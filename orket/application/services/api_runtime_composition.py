@@ -66,7 +66,7 @@ def build_api_runtime_container(
         stream_bus=stream_bus,
         interaction_manager=_build_interaction_manager(root, stream_bus, runtime_state),
         extension_manager=extension_manager,
-        extension_runtime_service=ExtensionRuntimeService(project_root=root),
+        extension_runtime_service=ExtensionRuntimeService(project_root=root, environment=authentication.environment),
         outward_run_store=run_store,
         outward_run_event_store=event_store,
         outward_approval_store=approval_store,

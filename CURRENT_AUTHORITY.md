@@ -1,8 +1,15 @@
 # CURRENT_AUTHORITY.md
 
-Last updated: 2026-09-18
+Last updated: 2026-09-19
 
 This file is the current canonical authority snapshot for high-impact runtime and governance paths.
+
+API hardware observations and event publication run in application-owned workers
+retained through request interruption and shutdown. Events capture the selected
+root and nested payload before dispatch. Extension model catalogs capture provider
+settings per application and use the admitted identity in failure responses.
+Migration and remaining observation limits:
+`docs/architecture/CONTRACT_DELTA_API_OBSERVATIONS_CD_2026-09-19.md`.
 
 Bundle commands enter application `BundleService`; the side-effecting storage
 adapter retains archive/file workers through cancellation. Packing checks admitted
@@ -950,7 +957,7 @@ Trust Kernel and Portable Conformance completed lane authority is archived under
 ```json
 {
   "version": 1,
-  "last_updated": "2026-09-18",
+  "last_updated": "2026-09-19",
   "authority": {
     "dependency_authority": {
       "primary": "pyproject.toml",

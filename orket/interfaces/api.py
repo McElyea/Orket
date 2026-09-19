@@ -58,7 +58,6 @@ from orket.application.services.runtime_policy import (
     resolve_state_backend_mode,
     runtime_policy_options,
 )
-from orket.hardware import get_metrics_snapshot
 from orket.interfaces.api_app_context_middleware import ApiAppContextMiddleware
 from orket.interfaces.api_runtime_context import (
     ApiAppRuntimeContext,
@@ -82,7 +81,6 @@ from orket.kernel.v1.outbound_policy_gate import (
     load_outbound_policy_config_file,
     merge_outbound_policy_config,
 )
-from orket.logging import log_event
 from orket.runtime.cors_config import resolve_cors_config
 from orket.settings import load_user_settings_async, save_user_settings_async
 from orket.streaming import CommitIntent, InteractionManager, StreamBus
@@ -464,13 +462,13 @@ API_KEY_NAME = "X-API-Key"
 api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
 
 
-def _log_api_auth_rejection(
+async def _log_api_auth_rejection(
     *,
     request_path: str,
     reason: str,
     provided_key_present: bool,
 ) -> None:
-    log_event(
+    await _runtime_context().events.emit(
         "api_auth_rejected",
         {
             "route_class": "core",
@@ -478,7 +476,6 @@ def _log_api_auth_rejection(
             "request_path": request_path,
             "provided_key_present": provided_key_present,
         },
-        _project_root(),
     )
 
 
@@ -498,7 +495,7 @@ async def get_api_key(request: Request, api_key_header: str | None = Security(ap
         request.state.authenticated_actor_ref = _api_key_actor_ref(api_key_header)
         return api_key_header
 
-    _log_api_auth_rejection(
+    await _log_api_auth_rejection(
         request_path=request_path,
         reason="invalid_or_missing_key_for_core_route",
         provided_key_present=provided_key_present,
@@ -768,8 +765,7 @@ v1_router.include_router(
         system_queries_getter=lambda: _runtime_context().system_queries,
         runtime_host_getter=lambda: _get_api_runtime_host(),
         now_local=lambda: _runtime_context().system_queries.local_now(),
-        get_metrics_snapshot=get_metrics_snapshot,
-        log_event=lambda name, payload, workspace: log_event(name, payload, workspace),
+        events_getter=lambda: _runtime_context().events,
         model_selection_getter=lambda: _runtime_context().model_selection,
         parse_roles_filter=lambda roles: _parse_roles_filter(roles),
         discover_active_roles=lambda root: _discover_active_roles(root),
@@ -1067,7 +1063,7 @@ async def get_run_detail(session_id: str) -> dict[str, Any]:
 
 @v1_router.get("/runs/{session_id}/metrics")
 async def get_run_metrics(session_id: str) -> Any:
-    log_event("api_run_metrics", {"session_id": session_id}, _project_root())
+    await _runtime_context().events.emit("api_run_metrics", {"session_id": session_id})
     metrics_reader = _get_api_runtime_host().create_member_metrics_reader()
     try:
         return await _runtime_context().system_queries.member_metrics(session_id, metrics_reader)
@@ -1293,7 +1289,7 @@ async def list_run_replay_turns(session_id: str, role: str | None = None) -> dic
 
 @v1_router.get("/runs/{session_id}/backlog")
 async def get_backlog(session_id: str) -> Any:
-    log_event("api_backlog", {"session_id": session_id}, _project_root())
+    await _runtime_context().events.emit("api_backlog", {"session_id": session_id})
     invocation = _get_api_runtime_node().resolve_backlog_invocation(session_id)
     runtime_engine = _get_engine()
     return await _invoke_async_method(runtime_engine.sessions, invocation, "backlog")
@@ -1318,7 +1314,7 @@ async def get_execution_graph(session_id: str) -> dict[str, Any]:
 
 @v1_router.get("/sessions/{session_id}")
 async def get_session_detail(session_id: str) -> Any:
-    log_event("api_session_detail", {"session_id": session_id}, _project_root())
+    await _runtime_context().events.emit("api_session_detail", {"session_id": session_id})
     runtime_node = _get_api_runtime_node()
     invocation = runtime_node.resolve_session_detail_invocation(session_id)
     runtime_engine = _get_engine()
@@ -1432,7 +1428,7 @@ async def replay_session_turn(
 
 @v1_router.get("/sessions/{session_id}/snapshot")
 async def get_session_snapshot(session_id: str) -> Any:
-    log_event("api_session_snapshot", {"session_id": session_id}, _project_root())
+    await _runtime_context().events.emit("api_session_snapshot", {"session_id": session_id})
     runtime_node = _get_api_runtime_node()
     invocation = runtime_node.resolve_session_snapshot_invocation(session_id)
     runtime_engine = _get_engine()
@@ -1681,8 +1677,7 @@ def _register_streaming_transport(target_app: FastAPI) -> None:
         interaction_manager_getter=lambda: _get_interaction_manager(target_app),
         stream_bus_getter=lambda: _get_stream_bus(target_app),
         runtime_state_getter=lambda: _get_runtime_state(target_app),
-        project_root_getter=lambda: _project_root(target_app),
-        log_event=log_event,
+        events_getter=lambda: _runtime_context(target_app).events,
     )
 
 

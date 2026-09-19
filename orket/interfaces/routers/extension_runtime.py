@@ -6,8 +6,7 @@ from typing import Any, Literal
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from orket.logging import log_event
-from orket.runtime.config.defaults import configured_provider
+from orket.application.services.extension_model_catalog import ExtensionModelCatalogUnavailable
 
 
 class ExtensionRuntimeGenerateRequest(BaseModel):
@@ -76,26 +75,8 @@ def build_extension_runtime_router(*, service_getter: Callable[[], Any]) -> APIR
             return await service.list_models(extension_id=extension_id, provider=provider)
         except ValueError as exc:
             _raise_extension_runtime_http_error(exc)
-        except Exception as exc:
-            requested = str(provider or "").strip().lower() or configured_provider()
-            log_event(
-                "extension_runtime_model_catalog_unavailable",
-                {"extension_id": extension_id, "provider": requested, "error": str(exc)},
-            )
-            raise HTTPException(
-                status_code=503,
-                detail={
-                    "ok": False,
-                    "code": "E_EXTENSION_RUNTIME_MODEL_CATALOG_UNAVAILABLE",
-                    "message": (
-                        f"Extension runtime model catalog unavailable for provider '{requested}' "
-                        f"and extension '{extension_id}'."
-                    ),
-                    "requested_provider": requested,
-                    "extension_id": extension_id,
-                    "degraded": True,
-                },
-            ) from exc
+        except ExtensionModelCatalogUnavailable as exc:
+            raise HTTPException(status_code=503, detail=exc.detail()) from exc
 
     @router.post("/extensions/{extension_id}/runtime/llm/generate")
     async def extension_runtime_generate(extension_id: str, req: ExtensionRuntimeGenerateRequest) -> Any:

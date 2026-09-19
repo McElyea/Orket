@@ -139,7 +139,7 @@ def test_clear_logs_rejects_unsupported_runtime_method(monkeypatch):
 
 
 def test_clear_logs_suppresses_permission_errors(monkeypatch):
-    """Layer: integration. Verifies clear-logs degrades truthfully when the explicit API runtime host surfaces permission errors."""
+    """Layer: contract. Verifies clear-logs degrades truthfully when the explicit API runtime host surfaces permission errors."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     captured = {}
 
@@ -151,7 +151,7 @@ def test_clear_logs_suppresses_permission_errors(monkeypatch):
         captured["event"] = (name, payload)
 
     monkeypatch.setattr(api_module._get_api_runtime_host(), "create_file_tools", lambda _root: FakeFs())
-    monkeypatch.setattr(api_module, "log_event", fake_log_event)
+    monkeypatch.setattr("orket.application.services.api_event_service.log_event", fake_log_event)
 
     response = client.post("/v1/system/clear-logs", headers={"X-API-Key": "test-key"})
     assert response.status_code == 200
@@ -2337,7 +2337,7 @@ def test_runs_sessions_reject_unsupported_runtime_methods(monkeypatch):
 
 
 def test_session_endpoints_emit_correlation_logs(monkeypatch):
-    """Layer: integration. Verifies session endpoint correlation logs still cover run-metrics reads after the explicit host-service move."""
+    """Layer: contract. Verifies session endpoint correlation logs still cover run-metrics reads after the explicit host-service move."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     captured_events = []
 
@@ -2353,7 +2353,7 @@ def test_session_endpoints_emit_correlation_logs(monkeypatch):
     async def fake_backlog(session_id):
         return [{"id": "I1", "session_id": session_id}]
 
-    monkeypatch.setattr(api_module, "log_event", fake_log_event)
+    monkeypatch.setattr("orket.application.services.api_event_service.log_event", fake_log_event)
     monkeypatch.setattr(api_module._get_engine().sessions, "get_session", fake_get_session)
     monkeypatch.setattr(api_module._get_engine().snapshots, "get", fake_get_snapshot)
     monkeypatch.setattr(api_module._get_engine().sessions, "get_session_issues", fake_backlog, raising=False)

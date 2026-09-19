@@ -4,7 +4,6 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-import orket.interfaces.api as api_module
 from orket.interfaces.api import create_api_app
 
 
@@ -42,7 +41,7 @@ def test_extension_runtime_routes_use_only_core_api_key(tmp_path: Path, monkeypa
 
 
 def test_extension_runtime_auth_rejection_emits_core_route_event(tmp_path: Path, monkeypatch) -> None:
-    """Layer: integration. Verifies rejected generic runtime auth emits the shared core-route rejection event."""
+    """Layer: contract. Verifies rejected generic runtime auth emits the shared core-route rejection event."""
     monkeypatch.setenv("ORKET_API_KEY", "core-key")
     captured_events: list[dict[str, object]] = []
 
@@ -51,7 +50,7 @@ def test_extension_runtime_auth_rejection_emits_core_route_event(tmp_path: Path,
         if name == "api_auth_rejected" and isinstance(payload, dict):
             captured_events.append(payload)
 
-    monkeypatch.setattr(api_module, "log_event", _fake_log_event)
+    monkeypatch.setattr("orket.application.services.api_event_service.log_event", _fake_log_event)
     client = TestClient(create_api_app(project_root=tmp_path))
 
     response = client.get(

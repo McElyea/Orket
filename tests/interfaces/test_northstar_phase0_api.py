@@ -68,7 +68,7 @@ def test_v1_auth_failure_logs_without_raw_key(monkeypatch: pytest.MonkeyPatch, t
     def _fake_log_event(event: str, payload: dict[str, Any], *_args: Any, **_kwargs: Any) -> None:
         captured.append((event, payload))
 
-    monkeypatch.setattr(api_module, "log_event", _fake_log_event)
+    monkeypatch.setattr("orket.application.services.api_event_service.log_event", _fake_log_event)
 
     response = test_client.get("/v1/version", headers={"X-API-Key": "raw-secret-key"})
 

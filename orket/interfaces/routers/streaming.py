@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
@@ -16,8 +15,7 @@ def register_streaming_routes(
     interaction_manager_getter: Callable[[], Any],
     stream_bus_getter: Callable[[], Any],
     runtime_state_getter: Callable[[], Any],
-    project_root_getter: Callable[[], Path],
-    log_event: Callable[[str, dict[str, Any], Path], None],
+    events_getter: Callable[[], Any],
 ) -> None:
     @app.websocket("/ws/events")
     async def websocket_events(websocket: WebSocket) -> None:
@@ -32,7 +30,7 @@ def register_streaming_routes(
             timestamp_utc=runtime_host_getter().utc_now_iso(),
         )
         if warning_event:
-            log_event("security_compat_fallback_used", warning_event, project_root_getter())
+            await events_getter().emit("security_compat_fallback_used", warning_event)
         if not authentication.authenticate(supplied_key):
             await websocket.close(code=4403)
             return
@@ -60,7 +58,7 @@ def register_streaming_routes(
             timestamp_utc=runtime_host_getter().utc_now_iso(),
         )
         if warning_event:
-            log_event("security_compat_fallback_used", warning_event, project_root_getter())
+            await events_getter().emit("security_compat_fallback_used", warning_event)
         if not authentication.authenticate(supplied_key):
             await websocket.close(code=4403)
             return

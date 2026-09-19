@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, ClassVar
 
+from orket.application.services.api_event_service import ApiEventService
 from orket.application.services.application_runtime_lifetime import (
     ApplicationRuntimeLifetime,
     RequestAdmissionClosed,
@@ -26,6 +27,7 @@ class ApiRuntimeContainer(ApplicationRuntimeLifetime):
     runtime_state: Any
     api_runtime_host: Any
     engine: Any
+    events: ApiEventService = field(init=False)
     authentication: Any | None = None
     system_queries: Any | None = None
     stream_bus: Any | None = None
@@ -45,6 +47,7 @@ class ApiRuntimeContainer(ApplicationRuntimeLifetime):
 
     def __post_init__(self) -> None:
         self.project_root = Path(self.project_root).resolve()
+        self.events = ApiEventService(self.project_root)
 
     async def _close_final_resource(self) -> None:
         await close_owned_resource(self.engine)

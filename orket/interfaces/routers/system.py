@@ -35,8 +35,7 @@ def build_system_router(
     system_queries_getter: Callable[[], Any],
     runtime_host_getter: Callable[[], Any],
     now_local: Callable[[], Any],
-    get_metrics_snapshot: Callable[[], dict[str, Any]],
-    log_event: Callable[[str, dict[str, Any], Path], None],
+    events_getter: Callable[[], Any],
     model_selection_getter: Callable[[], Any],
     parse_roles_filter: Callable[[str | None], list[str]],
     discover_active_roles: Callable[[Path], list[str]],
@@ -61,10 +60,9 @@ def build_system_router(
             invocation = api_runtime_node.resolve_clear_logs_invocation(log_path)
             await invoke_async_method(fs, invocation, "clear logs")
         except (PermissionError, FileNotFoundError, OSError) as exc:
-            log_event(
+            await events_getter().emit(
                 "clear_logs_skipped",
                 {"path": log_path, "error": str(exc)},
-                project_root,
             )
         return {"ok": True}
 
@@ -79,7 +77,7 @@ def build_system_router(
     @router.get("/system/metrics")
     async def get_metrics() -> dict[str, Any]:
         api_runtime_node = api_runtime_node_getter()
-        metrics = await asyncio.to_thread(get_metrics_snapshot)
+        metrics = await system_queries_getter().hardware_metrics()
         return cast(dict[str, Any], api_runtime_node.normalize_metrics(metrics))
 
     @router.get("/system/explorer")
@@ -199,7 +197,6 @@ def build_system_router(
         api_runtime_node = api_runtime_node_getter()
         runtime_host = runtime_host_getter()
         engine = engine_getter()
-        project_root = project_root_getter()
         session_id = runtime_host.create_session_id()
 
         asset_id = api_runtime_node.resolve_asset_id(req.path, req.issue_id)
@@ -217,7 +214,7 @@ def build_system_router(
         )
         method_name = invocation["method_name"]
 
-        log_event(
+        await events_getter().emit(
             "api_run_active",
             {
                 "asset_id": asset_id,
@@ -225,7 +222,6 @@ def build_system_router(
                 "session_id": session_id,
                 "method_name": method_name,
             },
-            project_root,
         )
         await schedule_async_invocation_task(engine, invocation, "run", session_id)
         return {"session_id": session_id}

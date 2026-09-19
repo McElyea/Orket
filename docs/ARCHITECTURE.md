@@ -1,6 +1,6 @@
 # Orket Architecture (Target State)
 
-Last updated: 2026-09-18
+Last updated: 2026-09-19
 Status: Active target architecture (transitioning)
 
 Canonical architecture specification for the Orket runtime.
@@ -42,7 +42,7 @@ register also records review-discovered ship-risk and self-deception debt that i
 not accepted as target-architecture conformance.
 
 1. Dependency layering exceptions:
-   1. `orket/interfaces/orket_bundle_cli.py` imports core/domain types directly.
+   1. The generated dependency graph records remaining transport/core/adapter boundary violations and unresolved dynamic imports. Bundle CLI core/domain imports were removed in 0.6.25; they are no longer a current exception.
 2. Decision-node purity exceptions:
    1. `orket/decision_nodes/builtins.py` still retains mutable planning/routing context. Loop limits now consume immutable explicit values; application owns registry selection, executable tool bindings, provider construction and organization overrides. API authentication, observed paths, board loading and calendar inputs now belong to application services; API strategy retains request/presentation recommendations. API/engine/pipeline construction, env bootstrap, and session-id minting on the touched runtime paths also live in explicit services.
 3. API runtime composition:
@@ -279,6 +279,13 @@ storage drains materialization and verifies files, and both source and installed
 callers consume package-owned archives. Canonical authoring sources and the
 mechanical archive check are documented in
 `docs/architecture/CONTRACT_DELTA_EXTENSION_SCAFFOLD_PACKAGING_D_2026-09-17.md`.
+
+API hardware observations and event publication run in application-owned workers
+retained through request interruption and shutdown. Events capture the selected
+root and nested payload before dispatch. Extension model catalogs capture provider
+settings per application and use the admitted identity in failure responses.
+Migration and remaining observation limits:
+`docs/architecture/CONTRACT_DELTA_API_OBSERVATIONS_CD_2026-09-19.md`.
 
 API authentication uses an application-owned settings snapshot shared by HTTP,
 WebSocket and startup security checks. Explorer/metrics workers and rooted board

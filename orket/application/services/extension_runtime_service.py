@@ -3,18 +3,20 @@ from __future__ import annotations
 import asyncio
 import base64
 import binascii
+import os
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
 from orket.adapters.execution.owned_io import run_owned_thread
+from orket.application.services.api_event_service import ApiEventService
 from orket.application.services.command_process_supervisor import CommandProcessSupervisor
+from orket.application.services.extension_model_catalog import ExtensionModelCatalog
 from orket.application.services.sdk_llm_provider import LocalModelCapabilityProvider
 from orket.capabilities.sdk_voice_provider import HostSTTCapabilityProvider, HostVoiceTurnController
 from orket.capabilities.tts_piper import build_tts_provider
 from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_MODEL
-from orket.runtime.config.defaults import configured_provider
-from orket.runtime.provider_runtime_target import list_provider_models
 from orket.services.extension_memory_namespace import validate_extension_id
 from orket.services.profile_write_policy import ProfileWritePolicy, ProfileWritePolicyError
 from orket.services.scoped_memory_store import ScopedMemoryRecord, ScopedMemoryStore
@@ -54,8 +56,13 @@ class ExtensionRuntimeService:
         memory_store: ScopedMemoryStore | None = None,
         stt_provider: HostSTTCapabilityProvider | None = None,
         tts_provider: TTSProvider | None = None,
+        environment: Mapping[str, str] | None = None,
     ) -> None:
         self._project_root = project_root.resolve()
+        self._catalog = ExtensionModelCatalog(
+            environment=dict(os.environ if environment is None else environment),
+            events=ApiEventService(self._project_root),
+        )
         self._owns_model_provider = model_provider is None
         self._model_provider = model_provider or LocalModelCapabilityProvider(
             model=DEFAULT_LOCAL_MODEL, temperature=0.2, seed=None,
@@ -92,28 +99,7 @@ class ExtensionRuntimeService:
         }
 
     async def list_models(self, *, extension_id: str, provider: str = "") -> dict[str, Any]:
-        validated_extension_id = validate_extension_id(extension_id)
-        requested_provider = str(provider or "").strip().lower() or configured_provider()
-        payload = await list_provider_models(
-            provider=requested_provider,
-            base_url=None,
-            timeout_s=8.0,
-            api_key=None,
-        )
-        raw_models = payload.get("models")
-        models = [str(model).strip() for model in raw_models if str(model).strip()] if isinstance(raw_models, list) else []
-        default_model = "Command-R:35B" if requested_provider == "ollama" else ""
-        if default_model not in models and models:
-            default_model = models[0]
-        return {
-            "ok": True,
-            "extension_id": validated_extension_id,
-            "requested_provider": str(payload.get("requested_provider") or requested_provider),
-            "canonical_provider": str(payload.get("canonical_provider") or requested_provider),
-            "base_url": str(payload.get("base_url") or ""),
-            "models": models,
-            "default_model": default_model,
-        }
+        return await self._catalog.list_models(extension_id=extension_id, provider=provider)
 
     async def llm_generate(
         self,

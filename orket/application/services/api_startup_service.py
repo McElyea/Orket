@@ -10,7 +10,7 @@ from typing import Any
 
 from orket.adapters.execution.owned_io import run_owned_thread
 from orket.application.services.api_runtime_container import ApiRuntimeContainer
-from orket.logging import log_event, subscribe_to_events, unsubscribe_from_events
+from orket.logging import subscribe_to_events, unsubscribe_from_events
 
 LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +44,7 @@ async def api_runtime_lifespan(
 ) -> AsyncIterator[None]:
     # Capture selected owners before startup can await or another caller can close.
     root, engine, authentication = owner.project_root, owner.engine, owner.authentication
-    state, governed_runtime = owner.runtime_state, owner.governed_agent_runtime
+    state, governed_runtime, events = owner.runtime_state, owner.governed_agent_runtime, owner.events
 
     async def initialize() -> None:
         await run_owned_thread(lambda: _validate_root(configured_root, root), label="api-startup-root")
@@ -59,14 +59,14 @@ async def api_runtime_lifespan(
         if governed_runtime is not None:
             await governed_runtime.start(owner)
         bypass_active = authentication.authenticate(None)
-        log_event("api_security_posture", {
+        await events.emit("api_security_posture", {
             "api_key_configured": authentication.key_configured,
             "insecure_no_api_key_bypass": bypass_active,
-        }, root)
+        })
         if bypass_active:
-            log_event("api_security_warning", {
+            await events.emit("api_security_warning", {
                 "message": "ORKET_ALLOW_INSECURE_NO_API_KEY bypasses /v1 auth without ORKET_API_KEY.",
-            }, root)
+            })
 
     try:
         # Initialization uses the same admitted-invocation lifetime as requests;

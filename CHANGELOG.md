@@ -5,6 +5,18 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.26] - 2026-09-19 - "Owned API observations"
+
+### Fixed
+- Retain API hardware and event workers through request cancellation, timeout and application shutdown.
+- Capture event payloads and project roots before dispatch; surface event write failures instead of returning before the write settles.
+- Capture extension catalog provider settings per application and retain the admitted provider identity in failure responses.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Migration and limits: `docs/architecture/CONTRACT_DELTA_API_OBSERVATIONS_CD_2026-09-19.md`.
+- Stability: scoped C/D progress; the full architectural-truth lane remains active.
+
 ## [0.6.25] - 2026-09-18 - "Owned bundle commands"
 
 ### Fixed

@@ -5,7 +5,6 @@ from pathlib import Path
 
 import pytest
 
-import orket.application.services.extension_runtime_service as extension_runtime_service
 from orket.application.services.extension_runtime_service import ExtensionRuntimeService
 from orket.capabilities.sdk_voice_provider import HostSTTCapabilityProvider
 from orket.services.scoped_memory_store import ScopedMemoryStore
@@ -128,9 +127,9 @@ async def test_extension_runtime_service_voice_and_transcribe_paths(tmp_path: Pa
 
 @pytest.mark.asyncio
 async def test_extension_runtime_service_list_models_and_override_generation(tmp_path: Path, monkeypatch) -> None:
-    """Layer: integration. Verifies model catalog output and provider/model override generation stay available on the generic seam."""
+    """Layer: contract. Verifies model catalog output and provider/model override generation stay available on the generic seam."""
 
-    async def fake_list_provider_models(*, provider: str, base_url, timeout_s: float, api_key):
+    async def fake_list_provider_models(*, provider: str, base_url, timeout_s: float, api_key, environment):
         del base_url, timeout_s, api_key
         return {
             "requested_provider": provider,
@@ -139,7 +138,7 @@ async def test_extension_runtime_service_list_models_and_override_generation(tmp
             "models": ["Command-R:35B", "qwen2.5-coder:7b"],
         }
 
-    monkeypatch.setattr(extension_runtime_service, "list_provider_models", fake_list_provider_models)
+    monkeypatch.setattr("orket.application.services.extension_model_catalog.list_provider_models", fake_list_provider_models)
     service = ExtensionRuntimeService(project_root=tmp_path, model_provider=_FakeModelProvider())  # type: ignore[arg-type]
 
     catalog = await service.list_models(extension_id="orket.companion", provider="ollama")

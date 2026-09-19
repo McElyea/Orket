@@ -12,6 +12,7 @@ from orket.adapters.storage.api_workspace_reader import ApiWorkspaceReader
 from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.board import get_board_hierarchy_async
 from orket.core.contracts.eos_calendar import EosSprintBaseline
+from orket.hardware import get_metrics_snapshot
 from orket.time_utils import configured_timezone
 
 
@@ -29,6 +30,9 @@ class ApiSystemQueryService:
 
     def current_sprint(self, now: datetime) -> str:
         return self.calendar.current_sprint(now)
+
+    async def hardware_metrics(self) -> dict[str, Any]:
+        return await run_owned_thread(get_metrics_snapshot, label="api-hardware-metrics")
 
     async def explorer(self, path: str, strategy: Any) -> dict[str, Any]:
         entries = await self.reader.directory(path)

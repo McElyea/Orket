@@ -12516,21 +12516,21 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
   Scoped installed-build/host acceptance now passes; this does not close the
   full plan or imply generic exactly-once effects or historical authenticity.
 
-Next action: continue C/D from their numbered requirements after the 0.6.25
-bundle command authority checkpoint below. The graph has 15 forbidden pairs, zero cross-layer
+Next action: continue C/D from their numbered requirements after the 0.6.26
+API observation ownership work below. The graph has 12 forbidden pairs, zero cross-layer
 cycles and eight unresolved import/reflection sites. Preserve every failed and
 passing source/native observation and the historical clock diagnosis. Canonical
 Ruff still has 103 findings. The prior stale benchmark expectation passes in the
 new source/native selection, but no fresh all-green full suite is claimed.
-Remaining core clocks, manifest reads, schema identities, async reachability and
+Remaining core clocks, schema identities, async reachability and
 adapter classification remain actionable. E1/E2, CAP-1/2/3, hosted Quality, release
 readiness and explicit whole-lane acceptance remain open.
 
 The final BT-3 audit accepts builtin evidence-based completion and scoped replay.
 It preserves the initial installed failures, corrected external fixture coverage,
 controlled publication-clock refusal and the live guard report's event-scope
-error. The original Linux timestamp reversal remains unexplained under C/D clock
-drift. Full source passed 5,429/81 skipped before three nonbehavioral cleanup edits
+error. The retained clock diagnosis corroborates a host-clock discontinuity for the
+original Linux timestamp reversal; its actor and cause remain unidentified. Full source passed 5,429/81 skipped before three nonbehavioral cleanup edits
 and the later test-only clock correction; focused source and all affected
 installed follow-ups cover those deltas. This does not claim a fresh all-green
 702-case installed rerun or repository-wide release readiness.
@@ -15497,3 +15497,89 @@ seen in preceding checkpoints on other cells/fields. Its cause remains unresolve
 passing results and differing occurrence do not establish a repair. All native
 launcher sessions have returned and been reaped; each audit row verifies all 937
 core origins and every retained installed-flow/cleanup check.
+
+### API observation ownership: 2026-09-19
+
+Core 0.6.26 moves API event publication and hardware observation into application
+services with retained worker lifetime. Extension catalog provider/endpoint inputs
+are captured per application; failure reporting uses the admitted provider.
+Contract: `docs/architecture/CONTRACT_DELTA_API_OBSERVATIONS_CD_2026-09-19.md`.
+
+The before-state 124-case affected cohort passed. Retained counterexamples then
+showed metrics request cancellation, timeout and shutdown escaping held workers.
+The first catalog counterexample lacked an API key; its failure was a fixture
+error, not provider proof. The corrected loopback HTTP case demonstrated a
+llama.cpp failure incorrectly reported as openai_compat after environment rotation.
+The first repaired regression run exposed two missed system-router event calls;
+those were repaired. The subsequent focused run passed 135 cases without
+failures/errors/skips, including the original runtime counterexamples.
+
+Observed path: primary, with deliberate degraded catalog/authentication failures.
+Result: partial success for the full goal. Live proof covers real ASGI request
+paths, files, hardware observations and loopback HTTP. Static dependency, lint,
+size and workflow checks are structural proof. No live model inference is claimed.
+
+The final source run passed all 1,212 cases, with zero failures/errors/skips, in
+509.969 seconds including runner overhead. All 1,159 prior
+case identities remain, with 53 added. The same 1,212 cases pass in each installed
+cell below; origin, dependency, CLI, ToolGate, unchanged support and cleanup checks
+also pass. All owned native launchers returned and their sessions were reaped.
+
+| Installed cell | Tests / failures / errors / skips | Core origins |
+|---|---:|---:|
+| a26-win-py311 | 1212 / 0 / 0 / 0 | 938 |
+| a26-linux-py311 | 1212 / 0 / 0 / 0 | 938 |
+| a26-win-py312 | 1212 / 0 / 0 / 0 | 938 |
+| a26-linux-py312 | 1212 / 0 / 0 / 0 | 938 |
+
+The native manifest binds 1,904 support files without core/SDK sources. Wheel and
+sdist parity matches 1,050 core Python files and 1,065 package files, with no
+mismatch. Private environments install core 0.6.26 and retain the unchanged SDK
+0.7.0a1/reference/starter 0.3.0a1 artifacts. Source/native/launcher budgets remain
+1,500/1,800/2,100 seconds; product deadlines were not widened.
+
+Evidence under `.tmp/c-api-observations/`:
+- `candidate/source-report.json`: SHA-256 `11a2d82602e17c5adb7bf3da2e54c5fdb916df2484afdcf87314e40ef3bdaae9`.
+- `candidate/manifest.json`: SHA-256 `fde2b94456d0f79ac46222fb14f7d428016ef403f84981e05a56cb4093a53ffc`.
+- `candidate/native-audit.json`: SHA-256 `c392148a19ed2258c017c577f7b46f95de8913442fac9b0a58fe107a639a3846`.
+- Core wheel: SHA-256 `69b41280842c9664aa9d72b4f7acfdd93ac0234c73790fefd74ad739f33ab2f5`.
+- Core sdist: SHA-256 `3ee0ab479f716eeae463491018ec00cc139042c975f4e2a47ee759252e24b573`.
+- `case-continuity.json`, `size-review.json`, `warning-observation.json`,
+  `ruff-comparison.json`, `final-collection/collection.json` and `review.json`
+  retain their declared scope and command results.
+
+The first structural run found a September 19 heading versus September 18
+embedded authority date. Both dates are now September 19; the repaired structural
+gate passed all 51 cases. The source run admitted before that failed structural
+result was inspected was explicitly aborted (exit 15, no finalized JUnit cases);
+its declaration, logs, original inputs and two-process termination receipt remain.
+It is not passing proof. `source-final-2` is the final source observation. The
+metadata-only correction changed no packaged file; the source archive does not
+include CURRENT_AUTHORITY.md. No package/source change followed final source proof.
+
+Changed-file Ruff, docs hygiene, release metadata and whitespace checks pass.
+Canonical Ruff retains the same 103 findings by path/code/message, allowing line
+movement only. New Python files/functions satisfy size limits and oversized
+touched files did not grow. Existing warning observations remain visible in the
+warning report; passing cells do not establish warning repair.
+
+The dependency graph now contains 1,050 modules, 3,304 import sites, 12 forbidden
+pairs, eight analysis errors, no unknown modules and no authority cycles. Three
+forbidden pairs were removed and none added. Collection succeeds while the
+dependency verdict and release readiness remain false. No exception or layer
+reclassification was added. The .25 checkpoint's 560 artifacts, its publication
+receipt, historical handoff and neighboring worktrees remain unchanged.
+
+Remaining blockers or drift: C/D/E/CAP, remaining implicit clocks/identities,
+adapter classification, full async inventory, dynamic loader boundaries, full
+quality/coverage, hosted CI, release readiness and explicit whole-lane acceptance
+remain open. The current core manifest loader is retired; the old Linux timestamp
+discontinuity is corroborated, with actor/cause still unknown. No fresh full-suite,
+live provider, Gitea or Docker acceptance is claimed. The prior full-suite result
+and every failed/aborted observation remain retained. The catalog environment
+change does not freeze all extension generation/voice settings; logging is not a
+transactional durable store or cross-application WebSocket filter.
+
+Continue from the numbered C/D requirements and the remaining boundary map;
+0.6.26 is a checkpoint, not whole-lane acceptance. Keep 10 AM–6 PM America/Denver
+commits local; any authorized off-hours push has a separate publication receipt.

@@ -7,6 +7,7 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+from orket.application.services.extension_model_catalog import ExtensionModelCatalogUnavailable
 from orket.application.services.extension_runtime_service import ExtensionRuntimeService
 from orket.capabilities.sdk_voice_provider import HostSTTCapabilityProvider
 from orket.interfaces.routers.extension_runtime import build_extension_runtime_router
@@ -111,8 +112,7 @@ def test_extension_runtime_router_models_failure_returns_truthful_degraded_error
 
     class _FailingService:
         async def list_models(self, *, extension_id: str, provider: str) -> dict[str, object]:
-            del extension_id
-            raise RuntimeError(f"catalog unavailable:{provider}")
+            raise ExtensionModelCatalogUnavailable(extension_id, provider)
 
     app = FastAPI()
     app.include_router(build_extension_runtime_router(service_getter=lambda: _FailingService()), prefix="/v1")
