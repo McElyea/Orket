@@ -16,17 +16,13 @@ from orket.core.domain import AuthoritySourceClass, ResultClass
 from .contracts import RunPlan
 from .governed_identity import (
     EXTENSION_WORKLOAD_OPERATOR_SURFACE_RESULT,
-    build_extension_control_bundle,
-    build_extension_policy_payload,
+    build_extension_governed_identity,
     digest_prefixed,
-)
-from .governed_identity import (
-    build_governed_identity as build_runtime_governed_identity,
 )
 from .models import ExtensionRecord, _ExtensionManifestEntry
 from .runtime import ExtensionEngineAdapter, RunContext
 from .sdk_workload_runner import SdkSubprocessRunError
-from .workload_artifacts import WorkloadArtifacts
+from .workload_policy import WorkloadPolicy
 
 
 def compile_workload(workload: Any, input_config: dict[str, Any], interaction_context: Any | None) -> RunPlan:
@@ -104,7 +100,7 @@ def build_sdk_context(
 
 def build_governed_identity(
     *,
-    artifacts: WorkloadArtifacts,
+    policy: WorkloadPolicy,
     extension: ExtensionRecord,
     workload_id: str,
     workload_version: str,
@@ -114,23 +110,8 @@ def build_governed_identity(
     department: str,
     input_identity: str,
 ) -> dict[str, Any]:
-    policy_payload = build_extension_policy_payload(
-        contract_style=contract_style,
-        security_mode=extension.security_mode,
-        security_profile=extension.security_profile,
-        security_policy_version=extension.security_policy_version,
-        reliable_mode_enabled=artifacts.reproducibility.reliable_mode_enabled(),
-        reliable_require_clean_git=artifacts.reliable_require_clean_git_enabled(),
-        provenance_verbose_enabled=artifacts.provenance_verbose_enabled(),
-        artifact_file_size_cap_bytes=artifacts.artifact_file_size_cap_bytes(),
-        artifact_total_size_cap_bytes=artifacts.artifact_total_size_cap_bytes(),
-    )
-    control_bundle = build_extension_control_bundle(
-        extension_id=extension.extension_id,
-        extension_version=extension.extension_version,
-        source_ref=extension.source_ref,
-        resolved_commit_sha=extension.resolved_commit_sha,
-        manifest_digest_sha256=extension.manifest_digest_sha256,
+    return build_extension_governed_identity(
+        extension=extension,
         workload_id=workload_id,
         workload_version=workload_version,
         workload_entrypoint=workload_entrypoint,
@@ -138,15 +119,8 @@ def build_governed_identity(
         contract_style=contract_style,
         department=department,
         input_identity=input_identity,
-        security_mode=extension.security_mode,
-        security_profile=extension.security_profile,
-        security_policy_version=extension.security_policy_version,
-        reliable_mode_enabled=artifacts.reproducibility.reliable_mode_enabled(),
-    )
-    return build_runtime_governed_identity(
         operator_surface=EXTENSION_WORKLOAD_OPERATOR_SURFACE_RESULT,
-        policy_payload=policy_payload,
-        control_bundle=control_bundle,
+        **policy.identity_inputs(),
     )
 
 

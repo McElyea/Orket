@@ -18,7 +18,7 @@ from orket.application.services.sdk_memory_provider import SQLiteMemoryCapabilit
 from orket.capabilities.sdk_voice_provider import HostSTTCapabilityProvider, HostVoiceTurnController
 from orket.capabilities.sync_bridge import run_coro_sync
 from orket.extensions.catalog import ExtensionCatalog
-from orket.extensions.contracts import RunAction, RunPlan
+from orket.extensions.contracts import RunAction
 from orket.extensions.governed_identity import build_governed_identity
 from orket.extensions.manifest_parser import ManifestParser
 from orket.extensions.models import (
@@ -33,6 +33,7 @@ from orket.extensions.sdk_capability_authorization import HostCapabilityControls
 from orket.extensions.workload_artifacts import WorkloadArtifacts
 from orket.extensions.workload_executor import WorkloadExecutor
 from orket.extensions.workload_loader import WorkloadLoader
+from orket.extensions.workload_policy import capture_workload_policy
 from orket.services.scoped_memory_store import ScopedMemoryStore
 from orket_extension_sdk.audio import NullAudioPlayer, NullTTSProvider
 from orket_extension_sdk.llm import LLMProvider
@@ -256,11 +257,6 @@ async def test_generic_sdk_executor_refuses_agent_workload_before_runtime_side_e
 
 
 
-def test_reproducibility_enforcer_reliable_mode_enabled_default(tmp_path: Path) -> None:
-    enforcer = ReproducibilityEnforcer(tmp_path)
-    assert enforcer.reliable_mode_enabled() is True
-
-
 def test_workload_loader_parse_sdk_entrypoint() -> None:
     loader = WorkloadLoader(registry_factory=lambda: None)  # type: ignore[arg-type]
     module_name, attr_name = loader.parse_sdk_entrypoint("demo.module:run")
@@ -269,6 +265,7 @@ def test_workload_loader_parse_sdk_entrypoint() -> None:
 
 
 def test_workload_artifacts_build_manifest(tmp_path: Path) -> None:
+    """Layer: integration. Validate real artifacts under explicitly captured policy."""
     artifact_root = tmp_path / "artifacts"
     artifact_root.mkdir(parents=True)
     (artifact_root / "a.txt").write_text("hello", encoding="utf-8")
@@ -281,6 +278,7 @@ def test_workload_artifacts_build_manifest(tmp_path: Path) -> None:
     )
     manifest = artifacts.build_artifact_manifest(
         artifact_root,
+        policy=capture_workload_policy(),
         plan_hash="plan-123",
         governed_identity=governed_identity,
     )
@@ -298,6 +296,7 @@ def test_workload_artifacts_build_manifest(tmp_path: Path) -> None:
 
 
 def test_workload_artifacts_validate_sdk_artifacts_rejects_prefix_escape(tmp_path: Path) -> None:
+    """Layer: integration. Validate real artifacts under explicitly captured policy."""
     artifact_root = tmp_path / "artifacts"
     artifact_root.mkdir(parents=True)
     outside_dir = tmp_path / "artifacts-evil"
@@ -313,10 +312,11 @@ def test_workload_artifacts_validate_sdk_artifacts_rejects_prefix_escape(tmp_pat
 
     artifacts = WorkloadArtifacts(tmp_path, ReproducibilityEnforcer(tmp_path))
     with pytest.raises(ValueError, match="E_ARTIFACT_PATH_TRAVERSAL"):
-        artifacts.validate_sdk_artifacts(result, artifact_root)
+        artifacts.validate_sdk_artifacts(result, artifact_root, policy=capture_workload_policy())
 
 
 def test_workload_artifacts_rejects_symlink_in_sdk_validation_and_manifest(tmp_path: Path) -> None:
+    """Layer: integration. Validate real artifacts under explicitly captured policy."""
     artifact_root = tmp_path / "artifacts"
     artifact_root.mkdir(parents=True)
     outside = tmp_path / "outside.txt"
@@ -335,12 +335,13 @@ def test_workload_artifacts_rejects_symlink_in_sdk_validation_and_manifest(tmp_p
     artifacts = WorkloadArtifacts(tmp_path, ReproducibilityEnforcer(tmp_path))
 
     with pytest.raises(ValueError, match="E_ARTIFACT_SYMLINK_FORBIDDEN"):
-        artifacts.validate_sdk_artifacts(result, artifact_root)
+        artifacts.validate_sdk_artifacts(result, artifact_root, policy=capture_workload_policy())
     with pytest.raises(ValueError, match="E_ARTIFACT_SYMLINK_FORBIDDEN"):
-        artifacts.build_artifact_manifest(artifact_root)
+        artifacts.build_artifact_manifest(artifact_root, policy=capture_workload_policy())
 
 
 def test_workload_artifacts_validate_sdk_artifacts_emits_deterministic_ordered_payload(tmp_path: Path) -> None:
+    """Layer: integration. Validate real artifacts under explicitly captured policy."""
     artifact_root = tmp_path / "artifacts"
     artifact_root.mkdir(parents=True)
     (artifact_root / "ok.txt").write_text("ok", encoding="utf-8")
@@ -354,7 +355,7 @@ def test_workload_artifacts_validate_sdk_artifacts_emits_deterministic_ordered_p
     )
     artifacts = WorkloadArtifacts(tmp_path, ReproducibilityEnforcer(tmp_path))
     with pytest.raises(ValueError) as excinfo:
-        artifacts.validate_sdk_artifacts(result, artifact_root)
+        artifacts.validate_sdk_artifacts(result, artifact_root, policy=capture_workload_policy())
     message = str(excinfo.value)
     assert message.startswith("E_SDK_ARTIFACT_VALIDATION_FAILED:")
     payload = json.loads(message.split(": ", 1)[1])
@@ -365,6 +366,7 @@ def test_workload_artifacts_validate_sdk_artifacts_emits_deterministic_ordered_p
 
 
 def test_workload_artifacts_enforces_file_and_total_size_caps(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Layer: integration. Validate real artifacts under explicitly captured policy."""
     artifact_root = tmp_path / "artifacts"
     artifact_root.mkdir(parents=True)
     big = artifact_root / "big.bin"
@@ -383,6 +385,7 @@ def test_workload_artifacts_enforces_file_and_total_size_caps(tmp_path: Path, mo
                 artifacts=[ArtifactRef(path="big.bin", digest_sha256=big_digest, kind="bin")],
             ),
             artifact_root,
+            policy=capture_workload_policy(),
         )
 
     monkeypatch.setenv("ORKET_EXT_ARTIFACT_FILE_SIZE_CAP_BYTES", "20")
@@ -397,6 +400,7 @@ def test_workload_artifacts_enforces_file_and_total_size_caps(tmp_path: Path, mo
                 ],
             ),
             artifact_root,
+            policy=capture_workload_policy(),
         )
 
 
@@ -489,23 +493,6 @@ def test_workload_artifacts_build_sdk_capability_registry_honors_voice_bounds(tm
     controller = registry.voice_turn_controller()
     assert isinstance(controller, HostVoiceTurnController)
     assert controller.silence_delay_seconds() == 3.0
-
-
-def test_workload_executor_compile_workload() -> None:
-    class _Workload:
-        workload_id = "demo_v1"
-        workload_version = "1.0.0"
-
-        def compile(self, input_config):
-            return RunPlan(workload_id="demo_v1", workload_version="1.0.0", actions=())
-
-    executor = WorkloadExecutor(
-        project_root=Path.cwd(),
-        reproducibility=ReproducibilityEnforcer(Path.cwd()),
-        registry_factory=lambda: None,  # type: ignore[arg-type]
-    )
-    run_plan = executor._compile_workload(_Workload(), {"seed": 1}, None)
-    assert run_plan.workload_id == "demo_v1"
 
 
 @pytest.mark.asyncio

@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-import os
-import subprocess
 from pathlib import Path
 from typing import Any
 
-from .models import RELIABLE_MODE_ENV, RELIABLE_REQUIRE_CLEAN_GIT_ENV
+from orket.application.services.command_process_supervisor import CommandProcessSupervisor
 
 
 class ReproducibilityEnforcer:
@@ -14,36 +12,27 @@ class ReproducibilityEnforcer:
     def __init__(self, project_root: Path) -> None:
         self.project_root = project_root
 
-    def reliable_mode_enabled(self) -> bool:
-        raw = (os.getenv(RELIABLE_MODE_ENV, "true") or "").strip().lower()
-        return raw not in {"0", "false", "no", "off"}
-
     def validate_required_materials(self, materials: Any) -> None:
+        root = self.project_root.resolve()
         missing: list[str] = []
         for material in list(materials or []):
             rel = str(material or "").strip()
             if not rel:
                 continue
-            target = (self.project_root / rel).resolve()
-            if not str(target).startswith(str(self.project_root)):
+            target = (root / rel).resolve()
+            if not target.is_relative_to(root):
                 raise ValueError(f"Material path escapes project root: {rel}")
             if not target.exists():
                 missing.append(rel)
         if missing:
             raise FileNotFoundError("Required materials missing: " + ", ".join(sorted(missing)))
 
-    def validate_clean_git_if_required(self) -> None:
-        raw = (os.getenv(RELIABLE_REQUIRE_CLEAN_GIT_ENV, "false") or "").strip().lower()
-        if raw not in {"1", "true", "yes", "on"}:
+    async def validate_clean_git_if_required(self, *, required: bool) -> None:
+        if not required:
             return
-        status = subprocess.run(
-            ["git", "status", "--porcelain"],
-            cwd=self.project_root,
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-        if status.returncode != 0:
-            raise RuntimeError("Unable to validate git clean state")
+        owner = CommandProcessSupervisor(self.project_root, cancellation_event="extension_git_status_cancelled")
+        status = await owner.run(["git", "status", "--porcelain"], cwd=self.project_root, timeout_seconds=30)
+        if not status.cleanup_confirmed or not status.capture_complete or status.reason != "completed" or status.returncode != 0:
+            raise RuntimeError(f"Unable to validate git clean state: {status.reason}")
         if status.stdout.strip():
             raise RuntimeError("Reliable Mode requires clean git state")

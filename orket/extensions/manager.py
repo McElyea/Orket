@@ -149,14 +149,8 @@ class ExtensionManager:
     def _build_artifact_manifest(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
         return self.workload_executor.artifacts.build_artifact_manifest(*args, **kwargs)
 
-    def _reliable_mode_enabled(self) -> bool:
-        return self.reproducibility.reliable_mode_enabled()
-
     def _validate_required_materials(self, *args: Any, **kwargs: Any) -> None:
         self.reproducibility.validate_required_materials(*args, **kwargs)
-
-    def _validate_clean_git_if_required(self, *args: Any, **kwargs: Any) -> None:
-        self.reproducibility.validate_clean_git_if_required(*args, **kwargs)
 
     def list_extensions(self) -> list[ExtensionRecord]:
         records = self.catalog.list_extensions(entry_point_rows=self._discover_entry_point_rows())

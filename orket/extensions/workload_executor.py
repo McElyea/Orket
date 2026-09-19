@@ -27,7 +27,6 @@ from .workload_executor_support import (
     begin_control_plane_execution,
     build_governed_identity,
     build_sdk_context,
-    compile_workload,
     control_plane_identity,
     emit_default_model_events,
     execute_plan_actions,
@@ -39,6 +38,7 @@ from .workload_executor_support import (
     sdk_side_effect_observed,
 )
 from .workload_loader import WorkloadLoader
+from .workload_policy import capture_workload_policy
 from .workload_publication import prepare_legacy_workload, publish_manifest, publish_provenance
 
 
@@ -56,9 +56,6 @@ class WorkloadExecutor:
         self.artifacts = WorkloadArtifacts(project_root, reproducibility)
         self.control_plane = build_extension_workload_control_plane_service(project_root=project_root)
 
-    def _compile_workload(self, workload: Any, input_config: dict[str, Any], interaction_context: Any | None):
-        return compile_workload(workload, input_config, interaction_context)
-
     async def run_legacy_workload(
         self,
         *,
@@ -70,14 +67,15 @@ class WorkloadExecutor:
         department: str,
         interaction_context: Any | None = None,
     ) -> ExtensionRunResult:
+        policy = capture_workload_policy()
         input_config, control_plane_workload_record = deepcopy(input_config), deepcopy(control_plane_workload_record)
         loaded_workload, run_plan = await prepare_legacy_workload(
-            self.loader, self.artifacts, extension, workload, input_config, interaction_context)
+            self.loader, self.artifacts, extension, workload, input_config, interaction_context, policy=policy)
 
         plan_hash = run_plan.plan_hash()
         artifact_root = self.artifacts.artifact_root(extension.extension_id, workload.workload_id, plan_hash, input_config)
         governed_identity = build_governed_identity(
-            artifacts=self.artifacts,
+            policy=policy,
             extension=extension,
             workload_id=workload.workload_id,
             workload_version=workload.workload_version,
@@ -119,7 +117,7 @@ class WorkloadExecutor:
             if not isinstance(summary, dict):
                 raise TypeError("summarize(run_artifacts) must return a dict")
             artifact_manifest, artifact_manifest_path, artifact_manifest_hash = await publish_manifest(
-                self.artifacts, artifact_root, plan_hash=plan_hash, governed_identity=governed_identity)
+                self.artifacts, artifact_root, plan_hash=plan_hash, governed_identity=governed_identity, policy=policy)
             closeout = await self.control_plane.finalize_execution(
                 run_id=control_plane_start.run.run_id,
                 outcome=ResultClass.SUCCESS,
@@ -134,7 +132,7 @@ class WorkloadExecutor:
                 closeout=closeout,
             )
             provenance_path, provenance_hash = await publish_provenance(partial(
-                self.artifacts.build_provenance,
+                self.artifacts.build_provenance, policy=policy,
                 extension=extension,
                 workload=loaded_workload,
                 manifest_entry=workload,
@@ -195,6 +193,7 @@ class WorkloadExecutor:
         department: str,
         interaction_context: Any | None = None,
     ) -> ExtensionRunResult:
+        policy = capture_workload_policy()
         input_config, control_plane_workload_record = deepcopy(input_config), deepcopy(control_plane_workload_record)
         agent_markers = agent_discriminator_reasons(
             {
@@ -214,7 +213,7 @@ class WorkloadExecutor:
         ).hexdigest()
         artifact_root = self.artifacts.artifact_root(extension.extension_id, workload.workload_id, input_digest, input_config)
         governed_identity = build_governed_identity(
-            artifacts=self.artifacts,
+            policy=policy,
             extension=extension,
             workload_id=workload.workload_id,
             workload_version=workload.workload_version,
@@ -296,7 +295,7 @@ class WorkloadExecutor:
                 call_records=list(capability_report.get("call_records") or []),
             )
             result = subprocess_result.workload_result
-            await run_owned_thread(partial(self.artifacts.validate_sdk_artifacts, result, artifact_root),
+            await run_owned_thread(partial(self.artifacts.validate_sdk_artifacts, result, artifact_root, policy=policy),
                                    label="sdk-artifact-validation")
             run_result = {
                 "status": "ok" if result.ok else "error",
@@ -350,7 +349,7 @@ class WorkloadExecutor:
         closeout = None
         try:
             artifact_manifest, artifact_manifest_path, artifact_manifest_hash = await publish_manifest(
-                self.artifacts, artifact_root, plan_hash=input_digest, governed_identity=governed_identity)
+                self.artifacts, artifact_root, plan_hash=input_digest, governed_identity=governed_identity, policy=policy)
             outcome = sdk_result_class(
                 subprocess_error=subprocess_error,
                 capability_report=capability_report,
@@ -386,7 +385,7 @@ class WorkloadExecutor:
                 closeout=closeout,
             )
             provenance_path, provenance_hash = await publish_provenance(partial(
-                self.artifacts.build_sdk_provenance,
+                self.artifacts.build_sdk_provenance, policy=policy,
                 extension=extension,
                 workload=workload,
                 input_config=runtime_input_config,

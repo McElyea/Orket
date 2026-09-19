@@ -8,7 +8,11 @@ Application retains SDK and legacy artifact/provenance workers through interrupt
 captures caller inputs before awaiting and preserves confirmed execution outcomes
 when later projection publication fails. Storage verifies each published JSON file;
 interaction lifecycle completion stays with the interaction owner. Contract and
-remaining policy/concurrency limits: `docs/architecture/CONTRACT_DELTA_WORKLOAD_PUBLICATION_D_2026-09-19.md`.
+publication/concurrency limits: `docs/architecture/CONTRACT_DELTA_WORKLOAD_PUBLICATION_D_2026-09-19.md`.
+Application also captures one immutable workload policy per invocation for
+admission, artifact limits, result identity and provenance redaction. Captured
+fields, Git observation ownership and remaining input scope:
+`docs/architecture/CONTRACT_DELTA_WORKLOAD_POLICY_D_2026-09-19.md`.
 
 SDK subprocesses now enter the shared native lifetime supervisor. Application
 retains private exchange workers through cancellation, adopts results only after

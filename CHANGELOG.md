@@ -5,6 +5,13 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.36] - 2026-09-19
+
+### Fixed
+- Capture one immutable SDK/legacy workload policy for admission, validation, result identity and provenance; environment rotation cannot change admitted limits or redaction.
+- Preserve independent policy snapshots for overlapping invocations on the same manager.
+- Refuse similarly prefixed material paths and retain native Git clean-state observation through interruption.
+
 ## [0.6.35] - 2026-09-19
 
 ### Fixed

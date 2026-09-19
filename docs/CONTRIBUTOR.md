@@ -190,6 +190,10 @@ interruption. Keep both controller regression modules in the Quality selection.
 
 Workload publication regressions exercise real SDK/legacy paths and the actual
 interaction manager, including native write refusals and retained cancellation.
+Policy proof also rotates environment between actual workload stages, checks
+independent database identities and overlaps runs on the same manager. Preserve
+size limits and real Git/material admission controls; see
+`docs/architecture/CONTRACT_DELTA_WORKLOAD_POLICY_D_2026-09-19.md`.
 Fake contexts alone cannot establish lifecycle authority. Keep publication/input
 ownership modules in both Quality selections; contract and proof limits live in
 `docs/architecture/CONTRACT_DELTA_WORKLOAD_PUBLICATION_D_2026-09-19.md`.

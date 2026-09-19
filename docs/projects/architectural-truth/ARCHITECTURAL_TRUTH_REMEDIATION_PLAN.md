@@ -12516,9 +12516,9 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
   Scoped installed-build/host acceptance now passes; this does not close the
   full plan or imply generic exactly-once effects or historical authenticity.
 
-Next action: capture consistent workload policy inputs and continue the full
-extension install/integrity async inventory after the verified 0.6.35 publication
-checkpoint, together with all numbered C/D requirements. The graph has zero forbidden
+Next action: repair extension manager installation/catalog/integrity ownership,
+including retained Windows/Linux preflight and reinstall failures, after the 0.6.36
+combined policy/graph-test checkpoint. Continue all numbered C/D requirements. The graph has zero forbidden
 static pairs, zero cross-layer cycles and six unresolved import/reflection diagnostics. Preserve every failed and
 passing source/native observation and the historical clock diagnosis. Canonical
 Ruff has 95 findings. The prior stale benchmark expectation passes in the
@@ -16825,3 +16825,121 @@ and the initial attempt are both retained. Report: `validation-effect-observatio
 (SHA-256 `23a4e7f84bc2e43285bf5d92f0e4c39cecbe556c51e1b2569608033c607a16e9`).
 `next-async-inventory.json` records four source-bound synchronous manager/CLI
 routes as structural debt, not live latency proof or a complete async inventory.
+
+
+### Captured workload policy checkpoint: 2026-09-19
+
+Candidate 0.6.36 captures an immutable policy before either executor first awaits.
+Admission, SDK validation, artifact limits, result/control-plane identity and
+provenance redaction use the same snapshot. Overlapping calls on one manager retain
+independent policy values. Legacy material containment uses resolved path membership;
+required clean-Git checks use the retained native command owner. Contract and
+internal signature migration: `docs/architecture/CONTRACT_DELTA_WORKLOAD_POLICY_D_2026-09-19.md`.
+
+The previous local checkpoint and all 834 directly bound evidence files were
+verified before editing, including unchanged neighboring checkouts and historical
+handoff. The original installed policy counterexample remains untouched. New
+source regressions reproduce both SDK and legacy policy disagreement (2 failures).
+The initial repair passes 60 cases. Expanded proof retains 109 passes and two
+new assertion errors: the independent database assertion requested `run_id` rather
+than the documented `control_plane_run_id` projection field. Correcting only that
+assertion and extending real-file size proof yields 24 focused passes. A reviewed
+follow-up normalizes the material root before containment. Final source/package
+and native observations are pending; the full goal remains active.
+
+
+#### Final captured-policy checkpoint proof and graph-test repair
+
+Observed path: primary. Full-goal result: partial success. The 0.6.36 broad source
+selection passed 1,749 cases without failures, errors or skips
+(797.312 seconds including runner overhead). Its original
+four native envelopes and subsequent graph-only repair are separate observations:
+
+| Installed cell | Original tests / failures / errors / skips | Original seconds | Graph follow-up tests / failures / errors / skips | Follow-up seconds |
+|---|---:|---:|---:|---:|
+| win-py311 | 1749 / 0 / 0 / 0 | 673.064 | 15 / 0 / 0 / 0 | 8.408 |
+| linux-py311 | 1749 / 1 / 0 / 0 | 512.06 | 15 / 0 / 0 / 0 | 6.563 |
+| win-py312 | 1749 / 0 / 0 / 0 | 786.504 | 15 / 0 / 0 / 0 | 10.26 |
+| linux-py312 | 1749 / 0 / 0 / 0 | 521.019 | 15 / 0 / 0 / 0 | 6.604 |
+
+Linux 3.11's original failure is retained, not converted into a green run. Its
+execution-graph test assumed node zero was ROOT. The retained authenticated API
+snapshot accepts ROOT and correctly rejects unfinished CHILD, but lists CHILD
+first. Independent observation of a copied database finds ROOT created at
+`2026-09-19T21:09:16.137936+00:00` and subsequently created CHILD at
+`2026-09-19T21:08:58.440105+00:00`: a 17.697831-second reversal. The native host
+journal query returned no matching clock records; its actor/cause is unestablished.
+The API's separate topological execution order remains ROOT then CHILD. Existing
+contract `CARD_COMPLETION_ACCEPTANCE_CONTRACT.md` makes ordering observational,
+not completion authority. Initial diagnosis queried a nonexistent `updated_at`
+column; that helper/copy is retained, and the corrected diagnosis uses observed
+schema fields. Original database/response hashes are unchanged.
+
+The test fixture now supplies explicit created timestamps, and both affected
+assertions identify cards by ID. Each test exercises root-first and child-first
+node orders. All 15 graph-module cases pass from source and the same four installed
+environments, with the same runtime wheels. This is a test-only repair; no graph
+runtime behavior or completion invariant was weakened. Progress-log tail checks
+missed the early failure marker; final disposition uses complete JUnit and retained
+reports, never progress dots. The original full-run failure stays visible.
+
+Combined proof covers 1,751 unique current identities per envelope: the original
+1,736 unaffected cases plus 15 current graph cases. It preserves every other prior
+identity, explicitly migrates two helper tests, and adds 24 policy/admission cases.
+This is not a fresh all-green full-cohort rerun. `combined-audit.json` binds both
+native reports, verifies the sole changed support file, unchanged wheels/runtime
+sources, exact source/current case sets, origins, copied inputs and retained bytes.
+Both envelopes' CLI/ToolGate flows and owned-process cleanup pass. Original full
+native runs observe 988 installed core origins each. All proof processes returned.
+
+The wheel built from its sdist matches 1,089 core Python files
+and 1,105 package files. The original harness binds 1,988
+support files without core/SDK source shadow; the graph repair changes one test
+module plus selection metadata. SDK 0.7.0a1 and reference/starter 0.3.0a1 are unchanged.
+
+Live policy proof includes trusted SDK/legacy execution, independent SQLite identity
+reads, overlapping runs, actual file-limit refusals and clean/dirty/non-repository
+Git observations. Controlled callbacks hold selected stages. Supplementary actual
+Git filesystem-monitor hooks show responsiveness of 0.031
+seconds on Windows and 0.020 on Linux against a
+predeclared 0.5-second bound; native job/subreaper cleanup is confirmed and no owned
+children remain. Supplemental file hashes also match after interpreter exit.
+
+Structural proof includes package parity, lint, size and workflow checks. The
+graph has 1,089 modules, 3,428 import sites, zero forbidden static pairs/cycles or
+unknown classifications, and six unresolved diagnostics. Canonical Ruff remains
+95; an unused import introduced by test extraction was removed before packaging.
+The oversized mixed test module and executor shrink. Initial growth refusal,
+the two pre-fix policy failures, two wrong projection-key assertions and every
+source/native result remain retained. No repository conformance claim is made.
+
+The next manager observations expose remaining debt. A timer-held actual integrity
+digest delays heartbeats 0.906 seconds on
+Windows and 0.813 on Linux beyond the
+0.5-second bound; these are controlled blocking-route proofs, not natural storage
+latency measurements. Windows reinstall partially deletes its prior clone before
+native Git-object deletion is refused. Git discovery in that damaged clone resolves
+the enclosing checkout. Linux replaces the valid clone before rejecting a malformed
+new manifest. Both leave unchanged catalogs pointing to records that fail integrity.
+The initial Windows probe did not catch OSError; its helper/folder and incomplete
+diagnosis remain retained. Separate complete probes record both actual failures
+and zero owned children. `next-async-inventory.json` binds nine reviewed caller
+routes, distinguishing existing worker ownership from remaining/conditional paths;
+it is not a complete async call graph.
+
+Evidence under `.tmp/d-workload-inputs/`:
+- `candidate/source-report.json`: `9bfb6af3bfbf1f3481f3753f40c6b4bed4b611dc239703f91893df1dd99d3b92`.
+- `candidate/manifest.json`: `90d1eecfc747ec26842eb1f58b617133bb3f69bc728307e9d00e4c94441b9d0f`.
+- `candidate/native-audit-original.json`: `0f3810a129e0792d233408d992bee913f4f3a5cbd03708256a9890f83db71320`.
+- `combined-audit.json`: `76b2047aedde2c43c487a7c74ff1ed4ed89e33242bde9bd7fce3f520dfefce9c`.
+- `graph-repair/manifest.json`, `graph-repair-source/report.json`,
+  `graph-order-diagnosis-complete/diagnosis.json` and `clock-observation.json`.
+- Windows/Linux Git cancellation and failed install `report.json` files,
+  `case-continuity.json`, `final-size-review.json`, `repaired-ruff-comparison.json`,
+  `review.json`, `post-proof-documents.json` and `CHANGESET.md`.
+
+Fresh full-suite/hosted CI, provider and capability acceptance, complete input
+immutability, hostile containment and cross-store transactions remain unverified.
+Manager install/catalog/integrity ownership and the full C/D/E/CAP obligations stay
+active. The historical clock diagnosis is preserved separately. Commits and the
+annotated tag remain local under the user's 10 AM-6 PM America/Denver restriction.

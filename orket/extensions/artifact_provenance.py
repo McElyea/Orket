@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 import re
 from pathlib import Path
 from posixpath import normpath
@@ -19,19 +18,13 @@ from .governed_identity import (
     validate_governed_identity,
 )
 from .models import CONTRACT_STYLE_SDK_V0, ExtensionRecord, _ExtensionManifestEntry
-from .reproducibility import ReproducibilityEnforcer
+from .workload_policy import WorkloadPolicy
 
 
 class ArtifactProvenanceBuilder:
     _ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
-    _ARTIFACT_FILE_SIZE_CAP_BYTES_ENV = "ORKET_EXT_ARTIFACT_FILE_SIZE_CAP_BYTES"
-    _ARTIFACT_TOTAL_SIZE_CAP_BYTES_ENV = "ORKET_EXT_ARTIFACT_TOTAL_SIZE_CAP_BYTES"
-    _ARTIFACT_FILE_SIZE_CAP_BYTES_DEFAULT = 32 * 1024 * 1024
-    _ARTIFACT_TOTAL_SIZE_CAP_BYTES_DEFAULT = 128 * 1024 * 1024
-
-    def __init__(self, project_root: Path, reproducibility: ReproducibilityEnforcer) -> None:
+    def __init__(self, project_root: Path) -> None:
         self.project_root = project_root
-        self.reproducibility = reproducibility
 
     def artifact_root(
         self,
@@ -57,10 +50,10 @@ class ArtifactProvenanceBuilder:
                     errors.append(msg)
         return errors
 
-    def validate_sdk_artifacts(self, result: WorkloadResult, artifact_root: Path) -> None:
+    def validate_sdk_artifacts(self, result: WorkloadResult, artifact_root: Path, *, policy: WorkloadPolicy) -> None:
         artifact_root_resolved = artifact_root.resolve()
-        max_file_bytes = self._artifact_file_size_cap_bytes()
-        max_total_bytes = self._artifact_total_size_cap_bytes()
+        max_file_bytes = policy.artifact_file_size_cap_bytes
+        max_total_bytes = policy.artifact_total_size_cap_bytes
         total_bytes = 0
         failures: list[dict[str, str]] = []
         artifacts = sorted(
@@ -116,6 +109,7 @@ class ArtifactProvenanceBuilder:
         self,
         *,
         extension: ExtensionRecord,
+        policy: WorkloadPolicy,
         workload: Workload,
         manifest_entry: _ExtensionManifestEntry,
         input_config: dict[str, Any],
@@ -132,7 +126,7 @@ class ArtifactProvenanceBuilder:
         input_digest = hashlib.sha256(
             json.dumps(input_config, sort_keys=True, separators=(",", ":")).encode("utf-8")
         ).hexdigest()
-        verbose = self._provenance_verbose_enabled()
+        verbose = policy.provenance_verbose_enabled
         governed_identity = build_extension_governed_identity(
             extension=extension,
             workload_id=workload.workload_id,
@@ -143,11 +137,7 @@ class ArtifactProvenanceBuilder:
             department=department,
             input_identity=plan_hash,
             operator_surface=EXTENSION_WORKLOAD_OPERATOR_SURFACE_PROVENANCE,
-            reliable_mode_enabled=self.reproducibility.reliable_mode_enabled(),
-            reliable_require_clean_git=self._reliable_require_clean_git_enabled(),
-            provenance_verbose_enabled=verbose,
-            artifact_file_size_cap_bytes=self._artifact_file_size_cap_bytes(),
-            artifact_total_size_cap_bytes=self._artifact_total_size_cap_bytes(),
+            **policy.identity_inputs(),
         )
         return {
             **build_base_provenance_payload(
@@ -155,7 +145,7 @@ class ArtifactProvenanceBuilder:
                 governed_identity=governed_identity,
                 artifact_manifest_hash=self._prefixed_manifest_hash(artifact_manifest),
                 artifact_root=str(artifact_root),
-                reliable_mode_enabled=self.reproducibility.reliable_mode_enabled(),
+                reliable_mode_enabled=policy.reliable_mode_enabled,
             ),
             "execution_state_authority": "control_plane_records" if control_plane_execution else "",
             "lane_output_execution_state_authoritative": False,
@@ -191,6 +181,7 @@ class ArtifactProvenanceBuilder:
         self,
         *,
         extension: ExtensionRecord,
+        policy: WorkloadPolicy,
         workload: _ExtensionManifestEntry,
         input_config: dict[str, Any],
         input_digest: str,
@@ -203,7 +194,7 @@ class ArtifactProvenanceBuilder:
         sdk_capability_report: dict[str, Any],
         control_plane_execution: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        verbose = self._provenance_verbose_enabled()
+        verbose = policy.provenance_verbose_enabled
         governed_identity = build_extension_governed_identity(
             extension=extension,
             workload_id=workload.workload_id,
@@ -214,11 +205,7 @@ class ArtifactProvenanceBuilder:
             department=department,
             input_identity=input_digest,
             operator_surface=EXTENSION_WORKLOAD_OPERATOR_SURFACE_PROVENANCE,
-            reliable_mode_enabled=self.reproducibility.reliable_mode_enabled(),
-            reliable_require_clean_git=self._reliable_require_clean_git_enabled(),
-            provenance_verbose_enabled=verbose,
-            artifact_file_size_cap_bytes=self._artifact_file_size_cap_bytes(),
-            artifact_total_size_cap_bytes=self._artifact_total_size_cap_bytes(),
+            **policy.identity_inputs(),
         )
         return {
             **build_base_provenance_payload(
@@ -226,7 +213,7 @@ class ArtifactProvenanceBuilder:
                 governed_identity=governed_identity,
                 artifact_manifest_hash=self._prefixed_manifest_hash(artifact_manifest),
                 artifact_root=str(artifact_root),
-                reliable_mode_enabled=self.reproducibility.reliable_mode_enabled(),
+                reliable_mode_enabled=policy.reliable_mode_enabled,
             ),
             "execution_state_authority": "control_plane_records" if control_plane_execution else "",
             "lane_output_execution_state_authoritative": False,
@@ -269,13 +256,14 @@ class ArtifactProvenanceBuilder:
         self,
         artifact_root: Path,
         *,
+        policy: WorkloadPolicy,
         plan_hash: str = "",
         governed_identity: dict[str, Any] | None = None,
         provenance_ref: str = "provenance.json",
     ) -> dict[str, Any]:
         artifact_root_resolved = artifact_root.resolve()
-        max_file_bytes = self._artifact_file_size_cap_bytes()
-        max_total_bytes = self._artifact_total_size_cap_bytes()
+        max_file_bytes = policy.artifact_file_size_cap_bytes
+        max_total_bytes = policy.artifact_total_size_cap_bytes
         total_bytes = 0
         files: list[dict[str, Any]] = []
         for path in sorted(artifact_root.rglob("*"), key=lambda entry: entry.as_posix()):
@@ -329,26 +317,6 @@ class ArtifactProvenanceBuilder:
     @staticmethod
     def _stream_sha256(path: Path) -> str:
         return hashlib.sha256(path.read_bytes()).hexdigest()
-
-    @classmethod
-    def _artifact_file_size_cap_bytes(cls) -> int:
-        raw = str(os.getenv(cls._ARTIFACT_FILE_SIZE_CAP_BYTES_ENV, "")).strip()
-        return max(1, int(raw)) if raw else cls._ARTIFACT_FILE_SIZE_CAP_BYTES_DEFAULT
-
-    @classmethod
-    def _artifact_total_size_cap_bytes(cls) -> int:
-        raw = str(os.getenv(cls._ARTIFACT_TOTAL_SIZE_CAP_BYTES_ENV, "")).strip()
-        return max(1, int(raw)) if raw else cls._ARTIFACT_TOTAL_SIZE_CAP_BYTES_DEFAULT
-
-    @staticmethod
-    def _reliable_require_clean_git_enabled() -> bool:
-        raw = str(os.getenv("ORKET_RELIABLE_REQUIRE_CLEAN_GIT", "")).strip().lower()
-        return raw in {"1", "true", "yes", "on"}
-
-    @staticmethod
-    def _provenance_verbose_enabled() -> bool:
-        raw = str(os.getenv("ORKET_EXT_PROVENANCE_VERBOSE", "")).strip().lower()
-        return raw in {"1", "true", "yes", "on"}
 
     @staticmethod
     def _redacted_snapshot(payload: dict[str, Any]) -> dict[str, Any]:

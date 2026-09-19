@@ -14,11 +14,13 @@ from .models import ExtensionRecord, _ExtensionManifestEntry
 from .workload_artifacts import WorkloadArtifacts
 from .workload_executor_support import compile_workload
 from .workload_loader import WorkloadLoader
+from .workload_policy import WorkloadPolicy
 
 
 async def prepare_legacy_workload(
     loader: WorkloadLoader, artifacts: WorkloadArtifacts, extension: ExtensionRecord,
     workload: _ExtensionManifestEntry, input_config: dict[str, Any], interaction_context: Any | None,
+    *, policy: WorkloadPolicy,
 ) -> tuple[Workload, RunPlan]:
     loaded = await run_owned_thread(partial(loader.load_legacy_workload, extension, workload.workload_id),
                                     label="legacy-extension-load")
@@ -28,19 +30,21 @@ async def prepare_legacy_workload(
         raise ValueError("RunPlan workload_id mismatch")
 
     def validate_materials() -> None:
-        if artifacts.reproducibility.reliable_mode_enabled():
+        if policy.reliable_mode_enabled:
             artifacts.reproducibility.validate_required_materials(loaded.required_materials())
-            artifacts.reproducibility.validate_clean_git_if_required()
 
     await run_owned_thread(validate_materials, label="legacy-workload-materials")
+    if policy.reliable_mode_enabled:
+        await artifacts.reproducibility.validate_clean_git_if_required(required=policy.reliable_require_clean_git)
     return loaded, plan
 
 
 async def publish_manifest(
     artifacts: WorkloadArtifacts, artifact_root: Path, *, plan_hash: str, governed_identity: dict[str, Any],
+    policy: WorkloadPolicy,
 ) -> tuple[dict[str, Any], Path, str]:
     manifest = await run_owned_thread(partial(artifacts.build_artifact_manifest, artifact_root,
-        plan_hash=plan_hash, governed_identity=governed_identity), label="workload-manifest-build")
+        plan_hash=plan_hash, governed_identity=governed_identity, policy=policy), label="workload-manifest-build")
     path = artifact_root / "artifact_manifest.json"
     await run_owned_thread(partial(write_json_file, path, manifest), label="workload-manifest-write")
     return manifest, path, f"sha256:{str(manifest.get('manifest_sha256') or '').strip()}"

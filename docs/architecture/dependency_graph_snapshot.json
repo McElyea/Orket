@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-19T19:56:04.657498+00:00",
+  "generated_at": "2026-09-19T20:51:33.151705+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -2617,7 +2617,7 @@
       },
       "orket.extensions.artifact_provenance": {
         "path": "orket/extensions/artifact_provenance.py",
-        "sha256": "2c2302a79ca67f17d97de0fa6b48951ed80a13382667235011bbe437b67bf8d2"
+        "sha256": "41b9cb5acaf95a6f29c6ba0cb5f448d54093e3473441d5a5665fabd301ebb79a"
       },
       "orket.extensions.catalog": {
         "path": "orket/extensions/catalog.py",
@@ -2669,7 +2669,7 @@
       },
       "orket.extensions.manager": {
         "path": "orket/extensions/manager.py",
-        "sha256": "0f113b974535ee81c8709ba8f047948d99fa6ddd72f0f5c6d8081483695890de"
+        "sha256": "46fbf82c42bbab1accbec0f7cf1498c35196d36b4ae48c001935e0df097487e0"
       },
       "orket.extensions.manifest_parser": {
         "path": "orket/extensions/manifest_parser.py",
@@ -2681,7 +2681,7 @@
       },
       "orket.extensions.reproducibility": {
         "path": "orket/extensions/reproducibility.py",
-        "sha256": "7b7712200653b6c87c73a5a406c830218ea0857f979c648949ee981aef8f107f"
+        "sha256": "a3487bf3c76e1af48106357f653d63d6812724f068b4ffaa1e893e3a3d646592"
       },
       "orket.extensions.runtime": {
         "path": "orket/extensions/runtime.py",
@@ -2705,23 +2705,27 @@
       },
       "orket.extensions.workload_artifacts": {
         "path": "orket/extensions/workload_artifacts.py",
-        "sha256": "741510edafdc12175095d1eece92dd81c756e00fd810c113ac3da7d00e9beb28"
+        "sha256": "947c9dd79e1760c8d52e8ed644747665f6ef12c5c83638f4a2a6f6c5f3c7f621"
       },
       "orket.extensions.workload_executor": {
         "path": "orket/extensions/workload_executor.py",
-        "sha256": "d81ec544c8765d587fec1cdcbb9469f826befa3fcebe7918f7c0275f5f5ac585"
+        "sha256": "ff693db0c5fcdde02b55628067aef48e8346e348e1f1cc6d53847734f0cce868"
       },
       "orket.extensions.workload_executor_support": {
         "path": "orket/extensions/workload_executor_support.py",
-        "sha256": "b9e0bc59c409f809bcc21ed589bf5878a33ae0a6163afebd156eee90d4493bb6"
+        "sha256": "45d8ebe892b77df4ffd72659c16fe4feb6b7f4a28dcd59fdbf60b3e55cb86aba"
       },
       "orket.extensions.workload_loader": {
         "path": "orket/extensions/workload_loader.py",
         "sha256": "04c57fa26de24ff103de6cfddb8156c62f9f377d94f7708bc106735f1f562fcc"
       },
+      "orket.extensions.workload_policy": {
+        "path": "orket/extensions/workload_policy.py",
+        "sha256": "66fef23c3839e362929fa73be66ee87e88dcde3da0f5ca008225077f483ec5b3"
+      },
       "orket.extensions.workload_publication": {
         "path": "orket/extensions/workload_publication.py",
-        "sha256": "49c83884d883b4572e3a906189b90391dbf180232a360760ef1996a080eda85c"
+        "sha256": "50b33477172993a131f8d7a9c89fac0ffbb71adcb02093cc885d7c2814481bb0"
       },
       "orket.hardware": {
         "path": "orket/hardware.py",
@@ -20469,28 +20473,28 @@
         "source": "orket.extensions.artifact_provenance",
         "target": "orket.extensions.contracts",
         "path": "orket/extensions/artifact_provenance.py",
-        "line": 13,
+        "line": 12,
         "kind": "from"
       },
       {
         "source": "orket.extensions.artifact_provenance",
         "target": "orket.extensions.governed_identity",
         "path": "orket/extensions/artifact_provenance.py",
-        "line": 14,
+        "line": 13,
         "kind": "from"
       },
       {
         "source": "orket.extensions.artifact_provenance",
         "target": "orket.extensions.models",
         "path": "orket/extensions/artifact_provenance.py",
-        "line": 21,
+        "line": 20,
         "kind": "from"
       },
       {
         "source": "orket.extensions.artifact_provenance",
-        "target": "orket.extensions.reproducibility",
+        "target": "orket.extensions.workload_policy",
         "path": "orket/extensions/artifact_provenance.py",
-        "line": 22,
+        "line": 21,
         "kind": "from"
       },
       {
@@ -20719,9 +20723,9 @@
       },
       {
         "source": "orket.extensions.reproducibility",
-        "target": "orket.extensions.models",
+        "target": "orket.application.services.command_process_supervisor",
         "path": "orket/extensions/reproducibility.py",
-        "line": 8,
+        "line": 6,
         "kind": "from"
       },
       {
@@ -20949,6 +20953,13 @@
         "kind": "from"
       },
       {
+        "source": "orket.extensions.workload_artifacts",
+        "target": "orket.extensions.workload_policy",
+        "path": "orket/extensions/workload_artifacts.py",
+        "line": 22,
+        "kind": "from"
+      },
+      {
         "source": "orket.extensions.workload_executor",
         "target": "orket.adapters.execution.owned_io",
         "path": "orket/extensions/workload_executor.py",
@@ -21029,6 +21040,13 @@
         "source": "orket.extensions.workload_executor",
         "target": "orket.extensions.workload_loader",
         "path": "orket/extensions/workload_executor.py",
+        "line": 40,
+        "kind": "from"
+      },
+      {
+        "source": "orket.extensions.workload_executor",
+        "target": "orket.extensions.workload_policy",
+        "path": "orket/extensions/workload_executor.py",
         "line": 41,
         "kind": "from"
       },
@@ -21076,37 +21094,30 @@
       },
       {
         "source": "orket.extensions.workload_executor_support",
-        "target": "orket.extensions.governed_identity",
-        "path": "orket/extensions/workload_executor_support.py",
-        "line": 23,
-        "kind": "from"
-      },
-      {
-        "source": "orket.extensions.workload_executor_support",
         "target": "orket.extensions.models",
         "path": "orket/extensions/workload_executor_support.py",
-        "line": 26,
+        "line": 22,
         "kind": "from"
       },
       {
         "source": "orket.extensions.workload_executor_support",
         "target": "orket.extensions.runtime",
         "path": "orket/extensions/workload_executor_support.py",
-        "line": 27,
+        "line": 23,
         "kind": "from"
       },
       {
         "source": "orket.extensions.workload_executor_support",
         "target": "orket.extensions.sdk_workload_runner",
         "path": "orket/extensions/workload_executor_support.py",
-        "line": 28,
+        "line": 24,
         "kind": "from"
       },
       {
         "source": "orket.extensions.workload_executor_support",
-        "target": "orket.extensions.workload_artifacts",
+        "target": "orket.extensions.workload_policy",
         "path": "orket/extensions/workload_executor_support.py",
-        "line": 29,
+        "line": 25,
         "kind": "from"
       },
       {
@@ -21128,6 +21139,13 @@
         "target": "orket.extensions.models",
         "path": "orket/extensions/workload_loader.py",
         "line": 16,
+        "kind": "from"
+      },
+      {
+        "source": "orket.extensions.workload_policy",
+        "target": "orket.extensions.models",
+        "path": "orket/extensions/workload_policy.py",
+        "line": 7,
         "kind": "from"
       },
       {
@@ -21177,6 +21195,13 @@
         "target": "orket.extensions.workload_loader",
         "path": "orket/extensions/workload_publication.py",
         "line": 16,
+        "kind": "from"
+      },
+      {
+        "source": "orket.extensions.workload_publication",
+        "target": "orket.extensions.workload_policy",
+        "path": "orket/extensions/workload_publication.py",
+        "line": 17,
         "kind": "from"
       },
       {
@@ -28485,7 +28510,7 @@
         "code": "importer_escape"
       }
     ],
-    "files_scanned": 1088,
+    "files_scanned": 1089,
     "scan_roots": [
       "orket"
     ],
@@ -29140,6 +29165,7 @@
       "orket.extensions.workload_executor": "application",
       "orket.extensions.workload_executor_support": "application",
       "orket.extensions.workload_loader": "application",
+      "orket.extensions.workload_policy": "application",
       "orket.extensions.workload_publication": "application",
       "orket.hardware": "adapters",
       "orket.interfaces.api": "interfaces",
@@ -29600,7 +29626,7 @@
       {
         "source": "application",
         "target": "application",
-        "count": 1649
+        "count": 1652
       },
       {
         "source": "application",
@@ -29683,66 +29709,6 @@
     }
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-18T22:36:05.304786Z",
-      "changed": true,
-      "before_digest": "sha256:a26d579ee24ec2a9c9740a0da764a40864100556cbf5a1527fffa26783547098",
-      "after_digest": "sha256:711d31a864411c745e10d2119ce85a1dee5ef89747951346432e33ebb4b2de88",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 2,
-        "initial_write": false,
-        "paths_total_previous": 44093,
-        "paths_total_current": 44093,
-        "paths_total_reference": 44093,
-        "churn_paths": 2,
-        "churn_ratio": 4.5e-05,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.modules.orket.application.services.user_settings_service.sha256"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-19T00:09:59.725656Z",
-      "changed": true,
-      "before_digest": "sha256:711d31a864411c745e10d2119ce85a1dee5ef89747951346432e33ebb4b2de88",
-      "after_digest": "sha256:0634d1eb33110dae44f5243119821ad52d34b7f9ec40c69e5d07ecc5b58d2c94",
-      "diff": {
-        "added_paths": 5,
-        "removed_paths": 1,
-        "changed_paths": 8645,
-        "initial_write": false,
-        "paths_total_previous": 44093,
-        "paths_total_current": 44120,
-        "paths_total_reference": 44120,
-        "churn_paths": 8651,
-        "churn_ratio": 0.196079,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.edges[432].line",
-          "$.observed.edges[432].path",
-          "$.observed.edges[432].source",
-          "$.observed.edges[433].line",
-          "$.observed.edges[433].path",
-          "$.observed.edges[433].source",
-          "$.observed.edges[433].target",
-          "$.observed.edges[434].line",
-          "$.observed.edges[434].path",
-          "$.observed.edges[434].source",
-          "$.observed.edges[434].target",
-          "$.observed.edges[435].line",
-          "$.observed.edges[435].target",
-          "$.observed.edges[436].line",
-          "$.observed.edges[436].target",
-          "$.observed.edges[437].line",
-          "$.observed.edges[437].target",
-          "$.observed.edges[438].line",
-          "$.observed.edges[438].path"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-19T01:54:31.331568Z",
       "changed": true,
@@ -30611,6 +30577,65 @@
         "sample_paths": [
           "$.generated_at",
           "$.observed.modules.orket.extensions.workload_publication.sha256"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-19T20:49:48.474539Z",
+      "changed": true,
+      "before_digest": "sha256:a7873d64580af3d8308ee9efe4ec7490c23fe7f5b2a429b2b89ad86dad690b98",
+      "after_digest": "sha256:351a8f94ee222d453ca6c35915f89a8aacd3a7e31043c049e248702e43f6f4dd",
+      "diff": {
+        "added_paths": 5,
+        "removed_paths": 0,
+        "changed_paths": 3416,
+        "initial_write": false,
+        "paths_total_previous": 45669,
+        "paths_total_current": 45709,
+        "paths_total_reference": 45709,
+        "churn_paths": 3421,
+        "churn_ratio": 0.074843,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.edges[2284].line",
+          "$.observed.edges[2285].line",
+          "$.observed.edges[2286].line",
+          "$.observed.edges[2287].line",
+          "$.observed.edges[2287].target",
+          "$.observed.edges[2320].line",
+          "$.observed.edges[2320].target",
+          "$.observed.edges[2353].line",
+          "$.observed.edges[2353].path",
+          "$.observed.edges[2353].source",
+          "$.observed.edges[2353].target",
+          "$.observed.edges[2354].line",
+          "$.observed.edges[2354].target",
+          "$.observed.edges[2355].line",
+          "$.observed.edges[2355].target",
+          "$.observed.edges[2356].line",
+          "$.observed.edges[2356].target",
+          "$.observed.edges[2357].line",
+          "$.observed.edges[2357].target"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-19T20:51:39.408118Z",
+      "changed": true,
+      "before_digest": "sha256:351a8f94ee222d453ca6c35915f89a8aacd3a7e31043c049e248702e43f6f4dd",
+      "after_digest": "sha256:9f55a1baa4b2d33cb0d50a37846d87cd81c04367f8572a96cf2abe498a1a9894",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 45709,
+        "paths_total_current": 45709,
+        "paths_total_reference": 45709,
+        "churn_paths": 1,
+        "churn_ratio": 2.2e-05,
+        "sample_paths": [
+          "$.generated_at"
         ]
       }
     }

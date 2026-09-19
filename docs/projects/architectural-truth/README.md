@@ -9,18 +9,19 @@ Current gate: scoped BT-1 through BT-5 are accepted. C/D dependency enforcement,
 core purity, explicit inputs and async safety are next, followed by E1/E2 and the
 gated capability obligations. The whole lane remains active.
 
-The local 0.6.35 checkpoint owns SDK/legacy artifact and provenance workers,
-verifies JSON publication, captures caller inputs and preserves confirmed execution
-outcomes on later projection failure. Real interaction completion belongs to its
-application owner. Source and four fresh Windows/Linux Python 3.11/3.12 installations
-pass 1,725 identical cases. The prior final-event test is explicitly
-replaced by the corrected owner contract; all other prior identities are retained.
-Contract: `docs/architecture/CONTRACT_DELTA_WORKLOAD_PUBLICATION_D_2026-09-19.md`.
-Earlier SDK native-lifetime and packaged-schema guarantees remain covered.
-Six dependency diagnostics, Ruff 95, ambient policy inputs, broader async inventory
-and later C/D/E/CAP obligations remain open. Failed proof and precise limits stay
-in the canonical plan. GitHub publication remains deferred; commits and annotated
-tags stay local during work hours.
+The local 0.6.36 checkpoint captures one immutable SDK/legacy policy for
+admission, artifact limits, result/control-plane identity and provenance. Overlapping
+runs retain separate snapshots; required Git checks use native process ownership.
+The 1,749-case source and three native runs pass. Linux 3.11 retains one graph test
+failure caused by assuming node order implied card identity; the retained response
+correctly accepts ROOT. Explicit timestamps and ID-based assertions pass all 15
+graph cases on source and all four installations using unchanged runtime wheels.
+Combined proof covers 1,751 current identities; it is not a fresh all-green broad
+rerun. Contract: `docs/architecture/CONTRACT_DELTA_WORKLOAD_POLICY_D_2026-09-19.md`.
+Six dependency diagnostics, Ruff 95, other inputs/clocks and C/D/E/CAP remain open.
+Native manager probes expose blocking preflight and Windows/Linux reinstalls that
+leave unchanged catalogs pointing to unusable installations. Exact failures and
+proof limits remain in the plan. Commits and tags stay local during work hours.
 
 C's v2 allowed-edge implementation replaces the transition denylist. The checker,
 exporter and baseline share one Git-visible import inventory; repository violations

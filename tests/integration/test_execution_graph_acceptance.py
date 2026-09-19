@@ -19,7 +19,7 @@ from tests.helpers.card_completion import complete_existing_card
 pytestmark = pytest.mark.integration
 
 
-async def graph_runtime(root, case):
+async def graph_runtime(root, case, *, root_first=True):
     db = root / "cards.db"
     if case == "legacy_done":
         async with aiosqlite.connect(db) as conn:
@@ -38,7 +38,8 @@ async def graph_runtime(root, case):
     if case not in {"legacy_done", "missing"}:
         await engine.cards.save({"id":"ROOT", "summary":"Prerequisite", "seat":"developer",
                                  "build_id":"foreign" if case == "foreign_build" else "build",
-                                 "session_id":"OUTSIDE" if case == "outside_view" else "GRAPH"})
+                                 "session_id":"OUTSIDE" if case == "outside_view" else "GRAPH",
+                                 "created_at":"2026-01-02T00:00:00+00:00"})
         service = engine.runtime_context.card_completion
         await complete_existing_card(engine.cards, "ROOT", service.workspace_root, service=service,
                                      target_status=CardStatus.GUARD_APPROVED if case == "guard_approved" else CardStatus.DONE)
@@ -47,7 +48,8 @@ async def graph_runtime(root, case):
         if case == "missing_evidence":
             await asyncio.to_thread(service.acceptance.evidence_store.db_path.unlink)
     await engine.cards.save({"id":"CHILD", "summary":"Dependent", "seat":"developer", "build_id":"build",
-                             "session_id":"GRAPH", "depends_on":["ROOT"]})
+                             "session_id":"GRAPH", "depends_on":["ROOT"],
+                             "created_at":"2026-01-03T00:00:00+00:00" if root_first else "2026-01-01T00:00:00+00:00"})
     return app, engine
 
 
@@ -81,16 +83,19 @@ async def test_graph_dependency_labels_require_current_retained_acceptance(tmp_p
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("root_first", [True, False], ids=["root-first", "child-first"])
 # Layer: integration
-async def test_graph_rechecks_evidence_on_each_read_and_persists_observed_projection(tmp_path, monkeypatch):
+async def test_graph_rechecks_evidence_on_each_read_and_persists_observed_projection(tmp_path, monkeypatch, root_first):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    app, engine = await graph_runtime(tmp_path, "done")
+    app, engine = await graph_runtime(tmp_path, "done", root_first=root_first)
     try:
         async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test",
                                      headers={"X-API-Key": "test-key"}) as client:
             first = await client.get("/v1/runs/GRAPH/execution-graph")
             assert first.status_code == 200
-            assert first.json()["nodes"][0]["completion_accepted"] is True
+            first_nodes = {node["id"]: node for node in first.json()["nodes"]}
+            assert first_nodes["ROOT"]["completion_accepted"] is True
+            assert first_nodes["CHILD"]["completion_accepted"] is False
             evidence = engine.runtime_context.card_completion.acceptance.evidence_store.db_path
             await asyncio.to_thread(evidence.unlink)
             second = await client.get("/v1/runs/GRAPH/execution-graph")
@@ -148,10 +153,11 @@ async def test_graph_terminal_lifecycle_does_not_hide_rejected_dependencies(tmp_
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("root_first", [True, False], ids=["root-first", "child-first"])
 # Layer: integration
-async def test_graph_handoffs_remain_observations_and_snapshot_failure_is_logged(tmp_path, monkeypatch, caplog):
+async def test_graph_handoffs_remain_observations_and_snapshot_failure_is_logged(tmp_path, monkeypatch, caplog, root_first):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    app, _ = await graph_runtime(tmp_path, "done")
+    app, _ = await graph_runtime(tmp_path, "done", root_first=root_first)
     try:
         run_path = tmp_path / "workspace" / "runs" / "GRAPH"
         await asyncio.to_thread((run_path / "agent_output").mkdir, parents=True)
@@ -169,7 +175,7 @@ async def test_graph_handoffs_remain_observations_and_snapshot_failure_is_logged
         assert graph["has_cycle"] is False
         assert graph["edge_count"] == 3
         assert [edge["kind"] for edge in graph["edges_detailed"]] == ["depends_on", "handoff", "handoff"]
-        assert graph["nodes"][1]["completion_accepted"] is False
+        assert {node["id"]: node for node in graph["nodes"]}["CHILD"]["completion_accepted"] is False
         assert "Execution graph snapshot persistence failed for session GRAPH" in caplog.text
     finally:
         await app.state.api_runtime_context.close()

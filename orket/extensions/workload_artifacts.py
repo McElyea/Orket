@@ -19,6 +19,7 @@ from .artifact_provenance import ArtifactProvenanceBuilder
 from .contracts import Workload
 from .reproducibility import ReproducibilityEnforcer
 from .sdk_capability_authorization import FIRST_SLICE_CAPABILITIES, HOST_BOUND_CAPABILITIES
+from .workload_policy import WorkloadPolicy
 
 
 class WorkloadArtifacts:
@@ -26,7 +27,7 @@ class WorkloadArtifacts:
 
     def __init__(self, project_root: Path, reproducibility: ReproducibilityEnforcer) -> None:
         self.reproducibility = reproducibility
-        self._artifacts = ArtifactProvenanceBuilder(project_root, reproducibility)
+        self._artifacts = ArtifactProvenanceBuilder(project_root)
 
     @staticmethod
     def build_sdk_capability_registry(
@@ -204,8 +205,8 @@ class WorkloadArtifacts:
             registry.register("speech.play_clip", NullAudioPlayer())
         return registry
 
-    def validate_sdk_artifacts(self, result: Any, artifact_root: Path) -> None:
-        self._artifacts.validate_sdk_artifacts(result, artifact_root)
+    def validate_sdk_artifacts(self, result: Any, artifact_root: Path, *, policy: WorkloadPolicy) -> None:
+        self._artifacts.validate_sdk_artifacts(result, artifact_root, policy=policy)
 
     def artifact_root(self, extension_id: str, workload_id: str, plan_hash: str, input_config: dict[str, Any]) -> Path:
         return self._artifacts.artifact_root(extension_id, workload_id, plan_hash, input_config)
@@ -226,18 +227,6 @@ class WorkloadArtifacts:
     @staticmethod
     def _redacted_snapshot(payload: dict[str, Any]) -> dict[str, Any]:
         return ArtifactProvenanceBuilder._redacted_snapshot(payload)
-
-    def artifact_file_size_cap_bytes(self) -> int:
-        return self._artifacts._artifact_file_size_cap_bytes()
-
-    def artifact_total_size_cap_bytes(self) -> int:
-        return self._artifacts._artifact_total_size_cap_bytes()
-
-    def reliable_require_clean_git_enabled(self) -> bool:
-        return self._artifacts._reliable_require_clean_git_enabled()
-
-    def provenance_verbose_enabled(self) -> bool:
-        return self._artifacts._provenance_verbose_enabled()
 
     @staticmethod
     def _resolve_bool_setting(value: Any) -> bool:

@@ -11,8 +11,9 @@ interaction completion. Status: active; scoped source and installed proof is rec
 Application retains admitted artifact workers through caller cancellation and
 timeout. This covers root preparation, SDK artifact validation, manifest building
 and writing, provenance building and writing, and final file digest observation.
-Legacy registration, compilation, reliable-mode checks, validators and summary
-callbacks also execute in owned workers. Loading, compilation and material
+Legacy registration, compilation, material checks, validators and summary
+callbacks also execute in owned workers. From 0.6.36, the clean-Git check uses
+the native command supervisor described in `CONTRACT_DELTA_WORKLOAD_POLICY_D_2026-09-19.md`. Loading, compilation and material
 validation retain separate cancellation boundaries; an interrupted stage cannot
 admit the next stage. The event loop remains available while
 these synchronous operations run. Cancellation is propagated after the worker
@@ -28,8 +29,9 @@ nor new concurrency fencing for runs that select the same artifact directory.
 
 Both executor entrypoints copy nested caller configuration and workload admission
 records before their first await. Later caller mutation cannot change their
-provenance. This does not freeze all ambient policy: reliable-mode, verbosity and
-artifact-size environment reads still require the remaining explicit-input work.
+provenance. From 0.6.36, reliable-mode, verbosity and artifact-size policy also
+use one invocation snapshot; scope and migration are in
+`CONTRACT_DELTA_WORKLOAD_POLICY_D_2026-09-19.md`. Other ambient inputs remain open.
 Trusted legacy callback code can also retain its own mutable objects.
 
 Cancellation before confirmed closeout preserves the existing unresolved execution

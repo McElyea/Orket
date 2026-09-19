@@ -1,12 +1,12 @@
 # Dependency Graph Snapshot
 
-Generated: `2026-09-19T19:56:04.657498+00:00`
+Generated: `2026-09-19T20:51:33.151705+00:00`
 
 Generated from the canonical dependency policy; do not edit this view by hand.
 This is conservative static import evidence, not a runtime call graph or a core-purity proof.
 
 Collection: `True`. Policy verdict: `False`.
-Files: 1088; import sites: 3425; forbidden pairs: 0; analysis errors: 6; authority cycles: 0.
+Files: 1089; import sites: 3428; forbidden pairs: 0; analysis errors: 6; authority cycles: 0.
 
 ## Module classification
 
@@ -90,7 +90,7 @@ Side-effect-free adapter targets: none declared
 | `adapters` | `adapters` | 233 |
 | `adapters` | `core` | 139 |
 | `application` | `adapters` | 382 |
-| `application` | `application` | 1649 |
+| `application` | `application` | 1652 |
 | `application` | `core` | 739 |
 | `application` | `decision_nodes` | 5 |
 | `core` | `core` | 140 |
