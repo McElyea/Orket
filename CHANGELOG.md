@@ -5,6 +5,20 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.34] - 2026-09-19 - "Owned SDK process lifetime"
+
+### Fixed
+- Retain SDK subprocesses and descendants through cancellation using the existing native command supervisor.
+- Own request/result exchange workers through interruption; preserve exchange data and unresolved control-plane state when execution cannot be established.
+- Preserve ordinary SDK cancellation so controller deadlines return their existing failure summary on Python 3.11 and 3.12 after native cleanup.
+- Package the canonical controller observability schema and honor each explicit schema selection; own schema readers through interruption and capture nested validation inputs.
+- Require complete native cleanup/capture and consistent child results before adoption; apply the existing 900-second child default and native capture bound.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Migration and limits: `docs/architecture/CONTRACT_DELTA_SDK_PROCESS_LIFETIME_D_2026-09-19.md`.
+- Stability: scoped C/D candidate; broader recovery, hostile-code containment and whole-lane acceptance remain open.
+
 ## [0.6.33] - 2026-09-19 - "Selected extension module origins"
 
 ### Fixed

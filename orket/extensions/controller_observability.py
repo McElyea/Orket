@@ -2,13 +2,16 @@ from __future__ import annotations
 
 import json
 from collections.abc import Mapping, Sequence
+from copy import deepcopy
+from functools import partial
 from pathlib import Path
 from typing import Any, Protocol
 
-import aiofiles
 from jsonschema import Draft202012Validator
 from jsonschema.exceptions import ValidationError as JsonSchemaValidationError
 
+from orket.adapters.execution.owned_io import run_owned_thread
+from orket.adapters.storage.controller_schema_store import read_controller_schema
 from orket_extension_sdk.controller import ControllerRunSummary, canonical_json
 
 CONTROLLER_OBSERVABILITY_PROJECTION_SOURCE = "controller_runtime_facts"
@@ -26,7 +29,6 @@ _CONTROLLER_RUN_FIELDS = (
     "result",
     "error_code",
 )
-_DEFAULT_SCHEMA_PATH = Path(__file__).resolve().parents[2] / "schemas" / "controller_observability_v1.json"
 _CONTROLLER_CHILD_FIELDS = (
     "event",
     "projection_source",
@@ -41,7 +43,6 @@ _CONTROLLER_CHILD_FIELDS = (
     "error_code",
 )
 _CAPS_FIELDS = ("max_depth", "max_fanout", "child_timeout_seconds")
-_SCHEMA_CACHE: dict[str, Any] | None = None
 
 
 class ObservabilityBatchSink(Protocol):
@@ -117,9 +118,10 @@ async def validate_observability_schema(
     *,
     schema_path: Path | None = None,
 ) -> None:
-    schema = await _load_schema(schema_path=schema_path)
+    captured_events = deepcopy(list(events))
+    schema = await run_owned_thread(partial(read_controller_schema, schema_path), label="controller-schema-read")
     validator = Draft202012Validator(schema)
-    for index, event in enumerate(events):
+    for index, event in enumerate(captured_events):
         try:
             validator.validate(dict(event))
         except JsonSchemaValidationError as exc:
@@ -226,15 +228,6 @@ def _child_observability_status(child_status: str) -> str:
     if child_status == "not_attempted":
         return "not_attempted"
     raise ValueError("controller.observability_event_invalid")
-
-
-async def _load_schema(*, schema_path: Path | None = None) -> dict[str, Any]:
-    global _SCHEMA_CACHE
-    if _SCHEMA_CACHE is None:
-        target_path = schema_path or _DEFAULT_SCHEMA_PATH
-        async with aiofiles.open(target_path, encoding="utf-8") as handle:
-            _SCHEMA_CACHE = json.loads(await handle.read())
-    return _SCHEMA_CACHE
 
 
 __all__ = [

@@ -1,7 +1,7 @@
 # Architectural Truth Remediation Plan
 
 Date: 2026-07-29
-Last updated: 2026-09-18
+Last updated: 2026-09-19
 Status: Active implementation plan; scoped BT-1 through BT-5 accepted; C/D is the next ordered gate
 Roadmap state: Priority Now
 Owner: Orket Core
@@ -12516,9 +12516,9 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
   Scoped installed-build/host acceptance now passes; this does not close the
   full plan or imply generic exactly-once effects or historical authenticity.
 
-Next action: repair the observed SDK cancellation/child-lifetime failure after
-the verified 0.6.33 extension-origin/publication checkpoint, and continue all
-numbered C/D requirements. The graph has zero forbidden
+Next action: repair the installed SDK artifact-publication worker that outlives
+caller cancellation, after the verified 0.6.34 native-lifetime checkpoint, and
+continue all numbered C/D requirements. The graph has zero forbidden
 static pairs, zero cross-layer cycles and six unresolved import/reflection diagnostics. Preserve every failed and
 passing source/native observation and the historical clock diagnosis. Canonical
 Ruff has 95 findings. The prior stale benchmark expectation passes in the
@@ -16502,3 +16502,192 @@ Exact evidence under `.tmp/c-extension-loading/`:
 Local commit and annotated tag follow final review and source/index binding.
 No GitHub push is performed. Full-suite/hosted acceptance, remaining C/D/E/CAP,
 release readiness and explicit whole-lane user acceptance remain open.
+
+
+### SDK process lifetime checkpoint: 2026-09-19
+
+Observed path: primary for trusted execution and interruption; degraded for
+missing SDK observations. Result: partial success for the full goal. Candidate
+0.6.34 implements `docs/specs/SDK_WORKLOAD_PROCESS_LIFETIME.md` and its same-date
+contract delta. Application reuses the native command supervisor, owns exchange
+workers and preserves nonterminal control-plane state on unknown execution.
+The default shares the existing 900-second child deadline; captured stdout/stderr
+uses the existing native limit. No raw-child fallback or dependency waiver is added.
+
+The retained pre-fix descendant regression fails because cancellation returned
+with living children. Its fixture then stops only independently identified owned
+processes. The first repair passes 12 actual lifetime cases across ordinary and
+detached/termination-resistant descendants, including leader success/error, native
+timeout, caller timeout and repeated cancellation. Initial control-plane tests
+retain four harness failures: three expected `executing` instead of the actual
+`attempt_executing` enum, and one expected a returned result instead of the existing
+post-closeout SDK error exception. Corrected expectations retain every final-truth,
+effect, checkpoint and native-cleanup assertion; the 25-case control-plane/exchange/
+protocol gate passes. The subsequent focused 47-case gate includes capability
+regressions and both workflow assertions. Diagnostic ownership was then tightened
+and its 13-case contract control passes. Synthetic native observations remain
+contract proof, separate from actual SDK/native/filesystem/SQLite execution.
+
+The refreshed graph has 1,085 modules, 3,412 import sites, zero forbidden static
+pairs/cycles/unknown classifications and six unresolved import/reflection sites.
+Canonical Ruff remains 95; two introduced findings were corrected with both
+observations preserved. Collection success does not mean dependency acceptance.
+The new files/functions/classes fit size limits. The existing oversized executor
+grows by two necessary lines so uncertainty bypasses generic false finalization;
+its broader decomposition and remaining artifact/provenance workers remain D/E2.
+
+Evidence root: `.tmp/d-sdk-lifetime/`, including `descendant-counterexample/`,
+`native-owned/`, `control-plane-owned/`, `exchange-and-control-plane/`,
+`focused-final/`, `diagnostic-owned/`, `collection/` and the separate canonical
+Ruff observations. Prior 0.6.33 evidence and the historical handoff are unchanged.
+Fresh package parity, the preserved source cohort and four native installed cells
+are pending. No full-suite, hosted CI, new provider or hostile-code containment
+acceptance is claimed. All remaining numbered C/D/E/CAP requirements and whole-lane
+acceptance remain active. Git commits and tags remain local during work hours.
+
+
+#### SDK controller deadline compatibility repair
+
+The initial 0.6.34 candidate passes its 1,675-case source selection and the same
+selection in all four installed cells, but an additional actual installed
+controller probe finds a newly introduced Python 3.12 regression: the child is
+stopped, yet the controller propagates `CommandProcessCancelled` instead of
+returning its existing failed-child summary. Python 3.11 returns the expected
+summary. Both probes observe zero remaining children. The cause is Python 3.12's
+exact-type timeout conversion; no execution deadline or native cleanup policy
+needs to change. The initial broad selection accepted either exception in its
+direct caller-timeout test and did not execute a real controller deadline.
+Passing those cases did not establish compatibility.
+
+The stricter direct-timeout regression and composed controller regression both
+fail on the initial source under Python 3.12. Confirmed SDK cancellation now raises
+ordinary `asyncio.CancelledError`, retaining the native lifetime as cause/event.
+The controller returns its existing failed-child summary after cleanup while
+the actual child control-plane run remains nonterminal and resume-forbidden.
+All 39 new SDK process/exchange/observation cases pass under source Python 3.12
+after repair; no failure assertion or execution deadline was weakened. The
+existing controller dispatcher suite is also added to both Quality jobs and the
+renewed gate. A separate source/archive/wheel/four-cell candidate is required
+before local checkpoint acceptance.
+
+Preserved observations: `controller-timeout-observation/report.json`,
+`controller-deadline-counterexample/report.json`,
+`controller-deadline-repaired-py312/report.json`, and the original `candidate/`
+source/native artifacts. The final gate uses `candidate-repaired/` and private
+`a34r-` cells; original package bytes and reports are not overwritten. Remaining
+SDK artifact-publication ownership and all later plan obligations stay open.
+
+
+#### Installed controller schema and per-call selection repair
+
+The renewed `candidate-repaired/` source selection passes 1,679 cases, but all
+four installed cells fail the actual controller integration because
+`controller_observability` reads an unpackaged repository-relative schema.
+The candidate is unadmitted. Its native inputs and evidence remain unchanged:
+
+| Installed cell | Passed / failed / errors / skips | Pytest seconds |
+|---|---:|---:|
+| a34r-win-py311 | 1,678 / 1 / 0 / 0 | 698.304 |
+| a34r-linux-py311 | 1,678 / 1 / 0 / 0 | 445.813 |
+| a34r-win-py312 | 1,678 / 1 / 0 / 0 | 855.194 |
+| a34r-linux-py312 | 1,678 / 1 / 0 / 0 | 461.976 |
+
+All four launchers returned and their observed process identities are gone.
+Native integrity checks pass apart from successful-case acceptance. An initial
+diagnostic assertion did not normalize escaped Windows path separators; its
+original helper is retained as `schema-audit-parser-first.py`, and a corrected
+parser verified the same unchanged reports. No product assertion was weakened.
+
+An independent installed `schema-selection-counterexample/` also proves that
+the process-wide cache ignores a later explicit rejecting schema. The canonical
+schema is now moved to package data at
+`orket/runtime/config/assets/contracts/controller_observability_v1.json` without
+changing its schema identifier or validation rules. A read-only storage adapter
+loads each selected schema; application owns its worker and captures nested event
+inputs before awaiting. Active schema docs and both Quality jobs change together.
+Migration: `docs/architecture/CONTRACT_DELTA_CONTROLLER_SCHEMA_CD_2026-09-19.md`.
+
+The focused source regression passes 51 cases with no failures, errors or skips,
+including actual nested controllers, explicit schema replacement, held real
+readers, repeated cancellation, strict caller timeout and nested input mutation.
+The new gate uses `candidate-packaged/` and `a34p-` native roots. Full source and
+four installed acceptance are pending; earlier failures are retained. Remaining
+SDK artifact publication, all numbered C/D/E/CAP requirements and explicit
+whole-lane acceptance remain open. Local commits and tags remain unpushed.
+
+Evidence under `.tmp/d-sdk-lifetime/`:
+- `candidate-repaired/native-audit-failed.json`: `9a0374483733e123bf4d8411f169ae33df82706f457fed2433208e6c7b8e94e0`.
+- `schema-selection-counterexample/report.json`: `bb97ead7a4a8353e41e20e21faaf5ece98c5678ff013d09b6107022cb6756e08`.
+- `schema-repaired-focus/report.json`: `dff956a93d36071648877df3e00197c7bdb776456886d97303cace0358e2203f`.
+- `terminal-recovery.json` binds completion of the failed four-cell candidate.
+
+
+#### Final SDK process lifetime checkpoint proof
+
+Observed path: primary for trusted native execution/interruption; degraded for
+explicit uncertainty. Result: partial success for the full architectural-truth
+goal. The scoped 0.6.34 source selection passes 1,688 unique cases with
+no failures, errors or skips (669.907 seconds including
+runner overhead). All 1,629 prior identities remain; 59
+are added. Four fresh installed cells pass those same identities:
+
+| Installed cell | Tests / failures / errors / skips | Core origins | Pytest seconds |
+|---|---:|---:|---:|
+| a34p-win-py311 | 1688 / 0 / 0 / 0 | 985 | 707.783 |
+| a34p-linux-py311 | 1688 / 0 / 0 / 0 | 985 | 472.643 |
+| a34p-win-py312 | 1688 / 0 / 0 / 0 | 985 | 872.579 |
+| a34p-linux-py312 | 1688 / 0 / 0 / 0 | 985 | 485.219 |
+
+The wheel built from its source archive matches 1,086 core
+Python files and 1,102 package files. The harness binds
+1,980 support files without core/SDK source shadow.
+Core is 0.6.34; SDK 0.7.0a1 and reference/starter 0.3.0a1 remain unchanged.
+Actual installed origins, dependencies, copied inputs, CLI/ToolGate controls and
+owned-process cleanup pass. All acceptance launchers returned and were reaped.
+Product test deadlines and existing source/native/launcher budgets were retained.
+
+Live proof covers actual trusted SDK children and descendants, normal/error exits,
+native and caller timeout, repeated cancellation, real file workers and independent
+control-plane reads. Synthetic native/protocol controls are contract proof.
+Import graph, package parity, lint, sizes and workflow assertions are structural.
+Ruff remains 95 with no additions; the graph still has six unresolved diagnostics.
+Installed nested controllers and the package-owned schema, per-call schema
+selection, replacement and owned validation readers also pass. No new provider,
+hostile-code containment, fresh full-suite or hosted CI proof is
+claimed. Remaining C/D/E/CAP and explicit whole-lane acceptance stay open.
+
+The pre-fix child leak, initial control-plane harness failures and lint findings
+remain retained. The first candidate's 1,675-case source/four-cell passes remain
+unadmitted because a real Python 3.12 controller deadline failed its return
+contract. Both strict pre-fix regressions and the installed controller observations
+remain retained. The corrected gate preserves ordinary cancellation, its native
+cause/event and the controller's failed-child summary without inventing terminal
+child truth. Existing dispatcher regressions are included in both Quality jobs. A Windows-default text decoding mistake temporarily changed
+historical plan punctuation; `encoding-repair.json` proves its exact restoration
+before this source gate. The unchanged runtime archive excludes that plan file.
+The later 1,679-case candidate fails the controller integration in all four
+installed cells because the schema was not packaged; its reports remain in
+`candidate-repaired/native-audit-failed.json`. The independent installed cache
+counterexample also remains retained. The final package owns that schema and
+reads each explicit selection without shared cache contamination.
+Post-proof documentation edits report observed results without changing tested
+runtime, test, dependency, policy or workflow inputs; exact hashes and diffs are
+recorded in `post-proof-documents.json`.
+
+The independent installed `next-publication-observation-repaired/` probe demonstrates a
+remaining D defect: `WorkloadExecutor` can return cancellation while its artifact
+manifest file worker remains held, then write that file after caller return.
+The diagnostic releases/drains the actual writer and observes zero remaining
+children. This is publication-worker debt, separate from repaired native process
+ownership. It is the next concrete repair, followed by all numbered obligations.
+
+Evidence under `.tmp/d-sdk-lifetime/`:
+- `candidate-packaged/source-report.json`: `420ee34ad32ca976157db2a6ff4a5b7a49d167f3c36a5e0df68d184ffd7e3995`.
+- `candidate-packaged/manifest.json`: `8625417105869f475249b4c13ffd1b8559113f7f721750eaaf3f92a8efe62e6d`.
+- `candidate-packaged/native-audit.json`: `d53d0cf26ec3f531ebb331bee304c4ba5f52d9fb20233cb6bd0690469abfbe36`.
+- `next-publication-observation-repaired/report.json`: `7779b56b11351d7e5e7d90dd9c0a929d8c4175b8c1e2869b0bbe5f919116bee4`.
+- `case-continuity.json`, `packaged-prebuild-review.json`, `packaged-size-review.json`,
+  `packaged-ruff-comparison.json`, `collection-packaged/collection.json` and `CHANGESET.md`.
+
+The exact 32 changed paths are in `CHANGESET.md`. Local commit/tag follow
+final review and source/index binding. No GitHub push is performed during work hours.

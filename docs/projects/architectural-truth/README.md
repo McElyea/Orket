@@ -9,16 +9,16 @@ Current gate: scoped BT-1 through BT-5 are accepted. C/D dependency enforcement,
 core purity, explicit inputs and async safety are next, followed by E1/E2 and the
 gated capability obligations. The whole lane remains active.
 
-The local 0.6.33 checkpoint verifies selected extension entrypoints and parents,
-owns registration/source-validation workers, and retains bootstrap publication
-through interruption with bounded native Windows retry. Source and four fresh
-Windows/Linux Python 3.11/3.12 installations pass 1,629 identical cases.
-The initial failed source gate, native holds, corrected harnesses and exact
-remaining limits stay in the canonical plan. Six dependency diagnostics and the
-observed SDK child-cancellation leak remain open, alongside all later C/D/E/CAP
-obligations. Contracts:
-`docs/architecture/CONTRACT_DELTA_EXTENSION_ORIGINS_CD_2026-09-19.md` and
-`docs/architecture/CONTRACT_DELTA_RUN_START_PUBLICATION_D_2026-09-19.md`.
+The local 0.6.34 checkpoint owns SDK children/descendants and private exchange
+workers through interruption, and preserves unresolved control-plane state on
+missing or uncertain child results. It also packages the controller schema and
+honors each schema selection through owned readers. Source and four fresh Windows/Linux Python
+3.11/3.12 installations pass 1,688 identical cases, preserving all
+1,629 prior cases. Contract: `docs/specs/SDK_WORKLOAD_PROCESS_LIFETIME.md`.
+Failed observations and precise proof ceilings remain in the canonical plan.
+The next installed counterexample shows artifact-manifest publication continuing
+after cancellation; its writer was released/drained and no children remained.
+Six dependency diagnostics, Ruff 95 and later C/D/E/CAP obligations remain open.
 GitHub publication remains deferred; commits and annotated tags stay local.
 
 C's v2 allowed-edge implementation replaces the transition denylist. The checker,

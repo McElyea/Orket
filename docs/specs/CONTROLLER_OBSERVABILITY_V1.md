@@ -1,6 +1,6 @@
 ﻿# CONTROLLER_OBSERVABILITY_V1
 
-Last updated: 2026-04-23
+Last updated: 2026-09-19
 Status: Active
 Owner: Orket Core
 
@@ -11,7 +11,7 @@ Phase authority:
 `docs/projects/archive/controller-workload/CW03082026-Phase2D/04-REQUIREMENTS-Phase-2D.md`
 
 Machine-readable schema:
-`schemas/controller_observability_v1.json`
+`orket/runtime/config/assets/contracts/controller_observability_v1.json`
 
 ## 1. Purpose
 
@@ -544,14 +544,14 @@ Execute controller workloads and verify:
 ## 14. Schema Authority Artifact
 
 A machine-checkable schema companion artifact is required:
-`schemas/controller_observability_v1.json`
+`orket/runtime/config/assets/contracts/controller_observability_v1.json`
 
 Authority model:
 
 | Artifact | Authority |
 |---|---|
 | `docs/specs/CONTROLLER_OBSERVABILITY_V1.md` | semantic contract |
-| `schemas/controller_observability_v1.json` | structural validation |
+| `orket/runtime/config/assets/contracts/controller_observability_v1.json` | structural validation |
 
 The schema artifact must exist and must encode, at minimum:
 1. `declared_fanout` as integer or null
@@ -563,6 +563,15 @@ The schema artifact must exist and must encode, at minimum:
 7. required fields and field types for both event kinds
 
 Contract tests must validate observability payloads against the schema artifact.
+
+The default is package-owned and ships in the source archive and wheel. The
+schema identifier `schemas/controller_observability_v1.json` remains stable; it
+is not a filesystem lookup contract. Explicit schema paths are read per call,
+without a process-wide cache. Nested event values are captured before an owned
+read worker starts. Explicit relative paths retain process-working-directory
+semantics; callers requiring a bound root supply absolute paths. Cancellation retains that worker
+until settlement. This does not freeze files against external writers. Migration:
+`docs/architecture/CONTRACT_DELTA_CONTROLLER_SCHEMA_CD_2026-09-19.md`.
 
 ## 15. Non-Goals
 
@@ -595,7 +604,7 @@ docs/specs/
     CONTROLLER_WORKLOAD_V1.md
     CONTROLLER_OBSERVABILITY_V1.md
 
-schemas/
+orket/runtime/config/assets/contracts/
     controller_observability_v1.json
 
 docs/projects/archive/controller-workload/

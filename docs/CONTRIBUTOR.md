@@ -179,6 +179,15 @@ module names or separate Python processes. A cached module from another root is
 an admission error, not a fixture to reuse. Source-origin and load-worker limits
 live in `docs/architecture/CONTRACT_DELTA_EXTENSION_ORIGINS_CD_2026-09-19.md`.
 
+SDK lifetime regressions use actual trusted workload children and independent
+process/filesystem observations, including returning leaders with descendants.
+Keep synthetic native-observation controls labeled contract proof. Uncertain
+execution must retain its control-plane state and private exchange; see
+`docs/specs/SDK_WORKLOAD_PROCESS_LIFETIME.md`.
+Controller proof also exercises installed nested workloads and the packaged
+schema, explicit schema replacement, captured validation inputs and read-worker
+interruption. Keep both controller regression modules in the Quality selection.
+
 ### Local provider development and testing
 
 1. Develop local provider support in this priority order: **llama.cpp**, **LM Studio**, then **Ollama**. Their runtime selection tokens are `llama_cpp`, `lmstudio`, and `ollama`.

@@ -336,6 +336,16 @@ receipts do not fill in an unobserved return or failure.
    - This is a diagnostic observation, not a successful speech result or a durable
      workload recovery receipt. Contract: `docs/specs/PIPER_RUNTIME_CONTRACT.md`.
 
+4. SDK process ownership emits `sdk_workload_process_cancelled` and
+`sdk_workload_process_observed` with the `owned_command.v1` fields above.
+These report native lifetime before SDK result adoption; they do not establish
+workload success, absent side effects or permission to replay an unresolved run.
+Contract: `docs/specs/SDK_WORKLOAD_PROCESS_LIFETIME.md`.
+`sdk_workload_process_uncertain` carries `phase`, nullable `exchange_path` and
+nullable `process_lifetime` with that schema. It reports retained uncertainty;
+diagnostic publication failure remains attached to the typed exception and cannot
+authorize final truth. Request bytes and child output are absent from the event.
+
 ## Guard Lifecycle
 1. `guard_approved`
    - `run_id`, `issue_id`, `seat`, `review_payload`

@@ -19,7 +19,7 @@ from .contracts import ExtensionRegistry
 from .models import ExtensionRecord, ExtensionRunResult, _ExtensionManifestEntry
 from .reproducibility import ReproducibilityEnforcer
 from .sdk_capability_authorization import build_host_authorization_envelope, split_host_capability_controls
-from .sdk_workload_runner import SdkSubprocessRunError, run_sdk_workload_in_subprocess
+from .sdk_workload_runner import SdkSubprocessExecutionUncertain, SdkSubprocessRunError, run_sdk_workload_in_subprocess
 from .workload_artifacts import WorkloadArtifacts
 from .workload_executor_support import (
     begin_control_plane_execution,
@@ -345,6 +345,8 @@ class WorkloadExecutor:
                 "metrics": {},
             }
             summary = {"ok": False, "status": "error", "output": {}, "issue_count": 1, "artifact_count": 0}
+        except SdkSubprocessExecutionUncertain:
+            raise  # Keep the existing nonterminal run and resume-forbidden checkpoint.
         except Exception as exc:
             await finalize_started_failure(
                 control_plane=self.control_plane,

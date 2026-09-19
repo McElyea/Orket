@@ -4,6 +4,17 @@ Last updated: 2026-09-19
 
 This file is the current canonical authority snapshot for high-impact runtime and governance paths.
 
+SDK subprocesses now enter the shared native lifetime supervisor. Application
+retains private exchange workers through cancellation, adopts results only after
+confirmed native cleanup and preserves unresolved control-plane records on missing
+or uncertain child observations. Direct calls use the existing 900-second child
+default with an explicit finite host override. Contract and remaining limits:
+`docs/specs/SDK_WORKLOAD_PROCESS_LIFETIME.md`. Scoped source and installed proof
+is recorded in the canonical plan; hostile containment and recovery are not expanded.
+Controller schema authority is packaged under `orket/runtime/config/assets/contracts/`;
+each validation owns its selected read and captures nested event inputs. Migration:
+`docs/architecture/CONTRACT_DELTA_CONTROLLER_SCHEMA_CD_2026-09-19.md`.
+
 Epic bootstrap retains its filesystem worker through interruption. Initial artifact
 publication retries native Windows access/sharing refusals within a two-second
 budget, verifies directory identity and preserves incomplete staging on exhaustion.
