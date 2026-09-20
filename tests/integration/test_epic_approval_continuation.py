@@ -62,7 +62,7 @@ async def approval_engine(root, monkeypatch, *, setup=False, custom_db=False):
         OrchestrationEngine, workspace, department="core",
         db_path=str(root / "custom/cards.db" if custom_db else root / ".orket/durable/db/orket_persistence.db"), config_root=root)
     monkeypatch.setattr(engine._pipeline.orchestrator.loop_policy_node, "approval_required_tools_for_seat",
-                        lambda seat_name, **_: ["write_file"] if seat_name == "lead_architect" else [])
+                        lambda inputs: ["write_file"] if inputs.seat_name == "lead_architect" else [])
     try:
         yield engine
     finally:

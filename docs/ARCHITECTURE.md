@@ -589,6 +589,11 @@ The application interprets returned recommendations and retains dependency/dispa
 authority. Contract, custom-node migration and limits:
 `docs/specs/DISPATCH_DECISION_INPUTS.md`.
 
+Loop-policy admission additionally supplies captured backlog, per-seat path facts,
+role tuples and guard-review values through application `loop_decision_service`.
+It validates recommendations without retrying strategy failures with another
+signature. A terminal-loop recommendation is not accepted build completion.
+
 ## 10. Deterministic Runtime Boundary
 
 Deterministic execution includes all runtime logic outside decision nodes and external integrations:

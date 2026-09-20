@@ -1,10 +1,10 @@
 # Dispatch decision input ownership
 
-Status: Active contract for the 0.6.47 candidate
+Status: Active contract for the 0.6.48 candidate
 Owner: Orket Core
 Last updated: 2026-09-20
 
-Application dispatch captures immutable values before invoking either strategy.
+Application dispatch captures immutable values before invoking each covered strategy.
 `PlanningInput`, `PlanningCardInput`, `RoutingInput` and `RoutingSeatInput` are
 authoritative in `orket/core/contracts/decision_inputs.py`. They contain frozen
 models, scalar facts and immutable sequences; construction copies input lists.
@@ -56,6 +56,37 @@ report. It does not erase that report or claim there were no preceding effects.
 The changed boundary does not freeze all caller-owned application objects or
 rewrite the durable transcript; it prevents borrowed evaluator inputs from
 mutating them. Custom-node migration is explicit, with no signature fallback.
+
+Loop policies receive tuples of `PlanningCardInput` for backlog checks. The
+application captures each dispatch snapshot before subsequent team-replan and
+dependency-propagation awaits, and captures the final exhaustion observation after
+its repository read. The selected main-loop node is retained before the first
+settings await. A terminal recommendation remains separate from accepted build
+completion; the application ignores a proposed completion event name.
+
+Per-seat policy methods accept one `SeatPolicyInput` from
+`orket/core/contracts/decision_inputs.py`. It contains seat name, captured card
+facts, turn status and resolved required-read/write path tuples. Arbitrary issue
+parameters and turn-contract dictionaries remain application-owned. The context
+builder captures this value once before calling its policy methods; existing
+application turn-contract overrides remain authoritative. Guard validators receive
+`GuardReviewInput` with rationale, violation and remediation tuples. The pure
+default validation has one definition shared with the absent-method default.
+
+Custom seat methods return lists or tuples of plain string names, and gate-mode
+methods return a plain string. No-candidate and guard recommendations require
+strict boolean fields and reject undeclared keys; exhaustion returns a boolean.
+The application copies lists and validates/copies mappings. Missing optional
+methods retain their existing defaults, but an entered strategy failure propagates
+once: no `TypeError` signature retry remains for seat or guard methods.
+
+Role selection takes a role tuple captured before turn-transition awaits. Its
+returned names are validated and copied before loading roles. A later refusal may
+follow an already-performed card transition; it does not imply that all preceding
+effects were rolled back. These are per-boundary observations, not an atomic
+snapshot of the complete application. No new retry-budget or completion policy
+is established. Custom-loop migration is explicit in
+`docs/architecture/CONTRACT_DELTA_LOOP_INPUTS_D_2026-09-20.md`.
 
 These are trusted in-process strategy contracts, not hostile Python containment.
 They do not prevent a plugin from using an independently acquired global reference

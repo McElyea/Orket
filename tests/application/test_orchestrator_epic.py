@@ -2157,7 +2157,6 @@ async def test_execute_epic_uses_custom_tool_strategy_node(tmp_path, monkeypatch
 
     assert tool_strategy_hit["used"] is True
 
-
 def test_build_turn_context_includes_stage_gate_mode(orchestrator):
     orch, _cards, _loader = orchestrator
     issue = IssueConfig(id="I1", seat="integrity_guard", summary="Guard Review")
@@ -2176,24 +2175,25 @@ def test_build_turn_context_includes_stage_gate_mode(orchestrator):
     assert callable(context["create_pending_gate_request"])
 
 
+@pytest.mark.unit
 def test_build_turn_context_promotes_gate_mode_when_approval_tools_present(orchestrator):
     orch, _cards, _loader = orchestrator
     issue = IssueConfig(id="I1", seat="coder", summary="Code Work")
 
     class _LoopPolicy:
-        def required_action_tools_for_seat(self, seat_name, issue=None, turn_status=None):
+        def required_action_tools_for_seat(self, inputs):
             return ["write_file", "update_issue_status"]
 
-        def required_statuses_for_seat(self, seat_name, issue=None, turn_status=None):
+        def required_statuses_for_seat(self, inputs):
             return ["code_review"]
 
-        def gate_mode_for_seat(self, seat_name, issue=None, turn_status=None):
+        def gate_mode_for_seat(self, inputs):
             return "auto"
 
-        def approval_required_tools_for_seat(self, seat_name, issue=None, turn_status=None):
+        def approval_required_tools_for_seat(self, inputs):
             return ["write_file"]
 
-        def required_read_paths_for_seat(self, seat_name, issue=None, turn_status=None):
+        def required_read_paths_for_seat(self, inputs):
             return []
 
     orch.loop_policy_node = _LoopPolicy()
@@ -2209,7 +2209,6 @@ def test_build_turn_context_promotes_gate_mode_when_approval_tools_present(orche
 
     assert context["approval_required_tools"] == ["write_file"]
     assert context["stage_gate_mode"] == "approval_required"
-
 
 def test_build_turn_context_includes_required_read_paths_for_reviewer(orchestrator):
     orch, _cards, _loader = orchestrator
@@ -2230,7 +2229,6 @@ def test_build_turn_context_includes_required_read_paths_for_reviewer(orchestrat
     ]
     assert context["required_write_paths"] == []
 
-
 def test_build_turn_context_includes_required_write_paths_for_coder(orchestrator):
     orch, _cards, _loader = orchestrator
     issue = IssueConfig(id="COD-1", seat="coder", summary="Implement")
@@ -2244,7 +2242,6 @@ def test_build_turn_context_includes_required_write_paths_for_coder(orchestrator
         resume_mode=False,
     )
     assert context["required_write_paths"] == ["agent_output/main.py"]
-
 
 def test_build_turn_context_non_final_guard_requires_done_status(orchestrator):
     orch, _cards, _loader = orchestrator
@@ -3098,6 +3095,7 @@ async def test_team_replan_limit_exceeded_raises_terminal_failure(orchestrator):
     assert cards.update_status.calls[-1][0][1] == CardStatus.BLOCKED
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_build_turn_context_pending_gate_callback_creates_tool_approval_request(orchestrator):
     orch, _cards, _loader = orchestrator
@@ -3112,16 +3110,16 @@ async def test_build_turn_context_pending_gate_callback_creates_tool_approval_re
             return "REQ-TOOL-42"
 
     class _LoopPolicy:
-        def required_action_tools_for_seat(self, seat_name, issue=None, turn_status=None):
+        def required_action_tools_for_seat(self, inputs):
             return ["write_file", "update_issue_status"]
 
-        def required_statuses_for_seat(self, seat_name, issue=None, turn_status=None):
+        def required_statuses_for_seat(self, inputs):
             return ["code_review"]
 
-        def gate_mode_for_seat(self, seat_name, issue=None, turn_status=None):
+        def gate_mode_for_seat(self, inputs):
             return "auto"
 
-        def approval_required_tools_for_seat(self, seat_name, issue=None, turn_status=None):
+        def approval_required_tools_for_seat(self, inputs):
             return ["write_file"]
 
     orch.pending_gates = _PendingRepo()
@@ -3162,6 +3160,7 @@ async def test_build_turn_context_pending_gate_callback_creates_tool_approval_re
     assert reservation.holder_ref == "turn-tool-run:run-1:I1:coder:0001"
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_build_turn_context_pending_gate_callback_creates_create_issue_tool_approval_request(orchestrator):
     """Layer: unit."""
@@ -3177,16 +3176,16 @@ async def test_build_turn_context_pending_gate_callback_creates_create_issue_too
             return "REQ-TOOL-43"
 
     class _LoopPolicy:
-        def required_action_tools_for_seat(self, seat_name, issue=None, turn_status=None):
+        def required_action_tools_for_seat(self, inputs):
             return ["create_issue", "update_issue_status"]
 
-        def required_statuses_for_seat(self, seat_name, issue=None, turn_status=None):
+        def required_statuses_for_seat(self, inputs):
             return ["code_review"]
 
-        def gate_mode_for_seat(self, seat_name, issue=None, turn_status=None):
+        def gate_mode_for_seat(self, inputs):
             return "auto"
 
-        def approval_required_tools_for_seat(self, seat_name, issue=None, turn_status=None):
+        def approval_required_tools_for_seat(self, inputs):
             return ["create_issue"]
 
     orch.pending_gates = _PendingRepo()
@@ -3226,26 +3225,27 @@ async def test_build_turn_context_pending_gate_callback_creates_create_issue_too
     assert reservation.status is ReservationStatus.ACTIVE
     assert reservation.holder_ref == "turn-tool-run:run-1:I1:coder:0001"
 
-
+@pytest.mark.unit
 def test_validate_guard_rejection_payload_default_logic(orchestrator):
     orch, _cards, _loader = orchestrator
 
     invalid = orch._validate_guard_rejection_payload(
-        SimpleNamespace(rationale="", remediation_actions=["Do something"])
+        SimpleNamespace(rationale="", violations=[], remediation_actions=["Do something"])
     )
     assert invalid == {"valid": False, "reason": "missing_rationale"}
 
     invalid_actions = orch._validate_guard_rejection_payload(
-        SimpleNamespace(rationale="Needs remediation.", remediation_actions=[])
+        SimpleNamespace(rationale="Needs remediation.", violations=[], remediation_actions=[])
     )
     assert invalid_actions == {"valid": False, "reason": "missing_remediation_actions"}
 
     valid = orch._validate_guard_rejection_payload(
-        SimpleNamespace(rationale="Needs remediation.", remediation_actions=["Fix issue"])
+        SimpleNamespace(rationale="Needs remediation.", violations=[], remediation_actions=["Fix issue"])
     )
     assert valid == {"valid": True, "reason": None}
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_create_pending_gate_request_uses_policy_gate_mode(orchestrator):
     orch, _cards, _loader = orchestrator
@@ -3259,8 +3259,8 @@ async def test_create_pending_gate_request_uses_policy_gate_mode(orchestrator):
             return "REQ-1234"
 
     class _LoopPolicy:
-        def gate_mode_for_seat(self, seat_name, issue=None, turn_status=None):
-            return "review_required" if seat_name == "integrity_guard" else "auto"
+        def gate_mode_for_seat(self, inputs):
+            return "review_required" if inputs.seat_name == "integrity_guard" else "auto"
 
     orch.pending_gates = _PendingRepo()
     orch.loop_policy_node = _LoopPolicy()

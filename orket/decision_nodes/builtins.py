@@ -4,20 +4,17 @@ import re
 from collections.abc import Mapping
 from typing import Any
 
-from orket.core.cards_runtime_contract import (
-    required_read_paths_for_seat as resolve_cards_required_read_paths,
-)
-from orket.core.cards_runtime_contract import (
-    required_write_paths_for_seat as resolve_cards_required_write_paths,
-)
 from orket.core.contracts.decision_inputs import (
     FailureEvaluationInput,
+    GuardReviewInput,
     LoopPolicyInputs,
     PlanningCardInput,
     PlanningInput,
     RoutingInput,
+    SeatPolicyInput,
     SuccessEvaluationInput,
     ToolSelectionInput,
+    validate_guard_review_input,
 )
 from orket.core.contracts.model_selection import ModelSelectionInput, model_dialect
 from orket.decision_nodes.api_runtime_strategy_node import (
@@ -552,15 +549,15 @@ class DefaultOrchestrationLoopPolicyNode:
     def turn_status_for_issue(self, is_review_turn: bool) -> Any:
         return CardStatus.CODE_REVIEW if is_review_turn else CardStatus.IN_PROGRESS
 
-    def role_order_for_turn(self, roles: list[str], is_review_turn: bool) -> list[str]:
+    def role_order_for_turn(self, roles: tuple[str, ...], is_review_turn: bool) -> list[str]:
         ordered_roles = list(roles)
         if is_review_turn and "integrity_guard" not in ordered_roles:
             ordered_roles.insert(0, "integrity_guard")
         return ordered_roles
 
-    def required_action_tools_for_seat(self, seat_name: str, **_kwargs: Any) -> list[str]:
-        seat = (seat_name or "").strip().lower()
-        issue = _kwargs.get("issue")
+    def required_action_tools_for_seat(self, inputs: SeatPolicyInput) -> list[str]:
+        seat = (inputs.seat_name or "").strip().lower()
+        issue = inputs.issue
         issue_seat = str(getattr(issue, "seat", "") or "").strip().lower()
         seat_requirements = {
             # Governed required tools must stay aligned with the shipped role surface.
@@ -575,14 +572,14 @@ class DefaultOrchestrationLoopPolicyNode:
         }
         resolved = list(seat_requirements.get(seat, []))
         if seat == "integrity_guard":
-            review_paths = resolve_cards_required_read_paths(seat_name=seat_name, issue=issue)
+            review_paths = list(inputs.required_read_paths)
             if review_paths or issue_seat in {"code_reviewer", "reviewer"}:
                 return ["read_file", "update_issue_status"]
         return resolved
 
-    def required_statuses_for_seat(self, seat_name: str, **_kwargs: Any) -> list[str]:
-        seat = (seat_name or "").strip().lower()
-        issue = _kwargs.get("issue")
+    def required_statuses_for_seat(self, inputs: SeatPolicyInput) -> list[str]:
+        seat = (inputs.seat_name or "").strip().lower()
+        issue = inputs.issue
         issue_seat = str(getattr(issue, "seat", "") or "").strip().lower()
         status_requirements = {
             "requirements_analyst": ["code_review"],
@@ -599,46 +596,30 @@ class DefaultOrchestrationLoopPolicyNode:
             return ["done"]
         return status_requirements.get(seat, [])
 
-    def required_read_paths_for_seat(self, seat_name: str, **_kwargs: Any) -> list[str]:
-        issue = _kwargs.get("issue")
-        return resolve_cards_required_read_paths(seat_name=seat_name, issue=issue)
+    def required_read_paths_for_seat(self, inputs: SeatPolicyInput) -> list[str]:
+        return list(inputs.required_read_paths)
 
-    def required_write_paths_for_seat(self, seat_name: str, **_kwargs: Any) -> list[str]:
-        issue = _kwargs.get("issue")
-        return resolve_cards_required_write_paths(seat_name=seat_name, issue=issue)
+    def required_write_paths_for_seat(self, inputs: SeatPolicyInput) -> list[str]:
+        return list(inputs.required_write_paths)
 
-    def gate_mode_for_seat(self, seat_name: str, **_kwargs: Any) -> str:
-        seat = (seat_name or "").strip().lower()
+    def gate_mode_for_seat(self, inputs: SeatPolicyInput) -> str:
+        seat = (inputs.seat_name or "").strip().lower()
         if seat == "integrity_guard":
             return "review_required"
         return "auto"
 
-    def approval_required_tools_for_seat(self, seat_name: str, **_kwargs: Any) -> list[str]:
+    def approval_required_tools_for_seat(self, inputs: SeatPolicyInput) -> list[str]:
         # Default OFF to preserve current behavior. Enable per seat via custom loop policy node.
-        _ = (seat_name or "").strip().lower()
+        _ = (inputs.seat_name or "").strip().lower()
         return []
 
-    def validate_guard_rejection_payload(self, payload: Any) -> dict[str, Any]:
-        rationale = str(getattr(payload, "rationale", "") or "").strip()
-        actions = getattr(payload, "remediation_actions", []) or []
-        normalized_actions = [str(item).strip() for item in actions if str(item).strip()]
-
-        if not rationale:
-            return {
-                "valid": False,
-                "reason": "missing_rationale",
-            }
-        if not normalized_actions:
-            return {
-                "valid": False,
-                "reason": "missing_remediation_actions",
-            }
-        return {"valid": True, "reason": None}
+    def validate_guard_rejection_payload(self, inputs: GuardReviewInput) -> dict[str, object]:
+        return validate_guard_review_input(inputs)
 
     def missing_seat_status(self) -> Any:
         return CardStatus.CANCELED
 
-    def is_backlog_done(self, backlog: list[Any]) -> bool:
+    def is_backlog_done(self, backlog: tuple[PlanningCardInput, ...]) -> bool:
         terminal_statuses = {
             CardStatus.DONE,
             CardStatus.CANCELED,
@@ -649,7 +630,7 @@ class DefaultOrchestrationLoopPolicyNode:
         }
         return all(i.status in terminal_statuses for i in backlog)
 
-    def no_candidate_outcome(self, backlog: list[Any]) -> dict[str, Any]:
+    def no_candidate_outcome(self, backlog: tuple[PlanningCardInput, ...]) -> dict[str, Any]:
         is_done = self.is_backlog_done(backlog)
         return {
             "is_done": is_done,
@@ -660,6 +641,6 @@ class DefaultOrchestrationLoopPolicyNode:
         self,
         iteration_count: int,
         max_iterations: int,
-        backlog: list[Any],
+        backlog: tuple[PlanningCardInput, ...],
     ) -> bool:
         return iteration_count >= max_iterations and not self.is_backlog_done(backlog)

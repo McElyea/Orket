@@ -9,6 +9,7 @@ from orket.application.services.card_dependency_service import (
     build_card_dependency_context,
     read_card_dispatch_snapshot,
 )
+from orket.application.services.decision_context_service import capture_backlog_inputs
 from orket.application.services.dependency_manager import (
     DependencyManager,
     DependencyValidationError,
@@ -20,6 +21,12 @@ from orket.application.services.deployment_planner import (
 from orket.application.services.epic_dispatch_batch import run_epic_dispatch_batch
 from orket.application.services.epic_setup_service import prepare_epic_workspace
 from orket.application.services.guard_review_payload import guard_review_for_turn
+from orket.application.services.loop_decision_service import (
+    capture_seat_policy_input,
+    recommend_exhaustion,
+    recommend_no_candidate,
+    validate_guard_review,
+)
 from orket.application.services.model_selection_service import ModelSelectionService
 from orket.application.services.orchestrator_failure_handler import OrchestratorFailureHandler
 from orket.application.services.orchestrator_review_preflight_service import (
@@ -29,6 +36,7 @@ from orket.application.services.orchestrator_turn_context_builder import (
     OrchestratorTurnContextBuilder,
     TurnContextBuildInput,
 )
+from orket.application.services.orchestrator_turn_context_policy import resolve_policy_token
 from orket.application.services.orchestrator_turn_preparation_service import (
     OrchestratorTurnPreparationService,
     TurnPreparationInput,
@@ -883,6 +891,7 @@ async def execute_epic(
     Main execution loop for an Epic.
     Executes independent issues in parallel using a TAG-based DAG.
     """
+    loop_node = self.loop_policy_node
     user_settings = await load_user_settings_async()
     preferences = await load_user_preferences_async()
     set_runtime_settings_context(user_settings=user_settings, user_preferences=preferences)
@@ -973,7 +982,7 @@ async def execute_epic(
     )
 
     # Concurrency/loop control via loop policy node.
-    concurrency_limit = self.loop_policy_node.concurrency_limit(self.loop_inputs)
+    concurrency_limit = loop_node.concurrency_limit(self.loop_inputs)
     semaphore = asyncio.Semaphore(concurrency_limit)
 
     log_event(
@@ -983,13 +992,14 @@ async def execute_epic(
     )
 
     iteration_count = 0
-    max_iterations = self.loop_policy_node.max_iterations(self.loop_inputs)
+    max_iterations = loop_node.max_iterations(self.loop_inputs)
 
     while iteration_count < max_iterations:
         iteration_count += 1
 
         dispatch = await read_card_dispatch_snapshot(cards=self.async_cards, build_id=active_build)
         backlog = list(dispatch.backlog)
+        backlog_inputs = capture_backlog_inputs(backlog)
         if await self._maybe_schedule_team_replan(backlog, run_id, active_build, team):
             continue
         candidates = dispatch.plan(self.planner_node, target_issue_id)
@@ -1003,15 +1013,8 @@ async def execute_epic(
             if propagated_count:
                 continue
 
-            # Empty-candidate policy (seam) with backward-compatible fallback.
-            outcome_fn = getattr(self.loop_policy_node, "no_candidate_outcome", None)
-            if callable(outcome_fn):
-                outcome = outcome_fn(backlog)
-            else:
-                is_done = self.loop_policy_node.is_backlog_done(backlog)
-                outcome = {"is_done": is_done}
-
-            if outcome.get("is_done"):
+            outcome = recommend_no_candidate(loop_node, backlog_inputs)
+            if outcome.is_done:
                 # Loop termination is not authority for accepted build completion.
                 log_event("orchestrator_epic_stopped", {"epic": epic.name, "run_id": run_id}, self.workspace)
                 break
@@ -1025,7 +1028,7 @@ async def execute_epic(
                 }
                 for item in backlog
             ]
-            reason = outcome.get("reason") or "No executable candidates while backlog incomplete."
+            reason = outcome.reason or "No executable candidates while backlog incomplete."
             log_event(
                 "orchestrator_stalled",
                 {
@@ -1069,11 +1072,8 @@ async def execute_epic(
 
     if iteration_count >= max_iterations:
         final_backlog = await self.async_cards.get_by_build(active_build)
-        exhaustion_fn = getattr(self.loop_policy_node, "should_raise_exhaustion", None)
-        if callable(exhaustion_fn):
-            should_raise = exhaustion_fn(iteration_count, max_iterations, final_backlog)
-        else:
-            should_raise = not self.loop_policy_node.is_backlog_done(final_backlog)
+        should_raise = recommend_exhaustion(loop_node, iteration_count, max_iterations,
+                                            capture_backlog_inputs(final_backlog))
         if should_raise:
             raise ExecutionFailed(f"Hyper-Loop exhausted iterations ({max_iterations})")
 
@@ -1388,20 +1388,7 @@ async def _execute_issue_turn(
 
 
 def _validate_guard_rejection_payload(self: Any, payload: GuardReviewPayload) -> dict[str, Any]:
-    validate_fn = getattr(self.loop_policy_node, "validate_guard_rejection_payload", None)
-    if callable(validate_fn):
-        try:
-            return dict(validate_fn(payload=payload))
-        except TypeError:
-            return dict(validate_fn(payload))
-
-    rationale = (payload.rationale or "").strip()
-    actions = [item.strip() for item in (payload.remediation_actions or []) if item and item.strip()]
-    if not rationale:
-        return {"valid": False, "reason": "missing_rationale"}
-    if not actions:
-        return {"valid": False, "reason": "missing_remediation_actions"}
-    return {"valid": True, "reason": None}
+    return dict(validate_guard_review(self.loop_policy_node, payload))
 
 
 async def _create_pending_gate_request(
@@ -1415,19 +1402,8 @@ async def _create_pending_gate_request(
     issue: IssueConfig,
     turn_status: CardStatus,
 ) -> str:
-    gate_mode = "auto"
-    gate_mode_fn = getattr(self.loop_policy_node, "gate_mode_for_seat", None)
-    if callable(gate_mode_fn):
-        try:
-            gate_mode = str(
-                gate_mode_fn(
-                    seat_name=seat_name,
-                    issue=issue,
-                    turn_status=turn_status,
-                )
-            )
-        except TypeError:
-            gate_mode = str(gate_mode_fn(seat_name))
+    gate_mode = resolve_policy_token(loop_policy_node=self.loop_policy_node, attribute="gate_mode_for_seat",
+        inputs=capture_seat_policy_input(seat_name, issue, turn_status), default="auto")
 
     request_created_at = datetime.now(UTC).isoformat()
     request_id = str(await self.pending_gates.create_request(

@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from orket.schema import CardStatus, IssueConfig
+from orket.application.services.loop_decision_service import admit_policy_names
+from orket.core.contracts.decision_inputs import SeatPolicyInput
+from orket.exceptions import ExecutionFailed
 
 
 def normalize_turn_contract_override_list(value: Any, *, lowercase: bool = False) -> list[str] | None:
@@ -21,45 +23,25 @@ def resolve_policy_list(
     *,
     loop_policy_node: Any,
     attribute: str,
-    seat_name: str,
-    issue: IssueConfig,
-    turn_status: CardStatus,
+    inputs: SeatPolicyInput,
 ) -> list[str]:
     resolver = getattr(loop_policy_node, attribute, None)
     if not callable(resolver):
         return []
-    try:
-        return list(
-            resolver(
-                seat_name=seat_name,
-                issue=issue,
-                turn_status=turn_status,
-            )
-            or []
-        )
-    except TypeError:
-        return list(resolver(seat_name) or [])
+    return admit_policy_names(resolver(inputs))
 
 
 def resolve_policy_token(
     *,
     loop_policy_node: Any,
     attribute: str,
-    seat_name: str,
-    issue: IssueConfig,
-    turn_status: CardStatus,
+    inputs: SeatPolicyInput,
     default: str,
 ) -> str:
     resolver = getattr(loop_policy_node, attribute, None)
     if not callable(resolver):
         return default
-    try:
-        return str(
-            resolver(
-                seat_name=seat_name,
-                issue=issue,
-                turn_status=turn_status,
-            )
-        )
-    except TypeError:
-        return str(resolver(seat_name))
+    value = resolver(inputs)
+    if type(value) is not str:
+        raise ExecutionFailed("E_LOOP_POLICY_INVALID_TOKEN")
+    return value

@@ -317,8 +317,8 @@ async def test_system_acceptance_tool_approval_continues_same_governed_run(tmp_p
     try:
         loop_policy = engine._pipeline.orchestrator.loop_policy_node
 
-        def _approval_required_tools_for_seat(seat_name, issue=None, turn_status=None):
-            if str(seat_name or "").strip().lower() == "lead_architect":
+        def _approval_required_tools_for_seat(inputs):
+            if inputs.seat_name.strip().lower() == "lead_architect":
                 return ["write_file"]
             return []
 

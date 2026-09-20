@@ -44,7 +44,7 @@ async def bound_engine(root, workspace, monkeypatch, db_path="state/cards.db"):
     monkeypatch.setattr(
         engine._pipeline.orchestrator.loop_policy_node,
         "approval_required_tools_for_seat",
-        lambda seat_name, **_: ["write_file"] if seat_name == "lead_architect" else [],
+        lambda inputs: ["write_file"] if inputs.seat_name == "lead_architect" else [],
     )
     try:
         yield engine

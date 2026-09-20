@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from orket.application.services.loop_decision_service import capture_seat_policy_input
 from orket.application.services.orchestrator_turn_context_gate_service import OrchestratorTurnContextGateService
 from orket.application.services.orchestrator_turn_context_policy import (
     normalize_turn_contract_override_list,
@@ -99,35 +100,28 @@ class OrchestratorTurnContextBuilder:
 
     def build(self, data: TurnContextBuildInput) -> dict[str, Any]:
         cards_runtime = dict(data.cards_runtime or resolve_cards_runtime(issue=data.issue))
+        policy_inputs = capture_seat_policy_input(data.seat_name, data.issue, data.turn_status)
         required_action_tools = resolve_policy_list(
             loop_policy_node=self.loop_policy_node,
             attribute="required_action_tools_for_seat",
-            seat_name=data.seat_name,
-            issue=data.issue,
-            turn_status=data.turn_status,
+            inputs=policy_inputs,
         )
         required_statuses = resolve_policy_list(
             loop_policy_node=self.loop_policy_node,
             attribute="required_statuses_for_seat",
-            seat_name=data.seat_name,
-            issue=data.issue,
-            turn_status=data.turn_status,
+            inputs=policy_inputs,
         )
         required_read_paths = resolve_policy_list(
             loop_policy_node=self.loop_policy_node,
             attribute="required_read_paths_for_seat",
-            seat_name=data.seat_name,
-            issue=data.issue,
-            turn_status=data.turn_status,
+            inputs=policy_inputs,
         )
         if not data.runtime_verifier_enabled:
             required_read_paths = [path for path in required_read_paths if path != DEFAULT_RUNTIME_VERIFICATION_PATH]
         required_write_paths = resolve_policy_list(
             loop_policy_node=self.loop_policy_node,
             attribute="required_write_paths_for_seat",
-            seat_name=data.seat_name,
-            issue=data.issue,
-            turn_status=data.turn_status,
+            inputs=policy_inputs,
         )
         params = getattr(data.issue, "params", None)
         normalized_issue_seat = str(getattr(data.issue, "seat", "") or "").strip().lower()
@@ -179,17 +173,13 @@ class OrchestratorTurnContextBuilder:
         gate_mode = resolve_policy_token(
             loop_policy_node=self.loop_policy_node,
             attribute="gate_mode_for_seat",
-            seat_name=data.seat_name,
-            issue=data.issue,
-            turn_status=data.turn_status,
+            inputs=policy_inputs,
             default="auto",
         )
         approval_required_tools = resolve_policy_list(
             loop_policy_node=self.loop_policy_node,
             attribute="approval_required_tools_for_seat",
-            seat_name=data.seat_name,
-            issue=data.issue,
-            turn_status=data.turn_status,
+            inputs=policy_inputs,
         )
         if approval_required_tools and gate_mode == "auto":
             gate_mode = "approval_required"

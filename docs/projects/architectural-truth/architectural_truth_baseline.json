@@ -1,6 +1,6 @@
 {
   "schema_version": "architectural_truth.baseline.v1",
-  "generated_at": "2026-09-20T22:30:11.357158Z",
+  "generated_at": "2026-09-20T23:05:11.085195Z",
   "collection_ok": true,
   "release_ready": false,
   "release_ready_reason": "Active architectural exceptions and red/noisy proof gates remain.",
@@ -313,7 +313,7 @@
           "forwarded_arguments": 2
         }
       ],
-      "files_scanned": 1100,
+      "files_scanned": 1101,
       "scan_roots": [
         "orket"
       ],
@@ -337,12 +337,12 @@
         {
           "source": "application",
           "target": "application",
-          "count": 1690
+          "count": 1697
         },
         {
           "source": "application",
           "target": "core",
-          "count": 744
+          "count": 749
         },
         {
           "source": "application",
@@ -357,7 +357,7 @@
         {
           "source": "decision_nodes",
           "target": "core",
-          "count": 8
+          "count": 6
         },
         {
           "source": "decision_nodes",
@@ -535,12 +535,12 @@
   },
   "test_taxonomy": {
     "schema_version": "test_taxonomy_report.v1",
-    "tests_total": 5367,
-    "missing_layer_total": 3767,
+    "tests_total": 5379,
+    "missing_layer_total": 3780,
     "by_layer": {
-      "unlabeled": 3767,
+      "unlabeled": 3780,
       "integration": 750,
-      "unit": 167,
+      "unit": 166,
       "contract": 672,
       "live_truth": 11
     },
@@ -1146,7 +1146,7 @@
         "layer": null
       }
     ],
-    "missing_layers_omitted": 3667
+    "missing_layers_omitted": 3680
   },
   "ruff": {
     "proof": "structural_lint",
@@ -1168,7 +1168,7 @@
   },
   "size_inventory": {
     "proof": "structural_ast",
-    "python_files_scanned": 1100,
+    "python_files_scanned": 1101,
     "files_over_400_total": 60,
     "functions_over_70_total": 206,
     "largest_files": [
@@ -1178,7 +1178,7 @@
       },
       {
         "path": "orket/application/workflows/orchestrator_ops.py",
-        "lines": 1661
+        "lines": 1637
       },
       {
         "path": "orket/runtime/policy/runtime_truth_drift_checker.py",
@@ -1214,7 +1214,7 @@
       },
       {
         "path": "orket/decision_nodes/builtins.py",
-        "lines": 665
+        "lines": 646
       },
       {
         "path": "orket/application/services/runtime_verifier.py",
@@ -1335,16 +1335,16 @@
         "lines": 299
       },
       {
-        "path": "orket/application/services/orchestrator_turn_context_builder.py",
-        "line": 100,
-        "name": "build",
-        "lines": 284
-      },
-      {
         "path": "orket/interfaces/routers/kernel.py",
         "line": 79,
         "name": "build_kernel_router",
         "lines": 278
+      },
+      {
+        "path": "orket/application/services/orchestrator_turn_context_builder.py",
+        "line": 101,
+        "name": "build",
+        "lines": 273
       },
       {
         "path": "orket/interfaces/orket_bundle_cli.py",
@@ -1384,7 +1384,7 @@
       },
       {
         "path": "orket/decision_nodes/builtins.py",
-        "line": 245,
+        "line": 242,
         "name": "generate_compose_file",
         "lines": 212
       },
@@ -1407,12 +1407,6 @@
         "lines": 209
       },
       {
-        "path": "orket/application/workflows/orchestrator_ops.py",
-        "line": 870,
-        "name": "execute_epic",
-        "lines": 209
-      },
-      {
         "path": "orket/application/terraform_review/service.py",
         "line": 45,
         "name": "run",
@@ -1423,6 +1417,12 @@
         "line": 186,
         "name": "run",
         "lines": 206
+      },
+      {
+        "path": "orket/application/workflows/orchestrator_ops.py",
+        "line": 878,
+        "name": "execute_epic",
+        "lines": 201
       }
     ],
     "parse_errors": []
@@ -1435,7 +1435,7 @@
       "C:\\Source\\Orket-architectural-truth\\orket\\runtime",
       "C:\\Source\\Orket-architectural-truth\\orket\\interfaces"
     ],
-    "scanned_files": 646,
+    "scanned_files": 647,
     "findings": [
       {
         "path": "C:\\Source\\Orket-architectural-truth\\orket\\runtime\\execution\\execution_pipeline_card_dispatch.py",
@@ -1546,77 +1546,6 @@
     "parse_errors": []
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-19T19:56:32.719421Z",
-      "changed": true,
-      "before_digest": "sha256:4a10f0eb81751a84492ad55806812d41607c9f508221d31a9efddc83cbadf2d9",
-      "after_digest": "sha256:8463be411851115f47bb900bf4f3fb4feb65635294e4e4afe0754a3f1876a066",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 2,
-        "initial_write": false,
-        "paths_total_previous": 2323,
-        "paths_total_current": 2323,
-        "paths_total_reference": 2323,
-        "churn_paths": 2,
-        "churn_ratio": 0.000861,
-        "sample_paths": [
-          "$.architecture_exceptions.exceptions[0].reason",
-          "$.generated_at"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-19T20:50:05.311083Z",
-      "changed": true,
-      "before_digest": "sha256:8463be411851115f47bb900bf4f3fb4feb65635294e4e4afe0754a3f1876a066",
-      "after_digest": "sha256:01397a7db8b7232e2d381ce04f3443e28b77f56c2cb65955db9fb4b627bf3ed8",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 11,
-        "initial_write": false,
-        "paths_total_previous": 2323,
-        "paths_total_current": 2323,
-        "paths_total_reference": 2323,
-        "churn_paths": 11,
-        "churn_ratio": 0.004735,
-        "sample_paths": [
-          "$.architecture_exceptions.exceptions[0].reason",
-          "$.dependency_graph.observed.files_scanned",
-          "$.dependency_graph.observed.layer_edges[3].count",
-          "$.generated_at",
-          "$.size_inventory.largest_functions[13].line",
-          "$.size_inventory.largest_functions[13].lines",
-          "$.size_inventory.python_files_scanned",
-          "$.test_taxonomy.by_layer.unlabeled",
-          "$.test_taxonomy.missing_layer_total",
-          "$.test_taxonomy.missing_layers_omitted",
-          "$.test_taxonomy.tests_total"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-19T20:51:56.029594Z",
-      "changed": true,
-      "before_digest": "sha256:01397a7db8b7232e2d381ce04f3443e28b77f56c2cb65955db9fb4b627bf3ed8",
-      "after_digest": "sha256:e4363e9d94dc3a67fdf084daf8328070de1560c6489f55c1aa2d1482d7c231ac",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 2323,
-        "paths_total_current": 2323,
-        "paths_total_reference": 2323,
-        "churn_paths": 1,
-        "churn_ratio": 0.00043,
-        "sample_paths": [
-          "$.generated_at"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-19T22:00:32.672720Z",
       "changed": true,
@@ -2293,6 +2222,94 @@
       "changed": true,
       "before_digest": "sha256:ce6e4d1feabae5a41380f2a60ba7c48517578c903c14402f591e3c049cff8662",
       "after_digest": "sha256:baf4ec69d2c68fc99481be1a3e567a86535b1ff1ed287db7734898ebe8229090",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 2331,
+        "paths_total_current": 2331,
+        "paths_total_reference": 2331,
+        "churn_paths": 1,
+        "churn_ratio": 0.000429,
+        "sample_paths": [
+          "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-20T22:48:02.539012Z",
+      "changed": true,
+      "before_digest": "sha256:baf4ec69d2c68fc99481be1a3e567a86535b1ff1ed287db7734898ebe8229090",
+      "after_digest": "sha256:16bd851d62ed9298a790c1d6ea31e579ab81648a8b03b907e34396eaa4705b20",
+      "diff": {
+        "added_paths": 2,
+        "removed_paths": 0,
+        "changed_paths": 35,
+        "initial_write": false,
+        "paths_total_previous": 2331,
+        "paths_total_current": 2357,
+        "paths_total_reference": 2357,
+        "churn_paths": 37,
+        "churn_ratio": 0.015698,
+        "sample_paths": [
+          "$.dependency_graph.observed.files_scanned",
+          "$.dependency_graph.observed.layer_edges[3].count",
+          "$.dependency_graph.observed.layer_edges[4].count",
+          "$.dependency_graph.observed.layer_edges[6].count",
+          "$.dependency_graph.verdict.ok",
+          "$.dependency_graph.verdict.violations",
+          "$.generated_at",
+          "$.noop_critical_paths.scanned_files",
+          "$.size_inventory.largest_files[1].lines",
+          "$.size_inventory.largest_files[10].lines",
+          "$.size_inventory.largest_functions[10].line",
+          "$.size_inventory.largest_functions[10].lines",
+          "$.size_inventory.largest_functions[10].name",
+          "$.size_inventory.largest_functions[10].path",
+          "$.size_inventory.largest_functions[11].line",
+          "$.size_inventory.largest_functions[11].lines",
+          "$.size_inventory.largest_functions[11].name",
+          "$.size_inventory.largest_functions[11].path",
+          "$.size_inventory.largest_functions[18].line",
+          "$.size_inventory.largest_functions[22].line"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-20T22:53:23.801555Z",
+      "changed": true,
+      "before_digest": "sha256:16bd851d62ed9298a790c1d6ea31e579ab81648a8b03b907e34396eaa4705b20",
+      "after_digest": "sha256:4adb94f4e9df34f5d612fcb4e813628912ced98fe954c1e782db2675f900e704",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 2,
+        "changed_paths": 9,
+        "initial_write": false,
+        "paths_total_previous": 2357,
+        "paths_total_current": 2331,
+        "paths_total_reference": 2357,
+        "churn_paths": 11,
+        "churn_ratio": 0.004667,
+        "sample_paths": [
+          "$.dependency_graph.observed.files_scanned",
+          "$.dependency_graph.observed.layer_edges[4].count",
+          "$.dependency_graph.observed.layer_edges[6].count",
+          "$.dependency_graph.observed.layer_edges[7].count",
+          "$.dependency_graph.verdict.ok",
+          "$.dependency_graph.verdict.violations",
+          "$.generated_at",
+          "$.size_inventory.largest_files[10].lines",
+          "$.size_inventory.largest_functions[18].line",
+          "$.size_inventory.python_files_scanned"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-20T23:05:11.087254Z",
+      "changed": true,
+      "before_digest": "sha256:4adb94f4e9df34f5d612fcb4e813628912ced98fe954c1e782db2675f900e704",
+      "after_digest": "sha256:571837279293786f7eb3443c5ee1a1da866f70052009c7d962bfe96cd07a4183",
       "diff": {
         "added_paths": 0,
         "removed_paths": 0,

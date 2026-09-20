@@ -1,0 +1,1148 @@
+{
+  "schema": "loop_policy_reference.v1",
+  "source_version": "0.6.47",
+  "wheel_sha256": "d4830f498114e1d4c88090617fc753a7d5ae7ec61b7b6d6894fa79f23c28081d",
+  "seats": [
+    {
+      "seat": "requirements_analyst",
+      "issue": null,
+      "outcomes": {
+        "required_action_tools_for_seat": [
+          "write_file",
+          "update_issue_status"
+        ],
+        "required_statuses_for_seat": [
+          "code_review"
+        ],
+        "required_read_paths_for_seat": [],
+        "required_write_paths_for_seat": [
+          "agent_output/requirements.txt"
+        ],
+        "gate_mode_for_seat": "auto",
+        "approval_required_tools_for_seat": []
+      }
+    },
+    {
+      "seat": "requirements_analyst",
+      "issue": {
+        "id": "card",
+        "summary": "Original",
+        "seat": "coder"
+      },
+      "outcomes": {
+        "required_action_tools_for_seat": [
+          "write_file",
+          "update_issue_status"
+        ],
+        "required_statuses_for_seat": [
+          "code_review"
+        ],
+        "required_read_paths_for_seat": [],
+        "required_write_paths_for_seat": [
+          "agent_output/requirements.txt"
+        ],
+        "gate_mode_for_seat": "auto",
+        "approval_required_tools_for_seat": []
+      }
+    },
+    {
+      "seat": "requirements_analyst",
+      "issue": {
+        "id": "card",
+        "summary": "Original",
+        "seat": "code_reviewer"
+      },
+      "outcomes": {
+        "required_action_tools_for_seat": [
+          "write_file",
+          "update_issue_status"
+        ],
+        "required_statuses_for_seat": [
+          "code_review"
+        ],
+        "required_read_paths_for_seat": [],
+        "required_write_paths_for_seat": [
+          "agent_output/requirements.txt"
+        ],
+        "gate_mode_for_seat": "auto",
+        "approval_required_tools_for_seat": []
+      }
+    },
+    {
+      "seat": "requirements_analyst",
+      "issue": {
+        "id": "card",
+        "summary": "Original",
+        "seat": "coder",
+        "params": {
+          "artifact_contract": {
+            "kind": "artifact",
+            "required_write_paths": [
+              "agent_output/out.txt"
+            ],
+            "review_read_paths": [
+              "agent_output/out.txt"
+            ]
+          }
+        }
+      },
+      "outcomes": {
+        "required_action_tools_for_seat": [
+          "write_file",
+          "update_issue_status"
+        ],
+        "required_statuses_for_seat": [
+          "code_review"
+        ],
+        "required_read_paths_for_seat": [],
+        "required_write_paths_for_seat": [
+          "agent_output/requirements.txt"
+        ],
+        "gate_mode_for_seat": "auto",
+        "approval_required_tools_for_seat": []
+      }
+    },
+    {
+      "seat": "architect",
+      "issue": null,
+      "outcomes": {
+        "required_action_tools_for_seat": [
+          "write_file",
+          "update_issue_status"
+        ],
+        "required_statuses_for_seat": [
+          "code_review"
+        ],
+        "required_read_paths_for_seat": [
+          "agent_output/requirements.txt"
+        ],
+        "required_write_paths_for_seat": [
+          "agent_output/design.txt"
+        ],
+        "gate_mode_for_seat": "auto",
+        "approval_required_tools_for_seat": []
+      }
+    },
+    {
+      "seat": "architect",
+      "issue": {
+        "id": "card",
+        "summary": "Original",
+        "seat": "coder"
+      },
+      "outcomes": {
+        "required_action_tools_for_seat": [
+          "write_file",
+          "update_issue_status"
+        ],
+        "required_statuses_for_seat": [
+          "code_review"
+        ],
+        "required_read_paths_for_seat": [
+          "agent_output/requirements.txt"
+        ],
+        "required_write_paths_for_seat": [
+          "agent_output/design.txt"
+        ],
+        "gate_mode_for_seat": "auto",
+        "approval_required_tools_for_seat": []
+      }
+    },
+    {
+      "seat": "architect",
+      "issue": {
+        "id": "card",
+        "summary": "Original",
+        "seat": "code_reviewer"
+      },
+      "outcomes": {
+        "required_action_tools_for_seat": [
+          "write_file",
+          "update_issue_status"
+        ],
+        "required_statuses_for_seat": [
+          "code_review"
+        ],
+        "required_read_paths_for_seat": [
+          "agent_output/requirements.txt"
+        ],
+        "required_write_paths_for_seat": [
+          "agent_output/design.txt"
+        ],
+        "gate_mode_for_seat": "auto",
+        "approval_required_tools_for_seat": []
+      }
+    },
+    {
+      "seat": "architect",
+      "issue": {
+        "id": "card",
+        "summary": "Original",
+        "seat": "coder",
+        "params": {
+          "artifact_contract": {
+            "kind": "artifact",
+            "required_write_paths": [
+              "agent_output/out.txt"
+            ],
+            "review_read_paths": [
+              "agent_output/out.txt"
+            ]
+          }
+        }
+      },
+      "outcomes": {
+        "required_action_tools_for_seat": [
+          "write_file",
+          "update_issue_status"
+        ],
+        "required_statuses_for_seat": [
+          "code_review"
+        ],
+        "required_read_paths_for_seat": [
+          "agent_output/requirements.txt"
+        ],
+        "required_write_paths_for_seat": [
+          "agent_output/design.txt"
+        ],
+        "gate_mode_for_seat": "auto",
+        "approval_required_tools_for_seat": []
+      }
+    },
+    {
+      "seat": "coder",
+      "issue": null,
+      "outcomes": {
+        "required_action_tools_for_seat": [
+          "write_file",
+          "update_issue_status"
+        ],
+        "required_statuses_for_seat": [
+          "code_review"
+        ],
+        "required_read_paths_for_seat": [],
+        "required_write_paths_for_seat": [
+          "agent_output/main.py"
+        ],
+        "gate_mode_for_seat": "auto",
+        "approval_required_tools_for_seat": []
+      }
+    },
+    {
+      "seat": "coder",
+      "issue": {
+        "id": "card",
+        "summary": "Original",
+        "seat": "coder"
+      },
+      "outcomes": {
+        "required_action_tools_for_seat": [
+          "write_file",
+          "update_issue_status"
+        ],
+        "required_statuses_for_seat": [
+          "code_review"
+        ],
+        "required_read_paths_for_seat": [],
+        "required_write_paths_for_seat": [
+          "agent_output/main.py"
+        ],
+        "gate_mode_for_seat": "auto",
+        "approval_required_tools_for_seat": []
+      }
+    },
+    {
+      "seat": "coder",
+      "issue": {
+        "id": "card",
+        "summary": "Original",
+        "seat": "code_reviewer"
+      },
+      "outcomes": {
+        "required_action_tools_for_seat": [
+          "write_file",
+          "update_issue_status"
+        ],
+        "required_statuses_for_seat": [
+          "code_review"
+        ],
+        "required_read_paths_for_seat": [],
+        "required_write_paths_for_seat": [
+          "agent_output/main.py"
+        ],
+        "gate_mode_for_seat": "auto",
+        "approval_required_tools_for_seat": []
+      }
+    },
+    {
+      "seat": "coder",
+      "issue": {
+        "id": "card",
+        "summary": "Original",
+        "seat": "coder",
+        "params": {
+          "artifact_contract": {
+            "kind": "artifact",
+            "required_write_paths": [
+              "agent_output/out.txt"
+            ],
+            "review_read_paths": [
+              "agent_output/out.txt"
+            ]
+          }
+        }
+      },
+      "outcomes": {
+        "required_action_tools_for_seat": [
+          "write_file",
+          "update_issue_status"
+        ],
+        "required_statuses_for_seat": [
+          "code_review"
+        ],
+        "required_read_paths_for_seat": [],
+        "required_write_paths_for_seat": [
+          "agent_output/out.txt"
+        ],
+        "gate_mode_for_seat": "auto",
+        "approval_required_tools_for_seat": []
+      }
+    },
+    {
+      "seat": "developer",
+      "issue": null,
+      "outcomes": {
+        "required_action_tools_for_seat": [
+          "write_file",
+          "update_issue_status"
+        ],
+        "required_statuses_for_seat": [
+          "code_review"
+        ],
+        "required_read_paths_for_seat": [],
+        "required_write_paths_for_seat": [
+          "agent_output/main.py"
+        ],
+        "gate_mode_for_seat": "auto",
+        "approval_required_tools_for_seat": []
+      }
+    },
+    {
+      "seat": "developer",
+      "issue": {
+        "id": "card",
+        "summary": "Original",
+        "seat": "coder"
+      },
+      "outcomes": {
+        "required_action_tools_for_seat": [
+          "write_file",
+          "update_issue_status"
+        ],
+        "required_statuses_for_seat": [
+          "code_review"
+        ],
+        "required_read_paths_for_seat": [],
+        "required_write_paths_for_seat": [
+          "agent_output/main.py"
+        ],
+        "gate_mode_for_seat": "auto",
+        "approval_required_tools_for_seat": []
+      }
+    },
+    {
+      "seat": "developer",
+      "issue": {
+        "id": "card",
+        "summary": "Original",
+        "seat": "code_reviewer"
+      },
+      "outcomes": {
+        "required_action_tools_for_seat": [
+          "write_file",
+          "update_issue_status"
+        ],
+        "required_statuses_for_seat": [
+          "code_review"
+        ],
+        "required_read_paths_for_seat": [],
+        "required_write_paths_for_seat": [
+          "agent_output/main.py"
+        ],
+        "gate_mode_for_seat": "auto",
+        "approval_required_tools_for_seat": []
+      }
+    },
+    {
+      "seat": "developer",
+      "issue": {
+        "id": "card",
+        "summary": "Original",
+        "seat": "coder",
+        "params": {
+          "artifact_contract": {
+            "kind": "artifact",
+            "required_write_paths": [
+              "agent_output/out.txt"
+            ],
+            "review_read_paths": [
+              "agent_output/out.txt"
+            ]
+          }
+        }
+      },
+      "outcomes": {
+        "required_action_tools_for_seat": [
+          "write_file",
+          "update_issue_status"
+        ],
+        "required_statuses_for_seat": [
+          "code_review"
+        ],
+        "required_read_paths_for_seat": [],
+        "required_write_paths_for_seat": [
+          "agent_output/out.txt"
+        ],
+        "gate_mode_for_seat": "auto",
+        "approval_required_tools_for_seat": []
+      }
+    },
+    {
+      "seat": "evidence_reviewer",
+      "issue": null,
+      "outcomes": {
+        "required_action_tools_for_seat": [
+          "write_file",
+          "update_issue_status"
+        ],
+        "required_statuses_for_seat": [
+          "code_review"
+        ],
+        "required_read_paths_for_seat": [],
+        "required_write_paths_for_seat": [
+          "agent_output/source_attribution_receipt.json"
+        ],
+        "gate_mode_for_seat": "auto",
+        "approval_required_tools_for_seat": []
+      }
+    },
+    {
+      "seat": "evidence_reviewer",
+      "issue": {
+        "id": "card",
+        "summary": "Original",
+        "seat": "coder"
+      },
+      "outcomes": {
+        "required_action_tools_for_seat": [
+          "write_file",
+          "update_issue_status"
+        ],
+        "required_statuses_for_seat": [
+          "code_review"
+        ],
+        "required_read_paths_for_seat": [],
+        "required_write_paths_for_seat": [
+          "agent_output/source_attribution_receipt.json"
+        ],
+        "gate_mode_for_seat": "auto",
+        "approval_required_tools_for_seat": []
+      }
+    },
+    {
+      "seat": "evidence_reviewer",
+      "issue": {
+        "id": "card",
+        "summary": "Original",
+        "seat": "code_reviewer"
+      },
+      "outcomes": {
+        "required_action_tools_for_seat": [
+          "write_file",
+          "update_issue_status"
+        ],
+        "required_statuses_for_seat": [
+          "code_review"
+        ],
+        "required_read_paths_for_seat": [],
+        "required_write_paths_for_seat": [
+          "agent_output/source_attribution_receipt.json"
+        ],
+        "gate_mode_for_seat": "auto",
+        "approval_required_tools_for_seat": []
+      }
+    },
+    {
+      "seat": "evidence_reviewer",
+      "issue": {
+        "id": "card",
+        "summary": "Original",
+        "seat": "coder",
+        "params": {
+          "artifact_contract": {
+            "kind": "artifact",
+            "required_write_paths": [
+              "agent_output/out.txt"
+            ],
+            "review_read_paths": [
+              "agent_output/out.txt"
+            ]
+          }
+        }
+      },
+      "outcomes": {
+        "required_action_tools_for_seat": [
+          "write_file",
+          "update_issue_status"
+        ],
+        "required_statuses_for_seat": [
+          "code_review"
+        ],
+        "required_read_paths_for_seat": [],
+        "required_write_paths_for_seat": [
+          "agent_output/source_attribution_receipt.json"
+        ],
+        "gate_mode_for_seat": "auto",
+        "approval_required_tools_for_seat": []
+      }
+    },
+    {
+      "seat": "code_reviewer",
+      "issue": null,
+      "outcomes": {
+        "required_action_tools_for_seat": [
+          "read_file",
+          "update_issue_status"
+        ],
+        "required_statuses_for_seat": [
+          "code_review"
+        ],
+        "required_read_paths_for_seat": [
+          "agent_output/requirements.txt",
+          "agent_output/main.py"
+        ],
+        "required_write_paths_for_seat": [],
+        "gate_mode_for_seat": "auto",
+        "approval_required_tools_for_seat": []
+      }
+    },
+    {
+      "seat": "code_reviewer",
+      "issue": {
+        "id": "card",
+        "summary": "Original",
+        "seat": "coder"
+      },
+      "outcomes": {
+        "required_action_tools_for_seat": [
+          "read_file",
+          "update_issue_status"
+        ],
+        "required_statuses_for_seat": [
+          "code_review"
+        ],
+        "required_read_paths_for_seat": [
+          "agent_output/requirements.txt",
+          "agent_output/main.py"
+        ],
+        "required_write_paths_for_seat": [],
+        "gate_mode_for_seat": "auto",
+        "approval_required_tools_for_seat": []
+      }
+    },
+    {
+      "seat": "code_reviewer",
+      "issue": {
+        "id": "card",
+        "summary": "Original",
+        "seat": "code_reviewer"
+      },
+      "outcomes": {
+        "required_action_tools_for_seat": [
+          "read_file",
+          "update_issue_status"
+        ],
+        "required_statuses_for_seat": [
+          "code_review"
+        ],
+        "required_read_paths_for_seat": [
+          "agent_output/requirements.txt",
+          "agent_output/main.py"
+        ],
+        "required_write_paths_for_seat": [],
+        "gate_mode_for_seat": "auto",
+        "approval_required_tools_for_seat": []
+      }
+    },
+    {
+      "seat": "code_reviewer",
+      "issue": {
+        "id": "card",
+        "summary": "Original",
+        "seat": "coder",
+        "params": {
+          "artifact_contract": {
+            "kind": "artifact",
+            "required_write_paths": [
+              "agent_output/out.txt"
+            ],
+            "review_read_paths": [
+              "agent_output/out.txt"
+            ]
+          }
+        }
+      },
+      "outcomes": {
+        "required_action_tools_for_seat": [
+          "read_file",
+          "update_issue_status"
+        ],
+        "required_statuses_for_seat": [
+          "code_review"
+        ],
+        "required_read_paths_for_seat": [
+          "agent_output/requirements.txt",
+          "agent_output/out.txt"
+        ],
+        "required_write_paths_for_seat": [],
+        "gate_mode_for_seat": "auto",
+        "approval_required_tools_for_seat": []
+      }
+    },
+    {
+      "seat": "reviewer",
+      "issue": null,
+      "outcomes": {
+        "required_action_tools_for_seat": [
+          "read_file",
+          "update_issue_status"
+        ],
+        "required_statuses_for_seat": [
+          "code_review"
+        ],
+        "required_read_paths_for_seat": [
+          "agent_output/requirements.txt",
+          "agent_output/main.py"
+        ],
+        "required_write_paths_for_seat": [],
+        "gate_mode_for_seat": "auto",
+        "approval_required_tools_for_seat": []
+      }
+    },
+    {
+      "seat": "reviewer",
+      "issue": {
+        "id": "card",
+        "summary": "Original",
+        "seat": "coder"
+      },
+      "outcomes": {
+        "required_action_tools_for_seat": [
+          "read_file",
+          "update_issue_status"
+        ],
+        "required_statuses_for_seat": [
+          "code_review"
+        ],
+        "required_read_paths_for_seat": [
+          "agent_output/requirements.txt",
+          "agent_output/main.py"
+        ],
+        "required_write_paths_for_seat": [],
+        "gate_mode_for_seat": "auto",
+        "approval_required_tools_for_seat": []
+      }
+    },
+    {
+      "seat": "reviewer",
+      "issue": {
+        "id": "card",
+        "summary": "Original",
+        "seat": "code_reviewer"
+      },
+      "outcomes": {
+        "required_action_tools_for_seat": [
+          "read_file",
+          "update_issue_status"
+        ],
+        "required_statuses_for_seat": [
+          "code_review"
+        ],
+        "required_read_paths_for_seat": [
+          "agent_output/requirements.txt",
+          "agent_output/main.py"
+        ],
+        "required_write_paths_for_seat": [],
+        "gate_mode_for_seat": "auto",
+        "approval_required_tools_for_seat": []
+      }
+    },
+    {
+      "seat": "reviewer",
+      "issue": {
+        "id": "card",
+        "summary": "Original",
+        "seat": "coder",
+        "params": {
+          "artifact_contract": {
+            "kind": "artifact",
+            "required_write_paths": [
+              "agent_output/out.txt"
+            ],
+            "review_read_paths": [
+              "agent_output/out.txt"
+            ]
+          }
+        }
+      },
+      "outcomes": {
+        "required_action_tools_for_seat": [
+          "read_file",
+          "update_issue_status"
+        ],
+        "required_statuses_for_seat": [
+          "code_review"
+        ],
+        "required_read_paths_for_seat": [
+          "agent_output/requirements.txt",
+          "agent_output/out.txt"
+        ],
+        "required_write_paths_for_seat": [],
+        "gate_mode_for_seat": "auto",
+        "approval_required_tools_for_seat": []
+      }
+    },
+    {
+      "seat": "integrity_guard",
+      "issue": null,
+      "outcomes": {
+        "required_action_tools_for_seat": [
+          "read_file",
+          "update_issue_status"
+        ],
+        "required_statuses_for_seat": [
+          "done",
+          "blocked"
+        ],
+        "required_read_paths_for_seat": [
+          "agent_output/main.py"
+        ],
+        "required_write_paths_for_seat": [],
+        "gate_mode_for_seat": "review_required",
+        "approval_required_tools_for_seat": []
+      }
+    },
+    {
+      "seat": "integrity_guard",
+      "issue": {
+        "id": "card",
+        "summary": "Original",
+        "seat": "coder"
+      },
+      "outcomes": {
+        "required_action_tools_for_seat": [
+          "read_file",
+          "update_issue_status"
+        ],
+        "required_statuses_for_seat": [
+          "done"
+        ],
+        "required_read_paths_for_seat": [
+          "agent_output/main.py"
+        ],
+        "required_write_paths_for_seat": [],
+        "gate_mode_for_seat": "review_required",
+        "approval_required_tools_for_seat": []
+      }
+    },
+    {
+      "seat": "integrity_guard",
+      "issue": {
+        "id": "card",
+        "summary": "Original",
+        "seat": "code_reviewer"
+      },
+      "outcomes": {
+        "required_action_tools_for_seat": [
+          "read_file",
+          "update_issue_status"
+        ],
+        "required_statuses_for_seat": [
+          "done",
+          "blocked"
+        ],
+        "required_read_paths_for_seat": [
+          "agent_output/requirements.txt",
+          "agent_output/design.txt",
+          "agent_output/main.py",
+          "agent_output/verification/runtime_verification.json"
+        ],
+        "required_write_paths_for_seat": [],
+        "gate_mode_for_seat": "review_required",
+        "approval_required_tools_for_seat": []
+      }
+    },
+    {
+      "seat": "integrity_guard",
+      "issue": {
+        "id": "card",
+        "summary": "Original",
+        "seat": "coder",
+        "params": {
+          "artifact_contract": {
+            "kind": "artifact",
+            "required_write_paths": [
+              "agent_output/out.txt"
+            ],
+            "review_read_paths": [
+              "agent_output/out.txt"
+            ]
+          }
+        }
+      },
+      "outcomes": {
+        "required_action_tools_for_seat": [
+          "read_file",
+          "update_issue_status"
+        ],
+        "required_statuses_for_seat": [
+          "done"
+        ],
+        "required_read_paths_for_seat": [
+          "agent_output/out.txt"
+        ],
+        "required_write_paths_for_seat": [],
+        "gate_mode_for_seat": "review_required",
+        "approval_required_tools_for_seat": []
+      }
+    },
+    {
+      "seat": "lead_architect",
+      "issue": null,
+      "outcomes": {
+        "required_action_tools_for_seat": [],
+        "required_statuses_for_seat": [],
+        "required_read_paths_for_seat": [],
+        "required_write_paths_for_seat": [],
+        "gate_mode_for_seat": "auto",
+        "approval_required_tools_for_seat": []
+      }
+    },
+    {
+      "seat": "lead_architect",
+      "issue": {
+        "id": "card",
+        "summary": "Original",
+        "seat": "coder"
+      },
+      "outcomes": {
+        "required_action_tools_for_seat": [],
+        "required_statuses_for_seat": [],
+        "required_read_paths_for_seat": [],
+        "required_write_paths_for_seat": [],
+        "gate_mode_for_seat": "auto",
+        "approval_required_tools_for_seat": []
+      }
+    },
+    {
+      "seat": "lead_architect",
+      "issue": {
+        "id": "card",
+        "summary": "Original",
+        "seat": "code_reviewer"
+      },
+      "outcomes": {
+        "required_action_tools_for_seat": [],
+        "required_statuses_for_seat": [],
+        "required_read_paths_for_seat": [],
+        "required_write_paths_for_seat": [],
+        "gate_mode_for_seat": "auto",
+        "approval_required_tools_for_seat": []
+      }
+    },
+    {
+      "seat": "lead_architect",
+      "issue": {
+        "id": "card",
+        "summary": "Original",
+        "seat": "coder",
+        "params": {
+          "artifact_contract": {
+            "kind": "artifact",
+            "required_write_paths": [
+              "agent_output/out.txt"
+            ],
+            "review_read_paths": [
+              "agent_output/out.txt"
+            ]
+          }
+        }
+      },
+      "outcomes": {
+        "required_action_tools_for_seat": [],
+        "required_statuses_for_seat": [],
+        "required_read_paths_for_seat": [],
+        "required_write_paths_for_seat": [],
+        "gate_mode_for_seat": "auto",
+        "approval_required_tools_for_seat": []
+      }
+    }
+  ],
+  "statuses": {
+    "ready": {
+      "done": false,
+      "outcome": {
+        "is_done": false,
+        "event_name": null
+      },
+      "exhaustion": true
+    },
+    "in_progress": {
+      "done": false,
+      "outcome": {
+        "is_done": false,
+        "event_name": null
+      },
+      "exhaustion": true
+    },
+    "blocked": {
+      "done": true,
+      "outcome": {
+        "is_done": true,
+        "event_name": "orchestrator_epic_stopped"
+      },
+      "exhaustion": false
+    },
+    "waiting_for_developer": {
+      "done": false,
+      "outcome": {
+        "is_done": false,
+        "event_name": null
+      },
+      "exhaustion": true
+    },
+    "ready_for_testing": {
+      "done": false,
+      "outcome": {
+        "is_done": false,
+        "event_name": null
+      },
+      "exhaustion": true
+    },
+    "code_review": {
+      "done": false,
+      "outcome": {
+        "is_done": false,
+        "event_name": null
+      },
+      "exhaustion": true
+    },
+    "awaiting_guard_review": {
+      "done": false,
+      "outcome": {
+        "is_done": false,
+        "event_name": null
+      },
+      "exhaustion": true
+    },
+    "guard_approved": {
+      "done": true,
+      "outcome": {
+        "is_done": true,
+        "event_name": "orchestrator_epic_stopped"
+      },
+      "exhaustion": false
+    },
+    "guard_rejected": {
+      "done": true,
+      "outcome": {
+        "is_done": true,
+        "event_name": "orchestrator_epic_stopped"
+      },
+      "exhaustion": false
+    },
+    "guard_requested_changes": {
+      "done": false,
+      "outcome": {
+        "is_done": false,
+        "event_name": null
+      },
+      "exhaustion": true
+    },
+    "done": {
+      "done": true,
+      "outcome": {
+        "is_done": true,
+        "event_name": "orchestrator_epic_stopped"
+      },
+      "exhaustion": false
+    },
+    "canceled": {
+      "done": true,
+      "outcome": {
+        "is_done": true,
+        "event_name": "orchestrator_epic_stopped"
+      },
+      "exhaustion": false
+    },
+    "archived": {
+      "done": true,
+      "outcome": {
+        "is_done": true,
+        "event_name": "orchestrator_epic_stopped"
+      },
+      "exhaustion": false
+    }
+  },
+  "guards": [
+    {
+      "input": {
+        "rationale": "",
+        "violations": [
+          "Original"
+        ],
+        "remediation_actions": [
+          "Fix design drift"
+        ]
+      },
+      "outcome": {
+        "valid": false,
+        "reason": "missing_rationale"
+      }
+    },
+    {
+      "input": {
+        "rationale": "Insufficient evidence.",
+        "violations": [
+          "Original"
+        ],
+        "remediation_actions": []
+      },
+      "outcome": {
+        "valid": false,
+        "reason": "missing_remediation_actions"
+      }
+    },
+    {
+      "input": {
+        "rationale": "Insufficient evidence.",
+        "violations": [
+          "Original"
+        ],
+        "remediation_actions": [
+          "Add fixtures"
+        ]
+      },
+      "outcome": {
+        "valid": true,
+        "reason": null
+      }
+    },
+    {
+      "input": {
+        "rationale": "   ",
+        "violations": [
+          "Original"
+        ],
+        "remediation_actions": [
+          "Fix"
+        ]
+      },
+      "outcome": {
+        "valid": false,
+        "reason": "missing_rationale"
+      }
+    },
+    {
+      "input": {
+        "rationale": "Reason",
+        "violations": [
+          "Original"
+        ],
+        "remediation_actions": [
+          "  ",
+          "Fix"
+        ]
+      },
+      "outcome": {
+        "valid": true,
+        "reason": null
+      }
+    }
+  ],
+  "roles": [
+    {
+      "roles": [],
+      "review": false,
+      "outcome": []
+    },
+    {
+      "roles": [],
+      "review": true,
+      "outcome": [
+        "integrity_guard"
+      ]
+    },
+    {
+      "roles": [
+        "coder"
+      ],
+      "review": false,
+      "outcome": [
+        "coder"
+      ]
+    },
+    {
+      "roles": [
+        "coder"
+      ],
+      "review": true,
+      "outcome": [
+        "integrity_guard",
+        "coder"
+      ]
+    },
+    {
+      "roles": [
+        "integrity_guard",
+        "coder"
+      ],
+      "review": false,
+      "outcome": [
+        "integrity_guard",
+        "coder"
+      ]
+    },
+    {
+      "roles": [
+        "integrity_guard",
+        "coder"
+      ],
+      "review": true,
+      "outcome": [
+        "integrity_guard",
+        "coder"
+      ]
+    }
+  ],
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-09-20T22:38:09.401593Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:6db3726e494ff1b203362ad225ebc5e6852a7d8c5f5075acf2ab74855ea7145d",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 1256,
+        "paths_total_reference": 1256,
+        "churn_paths": 1256,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    }
+  ]
+}

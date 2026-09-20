@@ -5,6 +5,16 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.48] - 2026-09-20
+
+### Fixed
+- Supply immutable backlog, seat-policy, role and guard-review facts to loop strategies; retain application ownership of issue records, turn contracts and completion evidence.
+- Validate loop recommendations and call custom seat/guard policies once; strategy `TypeError` no longer triggers a second invocation with different arguments.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Custom loop policies migrate to declared value inputs and typed recommendations. Migration: `docs/architecture/CONTRACT_DELTA_LOOP_INPUTS_D_2026-09-20.md`.
+
 ## [0.6.47] - 2026-09-20
 
 ### Fixed

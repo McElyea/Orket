@@ -12520,8 +12520,8 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.47 evaluator input checkpoint. Preserve the governed legacy-export cutover;
-continue loop/sandbox/API decision inputs, remaining deterministic input owners, adapter enforcement and async reachability before E1/E2
+0.6.48 loop-policy input checkpoint. Preserve the governed legacy-export cutover;
+continue sandbox/API/execution decision inputs, remaining deterministic input owners, adapter enforcement and async reachability before E1/E2
 and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
 Preserve every failed and
@@ -18416,3 +18416,92 @@ change or new provider/containment/capacity acceptance is made. The .43 Git time
 remain. Continue loop/sandbox/API decision inputs, remaining deterministic input
 owners, adapter classification/enforcement and complete async reachability before
 E1/E2 and CAP. The governed legacy-export cutover remains unchanged; no lane retirement.
+
+
+#### .48 captured loop-policy checkpoint (2026-09-20)
+
+Loop strategies receive immutable backlog, seat-policy, role and guard-review
+facts through application admission. The context builder captures card facts and
+resolved path tuples once; caller-owned params/turn contracts remain outside the
+strategy. Roles are captured before turn-transition awaits. The main loop binds
+its node before settings awaits and captures each backlog at its declared read
+boundary. Typed recommendations are copied/validated, and an entered seat/guard
+strategy error is observed once without a TypeError signature retry. Existing
+application approval, transition and accepted-completion authorities remain.
+Contract: `docs/specs/DISPATCH_DECISION_INPUTS.md`; migration:
+`docs/architecture/CONTRACT_DELTA_LOOP_INPUTS_D_2026-09-20.md`.
+
+The initial three-case counterexample run included one fixture error: it tried
+to mutate nonexistent `IssueConfig.summary`. The corrected isolated installed
+v0.6.47 probes use runtime `IssueRecord` and reach all three intended failures:
+borrowed issue/turn-contract mutation, retained guard-review mutation and duplicate
+invocation after strategy TypeError. All original failures remain retained.
+The first affected run passed 131 with two fixture migration failures (missing
+violations and a stale variable name). A new-test import error and the same model
+field mismatch were also retained and corrected. The corrected expanded selection
+passes 217; the three integration cases additionally prove a held real SQLite
+transition retains the earlier role tuple despite caller mutation.
+
+Default parity uses actual published installed .47 outcomes: 36 seat/issue
+combinations, 13 statuses, five guard inputs and six role/review combinations.
+The fixture binds the prior installed version, origin and wheel identity. The old
+monolithic unit test is replaced by marked contract cases while its original
+text is retained; scalar registry/status assertions remain explicit.
+
+The first frozen source candidate passes 481 cases but fails the canonical
+dependency gate: two imports targeted a newly introduced core module absent from
+the admitted decision-contract list. The scoped review wrapper initially reported
+success because graph export exited zero. That report is retained as an invalid
+policy-pass observation; exporter success means collection only. The corrected
+review requires `check_dependency_direction.py` and its actual verdict. Values and
+pure guard validation now live in the existing admitted `decision_inputs` module.
+No policy classification, allowed edge, contract allowlist or exception changed.
+No installed cell ran for the first candidate. Final artifacts were rebuilt and
+the entire source/installed cohort repeated under
+`.tmp/d-loop-inputs-corrected/`; initial evidence remains in `.tmp/d-loop-inputs/`.
+
+Final fresh source and serial installed Windows 3.11/3.12 execute the same
+**481 cases across 31 modules**, with zero failures, errors or skips:
+
+| Environment | Pass / fail / error / skip | Pytest seconds |
+| --- | --- | --- |
+| Source Windows 3.11 | 481 / 0 / 0 / 0 | 148.029 |
+| Installed win-py311 | 481 / 0 / 0 / 0 | 145.273 |
+| Installed win-py312 | 481 / 0 / 0 / 0 | 148.614 |
+
+Live scoped proof includes actual SQLite/context construction, card transition,
+orchestrator terminal-failure publication, accepted-completion refusals, approval
+continuation and native CLI incomplete/pending/cancellation outcomes with observed
+child teardown. Controlled providers are not fresh inference. A role refusal may
+follow an already-completed card transition; no rollback of earlier effects is
+claimed. Trusted input contracts are not hostile Python containment or an atomic
+whole-runtime snapshot.
+
+Installed audits verify copied case/support identities, imported core origins,
+primary/degraded CLI and ToolGate flows, no root database and no observed surviving
+owned children. Package parity covers 1,101 Python sources and
+1,117 wheel members, with 2,093 harness support files.
+Wheel SHA-256: `fd8dd668a74f578f914e5d961ba22c9b7942ab0e7143abbf3060b86159f94007`.
+Sdist SHA-256: `6eb10b22a1bd788552dfcba6f122ee60d8d563a9919d2bb9777b086f98138955`.
+
+Both Quality jobs include loop controls. Changed-file Ruff, the canonical dependency
+gate, documentation hygiene, release metadata and whitespace pass. Canonical Ruff
+retains 94 findings with none introduced. The corrected graph has 1,101 modules,
+3,495 import sites, six recognized routes and zero forbidden edges, unknown modules,
+cycles or analysis errors. Final size checks prove no oversized-file growth and
+new-file/function bounds. AC-01 through AC-10 apply to this scoped boundary only;
+complete adapter enforcement remains open.
+
+All 21,713 handoff and 135 .47 evidence hashes revalidate; the original checkout is
+unchanged. The main proof root retains the final checkpoint, index binding,
+publication and exact committed-file inventory. Selection/source reports govern
+scope over the inherited low-level runner's historical extension-installation label.
+
+No fresh Linux clock/runtime or model inference is claimed. The .45 passive
+clock blocker remains latest: 240.011 seconds without the required 60-second quiet
+interval and +18.666208636/-18.167079316-second steps. Runtime deadlines/clocks are
+unchanged. The .43 Git timeout, .44 non-Python package ceiling, full-suite/89%
+coverage and hosted Quality gaps remain. Continue sandbox/API/execution decision
+inputs, remaining deterministic inputs, adapter enforcement and async reachability
+before E1/E2 and CAP. The governed legacy-export cutover and explicit lane-acceptance
+requirement remain; no whole-lane completion or retirement.

@@ -108,3 +108,40 @@ class SuccessActions(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
     trigger_sandbox: StrictBool = False
     next_status: CardStatus | None = None
+
+
+class SeatPolicyInput(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+    seat_name: str
+    issue: PlanningCardInput | None
+    turn_status: CardStatus
+    required_read_paths: tuple[str, ...]
+    required_write_paths: tuple[str, ...]
+
+
+class GuardReviewInput(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+    rationale: str
+    violations: tuple[str, ...]
+    remediation_actions: tuple[str, ...]
+
+
+class GuardReviewDecision(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+    valid: StrictBool
+    reason: str | None = None
+
+
+class NoCandidateOutcome(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+    is_done: StrictBool
+    event_name: str | None = None
+    reason: str | None = None
+
+
+def validate_guard_review_input(inputs: GuardReviewInput) -> dict[str, object]:
+    if not inputs.rationale.strip():
+        return {"valid": False, "reason": "missing_rationale"}
+    if not any(action.strip() for action in inputs.remediation_actions):
+        return {"valid": False, "reason": "missing_remediation_actions"}
+    return {"valid": True, "reason": None}

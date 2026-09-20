@@ -8,6 +8,7 @@ from typing import Any
 
 from orket.application.services.cards_odr_stage import run_cards_odr_prebuild
 from orket.application.services.decision_context_service import recommend_routing_seat
+from orket.application.services.loop_decision_service import admit_policy_names
 from orket.application.services.orchestrator_prompt_preparation_service import (
     OrchestratorPromptPreparationService,
 )
@@ -181,7 +182,8 @@ class OrchestratorTurnPreparationService:
         if dispatch_target is None:
             return TurnPreparationResult(stop_execution=True)
         seat_name, cards_runtime, seat_obj, runtime_builder_seat, runtime_reviewer_seat = dispatch_target
-        is_guard_turn = is_review_turn and ("integrity_guard" in list(seat_obj.roles))
+        roles = tuple(seat_obj.roles)
+        is_guard_turn = is_review_turn and ("integrity_guard" in roles)
         turn_status = self.loop_policy_node.turn_status_for_issue(is_review_turn)
         turn_index = data.approval_turn_index if data.approval_turn_index is not None else len(self.transcript) + 1
         if is_guard_turn:
@@ -194,7 +196,7 @@ class OrchestratorTurnPreparationService:
                 assignee=seat_name,
                 reason="turn_dispatch",
                 metadata={"run_id": data.run_id, "review_turn": is_review_turn, "turn_index": turn_index},
-                roles=list(seat_obj.roles),
+                roles=list(roles),
             )
         elif hasattr(data.issue, "assignee") and getattr(data.issue, "assignee", None) is None:
             data.issue.assignee = seat_name
@@ -211,7 +213,7 @@ class OrchestratorTurnPreparationService:
                 self.workspace_root,
             )
 
-        roles_to_load = self.loop_policy_node.role_order_for_turn(list(seat_obj.roles), is_review_turn)
+        roles_to_load = admit_policy_names(self.loop_policy_node.role_order_for_turn(roles, is_review_turn))
         try:
             role_config = await self._load_asset("roles", roles_to_load[0], RoleConfig)
         except CardNotFound:

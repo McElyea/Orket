@@ -256,6 +256,14 @@ await and validate/copy primitive recommendations. Default order, failure polici
 and accepted-dependency checks remain authoritative.
 Custom-node migration and trusted-code limits: `docs/specs/DISPATCH_DECISION_INPUTS.md`.
 
+Loop admission is application-owned in `loop_decision_service` and the turn-context
+builder. Backlogs use immutable card values; seat policies receive captured facts
+and resolved path tuples, guard validators receive immutable review values, and
+role selection receives the tuple captured before turn transition awaits. Strategy
+errors are observed once, without old-signature retries. Typed recommendations
+remain advisory to application transition and accepted-completion authority.
+Migration: `docs/architecture/CONTRACT_DELTA_LOOP_INPUTS_D_2026-09-20.md`.
+
 API authentication and security configuration are application-owned in
 `ApiAuthenticationService`; each app captures its key, profile/mode, bypass,
 startup checks and CORS settings at construction. HTTP and both WebSocket routes

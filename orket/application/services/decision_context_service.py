@@ -37,15 +37,19 @@ def capture_loop_policy_inputs(organization: Any, environment: Mapping[str, str]
     )
 
 
-def capture_planning_inputs(backlog: Any, independent_ready: Any, target_issue_id: str | None) -> PlanningInput:
+def capture_backlog_inputs(backlog: Any) -> tuple[PlanningCardInput, ...]:
     """Project only declared card facts; arbitrary runtime params are not strategy context."""
     def capture(card: Any) -> PlanningCardInput:
         return PlanningCardInput(id=card.id, status=card.status, seat=getattr(card, "seat", ""),
             summary=getattr(card, "summary", None) or getattr(card, "name", None) or "",
             priority=getattr(card, "priority", 2.0), depends_on=tuple(getattr(card, "depends_on", ())))
 
-    return PlanningInput(backlog=tuple(capture(card) for card in backlog),
-                         independent_ready=tuple(capture(card) for card in independent_ready),
+    return tuple(capture(card) for card in backlog)
+
+
+def capture_planning_inputs(backlog: Any, independent_ready: Any, target_issue_id: str | None) -> PlanningInput:
+    return PlanningInput(backlog=capture_backlog_inputs(backlog),
+                         independent_ready=capture_backlog_inputs(independent_ready),
                          target_issue_id=target_issue_id)
 
 
