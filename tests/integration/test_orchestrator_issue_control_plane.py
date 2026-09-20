@@ -142,11 +142,11 @@ async def test_orchestrator_issue_turn_publishes_issue_dispatch_and_non_protocol
         role_order_for_turn=lambda roles, _is_review_turn: roles,
     )
     orch.evaluator_node = SimpleNamespace(
-        evaluate_success=lambda **_kwargs: {},
+        evaluate_success=lambda _inputs: {},
         success_post_actions=lambda _evaluation: {},
         should_trigger_sandbox=lambda _actions: False,
         next_status_after_success=lambda _actions: None,
-        evaluate_failure=lambda _issue, _result: {"action": "retry", "next_retry_count": 1},
+        evaluate_failure=lambda _inputs: {"action": "retry", "next_retry_count": 1},
         failure_exception_class=lambda _action: RuntimeError,
         status_for_failure_action=lambda _action: CardStatus.READY,
         failure_event_name=lambda _action: None,

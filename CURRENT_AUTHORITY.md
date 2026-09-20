@@ -248,10 +248,12 @@ captured organization overrides without a strategy mutation callback. Migration,
 retired configuration and remaining prompt/settings/async limitations are in
 `docs/architecture/CONTRACT_DELTA_DECISION_INPUTS_CD_2026-09-17.md`.
 
-Planner and router admission is application-owned in `decision_context_service`.
+Planner, router and evaluator admission is application-owned in `decision_context_service`.
 Strategies receive frozen core value contracts; planner recommendations map back
-to inspected application records, and routers receive no borrowed issue/team
-objects. Default order and accepted-dependency checks remain authoritative.
+to inspected records, and routers/evaluators receive no borrowed issue/team/result
+objects. Evaluator handlers capture inputs and node selection before their first
+await and validate/copy primitive recommendations. Default order, failure policies
+and accepted-dependency checks remain authoritative.
 Custom-node migration and trusted-code limits: `docs/specs/DISPATCH_DECISION_INPUTS.md`.
 
 API authentication and security configuration are application-owned in

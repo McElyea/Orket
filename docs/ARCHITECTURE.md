@@ -583,8 +583,8 @@ invoke decision_node(inputs)
 
 Decision nodes must never reach into runtime environment state for missing context.
 
-Planner/router calls use frozen value contracts captured by the application in
-`decision_context_service`; mutable issue/team models are not decision context.
+Planner/router/evaluator calls use frozen value contracts captured by the application in
+`decision_context_service`; mutable issue/team/turn models are not decision context.
 The application interprets returned recommendations and retains dependency/dispatch
 authority. Contract, custom-node migration and limits:
 `docs/specs/DISPATCH_DECISION_INPUTS.md`.

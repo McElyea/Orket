@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Mapping
 from typing import Any
 
 from orket.core.cards_runtime_contract import (
@@ -10,10 +11,12 @@ from orket.core.cards_runtime_contract import (
     required_write_paths_for_seat as resolve_cards_required_write_paths,
 )
 from orket.core.contracts.decision_inputs import (
+    FailureEvaluationInput,
     LoopPolicyInputs,
     PlanningCardInput,
     PlanningInput,
     RoutingInput,
+    SuccessEvaluationInput,
     ToolSelectionInput,
 )
 from orket.core.contracts.model_selection import ModelSelectionInput, model_dialect
@@ -84,43 +87,37 @@ class DefaultEvaluatorNode:
     Preserves existing success/failure orchestration decisions.
     """
 
-    def evaluate_success(
-        self,
-        issue: Any,
-        updated_issue: Any,
-        turn: Any,
-        seat_name: str,
-        is_review_turn: bool,
-    ) -> dict[str, Any]:
+    def evaluate_success(self, inputs: SuccessEvaluationInput) -> dict[str, Any]:
+        turn = inputs.turn
         return {
-            "remember_decision": ("decision" in (turn.content or "").lower()) or ("architect" in seat_name),
+            "remember_decision": ("decision" in turn.content.lower()) or ("architect" in turn.seat_name),
             "trigger_sandbox": (
-                updated_issue.status == CardStatus.CODE_REVIEW
-                or (updated_issue.status == issue.status and not is_review_turn)
+                inputs.updated_issue_status == CardStatus.CODE_REVIEW
+                or (inputs.updated_issue_status == turn.issue_status and not turn.is_review_turn)
             ),
-            "promote_code_review": updated_issue.status == issue.status,
+            "promote_code_review": inputs.updated_issue_status == turn.issue_status,
         }
 
-    def evaluate_failure(self, issue: Any, result: Any) -> dict[str, Any]:
-        if self._is_recoverable_missing_read_error(result):
-            next_retry_count = issue.retry_count + 1
-            if next_retry_count > issue.max_retries:
+    def evaluate_failure(self, inputs: FailureEvaluationInput) -> dict[str, Any]:
+        if self._is_recoverable_missing_read_error(inputs):
+            next_retry_count = inputs.retry_count + 1
+            if next_retry_count > inputs.max_retries:
                 return {"action": "catastrophic", "next_retry_count": next_retry_count}
             return {"action": "retry", "next_retry_count": next_retry_count}
 
-        if self._is_approval_required_pending(result):
-            return {"action": "approval_pending", "next_retry_count": issue.retry_count}
+        if self._is_approval_required_pending(inputs):
+            return {"action": "approval_pending", "next_retry_count": inputs.retry_count}
 
-        if result.violations or self._is_governance_deterministic_failure(result):
-            return {"action": "governance_violation", "next_retry_count": issue.retry_count}
+        if inputs.violations or self._is_governance_deterministic_failure(inputs):
+            return {"action": "governance_violation", "next_retry_count": inputs.retry_count}
 
-        next_retry_count = issue.retry_count + 1
-        if next_retry_count > issue.max_retries:
+        next_retry_count = inputs.retry_count + 1
+        if next_retry_count > inputs.max_retries:
             return {"action": "catastrophic", "next_retry_count": next_retry_count}
 
         return {"action": "retry", "next_retry_count": next_retry_count}
 
-    def _is_governance_deterministic_failure(self, result: Any) -> bool:
+    def _is_governance_deterministic_failure(self, result: FailureEvaluationInput) -> bool:
         error_text = str(getattr(result, "error", "") or "").strip().lower()
         if not error_text.startswith("deterministic failure:"):
             return False
@@ -139,7 +136,7 @@ class DefaultEvaluatorNode:
         )
         return any(marker in error_text for marker in governance_markers)
 
-    def _is_recoverable_missing_read_error(self, result: Any) -> bool:
+    def _is_recoverable_missing_read_error(self, result: FailureEvaluationInput) -> bool:
         violations = [str(item or "").strip().lower() for item in (getattr(result, "violations", []) or [])]
         marker = "tool read_file failed: file not found"
         if violations and all(marker in violation for violation in violations):
@@ -147,21 +144,21 @@ class DefaultEvaluatorNode:
         error_text = str(getattr(result, "error", "") or "").strip().lower()
         return marker in error_text
 
-    def _is_approval_required_pending(self, result: Any) -> bool:
+    def _is_approval_required_pending(self, result: FailureEvaluationInput) -> bool:
         error_text = str(getattr(result, "error", "") or "").strip().lower()
         return "approval required for tool 'write_file' before execution." in error_text
 
-    def success_post_actions(self, success_eval: dict[str, Any]) -> dict[str, Any]:
+    def success_post_actions(self, success_eval: Mapping[str, Any]) -> dict[str, Any]:
         trigger_sandbox = bool(success_eval.get("trigger_sandbox"))
         next_status = None
         if trigger_sandbox and success_eval.get("promote_code_review"):
             next_status = CardStatus.CODE_REVIEW
         return {"trigger_sandbox": trigger_sandbox, "next_status": next_status}
 
-    def should_trigger_sandbox(self, success_actions: dict[str, Any]) -> bool:
+    def should_trigger_sandbox(self, success_actions: Mapping[str, Any]) -> bool:
         return bool(success_actions.get("trigger_sandbox"))
 
-    def next_status_after_success(self, success_actions: dict[str, Any]) -> Any:
+    def next_status_after_success(self, success_actions: Mapping[str, Any]) -> Any:
         return success_actions.get("next_status")
 
     def status_for_failure_action(self, action: str) -> Any:

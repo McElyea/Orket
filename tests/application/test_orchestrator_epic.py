@@ -546,14 +546,14 @@ async def test_handle_failure_retry_increment(orchestrator):
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 async def test_handle_failure_uses_evaluator_exception_policy(orchestrator):
     orch, _cards, _loader = orchestrator
     issue = IssueConfig(id="I1", seat="dev", summary="Test", retry_count=0, max_retries=3)
     result = SimpleNamespace(error="Fixable error", violations=[])
-
     class CustomEvaluator:
-        def evaluate_failure(self, issue, result):
-            return {"action": "retry", "next_retry_count": issue.retry_count + 1}
+        def evaluate_failure(self, inputs):
+            return {"action": "retry", "next_retry_count": inputs.retry_count + 1}
 
         def failure_exception_class(self, action):
             return RuntimeError
@@ -574,14 +574,14 @@ async def test_handle_failure_uses_evaluator_exception_policy(orchestrator):
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 async def test_handle_failure_normalizes_idesign_violation_message_when_disabled(orchestrator):
     orch, _cards, _loader = orchestrator
     issue = IssueConfig(id="I1", seat="dev", summary="Test", retry_count=0, max_retries=3)
     result = SimpleNamespace(error="raw", violations=["Tool write_file failed: Permission denied"])
-
     class CustomEvaluator:
-        def evaluate_failure(self, issue, result):
-            return {"action": "governance_violation", "next_retry_count": issue.retry_count}
+        def evaluate_failure(self, inputs):
+            return {"action": "governance_violation", "next_retry_count": inputs.retry_count}
 
         def failure_exception_class(self, action):
             return ExecutionFailed
@@ -603,6 +603,7 @@ async def test_handle_failure_normalizes_idesign_violation_message_when_disabled
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 async def test_handle_failure_keeps_idesign_violation_message_when_enabled(orchestrator):
     orch, _cards, _loader = orchestrator
     issue = IssueConfig(
@@ -614,10 +615,9 @@ async def test_handle_failure_keeps_idesign_violation_message_when_enabled(orche
         params={"idesign_enabled": True},
     )
     result = SimpleNamespace(error="raw", violations=["Tool write_file failed: Permission denied"])
-
     class CustomEvaluator:
-        def evaluate_failure(self, issue, result):
-            return {"action": "governance_violation", "next_retry_count": issue.retry_count}
+        def evaluate_failure(self, inputs):
+            return {"action": "governance_violation", "next_retry_count": inputs.retry_count}
 
         def failure_exception_class(self, action):
             return ExecutionFailed
@@ -638,14 +638,14 @@ async def test_handle_failure_keeps_idesign_violation_message_when_enabled(orche
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 async def test_handle_failure_approval_pending_preserves_issue_state_without_scheduler_transition(orchestrator):
     orch, cards, _loader = orchestrator
     issue = IssueConfig(id="I1", seat="dev", summary="Test", status=CardStatus.IN_PROGRESS, retry_count=0, max_retries=3)
     result = SimpleNamespace(error="Approval required for tool 'write_file'", violations=[])
-
     class CustomEvaluator:
-        def evaluate_failure(self, issue, result):
-            return {"action": "approval_pending", "next_retry_count": issue.retry_count}
+        def evaluate_failure(self, inputs):
+            return {"action": "approval_pending", "next_retry_count": inputs.retry_count}
 
         def failure_exception_class(self, action):
             return ExecutionFailed
@@ -1022,7 +1022,7 @@ async def test_execute_issue_turn_closes_provider_per_turn_across_repeated_cycle
 
 
 @pytest.mark.asyncio
-# Layer: unit
+@pytest.mark.unit
 async def test_execute_issue_turn_skips_sandbox_when_policy_disabled(orchestrator, monkeypatch):
     orch, cards, loader = orchestrator
     issue = IssueConfig(id="I1", seat="dev", summary="Test")
@@ -1071,7 +1071,7 @@ async def test_execute_issue_turn_skips_sandbox_when_policy_disabled(orchestrato
             )
 
     class _Evaluator:
-        def evaluate_success(self, **_kwargs):
+        def evaluate_success(self, _inputs):
             return {}
 
         def success_post_actions(self, _success_eval):

@@ -5,6 +5,10 @@ from collections.abc import Awaitable, Callable
 from pathlib import Path
 from typing import Any
 
+from orket.application.services.decision_context_service import (
+    admit_failure_recommendation,
+    capture_failure_evaluation,
+)
 from orket.application.services.failure_report_service import FailureReportService
 from orket.core.domain.failure_reporter import FailureReporter
 from orket.exceptions import ApprovalPending
@@ -63,6 +67,8 @@ class OrchestratorFailureHandler:
         roles: list[str],
         turn_index: int | None = None,
     ) -> None:
+        result = capture_failure_evaluation(issue, result)
+        node = self.evaluator_node
         report = FailureReporter.build_report(
             timestamp=self.report_timestamp,
             session_id=run_id,
@@ -72,27 +78,27 @@ class OrchestratorFailureHandler:
         )
         await FailureReportService(self.workspace_root).publish(report)
 
-        eval_decision = self.evaluator_node.evaluate_failure(issue, result)
-        issue.retry_count = eval_decision.get("next_retry_count", issue.retry_count)
-        action = eval_decision.get("action")
-        failure_exception_class = self.evaluator_node.failure_exception_class(action)
+        eval_decision = admit_failure_recommendation(node.evaluate_failure(result), result)
+        issue.retry_count = eval_decision.next_retry_count
+        action = eval_decision.action
+        failure_exception_class = node.failure_exception_class(action)
 
         if action == "governance_violation":
             await self.request_issue_transition(
                 issue=issue,
-                target_status=self.evaluator_node.status_for_failure_action(action),
+                target_status=node.status_for_failure_action(action),
                 reason="governance_violation",
                 metadata=self._failure_metadata(run_id=run_id, result=result, turn_index=turn_index),
                 roles=roles,
             )
             await self.async_cards.save(issue.model_dump())
-            message = self.evaluator_node.governance_violation_message(result.error)
+            message = node.governance_violation_message(result.error)
             if not self.is_issue_idesign_enabled(issue):
                 message = self.normalize_governance_violation_message(message)
             raise failure_exception_class(message)
 
         if action == "approval_pending":
-            event_name = self.evaluator_node.failure_event_name(action)
+            event_name = node.failure_event_name(action)
             if event_name:
                 log_event(
                     event_name,
@@ -103,7 +109,7 @@ class OrchestratorFailureHandler:
             raise ApprovalPending(str(result.error or "Approval required before execution."))
 
         if action == "catastrophic":
-            event_name = self.evaluator_node.failure_event_name(action)
+            event_name = node.failure_event_name(action)
             if event_name:
                 log_event(
                     event_name,
@@ -112,20 +118,20 @@ class OrchestratorFailureHandler:
                 )
             await self.request_issue_transition(
                 issue=issue,
-                target_status=self.evaluator_node.status_for_failure_action(action),
+                target_status=node.status_for_failure_action(action),
                 reason="catastrophic_failure",
                 metadata=self._failure_metadata(run_id=run_id, result=result, turn_index=turn_index),
                 roles=roles,
             )
             await self.async_cards.save(issue.model_dump())
-            if self.evaluator_node.should_cancel_session(action):
+            if node.should_cancel_session(action):
                 await self._cancel_runtime_tasks(run_id)
-            raise failure_exception_class(self.evaluator_node.catastrophic_failure_message(issue.id, issue.max_retries))
+            raise failure_exception_class(node.catastrophic_failure_message(issue.id, result.max_retries))
 
         if action != "retry":
-            raise failure_exception_class(self.evaluator_node.unexpected_failure_action_message(action, issue.id))
+            raise failure_exception_class(node.unexpected_failure_action_message(action, issue.id))
 
-        event_name = self.evaluator_node.failure_event_name(action)
+        event_name = node.failure_event_name(action)
         if event_name:
             log_event(
                 event_name,
@@ -133,7 +139,7 @@ class OrchestratorFailureHandler:
                     "run_id": run_id,
                     "issue_id": issue.id,
                     "retry_count": issue.retry_count,
-                    "max_retries": issue.max_retries,
+                    "max_retries": result.max_retries,
                     "error": result.error,
                 },
                 self.workspace_root,
@@ -141,7 +147,7 @@ class OrchestratorFailureHandler:
 
         await self.request_issue_transition(
             issue=issue,
-            target_status=self.evaluator_node.status_for_failure_action(action),
+            target_status=node.status_for_failure_action(action),
             reason="retry_scheduled",
             metadata=self._failure_metadata(
                 run_id=run_id,
@@ -149,17 +155,17 @@ class OrchestratorFailureHandler:
                 turn_index=turn_index,
                 extra={
                     "retry_count": issue.retry_count,
-                    "max_retries": issue.max_retries,
+                    "max_retries": result.max_retries,
                 },
             ),
             roles=roles,
         )
         await self.async_cards.save(issue.model_dump())
         raise failure_exception_class(
-            self.evaluator_node.retry_failure_message(
+            node.retry_failure_message(
                 issue.id,
                 issue.retry_count,
-                issue.max_retries,
+                result.max_retries,
                 result.error,
             )
         )

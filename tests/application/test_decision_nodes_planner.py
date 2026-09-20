@@ -4,9 +4,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from orket.application.services.decision_context_service import capture_routing_input
+from orket.application.services import decision_context_service as decision_context
 from orket.application.services.decision_node_registry import DecisionNodeRegistry, build_decision_node_registry
-from orket.core.contracts.decision_inputs import LoopPolicyInputs, PlanningCardInput
+from orket.core.contracts.decision_inputs import LoopPolicyInputs, PlanningCardInput, SuccessEvaluationInput
 from orket.decision_nodes.builtins import (
     DefaultApiRuntimeStrategyNode,
     DefaultEvaluatorNode,
@@ -131,7 +131,7 @@ def test_default_router_routes_to_issue_seat_for_non_review():
         }
     )
 
-    assert router.route(capture_routing_input(issue, team, False)) == "senior_developer"
+    assert router.route(decision_context.capture_routing_input(issue, team, False)) == "senior_developer"
 
 
 def test_default_router_prefers_integrity_guard_for_review():
@@ -144,7 +144,7 @@ def test_default_router_prefers_integrity_guard_for_review():
         }
     )
 
-    assert router.route(capture_routing_input(issue, team, True)) == "integrity_guard"
+    assert router.route(decision_context.capture_routing_input(issue, team, True)) == "integrity_guard"
 
 
 # Layer: contract
@@ -200,13 +200,9 @@ def test_default_evaluator_success_decisions():
     updated_issue = _issue("I1", CardStatus.READY)
     turn = SimpleNamespace(content="Design decision captured.")
 
-    result = evaluator.evaluate_success(
-        issue=issue,
-        updated_issue=updated_issue,
-        turn=turn,
-        seat_name="lead_architect",
-        is_review_turn=False,
-    )
+    result = evaluator.evaluate_success(SuccessEvaluationInput(
+        turn=decision_context.capture_success_turn(issue, turn, "lead_architect", False),
+        updated_issue_status=updated_issue.status))
 
     assert result["remember_decision"] is True
     assert result["trigger_sandbox"] is True
@@ -222,10 +218,10 @@ def test_default_evaluator_success_decisions():
 
 def test_default_evaluator_failure_governance_violation():
     evaluator = DefaultEvaluatorNode()
-    issue = SimpleNamespace(retry_count=1, max_retries=3)
+    issue = SimpleNamespace(id="I1", retry_count=1, max_retries=3)
     result = SimpleNamespace(violations=["blocked"])
 
-    decision = evaluator.evaluate_failure(issue, result)
+    decision = evaluator.evaluate_failure(decision_context.capture_failure_evaluation(issue, result))
 
     assert decision["action"] == "governance_violation"
     assert decision["next_retry_count"] == 1
@@ -237,13 +233,13 @@ def test_default_evaluator_failure_governance_violation():
 
 def test_default_evaluator_failure_deterministic_security_is_governance_violation():
     evaluator = DefaultEvaluatorNode()
-    issue = SimpleNamespace(retry_count=1, max_retries=3)
+    issue = SimpleNamespace(id="I1", retry_count=1, max_retries=3)
     result = SimpleNamespace(
         violations=[],
         error="Deterministic failure: security scope contract not met after corrective reprompt.",
     )
 
-    decision = evaluator.evaluate_failure(issue, result)
+    decision = evaluator.evaluate_failure(decision_context.capture_failure_evaluation(issue, result))
 
     assert decision["action"] == "governance_violation"
     assert decision["next_retry_count"] == 1
@@ -252,13 +248,13 @@ def test_default_evaluator_failure_deterministic_security_is_governance_violatio
 # Layer: contract
 def test_default_evaluator_failure_deterministic_progress_after_corrective_reprompt_is_governance_violation():
     evaluator = DefaultEvaluatorNode()
-    issue = SimpleNamespace(retry_count=1, max_retries=3)
+    issue = SimpleNamespace(id="I1", retry_count=1, max_retries=3)
     result = SimpleNamespace(
         violations=[],
         error="Deterministic failure: progress contract not met after corrective reprompt.",
     )
 
-    decision = evaluator.evaluate_failure(issue, result)
+    decision = evaluator.evaluate_failure(decision_context.capture_failure_evaluation(issue, result))
 
     assert decision["action"] == "governance_violation"
     assert decision["next_retry_count"] == 1
@@ -266,13 +262,13 @@ def test_default_evaluator_failure_deterministic_progress_after_corrective_repro
 
 def test_default_evaluator_missing_read_file_is_retry():
     evaluator = DefaultEvaluatorNode()
-    issue = SimpleNamespace(retry_count=0, max_retries=3)
+    issue = SimpleNamespace(id="I1", retry_count=0, max_retries=3)
     result = SimpleNamespace(
         violations=["Tool read_file failed: File not found"],
         error="Governance violations: ['Tool read_file failed: File not found']",
     )
 
-    decision = evaluator.evaluate_failure(issue, result)
+    decision = evaluator.evaluate_failure(decision_context.capture_failure_evaluation(issue, result))
 
     assert decision["action"] == "retry"
     assert decision["next_retry_count"] == 1
@@ -280,13 +276,13 @@ def test_default_evaluator_missing_read_file_is_retry():
 
 def test_default_evaluator_missing_read_file_error_only_is_retry():
     evaluator = DefaultEvaluatorNode()
-    issue = SimpleNamespace(retry_count=0, max_retries=3)
+    issue = SimpleNamespace(id="I1", retry_count=0, max_retries=3)
     result = SimpleNamespace(
         violations=[],
         error="Governance violations: ['Tool read_file failed: File not found']",
     )
 
-    decision = evaluator.evaluate_failure(issue, result)
+    decision = evaluator.evaluate_failure(decision_context.capture_failure_evaluation(issue, result))
 
     assert decision["action"] == "retry"
     assert decision["next_retry_count"] == 1
@@ -294,13 +290,13 @@ def test_default_evaluator_missing_read_file_error_only_is_retry():
 
 def test_default_evaluator_write_file_approval_pending_is_requeue_without_retry_increment():
     evaluator = DefaultEvaluatorNode()
-    issue = SimpleNamespace(retry_count=2, max_retries=3)
+    issue = SimpleNamespace(id="I1", retry_count=2, max_retries=3)
     result = SimpleNamespace(
         violations=[],
         error="Approval required for tool 'write_file' before execution.",
     )
 
-    decision = evaluator.evaluate_failure(issue, result)
+    decision = evaluator.evaluate_failure(decision_context.capture_failure_evaluation(issue, result))
 
     assert decision["action"] == "approval_pending"
     assert decision["next_retry_count"] == 2
@@ -311,13 +307,13 @@ def test_default_evaluator_write_file_approval_pending_is_requeue_without_retry_
 
 def test_default_evaluator_non_readfile_violation_remains_governance():
     evaluator = DefaultEvaluatorNode()
-    issue = SimpleNamespace(retry_count=0, max_retries=3)
+    issue = SimpleNamespace(id="I1", retry_count=0, max_retries=3)
     result = SimpleNamespace(
         violations=["Tool write_file failed: Permission denied"],
         error="Governance violations: ['Tool write_file failed: Permission denied']",
     )
 
-    decision = evaluator.evaluate_failure(issue, result)
+    decision = evaluator.evaluate_failure(decision_context.capture_failure_evaluation(issue, result))
 
     assert decision["action"] == "governance_violation"
     assert decision["next_retry_count"] == 0
@@ -325,10 +321,10 @@ def test_default_evaluator_non_readfile_violation_remains_governance():
 
 def test_default_evaluator_failure_retry():
     evaluator = DefaultEvaluatorNode()
-    issue = SimpleNamespace(retry_count=1, max_retries=3)
+    issue = SimpleNamespace(id="I1", retry_count=1, max_retries=3)
     result = SimpleNamespace(violations=[])
 
-    decision = evaluator.evaluate_failure(issue, result)
+    decision = evaluator.evaluate_failure(decision_context.capture_failure_evaluation(issue, result))
 
     assert decision["action"] == "retry"
     assert decision["next_retry_count"] == 2
@@ -340,10 +336,10 @@ def test_default_evaluator_failure_retry():
 
 def test_default_evaluator_failure_catastrophic():
     evaluator = DefaultEvaluatorNode()
-    issue = SimpleNamespace(retry_count=3, max_retries=3)
+    issue = SimpleNamespace(id="I1", retry_count=3, max_retries=3)
     result = SimpleNamespace(violations=[])
 
-    decision = evaluator.evaluate_failure(issue, result)
+    decision = evaluator.evaluate_failure(decision_context.capture_failure_evaluation(issue, result))
 
     assert decision["action"] == "catastrophic"
     assert decision["next_retry_count"] == 4

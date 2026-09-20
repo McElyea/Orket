@@ -5,6 +5,16 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.47] - 2026-09-20
+
+### Fixed
+- Capture immutable evaluator inputs and node selection before failure publication or success inspection awaits, protecting runtime records and retained turns from borrowed strategy references.
+- Validate recommendation fields and supply copied read-only success decisions/actions while preserving default retry, approval, guard and exception policies.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Custom evaluators accept the declared single input values and primitive recommendation mappings. Migration: `docs/architecture/CONTRACT_DELTA_EVALUATOR_INPUTS_D_2026-09-20.md`.
+
 ## [0.6.46] - 2026-09-20
 
 ### Fixed

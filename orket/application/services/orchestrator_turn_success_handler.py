@@ -6,7 +6,13 @@ from types import SimpleNamespace
 from typing import Any
 
 from orket.application.services.card_completion_turn_service import verify_card_completion_claims
+from orket.application.services.decision_context_service import (
+    admit_success_actions,
+    admit_success_recommendation,
+    capture_success_turn,
+)
 from orket.core.contracts.card_completion_commit import SUCCESSFUL_CARD_STATUSES, CardCompletionRejected
+from orket.core.contracts.decision_inputs import SuccessEvaluationInput
 from orket.core.domain.execution import ExecutionTurn
 from orket.logging import log_event
 
@@ -154,8 +160,11 @@ class OrchestratorTurnSuccessHandler:
         active_build: str,
         context: dict[str, Any],
     ) -> None:
+        turn_inputs = capture_success_turn(issue, result.turn, seat_name, is_review_turn)
+        node = self.evaluator_node
         self.transcript.append(result.turn)
         updated_issue = await self.async_cards.get_by_id(issue.id)
+        evaluation = SuccessEvaluationInput(turn=turn_inputs, updated_issue_status=updated_issue.status)
         await verify_card_completion_claims(cards=self.async_cards, turn=result.turn, context=context)
         receipt = None
         if updated_issue.status.value in SUCCESSFUL_CARD_STATUSES:
@@ -176,16 +185,10 @@ class OrchestratorTurnSuccessHandler:
             if not should_continue:
                 return
 
-        success_eval = self.evaluator_node.evaluate_success(
-            issue=issue,
-            updated_issue=updated_issue,
-            turn=result.turn,
-            seat_name=seat_name,
-            is_review_turn=is_review_turn,
-        )
+        success_eval = admit_success_recommendation(node.evaluate_success(evaluation))
         if success_eval.get("remember_decision"):
             await self.memory.remember(
-                content=f"Decision by {seat_name} on {issue.id}: {result.turn.content[:200]}...",
+                content=f"Decision by {seat_name} on {issue.id}: {turn_inputs.content[:200]}...",
                 metadata={
                     "issue_id": issue.id,
                     "role": seat_name,
@@ -194,8 +197,8 @@ class OrchestratorTurnSuccessHandler:
                 },
             )
 
-        success_actions = self.evaluator_node.success_post_actions(success_eval)
-        if self.evaluator_node.should_trigger_sandbox(success_actions):
+        success_actions = admit_success_actions(node.success_post_actions(success_eval))
+        if node.should_trigger_sandbox(success_actions):
             if self.is_sandbox_disabled():
                 log_event(
                     "sandbox_trigger_skipped_policy",
@@ -204,7 +207,7 @@ class OrchestratorTurnSuccessHandler:
                 )
             else:
                 await self.trigger_sandbox(epic, run_id=run_id)
-            next_status = self.evaluator_node.next_status_after_success(success_actions)
+            next_status = node.next_status_after_success(success_actions)
             if next_status is not None:
                 await self.request_issue_transition(
                     issue=issue,

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, StrictBool, StrictInt
 
 from orket.core.types import CardStatus
 
@@ -65,3 +65,46 @@ class RoutingInput(BaseModel):
     issue_seat: str
     is_review_turn: bool
     seats: tuple[RoutingSeatInput, ...]
+
+
+class FailureEvaluationInput(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+    issue_id: str
+    retry_count: int
+    max_retries: int
+    error: str | None
+    violations: tuple[str, ...]
+
+
+class SuccessTurnInput(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+    issue_id: str
+    issue_status: CardStatus
+    content: str
+    seat_name: str
+    is_review_turn: bool
+
+
+class SuccessEvaluationInput(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+    turn: SuccessTurnInput
+    updated_issue_status: CardStatus
+
+
+class FailureRecommendation(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+    action: str
+    next_retry_count: StrictInt
+
+
+class SuccessRecommendation(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+    remember_decision: StrictBool = False
+    trigger_sandbox: StrictBool = False
+    promote_code_review: StrictBool = False
+
+
+class SuccessActions(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+    trigger_sandbox: StrictBool = False
+    next_status: CardStatus | None = None

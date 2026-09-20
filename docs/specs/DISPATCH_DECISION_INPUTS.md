@@ -1,6 +1,6 @@
-# Planner and router input ownership
+# Dispatch decision input ownership
 
-Status: Active contract for the 0.6.46 candidate
+Status: Active contract for the 0.6.47 candidate
 Owner: Orket Core
 Last updated: 2026-09-20
 
@@ -31,6 +31,31 @@ accessing undeclared runtime fields. Custom routers migrate from
 `route(issue, team, is_review_turn)` to `route(inputs)`. There is no old-signature
 fallback or mutable compatibility payload. Frozen-value mutation errors propagate
 before this invocation can authorize dispatch effects.
+
+Evaluator handlers capture their selected node and immutable input facts before
+their first await. Failure context contains issue ID, retry counts, error and a
+copied tuple of violations. Failure-report publication and subsequent evaluation
+use the same captured error. Success context captures initial issue status, content,
+seat and review flag; the observed updated status is added after the application
+reads the repository. This is an explicit observation sequence, not an atomic
+snapshot of the entire runtime or database.
+
+Evaluators implement `evaluate_failure(FailureEvaluationInput)` and
+`evaluate_success(SuccessEvaluationInput)`. They cannot borrow the caller's issue,
+result, mutable violation list or retained execution turn through these arguments.
+The application validates recommendation field types and copies success decisions
+and actions into read-only primitive mappings before further evaluator calls.
+Success flags require booleans; retry counts require integers without coercing
+booleans or strings. Unknown fields fail. An omitted next retry count preserves the
+captured count. Existing custom exception/message policies remain available.
+These checks do not establish a new retry-budget policy or authorize arbitrary
+recommendations; the existing application transition/completion authorities remain.
+
+A failure evaluator refusal may follow an already-published truthful failure
+report. It does not erase that report or claim there were no preceding effects.
+The changed boundary does not freeze all caller-owned application objects or
+rewrite the durable transcript; it prevents borrowed evaluator inputs from
+mutating them. Custom-node migration is explicit, with no signature fallback.
 
 These are trusted in-process strategy contracts, not hostile Python containment.
 They do not prevent a plugin from using an independently acquired global reference

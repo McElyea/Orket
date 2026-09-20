@@ -3,15 +3,21 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from types import MappingProxyType
 from typing import Any
 
 from orket.core.contracts.decision_inputs import (
+    FailureEvaluationInput,
+    FailureRecommendation,
     LoopPolicyInputs,
     PlanningCardInput,
     PlanningInput,
     RoutingInput,
     RoutingSeatInput,
     ScalarLimit,
+    SuccessActions,
+    SuccessRecommendation,
+    SuccessTurnInput,
 )
 from orket.exceptions import ExecutionFailed
 
@@ -54,3 +60,25 @@ def recommend_routing_seat(router: Any, issue: Any, team: Any, is_review_turn: b
     if type(selected) is not str:
         raise ExecutionFailed("E_CARD_ROUTING_INVALID_RECOMMENDATION")
     return selected
+
+
+def capture_failure_evaluation(issue: Any, result: Any) -> FailureEvaluationInput:
+    return FailureEvaluationInput(issue_id=issue.id, retry_count=issue.retry_count, max_retries=issue.max_retries,
+        error=getattr(result, "error", None), violations=tuple(getattr(result, "violations", ()) or ()))
+
+
+def capture_success_turn(issue: Any, turn: Any, seat_name: str, is_review_turn: bool) -> SuccessTurnInput:
+    return SuccessTurnInput(issue_id=issue.id, issue_status=issue.status, content=turn.content or "",
+                            seat_name=seat_name, is_review_turn=is_review_turn)
+
+
+def admit_failure_recommendation(payload: Mapping[str, Any], inputs: FailureEvaluationInput) -> FailureRecommendation:
+    return FailureRecommendation.model_validate({"next_retry_count": inputs.retry_count, **payload})
+
+
+def admit_success_recommendation(payload: Mapping[str, Any]) -> Mapping[str, Any]:
+    return MappingProxyType(SuccessRecommendation.model_validate(payload).model_dump())
+
+
+def admit_success_actions(payload: Mapping[str, Any]) -> Mapping[str, Any]:
+    return MappingProxyType(SuccessActions.model_validate(payload).model_dump())

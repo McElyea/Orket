@@ -12520,8 +12520,8 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.46 planner/router input checkpoint. Preserve the governed legacy-export cutover;
-continue remaining immutable decision inputs, adapter classification and async reachability before E1/E2
+0.6.47 evaluator input checkpoint. Preserve the governed legacy-export cutover;
+continue loop/sandbox/API decision inputs, remaining deterministic input owners, adapter enforcement and async reachability before E1/E2
 and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
 Preserve every failed and
@@ -18332,3 +18332,87 @@ are unchanged. The .43 Git timeout, .44 non-Python packaging ceiling, full-suite
 capacity acceptance follows. Continue the remaining evaluator/loop/sandbox/API
 decision-input boundaries, adapter enforcement and async reachability before E1/E2
 and CAP. No whole-lane completion or retirement.
+
+
+#### .47 captured evaluator checkpoint (2026-09-20)
+
+Both evaluator handlers capture immutable context and the selected node before
+their first await. Failure publication and evaluation share captured error,
+violations and retry inputs. Success evaluation combines captured initial status,
+content, seat and review flag with the repository's later observed status; decision
+memory uses the captured content. Strategies receive no borrowed issue/result/turn
+objects. Recommendation fields are validated and success decisions/actions are
+copied into read-only primitive mappings before further strategy calls. Default
+retry, approval, guard, custom exception and message policies remain.
+Contract: `docs/specs/DISPATCH_DECISION_INPUTS.md`; explicit custom-node delta:
+`docs/architecture/CONTRACT_DELTA_EVALUATOR_INPUTS_D_2026-09-20.md`.
+
+Three retained pre-change controls expose issue retry-limit mutation, inputs
+changing during failure-report publication, and a success evaluator rewriting a
+turn already appended to the transcript. The first success probe omitted required
+turn role/issue fields and stopped at construction; the corrected probe reaches
+all three intended failures. Existing affected regressions pass 131 cases. The new
+88-case boundary selection initially has 87 passes and one test failure reading
+the report under an incorrect `violation` key. Its existing schema uses `detail`;
+that assertion is corrected without a report/runtime change. The combined corrected
+boundary/regression selection passes 210 cases. All original inputs and failures
+are retained under `.tmp/d-evaluation-inputs/`.
+
+The first 364-case source/installed matrix passed, but review found a parity
+oracle that repeated the new implementation. Its replacement uses 78 outcomes
+actually captured from the published installed v0.6.46 wheel, with its version,
+origin and wheel identity verified. The resulting fixture is tracked and the
+refined 88-case boundary selection passes. The final candidate was rebuilt and
+the entire source/installed matrix repeated. Authoritative final records are in
+`.tmp/d-evaluation-inputs-independent/`; the earlier matrix and preliminary plan
+text remain retained under the main proof root. No runtime code changed during
+this reference refinement.
+
+Frozen fresh source and serial installed Windows 3.11/3.12 run the same **364 cases
+across 24 modules**, with zero failures, errors or skips:
+
+| Environment | Pass / fail / error / skip | Pytest seconds |
+| --- | --- | --- |
+| Source Windows 3.11 | 364 / 0 / 0 / 0 | 38.305 |
+| Installed win-py311 | 364 / 0 / 0 / 0 | 35.843 |
+| Installed win-py312 | 364 / 0 / 0 / 0 | 36.152 |
+
+Proof includes actual failure JSON publication, SQLite success inspection,
+orchestrator dispatch, accepted dependency/card completion, retry/approval/guard
+regressions, immutable nested values, held-await input/node rotation and malformed
+recommendation controls. Controlled providers and nodes do not establish fresh
+inference. Failure reports intentionally remain after a later evaluator refusal;
+this is not a claim that no earlier effect occurred. Application-wide atomic
+snapshots, a new retry-budget policy and hostile Python containment are not proved.
+
+Each installed cell checks 678 core origins, matching copied support/case identities,
+actual CLI primary/degraded and controlled ToolGate flows, no root database and no
+observed surviving proof children. Package parity covers 1,100 Python sources and
+1,116 wheel members; the harness has 2,089 support files. Wheel SHA-256:
+`d4830f498114e1d4c88090617fc753a7d5ae7ec61b7b6d6894fa79f23c28081d`.
+Sdist SHA-256:
+`a3b479e49b806044fc18c74be32bdaa53219dc31cbba24158be050b0e5a2ddcb`.
+
+Both Quality jobs include evaluator controls. Changed-file Ruff, dependency,
+documentation hygiene, release metadata and whitespace pass; canonical Ruff retains
+94 findings with none introduced. Dependency policy and exceptions are unchanged:
+1,100 modules, 3,485 import sites, six recognized routes and zero forbidden edges,
+unknown modules, cycles or analysis errors. The builtin shrinks by three lines and
+the decision test module by four; the oversized epic test module does not grow.
+Its five modified isolated tests now have canonical unit markers. New structures
+meet size limits. AC-01 through AC-10 pass for this changed input boundary only.
+
+All 21,713 handoff and 96 .46 checkpoint evidence hashes revalidate; the original
+checkout is unchanged. The proof root retains `checkpoint.json`, `index-check.json`,
+`publication.json` and `COMMITTED_CHANGESET.md` for the scoped annotated-v0.6.47
+publication. Exact selection/source-report scope supersedes the reused low-level
+runner's historical extension-installation label.
+
+No fresh Linux runtime or passive clock observation is claimed. The .45 preflight
+remains the latest retained blocker: 240.011 seconds without the required 60-second
+quiet interval, with +18.666208636/-18.167079316-second wall steps. No clock/deadline
+change or new provider/containment/capacity acceptance is made. The .43 Git timeout,
+.44 non-Python shipping ceiling, full-suite/89%-coverage and hosted Quality gaps
+remain. Continue loop/sandbox/API decision inputs, remaining deterministic input
+owners, adapter classification/enforcement and complete async reachability before
+E1/E2 and CAP. The governed legacy-export cutover remains unchanged; no lane retirement.

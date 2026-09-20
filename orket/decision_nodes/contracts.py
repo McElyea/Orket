@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any, Protocol
 
 from orket.core.contracts.decision_inputs import (
+    FailureEvaluationInput,
     LoopPolicyInputs,
     PlanningCardInput,
     PlanningInput,
     RoutingInput,
+    SuccessEvaluationInput,
     ToolSelectionInput,
 )
 from orket.core.contracts.model_selection import ModelSelectionInput
@@ -27,22 +30,15 @@ class RouterNode(Protocol):
 class EvaluatorNode(Protocol):
     """Decision node: evaluates issue outcomes and quality signals."""
 
-    def evaluate_success(
-        self,
-        issue: Any,
-        updated_issue: Any,
-        turn: Any,
-        seat_name: str,
-        is_review_turn: bool,
-    ) -> Any: ...
+    def evaluate_success(self, inputs: SuccessEvaluationInput) -> Mapping[str, Any]: ...
 
-    def evaluate_failure(self, issue: Any, result: Any) -> Any: ...
+    def evaluate_failure(self, inputs: FailureEvaluationInput) -> Mapping[str, Any]: ...
 
-    def success_post_actions(self, success_eval: dict[str, Any]) -> dict[str, Any]: ...
+    def success_post_actions(self, success_eval: Mapping[str, Any]) -> Mapping[str, Any]: ...
 
-    def should_trigger_sandbox(self, success_actions: dict[str, Any]) -> bool: ...
+    def should_trigger_sandbox(self, success_actions: Mapping[str, Any]) -> bool: ...
 
-    def next_status_after_success(self, success_actions: dict[str, Any]) -> Any: ...
+    def next_status_after_success(self, success_actions: Mapping[str, Any]) -> Any: ...
 
     def status_for_failure_action(self, action: str) -> Any: ...
 

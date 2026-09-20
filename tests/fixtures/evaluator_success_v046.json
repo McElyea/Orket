@@ -1,0 +1,419 @@
+{
+  "schema_version": "evaluator_success_reference.v1",
+  "source_version": "0.6.46",
+  "source_wheel_sha256": "40e40558cbc2614c746f7503a0b7930a7add80d22227c538fcae69811d3cc154",
+  "content": "Decision captured",
+  "seat_name": "developer",
+  "cases": {
+    "ready|ready|False": {
+      "remember_decision": true,
+      "trigger_sandbox": true,
+      "promote_code_review": true
+    },
+    "ready|ready|True": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": true
+    },
+    "ready|code_review|False": {
+      "remember_decision": true,
+      "trigger_sandbox": true,
+      "promote_code_review": false
+    },
+    "ready|code_review|True": {
+      "remember_decision": true,
+      "trigger_sandbox": true,
+      "promote_code_review": false
+    },
+    "ready|done|False": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "ready|done|True": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "in_progress|ready|False": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "in_progress|ready|True": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "in_progress|code_review|False": {
+      "remember_decision": true,
+      "trigger_sandbox": true,
+      "promote_code_review": false
+    },
+    "in_progress|code_review|True": {
+      "remember_decision": true,
+      "trigger_sandbox": true,
+      "promote_code_review": false
+    },
+    "in_progress|done|False": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "in_progress|done|True": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "blocked|ready|False": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "blocked|ready|True": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "blocked|code_review|False": {
+      "remember_decision": true,
+      "trigger_sandbox": true,
+      "promote_code_review": false
+    },
+    "blocked|code_review|True": {
+      "remember_decision": true,
+      "trigger_sandbox": true,
+      "promote_code_review": false
+    },
+    "blocked|done|False": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "blocked|done|True": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "waiting_for_developer|ready|False": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "waiting_for_developer|ready|True": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "waiting_for_developer|code_review|False": {
+      "remember_decision": true,
+      "trigger_sandbox": true,
+      "promote_code_review": false
+    },
+    "waiting_for_developer|code_review|True": {
+      "remember_decision": true,
+      "trigger_sandbox": true,
+      "promote_code_review": false
+    },
+    "waiting_for_developer|done|False": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "waiting_for_developer|done|True": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "ready_for_testing|ready|False": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "ready_for_testing|ready|True": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "ready_for_testing|code_review|False": {
+      "remember_decision": true,
+      "trigger_sandbox": true,
+      "promote_code_review": false
+    },
+    "ready_for_testing|code_review|True": {
+      "remember_decision": true,
+      "trigger_sandbox": true,
+      "promote_code_review": false
+    },
+    "ready_for_testing|done|False": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "ready_for_testing|done|True": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "code_review|ready|False": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "code_review|ready|True": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "code_review|code_review|False": {
+      "remember_decision": true,
+      "trigger_sandbox": true,
+      "promote_code_review": true
+    },
+    "code_review|code_review|True": {
+      "remember_decision": true,
+      "trigger_sandbox": true,
+      "promote_code_review": true
+    },
+    "code_review|done|False": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "code_review|done|True": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "awaiting_guard_review|ready|False": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "awaiting_guard_review|ready|True": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "awaiting_guard_review|code_review|False": {
+      "remember_decision": true,
+      "trigger_sandbox": true,
+      "promote_code_review": false
+    },
+    "awaiting_guard_review|code_review|True": {
+      "remember_decision": true,
+      "trigger_sandbox": true,
+      "promote_code_review": false
+    },
+    "awaiting_guard_review|done|False": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "awaiting_guard_review|done|True": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "guard_approved|ready|False": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "guard_approved|ready|True": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "guard_approved|code_review|False": {
+      "remember_decision": true,
+      "trigger_sandbox": true,
+      "promote_code_review": false
+    },
+    "guard_approved|code_review|True": {
+      "remember_decision": true,
+      "trigger_sandbox": true,
+      "promote_code_review": false
+    },
+    "guard_approved|done|False": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "guard_approved|done|True": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "guard_rejected|ready|False": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "guard_rejected|ready|True": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "guard_rejected|code_review|False": {
+      "remember_decision": true,
+      "trigger_sandbox": true,
+      "promote_code_review": false
+    },
+    "guard_rejected|code_review|True": {
+      "remember_decision": true,
+      "trigger_sandbox": true,
+      "promote_code_review": false
+    },
+    "guard_rejected|done|False": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "guard_rejected|done|True": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "guard_requested_changes|ready|False": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "guard_requested_changes|ready|True": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "guard_requested_changes|code_review|False": {
+      "remember_decision": true,
+      "trigger_sandbox": true,
+      "promote_code_review": false
+    },
+    "guard_requested_changes|code_review|True": {
+      "remember_decision": true,
+      "trigger_sandbox": true,
+      "promote_code_review": false
+    },
+    "guard_requested_changes|done|False": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "guard_requested_changes|done|True": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "done|ready|False": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "done|ready|True": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "done|code_review|False": {
+      "remember_decision": true,
+      "trigger_sandbox": true,
+      "promote_code_review": false
+    },
+    "done|code_review|True": {
+      "remember_decision": true,
+      "trigger_sandbox": true,
+      "promote_code_review": false
+    },
+    "done|done|False": {
+      "remember_decision": true,
+      "trigger_sandbox": true,
+      "promote_code_review": true
+    },
+    "done|done|True": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": true
+    },
+    "canceled|ready|False": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "canceled|ready|True": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "canceled|code_review|False": {
+      "remember_decision": true,
+      "trigger_sandbox": true,
+      "promote_code_review": false
+    },
+    "canceled|code_review|True": {
+      "remember_decision": true,
+      "trigger_sandbox": true,
+      "promote_code_review": false
+    },
+    "canceled|done|False": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "canceled|done|True": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "archived|ready|False": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "archived|ready|True": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "archived|code_review|False": {
+      "remember_decision": true,
+      "trigger_sandbox": true,
+      "promote_code_review": false
+    },
+    "archived|code_review|True": {
+      "remember_decision": true,
+      "trigger_sandbox": true,
+      "promote_code_review": false
+    },
+    "archived|done|False": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    },
+    "archived|done|True": {
+      "remember_decision": true,
+      "trigger_sandbox": false,
+      "promote_code_review": false
+    }
+  },
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-09-20T22:19:05.639749Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:05e12579554ece0fcf7fb1b94e8628b2f52ee37e6f1e5122987d609b93608ab8",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 557,
+        "paths_total_reference": 557,
+        "churn_paths": 557,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    }
+  ]
+}
