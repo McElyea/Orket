@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-20T21:02:09.018632+00:00",
+  "generated_at": "2026-09-20T21:48:15.347671+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -889,7 +889,7 @@
       },
       "orket.application.services.card_dependency_service": {
         "path": "orket/application/services/card_dependency_service.py",
-        "sha256": "346be5676101b8eee62b3046763f4f4c1f971461fbd530b3f5f3096d6963ccb8"
+        "sha256": "afa22a7b76d55f99282890824ecae8b751007ea945bf4efc84a903affe4c9dbc"
       },
       "orket.application.services.card_workspace_mutation_service": {
         "path": "orket/application/services/card_workspace_mutation_service.py",
@@ -977,7 +977,7 @@
       },
       "orket.application.services.decision_context_service": {
         "path": "orket/application/services/decision_context_service.py",
-        "sha256": "44b97169cccd04eceaea284e785e26fc8860dec8a2246204b9f1b69ae0bca899"
+        "sha256": "ebfe6c2dd1f4baf9a7a15f23546c65d95d15bb63cd62b6b54cbbdeb99c7364b7"
       },
       "orket.application.services.decision_node_registry": {
         "path": "orket/application/services/decision_node_registry.py",
@@ -1473,7 +1473,7 @@
       },
       "orket.application.services.orchestrator_turn_preparation_service": {
         "path": "orket/application/services/orchestrator_turn_preparation_service.py",
-        "sha256": "07d52dacc95c8ec32006bd94a2e47f5b2a2a9b93bc9a723ed0c5b814ddf7879b"
+        "sha256": "3ca4e27d6d7a3d8b9c535245a796e62bc7ec5d7fd5cc80454a6c4044c44d5b77"
       },
       "orket.application.services.orchestrator_turn_success_handler": {
         "path": "orket/application/services/orchestrator_turn_success_handler.py",
@@ -2193,7 +2193,7 @@
       },
       "orket.core.contracts.decision_inputs": {
         "path": "orket/core/contracts/decision_inputs.py",
-        "sha256": "f55ec100eae478e896afe7f9e5a95aa3260bce55cd73e0c64ed8b7a1ecb9ca9f"
+        "sha256": "2cedf3d9d4658ce43a338771eb84222c92cf4106d3b36eb5ba3d6ccb2f8a9a96"
       },
       "orket.core.contracts.dual_write_intent": {
         "path": "orket/core/contracts/dual_write_intent.py",
@@ -2593,11 +2593,11 @@
       },
       "orket.decision_nodes.builtins": {
         "path": "orket/decision_nodes/builtins.py",
-        "sha256": "a906a6be58d81d3955023be1070ff6c97a8ca2c5e176f6b7884cee8d1a39547a"
+        "sha256": "3924666629412339f11290fb7c7ad6bb8ce293496d9ad638c9e6bfdf86245e5f"
       },
       "orket.decision_nodes.contracts": {
         "path": "orket/decision_nodes/contracts.py",
-        "sha256": "30ee23ef4d8eec192b3a0647a8821be8bc4a43a610dee633d7abe1a07398739e"
+        "sha256": "0cfa7f2202a98fc064d25e38674b5607d89b639034685e3bd6db7d6f828421f1"
       },
       "orket.discovery": {
         "path": "orket/discovery.py",
@@ -8489,28 +8489,28 @@
       },
       {
         "source": "orket.application.services.card_dependency_service",
-        "target": "orket.core.contracts.card_completion_commit",
+        "target": "orket.application.services.decision_context_service",
         "path": "orket/application/services/card_dependency_service.py",
         "line": 11,
         "kind": "from"
       },
       {
         "source": "orket.application.services.card_dependency_service",
-        "target": "orket.core.contracts.repositories",
+        "target": "orket.core.contracts.card_completion_commit",
         "path": "orket/application/services/card_dependency_service.py",
         "line": 12,
         "kind": "from"
       },
       {
         "source": "orket.application.services.card_dependency_service",
-        "target": "orket.core.domain.records",
+        "target": "orket.core.contracts.repositories",
         "path": "orket/application/services/card_dependency_service.py",
         "line": 13,
         "kind": "from"
       },
       {
         "source": "orket.application.services.card_dependency_service",
-        "target": "orket.decision_nodes.contracts",
+        "target": "orket.core.domain.records",
         "path": "orket/application/services/card_dependency_service.py",
         "line": 14,
         "kind": "from"
@@ -9031,6 +9031,13 @@
         "target": "orket.core.contracts.decision_inputs",
         "path": "orket/application/services/decision_context_service.py",
         "line": 8,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.decision_context_service",
+        "target": "orket.exceptions",
+        "path": "orket/application/services/decision_context_service.py",
+        "line": 16,
         "kind": "from"
       },
       {
@@ -13151,51 +13158,58 @@
       },
       {
         "source": "orket.application.services.orchestrator_turn_preparation_service",
-        "target": "orket.application.services.orchestrator_prompt_preparation_service",
+        "target": "orket.application.services.decision_context_service",
         "path": "orket/application/services/orchestrator_turn_preparation_service.py",
         "line": 10,
         "kind": "from"
       },
       {
         "source": "orket.application.services.orchestrator_turn_preparation_service",
-        "target": "orket.core.cards_runtime_contract",
+        "target": "orket.application.services.orchestrator_prompt_preparation_service",
         "path": "orket/application/services/orchestrator_turn_preparation_service.py",
-        "line": 13,
+        "line": 11,
         "kind": "from"
       },
       {
         "source": "orket.application.services.orchestrator_turn_preparation_service",
-        "target": "orket.core.contracts.decision_inputs",
+        "target": "orket.core.cards_runtime_contract",
         "path": "orket/application/services/orchestrator_turn_preparation_service.py",
         "line": 14,
         "kind": "from"
       },
       {
         "source": "orket.application.services.orchestrator_turn_preparation_service",
-        "target": "orket.exceptions",
+        "target": "orket.core.contracts.decision_inputs",
         "path": "orket/application/services/orchestrator_turn_preparation_service.py",
         "line": 15,
         "kind": "from"
       },
       {
         "source": "orket.application.services.orchestrator_turn_preparation_service",
-        "target": "orket.logging",
+        "target": "orket.exceptions",
         "path": "orket/application/services/orchestrator_turn_preparation_service.py",
         "line": 16,
         "kind": "from"
       },
       {
         "source": "orket.application.services.orchestrator_turn_preparation_service",
-        "target": "orket.schema",
+        "target": "orket.logging",
         "path": "orket/application/services/orchestrator_turn_preparation_service.py",
         "line": 17,
         "kind": "from"
       },
       {
         "source": "orket.application.services.orchestrator_turn_preparation_service",
-        "target": "orket.utils",
+        "target": "orket.schema",
         "path": "orket/application/services/orchestrator_turn_preparation_service.py",
         "line": 18,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.orchestrator_turn_preparation_service",
+        "target": "orket.utils",
+        "path": "orket/application/services/orchestrator_turn_preparation_service.py",
+        "line": 19,
         "kind": "from"
       },
       {
@@ -19485,6 +19499,13 @@
         "kind": "from"
       },
       {
+        "source": "orket.core.contracts.decision_inputs",
+        "target": "orket.core.types",
+        "path": "orket/core/contracts/decision_inputs.py",
+        "line": 9,
+        "kind": "from"
+      },
+      {
         "source": "orket.core.contracts.dual_write_intent",
         "target": "orket.core.contracts.protocol_error_codes",
         "path": "orket/core/contracts/dual_write_intent.py",
@@ -20223,49 +20244,42 @@
         "source": "orket.decision_nodes.builtins",
         "target": "orket.core.contracts.model_selection",
         "path": "orket/decision_nodes/builtins.py",
-        "line": 13,
+        "line": 19,
         "kind": "from"
       },
       {
         "source": "orket.decision_nodes.builtins",
         "target": "orket.decision_nodes.api_runtime_strategy_node",
         "path": "orket/decision_nodes/builtins.py",
-        "line": 14,
-        "kind": "from"
-      },
-      {
-        "source": "orket.decision_nodes.builtins",
-        "target": "orket.decision_nodes.contracts",
-        "path": "orket/decision_nodes/builtins.py",
-        "line": 17,
+        "line": 20,
         "kind": "from"
       },
       {
         "source": "orket.decision_nodes.builtins",
         "target": "orket.exceptions",
         "path": "orket/decision_nodes/builtins.py",
-        "line": 18,
+        "line": 23,
         "kind": "from"
       },
       {
         "source": "orket.decision_nodes.builtins",
         "target": "orket.schema",
         "path": "orket/decision_nodes/builtins.py",
-        "line": 19,
+        "line": 24,
         "kind": "from"
       },
       {
         "source": "orket.decision_nodes.contracts",
         "target": "orket.core.contracts.decision_inputs",
         "path": "orket/decision_nodes/contracts.py",
-        "line": 6,
+        "line": 5,
         "kind": "from"
       },
       {
         "source": "orket.decision_nodes.contracts",
         "target": "orket.core.contracts.model_selection",
         "path": "orket/decision_nodes/contracts.py",
-        "line": 7,
+        "line": 12,
         "kind": "from"
       },
       {
@@ -30066,22 +30080,22 @@
       {
         "source": "application",
         "target": "application",
-        "count": 1686
+        "count": 1688
       },
       {
         "source": "application",
         "target": "core",
-        "count": 742
+        "count": 743
       },
       {
         "source": "application",
         "target": "decision_nodes",
-        "count": 5
+        "count": 4
       },
       {
         "source": "core",
         "target": "core",
-        "count": 140
+        "count": 141
       },
       {
         "source": "decision_nodes",
@@ -30091,7 +30105,7 @@
       {
         "source": "decision_nodes",
         "target": "decision_nodes",
-        "count": 3
+        "count": 2
       },
       {
         "source": "interfaces",
@@ -30118,73 +30132,6 @@
     }
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-19T10:04:41.453436Z",
-      "changed": true,
-      "before_digest": "sha256:726f2a4bcb3ab12ed9050ad448c2b5503f332c96bf3c0b55710cc533461bda9e",
-      "after_digest": "sha256:a7ac60e0f7d966e66063f3531eef4883149666590462c94a93dbc1eb1765f1c1",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 9,
-        "initial_write": false,
-        "paths_total_previous": 44639,
-        "paths_total_current": 44639,
-        "paths_total_reference": 44639,
-        "churn_paths": 9,
-        "churn_ratio": 0.000202,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.edges[1387].line",
-          "$.observed.edges[1387].target",
-          "$.observed.edges[1388].line",
-          "$.observed.edges[1388].target",
-          "$.observed.edges[1389].line",
-          "$.observed.edges[1389].target",
-          "$.observed.edges[1390].line",
-          "$.observed.modules.orket.application.services.project_vendor_factory.sha256"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-19T10:45:48.305420Z",
-      "changed": true,
-      "before_digest": "sha256:a7ac60e0f7d966e66063f3531eef4883149666590462c94a93dbc1eb1765f1c1",
-      "after_digest": "sha256:849884f93edfdd188954aa8cfdfc6a02a251b3416f7b100c906d8a64293a2301",
-      "diff": {
-        "added_paths": 8,
-        "removed_paths": 1,
-        "changed_paths": 9817,
-        "initial_write": false,
-        "paths_total_previous": 44639,
-        "paths_total_current": 44684,
-        "paths_total_reference": 44684,
-        "churn_paths": 9826,
-        "churn_ratio": 0.2199,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.edges[126].line",
-          "$.observed.edges[126].path",
-          "$.observed.edges[126].source",
-          "$.observed.edges[126].target",
-          "$.observed.edges[127].line",
-          "$.observed.edges[127].path",
-          "$.observed.edges[127].source",
-          "$.observed.edges[127].target",
-          "$.observed.edges[128].line",
-          "$.observed.edges[128].path",
-          "$.observed.edges[128].source",
-          "$.observed.edges[129].line",
-          "$.observed.edges[129].path",
-          "$.observed.edges[129].source",
-          "$.observed.edges[129].target",
-          "$.observed.edges[130].line",
-          "$.observed.edges[130].target",
-          "$.observed.edges[131].line",
-          "$.observed.edges[131].target"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-19T12:16:37.934577Z",
       "changed": true,
@@ -31079,6 +31026,79 @@
           "$.observed.edges[1473].source",
           "$.observed.edges[1473].target",
           "$.observed.edges[1474].line"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-20T21:46:13.683012Z",
+      "changed": true,
+      "before_digest": "sha256:418892cb5d04fc9d01b8a66277580cc3ac0022b8fed949e2d0c15253be08575c",
+      "after_digest": "sha256:b647fdd59d307b39b5696d430d1c6750d285dc86023bd8ae233af20d960c065b",
+      "diff": {
+        "added_paths": 2,
+        "removed_paths": 0,
+        "changed_paths": 7469,
+        "initial_write": false,
+        "paths_total_previous": 46357,
+        "paths_total_current": 46379,
+        "paths_total_reference": 46379,
+        "churn_paths": 7471,
+        "churn_ratio": 0.161086,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.edges[569].target",
+          "$.observed.edges[644].line",
+          "$.observed.edges[644].path",
+          "$.observed.edges[644].source",
+          "$.observed.edges[644].target",
+          "$.observed.edges[645].line",
+          "$.observed.edges[645].target",
+          "$.observed.edges[646].line",
+          "$.observed.edges[646].target",
+          "$.observed.edges[647].line",
+          "$.observed.edges[647].target",
+          "$.observed.edges[648].line",
+          "$.observed.edges[648].path",
+          "$.observed.edges[648].source",
+          "$.observed.edges[648].target",
+          "$.observed.edges[649].line",
+          "$.observed.edges[649].target",
+          "$.observed.edges[650].line",
+          "$.observed.edges[650].target"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-20T21:48:31.543048Z",
+      "changed": true,
+      "before_digest": "sha256:b647fdd59d307b39b5696d430d1c6750d285dc86023bd8ae233af20d960c065b",
+      "after_digest": "sha256:7ed38e592f1d5b4438b8b9143d3ca00d2f38dc7e31d761f80c8241a712b21a30",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 15,
+        "initial_write": false,
+        "paths_total_previous": 46379,
+        "paths_total_current": 46379,
+        "paths_total_reference": 46379,
+        "churn_paths": 15,
+        "churn_ratio": 0.000323,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.edges[566].target",
+          "$.observed.edges[567].target",
+          "$.observed.edges[568].target",
+          "$.observed.edges[569].target",
+          "$.observed.edges[644].line",
+          "$.observed.edges[2245].line",
+          "$.observed.edges[2246].line",
+          "$.observed.edges[2247].line",
+          "$.observed.edges[2248].line",
+          "$.observed.edges[2250].line",
+          "$.observed.modules.orket.application.services.card_dependency_service.sha256",
+          "$.observed.modules.orket.application.services.decision_context_service.sha256",
+          "$.observed.modules.orket.decision_nodes.builtins.sha256",
+          "$.observed.modules.orket.decision_nodes.contracts.sha256"
         ]
       }
     }

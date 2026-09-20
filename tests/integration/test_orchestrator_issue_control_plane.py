@@ -135,7 +135,7 @@ async def test_orchestrator_issue_turn_publishes_issue_dispatch_and_non_protocol
         loader=loader,
         sandbox_orchestrator=SimpleNamespace(registry=SimpleNamespace(get=lambda _sid: None)),
     )
-    orch.router_node = SimpleNamespace(route=lambda _issue, _team, _is_review_turn: "developer")
+    orch.router_node = SimpleNamespace(route=lambda _inputs: "developer")
     orch.loop_policy_node = SimpleNamespace(
         is_review_turn=lambda _status: False,
         turn_status_for_issue=lambda _is_review_turn: CardStatus.IN_PROGRESS,

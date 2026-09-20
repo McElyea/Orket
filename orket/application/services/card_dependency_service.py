@@ -8,10 +8,10 @@ from orket.application.services.card_completion_outcome_service import (
     inspect_build_completion,
     require_accepted_card_receipt,
 )
+from orket.application.services.decision_context_service import capture_planning_inputs
 from orket.core.contracts.card_completion_commit import CardCompletionRejected
 from orket.core.contracts.repositories import CardRepository
 from orket.core.domain.records import IssueRecord
-from orket.decision_nodes.contracts import PlanningInput
 from orket.exceptions import ExecutionFailed
 from orket.schema import CardStatus, IssueConfig
 
@@ -30,19 +30,14 @@ class CardDispatchSnapshot:
         return [card for card in self.eligible if card.status == CardStatus.READY]
 
     def plan(self, planner: Any, target_issue_id: str | None) -> list[IssueRecord]:
-        # Strategies select among inspected cards; mutations to their copies do
-        # not rewrite the authoritative dispatch payload or dependency inventory.
-        proposed = planner.plan(PlanningInput(
-            backlog=[card.model_copy(deep=True) for card in self.eligible],
-            independent_ready=[card.model_copy(deep=True) for card in self.independent_ready],
-            target_issue_id=target_issue_id,
-        ))
+        # Immutable strategy facts never become the authoritative dispatch payload.
+        proposed = planner.plan(capture_planning_inputs(self.eligible, self.independent_ready, target_issue_id))
         by_id = {card.id: card for card in self.eligible}
         selected = []
         seen = set()
         for proposal in proposed:
             card_id = getattr(proposal, "id", None)
-            if card_id not in by_id or card_id in seen:
+            if type(card_id) is not str or card_id not in by_id or card_id in seen:
                 raise ExecutionFailed(f"E_CARD_DISPATCH_UNADMITTED:{card_id}")
             selected.append(by_id[card_id])
             seen.add(card_id)

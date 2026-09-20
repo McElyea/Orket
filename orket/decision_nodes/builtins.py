@@ -9,12 +9,17 @@ from orket.core.cards_runtime_contract import (
 from orket.core.cards_runtime_contract import (
     required_write_paths_for_seat as resolve_cards_required_write_paths,
 )
-from orket.core.contracts.decision_inputs import LoopPolicyInputs, ToolSelectionInput
+from orket.core.contracts.decision_inputs import (
+    LoopPolicyInputs,
+    PlanningCardInput,
+    PlanningInput,
+    RoutingInput,
+    ToolSelectionInput,
+)
 from orket.core.contracts.model_selection import ModelSelectionInput, model_dialect
 from orket.decision_nodes.api_runtime_strategy_node import (
     DefaultApiRuntimeStrategyNode as _DefaultApiRuntimeStrategyNode,
 )
-from orket.decision_nodes.contracts import PlanningInput
 from orket.exceptions import CatastrophicFailure, ExecutionFailed, GovernanceViolation
 from orket.schema import CardStatus
 
@@ -22,12 +27,9 @@ DefaultApiRuntimeStrategyNode = _DefaultApiRuntimeStrategyNode
 
 
 class DefaultPlannerNode:
-    """
-    Built-in planner decision node.
-    Preserves existing orchestration candidate behavior.
-    """
+    """Preserve orchestration candidate order over captured card facts."""
 
-    def plan(self, data: PlanningInput) -> list[Any]:
+    def plan(self, data: PlanningInput) -> list[PlanningCardInput]:
         backlog = data.backlog
         independent_ready = data.independent_ready
         target_issue_id = data.target_issue_id
@@ -48,7 +50,7 @@ class DefaultPlannerNode:
                 return [target]
             return []
 
-        return in_review + independent_ready
+        return in_review + list(independent_ready)
 
 
 class DefaultRouterNode:
@@ -58,15 +60,11 @@ class DefaultRouterNode:
     during review turns.
     """
 
-    def route(self, issue: Any, team: Any, is_review_turn: bool) -> str:
-        if not is_review_turn:
-            return str(issue.seat)
-
-        verifier_seat = next(
-            (name for name, seat in team.seats.items() if "integrity_guard" in seat.roles),
-            None,
-        )
-        return str(verifier_seat or issue.seat)
+    def route(self, data: RoutingInput) -> str:
+        if not data.is_review_turn:
+            return data.issue_seat
+        verifier_seat = next((seat.name for seat in data.seats if "integrity_guard" in seat.roles), None)
+        return verifier_seat or data.issue_seat
 
 
 class DefaultPromptStrategyNode:

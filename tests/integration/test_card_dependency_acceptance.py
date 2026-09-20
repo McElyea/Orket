@@ -120,9 +120,7 @@ async def test_planner_copies_cannot_replace_dispatch_payload_or_select_unadmitt
     class MutatingPlanner:
         def plan(self, data):
             selected = next(card for card in data.backlog if card.id == "dependent")
-            selected.summary = "Replace objective"
-            selected.depends_on = []
-            return [selected]
+            return [selected.model_copy(update={"summary": "Replace objective", "depends_on": ()})]
 
     selected = snapshot.plan(MutatingPlanner(), "dependent")[0]
     assert selected.summary == "Next work" and selected.depends_on == ["prerequisite"]

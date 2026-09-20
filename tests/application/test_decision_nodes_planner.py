@@ -2,8 +2,11 @@ from datetime import UTC, datetime
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
+
+from orket.application.services.decision_context_service import capture_routing_input
 from orket.application.services.decision_node_registry import DecisionNodeRegistry, build_decision_node_registry
-from orket.core.contracts.decision_inputs import LoopPolicyInputs
+from orket.core.contracts.decision_inputs import LoopPolicyInputs, PlanningCardInput
 from orket.decision_nodes.builtins import (
     DefaultApiRuntimeStrategyNode,
     DefaultEvaluatorNode,
@@ -15,10 +18,10 @@ from orket.decision_nodes.contracts import PlanningInput
 from orket.exceptions import CatastrophicFailure, ExecutionFailed, GovernanceViolation
 from orket.schema import CardStatus
 
+pytestmark = pytest.mark.contract
 
 def _issue(issue_id: str, status: CardStatus):
-    return SimpleNamespace(id=issue_id, status=status)
-
+    return PlanningCardInput(id=issue_id, status=status)
 
 def test_default_planner_prioritizes_review_then_ready():
     planner = DefaultPlannerNode()
@@ -32,7 +35,6 @@ def test_default_planner_prioritizes_review_then_ready():
 
     assert [c.id for c in candidates] == ["I2", "I1"]
 
-
 def test_default_planner_target_missing_returns_empty():
     planner = DefaultPlannerNode()
     backlog = [_issue("I1", CardStatus.READY)]
@@ -43,7 +45,6 @@ def test_default_planner_target_missing_returns_empty():
     )
 
     assert candidates == []
-
 
 def test_default_planner_target_in_review_selected():
     planner = DefaultPlannerNode()
@@ -56,7 +57,6 @@ def test_default_planner_target_in_review_selected():
 
     assert [c.id for c in candidates] == ["I1"]
 
-
 def test_default_planner_target_in_progress_selected():
     planner = DefaultPlannerNode()
     backlog = [_issue("I1", CardStatus.IN_PROGRESS), _issue("I2", CardStatus.READY)]
@@ -68,7 +68,6 @@ def test_default_planner_target_in_progress_selected():
 
     assert [c.id for c in candidates] == ["I1"]
 
-
 def test_default_planner_target_ready_but_not_independent_returns_empty():
     planner = DefaultPlannerNode()
     backlog = [_issue("I1", CardStatus.READY)]
@@ -79,7 +78,6 @@ def test_default_planner_target_ready_but_not_independent_returns_empty():
     )
 
     assert candidates == []
-
 
 def test_default_planner_target_ready_and_independent_selected():
     planner = DefaultPlannerNode()
@@ -125,7 +123,7 @@ def test_registry_uses_registered_planner():
 
 def test_default_router_routes_to_issue_seat_for_non_review():
     router = DefaultRouterNode()
-    issue = SimpleNamespace(seat="senior_developer")
+    issue = SimpleNamespace(id="I1", seat="senior_developer")
     team = SimpleNamespace(
         seats={
             "senior_developer": SimpleNamespace(roles=["coder"]),
@@ -133,12 +131,12 @@ def test_default_router_routes_to_issue_seat_for_non_review():
         }
     )
 
-    assert router.route(issue, team, is_review_turn=False) == "senior_developer"
+    assert router.route(capture_routing_input(issue, team, False)) == "senior_developer"
 
 
 def test_default_router_prefers_integrity_guard_for_review():
     router = DefaultRouterNode()
-    issue = SimpleNamespace(seat="senior_developer")
+    issue = SimpleNamespace(id="I1", seat="senior_developer")
     team = SimpleNamespace(
         seats={
             "senior_developer": SimpleNamespace(roles=["coder"]),
@@ -146,7 +144,7 @@ def test_default_router_prefers_integrity_guard_for_review():
         }
     )
 
-    assert router.route(issue, team, is_review_turn=True) == "integrity_guard"
+    assert router.route(capture_routing_input(issue, team, True)) == "integrity_guard"
 
 
 # Layer: contract

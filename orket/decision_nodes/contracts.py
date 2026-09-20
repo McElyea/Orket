@@ -1,31 +1,27 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any, Protocol
 
-from orket.core.contracts.decision_inputs import LoopPolicyInputs, ToolSelectionInput
+from orket.core.contracts.decision_inputs import (
+    LoopPolicyInputs,
+    PlanningCardInput,
+    PlanningInput,
+    RoutingInput,
+    ToolSelectionInput,
+)
 from orket.core.contracts.model_selection import ModelSelectionInput
-
-
-@dataclass
-class PlanningInput:
-    """Stable contract payload for planner decision nodes."""
-
-    backlog: list[Any]
-    independent_ready: list[Any]
-    target_issue_id: str | None = None
 
 
 class PlannerNode(Protocol):
     """Decision node: determines which issues are candidates this tick."""
 
-    def plan(self, data: PlanningInput) -> list[Any]: ...
+    def plan(self, data: PlanningInput) -> list[PlanningCardInput]: ...
 
 
 class RouterNode(Protocol):
     """Decision node: determines which seat should execute an issue."""
 
-    def route(self, issue: Any, team: Any, is_review_turn: bool) -> str: ...
+    def route(self, data: RoutingInput) -> str: ...
 
 
 class EvaluatorNode(Protocol):

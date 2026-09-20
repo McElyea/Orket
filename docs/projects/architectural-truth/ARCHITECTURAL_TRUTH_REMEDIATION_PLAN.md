@@ -12520,8 +12520,8 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.45 schema input checkpoint. Settle the remaining legacy-domain import effects,
-then continue immutable decision inputs, adapter classification and async reachability before E1/E2
+0.6.46 planner/router input checkpoint. Preserve the governed legacy-export cutover;
+continue remaining immutable decision inputs, adapter classification and async reachability before E1/E2
 and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
 Preserve every failed and
@@ -18257,3 +18257,78 @@ asserting whole-D acceptance. Core-classified deprecated `orket.domain` still em
 warnings and installs aliases; its contract disposition precedes any change.
 Immutable decision context, complete adapter classification, async reachability,
 remaining D/E/CAP gates and explicit user acceptance remain open. No lane retirement.
+
+
+#### .46 immutable planner/router checkpoint (2026-09-20)
+
+Application dispatch now captures frozen `PlanningInput`/`PlanningCardInput` and
+`RoutingInput`/`RoutingSeatInput` values. Mutable runtime card/team references,
+arbitrary parameter dictionaries and executable handles are absent. Planner
+recommendations still map to application-owned inspected records, with unknown,
+non-string and duplicate IDs refused; dependency reinspection remains authoritative.
+Routers implement `route(inputs)` and return plain strings before application
+policy, seat lookup or dispatch. Default status/order and first-guard routing are
+preserved. Contract and explicit custom-node migration:
+`docs/specs/DISPATCH_DECISION_INPUTS.md` and
+`docs/architecture/CONTRACT_DELTA_DISPATCH_INPUTS_D_2026-09-20.md`.
+
+The legacy namespace is preserved under the accepted `BT4-FIXTURE-SYNC-RETIRE`
+commitment: deprecated exports retire at the explicit 0.7.0 cutover after caller
+inventory and contract acceptance. Its import warnings/alias state remain D debt.
+No reclassification, dependency exception or pure-core claim hides that debt.
+
+Pre-change proof demonstrates writable planner values and an actual orchestrator
+router changing the borrowed team's roles. The first probe's router case stopped
+at missing settings bootstrap; corrected explicit bootstrap reaches the mutation
+and retains two intended failures. The original 64-case regression selection passes.
+Expanded boundary proof initially has 97 passes and seven fixture-comparison
+failures. Read-only inspection of all seven retained databases shows only the
+initial save-generated `created_at` difference. Tests now compare complete actual
+pre-dispatch records; all 104 boundary cases pass, retaining the failed artifacts.
+
+Fresh frozen source and serial installed Windows cells pass the same **267 cases
+across 21 modules**, with zero failures, errors or skips:
+
+| Environment | Pass / fail / error / skip | Pytest seconds |
+| --- | --- | --- |
+| Source Windows 3.11 | 267 / 0 / 0 / 0 | 41.855 |
+| Installed win-py311 | 267 / 0 / 0 / 0 | 42.421 |
+| Installed win-py312 | 267 / 0 / 0 / 0 | 43.262 |
+
+The cohort includes actual SQLite accepted-dependency inspection, persisted-card
+comparison, orchestrator dispatch/control-plane behavior, owned fixture processes,
+controlled local HTTP and affected model/loop/sandbox regressions. Each installed
+cell verifies 674 loaded core origins, exact support/case identities, actual CLI
+primary/degraded and controlled ToolGate flows, no root database and no observed
+surviving proof children. Controlled strategies/providers are not fresh inference.
+Package parity covers 1,100 Python sources and 1,116 wheel members; the harness has
+2,085 support files. Wheel SHA-256:
+`40e40558cbc2614c746f7503a0b7930a7add80d22227c538fcae69811d3cc154`.
+Sdist SHA-256:
+`0afda5cc6568b05c5fcfb84528670e876e137f5e4fb26b30c9ed813e447dfe37`.
+
+Changed-file Ruff, dependency, docs hygiene, release metadata and whitespace pass.
+The initial review retained six import-format findings and a collector failure on
+a data-only file with no functions; corrected collection explicitly represents
+that absence. No lint waiver is added; canonical Ruff retains 94 findings.
+Dependency policy/classifications/edges/exceptions are unchanged: 1,100 modules,
+3,482 import sites, six recognized routes and zero violations/unknowns/cycles/errors.
+The touched oversized builtin and test files each shrink by two lines. New types,
+functions and files meet limits. AC-01 through AC-10 pass for this changed boundary;
+whole-D purity, all decision inputs and replay reconstruction are not established.
+
+All 21,713 handoff and 116 .45 checkpoint hashes revalidate; original checkout is
+unchanged. `.tmp/d-dispatch-inputs/` retains exact commands, failed and accepted
+inputs, source/native reports, `checkpoint.json`, `index-check.json`,
+`publication.json` and `COMMITTED_CHANGESET.md` for annotated v0.6.46 publication.
+The shared source runner's historical extension-installation label does not govern
+this cohort; its exact selection and source-report scope do.
+
+No new Linux runtime cell or passive clock measurement is claimed. The retained
+.45 preflight remains blocked at 240.011 seconds without its required 60-second
+quiet interval (+18.666208636/-18.167079316-second wall steps). Deadlines and clocks
+are unchanged. The .43 Git timeout, .44 non-Python packaging ceiling, full-suite
+89%-coverage and hosted Quality gaps remain. No new provider, containment or
+capacity acceptance follows. Continue the remaining evaluator/loop/sandbox/API
+decision-input boundaries, adapter enforcement and async reachability before E1/E2
+and CAP. No whole-lane completion or retirement.

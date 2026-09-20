@@ -7,6 +7,7 @@ from types import MappingProxyType
 from typing import Any
 
 from orket.application.services.cards_odr_stage import run_cards_odr_prebuild
+from orket.application.services.decision_context_service import recommend_routing_seat
 from orket.application.services.orchestrator_prompt_preparation_service import (
     OrchestratorPromptPreparationService,
 )
@@ -117,7 +118,7 @@ class OrchestratorTurnPreparationService:
         data: TurnPreparationInput,
         is_review_turn: bool,
     ) -> tuple[str, dict[str, Any], Any, str, str] | None:
-        seat_name = self.router_node.route(data.issue, data.team, is_review_turn)
+        seat_name = recommend_routing_seat(self.router_node, data.issue, data.team, is_review_turn)
         small_policy = self.resolve_small_project_team_policy(data.epic, data.team)
         if small_policy["active"] and not is_review_turn:
             normalized_seat = str(seat_name or "").strip().lower()

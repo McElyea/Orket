@@ -5,6 +5,16 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.46] - 2026-09-20
+
+### Fixed
+- Capture immutable planner and router value inputs at application dispatch; keep authoritative card records and dependency checks outside advisory strategy calls.
+- Require plain-string router recommendations before dispatch while preserving default planner status/order and guard-seat selection.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Custom routers implement `route(RoutingInput)`; planners consume the declared immutable card facts. Migration: `docs/architecture/CONTRACT_DELTA_DISPATCH_INPUTS_D_2026-09-20.md`.
+
 ## [0.6.45] - 2026-09-20
 
 ### Fixed
