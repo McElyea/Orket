@@ -4,6 +4,13 @@ Last updated: 2026-09-19
 
 This file is the current canonical authority snapshot for high-impact runtime and governance paths.
 
+Controller runtime hooks capture policy and invocation roots before dispatch.
+Dispatch prepares its own manager through the retained application worker;
+disabled controllers do not construct one. Direct dispatchers require an explicit
+manager. CLI preparation also captures environment/cwd before worker scheduling.
+Migration, partial directory effects and remaining synchronous construction scope:
+`docs/architecture/CONTRACT_DELTA_CONTROLLER_CONSTRUCTION_D_2026-09-19.md`.
+
 Extension installation admits a distinct checkout before locked, verified catalog
 publication; failed upgrades retain prior installations. Native Git commands and
 catalog/preflight workers remain owned through interruption. Manager inputs and

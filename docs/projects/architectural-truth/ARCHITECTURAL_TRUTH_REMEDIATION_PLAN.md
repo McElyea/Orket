@@ -12475,10 +12475,10 @@ for later slices. Extract durable contracts before archiving project history.
 Follow contributor version/changelog/tag policy when committing. The user has
 requested a versioned GitHub checkpoint and continued commits on the existing
 branch; its proof and publication disposition are recorded in the C/D checkpoint.
-The later user instruction restricts 10 AM-6 PM America/Denver work hours to
-local commits only. Retain commits and matching annotated tags locally during
-that window; do not push to GitHub. The versioned local checkpoints recorded below follow this
-restriction; remote publication remains deferred.
+The user has since reauthorized GitHub pushes, superseding the earlier
+10 AM-6 PM local-only restriction. Earlier local-only checkpoint notes remain
+historical records; current versioned branch checkpoints and their annotated
+tags are published together after verification.
 
 Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
@@ -12516,8 +12516,8 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
   Scoped installed-build/host acceptance now passes; this does not close the
   full plan or imply generic exactly-once effects or historical authenticity.
 
-Next action: continue remaining manager/API/controller construction and admission-input
-boundaries after the verified 0.6.37 installation/preflight and recovery checkpoint,
+Next action: continue remaining manager/API construction and admission-input
+boundaries after the verified 0.6.38 controller construction checkpoint,
 together with all numbered C/D requirements. The graph has zero forbidden
 static pairs, zero cross-layer cycles and six unresolved import/reflection diagnostics. Preserve every failed and
 passing source/native observation and the historical clock diagnosis. Canonical
@@ -17102,3 +17102,77 @@ Evidence under `.tmp/d-extension-manager/`: `runtime-candidate/source-report.jso
 `CHANGESET.md`. Exact failed records and the previous 673 direct evidence hashes
 remain bound by the checkpoint. GitHub pushes are reauthorized; the versioned
 branch checkpoint and annotated tag are published together after final review.
+
+
+#### .38 controller construction candidate
+
+The .37 checkpoint was committed at `af3b5eb09db6b9052126fb9c149a40bf67ff8da7`
+and published with annotated `v0.6.37`; independent remote inspection matched the
+branch and peeled tag. Pushes are authorized again. Its 1,381 direct evidence
+hashes were verified before the .38 snapshot and remain retained.
+
+The next D slice addresses the controller constructor heartbeat failure and a
+new retained queued-CLI input counterexample. The synchronous controller builder
+now captures inputs and returns hooks; manager preparation belongs to its async
+dispatch hook. Direct dispatchers require an explicit manager. CLI preparation
+captures environment/cwd before worker scheduling. Root selection policy and SDK
+entrypoint signatures remain unchanged. Contract and migration:
+`docs/architecture/CONTRACT_DELTA_CONTROLLER_CONSTRUCTION_D_2026-09-19.md`.
+
+The initial focused source run passed 18 cases with unchanged inputs, real SDK
+children and native directory effects/refusals. It includes controlled scheduling
+and directory holds, cancellation, repeated cancellation and caller timeouts.
+This preliminary run used .37 installed child support; it is not installed .38
+proof. Fresh .38 artifact and affected-source/native gates remain pending.
+Direct manager/control-plane constructors and wider API composition remain D work.
+Evidence: `.tmp/d-extension-construction/before.json`, `before-probe/report.json`,
+`design.json` and `source-initial/report.json`. Whole C/D/E/CAP remains open.
+
+
+#### Verified .38 controller construction checkpoint
+
+Observed path: primary; scoped result: success; whole-goal result: partial success.
+Fresh source and four fresh installed Windows/Linux Python 3.11/3.12 cells each
+pass the same 166 cases from 23 affected modules, with no failures/errors/skips.
+Source inputs remain unchanged; installed checks verify exact case identities,
+package origins/bytes, dependency and support inputs, CLI primary/degraded flows,
+ToolGate denial behavior and terminal native children. This is an affected cohort,
+not a fresh complete suite or replacement of the failed .37 broad native matrix.
+
+| Installed cell | Tests / failures / errors / skips | Seconds | Core origins |
+|---|---:|---:|---:|
+| a38-win-py311 | 166 / 0 / 0 / 0 | 170.411 | 942 |
+| a38-linux-py311 | 166 / 0 / 0 / 0 | 73.379 | 942 |
+| a38-win-py312 | 166 / 0 / 0 / 0 | 176.005 | 942 |
+| a38-linux-py312 | 166 / 0 / 0 / 0 | 74.391 | 942 |
+
+The tests execute actual SDK children, queued cwd/environment/context/payload
+rotation, disabled controller execution, native directory creation/refusal and
+retained cancellation/repeated cancellation/caller timeout. Controlled directory
+holds use the declared 0.5-second event-loop responsiveness bound; they are not
+natural filesystem performance evidence. Worker failures remain visible after
+interruption; interrupted or failed preparation does not dispatch a child.
+The separate actual installed Windows extension CLI passes install/list/refused
+replacement/run with exits 0/0/1/0, unchanged prior catalog/manifest and a runnable
+prior workload. No provider or sandbox admission is claimed.
+
+The wheel built from its source archive matches 1094 Python files
+and 1110 package files. Changed-file Ruff, size,
+docs hygiene, release policy, template parity and whitespace checks pass.
+Canonical Ruff retains 94 diagnostics with none added. The static graph retains
+1,094 modules and 3,450 sites, zero forbidden pairs/cycles/unknown modules and six
+dynamic diagnostics. Baseline collection succeeds; release_ready remains false.
+
+Direct manager/control-plane constructors, wider API composition, other invocation
+input boundaries, hosted Quality, a fresh full suite, C/D/E/CAP acceptance and
+explicit whole-lane acceptance remain open. Root policy is preserved; unusual
+platform-specific path forms and transitive filesystem identity are not established
+by the ordinary relative/absolute path rotation tests in this checkpoint.
+
+Evidence under `.tmp/d-extension-construction/`: `candidate/source-report.json`
+(`970b3f4ec9f4ad2b5b3e3f0f0f553b4ac9b15d6460090f261d230a4cf742c860`), `candidate/manifest.json`
+(`bf8c16ab8a372a0a2e3eea67080cc5e1ff1ef369ca5357a629962acddd66ee6f`), `candidate/native-audit.json`
+(`aa326b418106f67e89577dc0fd041710101455398c68891aa1654b39c9892e71`), `cli-installed/report.json`,
+`static-review.json`, `retention.json`, `post-proof-documents.json` and `CHANGESET.md`.
+The .37 checkpoint and all 1,381 direct evidence hashes remain retained.
+Commit and annotated `v0.6.38` are published together after final index review.

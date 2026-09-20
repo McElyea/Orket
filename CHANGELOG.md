@@ -5,6 +5,16 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.38] - 2026-09-19
+
+### Fixed
+- Prepare controller child managers inside an owned asynchronous dispatch worker; disabled controllers do not construct a child manager.
+- Capture controller policy and manager invocation roots before queued preparation; retain cancellation and native construction failures without dispatching a child.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Supply an explicit manager to `ControllerDispatcher`; asynchronous callers can await `prepare_extension_manager`. Migration: `docs/architecture/CONTRACT_DELTA_CONTROLLER_CONSTRUCTION_D_2026-09-19.md`.
+
 ## [0.6.37] - 2026-09-19
 
 ### Fixed

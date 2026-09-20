@@ -1,6 +1,6 @@
 # Controller Workload Contract v1
 
-Last updated: 2026-04-23
+Last updated: 2026-09-19
 Status: Active
 Owner: Orket Core
 
@@ -26,6 +26,24 @@ Owner: Orket Core
 2. Host runtime remains authoritative for child dispatch, policy gates, and observability emission.
 3. Extension entrypoints may remain as compatibility adapters that delegate to this SDK layer.
 4. Runtime import guard policy allows the audited controller compatibility bridge imports `orket.extensions.controller_workload_runtime`, `orket.extensions.controller_dispatcher`, `orket.extensions.controller_dispatcher_contract`, and `orket.extensions.controller_observability` for controller workload adapters; other internal `orket.*` surfaces remain blocked unless explicitly allowlisted.
+
+## Runtime Construction (Normative)
+
+The synchronous host runtime builder captures controller environment, invocation
+cwd and catalog/context selections without preparing a manager. Its async dispatch
+hook captures the child envelope and dispatch values before owned preparation.
+Relative workspaces bind to that invocation cwd. Each dispatch prepares its own
+manager; disabled controllers do not prepare one. Controller policy uses the
+captured environment. Explicit payload enablement keeps its existing precedence.
+
+Direct `ControllerDispatcher` construction requires an explicit manager. Async
+embeddings can await application `prepare_extension_manager(...)`; synchronous
+manager construction remains unsuitable for an event-loop thread. Preparation
+retains native workers through cancellation/timeout; directory effects can remain,
+and native failures take precedence over interruption. Failed or interrupted
+preparation never starts child dispatch. Existing catalog/project/durable-root
+selection policy is unchanged. Migration and remaining scope:
+`docs/architecture/CONTRACT_DELTA_CONTROLLER_CONSTRUCTION_D_2026-09-19.md`.
 
 ## Envelope Contract
 

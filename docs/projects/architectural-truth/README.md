@@ -9,6 +9,15 @@ Current gate: scoped BT-1 through BT-5 are accepted. C/D dependency enforcement,
 core purity, explicit inputs and async safety are next, followed by E1/E2 and the
 gated capability obligations. The whole lane remains active.
 
+The 0.6.38 checkpoint owns controller manager preparation inside async dispatch
+and captures invocation roots and policy before queued preparation. Direct
+dispatchers require an explicit manager. Fresh source and four fresh installed
+Windows/Linux Python 3.11/3.12 cells pass 166 identical affected cases; the
+installed Windows extension CLI also passes install/list/refusal/run. Controlled
+native directory holds, actual refusals and SDK children establish the scoped
+lifetime/input guarantees. Direct manager and API construction remain open.
+Migration: `docs/architecture/CONTRACT_DELTA_CONTROLLER_CONSTRUCTION_D_2026-09-19.md`.
+
 The 0.6.37 checkpoint stages distinct extension checkouts before locked, verified
 catalog publication; failed replacements retain prior installations. Native Git
 and preflight workers remain owned through interruption, including Python 3.12

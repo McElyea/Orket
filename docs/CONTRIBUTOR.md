@@ -181,6 +181,12 @@ and catalog native lock identities. Interruption/publication limits and synchron
 worker-only catalog surfaces are specified in
 `docs/architecture/CONTRACT_DELTA_EXTENSION_INSTALL_D_2026-09-19.md`.
 
+Both Quality selections retain controller construction and queued manager-input
+regressions, including real SDK children, native directory refusal and retained
+interruption. Controlled directory holds measure event-loop responsiveness under
+injected latency; they are not natural filesystem performance benchmarks. See
+`docs/architecture/CONTRACT_DELTA_CONTROLLER_CONSTRUCTION_D_2026-09-19.md`.
+
 Both Quality selections also retain Git interruption uncertainty controls, sandbox
 deployment publication recovery and rule-simulation interruption reproducibility.
 The sandbox regressions use real SQLite with controlled Docker observations;

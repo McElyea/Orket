@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from copy import deepcopy
 from functools import partial
 from pathlib import Path
@@ -64,10 +64,16 @@ class ExtensionManager:
     """Coordinator for extension catalog, installation, and workload execution."""
 
     def __init__(self, catalog_path: Path | None = None, project_root: Path | None = None,
-                 *, utc_now: Callable[[], str] = utc_now_iso):
-        self.catalog_path = (catalog_path or default_extensions_catalog_path()).resolve()
-        self.project_root = (project_root or Path.cwd()).resolve()
-        self.install_root = durable_root() / "extensions"
+                 *, utc_now: Callable[[], str] = utc_now_iso, invocation_root: Path | None = None,
+                 environment: Mapping[str, str] | None = None):
+        root = invocation_root or Path.cwd()
+        observed = dict(os.environ if environment is None else environment)
+        if not root.is_absolute():
+            raise ValueError("E_EXT_INVOCATION_ROOT_ABSOLUTE_REQUIRED")
+        catalog = catalog_path or default_extensions_catalog_path(invocation_root=root, environment=observed)
+        self.catalog_path = (root / catalog).resolve()
+        self.project_root = (root / (project_root or root)).resolve()
+        self.install_root = durable_root(invocation_root=root, environment=observed) / "extensions"
         self._utc_now = utc_now
         self._config_sections: set[str] = set()
         self._config_sections_lock = Lock()

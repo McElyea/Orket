@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import asyncio
 import os
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from orket_extension_sdk.controller import (
     ControllerChildCall,
@@ -37,7 +38,9 @@ from .controller_dispatcher_contract import (
     read_env_int,
     requested_timeout,
 )
-from .manager import ExtensionManager
+
+if TYPE_CHECKING:
+    from .manager import ExtensionManager
 
 
 @dataclass(frozen=True)
@@ -79,11 +82,15 @@ class ControllerDispatcher:
     def __init__(
         self,
         *,
-        extension_manager: ExtensionManager | None = None,
+        extension_manager: ExtensionManager,
         runtime_policy_caps: ControllerPolicyCaps | None = None,
+        environment: Mapping[str, str] | None = None,
     ) -> None:
-        self._extension_manager = extension_manager or ExtensionManager()
-        self._runtime_policy_caps = self._resolve_runtime_policy_caps(runtime_policy_caps)
+        if extension_manager is None:
+            raise ValueError("E_CONTROLLER_MANAGER_REQUIRED")
+        self._extension_manager = extension_manager
+        self._runtime_policy_caps = self._resolve_runtime_policy_caps(
+            runtime_policy_caps, dict(os.environ if environment is None else environment))
 
     async def dispatch(
         self,
@@ -313,7 +320,8 @@ class ControllerDispatcher:
         )
 
     @staticmethod
-    def _resolve_runtime_policy_caps(runtime_policy_caps: ControllerPolicyCaps | None) -> ControllerPolicyCaps:
+    def _resolve_runtime_policy_caps(runtime_policy_caps: ControllerPolicyCaps | None,
+                                     environment: Mapping[str, str]) -> ControllerPolicyCaps:
         base = runtime_policy_caps or ControllerPolicyCaps(
             max_depth=DEFAULT_MAX_DEPTH,
             max_fanout=DEFAULT_MAX_FANOUT,
@@ -321,17 +329,17 @@ class ControllerDispatcher:
         )
         return ControllerPolicyCaps(
             max_depth=read_env_int(
-                os.getenv("ORKET_CONTROLLER_MAX_DEPTH", ""),
+                environment.get("ORKET_CONTROLLER_MAX_DEPTH", ""),
                 fallback=int(base.max_depth or DEFAULT_MAX_DEPTH),
                 minimum=0,
             ),
             max_fanout=read_env_int(
-                os.getenv("ORKET_CONTROLLER_MAX_FANOUT", ""),
+                environment.get("ORKET_CONTROLLER_MAX_FANOUT", ""),
                 fallback=int(base.max_fanout or DEFAULT_MAX_FANOUT),
                 minimum=1,
             ),
             child_timeout_seconds=read_env_int(
-                os.getenv("ORKET_CONTROLLER_CHILD_TIMEOUT_SECONDS", ""),
+                environment.get("ORKET_CONTROLLER_CHILD_TIMEOUT_SECONDS", ""),
                 fallback=int(base.child_timeout_seconds or DEFAULT_CHILD_TIMEOUT_SECONDS),
                 minimum=1,
             ),

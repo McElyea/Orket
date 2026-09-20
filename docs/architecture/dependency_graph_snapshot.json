@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-19T23:46:39.970579+00:00",
+  "generated_at": "2026-09-20T00:45:40.828540+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -1057,7 +1057,7 @@
       },
       "orket.application.services.extension_catalog_commands": {
         "path": "orket/application/services/extension_catalog_commands.py",
-        "sha256": "0191b518bb8438a802ef5db7f67bd180dc7d169c1a859107ca75fadb605bc573"
+        "sha256": "d21bfe0d31692b3ebe19aae85ea5410968df3169fb26f79039a3240e2785805d"
       },
       "orket.application.services.extension_model_catalog": {
         "path": "orket/application/services/extension_model_catalog.py",
@@ -2641,7 +2641,7 @@
       },
       "orket.extensions.controller_dispatcher": {
         "path": "orket/extensions/controller_dispatcher.py",
-        "sha256": "beef337c59e4c1769c100fa0b8b8bf306043a1b9fa00fab99db29aff9d8d838d"
+        "sha256": "49ea11e7ac5e4fcbce9eb0aeae50ce4b601d4020ae4498d769432ff7dcea308a"
       },
       "orket.extensions.controller_dispatcher_contract": {
         "path": "orket/extensions/controller_dispatcher_contract.py",
@@ -2653,7 +2653,7 @@
       },
       "orket.extensions.controller_workload_runtime": {
         "path": "orket/extensions/controller_workload_runtime.py",
-        "sha256": "542cf4e8977f3061d11dd6c6dbcdfb03720f6334d09f15159073783d7be297f8"
+        "sha256": "226c14d907225bf116842ce35e1924d61919fb99179ad1f4d0ea446cc62a79a3"
       },
       "orket.extensions.git_commands": {
         "path": "orket/extensions/git_commands.py",
@@ -2685,7 +2685,7 @@
       },
       "orket.extensions.manager": {
         "path": "orket/extensions/manager.py",
-        "sha256": "dac7a0c2db687982b1bd05066a1b415478c5a53854e03712ea10b354afeb9ae6"
+        "sha256": "61a807ca7306c9f347009293937b2cdc0fb99d419c320ae895147a32bf87edd4"
       },
       "orket.extensions.manifest_parser": {
         "path": "orket/extensions/manifest_parser.py",
@@ -2693,7 +2693,7 @@
       },
       "orket.extensions.models": {
         "path": "orket/extensions/models.py",
-        "sha256": "b171c5fa1b5c135e8589901ce1c1834858844ae9f603f590a3b1b7657174694d"
+        "sha256": "4a7c4af275cfc979f703ac2c8968308a4d14735d911a605dd55b45580ef5da57"
       },
       "orket.extensions.reproducibility": {
         "path": "orket/extensions/reproducibility.py",
@@ -9433,21 +9433,21 @@
         "source": "orket.application.services.extension_catalog_commands",
         "target": "orket.adapters.execution.owned_io",
         "path": "orket/application/services/extension_catalog_commands.py",
-        "line": 2,
+        "line": 9,
         "kind": "from"
       },
       {
         "source": "orket.application.services.extension_catalog_commands",
         "target": "orket.extensions.manager",
         "path": "orket/application/services/extension_catalog_commands.py",
-        "line": 3,
+        "line": 10,
         "kind": "from"
       },
       {
         "source": "orket.application.services.extension_catalog_commands",
         "target": "orket.extensions.models",
         "path": "orket/application/services/extension_catalog_commands.py",
-        "line": 4,
+        "line": 11,
         "kind": "from"
       },
       {
@@ -20570,14 +20570,14 @@
         "source": "orket.extensions.controller_dispatcher",
         "target": "orket.extensions.controller_dispatcher_contract",
         "path": "orket/extensions/controller_dispatcher.py",
-        "line": 17,
+        "line": 18,
         "kind": "from"
       },
       {
         "source": "orket.extensions.controller_dispatcher",
         "target": "orket.extensions.manager",
         "path": "orket/extensions/controller_dispatcher.py",
-        "line": 40,
+        "line": 43,
         "kind": "from"
       },
       {
@@ -20603,35 +20603,35 @@
       },
       {
         "source": "orket.extensions.controller_workload_runtime",
+        "target": "orket.application.services.extension_catalog_commands",
+        "path": "orket/extensions/controller_workload_runtime.py",
+        "line": 11,
+        "kind": "from"
+      },
+      {
+        "source": "orket.extensions.controller_workload_runtime",
         "target": "orket.extensions.__init__",
         "path": "orket/extensions/controller_workload_runtime.py",
-        "line": 8,
+        "line": 12,
         "kind": "from"
       },
       {
         "source": "orket.extensions.controller_workload_runtime",
         "target": "orket.extensions.controller_observability",
         "path": "orket/extensions/controller_workload_runtime.py",
-        "line": 8,
+        "line": 12,
         "kind": "from"
       },
       {
         "source": "orket.extensions.controller_workload_runtime",
         "target": "orket.extensions.controller_dispatcher",
         "path": "orket/extensions/controller_workload_runtime.py",
-        "line": 9,
+        "line": 13,
         "kind": "from"
       },
       {
         "source": "orket.extensions.controller_workload_runtime",
         "target": "orket.extensions.controller_dispatcher_contract",
-        "path": "orket/extensions/controller_workload_runtime.py",
-        "line": 10,
-        "kind": "from"
-      },
-      {
-        "source": "orket.extensions.controller_workload_runtime",
-        "target": "orket.extensions.manager",
         "path": "orket/extensions/controller_workload_runtime.py",
         "line": 14,
         "kind": "from"
@@ -20885,7 +20885,7 @@
         "source": "orket.extensions.models",
         "target": "orket.runtime_paths",
         "path": "orket/extensions/models.py",
-        "line": 9,
+        "line": 10,
         "kind": "from"
       },
       {
@@ -29889,45 +29889,6 @@
   },
   "diff_ledger": [
     {
-      "run_at_utc": "2026-09-19T04:52:02.996678Z",
-      "changed": true,
-      "before_digest": "sha256:f10662c637f49dd51babe42a4739c82b878cbcd3cd09e3faf833f45307090ffc",
-      "after_digest": "sha256:1e211b9957402087dc9210540f74f14b10e9eeb190cadc734ad05d0500a5c54a",
-      "diff": {
-        "added_paths": 16,
-        "removed_paths": 3,
-        "changed_paths": 10934,
-        "initial_write": false,
-        "paths_total_previous": 44177,
-        "paths_total_current": 44254,
-        "paths_total_reference": 44254,
-        "churn_paths": 10953,
-        "churn_ratio": 0.247503,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.edges[102].line",
-          "$.observed.edges[102].path",
-          "$.observed.edges[102].source",
-          "$.observed.edges[102].target",
-          "$.observed.edges[103].line",
-          "$.observed.edges[103].target",
-          "$.observed.edges[104].line",
-          "$.observed.edges[104].path",
-          "$.observed.edges[104].source",
-          "$.observed.edges[104].target",
-          "$.observed.edges[105].line",
-          "$.observed.edges[105].path",
-          "$.observed.edges[105].source",
-          "$.observed.edges[105].target",
-          "$.observed.edges[106].line",
-          "$.observed.edges[106].path",
-          "$.observed.edges[106].source",
-          "$.observed.edges[106].target",
-          "$.observed.edges[107].line"
-        ]
-      }
-    },
-    {
       "run_at_utc": "2026-09-19T04:53:20.760047Z",
       "changed": true,
       "before_digest": "sha256:1e211b9957402087dc9210540f74f14b10e9eeb190cadc734ad05d0500a5c54a",
@@ -30816,6 +30777,45 @@
           "$.generated_at",
           "$.observed.modules.orket.application.services.sandbox_runtime_lifecycle_service.sha256",
           "$.observed.modules.orket.extensions.git_commands.sha256"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-20T00:45:50.094309Z",
+      "changed": true,
+      "before_digest": "sha256:ff108eff699a5fdab71ecf427ddd924f1af9f2984ff9bebbf33e5f4bcb88fee1",
+      "after_digest": "sha256:262513f47d9b0cc611f36bd6d6c5118408bc85fa884745616cea6eb3eec83a6b",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 21,
+        "initial_write": false,
+        "paths_total_previous": 45986,
+        "paths_total_current": 45986,
+        "paths_total_reference": 45986,
+        "churn_paths": 21,
+        "churn_ratio": 0.000457,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.edges[704].line",
+          "$.observed.edges[705].line",
+          "$.observed.edges[706].line",
+          "$.observed.edges[2295].line",
+          "$.observed.edges[2296].line",
+          "$.observed.edges[2300].line",
+          "$.observed.edges[2300].target",
+          "$.observed.edges[2301].line",
+          "$.observed.edges[2301].target",
+          "$.observed.edges[2302].line",
+          "$.observed.edges[2302].target",
+          "$.observed.edges[2303].line",
+          "$.observed.edges[2303].target",
+          "$.observed.edges[2304].target",
+          "$.observed.edges[2340].line",
+          "$.observed.modules.orket.application.services.extension_catalog_commands.sha256",
+          "$.observed.modules.orket.extensions.controller_dispatcher.sha256",
+          "$.observed.modules.orket.extensions.controller_workload_runtime.sha256",
+          "$.observed.modules.orket.extensions.manager.sha256"
         ]
       }
     }

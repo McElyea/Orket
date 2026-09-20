@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
@@ -16,11 +17,13 @@ CONTRACT_STYLE_LEGACY = "legacy_v1"
 CONTRACT_STYLE_SDK_V0 = "sdk_v0"
 
 
-def default_extensions_catalog_path() -> Path:
-    env_path = (os.getenv("ORKET_EXTENSIONS_CATALOG") or "").strip()
+def default_extensions_catalog_path(*, invocation_root: Path | None = None,
+                                    environment: Mapping[str, str] | None = None) -> Path:
+    observed = os.environ if environment is None else environment
+    env_path = (observed.get("ORKET_EXTENSIONS_CATALOG") or "").strip()
     if env_path:
-        return Path(env_path)
-    return durable_root() / "config" / "extensions_catalog.json"
+        return (invocation_root / env_path) if invocation_root is not None else Path(env_path)
+    return durable_root(invocation_root=invocation_root, environment=observed) / "config" / "extensions_catalog.json"
 
 
 @dataclass(frozen=True)
