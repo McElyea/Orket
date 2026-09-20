@@ -101,7 +101,7 @@ async def test_compare_controller_replay_outputs_passes_for_equivalent_controlle
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Layer: integration."""
-    manager, workspace = _build_controller_manager(tmp_path, monkeypatch)
+    manager, workspace = await _build_controller_manager(tmp_path, monkeypatch)
     payload_a = {
         "controller_workload_id": "controller_workload_v1",
         "requested_caps": {"max_depth": 2, "max_fanout": 5, "child_timeout_seconds": 30},
@@ -160,9 +160,9 @@ async def test_external_template_repo_installs_and_runs_controller_workload(
     _init_git_repo(controller_external)
 
     manager = ExtensionManager(catalog_path=catalog_path, project_root=tmp_path)
-    manager.install_from_repo(str(sdk_a))
-    manager.install_from_repo(str(sdk_b))
-    manager.install_from_repo(str(controller_external))
+    await manager.install_from_repo(str(sdk_a))
+    await manager.install_from_repo(str(sdk_b))
+    await manager.install_from_repo(str(controller_external))
 
     workspace = tmp_path / "workspace" / "default"
     workspace.mkdir(parents=True, exist_ok=True)

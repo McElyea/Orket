@@ -155,7 +155,7 @@ async def test_dispatcher_blocked_mapping_and_not_attempted_timeout_shape() -> N
     assert failed.child_results[1].enforced_timeout is None
 
 
-def _build_controller_manager(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[ExtensionManager, Path]:
+async def _build_controller_manager(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[ExtensionManager, Path]:
     catalog_path = tmp_path / "extensions_catalog.json"
     monkeypatch.setenv("ORKET_EXTENSIONS_CATALOG", str(catalog_path))
     sdk_a = tmp_path / "sdk_a"
@@ -167,9 +167,9 @@ def _build_controller_manager(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -
     _init_sdk_child_repo(sdk_b, extension_id="sdk.child.b", workload_id="sdk_child_b_v1")
     _init_controller_bootstrap_repo(controller)
     manager = ExtensionManager(catalog_path=catalog_path, project_root=tmp_path)
-    manager.install_from_repo(str(sdk_a))
-    manager.install_from_repo(str(sdk_b))
-    manager.install_from_repo(str(controller))
+    await manager.install_from_repo(str(sdk_a))
+    await manager.install_from_repo(str(sdk_b))
+    await manager.install_from_repo(str(controller))
     workspace = tmp_path / "workspace" / "default"
     workspace.mkdir(parents=True, exist_ok=True)
     return manager, workspace
@@ -180,7 +180,7 @@ async def test_controller_workload_observability_emission_and_fail_closed(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Layer: integration."""
-    manager, workspace = _build_controller_manager(tmp_path, monkeypatch)
+    manager, workspace = await _build_controller_manager(tmp_path, monkeypatch)
 
     run = await manager.run_workload(
         workload_id="controller_workload_v1",
@@ -251,7 +251,7 @@ async def test_controller_workload_enablement_policy_blocks_run(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Layer: integration."""
-    manager, workspace = _build_controller_manager(tmp_path, monkeypatch)
+    manager, workspace = await _build_controller_manager(tmp_path, monkeypatch)
     monkeypatch.setenv("ORKET_CONTROLLER_ENABLED", "0")
 
     blocked_run = await manager.run_workload(

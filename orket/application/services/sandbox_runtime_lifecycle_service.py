@@ -323,6 +323,7 @@ class SandboxRuntimeLifecycleService:
         if record.state is SandboxState.ACTIVE:
             if record.owner_instance_id != self.instance_id:
                 raise SandboxLifecycleError("Sandbox heartbeat rejected for non-owner instance.")
+            observed_at = self._now()
             record = (
                 await self.mutations.renew_lease(
                     sandbox_id=sandbox_id,
@@ -330,18 +331,15 @@ class SandboxRuntimeLifecycleService:
                     expected_record_version=record.record_version,
                     expected_owner_instance_id=self.instance_id,
                     expected_lease_epoch=record.lease_epoch,
-                    last_heartbeat_at=self._now(),
-                    lease_expires_at=self._lease_expires_at(self._now()),
+                    last_heartbeat_at=observed_at,
+                    lease_expires_at=self._lease_expires_at(observed_at),
                 )
             ).record
             await self._publish_control_plane_lease(
-                record=record,
-                publication_timestamp=record.last_heartbeat_at or self._now(),
-            )
-            await self._publish_control_plane_resource(
-                record=record,
-                observed_at=record.last_heartbeat_at or self._now(),
-            )
+                record=record, publication_timestamp=observed_at)
+            await self._publish_control_plane_resource(record=record, observed_at=observed_at)
+            await self._publish_control_plane_deploy_effect(
+                record=record, publication_timestamp=observed_at)
             return record
         return record
 

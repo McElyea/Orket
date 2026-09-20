@@ -40,7 +40,7 @@ async def run_family(family: str, folder: Path):
     await asyncio.to_thread(repo.mkdir, parents=True)
     await asyncio.to_thread(_init_sdk_extension_repo if family == "sdk" else _init_test_extension_repo, repo)
     manager = ExtensionManager(catalog_path=folder / "extensions_catalog.json", project_root=folder)
-    await asyncio.to_thread(manager.install_from_repo, str(repo))
+    await manager.install_from_repo(str(repo))
     return await manager.run_workload(
         workload_id="sdk_v1" if family == "sdk" else "mystery_v1",
         input_config={"seed": 321, "mode": "basic"}, workspace=folder / "workspace/default", department="core",

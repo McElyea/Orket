@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import subprocess
 from pathlib import Path
@@ -86,6 +87,7 @@ def test_host_validation_refuses_unknown_agent_feature(tmp_path: Path) -> None:
 
 
 def test_install_publishes_agent_for_dedicated_catalog_resolution(tmp_path: Path) -> None:
+    """Layer: integration. Exercise the admitted extension through its async command boundary."""
     repo = tmp_path / "repo"
     _write_agent_repo(repo)
     catalog_path = tmp_path / "catalog.json"
@@ -93,7 +95,7 @@ def test_install_publishes_agent_for_dedicated_catalog_resolution(tmp_path: Path
     manager.install_root = tmp_path / "installed"
     manager.install_root.mkdir()
 
-    installed = manager.install_from_repo(str(repo))
+    installed = asyncio.run(manager.install_from_repo(str(repo)))
     launch = manager.resolve_governed_agent_workload("governed-agent-loop")
 
     assert catalog_path.exists()

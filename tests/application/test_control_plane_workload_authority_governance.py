@@ -159,6 +159,7 @@ PRIVATE_EXTENSION_MANIFEST_IMPORT_OWNERS = {
     "orket/extensions/workload_executor.py",
     "orket/extensions/workload_executor_support.py",
     "orket/extensions/workload_loader.py",
+    "orket/extensions/workload_publication.py",
 }
 RUNTIME_PIPELINE_METHOD_OWNERS = (
     (ORKET_ROOT / "runtime" / "execution" / "execution_pipeline.py", "ExecutionPipeline"),
@@ -611,8 +612,7 @@ def test_controller_dispatcher_uses_manager_sdk_probe_instead_of_private_manifes
         encoding="utf-8-sig"
     )
 
-    assert ".has_manifest_entry(" in dispatcher_text
-    assert ".uses_sdk_contract(" in dispatcher_text
+    assert "require_sdk=True" in dispatcher_text
     assert "._resolve_manifest_entry(" not in dispatcher_text
 
 # Layer: contract

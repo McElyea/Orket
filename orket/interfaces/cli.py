@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from orket.application.services.extension_catalog_commands import list_installed_extensions, prepare_extension_manager
 from orket.application.services.protocol_command_service import ProtocolCommand, execute_protocol_command
 from orket.application.services.runtime_execution_result_service import RuntimeExecutionCancelled
 from orket.application.services.runtime_result_lifetime import close_runtime_owner
@@ -171,8 +172,8 @@ def parse_args(argv: list[str] | None = None, *, prog: str | None = None) -> arg
     return parser.parse_args(argv)
 
 
-def _print_extensions_list(manager: ExtensionManager) -> None:
-    extensions = manager.list_extensions()
+async def _print_extensions_list(manager: ExtensionManager) -> None:
+    extensions = await list_installed_extensions(manager)
     if not extensions:
         print("No extensions installed.")
         return
@@ -187,11 +188,11 @@ def _print_extensions_list(manager: ExtensionManager) -> None:
             print("  workload: <none>")
 
 
-def _install_extension(args: argparse.Namespace, manager: ExtensionManager) -> None:
+async def _install_extension(args: argparse.Namespace, manager: ExtensionManager) -> None:
     repo = str(args.target or "").strip()
     if not repo:
         raise ValueError("extensions install requires a repo path/URL (e.g. 'orket runtime extensions install <repo>').")
-    record = manager.install_from_repo(repo=repo, ref=args.ref)
+    record = await manager.install_from_repo(repo=repo, ref=args.ref)
     print(f"Installed extension: {record.extension_id} ({record.extension_version})")
     if record.manifest_entries:
         print("Registered workloads:")
@@ -242,7 +243,6 @@ def _emit_startup_status(startup_status: dict[str, str] | None) -> None:
 
 
 async def run_cli(argv: list[str] | None = None, *, prog: str | None = None) -> int:
-    # Force UTF-8
     if sys.platform == "win32":
         sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
         sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
@@ -252,14 +252,14 @@ async def run_cli(argv: list[str] | None = None, *, prog: str | None = None) -> 
         startup_status = await run_startup_checks(perform_first_run_setup)
         _emit_startup_status(startup_status)
         args = parse_args() if argv is None and prog is None else parse_args(argv, prog=prog)
-        extension_manager = ExtensionManager()
+        extension_manager = await prepare_extension_manager()
 
         if args.command == "extensions":
             if args.subcommand == "list":
-                _print_extensions_list(extension_manager)
+                await _print_extensions_list(extension_manager)
                 return 0
             if args.subcommand == "install":
-                _install_extension(args, extension_manager)
+                await _install_extension(args, extension_manager)
                 return 0
             raise ValueError(
                 "Supported extensions commands: 'orket runtime extensions list' and "

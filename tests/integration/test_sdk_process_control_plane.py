@@ -34,7 +34,7 @@ def admitted_sdk(tmp_path):
     for args in [["init"], ["add", "."], ["-c", "user.email=test@example.com", "-c", "user.name=Test", "commit", "-m", "fixture"]]:
         subprocess.run(["git", *args], cwd=root, capture_output=True, check=True)
     manager = ExtensionManager(catalog_path=tmp_path / "catalog.json", project_root=tmp_path)
-    manager.install_from_repo(str(root))
+    asyncio.run(manager.install_from_repo(str(root)))
     return manager, options["input_payload"]
 
 

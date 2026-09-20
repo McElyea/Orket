@@ -24,7 +24,7 @@ def admitted_legacy(tmp_path):
     repo.mkdir()
     _init_test_extension_repo(repo)
     manager = ExtensionManager(catalog_path=tmp_path / "legacy-catalog.json", project_root=tmp_path)
-    manager.install_from_repo(str(repo))
+    asyncio.run(manager.install_from_repo(str(repo)))
     return manager, {"seed": 1}
 
 

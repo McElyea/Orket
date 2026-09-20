@@ -38,7 +38,7 @@ from .workload_executor_support import (
     sdk_side_effect_observed,
 )
 from .workload_loader import WorkloadLoader
-from .workload_policy import capture_workload_policy
+from .workload_policy import WorkloadPolicy
 from .workload_publication import prepare_legacy_workload, publish_manifest, publish_provenance
 
 
@@ -65,9 +65,9 @@ class WorkloadExecutor:
         input_config: dict[str, Any],
         workspace: Path,
         department: str,
+        policy: WorkloadPolicy,
         interaction_context: Any | None = None,
     ) -> ExtensionRunResult:
-        policy = capture_workload_policy()
         input_config, control_plane_workload_record = deepcopy(input_config), deepcopy(control_plane_workload_record)
         loaded_workload, run_plan = await prepare_legacy_workload(
             self.loader, self.artifacts, extension, workload, input_config, interaction_context, policy=policy)
@@ -191,9 +191,9 @@ class WorkloadExecutor:
         input_config: dict[str, Any],
         workspace: Path,
         department: str,
+        policy: WorkloadPolicy,
         interaction_context: Any | None = None,
     ) -> ExtensionRunResult:
-        policy = capture_workload_policy()
         input_config, control_plane_workload_record = deepcopy(input_config), deepcopy(control_plane_workload_record)
         agent_markers = agent_discriminator_reasons(
             {

@@ -14,7 +14,9 @@ provenance; changing verbosity could expose configuration that was admitted unde
 redacted publication. The retained 0.6.35 installed counterexample remains evidence
 of that defect.
 
-Application captures one frozen `WorkloadPolicy` before the executor's first await.
+From 0.6.37, the manager captures one frozen `WorkloadPolicy` before preflight's
+first await and passes it explicitly to the executor. The 0.6.36 boundary was the
+executor's first await; migration is in `CONTRACT_DELTA_EXTENSION_INSTALL_D_2026-09-19.md`.
 The snapshot includes `ORKET_RELIABLE_MODE`, `ORKET_RELIABLE_REQUIRE_CLEAN_GIT`,
 `ORKET_EXT_PROVENANCE_VERBOSE`, `ORKET_EXT_ARTIFACT_FILE_SIZE_CAP_BYTES` and
 `ORKET_EXT_ARTIFACT_TOTAL_SIZE_CAP_BYTES`. Existing boolean, numeric and default

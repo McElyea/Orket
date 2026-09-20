@@ -7,6 +7,10 @@ import sys
 import time
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 
 def _run_live_process(config_path: Path, workspace: Path, result_out: Path) -> subprocess.Popen[str]:
     repo_root = Path(__file__).resolve().parents[2]
@@ -35,6 +39,21 @@ def _checkpoint_files(path: Path) -> list[Path]:
     return sorted(path.glob("episode_*.json"))
 
 
+def _wait_for_completed_episode(proc: subprocess.Popen[str], checkpoints: Path) -> None:
+    # Readiness is a committed artifact, not elapsed interpreter startup time.
+    deadline = time.monotonic() + 10
+    while time.monotonic() < deadline:
+        if _checkpoint_files(checkpoints):
+            return
+        if proc.poll() is not None:
+            stdout, stderr = proc.communicate(timeout=60)
+            raise AssertionError(f"Rule simulation exited before its first checkpoint: {stdout}\n{stderr}")
+        time.sleep(0.01)
+    proc.kill()
+    stdout, stderr = proc.communicate(timeout=60)
+    raise AssertionError(f"Rule simulation produced no checkpoint within 10 seconds: {stdout}\n{stderr}")
+
+
 def test_graceful_interruption_reproducible_completed_episodes(tmp_path: Path) -> None:
     stop_file = tmp_path / "stop.signal"
     checkpoint_a = tmp_path / "ckpt_a"
@@ -58,7 +77,7 @@ def test_graceful_interruption_reproducible_completed_episodes(tmp_path: Path) -
     cfg_a.write_text(json.dumps(config_graceful), encoding="utf-8")
     result_a = tmp_path / "result_a.json"
     proc = _run_live_process(cfg_a, workspace_a, result_a)
-    time.sleep(1.2)
+    _wait_for_completed_episode(proc, checkpoint_a)
     stop_file.write_text("stop\n", encoding="utf-8")
     stdout, stderr = proc.communicate(timeout=60)
     assert proc.returncode == 0, f"stdout={stdout}\nstderr={stderr}"
@@ -104,7 +123,7 @@ def test_hard_kill_reproducible_completed_episodes(tmp_path: Path) -> None:
     cfg_a.write_text(json.dumps(config), encoding="utf-8")
     result_a = tmp_path / "kill_result_a.json"
     proc = _run_live_process(cfg_a, workspace_a, result_a)
-    time.sleep(1.2)
+    _wait_for_completed_episode(proc, checkpoint_a)
     proc.kill()
     proc.communicate(timeout=60)
     partial = _checkpoint_files(checkpoint_a)

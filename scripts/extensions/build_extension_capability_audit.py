@@ -19,7 +19,6 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from orket.extensions.manager import ExtensionManager
 
 HOST_CONTROLS_KEY = "__orket_host_capability_authorization__"
 OUTPUT_PATH = REPO_ROOT / "benchmarks" / "results" / "extensions" / "extension_capability_audit.json"
@@ -149,11 +148,12 @@ def _controls(*, test_case: str, expected_result: str, admit_only: list[str] | N
 
 
 async def _run_case(project_root: Path, case: dict[str, Any]) -> None:
+    from orket.extensions.manager import ExtensionManager
     repo = project_root / "repos" / str(case["test_case"])
     repo.mkdir(parents=True, exist_ok=True)
     _init_sdk_repo(repo, module_source=str(case["module_source"]), required_capabilities=list(case["required_capabilities"]))
     manager = ExtensionManager(catalog_path=project_root / "extensions_catalog.json", project_root=project_root)
-    manager.install_from_repo(str(repo))
+    await manager.install_from_repo(str(repo))
     workspace = project_root / "workspace" / "default"
     input_config = dict(case["input_config"])
     if "capabilities" in case:

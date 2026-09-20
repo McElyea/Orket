@@ -9,19 +9,21 @@ Current gate: scoped BT-1 through BT-5 are accepted. C/D dependency enforcement,
 core purity, explicit inputs and async safety are next, followed by E1/E2 and the
 gated capability obligations. The whole lane remains active.
 
-The local 0.6.36 checkpoint captures one immutable SDK/legacy policy for
-admission, artifact limits, result/control-plane identity and provenance. Overlapping
-runs retain separate snapshots; required Git checks use native process ownership.
-The 1,749-case source and three native runs pass. Linux 3.11 retains one graph test
-failure caused by assuming node order implied card identity; the retained response
-correctly accepts ROOT. Explicit timestamps and ID-based assertions pass all 15
-graph cases on source and all four installations using unchanged runtime wheels.
-Combined proof covers 1,751 current identities; it is not a fresh all-green broad
-rerun. Contract: `docs/architecture/CONTRACT_DELTA_WORKLOAD_POLICY_D_2026-09-19.md`.
-Six dependency diagnostics, Ruff 95, other inputs/clocks and C/D/E/CAP remain open.
-Native manager probes expose blocking preflight and Windows/Linux reinstalls that
-leave unchanged catalogs pointing to unusable installations. Exact failures and
-proof limits remain in the plan. Commits and tags stay local during work hours.
+The 0.6.37 checkpoint stages distinct extension checkouts before locked, verified
+catalog publication; failed replacements retain prior installations. Native Git
+and preflight workers remain owned through interruption, including Python 3.12
+timeouts. Verified sandbox health retries repair missing deployment journals.
+Fresh source passes 1,827 selected cases; four fresh installed
+Windows/Linux Python 3.11/3.12 environments pass the declared 177-case
+repair subset. The earlier broad native matrix retains its failures; this is not
+a fresh all-green broad native or full-suite claim. Separate real Docker/SQLite
+recovery and independently verified teardown pass. Migration and limits:
+`docs/architecture/CONTRACT_DELTA_EXTENSION_INSTALL_D_2026-09-19.md` and
+`docs/architecture/CONTRACT_DELTA_SANDBOX_DEPLOY_RECOVERY_D_2026-09-19.md`.
+Six dynamic diagnostics, Ruff 94, constructor blocking and other C/D/E/CAP gates
+remain open. Exact failed observations and scoped proof remain in the plan.
+GitHub pushes are reauthorized; earlier local-only notes describe historical
+checkpoint restrictions.
 
 C's v2 allowed-edge implementation replaces the transition denylist. The checker,
 exporter and baseline share one Git-visible import inventory; repository violations

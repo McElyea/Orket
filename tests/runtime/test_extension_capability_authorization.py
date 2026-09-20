@@ -140,12 +140,12 @@ def _host_controls(
     }
 
 
-def _install_manager(tmp_path: Path, *, module_source: str, required_capabilities: list[str]) -> ExtensionManager:
+async def _install_manager(tmp_path: Path, *, module_source: str, required_capabilities: list[str]) -> ExtensionManager:
     repo = tmp_path / "sdk_repo"
     repo.mkdir(parents=True, exist_ok=True)
     _init_sdk_repo(repo, module_source=module_source, required_capabilities=required_capabilities)
     manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
-    manager.install_from_repo(str(repo))
+    await manager.install_from_repo(str(repo))
     return manager
 
 
@@ -173,7 +173,7 @@ def _control_plane_db_path(project_root: Path) -> Path:
 @pytest.mark.asyncio
 async def test_sdk_capability_authorization_allows_admitted_memory_query_without_write(tmp_path: Path) -> None:
     """Layer: integration. Verifies the real subprocess path admits `memory.query` independently of `memory.write`."""
-    manager = _install_manager(tmp_path, module_source=MEMORY_QUERY_SOURCE, required_capabilities=["memory.query", "memory.write"])
+    manager = await _install_manager(tmp_path, module_source=MEMORY_QUERY_SOURCE, required_capabilities=["memory.query", "memory.write"])
     workspace = tmp_path / "workspace" / "default"
     result = await manager.run_workload(
         workload_id="sdk_auth_v1",
@@ -207,7 +207,7 @@ async def test_sdk_capability_authorization_allows_admitted_memory_query_without
 @pytest.mark.asyncio
 async def test_sdk_capability_authorization_allows_admitted_memory_write_without_read(tmp_path: Path) -> None:
     """Layer: integration. Verifies the real subprocess path admits `memory.write` independently of `memory.query`."""
-    manager = _install_manager(tmp_path, module_source=MEMORY_WRITE_SOURCE, required_capabilities=["memory.query", "memory.write"])
+    manager = await _install_manager(tmp_path, module_source=MEMORY_WRITE_SOURCE, required_capabilities=["memory.query", "memory.write"])
     result = await manager.run_workload(
         workload_id="sdk_auth_v1",
         input_config=_host_controls(test_case="memory_write_allowed", expected_result="success", admit_only=["memory.write"]),
@@ -224,7 +224,7 @@ async def test_sdk_capability_authorization_allows_admitted_memory_write_without
 @pytest.mark.asyncio
 async def test_sdk_capability_authorization_blocks_undeclared_memory_write(tmp_path: Path) -> None:
     """Layer: integration. Verifies undeclared first-slice use fails closed before side effects even when the child has a provider seam."""
-    manager = _install_manager(tmp_path, module_source=MEMORY_WRITE_SOURCE, required_capabilities=[])
+    manager = await _install_manager(tmp_path, module_source=MEMORY_WRITE_SOURCE, required_capabilities=[])
 
     with pytest.raises(RuntimeError, match="E_SDK_CAPABILITY_UNDECLARED_USE: memory.write"):
         await manager.run_workload(
@@ -242,7 +242,7 @@ async def test_sdk_capability_authorization_blocks_undeclared_memory_write(tmp_p
 @pytest.mark.asyncio
 async def test_sdk_capability_authorization_blocks_declared_but_denied_memory_write(tmp_path: Path) -> None:
     """Layer: integration. Verifies declared-but-not-admitted first-slice use stays distinct from undeclared use."""
-    manager = _install_manager(tmp_path, module_source=MEMORY_WRITE_SOURCE, required_capabilities=["memory.query", "memory.write"])
+    manager = await _install_manager(tmp_path, module_source=MEMORY_WRITE_SOURCE, required_capabilities=["memory.query", "memory.write"])
 
     with pytest.raises(RuntimeError, match="E_SDK_CAPABILITY_DENIED: memory.write"):
         await manager.run_workload(
@@ -261,7 +261,7 @@ async def test_sdk_capability_authorization_blocks_declared_but_denied_memory_wr
 @pytest.mark.asyncio
 async def test_sdk_capability_authorization_blocks_child_drift_before_workload_execution(tmp_path: Path) -> None:
     """Layer: integration. Verifies the subprocess revalidation fails closed when child-side first-slice authority expands."""
-    manager = _install_manager(tmp_path, module_source=MEMORY_QUERY_SOURCE, required_capabilities=["memory.query"])
+    manager = await _install_manager(tmp_path, module_source=MEMORY_QUERY_SOURCE, required_capabilities=["memory.query"])
 
     with pytest.raises(RuntimeError, match="E_SDK_CAPABILITY_AUTHORIZATION_DRIFT: memory.write"):
         await manager.run_workload(
@@ -285,7 +285,7 @@ async def test_sdk_capability_authorization_blocks_child_drift_before_workload_e
 @pytest.mark.asyncio
 async def test_sdk_capability_authorization_allows_admitted_model_generate_with_static_provider(tmp_path: Path) -> None:
     """Layer: integration. Verifies the first slice can admit `model.generate` independently using a deterministic host-configured provider."""
-    manager = _install_manager(tmp_path, module_source=MODEL_GENERATE_SOURCE, required_capabilities=["model.generate"])
+    manager = await _install_manager(tmp_path, module_source=MODEL_GENERATE_SOURCE, required_capabilities=["model.generate"])
     result = await manager.run_workload(
         workload_id="sdk_auth_v1",
         input_config={
@@ -314,7 +314,7 @@ async def test_sdk_capability_authorization_governs_voice_and_audio_families(tmp
         "speech.play_clip",
         "voice.turn_control",
     ]
-    manager = _install_manager(tmp_path, module_source=VOICE_FAMILY_SOURCE, required_capabilities=required_capabilities)
+    manager = await _install_manager(tmp_path, module_source=VOICE_FAMILY_SOURCE, required_capabilities=required_capabilities)
     result = await manager.run_workload(
         workload_id="sdk_auth_v1",
         input_config=_host_controls(
@@ -347,7 +347,7 @@ async def test_sdk_capability_authorization_governs_voice_and_audio_families(tmp
 @pytest.mark.asyncio
 async def test_sdk_capability_authorization_blocks_declared_but_denied_tts_speak(tmp_path: Path) -> None:
     """Layer: integration. Verifies non-memory/model governed capability denial uses the same fail-closed host admission surface."""
-    manager = _install_manager(tmp_path, module_source=TTS_SPEAK_SOURCE, required_capabilities=["tts.speak", "memory.query"])
+    manager = await _install_manager(tmp_path, module_source=TTS_SPEAK_SOURCE, required_capabilities=["tts.speak", "memory.query"])
 
     with pytest.raises(RuntimeError, match="E_SDK_CAPABILITY_DENIED: tts.speak"):
         await manager.run_workload(

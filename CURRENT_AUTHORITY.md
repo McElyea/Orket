@@ -4,6 +4,19 @@ Last updated: 2026-09-19
 
 This file is the current canonical authority snapshot for high-impact runtime and governance paths.
 
+Extension installation admits a distinct checkout before locked, verified catalog
+publication; failed upgrades retain prior installations. Native Git commands and
+catalog/preflight workers remain owned through interruption. Manager inputs and
+policy are captured before preflight, and controller SDK admission uses that same
+catalog observation. Async installation migration, native ownership paths and
+remaining construction/publication limits:
+`docs/architecture/CONTRACT_DELTA_EXTENSION_INSTALL_D_2026-09-19.md`.
+
+Owned ACTIVE sandbox health retries publish any missing deployment effect before
+returning success, after lease/resource publication with one captured timestamp.
+Existing lease monotonicity guards remain active. Recovery and partial-effect limits:
+`docs/architecture/CONTRACT_DELTA_SANDBOX_DEPLOY_RECOVERY_D_2026-09-19.md`.
+
 Application retains SDK and legacy artifact/provenance workers through interruption,
 captures caller inputs before awaiting and preserves confirmed execution outcomes
 when later projection publication fails. Storage verifies each published JSON file;

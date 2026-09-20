@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any, Literal
 
+from orket.adapters.execution.owned_io import run_owned_thread
 from orket.adapters.storage.async_control_plane_execution_repository import (
     AsyncControlPlaneExecutionRepository,
 )
@@ -138,7 +138,7 @@ class GovernedAgentWakeLoopDispatcher:
                 reason="provider_capacity_unavailable",
                 child_confirmed_stopped=True,
             )
-        launch = await asyncio.to_thread(self._extensions.resolve_governed_agent_workload, workload_id)
+        launch = await run_owned_thread(lambda: self._extensions.resolve_governed_agent_workload(workload_id), label="agent-wake-catalog")
         await guard.ensure_active()
         if launch.workload_id != workload_id:
             raise ValueError("E_AGENT_WAKE_WORKLOAD_AUTHORITY_DRIFT")

@@ -246,7 +246,7 @@ async def test_generic_sdk_executor_refuses_agent_workload_before_runtime_side_e
     monkeypatch.setattr(executor.artifacts, "artifact_root", unexpected_artifact_root)
 
     with pytest.raises(ValueError, match="E_AGENT_RUNTIME_NOT_ADMITTED"):
-        await executor.run_sdk_workload(
+        await executor.run_sdk_workload(policy=capture_workload_policy(),
             extension=extension,
             workload=workload,
             control_plane_workload_record={},

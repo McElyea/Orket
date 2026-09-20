@@ -46,12 +46,6 @@ class _StubExtensionManager:
         self._outcomes = outcomes
         self.calls: list[str] = []
 
-    def has_manifest_entry(self, workload_id: str) -> bool:
-        return workload_id in self._workload_styles
-
-    def uses_sdk_contract(self, workload_id: str) -> bool:
-        return self._workload_styles.get(workload_id) == CONTRACT_STYLE_SDK_V0
-
     async def run_workload(
         self,
         *,
@@ -60,8 +54,13 @@ class _StubExtensionManager:
         workspace: Path,
         department: str,
         interaction_context: object | None = None,
+        require_sdk: bool = False,
     ) -> ExtensionRunResult:
         _ = (input_config, workspace, department, interaction_context)
+        if workload_id not in self._workload_styles:
+            raise ValueError("Unknown workload")
+        if require_sdk and self._workload_styles[workload_id] != CONTRACT_STYLE_SDK_V0:
+            raise ValueError(ERROR_CHILD_SDK_REQUIRED)
         self.calls.append(workload_id)
         options = self._outcomes.get(workload_id) or []
         if not options:
@@ -309,10 +308,10 @@ async def test_controller_dispatcher_integration_runtime_path_and_determinism(tm
     _init_controller_bootstrap_repo(controller)
 
     manager = ExtensionManager(catalog_path=catalog_path, project_root=tmp_path)
-    manager.install_from_repo(str(sdk_a))
-    manager.install_from_repo(str(sdk_b))
-    manager.install_from_repo(str(legacy))
-    manager.install_from_repo(str(controller))
+    await manager.install_from_repo(str(sdk_a))
+    await manager.install_from_repo(str(sdk_b))
+    await manager.install_from_repo(str(legacy))
+    await manager.install_from_repo(str(controller))
 
     workspace = tmp_path / "workspace" / "default"
     workspace.mkdir(parents=True, exist_ok=True)

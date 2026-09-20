@@ -12516,12 +12516,12 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
   Scoped installed-build/host acceptance now passes; this does not close the
   full plan or imply generic exactly-once effects or historical authenticity.
 
-Next action: repair extension manager installation/catalog/integrity ownership,
-including retained Windows/Linux preflight and reinstall failures, after the 0.6.36
-combined policy/graph-test checkpoint. Continue all numbered C/D requirements. The graph has zero forbidden
+Next action: continue remaining manager/API/controller construction and admission-input
+boundaries after the verified 0.6.37 installation/preflight and recovery checkpoint,
+together with all numbered C/D requirements. The graph has zero forbidden
 static pairs, zero cross-layer cycles and six unresolved import/reflection diagnostics. Preserve every failed and
 passing source/native observation and the historical clock diagnosis. Canonical
-Ruff has 95 findings. The prior stale benchmark expectation passes in the
+Ruff has 94 findings. The prior stale benchmark expectation passes in the
 new source/native selection, but no fresh all-green full suite is claimed.
 Remaining core clocks, schema identities, async reachability and
 adapter classification remain actionable. E1/E2, CAP-1/2/3, hosted Quality, release
@@ -16943,3 +16943,162 @@ immutability, hostile containment and cross-store transactions remain unverified
 Manager install/catalog/integrity ownership and the full C/D/E/CAP obligations stay
 active. The historical clock diagnosis is preserved separately. Commits and the
 annotated tag remain local under the user's 10 AM-6 PM America/Denver restriction.
+
+
+### Extension installation and preflight ownership candidate: 2026-09-19
+
+Core 0.6.37 stages distinct checkouts before native-owned, verified catalog
+publication. Installation is async; CLI preparation/listing enter application
+owned workers. Workload inputs/policy precede preflight, controller SDK admission
+uses that same record, and governed-agent wake preparation retains its worker.
+Missing Git metadata and malformed catalog containers refuse admission. Durable
+contract: `docs/architecture/CONTRACT_DELTA_EXTENSION_INSTALL_D_2026-09-19.md`.
+
+The 0.6.36 checkpoint and all 673 direct evidence hashes were verified before
+editing; historical handoff and neighboring repositories were unchanged. New
+observations are under `.tmp/d-extension-manager/`. Initial focused execution
+retains 98 passes and two test failures: a new contention assertion expected
+RuntimeError instead of the native lock's ValueError, and the pre-existing exact
+private-import inventory omitted workload_publication.py. Corrected expanded
+execution passes 76 cases. A separate 15-case source run passes native Windows
+catalog replacement refusal and source-policy/Quality checks. The initial graph
+also retains one introduced CLI-to-adapter edge; application command ownership
+repairs that edge before package admission. These are intermediate observations; the later source and focused native
+repair proof is recorded below.
+
+Cancellation before publication retains the old catalog; cancellation during
+publication can retain a verified new row. All checkouts remain available for
+inspection. Construction-time API/controller filesystem observations, wider
+clock/input/adapter work, six dynamic diagnostics, E1/E2, CAP-1/2/3 and explicit
+whole-lane acceptance remain open. No new hostile containment, provider or
+full-suite claim is made. Commits/tags remain local during work hours.
+
+
+The first frozen 0.6.37 source run retained 1,806 passes and 11 failures in 1,817
+cases. All 11 failures came from two migrated synchronous test builders invoking
+`asyncio.run` inside active test loops; those builders and their callers are now
+async/await. Five CLI stubs also targeted the retired constructor location; they
+now target application composition, with a contract checking that construction
+and listing both run outside the event loop. The focused repair passes 29 cases.
+`fixture-repair-delta.json` binds the seven test/workflow changes and confirms no
+runtime source or wheel changed. A fresh full selected source run and four native
+cells must establish the final current test envelope; the first run is not green.
+
+
+#### Retained native failures and .37 recovery repair
+
+The repaired support-only harness did not produce a green broad native matrix.
+Its 1,818-case observations are retained under
+`.tmp/d-extension-manager/installed-repaired/observed-native-audit.json`:
+Windows 3.11 passed all cases; Linux 3.11 failed one sandbox deployment-journal
+assertion; Linux 3.12 failed the Git timeout case; Windows 3.12 failed that case
+and both rule-simulation interruption tests. Independent audits verified copied
+inputs, installed origins, exact case identities, retained evidence, CLI flows,
+ToolGate denial checks and terminal processes. Failed test verdicts remain failed.
+
+The sandbox observation returned RUNNING/ACTIVE with an empty deployment journal.
+Retained SQLite timestamps show a lease publication reversal; the physical clock
+actor is unknown. Controlled Windows-source and Linux-installed reproductions
+established the product defect: the first health publication transitioned ACTIVE,
+then the lease rejected regressed time; a retry renewed authority without repairing
+the missing deployment effect. The repair invokes the existing idempotent deployment
+publisher on owned ACTIVE health retries and captures one timestamp for that renewal.
+Lease monotonicity remains enforced. Contract:
+`docs/architecture/CONTRACT_DELTA_SANDBOX_DEPLOY_RECOVERY_D_2026-09-19.md`.
+
+Git interruption now retains native lifetime evidence as the cause of the exact
+base cancellation type, allowing Python 3.12 timeout scopes to raise TimeoutError.
+Uncertain cleanup/capture or a failed cancellation record remains an explicit
+extension error. Real descendant-tree timeout and cancellation checks remain.
+Rule-simulation interruption tests now wait up to ten seconds for a committed
+checkpoint instead of sleeping 1.2 seconds during process startup; original
+partial-run bounds and byte-for-byte uninterrupted-prefix comparisons remain.
+
+The first 30-case repair attempt retained two test-query failures and an invalid
+input-stability gate because draft copying overlapped its snapshot. No acceptance
+claim uses that attempt. The corrected fresh 32-case repair passed with zero
+failures/errors/skips and unchanged inputs. Its sandbox tests use real SQLite,
+including a native refusing trigger, with controlled Docker observations.
+Evidence: `runtime-repair-input-delta.json` and
+`runtime-repair-frozen/report.json` under `.tmp/d-extension-manager/`.
+
+Explicit live Docker acceptance then exercised actual native Compose, container
+observations and SQLite with a trusted minimal nginx policy, a controlled clock
+reversal and no published ports or host mounts. It observed the expected lease
+refusal, successful journal recovery, an actual nginx HTTP response and an
+unchanged journal on a repeated health check. Application deletion completed;
+independent exact-project Docker queries verified containers, networks and volumes
+absent in the same execution. Result: primary/success. The initial harness settings
+bootstrap failure created no sandbox and remains retained. Successful evidence:
+`.tmp/d-extension-manager/sandbox-live-recovery-configured/report.json`.
+This is lifecycle recovery proof, not full application, provider or hostile-code
+acceptance.
+
+Fresh runtime artifacts and proof are retained separately under
+`.tmp/d-extension-manager/runtime-candidate/`. The declared gate reran the broad
+selected source cohort and a native subset covering every modified test module
+plus the selected sandbox regressions on Windows/Linux Python 3.11/3.12. It does
+not reclassify the failed broad native matrix or claim a fresh full-suite run.
+The source-derived native case subset and artifact hashes are recorded before
+native execution. Whole C/D, E, capability and lane acceptance remain open.
+
+The user explicitly reauthorized GitHub pushes. Ten completed commits through
+0.6.36 and their annotated tags were pushed atomically and independently matched
+to 21 remote refs; `.tmp/d-extension-manager/remote-checkpoints-through-36.json`
+retains that verification. The .37 checkpoint then entered the final review
+recorded below.
+
+
+#### Verified .37 installation and recovery checkpoint
+
+Observed path: primary; checkpoint result: success; whole-goal result: partial
+success. Fresh source passes 1,827 selected cases without
+failures/errors/skips and with unchanged inputs. The declared installed repair
+subset passes 177 identical source-derived cases in each
+of four fresh private installations:
+
+| Installed cell | Tests / failures / errors / skips | Seconds | Core origins |
+|---|---:|---:|---:|
+| a37r-win-py311 | 177 / 0 / 0 / 0 | 194.699 | 699 |
+| a37r-linux-py311 | 177 / 0 / 0 / 0 | 85.145 | 699 |
+| a37r-win-py312 | 177 / 0 / 0 / 0 | 197.468 | 699 |
+| a37r-linux-py312 | 177 / 0 / 0 / 0 | 144.684 | 699 |
+
+This is fresh broad selected source proof plus a focused native repair matrix,
+not a fresh all-green broad native matrix or a full-suite run. Every earlier
+failure above remains retained. Installed gates independently verify exact case
+identity, all imported core bytes/origins, unchanged support inputs, wheel identity,
+CLI primary/degraded flows, ToolGate denial behavior and no remaining owned children.
+The wheel built from its source archive matches 1,094
+Python files and 1,110 package files.
+
+Runtime proof covers native Git installation/replacement/refusal and descendant
+teardown, captured preflight inputs, journal retry/refusal and rule-simulation
+checkpoint parity. The separate real Docker recovery and same-execution teardown
+above passes on the identical source bytes. Synthetic uncertainty observations
+remain contract proof; injected native delays establish the declared responsiveness
+bounds, not natural filesystem latency or hostile-code containment.
+
+The rebuilt Windows console entrypoint separately passes actual install, list,
+invalid-reference replacement refusal and workload execution, with exit codes
+0/0/1/0. Independent catalog and manifest reads verify that the refused replacement
+retains the prior installation, which remains runnable. Exact commands, output and
+executed helper bytes are retained in `cli-installed-repair/`.
+
+Structural checks pass for changed-file Ruff, size limits, documentation hygiene,
+release metadata and packaged templates. Canonical Ruff still has 94 findings;
+there are no newly introduced diagnostics. The dependency graph retains 1,094
+modules, 3,450 import sites, zero forbidden static pairs/cycles/unknown modules and
+six unresolved dynamic diagnostics. Baseline collection succeeds; release_ready
+remains false. Hosted Quality, a fresh complete suite, whole C/D/E/CAP and explicit
+whole-lane acceptance remain unverified/open. The retained constructor heartbeat
+failures and separate interaction admission/environment observations remain D work.
+
+Evidence under `.tmp/d-extension-manager/`: `runtime-candidate/source-report.json`
+(`bf6d2291cec655f2d71d35eaf089b22e97ed495ed0d720feb17abe5891033630`), `runtime-candidate/manifest.json`
+(`5ad9aa5aef2d4a7e9bc53fbc63eda43f6e824c0285d80fa131c56e4f9faaae85`), `runtime-candidate/native-audit.json`
+(`d15f72679e3568de24b689f0fddfc56ae5db4c81881d5834d84046ffdd69e4d5`), `runtime-repair-static-review.json`,
+`runtime-repair-size-lint.json`, `post-proof-documents.json`, `review.json` and
+`CHANGESET.md`. Exact failed records and the previous 673 direct evidence hashes
+remain bound by the checkpoint. GitHub pushes are reauthorized; the versioned
+branch checkpoint and annotated tag are published together after final review.

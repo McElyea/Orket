@@ -223,31 +223,6 @@ class ControllerDispatcher:
                 error_code=guard_error,
             )
 
-        if not self._extension_manager.has_manifest_entry(child.target_workload):
-            return _ChildOutcome(
-                result=failed_child_result(
-                    child=child,
-                    error_code=ERROR_CHILD_EXECUTION_FAILED,
-                    requested_timeout=requested_timeout_value,
-                    enforced_timeout=enforced_timeout_value,
-                    requested_caps=caps.requested,
-                    enforced_caps=caps.enforced,
-                ),
-                error_code=ERROR_CHILD_EXECUTION_FAILED,
-            )
-        if not self._extension_manager.uses_sdk_contract(child.target_workload):
-            return _ChildOutcome(
-                result=failed_child_result(
-                    child=child,
-                    error_code=ERROR_CHILD_SDK_REQUIRED,
-                    requested_timeout=requested_timeout_value,
-                    enforced_timeout=enforced_timeout_value,
-                    requested_caps=caps.requested,
-                    enforced_caps=caps.enforced,
-                ),
-                error_code=ERROR_CHILD_SDK_REQUIRED,
-            )
-
         child_input = dict(child.payload)
         child_input.setdefault("parent_depth", next_depth)
         child_input.setdefault("ancestry", list(active_ancestry))
@@ -255,6 +230,7 @@ class ControllerDispatcher:
         try:
             run_call = self._extension_manager.run_workload(
                 workload_id=child.target_workload,
+                require_sdk=True,
                 input_config=child_input,
                 workspace=workspace,
                 department=department,
@@ -264,7 +240,7 @@ class ControllerDispatcher:
                 if enforced_timeout_value is None
                 else await asyncio.wait_for(run_call, timeout=float(enforced_timeout_value))
             )
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return _ChildOutcome(
                 result=failed_child_result(
                     child=child,

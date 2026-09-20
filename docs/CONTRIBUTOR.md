@@ -174,6 +174,21 @@ limit omissions; exit 1 reports discovery/read/write errors. Review the filter a
 output before sharing. The ignored local `project_dump.py` is not repository
 tooling or a test prerequisite.
 
+Extension installation is async: await `ExtensionManager.install_from_repo`.
+Keep real Git cancellation, failed replacement, native catalog refusal and captured
+preflight regressions in both Quality selections. Preserve referenced checkouts
+and catalog native lock identities. Interruption/publication limits and synchronous
+worker-only catalog surfaces are specified in
+`docs/architecture/CONTRACT_DELTA_EXTENSION_INSTALL_D_2026-09-19.md`.
+
+Both Quality selections also retain Git interruption uncertainty controls, sandbox
+deployment publication recovery and rule-simulation interruption reproducibility.
+The sandbox regressions use real SQLite with controlled Docker observations;
+separate live Docker proof must verify teardown. See
+`docs/architecture/CONTRACT_DELTA_SANDBOX_DEPLOY_RECOVERY_D_2026-09-19.md`.
+Rule-simulation interruption tests wait for a committed episode checkpoint before
+interrupting and retain byte-for-byte comparison with the uninterrupted run.
+
 Extension tests that create independent source roots must use distinct top-level
 module names or separate Python processes. A cached module from another root is
 an admission error, not a fixture to reuse. Source-origin and load-worker limits

@@ -5,6 +5,8 @@ from importlib.metadata import entry_points
 from pathlib import Path
 from typing import Any
 
+from orket.adapters.storage.local_file_lock import NativeFileLocks
+from orket.adapters.storage.verified_file import write_verified_bytes
 from orket_extension_sdk.manifest import (
     is_agent_workload_payload,
     validate_workload_manifest_payload,
@@ -131,15 +133,32 @@ class ExtensionCatalog:
             return {"extensions": []}
         data = json.loads(self.catalog_path.read_text(encoding="utf-8"))
         if not isinstance(data, dict):
-            return {"extensions": []}
+            raise ValueError("E_EXT_CATALOG_OBJECT_REQUIRED")
         extensions = data.get("extensions", [])
-        if not isinstance(extensions, list):
-            return {"extensions": []}
+        if not isinstance(extensions, list) or any(not isinstance(row, dict) for row in extensions):
+            raise ValueError("E_EXT_CATALOG_ROWS_REQUIRED")
         return {"extensions": extensions}
 
     def save_catalog_payload(self, payload: dict[str, Any]) -> None:
-        self.catalog_path.parent.mkdir(parents=True, exist_ok=True)
-        self.catalog_path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+        with self._publication_lock().hold_sync("catalog"):
+            self._write_payload(payload)
+
+    def publish_record(self, record: ExtensionRecord) -> None:
+        """Worker-only catalog update; contending writers fail without losing rows."""
+        with self._publication_lock().hold_sync("catalog"):
+            payload = self.load_catalog_payload()
+            rows = [row for row in payload["extensions"]
+                    if str(row.get("extension_id", "")).strip() != record.extension_id]
+            rows.append(self.row_from_record(record))
+            self._write_payload({"extensions": rows})
+
+    def _publication_lock(self) -> NativeFileLocks:
+        return NativeFileLocks(self.catalog_path, suffix=".extension-locks",
+                               error_prefix="E_EXT_CATALOG", empty_key_error="E_EXT_CATALOG_LOCK_KEY")
+
+    def _write_payload(self, payload: dict[str, Any]) -> None:
+        raw = json.dumps(payload, indent=2, sort_keys=True, allow_nan=False).encode("utf-8")
+        write_verified_bytes(self.catalog_path, raw, error_code="E_EXT_CATALOG_WRITE_UNVERIFIED")
 
     @staticmethod
     def row_from_record(record: ExtensionRecord) -> dict[str, Any]:

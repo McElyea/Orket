@@ -8,6 +8,7 @@ import pytest
 from orket.extensions.models import ExtensionRecord, _ExtensionManifestEntry
 from orket.extensions.reproducibility import ReproducibilityEnforcer
 from orket.extensions.workload_executor import WorkloadExecutor
+from orket.extensions.workload_policy import capture_workload_policy
 from tests.integration.test_extension_module_origin import _source
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
@@ -37,7 +38,7 @@ async def test_legacy_registration_worker_settles_before_interruption_returns(tm
                                 registry_factory=Registry)
     entry = _ExtensionManifestEntry('fixture', '1')
     extension = ExtensionRecord('owned', '1', 'fixture', '1', str(tmp_path), module, 'register', (entry,))
-    operation = executor.run_legacy_workload(extension=extension, workload=entry, control_plane_workload_record={},
+    operation = executor.run_legacy_workload(policy=capture_workload_policy(), extension=extension, workload=entry, control_plane_workload_record={},
         input_config={}, workspace=tmp_path / 'workspace', department='core')
     request = asyncio.create_task(asyncio.wait_for(operation, 0.05) if stop == 'timeout' else operation)
     try:
@@ -81,7 +82,7 @@ async def test_sdk_source_validation_settles_before_interruption_returns(tmp_pat
     monkeypatch.setattr(executor.loader, 'validate_extension_imports', held)
     entry = _ExtensionManifestEntry('fixture', '1', entrypoint='selected:Work', contract_style='sdk_v0')
     extension = ExtensionRecord('owned', '1', 'fixture', 'v0', str(tmp_path), '', '', (entry,), contract_style='sdk_v0')
-    operation = executor.run_sdk_workload(extension=extension, workload=entry, control_plane_workload_record={},
+    operation = executor.run_sdk_workload(policy=capture_workload_policy(), extension=extension, workload=entry, control_plane_workload_record={},
         input_config={}, workspace=tmp_path / 'workspace', department='core')
     request = asyncio.create_task(asyncio.wait_for(operation, 0.05) if stop == 'timeout' else operation)
     try:

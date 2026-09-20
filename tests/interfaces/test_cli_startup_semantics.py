@@ -6,6 +6,7 @@ from types import SimpleNamespace
 
 import pytest
 
+import orket.application.services.extension_catalog_commands as extension_commands_module
 import orket.application.services.structural_reconciliation_service as reconciler_module
 import orket.discovery as discovery_module
 import orket.interfaces.cli as cli_module
@@ -107,7 +108,7 @@ async def test_cli_startup_runs_reconciliation_without_bypass(monkeypatch, capsy
     monkeypatch.setattr(discovery_module, "log_event", _capture_event)
     monkeypatch.setattr(discovery_module, "_default_model_root", lambda: Path("/fake-root/model"))
     monkeypatch.setattr(discovery_module, "_default_workspace_root", lambda: Path("/fake-root/workspace/default"))
-    monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
+    monkeypatch.setattr(extension_commands_module, "ExtensionManager", _DummyExtensionManager)
     monkeypatch.setattr(cli_module.sys, "platform", "linux")
     monkeypatch.setattr(
         cli_module,
@@ -204,7 +205,7 @@ async def test_cli_startup_warns_when_reconciliation_failed(monkeypatch, capsys)
         "perform_first_run_setup",
         lambda: {"reconciliation": "failed", "onboarding": "no_op"},
     )
-    monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
+    monkeypatch.setattr(extension_commands_module, "ExtensionManager", _DummyExtensionManager)
     monkeypatch.setattr(cli_module.sys, "platform", "linux")
     monkeypatch.setattr(
         cli_module,
@@ -235,7 +236,7 @@ async def test_cli_startup_runs_sync_setup_outside_the_event_loop(monkeypatch) -
         return {"reconciliation": "success", "onboarding": "no_op"}
 
     monkeypatch.setattr(cli_module, "perform_first_run_setup", _setup)
-    monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
+    monkeypatch.setattr(extension_commands_module, "ExtensionManager", _DummyExtensionManager)
     monkeypatch.setattr(cli_module.sys, "platform", "linux")
     monkeypatch.setattr(
         cli_module,
@@ -252,7 +253,7 @@ async def test_cli_startup_runs_sync_setup_outside_the_event_loop(monkeypatch) -
 async def test_cli_known_fatal_error_returns_nonzero(monkeypatch, capsys) -> None:
     """Layer: contract. Verifies handled fatal CLI errors return a failing process status."""
     monkeypatch.setattr(cli_module, "perform_first_run_setup", lambda: None)
-    monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
+    monkeypatch.setattr(extension_commands_module, "ExtensionManager", _DummyExtensionManager)
     monkeypatch.setattr(cli_module.sys, "platform", "linux")
     monkeypatch.setattr(
         cli_module,
@@ -287,7 +288,7 @@ async def test_cli_rock_runtime_preserves_flag_but_routes_directly_to_run_card(m
             return {"card": rock_name}
 
     monkeypatch.setattr(cli_module, "perform_first_run_setup", lambda: None)
-    monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
+    monkeypatch.setattr(extension_commands_module, "ExtensionManager", _DummyExtensionManager)
     monkeypatch.setattr(cli_module, "OrchestrationEngine", _FakeEngine)
     monkeypatch.setattr(cli_module, "print_orket_manifest", lambda *_args, **_kwargs: None)
     monkeypatch.setattr(cli_module.sys, "platform", "linux")

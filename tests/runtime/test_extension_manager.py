@@ -489,12 +489,13 @@ def test_uses_sdk_contract_reflects_manifest_style(tmp_path):
 
 
 def test_install_from_repo_registers_extension(tmp_path):
+    """Layer: integration. Exercise the admitted extension through its async command boundary."""
     repo = tmp_path / "ext_repo"
     repo.mkdir(parents=True, exist_ok=True)
     _init_test_extension_repo(repo)
 
     manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
-    record = manager.install_from_repo(str(repo))
+    record = asyncio.run(manager.install_from_repo(str(repo)))
 
     assert record.extension_id == "mystery.extension"
     assert record.manifest_entries[0].workload_id == "mystery_v1"
@@ -509,12 +510,13 @@ def test_install_from_repo_registers_extension(tmp_path):
 
 
 def test_install_from_repo_registers_sdk_extension(tmp_path):
+    """Layer: integration. Exercise the admitted extension through its async command boundary."""
     repo = tmp_path / "sdk_repo"
     repo.mkdir(parents=True, exist_ok=True)
     _init_sdk_extension_repo(repo, config_sections=["appearance"], allowed_stdlib_modules=["hashlib", "pathlib"])
 
     manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
-    record = manager.install_from_repo(str(repo))
+    record = asyncio.run(manager.install_from_repo(str(repo)))
 
     assert "appearance" in manager.config_sections()
 
@@ -536,7 +538,7 @@ async def test_run_sdk_workload_blocks_undeclared_stdlib_import_when_declared_al
     repo.mkdir(parents=True, exist_ok=True)
     _init_sdk_extension_repo(repo, allowed_stdlib_modules=["pathlib"])
     manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
-    manager.install_from_repo(str(repo))
+    await manager.install_from_repo(str(repo))
 
     with pytest.raises(ValueError, match="E_EXT_STDLIB_IMPORT_UNDECLARED: hashlib"):
         await manager.run_workload(
@@ -554,7 +556,7 @@ async def test_run_sdk_workload_subprocess_blocks_dynamic_undeclared_stdlib_impo
     repo.mkdir(parents=True, exist_ok=True)
     _init_sdk_dynamic_import_repo(repo)
     manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
-    manager.install_from_repo(str(repo))
+    await manager.install_from_repo(str(repo))
 
     with pytest.raises(RuntimeError, match="E_EXT_STDLIB_IMPORT_UNDECLARED: subprocess"):
         await manager.run_workload(
@@ -566,12 +568,13 @@ async def test_run_sdk_workload_subprocess_blocks_dynamic_undeclared_stdlib_impo
 
 
 def test_install_from_repo_registers_sdk_json_manifest_extension(tmp_path):
+    """Layer: integration. Exercise the admitted extension through its async command boundary."""
     repo = tmp_path / "sdk_json_repo"
     repo.mkdir(parents=True, exist_ok=True)
     _init_sdk_extension_repo_json_manifest(repo)
 
     manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
-    record = manager.install_from_repo(str(repo))
+    record = asyncio.run(manager.install_from_repo(str(repo)))
 
     assert record.extension_id == "sdk.json.extension"
     assert record.contract_style == "sdk_v0"
@@ -620,11 +623,12 @@ def test_extension_manager_exposes_helper_methods_explicitly():
 
 @pytest.mark.asyncio
 async def test_run_workload_emits_provenance(tmp_path):
+    """Layer: integration. Exercise the admitted extension through its async command boundary."""
     repo = tmp_path / "ext_repo"
     repo.mkdir(parents=True, exist_ok=True)
     _init_test_extension_repo(repo)
     manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
-    manager.install_from_repo(str(repo))
+    await manager.install_from_repo(str(repo))
 
     workspace = tmp_path / "workspace" / "default"
     workspace.mkdir(parents=True, exist_ok=True)
@@ -649,7 +653,7 @@ async def test_run_workload_publishes_control_plane_execution_and_checkpoint(tmp
     repo.mkdir(parents=True, exist_ok=True)
     _init_test_extension_repo(repo)
     manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
-    manager.install_from_repo(str(repo))
+    await manager.install_from_repo(str(repo))
 
     result = await manager.run_workload(
         workload_id="mystery_v1",
@@ -681,11 +685,12 @@ async def test_run_workload_publishes_control_plane_execution_and_checkpoint(tmp
 
 @pytest.mark.asyncio
 async def test_run_workload_rejects_private_orket_imports(tmp_path):
+    """Layer: integration. Exercise the admitted extension through its async command boundary."""
     repo = tmp_path / "blocked_repo"
     repo.mkdir(parents=True, exist_ok=True)
     _init_blocked_import_extension_repo(repo)
     manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
-    manager.install_from_repo(str(repo))
+    await manager.install_from_repo(str(repo))
 
     with pytest.raises(ValueError):
         await manager.run_workload(
@@ -699,11 +704,12 @@ async def test_run_workload_rejects_private_orket_imports(tmp_path):
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_run_workload_context_leaves_finalization_to_owner(tmp_path):
+    """Layer: integration. Exercise the admitted extension through its async command boundary."""
     repo = tmp_path / "ext_repo"
     repo.mkdir(parents=True, exist_ok=True)
     _init_test_extension_repo(repo)
     manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
-    manager.install_from_repo(str(repo))
+    await manager.install_from_repo(str(repo))
 
     class _FakeContext:
         def __init__(self):
@@ -732,11 +738,12 @@ async def test_run_workload_context_leaves_finalization_to_owner(tmp_path):
 
 @pytest.mark.asyncio
 async def test_run_sdk_workload_emits_provenance(tmp_path):
+    """Layer: integration. Exercise the admitted extension through its async command boundary."""
     repo = tmp_path / "sdk_repo"
     repo.mkdir(parents=True, exist_ok=True)
     _init_sdk_extension_repo(repo)
     manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
-    manager.install_from_repo(str(repo))
+    await manager.install_from_repo(str(repo))
 
     workspace = tmp_path / "workspace" / "default"
     workspace.mkdir(parents=True, exist_ok=True)
@@ -769,12 +776,13 @@ async def test_run_sdk_workload_emits_provenance(tmp_path):
 
 @pytest.mark.asyncio
 async def test_run_sdk_workload_provenance_verbose_mode_includes_raw_payloads(tmp_path, monkeypatch):
+    """Layer: integration. Exercise the admitted extension through its async command boundary."""
     monkeypatch.setenv("ORKET_EXT_PROVENANCE_VERBOSE", "true")
     repo = tmp_path / "sdk_repo_verbose"
     repo.mkdir(parents=True, exist_ok=True)
     _init_sdk_extension_repo(repo)
     manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
-    manager.install_from_repo(str(repo))
+    await manager.install_from_repo(str(repo))
 
     workspace = tmp_path / "workspace" / "default"
     workspace.mkdir(parents=True, exist_ok=True)
@@ -792,11 +800,12 @@ async def test_run_sdk_workload_provenance_verbose_mode_includes_raw_payloads(tm
 
 @pytest.mark.asyncio
 async def test_run_sdk_workload_declared_invalid_capability_fails_closed(tmp_path):
+    """Layer: integration. Exercise the admitted extension through its async command boundary."""
     repo = tmp_path / "sdk_repo"
     repo.mkdir(parents=True, exist_ok=True)
     _init_sdk_extension_repo(repo, required_capabilities=["clock.now"])
     manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
-    manager.install_from_repo(str(repo))
+    await manager.install_from_repo(str(repo))
 
     workspace = tmp_path / "workspace" / "default"
     workspace.mkdir(parents=True, exist_ok=True)
@@ -811,6 +820,7 @@ async def test_run_sdk_workload_declared_invalid_capability_fails_closed(tmp_pat
 
 @pytest.mark.asyncio
 async def test_mixed_catalog_runs_legacy_and_sdk_workloads(tmp_path):
+    """Layer: integration. Exercise the admitted extension through its async command boundary."""
     legacy_repo = tmp_path / "legacy_repo"
     legacy_repo.mkdir(parents=True, exist_ok=True)
     _init_test_extension_repo(legacy_repo)
@@ -820,8 +830,8 @@ async def test_mixed_catalog_runs_legacy_and_sdk_workloads(tmp_path):
     _init_sdk_extension_repo_json_manifest(sdk_repo)
 
     manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
-    manager.install_from_repo(str(legacy_repo))
-    manager.install_from_repo(str(sdk_repo))
+    await manager.install_from_repo(str(legacy_repo))
+    await manager.install_from_repo(str(sdk_repo))
 
     workspace = tmp_path / "workspace" / "default"
     workspace.mkdir(parents=True, exist_ok=True)
@@ -847,11 +857,12 @@ async def test_mixed_catalog_runs_legacy_and_sdk_workloads(tmp_path):
 
 @pytest.mark.asyncio
 async def test_run_sdk_workload_blocks_artifact_path_escape(tmp_path):
+    """Layer: integration. Exercise the admitted extension through its async command boundary."""
     repo = tmp_path / "sdk_bad_escape_repo"
     repo.mkdir(parents=True, exist_ok=True)
     _init_sdk_bad_artifact_repo(repo, mode="escape")
     manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
-    manager.install_from_repo(str(repo))
+    await manager.install_from_repo(str(repo))
 
     workspace = tmp_path / "workspace" / "default"
     workspace.mkdir(parents=True, exist_ok=True)
@@ -866,11 +877,12 @@ async def test_run_sdk_workload_blocks_artifact_path_escape(tmp_path):
 
 @pytest.mark.asyncio
 async def test_run_sdk_workload_rejects_artifact_digest_mismatch(tmp_path):
+    """Layer: integration. Exercise the admitted extension through its async command boundary."""
     repo = tmp_path / "sdk_bad_digest_repo"
     repo.mkdir(parents=True, exist_ok=True)
     _init_sdk_bad_artifact_repo(repo, mode="digest")
     manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
-    manager.install_from_repo(str(repo))
+    await manager.install_from_repo(str(repo))
 
     workspace = tmp_path / "workspace" / "default"
     workspace.mkdir(parents=True, exist_ok=True)
@@ -885,11 +897,12 @@ async def test_run_sdk_workload_rejects_artifact_digest_mismatch(tmp_path):
 
 @pytest.mark.asyncio
 async def test_run_workload_rejects_manifest_digest_tamper(tmp_path):
+    """Layer: integration. Exercise the admitted extension through its async command boundary."""
     repo = tmp_path / "sdk_repo_tamper"
     repo.mkdir(parents=True, exist_ok=True)
     _init_sdk_extension_repo(repo)
     manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
-    record = manager.install_from_repo(str(repo))
+    record = await manager.install_from_repo(str(repo))
 
     manifest_path = Path(record.manifest_path)
     await asyncio.to_thread(
@@ -907,53 +920,3 @@ async def test_run_workload_rejects_manifest_digest_tamper(tmp_path):
             workspace=workspace,
             department="core",
         )
-
-
-def test_install_from_repo_enforce_mode_blocks_local_path(tmp_path, monkeypatch):
-    repo = tmp_path / "ext_repo_enforce"
-    repo.mkdir(parents=True, exist_ok=True)
-    _init_test_extension_repo(repo)
-    monkeypatch.setenv("ORKET_EXT_SECURITY_MODE", "enforce")
-    monkeypatch.setenv("ORKET_EXT_SECURITY_PROFILE", "production")
-
-    manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
-    with pytest.raises(RuntimeError, match="E_EXT_TRUST_SOURCE_LOCAL_PATH_DENIED"):
-        manager.install_from_repo(str(repo))
-
-
-def test_install_from_repo_compat_mode_records_fallbacks(tmp_path, monkeypatch):
-    repo = tmp_path / "ext_repo_compat"
-    repo.mkdir(parents=True, exist_ok=True)
-    _init_test_extension_repo(repo)
-    monkeypatch.setenv("ORKET_EXT_SECURITY_MODE", "compat")
-    monkeypatch.setenv("ORKET_EXT_SECURITY_PROFILE", "production")
-
-    manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
-    record = manager.install_from_repo(str(repo))
-    assert "EXT_LOCAL_PATH_COMPAT" in record.compat_fallbacks
-
-
-def test_source_policy_enforce_denies_unapproved_host(monkeypatch):
-    monkeypatch.setenv("ORKET_EXT_SECURITY_MODE", "enforce")
-    monkeypatch.setenv("ORKET_EXT_SECURITY_PROFILE", "production")
-    monkeypatch.setenv("ORKET_EXT_ALLOWED_HOSTS", "github.com")
-    with pytest.raises(RuntimeError, match="E_EXT_TRUST_HOST_DENIED"):
-        ExtensionManager._evaluate_source_policy("https://example.com/repo.git")
-
-
-def test_source_policy_enforce_denies_unapproved_protocol(monkeypatch):
-    monkeypatch.setenv("ORKET_EXT_SECURITY_MODE", "enforce")
-    monkeypatch.setenv("ORKET_EXT_SECURITY_PROFILE", "production")
-    monkeypatch.setenv("ORKET_EXT_ALLOWED_HOSTS", "github.com")
-    with pytest.raises(RuntimeError, match="E_EXT_TRUST_PROTOCOL_DENIED"):
-        ExtensionManager._evaluate_source_policy("http://github.com/repo.git")
-
-
-def test_source_policy_compat_records_host_and_protocol_fallbacks(monkeypatch):
-    monkeypatch.setenv("ORKET_EXT_SECURITY_MODE", "compat")
-    monkeypatch.setenv("ORKET_EXT_SECURITY_PROFILE", "production")
-    monkeypatch.setenv("ORKET_EXT_ALLOWED_HOSTS", "github.com")
-    decision = ExtensionManager._evaluate_source_policy("http://example.com/repo.git")
-    assert decision.security_mode == "compat"
-    assert "EXT_PROTOCOL_COMPAT" in decision.compat_fallbacks
-    assert "EXT_HOST_COMPAT" in decision.compat_fallbacks

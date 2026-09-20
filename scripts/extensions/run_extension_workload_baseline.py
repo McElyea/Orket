@@ -14,7 +14,6 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from orket.extensions import ExtensionManager
 
 
 def _parse_args() -> argparse.Namespace:
@@ -55,12 +54,13 @@ def _percentile(values: list[float], pct: float) -> float:
 
 
 async def _run(args: argparse.Namespace) -> dict[str, Any]:
-    project_root = Path(args.project_root).resolve()
-    workspace = Path(args.workspace).resolve()
+    from orket.extensions import ExtensionManager
+    project_root = await asyncio.to_thread(Path(args.project_root).resolve)
+    workspace = await asyncio.to_thread(Path(args.workspace).resolve)
     workspace.mkdir(parents=True, exist_ok=True)
     manager = ExtensionManager(project_root=project_root)
     if str(args.repo or "").strip():
-        manager.install_from_repo(str(args.repo).strip())
+        await manager.install_from_repo(str(args.repo).strip())
 
     input_payload = _load_input_payload(str(args.input_json))
     input_config = {"seed": int(args.seed), **input_payload}

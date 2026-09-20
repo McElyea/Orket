@@ -31,7 +31,7 @@
       "id": "AT-EX-005",
       "area": "async-reachable-sync-io",
       "status": "active_unaccepted_ship_risk",
-      "reason": "Request and CLI event-loop paths can reach synchronous file and subprocess operations.",
+      "reason": "Extension install Git commands now have native ownership; catalog publication and preflight use retained workers, with captured policy and one controller admission. API/controller construction-time observations and other request/CLI synchronous I/O remain active D debt.",
       "removal_condition": "Reachability-aware static inventory and live responsiveness/cancellation tests pass with only explicit standalone-script exemptions.",
       "evidence": "docs/projects/future/BRUTAL_CODE_REVIEW_ARCHITECTURAL_TRUTH_2026-07-29.md#sr-05--async-reachable-code-still-performs-synchronous-io"
     },

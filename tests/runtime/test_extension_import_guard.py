@@ -14,6 +14,7 @@ from orket.extensions.import_guard import ExtensionImportGuard
 from orket.extensions.models import CONTRACT_STYLE_SDK_V0, ExtensionRecord, _ExtensionManifestEntry
 from orket.extensions.reproducibility import ReproducibilityEnforcer
 from orket.extensions.workload_executor import WorkloadExecutor
+from orket.extensions.workload_policy import capture_workload_policy
 
 _BLOCKED_MODULE = "orket.runtime.config.provider_runtime_target"
 
@@ -119,7 +120,7 @@ async def test_sdk_run_blocks_dynamic_internal_orket_import_and_does_not_leak_gu
 
     _purge_module(_BLOCKED_MODULE)
     with pytest.raises(RuntimeError, match="E_EXT_IMPORT_BLOCKED"):
-        await executor.run_sdk_workload(
+        await executor.run_sdk_workload(policy=capture_workload_policy(),
             extension=extension,
             workload=workload,
             control_plane_workload_record=_control_plane_workload_record(extension, workload),
@@ -164,7 +165,7 @@ async def test_sdk_run_allows_dynamic_sdk_imports(tmp_path: Path) -> None:
     executor = _build_executor(tmp_path)
     workspace = tmp_path / "workspace"
     workspace.mkdir(parents=True, exist_ok=True)
-    result = await executor.run_sdk_workload(
+    result = await executor.run_sdk_workload(policy=capture_workload_policy(),
         extension=extension,
         workload=workload,
         control_plane_workload_record=_control_plane_workload_record(extension, workload),

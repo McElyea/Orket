@@ -5,6 +5,19 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.37] - 2026-09-19
+
+### Fixed
+- Stage and validate independent extension checkouts before a locked, verified catalog publication; failed replacements retain prior installations.
+- Own Git process trees and workload preflight workers through interruption; capture policy and nested inputs before preflight and enforce controller SDK admission in that same observation.
+- Reject missing Git metadata and malformed catalog containers; retain uncertain publication effects for inspection.
+- Preserve native Git interruption evidence while allowing Python 3.12 caller timeouts to report `TimeoutError`.
+- Repair missing sandbox deployment journal entries on verified healthy retries before returning success; retain lease timestamp monotonicity checks.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Await `ExtensionManager.install_from_repo`; direct workload executors require explicit policy. Migration: `docs/architecture/CONTRACT_DELTA_EXTENSION_INSTALL_D_2026-09-19.md`.
+
 ## [0.6.36] - 2026-09-19
 
 ### Fixed

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import subprocess
 from types import SimpleNamespace
@@ -81,7 +82,7 @@ def test_print_extensions_list_shows_installed_extensions(tmp_path, capsys):
     )
     manager = ExtensionManager(catalog_path=catalog)
 
-    _print_extensions_list(manager)
+    asyncio.run(_print_extensions_list(manager))
     out = capsys.readouterr().out
 
     assert "Installed extensions:" in out
@@ -107,7 +108,7 @@ async def test_run_extension_workload_executes_installed_workload(tmp_path, caps
     manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
 
     install_args = SimpleNamespace(target=str(repo), ref=None)
-    _install_extension(install_args, manager)
+    await _install_extension(install_args, manager)
 
     args = SimpleNamespace(
         subcommand="mystery_v1",
