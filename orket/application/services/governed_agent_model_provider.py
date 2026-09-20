@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 from collections.abc import Mapping
 from dataclasses import dataclass
+from types import MappingProxyType
 from typing import Any
 
 import httpx
@@ -78,17 +80,21 @@ async def prepare_governed_agent_local_runtime(
     provider: str,
     base_url: str = "",
     inventory_timeout_seconds: float = 30,
+    environment: Mapping[str, str] | None = None,
 ) -> GovernedAgentLocalRuntime:
+    models = dict(model_by_role)
+    observed = MappingProxyType(dict(os.environ if environment is None else environment))
     if provider not in PROVIDER_CHOICES:
         raise ValueError("E_AGENT_PROVIDER_MODE_INVALID")
     requests_by_role = {item.role: item for item in request.model_profiles}
-    if set(model_by_role) != set(requests_by_role):
+    if set(models) != set(requests_by_role):
         raise ValueError("E_AGENT_LOCAL_ROLE_MODEL_MAP_MISMATCH")
     targets: dict[str, ProviderRuntimeTarget] = {}
-    for role, requested_model in model_by_role.items():
+    for role, requested_model in models.items():
         target = await _resolve_exact_target(
             provider=provider, model=requested_model, role=role,
             base_url=base_url, timeout_seconds=inventory_timeout_seconds,
+            environment=observed,
         )
         targets[role] = target
     maximum_timeout = max(item.timeout_ms for item in requests_by_role.values()) / 1000
@@ -101,6 +107,7 @@ async def prepare_governed_agent_local_runtime(
             provider=provider,
             base_url=target.base_url,
             runtime_target=target,
+            environment=observed,
             connect_timeout_seconds=min(30, max(1, maximum_timeout)),
         )
         for model_id, target in unique_targets.items()
@@ -128,7 +135,8 @@ async def prepare_governed_agent_local_runtime(
 
 
 async def _resolve_exact_target(*, provider: str, model: str, role: str,
-                                base_url: str, timeout_seconds: float) -> ProviderRuntimeTarget:
+                                base_url: str, timeout_seconds: float,
+                                environment: Mapping[str, str]) -> ProviderRuntimeTarget:
     if not model:
         raise ValueError(f"E_AGENT_LOCAL_MODEL_REQUIRED:{role}")
     try:
@@ -136,6 +144,7 @@ async def _resolve_exact_target(*, provider: str, model: str, role: str,
             provider=provider, requested_model=model, base_url=base_url or None,
             timeout_s=timeout_seconds, auto_select_model=False, auto_load_local_model=False,
             model_load_timeout_s=timeout_seconds, model_ttl_sec=0,
+            environment=environment,
         )
     except httpx.HTTPError as exc:
         raise ValueError(f"E_AGENT_LOCAL_INVENTORY_UNAVAILABLE:{provider}:{type(exc).__name__}") from exc

@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-20T16:51:36.235274+00:00",
+  "generated_at": "2026-09-20T17:44:30.392793+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -1217,7 +1217,7 @@
       },
       "orket.application.services.governed_agent_execution_composition": {
         "path": "orket/application/services/governed_agent_execution_composition.py",
-        "sha256": "4767db5b469488cfeb69088c8f612ea9f1bcfbb1e36a02737ff28eb41ade83b8"
+        "sha256": "07e319230479bd1847cb0145c04beb1f69f39bda03827e37fd736652c5ab7e88"
       },
       "orket.application.services.governed_agent_fixture": {
         "path": "orket/application/services/governed_agent_fixture.py",
@@ -1241,7 +1241,7 @@
       },
       "orket.application.services.governed_agent_model_provider": {
         "path": "orket/application/services/governed_agent_model_provider.py",
-        "sha256": "84f539bac563a7a5847ad182cf14cd030e6c71eb51127f15faf348b3a72d49e6"
+        "sha256": "06ce52391389b14f39b4bdb2a9e0e1fb390244b41bc736f34071c8cb4e75f5a8"
       },
       "orket.application.services.governed_agent_operator_service": {
         "path": "orket/application/services/governed_agent_operator_service.py",
@@ -1277,7 +1277,7 @@
       },
       "orket.application.services.governed_agent_submission_service": {
         "path": "orket/application/services/governed_agent_submission_service.py",
-        "sha256": "4846c459e1c2fec7572a2305caeb0341b39c4da41eacb6498cb613e1e4b32c7b"
+        "sha256": "4325c811ef97c6bd8be7da8084398e3ec292283e6642ea9615e7f203aac9d04a"
       },
       "orket.application.services.governed_agent_supervisor": {
         "path": "orket/application/services/governed_agent_supervisor.py",
@@ -11427,42 +11427,42 @@
         "source": "orket.application.services.governed_agent_model_provider",
         "target": "orket.adapters.llm.local_model_provider",
         "path": "orket/application/services/governed_agent_model_provider.py",
-        "line": 11,
+        "line": 13,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_model_provider",
         "target": "orket.application.services.governed_agent_broker_service",
         "path": "orket/application/services/governed_agent_model_provider.py",
-        "line": 12,
+        "line": 14,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_model_provider",
         "target": "orket.application.services.local_model_factory",
         "path": "orket/application/services/governed_agent_model_provider.py",
-        "line": 17,
+        "line": 19,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_model_provider",
         "target": "orket.core.contracts.provider_runtime",
         "path": "orket/application/services/governed_agent_model_provider.py",
-        "line": 18,
+        "line": 20,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_model_provider",
         "target": "orket.exceptions",
         "path": "orket/application/services/governed_agent_model_provider.py",
-        "line": 19,
+        "line": 21,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_model_provider",
         "target": "orket.runtime.config.provider_runtime_target",
         "path": "orket/application/services/governed_agent_model_provider.py",
-        "line": 20,
+        "line": 22,
         "kind": "from"
       },
       {
@@ -11686,63 +11686,63 @@
         "source": "orket.application.services.governed_agent_submission_service",
         "target": "orket.adapters.execution.owned_io",
         "path": "orket/application/services/governed_agent_submission_service.py",
-        "line": 9,
+        "line": 12,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_submission_service",
         "target": "orket.adapters.storage.async_control_plane_execution_repository",
         "path": "orket/application/services/governed_agent_submission_service.py",
-        "line": 10,
+        "line": 13,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_submission_service",
         "target": "orket.adapters.storage.async_control_plane_record_repository",
         "path": "orket/application/services/governed_agent_submission_service.py",
-        "line": 11,
+        "line": 14,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_submission_service",
         "target": "orket.adapters.storage.async_governed_agent_repository",
         "path": "orket/application/services/governed_agent_submission_service.py",
-        "line": 12,
+        "line": 15,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_submission_service",
         "target": "orket.application.services.governed_agent_commands",
         "path": "orket/application/services/governed_agent_submission_service.py",
-        "line": 13,
+        "line": 16,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_submission_service",
         "target": "orket.application.services.governed_agent_execution_composition",
         "path": "orket/application/services/governed_agent_submission_service.py",
-        "line": 14,
+        "line": 17,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_submission_service",
         "target": "orket.core.contracts.__init__",
         "path": "orket/application/services/governed_agent_submission_service.py",
-        "line": 21,
+        "line": 24,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_submission_service",
         "target": "orket.extensions.manager",
         "path": "orket/application/services/governed_agent_submission_service.py",
-        "line": 22,
+        "line": 25,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_submission_service",
         "target": "orket.extensions.models",
         "path": "orket/application/services/governed_agent_submission_service.py",
-        "line": 23,
+        "line": 26,
         "kind": "from"
       },
       {
@@ -30068,30 +30068,6 @@
   },
   "diff_ledger": [
     {
-      "run_at_utc": "2026-09-19T06:05:09.601121Z",
-      "changed": true,
-      "before_digest": "sha256:258df10251d24d9b6f1587dc10a27e25aa3e1ab76eeb08cc57767f296ca0b51b",
-      "after_digest": "sha256:a92db570b306d4638eb1bc9f0ac30d516a4893fa327faa3661b0548eecdde961",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 5,
-        "initial_write": false,
-        "paths_total_previous": 44284,
-        "paths_total_current": 44284,
-        "paths_total_reference": 44284,
-        "churn_paths": 5,
-        "churn_ratio": 0.000113,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.edges[644].target",
-          "$.observed.edges[645].target",
-          "$.observed.modules.orket.application.services.extension_runtime_service.sha256",
-          "$.observed.modules.orket.interfaces.routers.system.sha256"
-        ]
-      }
-    },
-    {
       "run_at_utc": "2026-09-19T07:08:06.549961Z",
       "changed": true,
       "before_digest": "sha256:a92db570b306d4638eb1bc9f0ac30d516a4893fa327faa3661b0548eecdde961",
@@ -31013,6 +30989,44 @@
         "sample_paths": [
           "$.generated_at",
           "$.observed.modules.orket.application.services.extension_workload_control_plane_service.sha256"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-20T17:44:36.532698Z",
+      "changed": true,
+      "before_digest": "sha256:34c5606fe7128560c6625e0ed33921044c64e43389eeb9fa2726ba23e1a98e5b",
+      "after_digest": "sha256:17a5b7fa3eade60547ae3e59bec4f4906d384910bd1c8e435b50402bb6926135",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 19,
+        "initial_write": false,
+        "paths_total_previous": 46263,
+        "paths_total_current": 46263,
+        "paths_total_reference": 46263,
+        "churn_paths": 19,
+        "churn_ratio": 0.000411,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.edges[986].line",
+          "$.observed.edges[987].line",
+          "$.observed.edges[988].line",
+          "$.observed.edges[989].line",
+          "$.observed.edges[990].line",
+          "$.observed.edges[991].line",
+          "$.observed.edges[1023].line",
+          "$.observed.edges[1024].line",
+          "$.observed.edges[1025].line",
+          "$.observed.edges[1026].line",
+          "$.observed.edges[1027].line",
+          "$.observed.edges[1028].line",
+          "$.observed.edges[1029].line",
+          "$.observed.edges[1030].line",
+          "$.observed.edges[1031].line",
+          "$.observed.modules.orket.application.services.governed_agent_execution_composition.sha256",
+          "$.observed.modules.orket.application.services.governed_agent_model_provider.sha256",
+          "$.observed.modules.orket.application.services.governed_agent_submission_service.sha256"
         ]
       }
     }

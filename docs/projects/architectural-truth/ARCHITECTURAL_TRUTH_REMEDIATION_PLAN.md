@@ -12516,8 +12516,8 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
   Scoped installed-build/host acceptance now passes; this does not close the
   full plan or imply generic exactly-once effects or historical authenticity.
 
-Next action: continue governed-agent submission/admission input capture after the
-verified 0.6.40 direct-construction checkpoint, preserving the queued-submission
+Next action: repair governed wake-dispatch input capture and provider cleanup after
+the verified 0.6.41 direct-submission/provider checkpoint, preserving the wake
 counterexamples below, then all remaining numbered C/D requirements. The graph has zero forbidden
 static pairs, zero cross-layer cycles and six unresolved import/reflection diagnostics. Preserve every failed and
 passing source/native observation and the historical clock diagnosis. Canonical
@@ -12525,7 +12525,7 @@ Ruff has 94 findings. The prior stale benchmark expectation passes in the
 new source/native selection. The unmodified published .39 complete rerun has
 7,260 passes, three failures and 89 skips; its coverage is 84.56120595327887%
 against the unchanged 89% gate. The two parent-Git-dependent fixture failures and
-authority-date mismatch are repaired in the .40 candidate; a passing full suite
+authority-date mismatch are repaired in the published .40 checkpoint; a passing full suite
 is not yet established. Fresh Linux acceptance remains blocked by native clock
 instability; continue independent work without changing clocks or deadlines.
 Remaining core clocks, schema identities, async reachability and
@@ -17687,3 +17687,115 @@ and retains the original request deadline and test/product assertions. Continue
 by capturing submission/store locations and provider inputs before queued
 preparation, with actual positive controls and interruption proof. Do not use this
 counterexample to weaken existing admission, lease or terminal invariants.
+
+#### .41 governed submission/provider capture candidate (2026-09-20)
+
+Observed path: primary; result: partial success. The .40 branch and annotated tag
+are published and their checkpoint remains retained. The next bounded repair
+captures absolute submission locations and environment before queued preparation,
+then forwards the environment through governed provider selection. Direct local
+runtime preparation copies the role-model mapping and environment before inventory
+awaits and uses the same values for every role and client. Invalid relative roots
+refuse before worker scheduling. The existing frozen SDK request remains the
+request authority; no replacement wire schema or compatibility alias is introduced.
+Contract: `docs/architecture/CONTRACT_DELTA_GOVERNED_SUBMISSION_CAPTURE_D_2026-09-20.md`.
+
+The corrected pre-change provider probe in
+`.tmp/d-submission-capture/provider-inputs-admitted-before/` passes its unchanged
+control and fails three mutation cases over actual loopback TCP: a changed URL
+redirects a later role, a changed role-model mapping selects another model, and
+late quarantine changes admission. The earlier two probes are retained fixture
+failures, not proof of those defects: the synthetic llama.cpp model lacked a GGUF
+inventory entry, then the initial OpenAI-compatible model name lacked a strict
+prompt profile. The corrected control uses the canonical Qwen prompt profile;
+no inventory, quarantine or prompt rule was weakened.
+
+The first targeted source run passes 40 cases. The second passes 42 with unchanged
+inputs, zero failures/errors/skips and terminal/reaped ownership. It adds actual
+queued submission inventory refusal under ambient and explicit environment
+mutation, requiring the originally selected server and no run database. Other
+cases exercise native governed subprocesses, SQLite, CLI/replay, continuation
+path capture, a pre-existing competing store's unchanged bytes, provider HTTP
+completion, quarantine refusal and existing cancellation/timeout assertions.
+The fixture responses are controlled; they are not model inference. Subsequent
+test fixture I/O/import cleanup still requires the final frozen candidate proof.
+
+Both Quality jobs include the new regressions. Fresh source/package and installed
+Windows Python 3.11/3.12 acceptance are pending under `.tmp/d-submission-capture/`.
+The prior operator llama.cpp endpoint at `127.0.0.1:8080` currently has no listener
+and refuses inventory connections (`WinError 10061`); `provider-availability.json`
+records this live environment blocker and that inference was not launched. No
+prior inference receipt is represented as a fresh .41 execution. Linux retains
+the documented unstable-clock blocker; no clock or deadline is changed. Broader
+C/D, coverage/full-suite, E1/E2, CAP and explicit lane acceptance remain open.
+
+#### .41 scoped proof and publication checkpoint (2026-09-20)
+
+Observed path: primary; result: partial success for the complete goal. The frozen
+source cohort passes 384 cases in 47 modules, with no failures/errors/skips and
+unchanged inputs. Fresh Windows Python 3.11 and 3.12 environments install the
+same .41 wheel and pass exactly those 384 identities. Each verifies 959 imported
+core origins and digests, primary/degraded CLI flows, strict ToolGate audit, no
+residual children or harness database, and terminal/reaped process ownership.
+Pytest times are 298.84 seconds for source, 320.95 for installed 3.11, and 348.14
+for installed 3.12. No deadline, lease, response bound or assertion was weakened.
+
+The artifacts bind all 1,099 runtime Python files, with no missing/stale Python
+files or wheel/source differences. Wheel SHA-256:
+`a9bc3686f2c2de9f035f995409942e3537c46403530c110cbb6a272fc03893b7`.
+Sdist SHA-256:
+`6d04d99403116689eb4445ef41b222fe114cf25ef014c58e69858d0d88b43629`.
+The source/native reports and manifest are under `.tmp/d-submission-capture/`.
+The retained SDK/reference/starter packages and proof deadlines are unchanged.
+
+This is actual subprocess/SQLite and provider HTTP execution with controlled
+responses. Fresh model inference remains unverified: the prior llama.cpp endpoint
+refuses connections and has no listener. Pinokio discovery also found neither a
+usable configured executable nor a reachable control plane; no app or installation
+was launched. Both observations remain retained. Linux acceptance remains blocked
+by the existing native clock preflight; no fresh Linux cell is claimed. Neither
+environment blocker prevents independent remaining C/D/E work.
+
+Changed-file Ruff, docs hygiene, release metadata and whitespace checks pass.
+Canonical Ruff retains 94 findings with none introduced. All new tests have the
+module-wide pytest integration marker; the old prose-only taxonomy checker still
+does not recognize that classification and remains E1 work. The graph retains
+1,099 modules, 3,472 sites, zero forbidden pairs/cycles/unknown modules and six
+unresolved dynamic diagnostics. Baseline collection passes with
+`release_ready=false`. Full-suite 89% coverage and hosted Quality acceptance remain
+open; the failed .39 suite and every failed fixture/probe observation are retained.
+No new or modified Python file exceeds 400 lines, and the longest affected
+function is 59 lines.
+
+All 21,713 directly retained handoff hashes and 125 additional .40 checkpoint
+evidence hashes revalidate; the original checkout remains unchanged. The final
+documentation closeout updates this plan and baseline only, preserving tested
+runtime/test bytes. `checkpoint.json`, `index-check.json`, `publication.json` and
+`COMMITTED_CHANGESET.md` bind the exact scoped changes and authorized branch plus
+annotated v0.6.41 publication. The final release-tag check follows commit/tag
+creation; no main merge, whole-plan completion or lane retirement is implied.
+
+AC disposition: AC-01 partial (six diagnostics, remaining C); AC-02 pass
+(decision-node authority unchanged); AC-03 pass (captured submission/provider
+inputs); AC-04 partial (remaining clocks/identities and wake inputs, D); AC-05 pass
+(retained submission worker and cleanup); AC-06 pass (existing effect adapters);
+AC-07 pass (strict refusals and failure truth retained); AC-08 pass (event schemas
+unchanged); AC-09 partial (real store/CLI/replay scope, broader D/CAP still open);
+AC-10 pass (contract, spec, contributor, authority, Quality selections and plan).
+
+#### Next D boundary: wake input and cleanup counterexamples (2026-09-20)
+
+Two independent owned probes at the .41 candidate bytes each retain a passing
+control and a failing mutation/interruption case. `wake-inputs-before/` shows
+that changing the retained wake payload's nested run ID during a real fence
+check redirects the subsequent native governed execution; the original run record
+is absent. `wake-close-before/` completes the native governed loop, then holds
+cleanup of a real HTTP client: caller cancellation returns before that cleanup
+finishes. Its unmodified control drains successfully. The latter uses an injected
+cleanup hold and deterministic provider selection, not a live inference session.
+Reports under `.tmp/d-submission-capture/` bind exact inputs, actual SQLite and
+subprocess effects, terminal test owners and the unchanged 0.5-second response
+bound. These are remaining wake-dispatch defects; direct-submission capture does
+not claim to repair them. Continue by retaining immutable wake/provider inputs
+and owning provider cleanup through interruption, with the existing fence,
+admission, lease and terminal contracts intact.

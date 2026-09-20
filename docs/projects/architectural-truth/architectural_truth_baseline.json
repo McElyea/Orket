@@ -1,6 +1,6 @@
 {
   "schema_version": "architectural_truth.baseline.v1",
-  "generated_at": "2026-09-20T17:20:10.831991Z",
+  "generated_at": "2026-09-20T18:01:42.139944Z",
   "collection_ok": true,
   "release_ready": false,
   "release_ready_reason": "Active architectural exceptions and red/noisy proof gates remain.",
@@ -545,10 +545,10 @@
   },
   "test_taxonomy": {
     "schema_version": "test_taxonomy_report.v1",
-    "tests_total": 5296,
-    "missing_layer_total": 3695,
+    "tests_total": 5301,
+    "missing_layer_total": 3700,
     "by_layer": {
-      "unlabeled": 3695,
+      "unlabeled": 3700,
       "integration": 750,
       "unit": 168,
       "contract": 672,
@@ -1156,7 +1156,7 @@
         "layer": null
       }
     ],
-    "missing_layers_omitted": 3595
+    "missing_layers_omitted": 3600
   },
   "ruff": {
     "proof": "structural_lint",
@@ -1556,46 +1556,6 @@
     "parse_errors": []
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-19T08:13:00.604717Z",
-      "changed": true,
-      "before_digest": "sha256:e93f99d33302ec0c63d9f9f45c4cdac2660ea3943a4bfe04889ecf15bd7f0962",
-      "after_digest": "sha256:a756a8b27e96d72c34ec8f16bd3462df279cb5dddfbf73ca7f4797665816d9c5",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 2478,
-        "paths_total_current": 2478,
-        "paths_total_reference": 2478,
-        "churn_paths": 1,
-        "churn_ratio": 0.000404,
-        "sample_paths": [
-          "$.generated_at"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-19T09:03:26.874749Z",
-      "changed": true,
-      "before_digest": "sha256:a756a8b27e96d72c34ec8f16bd3462df279cb5dddfbf73ca7f4797665816d9c5",
-      "after_digest": "sha256:96290ee7254c15e975d42e0c074d4be062e9f3a111f11f0827ee2cb797c1fd76",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 2478,
-        "paths_total_current": 2478,
-        "paths_total_reference": 2478,
-        "churn_paths": 1,
-        "churn_ratio": 0.000404,
-        "sample_paths": [
-          "$.generated_at"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-19T10:00:32.954779Z",
       "changed": true,
@@ -2407,6 +2367,50 @@
         "churn_ratio": 0.000858,
         "sample_paths": [
           "$.architecture_exceptions.exceptions[0].reason",
+          "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-20T17:44:51.936644Z",
+      "changed": true,
+      "before_digest": "sha256:822df331ea9d95a44c04832a337ee7701e7a27b0086a89bad37b1f0c7e4095c4",
+      "after_digest": "sha256:0a80cff523dc91e4b2434a7a2bd08377f6883cb85d5b57e5b1d239d3f9e71b96",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 5,
+        "initial_write": false,
+        "paths_total_previous": 2332,
+        "paths_total_current": 2332,
+        "paths_total_reference": 2332,
+        "churn_paths": 5,
+        "churn_ratio": 0.002144,
+        "sample_paths": [
+          "$.generated_at",
+          "$.test_taxonomy.by_layer.unlabeled",
+          "$.test_taxonomy.missing_layer_total",
+          "$.test_taxonomy.missing_layers_omitted",
+          "$.test_taxonomy.tests_total"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-20T18:01:42.142947Z",
+      "changed": true,
+      "before_digest": "sha256:0a80cff523dc91e4b2434a7a2bd08377f6883cb85d5b57e5b1d239d3f9e71b96",
+      "after_digest": "sha256:d66f5ab00d0d6c5cb005d1cb7c113911a08d9cbeeee9e4e284091c0a374a2d53",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 2332,
+        "paths_total_current": 2332,
+        "paths_total_reference": 2332,
+        "churn_paths": 1,
+        "churn_ratio": 0.000429,
+        "sample_paths": [
           "$.generated_at"
         ]
       }

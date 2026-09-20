@@ -33,10 +33,10 @@ async def test_submission_retains_real_preparation_worker_through_interruption(t
     entered, release, finished = threading.Event(), threading.Event(), threading.Event()
     original = submission_service._prepare_submission
 
-    def held_preparation(value):
+    def held_preparation(value, **inputs):
         entered.set()
         assert release.wait(10)
-        result = original(value)
+        result = original(value, **inputs)
         finished.set()
         return result
 
@@ -71,8 +71,8 @@ async def test_submission_closes_real_client_if_loop_composition_fails(tmp_path,
     client = httpx.AsyncClient()
     original = submission_service._select_provider
 
-    async def select(*arguments):
-        result = await original(*arguments)
+    async def select(*arguments, **inputs):
+        result = await original(*arguments, **inputs)
         result._live_provider = client
         return result
 

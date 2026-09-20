@@ -1,6 +1,6 @@
 # Governed Agent Loop V1
 
-Last updated: 2026-09-14
+Last updated: 2026-09-20
 Status: Active durable contract; core 0.6.0 acceptance released; llama.cpp feature integration added in source
 Owner: Orket Core
 Accepted requirements source: `docs/projects/archive/governed-agent-loop/GAL09062026-REQUIREMENTS/GOVERNED_AGENT_LOOP_REQUIREMENTS_DEFINITION_PLAN.md`
@@ -36,6 +36,18 @@ The implementation plan is not semantic authority. Wire schemas and SDK
 bindings implemented for this contract must conform to this document.
 
 ## Accepted first-slice boundary
+
+Direct bounded submissions capture their invocation root and environment when
+the async body starts, before queued preparation. Relative project, catalog,
+request, continuation and database paths bind to that absolute root; invalid
+nonabsolute bindings refuse before worker scheduling. Optional explicit root and
+environment inputs let callers preserve an earlier admission boundary. This
+captures locations, not file contents or symlink targets. Local provider runtime
+preparation copies role-model and environment inputs before its first inventory
+await and retains those inputs through every role and client. Exact model
+matching, quarantine and strict prompt profiles still apply. These guarantees do
+not extend to the full wake-dispatch operation. Contract and migration:
+`docs/architecture/CONTRACT_DELTA_GOVERNED_SUBMISSION_CAPTURE_D_2026-09-20.md`.
 
 The first slice contains:
 

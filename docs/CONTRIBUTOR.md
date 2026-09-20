@@ -130,6 +130,13 @@ binds relative database paths at construction. Both Quality jobs retain the
 native construction and competing-store regressions. Migration and partial-effect
 limits: `docs/architecture/CONTRACT_DELTA_DIRECT_EXTENSION_CONSTRUCTION_D_2026-09-20.md`.
 
+Governed submissions bind relative project, catalog, request, continuation and
+database paths when the async body starts, before scheduling preparation. Callers
+with an earlier admission boundary can pass `invocation_root` and `environment`.
+Provider preparation copies role-model and environment inputs before inventory
+awaits. Both Quality jobs retain the queued-path and provider-input regressions.
+Scope and migration: `docs/architecture/CONTRACT_DELTA_GOVERNED_SUBMISSION_CAPTURE_D_2026-09-20.md`.
+
 Bootstrap synchronous settings before starting an event loop, or explicitly bind
 `set_runtime_settings_context(...)` for synchronous runtime consumers. Async
 settings APIs observe persistence through owned workers; they do not refresh a

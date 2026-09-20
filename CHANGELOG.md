@@ -5,6 +5,17 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.41] - 2026-09-20
+
+### Fixed
+- Capture governed submission paths and environment before queuing preparation, so later cwd changes cannot select another request or database.
+- Copy governed provider role-model and environment inputs before inventory awaits, and retain them through target resolution and client construction.
+- Preserve strict admission, quarantine, lease, interruption and terminal rules; add real subprocess/SQLite and controlled TCP mutation regressions to both Quality jobs.
+- `compatibility_status`: `compatible`
+- `affected_audience`: `all`
+- `migration_requirement`: `none`
+- Optional submission root/environment inputs support callers that own an earlier capture boundary. Contract: `docs/architecture/CONTRACT_DELTA_GOVERNED_SUBMISSION_CAPTURE_D_2026-09-20.md`.
+
 ## [0.6.40] - 2026-09-20
 
 ### Fixed

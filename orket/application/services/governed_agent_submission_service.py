@@ -2,8 +2,11 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+import os
+from collections.abc import Mapping
+from dataclasses import dataclass, replace
 from pathlib import Path
+from types import MappingProxyType
 from typing import Any
 
 from orket.adapters.execution.owned_io import run_owned_io, run_owned_thread
@@ -56,12 +59,27 @@ class GovernedAgentSubmission:
         object.__setattr__(self, "next_lease_expiries_utc", tuple(self.next_lease_expiries_utc))
 
 
-async def submit_governed_agent(*, db_path: Path, submission: GovernedAgentSubmission) -> dict[str, Any]:
+async def submit_governed_agent(*, db_path: Path, submission: GovernedAgentSubmission,
+                               invocation_root: Path | None = None,
+                               environment: Mapping[str, str] | None = None) -> dict[str, Any]:
+    root = invocation_root or Path.cwd()
+    if not root.is_absolute():
+        raise ValueError("E_AGENT_INVOCATION_ROOT_ABSOLUTE_REQUIRED")
+    observed = MappingProxyType(dict(os.environ if environment is None else environment))
+    submission = replace(
+        submission, project_root=_bind_path(root, submission.project_root),
+        catalog_path=_bind_path(root, submission.catalog_path), request_path=_bind_path(root, submission.request_path),
+        continuation_inputs_path=(
+            _bind_path(root, submission.continuation_inputs_path) if submission.continuation_inputs_path else None
+        ),
+    )
+    db_path = _bind_path(root, db_path)
     launch, request_payload, continuation_inputs = await run_owned_thread(
-        lambda: _prepare_submission(submission), label="governed-agent-submission-inputs",
+        lambda: _prepare_submission(submission, invocation_root=root, environment=observed),
+        label="governed-agent-submission-inputs",
     )
     request = AgentIterationRequest.from_wire(request_payload)
-    selection = await _select_provider(submission.provider, request, launch)
+    selection = await _select_provider(submission.provider, request, launch, environment=observed)
     try:
         execution = AsyncControlPlaneExecutionRepository(db_path)
         iterations = AsyncGovernedAgentRepository(db_path)
@@ -86,9 +104,18 @@ async def submit_governed_agent(*, db_path: Path, submission: GovernedAgentSubmi
     return _execution_payload(result, selection, inspection, db_path)
 
 
-def _prepare_submission(submission: GovernedAgentSubmission):
+def _bind_path(root: Path, path: Path) -> Path:
+    bound = root / path
+    if not bound.is_absolute():
+        raise ValueError("E_AGENT_SUBMISSION_PATH_ABSOLUTE_REQUIRED")
+    return bound
+
+
+def _prepare_submission(submission: GovernedAgentSubmission, *, invocation_root: Path,
+                        environment: Mapping[str, str]):
     # Called only by the owned worker above; catalog validation and reads are synchronous.
-    manager = ExtensionManager(catalog_path=submission.catalog_path, project_root=submission.project_root)
+    manager = ExtensionManager(catalog_path=submission.catalog_path, project_root=submission.project_root,
+                               invocation_root=invocation_root, environment=environment)
     launch = manager.resolve_governed_agent_workload(submission.workload_id)
     request = _read_json_object(submission.request_path)
     continuation = _read_json_object(submission.continuation_inputs_path) if submission.continuation_inputs_path else None
@@ -104,6 +131,7 @@ def _read_json_object(path: Path) -> dict[str, Any]:
 
 async def _select_provider(
     options: GovernedAgentProviderOptions, request: AgentIterationRequest, launch: GovernedAgentWorkloadLaunch,
+    *, environment: Mapping[str, str],
 ) -> GovernedAgentProviderSelection:
     provider_name = options.provider_name or ("ollama" if options.ollama_model else "llama_cpp")
     if (options.ollama_model or options.ollama_base_url) and provider_name != "ollama":
@@ -115,6 +143,7 @@ async def _select_provider(
         request=request, launch=launch, deterministic_fixture=options.deterministic_fixture, model_by_role=models,
         provider_name=provider_name, provider_base_url=options.provider_base_url,
         ollama_base_url=options.ollama_base_url, inventory_timeout_seconds=options.inventory_timeout_seconds,
+        environment=environment,
     )
 
 

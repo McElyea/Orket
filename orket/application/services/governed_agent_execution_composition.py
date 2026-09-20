@@ -76,6 +76,7 @@ async def select_governed_agent_provider(
     inventory_timeout_seconds: float,
     provider_name: str = "llama_cpp",
     provider_base_url: str = "",
+    environment: Mapping[str, str] | None = None,
 ) -> GovernedAgentProviderSelection:
     requested = _validate_catalog_profiles(request, launch)
     if deterministic_fixture:
@@ -106,6 +107,7 @@ async def select_governed_agent_provider(
         provider=provider_name,
         base_url=provider_base_url or (ollama_base_url if provider_name == "ollama" else ""),
         inventory_timeout_seconds=inventory_timeout_seconds,
+        environment=environment,
     )
     return GovernedAgentProviderSelection(
         provider=runtime.provider,

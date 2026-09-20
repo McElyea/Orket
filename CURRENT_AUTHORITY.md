@@ -334,6 +334,15 @@ Migration and interruption limits:
 `docs/architecture/CONTRACT_DELTA_DIRECT_EXTENSION_CONSTRUCTION_D_2026-09-20.md`.
 This scoped boundary does not close broader C/D reachability or E/CAP acceptance.
 
+The 0.6.41 governed submission boundary captures an absolute invocation root and
+environment before its first await, binds submission and database locations to
+that root, and passes captured inputs through owned preparation. Shared governed
+provider preparation copies role-model and environment inputs before inventory
+awaits and uses them for all target and client construction. File contents and
+the full wake-dispatch lifetime are outside this capture contract. Existing
+admission, quarantine, leases, terminal truth and cleanup retain authority.
+Contract: `docs/architecture/CONTRACT_DELTA_GOVERNED_SUBMISSION_CAPTURE_D_2026-09-20.md`.
+
 The 0.6.39 API construction transition captures cwd, environment, settings
 and preferences in the synchronous factory, then acquires the graph in a
 lifespan-owned worker. Runtime services require lifespan entry; HTTP/WebSocket
