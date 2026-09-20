@@ -10,6 +10,7 @@ import pytest
 
 from orket.adapters.storage.async_control_plane_execution_repository import AsyncControlPlaneExecutionRepository
 from orket.adapters.storage.async_control_plane_record_repository import AsyncControlPlaneRecordRepository
+from orket.application.services.extension_catalog_commands import prepare_extension_manager
 from orket.extensions.manager import ExtensionManager
 
 
@@ -537,7 +538,7 @@ async def test_run_sdk_workload_blocks_undeclared_stdlib_import_when_declared_al
     repo = tmp_path / "sdk_repo_stdlib"
     repo.mkdir(parents=True, exist_ok=True)
     _init_sdk_extension_repo(repo, allowed_stdlib_modules=["pathlib"])
-    manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
+    manager = await prepare_extension_manager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
     await manager.install_from_repo(str(repo))
 
     with pytest.raises(ValueError, match="E_EXT_STDLIB_IMPORT_UNDECLARED: hashlib"):
@@ -555,7 +556,7 @@ async def test_run_sdk_workload_subprocess_blocks_dynamic_undeclared_stdlib_impo
     repo = tmp_path / "sdk_repo_dynamic"
     repo.mkdir(parents=True, exist_ok=True)
     _init_sdk_dynamic_import_repo(repo)
-    manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
+    manager = await prepare_extension_manager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
     await manager.install_from_repo(str(repo))
 
     with pytest.raises(RuntimeError, match="E_EXT_STDLIB_IMPORT_UNDECLARED: subprocess"):
@@ -627,7 +628,7 @@ async def test_run_workload_emits_provenance(tmp_path):
     repo = tmp_path / "ext_repo"
     repo.mkdir(parents=True, exist_ok=True)
     _init_test_extension_repo(repo)
-    manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
+    manager = await prepare_extension_manager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
     await manager.install_from_repo(str(repo))
 
     workspace = tmp_path / "workspace" / "default"
@@ -652,7 +653,7 @@ async def test_run_workload_publishes_control_plane_execution_and_checkpoint(tmp
     repo = tmp_path / "ext_repo"
     repo.mkdir(parents=True, exist_ok=True)
     _init_test_extension_repo(repo)
-    manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
+    manager = await prepare_extension_manager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
     await manager.install_from_repo(str(repo))
 
     result = await manager.run_workload(
@@ -689,7 +690,7 @@ async def test_run_workload_rejects_private_orket_imports(tmp_path):
     repo = tmp_path / "blocked_repo"
     repo.mkdir(parents=True, exist_ok=True)
     _init_blocked_import_extension_repo(repo)
-    manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
+    manager = await prepare_extension_manager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
     await manager.install_from_repo(str(repo))
 
     with pytest.raises(ValueError):
@@ -708,7 +709,7 @@ async def test_run_workload_context_leaves_finalization_to_owner(tmp_path):
     repo = tmp_path / "ext_repo"
     repo.mkdir(parents=True, exist_ok=True)
     _init_test_extension_repo(repo)
-    manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
+    manager = await prepare_extension_manager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
     await manager.install_from_repo(str(repo))
 
     class _FakeContext:
@@ -742,7 +743,7 @@ async def test_run_sdk_workload_emits_provenance(tmp_path):
     repo = tmp_path / "sdk_repo"
     repo.mkdir(parents=True, exist_ok=True)
     _init_sdk_extension_repo(repo)
-    manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
+    manager = await prepare_extension_manager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
     await manager.install_from_repo(str(repo))
 
     workspace = tmp_path / "workspace" / "default"
@@ -781,7 +782,7 @@ async def test_run_sdk_workload_provenance_verbose_mode_includes_raw_payloads(tm
     repo = tmp_path / "sdk_repo_verbose"
     repo.mkdir(parents=True, exist_ok=True)
     _init_sdk_extension_repo(repo)
-    manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
+    manager = await prepare_extension_manager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
     await manager.install_from_repo(str(repo))
 
     workspace = tmp_path / "workspace" / "default"
@@ -804,7 +805,7 @@ async def test_run_sdk_workload_declared_invalid_capability_fails_closed(tmp_pat
     repo = tmp_path / "sdk_repo"
     repo.mkdir(parents=True, exist_ok=True)
     _init_sdk_extension_repo(repo, required_capabilities=["clock.now"])
-    manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
+    manager = await prepare_extension_manager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
     await manager.install_from_repo(str(repo))
 
     workspace = tmp_path / "workspace" / "default"
@@ -829,7 +830,7 @@ async def test_mixed_catalog_runs_legacy_and_sdk_workloads(tmp_path):
     sdk_repo.mkdir(parents=True, exist_ok=True)
     _init_sdk_extension_repo_json_manifest(sdk_repo)
 
-    manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
+    manager = await prepare_extension_manager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
     await manager.install_from_repo(str(legacy_repo))
     await manager.install_from_repo(str(sdk_repo))
 
@@ -861,7 +862,7 @@ async def test_run_sdk_workload_blocks_artifact_path_escape(tmp_path):
     repo = tmp_path / "sdk_bad_escape_repo"
     repo.mkdir(parents=True, exist_ok=True)
     _init_sdk_bad_artifact_repo(repo, mode="escape")
-    manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
+    manager = await prepare_extension_manager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
     await manager.install_from_repo(str(repo))
 
     workspace = tmp_path / "workspace" / "default"
@@ -881,7 +882,7 @@ async def test_run_sdk_workload_rejects_artifact_digest_mismatch(tmp_path):
     repo = tmp_path / "sdk_bad_digest_repo"
     repo.mkdir(parents=True, exist_ok=True)
     _init_sdk_bad_artifact_repo(repo, mode="digest")
-    manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
+    manager = await prepare_extension_manager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
     await manager.install_from_repo(str(repo))
 
     workspace = tmp_path / "workspace" / "default"
@@ -901,7 +902,7 @@ async def test_run_workload_rejects_manifest_digest_tamper(tmp_path):
     repo = tmp_path / "sdk_repo_tamper"
     repo.mkdir(parents=True, exist_ok=True)
     _init_sdk_extension_repo(repo)
-    manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
+    manager = await prepare_extension_manager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
     record = await manager.install_from_repo(str(repo))
 
     manifest_path = Path(record.manifest_path)

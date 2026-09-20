@@ -10,6 +10,7 @@ import pytest
 import orket.extensions as extensions_package
 import orket.extensions.manager as extension_manager_module
 import orket.extensions.models as extension_models
+from orket.adapters.execution.owned_io import run_owned_thread
 from orket.application.services.control_plane_workload_catalog import (
     WorkloadAuthorityInput,
     resolve_control_plane_workload,
@@ -209,11 +210,11 @@ async def test_generic_sdk_executor_refuses_agent_workload_before_runtime_side_e
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Layer: integration. Agent declarations cannot fall through the legacy generic subprocess path."""
-    executor = WorkloadExecutor(
+    executor = await run_owned_thread(lambda: WorkloadExecutor(
         project_root=tmp_path,
         reproducibility=ReproducibilityEnforcer(tmp_path),
         registry_factory=lambda: None,  # type: ignore[arg-type]
-    )
+    ), label="extension-executor-test-construction")
     workload = _ExtensionManifestEntry(
         workload_id="governed-agent-loop",
         workload_version="0.1.0",

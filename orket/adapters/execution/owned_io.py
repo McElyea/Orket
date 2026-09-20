@@ -8,6 +8,7 @@ from typing import TypeVar
 
 IOResult = TypeVar("IOResult")
 logger = logging.getLogger(__name__)
+side_effecting = True  # Owns asynchronous I/O and worker admission.
 
 
 async def run_owned_io(
@@ -44,3 +45,12 @@ async def run_owned_io(
 async def run_owned_thread(operation: Callable[[], IOResult], *, label: str) -> IOResult:
     """Drain a synchronous capability; a worker failure takes precedence over cancellation."""
     return await run_owned_io(lambda: asyncio.to_thread(operation), label=label, preserve_failure=True)
+
+
+def require_sync_context(*, code: str) -> None:
+    """Refuse synchronous native work on a running event loop before any effects."""
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        return
+    raise RuntimeError(code)

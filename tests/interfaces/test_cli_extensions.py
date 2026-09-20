@@ -7,6 +7,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from orket.application.services.extension_catalog_commands import prepare_extension_manager
 from orket.extensions.manager import ExtensionManager
 from orket.interfaces.cli import _install_extension, _print_extensions_list, _run_extension_workload
 
@@ -90,9 +91,10 @@ def test_print_extensions_list_shows_installed_extensions(tmp_path, capsys):
     assert "workload: mystery_v1 (1.0.0)" in out
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_run_extension_workload_requires_registered_workload(tmp_path):
-    manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json")
+    manager = await prepare_extension_manager(catalog_path=tmp_path / "extensions_catalog.json")
     args = SimpleNamespace(subcommand="missing_workload", seed=123, workspace=str(tmp_path / "workspace"), department="core")
 
     with pytest.raises(ValueError):
@@ -105,7 +107,7 @@ async def test_run_extension_workload_executes_installed_workload(tmp_path, caps
     repo = tmp_path / "ext_repo"
     repo.mkdir(parents=True, exist_ok=True)
     _init_test_extension_repo(repo)
-    manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
+    manager = await prepare_extension_manager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
 
     install_args = SimpleNamespace(target=str(repo), ref=None)
     await _install_extension(install_args, manager)

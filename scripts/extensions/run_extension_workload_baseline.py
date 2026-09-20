@@ -54,11 +54,11 @@ def _percentile(values: list[float], pct: float) -> float:
 
 
 async def _run(args: argparse.Namespace) -> dict[str, Any]:
-    from orket.extensions import ExtensionManager
+    from orket.application.services.extension_catalog_commands import prepare_extension_manager
     project_root = await asyncio.to_thread(Path(args.project_root).resolve)
     workspace = await asyncio.to_thread(Path(args.workspace).resolve)
     workspace.mkdir(parents=True, exist_ok=True)
-    manager = ExtensionManager(project_root=project_root)
+    manager = await prepare_extension_manager(project_root=project_root)
     if str(args.repo or "").strip():
         await manager.install_from_repo(str(args.repo).strip())
 

@@ -10,11 +10,11 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from orket.extensions import ExtensionManager
+from orket.application.services.extension_catalog_commands import prepare_extension_manager
 
 
 async def _run(args: argparse.Namespace) -> int:
-    manager = ExtensionManager(project_root=Path(args.project_root).resolve())
+    manager = await prepare_extension_manager(project_root=Path(args.project_root).resolve())
     result = await manager.run_workload(
         workload_id="meta_breaker_v1",
         input_config={

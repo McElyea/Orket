@@ -5,11 +5,7 @@ import json
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from pathlib import Path
 
-from orket.adapters.storage.async_control_plane_execution_repository import AsyncControlPlaneExecutionRepository
-from orket.adapters.storage.async_control_plane_record_repository import AsyncControlPlaneRecordRepository
-from orket.adapters.storage.control_plane_transaction import SQLiteControlPlaneTransactions
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.control_plane_snapshot_publication import publish_run_snapshots, snapshot_digest
 from orket.application.services.extension_workload_closeout import finalize_extension_workload
@@ -520,24 +516,9 @@ class ExtensionWorkloadControlPlaneService:
         raise ExtensionWorkloadControlPlaneError(f"extension workload effect not found: {effect_id}")
 
 
-def build_extension_workload_control_plane_service(
-    *,
-    project_root: Path,
-    db_path: str | Path | None = None,
-) -> ExtensionWorkloadControlPlaneService:
-    resolved_db_path = Path(db_path) if db_path is not None else (project_root / ".orket" / "durable" / "db" / "control_plane_records.sqlite3")
-    resolved_db_path.parent.mkdir(parents=True, exist_ok=True)
-    return ExtensionWorkloadControlPlaneService(
-        execution_repository=AsyncControlPlaneExecutionRepository(resolved_db_path),
-        publication=ControlPlanePublicationService(repository=AsyncControlPlaneRecordRepository(resolved_db_path)),
-        transactions=SQLiteControlPlaneTransactions(resolved_db_path),
-    )
-
-
 __all__ = [
     "ExtensionWorkloadControlPlaneCloseout",
     "ExtensionWorkloadControlPlaneError",
     "ExtensionWorkloadControlPlaneService",
     "ExtensionWorkloadControlPlaneStart",
-    "build_extension_workload_control_plane_service",
 ]

@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from orket.extensions import ExtensionManager
+from orket.application.services.extension_catalog_commands import prepare_extension_manager
 
 
 def _load_register_module():
@@ -19,6 +19,7 @@ def _load_register_module():
     return module
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_run_meta_breaker_workload_is_deterministic_for_same_seed(tmp_path, monkeypatch):
     module = _load_register_module()
@@ -27,7 +28,7 @@ async def test_run_meta_breaker_workload_is_deterministic_for_same_seed(tmp_path
     monkeypatch.setenv("ORKET_DURABLE_ROOT", str(durable_root))
     assert module.main() == 0
 
-    manager = ExtensionManager(project_root=tmp_path)
+    manager = await prepare_extension_manager(project_root=tmp_path)
     workspace = tmp_path / "workspace" / "default"
     workspace.mkdir(parents=True, exist_ok=True)
     result_a = await manager.run_workload(

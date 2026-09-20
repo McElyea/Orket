@@ -6,6 +6,7 @@ from typing import Any
 
 import pytest
 
+from orket.application.services.extension_catalog_commands import prepare_extension_manager
 from orket.extensions import controller_observability
 from orket.extensions.controller_dispatcher import (
     ERROR_CHILD_TIMEOUT_INVALID,
@@ -166,7 +167,7 @@ async def _build_controller_manager(tmp_path: Path, monkeypatch: pytest.MonkeyPa
     _init_sdk_child_repo(sdk_a, extension_id="sdk.child.a", workload_id="sdk_child_a_v1")
     _init_sdk_child_repo(sdk_b, extension_id="sdk.child.b", workload_id="sdk_child_b_v1")
     _init_controller_bootstrap_repo(controller)
-    manager = ExtensionManager(catalog_path=catalog_path, project_root=tmp_path)
+    manager = await prepare_extension_manager(catalog_path=catalog_path, project_root=tmp_path)
     await manager.install_from_repo(str(sdk_a))
     await manager.install_from_repo(str(sdk_b))
     await manager.install_from_repo(str(controller))

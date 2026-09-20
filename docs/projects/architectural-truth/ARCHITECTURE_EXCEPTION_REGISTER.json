@@ -1,13 +1,13 @@
 {
   "schema_version": "architectural_truth.exception_register.v1",
   "owner": "Orket Core",
-  "last_reviewed": "2026-09-19",
+  "last_reviewed": "2026-09-20",
   "exceptions": [
     {
       "id": "AT-EX-001",
       "area": "dependency-policy-model",
       "status": "active_unaccepted_ship_risk",
-      "reason": "The 0.6.36 graph has zero forbidden static pairs and cross-layer cycles, but six unresolved import/reflection sites still fail its verdict. Repository conformance remains unaccepted; no broad transition label grants an exemption.",
+      "reason": "The generated graph has zero forbidden static pairs and cross-layer cycles, but six unresolved import/reflection sites still fail its verdict. Repository conformance remains unaccepted; no broad transition label grants an exemption.",
       "removal_condition": "One ratified manifest defines allowed layers and edges, and the checker fails every unexpected edge unless an exact governed exception exists.",
       "evidence": "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md#c-one-enforceable-dependency-model"
     },
@@ -31,7 +31,7 @@
       "id": "AT-EX-005",
       "area": "async-reachable-sync-io",
       "status": "active_unaccepted_ship_risk",
-      "reason": "Extension install Git commands now have native ownership; catalog publication and preflight use retained workers, with captured policy and one controller admission. API/controller construction-time observations and other request/CLI synchronous I/O remain active D debt.",
+      "reason": "Extension install Git commands, catalog publication, preflight and API/controller preparation have retained ownership. Direct manager/control-plane construction now refuses running event loops; relative storage paths bind before preparation. Complete reachability, remaining submission/provider inputs and other request/CLI synchronous I/O remain active D debt.",
       "removal_condition": "Reachability-aware static inventory and live responsiveness/cancellation tests pass with only explicit standalone-script exemptions.",
       "evidence": "docs/projects/future/BRUTAL_CODE_REVIEW_ARCHITECTURAL_TRUTH_2026-07-29.md#sr-05--async-reachable-code-still-performs-synchronous-io"
     },

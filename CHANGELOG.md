@@ -5,6 +5,18 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.40] - 2026-09-20
+
+### Fixed
+- Refuse direct extension-manager and control-plane construction on an event-loop thread; async callers await owned preparation.
+- Bind relative extension control-plane database paths at construction so later cwd changes cannot redirect schema creation into another store.
+- Migrate async script and test callers, preserve native failure and cancellation behavior, and require the direct-construction regressions in both Quality jobs.
+- Isolate legacy Git admission fixtures from the source checkout and synchronize the authority snapshot date after the retained full-suite rerun exposed those verification gaps.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Await `prepare_extension_manager` on an event loop; import control-plane construction from `extension_workload_composition`. Migration: `docs/architecture/CONTRACT_DELTA_DIRECT_EXTENSION_CONSTRUCTION_D_2026-09-20.md`.
+
 ## [0.6.39] - 2026-09-20
 
 ### Fixed

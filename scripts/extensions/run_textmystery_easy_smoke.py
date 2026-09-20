@@ -12,7 +12,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from orket.extensions.manager import ExtensionManager
+from orket.application.services.extension_catalog_commands import prepare_extension_manager
 from scripts.extensions.register_textmystery_bridge_extension import main as register_bridge_main
 
 
@@ -61,7 +61,7 @@ def _default_leak_payload() -> dict[str, Any]:
 
 
 async def _run_bridge(textmystery_root: str) -> dict[str, Any]:
-    manager = ExtensionManager(project_root=PROJECT_ROOT)
+    manager = await prepare_extension_manager(project_root=PROJECT_ROOT)
     parity_result = await manager.run_workload(
         workload_id="textmystery_bridge_v1",
         input_config={

@@ -1,6 +1,6 @@
 # Controller Workload Contract v1
 
-Last updated: 2026-09-19
+Last updated: 2026-09-20
 Status: Active
 Owner: Orket Core
 
@@ -38,12 +38,20 @@ captured environment. Explicit payload enablement keeps its existing precedence.
 
 Direct `ControllerDispatcher` construction requires an explicit manager. Async
 embeddings can await application `prepare_extension_manager(...)`; synchronous
-manager construction remains unsuitable for an event-loop thread. Preparation
+manager construction refuses an event-loop thread with
+`E_EXT_MANAGER_CONSTRUCTION_REQUIRES_WORKER` before native observations. Preparation
 retains native workers through cancellation/timeout; directory effects can remain,
 and native failures take precedence over interruption. Failed or interrupted
 preparation never starts child dispatch. Existing catalog/project/durable-root
 selection policy is unchanged. Migration and remaining scope:
 `docs/architecture/CONTRACT_DELTA_CONTROLLER_CONSTRUCTION_D_2026-09-19.md`.
+
+Control-plane construction is composed by application
+`extension_workload_composition`. Its synchronous builder refuses an event-loop
+thread with `E_EXT_CONTROL_PLANE_CONSTRUCTION_REQUIRES_WORKER`; async embeddings
+await its preparation function. Relative database paths bind at construction or
+async admission, before native preparation, and cannot follow a later cwd change.
+Migration: `docs/architecture/CONTRACT_DELTA_DIRECT_EXTENSION_CONSTRUCTION_D_2026-09-20.md`.
 
 ## Envelope Contract
 

@@ -323,6 +323,17 @@ sibling control-plane store and explicit offline historical relative-scope
 migration. Migration preserves request/native-lock identities, checks source
 ownership and cannot merge unrelated histories or grant effect approval.
 
+The 0.6.40 direct extension construction boundary refuses synchronous manager
+and control-plane construction on a running event-loop thread before native path
+or directory effects. Async callers await application preparation, which captures
+relative locations before retaining the worker. Control-plane composition lives
+in `orket/application/services/extension_workload_composition.py`; its synchronous
+builder also binds relative database paths at construction so later cwd changes
+cannot redirect storage. The storage and terminal authorities remain unchanged.
+Migration and interruption limits:
+`docs/architecture/CONTRACT_DELTA_DIRECT_EXTENSION_CONSTRUCTION_D_2026-09-20.md`.
+This scoped boundary does not close broader C/D reachability or E/CAP acceptance.
+
 The 0.6.39 API construction transition captures cwd, environment, settings
 and preferences in the synchronous factory, then acquires the graph in a
 lifespan-owned worker. Runtime services require lifespan entry; HTTP/WebSocket
@@ -1080,7 +1091,7 @@ Trust Kernel and Portable Conformance completed lane authority is archived under
 ```json
 {
   "version": 1,
-  "last_updated": "2026-09-19",
+  "last_updated": "2026-09-20",
   "authority": {
     "dependency_authority": {
       "primary": "pyproject.toml",

@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from orket.extensions import ExtensionManager
+from orket.application.services.extension_catalog_commands import prepare_extension_manager
 
 
 def _load_register_module():
@@ -45,6 +45,7 @@ def _init_fake_textmystery_root(root: Path) -> None:
     )
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_textmystery_bridge_sdk_workload_deterministic_with_local_contract(tmp_path, monkeypatch):
     fake_textmystery = tmp_path / "fake_textmystery"
@@ -56,7 +57,7 @@ async def test_textmystery_bridge_sdk_workload_deterministic_with_local_contract
     monkeypatch.setenv("ORKET_DURABLE_ROOT", str(durable_root))
     assert register_module.main() == 0
 
-    manager = ExtensionManager(project_root=tmp_path)
+    manager = await prepare_extension_manager(project_root=tmp_path)
     workspace = tmp_path / "workspace" / "default"
     workspace.mkdir(parents=True, exist_ok=True)
     input_config = {

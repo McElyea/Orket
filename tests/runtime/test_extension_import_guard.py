@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import importlib
 import sys
 from pathlib import Path
@@ -114,7 +115,7 @@ async def test_sdk_run_blocks_dynamic_internal_orket_import_and_does_not_leak_gu
         workload_id="sdk_block_v1",
     )
 
-    executor = _build_executor(tmp_path)
+    executor = await asyncio.to_thread(_build_executor, tmp_path)
     workspace = tmp_path / "workspace"
     workspace.mkdir(parents=True, exist_ok=True)
 
@@ -162,7 +163,7 @@ async def test_sdk_run_allows_dynamic_sdk_imports(tmp_path: Path) -> None:
         workload_id="sdk_allow_v1",
     )
 
-    executor = _build_executor(tmp_path)
+    executor = await asyncio.to_thread(_build_executor, tmp_path)
     workspace = tmp_path / "workspace"
     workspace.mkdir(parents=True, exist_ok=True)
     result = await executor.run_sdk_workload(policy=capture_workload_policy(),

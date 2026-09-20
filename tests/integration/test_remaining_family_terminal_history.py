@@ -7,9 +7,9 @@ import json
 import aiosqlite
 import pytest
 
+from orket.application.services.extension_workload_composition import prepare_extension_workload_control_plane_service
 from orket.application.services.extension_workload_control_plane_service import (
     ExtensionWorkloadControlPlaneService,
-    build_extension_workload_control_plane_service,
 )
 from orket.application.services.review_run_control_plane_service import (
     ReviewRunControlPlaneService,
@@ -118,6 +118,7 @@ async def test_retained_success_cannot_be_reinterpreted_as_failure(family, tmp_p
     assert await records(db) == before
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize("family", ["sdk", "legacy", "review"])
 @pytest.mark.parametrize("conflicting", [False, True], ids=["identical", "conflicting-outcomes"])
 # Layer: integration
@@ -143,7 +144,7 @@ async def test_competing_initial_closeouts_publish_one_consistent_result(family,
             second.finalize_completed(**captured[0]))
         calls = [first.finalize_completed(**captured[0]), other]
     else:
-        first, second = [build_extension_workload_control_plane_service(project_root=tmp_path) for _ in range(2)]
+        first, second = [await prepare_extension_workload_control_plane_service(project_root=tmp_path) for _ in range(2)]
         alternate = captured[0] | ({"outcome": ResultClass.FAILED, "failure_class": "contending-failure"}
                                    if conflicting else {})
         calls = [first.finalize_execution(**captured[0]), second.finalize_execution(**alternate)]

@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from orket.application.services.extension_catalog_commands import prepare_extension_manager
 from orket.extensions.controller_dispatcher import (
     ERROR_CHILD_EXECUTION_FAILED,
     ERROR_CHILD_SDK_REQUIRED,
@@ -17,7 +18,6 @@ from orket.extensions.controller_dispatcher import (
     ERROR_RECURSION_DENIED,
     ControllerDispatcher,
 )
-from orket.extensions.manager import ExtensionManager
 from orket.extensions.models import CONTRACT_STYLE_SDK_V0, ExtensionRunResult
 from orket_extension_sdk.controller import ControllerPolicyCaps
 
@@ -307,7 +307,7 @@ async def test_controller_dispatcher_integration_runtime_path_and_determinism(tm
     _init_legacy_repo(legacy, extension_id="legacy.child", workload_id="legacy_child_v1")
     _init_controller_bootstrap_repo(controller)
 
-    manager = ExtensionManager(catalog_path=catalog_path, project_root=tmp_path)
+    manager = await prepare_extension_manager(catalog_path=catalog_path, project_root=tmp_path)
     await manager.install_from_repo(str(sdk_a))
     await manager.install_from_repo(str(sdk_b))
     await manager.install_from_repo(str(legacy))

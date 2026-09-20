@@ -9,12 +9,10 @@ import aiosqlite
 
 from orket.application.review.models import SnapshotBounds
 from orket.application.review.run_service import ReviewRunService
-from orket.application.services.extension_workload_control_plane_service import (
-    build_extension_workload_control_plane_service,
-)
+from orket.application.services.extension_catalog_commands import prepare_extension_manager
+from orket.application.services.extension_workload_composition import prepare_extension_workload_control_plane_service
 from orket.application.services.review_run_control_plane_service import build_review_run_control_plane_service
 from orket.core.domain import AuthoritySourceClass, ResultClass
-from orket.extensions.manager import ExtensionManager
 from tests.application.test_review_run_service import _git, _init_repo
 from tests.runtime.test_extension_manager import _init_sdk_extension_repo, _init_test_extension_repo
 
@@ -39,7 +37,7 @@ async def run_family(family: str, folder: Path):
     repo = folder / "extension-source"
     await asyncio.to_thread(repo.mkdir, parents=True)
     await asyncio.to_thread(_init_sdk_extension_repo if family == "sdk" else _init_test_extension_repo, repo)
-    manager = ExtensionManager(catalog_path=folder / "extensions_catalog.json", project_root=folder)
+    manager = await prepare_extension_manager(catalog_path=folder / "extensions_catalog.json", project_root=folder)
     await manager.install_from_repo(str(repo))
     return await manager.run_workload(
         workload_id="sdk_v1" if family == "sdk" else "mystery_v1",
@@ -64,7 +62,7 @@ async def retained_request(family: str, folder: Path):
         return build_review_run_control_plane_service(database_for(family, folder)), {"run_id": run["run_id"]}
     truth = rows["final_truth_records"][0]
     step = next(row for row in rows["control_plane_steps"] if row["step_kind"].endswith("closeout"))
-    owner = build_extension_workload_control_plane_service(project_root=folder)
+    owner = await prepare_extension_workload_control_plane_service(project_root=folder)
     return owner, dict(run_id=run["run_id"], outcome=ResultClass(truth["result_class"]),
         authoritative_result_ref=truth["authoritative_result_ref"], prior_step_ref=step["input_ref"],
         authority_sources=[AuthoritySourceClass(value) for value in truth["authority_sources"]])

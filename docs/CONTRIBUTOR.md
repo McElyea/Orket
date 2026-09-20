@@ -121,6 +121,15 @@ factory result. The module-default app and adapter-owned handler are retired in
 0.6.20. Direct embeddings, captured input rotation, native Gitea review translation
 and interruption limits live in `docs/specs/WEBHOOK_RUNTIME_LIFECYCLE.md`.
 
+Direct extension-manager construction is synchronous and refuses an event-loop
+thread in 0.6.40. Async embeddings and scripts await application
+`prepare_extension_manager(...)`; direct control-plane embeddings use
+`extension_workload_composition.prepare_extension_workload_control_plane_service(...)`.
+The synchronous control-plane builder now lives in that composition module and
+binds relative database paths at construction. Both Quality jobs retain the
+native construction and competing-store regressions. Migration and partial-effect
+limits: `docs/architecture/CONTRACT_DELTA_DIRECT_EXTENSION_CONSTRUCTION_D_2026-09-20.md`.
+
 Bootstrap synchronous settings before starting an event loop, or explicitly bind
 `set_runtime_settings_context(...)` for synchronous runtime consumers. Async
 settings APIs observe persistence through owned workers; they do not refresh a

@@ -148,11 +148,11 @@ def _controls(*, test_case: str, expected_result: str, admit_only: list[str] | N
 
 
 async def _run_case(project_root: Path, case: dict[str, Any]) -> None:
-    from orket.extensions.manager import ExtensionManager
+    from orket.application.services.extension_catalog_commands import prepare_extension_manager
     repo = project_root / "repos" / str(case["test_case"])
     repo.mkdir(parents=True, exist_ok=True)
     _init_sdk_repo(repo, module_source=str(case["module_source"]), required_capabilities=list(case["required_capabilities"]))
-    manager = ExtensionManager(catalog_path=project_root / "extensions_catalog.json", project_root=project_root)
+    manager = await prepare_extension_manager(catalog_path=project_root / "extensions_catalog.json", project_root=project_root)
     await manager.install_from_repo(str(repo))
     workspace = project_root / "workspace" / "default"
     input_config = dict(case["input_config"])

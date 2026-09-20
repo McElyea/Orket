@@ -12516,13 +12516,18 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
   Scoped installed-build/host acceptance now passes; this does not close the
   full plan or imply generic exactly-once effects or historical authenticity.
 
-Next action: continue remaining manager/API construction and admission-input
-boundaries after the verified 0.6.38 controller construction checkpoint,
-together with all numbered C/D requirements. The graph has zero forbidden
+Next action: continue governed-agent submission/admission input capture after the
+verified 0.6.40 direct-construction checkpoint, preserving the queued-submission
+counterexamples below, then all remaining numbered C/D requirements. The graph has zero forbidden
 static pairs, zero cross-layer cycles and six unresolved import/reflection diagnostics. Preserve every failed and
 passing source/native observation and the historical clock diagnosis. Canonical
 Ruff has 94 findings. The prior stale benchmark expectation passes in the
-new source/native selection, but no fresh all-green full suite is claimed.
+new source/native selection. The unmodified published .39 complete rerun has
+7,260 passes, three failures and 89 skips; its coverage is 84.56120595327887%
+against the unchanged 89% gate. The two parent-Git-dependent fixture failures and
+authority-date mismatch are repaired in the .40 candidate; a passing full suite
+is not yet established. Fresh Linux acceptance remains blocked by native clock
+instability; continue independent work without changing clocks or deadlines.
 Remaining core clocks, schema identities, async reachability and
 adapter classification remain actionable. E1/E2, CAP-1/2/3, hosted Quality, release
 readiness and explicit whole-lane acceptance remain open.
@@ -17513,3 +17518,172 @@ records their exact remote identities. Remaining work belongs to the active
 C/D/E/CAP plan, including direct manager construction, six dynamic diagnostics,
 Ruff debt, coverage, stable-clock Linux 3.12 acceptance and full-suite/hosted Quality
 acceptance. Committing this scoped checkpoint does not waive those remaining gates.
+
+
+#### .39 published reentry verification and .40 direct-construction candidate (2026-09-20)
+
+Observed path: primary; result: partial success. The published handoff verifies
+all 21,713 directly retained evidence hashes, both checkout snapshots, branch/tag
+refs and checkpoint. HEAD is `e7fa800d68532d1d83405ce7a39a15420d3e6a28`; annotated
+tag v0.6.39 is `ba3a06473358c7a1de5ca49cc7acf4c99fdfb4b0`. The original checkout
+and accepted BT-1 through BT-5 evidence remain unchanged.
+
+Fresh full-suite proof at those unchanged .39 bytes is retained under
+`.tmp/d-reentry-verification/source-full-v039/`: 7,352 cases, 7,260 passed,
+three failed, 89 skipped, no errors or forced cleanup, with unchanged inputs.
+Parent-only coverage is 84.56120595327887%, below the required 89%. The failed
+suite is not relabeled green. Two admission probes incorrectly inherited the
+clean parent checkout instead of preparing their own dirty Git repository; the
+third failure is the displayed/JSON authority-date mismatch. The candidate
+isolates those fixtures with a real repository and actual dirty-status assertion,
+and synchronizes the date. No product or test deadline changes. The coverage gap
+and full-suite acceptance remain open. Exact receipts and limits are in
+`full-suite-disposition.json` under the same reentry root.
+
+The read-only .39 structural observation preserves 94 Ruff findings, six dynamic
+analysis diagnostics, zero forbidden pairs/cycles, 3,688 missing labels reported
+by the old prose taxonomy checker, and 15 no-op findings with no parse errors.
+The latter include type-only declarations; neither checker result is promoted
+into an accurate runtime verdict. Docs hygiene and release metadata pass. These
+observations are retained in `structural-v039/`; E1 checker repairs remain open.
+
+Linux's fresh 240-second native clock preflight remains blocked: no synchronized
+60-second quiet window and observed wall/monotonic steps of +17.908058625 and
+-17.381331347 seconds. `linux-clock-preflight.json` retains samples and the service
+journal; no acceptance cell was launched. This is an environment blocker, not
+an application pass or a diagnosed time-service cause. Clocks, synchronization
+configuration, runtime deadlines and assertions remain unchanged.
+
+Direct-construction counterexamples establish actual remaining D defects.
+`direct-construction-boundary-before/` records six cases: four failures and two
+positive controls. Both synchronous constructors admitted an event-loop caller;
+relative control-plane paths later followed cwd and failed to open the selected
+store. `direct-competing-store-before/` retains two additional failures: after
+cwd rotation, the first repository read created control-plane tables inside a
+pre-existing sentinel SQLite store. Read-only inspection binds those store bytes
+and tables. Both owned runs preserve source hashes and terminal process receipts.
+The earlier ad-hoc probe's shell returned the log-reader status, so it is not used
+as an exact pytest process-exit receipt.
+
+The .40 candidate adds a shared synchronous-admission guard, migrates direct async
+manager/script/test callers to owned preparation, and moves control-plane
+composition out of the oversized service module without a forwarding alias.
+Synchronous construction binds relative databases immediately; async preparation
+captures the invocation root before queueing. Existing repositories, transaction
+owners, storage schema and terminal publication remain authoritative. New
+integration cases cover refusal before effects, native SQLite positive controls,
+repeated cancellation/caller timeout, worker failure precedence, native directory
+obstruction, queued cwd rotation and competing-store byte preservation. The
+0.5-second responsiveness bound was declared before execution with a controlled
+filesystem hold; it is not a natural-filesystem benchmark. Both Quality jobs
+include the regressions. Contract:
+`docs/architecture/CONTRACT_DELTA_DIRECT_EXTENSION_CONSTRUCTION_D_2026-09-20.md`.
+
+`direct-construction-initial/` passes 46 cases with unchanged inputs, including
+all three repaired full-suite identities. Subsequent test-helper formatting and
+worker-owned fixture I/O require the final candidate proof. Fresh package/source
+and Windows Python 3.11/3.12 installed proof are pending under
+`.tmp/d-direct-construction/`; Linux is not silently omitted from the overall
+acceptance obligations. No provider inference or hostile-code containment proof
+is claimed. Remaining C/D, E1/E2, CAP-1/2/3, coverage, hosted Quality, supported-host
+acceptance and explicit whole-lane acceptance stay active.
+
+
+#### .40 scoped proof and publication checkpoint (2026-09-20)
+
+Observed path: primary; result: partial success for the complete goal. The final
+source cohort passes 342 cases in 41 modules, with no failures/errors/skips and
+unchanged inputs. Fresh Windows Python 3.11 and 3.12 environments install the same
+core wheel and execute exactly those 342 identities. Both pass; each verifies
+959 imported core origins and package digests, actual primary/degraded CLI flows,
+strict ToolGate audit, no residual children or root database, and terminal/reaped
+owners. Source time is 266.01 seconds; installed times are 266.98 and 285.91 seconds.
+Controlled worker holds and provider fixtures retain their stated claim ceilings.
+There is no fresh Linux acceptance: the retained native clock preflight blocked
+before tests. The scoped Windows proof does not replace that obligation.
+
+The wheel/sdist bind all 1,099 runtime Python files without stale/missing Python
+files or wheel/source mismatches. Wheel SHA-256:
+`a4b0ba1f424c2c928ef59d4fed8965076f2b567eaa787ea6611bf50a65d18090`.
+Sdist SHA-256:
+`7c52479c723ae032728fce56906ceaf05860e5d06d70d9512bc93900138d8cc8`.
+The first build attempt used the proof interpreter without the build frontend and
+failed before creating artifacts. The established packaging interpreter then
+built these artifacts; both logs and the result ledger remain retained.
+
+The first installed Windows 3.11 attempt passed 335 cases and failed seven because
+the harness omitted `CURRENT_AUTHORITY.md`, `AGENTS.md` and their referenced
+documents. That attempt remains failed. The corrected harness adds 31 exact
+source-bound documents, with the same 342 cases, runtime artifacts, driver,
+assertions and deadlines. No failed case was excluded or relabeled as a pass.
+The canonical native receipt is
+`.tmp/d-direct-construction/native-corrected/native-audit.json`; the failed
+manifest, logs and disposition remain beside it in the parent proof directory.
+
+Additional live script proof copies five scripts without changing their bytes
+into an isolated project and uses installed .40. Meta Breaker registration and
+workload execution, TextMystery easy smoke (parity/leak) and its standalone bridge
+command all return zero. The TextMystery contract comes from the actual local
+external checkout; that checkout and all source/copy hashes remain unchanged, and
+no child processes remain. This proves the local contract/script path with the
+existing SDK capability providers, not model inference or physical audio output.
+Other migrated audit/scenario/baseline script paths execute in the selected cohort.
+
+The fresh full-suite .39 failure is retained: 7,260 passed, three failed, 89 skipped,
+84.56120595327887% coverage against 89%. All three failed identities now pass in
+source and both installed .40 cells. A complete .40 suite and passing 89% coverage
+have not been established. Canonical Ruff still has 94 findings and none added;
+changed runtime/test files pass Ruff. The six migrated standalone scripts reduce
+11 existing Ruff findings to 10, with no introduced findings. The graph has
+1,099 modules, 3,472 import sites, zero forbidden pairs/cycles/unknown modules and
+six unresolved dynamic diagnostics. The baseline remains `release_ready=false`.
+Hosted Gitea Quality execution remains unavailable. The initial pre-tag release
+check correctly failed on the absent .40 tag; metadata passes before commit, and
+the final annotated-tag check is required after commit.
+
+All 21,713 directly retained handoff evidence hashes revalidate, and the original
+checkout is unchanged. The source/package/native binding is sealed before the
+final documentation-only closeout. That closeout records this disposition, updates
+the exception register's review date and removes its stale .36 graph label, and
+refreshes the baseline; it changes no runtime/test bytes. The new composition and
+test modules are 51 and 215 lines, with longest functions 18 and 51 lines. The
+oversized runtime service/executor shrink; two existing oversized test modules
+gain one necessary import each to enter owned construction.
+
+AC disposition for this scope: AC-01 partial (six existing dynamic diagnostics,
+owned by remaining C); AC-02 pass (decision-node authority unchanged); AC-03 pass
+(captured construction locations and explicit async boundary); AC-04 partial
+(broader clock/identity/input inventory remains D); AC-05 pass (application-owned
+preparation); AC-06 pass (shared I/O adapter declares effects); AC-07 pass (refusal,
+worker failure and interruption remain observable); AC-08 pass (event schemas
+unchanged); AC-09 partial (real storage/cancellation proof, no broader replay or
+containment acceptance; remaining D/CAP); AC-10 pass (contract, authority,
+contributor, both Quality selections and plan synchronized).
+
+Proof, index and publication receipts live under `.tmp/d-direct-construction/`.
+`checkpoint.json` binds the scope and retained reports, `COMMITTED_CHANGESET.md`
+lists exact committed paths, `index-check.json` binds staged Python bytes to the
+tested/package bytes, and `publication.json` records the branch and matching
+annotated v0.6.40 tag's remote identities after authorized atomic publication.
+This is a scoped checkpoint. Remaining C/D/E1/E2/CAP-1/2/3, stable-clock Linux,
+coverage/full-suite/hosted Quality and explicit whole-lane acceptance stay open.
+
+#### Next D admission boundary: queued submission counterexample (2026-09-20)
+
+The independent live probe in
+`.tmp/d-reentry-verification/governed-submission-locations-valid-before/` has one
+passing absolute-path control and three failing relative-path cases. All four
+actually complete the deterministic governed agent flow; queued cwd rotation
+causes relative submission paths to select the alternate request (returning
+`rotated-submission-run` instead of `run-1`) or a relative database to be created
+under the rotated root. Source inputs remain unchanged. These are remaining D
+admission defects, not repaired .40 behavior or new accepted semantics.
+
+The prior `governed-submission-locations-before/` probe is retained separately:
+all four cases failed because its borrowed cancellation-only fixture omitted the
+second-iteration lease authorization. It is not evidence for the path defect.
+The corrected probe supplies the existing two-iteration authorization contract
+and retains the original request deadline and test/product assertions. Continue
+by capturing submission/store locations and provider inputs before queued
+preparation, with actual positive controls and interruption proof. Do not use this
+counterexample to weaken existing admission, lease or terminal invariants.

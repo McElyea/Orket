@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-20T04:27:32.001264+00:00",
+  "generated_at": "2026-09-20T16:51:36.235274+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -173,7 +173,7 @@
       },
       "orket.adapters.execution.owned_io": {
         "path": "orket/adapters/execution/owned_io.py",
-        "sha256": "ae74a6676021a6cdea3b43e263cb841715d4f0ed60d5b5e1da9f272264c6f282"
+        "sha256": "aef1c74ea472387902cfa6f424fa971843f67354948f8987ee7bf6ad20ee4b89"
       },
       "orket.adapters.execution.process_lifecycle": {
         "path": "orket/adapters/execution/process_lifecycle.py",
@@ -1083,9 +1083,13 @@
         "path": "orket/application/services/extension_workload_closeout.py",
         "sha256": "9801b09ef072b71fe09c443c6f96a29c547b41a02e7afaaef5a05d7fb0bbdb9a"
       },
+      "orket.application.services.extension_workload_composition": {
+        "path": "orket/application/services/extension_workload_composition.py",
+        "sha256": "0c4204a852b2c3c02478563369296b620bdd1e421bb12560e1d2b8a74c5533ff"
+      },
       "orket.application.services.extension_workload_control_plane_service": {
         "path": "orket/application/services/extension_workload_control_plane_service.py",
-        "sha256": "cec64b860cd1894e7bc0e107fcae8358ecf74846838cd99295f684fbb20fa0d4"
+        "sha256": "690ae432631986a1d9606daec82b15b7ba8770c629f571c8e9140488564f1692"
       },
       "orket.application.services.failure_report_service": {
         "path": "orket/application/services/failure_report_service.py",
@@ -2693,7 +2697,7 @@
       },
       "orket.extensions.manager": {
         "path": "orket/extensions/manager.py",
-        "sha256": "61a807ca7306c9f347009293937b2cdc0fb99d419c320ae895147a32bf87edd4"
+        "sha256": "32dec16199df737228abcbab697c3f345361e96449e9580c40304b6ec2fe43b5"
       },
       "orket.extensions.manifest_parser": {
         "path": "orket/extensions/manifest_parser.py",
@@ -2737,7 +2741,7 @@
       },
       "orket.extensions.workload_executor": {
         "path": "orket/extensions/workload_executor.py",
-        "sha256": "d31650c819a5fe1167825a862819f58ae61cfebd0345dc2e5203acbee5221a72"
+        "sha256": "de0e69b73aef5ba9c0fe4b178a00fe47a390cb1bcadf48a019c39284b20149b0"
       },
       "orket.extensions.workload_executor_support": {
         "path": "orket/extensions/workload_executor_support.py",
@@ -9747,80 +9751,101 @@
         "kind": "from"
       },
       {
-        "source": "orket.application.services.extension_workload_control_plane_service",
+        "source": "orket.application.services.extension_workload_composition",
+        "target": "orket.adapters.execution.owned_io",
+        "path": "orket/application/services/extension_workload_composition.py",
+        "line": 8,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.extension_workload_composition",
         "target": "orket.adapters.storage.async_control_plane_execution_repository",
-        "path": "orket/application/services/extension_workload_control_plane_service.py",
+        "path": "orket/application/services/extension_workload_composition.py",
+        "line": 9,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.extension_workload_composition",
+        "target": "orket.adapters.storage.async_control_plane_record_repository",
+        "path": "orket/application/services/extension_workload_composition.py",
         "line": 10,
         "kind": "from"
       },
       {
-        "source": "orket.application.services.extension_workload_control_plane_service",
-        "target": "orket.adapters.storage.async_control_plane_record_repository",
-        "path": "orket/application/services/extension_workload_control_plane_service.py",
+        "source": "orket.application.services.extension_workload_composition",
+        "target": "orket.adapters.storage.control_plane_transaction",
+        "path": "orket/application/services/extension_workload_composition.py",
         "line": 11,
         "kind": "from"
       },
       {
-        "source": "orket.application.services.extension_workload_control_plane_service",
-        "target": "orket.adapters.storage.control_plane_transaction",
-        "path": "orket/application/services/extension_workload_control_plane_service.py",
+        "source": "orket.application.services.extension_workload_composition",
+        "target": "orket.application.services.control_plane_publication_service",
+        "path": "orket/application/services/extension_workload_composition.py",
         "line": 12,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.extension_workload_composition",
+        "target": "orket.application.services.extension_workload_control_plane_service",
+        "path": "orket/application/services/extension_workload_composition.py",
+        "line": 13,
         "kind": "from"
       },
       {
         "source": "orket.application.services.extension_workload_control_plane_service",
         "target": "orket.application.services.control_plane_publication_service",
         "path": "orket/application/services/extension_workload_control_plane_service.py",
-        "line": 13,
+        "line": 9,
         "kind": "from"
       },
       {
         "source": "orket.application.services.extension_workload_control_plane_service",
         "target": "orket.application.services.control_plane_snapshot_publication",
         "path": "orket/application/services/extension_workload_control_plane_service.py",
-        "line": 14,
+        "line": 10,
         "kind": "from"
       },
       {
         "source": "orket.application.services.extension_workload_control_plane_service",
         "target": "orket.application.services.extension_workload_closeout",
         "path": "orket/application/services/extension_workload_control_plane_service.py",
-        "line": 15,
+        "line": 11,
         "kind": "from"
       },
       {
         "source": "orket.application.services.extension_workload_control_plane_service",
         "target": "orket.core.contracts.__init__",
         "path": "orket/application/services/extension_workload_control_plane_service.py",
-        "line": 16,
+        "line": 12,
         "kind": "from"
       },
       {
         "source": "orket.application.services.extension_workload_control_plane_service",
         "target": "orket.core.contracts.control_plane_transaction",
         "path": "orket/application/services/extension_workload_control_plane_service.py",
-        "line": 26,
+        "line": 22,
         "kind": "from"
       },
       {
         "source": "orket.application.services.extension_workload_control_plane_service",
         "target": "orket.core.contracts.repositories",
         "path": "orket/application/services/extension_workload_control_plane_service.py",
-        "line": 27,
+        "line": 23,
         "kind": "from"
       },
       {
         "source": "orket.application.services.extension_workload_control_plane_service",
         "target": "orket.core.domain.__init__",
         "path": "orket/application/services/extension_workload_control_plane_service.py",
-        "line": 28,
+        "line": 24,
         "kind": "from"
       },
       {
         "source": "orket.application.services.extension_workload_control_plane_service",
         "target": "orket.naming",
         "path": "orket/application/services/extension_workload_control_plane_service.py",
-        "line": 38,
+        "line": 34,
         "kind": "from"
       },
       {
@@ -21228,86 +21253,93 @@
       },
       {
         "source": "orket.extensions.workload_executor",
-        "target": "orket.application.services.extension_workload_control_plane_service",
+        "target": "orket.application.services.extension_workload_composition",
         "path": "orket/extensions/workload_executor.py",
         "line": 13,
         "kind": "from"
       },
       {
         "source": "orket.extensions.workload_executor",
+        "target": "orket.application.services.extension_workload_control_plane_service",
+        "path": "orket/extensions/workload_executor.py",
+        "line": 14,
+        "kind": "from"
+      },
+      {
+        "source": "orket.extensions.workload_executor",
         "target": "orket.core.domain.__init__",
         "path": "orket/extensions/workload_executor.py",
-        "line": 17,
+        "line": 15,
         "kind": "from"
       },
       {
         "source": "orket.extensions.workload_executor",
         "target": "orket.extensions.contracts",
         "path": "orket/extensions/workload_executor.py",
-        "line": 20,
+        "line": 18,
         "kind": "from"
       },
       {
         "source": "orket.extensions.workload_executor",
         "target": "orket.extensions.models",
         "path": "orket/extensions/workload_executor.py",
-        "line": 21,
+        "line": 19,
         "kind": "from"
       },
       {
         "source": "orket.extensions.workload_executor",
         "target": "orket.extensions.reproducibility",
         "path": "orket/extensions/workload_executor.py",
-        "line": 22,
+        "line": 20,
         "kind": "from"
       },
       {
         "source": "orket.extensions.workload_executor",
         "target": "orket.extensions.sdk_capability_authorization",
         "path": "orket/extensions/workload_executor.py",
-        "line": 23,
+        "line": 21,
         "kind": "from"
       },
       {
         "source": "orket.extensions.workload_executor",
         "target": "orket.extensions.sdk_workload_runner",
         "path": "orket/extensions/workload_executor.py",
-        "line": 24,
+        "line": 22,
         "kind": "from"
       },
       {
         "source": "orket.extensions.workload_executor",
         "target": "orket.extensions.workload_artifacts",
         "path": "orket/extensions/workload_executor.py",
-        "line": 25,
+        "line": 23,
         "kind": "from"
       },
       {
         "source": "orket.extensions.workload_executor",
         "target": "orket.extensions.workload_executor_support",
         "path": "orket/extensions/workload_executor.py",
-        "line": 26,
+        "line": 24,
         "kind": "from"
       },
       {
         "source": "orket.extensions.workload_executor",
         "target": "orket.extensions.workload_loader",
         "path": "orket/extensions/workload_executor.py",
-        "line": 40,
+        "line": 38,
         "kind": "from"
       },
       {
         "source": "orket.extensions.workload_executor",
         "target": "orket.extensions.workload_policy",
         "path": "orket/extensions/workload_executor.py",
-        "line": 41,
+        "line": 39,
         "kind": "from"
       },
       {
         "source": "orket.extensions.workload_executor",
         "target": "orket.extensions.workload_publication",
         "path": "orket/extensions/workload_executor.py",
-        "line": 42,
+        "line": 40,
         "kind": "from"
       },
       {
@@ -28826,7 +28858,7 @@
         "code": "importer_escape"
       }
     ],
-    "files_scanned": 1098,
+    "files_scanned": 1099,
     "scan_roots": [
       "orket"
     ],
@@ -29072,6 +29104,7 @@
       "orket.application.services.extension_runtime_support": "application",
       "orket.application.services.extension_scaffold_service": "application",
       "orket.application.services.extension_workload_closeout": "application",
+      "orket.application.services.extension_workload_composition": "application",
       "orket.application.services.extension_workload_control_plane_service": "application",
       "orket.application.services.failure_report_service": "application",
       "orket.application.services.fixture_container_owner": "application",
@@ -29946,12 +29979,12 @@
       {
         "source": "application",
         "target": "adapters",
-        "count": 392
+        "count": 393
       },
       {
         "source": "application",
         "target": "application",
-        "count": 1677
+        "count": 1680
       },
       {
         "source": "application",
@@ -30034,67 +30067,6 @@
     }
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-19T05:04:12.010634Z",
-      "changed": true,
-      "before_digest": "sha256:e92214ca8ab26c249c3a2f62ab3ad23f7713c18f167281546d2bc28f52b17d62",
-      "after_digest": "sha256:99ce21044240c673b1df116fa93b538a3d4c6977c03e030cb16b914c89544177",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 3,
-        "initial_write": false,
-        "paths_total_previous": 44254,
-        "paths_total_current": 44254,
-        "paths_total_reference": 44254,
-        "churn_paths": 3,
-        "churn_ratio": 6.8e-05,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.modules.orket.adapters.storage.bundle_store.sha256",
-          "$.observed.modules.orket.application.services.bundle_service.sha256"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-19T06:03:57.299409Z",
-      "changed": true,
-      "before_digest": "sha256:99ce21044240c673b1df116fa93b538a3d4c6977c03e030cb16b914c89544177",
-      "after_digest": "sha256:258df10251d24d9b6f1587dc10a27e25aa3e1ab76eeb08cc57767f296ca0b51b",
-      "diff": {
-        "added_paths": 9,
-        "removed_paths": 3,
-        "changed_paths": 10197,
-        "initial_write": false,
-        "paths_total_previous": 44254,
-        "paths_total_current": 44284,
-        "paths_total_reference": 44284,
-        "churn_paths": 10209,
-        "churn_ratio": 0.230535,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.edges[403].line",
-          "$.observed.edges[403].path",
-          "$.observed.edges[403].source",
-          "$.observed.edges[403].target",
-          "$.observed.edges[404].line",
-          "$.observed.edges[404].path",
-          "$.observed.edges[404].source",
-          "$.observed.edges[404].target",
-          "$.observed.edges[405].line",
-          "$.observed.edges[405].target",
-          "$.observed.edges[406].line",
-          "$.observed.edges[406].target",
-          "$.observed.edges[407].line",
-          "$.observed.edges[407].target",
-          "$.observed.edges[408].line",
-          "$.observed.edges[408].target",
-          "$.observed.edges[409].line",
-          "$.observed.edges[409].target",
-          "$.observed.edges[410].line"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-19T06:05:09.601121Z",
       "changed": true,
@@ -30981,6 +30953,66 @@
           "$.observed.edges[478].target",
           "$.observed.edges[479].line",
           "$.observed.edges[479].target"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-20T16:50:42.461224Z",
+      "changed": true,
+      "before_digest": "sha256:a11f7dcb422ec0d96019b2210a77be442ac0d4e5bb836a6c1d3bd74e7614e027",
+      "after_digest": "sha256:167d31b269b033c085306360c0fe51f1538fdc9a3c94df7b1075582088b443a2",
+      "diff": {
+        "added_paths": 6,
+        "removed_paths": 0,
+        "changed_paths": 8041,
+        "initial_write": false,
+        "paths_total_previous": 46212,
+        "paths_total_current": 46263,
+        "paths_total_reference": 46263,
+        "churn_paths": 8047,
+        "churn_ratio": 0.17394,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.edges[747].line",
+          "$.observed.edges[747].path",
+          "$.observed.edges[747].source",
+          "$.observed.edges[747].target",
+          "$.observed.edges[748].line",
+          "$.observed.edges[748].path",
+          "$.observed.edges[748].source",
+          "$.observed.edges[748].target",
+          "$.observed.edges[749].line",
+          "$.observed.edges[749].path",
+          "$.observed.edges[749].source",
+          "$.observed.edges[749].target",
+          "$.observed.edges[750].line",
+          "$.observed.edges[750].path",
+          "$.observed.edges[750].source",
+          "$.observed.edges[750].target",
+          "$.observed.edges[751].line",
+          "$.observed.edges[751].path",
+          "$.observed.edges[751].source"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-20T16:51:42.304513Z",
+      "changed": true,
+      "before_digest": "sha256:167d31b269b033c085306360c0fe51f1538fdc9a3c94df7b1075582088b443a2",
+      "after_digest": "sha256:34c5606fe7128560c6625e0ed33921044c64e43389eeb9fa2726ba23e1a98e5b",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 2,
+        "initial_write": false,
+        "paths_total_previous": 46263,
+        "paths_total_current": 46263,
+        "paths_total_reference": 46263,
+        "churn_paths": 2,
+        "churn_ratio": 4.3e-05,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.modules.orket.application.services.extension_workload_control_plane_service.sha256"
         ]
       }
     }

@@ -19,6 +19,12 @@ async def test_legacy_admission_captures_policy_before_compile(
     tmp_path, admitted_legacy, monkeypatch, setting, admitted,
 ):
     manager, payload = admitted_legacy
+    # Own the dirty repository; otherwise Git discovers the parent checkout,
+    # making this refusal probe pass only while the source worktree is dirty.
+    await asyncio.to_thread(subprocess.run, ["git", "init"], cwd=tmp_path, check=True, capture_output=True)
+    status = await asyncio.to_thread(subprocess.run, ["git", "status", "--porcelain"],
+                                    cwd=tmp_path, check=True, capture_output=True, text=True)
+    assert status.stdout.strip(), "The refusal fixture must contain actual untracked files"
     monkeypatch.setenv("ORKET_RELIABLE_MODE", "true")
     monkeypatch.setenv("ORKET_RELIABLE_REQUIRE_CLEAN_GIT", "true")
     monkeypatch.setenv(setting, str(admitted).lower())

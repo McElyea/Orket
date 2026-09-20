@@ -8,6 +8,7 @@ import pytest
 
 from orket.adapters.storage.async_control_plane_execution_repository import AsyncControlPlaneExecutionRepository
 from orket.adapters.storage.async_control_plane_record_repository import AsyncControlPlaneRecordRepository
+from orket.application.services.extension_catalog_commands import prepare_extension_manager
 from orket.extensions.manager import ExtensionManager
 
 PROOF_REF = "python -m pytest -q tests/runtime/test_extension_capability_authorization.py"
@@ -144,7 +145,7 @@ async def _install_manager(tmp_path: Path, *, module_source: str, required_capab
     repo = tmp_path / "sdk_repo"
     repo.mkdir(parents=True, exist_ok=True)
     _init_sdk_repo(repo, module_source=module_source, required_capabilities=required_capabilities)
-    manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
+    manager = await prepare_extension_manager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
     await manager.install_from_repo(str(repo))
     return manager
 

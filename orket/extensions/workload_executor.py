@@ -10,10 +10,8 @@ from typing import Any
 
 from orket.adapters.execution.owned_io import run_owned_thread
 from orket.adapters.storage.workload_artifact_store import prepare_artifact_root
-from orket.application.services.extension_workload_control_plane_service import (
-    ExtensionWorkloadControlPlaneService,
-    build_extension_workload_control_plane_service,
-)
+from orket.application.services.extension_workload_composition import build_extension_workload_control_plane_service
+from orket.application.services.extension_workload_control_plane_service import ExtensionWorkloadControlPlaneService
 from orket.core.domain import AuthoritySourceClass, ResultClass
 from orket_extension_sdk.manifest import agent_discriminator_reasons
 

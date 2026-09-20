@@ -12,7 +12,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from orket.extensions import ExtensionManager
+from orket.application.services.extension_catalog_commands import prepare_extension_manager
 
 
 def _load_payload(path: Path | None) -> dict[str, Any]:
@@ -32,7 +32,7 @@ def _resolve_textmystery_root(raw_value: str | None) -> str:
 
 
 async def _run(args: argparse.Namespace) -> int:
-    manager = ExtensionManager(project_root=Path.cwd())
+    manager = await prepare_extension_manager(project_root=Path.cwd())
     result = await manager.run_workload(
         workload_id="textmystery_bridge_v1",
         input_config={

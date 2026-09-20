@@ -21,6 +21,7 @@ from orket.adapters.storage.async_pending_gate_repository import AsyncPendingGat
 from orket.adapters.storage.control_plane_transaction import SQLiteControlPlaneTransactions
 from orket.adapters.tools.governed_agent_file_effect_executor import GovernedAgentFileEffectExecutor
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
+from orket.application.services.extension_catalog_commands import prepare_extension_manager
 from orket.application.services.governed_agent_broker_service import (
     GovernedAgentHostBroker,
     GovernedAgentModelObservation,
@@ -35,7 +36,6 @@ from orket.application.services.governed_agent_wake_dispatcher import (
 from orket.application.services.tool_gate_service import ToolGate
 from orket.core.contracts.governed_agent_ports import GovernedAgentAuthorityStaleError
 from orket.core.contracts.governed_agent_wake_records import GovernedAgentWakeRequest
-from orket.extensions.manager import ExtensionManager
 from orket_extension_sdk.agent_fixtures import agent_model_call_request, prefixed_digest
 from tests.runtime.governed_agent_test_support import (
     agent_request,
@@ -77,7 +77,7 @@ async def test_dispatcher_releases_work_that_exceeds_provider_capacity(tmp_path:
         execution_repository=execution,
         iteration_repository=iterations,
         record_repository=records,
-        extension_manager=ExtensionManager(catalog_path=tmp_path / "unused.json", project_root=tmp_path),
+        extension_manager=await prepare_extension_manager(catalog_path=tmp_path / "unused.json", project_root=tmp_path),
         provider=GovernedAgentProviderConfiguration(
             mode="deterministic_fixture",
             default_model="",

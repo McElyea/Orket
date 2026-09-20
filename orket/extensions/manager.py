@@ -8,7 +8,7 @@ from pathlib import Path
 from threading import Lock
 from typing import TYPE_CHECKING, Any
 
-from orket.adapters.execution.owned_io import run_owned_thread
+from orket.adapters.execution.owned_io import require_sync_context, run_owned_thread
 from orket.adapters.storage.extension_install_store import sha256_file
 from orket.application.services.control_plane_workload_catalog import (
     _resolve_extension_control_plane_workload,
@@ -66,6 +66,7 @@ class ExtensionManager:
     def __init__(self, catalog_path: Path | None = None, project_root: Path | None = None,
                  *, utc_now: Callable[[], str] = utc_now_iso, invocation_root: Path | None = None,
                  environment: Mapping[str, str] | None = None):
+        require_sync_context(code="E_EXT_MANAGER_CONSTRUCTION_REQUIRES_WORKER")
         root = invocation_root or Path.cwd()
         observed = dict(os.environ if environment is None else environment)
         if not root.is_absolute():

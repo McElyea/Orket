@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from orket.extensions.manager import ExtensionManager
+from orket.application.services.extension_catalog_commands import prepare_extension_manager
 from orket.runtime.controller_replay_parity import compare_controller_replay_outputs
 from scripts.extensions.bootstrap_controller_external_repo import bootstrap_controller_external_repo
 from tests.runtime.test_controller_dispatcher import _init_git_repo, _init_sdk_child_repo
@@ -159,7 +159,7 @@ async def test_external_template_repo_installs_and_runs_controller_workload(
     bootstrap_controller_external_repo(target_dir=controller_external, force=True)
     _init_git_repo(controller_external)
 
-    manager = ExtensionManager(catalog_path=catalog_path, project_root=tmp_path)
+    manager = await prepare_extension_manager(catalog_path=catalog_path, project_root=tmp_path)
     await manager.install_from_repo(str(sdk_a))
     await manager.install_from_repo(str(sdk_b))
     await manager.install_from_repo(str(controller_external))

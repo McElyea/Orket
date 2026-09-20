@@ -5,6 +5,7 @@ import threading
 
 import pytest
 
+from orket.adapters.execution.owned_io import run_owned_thread
 from orket.extensions.models import ExtensionRecord, _ExtensionManifestEntry
 from orket.extensions.reproducibility import ReproducibilityEnforcer
 from orket.extensions.workload_executor import WorkloadExecutor
@@ -34,8 +35,8 @@ async def test_legacy_registration_worker_settles_before_interruption_returns(tm
         def workloads(self):
             return dict(items)
 
-    executor = WorkloadExecutor(project_root=tmp_path, reproducibility=ReproducibilityEnforcer(tmp_path),
-                                registry_factory=Registry)
+    executor = await run_owned_thread(lambda: WorkloadExecutor(project_root=tmp_path, reproducibility=ReproducibilityEnforcer(tmp_path),
+                                registry_factory=Registry), label="extension-executor-test-construction")
     entry = _ExtensionManifestEntry('fixture', '1')
     extension = ExtensionRecord('owned', '1', 'fixture', '1', str(tmp_path), module, 'register', (entry,))
     operation = executor.run_legacy_workload(policy=capture_workload_policy(), extension=extension, workload=entry, control_plane_workload_record={},
@@ -67,8 +68,8 @@ async def test_sdk_source_validation_settles_before_interruption_returns(tmp_pat
     module = 'selected'
     await asyncio.to_thread(_source, tmp_path, module, 'selected')
     entered, release, settled = threading.Event(), threading.Event(), threading.Event()
-    executor = WorkloadExecutor(project_root=tmp_path, reproducibility=ReproducibilityEnforcer(tmp_path),
-                                registry_factory=lambda: None)
+    executor = await run_owned_thread(lambda: WorkloadExecutor(project_root=tmp_path, reproducibility=ReproducibilityEnforcer(tmp_path),
+                                registry_factory=lambda: None), label="extension-executor-test-construction")
     original = executor.loader.validate_extension_imports
 
     def held(*args, **kwargs):
