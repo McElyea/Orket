@@ -58,14 +58,11 @@ class ExtensionRuntimeService:
         tts_provider: TTSProvider | None = None,
         environment: Mapping[str, str] | None = None,
     ) -> None:
+        observed_environment = dict(os.environ if environment is None else environment)
         self._project_root = project_root.resolve()
         self._catalog = ExtensionModelCatalog(
-            environment=dict(os.environ if environment is None else environment),
+            environment=observed_environment,
             events=ApiEventService(self._project_root),
-        )
-        self._owns_model_provider = model_provider is None
-        self._model_provider = model_provider or LocalModelCapabilityProvider(
-            model=DEFAULT_LOCAL_MODEL, temperature=0.2, seed=None,
         )
         self._memory_store = memory_store or ScopedMemoryStore(
             default_memory_db_path(self._project_root),
@@ -73,9 +70,14 @@ class ExtensionRuntimeService:
         )
         self._stt_provider = stt_provider or HostSTTCapabilityProvider()
         self._tts_provider = tts_provider or build_tts_provider(input_config={}, workspace=self._project_root,
+            environment=observed_environment,
             command_runner=CommandProcessSupervisor(self._project_root, cancellation_event="piper_process_cancelled"))
         self._state_lock = asyncio.Lock()
         self._states: dict[str, _ExtensionRuntimeState] = {}
+        self._owns_model_provider = model_provider is None
+        self._model_provider = model_provider or LocalModelCapabilityProvider(
+            model=DEFAULT_LOCAL_MODEL, temperature=0.2, seed=None, environment=observed_environment,
+        )
 
     async def close(self) -> None:
         if self._owns_model_provider:

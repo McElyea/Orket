@@ -209,7 +209,7 @@ def test_flow_run_route_accepts_single_card_slice(monkeypatch, tmp_path) -> None
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     _seed_runnable_issue_model(Path(tmp_path).resolve(), "CARD-RUN-1")
     client.configure(project_root=Path(tmp_path).resolve())
-    engine = api_module._get_engine()
+    engine = api_module._get_engine(client.app)
 
     asyncio.run(
         engine.cards.save(
@@ -289,7 +289,7 @@ def test_flow_run_route_accepts_authored_card_projection(monkeypatch, tmp_path) 
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     _seed_runtime_model_for_authored_projection(root)
     client.configure(project_root=root)
-    engine = api_module._get_engine()
+    engine = api_module._get_engine(client.app)
 
     captured: dict[str, object] = {}
 

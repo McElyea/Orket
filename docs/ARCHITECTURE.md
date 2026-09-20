@@ -1,6 +1,6 @@
 # Orket Architecture (Target State)
 
-Last updated: 2026-09-19
+Last updated: 2026-09-20
 Status: Active target architecture (transitioning)
 
 Canonical architecture specification for the Orket runtime.
@@ -47,11 +47,11 @@ register also records review-discovered ship-risk and self-deception debt that i
 not accepted as target-architecture conformance.
 
 1. Dependency layering exceptions:
-   1. The 0.6.38 generated graph has no forbidden static pairs or cross-layer cycles, but six unresolved dynamic-import/reflection sites still fail its verdict. Core purity and runtime ownership remain separate C/D obligations; zero static pairs does not establish full conformance.
+   1. The 0.6.39 generated graph has no forbidden static pairs or cross-layer cycles, but six unresolved dynamic-import/reflection sites still fail its verdict. Core purity and runtime ownership remain separate C/D obligations; zero static pairs does not establish full conformance.
 2. Decision-node purity exceptions:
    1. `orket/decision_nodes/builtins.py` still retains mutable planning/routing context. Loop limits now consume immutable explicit values; application owns registry selection, executable tool bindings, provider construction and organization overrides. API authentication, observed paths, board loading and calendar inputs now belong to application services; API strategy retains request/presentation recommendations. API/engine/pipeline construction, env bootstrap, and session-id minting on the touched runtime paths also live in explicit services.
 3. API runtime composition:
-   1. `create_api_app()` returns a distinct FastAPI app with an application-owned `ApiRuntimeContainer`, runtime state, host, engine, decision node, outbound-policy snapshot, stream/interaction/extension owners, outward stores/services, and tracked task teardown. Pure ASGI middleware admits each HTTP/WebSocket invocation through the container, retaining ownership through streaming and awaited connectors. Shutdown waits for active invocation cleanup before resources and engine; availability and remaining lifetime limits live in `docs/specs/API_RUNTIME_LIFECYCLE.md`.
+   1. `create_api_app()` returns a distinct FastAPI transport with captured construction inputs. Its lifespan acquires the application-owned `ApiRuntimeContainer`, runtime state, host, engine, decision node, outbound-policy snapshot, stream/interaction/extension owners and outward stores/services through an owned preparation worker. HTTP/WebSocket admission requires completed initialization and retains ownership through streaming and awaited connectors. Shutdown waits for active invocation cleanup before resources and engine. The 0.6.39 construction transition and its scoped source/installed verification limits live in `docs/specs/API_RUNTIME_LIFECYCLE.md` and the canonical architectural-truth plan.
    2. `orket/interfaces/api.py` is import-pure with respect to FastAPI/runtime owners: it exports no module-default app or mutable owner aliases and constructs no application, adapter, decision-node, kernel, or orchestration implementation. Production callers use `orket.interfaces.runtime_entrypoints.create_api_app(...)` and retain the returned app.
 4. Deterministic runtime clock/input exceptions:
    1. Some application paths still use wall-clock helpers directly (for example `time.time()` / `datetime.now(...)`) instead of injected runtime inputs.

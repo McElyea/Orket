@@ -52,9 +52,9 @@ async def test_api_close_settles_active_approval_request(tmp_path, boundary, sto
     calls[:] = [{"tool": "run_command", "args": {"command": [
         sys.executable, str(WORKER), str(tmp_path), "2", "detached", "ignore-term", "cancel"]}}]
     app = create_api_app(CompositionConfig(project_root=tmp_path))
-    context = app.state.api_runtime_context
     processes, request, closing = [], None, None
     async with serving_api(app) as client:
+        context = app.state.api_runtime_context
         try:
             proposal = await submit_sequence(client, calls)
             request = asyncio.create_task(approve(client, proposal))

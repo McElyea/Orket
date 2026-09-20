@@ -1,7 +1,8 @@
 """Layer: integration. Real loopback model inventory retains its admitted provider identity."""
 import asyncio
 import json
-from contextlib import asynccontextmanager
+import os
+from contextlib import AsyncExitStack, asynccontextmanager
 
 import pytest
 
@@ -49,29 +50,34 @@ async def test_catalog_failure_reports_admitted_provider_after_environment_rotat
         monkeypatch.setenv("ORKET_LLM_PROVIDER", "llama_cpp")
         monkeypatch.setenv("ORKET_LLAMA_CPP_BASE_URL", url)
         app = create_api_app(project_root=tmp_path)
-        request = asyncio.create_task(_request(app, "/v1/extensions/fixture/runtime/models", key="test-key"))
-        try:
-            await asyncio.wait_for(entered.wait(), 3)
-            monkeypatch.setenv("ORKET_LLM_PROVIDER", "openai_compat")
-            release.set()
-            response = await asyncio.wait_for(request, 3)
-            assert response.status_code == 503, response.text
-            assert response.json()["detail"]["requested_provider"] == "llama_cpp"
-            assert requests == ["GET /v1/models HTTP/1.1"]
-            record = json.loads(await asyncio.to_thread((tmp_path / "orket.log").read_text, encoding="utf-8"))
-            assert record["event"] == "extension_runtime_model_catalog_unavailable"
-            assert record["data"]["provider"] == "llama_cpp"
-        finally:
-            release.set()
-            await asyncio.gather(request, return_exceptions=True)
-            await app.state.api_runtime_context.close()
+        async with app.router.lifespan_context(app):
+            request = asyncio.create_task(_request(app, "/v1/extensions/fixture/runtime/models", key="test-key"))
+            try:
+                await asyncio.wait_for(entered.wait(), 3)
+                monkeypatch.setenv("ORKET_LLM_PROVIDER", "openai_compat")
+                release.set()
+                response = await asyncio.wait_for(request, 3)
+                assert response.status_code == 503, response.text
+                assert response.json()["detail"]["requested_provider"] == "llama_cpp"
+                assert requests == ["GET /v1/models HTTP/1.1"]
+                records = [json.loads(line) for line in (await asyncio.to_thread(
+                    (tmp_path / "orket.log").read_text, encoding="utf-8")).splitlines()]
+                assert [record["event"] for record in records] == [
+                    "api_security_posture", "extension_runtime_model_catalog_unavailable"]
+                record = records[-1]
+                assert record["event"] == "extension_runtime_model_catalog_unavailable"
+                assert record["data"]["provider"] == "llama_cpp"
+            finally:
+                release.set()
+                await asyncio.gather(request, return_exceptions=True)
+                await app.state.api_runtime_context.close()
 
 
 async def test_catalogs_keep_application_endpoints_after_environment_rotation(tmp_path, monkeypatch):
     async with _catalog_server() as first, _catalog_server() as second:
         apps = []
         for index, server in enumerate((first, second)):
-            environment = {"ORKET_API_KEY": "expected", "ORKET_LLM_PROVIDER": "llama_cpp",
+            environment = {**os.environ, "ORKET_API_KEY": "expected", "ORKET_LLM_PROVIDER": "llama_cpp",
                            "ORKET_LLAMA_CPP_BASE_URL": server[0],
                            "ORKET_LLAMA_CPP_GGUF_MODEL_ROOT": str(tmp_path / "empty-models")}
             apps.append(create_api_app(project_root=tmp_path / str(index), environment=environment))
@@ -79,7 +85,9 @@ async def test_catalogs_keep_application_endpoints_after_environment_rotation(tm
             server[2].set()
         monkeypatch.setenv("ORKET_LLM_PROVIDER", "openai_compat")
         monkeypatch.setenv("ORKET_LLM_OPENAI_BASE_URL", "http://127.0.0.1:1/v1")
-        try:
+        async with AsyncExitStack() as lifetimes:
+            for app in apps:
+                await lifetimes.enter_async_context(app.router.lifespan_context(app))
             responses = await asyncio.wait_for(asyncio.gather(*[
                 _request(app, "/v1/extensions/fixture/runtime/models") for app in apps
             ]), 3)
@@ -90,5 +98,3 @@ async def test_catalogs_keep_application_endpoints_after_environment_rotation(tm
                 assert response.json()["models"] == ["fixture-model"]
                 assert response.json()["default_model"] == "fixture-model"
                 assert server[3] == ["GET /v1/models HTTP/1.1"]
-        finally:
-            await asyncio.gather(*(app.state.api_runtime_context.close() for app in apps))

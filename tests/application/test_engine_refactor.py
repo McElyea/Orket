@@ -1,5 +1,6 @@
-import importlib
 import json
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -308,11 +309,13 @@ def test_engine_kernel_lifecycle_and_compare_boundary_with_real_gateway(monkeypa
 
 def test_engine_module_reload_import_smoke():
     """Layer: unit. Verifies the engine module imports directly without routing through the legacy runtime shim."""
-    import orket.orchestration.engine as engine_module
-
-    reloaded = importlib.reload(engine_module)
-
-    assert hasattr(reloaded, "OrchestrationEngine")
+    # A fresh process keeps module reload from replacing classes used by later tests.
+    result = subprocess.run(
+        [sys.executable, "-c", "import importlib; import orket.orchestration.engine as engine; "
+         "assert hasattr(importlib.reload(engine), 'OrchestrationEngine')"],
+        capture_output=True, text=True, timeout=30,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
 
 
 def test_engine_reuses_shared_runtime_context(monkeypatch, tmp_path):

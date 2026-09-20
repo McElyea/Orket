@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+# Project imports must follow the direct-script source-root bootstrap.
+# ruff: noqa: E402
 import argparse
 import json
 import sys
@@ -13,6 +15,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from orket.application.services.extension_model_catalog import ExtensionModelCatalogUnavailable
 from orket.interfaces.routers.extension_runtime import build_extension_runtime_router
 from orket.runtime.degradation_first_ui_standard import (
     degradation_first_ui_standard_snapshot,
@@ -21,19 +24,7 @@ from orket.runtime.degradation_first_ui_standard import (
 from orket.runtime.runtime_truth_contracts import runtime_status_vocabulary_snapshot
 from orket.runtime.state_transition_registry import state_transition_registry_snapshot
 from orket.runtime.structured_warning_policy import structured_warning_policy_snapshot
-
-try:
-    from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
-except ModuleNotFoundError:  # pragma: no cover - script execution fallback
-    import importlib.util
-
-    helper_path = Path(__file__).resolve().parents[1] / "common" / "rerun_diff_ledger.py"
-    spec = importlib.util.spec_from_file_location("rerun_diff_ledger", helper_path)
-    if spec is None or spec.loader is None:  # pragma: no cover - defensive fallback
-        raise RuntimeError(f"E_DIFF_LEDGER_HELPER_LOAD_FAILED:{helper_path}")
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    write_payload_with_diff_ledger = module.write_payload_with_diff_ledger
+from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
 
 
 def _parse_args(argv: list[str]) -> argparse.Namespace:
@@ -87,10 +78,10 @@ def _structured_warning_policy_declares_runtime_degraded() -> dict[str, Any]:
 
 
 def _extension_runtime_models_unavailable_returns_truthful_degraded_failure() -> dict[str, Any]:
+    """Contract probe of HTTP mapping; supplied failure does not prove provider availability."""
     class _Service:
         async def list_models(self, *, extension_id: str, provider: str) -> dict[str, Any]:
-            del extension_id
-            raise RuntimeError(f"simulated-failure:{provider}")
+            raise ExtensionModelCatalogUnavailable(extension_id, provider)
 
     app = FastAPI()
     app.include_router(build_extension_runtime_router(service_getter=lambda: _Service()))

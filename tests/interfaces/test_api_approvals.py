@@ -55,7 +55,7 @@ def test_list_approvals_routes_to_engine(monkeypatch) -> None:
         captured["limit"] = limit
         return [{"approval_id": "abc123", "status": "PENDING"}]
 
-    monkeypatch.setattr(api_module._get_engine(), "list_approvals", fake_list_approvals)
+    monkeypatch.setattr(api_module._get_engine(client.app), "list_approvals", fake_list_approvals)
 
     response = client.get(
         "/v1/approvals?status=PENDING&session_id=sess-1&request_id=req-1&limit=20",
@@ -78,7 +78,7 @@ def test_get_approval_returns_404_when_missing(monkeypatch) -> None:
     async def fake_get_approval(_approval_id: str):
         return None
 
-    monkeypatch.setattr(api_module._get_engine(), "get_approval", fake_get_approval)
+    monkeypatch.setattr(api_module._get_engine(client.app), "get_approval", fake_get_approval)
     response = client.get("/v1/approvals/missing", headers={"X-API-Key": "test-key"})
     assert response.status_code == 404
     assert "not found" in response.json()["detail"].lower()
@@ -98,7 +98,7 @@ def test_decide_approval_returns_409_on_conflict(monkeypatch) -> None:
         _ = approval_id, decision, edited_proposal, notes, operator_actor_ref
         raise RuntimeError("approval already resolved with a conflicting decision")
 
-    monkeypatch.setattr(api_module._get_engine(), "decide_approval", fake_decide_approval)
+    monkeypatch.setattr(api_module._get_engine(client.app), "decide_approval", fake_decide_approval)
     response = client.post(
         "/v1/approvals/abc123/decision",
         headers={"X-API-Key": "test-key"},
@@ -126,7 +126,7 @@ def test_decide_approval_routes_to_engine(monkeypatch) -> None:
         captured["operator_actor_ref"] = operator_actor_ref
         return {"status": "resolved", "approval": {"approval_id": approval_id, "status": "APPROVED"}}
 
-    monkeypatch.setattr(api_module._get_engine(), "decide_approval", fake_decide_approval)
+    monkeypatch.setattr(api_module._get_engine(client.app), "decide_approval", fake_decide_approval)
     response = client.post(
         "/v1/approvals/abc123/decision",
         headers={"X-API-Key": "test-key"},
@@ -146,7 +146,7 @@ def test_decide_approval_routes_to_engine(monkeypatch) -> None:
 def test_decide_approval_rejects_non_packet1_decision(monkeypatch) -> None:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.delenv("ORKET_ENABLE_NERVOUS_SYSTEM", raising=False)
-    monkeypatch.setattr(api_module._get_engine(), "pending_gates", _FakePendingGates(rows=[_tool_approval_row()]), raising=False)
+    monkeypatch.setattr(api_module._get_engine(client.app), "pending_gates", _FakePendingGates(rows=[_tool_approval_row()]), raising=False)
 
     response = client.post(
         "/v1/approvals/apr-1/decision",
@@ -165,10 +165,10 @@ def test_approvals_endpoints_real_nervous_system_flow(monkeypatch) -> None:
     reset_runtime_state_for_tests()
     repository = InMemoryControlPlaneRecordRepository()
     publication = ControlPlanePublicationService(repository=repository)
-    monkeypatch.setattr(api_module._get_engine(), "control_plane_repository", repository, raising=False)
-    monkeypatch.setattr(api_module._get_engine(), "control_plane_publication", publication, raising=False)
+    monkeypatch.setattr(api_module._get_engine(client.app), "control_plane_repository", repository, raising=False)
+    monkeypatch.setattr(api_module._get_engine(client.app), "control_plane_publication", publication, raising=False)
     monkeypatch.setattr(
-        api_module._get_engine(),
+        api_module._get_engine(client.app),
         "tool_approval_control_plane_operator",
         ToolApprovalControlPlaneOperatorService(publication=publication),
         raising=False,
@@ -263,19 +263,19 @@ def test_tool_approval_api_retains_decision_projection_when_terminal_continuatio
     repository = InMemoryControlPlaneRecordRepository()
     execution_repository = InMemoryControlPlaneExecutionRepository()
     publication = ControlPlanePublicationService(repository=repository)
-    monkeypatch.setattr(api_module._get_engine(), "pending_gates", _FakePendingGates(rows=[_tool_approval_row()]), raising=False)
-    monkeypatch.setattr(api_module._get_engine(), "control_plane_repository", repository, raising=False)
-    monkeypatch.setattr(api_module._get_engine(), "control_plane_execution_repository", execution_repository, raising=False)
-    monkeypatch.setattr(api_module._get_engine(), "control_plane_transactions", unit_control_plane_transactions(api_module._get_engine()))
-    monkeypatch.setattr(api_module._get_engine(), "control_plane_publication", publication, raising=False)
+    monkeypatch.setattr(api_module._get_engine(client.app), "pending_gates", _FakePendingGates(rows=[_tool_approval_row()]), raising=False)
+    monkeypatch.setattr(api_module._get_engine(client.app), "control_plane_repository", repository, raising=False)
+    monkeypatch.setattr(api_module._get_engine(client.app), "control_plane_execution_repository", execution_repository, raising=False)
+    monkeypatch.setattr(api_module._get_engine(client.app), "control_plane_transactions", unit_control_plane_transactions(api_module._get_engine(client.app)))
+    monkeypatch.setattr(api_module._get_engine(client.app), "control_plane_publication", publication, raising=False)
     monkeypatch.setattr(
-        api_module._get_engine(),
+        api_module._get_engine(client.app),
         "tool_approval_control_plane_operator",
         ToolApprovalControlPlaneOperatorService(publication=publication),
         raising=False,
     )
     monkeypatch.setattr(
-        api_module._get_engine(),
+        api_module._get_engine(client.app),
         "tool_approval_control_plane_reservation",
         ToolApprovalControlPlaneReservationService(publication=publication),
         raising=False,
@@ -316,8 +316,8 @@ def test_tool_approval_api_retains_decision_projection_when_terminal_continuatio
             )
         )
     )
-    asyncio.run(_seed_target_resource(api_module._get_engine()))
-    journal_entries = asyncio.run(_seed_target_step_and_effect_journal(api_module._get_engine()))
+    asyncio.run(_seed_target_resource(api_module._get_engine(client.app)))
+    journal_entries = asyncio.run(_seed_target_step_and_effect_journal(api_module._get_engine(client.app)))
     asyncio.run(
         publication.accept_checkpoint(
             acceptance_id="turn-tool-checkpoint-acceptance:sess-1:ISS-1:coder:0001:0001",
@@ -344,7 +344,7 @@ def test_tool_approval_api_retains_decision_projection_when_terminal_continuatio
         )
     )
     asyncio.run(
-        api_module._get_engine().tool_approval_control_plane_reservation.publish_pending_tool_approval_hold(
+        api_module._get_engine(client.app).tool_approval_control_plane_reservation.publish_pending_tool_approval_hold(
             approval_id="apr-1",
             session_id="sess-1",
             issue_id="ISS-1",
@@ -492,11 +492,11 @@ def test_guard_review_decision_publishes_operator_command(monkeypatch) -> None:
     monkeypatch.delenv("ORKET_ENABLE_NERVOUS_SYSTEM", raising=False)
     repository = InMemoryControlPlaneRecordRepository()
     publication = ControlPlanePublicationService(repository=repository)
-    monkeypatch.setattr(api_module._get_engine(), "pending_gates", _FakePendingGates(rows=[_guard_review_row()]), raising=False)
-    monkeypatch.setattr(api_module._get_engine(), "control_plane_repository", repository, raising=False)
-    monkeypatch.setattr(api_module._get_engine(), "control_plane_publication", publication, raising=False)
+    monkeypatch.setattr(api_module._get_engine(client.app), "pending_gates", _FakePendingGates(rows=[_guard_review_row()]), raising=False)
+    monkeypatch.setattr(api_module._get_engine(client.app), "control_plane_repository", repository, raising=False)
+    monkeypatch.setattr(api_module._get_engine(client.app), "control_plane_publication", publication, raising=False)
     monkeypatch.setattr(
-        api_module._get_engine(),
+        api_module._get_engine(client.app),
         "pending_gate_control_plane_operator",
         PendingGateControlPlaneOperatorService(publication=publication),
         raising=False,

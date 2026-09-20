@@ -1,6 +1,8 @@
 """Layer: contract. Provider omission and invalid input cannot select Ollama."""
 from __future__ import annotations
 
+import os
+
 import pytest
 
 from orket.application.services.governed_agent_api_composition import _configured_model
@@ -74,9 +76,9 @@ def test_unknown_provider_is_rejected_before_client_creation(monkeypatch):
 def test_legacy_model_variable_requires_explicit_ollama_provider(monkeypatch):
     monkeypatch.setenv("ORKET_GOVERNED_AGENT_OLLAMA_MODEL", "legacy-ollama-model")
     assert configured_provider("ORKET_GOVERNED_AGENT_PROVIDER") == "llama_cpp"
-    assert _configured_model() == ""
+    assert _configured_model(dict(os.environ)) == ""
     monkeypatch.setenv("ORKET_GOVERNED_AGENT_PROVIDER", "ollama")
-    assert _configured_model() == "legacy-ollama-model"
+    assert _configured_model(dict(os.environ)) == "legacy-ollama-model"
 
 
 @pytest.mark.parametrize("provider", ["llama_cpp", "lmstudio", "ollama", "openai_compat"])

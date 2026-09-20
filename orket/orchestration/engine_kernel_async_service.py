@@ -11,6 +11,18 @@ from orket.application.services.tool_approval_control_plane_reservation_service 
 )
 
 
+def build_kernel_async_control_plane(engine: Any) -> KernelAsyncControlPlaneService:
+    return KernelAsyncControlPlaneService(
+        gateway_facade=engine.kernel_gateway_facade,
+        kernel_action_control_plane=engine.kernel_action_control_plane,
+        kernel_action_control_plane_operator=engine.kernel_action_control_plane_operator,
+        kernel_action_control_plane_view=engine.kernel_action_control_plane_view,
+        control_plane_repository=engine.control_plane_repository,
+        control_plane_publication=engine.control_plane_publication,
+        get_approval=lambda approval_id: engine.get_approval(approval_id),
+    )
+
+
 class KernelAsyncControlPlaneService:
     """Owns async kernel control-plane publication and response augmentation for the engine."""
 

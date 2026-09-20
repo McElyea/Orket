@@ -5,6 +5,19 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.39] - 2026-09-20
+
+### Fixed
+- Capture API construction inputs at the synchronous factory boundary and acquire the runtime graph inside lifespan-owned preparation.
+- Retain preparation and acquired-resource cleanup through interruption; refuse requests until initialization succeeds.
+- Bind canonical server settings before spawned-worker imports and drain reload workers cooperatively before replacement.
+- Propagate reload-worker startup and teardown failures to the launcher instead of keeping an idle supervisor or replacing a failed owner.
+- Migrate remaining API test callers to real lifespan ownership and make degradation-contract checks inject the actual unavailable-catalog error.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Enter the API application's lifespan before using runtime services or issuing requests; explicitly bind settings and preferences for event-loop factory callers. Migration: `docs/architecture/CONTRACT_DELTA_API_CONSTRUCTION_D_2026-09-19.md`.
+
 ## [0.6.38] - 2026-09-19
 
 ### Fixed

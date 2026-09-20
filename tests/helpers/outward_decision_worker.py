@@ -11,6 +11,7 @@ from pathlib import Path
 
 import aiosqlite
 
+from orket.settings import set_runtime_settings_context
 from tests.helpers.outward_authorization import FixedInputs, outward_api
 
 
@@ -54,4 +55,7 @@ async def run(root: Path, proposal_id: str, decision: str, api_key: str) -> None
 
 
 if __name__ == "__main__":
+    # Decision contention uses explicit test settings; preference migration has
+    # separate native-lock proof and must not race the decision setup handshake.
+    set_runtime_settings_context(user_settings={}, user_preferences={})
     asyncio.run(run(Path(sys.argv[1]), sys.argv[2], sys.argv[3], sys.argv[4]))

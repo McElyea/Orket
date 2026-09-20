@@ -11,12 +11,13 @@ from orket.adapters.storage.async_repositories import (
 )
 from orket.application.services.decision_node_registry import DecisionNodeRegistry, build_decision_node_registry
 from orket.application.services.kernel_v1_gateway import KernelV1Gateway
+from orket.application.services.runtime_construction_inputs import RuntimeConstructionInputs
 from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.application.services.runtime_result_projection import RuntimeResult
 from orket.core.domain import OperatorCommandClass, OperatorInputClass
 from orket.logging import log_event
 from orket.orchestration import engine_approvals
-from orket.orchestration.engine_kernel_async_service import KernelAsyncControlPlaneService
+from orket.orchestration.engine_kernel_async_service import build_kernel_async_control_plane
 from orket.orchestration.engine_services import (
     CardArchiver,
     KernelGatewayFacade,
@@ -50,11 +51,16 @@ class OrchestrationEngine:
         kernel_gateway: KernelV1Gateway | None = None,
         runtime_bootstrap_service: Any | None = None,
         runtime_inputs: RuntimeInputService | None = None,
+        construction_inputs: RuntimeConstructionInputs | None = None,
     ) -> None:
-        self.decision_nodes = decision_nodes or build_decision_node_registry()
+        if construction_inputs is not None:
+            construction_inputs.bind_settings()
+        self.decision_nodes = decision_nodes or build_decision_node_registry(
+            environment=construction_inputs.environment if construction_inputs is not None else None)
         self.runtime_bootstrap_service = runtime_bootstrap_service or DEFAULT_RUNTIME_BOOTSTRAP_SERVICE
         self.runtime_inputs = runtime_inputs or RuntimeInputService()
-        self.runtime_bootstrap_service.bootstrap_environment()
+        if construction_inputs is None:
+            self.runtime_bootstrap_service.bootstrap_environment()
         self.runtime_context = OrketRuntimeContext.from_env(
             workspace_root=workspace_root,
             department=department,
@@ -71,6 +77,7 @@ class OrchestrationEngine:
             config_root_resolver=self.runtime_bootstrap_service.resolve_config_root,
             run_ledger_factory=build_run_ledger_repository,
             telemetry_sink=self._emit_run_ledger_telemetry,
+            construction_inputs=construction_inputs,
         )
         self.workspace_root = self.runtime_context.workspace_root
         self.department = self.runtime_context.department
@@ -109,21 +116,10 @@ class OrchestrationEngine:
         self.card_archiver = CardArchiver(self.cards)
         self.kernel_gateway_facade = KernelGatewayFacade(self.kernel_gateway)
         self.replay_diagnostics = ReplayDiagnosticsService(self.workspace_root)
-        self.kernel_async_control_plane = self._build_kernel_async_control_plane()
+        self.kernel_async_control_plane = build_kernel_async_control_plane(self)
         self._initialize_lock = asyncio.Lock()
         self._initialized = False
         self._closed = False
-
-    def _build_kernel_async_control_plane(self) -> KernelAsyncControlPlaneService:
-        return KernelAsyncControlPlaneService(
-            gateway_facade=self.kernel_gateway_facade,
-            kernel_action_control_plane=self.kernel_action_control_plane,
-            kernel_action_control_plane_operator=self.kernel_action_control_plane_operator,
-            kernel_action_control_plane_view=self.kernel_action_control_plane_view,
-            control_plane_repository=self.control_plane_repository,
-            control_plane_publication=self.control_plane_publication,
-            get_approval=lambda approval_id: self.get_approval(approval_id),
-        )
 
     async def initialize(self) -> None:
         if self._initialized:
@@ -416,21 +412,21 @@ class OrchestrationEngine:
         return self.kernel_gateway_facade.admit_proposal(request)
 
     async def kernel_admit_proposal_async(self, request: dict[str, Any]) -> dict[str, Any]:
-        self.kernel_async_control_plane = self._build_kernel_async_control_plane()
+        self.kernel_async_control_plane = build_kernel_async_control_plane(self)
         return await self.kernel_async_control_plane.admit_proposal_async(request)
 
     def kernel_commit_proposal(self, request: dict[str, Any]) -> dict[str, Any]:
         return self.kernel_gateway_facade.commit_proposal(request)
 
     async def kernel_commit_proposal_async(self, request: dict[str, Any]) -> dict[str, Any]:
-        self.kernel_async_control_plane = self._build_kernel_async_control_plane()
+        self.kernel_async_control_plane = build_kernel_async_control_plane(self)
         return await self.kernel_async_control_plane.commit_proposal_async(request)
 
     def kernel_end_session(self, request: dict[str, Any]) -> dict[str, Any]:
         return self.kernel_gateway_facade.end_session(request)
 
     async def kernel_end_session_async(self, request: dict[str, Any]) -> dict[str, Any]:
-        self.kernel_async_control_plane = self._build_kernel_async_control_plane()
+        self.kernel_async_control_plane = build_kernel_async_control_plane(self)
         return await self.kernel_async_control_plane.end_session_async(request)
 
     def kernel_list_ledger_events(self, request: dict[str, Any]) -> dict[str, Any]:

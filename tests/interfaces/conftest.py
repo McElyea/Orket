@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import asyncio
-import os
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
@@ -12,40 +10,34 @@ from fastapi.testclient import TestClient
 
 
 class LazyApiTestClient:
-    """Open TestClient at request time so test-local env changes are visible."""
+    """Capture the test's inputs and enter the real lifespan on first explicit use."""
 
-    def __init__(self, app: Any) -> None:
-        self._app = app
+    def __init__(self, project_root: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        self._project_root = project_root
+        self._monkeypatch = monkeypatch
+        self._app: Any = None
         self._client: TestClient | None = None
-        self._retired_contexts: list[Any] = []
 
     @property
     def app(self) -> Any:
+        self._live_client()
         return self._app
 
     def configure(self, *, project_root: Path) -> None:
-        import orket.interfaces.api as api_module
-
         self.close()
-        previous_context = self._app.state.api_runtime_context
-        if not previous_context.closed:
-            self._retired_contexts.append(previous_context)
-        self._app = api_module.create_api_app(project_root=project_root)
-        api_module._ACTIVE_API_APP.set(self._app)
-
-    @property
-    def retired_contexts(self) -> tuple[Any, ...]:
-        return tuple(self._retired_contexts)
+        self._project_root = project_root
 
     def _live_client(self) -> TestClient:
         if self._client is None:
-            from orket.application.services.api_authentication_service import ApiAuthenticationService
+            import orket.interfaces.api as api_module
+            import orket.state as state_module
 
-            # This test-owned lazy client adopts test setup inputs once at startup.
-            # Production factory capture is exercised directly by the API isolation tests.
-            self._app.state.api_runtime_context.authentication = ApiAuthenticationService(os.environ)
-            self._client = TestClient(self._app)
-            self._client.__enter__()
+            self._app = api_module.create_api_app(project_root=self._project_root)
+            client = TestClient(self._app)
+            client.__enter__()
+            self._client = client
+            api_module._ACTIVE_API_APP.set(self._app)
+            self._monkeypatch.setattr(state_module, "runtime_state", self._app.state.api_runtime_context.runtime_state)
         return self._client
 
     def close(self) -> None:
@@ -80,24 +72,15 @@ def fresh_api_client(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyP
         return
 
     import orket.interfaces.api as api_module
-    import orket.state as state_module
     if request.module.__name__.endswith("test_api_interactions"):
         monkeypatch.setenv("ORKET_STREAM_EVENTS_V1", "true")
-    configured_app = api_module.create_api_app(project_root=Path(api_module._resolve_default_project_root()).resolve())
-    monkeypatch.setattr(state_module, "runtime_state", configured_app.state.api_runtime_context.runtime_state)
-    token = api_module._ACTIVE_API_APP.set(configured_app)
+    token = api_module._ACTIVE_API_APP.set(None)
     previous = request.module.client
-    lazy_client = LazyApiTestClient(configured_app)
+    lazy_client = LazyApiTestClient(Path(api_module._resolve_default_project_root()), monkeypatch)
     request.module.client = lazy_client
     try:
         yield
     finally:
         lazy_client.close()
-        context = lazy_client.app.state.api_runtime_context
-        if not context.closed:
-            asyncio.run(context.close())
-        for retired_context in lazy_client.retired_contexts:
-            if not retired_context.closed:
-                asyncio.run(retired_context.close())
         api_module._ACTIVE_API_APP.reset(token)
         request.module.client = previous

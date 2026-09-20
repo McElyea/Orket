@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 import httpx
@@ -18,23 +19,24 @@ from tests.integration.test_execution_graph_acceptance import graph_runtime
 pytestmark = pytest.mark.integration
 
 
+@asynccontextmanager
 async def operator_runtime(root, case, *, retain_outcome=True):
-    app, engine = await graph_runtime(root, case)
-    service = engine.runtime_context.card_completion
-    await complete_existing_card(engine.cards, "CHILD", service.workspace_root, service=service)
-    outcome = await inspect_build_completion(cards=engine.cards, build_id="build", expected_card_ids=("ROOT", "CHILD"))
-    artifacts = {"card_completion_outcome": outcome.to_artifact(), "packet2_facts": {"source_attribution": {
-        "mode": "required", "high_stakes": False, "synthesis_status": "verified",
-        "artifact_provenance_verified": True, "receipt_artifact_path": "agent_output/source_attribution_receipt.json"}}}
-    if not retain_outcome:
-        artifacts.pop("card_completion_outcome")
-    summary = build_run_summary_payload(run_id="GRAPH", status="done", failure_reason=None,
-        started_at="2026-09-12T12:00:00+00:00", ended_at="2026-09-12T12:00:05+00:00", tool_names=[], artifacts=artifacts)
-    await engine.run_ledger.start_run(session_id="GRAPH", run_type="epic", run_name="operator-proof",
-                                    department="core", build_id="build", summary={}, artifacts={})
-    await engine.run_ledger.finalize_run(session_id="GRAPH", status="done", summary=summary, artifacts=artifacts)
-    await engine.sessions.complete_session("GRAPH", "done", [])
-    return app, engine
+    async with graph_runtime(root, case) as (app, engine):
+        service = engine.runtime_context.card_completion
+        await complete_existing_card(engine.cards, "CHILD", service.workspace_root, service=service)
+        outcome = await inspect_build_completion(cards=engine.cards, build_id="build", expected_card_ids=("ROOT", "CHILD"))
+        artifacts = {"card_completion_outcome": outcome.to_artifact(), "packet2_facts": {"source_attribution": {
+            "mode": "required", "high_stakes": False, "synthesis_status": "verified",
+            "artifact_provenance_verified": True, "receipt_artifact_path": "agent_output/source_attribution_receipt.json"}}}
+        if not retain_outcome:
+            artifacts.pop("card_completion_outcome")
+        summary = build_run_summary_payload(run_id="GRAPH", status="done", failure_reason=None,
+            started_at="2026-09-12T12:00:00+00:00", ended_at="2026-09-12T12:00:05+00:00", tool_names=[], artifacts=artifacts)
+        await engine.run_ledger.start_run(session_id="GRAPH", run_type="epic", run_name="operator-proof",
+                                        department="core", build_id="build", summary={}, artifacts={})
+        await engine.run_ledger.finalize_run(session_id="GRAPH", status="done", summary=summary, artifacts=artifacts)
+        await engine.sessions.complete_session("GRAPH", "done", [])
+        yield app, engine
 
 
 @pytest.mark.asyncio
@@ -43,8 +45,7 @@ async def operator_runtime(root, case, *, retain_outcome=True):
 # Layer: integration
 async def test_operator_card_and_run_views_require_retained_acceptance(tmp_path, monkeypatch, case):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    app, _ = await operator_runtime(tmp_path, case)
-    try:
+    async with operator_runtime(tmp_path, case) as (app, _):
         async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test",
                                      headers={"X-API-Key": "test-key"}) as client:
             run = await client.get("/v1/runs/GRAPH/view")
@@ -64,16 +65,13 @@ async def test_operator_card_and_run_views_require_retained_acceptance(tmp_path,
             assert not card.json()["raw_status"].startswith("cardstatus.")
         assert run.json()["completion_accepted"] is accepted
         assert run.json()["source_attribution"]["synthesis_status"] == "verified"
-    finally:
-        await app.state.api_runtime_context.close()
 
 
 @pytest.mark.asyncio
 # Layer: integration
 async def test_operator_inspection_preserves_stores_and_does_not_rerun_workspace_code(tmp_path, monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    app, engine = await operator_runtime(tmp_path, "done")
-    try:
+    async with operator_runtime(tmp_path, "done") as (app, engine):
         service = engine.runtime_context.card_completion
         paths = {Path(engine.cards.db_path), Path(engine.run_ledger.db_path), service.acceptance.evidence_store.db_path}
 
@@ -90,8 +88,6 @@ async def test_operator_inspection_preserves_stores_and_does_not_rerun_workspace
                 payload = response.json()
                 assert all(item["completion_accepted"] for item in payload.get("items", [payload]))
         assert await asyncio.to_thread(store_hashes) == before
-    finally:
-        await app.state.api_runtime_context.close()
 
 
 @pytest.mark.asyncio
@@ -99,8 +95,7 @@ async def test_operator_inspection_preserves_stores_and_does_not_rerun_workspace
 # Layer: integration
 async def test_operator_views_reject_missing_or_substituted_outcome(tmp_path, monkeypatch, corruption):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    app, engine = await operator_runtime(tmp_path, "done", retain_outcome=corruption != "missing")
-    try:
+    async with operator_runtime(tmp_path, "done", retain_outcome=corruption != "missing") as (app, engine):
         run = validated_run_ledger_record_projection(await engine.run_ledger.get_run("GRAPH"))
         artifacts = run["artifact_json"]
         if corruption == "missing":
@@ -125,16 +120,13 @@ async def test_operator_views_reject_missing_or_substituted_outcome(tmp_path, mo
         assert card.status_code == 200
         assert card.json()["completion_accepted"] is True
         assert card.json()["filter_bucket"] == "completed"
-    finally:
-        await app.state.api_runtime_context.close()
 
 
 @pytest.mark.asyncio
 # Layer: integration
 async def test_operator_card_page_offset_is_applied_once(tmp_path, monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    app, _ = await operator_runtime(tmp_path, "done")
-    try:
+    async with operator_runtime(tmp_path, "done") as (app, _):
         async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test",
                                      headers={"X-API-Key": "test-key"}) as client:
             full = await client.get("/v1/cards/view?limit=2")
@@ -142,8 +134,6 @@ async def test_operator_card_page_offset_is_applied_once(tmp_path, monkeypatch):
         assert full.status_code == page.status_code == 200
         assert len(full.json()["items"]) == 2
         assert page.json()["items"] == full.json()["items"][1:]
-    finally:
-        await app.state.api_runtime_context.close()
 
 
 @pytest.mark.asyncio
@@ -151,8 +141,7 @@ async def test_operator_card_page_offset_is_applied_once(tmp_path, monkeypatch):
 # Layer: integration
 async def test_operator_views_reject_stale_published_outcome(tmp_path, monkeypatch, change):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    app, engine = await operator_runtime(tmp_path, "done")
-    try:
+    async with operator_runtime(tmp_path, "done") as (app, engine):
         async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test",
                                      headers={"X-API-Key": "test-key"}) as client:
             before = await client.get("/v1/runs/GRAPH/view")
@@ -170,5 +159,3 @@ async def test_operator_views_reject_stale_published_outcome(tmp_path, monkeypat
         assert after.status_code == card.status_code == 200
         assert after.json()["verification"]["status"] != "verified"
         assert (card.json()["filter_bucket"] == "completed") is (change == "new_receipt")
-    finally:
-        await app.state.api_runtime_context.close()

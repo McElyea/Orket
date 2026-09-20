@@ -1,14 +1,59 @@
 # API Runtime Lifecycle
 
-Last updated: 2026-09-19
+Last updated: 2026-09-20
 Status: Active
 
 `orket.application.services.api_runtime_container.ApiRuntimeContainer` owns the
 HTTP/WebSocket ASGI invocation tasks, registered background tasks and resources
 of one API application, followed by its engine. The public factory is
 `orket.interfaces.runtime_entrypoints.create_api_app(CompositionConfig)`;
-`orket.interfaces.api.lifespan` delegates initialization and teardown to
+`orket.interfaces.api.lifespan` enters owned `ApiRuntimePreparation`, then delegates
+initialization and runtime teardown to
 `orket.application.services.api_startup_service.api_runtime_lifespan`.
+
+The 0.6.39 construction transition is specified in
+`docs/architecture/CONTRACT_DELTA_API_CONSTRUCTION_D_2026-09-19.md`: the synchronous
+ASGI factory captures inputs, lifespan owns runtime preparation, and requests are
+refused until initialization succeeds. Runtime services are not an eager factory
+result. The canonical architectural-truth plan records the verified source
+and installed observations, including the Linux 3.12 clock blocker.
+
+Preparation captures invocation cwd, environment, user settings and preferences
+at the synchronous factory boundary. Bootstrap settings before the event loop or
+bind both snapshots explicitly. The preparation worker binds those captured values
+only in its execution context, acquires the graph and reads the selected outbound
+policy file. Native files are observed during preparation; the factory does not
+freeze their contents. A later failure or interruption drains the worker and closes
+already acquired resources. Directory and migration effects may remain, and a
+constructor that fails before returning its resource retains its own cleanup duty.
+
+Before preparation and initialization succeed, HTTP receives 503 and WebSockets
+close with 1001 before acceptance. A completed preparation publishes runtime context,
+but admission additionally requires readiness. A factory result supports one
+lifespan; restarting requires another app. Embeddings and tests enter the lifespan
+before consuming services. `python server.py` binds settings and preferences during
+pre-loop bootstrap so a spawned worker can later import `server:app` inside its
+event loop. Current normal-start/reload observations and platform limitations are
+recorded in the canonical plan; scoped checkpoint proof is not whole-lane acceptance.
+
+The canonical reload launcher retains Uvicorn's selected file watcher and spawned
+worker. Its supervisor requests shutdown through a process-shared event and joins
+the worker before replacement. The worker waits for startup before requesting
+normal server shutdown; repeated console signals request the same cooperative
+close instead of escalating to a lifespan-skipping exit. Parent shutdown retains
+the worker and listener cleanup. This adds no hard-stop deadline: startup or cleanup
+that never settles can hold the supervisor. Real StatReload, active-work,
+interruption and failure paths pass on installed Windows/Linux Python
+3.11/3.12. Complete Linux 3.12 cohort acceptance remains blocked by native
+wall-clock discontinuities in governed-agent tests. Windows source also
+exercises Uvicorn 0.27.0 and 0.52.4.
+These observations do not cover all intermediate versions or optional watcher
+backends; the private Uvicorn integration still requires compatibility review
+when dependencies change.
+Lifespan startup or shutdown failure makes the worker exit unsuccessfully. The
+supervisor observes unexpected worker exit and refuses replacement after failed
+cleanup; it closes its listener and reports failure to the launcher. The launcher
+requires Uvicorn lifespan support instead of accepting an unsupported protocol.
 
 API and standalone webhook owners share `ApplicationRuntimeLifetime`; their
 configuration and final resources remain separate. Managed background work uses
@@ -82,8 +127,8 @@ The existing runtime database default is invocation-relative, as specified by
 `docs/specs/RUNTIME_STORE_BINDING.md`. Applications constructed with the same
 durable-root selection share card history. To select separate stores, supply a
 different `ORKET_DURABLE_ROOT` before each factory invocation; an engine retains
-its resolved absolute binding. Do not change process environment concurrently
-with construction. This is existing storage behavior, not a tenant-isolation
+its resolved absolute binding. Factory capture must not race an environment
+mutation; later preparation uses the captured selection. This is existing storage behavior, not a tenant-isolation
 guarantee or an automatic database migration.
 
 ## Captured authority and system observations

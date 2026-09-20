@@ -28,9 +28,6 @@ def capability_route(capability):
 @pytest.mark.parametrize("fail", [False, True])
 # Layer: integration
 async def test_tcp_shutdown_retains_capability_effect_and_failure(generation_app, monkeypatch, tmp_path, capability, fail):
-    context = generation_app.state.api_runtime_context
-    service = context.extension_runtime_service
-    delayed = await delay_capability(service, capability, monkeypatch, tmp_path / "tcp-effect.txt", fail=fail)
     method, route, body = capability_route(capability)
     request, closing = None, None
     retained_failure = None
@@ -38,6 +35,9 @@ async def test_tcp_shutdown_retains_capability_effect_and_failure(generation_app
     expected_exit = pytest.raises(RuntimeError, match="teardown failed") if fail else nullcontext()
     with expected_exit as exit_failure:
         async with serving_api(generation_app) as client:
+            context = generation_app.state.api_runtime_context
+            service = context.extension_runtime_service
+            delayed = await delay_capability(service, capability, monkeypatch, tmp_path / "tcp-effect.txt", fail=fail)
             try:
                 request = asyncio.create_task(client.request(method, f"/v1/extensions/orket.test/runtime/{route}", json=body))
                 assert await asyncio.to_thread(delayed.entered.wait, 5)

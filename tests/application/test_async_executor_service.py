@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import asyncio
 import json
+import threading
 from pathlib import Path
 
 import pytest
 
 from orket.adapters.storage.async_executor_service import AsyncExecutorService
 from orket.adapters.storage.async_file_tools import AsyncFileTools
+from orket.adapters.storage.driver_resource_store import DriverResourceStore
 from orket.driver_support_resources import DriverResourceMixin
 
 
@@ -25,33 +27,33 @@ async def test_run_coroutine_blocking_rejects_running_loop_usage() -> None:
 
 
 @pytest.mark.asyncio
-async def test_execute_structural_change_uses_async_file_tools(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    """Layer: integration. Verifies async structural changes do not fall back to sync file bridges."""
+async def test_execute_structural_change_keeps_native_files_off_loop(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """Layer: integration. Real structural storage reads and writes stay in the owned worker."""
     model_root = tmp_path / "model"
     epic_path = model_root / "core" / "epics" / "billing.json"
-    epic_path.parent.mkdir(parents=True, exist_ok=True)
-    epic_path.write_text(json.dumps({"name": "billing", "issues": []}, indent=2), encoding="utf-8")
-
+    await asyncio.to_thread(epic_path.parent.mkdir, parents=True, exist_ok=True)
+    await asyncio.to_thread(epic_path.write_text, json.dumps({"name": "billing", "issues": []}), encoding="utf-8")
     harness = _DriverResourceHarness()
-    harness.model_root = model_root
-    harness.fs = AsyncFileTools(tmp_path)
-    monkeypatch.setattr(harness.fs, "read_file_sync", lambda _path: (_ for _ in ()).throw(AssertionError("unexpected sync read")))
-    monkeypatch.setattr(
-        harness.fs,
-        "write_file_sync",
-        lambda _path, _content: (_ for _ in ()).throw(AssertionError("unexpected sync write")),
-    )
-    monkeypatch.setattr("orket.driver_support_resources.log_event", lambda *_args, **_kwargs: None)
+    harness.model_root, harness.fs = model_root, AsyncFileTools(tmp_path)
+    observed, loop_thread = [], threading.get_ident()
+    read, write = DriverResourceStore.read, DriverResourceStore.write
 
-    result = await harness._execute_structural_change(
-        {
-            "action": "create_issue",
-            "target_parent": "billing",
-            "suggested_department": "core",
-            "new_asset": {"summary": "Add truth check", "seat": "coder", "priority": "High"},
-        }
-    )
+    def observe_read(store, path):
+        observed.append(("read", threading.get_ident()))
+        return read(store, path)
 
-    saved = json.loads(epic_path.read_text(encoding="utf-8"))
+    def observe_write(store, path, payload):
+        observed.append(("write", threading.get_ident()))
+        return write(store, path, payload)
+
+    monkeypatch.setattr(DriverResourceStore, "read", observe_read)
+    monkeypatch.setattr(DriverResourceStore, "write", observe_write)
+    result = await harness._execute_structural_change({
+        "action": "create_issue", "target_parent": "billing", "suggested_department": "core",
+        "new_asset": {"summary": "Add truth check", "seat": "coder", "priority": "High"},
+    })
+    saved = json.loads(await asyncio.to_thread(epic_path.read_text, encoding="utf-8"))
     assert result.startswith("Added issue 'Add truth check'")
     assert saved["issues"][0]["summary"] == "Add truth check"
+    assert [action for action, _ in observed] == ["read", "write"]
+    assert all(thread != loop_thread for _, thread in observed)

@@ -104,6 +104,18 @@ application exports through `orket.runtime`. The former runtime transport-factor
 exports are retired in 0.6.19. `API_RUNTIME_LIFECYCLE.md` documents the distinction
 between separate API owners and selected persistent stores.
 
+The 0.6.39 API construction transition requires embeddings and test clients
+to enter the application's lifespan before looking up runtime services or making
+requests. The synchronous factory captures inputs; owned preparation and startup
+acquire the runtime. Bind both settings and preferences for event-loop factory
+callers. The canonical `python server.py` command performs that binding before
+the loop so spawned reload workers can later import the ASGI app. Canonical reload
+uses cooperative worker shutdown and waits for the old worker before replacement;
+it has no forced-stop deadline. Worker startup or cleanup failure remains a
+launcher failure. Both Quality jobs include the construction, server and
+affected caller regressions. Scoped source/installed proof and the remaining
+repository-wide verification limits remain in the architectural-truth plan.
+
 Standalone webhook apps also require their lifespan and retain one owner per
 factory result. The module-default app and adapter-owned handler are retired in
 0.6.20. Direct embeddings, captured input rotation, native Gitea review translation

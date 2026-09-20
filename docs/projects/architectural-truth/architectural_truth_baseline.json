@@ -1,6 +1,6 @@
 {
   "schema_version": "architectural_truth.baseline.v1",
-  "generated_at": "2026-09-20T00:46:31.822462Z",
+  "generated_at": "2026-09-20T06:36:20.317153Z",
   "collection_ok": true,
   "release_ready": false,
   "release_ready_reason": "Active architectural exceptions and red/noisy proof gates remain.",
@@ -122,12 +122,18 @@
     "path": "primary",
     "result": "success",
     "exit_code": 0,
+    "construction_deferred": true,
     "distinct_contexts": true,
     "distinct_engines": true,
     "distinct_runtime_states": true,
     "first_context_replaced": false,
     "first_root_retained": true,
+    "health_statuses": [
+      200,
+      200
+    ],
     "module_default_owner_absent": true,
+    "owners_closed": true,
     "same_app_object": false,
     "second_root_retained": true
   },
@@ -286,7 +292,7 @@
           "code": "importer_escape"
         }
       ],
-      "files_scanned": 1094,
+      "files_scanned": 1098,
       "scan_roots": [
         "orket"
       ],
@@ -305,17 +311,17 @@
         {
           "source": "application",
           "target": "adapters",
-          "count": 390
+          "count": 392
         },
         {
           "source": "application",
           "target": "application",
-          "count": 1664
+          "count": 1677
         },
         {
           "source": "application",
           "target": "core",
-          "count": 740
+          "count": 741
         },
         {
           "source": "application",
@@ -340,12 +346,12 @@
         {
           "source": "interfaces",
           "target": "application",
-          "count": 85
+          "count": 86
         },
         {
           "source": "interfaces",
           "target": "interfaces",
-          "count": 43
+          "count": 44
         }
       ]
     },
@@ -539,10 +545,10 @@
   },
   "test_taxonomy": {
     "schema_version": "test_taxonomy_report.v1",
-    "tests_total": 5278,
-    "missing_layer_total": 3677,
+    "tests_total": 5289,
+    "missing_layer_total": 3688,
     "by_layer": {
-      "unlabeled": 3677,
+      "unlabeled": 3688,
       "integration": 750,
       "unit": 168,
       "contract": 672,
@@ -1150,7 +1156,7 @@
         "layer": null
       }
     ],
-    "missing_layers_omitted": 3577
+    "missing_layers_omitted": 3588
   },
   "ruff": {
     "proof": "structural_lint",
@@ -1172,13 +1178,13 @@
   },
   "size_inventory": {
     "proof": "structural_ast",
-    "python_files_scanned": 1094,
+    "python_files_scanned": 1098,
     "files_over_400_total": 60,
-    "functions_over_70_total": 205,
+    "functions_over_70_total": 207,
     "largest_files": [
       {
         "path": "orket/interfaces/api.py",
-        "lines": 1699
+        "lines": 1668
       },
       {
         "path": "orket/application/workflows/orchestrator_ops.py",
@@ -1234,7 +1240,7 @@
       },
       {
         "path": "orket/application/services/sandbox_runtime_lifecycle_service.py",
-        "lines": 613
+        "lines": 614
       },
       {
         "path": "orket/runtime/config/provider_runtime_target.py",
@@ -1246,7 +1252,7 @@
       },
       {
         "path": "orket/services/sandbox_orchestrator.py",
-        "lines": 578
+        "lines": 580
       },
       {
         "path": "orket/streaming/model_provider.py",
@@ -1439,7 +1445,7 @@
       "C:\\Source\\Orket-architectural-truth\\orket\\runtime",
       "C:\\Source\\Orket-architectural-truth\\orket\\interfaces"
     ],
-    "scanned_files": 640,
+    "scanned_files": 644,
     "findings": [
       {
         "path": "C:\\Source\\Orket-architectural-truth\\orket\\runtime\\execution\\execution_pipeline_card_dispatch.py",
@@ -1550,93 +1556,6 @@
     "parse_errors": []
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-19T05:04:32.207487Z",
-      "changed": true,
-      "before_digest": "sha256:a85c27e878ae8ef94b20eaf9cd8b5c6238a195abf11879e6e8138b155c38038d",
-      "after_digest": "sha256:8fb554978a218a97322d2c053966731067a89a60660f8ca74c4160637d5c3960",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 5,
-        "initial_write": false,
-        "paths_total_previous": 2578,
-        "paths_total_current": 2578,
-        "paths_total_reference": 2578,
-        "churn_paths": 5,
-        "churn_ratio": 0.001939,
-        "sample_paths": [
-          "$.generated_at",
-          "$.test_taxonomy.by_layer.unlabeled",
-          "$.test_taxonomy.missing_layer_total",
-          "$.test_taxonomy.missing_layers_omitted",
-          "$.test_taxonomy.tests_total"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-19T06:04:16.395553Z",
-      "changed": true,
-      "before_digest": "sha256:8fb554978a218a97322d2c053966731067a89a60660f8ca74c4160637d5c3960",
-      "after_digest": "sha256:6a6a121dd0bab022c63ef08a66e2e17fee0dd9b3aabe8d1dbad89575106a6161",
-      "diff": {
-        "added_paths": 1,
-        "removed_paths": 3,
-        "changed_paths": 38,
-        "initial_write": false,
-        "paths_total_previous": 2578,
-        "paths_total_current": 2541,
-        "paths_total_reference": 2578,
-        "churn_paths": 42,
-        "churn_ratio": 0.016292,
-        "sample_paths": [
-          "$.dependency_graph.observed.files_scanned",
-          "$.dependency_graph.observed.layer_edges[3].count",
-          "$.dependency_graph.observed.layer_edges[4].count",
-          "$.dependency_graph.observed.layer_edges[5].count",
-          "$.dependency_graph.observed.layer_edges[11].count",
-          "$.dependency_graph.verdict.violations[6].sites[0].line",
-          "$.dependency_graph.verdict.violations[6].target",
-          "$.dependency_graph.verdict.violations[7].sites[0].line",
-          "$.dependency_graph.verdict.violations[7].sites[0].path",
-          "$.dependency_graph.verdict.violations[7].source",
-          "$.dependency_graph.verdict.violations[7].target",
-          "$.dependency_graph.verdict.violations[8].sites[0].line",
-          "$.dependency_graph.verdict.violations[8].sites[0].path",
-          "$.dependency_graph.verdict.violations[8].source",
-          "$.dependency_graph.verdict.violations[8].target",
-          "$.dependency_graph.verdict.violations[9].sites[0].line",
-          "$.dependency_graph.verdict.violations[9].sites[0].path",
-          "$.dependency_graph.verdict.violations[9].source",
-          "$.dependency_graph.verdict.violations[9].target",
-          "$.dependency_graph.verdict.violations[10].sites[0].line"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-19T06:05:28.775384Z",
-      "changed": true,
-      "before_digest": "sha256:6a6a121dd0bab022c63ef08a66e2e17fee0dd9b3aabe8d1dbad89575106a6161",
-      "after_digest": "sha256:8996c46053fe0e2786f8fa3ff16ea8e403dc55b2d5a8367b22002851ccf9e5ae",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 1,
-        "changed_paths": 4,
-        "initial_write": false,
-        "paths_total_previous": 2541,
-        "paths_total_current": 2539,
-        "paths_total_reference": 2541,
-        "churn_paths": 5,
-        "churn_ratio": 0.001968,
-        "sample_paths": [
-          "$.generated_at",
-          "$.ruff.by_code.F841",
-          "$.ruff.by_code.I001",
-          "$.ruff.issues_total",
-          "$.size_inventory.largest_functions[15].lines"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-19T07:08:25.250945Z",
       "changed": true,
@@ -2419,6 +2338,99 @@
           "$.test_taxonomy.missing_layer_total",
           "$.test_taxonomy.missing_layers_omitted",
           "$.test_taxonomy.tests_total"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-20T04:28:08.823798Z",
+      "changed": true,
+      "before_digest": "sha256:f0ae9c52e9cc73dfc55397a227f82517bbd820d6c5c8470723ae778916662b8c",
+      "after_digest": "sha256:40fb30f8be2571326b0cfb04bebed18e7654ace7d473e1647ab3c3b297daa273",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 8,
+        "changed_paths": 20,
+        "initial_write": false,
+        "paths_total_previous": 2323,
+        "paths_total_current": 2307,
+        "paths_total_reference": 2323,
+        "churn_paths": 28,
+        "churn_ratio": 0.012053,
+        "sample_paths": [
+          "$.api_factory_behavior.distinct_contexts",
+          "$.api_factory_behavior.distinct_engines",
+          "$.api_factory_behavior.distinct_runtime_states",
+          "$.api_factory_behavior.first_context_replaced",
+          "$.api_factory_behavior.first_root_retained",
+          "$.api_factory_behavior.module_default_owner_absent",
+          "$.api_factory_behavior.same_app_object",
+          "$.api_factory_behavior.second_root_retained",
+          "$.api_factory_behavior.exit_code",
+          "$.api_factory_behavior.result",
+          "$.collection_ok",
+          "$.dependency_graph.observed.files_scanned",
+          "$.dependency_graph.observed.layer_edges[2].count",
+          "$.dependency_graph.observed.layer_edges[3].count",
+          "$.dependency_graph.observed.layer_edges[4].count",
+          "$.dependency_graph.observed.layer_edges[9].count",
+          "$.dependency_graph.observed.layer_edges[10].count",
+          "$.generated_at",
+          "$.noop_critical_paths.scanned_files",
+          "$.size_inventory.functions_over_70_total"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-20T04:29:44.705261Z",
+      "changed": true,
+      "before_digest": "sha256:40fb30f8be2571326b0cfb04bebed18e7654ace7d473e1647ab3c3b297daa273",
+      "after_digest": "sha256:eb61ece9f4ede33bc8ae0c7e6ccec6f0d460ea6f0b9efe4b9ceeb54efd472bd3",
+      "diff": {
+        "added_paths": 11,
+        "removed_paths": 0,
+        "changed_paths": 4,
+        "initial_write": false,
+        "paths_total_previous": 2307,
+        "paths_total_current": 2332,
+        "paths_total_reference": 2332,
+        "churn_paths": 15,
+        "churn_ratio": 0.006432,
+        "sample_paths": [
+          "$.api_factory_behavior.construction_deferred",
+          "$.api_factory_behavior.distinct_contexts",
+          "$.api_factory_behavior.distinct_engines",
+          "$.api_factory_behavior.distinct_runtime_states",
+          "$.api_factory_behavior.first_context_replaced",
+          "$.api_factory_behavior.first_root_retained",
+          "$.api_factory_behavior.health_statuses",
+          "$.api_factory_behavior.module_default_owner_absent",
+          "$.api_factory_behavior.owners_closed",
+          "$.api_factory_behavior.same_app_object",
+          "$.api_factory_behavior.second_root_retained",
+          "$.api_factory_behavior.exit_code",
+          "$.api_factory_behavior.result",
+          "$.collection_ok",
+          "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-20T06:36:20.319154Z",
+      "changed": true,
+      "before_digest": "sha256:eb61ece9f4ede33bc8ae0c7e6ccec6f0d460ea6f0b9efe4b9ceeb54efd472bd3",
+      "after_digest": "sha256:da5f68cdf5c23be95d0c361a519f42000b43687608c0791d644f4083f3e5a7a4",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 2332,
+        "paths_total_current": 2332,
+        "paths_total_reference": 2332,
+        "churn_paths": 1,
+        "churn_ratio": 0.000429,
+        "sample_paths": [
+          "$.generated_at"
         ]
       }
     }

@@ -1,3 +1,4 @@
+# Layer: integration. Controlled driver provider; actual command interpretation and resource boundary.
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -6,9 +7,10 @@ import pytest
 from orket.driver import OrketDriver
 
 
-def _driver() -> OrketDriver:
+def _driver(root: Path) -> OrketDriver:
     driver = OrketDriver.__new__(OrketDriver)
-    driver.model_root = Path("model")
+    driver.model_root = root / "model"
+    driver.workspace_root = root / "workspace"
     driver.skill = None
     driver.dialect = None
     driver.provider = SimpleNamespace(complete=None)
@@ -16,8 +18,8 @@ def _driver() -> OrketDriver:
 
 
 @pytest.mark.asyncio
-async def test_operator_canary_conversation_flow():
-    driver = _driver()
+async def test_operator_canary_conversation_flow(tmp_path):
+    driver = _driver(tmp_path)
 
     hello = await driver.process_request("hello")
     assert "chat normally" in hello.lower()
@@ -30,8 +32,8 @@ async def test_operator_canary_conversation_flow():
 
 
 @pytest.mark.asyncio
-async def test_operator_canary_capability_flow():
-    driver = _driver()
+async def test_operator_canary_capability_flow(tmp_path):
+    driver = _driver(tmp_path)
     response = await driver.process_request("What can you do in this environment?")
 
     assert "Operator CLI is available." in response

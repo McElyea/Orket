@@ -1,5 +1,6 @@
 """Layer: integration. Real SQLite commits and cleanup retained through interruption."""
 import asyncio
+import os
 from contextlib import asynccontextmanager
 
 import aiosqlite
@@ -102,28 +103,29 @@ async def test_application_close_waits_for_cancelled_flow_commit(tmp_path, monke
         finally:
             settled.set()
 
-    app = create_api_app(project_root=tmp_path, environment={"ORKET_API_KEY": "flow-proof"}, runtime_inputs=FlowInputs())
-    context = app.state.api_runtime_context
-    with monkeypatch.context() as patch:
-        patch.setattr(storage.AsyncFlowRepository, "_execute", held_execute)
-        try:
-            async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as client:
-                request = asyncio.create_task(client.post("/v1/flows", headers={"X-API-Key": "flow-proof"},
-                                                          json={"definition": definition().model_dump()}))
-                await asyncio.wait_for(entered.wait(), 5)
-                close = asyncio.create_task(context.close())
-                try:
-                    await interrupt_twice(request)
-                    assert not close.done() and not settled.is_set()
-                finally:
-                    release.set()
-                    response = await asyncio.wait_for(request, 5)
-                    assert response.status_code == 503
-                    assert response.json() == {"detail": "API runtime is closing."}
-                    await asyncio.wait_for(close, 5)
-        finally:
-            release.set()
-            await context.close()
-    assert context.closed and settled.is_set()
-    repo = storage.AsyncFlowRepository(tmp_path / ".orket/durable/db/orket_ui_flows.sqlite3")
-    assert (await repo.get_flow("FLOW-FIXED"))["name"] == "original"
+    app = create_api_app(project_root=tmp_path, environment={**os.environ, "ORKET_API_KEY": "flow-proof"}, runtime_inputs=FlowInputs())
+    async with app.router.lifespan_context(app):
+        context = app.state.api_runtime_context
+        with monkeypatch.context() as patch:
+            patch.setattr(storage.AsyncFlowRepository, "_execute", held_execute)
+            try:
+                async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as client:
+                    request = asyncio.create_task(client.post("/v1/flows", headers={"X-API-Key": "flow-proof"},
+                                                              json={"definition": definition().model_dump()}))
+                    await asyncio.wait_for(entered.wait(), 5)
+                    close = asyncio.create_task(context.close())
+                    try:
+                        await interrupt_twice(request)
+                        assert not close.done() and not settled.is_set()
+                    finally:
+                        release.set()
+                        response = await asyncio.wait_for(request, 5)
+                        assert response.status_code == 503
+                        assert response.json() == {"detail": "API runtime is closing."}
+                        await asyncio.wait_for(close, 5)
+            finally:
+                release.set()
+                await context.close()
+        assert context.closed and settled.is_set()
+        repo = storage.AsyncFlowRepository(tmp_path / ".orket/durable/db/orket_ui_flows.sqlite3")
+        assert (await repo.get_flow("FLOW-FIXED"))["name"] == "original"

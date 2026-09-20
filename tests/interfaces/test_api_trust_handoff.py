@@ -58,12 +58,10 @@ async def test_api_handoff_required_submission_verifies_before_start(tmp_path, m
     """Layer: integration. Verifies API submission can require Packet 1 handoff admission."""
     client, db_path = _client(tmp_path, monkeypatch)
     package = _package(tmp_path, target_agent_id="run-api-handoff")
-    try:
+    with client:
         response = client.post("/v1/runs", headers={"X-API-Key": "test-key"}, json=_payload("run-api-handoff", package))
         assert response.status_code == 200
         assert response.json()["status"] == "approval_required"
-    finally:
-        client.close()
 
     events = await OutwardRunEventStore(db_path).list_for_run("run-api-handoff")
     event_types = [event.event_type for event in events]
@@ -75,7 +73,7 @@ async def test_api_handoff_required_submission_verifies_before_start(tmp_path, m
 async def test_api_incomplete_handoff_contract_fails_closed(tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Layer: integration. Verifies incomplete API handoff contracts reject durably before run_started."""
     client, db_path = _client(tmp_path, monkeypatch)
-    try:
+    with client:
         response = client.post(
             "/v1/runs",
             headers={"X-API-Key": "test-key"},
@@ -84,8 +82,6 @@ async def test_api_incomplete_handoff_contract_fails_closed(tmp_path, monkeypatc
         assert response.status_code == 200
         assert response.json()["status"] == "completed"
         assert response.json()["stop_reason"] == "handoff_acceptance_contract_incomplete"
-    finally:
-        client.close()
 
     events = await OutwardRunEventStore(db_path).list_for_run("run-api-handoff-incomplete")
     event_types = [event.event_type for event in events]

@@ -67,21 +67,15 @@ def boundary(tmp_path, monkeypatch):
 
 @asynccontextmanager
 async def outward_api(root: Path, inputs: FixedInputs, *, api_key: str = TEST_API_KEY):
-    environment, created = dict(os.environ), []
-
-    def construct():
-        app = create_api_app(project_root=root, runtime_inputs=inputs, environment=environment)
-        created.append(app)
-        return app
-
-    try:
-        app = await run_owned_thread(construct, label="outward-test-api-bootstrap")
-    except asyncio.CancelledError:
-        if created:
-            await created[0].state.api_runtime_context.close()
-        raise
-    context = app.state.api_runtime_context
-    try:
+    environment = dict(os.environ)
+    # Fresh subprocess fixtures have no bound settings; their synchronous bootstrap
+    # belongs to a retained worker. Runtime acquisition still requires the lifespan.
+    app = await run_owned_thread(
+        lambda: create_api_app(project_root=root, runtime_inputs=inputs, environment=environment),
+        label="outward-test-settings-bootstrap",
+    )
+    async with app.router.lifespan_context(app):
+        context = app.state.api_runtime_context
         async with AsyncClient(
             transport=ASGITransport(app=app, raise_app_exceptions=False),
             base_url="http://orket.test",
@@ -89,10 +83,8 @@ async def outward_api(root: Path, inputs: FixedInputs, *, api_key: str = TEST_AP
             timeout=15,
         ) as client:
             yield client, context
-    finally:
-        await context.close()
-        assert context.closed
-        assert context.active_background_task_count == 0
+    assert context.closed
+    assert context.active_background_task_count == 0
 
 
 async def submit_sequence(client: AsyncClient, calls: list[dict], *, approval_seconds: int = 300) -> str:

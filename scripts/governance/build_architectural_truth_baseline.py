@@ -189,35 +189,11 @@ def collect_command_behavior() -> list[dict[str, Any]]:
 
 
 def collect_api_factory_behavior() -> dict[str, Any]:
-    probe = """
-import asyncio
-import json
-import tempfile
-from pathlib import Path
-import orket.interfaces.api as api_module
-from orket.interfaces.api import create_api_app
-with tempfile.TemporaryDirectory(prefix="orket-api-factory-probe-") as raw:
-    root = Path(raw)
-    first = create_api_app(root / "one")
-    first_context = first.state.api_runtime_context
-    second = create_api_app(root / "two")
-    second_context = second.state.api_runtime_context
-    print(json.dumps({
-        "same_app_object": first is second,
-        "first_context_replaced": first_context is not first.state.api_runtime_context,
-        "first_root_retained": first_context.project_root == (root / "one").resolve(),
-        "second_root_retained": second_context.project_root == (root / "two").resolve(),
-        "distinct_contexts": first_context is not second_context,
-        "distinct_engines": first_context.engine is not second_context.engine,
-        "distinct_runtime_states": first_context.runtime_state is not second_context.runtime_state,
-        "module_default_owner_absent": not hasattr(api_module, "app"),
-    }, sort_keys=True))
-    asyncio.run(first_context.close())
-    asyncio.run(second_context.close())
-"""
+    from scripts.governance.architectural_truth_api_probe import API_FACTORY_PROBE
+
     env = os.environ.copy()
     env["ORKET_DISABLE_SANDBOX"] = "1"
-    result = _run_command([sys.executable, "-c", probe], cwd=PROJECT_ROOT, env=env)
+    result = _run_command([sys.executable, "-c", API_FACTORY_PROBE], cwd=PROJECT_ROOT, env=env)
     lines = [line for line in result.stdout.splitlines() if line.strip()]
     try:
         observation = json.loads(lines[-1]) if lines else {}
@@ -233,6 +209,9 @@ with tempfile.TemporaryDirectory(prefix="orket-api-factory-probe-") as raw:
         and observation.get("distinct_engines")
         and observation.get("distinct_runtime_states")
         and observation.get("module_default_owner_absent")
+        and observation.get("construction_deferred")
+        and observation.get("health_statuses") == [200, 200]
+        and observation.get("owners_closed")
     )
     return {
         "proof": "live_isolated_subprocess",

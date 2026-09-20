@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import os
-from collections.abc import Coroutine
+from collections.abc import Coroutine, Mapping
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from pathlib import Path
@@ -35,13 +35,17 @@ class ConfigLoader:
         department: str = "core",
         organization: Any | None = None,
         decision_nodes: DecisionNodeRegistry | None = None,
+        environment: Mapping[str, str] | None = None,
+        user_settings: dict[str, Any] | None = None,
     ) -> None:
         self.root = root
         self.config_dir = root / "config"
         self.model_dir = root / "model"
         self.department = department
         self.organization = organization
-        self.decision_nodes = decision_nodes or build_decision_node_registry()
+        self._environment = dict(environment) if environment is not None else None
+        self._user_settings = json.dumps(user_settings, allow_nan=False) if user_settings is not None else None
+        self.decision_nodes = decision_nodes or build_decision_node_registry(environment=self._environment)
         self.loader_strategy_node = self.decision_nodes.resolve_loader_strategy(self.organization)
         self.file_tools = AsyncFileTools(self.root)
 
@@ -74,7 +78,7 @@ class ConfigLoader:
         from orket.schema import OrganizationConfig
         from orket.settings import load_user_settings_async, set_runtime_settings_context
 
-        environment = dict(os.environ)
+        environment = dict(os.environ if self._environment is None else self._environment)
         org_data = {}
 
         info_path, arch_path = self.loader_strategy_node.organization_modular_paths(self.config_dir)
@@ -105,8 +109,8 @@ class ConfigLoader:
             log_event("config_validation_failed", {"error": str(exc)}, workspace=self.root)
             return None
 
-        settings = await load_user_settings_async()
-        set_runtime_settings_context(user_settings=settings)
+        settings = json.loads(self._user_settings) if self._user_settings is not None else await load_user_settings_async()
+        set_runtime_settings_context(user_settings=settings, environment=environment)
         overrides = {field: value for field, key in (("name", "ORKET_ORG_NAME"), ("vision", "ORKET_ORG_VISION"))
                      if (value := environment.get(key, settings.get(key)))}
         return OrganizationConfig.model_validate({**org.model_dump(), **overrides})

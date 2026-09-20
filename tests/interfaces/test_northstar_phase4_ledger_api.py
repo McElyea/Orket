@@ -57,7 +57,7 @@ async def test_phase4_ledger_export_verify_filter_audit_and_gate(tmp_path, monke
 
     monkeypatch.setattr(api_module, "apply_outbound_policy_gate", _fake_gate)
     client, db_path = _client(tmp_path, monkeypatch)
-    try:
+    with client:
         run_id = _submit_and_approve(client)
         calls.clear()
 
@@ -89,8 +89,6 @@ async def test_phase4_ledger_export_verify_filter_audit_and_gate(tmp_path, monke
         assert audit[0]["event_group"] == "audit"
         assert "api.runs.ledger" in calls
         assert "api.runs.ledger.verify" in calls
-    finally:
-        client.close()
 
     events = await OutwardRunEventStore(db_path).list_for_run("run-phase4-api")
     assert events[-1].event_type == "ledger_export_requested"

@@ -4,19 +4,43 @@ from collections.abc import Callable
 from datetime import datetime
 from typing import Any
 
+from orket.application.services.decision_node_registry import build_decision_node_registry
+from orket.application.services.runtime_construction_inputs import RuntimeConstructionInputs
+from orket.runtime_paths import (
+    durable_root,
+    resolve_control_plane_db_path,
+    resolve_sandbox_lifecycle_db_path,
+    resolve_webhook_db_path,
+)
+
 
 class PipelineWiringService:
     """Explicit owner for execution-pipeline subordinate runtime construction."""
 
+    def __init__(self, construction_inputs: RuntimeConstructionInputs | None = None) -> None:
+        self.construction_inputs = construction_inputs
+
     def create_sandbox_orchestrator(self, workspace: Any, organization: Any) -> Any:
         from orket.services.sandbox_orchestrator import SandboxOrchestrator
 
-        return SandboxOrchestrator(workspace, organization=organization)
+        inputs = self.construction_inputs
+        if inputs is None:
+            return SandboxOrchestrator(workspace, organization=organization)
+        return SandboxOrchestrator(workspace, organization=organization, environment=inputs.environment,
+            terminal_evidence_root=durable_root(invocation_root=inputs.invocation_root,
+                                               environment=inputs.environment) / "sandbox_terminal_evidence",
+            decision_nodes=build_decision_node_registry(environment=inputs.environment),
+            lifecycle_db_path=resolve_sandbox_lifecycle_db_path(invocation_root=inputs.invocation_root,
+                                                               environment=inputs.environment),
+            control_plane_db_path=str(resolve_control_plane_db_path(invocation_root=inputs.invocation_root,
+                                                                    environment=inputs.environment)))
 
     def create_webhook_database(self) -> Any:
         from orket.adapters.vcs.webhook_db import WebhookDatabase
 
-        return WebhookDatabase()
+        inputs = self.construction_inputs
+        return WebhookDatabase(resolve_webhook_db_path(invocation_root=inputs.invocation_root,
+            environment=inputs.environment)) if inputs is not None else WebhookDatabase()
 
     def create_bug_fix_manager(
         self, organization: Any, webhook_db: Any, *, workspace: Any, now_utc: Callable[[], datetime],
@@ -57,6 +81,7 @@ class PipelineWiringService:
             sandbox_orchestrator=sandbox_orchestrator,
             card_completion=card_completion,
             control_plane_clock=control_plane_clock,
+            environment=self.construction_inputs.environment if self.construction_inputs is not None else None,
         )
 
     def create_sub_pipeline(self, *, parent_pipeline: Any, epic_workspace: Any, department: str) -> Any:
@@ -68,4 +93,5 @@ class PipelineWiringService:
             decision_nodes=parent_pipeline.decision_nodes,
             runtime_inputs=parent_pipeline.runtime_inputs,
             pipeline_wiring_service=self,
+            construction_inputs=parent_pipeline.runtime_context.construction_inputs,
         )

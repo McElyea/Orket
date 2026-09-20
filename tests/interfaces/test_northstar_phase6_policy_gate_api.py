@@ -33,7 +33,7 @@ def _client(tmp_path, monkeypatch: pytest.MonkeyPatch) -> TestClient:
 def test_phase6_policy_gate_filters_approval_events_summary_and_ledger(tmp_path, monkeypatch) -> None:
     """Layer: integration. Verifies configured policy gate redaction on outward operator API surfaces."""
     client = _client(tmp_path, monkeypatch)
-    try:
+    with client:
         approval_run = client.post(
             "/v1/runs",
             headers={"X-API-Key": "test-key"},
@@ -90,5 +90,3 @@ def test_phase6_policy_gate_filters_approval_events_summary_and_ledger(tmp_path,
         assert ledger.json()["export_scope"] == "partial_view"
         assert ledger.json()["verification"]["result"] == "partial_valid"
         assert verify_ledger_export(ledger.json())["result"] == "partial_valid"
-    finally:
-        client.close()

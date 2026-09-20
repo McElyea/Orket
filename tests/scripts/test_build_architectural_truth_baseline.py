@@ -36,3 +36,6 @@ def test_architectural_truth_api_factory_probe_requires_real_isolation() -> None
     assert payload["distinct_engines"] is True
     assert payload["distinct_runtime_states"] is True
     assert payload["module_default_owner_absent"] is True
+    assert payload["construction_deferred"] is True
+    assert payload["health_statuses"] == [200, 200]
+    assert payload["owners_closed"] is True

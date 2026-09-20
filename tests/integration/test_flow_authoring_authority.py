@@ -1,5 +1,6 @@
 """Layer: integration. Real SQLite authoring through services and authenticated ASGI."""
 import asyncio
+import os
 from contextlib import asynccontextmanager
 
 import httpx
@@ -15,13 +16,12 @@ pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 
 @asynccontextmanager
 async def client_for(root, inputs=None):
-    app = create_api_app(project_root=root, environment={"ORKET_API_KEY": "flow-proof"}, runtime_inputs=inputs)
-    try:
-        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test",
-                                    headers={"X-API-Key": "flow-proof"}) as client:
-            yield client
-    finally:
-        await app.state.api_runtime_context.close()
+    app = create_api_app(project_root=root, environment={**os.environ, "ORKET_API_KEY": "flow-proof"}, runtime_inputs=inputs)
+    async with app.router.lifespan_context(app), httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app), base_url="http://test",
+        headers={"X-API-Key": "flow-proof"},
+    ) as client:
+        yield client
     assert app.state.api_runtime_context.closed and client.is_closed
 
 

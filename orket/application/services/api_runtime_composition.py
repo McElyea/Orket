@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-import os
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from pathlib import Path
+from typing import Any, TypeVar
 
 from orket.adapters.storage.outward_approval_store import OutwardApprovalStore
 from orket.adapters.storage.outward_run_event_store import OutwardRunEventStore
@@ -25,28 +25,34 @@ from orket.application.services.outward_ledger_service import OutwardLedgerServi
 from orket.application.services.outward_run_execution_service import OutwardRunExecutionService
 from orket.application.services.outward_run_inspection_service import OutwardRunInspectionService
 from orket.application.services.outward_run_service import OutwardRunService
+from orket.application.services.runtime_construction_inputs import RuntimeConstructionInputs
 from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.extensions import ExtensionManager
 from orket.runtime_paths import resolve_control_plane_db_path
 from orket.state import create_runtime_state
 from orket.streaming import StreamBus, StreamBusConfig
 
+Resource = TypeVar("Resource")
+
 
 def build_api_runtime_container(
     project_root: Path,
     *,
     runtime_inputs: RuntimeInputService | None = None,
-    environment: Mapping[str, str] | None = None,
+    construction_inputs: RuntimeConstructionInputs,
+    own_resource: Callable[[Any], None],
 ) -> ApiRuntimeContainer:
     """Build the complete application-owned runtime graph for one API app."""
     root = Path(project_root).resolve()
+    environment = construction_inputs.environment
     runtime_node = build_decision_node_registry(environment=environment).resolve_api_runtime()
-    authentication = ApiAuthenticationService(os.environ if environment is None else environment)
+    authentication = ApiAuthenticationService(environment)
     runtime_state = create_runtime_state()
-    runtime_host = ApiRuntimeHostService(project_root=root, runtime_inputs=runtime_inputs, environment=authentication.environment)
+    runtime_host = ApiRuntimeHostService(project_root=root, runtime_inputs=runtime_inputs,
+        environment=environment, construction_inputs=construction_inputs)
     stream_bus = _build_stream_bus(authentication.environment)
-    run_store, event_store, approval_store = _build_outward_stores()
-    raw_allowlist = str(os.getenv("ORKET_CONNECTOR_HTTP_ALLOWLIST") or "")
+    run_store, event_store, approval_store = _build_outward_stores(construction_inputs)
+    raw_allowlist = str(environment.get("ORKET_CONNECTOR_HTTP_ALLOWLIST") or "")
     http_allowlist = tuple(host.strip().lower() for host in raw_allowlist.split(",") if host.strip())
     approval_service = OutwardApprovalService(
         approval_store=approval_store, workspace_root=root, http_allowlist=http_allowlist,
@@ -55,21 +61,24 @@ def build_api_runtime_container(
         connector_registry=DEFAULT_BUILTIN_CONNECTOR_REGISTRY,
         utc_now=runtime_host.utc_now_iso,
     )
-    extension_manager = ExtensionManager(project_root=root)
+    extension_manager = ExtensionManager(project_root=root, environment=environment,
+        invocation_root=construction_inputs.invocation_root)
+    engine = _own(runtime_host.create_engine(runtime_node.resolve_api_workspace(root)), own_resource)
+    interactions = _own(_build_interaction_manager(root, stream_bus, runtime_state, runtime_host, environment), own_resource)
+    extensions = _own(ExtensionRuntimeService(project_root=root, environment=environment), own_resource)
     container = ApiRuntimeContainer(
         project_root=root,
         api_runtime_node=runtime_node,
         runtime_state=runtime_state,
         api_runtime_host=runtime_host,
-        engine=runtime_host.create_engine(runtime_node.resolve_api_workspace(root)),
+        engine=engine,
         authentication=authentication,
         system_queries=ApiSystemQueryService(root, environment=authentication.environment,
                                             runtime_inputs=runtime_host.runtime_inputs),
         stream_bus=stream_bus,
-        interaction_manager=_build_interaction_manager(root, stream_bus, runtime_state, runtime_host,
-                                                       authentication.environment),
+        interaction_manager=interactions,
         extension_manager=extension_manager,
-        extension_runtime_service=ExtensionRuntimeService(project_root=root, environment=authentication.environment),
+        extension_runtime_service=extensions,
         outward_run_store=run_store,
         outward_run_event_store=event_store,
         outward_approval_store=approval_store,
@@ -93,15 +102,21 @@ def build_api_runtime_container(
         ),
         model_selection=ModelSelectionService(environment=authentication.environment),
     )
-    governed_agent_runtime = build_api_governed_agent_runtime(
+    governed_agent_runtime = _own(build_api_governed_agent_runtime(
         runtime_host=runtime_host,
         extension_manager=extension_manager,
-    )
+        environment=environment, invocation_root=construction_inputs.invocation_root,
+    ), own_resource)
     container.governed_agent_runtime = governed_agent_runtime
     container.register_owned_resource(governed_agent_runtime)
     container.register_owned_resource(container.extension_runtime_service)
     container.register_owned_resource(container.interaction_manager)
     return container
+
+
+def _own(resource: Resource, register: Callable[[Any], None]) -> Resource:
+    register(resource)
+    return resource
 
 
 def _build_stream_bus(environment: Mapping[str, str]) -> StreamBus:
@@ -136,9 +151,10 @@ def _build_interaction_manager(root: Path, bus: StreamBus, state: object, host: 
     )
 
 
-def _build_outward_stores() -> tuple[OutwardRunStore, OutwardRunEventStore, OutwardApprovalStore]:
-    raw_path = str(os.getenv("ORKET_OUTWARD_PIPELINE_DB_PATH") or "").strip()
-    db_path = Path(raw_path) if raw_path else resolve_control_plane_db_path()
+def _build_outward_stores(inputs: RuntimeConstructionInputs) -> tuple[OutwardRunStore, OutwardRunEventStore, OutwardApprovalStore]:
+    raw_path = str(inputs.environment.get("ORKET_OUTWARD_PIPELINE_DB_PATH") or "").strip()
+    db_path = (inputs.invocation_root / raw_path if raw_path else resolve_control_plane_db_path(
+        invocation_root=inputs.invocation_root, environment=inputs.environment))
     return OutwardRunStore(db_path), OutwardRunEventStore(db_path), OutwardApprovalStore(db_path)
 
 

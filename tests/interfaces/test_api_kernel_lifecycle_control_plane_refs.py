@@ -25,19 +25,19 @@ def _install_control_plane(monkeypatch) -> tuple[
 ]:
     execution_repo = InMemoryControlPlaneExecutionRepository()
     record_repo = InMemoryControlPlaneRecordRepository()
-    monkeypatch.setattr(api_module._get_engine(), "control_plane_execution_repository", execution_repo)
-    monkeypatch.setattr(api_module._get_engine(), "control_plane_repository", record_repo)
-    monkeypatch.setattr(api_module._get_engine(), "control_plane_publication", ControlPlanePublicationService(repository=record_repo))
+    monkeypatch.setattr(api_module._get_engine(client.app), "control_plane_execution_repository", execution_repo)
+    monkeypatch.setattr(api_module._get_engine(client.app), "control_plane_repository", record_repo)
+    monkeypatch.setattr(api_module._get_engine(client.app), "control_plane_publication", ControlPlanePublicationService(repository=record_repo))
     monkeypatch.setattr(
-        api_module._get_engine(),
+        api_module._get_engine(client.app),
         "kernel_action_control_plane",
         KernelActionControlPlaneService(
             execution_repository=execution_repo,
-            publication=api_module._get_engine().control_plane_publication,
+            publication=api_module._get_engine(client.app).control_plane_publication,
         ),
     )
     monkeypatch.setattr(
-        api_module._get_engine(),
+        api_module._get_engine(client.app),
         "kernel_action_control_plane_view",
         KernelActionControlPlaneViewService(
             record_repository=record_repo,
@@ -182,7 +182,7 @@ def test_kernel_api_commit_fail_closes_authority_on_execution_promotion_failure(
         raise RuntimeError("promote failed")
 
     monkeypatch.setattr(
-        api_module._get_engine().control_plane_publication,
+        api_module._get_engine(client.app).control_plane_publication,
         "promote_reservation_to_lease",
         _raise_promote_failure,
     )

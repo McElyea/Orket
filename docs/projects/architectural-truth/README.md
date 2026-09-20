@@ -1,7 +1,7 @@
 # Architectural Truth
 
 Date: 2026-07-29
-Last updated: 2026-09-19
+Last updated: 2026-09-20
 Status: Active project registry
 Owner: Orket Core
 
@@ -9,13 +9,27 @@ Current gate: scoped BT-1 through BT-5 are accepted. C/D dependency enforcement,
 core purity, explicit inputs and async safety are next, followed by E1/E2 and the
 gated capability obligations. The whole lane remains active.
 
+The 0.6.39 checkpoint captures API construction inputs and owns graph preparation
+inside lifespan; canonical reload drains each worker and preserves startup/
+cleanup failures. Source passes 1,001 selected cases. Installed Windows
+Python 3.11/3.12 pass 1,001 each; Linux 3.11 passes 1,000 with one Windows
+junction skip. Linux 3.12 remains an environment blocker: observed native
+clock jumps expire live deadlines/leases; both attempts retain 999 passes,
+one failure and one skip. Package
+origins, CLI flows and live native cleanup are verified. All 102 failures from
+the earlier full-suite run pass in the corrected cohort; the full suite was
+not repeated. Measured coverage remains 84.47% against 89%, and hosted Quality
+is unverified. Whole C/D/E/CAP acceptance remains open. Migration and proof:
+`docs/architecture/CONTRACT_DELTA_API_CONSTRUCTION_D_2026-09-19.md` and the plan.
+
 The 0.6.38 checkpoint owns controller manager preparation inside async dispatch
 and captures invocation roots and policy before queued preparation. Direct
 dispatchers require an explicit manager. Fresh source and four fresh installed
 Windows/Linux Python 3.11/3.12 cells pass 166 identical affected cases; the
 installed Windows extension CLI also passes install/list/refusal/run. Controlled
 native directory holds, actual refusals and SDK children establish the scoped
-lifetime/input guarantees. Direct manager and API construction remain open.
+lifetime/input guarantees. API construction is addressed by the later .39
+checkpoint; direct manager construction and other C/D obligations remain open.
 Migration: `docs/architecture/CONTRACT_DELTA_CONTROLLER_CONSTRUCTION_D_2026-09-19.md`.
 
 The 0.6.37 checkpoint stages distinct extension checkouts before locked, verified

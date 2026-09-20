@@ -61,7 +61,7 @@ async def test_outward_approval_list_review_approve_and_idempotency(tmp_path, mo
     """Layer: integration. Verifies outward approval queue, review, approve, and idempotency API behavior."""
     client, db_path = _client(tmp_path, monkeypatch)
     proposal_id = await _seed_pending(db_path)
-    try:
+    with client:
         listed = client.get("/v1/approvals?status=pending", headers={"X-API-Key": "test-key"})
         reviewed = client.get(f"/v1/approvals/{proposal_id}", headers={"X-API-Key": "test-key"})
         approved = client.post(
@@ -83,8 +83,6 @@ async def test_outward_approval_list_review_approve_and_idempotency(tmp_path, mo
         assert approved.status_code == 200
         assert approved.json()["approval"]["status"] == "approved"
         assert repeated.json() == approved.json()
-    finally:
-        client.close()
 
 
 @pytest.mark.integration
@@ -93,7 +91,7 @@ async def test_outward_approval_deny_api_records_terminal_run(tmp_path, monkeypa
     """Layer: integration. Verifies outward denial endpoint completes the run and records a decision event."""
     client, db_path = _client(tmp_path, monkeypatch)
     proposal_id = await _seed_pending(db_path, run_id="run-deny-api")
-    try:
+    with client:
         denied = client.post(
             f"/v1/approvals/{proposal_id}/deny",
             headers={"X-API-Key": "test-key"},
@@ -101,8 +99,6 @@ async def test_outward_approval_deny_api_records_terminal_run(tmp_path, monkeypa
         )
         assert denied.status_code == 200
         assert denied.json()["approval"]["status"] == "denied"
-    finally:
-        client.close()
 
     run = await OutwardRunStore(db_path).get("run-deny-api")
     assert run is not None
@@ -118,7 +114,7 @@ async def test_outward_submit_pauses_before_api_approval_then_writes_file(tmp_pa
     """Layer: integration. Verifies API submission reaches a gated write_file and resumes after approval."""
     client, db_path = _client(tmp_path, monkeypatch)
     target = tmp_path / "api-approved.txt"
-    try:
+    with client:
         submitted = client.post(
             "/v1/runs",
             headers={"X-API-Key": "test-key"},
@@ -153,8 +149,6 @@ async def test_outward_submit_pauses_before_api_approval_then_writes_file(tmp_pa
         assert approved.json()["approval"]["status"] == "approved"
         assert status.json()["status"] == "completed"
         assert target.read_text(encoding="utf-8") == "api approved"
-    finally:
-        client.close()
 
     events = await OutwardRunEventStore(db_path).list_for_run("run-api-exec")
     assert "tool_invoked" in [event.event_type for event in events]
@@ -173,7 +167,7 @@ async def test_outward_approval_payloads_traverse_outbound_gate(tmp_path, monkey
     monkeypatch.setattr(api_module, "apply_outbound_policy_gate", _fake_gate)
     client, db_path = _client(tmp_path, monkeypatch)
     proposal_id = await _seed_pending(db_path, run_id="run-gate-api")
-    try:
+    with client:
         client.get("/v1/approvals?status=pending", headers={"X-API-Key": "test-key"})
         client.get(f"/v1/approvals/{proposal_id}", headers={"X-API-Key": "test-key"})
         client.post(
@@ -181,8 +175,6 @@ async def test_outward_approval_payloads_traverse_outbound_gate(tmp_path, monkey
             headers={"X-API-Key": "test-key"},
             json={},
         )
-    finally:
-        client.close()
 
     assert calls == ["api.approvals.list", "api.approvals.review", "api.approvals.approve"]
 

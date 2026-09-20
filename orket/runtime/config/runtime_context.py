@@ -13,6 +13,7 @@ from orket.adapters.storage.async_repositories import (
     AsyncSuccessRepository,
 )
 from orket.application.services.decision_node_registry import DecisionNodeRegistry, build_decision_node_registry
+from orket.application.services.runtime_construction_inputs import RuntimeConstructionInputs
 from orket.orchestration.orchestration_config import OrchestrationConfig
 from orket.runtime_paths import resolve_runtime_db_path
 from orket.settings import load_user_settings
@@ -54,6 +55,7 @@ class OrketRuntimeContext:
     run_ledger: Any
     storage_binding: RuntimeStoreBindingService
     card_completion: CardCompletionService | None = None
+    construction_inputs: RuntimeConstructionInputs | None = None
 
     async def initialize(self) -> None:
         await self.storage_binding.initialize()
@@ -97,27 +99,34 @@ class OrketRuntimeContext:
         run_ledger_factory: RunLedgerFactory | None = None,
         telemetry_sink: TelemetrySink | None = None,
         primary_run_ledger_mode: str = "sqlite",
+        construction_inputs: RuntimeConstructionInputs | None = None,
     ) -> OrketRuntimeContext:
         # The legacy extension package imports the engine; compose after runtime types initialize.
         from orket.application.services.card_completion_composition import build_card_completion_service
         from orket.application.services.runtime_store_binding_service import RuntimeStoreBindingService
 
-        runtime_nodes = decision_nodes if decision_nodes is not None else build_decision_node_registry()
+        environment = construction_inputs.environment if construction_inputs is not None else None
+        runtime_nodes = decision_nodes if decision_nodes is not None else build_decision_node_registry(environment=environment)
         resolved_workspace = Path(workspace_root).resolve()
-        resolved_db_path = resolve_runtime_db_path(db_path)
+        resolved_db_path = (resolve_runtime_db_path(db_path, invocation_root=construction_inputs.invocation_root,
+            environment=environment) if construction_inputs is not None else resolve_runtime_db_path(db_path))
+        selected_config_root = config_root or (construction_inputs.invocation_root if construction_inputs is not None else None)
         resolved_config_root = (
-            config_root_resolver(config_root)
+            config_root_resolver(selected_config_root)
             if config_root_resolver is not None
-            else (config_root or Path().resolve())
+            else (selected_config_root or Path().resolve())
         )
+        loader_options = dict(config_loader_kwargs or {})
+        if construction_inputs is not None:
+            loader_options.update(environment=environment, user_settings=construction_inputs.user_settings())
         loader = config_loader_factory(
             resolved_config_root,
             department,
-            **dict(config_loader_kwargs or {}),
+            **loader_options,
         )
         org = loader.load_organization()
-        user_settings = normalized_user_settings()
-        orchestration_config = OrchestrationConfig(org)
+        user_settings = construction_inputs.user_settings() if construction_inputs is not None else normalized_user_settings()
+        orchestration_config = OrchestrationConfig(org, environment=environment)
         state_backend_mode = orchestration_config.resolve_state_backend_mode(user_settings=user_settings)
         run_ledger_mode = orchestration_config.resolve_run_ledger_mode(user_settings=user_settings)
         gitea_state_pilot_enabled = orchestration_config.resolve_gitea_state_pilot_enabled(user_settings=user_settings)
@@ -161,4 +170,5 @@ class OrketRuntimeContext:
             run_ledger=run_ledger,
             card_completion=completion,
             storage_binding=RuntimeStoreBindingService(resolved_db_path),
+            construction_inputs=construction_inputs,
         )

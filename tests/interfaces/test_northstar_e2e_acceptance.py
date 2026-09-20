@@ -109,7 +109,7 @@ def test_northstar_e2e_acceptance_approval_path(tmp_path: Path, monkeypatch: pyt
     """Layer: end-to-end. Verifies submit -> approve -> effect -> inspect -> export -> offline verify."""
     client = _client(tmp_path, monkeypatch, model_args={"path": "approved.txt", "content": "approved"})
     target = tmp_path / "approved.txt"
-    try:
+    with client:
         _submit_write_run(client, run_id="e2e-approval", path="approved.txt", content="approved")
         proposal_id = _pending_proposal_id(client)
 
@@ -129,8 +129,6 @@ def test_northstar_e2e_acceptance_approval_path(tmp_path: Path, monkeypatch: pyt
         assert target.read_text(encoding="utf-8") == "approved"
         assert events.json()["count"] == ledger["summary"]["event_count"]
         assert "tool_invoked" in [event["event_type"] for event in ledger["events"]]
-    finally:
-        client.close()
 
 
 @pytest.mark.end_to_end
@@ -138,7 +136,7 @@ def test_northstar_e2e_acceptance_denial_path(tmp_path: Path, monkeypatch: pytes
     """Layer: end-to-end. Verifies submit -> deny -> no effect -> completed run -> ledger offline verify."""
     client = _client(tmp_path, monkeypatch, model_args={"path": "denied.txt", "content": "denied"})
     target = tmp_path / "denied.txt"
-    try:
+    with client:
         _submit_write_run(client, run_id="e2e-denial", path="denied.txt", content="denied")
         proposal_id = _pending_proposal_id(client)
 
@@ -158,8 +156,6 @@ def test_northstar_e2e_acceptance_denial_path(tmp_path: Path, monkeypatch: pytes
         decision_events = [event for event in ledger["events"] if event["event_type"] == "proposal_denied"]
         assert decision_events
         assert decision_events[0]["payload"]["reason"] == "operator rejected"
-    finally:
-        client.close()
 
 
 @pytest.mark.end_to_end
@@ -168,7 +164,7 @@ def test_northstar_e2e_acceptance_timeout_path(tmp_path: Path, monkeypatch: pyte
     clock = _FrozenRuntimeInputs("2026-04-25T12:00:00+00:00")
     client = _client(tmp_path, monkeypatch, clock=clock, model_args={"path": "timeout.txt", "content": "timeout"})
     target = tmp_path / "timeout.txt"
-    try:
+    with client:
         _submit_write_run(
             client,
             run_id="e2e-timeout",
@@ -193,5 +189,3 @@ def test_northstar_e2e_acceptance_timeout_path(tmp_path: Path, monkeypatch: pyte
         assert timeout_events
         assert timeout_events[0]["payload"]["operator_ref"] == "system:timeout"
         assert timeout_events[0]["payload"]["reason"] == "timeout_exceeded"
-    finally:
-        client.close()

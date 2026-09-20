@@ -1,7 +1,7 @@
 # Architectural Truth Remediation Plan
 
 Date: 2026-07-29
-Last updated: 2026-09-19
+Last updated: 2026-09-20
 Status: Active implementation plan; scoped BT-1 through BT-5 accepted; C/D is the next ordered gate
 Roadmap state: Priority Now
 Owner: Orket Core
@@ -17176,3 +17176,340 @@ Evidence under `.tmp/d-extension-construction/`: `candidate/source-report.json`
 `static-review.json`, `retention.json`, `post-proof-documents.json` and `CHANGESET.md`.
 The .37 checkpoint and all 1,381 direct evidence hashes remain retained.
 Commit and annotated `v0.6.38` are published together after final index review.
+
+#### .39 API construction implementation
+
+The .38 checkpoint is committed and published at
+`903668da1a691c752de038c1367347fa71a120d3` with annotated `v0.6.38`; remote branch,
+tag object and peeled commit were independently verified. The next snapshot
+matches its clean worktree and 108 directly bound evidence files.
+
+The retained pre-change public API factory constructed its runtime graph synchronously.
+With an independent controlled 0.8-second hold before a real directory write,
+it produced a 1.078-second event-loop gap against the declared 0.5-second bound.
+The actual app was constructed and its owner closed. This is a controlled live
+construction counterexample, not natural filesystem performance or HTTP/lifespan
+proof. Source inputs remained unchanged. Evidence under `.tmp/d-api-construction/`:
+`before.json`, `public-factory-before/report.json` and `construction-review.json`.
+The structural inventory finds 104 named direct calls in 49 files; it is not a
+complete transitive call graph.
+
+Implement the settled construction/lifespan/input contract in
+`docs/architecture/CONTRACT_DELTA_API_CONSTRUCTION_D_2026-09-19.md`, retaining the
+synchronous ASGI factory and existing store-selection policy. A thread move alone
+is insufficient: engine, subordinate storage, exporter, governed-agent and provider
+construction must consume captured inputs, and failed/interrupted preparation
+must retain acquired resources. Migrate runtime consumers to actual lifespan
+ownership, preserving decisive A/B/BT and controller/installation proofs.
+The .39 implementation and source/installed/server verification are not complete.
+All other C/D/E/CAP obligations and explicit whole-lane acceptance remain active.
+
+#### .39 initial API implementation observations
+
+Observed path: primary. Scoped source result: success for the selections below;
+whole-checkpoint result: partial success. The synchronous factory now captures
+inputs and returns transport state. Lifespan owns graph construction in a retained
+worker, refuses HTTP/WebSocket admission until initialization and drains acquired
+resources after construction failure or interruption. There is no eager runtime
+context before lifespan and no second lifespan on the same factory result.
+
+Queued cwd/environment/settings rotation exposed two missed inputs: engine ledger
+selection still used ambient environment and sandbox terminal-evidence construction
+used the rotated cwd. Both failures are retained. Orchestration configuration and
+the sandbox evidence-root arguments now consume captured selections. Passing that
+root through the existing oversized sandbox modules requires two constructor/wiring
+lines in the orchestrator and one constructor argument in the lifecycle service;
+this small growth is required to prevent the observed misplaced native directory.
+
+| Retained source phase | Cases | Failures / errors / skips | Proof scope |
+|---|---:|---:|---|
+| `source-outward-explicit-settings` | 50 | 0 / 0 / 0 | New construction/input/interruption cases; public fresh-process admission and store sharing; native SQLite approval contention; startup security. |
+| `source-tcp` | 6 | 0 / 0 / 0 | Actual TCP command, model-worker and native commit ownership through shutdown. Controlled model output is not provider admission. |
+| `source-interface-startup-corrected` | 173 | 0 / 0 / 0 | Existing interface, interaction, kernel, operator and isolation behavior through actual lifespan; controlled ports retain contract-proof limits. |
+
+Each phase retained unchanged source inputs and its exact selection. These are
+separate observations, not one full-suite run or installed .39 proof. The first
+source assertion incorrectly assumed an eagerly created card database; the
+corrected test exercises the actual lazy repository before observing the file.
+Later independent decision workers encountered missing bound settings, then real
+`E_SETTINGS_UNCERTAIN:owner_busy` during concurrent preference migration. The test
+workers now explicitly bind empty settings/preferences as required by contributor
+workflow. Native preference-lock refusal is preserved; no runtime fallback/retry
+was added. Their stderr is now included when the ready handshake fails.
+
+The shared outward helper, fresh-process entrypoint probe, ordinary `test_client`
+and lazy interface fixture now enter the real lifespan. Interface test lookups
+explicitly select the started app. A policy-display test starts a valid local
+runtime before changing operator settings to an incomplete Gitea configuration;
+this does not admit that configuration for runtime startup. The isolation test
+observes the real engine's initialize/close calls instead of replacing the engine.
+
+Retained observations live under `.tmp/d-api-construction/`; all earlier failed
+phases remain present, including `source-input-rotation-before`,
+`source-input-rotation-after`, `source-outward-worker-diagnostic` and
+`source-interface-fixtures`. The prior .38 checkpoint remains the published tip.
+The .39 candidate is uncommitted and its version/changelog/authority/Quality updates
+are still pending. Remaining API consumers, startup failure/lifecycle regressions,
+server startup and reload, affected engine/pipeline/storage tests, fresh four-cell
+installed proof, package-origin checks, full-suite and hosted Quality verification
+remain open. This progress does not close C/D/E/CAP or authorize whole-lane retirement.
+
+#### .39 caller migration and canonical server observations
+
+Observed path: primary. Overall result: partial success. The previous
+`implementation-progress.json` snapshot, its 19 direct evidence hashes and all 108
+prior .38 evidence hashes matched before this continuation's edits. That snapshot
+and its exact changeset remain historical artifacts; the new progress checkpoint
+is `.tmp/d-api-construction/caller-migration-progress.json`.
+
+Remaining touched HTTP, WebSocket, interaction, flow, model-selection, protocol,
+settings and shutdown tests now enter actual lifespans before consuming runtime
+services. Controlled request holds are installed after startup where appropriate.
+Interaction assertions distinguish startup's managed broadcaster from admitted
+workload tasks. Cleanup-failure tests observe the same retained failure at lifespan
+exit. Graph acceptance tests use the actual lifespan-owned engine instead of
+substituting a separately constructed engine. Existing outcome assertions remain.
+
+| Retained source phase | Cases | Failures / errors / skips | Disposition |
+|---|---:|---:|---|
+| `source-interfaces-all` | 406 | 4 / 0 / 0 | Four CLI doubles rejected the captured manager constructor arguments added in .38; corrected the doubles. |
+| `source-startup-authority` | 21 | 1 / 0 / 0 | Explorer expectation omitted the real startup security log; corrected its expected listing. |
+| `source-startup-observations` | 30 | 0 / 0 / 0 | Startup ownership, authority, observation workers and CLI startup. |
+| `source-request-lifetimes` | 35 | 0 / 0 / 0 | Interaction state/commit, TCP generation, WebSocket/stream ownership, shutdown and cleanup failure. |
+| `source-storage-consumers` | 77 | 4 / 0 / 0 | 73 passed; four settings fixtures left preferences unbound after selecting a preferences file. Bind both explicit snapshots. |
+| `source-interfaces-storage-corrected` | 410 | 0 / 0 / 0 | Complete interface directory plus all four corrected settings persistence cases. |
+| `source-server-bootstrap` | 2 | 1 / 0 / 0 | Real bootstrap and lifespan completed, but expected preferences omitted their persisted migration marker; compare captured model values and actual migrated persistence. |
+| `source-construction-consumers` | 136 | 0 / 0 / 0 | Corrected bootstrap regression, affected engine/pipeline/configuration/exporter/sandbox consumers, module/security gates and shutdown outcomes. |
+
+Every source phase retained unchanged inputs and exact case identities. These
+separate observations have overlap and must not be summed into a full-suite claim.
+Controlled ports retain their contract limits; real filesystem, SQLite, process,
+socket and lifespan observations are live proof of those specific paths. They are
+not fresh installed .39, provider inference or hostile-code containment proof.
+
+The actual canonical server command was also invoked with a byte-identical copy
+of `server.py` in an isolated project, importing the current source implementation.
+The pre-fix Windows normal command served public health and authenticated heartbeat
+and shut down gracefully. Its reload child failed during the in-loop `server:app`
+import with `SettingsBridgeError` for unbound user settings. `server.py` now binds
+settings and preferences at pre-loop bootstrap. The isolated regression executes
+the spawned-worker pre-loop module path, its later in-loop import, real persisted
+settings/preferences, ASGI requests and application teardown. It does not claim
+to execute the operating system's file watcher or reload signal sequence.
+
+After the fix, Windows normal startup again passed. Windows reload startup served
+the expected HTTP responses, but automatic file-triggered restart did not settle
+within the declared 25-second readiness bound. Its cleanup also exposed a probe
+defect: a replacement worker appeared after the initial cleanup process census.
+The original failure report remains unchanged. The missed child's identity and
+parent were independently verified, and supplemental cleanup force-terminated it;
+the receipt records failure, not successful same-execution graceful teardown.
+Its original log bytes remain retained. The cause of the Windows restart stall
+is unresolved; do not attribute it to runtime ownership or console redirection
+without another discriminating observation. Correct the probe's evolving process
+census before another failing reload attempt.
+
+Native Linux Python 3.11 ran the same canonical command against frozen current
+source with retained .38 dependencies: both normal startup and file-triggered
+reload passed. The original server worker was terminal before the replacement's
+health response, both reload lifespans logged completed shutdown, the parent
+returned zero and no force cleanup was needed. Named source bytes remained
+unchanged. This is native Linux source proof, not fresh installed .39 proof.
+
+Evidence under `.tmp/d-api-construction/`: `source-server-before/{normal,reload}`,
+`source-server-bound-settings/{normal,reload}` (including the reload supplemental
+cleanup and log-retention receipts), `source-server-linux-bound/{normal,reload}`,
+its `native-wrapper.json`, and the source phase reports above. The first Linux
+launch used an incorrect private interpreter subdirectory and failed before the
+probe started; the corrected `env/bin/python` launch owns the recorded observation.
+
+The lifecycle spec, construction delta, contributor workflow, architecture and
+current authority now describe lifespan-owned construction and server bootstrap,
+with the pending verification disposition explicit. Remaining .39 gates include
+Windows automatic reload and truthful failure cleanup, final authority/version/
+changelog/Quality/graph/baseline updates, fresh Windows/Linux Python 3.11/3.12
+installed and package-origin proof, required preserved cohorts and full-suite/
+hosted Quality verification. The candidate remains uncommitted and .38 remains
+the published branch/tag. C/D/E/CAP and explicit whole-lane acceptance stay open.
+
+#### .39 cooperative reload and user-requested session handoff
+
+Observed path: primary. Overall result: partial success. On 2026-09-19 the user
+requested a handoff and next-session `/goal` prompt. Stop implementation at this
+checkpoint; the full remediation goal remains unfinished. The dated local transfer
+is `.tmp/ARCHITECTURAL_TRUTH_SESSION_HANDOFF_2026-09-19.md`; this plan and ROADMAP
+remain the execution authorities. The earlier handoff and progress snapshots are
+historical evidence and must not be overwritten to make their bytes match today.
+
+The Windows diagnostic harness now admits the suspended canonical server into a
+retained native Windows job before releasing it, so replacement descendants remain
+owned through cleanup. It records an evolving process census, console-stop attempts,
+root reaping and native job emptiness. This corrects the earlier probe's missed
+replacement-child cleanup; it does not erase that failed observation.
+
+| Retained phase under `.tmp/d-api-construction/` | Result | Live observation and limit |
+|---|---|---|
+| `source-server-windows-owned` | failure | Standard canonical Uvicorn reload still exceeded the 25-second readiness bound; corrected job-owned cleanup drained both lifespans without force. |
+| `source-server-windows-minimal` | failure | A minimal FastAPI/Uvicorn fixture without Orket runtime imports reproduced the restart timeout; cleanup drained its job. |
+| `source-server-windows-signal-control` | success | Changing only the minimal fixture's console-signal group target allowed restart. Framework diagnostic only, not a product patch or Orket acceptance. |
+| `source-server-windows-cooperative` | failure | First IPC implementation restarted, but coincident console shutdown triggered Uvicorn's forced-exit path: only one of two lifespans completed shutdown. Process cleanup alone was not accepted. |
+| `source-server-windows-cooperative-close` | success | Corrected canonical source, Uvicorn 0.52.4: old worker terminal before replacement health, two completed lifespan shutdowns, empty native job, no force cleanup. |
+| `source-server-windows-minimum` | success | Same corrected source on Uvicorn 0.27.0: replacement health, old worker terminal, two completed lifespan shutdowns, empty native job, no force cleanup. |
+
+`orket/interfaces/api_reload_runtime.py` retains Uvicorn's watcher/spawn selection
+but requests worker shutdown through a process-shared event. The parent joins the
+old worker before replacement. The worker waits for startup before requesting normal
+server shutdown, because the supported older Uvicorn path otherwise skips shutdown
+when `should_exit` is set during startup. Console exit handling requests that same
+event without escalating to `force_exit`, which can skip the lifespan. Parent
+shutdown retains worker and listener cleanup. There is no hard-stop deadline or
+hostile-code isolation claim; stalled startup/cleanup can retain the parent.
+The process-shared event's async polling has a documented ASYNC110 suppression.
+
+The minimum-version environment's initial pip import failure and corrected setup
+are retained under `minimum-uvicorn/`. It shares selected dependency sites but has
+its own Uvicorn 0.27.0 installation. Both successful reload probes imported current
+source, not an installed .39 package. The previous native Linux source pass predates
+the cooperative supervisor and cannot establish this new implementation's Linux
+behavior. Earlier pytest cohorts likewise remain bound to their recorded inputs.
+
+Next-session order:
+
+1. Follow contributor startup, read the dated transfer, and run
+   `.tmp/d_api_session_handoff.py verify` with the recorded source interpreter.
+   Inspect any mismatch before edits; never recapture to hide a difference.
+2. Review the cooperative supervisor's private Uvicorn API dependencies and owner
+   failure edges. Add permanent integration coverage for real file-triggered reload,
+   startup interruption, repeated triggers/signals, active work and failed cleanup.
+   Complete native Linux proof of the new code; use a new frozen declaration and
+   phase rather than the sealed Linux wrapper's older hardcoded source snapshot.
+3. Finish the .39 source/caller gates, both Quality selections, authority/version/
+   changelog updates, dependency graph and baseline. Build and verify fresh installed
+   Windows/Linux Python 3.11/3.12 cells with package-origin/byte checks and preserved
+   A/B/BT cohorts. Obtain a fresh full-suite/coverage and hosted Quality disposition;
+   disclose exact blockers instead of treating focused passes as full proof.
+4. Commit a verified, accurately scoped checkpoint and push this branch with its
+   matching annotated version tag under the release policy. GitHub pushes are
+   authorized again; the user's later permission supersedes the work-hours hold.
+5. Continue the complete C/D/E/CAP plan. Do not stop at .39, retire the whole lane,
+   or infer user acceptance from a passing checkpoint. The old Linux lease
+   monotonicity counterexample was fixed and verified in .37; do not restart it.
+
+At handoff, .38 remains published at
+`903668da1a691c752de038c1367347fa71a120d3`, annotated tag `v0.6.38`; branch and peeled
+tag were checked against origin. The .39 candidate has 85 Git-visible changed files,
+including intent-to-add new files, and no .39 version bump, commit or tag. Exact
+paths are in `.tmp/d-api-construction/SESSION_HANDOFF_CHANGESET.md`; the new complete
+Git-visible byte/status snapshot and evidence bindings are in
+`.tmp/d-api-construction/session-handoff-state.json`. No proof process remains
+running. Preserve all prior checkouts, native identities, databases and receipts.
+
+
+#### .39 verification resumed and scoped commit checkpoint (2026-09-20)
+
+Observed path: primary; result: partial success. Source and three installed
+cells pass; Linux 3.12 remains an environment blocker. The user resumed verification
+of the 85 handoff changes and authorized committing; GitHub push authorization
+remains effective. The preceding handoff stop and unpublished-state notes are
+historical. This checkpoint does not complete C/D/E/CAP or accept the whole lane.
+
+The final candidate is `.tmp/d-api-construction/candidate-native-corrected/`.
+Source executes 1,001 cases with zero failures/errors/skips and unchanged inputs.
+Fresh installed Windows/Linux Python 3.11/3.12 cells execute exactly those case
+identities. Both Windows cells pass 1,001. Linux 3.11 passes 1,000 and skips
+only `test_export_rejects_top_level_junction_before_remote_access`, which actually
+passes on Windows. Both Linux 3.12 attempts have 999 passes, one failure and that
+same platform skip; their clock failure and failed preflight are detailed below.
+The harness requires that exact platform-specific skip; any other skip, failure,
+error or identity mismatch fails the cell. Package
+origins/hashes, CLI primary/degraded flows, strict ToolGate audit, no residual
+children/root database, retained bytes and terminal/reaped owners pass every
+executed cell. The Linux 3.12 pytest failures remain failures; this checkpoint
+does not claim a successful complete four-cell matrix.
+
+The wheel and sdist bind all 1,098 runtime Python files without stale/missing
+Python files or wheel-source mismatches. Wheel SHA-256:
+`5a8da73023d957bff6f7d1f88d974df356a8189874b8e2e729bdcbeb42eb075a`.
+Sdist SHA-256:
+`6e1e9a4d23d9e99208b704b388d6d05785cd9f68cb78cc78a29f2cb4e0ba6427`.
+The source and installed cohort includes retained .38 tests, all interfaces,
+every changed test, affected constructor consumers and governance regressions.
+Controlled model transports/admission are contract evidence, not live inference.
+Actual native files, SQLite, TCP/WebSockets, server reload, owned workers and
+process teardown provide live proof of their specific paths. StatReload and the
+installed reload dependency sets pass; Windows source also passed Uvicorn 0.27.0 and
+0.52.4. Optional watcher backends and all intermediate versions remain unproved.
+No hard-stop, hostile-code isolation or rollback-of-filesystem-effects guarantee
+is added. Canonical server crash reporting now calls the actual crash service.
+
+The retained full-suite/coverage run (`source-full-coverage/`) executed 7,352
+cases: 7,161 passed, 102 failed, 89 skipped. It completed normally with unchanged
+inputs. All 102 failed identities map to passing corrected cases in the final
+cohort, including the explicitly renamed real filesystem/thread-ownership test.
+The corrections enter actual API lifespans, isolate engine import reload in a
+subprocess, fix stale canary/executor fixtures and inject the exact unavailable
+catalog error in the degradation checker. The CLI completion fixture explicitly
+allows two interpreter startups within a 30-second fixture deadline; product
+deadlines, real clocks and separate deadline-failure coverage are unchanged.
+The generation-options fixture explicitly controls preparation as well as HTTP;
+it no longer depends on installed LM Studio discovery. The entire full suite has
+not been rerun after these corrections. Coverage was 84.46772120297877%, below
+the 89% gate; no baseline comparison establishes that shortfall as pre-existing.
+The 89 full-suite skips are retained as unverified cases, not converted to passes.
+
+Failed observations remain immutable: the first coverage wrapper leaked inherited
+pytest options and misrouted its output, then recorded forced owned-process cleanup
+as failure; the replacement wrapper applies coverage only to the parent pytest.
+Earlier source candidates retain class-identity pollution, changed-input and CLI
+fixture-budget failures. The first certified native Windows/Linux 3.11 cells
+retain two controlled-provider failures and the harness's missing exception
+register; Python 3.12 was not launched for that known-failed harness. The final
+harness includes the required register and records Linux's legitimate junction
+skip explicitly. Its first Linux 3.12 cell then recorded 999 passed, one failed
+and one skipped. The denial fixture observed 20.374054 seconds between request
+and ingress wall timestamps within a 0.475-second monotonic test interval; its
+deadline had expired before the approval step. That observation is consistent
+with a host/WSL clock step, but the exact time-service cause was not captured.
+A second cell captured a 20.266804913-second wall/monotonic step directly and
+failed the manual-wake case with `E_AGENT_WAKE_CLAIM_STALE` (999 passed, one failed,
+one skipped). A final preflight waited up to 240 seconds for native synchronization
+and 60 quiet seconds; it failed before starting a third test cell. Its samples
+record +20.286573/-19.332442879-second wall/monotonic steps. Native samples and the
+time-service journal are retained. Linux 3.12 therefore remains an environment
+blocker; no repeated-four-cell pass is claimed. Runtime, test bytes, clocks and
+deadlines were unchanged for these attempts. The preflight only observed existing
+time synchronization. No prior failed report
+was overwritten or relabeled as success.
+
+Both checked-in Quality selections include the construction/server and remaining
+API caller regressions. Changed-file Ruff, docs hygiene, release metadata and
+whitespace checks are required by the final review. Canonical Ruff retains 94
+findings with none introduced by this checkpoint. The dependency graph has
+1,098 modules, 3,468 edges/import sites, zero forbidden pairs/cycles/unknown modules
+and six unresolved dynamic-analysis errors. The refreshed baseline collects
+successfully and remains `release_ready=false`. The repository publishes no
+GitHub Actions workflows; the authoritative Quality definitions are under
+`.gitea/workflows/`. Their hosted execution is unavailable in this session.
+
+AC disposition for this scope: AC-01 partial (six dynamic diagnostics remain),
+AC-02 pass (no changed decision-node authority), AC-03 pass (captured contracts),
+AC-04 partial (broader nondeterministic inputs remain), AC-05 pass (owned workers),
+AC-06 pass (existing effect adapters), AC-07 pass (failure truth), AC-08 pass
+(unchanged event schemas), AC-09 partial (no broader replay/containment proof),
+AC-10 pass (authority, migration and contributor docs synchronized).
+
+Final receipts: `full-suite-final-disposition.json`, `final-review/report.json`,
+`documentation-closeout.json`, `checkpoint.json`, `index-check.json` and
+`publication.json` under `.tmp/d-api-construction/`. The checkpoint binds final
+runtime code/tests to the candidate. Subsequent changes update documentation and
+baseline, and remove four duplicate CI arguments without changing selected test
+paths. The final workflow contract tests pass; exact before/after hashes and
+selection equality are retained in `quality-selection-closeout.json`.
+The dated handoff's 9,588 evidence hashes, .38 checkpoint's 108 evidence hashes
+and original checkout state are preserved. Exact committed paths are listed in
+`.tmp/d-api-construction/COMMITTED_CHANGESET.md`. The matching annotated .39 tag
+and branch are published only after index validation; the publication receipt
+records their exact remote identities. Remaining work belongs to the active
+C/D/E/CAP plan, including direct manager construction, six dynamic diagnostics,
+Ruff debt, coverage, stable-clock Linux 3.12 acceptance and full-suite/hosted Quality
+acceptance. Committing this scoped checkpoint does not waive those remaining gates.

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Mapping
 from typing import Any
 
 REQUIRED_CONFIG_KEYS = [
@@ -11,9 +12,10 @@ REQUIRED_CONFIG_KEYS = [
 ]
 
 
-def collect_gitea_state_pilot_inputs() -> dict[str, Any]:
+def collect_gitea_state_pilot_inputs(*, environment: Mapping[str, str] | None = None) -> dict[str, Any]:
+    observed = os.environ if environment is None else environment
     def _env(name: str) -> str:
-        return str(os.environ.get(name) or "").strip()
+        return str(observed.get(name) or "").strip()
 
     return {
         "state_backend_mode": _env("ORKET_STATE_BACKEND_MODE") or "local",

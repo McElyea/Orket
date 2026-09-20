@@ -26,7 +26,7 @@ def _application(tmp_path, monkeypatch):
     path.write_text('{"keep": 17, "protocol_timezone": "UTC"}', encoding="utf-8")
     settings.set_settings_file(path)
     settings.set_preferences_file(tmp_path / "preferences.json")
-    settings.set_runtime_settings_context(user_settings={"protocol_timezone": "Pacific/Honolulu"})
+    settings.set_runtime_settings_context(user_settings={"protocol_timezone": "Pacific/Honolulu"}, user_preferences={})
     return create_api_app(CompositionConfig(project_root=tmp_path)), path
 
 
@@ -47,7 +47,6 @@ async def test_api_settings_read_and_patch_persistence_independently_of_runtime_
 
 async def test_api_shutdown_waits_for_admitted_settings_write(tmp_path, monkeypatch):
     app, path = _application(tmp_path, monkeypatch)
-    context = app.state.api_runtime_context
     entered, release = threading.Event(), threading.Event()
     original = Path.replace
 
@@ -59,6 +58,7 @@ async def test_api_shutdown_waits_for_admitted_settings_write(tmp_path, monkeypa
 
     monkeypatch.setattr(Path, "replace", held_replace)
     async with serving_api(app) as client:
+        context = app.state.api_runtime_context
         request = asyncio.create_task(client.patch("/v1/settings", json={"protocol_timezone": "America/Denver"}))
         closing = None
         try:

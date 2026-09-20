@@ -20,6 +20,7 @@ from orket.application.services.decision_node_registry import DecisionNodeRegist
 from orket.application.services.epic_approval_pause_service import EpicApprovalPauseService
 from orket.application.services.epic_preparation_service import EpicPreparationService
 from orket.application.services.epic_publication_service import EpicPublicationService
+from orket.application.services.runtime_construction_inputs import RuntimeConstructionInputs
 from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.application.workflows.turn_artifact_writer import TurnArtifactWriter
 from orket.logging import log_event
@@ -68,10 +69,12 @@ class ExecutionPipeline(
         runtime_context: OrketRuntimeContext | None = None,
         runtime_inputs: RuntimeInputService | None = None,
         pipeline_wiring_service: PipelineWiringService | None = None,
+        construction_inputs: RuntimeConstructionInputs | None = None,
     ):
         from orket.orchestration.notes import NoteStore
 
-        runtime_nodes = decision_nodes or build_decision_node_registry()
+        runtime_nodes = decision_nodes or (runtime_context.decision_nodes if runtime_context is not None
+            else build_decision_node_registry(environment=construction_inputs.environment if construction_inputs else None))
         self.runtime_context = runtime_context or OrketRuntimeContext.from_env(
             workspace_root=workspace,
             department=department,
@@ -87,6 +90,7 @@ class ExecutionPipeline(
             config_loader_kwargs={"decision_nodes": runtime_nodes},
             run_ledger_factory=build_run_ledger_repository,
             telemetry_sink=self._emit_run_ledger_telemetry,
+            construction_inputs=construction_inputs,
         )
         self.workspace = self.runtime_context.workspace_root
         self.department = self.runtime_context.department
@@ -102,14 +106,16 @@ class ExecutionPipeline(
         self.gitea_state_pilot_enabled = self.runtime_context.gitea_state_pilot_enabled
         self.runtime_inputs = runtime_inputs or RuntimeInputService()
         self.execution_runtime_node = self.decision_nodes.resolve_execution_runtime(self.org)
-        self.pipeline_wiring_service = pipeline_wiring_service or PipelineWiringService()
+        self.pipeline_wiring_service = pipeline_wiring_service or PipelineWiringService(self.runtime_context.construction_inputs)
 
         self.async_cards = self.runtime_context.cards_repo
         self.sessions = self.runtime_context.sessions_repo
         self.snapshots = self.runtime_context.snapshots_repo
         self.success = self.runtime_context.success_repo
         self.run_ledger = self.runtime_context.run_ledger
-        self.artifact_exporter = GiteaArtifactExporter(self.workspace)
+        inputs = self.runtime_context.construction_inputs
+        self.artifact_exporter = GiteaArtifactExporter(self.workspace,
+            environment=inputs.environment if inputs else None, invocation_root=inputs.invocation_root if inputs else None)
 
         self.notes = NoteStore()
         self.transcript: list[dict[str, Any]] = []

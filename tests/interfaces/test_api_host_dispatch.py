@@ -19,12 +19,12 @@ def test_preview_asset_uses_runtime_invocation(monkeypatch):
             return {"mode": "epic", "asset_name": asset_name, "department": department}
 
     monkeypatch.setattr(
-        api_module._get_api_runtime_node(),
+        api_module._get_api_runtime_node(client.app),
         "resolve_preview_target",
         lambda path, issue_id: {"mode": "issue", "asset_name": "asset-x", "department": "core"},
     )
     monkeypatch.setattr(
-        api_module._get_api_runtime_node(),
+        api_module._get_api_runtime_node(client.app),
         "resolve_preview_invocation",
         lambda target, issue_id: {
             "method_name": "build_issue_preview",
@@ -35,7 +35,7 @@ def test_preview_asset_uses_runtime_invocation(monkeypatch):
     async def create_builder(_model_root):
         return FakeBuilder()
 
-    monkeypatch.setattr(api_module._get_api_runtime_host(), "create_preview_builder", create_builder)
+    monkeypatch.setattr(api_module._get_api_runtime_host(client.app), "create_preview_builder", create_builder)
 
     response = client.get(
         "/v1/system/preview-asset?path=model/core/epics/x.json&issue_id=ISSUE-9",
@@ -54,12 +54,12 @@ def test_preview_asset_rejects_unsupported_mode(monkeypatch):
             return {"asset_name": asset_name, "department": department}
 
     monkeypatch.setattr(
-        api_module._get_api_runtime_node(),
+        api_module._get_api_runtime_node(client.app),
         "resolve_preview_target",
         lambda path, issue_id: {"mode": "custom", "asset_name": "asset-x", "department": "core"},
     )
     monkeypatch.setattr(
-        api_module._get_api_runtime_node(),
+        api_module._get_api_runtime_node(client.app),
         "resolve_preview_invocation",
         lambda target, issue_id: {
             "method_name": "build_custom_preview",
@@ -70,7 +70,7 @@ def test_preview_asset_rejects_unsupported_mode(monkeypatch):
     async def create_builder(_model_root):
         return FakeBuilder()
 
-    monkeypatch.setattr(api_module._get_api_runtime_host(), "create_preview_builder", create_builder)
+    monkeypatch.setattr(api_module._get_api_runtime_host(client.app), "create_preview_builder", create_builder)
 
     response = client.get(
         "/v1/system/preview-asset?path=model/core/epics/x.json",
@@ -89,12 +89,12 @@ def test_preview_asset_uses_runtime_error_detail_for_unsupported_mode(monkeypatc
             return {"asset_name": asset_name, "department": department}
 
     monkeypatch.setattr(
-        api_module._get_api_runtime_node(),
+        api_module._get_api_runtime_node(client.app),
         "resolve_preview_target",
         lambda path, issue_id: {"mode": "custom", "asset_name": "asset-x", "department": "core"},
     )
     monkeypatch.setattr(
-        api_module._get_api_runtime_node(),
+        api_module._get_api_runtime_node(client.app),
         "resolve_preview_invocation",
         lambda target, issue_id: {
             "method_name": "build_custom_preview",
@@ -105,7 +105,7 @@ def test_preview_asset_uses_runtime_error_detail_for_unsupported_mode(monkeypatc
     async def create_builder(_model_root):
         return FakeBuilder()
 
-    monkeypatch.setattr(api_module._get_api_runtime_host(), "create_preview_builder", create_builder)
+    monkeypatch.setattr(api_module._get_api_runtime_host(client.app), "create_preview_builder", create_builder)
 
     response = client.get(
         "/v1/system/preview-asset?path=model/core/epics/x.json",
@@ -137,9 +137,9 @@ def test_chat_driver_uses_runtime_invocation(monkeypatch):
     async def create_driver():
         return driver
 
-    monkeypatch.setattr(api_module._get_api_runtime_host(), "create_chat_driver", create_driver)
+    monkeypatch.setattr(api_module._get_api_runtime_host(client.app), "create_chat_driver", create_driver)
     monkeypatch.setattr(
-        api_module._get_api_runtime_node(),
+        api_module._get_api_runtime_node(client.app),
         "resolve_chat_driver_invocation",
         lambda message: {"method_name": "process_custom", "args": [message]},
     )
@@ -175,9 +175,9 @@ def test_chat_driver_rejects_unsupported_runtime_method(monkeypatch):
     async def create_driver():
         return driver
 
-    monkeypatch.setattr(api_module._get_api_runtime_host(), "create_chat_driver", create_driver)
+    monkeypatch.setattr(api_module._get_api_runtime_host(client.app), "create_chat_driver", create_driver)
     monkeypatch.setattr(
-        api_module._get_api_runtime_node(),
+        api_module._get_api_runtime_node(client.app),
         "resolve_chat_driver_invocation",
         lambda message: {"method_name": "missing_method", "args": [message]},
     )

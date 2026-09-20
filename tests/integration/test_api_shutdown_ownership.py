@@ -57,86 +57,88 @@ async def accepts_connections(address):
 # Layer: integration
 async def test_container_close_waits_for_real_resources_through_cancellation(tmp_path, boundary, stop):
     app = create_api_app(CompositionConfig(project_root=tmp_path))
-    context = app.state.api_runtime_context
-    resource, address = await listener()
-    context.register_owned_resource(resource)
-    assert await accepts_connections(address)
-    first = asyncio.create_task(context.close())
-    second = None
-    try:
-        await asyncio.wait_for(resource.entered.wait(), 5)
-        assert not context.closed and not context.accepting_work
-        with pytest.raises(RuntimeError, match="closed"):
-            context.register_owned_resource(object())
-        if stop == "concurrent":
-            second = asyncio.create_task(context.close())
-            await asyncio.sleep(0)
-            assert not second.done(), "A concurrent close returned while the owned socket still accepts connections"
-        if stop in {"cancel", "repeated-cancel"}:
-            for _ in range(3 if stop == "repeated-cancel" else 1):
-                first.cancel()
+    async with app.router.lifespan_context(app):
+        context = app.state.api_runtime_context
+        resource, address = await listener()
+        context.register_owned_resource(resource)
+        assert await accepts_connections(address)
+        first = asyncio.create_task(context.close())
+        second = None
+        try:
+            await asyncio.wait_for(resource.entered.wait(), 5)
+            assert not context.closed and not context.accepting_work
+            with pytest.raises(RuntimeError, match="closed"):
+                context.register_owned_resource(object())
+            if stop == "concurrent":
+                second = asyncio.create_task(context.close())
                 await asyncio.sleep(0)
-        resource.release.set()
-        if stop in {"cancel", "repeated-cancel"}:
-            with pytest.raises(asyncio.CancelledError):
+                assert not second.done(), "A concurrent close returned while the owned socket still accepts connections"
+            if stop in {"cancel", "repeated-cancel"}:
+                for _ in range(3 if stop == "repeated-cancel" else 1):
+                    first.cancel()
+                    await asyncio.sleep(0)
+            resource.release.set()
+            if stop in {"cancel", "repeated-cancel"}:
+                with pytest.raises(asyncio.CancelledError):
+                    await asyncio.wait_for(first, 5)
+            else:
                 await asyncio.wait_for(first, 5)
-        else:
-            await asyncio.wait_for(first, 5)
-        if second is not None:
-            await asyncio.wait_for(second, 5)
-        await context.close()
-        assert not await accepts_connections(address), "API close left its actual owned listener open"
-        assert context.closed and context.active_background_task_count == 0
-    finally:
-        resource.release.set()
-        await asyncio.gather(first, *([second] if second is not None else []), return_exceptions=True)
-        # Counterexample cleanup is explicit and does not count as application proof.
-        resource.server.close()
-        await resource.server.wait_closed()
-        await context.close()
-        await context.engine.close()
+            if second is not None:
+                await asyncio.wait_for(second, 5)
+            await context.close()
+            assert not await accepts_connections(address), "API close left its actual owned listener open"
+            assert context.closed and context.active_background_task_count == 0
+        finally:
+            resource.release.set()
+            await asyncio.gather(first, *([second] if second is not None else []), return_exceptions=True)
+            # Counterexample cleanup is explicit and does not count as application proof.
+            resource.server.close()
+            await resource.server.wait_closed()
+            await context.close()
+            await context.engine.close()
 
 
 @pytest.mark.parametrize("stop", ["normal", "repeated-cancel"])
 # Layer: integration
 async def test_api_close_settles_registered_native_command_tree(tmp_path, boundary, stop):
     app = create_api_app(CompositionConfig(project_root=tmp_path))
-    context = app.state.api_runtime_context
-    connectors = context.outward_approval_service.connectors
-    command = asyncio.create_task(connectors.invoke("run_command", {
-        "command": [sys.executable, str(WORKER), str(tmp_path), "2", "detached", "ignore-term", "cancel"]}))
-    context.track_background_task(command)
-    processes, closing = [], None
-    try:
-        processes = await await_tree(tmp_path)
-        closing = asyncio.create_task(context.close())
-        await asyncio.sleep(0)
-        if stop == "repeated-cancel":
-            for _ in range(3):
-                closing.cancel()
-                await asyncio.sleep(0)
-            with pytest.raises(asyncio.CancelledError):
+    async with app.router.lifespan_context(app):
+        context = app.state.api_runtime_context
+        connectors = context.outward_approval_service.connectors
+        command = asyncio.create_task(connectors.invoke("run_command", {
+            "command": [sys.executable, str(WORKER), str(tmp_path), "2", "detached", "ignore-term", "cancel"]}))
+        context.track_background_task(command)
+        processes, closing = [], None
+        try:
+            processes = await await_tree(tmp_path)
+            closing = asyncio.create_task(context.close())
+            await asyncio.sleep(0)
+            if stop == "repeated-cancel":
+                for _ in range(3):
+                    closing.cancel()
+                    await asyncio.sleep(0)
+                with pytest.raises(asyncio.CancelledError):
+                    await asyncio.wait_for(closing, 5)
+            else:
                 await asyncio.wait_for(closing, 5)
-        else:
-            await asyncio.wait_for(closing, 5)
-        await assert_stopped(processes, tmp_path)
-        assert context.closed and command.cancelled() and context.active_background_task_count == 0
-        await context.close()
-    finally:
-        if not processes:
-            processes = await asyncio.to_thread(observe_processes, tmp_path)
-        await asyncio.to_thread(stop_observed, processes)
-        if not command.done():
-            command.cancel()
-        await asyncio.gather(command, *([closing] if closing is not None else []), return_exceptions=True)
-        await context.close()
+            await assert_stopped(processes, tmp_path)
+            assert context.closed and command.cancelled() and context.active_background_task_count == 0
+            await context.close()
+        finally:
+            if not processes:
+                processes = await asyncio.to_thread(observe_processes, tmp_path)
+            await asyncio.to_thread(stop_observed, processes)
+            if not command.done():
+                command.cancel()
+            await asyncio.gather(command, *([closing] if closing is not None else []), return_exceptions=True)
+            await context.close()
 
 
 @pytest.mark.end_to_end
 # Layer: end-to-end
 async def test_live_tcp_api_server_finishes_application_teardown(tmp_path, boundary):
     app = create_api_app(CompositionConfig(project_root=tmp_path))
-    context = app.state.api_runtime_context
+    context = None
     server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=0, log_config=None, lifespan="on"))
     serving = asyncio.create_task(server.serve())
     try:
@@ -146,6 +148,7 @@ async def test_live_tcp_api_server_finishes_application_teardown(tmp_path, bound
                     await serving
                     pytest.fail("Server exited before accepting requests")
                 await asyncio.sleep(0.01)
+        context = app.state.api_runtime_context
         address = server.servers[0].sockets[0].getsockname()
         async with httpx.AsyncClient(base_url=f"http://{address[0]}:{address[1]}", trust_env=False) as client:
             response = await client.get("/health")
@@ -158,19 +161,22 @@ async def test_live_tcp_api_server_finishes_application_teardown(tmp_path, bound
     finally:
         server.should_exit = True
         await asyncio.wait_for(serving, 5)
-        await context.close()
+        if context is not None:
+            await context.close()
 
 
 # Layer: integration
 async def test_repeated_lifespan_cancellation_finishes_owned_teardown(tmp_path, boundary):
     app = create_api_app(CompositionConfig(project_root=tmp_path))
-    context = app.state.api_runtime_context
+    context = None
     resource, address = await listener()
-    context.register_owned_resource(resource)
     started, finish = asyncio.Event(), asyncio.Event()
 
     async def serve():
+        nonlocal context
         async with app.router.lifespan_context(app):
+            context = app.state.api_runtime_context
+            context.register_owned_resource(resource)
             started.set()
             await finish.wait()
 
@@ -195,5 +201,6 @@ async def test_repeated_lifespan_cancellation_finishes_owned_teardown(tmp_path, 
         await asyncio.gather(task, return_exceptions=True)
         resource.server.close()
         await resource.server.wait_closed()
-        await context.close()
-        await context.engine.close()
+        if context is not None:
+            await context.close()
+            await context.engine.close()

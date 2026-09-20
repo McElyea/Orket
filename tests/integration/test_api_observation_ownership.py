@@ -1,7 +1,9 @@
 """Layer: integration. API observations own real workers and captured request inputs."""
 import asyncio
 import json
+import os
 import threading
+from contextlib import AsyncExitStack
 
 import httpx
 import pytest
@@ -35,47 +37,48 @@ async def test_metrics_request_retains_real_worker_until_settled(tmp_path, monke
         finally:
             settled.set()
 
-    monkeypatch.setattr(hardware, "_cached_vram_metrics", held_metrics)
-    app = create_api_app(project_root=tmp_path, environment={"ORKET_API_KEY": "expected"})
-    owner = app.state.api_runtime_context
+    app = create_api_app(project_root=tmp_path, environment={**os.environ, "ORKET_API_KEY": "expected"})
+    async with app.router.lifespan_context(app):
+        monkeypatch.setattr(hardware, "_cached_vram_metrics", held_metrics)
+        owner = app.state.api_runtime_context
 
-    async def invoke():
-        if stop == "timeout":
-            async with asyncio.timeout(0.2):
-                return await _request(app, "/v1/system/metrics")
-        return await _request(app, "/v1/system/metrics")
+        async def invoke():
+            if stop == "timeout":
+                async with asyncio.timeout(0.2):
+                    return await _request(app, "/v1/system/metrics")
+            return await _request(app, "/v1/system/metrics")
 
-    request, closing = asyncio.create_task(invoke()), None
-    try:
-        assert await asyncio.to_thread(entered.wait, 3)
-        heartbeat = await asyncio.wait_for(_request(app, "/v1/system/heartbeat"), RESPONSIVENESS_SECONDS)
-        assert heartbeat.status_code == 200
-        if stop == "shutdown":
-            closing = asyncio.create_task(owner.close())
-        elif stop == "cancel":
-            request.cancel()
-            await asyncio.sleep(0)
-            request.cancel()
-        await asyncio.sleep(0.25 if stop == "timeout" else 0.05)
-        assert not request.done(), "Request escaped while its hardware worker was still running"
-        if closing is not None:
-            assert not closing.done() and not owner.closed
-        release.set()
-        result, = await asyncio.wait_for(asyncio.gather(request, return_exceptions=True), SETTLEMENT_SECONDS)
-        assert settled.is_set()
-        if stop == "timeout":
-            assert isinstance(result, TimeoutError)
-        elif stop == "cancel":
-            assert isinstance(result, asyncio.CancelledError)
-        else:
-            assert result.status_code == 503
-    finally:
-        release.set()
-        await asyncio.wait_for(asyncio.gather(request, return_exceptions=True), SETTLEMENT_SECONDS)
-        if closing is not None:
-            await asyncio.wait_for(closing, SETTLEMENT_SECONDS)
-        await owner.close()
-        assert await asyncio.to_thread(settled.wait, SETTLEMENT_SECONDS)
+        request, closing = asyncio.create_task(invoke()), None
+        try:
+            assert await asyncio.to_thread(entered.wait, 3)
+            heartbeat = await asyncio.wait_for(_request(app, "/v1/system/heartbeat"), RESPONSIVENESS_SECONDS)
+            assert heartbeat.status_code == 200
+            if stop == "shutdown":
+                closing = asyncio.create_task(owner.close())
+            elif stop == "cancel":
+                request.cancel()
+                await asyncio.sleep(0)
+                request.cancel()
+            await asyncio.sleep(0.25 if stop == "timeout" else 0.05)
+            assert not request.done(), "Request escaped while its hardware worker was still running"
+            if closing is not None:
+                assert not closing.done() and not owner.closed
+            release.set()
+            result, = await asyncio.wait_for(asyncio.gather(request, return_exceptions=True), SETTLEMENT_SECONDS)
+            assert settled.is_set()
+            if stop == "timeout":
+                assert isinstance(result, TimeoutError)
+            elif stop == "cancel":
+                assert isinstance(result, asyncio.CancelledError)
+            else:
+                assert result.status_code == 503
+        finally:
+            release.set()
+            await asyncio.wait_for(asyncio.gather(request, return_exceptions=True), SETTLEMENT_SECONDS)
+            if closing is not None:
+                await asyncio.wait_for(closing, SETTLEMENT_SECONDS)
+            await owner.close()
+            assert await asyncio.to_thread(settled.wait, SETTLEMENT_SECONDS)
 
 
 @pytest.mark.parametrize("stop", ["cancel", "timeout", "shutdown"])
@@ -88,43 +91,47 @@ async def test_rejected_auth_retains_its_event_write(tmp_path, monkeypatch, stop
         assert release.wait(15), "Fixture write was not released"
         original(path, line)
 
-    monkeypatch.setattr(event_adapter, "_append_line_sync", held_write)
-    app = create_api_app(project_root=tmp_path, environment={"ORKET_API_KEY": "expected"})
-    owner = app.state.api_runtime_context
+    app = create_api_app(project_root=tmp_path, environment={**os.environ, "ORKET_API_KEY": "expected"})
+    async with app.router.lifespan_context(app):
+        monkeypatch.setattr(event_adapter, "_append_line_sync", held_write)
+        owner = app.state.api_runtime_context
 
-    async def invoke():
-        if stop == "timeout":
-            async with asyncio.timeout(0.2):
-                return await _request(app, "/v1/system/heartbeat", key="wrong")
-        return await _request(app, "/v1/system/heartbeat", key="wrong")
+        async def invoke():
+            if stop == "timeout":
+                async with asyncio.timeout(0.2):
+                    return await _request(app, "/v1/system/heartbeat", key="wrong")
+            return await _request(app, "/v1/system/heartbeat", key="wrong")
 
-    request, closing = asyncio.create_task(invoke()), None
-    try:
-        assert await asyncio.to_thread(entered.wait, 3)
-        response = await asyncio.wait_for(_request(app, "/v1/system/heartbeat"), RESPONSIVENESS_SECONDS)
-        assert response.status_code == 200
-        if stop == "shutdown":
-            closing = asyncio.create_task(owner.close())
-        elif stop == "cancel":
-            request.cancel()
-            await asyncio.sleep(0)
-            request.cancel()
-        await asyncio.sleep(0.25 if stop == "timeout" else 0.05)
-        assert not request.done()
-        if closing is not None:
-            assert not closing.done() and not owner.closed
-        release.set()
-        await asyncio.wait_for(asyncio.gather(request, return_exceptions=True), SETTLEMENT_SECONDS)
-        record = json.loads(await asyncio.to_thread((tmp_path / "orket.log").read_text, encoding="utf-8"))
-        assert record["event"] == "api_auth_rejected"
-        assert record["data"]["request_path"] == "/v1/system/heartbeat"
-        assert "wrong" not in json.dumps(record)
-    finally:
-        release.set()
-        await asyncio.wait_for(asyncio.gather(request, return_exceptions=True), SETTLEMENT_SECONDS)
-        if closing is not None:
-            await asyncio.wait_for(closing, SETTLEMENT_SECONDS)
-        await owner.close()
+        request, closing = asyncio.create_task(invoke()), None
+        try:
+            assert await asyncio.to_thread(entered.wait, 3)
+            response = await asyncio.wait_for(_request(app, "/v1/system/heartbeat"), RESPONSIVENESS_SECONDS)
+            assert response.status_code == 200
+            if stop == "shutdown":
+                closing = asyncio.create_task(owner.close())
+            elif stop == "cancel":
+                request.cancel()
+                await asyncio.sleep(0)
+                request.cancel()
+            await asyncio.sleep(0.25 if stop == "timeout" else 0.05)
+            assert not request.done()
+            if closing is not None:
+                assert not closing.done() and not owner.closed
+            release.set()
+            await asyncio.wait_for(asyncio.gather(request, return_exceptions=True), SETTLEMENT_SECONDS)
+            records = [json.loads(line) for line in (await asyncio.to_thread(
+                (tmp_path / "orket.log").read_text, encoding="utf-8")).splitlines()]
+            assert [item["event"] for item in records] == ["api_security_posture", "api_auth_rejected"]
+            record = records[-1]
+            assert record["event"] == "api_auth_rejected"
+            assert record["data"]["request_path"] == "/v1/system/heartbeat"
+            assert "wrong" not in json.dumps(record)
+        finally:
+            release.set()
+            await asyncio.wait_for(asyncio.gather(request, return_exceptions=True), SETTLEMENT_SECONDS)
+            if closing is not None:
+                await asyncio.wait_for(closing, SETTLEMENT_SECONDS)
+            await owner.close()
 
 
 async def test_event_worker_captures_nested_payload_before_await(tmp_path, monkeypatch):
@@ -152,27 +159,26 @@ async def test_event_worker_captures_nested_payload_before_await(tmp_path, monke
 
 
 async def test_event_write_failure_is_observed_by_request(tmp_path):
-    await asyncio.to_thread((tmp_path / "orket.log").mkdir)
-    app = create_api_app(project_root=tmp_path, environment={"ORKET_API_KEY": "expected"})
-    try:
+    app = create_api_app(project_root=tmp_path, environment={**os.environ, "ORKET_API_KEY": "expected"})
+    async with app.router.lifespan_context(app):
+        await asyncio.to_thread((tmp_path / "orket.log").rename, tmp_path / "startup.log")
+        await asyncio.to_thread((tmp_path / "orket.log").mkdir)
         with pytest.raises(OSError):
             await _request(app, "/v1/system/heartbeat", key="wrong")
         assert (await _request(app, "/v1/system/heartbeat")).status_code == 200
-    finally:
-        await app.state.api_runtime_context.close()
 
 
 async def test_concurrent_rejections_write_only_to_their_application_roots(tmp_path):
-    apps = [create_api_app(project_root=tmp_path / name, environment={"ORKET_API_KEY": name})
+    apps = [create_api_app(project_root=tmp_path / name, environment={**os.environ, "ORKET_API_KEY": name})
             for name in ("first", "second")]
-    try:
+    async with AsyncExitStack() as lifetimes:
+        for app in apps:
+            await lifetimes.enter_async_context(app.router.lifespan_context(app))
         responses = await asyncio.gather(*[
             _request(app, f"/v1/sessions/{index}", key="wrong") for index, app in enumerate(apps)
         ])
         assert [response.status_code for response in responses] == [403, 403]
         for index, name in enumerate(("first", "second")):
             records = (await asyncio.to_thread((tmp_path / name / "orket.log").read_text, encoding="utf-8")).splitlines()
-            assert len(records) == 1
-            assert json.loads(records[0])["data"]["request_path"] == f"/v1/sessions/{index}"
-    finally:
-        await asyncio.gather(*(app.state.api_runtime_context.close() for app in apps))
+            assert [json.loads(record)["event"] for record in records] == ["api_security_posture", "api_auth_rejected"]
+            assert json.loads(records[-1])["data"]["request_path"] == f"/v1/sessions/{index}"

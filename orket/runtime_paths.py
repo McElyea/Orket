@@ -51,11 +51,13 @@ def resolve_sandbox_lifecycle_db_path(
     return str(target)
 
 
-def resolve_control_plane_db_path(db_path: str | Path | None = None) -> Path:
+def resolve_control_plane_db_path(db_path: str | Path | None = None, *, invocation_root: Path | None = None,
+                                  environment: Mapping[str, str] | None = None) -> Path:
     if db_path is not None:
-        return Path(db_path)
-    target = durable_root() / "db" / "control_plane_records.sqlite3"
-    _migrate_legacy_file(legacy=Path.cwd() / "control_plane_records.sqlite3", target=target)
+        return invocation_root / db_path if invocation_root is not None else Path(db_path)
+    root = invocation_root or Path.cwd()
+    target = durable_root(invocation_root=root, environment=environment) / "db" / "control_plane_records.sqlite3"
+    _migrate_legacy_file(legacy=root / "control_plane_records.sqlite3", target=target)
     target.parent.mkdir(parents=True, exist_ok=True)
     return target
 
@@ -74,11 +76,13 @@ def control_plane_db_for_runtime(*, runtime_db: str | Path) -> Path:
     return resolve_control_plane_db_path(runtime_path.with_name("control_plane_records.sqlite3"))
 
 
-def resolve_webhook_db_path(db_path: str | Path | None = None) -> Path:
+def resolve_webhook_db_path(db_path: str | Path | None = None, *, invocation_root: Path | None = None,
+                            environment: Mapping[str, str] | None = None) -> Path:
     if db_path is not None:
-        return Path(db_path)
-    target = durable_root() / "db" / "webhook.db"
-    _migrate_legacy_file(legacy=Path.cwd() / ".orket" / "webhook.db", target=target)
+        return invocation_root / db_path if invocation_root is not None else Path(db_path)
+    root = invocation_root or Path.cwd()
+    target = durable_root(invocation_root=root, environment=environment) / "db" / "webhook.db"
+    _migrate_legacy_file(legacy=root / ".orket" / "webhook.db", target=target)
     target.parent.mkdir(parents=True, exist_ok=True)
     return target
 
@@ -132,10 +136,12 @@ def resolve_user_preferences_path(
     return target
 
 
-def resolve_gitea_artifact_cache_root(path: str | None = None) -> Path:
+def resolve_gitea_artifact_cache_root(path: str | None = None, *, invocation_root: Path | None = None,
+                                     environment: Mapping[str, str] | None = None) -> Path:
     if path:
-        return Path(path)
-    target = durable_root() / "gitea_artifacts"
-    _migrate_legacy_dir(legacy=Path.cwd() / ".orket" / "gitea_artifacts", target=target)
+        return invocation_root / path if invocation_root is not None else Path(path)
+    root = invocation_root or Path.cwd()
+    target = durable_root(invocation_root=root, environment=environment) / "gitea_artifacts"
+    _migrate_legacy_dir(legacy=root / ".orket" / "gitea_artifacts", target=target)
     target.mkdir(parents=True, exist_ok=True)
     return target

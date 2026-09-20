@@ -8,6 +8,7 @@ import os
 import re
 import shutil
 import stat
+from collections.abc import Mapping
 from datetime import date
 from pathlib import Path, PurePosixPath
 from typing import Any
@@ -21,8 +22,8 @@ from orket.core.domain.outward_authorization import canonical_json
 from orket.runtime_paths import resolve_gitea_artifact_cache_root
 
 
-def _env_enabled(name: str, default: str = "0") -> bool:
-    return os.getenv(name, default).strip().lower() in {"1", "true", "yes", "on"}
+def _env_enabled(name: str, default: str = "0", *, environment: Mapping[str, str]) -> bool:
+    return environment.get(name, default).strip().lower() in {"1", "true", "yes", "on"}
 
 
 def _safe_slug(value: str, fallback: str = "value") -> str:
@@ -35,23 +36,26 @@ class GiteaArtifactExporter:
 
     side_effecting = True
 
-    def __init__(self, workspace: Path):
-        self.workspace = Path(workspace).resolve()
-        self._username = os.getenv("GITEA_ADMIN_USER", "").strip()
-        self._password = os.getenv("GITEA_ADMIN_PASSWORD", "").strip()
+    def __init__(self, workspace: Path, *, environment: Mapping[str, str] | None = None,
+                 invocation_root: Path | None = None):
+        observed, root = dict(os.environ if environment is None else environment), invocation_root or Path.cwd()
+        self.workspace = (root / workspace).resolve()
+        self._username = observed.get("GITEA_ADMIN_USER", "").strip()
+        self._password = observed.get("GITEA_ADMIN_PASSWORD", "").strip()
         self._binding = {
-            "enabled": _env_enabled("ORKET_GITEA_ARTIFACT_EXPORT", "0"),
+            "enabled": _env_enabled("ORKET_GITEA_ARTIFACT_EXPORT", "0", environment=observed),
             "workspace": str(self.workspace),
-            "gitea_url": os.getenv("GITEA_URL", "").strip(),
-            "owner": (os.getenv("ORKET_GITEA_ARTIFACT_OWNER", "").strip()
-                      or os.getenv("GITEA_PRODUCT_OWNER", "").strip() or self._username),
-            "repo_name": os.getenv("ORKET_GITEA_ARTIFACT_REPO", "orket-run-artifacts").strip(),
-            "branch": os.getenv("ORKET_GITEA_ARTIFACT_BRANCH", "main").strip(),
-            "prefix": os.getenv("ORKET_GITEA_ARTIFACT_PATH_PREFIX", "runs").strip().strip("/"),
-            "private_repo": _env_enabled("ORKET_GITEA_ARTIFACT_PRIVATE", "1"),
-            "cache_root": str(resolve_gitea_artifact_cache_root(os.getenv("ORKET_GITEA_ARTIFACT_CACHE_ROOT", "").strip())),
-            "author_name": os.getenv("ORKET_GITEA_ARTIFACT_AUTHOR_NAME", "Orket Artifact Bot"),
-            "author_email": os.getenv("ORKET_GITEA_ARTIFACT_AUTHOR_EMAIL", "orket@local"),
+            "gitea_url": observed.get("GITEA_URL", "").strip(),
+            "owner": (observed.get("ORKET_GITEA_ARTIFACT_OWNER", "").strip()
+                      or observed.get("GITEA_PRODUCT_OWNER", "").strip() or self._username),
+            "repo_name": observed.get("ORKET_GITEA_ARTIFACT_REPO", "orket-run-artifacts").strip(),
+            "branch": observed.get("ORKET_GITEA_ARTIFACT_BRANCH", "main").strip(),
+            "prefix": observed.get("ORKET_GITEA_ARTIFACT_PATH_PREFIX", "runs").strip().strip("/"),
+            "private_repo": _env_enabled("ORKET_GITEA_ARTIFACT_PRIVATE", "1", environment=observed),
+            "cache_root": str(resolve_gitea_artifact_cache_root(observed.get("ORKET_GITEA_ARTIFACT_CACHE_ROOT", "").strip(),
+                invocation_root=root, environment=observed)),
+            "author_name": observed.get("ORKET_GITEA_ARTIFACT_AUTHOR_NAME", "Orket Artifact Bot"),
+            "author_email": observed.get("ORKET_GITEA_ARTIFACT_AUTHOR_EMAIL", "orket@local"),
         }
         target = parse.urlsplit(self._binding["gitea_url"])
         if target.username is not None or target.password is not None:

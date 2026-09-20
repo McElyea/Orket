@@ -9,7 +9,7 @@ from fastapi import FastAPI
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from orket.interfaces.api_runtime_context import get_api_runtime_context
-from orket.interfaces.application_request_lifetime import run_owned_asgi
+from orket.interfaces.application_request_lifetime import run_owned_asgi, unavailable
 
 
 class ApiAppContextMiddleware:
@@ -28,8 +28,9 @@ class ApiAppContextMiddleware:
 
     async def _request(self, scope: Scope, receive: Receive, send: Send) -> None:
         context = get_api_runtime_context(self._owner_app)
-        if context is None:
-            raise RuntimeError("API app runtime context is missing.")
+        if context is None or not getattr(self._owner_app.state, "api_ready", False):
+            await unavailable(scope, send, detail="API runtime is not ready.")
+            return
         await run_owned_asgi(
             context, self._app, scope, receive, send, unavailable_detail="API runtime is closing.", version_header=True
         )

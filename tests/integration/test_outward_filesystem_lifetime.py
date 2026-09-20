@@ -77,22 +77,23 @@ async def test_direct_filesystem_waits_for_actual_worker(tmp_path, monkeypatch, 
 # Layer: integration
 async def test_api_request_close_waits_for_direct_filesystem_worker(tmp_path, monkeypatch):
     app = create_api_app(CompositionConfig(project_root=tmp_path))
-    owner = app.state.api_runtime_context
-    target, entered, release, finished, args = await held_filesystem_operation(tmp_path, monkeypatch, "delete_file")
-    service = OutwardConnectorService(connector_registry=DEFAULT_BUILTIN_CONNECTOR_REGISTRY, workspace_root=tmp_path)
-    caller = asyncio.create_task(owner.run_request(lambda: service.invoke("delete_file", args)))
-    closing = None
-    try:
-        assert await asyncio.to_thread(entered.wait, 5)
-        closing = asyncio.create_task(owner.close())
-        completed, _ = await asyncio.wait({closing}, timeout=0.2)
-        assert not completed and not owner.closed and not finished.is_set()
-        caller.cancel()
-        await asyncio.sleep(0)
-        caller.cancel()
-        assert not caller.done() and owner.active_request_count == 1
-    finally:
-        release.set()
-        await asyncio.gather(caller, return_exceptions=True)
-        await (closing if closing is not None else owner.close())
-    assert owner.closed and finished.is_set() and not await asyncio.to_thread(target.exists)
+    async with app.router.lifespan_context(app):
+        owner = app.state.api_runtime_context
+        target, entered, release, finished, args = await held_filesystem_operation(tmp_path, monkeypatch, "delete_file")
+        service = OutwardConnectorService(connector_registry=DEFAULT_BUILTIN_CONNECTOR_REGISTRY, workspace_root=tmp_path)
+        caller = asyncio.create_task(owner.run_request(lambda: service.invoke("delete_file", args)))
+        closing = None
+        try:
+            assert await asyncio.to_thread(entered.wait, 5)
+            closing = asyncio.create_task(owner.close())
+            completed, _ = await asyncio.wait({closing}, timeout=0.2)
+            assert not completed and not owner.closed and not finished.is_set()
+            caller.cancel()
+            await asyncio.sleep(0)
+            caller.cancel()
+            assert not caller.done() and owner.active_request_count == 1
+        finally:
+            release.set()
+            await asyncio.gather(caller, return_exceptions=True)
+            await (closing if closing is not None else owner.close())
+        assert owner.closed and finished.is_set() and not await asyncio.to_thread(target.exists)

@@ -221,4 +221,5 @@ async def _await_worker_signal(worker, signal):
     while line := await worker.stdout.readline():
         if line.strip() == signal:
             return
-    raise AssertionError(f"Independent worker exited before {signal.decode()}")
+    stderr = await worker.stderr.read()
+    raise AssertionError(f"Independent worker exited before {signal.decode()}: {stderr.decode(errors='replace')}")

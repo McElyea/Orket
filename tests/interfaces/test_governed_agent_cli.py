@@ -270,10 +270,14 @@ def test_agent_submit_runs_catalog_resolved_deterministic_fixture(tmp_path: Path
         encoding="utf-8",
     )
     request = agent_request()
+    # This completion case starts two real interpreters. Short expiry has separate
+    # acceptance cases; preserve elapsed time while giving this request 30 seconds.
+    now = datetime.now(UTC)
+    request["deadline_utc"] = (now + timedelta(seconds=30)).isoformat()
+    request["lease_expires_at_utc"] = (now + timedelta(seconds=25)).isoformat()
     request_path = tmp_path / "request.json"
     request_path.write_text(json.dumps(request), encoding="utf-8")
     db_path = tmp_path / "agent.sqlite3"
-    now = datetime.now(UTC)
 
     exit_code = main(
         [
@@ -293,14 +297,14 @@ def test_agent_submit_runs_catalog_resolved_deterministic_fixture(tmp_path: Path
             "--decision-timestamp-utc",
             (now + timedelta(seconds=2)).isoformat(),
             "--next-lease-expires-at-utc",
-            (now + timedelta(seconds=7)).isoformat(),
+            (now + timedelta(seconds=29)).isoformat(),
             "--deterministic-fixture",
             "--json",
         ]
     )
     payload = json.loads(capsys.readouterr().out)
 
-    assert exit_code == 0
+    assert exit_code == 0, payload
     assert payload["proof_posture"] == "deterministic_fixture_not_live_model"
     assert payload["run"]["lifecycle_state"] == "completed"
     assert [item["disposition"] for item in payload["decisions"]] == ["continue", "complete"]

@@ -20,7 +20,7 @@ def _client(tmp_path, monkeypatch: pytest.MonkeyPatch) -> tuple[TestClient, str]
 def test_run_submit_status_list_and_idempotency(tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Layer: integration. Verifies Phase 1 run API submission, status, list, and idempotency."""
     client, _db_path = _client(tmp_path, monkeypatch)
-    try:
+    with client:
         payload = {
             "run_id": "run-api-phase1",
             "task": {"description": "Demo", "instruction": "Do the work"},
@@ -45,15 +45,13 @@ def test_run_submit_status_list_and_idempotency(tmp_path, monkeypatch: pytest.Mo
 
         assert list_response.status_code == 200
         assert list_response.json()["items"] == [submit_response.json()]
-    finally:
-        client.close()
 
 
 @pytest.mark.integration
 def test_run_submit_missing_instruction_rejected(tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Layer: integration. Verifies invalid work submission fails before execution."""
     client, _db_path = _client(tmp_path, monkeypatch)
-    try:
+    with client:
         response = client.post(
             "/v1/runs",
             headers={"X-API-Key": "test-key"},
@@ -62,8 +60,6 @@ def test_run_submit_missing_instruction_rejected(tmp_path, monkeypatch: pytest.M
 
         assert response.status_code == 422
         assert response.json()["detail"] == "task.instruction is required"
-    finally:
-        client.close()
 
 
 @pytest.mark.integration
@@ -80,7 +76,7 @@ def test_run_api_payloads_traverse_outbound_policy_gate(
 
     monkeypatch.setattr(api_module, "apply_outbound_policy_gate", _fake_gate)
     client, _db_path = _client(tmp_path, monkeypatch)
-    try:
+    with client:
         payload = {
             "run_id": "run-gated-phase1",
             "task": {"description": "Demo", "instruction": "Do the work"},
@@ -91,8 +87,6 @@ def test_run_api_payloads_traverse_outbound_policy_gate(
         assert client.get("/v1/runs?status=queued", headers={"X-API-Key": "test-key"}).status_code == 200
 
         assert calls == ["api.runs.submit", "api.runs.status", "api.runs.list"]
-    finally:
-        client.close()
 
 
 @pytest.mark.integration
@@ -100,15 +94,13 @@ def test_run_api_payloads_traverse_outbound_policy_gate(
 async def test_run_submit_creates_initial_run_event(tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Layer: integration. Verifies API submission creates the expected initial run_events row."""
     client, db_path = _client(tmp_path, monkeypatch)
-    try:
+    with client:
         response = client.post(
             "/v1/runs",
             headers={"X-API-Key": "test-key"},
             json={"run_id": "run-event-phase1", "task": {"description": "Demo", "instruction": "Do the work"}},
         )
         assert response.status_code == 200
-    finally:
-        client.close()
 
     events = await OutwardRunEventStore(db_path).list_for_run("run-event-phase1")
     assert [event.event_type for event in events] == ["run_submitted"]

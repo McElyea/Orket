@@ -14,16 +14,18 @@ class _FakeTarget:
 
 
 @pytest.fixture
-async def active_api_app(tmp_path, fresh_runtime_state):
+async def active_api_app(tmp_path, fresh_runtime_state, monkeypatch):
     """Layer: integration. Owns one explicit API runtime for task lifecycle tests."""
-    created_app = api_module.create_api_app(project_root=tmp_path, environment={"ORKET_API_KEY": "test-key"})
-    context = created_app.state.api_runtime_context
-    context.runtime_state = fresh_runtime_state
+    from orket.application.services import api_runtime_composition
+
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    monkeypatch.setattr(api_runtime_composition, "create_runtime_state", lambda: fresh_runtime_state)
+    created_app = api_module.create_api_app(project_root=tmp_path)
     token = api_module._ACTIVE_API_APP.set(created_app)
     try:
-        yield created_app
+        async with created_app.router.lifespan_context(created_app):
+            yield created_app
     finally:
-        await context.close()
         api_module._ACTIVE_API_APP.reset(token)
 
 

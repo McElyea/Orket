@@ -3,11 +3,10 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from fastapi.testclient import TestClient
+from httpx import ASGITransport, AsyncClient
 
 import orket.interfaces.api as api_module
 from orket.application.services.card_completion_outcome_service import inspect_build_completion
-from orket.orchestration.engine import OrchestrationEngine
 from orket.runtime.run_summary import build_run_summary_payload
 from orket.schema import CardStatus
 from tests.helpers.card_completion import complete_existing_card
@@ -31,194 +30,187 @@ def _run_identity(*, run_id: str, workload: str = "cards-runtime") -> dict[str, 
 # Layer: integration
 async def test_cards_and_runs_operator_views_project_truthful_outcomes(monkeypatch, tmp_path: Path) -> None:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    workspace_root = tmp_path / "workspace"
-    workspace_root.mkdir(parents=True, exist_ok=True)
-    real_engine = OrchestrationEngine(
-        workspace_root=workspace_root,
-        db_path=str(tmp_path / "runtime.db"),
-    )
     created_app = api_module.create_api_app(project_root=tmp_path)
-    created_context = created_app.state.api_runtime_context
-    await created_context.engine.close()
-    created_context.engine = real_engine
+    async with created_app.router.lifespan_context(created_app):
+        created_context = created_app.state.api_runtime_context
+        real_engine = created_context.engine
+        workspace_root = real_engine.workspace_root
 
-    verified_session_id = "RUN-VERIFIED-1"
-    failed_session_id = "RUN-FAILED-1"
-    for session_id in (verified_session_id, failed_session_id):
-        await real_engine.sessions.start_session(
-            session_id,
-            {"type": "epic", "name": session_id, "department": "core", "task_input": "demo"},
+        verified_session_id = "RUN-VERIFIED-1"
+        failed_session_id = "RUN-FAILED-1"
+        for session_id in (verified_session_id, failed_session_id):
+            await real_engine.sessions.start_session(
+                session_id,
+                {"type": "epic", "name": session_id, "department": "core", "task_input": "demo"},
+            )
+
+        await real_engine.cards.save(
+            {
+                "id": "CARD-VERIFIED",
+                "session_id": verified_session_id,
+                "build_id": "BUILD-1",
+                "seat": "COD-1",
+                "summary": "Verified card",
+                "priority": 2.0,
+                "params": {
+                    "execution_profile": "builder_guard_app_v1",
+                    "artifact_contract": {
+                        "kind": "app",
+                        "primary_output": "agent_output/main.py",
+                        "entrypoint_path": "agent_output/main.py",
+                        "required_write_paths": ["agent_output/main.py"],
+                    },
+                },
+            }
         )
+        await real_engine.cards.save(
+            {
+                "id": "CARD-FAILED",
+                "session_id": failed_session_id,
+                "build_id": "BUILD-2",
+                "seat": "COD-1",
+                "summary": "Blocked card",
+                "priority": 2.0,
+                "params": {
+                    "execution_profile": "odr_prebuild_builder_guard_v1",
+                    "artifact_contract": {
+                        "kind": "artifact",
+                        "primary_output": "agent_output/out.txt",
+                        "required_write_paths": ["agent_output/out.txt"],
+                    },
+                },
+            }
+        )
+        await complete_existing_card(real_engine.cards, "CARD-VERIFIED", workspace_root, service=real_engine.runtime_context.card_completion)
+        await real_engine.cards.update_status("CARD-FAILED", CardStatus.BLOCKED)
 
-    await real_engine.cards.save(
-        {
-            "id": "CARD-VERIFIED",
-            "session_id": verified_session_id,
-            "build_id": "BUILD-1",
-            "seat": "COD-1",
-            "summary": "Verified card",
-            "priority": 2.0,
-            "params": {
+        verified_completion = await inspect_build_completion(
+            cards=real_engine.cards, build_id="BUILD-1", expected_card_ids=("CARD-VERIFIED",),
+        )
+        verified_artifacts = {
+            "card_completion_outcome": verified_completion.to_artifact(),
+            "run_identity": _run_identity(run_id=verified_session_id),
+            "packet1_facts": {
+                "primary_work_artifact_output": {"id": "agent_output/main.py", "kind": "artifact"},
+            },
+            "packet2_facts": {
+                "source_attribution": {
+                    "mode": "required",
+                    "high_stakes": False,
+                    "synthesis_status": "verified",
+                    "artifact_provenance_verified": True,
+                    "receipt_artifact_path": "agent_output/source_attribution_receipt.json",
+                }
+            },
+            "cards_runtime_facts": {
                 "execution_profile": "builder_guard_app_v1",
+                "stop_reason": "completed",
+                "resolution_state": "resolved",
                 "artifact_contract": {
                     "kind": "app",
                     "primary_output": "agent_output/main.py",
                     "entrypoint_path": "agent_output/main.py",
                     "required_write_paths": ["agent_output/main.py"],
+                    "review_read_paths": ["agent_output/main.py"],
+                    "deployment_enabled": True,
                 },
             },
+            "runtime_verification_path": "agent_output/verification/runtime_verification.json",
         }
-    )
-    await real_engine.cards.save(
-        {
-            "id": "CARD-FAILED",
-            "session_id": failed_session_id,
-            "build_id": "BUILD-2",
-            "seat": "COD-1",
-            "summary": "Blocked card",
-            "priority": 2.0,
-            "params": {
+        verified_summary = build_run_summary_payload(
+            run_id=verified_session_id,
+            status="done",
+            failure_reason=None,
+            started_at=_STARTED_AT,
+            ended_at=_FINALIZED_AT,
+            tool_names=[],
+            artifacts=verified_artifacts,
+        )
+        await real_engine.run_ledger.start_run(
+            session_id=verified_session_id,
+            run_type="epic",
+            run_name="verified",
+            department="core",
+            build_id="BUILD-1",
+            summary={"phase": "execute"},
+            artifacts={"run_identity": verified_artifacts["run_identity"]},
+        )
+        await real_engine.run_ledger.finalize_run(
+            session_id=verified_session_id,
+            status="done",
+            summary=verified_summary,
+            artifacts=verified_artifacts,
+        )
+
+        failed_artifacts = {
+            "run_identity": _run_identity(run_id=failed_session_id),
+            "cards_runtime_facts": {
                 "execution_profile": "odr_prebuild_builder_guard_v1",
-                "artifact_contract": {
-                    "kind": "artifact",
-                    "primary_output": "agent_output/out.txt",
-                    "required_write_paths": ["agent_output/out.txt"],
-                },
+                "resolution_state": "resolved",
+                "odr_active": True,
+                "audit_mode": "self_audit_fallback",
+                "odr_stop_reason": "UNRESOLVED_DECISIONS",
+                "odr_pending_decisions": 2,
             },
         }
-    )
-    await complete_existing_card(real_engine.cards, "CARD-VERIFIED", workspace_root, service=real_engine.runtime_context.card_completion)
-    await real_engine.cards.update_status("CARD-FAILED", CardStatus.BLOCKED)
+        failed_summary = build_run_summary_payload(
+            run_id=failed_session_id,
+            status="failed",
+            failure_reason="UNRESOLVED_DECISIONS",
+            started_at=_STARTED_AT,
+            ended_at=_FINALIZED_AT,
+            tool_names=[],
+            artifacts=failed_artifacts,
+        )
+        await real_engine.run_ledger.start_run(
+            session_id=failed_session_id,
+            run_type="epic",
+            run_name="failed",
+            department="core",
+            build_id="BUILD-2",
+            summary={"phase": "prebuild"},
+            artifacts={"run_identity": failed_artifacts["run_identity"]},
+        )
+        await real_engine.run_ledger.finalize_run(
+            session_id=failed_session_id,
+            status="failed",
+            summary=failed_summary,
+            artifacts=failed_artifacts,
+        )
 
-    verified_completion = await inspect_build_completion(
-        cards=real_engine.cards, build_id="BUILD-1", expected_card_ids=("CARD-VERIFIED",),
-    )
-    verified_artifacts = {
-        "card_completion_outcome": verified_completion.to_artifact(),
-        "run_identity": _run_identity(run_id=verified_session_id),
-        "packet1_facts": {
-            "primary_work_artifact_output": {"id": "agent_output/main.py", "kind": "artifact"},
-        },
-        "packet2_facts": {
-            "source_attribution": {
-                "mode": "required",
-                "high_stakes": False,
-                "synthesis_status": "verified",
-                "artifact_provenance_verified": True,
-                "receipt_artifact_path": "agent_output/source_attribution_receipt.json",
-            }
-        },
-        "cards_runtime_facts": {
-            "execution_profile": "builder_guard_app_v1",
-            "stop_reason": "completed",
-            "resolution_state": "resolved",
-            "artifact_contract": {
-                "kind": "app",
-                "primary_output": "agent_output/main.py",
-                "entrypoint_path": "agent_output/main.py",
-                "required_write_paths": ["agent_output/main.py"],
-                "review_read_paths": ["agent_output/main.py"],
-                "deployment_enabled": True,
-            },
-        },
-        "runtime_verification_path": "agent_output/verification/runtime_verification.json",
-    }
-    verified_summary = build_run_summary_payload(
-        run_id=verified_session_id,
-        status="done",
-        failure_reason=None,
-        started_at=_STARTED_AT,
-        ended_at=_FINALIZED_AT,
-        tool_names=[],
-        artifacts=verified_artifacts,
-    )
-    await real_engine.run_ledger.start_run(
-        session_id=verified_session_id,
-        run_type="epic",
-        run_name="verified",
-        department="core",
-        build_id="BUILD-1",
-        summary={"phase": "execute"},
-        artifacts={"run_identity": verified_artifacts["run_identity"]},
-    )
-    await real_engine.run_ledger.finalize_run(
-        session_id=verified_session_id,
-        status="done",
-        summary=verified_summary,
-        artifacts=verified_artifacts,
-    )
+        async with AsyncClient(transport=ASGITransport(created_app), base_url="http://api.test") as client:
+            completed = await client.get("/v1/cards/view?filter=completed", headers={"X-API-Key": "test-key"})
+            terminal_failure = await client.get("/v1/cards/view?filter=terminal_failure", headers={"X-API-Key": "test-key"})
+            card_detail = await client.get("/v1/cards/CARD-VERIFIED/view", headers={"X-API-Key": "test-key"})
+            run_history = await client.get("/v1/runs/view?limit=5", headers={"X-API-Key": "test-key"})
+            run_detail = await client.get(f"/v1/runs/{verified_session_id}/view", headers={"X-API-Key": "test-key"})
 
-    failed_artifacts = {
-        "run_identity": _run_identity(run_id=failed_session_id),
-        "cards_runtime_facts": {
-            "execution_profile": "odr_prebuild_builder_guard_v1",
-            "resolution_state": "resolved",
-            "odr_active": True,
-            "audit_mode": "self_audit_fallback",
-            "odr_stop_reason": "UNRESOLVED_DECISIONS",
-            "odr_pending_decisions": 2,
-        },
-    }
-    failed_summary = build_run_summary_payload(
-        run_id=failed_session_id,
-        status="failed",
-        failure_reason="UNRESOLVED_DECISIONS",
-        started_at=_STARTED_AT,
-        ended_at=_FINALIZED_AT,
-        tool_names=[],
-        artifacts=failed_artifacts,
-    )
-    await real_engine.run_ledger.start_run(
-        session_id=failed_session_id,
-        run_type="epic",
-        run_name="failed",
-        department="core",
-        build_id="BUILD-2",
-        summary={"phase": "prebuild"},
-        artifacts={"run_identity": failed_artifacts["run_identity"]},
-    )
-    await real_engine.run_ledger.finalize_run(
-        session_id=failed_session_id,
-        status="failed",
-        summary=failed_summary,
-        artifacts=failed_artifacts,
-    )
+        assert completed.status_code == 200
+        assert completed.json()["items"][0]["card_id"] == "CARD-VERIFIED"
+        assert completed.json()["items"][0]["filter_bucket"] == "completed"
+        assert completed.json()["items"][0]["last_run"]["lifecycle_category"] == "artifact_run_verified"
 
-    client = TestClient(created_app)
-    completed = client.get("/v1/cards/view?filter=completed", headers={"X-API-Key": "test-key"})
-    terminal_failure = client.get("/v1/cards/view?filter=terminal_failure", headers={"X-API-Key": "test-key"})
-    card_detail = client.get("/v1/cards/CARD-VERIFIED/view", headers={"X-API-Key": "test-key"})
-    run_history = client.get("/v1/runs/view?limit=5", headers={"X-API-Key": "test-key"})
-    run_detail = client.get(f"/v1/runs/{verified_session_id}/view", headers={"X-API-Key": "test-key"})
+        assert terminal_failure.status_code == 200
+        assert terminal_failure.json()["items"][0]["card_id"] == "CARD-FAILED"
+        assert terminal_failure.json()["items"][0]["filter_bucket"] == "terminal_failure"
 
-    assert completed.status_code == 200
-    assert completed.json()["items"][0]["card_id"] == "CARD-VERIFIED"
-    assert completed.json()["items"][0]["filter_bucket"] == "completed"
-    assert completed.json()["items"][0]["last_run"]["lifecycle_category"] == "artifact_run_verified"
+        assert card_detail.status_code == 200
+        card_payload = card_detail.json()
+        assert card_payload["execution_profile"] == "builder_guard_app_v1"
+        assert card_payload["run"]["lifecycle_category"] == "artifact_run_verified"
+        assert card_payload["run_action"]["endpoint"] == "/v1/system/run-active"
+        assert card_payload["artifact_contract"]["primary_output"] == "agent_output/main.py"
 
-    assert terminal_failure.status_code == 200
-    assert terminal_failure.json()["items"][0]["card_id"] == "CARD-FAILED"
-    assert terminal_failure.json()["items"][0]["filter_bucket"] == "terminal_failure"
+        assert run_history.status_code == 200
+        history_items = run_history.json()["items"]
+        assert any(item["session_id"] == verified_session_id and item["lifecycle_category"] == "artifact_run_verified" for item in history_items)
+        assert any(item["session_id"] == failed_session_id and item["lifecycle_category"] == "prebuild_blocked" for item in history_items)
 
-    assert card_detail.status_code == 200
-    card_payload = card_detail.json()
-    assert card_payload["execution_profile"] == "builder_guard_app_v1"
-    assert card_payload["run"]["lifecycle_category"] == "artifact_run_verified"
-    assert card_payload["run_action"]["endpoint"] == "/v1/system/run-active"
-    assert card_payload["artifact_contract"]["primary_output"] == "agent_output/main.py"
-
-    assert run_history.status_code == 200
-    history_items = run_history.json()["items"]
-    assert any(item["session_id"] == verified_session_id and item["lifecycle_category"] == "artifact_run_verified" for item in history_items)
-    assert any(item["session_id"] == failed_session_id and item["lifecycle_category"] == "prebuild_blocked" for item in history_items)
-
-    assert run_detail.status_code == 200
-    run_payload = run_detail.json()
-    assert run_payload["lifecycle_category"] == "artifact_run_verified"
-    assert run_payload["verification"]["status"] == "verified"
-    assert "agent_output/main.py" in run_payload["key_artifacts"]
-    client.close()
-    await created_context.close()
+        assert run_detail.status_code == 200
+        run_payload = run_detail.json()
+        assert run_payload["lifecycle_category"] == "artifact_run_verified"
+        assert run_payload["verification"]["status"] == "verified"
+        assert "agent_output/main.py" in run_payload["key_artifacts"]
 
 
 def test_system_operator_views_surface_provider_and_health_status(monkeypatch, test_client) -> None:

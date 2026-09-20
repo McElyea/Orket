@@ -14,6 +14,10 @@ from tests.helpers.runtime_result import published_result
 
 
 class _DummyExtensionManager:
+    def __init__(self, catalog_path=None, project_root=None, *, invocation_root, environment):
+        assert invocation_root.is_absolute()
+        assert isinstance(environment, dict)
+
     def list_extensions(self):
         return []
 

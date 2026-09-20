@@ -46,7 +46,7 @@ def test_interaction_stream_flow_emits_commit_final(monkeypatch):
         assert "commit_final" in event_types
 
 
-def test_interaction_session_start_registers_runtime_surface(monkeypatch, fresh_runtime_state):
+def test_interaction_session_start_registers_runtime_surface(monkeypatch):
     """Layer: integration. Verifies the API start path records interaction-session ownership in GlobalState's transport registry."""
     monkeypatch.setenv("ORKET_STREAM_EVENTS_V1", "true")
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
@@ -59,7 +59,7 @@ def test_interaction_session_start_registers_runtime_surface(monkeypatch, fresh_
 
     assert start.status_code == 200
     session_id = start.json()["session_id"]
-    assert asyncio.run(api_module._get_runtime_state().is_interaction_session(session_id)) is True
+    assert asyncio.run(api_module._get_runtime_state(client.app).is_interaction_session(session_id)) is True
 
 
 def test_interaction_model_stream_flow_emits_commit_final(monkeypatch):
@@ -201,7 +201,7 @@ def test_interaction_builtin_turn_exposes_bounded_packet1_context(monkeypatch, t
     monkeypatch.setenv("ORKET_STREAM_EVENTS_V1", "true")
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setattr(
-        api_module._runtime_context(),
+        api_module._runtime_context(client.app),
         "interaction_manager",
         create_interaction_manager(tmp_path),
         raising=False,
@@ -252,7 +252,7 @@ def test_interaction_builtin_turn_exposes_bounded_packet1_context(monkeypatch, t
         "turn_params": {"persona": "guard"},
         "workload_id": "stream_test_v1",
         "department": "core",
-        "workspace": str((api_module._project_root() / "workspace" / "default").resolve()),
+        "workspace": str((api_module._project_root(client.app) / "workspace" / "default").resolve()),
     }
     assert captured_envelope["context_version"] == "packet1_session_context_v1"
     assert captured_envelope["continuity"] == {
@@ -264,7 +264,7 @@ def test_interaction_builtin_turn_exposes_bounded_packet1_context(monkeypatch, t
         "turn_params": {"persona": "guard"},
         "workload_id": "stream_test_v1",
         "department": "core",
-        "workspace": str((api_module._project_root() / "workspace" / "default").resolve()),
+        "workspace": str((api_module._project_root(client.app) / "workspace" / "default").resolve()),
     }
     assert [row["provider_id"] for row in captured_lineage] == [
         "host_continuity",
@@ -279,7 +279,7 @@ def test_interaction_extension_turn_includes_manifest_required_capabilities(monk
     monkeypatch.setenv("ORKET_STREAM_EVENTS_V1", "true")
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setattr(
-        api_module._runtime_context(),
+        api_module._runtime_context(client.app),
         "interaction_manager",
         create_interaction_manager(tmp_path),
         raising=False,
@@ -312,7 +312,7 @@ def test_interaction_extension_turn_includes_manifest_required_capabilities(monk
             captured_envelope.update(interaction_context.packet1_context_envelope())
             captured_lineage.extend(interaction_context.packet1_provider_lineage())
 
-    monkeypatch.setattr(api_module._runtime_context(), "extension_manager", _FakeExtensionManager(), raising=False)
+    monkeypatch.setattr(api_module._runtime_context(client.app), "extension_manager", _FakeExtensionManager(), raising=False)
 
     start = client.post(
         "/v1/interactions/sessions",
@@ -346,7 +346,7 @@ def test_interaction_extension_turn_includes_manifest_required_capabilities(monk
         "turn_params": {"mode": "extension"},
         "workload_id": "ext-workload",
         "department": "operations",
-        "workspace": str((api_module._project_root() / "workspace" / "default").resolve()),
+        "workspace": str((api_module._project_root(client.app) / "workspace" / "default").resolve()),
         "required_capabilities": ["workspace.root", "clock.now"],
     }
     assert captured_envelope["context_version"] == "packet1_session_context_v1"
@@ -366,7 +366,7 @@ def test_interaction_session_inspection_surfaces_expose_context_lineage(monkeypa
     monkeypatch.setenv("ORKET_STREAM_EVENTS_V1", "true")
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setattr(
-        api_module._runtime_context(),
+        api_module._runtime_context(client.app),
         "interaction_manager",
         create_interaction_manager(tmp_path),
         raising=False,
@@ -434,7 +434,7 @@ def test_interaction_session_inspection_surfaces_expose_context_lineage(monkeypa
         "turn_params": {"persona": "guard"},
         "workload_id": "stream_test_v1",
         "department": "core",
-        "workspace": str((api_module._project_root() / "workspace" / "default").resolve()),
+        "workspace": str((api_module._project_root(client.app) / "workspace" / "default").resolve()),
     }
     assert snapshot_payload["replay_boundary"]["timeline_view"] == "inspection_only"
     assert snapshot_payload["replay_boundary"]["targeted_replay"] == "run_session_only"
@@ -455,7 +455,7 @@ def test_interaction_session_targeted_replay_fails_closed(monkeypatch, tmp_path)
     monkeypatch.setenv("ORKET_STREAM_EVENTS_V1", "true")
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setattr(
-        api_module._runtime_context(),
+        api_module._runtime_context(client.app),
         "interaction_manager",
         create_interaction_manager(tmp_path),
         raising=False,

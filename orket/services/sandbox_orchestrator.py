@@ -62,6 +62,7 @@ class SandboxOrchestrator:
         lifecycle_db_path: str | None = None,
         control_plane_db_path: str | None = None,
         environment: Mapping[str, str] | None = None,
+        terminal_evidence_root: Path | None = None,
     ) -> None:
         observed_environment = dict(os.environ if environment is None else environment)
         self.workspace_root = workspace_root
@@ -110,6 +111,7 @@ class SandboxOrchestrator:
             control_plane_publication=self.control_plane_publication,
             control_plane_execution=self.control_plane_execution,
             control_plane_effects=self.control_plane_effects,
+            terminal_evidence_root=terminal_evidence_root,
         )
         self.lifecycle_recovery = SandboxRuntimeRecoveryService(lifecycle_service=self.lifecycle_service)
         self.restart_policy = SandboxRestartPolicyService(lifecycle_service=self.lifecycle_service)

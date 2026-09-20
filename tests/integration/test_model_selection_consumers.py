@@ -1,6 +1,7 @@
 """Layer: integration. Actual selection, files, API owners and controlled HTTP."""
 import asyncio
 import json
+import os
 import threading
 
 import httpx
@@ -21,7 +22,7 @@ async def _write_json(path, payload):
 
 
 def _environment(endpoint):
-    return {"ORKET_API_KEY": "fixture-key", "ORKET_OPERATOR_MODEL": MODEL,
+    return {**os.environ, "ORKET_API_KEY": "fixture-key", "ORKET_OPERATOR_MODEL": MODEL,
             "ORKET_LLM_PROVIDER": "openai_compat", "ORKET_LLM_OPENAI_BASE_URL": endpoint,
             "ORKET_PROVIDER_RUNTIME_AUTO_SELECT_MODEL": "false",
             "ORKET_PROVIDER_RUNTIME_AUTO_LOAD_LOCAL_MODEL": "false"}
@@ -72,15 +73,13 @@ async def test_real_api_chat_closes_request_driver(tmp_path, monkeypatch):
     monkeypatch.setattr(driver_module, "OrketDriver", observe)
     with provider_server() as (endpoint, calls):
         app = create_api_app(project_root=tmp_path, environment=_environment(endpoint))
-        try:
+        async with app.router.lifespan_context(app):
             async with httpx.AsyncClient(transport=httpx.ASGITransport(app), base_url="http://fixture") as client:
                 response = await client.post("/v1/system/chat-driver", headers={"X-API-Key": "fixture-key"},
                                              json={"message": "Explain the system to a curious developer."})
             assert response.status_code == 200 and AUDITOR.strip() in response.json()["response"]
             assert len(created) == 1 and created[0].provider.client.is_closed
             assert len([c for c in calls if c[0] == "POST"]) == 1
-        finally:
-            await app.state.api_runtime_context.close()
 
 
 async def test_cancelled_driver_bootstrap_drains_worker_and_closes_actual_transport(tmp_path, monkeypatch):
@@ -123,21 +122,20 @@ async def test_api_model_assignments_report_actual_score_provenance(tmp_path):
         "name": "Fixture", "vision": "Preview", "ethos": "Truth",
         "process_rules": {"model_compliance_policy": {
             "min_score": 85, "fallback_model": "qwen-fallback", "score_source": str(score)}}})
-    app = create_api_app(project_root=tmp_path, environment={"ORKET_API_KEY": "key", "ORKET_MODEL_CODER": "candidate"})
-    try:
-        async with httpx.AsyncClient(transport=httpx.ASGITransport(app), base_url="http://fixture") as client:
-            first = await client.get("/v1/system/model-assignments?roles=coder", headers={"X-API-Key": "key"})
-            assert first.status_code == 200
-            item = first.json()["items"][0]
-            assert item["selected_model"] == "candidate" and item["final_model"] == "qwen-fallback"
-            assert item["reason"] == "score_below_threshold" and item["score_source"]["status"] == "observed"
-            await asyncio.to_thread(score.unlink)
-            second = await client.get("/v1/system/model-assignments?roles=coder", headers={"X-API-Key": "key"})
-            item = second.json()["items"][0]
-            assert item["final_model"] == "candidate" and item["reason"] == "score_missing"
-            assert item["score_source"]["status"] == "missing"
-    finally:
-        await app.state.api_runtime_context.close()
+    app = create_api_app(project_root=tmp_path, environment={**os.environ, "ORKET_API_KEY": "key", "ORKET_MODEL_CODER": "candidate"})
+    async with app.router.lifespan_context(app), httpx.AsyncClient(
+        transport=httpx.ASGITransport(app), base_url="http://fixture",
+    ) as client:
+        first = await client.get("/v1/system/model-assignments?roles=coder", headers={"X-API-Key": "key"})
+        assert first.status_code == 200
+        item = first.json()["items"][0]
+        assert item["selected_model"] == "candidate" and item["final_model"] == "qwen-fallback"
+        assert item["reason"] == "score_below_threshold" and item["score_source"]["status"] == "observed"
+        await asyncio.to_thread(score.unlink)
+        second = await client.get("/v1/system/model-assignments?roles=coder", headers={"X-API-Key": "key"})
+        item = second.json()["items"][0]
+        assert item["final_model"] == "candidate" and item["reason"] == "score_missing"
+        assert item["score_source"]["status"] == "missing"
 
 
 async def test_real_preview_uses_asset_model_and_project_files(tmp_path, monkeypatch):

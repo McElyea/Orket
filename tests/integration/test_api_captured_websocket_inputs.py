@@ -1,4 +1,6 @@
 """Layer: integration. Real ASGI WebSocket routes and startup over captured application inputs."""
+import os
+
 import pytest
 from fastapi.testclient import TestClient
 from starlette.websockets import WebSocketDisconnect
@@ -15,7 +17,7 @@ def test_websocket_authentication_retains_app_key_and_mode(tmp_path, monkeypatch
     monkeypatch.setenv('ORKET_STREAM_EVENTS_V1', 'false')
     monkeypatch.setenv('ORKET_DURABLE_ROOT', str(tmp_path/'.orket/durable'))
     monkeypatch.setenv('ORKET_OUTWARD_PIPELINE_DB_PATH', str(tmp_path/'outward.db'))
-    environment = {'ORKET_API_KEY': 'captured-key', 'ORKET_API_SECURITY_MODE': mode, 'ORKET_ENV': 'local',
+    environment = {**os.environ, 'ORKET_API_KEY': 'captured-key', 'ORKET_API_SECURITY_MODE': mode, 'ORKET_ENV': 'local',
                    'ORKET_STREAM_EVENTS_V1': 'true'}
     app = create_api_app(project_root=tmp_path, environment=environment)
     environment.update(ORKET_API_KEY='changed-key', ORKET_API_SECURITY_MODE='enforce' if mode == 'compat' else 'compat',
@@ -42,7 +44,7 @@ def test_websocket_authentication_retains_app_key_and_mode(tmp_path, monkeypatch
 
 
 def test_startup_rejects_captured_insecure_nonlocal_settings_after_environment_change(tmp_path, monkeypatch):
-    app = create_api_app(project_root=tmp_path, environment={
+    app = create_api_app(project_root=tmp_path, environment={**os.environ,
         'ORKET_ENV': 'production', 'ORKET_API_SECURITY_PROFILE': 'dev', 'ORKET_ALLOW_INSECURE_NO_API_KEY': 'true',
     })
     monkeypatch.setenv('ORKET_ENV', 'local')

@@ -1,6 +1,6 @@
 # CURRENT_AUTHORITY.md
 
-Last updated: 2026-09-19
+Last updated: 2026-09-20
 
 This file is the current canonical authority snapshot for high-impact runtime and governance paths.
 
@@ -322,6 +322,27 @@ the declared `tzdata` dependency on hosts without a system IANA database.
 sibling control-plane store and explicit offline historical relative-scope
 migration. Migration preserves request/native-lock identities, checks source
 ownership and cannot merge unrelated histories or grant effect approval.
+
+The 0.6.39 API construction transition captures cwd, environment, settings
+and preferences in the synchronous factory, then acquires the graph in a
+lifespan-owned worker. Runtime services require lifespan entry; HTTP/WebSocket
+admission additionally requires successful initialization. Failed or interrupted
+preparation retains its worker and acquired-resource cleanup. The canonical server
+binds both settings snapshots before its event loop, including spawned workers'
+later `server:app` imports. Contract and remaining verification disposition:
+`docs/architecture/CONTRACT_DELTA_API_CONSTRUCTION_D_2026-09-19.md` and the canonical
+architectural-truth plan. Canonical reload now requests cooperative worker shutdown
+through a process-shared event and joins that worker before replacement. Native
+Windows source reload and failure paths passed with Uvicorn 0.52.4 and 0.27.0.
+Fresh source passes 1,001 selected cases. Installed Windows Python 3.11/3.12
+pass all 1,001; Linux 3.11 passes 1,000 with one native Windows junction skip.
+Linux 3.12 remains blocked by observed 20-second WSL clock jumps: both
+attempts retain 999 passes, one failure and one platform skip. Package
+origins, CLI flows and live reload/cleanup pass; four-cell acceptance remains
+open. The clock preflight also failed. Earlier failures
+remain retained. StatReload is exercised; optional watcher backends and every
+intermediate Uvicorn version are not established. This is scoped checkpoint
+proof; the full-suite, coverage and hosted Quality limits remain in the plan.
 
 API application teardown authority lives in `docs/specs/API_RUNTIME_LIFECYCLE.md`
 and `orket/application/services/api_runtime_container.py`. Application service

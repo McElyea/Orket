@@ -30,11 +30,11 @@ def test_kernel_operator_surfaces_cover_one_action_lifecycle(monkeypatch) -> Non
     repository = InMemoryControlPlaneRecordRepository()
     execution_repository = InMemoryControlPlaneExecutionRepository()
     publication = ControlPlanePublicationService(repository=repository)
-    monkeypatch.setattr(api_module._get_engine(), "control_plane_repository", repository, raising=False)
-    monkeypatch.setattr(api_module._get_engine(), "control_plane_execution_repository", execution_repository, raising=False)
-    monkeypatch.setattr(api_module._get_engine(), "control_plane_publication", publication, raising=False)
+    monkeypatch.setattr(api_module._get_engine(client.app), "control_plane_repository", repository, raising=False)
+    monkeypatch.setattr(api_module._get_engine(client.app), "control_plane_execution_repository", execution_repository, raising=False)
+    monkeypatch.setattr(api_module._get_engine(client.app), "control_plane_publication", publication, raising=False)
     monkeypatch.setattr(
-        api_module._get_engine(),
+        api_module._get_engine(client.app),
         "kernel_action_control_plane",
         KernelActionControlPlaneService(
             execution_repository=execution_repository,
@@ -43,7 +43,7 @@ def test_kernel_operator_surfaces_cover_one_action_lifecycle(monkeypatch) -> Non
         raising=False,
     )
     monkeypatch.setattr(
-        api_module._get_engine(),
+        api_module._get_engine(client.app),
         "kernel_action_control_plane_view",
         KernelActionControlPlaneViewService(
             record_repository=repository,
@@ -52,7 +52,7 @@ def test_kernel_operator_surfaces_cover_one_action_lifecycle(monkeypatch) -> Non
         raising=False,
     )
     monkeypatch.setattr(
-        api_module._get_engine(),
+        api_module._get_engine(client.app),
         "tool_approval_control_plane_operator",
         ToolApprovalControlPlaneOperatorService(publication=publication),
         raising=False,

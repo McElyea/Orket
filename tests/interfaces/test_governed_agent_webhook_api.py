@@ -102,8 +102,10 @@ def test_webhook_api_rejects_stale_delivery_and_incomplete_configuration(
     assert oversized.json()["detail"]["code"] == "E_AGENT_WEBHOOK_BODY_TOO_LARGE"
 
     monkeypatch.delenv("ORKET_GOVERNED_AGENT_WEBHOOK_SECRET")
-    with pytest.raises(ValueError, match="E_AGENT_WEBHOOK_CONFIGURATION_INCOMPLETE"):
+    with pytest.raises(ValueError, match="E_AGENT_WEBHOOK_CONFIGURATION_INCOMPLETE"), TestClient(
         create_api_app(project_root=tmp_path)
+    ):
+        pass
 
 
 def test_api_owned_supervisor_dispatches_authenticated_webhook_wake(

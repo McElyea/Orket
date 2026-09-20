@@ -28,7 +28,6 @@ def build_app(root, monkeypatch):
 
 async def test_real_http_adopts_workload_and_shutdown_waits_for_native_commit(tmp_path, monkeypatch):
     app = build_app(tmp_path, monkeypatch)
-    runtime = app.state.api_runtime_context
     entered, release = threading.Event(), threading.Event()
     publish = InteractionArtifactStore._publish_sync
 
@@ -41,6 +40,7 @@ async def test_real_http_adopts_workload_and_shutdown_waits_for_native_commit(tm
     monkeypatch.setattr(InteractionArtifactStore, "_publish_sync", held)
     closing = None
     async with serving_api(app) as client:
+        runtime = app.state.api_runtime_context
         try:
             started = await client.post("/v1/interactions/sessions", json={"session_params": {"label": "tcp"}})
             assert started.status_code == 200
@@ -81,73 +81,77 @@ async def test_real_http_adopts_workload_and_shutdown_waits_for_native_commit(tm
 
 async def test_interrupted_http_admission_has_failed_commit_and_no_unadopted_work(tmp_path, monkeypatch):
     app = build_app(tmp_path, monkeypatch)
-    runtime = app.state.api_runtime_context
-    manager = runtime.interaction_manager
-    session = await manager.start({})
-    queue = await manager.bus.subscribe(session)
-    entered, release = hold_event(monkeypatch, manager.bus, StreamEventType.TURN_ACCEPTED)
-    request = None
-    async with httpx.AsyncClient(transport=httpx.ASGITransport(app), base_url="http://fixture",
-                                headers={"X-API-Key": TEST_API_KEY}) as client:
-        try:
-            request = asyncio.create_task(client.post(f"/v1/interactions/{session}/turns",
-                                                       json={"workload_id": "stream_test_v1"}))
-            await asyncio.wait_for(entered.wait(), 0.5)
-            request.cancel()
-            assert (await asyncio.wait_for(client.get("/v1/system/heartbeat"), 0.5)).status_code == 200
-            assert not request.done()
-            release.set()
-            with pytest.raises(asyncio.CancelledError):
-                await asyncio.wait_for(request, 3)
-            assert (await manager.queries.get_session_status(session))["status"] == "idle"
-            events = [queue.get_nowait() for _ in range(queue.qsize())]
-            assert [event.event_type for event in events] == [StreamEventType.TURN_ACCEPTED,
-                                                            StreamEventType.TURN_INTERRUPTED, StreamEventType.COMMIT_FINAL]
-            assert events[-1].payload["commit_outcome"] == "fail_closed"
-            path = Path(events[-1].payload["artifact_refs"][0])
-            payload = json.loads(await asyncio.to_thread(path.read_text, encoding="utf-8"))
-            assert payload["intents"] == [{"type": "decision", "ref": "fail_closed:admission_interrupted",
-                                           "payload_digest": None}]
-            assert runtime.active_background_task_count == runtime.active_request_count == 0
-        finally:
-            release.set()
-            if request is not None:
-                await asyncio.gather(request, return_exceptions=True)
-            await manager.bus.unsubscribe(session, queue)
-            await runtime.close()
+    async with app.router.lifespan_context(app):
+        runtime = app.state.api_runtime_context
+        startup_tasks = set(runtime._background_tasks)
+        manager = runtime.interaction_manager
+        session = await manager.start({})
+        queue = await manager.bus.subscribe(session)
+        entered, release = hold_event(monkeypatch, manager.bus, StreamEventType.TURN_ACCEPTED)
+        request = None
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app), base_url="http://fixture",
+                                    headers={"X-API-Key": TEST_API_KEY}) as client:
+            try:
+                request = asyncio.create_task(client.post(f"/v1/interactions/{session}/turns",
+                                                           json={"workload_id": "stream_test_v1"}))
+                await asyncio.wait_for(entered.wait(), 0.5)
+                request.cancel()
+                assert (await asyncio.wait_for(client.get("/v1/system/heartbeat"), 0.5)).status_code == 200
+                assert not request.done()
+                release.set()
+                with pytest.raises(asyncio.CancelledError):
+                    await asyncio.wait_for(request, 3)
+                assert (await manager.queries.get_session_status(session))["status"] == "idle"
+                events = [queue.get_nowait() for _ in range(queue.qsize())]
+                assert [event.event_type for event in events] == [StreamEventType.TURN_ACCEPTED,
+                                                                StreamEventType.TURN_INTERRUPTED, StreamEventType.COMMIT_FINAL]
+                assert events[-1].payload["commit_outcome"] == "fail_closed"
+                path = Path(events[-1].payload["artifact_refs"][0])
+                payload = json.loads(await asyncio.to_thread(path.read_text, encoding="utf-8"))
+                assert payload["intents"] == [{"type": "decision", "ref": "fail_closed:admission_interrupted",
+                                               "payload_digest": None}]
+                assert set(runtime._background_tasks) == startup_tasks and runtime.active_request_count == 0
+            finally:
+                release.set()
+                if request is not None:
+                    await asyncio.gather(request, return_exceptions=True)
+                await manager.bus.unsubscribe(session, queue)
+                await runtime.close()
 
 
 async def test_public_finalize_cannot_commit_while_adopted_workload_is_still_running(tmp_path, monkeypatch):
     app = build_app(tmp_path, monkeypatch)
-    runtime = app.state.api_runtime_context
-    entered, release = asyncio.Event(), asyncio.Event()
-    run = commands.run_builtin_workload
+    async with app.router.lifespan_context(app):
+        runtime = app.state.api_runtime_context
+        startup_tasks = set(runtime._background_tasks)
+        entered, release = asyncio.Event(), asyncio.Event()
+        run = commands.run_builtin_workload
 
-    async def held(**kwargs):
-        entered.set()
-        await release.wait()
-        return await run(**kwargs)
+        async def held(**kwargs):
+            entered.set()
+            await release.wait()
+            return await run(**kwargs)
 
-    monkeypatch.setattr(commands, "run_builtin_workload", held)
-    async with httpx.AsyncClient(transport=httpx.ASGITransport(app), base_url="http://fixture",
-                                headers={"X-API-Key": TEST_API_KEY}) as client:
-        try:
-            session = (await client.post("/v1/interactions/sessions", json={})).json()["session_id"]
-            response = await client.post(f"/v1/interactions/{session}/turns", json={"workload_id": "stream_test_v1"})
-            turn = response.json()["turn_id"]
-            await asyncio.wait_for(entered.wait(), 0.5)
-            refused = await client.post(f"/v1/interactions/{session}/finalize", json={"turn_id": turn})
-            assert refused.status_code == 400 and "not published its result" in refused.text
-            path = tmp_path / "workspace/interactions" / session / turn / "authority_commit.json"
-            assert not await asyncio.to_thread(path.exists)
-            with pytest.raises(ValueError, match="Drain the owning application"):
-                await runtime.interaction_manager.close(session)
-            tasks = tuple(runtime._background_tasks)
-            release.set()
-            await asyncio.wait_for(asyncio.gather(*tasks), 3)
-            finalized = await client.post(f"/v1/interactions/{session}/finalize", json={"turn_id": turn})
-            assert finalized.status_code == 200 and finalized.json()["status"] == "committed"
-            assert json.loads(await asyncio.to_thread(path.read_text, encoding="utf-8"))["authoritative"]
-        finally:
-            release.set()
-            await runtime.close()
+        monkeypatch.setattr(commands, "run_builtin_workload", held)
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app), base_url="http://fixture",
+                                    headers={"X-API-Key": TEST_API_KEY}) as client:
+            try:
+                session = (await client.post("/v1/interactions/sessions", json={})).json()["session_id"]
+                response = await client.post(f"/v1/interactions/{session}/turns", json={"workload_id": "stream_test_v1"})
+                turn = response.json()["turn_id"]
+                await asyncio.wait_for(entered.wait(), 0.5)
+                refused = await client.post(f"/v1/interactions/{session}/finalize", json={"turn_id": turn})
+                assert refused.status_code == 400 and "not published its result" in refused.text
+                path = tmp_path / "workspace/interactions" / session / turn / "authority_commit.json"
+                assert not await asyncio.to_thread(path.exists)
+                with pytest.raises(ValueError, match="Drain the owning application"):
+                    await runtime.interaction_manager.close(session)
+                tasks = tuple(set(runtime._background_tasks) - startup_tasks)
+                release.set()
+                await asyncio.wait_for(asyncio.gather(*tasks), 3)
+                finalized = await client.post(f"/v1/interactions/{session}/finalize", json={"turn_id": turn})
+                assert finalized.status_code == 200 and finalized.json()["status"] == "committed"
+                assert json.loads(await asyncio.to_thread(path.read_text, encoding="utf-8"))["authoritative"]
+            finally:
+                release.set()
+                await runtime.close()

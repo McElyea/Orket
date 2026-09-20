@@ -8,6 +8,7 @@ from types import MappingProxyType
 from typing import Any
 
 from orket.adapters.execution.owned_io import run_owned_io, run_owned_thread
+from orket.application.services.runtime_construction_inputs import RuntimeConstructionInputs
 from orket.application.services.runtime_input_service import RuntimeInputService
 
 
@@ -15,9 +16,11 @@ class ApiRuntimeHostService:
     """Explicit owner for API-facing runtime object construction and session ids."""
 
     def __init__(self, project_root: Path, *, runtime_inputs: RuntimeInputService | None = None,
-                 environment: Mapping[str, str] | None = None) -> None:
+                 environment: Mapping[str, str] | None = None,
+                 construction_inputs: RuntimeConstructionInputs | None = None) -> None:
         self.project_root = Path(project_root).resolve()
         self.runtime_inputs = runtime_inputs or RuntimeInputService()
+        self.construction_inputs = construction_inputs
         self.environment = MappingProxyType(dict(os.environ if environment is None else environment))
 
     def create_session_id(self) -> str:
@@ -66,6 +69,7 @@ class ApiRuntimeHostService:
             workspace_root or self.project_root / "workspace" / "default",
             config_root=self.project_root,
             runtime_inputs=self.runtime_inputs,
+            construction_inputs=self.construction_inputs,
         )
 
     def create_engine(self, workspace_root: Path | None = None) -> Any:
@@ -75,6 +79,7 @@ class ApiRuntimeHostService:
             workspace_root or self.project_root / "workspace" / "default",
             config_root=self.project_root,
             runtime_inputs=self.runtime_inputs,
+            construction_inputs=self.construction_inputs,
         )
 
     def create_file_tools(self, project_root: Path | None = None) -> Any:

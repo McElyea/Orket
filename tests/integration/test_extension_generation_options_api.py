@@ -8,6 +8,7 @@ import httpx
 import pytest
 
 from orket.capabilities.sync_bridge import run_coro_sync
+from tests.helpers.provider_preparation import ControlledPreparation
 from tests.integration.test_api_active_request_ownership import serving_api
 from tests.integration.test_extension_generation_api_lifetime import generation_app as generation_app
 
@@ -22,12 +23,13 @@ async def test_api_preserves_generation_options_and_rejects_empty_stop(generatio
         observed.append(json.loads(request.content))
         return httpx.Response(200, json={"choices": [{"message": {"content": "controlled"}}]})
 
-    provider = generation_app.state.api_runtime_context.extension_runtime_service._model_provider._provider
-    await asyncio.to_thread(run_coro_sync, provider.client.aclose())
-    # Keep API, SDK bridge and policy real; this transport is not live inference.
-    provider.provider_name = "lmstudio"
-    provider.client = httpx.AsyncClient(base_url="http://controlled.test/v1", transport=httpx.MockTransport(respond))
     async with serving_api(generation_app) as client:
+        provider = generation_app.state.api_runtime_context.extension_runtime_service._model_provider._provider
+        await asyncio.to_thread(run_coro_sync, provider.client.aclose())
+        # Keep API, SDK bridge and policy real; this transport is not live inference.
+        provider.provider_name = "lmstudio"
+        provider._runtime_preparation = ControlledPreparation()
+        provider.client = httpx.AsyncClient(base_url="http://controlled.test/v1", transport=httpx.MockTransport(respond))
         response = await client.post("/v1/extensions/orket.test/runtime/llm/generate", json={
             "user_message": "hello", "max_tokens": 512, "temperature": 0.0,
             "stop_sequences": [""] if invalid_stop else [" ", " END\n"]})

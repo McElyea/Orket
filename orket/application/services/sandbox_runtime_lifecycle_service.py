@@ -62,6 +62,7 @@ class SandboxRuntimeLifecycleService:
         control_plane_publication: ControlPlanePublicationService | None = None,
         control_plane_execution: SandboxControlPlaneExecutionService | None = None,
         control_plane_effects: SandboxControlPlaneEffectService | None = None,
+        terminal_evidence_root: Path | None = None,
     ) -> None:
         self.repository = repository
         self.command_runner = command_runner
@@ -102,7 +103,7 @@ class SandboxRuntimeLifecycleService:
             else self.control_plane_execution.repository,
         )
         self.event_publisher = SandboxLifecycleEventPublisher(repository=repository)
-        self.terminal_evidence = SandboxTerminalEvidenceService()
+        self.terminal_evidence = SandboxTerminalEvidenceService(evidence_root=terminal_evidence_root)
         self.terminal_outcomes = SandboxTerminalOutcomeService(lifecycle_service=self)
         self.cleanup_authority = SandboxCleanupAuthorityService()
         self.cleanup_verifier = SandboxCleanupVerificationService()

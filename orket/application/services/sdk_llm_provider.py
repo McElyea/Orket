@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from orket.application.services.local_model_factory import create_local_model_provider
 from orket.capabilities.sync_bridge import run_coro_sync
 from orket_extension_sdk.llm import GenerateRequest, GenerateResponse, nonnegative_int_or_none
@@ -16,6 +18,7 @@ class LocalModelCapabilityProvider:
         seed: int | None,
         timeout: int = 300,
         provider: str = "",
+        environment: Mapping[str, str] | None = None,
     ) -> None:
         self._provider = create_local_model_provider(
             model=model,
@@ -23,6 +26,7 @@ class LocalModelCapabilityProvider:
             seed=seed,
             timeout=timeout,
             provider=provider,
+            environment=environment,
         )
         self._closed = False
 

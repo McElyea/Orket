@@ -11,14 +11,13 @@ from pathlib import Path
 from typing import Any, TypeVar, cast
 
 from fastapi import APIRouter, Body, Depends, FastAPI, HTTPException, Query, Request, Security, WebSocketDisconnect
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from fastapi.security import APIKeyHeader
 
 from orket import __version__
 from orket.application.interactions.manager import InteractionManager
-from orket.application.services.api_runtime_composition import build_api_runtime_container
 from orket.application.services.api_runtime_host_service import ApiRuntimeHostService
+from orket.application.services.api_runtime_preparation import build_api_runtime_preparation
 from orket.application.services.api_startup_service import api_runtime_lifespan
 from orket.application.services.execution_graph_service import (
     execution_graph_payload,
@@ -38,6 +37,7 @@ from orket.application.services.outward_run_service import (
 from orket.application.services.run_ledger_summary_projection import (
     validated_run_ledger_record_projection,
 )
+from orket.application.services.runtime_construction_inputs import RuntimeConstructionInputs
 from orket.application.services.runtime_policy import (
     allowed_architecture_patterns,
     is_microservices_pilot_stable,
@@ -59,12 +59,12 @@ from orket.application.services.runtime_policy import (
     resolve_state_backend_mode,
     runtime_policy_options,
 )
-from orket.interfaces.api_app_context_middleware import ApiAppContextMiddleware
 from orket.interfaces.api_runtime_context import (
     ApiAppRuntimeContext,
     get_api_runtime_context,
     set_api_runtime_context,
 )
+from orket.interfaces.api_transport_composition import register_api_transport
 from orket.interfaces.routers.card_authoring import build_card_authoring_router
 from orket.interfaces.routers.cards import build_cards_router
 from orket.interfaces.routers.extension_runtime import build_extension_runtime_router
@@ -75,14 +75,11 @@ from orket.interfaces.routers.outward_ledger import build_outward_ledger_router
 from orket.interfaces.routers.runs import build_runs_router
 from orket.interfaces.routers.sessions import build_sessions_router
 from orket.interfaces.routers.settings import build_settings_router
-from orket.interfaces.routers.streaming import register_streaming_routes
 from orket.interfaces.routers.system import build_system_router
 from orket.kernel.v1.outbound_policy_gate import (
     apply_outbound_policy_gate,
-    load_outbound_policy_config_file,
     merge_outbound_policy_config,
 )
-from orket.runtime.cors_config import resolve_cors_config
 from orket.settings import load_user_settings_async, save_user_settings_async
 
 LOGGER = logging.getLogger(__name__)
@@ -91,7 +88,7 @@ _PayloadT = TypeVar("_PayloadT")
 
 
 def _resolve_default_project_root() -> Path:
-    return Path(__file__).resolve().parents[2]
+    return Path(__file__).parents[2]
 
 
 def _current_api_app(target_app: FastAPI | None = None) -> FastAPI:
@@ -511,13 +508,16 @@ async def get_api_key(request: Request, api_key_header: str | None = Security(ap
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
-    context = get_api_runtime_context(_app)
-    configured_root = getattr(_app.state, "project_root", None)
-    if context is None or configured_root is None:
-        raise RuntimeError("API app runtime context does not match its configured project root.")
-    state, runtime_node = context.runtime_state, context.api_runtime_node
-    async with api_runtime_lifespan(context, configured_root, lambda: event_broadcaster(state, runtime_node)):
-        yield
+    async with _app.state.api_preparation.open() as prepared:
+        context = set_api_runtime_context(_app, prepared.container)
+        _app.state.outbound_policy_config = prepared.outbound_policy
+        state, runtime_node = context.runtime_state, context.api_runtime_node
+        async with api_runtime_lifespan(context, context.project_root, lambda: event_broadcaster(state, runtime_node)):
+            _app.state.api_ready = True
+            try:
+                yield
+            finally:
+                _app.state.api_ready = False
 
 
 def _filter_operator_payload(payload: _PayloadT, *, surface: str) -> _PayloadT:
@@ -527,16 +527,6 @@ def _filter_operator_payload(payload: _PayloadT, *, surface: str) -> _PayloadT:
         merge_outbound_policy_config(base_config, {"surface": surface}),
     )
     return cast(_PayloadT, filtered)
-
-
-def _load_outbound_policy_config_for_app(project_root: Path) -> dict[str, Any]:
-    raw_path = str(os.getenv("ORKET_OUTBOUND_POLICY_CONFIG_PATH") or "").strip()
-    if not raw_path:
-        return {}
-    config_path = Path(raw_path)
-    if not config_path.is_absolute():
-        config_path = project_root / config_path
-    return cast(dict[str, Any], load_outbound_policy_config_file(config_path))
 
 
 # Apply auth to all v1 endpoints if configured
@@ -1658,42 +1648,21 @@ async def event_broadcaster(state: Any, runtime_node: Any) -> None:
             state.event_queue.task_done()
 
 
-def _register_streaming_transport(target_app: FastAPI) -> None:
-    register_streaming_routes(
-        target_app,
-        api_key_name=API_KEY_NAME,
-        authentication_getter=lambda: _runtime_context(target_app).authentication,
-        runtime_host_getter=lambda: _get_api_runtime_host(target_app),
-        interaction_manager_getter=lambda: _get_interaction_manager(target_app),
-        runtime_state_getter=lambda: _get_runtime_state(target_app),
-        events_getter=lambda: _runtime_context(target_app).events,
-    )
-
-
-def _register_created_app_transport(target_app: FastAPI) -> None:
-    config = resolve_cors_config(_runtime_context(target_app).authentication.environment)
-    target_app.add_middleware(
-        CORSMiddleware,
-        allow_origins=config.allow_origins,
-        allow_methods=config.allow_methods,
-        allow_headers=config.allow_headers,
-        allow_credentials=config.allow_credentials,
-    )
-    target_app.add_middleware(ApiAppContextMiddleware, owner_app=target_app, active_app=_ACTIVE_API_APP)
-    target_app.add_api_route("/health", health, methods=["GET"])
-    target_app.include_router(v1_router)
-    _register_streaming_transport(target_app)
-
-
 def create_api_app(
     project_root: Path | None = None, *, runtime_inputs: Any | None = None,
     environment: Mapping[str, str] | None = None,
 ) -> FastAPI:
-    root = Path(project_root).resolve() if project_root is not None else _resolve_default_project_root()
+    inputs = RuntimeConstructionInputs.capture(environment=environment)
+    root = inputs.invocation_root / (project_root if project_root is not None else _resolve_default_project_root())
     created_app = FastAPI(title="Orket API", version=__version__, lifespan=lifespan)
     created_app.state.project_root = root
-    created_app.state.outbound_policy_config = _load_outbound_policy_config_for_app(root)
-    set_api_runtime_context(created_app, build_api_runtime_container(root, runtime_inputs=runtime_inputs,
-                                                                   environment=environment))
-    _register_created_app_transport(created_app)
+    created_app.state.api_ready = False
+    created_app.state.api_preparation = build_api_runtime_preparation(root, inputs=inputs, runtime_inputs=runtime_inputs)
+    register_api_transport(created_app, environment=inputs.environment, active_app=_ACTIVE_API_APP,
+        router=v1_router, health=health, api_key_name=API_KEY_NAME,
+        authentication_getter=lambda: _runtime_context(created_app).authentication,
+        runtime_host_getter=lambda: _get_api_runtime_host(created_app),
+        interaction_manager_getter=lambda: _get_interaction_manager(created_app),
+        runtime_state_getter=lambda: _get_runtime_state(created_app),
+        events_getter=lambda: _runtime_context(created_app).events)
     return created_app

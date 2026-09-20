@@ -65,8 +65,8 @@ async def test_api_close_waits_for_protocol_replay_worker(tmp_path, monkeypatch)
     monkeypatch.setenv("ORKET_API_KEY", TEST_API_KEY)
     _write_protocol_run(tmp_path, "run-a", status="incomplete", ok=True)
     app = create_api_app(CompositionConfig(project_root=tmp_path))
-    owner = app.state.api_runtime_context
     async with serving_api(app) as client:
+        owner = app.state.api_runtime_context
         entered, release, finished = _hold_replay(monkeypatch)
         request = asyncio.create_task(client.get("/v1/protocol/runs/run-a/replay"))
         closing = None

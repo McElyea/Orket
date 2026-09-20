@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -52,8 +53,8 @@ from orket.application.services.governed_agent_webhook_ingress_service import (
     GovernedAgentWebhookIngressService,
 )
 from orket.application.services.tool_gate_service import ToolGate
+from orket.core.contracts.provider_runtime import provider_from_environment
 from orket.extensions import ExtensionManager
-from orket.runtime.config.defaults import configured_provider
 from orket.runtime_paths import resolve_control_plane_db_path
 
 
@@ -81,8 +82,10 @@ def build_api_governed_agent_runtime(
     *,
     runtime_host: ApiRuntimeHostService,
     extension_manager: ExtensionManager,
+    environment: Mapping[str, str] | None = None,
+    invocation_root: Path | None = None,
 ) -> GovernedAgentRuntime:
-    settings = _settings()
+    settings = _settings(environment=environment, invocation_root=invocation_root)
     execution = AsyncControlPlaneExecutionRepository(settings.db_path)
     iterations = AsyncGovernedAgentRepository(settings.db_path)
     wakes = AsyncGovernedAgentWakeRepository(settings.db_path)
@@ -231,30 +234,34 @@ def _webhook_ingress(
     )
 
 
-def _settings() -> GovernedAgentApiSettings:
-    raw_db = str(os.getenv("ORKET_GOVERNED_AGENT_DB_PATH") or "").strip()
+def _settings(*, environment: Mapping[str, str] | None = None,
+              invocation_root: Path | None = None) -> GovernedAgentApiSettings:
+    environment = dict(os.environ if environment is None else environment)
+    root = invocation_root or Path.cwd()
+    raw_db = str(environment.get("ORKET_GOVERNED_AGENT_DB_PATH") or "").strip()
     role_models = {
-        role: str(os.getenv(f"ORKET_GOVERNED_AGENT_{role.upper()}_MODEL") or "").strip()
+        role: str(environment.get(f"ORKET_GOVERNED_AGENT_{role.upper()}_MODEL") or "").strip()
         for role in ("planner", "actor", "critic")
-        if str(os.getenv(f"ORKET_GOVERNED_AGENT_{role.upper()}_MODEL") or "").strip()
+        if str(environment.get(f"ORKET_GOVERNED_AGENT_{role.upper()}_MODEL") or "").strip()
     }
     settings = GovernedAgentApiSettings(
-        supervisor_enabled=_env_bool("ORKET_GOVERNED_AGENT_SUPERVISOR_ENABLED", False),
-        db_path=Path(raw_db).resolve() if raw_db else resolve_control_plane_db_path(),
-        provider_mode=configured_provider("ORKET_GOVERNED_AGENT_PROVIDER"),
-        default_model=_configured_model(),
+        supervisor_enabled=_env_bool(environment, "ORKET_GOVERNED_AGENT_SUPERVISOR_ENABLED", False),
+        db_path=(root / raw_db).resolve() if raw_db else resolve_control_plane_db_path(
+            invocation_root=root, environment=environment),
+        provider_mode=provider_from_environment(environment, "ORKET_GOVERNED_AGENT_PROVIDER"),
+        default_model=_configured_model(environment),
         role_models=role_models,
-        ollama_base_url=str(os.getenv("ORKET_GOVERNED_AGENT_OLLAMA_BASE_URL") or "").strip(),
-        provider_base_url=str(os.getenv("ORKET_GOVERNED_AGENT_BASE_URL") or "").strip(),
-        inventory_timeout_seconds=_env_float("ORKET_GOVERNED_AGENT_INVENTORY_TIMEOUT_SECONDS", 30.0),
-        capacity_limit=_env_int("ORKET_GOVERNED_AGENT_CAPACITY_LIMIT", 1),
-        lease_seconds=_env_float("ORKET_GOVERNED_AGENT_CLAIM_LEASE_SECONDS", 120.0),
-        renewal_interval_seconds=_env_float("ORKET_GOVERNED_AGENT_CLAIM_RENEWAL_SECONDS", 30.0),
-        idle_wait_seconds=_env_float("ORKET_GOVERNED_AGENT_IDLE_WAIT_SECONDS", 1.0),
-        webhook_issuer_ref=_env_optional("ORKET_GOVERNED_AGENT_WEBHOOK_ISSUER_REF"),
-        webhook_key_id=_env_optional("ORKET_GOVERNED_AGENT_WEBHOOK_KEY_ID"),
-        webhook_secret=_env_optional("ORKET_GOVERNED_AGENT_WEBHOOK_SECRET"),
-        webhook_replay_window_seconds=_env_int("ORKET_GOVERNED_AGENT_WEBHOOK_REPLAY_WINDOW_SECONDS", 300),
+        ollama_base_url=str(environment.get("ORKET_GOVERNED_AGENT_OLLAMA_BASE_URL") or "").strip(),
+        provider_base_url=str(environment.get("ORKET_GOVERNED_AGENT_BASE_URL") or "").strip(),
+        inventory_timeout_seconds=_env_float(environment, "ORKET_GOVERNED_AGENT_INVENTORY_TIMEOUT_SECONDS", 30.0),
+        capacity_limit=_env_int(environment, "ORKET_GOVERNED_AGENT_CAPACITY_LIMIT", 1),
+        lease_seconds=_env_float(environment, "ORKET_GOVERNED_AGENT_CLAIM_LEASE_SECONDS", 120.0),
+        renewal_interval_seconds=_env_float(environment, "ORKET_GOVERNED_AGENT_CLAIM_RENEWAL_SECONDS", 30.0),
+        idle_wait_seconds=_env_float(environment, "ORKET_GOVERNED_AGENT_IDLE_WAIT_SECONDS", 1.0),
+        webhook_issuer_ref=_env_optional(environment, "ORKET_GOVERNED_AGENT_WEBHOOK_ISSUER_REF"),
+        webhook_key_id=_env_optional(environment, "ORKET_GOVERNED_AGENT_WEBHOOK_KEY_ID"),
+        webhook_secret=_env_optional(environment, "ORKET_GOVERNED_AGENT_WEBHOOK_SECRET"),
+        webhook_replay_window_seconds=_env_int(environment, "ORKET_GOVERNED_AGENT_WEBHOOK_REPLAY_WINDOW_SECONDS", 300),
     )
     if settings.provider_mode != "deterministic_fixture" and settings.provider_mode not in PROVIDER_CHOICES:
         raise ValueError("E_AGENT_PROVIDER_MODE_INVALID")
@@ -295,8 +302,8 @@ def _lease_expiry(now_utc: str, lease_seconds: float) -> str:
     return (now + timedelta(seconds=lease_seconds)).isoformat()
 
 
-def _env_bool(name: str, default: bool) -> bool:
-    raw = str(os.getenv(name) or "").strip().lower()
+def _env_bool(environment: Mapping[str, str], name: str, default: bool) -> bool:
+    raw = str(environment.get(name) or "").strip().lower()
     if not raw:
         return default
     if raw in {"1", "true", "yes", "on"}:
@@ -306,30 +313,30 @@ def _env_bool(name: str, default: bool) -> bool:
     raise ValueError(f"E_AGENT_API_RUNTIME_BOOLEAN_INVALID:{name}")
 
 
-def _env_float(name: str, default: float) -> float:
+def _env_float(environment: Mapping[str, str], name: str, default: float) -> float:
     try:
-        return float(str(os.getenv(name) or default))
+        return float(str(environment.get(name) or default))
     except ValueError as exc:
         raise ValueError(f"E_AGENT_API_RUNTIME_NUMBER_INVALID:{name}") from exc
 
 
-def _env_int(name: str, default: int) -> int:
+def _env_int(environment: Mapping[str, str], name: str, default: int) -> int:
     try:
-        return int(str(os.getenv(name) or default))
+        return int(str(environment.get(name) or default))
     except ValueError as exc:
         raise ValueError(f"E_AGENT_API_RUNTIME_NUMBER_INVALID:{name}") from exc
 
 
-def _env_optional(name: str) -> str | None:
-    value = str(os.getenv(name) or "").strip()
+def _env_optional(environment: Mapping[str, str], name: str) -> str | None:
+    value = str(environment.get(name) or "").strip()
     return value or None
 
 
-def _configured_model() -> str:
-    provider = str(os.getenv("ORKET_GOVERNED_AGENT_PROVIDER") or "").strip().lower()
-    selected = str(os.getenv("ORKET_GOVERNED_AGENT_MODEL") or "").strip()
+def _configured_model(environment: Mapping[str, str]) -> str:
+    provider = str(environment.get("ORKET_GOVERNED_AGENT_PROVIDER") or "").strip().lower()
+    selected = str(environment.get("ORKET_GOVERNED_AGENT_MODEL") or "").strip()
     if selected:
         return selected
     if provider == "ollama":
-        return str(os.getenv("ORKET_GOVERNED_AGENT_OLLAMA_MODEL") or "").strip()
+        return str(environment.get("ORKET_GOVERNED_AGENT_OLLAMA_MODEL") or "").strip()
     return ""

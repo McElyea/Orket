@@ -6,6 +6,7 @@ import os
 import shlex
 import shutil
 import sys
+from collections.abc import Mapping
 from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
@@ -155,16 +156,18 @@ class PiperTTSProvider:
 
 def build_tts_provider(
     *, input_config: dict[str, Any], command_runner: CommandRunner | None = None, workspace: Path | None = None,
+    environment: Mapping[str, str] | None = None,
 ) -> TTSProvider:
-    backend = str(input_config.get("tts_backend") or os.getenv("ORKET_TTS_BACKEND", "null")).strip().lower()
+    observed = os.environ if environment is None else environment
+    backend = str(input_config.get("tts_backend") or observed.get("ORKET_TTS_BACKEND", "null")).strip().lower()
     if backend == "null":
         return NullTTSProvider()
     if backend != "piper":
         raise ValueError("E_TTS_BACKEND_UNSUPPORTED")
-    model_path_raw = str(input_config.get("tts_model_path") or os.getenv("ORKET_TTS_PIPER_MODEL_PATH", "")).strip()
-    voices_dir_raw = str(input_config.get("tts_voices_dir") or os.getenv("ORKET_TTS_PIPER_VOICES_DIR", "")).strip()
-    executable = str(input_config.get("tts_executable") or os.getenv("ORKET_TTS_PIPER_BIN", "piper")).strip() or "piper"
-    sample_rate = sample_rate_expectation(input_config.get("tts_sample_rate", os.getenv("ORKET_TTS_SAMPLE_RATE")))
+    model_path_raw = str(input_config.get("tts_model_path") or observed.get("ORKET_TTS_PIPER_MODEL_PATH", "")).strip()
+    voices_dir_raw = str(input_config.get("tts_voices_dir") or observed.get("ORKET_TTS_PIPER_VOICES_DIR", "")).strip()
+    executable = str(input_config.get("tts_executable") or observed.get("ORKET_TTS_PIPER_BIN", "piper")).strip() or "piper"
+    sample_rate = sample_rate_expectation(input_config.get("tts_sample_rate", observed.get("ORKET_TTS_SAMPLE_RATE")))
     if not model_path_raw:
         raise ValueError("E_PIPER_MODEL_REQUIRED")
     if command_runner is None or workspace is None:
@@ -177,7 +180,7 @@ def build_tts_provider(
             voices_dir=voices_dir,
             executable=executable,
             sample_rate=sample_rate,
-            timeout_seconds=float(input_config.get("tts_timeout_seconds", os.getenv("ORKET_TTS_TIMEOUT_SECONDS", "120"))),
+            timeout_seconds=float(input_config.get("tts_timeout_seconds", observed.get("ORKET_TTS_TIMEOUT_SECONDS", "120"))),
         ),
         command_runner=command_runner,
         workspace=workspace,

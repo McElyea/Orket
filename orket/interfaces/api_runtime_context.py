@@ -17,7 +17,8 @@ def get_api_runtime_context(app: FastAPI) -> ApiAppRuntimeContext | None:
 
 
 def set_api_runtime_context(app: FastAPI, context: ApiAppRuntimeContext) -> ApiAppRuntimeContext:
-    context.project_root = Path(context.project_root).resolve()
+    if not Path(context.project_root).is_absolute():
+        raise ValueError("E_API_RUNTIME_ROOT_ABSOLUTE_REQUIRED")
     app.state.project_root = context.project_root
     setattr(app.state, _API_RUNTIME_CONTEXT_STATE_KEY, context)
     return context

@@ -55,6 +55,8 @@ def test_quality_workflow_enforces_architecture_and_volatility_gates() -> None:
 
     # The quick gate job and the full quality job should both run these checks.
     duplicated_in_both_jobs = [
+        "tests/integration/test_extension_capability_api_lifetime.py tests/integration/test_extension_generation_options_api.py tests/integration/test_piper_process_lifetime.py tests/integration/test_interaction_cancel_ownership.py tests/integration/test_operator_completion_views.py",
+        "tests/integration/test_api_construction_ownership.py tests/integration/test_api_construction_inputs.py tests/integration/test_api_preparation_interruption.py tests/integration/test_api_server_bootstrap.py tests/integration/test_api_server_reload.py",
         "tests/integration/test_workload_publication_ownership.py tests/integration/test_workload_publication_inputs.py tests/integration/test_legacy_publication_ownership.py tests/integration/test_workload_policy_inputs.py tests/integration/test_workload_reproducibility_inputs.py tests/runtime/test_workload_policy.py tests/integration/test_extension_installation_ownership.py tests/integration/test_extension_catalog_publication.py tests/integration/test_extension_manager_preflight.py tests/integration/test_extension_git_lifetime.py tests/runtime/test_extension_source_policy.py tests/contracts/test_extension_cli_ownership.py tests/contracts/test_extension_git_cancellation.py tests/integration/test_sandbox_deploy_publication_recovery.py tests/rulesim/test_interruption_reproducibility.py",
         "tests/integration/test_extension_module_origin.py tests/integration/test_extension_load_ownership.py",
         "tests/integration/test_run_start_publication.py tests/integration/test_run_start_ownership.py",

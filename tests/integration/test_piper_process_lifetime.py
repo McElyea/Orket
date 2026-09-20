@@ -70,10 +70,10 @@ async def test_piper_owns_detached_resistant_children_and_grandchildren(tmp_path
 @pytest.mark.asyncio
 # Layer: integration
 async def test_tcp_piper_shutdown_stops_the_active_native_tree(generation_app, tmp_path, caplog):
-    context = generation_app.state.api_runtime_context
-    context.extension_runtime_service._tts_provider = await asyncio.to_thread(tree_provider, tmp_path, "cancel")
     processes, request, closing = [], None, None
     async with serving_api(generation_app) as client:
+        context = generation_app.state.api_runtime_context
+        context.extension_runtime_service._tts_provider = await asyncio.to_thread(tree_provider, tmp_path, "cancel")
         try:
             request = asyncio.create_task(client.post("/v1/extensions/orket.test/runtime/tts/synthesize",
                                                       json={"text": "hello", "voice_id": "voice"}))

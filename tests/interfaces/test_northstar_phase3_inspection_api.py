@@ -58,7 +58,7 @@ async def test_phase3_events_summary_stream_and_gate_are_read_only(tmp_path, mon
 
     monkeypatch.setattr(api_module, "apply_outbound_policy_gate", _fake_gate)
     client, db_path = _client(tmp_path, monkeypatch)
-    try:
+    with client:
         run_id = _submit_and_approve(client)
         calls.clear()
         before_events = await OutwardRunEventStore(db_path).list_for_run(run_id)
@@ -86,8 +86,6 @@ async def test_phase3_events_summary_stream_and_gate_are_read_only(tmp_path, mon
         assert "api.runs.events" in calls
         assert "api.runs.summary" in calls
         assert "api.runs.events.stream" in calls
-    finally:
-        client.close()
 
     after_events = await OutwardRunEventStore(db_path).list_for_run(run_id)
     after_run = await OutwardRunStore(db_path).get(run_id)

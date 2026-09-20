@@ -167,11 +167,10 @@ def test_client(tmp_path, api_key_env):
 
     created_app = api_module.create_api_app(project_root=tmp_path)
     token = api_module._ACTIVE_API_APP.set(created_app)
-    client = TestClient(created_app)
     try:
-        yield client
+        with TestClient(created_app) as client:
+            yield client
     finally:
-        client.close()
         api_module._ACTIVE_API_APP.reset(token)
 
 

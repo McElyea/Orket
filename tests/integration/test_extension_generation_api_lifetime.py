@@ -20,7 +20,7 @@ def generation_app(tmp_path, monkeypatch):
     monkeypatch.setenv("ORKET_LLM_PROVIDER", "llama_cpp")
     monkeypatch.setenv("ORKET_DURABLE_ROOT", str(tmp_path / ".orket/durable"))
     monkeypatch.setenv("ORKET_OUTWARD_PIPELINE_DB_PATH", str(tmp_path / "outward.db"))
-    # Public bootstrap constructs the app before the event loop starts.
+    # Public bootstrap captures inputs; the TCP server owns construction and startup.
     return create_api_app(CompositionConfig(project_root=tmp_path))
 
 
@@ -41,10 +41,10 @@ async def test_tcp_generation_shutdown_waits_for_worker_and_closes_all_clients(g
         return ModelResponse(content="ready", raw={"model": "controlled"})
 
     monkeypatch.setattr(LocalModelProvider, "complete", complete)
-    context = generation_app.state.api_runtime_context
-    default = context.extension_runtime_service._model_provider
     request, closing = None, None
     async with serving_api(generation_app) as client:
+        context = generation_app.state.api_runtime_context
+        default = context.extension_runtime_service._model_provider
         try:
             body = {"user_message": "hello"}
             if override:
@@ -78,9 +78,9 @@ async def test_tcp_generation_success_closes_default_client_at_lifespan_exit(gen
         return ModelResponse(content="ready", raw={"model": "controlled"})
 
     monkeypatch.setattr(LocalModelProvider, "complete", complete)
-    context = generation_app.state.api_runtime_context
-    default = context.extension_runtime_service._model_provider
     async with serving_api(generation_app) as client:
+        context = generation_app.state.api_runtime_context
+        default = context.extension_runtime_service._model_provider
         response = await client.post("/v1/extensions/orket.test/runtime/llm/generate", json={"user_message": "hello"})
         assert response.status_code == 200 and response.json()["text"] == "ready"
         assert not default._provider.client.is_closed
@@ -101,32 +101,35 @@ async def test_injected_provider_remains_owned_by_embedding(tmp_path):
 @pytest.mark.asyncio
 # Layer: contract
 async def test_default_client_cleanup_failure_prevents_closed_claim(generation_app, monkeypatch):
-    context = generation_app.state.api_runtime_context
-    provider = context.extension_runtime_service._model_provider
-    original_close = provider.close
-    entered, release = threading.Event(), threading.Event()
+    with pytest.raises(RuntimeError, match="teardown failed") as lifespan_failure:
+        async with generation_app.router.lifespan_context(generation_app):
+            context = generation_app.state.api_runtime_context
+            provider = context.extension_runtime_service._model_provider
+            original_close = provider.close
+            entered, release = threading.Event(), threading.Event()
 
-    def close():
-        entered.set()
-        assert release.wait(5)
-        original_close()
-        raise OSError("controlled cleanup failure")
+            def close():
+                entered.set()
+                assert release.wait(5)
+                original_close()
+                raise OSError("controlled cleanup failure")
 
-    monkeypatch.setattr(provider, "close", close)
-    closing = asyncio.create_task(context.close())
-    try:
-        assert await asyncio.to_thread(entered.wait, 5)
-        closing.cancel()
-        await asyncio.sleep(0)
-        assert not closing.done() and not context.closed
-        release.set()
-        with pytest.raises(RuntimeError, match="teardown failed") as observed:
-            await closing
-        assert isinstance(observed.value.__cause__, OSError)
-        assert not context.closed and provider._provider.client.is_closed
-        with pytest.raises(RuntimeError) as repeated:
-            await context.close()
-        assert repeated.value is observed.value
-    finally:
-        release.set()
-        await asyncio.gather(closing, return_exceptions=True)
+            monkeypatch.setattr(provider, "close", close)
+            closing = asyncio.create_task(context.close())
+            try:
+                assert await asyncio.to_thread(entered.wait, 5)
+                closing.cancel()
+                await asyncio.sleep(0)
+                assert not closing.done() and not context.closed
+                release.set()
+                with pytest.raises(RuntimeError, match="teardown failed") as observed:
+                    await closing
+                assert isinstance(observed.value.__cause__, OSError)
+                assert not context.closed and provider._provider.client.is_closed
+                with pytest.raises(RuntimeError) as repeated:
+                    await context.close()
+                assert repeated.value is observed.value
+            finally:
+                release.set()
+                await asyncio.gather(closing, return_exceptions=True)
+    assert lifespan_failure.value is observed.value

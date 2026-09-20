@@ -75,43 +75,44 @@ def test_factory_owns_distinct_runtime_graphs_for_distinct_roots(tmp_path: Path)
 
     app_a = module.create_api_app(project_root=root_a)
     app_b = module.create_api_app(project_root=root_b)
-    context_a = app_a.state.api_runtime_context
-    context_b = app_b.state.api_runtime_context
+    with TestClient(app_a) as client_a, TestClient(app_b):
+        context_a = app_a.state.api_runtime_context
+        context_b = app_b.state.api_runtime_context
 
-    assert app_a is not app_b
-    assert context_a is not context_b
-    assert context_a.project_root == root_a
-    assert context_b.project_root == root_b
-    assert app_a.state.outbound_policy_config is not app_b.state.outbound_policy_config
-    assert context_a.runtime_state.event_queue is not context_b.runtime_state.event_queue
-    assert context_a.extension_manager.catalog is not context_b.extension_manager.catalog
-    for attribute in (
-        "api_runtime_node",
-        "runtime_state",
-        "api_runtime_host",
-        "engine",
-        "stream_bus",
-        "interaction_manager",
-        "extension_manager",
-        "extension_runtime_service",
-        "outward_run_store",
-        "outward_run_event_store",
-        "outward_approval_store",
-        "outward_run_service",
-        "outward_approval_service",
-        "outward_run_execution_service",
-        "outward_run_inspection_service",
-        "outward_ledger_service",
-        "governed_agent_runtime",
-    ):
-        assert getattr(context_a, attribute) is not getattr(context_b, attribute)
+        assert app_a is not app_b
+        assert context_a is not context_b
+        assert context_a.project_root == root_a
+        assert context_b.project_root == root_b
+        assert app_a.state.outbound_policy_config is not app_b.state.outbound_policy_config
+        assert context_a.runtime_state.event_queue is not context_b.runtime_state.event_queue
+        assert context_a.extension_manager.catalog is not context_b.extension_manager.catalog
+        for attribute in (
+            "api_runtime_node",
+            "runtime_state",
+            "api_runtime_host",
+            "engine",
+            "stream_bus",
+            "interaction_manager",
+            "extension_manager",
+            "extension_runtime_service",
+            "outward_run_store",
+            "outward_run_event_store",
+            "outward_approval_store",
+            "outward_run_service",
+            "outward_approval_service",
+            "outward_run_execution_service",
+            "outward_run_inspection_service",
+            "outward_ledger_service",
+            "governed_agent_runtime",
+        ):
+            assert getattr(context_a, attribute) is not getattr(context_b, attribute)
 
-    engine_b = context_b.engine
-    asyncio.run(context_a.close())
-    assert context_a.closed is True
-    assert context_b.closed is False
-    assert context_b.engine is engine_b
-    asyncio.run(context_b.close())
+        engine_b = context_b.engine
+        client_a.portal.call(context_a.close)
+        assert context_a.closed is True
+        assert context_b.closed is False
+        assert context_b.engine is engine_b
+
 
 
 def test_concurrent_requests_observe_their_own_app_root(tmp_path: Path, monkeypatch) -> None:
@@ -136,39 +137,33 @@ def test_concurrent_requests_observe_their_own_app_root(tmp_path: Path, monkeypa
 
 
 def test_lifespan_closes_engine_and_tracked_tasks_once(tmp_path: Path, monkeypatch) -> None:
-    """Layer: integration. App teardown cancels transport tasks and closes its engine once."""
+    """Layer: integration. Observe actual engine initialization, teardown and idempotent owner close."""
+    from orket.orchestration.engine import OrchestrationEngine
+
     module = importlib.import_module("orket.interfaces.api")
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    initialize, close = OrchestrationEngine.initialize, OrchestrationEngine.close
+    initialized, closed = [], []
+
+    async def observe_initialize(engine):
+        await initialize(engine)
+        initialized.append(engine)
+
+    async def observe_close(engine):
+        await close(engine)
+        closed.append(engine)
+
+    monkeypatch.setattr(OrchestrationEngine, "initialize", observe_initialize)
+    monkeypatch.setattr(OrchestrationEngine, "close", observe_close)
     created_app = module.create_api_app(project_root=tmp_path)
-    context = created_app.state.api_runtime_context
-    original_engine = context.engine
-
-    class RecordingEngine:
-        def __init__(self) -> None:
-            self.initialize_calls = 0
-            self.close_calls = 0
-
-        async def initialize(self) -> None:
-            self.initialize_calls += 1
-
-        async def close(self) -> None:
-            self.close_calls += 1
-
-    recording_engine = RecordingEngine()
-    asyncio.run(original_engine.close())
-    context.engine = recording_engine
-
     with TestClient(created_app) as client:
+        context = created_app.state.api_runtime_context
         assert client.get("/health").json() == {"status": "ok"}
         assert context.active_background_task_count == 1
-
-    assert recording_engine.initialize_calls == 1
-    assert recording_engine.close_calls == 1
-    assert context.active_background_task_count == 0
-    assert context.closed is True
-
+    assert initialized == closed == [context.engine]
+    assert context.active_background_task_count == 0 and context.closed
     asyncio.run(context.close())
-    assert recording_engine.close_calls == 1
+    assert closed == [context.engine]
 
 
 def test_repeated_app_lifecycles_leave_no_tracked_tasks(tmp_path: Path, monkeypatch) -> None:
@@ -179,8 +174,8 @@ def test_repeated_app_lifecycles_leave_no_tracked_tasks(tmp_path: Path, monkeypa
 
     for index in range(3):
         created_app = module.create_api_app(project_root=tmp_path / f"workspace_{index}")
-        context = created_app.state.api_runtime_context
         with TestClient(created_app) as client:
+            context = created_app.state.api_runtime_context
             assert client.get("/health").status_code == 200
         contexts.append(context)
 
@@ -195,9 +190,10 @@ def test_explicit_app_lookup_never_crosses_runtime_owners(tmp_path: Path) -> Non
     app_a = module.create_api_app(project_root=tmp_path / "a")
     app_b = module.create_api_app(project_root=tmp_path / "b")
 
-    assert module._get_engine(app_a) is app_a.state.api_runtime_context.engine
-    assert module._get_engine(app_b) is app_b.state.api_runtime_context.engine
-    assert module._get_engine(app_a) is not module._get_engine(app_b)
+    with TestClient(app_a), TestClient(app_b):
+        assert module._get_engine(app_a) is app_a.state.api_runtime_context.engine
+        assert module._get_engine(app_b) is app_b.state.api_runtime_context.engine
+        assert module._get_engine(app_a) is not module._get_engine(app_b)
 
     asyncio.run(app_a.state.api_runtime_context.close())
     asyncio.run(app_b.state.api_runtime_context.close())

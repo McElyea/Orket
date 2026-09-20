@@ -24,8 +24,8 @@ async def test_actual_websocket_routes_close_and_release_subscriptions(tmp_path,
 
     def exercise():
         app = create_api_app(CompositionConfig(project_root=tmp_path))
-        context = app.state.api_runtime_context
         with TestClient(app, headers={"X-API-Key": TEST_API_KEY}) as client:
+            context = app.state.api_runtime_context
             path = "/ws/events"
             if channel == "interactions":
                 response = client.post("/v1/interactions/sessions", json={"session_params": {}})
@@ -52,7 +52,6 @@ async def test_actual_websocket_routes_close_and_release_subscriptions(tmp_path,
 # Layer: integration
 async def test_streaming_body_remains_owned_after_response_headers(tmp_path, boundary):
     app = create_api_app(CompositionConfig(project_root=tmp_path))
-    context = app.state.api_runtime_context
     stopped = asyncio.Event()
 
     async def body():
@@ -67,6 +66,7 @@ async def test_streaming_body_remains_owned_after_response_headers(tmp_path, bou
 
     app.add_api_route("/v1/ownership-stream", stream, methods=["GET"])
     async with serving_api(app) as client, client.stream("GET", "/v1/ownership-stream") as response:
+        context = app.state.api_runtime_context
         assert response.status_code == 200 and "X-Orket-Version" in response.headers
         chunks = response.aiter_lines()
         assert await anext(chunks) == "started"

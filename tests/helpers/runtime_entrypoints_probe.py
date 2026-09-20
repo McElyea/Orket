@@ -42,10 +42,10 @@ def api(*, separate_stores=False):
         if separate_stores:
             os.environ['ORKET_DURABLE_ROOT'] = str(root / 'durable')
         apps.append(runtime_entrypoints.create_api_app(CompositionConfig(project_root=root, module_profile='api-runtime')))
-    owners = [app.state.api_runtime_context for app in apps]
-    assert apps[0] is not apps[1] and owners[0].engine is not owners[1].engine
-    assert [owner.project_root for owner in owners] == roots
     with TestClient(apps[0]) as first, TestClient(apps[1]) as second:
+        owners = [app.state.api_runtime_context for app in apps]
+        assert apps[0] is not apps[1] and owners[0].engine is not owners[1].engine
+        assert [owner.project_root for owner in owners] == roots
         assert first.get('/health').json() == second.get('/health').json() == {'status': 'ok'}
         rejected = first.get('/v1/system/heartbeat')
         admitted = first.get('/v1/system/heartbeat', headers={'X-API-Key': 'entrypoint-test-key'})
