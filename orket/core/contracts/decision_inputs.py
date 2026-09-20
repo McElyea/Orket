@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 from pydantic import BaseModel, ConfigDict, StrictBool, StrictInt
 
+from orket.core.domain.sandbox import PortAllocation
 from orket.core.types import CardStatus
 
 ScalarLimit = str | int | float | bool | None
@@ -145,3 +146,17 @@ def validate_guard_review_input(inputs: GuardReviewInput) -> dict[str, object]:
     if not any(action.strip() for action in inputs.remediation_actions):
         return {"valid": False, "reason": "missing_remediation_actions"}
     return {"valid": True, "reason": None}
+
+
+class SandboxPortInput(PortAllocation):
+    """Frozen projection of the authoritative port fields; no allocation ownership."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+
+class SandboxComposeInput(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+    id: str
+    rock_id: str
+    tech_stack: str
+    ports: SandboxPortInput

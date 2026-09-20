@@ -11,6 +11,8 @@ from orket.core.contracts.decision_inputs import (
     PlanningCardInput,
     PlanningInput,
     RoutingInput,
+    SandboxComposeInput,
+    SandboxPortInput,
     SeatPolicyInput,
     SuccessEvaluationInput,
     ToolSelectionInput,
@@ -217,10 +219,7 @@ class DefaultToolStrategyNode:
 
 
 class DefaultSandboxPolicyNode:
-    """
-    Built-in sandbox policy node.
-    Preserves current sandbox naming, compose generation, and DB URL behavior.
-    """
+    """Sandbox policy over captured primitive configuration and immutable port facts."""
 
     def build_sandbox_id(self, rock_id: str) -> str:
         sanitized_rock = re.sub(r"[^a-z0-9_-]", "", rock_id.lower())
@@ -229,8 +228,8 @@ class DefaultSandboxPolicyNode:
     def build_compose_project(self, sandbox_id: str) -> str:
         return f"orket-{sandbox_id}"
 
-    def get_database_url(self, tech_stack: Any, ports: Any, db_password: str = "") -> str:
-        value = tech_stack.value if hasattr(tech_stack, "value") else str(tech_stack)
+    def get_database_url(self, tech_stack: str, ports: SandboxPortInput, db_password: str = "") -> str:
+        value = tech_stack
         if value == "fastapi-vue-mongo":
             return f"mongodb://localhost:{ports.database}/appdb"
         if value == "csharp-razor-ef":
@@ -239,8 +238,8 @@ class DefaultSandboxPolicyNode:
             return f"postgresql://postgres:{db_password}@localhost:{ports.database}/appdb"
         raise ValueError(f"Unsupported tech stack: {tech_stack}")
 
-    def generate_compose_file(self, sandbox: Any, db_password: str, admin_password: str) -> str:
-        if sandbox.tech_stack.value == "fastapi-react-postgres":
+    def generate_compose_file(self, sandbox: SandboxComposeInput, db_password: str, admin_password: str) -> str:
+        if sandbox.tech_stack == "fastapi-react-postgres":
             return f"""services:
   api:
     build:
@@ -318,7 +317,7 @@ networks:
       orket.run_id: "{sandbox.rock_id}"
 """
 
-        if sandbox.tech_stack.value == "fastapi-vue-mongo":
+        if sandbox.tech_stack == "fastapi-vue-mongo":
             return f"""services:
   api:
     build:
@@ -398,7 +397,7 @@ networks:
       orket.run_id: "{sandbox.rock_id}"
 """
 
-        if sandbox.tech_stack.value == "csharp-razor-ef":
+        if sandbox.tech_stack == "csharp-razor-ef":
             return f"""services:
   app:
     build:

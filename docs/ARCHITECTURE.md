@@ -181,6 +181,12 @@ through the application service; environment extras fail without warning effects
 Contract: `docs/specs/SCHEMA_INPUT_OWNERSHIP.md`. Remaining effects, decision context,
 adapter classification and async reachability still require D acceptance.
 
+Sandbox policy input ownership, strict recommendation admission and partial-effect
+limits live in `docs/specs/SANDBOX_POLICY_INPUTS.md`. Creation captures its selected
+policy and fresh secrets before preflight; strategies receive immutable port and
+compose facts. Early refusal releases its allocation; later refusal retains
+existing durable reconciliation evidence.
+
 The orchestrator's supplied control-plane clock covers both issue dispatch and
 scheduler namespace publication, including activation-failure cleanup. Direct
 composition retains the UTC adapter default. The clock wiring does not make the

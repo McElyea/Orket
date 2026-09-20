@@ -10,6 +10,8 @@ from orket.core.contracts.decision_inputs import (
     PlanningCardInput,
     PlanningInput,
     RoutingInput,
+    SandboxComposeInput,
+    SandboxPortInput,
     SeatPolicyInput,
     SuccessEvaluationInput,
     ToolSelectionInput,
@@ -172,9 +174,9 @@ class SandboxPolicyNode(Protocol):
 
     def build_compose_project(self, sandbox_id: str) -> str: ...
 
-    def get_database_url(self, tech_stack: Any, ports: Any, db_password: str = "") -> str: ...
+    def get_database_url(self, tech_stack: str, ports: SandboxPortInput, db_password: str = "") -> str: ...
 
-    def generate_compose_file(self, sandbox: Any, db_password: str, admin_password: str) -> str: ...
+    def generate_compose_file(self, sandbox: SandboxComposeInput, db_password: str, admin_password: str) -> str: ...
 
 
 class LoaderStrategyNode(Protocol):

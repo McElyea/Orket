@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-20T22:52:30.312733+00:00",
+  "generated_at": "2026-09-20T23:30:48.753474+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -1673,7 +1673,7 @@
       },
       "orket.application.services.runtime_input_service": {
         "path": "orket/application/services/runtime_input_service.py",
-        "sha256": "089f18e5622c81759ad5b8a54c16efffbd6262efbabc9afb85170758f6a8ff2f"
+        "sha256": "5b74b963b2dc3cc9558360a64742ecf762e8e7b320d6102d415f24c352a776bf"
       },
       "orket.application.services.runtime_policy": {
         "path": "orket/application/services/runtime_policy.py",
@@ -1786,6 +1786,10 @@
       "orket.application.services.sandbox_lifecycle_view_service": {
         "path": "orket/application/services/sandbox_lifecycle_view_service.py",
         "sha256": "cb0550c806c13ee03f5c385610f0eee9e6e1a72bca911a35cc979e794ea38c32"
+      },
+      "orket.application.services.sandbox_policy_input_service": {
+        "path": "orket/application/services/sandbox_policy_input_service.py",
+        "sha256": "301ec1c98bc8ab9861259cfcb871f12898c3187d3fc36f61474874d7a831d236"
       },
       "orket.application.services.sandbox_restart_policy_service": {
         "path": "orket/application/services/sandbox_restart_policy_service.py",
@@ -2197,7 +2201,7 @@
       },
       "orket.core.contracts.decision_inputs": {
         "path": "orket/core/contracts/decision_inputs.py",
-        "sha256": "2e3a0419d8c1c75d8cd377307ac9e162061a337b0d36c9755f155698cfc8f4e1"
+        "sha256": "4a32cbe143c5bfbee387b1f3e5739b29834fa15fb2b6d850e7c86c30807b7407"
       },
       "orket.core.contracts.dual_write_intent": {
         "path": "orket/core/contracts/dual_write_intent.py",
@@ -2597,11 +2601,11 @@
       },
       "orket.decision_nodes.builtins": {
         "path": "orket/decision_nodes/builtins.py",
-        "sha256": "2fdfceab4252142d758ce5f780e7d9e44a1873784c0a0fbef8d0c04b8056f4d7"
+        "sha256": "e0f9945bd76e712e6623427cb5d98003005b3b77aa5cd4318badf255e071b44d"
       },
       "orket.decision_nodes.contracts": {
         "path": "orket/decision_nodes/contracts.py",
-        "sha256": "2613d145c6a099ab45846c6add0e62c6f7fe7e16bac70eb3e2f431d6afee5752"
+        "sha256": "a32d45bec7ea2160b2ebb45a4d61e4bfab87008e0eb2214f3ceca3490fd2ade3"
       },
       "orket.discovery": {
         "path": "orket/discovery.py",
@@ -4437,7 +4441,7 @@
       },
       "orket.services.sandbox_orchestrator": {
         "path": "orket/services/sandbox_orchestrator.py",
-        "sha256": "fe1173240e9d85d21f5544b2b7ee94ef63914ca90c6c11b67bc33ce30830fc79"
+        "sha256": "efb6df957d0a899b146c551cd09357e15a1c27e27afbc454bcfe0ba4630c7f88"
       },
       "orket.services.scoped_memory_store": {
         "path": "orket/services/scoped_memory_store.py",
@@ -16185,6 +16189,27 @@
         "kind": "from"
       },
       {
+        "source": "orket.application.services.sandbox_policy_input_service",
+        "target": "orket.application.services.runtime_input_service",
+        "path": "orket/application/services/sandbox_policy_input_service.py",
+        "line": 7,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.sandbox_policy_input_service",
+        "target": "orket.core.contracts.decision_inputs",
+        "path": "orket/application/services/sandbox_policy_input_service.py",
+        "line": 8,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.sandbox_policy_input_service",
+        "target": "orket.core.domain.sandbox",
+        "path": "orket/application/services/sandbox_policy_input_service.py",
+        "line": 9,
+        "kind": "from"
+      },
+      {
         "source": "orket.application.services.sandbox_restart_policy_service",
         "target": "orket.application.services.sandbox_lifecycle_policy",
         "path": "orket/application/services/sandbox_restart_policy_service.py",
@@ -19609,9 +19634,16 @@
       },
       {
         "source": "orket.core.contracts.decision_inputs",
-        "target": "orket.core.types",
+        "target": "orket.core.domain.sandbox",
         "path": "orket/core/contracts/decision_inputs.py",
         "line": 9,
+        "kind": "from"
+      },
+      {
+        "source": "orket.core.contracts.decision_inputs",
+        "target": "orket.core.types",
+        "path": "orket/core/contracts/decision_inputs.py",
+        "line": 10,
         "kind": "from"
       },
       {
@@ -20339,28 +20371,28 @@
         "source": "orket.decision_nodes.builtins",
         "target": "orket.core.contracts.model_selection",
         "path": "orket/decision_nodes/builtins.py",
-        "line": 19,
+        "line": 21,
         "kind": "from"
       },
       {
         "source": "orket.decision_nodes.builtins",
         "target": "orket.decision_nodes.api_runtime_strategy_node",
         "path": "orket/decision_nodes/builtins.py",
-        "line": 20,
+        "line": 22,
         "kind": "from"
       },
       {
         "source": "orket.decision_nodes.builtins",
         "target": "orket.exceptions",
         "path": "orket/decision_nodes/builtins.py",
-        "line": 23,
+        "line": 25,
         "kind": "from"
       },
       {
         "source": "orket.decision_nodes.builtins",
         "target": "orket.schema",
         "path": "orket/decision_nodes/builtins.py",
-        "line": 24,
+        "line": 26,
         "kind": "from"
       },
       {
@@ -20374,7 +20406,7 @@
         "source": "orket.decision_nodes.contracts",
         "target": "orket.core.contracts.model_selection",
         "path": "orket/decision_nodes/contracts.py",
-        "line": 17,
+        "line": 19,
         "kind": "from"
       },
       {
@@ -28501,189 +28533,196 @@
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.adapters.storage.async_control_plane_execution_repository",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 16,
+        "line": 15,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.adapters.storage.async_control_plane_record_repository",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 17,
+        "line": 16,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.adapters.storage.async_executor_service",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 18,
+        "line": 17,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.adapters.storage.async_file_tools",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 19,
+        "line": 18,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.adapters.storage.async_sandbox_lifecycle_repository",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 20,
+        "line": 19,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.adapters.storage.command_runner",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 21,
+        "line": 20,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.application.services.control_plane_publication_service",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 22,
+        "line": 21,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.application.services.control_plane_workload_catalog",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 23,
+        "line": 22,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.application.services.decision_node_registry",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 26,
+        "line": 25,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.application.services.runtime_input_service",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 27,
+        "line": 26,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.application.services.sandbox_control_plane_effect_service",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 28,
+        "line": 27,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.application.services.sandbox_control_plane_execution_service",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 29,
+        "line": 28,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.application.services.sandbox_control_plane_operator_service",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 30,
+        "line": 29,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.application.services.sandbox_control_plane_reservation_service",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 31,
+        "line": 30,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.application.services.sandbox_control_plane_resource_service",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 34,
+        "line": 33,
+        "kind": "from"
+      },
+      {
+        "source": "orket.services.sandbox_orchestrator",
+        "target": "orket.application.services.sandbox_policy_input_service",
+        "path": "orket/services/sandbox_orchestrator.py",
+        "line": 36,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.application.services.sandbox_restart_policy_service",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 37,
+        "line": 42,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.application.services.sandbox_runtime_inspection_service",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 38,
+        "line": 43,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.application.services.sandbox_runtime_lifecycle_service",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 39,
+        "line": 44,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.application.services.sandbox_runtime_recovery_service",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 40,
+        "line": 45,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.core.domain.__init__",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 41,
+        "line": 46,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.core.domain.sandbox",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 42,
+        "line": 47,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.core.domain.sandbox_lifecycle",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 43,
+        "line": 48,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.core.domain.sandbox_lifecycle",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 44,
+        "line": 49,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.core.domain.sandbox_lifecycle_records",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 45,
+        "line": 50,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.core.domain.verification",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 46,
+        "line": 51,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.logging",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 47,
+        "line": 52,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.runtime_paths",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 48,
+        "line": 53,
         "kind": "from"
       },
       {
@@ -29048,7 +29087,7 @@
         "forwarded_arguments": 2
       }
     ],
-    "files_scanned": 1101,
+    "files_scanned": 1102,
     "scan_roots": [
       "orket"
     ],
@@ -29470,6 +29509,7 @@
       "orket.application.services.sandbox_lifecycle_policy": "application",
       "orket.application.services.sandbox_lifecycle_reconciliation_service": "application",
       "orket.application.services.sandbox_lifecycle_view_service": "application",
+      "orket.application.services.sandbox_policy_input_service": "application",
       "orket.application.services.sandbox_restart_policy_service": "application",
       "orket.application.services.sandbox_runtime_cleanup_service": "application",
       "orket.application.services.sandbox_runtime_inspection_service": "application",
@@ -30176,12 +30216,12 @@
       {
         "source": "application",
         "target": "application",
-        "count": 1697
+        "count": 1699
       },
       {
         "source": "application",
         "target": "core",
-        "count": 749
+        "count": 751
       },
       {
         "source": "application",
@@ -30191,7 +30231,7 @@
       {
         "source": "core",
         "target": "core",
-        "count": 141
+        "count": 142
       },
       {
         "source": "decision_nodes",
@@ -30228,45 +30268,6 @@
     }
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-19T15:12:48.323207Z",
-      "changed": true,
-      "before_digest": "sha256:2aa6650c33bb9aefc2fb425f9130586e76430eafd6823ae0b9c01febd1f859ae",
-      "after_digest": "sha256:034f3a63b0eb24ff19b16378913c3899c708b24d55191c34cbb33a04a5d11c53",
-      "diff": {
-        "added_paths": 7,
-        "removed_paths": 4,
-        "changed_paths": 3825,
-        "initial_write": false,
-        "paths_total_previous": 45369,
-        "paths_total_current": 45403,
-        "paths_total_reference": 45403,
-        "churn_paths": 3836,
-        "churn_ratio": 0.084488,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.analysis_errors[0].code",
-          "$.observed.analysis_errors[0].line",
-          "$.observed.analysis_errors[0].path",
-          "$.observed.analysis_errors[1].code",
-          "$.observed.analysis_errors[1].line",
-          "$.observed.analysis_errors[1].path",
-          "$.observed.analysis_errors[2].code",
-          "$.observed.analysis_errors[3].line",
-          "$.observed.analysis_errors[3].path",
-          "$.observed.analysis_errors[5].code",
-          "$.observed.analysis_errors[5].line",
-          "$.observed.analysis_errors",
-          "$.observed.edges[2278].target",
-          "$.observed.edges[2279].line",
-          "$.observed.edges[2279].target",
-          "$.observed.edges[2280].line",
-          "$.observed.edges[2280].path",
-          "$.observed.edges[2280].source",
-          "$.observed.edges[2280].target"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-19T15:14:30.955645Z",
       "changed": true,
@@ -31211,6 +31212,45 @@
           "$.observed.edges[1159].line",
           "$.observed.edges[1159].target",
           "$.observed.edges[1160].line"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-20T23:31:05.613150Z",
+      "changed": true,
+      "before_digest": "sha256:7a46ab9b132492d15c6a25c07fb848ce60161a9d5872afc19a7c6d828a5ef720",
+      "after_digest": "sha256:3681c0adc62d2da4b0b6ba1d7e57629de188b67280234e077dbfebe7b5a69cf0",
+      "diff": {
+        "added_paths": 7,
+        "removed_paths": 0,
+        "changed_paths": 5519,
+        "initial_write": false,
+        "paths_total_previous": 46529,
+        "paths_total_current": 46591,
+        "paths_total_reference": 46591,
+        "churn_paths": 5526,
+        "churn_ratio": 0.118607,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.edges[1665].line",
+          "$.observed.edges[1665].path",
+          "$.observed.edges[1665].source",
+          "$.observed.edges[1665].target",
+          "$.observed.edges[1666].line",
+          "$.observed.edges[1666].path",
+          "$.observed.edges[1666].source",
+          "$.observed.edges[1666].target",
+          "$.observed.edges[1667].line",
+          "$.observed.edges[1667].path",
+          "$.observed.edges[1667].source",
+          "$.observed.edges[1667].target",
+          "$.observed.edges[1668].line",
+          "$.observed.edges[1668].target",
+          "$.observed.edges[1669].line",
+          "$.observed.edges[1669].path",
+          "$.observed.edges[1669].source",
+          "$.observed.edges[1669].target",
+          "$.observed.edges[1670].line"
         ]
       }
     }

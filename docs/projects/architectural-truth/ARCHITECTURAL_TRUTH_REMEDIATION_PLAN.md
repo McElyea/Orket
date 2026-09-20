@@ -12520,8 +12520,8 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.48 loop-policy input checkpoint. Preserve the governed legacy-export cutover;
-continue sandbox/API/execution decision inputs, remaining deterministic input owners, adapter enforcement and async reachability before E1/E2
+0.6.49 sandbox-policy input checkpoint. Preserve the governed legacy-export cutover;
+continue API/execution decision inputs, remaining deterministic input owners, adapter enforcement and async reachability before E1/E2
 and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
 Preserve every failed and
@@ -18505,3 +18505,85 @@ coverage and hosted Quality gaps remain. Continue sandbox/API/execution decision
 inputs, remaining deterministic inputs, adapter enforcement and async reachability
 before E1/E2 and CAP. The governed legacy-export cutover and explicit lane-acceptance
 requirement remain; no whole-lane completion or retirement.
+
+
+#### .49 captured sandbox-policy checkpoint (2026-09-20)
+
+Application sandbox admission captures the selected policy, creation timestamp and
+two fresh secret inputs before preflight awaits. Constructor registry selection
+uses its explicit environment snapshot. Custom policies receive a tech-stack
+string, frozen port values and a frozen compose projection without workspace or
+container handles. Plain-string recommendations are admitted before use. Early
+policy refusal releases only its new allocation, preserving other reservations
+and the allocator counter. Later compose refusal preserves earlier durable
+publications and the existing `starting` record with reconciliation flag set.
+Contract: `docs/specs/SANDBOX_POLICY_INPUTS.md`; migration:
+`docs/architecture/CONTRACT_DELTA_SANDBOX_POLICY_INPUTS_D_2026-09-20.md`.
+
+Four pre-change counterexamples reached their intended failures: borrowed compose
+mutation, borrowed allocation mutation, leaked allocation after policy refusal and
+policy replacement during a held actual SQLite preflight. Corrected tests prove
+these boundaries and capture through a held allocation-publication await. The
+initial affected selection retained one stale secret-patch fixture failure; it
+passes 64 cases after patching the application collector. A new assertion
+incorrectly treated reconciliation as a lifecycle state; corrected admission tests
+pass 13. The final focused capture cohort passes 29. Runtime lifecycle semantics
+were not changed to satisfy that assertion.
+
+Default parity uses ten synthetic input cases from the actual published installed
+.48 wheel (`fd8dd668a74f578f914e5d961ba22c9b7942ab0e7143abbf3060b86159f94007`).
+Supported database URLs and compose bytes match their independently retained
+hashes; unsupported stacks retain refusal type/category while diagnostics migrate
+from enum representation to string values. No fresh secrets are written in proof
+receipts. An initial build attempt lacked the build module in the selected proof
+environment; its failure remains retained. The established build environment then
+built the source archive and wheel successfully without changing requirements.
+
+The final cohort covers 47 modules with zero failures, errors or skips:
+
+| Cell | Cases / failures / errors / skips | JUnit seconds |
+|---|---|---|
+| Source Windows Python 3.11 | 307 / 0 / 0 / 0 | 13.092 |
+| Installed win-py311 | 307 / 0 / 0 / 0 | 13.576 |
+| Installed win-py312 | 307 / 0 / 0 / 0 | 20.868 |
+
+Each installed cell verifies 918 imported origins, actual CLI startup, package
+identity, copied inputs and native teardown. Package parity covers 1,102 Python
+sources, 1,118 wheel members and 2,098 support files. Wheel SHA-256:
+`5c683b8466db974f067de02dd8a2e959664e99d82663f8c02632ecc4626db488`; sdist SHA-256:
+`c39a5328a697d86f2d024510a7e228897b1d8a95bb95b6a77054ede27b86c69f`.
+
+Installed Windows Python 3.11 additionally ran all nine affected real Docker
+acceptance cases for creation, lease reclaim, unknown outcome, reconciliation,
+terminal evidence, host-context mismatch, sweeper cleanup and leak checks.
+The first run passed all nine tests, but its wrapper expected eight and omitted
+the mismatch project from independent inventory. That failed wrapper and its exact
+helper bytes remain retained; both live modes were repeated with the corrected
+nine-case/project inventory, without changing runtime or test inputs. Its parent elapsed time was
+27.207389 seconds. These fixture compose hooks bypass
+policy projection, so a separate installed real Docker/SQLite/HTTP flow exercised
+the actual new policy projection, observed frozen-port mutation refusal in both
+policy calls, exactly two secret observations, a running container and matching
+deployment/cleanup journal entries. Its parent elapsed time was
+4.808439 seconds. Both paths were **primary / success**,
+with immediate application/test cleanup, independent successful exact-project
+Docker inventory commands, no surviving child processes and no owned containers,
+networks or volumes. There was no fallback teardown or provider claim. The separate
+policy flow specified `pull_policy: never` for its retained local image.
+
+Structural proof uses the actual canonical dependency gate, not exporter status:
+1,102 modules, 3,500 import sites, six recognized dynamic routes and zero analysis
+errors, unknown modules, forbidden edges or authority cycles. Policy v2 remains
+unchanged. Changed Python is Ruff-clean and oversized files do not grow; canonical
+Ruff still reports the 94 pre-existing findings. Both Quality jobs retain the new
+admission regressions; no hosted Quality run is claimed. Evidence and exact input
+bindings are under `.tmp/d-sandbox-policy-inputs/`.
+
+The latest passive Linux clock observation remains .45: no required 60-second quiet
+window in 240.011222449 seconds, with +18.666208636/-18.167079316-second wall steps.
+No fresh Linux runtime or model inference acceptance is claimed, and no clocks or
+product deadlines were weakened. The .43 Git timeout cause, .44 non-Python package
+ceiling, whole-suite/89% coverage and remaining D/E/CAP requirements stay open.
+Continue API/execution strategy inputs, remaining deterministic inputs, adapter
+enforcement and async reachability before E1/E2 and CAP. Retain governed legacy
+exports and explicit whole-lane acceptance; this checkpoint does not retire the lane.

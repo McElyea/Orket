@@ -5,6 +5,16 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.49] - 2026-09-20
+
+### Fixed
+- Capture sandbox policy selection, creation time and fresh secret inputs before preflight awaits; pass immutable port and compose facts to custom policies.
+- Admit plain-string recommendations and release a newly allocated port reservation when policy admission fails, preserving earlier durable reconciliation evidence on later failure.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Custom sandbox strategies accept string tech-stack values and frozen port/compose projections. Migration: `docs/architecture/CONTRACT_DELTA_SANDBOX_POLICY_INPUTS_D_2026-09-20.md`.
+
 ## [0.6.48] - 2026-09-20
 
 ### Fixed

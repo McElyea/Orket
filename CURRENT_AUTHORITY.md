@@ -30,6 +30,12 @@ orchestrator clock observations keep their existing second precision. Migration
 and remaining lifecycle input scope:
 `docs/architecture/CONTRACT_DELTA_SANDBOX_CREATION_INPUTS_D_2026-09-20.md`.
 
+Sandbox policy input ownership, strict recommendation admission and partial-effect
+limits live in `docs/specs/SANDBOX_POLICY_INPUTS.md`. Creation captures its selected
+policy and fresh secrets before preflight; strategies receive immutable port and
+compose facts. Early refusal releases its allocation; later refusal retains
+existing durable reconciliation evidence.
+
 Application retains SDK and legacy artifact/provenance workers through interruption,
 captures caller inputs before awaiting and preserves confirmed execution outcomes
 when later projection publication fails. Storage verifies each published JSON file;
@@ -1229,6 +1235,7 @@ Trust Kernel and Portable Conformance completed lane authority is archived under
       "active_roadmap_source": "docs/ROADMAP.md",
       "process_source": "docs/CONTRIBUTOR.md",
       "core_runtime_contract_sources": [
+        "docs/specs/SANDBOX_POLICY_INPUTS.md",
         "docs/specs/CORE_RUNTIME_STABILITY_REQUIREMENTS.md",
         "docs/specs/CORE_TOOL_RINGS_COMPATIBILITY_REQUIREMENTS.md",
         "docs/specs/RUNTIME_INVARIANTS.md",

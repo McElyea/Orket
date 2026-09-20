@@ -6,7 +6,6 @@ from __future__ import annotations
 import asyncio
 import json
 import os
-import secrets
 import socket
 import subprocess
 from collections.abc import Mapping
@@ -33,6 +32,12 @@ from orket.application.services.sandbox_control_plane_reservation_service import
 )
 from orket.application.services.sandbox_control_plane_resource_service import (
     SandboxControlPlaneResourceService,
+)
+from orket.application.services.sandbox_policy_input_service import (
+    admit_sandbox_text,
+    allocate_sandbox,
+    capture_sandbox_creation,
+    render_sandbox_compose,
 )
 from orket.application.services.sandbox_restart_policy_service import SandboxRestartPolicyService
 from orket.application.services.sandbox_runtime_inspection_service import SandboxRuntimeInspectionService
@@ -70,7 +75,7 @@ class SandboxOrchestrator:
         self.workspace_root = workspace_root
         self.registry = registry or SandboxRegistry()
         self.organization = organization
-        self.decision_nodes = decision_nodes or build_decision_node_registry()
+        self.decision_nodes = decision_nodes or build_decision_node_registry(environment=observed_environment)
         self.sandbox_policy_node = self.decision_nodes.resolve_sandbox_policy(self.organization)
         self.command_runner = command_runner or CommandRunner()
         self.templates_dir = Path(__file__).parent.parent.parent / "infrastructure" / "sandbox_templates"
@@ -139,26 +144,13 @@ class SandboxOrchestrator:
         workspace_path: str,
     ) -> Sandbox:
         """Create and deploy a new sandbox environment."""
-        created_at = self.runtime_inputs.utc_now_iso()
-        sandbox_id = self.sandbox_policy_node.build_sandbox_id(rock_id)
+        creation = capture_sandbox_creation(self.runtime_inputs, self.sandbox_policy_node)
+        sandbox_id = admit_sandbox_text(creation.policy.build_sandbox_id(rock_id), "sandbox_id")
         if await self.lifecycle_service.repository.get_record(sandbox_id):
             raise ValueError(f"Sandbox lifecycle record already exists for {sandbox_id}")
-        ports = self.registry.port_allocator.allocate(sandbox_id, tech_stack)
-        db_password = secrets.token_urlsafe(32)
-        sandbox = Sandbox(
-            id=sandbox_id,
-            rock_id=rock_id,
-            project_name=project_name,
-            tech_stack=tech_stack,
-            ports=ports,
-            compose_project=self.sandbox_policy_node.build_compose_project(sandbox_id),
-            workspace_path=workspace_path,
-            api_url=f"http://localhost:{ports.api}",
-            frontend_url=f"http://localhost:{ports.frontend}",
-            database_url=self.sandbox_policy_node.get_database_url(tech_stack, ports, db_password),
-            admin_url=f"http://localhost:{ports.admin_tool}" if ports.admin_tool else None,
-            created_at=created_at,
-        )
+        sandbox = allocate_sandbox(allocator=self.registry.port_allocator, inputs=creation, sandbox_id=sandbox_id,
+            rock_id=rock_id, project_name=project_name, tech_stack=tech_stack, workspace_path=workspace_path)
+        ports = sandbox.ports
         reservation_id = None
         try:
             reservation = await self.control_plane_reservations.publish_allocation_reservation(
@@ -250,7 +242,8 @@ class SandboxOrchestrator:
         # 4. Generate docker-compose.yml
         compose_path = self._compose_path(workspace_path)
         try:
-            compose_content = self._generate_compose_file(sandbox, db_password)
+            compose_content = self._generate_compose_file(sandbox, creation.db_password,
+                policy_node=creation.policy, admin_password=creation.admin_password)
             await self.fs.write_file(str(compose_path), compose_content)
             log_event(
                 "sandbox_create",
@@ -489,16 +482,12 @@ class SandboxOrchestrator:
     # Private Helpers
     # -------------------------------------------------------------------------
 
-    def _generate_compose_file(self, sandbox: Sandbox, db_password: str) -> str:
-        """
-        Generate docker-compose.yml content through sandbox policy node.
-        """
-        admin_password = secrets.token_urlsafe(32)
-        return self.sandbox_policy_node.generate_compose_file(
-            sandbox=sandbox,
-            db_password=db_password,
-            admin_password=admin_password,
-        )
+    def _generate_compose_file(self, sandbox: Sandbox, db_password: str, *,
+                               policy_node: Any = None, admin_password: str | None = None) -> str:
+        """Generate from the selected strategy and captured immutable sandbox facts."""
+        policy = self.sandbox_policy_node if policy_node is None else policy_node
+        secret = self.runtime_inputs.create_secret_token() if admin_password is None else admin_password
+        return render_sandbox_compose(policy, sandbox, db_password, secret)
 
     @staticmethod
     def _compose_path(workspace_path: str | Path) -> Path:

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from secrets import token_urlsafe
 from time import monotonic, perf_counter_ns
 from uuid import uuid4
 
@@ -25,6 +26,10 @@ class RuntimeInputService:
 
     def create_verification_scenario_id(self) -> str:
         return uuid4().hex[:4]
+
+    def create_secret_token(self) -> str:
+        """Capture a fresh secret at admission; callers must not publish it as evidence."""
+        return token_urlsafe(32)
 
     def utc_now(self) -> datetime:
         return datetime.now(UTC)

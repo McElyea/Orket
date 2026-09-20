@@ -16,13 +16,13 @@ from orket.core.domain.sandbox_lifecycle import SandboxState, TerminalReason
 from orket.services.sandbox_orchestrator import SandboxOrchestrator
 from tests.acceptance._sandbox_live_ports import patch_orchestrator_port_allocator
 
-pytestmark = pytest.mark.skipif(
+pytestmark = [pytest.mark.end_to_end, pytest.mark.skipif(
     os.getenv("ORKET_RUN_SANDBOX_ACCEPTANCE") != "1",
     reason="Set ORKET_RUN_SANDBOX_ACCEPTANCE=1 to run live sandbox acceptance tests.",
-)
+)]
 
 
-def _unhealthy_compose(sandbox, _db_password: str) -> str:
+def _unhealthy_compose(sandbox, _db_password: str, *, policy_node=None, admin_password=None) -> str:
     return f"""services:
   api:
     image: nginx:alpine
@@ -54,7 +54,7 @@ networks:
 """
 
 
-def _lightweight_compose(sandbox, _db_password: str) -> str:
+def _lightweight_compose(sandbox, _db_password: str, *, policy_node=None, admin_password=None) -> str:
     return f"""services:
   api:
     image: nginx:alpine

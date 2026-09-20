@@ -1,0 +1,320 @@
+{
+  "schema": "sandbox_policy_reference.v1",
+  "source_version": "0.6.48",
+  "wheel_sha256": "fd8dd668a74f578f914e5d961ba22c9b7942ab0e7143abbf3060b86159f94007",
+  "cases": [
+    {
+      "sandbox": {
+        "id": "sandbox-reference",
+        "rock_id": "reference",
+        "project_name": "Reference",
+        "tech_stack": "fastapi-react-postgres",
+        "ports": {
+          "api": 8001,
+          "frontend": 3001,
+          "database": 5433,
+          "admin_tool": 8081
+        },
+        "compose_project": "orket-sandbox-reference",
+        "workspace_path": "workspace",
+        "created_at": "2026-09-20T12:34:56+00:00",
+        "api_url": "",
+        "frontend_url": "",
+        "database_url": ""
+      },
+      "database": {
+        "kind": "text",
+        "sha256": "5dd403f03843a75abbb7500bb415cf4b3db86f8bc7876f2cf3d0102c502014ea"
+      },
+      "compose": {
+        "kind": "text",
+        "sha256": "04e6e643f38227d45cb939a54c6930219364492fe9dcd1c26cb389f52cdd4667"
+      }
+    },
+    {
+      "sandbox": {
+        "id": "sandbox-reference",
+        "rock_id": "reference",
+        "project_name": "Reference",
+        "tech_stack": "fastapi-react-postgres",
+        "ports": {
+          "api": 8001,
+          "frontend": 3001,
+          "database": 5433,
+          "admin_tool": null
+        },
+        "compose_project": "orket-sandbox-reference",
+        "workspace_path": "workspace",
+        "created_at": "2026-09-20T12:34:56+00:00",
+        "api_url": "",
+        "frontend_url": "",
+        "database_url": ""
+      },
+      "database": {
+        "kind": "text",
+        "sha256": "5dd403f03843a75abbb7500bb415cf4b3db86f8bc7876f2cf3d0102c502014ea"
+      },
+      "compose": {
+        "kind": "text",
+        "sha256": "a5e6f4cab0d37bcbd29fe0fd1e7250487f3041bfadcf53b2f32d742e2dd40556"
+      }
+    },
+    {
+      "sandbox": {
+        "id": "sandbox-reference",
+        "rock_id": "reference",
+        "project_name": "Reference",
+        "tech_stack": "fastapi-vue-mongo",
+        "ports": {
+          "api": 8001,
+          "frontend": 3001,
+          "database": 5433,
+          "admin_tool": 8081
+        },
+        "compose_project": "orket-sandbox-reference",
+        "workspace_path": "workspace",
+        "created_at": "2026-09-20T12:34:56+00:00",
+        "api_url": "",
+        "frontend_url": "",
+        "database_url": ""
+      },
+      "database": {
+        "kind": "text",
+        "sha256": "218d93bba8fb4626cd2c7b6d9bb9680751153be551778877ca8a8e33ec4b36ad"
+      },
+      "compose": {
+        "kind": "text",
+        "sha256": "6b1db40b8c1a91e031ef16d4a0dad9ee5f638f7b09925472e7e4d12944c63f3f"
+      }
+    },
+    {
+      "sandbox": {
+        "id": "sandbox-reference",
+        "rock_id": "reference",
+        "project_name": "Reference",
+        "tech_stack": "fastapi-vue-mongo",
+        "ports": {
+          "api": 8001,
+          "frontend": 3001,
+          "database": 5433,
+          "admin_tool": null
+        },
+        "compose_project": "orket-sandbox-reference",
+        "workspace_path": "workspace",
+        "created_at": "2026-09-20T12:34:56+00:00",
+        "api_url": "",
+        "frontend_url": "",
+        "database_url": ""
+      },
+      "database": {
+        "kind": "text",
+        "sha256": "218d93bba8fb4626cd2c7b6d9bb9680751153be551778877ca8a8e33ec4b36ad"
+      },
+      "compose": {
+        "kind": "text",
+        "sha256": "cab902d8f969898565ee101ebec1962c783202e7562ae094ed7467ef98028b13"
+      }
+    },
+    {
+      "sandbox": {
+        "id": "sandbox-reference",
+        "rock_id": "reference",
+        "project_name": "Reference",
+        "tech_stack": "csharp-razor-ef",
+        "ports": {
+          "api": 8001,
+          "frontend": 3001,
+          "database": 5433,
+          "admin_tool": 8081
+        },
+        "compose_project": "orket-sandbox-reference",
+        "workspace_path": "workspace",
+        "created_at": "2026-09-20T12:34:56+00:00",
+        "api_url": "",
+        "frontend_url": "",
+        "database_url": ""
+      },
+      "database": {
+        "kind": "text",
+        "sha256": "b8c3a9d11528d6c7abfc53874fc05f28c7e968f17fc77e06d995141cdb185a8b"
+      },
+      "compose": {
+        "kind": "text",
+        "sha256": "95d95bc4f3704c3dcf1bb52991d0845e7b4f4cf83c6216f114ffebf875d6d2b5"
+      }
+    },
+    {
+      "sandbox": {
+        "id": "sandbox-reference",
+        "rock_id": "reference",
+        "project_name": "Reference",
+        "tech_stack": "csharp-razor-ef",
+        "ports": {
+          "api": 8001,
+          "frontend": 3001,
+          "database": 5433,
+          "admin_tool": null
+        },
+        "compose_project": "orket-sandbox-reference",
+        "workspace_path": "workspace",
+        "created_at": "2026-09-20T12:34:56+00:00",
+        "api_url": "",
+        "frontend_url": "",
+        "database_url": ""
+      },
+      "database": {
+        "kind": "text",
+        "sha256": "b8c3a9d11528d6c7abfc53874fc05f28c7e968f17fc77e06d995141cdb185a8b"
+      },
+      "compose": {
+        "kind": "text",
+        "sha256": "95d95bc4f3704c3dcf1bb52991d0845e7b4f4cf83c6216f114ffebf875d6d2b5"
+      }
+    },
+    {
+      "sandbox": {
+        "id": "sandbox-reference",
+        "rock_id": "reference",
+        "project_name": "Reference",
+        "tech_stack": "node-react-postgres",
+        "ports": {
+          "api": 8001,
+          "frontend": 3001,
+          "database": 5433,
+          "admin_tool": 8081
+        },
+        "compose_project": "orket-sandbox-reference",
+        "workspace_path": "workspace",
+        "created_at": "2026-09-20T12:34:56+00:00",
+        "api_url": "",
+        "frontend_url": "",
+        "database_url": ""
+      },
+      "database": {
+        "kind": "refusal",
+        "type": "ValueError",
+        "message": "Unsupported tech stack: node-react-postgres"
+      },
+      "compose": {
+        "kind": "refusal",
+        "type": "ValueError",
+        "message": "Unsupported tech stack: TechStack.NODE_REACT_POSTGRES"
+      }
+    },
+    {
+      "sandbox": {
+        "id": "sandbox-reference",
+        "rock_id": "reference",
+        "project_name": "Reference",
+        "tech_stack": "node-react-postgres",
+        "ports": {
+          "api": 8001,
+          "frontend": 3001,
+          "database": 5433,
+          "admin_tool": null
+        },
+        "compose_project": "orket-sandbox-reference",
+        "workspace_path": "workspace",
+        "created_at": "2026-09-20T12:34:56+00:00",
+        "api_url": "",
+        "frontend_url": "",
+        "database_url": ""
+      },
+      "database": {
+        "kind": "refusal",
+        "type": "ValueError",
+        "message": "Unsupported tech stack: node-react-postgres"
+      },
+      "compose": {
+        "kind": "refusal",
+        "type": "ValueError",
+        "message": "Unsupported tech stack: TechStack.NODE_REACT_POSTGRES"
+      }
+    },
+    {
+      "sandbox": {
+        "id": "sandbox-reference",
+        "rock_id": "reference",
+        "project_name": "Reference",
+        "tech_stack": "django-react-postgres",
+        "ports": {
+          "api": 8001,
+          "frontend": 3001,
+          "database": 5433,
+          "admin_tool": 8081
+        },
+        "compose_project": "orket-sandbox-reference",
+        "workspace_path": "workspace",
+        "created_at": "2026-09-20T12:34:56+00:00",
+        "api_url": "",
+        "frontend_url": "",
+        "database_url": ""
+      },
+      "database": {
+        "kind": "refusal",
+        "type": "ValueError",
+        "message": "Unsupported tech stack: django-react-postgres"
+      },
+      "compose": {
+        "kind": "refusal",
+        "type": "ValueError",
+        "message": "Unsupported tech stack: TechStack.DJANGO_REACT_POSTGRES"
+      }
+    },
+    {
+      "sandbox": {
+        "id": "sandbox-reference",
+        "rock_id": "reference",
+        "project_name": "Reference",
+        "tech_stack": "django-react-postgres",
+        "ports": {
+          "api": 8001,
+          "frontend": 3001,
+          "database": 5433,
+          "admin_tool": null
+        },
+        "compose_project": "orket-sandbox-reference",
+        "workspace_path": "workspace",
+        "created_at": "2026-09-20T12:34:56+00:00",
+        "api_url": "",
+        "frontend_url": "",
+        "database_url": ""
+      },
+      "database": {
+        "kind": "refusal",
+        "type": "ValueError",
+        "message": "Unsupported tech stack: django-react-postgres"
+      },
+      "compose": {
+        "kind": "refusal",
+        "type": "ValueError",
+        "message": "Unsupported tech stack: TechStack.DJANGO_REACT_POSTGRES"
+      }
+    }
+  ],
+  "tokens": {
+    "database": "synthetic-reference-db",
+    "admin": "synthetic-reference-admin"
+  },
+  "scope": "Synthetic inputs only. Exact output bytes for supported stacks; unsupported stacks retain ValueError and unsupported-stack category. Enum versus string diagnostic rendering is an explicit input migration.",
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-09-20T23:19:31.869838Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:26056abf2a0fcb323579fccc52ec6e3544573fe58d157f67acf40c8aa702ef9e",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 440,
+        "paths_total_reference": 440,
+        "churn_paths": 440,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    }
+  ]
+}

@@ -4,7 +4,7 @@ import asyncio
 import json
 
 
-def lightweight_compose(sandbox, _db_password: str) -> str:
+def lightweight_compose(sandbox, _db_password: str, *, policy_node=None, admin_password=None) -> str:
     return f"""services:
   api:
     image: nginx:alpine
