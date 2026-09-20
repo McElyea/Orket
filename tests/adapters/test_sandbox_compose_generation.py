@@ -13,6 +13,7 @@ from orket.core.domain.sandbox import SandboxRegistry, TechStack
 from orket.services.sandbox_orchestrator import SandboxOrchestrator
 
 
+@pytest.mark.unit
 def test_fastapi_react_postgres_compose():
     """Test FastAPI + React + Postgres compose generation."""
     orchestrator = SandboxOrchestrator(
@@ -32,6 +33,7 @@ def test_fastapi_react_postgres_compose():
 
     sandbox = Sandbox(
         id="test-sandbox-1",
+        created_at="2026-09-20T12:34:56.123456+00:00",
         rock_id="test-rock",
         project_name="Test Project",
         tech_stack=TechStack.FASTAPI_REACT_POSTGRES,
@@ -68,6 +70,7 @@ def test_fastapi_react_postgres_compose():
     print(f"\nGenerated compose file:\n{compose_content}")
 
 
+@pytest.mark.unit
 def test_fastapi_vue_mongo_compose():
     """Test FastAPI + Vue + MongoDB compose generation."""
     orchestrator = SandboxOrchestrator(
@@ -86,6 +89,7 @@ def test_fastapi_vue_mongo_compose():
 
     sandbox = Sandbox(
         id="test-sandbox-2",
+        created_at="2026-09-20T12:34:56.123456+00:00",
         rock_id="test-rock-2",
         project_name="Test Project 2",
         tech_stack=TechStack.FASTAPI_VUE_MONGO,
@@ -137,6 +141,7 @@ def test_port_allocation():
     print(f"  Sandbox 2: API={ports2.api}, Frontend={ports2.frontend}, DB={ports2.database}")
 
 
+@pytest.mark.unit
 def test_csharp_razor_ef_compose():
     """Test C# Razor + SQL Server compose generation."""
     orchestrator = SandboxOrchestrator(
@@ -155,6 +160,7 @@ def test_csharp_razor_ef_compose():
 
     sandbox = Sandbox(
         id="test-sandbox-csharp",
+        created_at="2026-09-20T12:34:56.123456+00:00",
         rock_id="test-rock-csharp",
         project_name="CSharp Project",
         tech_stack=TechStack.CSHARP_RAZOR_EF,
@@ -227,4 +233,3 @@ if __name__ == "__main__":
     test_fastapi_vue_mongo_compose()
     test_port_allocation()
     print("\nðŸŽ‰ All sandbox compose generation tests passed!")
-

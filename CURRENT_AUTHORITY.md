@@ -24,6 +24,12 @@ returning success, after lease/resource publication with one captured timestamp.
 Existing lease monotonicity guards remain active. Recovery and partial-effect limits:
 `docs/architecture/CONTRACT_DELTA_SANDBOX_DEPLOY_RECOVERY_D_2026-09-19.md`.
 
+Sandbox core values require an explicit creation timestamp. Application creation
+captures it through `RuntimeInputService` before preflight awaits; later
+orchestrator clock observations keep their existing second precision. Migration
+and remaining lifecycle input scope:
+`docs/architecture/CONTRACT_DELTA_SANDBOX_CREATION_INPUTS_D_2026-09-20.md`.
+
 Application retains SDK and legacy artifact/provenance workers through interruption,
 captures caller inputs before awaiting and preserves confirmed execution outcomes
 when later projection publication fails. Storage verifies each published JSON file;

@@ -12520,8 +12520,8 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.43 bounded dynamic-route checkpoint. Begin with the remaining sandbox creation
-clock and schema identities, then continue numbered D requirements before E1/E2
+0.6.44 sandbox creation-input checkpoint. Continue schema identities/warnings and
+the remaining numbered D requirements before E1/E2
 and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
 Preserve every failed and
@@ -18077,3 +18077,88 @@ then E1/E2 and CAP in order. AC-01 passes the changed bounded dependency contrac
 AC-02/03/05/06/07/08/09/10 pass within this checkpoint's scope. AC-04 remains partial
 for `orket/core/domain/sandbox.py` and `orket/schema.py`, owned by this active D
 lane; broader D/E/CAP and explicit user acceptance remain open.
+
+
+#### .44 sandbox creation input checkpoint (2026-09-20)
+
+The core `Sandbox` constructor now requires `created_at`. `SandboxOrchestrator`
+captures the existing `RuntimeInputService.utc_now_iso()` observation when its
+creation coroutine begins, before preflight awaits, and passes it into core
+construction and allocation publication. Creation preserves microseconds; later
+orchestrator observations retain their previous second precision through the same
+input port. No lease guard, clock implementation or runtime deadline changed.
+Direct constructors and affected test layers migrate explicitly. Contract:
+`docs/architecture/CONTRACT_DELTA_SANDBOX_CREATION_INPUTS_D_2026-09-20.md`.
+
+The retained pre-change probe has one failure and one healthy explicit-value pass.
+The first scoped campaign had a collection error because two new modules shared
+a basename under the existing pytest import mode. Renaming the integration module
+resolves that harness error; the corrected preliminary selection passes 16 cases.
+Its original error, inputs and output remain retained. The tests prove value parity,
+capture before a real SQLite read suspends, clock failure before allocation, and
+controlled publication refusal with port release. They do not claim Docker proof.
+
+Frozen source and serial installed Windows 3.11/3.12 runs pass the same **276 cases
+across 44 modules**, with no failures, errors or skips. Selection includes every
+non-acceptance sandbox-named module, affected webhook adapters and authority checks.
+This is a scoped regression campaign, not a re-execution of all retained BT cases.
+
+| Environment | Pass / fail / error / skip | Pytest seconds |
+| --- | --- | --- |
+| Source Windows 3.11 | 276 / 0 / 0 / 0 | 14.300 |
+| Installed win-py311 | 276 / 0 / 0 / 0 | 16.431 |
+| Installed win-py312 | 276 / 0 / 0 / 0 | 24.390 |
+
+Both installed cells verify 903 loaded core module origins, identical copied inputs,
+real CLI primary/degraded board effects, controlled ToolGate observations, no root
+database and no surviving proof children. Package parity covers all 1,099 Python
+files and 1,115 wheel package members. Wheel SHA-256:
+`d2d03026cdb7899eb34e05805c5316c1b0e8e45043c5a7619ed58e7d33150e8a`.
+Sdist SHA-256:
+`1753381d8ae479db3870f1a7084f0f7696fdef727fc4f3e9bf005d8e41846e34`.
+The first build used a source-test environment without the build frontend; its
+failure and log remain retained. The established build environment produced the
+accepted artifacts without changing dependency declarations.
+
+The installed Windows 3.11 **live Docker/SQLite** flow passes on the primary path
+in 6.000 parent-observed seconds. It uses the actual installed
+wheel, unchanged ambient clocks/deadlines and a trusted minimal local nginx Compose
+policy with no published ports, host mounts, image pulls or builds. Creation time
+matches both durable reservation records exactly; Docker inventory, actual HTTP,
+health and the single deployment effect succeed. Application deletion publishes
+the single cleanup effect and a cleaned lifecycle record. Both child and independent
+parent inventories confirm no remaining exact-project containers, networks or
+volumes; the parent confirms no surviving observed children. All 1,115 installed
+package member hashes match the wheel and source before and after execution.
+
+The first live helper stopped before Docker creation because it wrongly required
+every non-Python repository file under `orket/` to be installed. The corrected
+helper verifies every actual wheel member and all Python sources, explicitly
+listing the same three pre-existing unpackaged JSON sources. Initial helper bytes,
+failure log and no-resource/no-child checks remain retained. This does not establish
+repository-wide non-Python asset shipping coverage or waive such an obligation.
+
+Evidence lives under `.tmp/d-sandbox-creation-inputs/`; `manifest.json`,
+`native-audit.json`, `live-installed-win-py311-corrected/report.json` and its parent
+receipt bind those scopes. Both Quality jobs include the new input regressions.
+Dependency analysis reports 1,099 modules, 3,474 import sites, six recognized routes
+and zero analysis errors, forbidden edges, unknown modules or cycles. Canonical
+Ruff retains 94 findings; two existing UP042 enum findings are in the touched core
+file. No new Ruff finding is introduced; a clean changed-file lint claim is not made.
+Docs hygiene, release metadata and whitespace pass. Baseline collection remains
+distinct from release readiness, which stays false.
+
+No new full-suite/89%-coverage, Linux runtime, hosted Quality, provider, containment
+or capacity acceptance is claimed. The latest Linux clock blocker and the .43
+overlapping Git checkout timeout remain unresolved; serial scoped success repairs
+neither. The three unpackaged JSON sources remain outside this asset proof ceiling.
+Preserved handoff and .43 evidence hashes and the original checkout are revalidated
+before publication. `checkpoint.json`, `index-check.json`, `publication.json` and
+`COMMITTED_CHANGESET.md` bind the scoped branch and annotated v0.6.44 checkpoint.
+
+AC-01/02/03/05/06/07/08/09/10 pass within this input-change scope. AC-04 passes for
+the changed sandbox creation value; remaining schema identities and warnings in
+`orket/schema.py`, other lifecycle clocks, immutable decision context, adapter
+classification and async reachability remain owned by active D. The oversized
+orchestrator does not grow. Continue numbered D, then E1/E2 and CAP. No whole-lane
+completion or retirement is claimed.

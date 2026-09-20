@@ -9,7 +9,6 @@ in Docker containers with allocated ports.
 from __future__ import annotations
 
 import enum
-from datetime import UTC, datetime
 
 from pydantic import BaseModel, Field
 
@@ -68,7 +67,7 @@ class Sandbox(BaseModel):
     workspace_path: str  # Path to project code
 
     # Lifecycle metadata
-    created_at: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
+    created_at: str
     deployed_at: str | None = None
     deleted_at: str | None = None
 

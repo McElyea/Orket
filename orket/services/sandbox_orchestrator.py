@@ -10,7 +10,6 @@ import secrets
 import socket
 import subprocess
 from collections.abc import Mapping
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -25,6 +24,7 @@ from orket.application.services.control_plane_workload_catalog import (
     sandbox_runtime_workload_for_tech_stack,
 )
 from orket.application.services.decision_node_registry import DecisionNodeRegistry, build_decision_node_registry
+from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.application.services.sandbox_control_plane_effect_service import SandboxControlPlaneEffectService
 from orket.application.services.sandbox_control_plane_execution_service import SandboxControlPlaneExecutionService
 from orket.application.services.sandbox_control_plane_operator_service import SandboxControlPlaneOperatorService
@@ -39,7 +39,7 @@ from orket.application.services.sandbox_runtime_inspection_service import Sandbo
 from orket.application.services.sandbox_runtime_lifecycle_service import SandboxRuntimeLifecycleService
 from orket.application.services.sandbox_runtime_recovery_service import SandboxRuntimeRecoveryService
 from orket.core.domain import LeaseStatus, ReservationStatus
-from orket.core.domain.sandbox import PortAllocation, Sandbox, SandboxRegistry, SandboxStatus, TechStack
+from orket.core.domain.sandbox import Sandbox, SandboxRegistry, SandboxStatus, TechStack
 from orket.core.domain.sandbox_lifecycle import SandboxLifecycleError
 from orket.core.domain.sandbox_lifecycle import SandboxState as LifecycleState
 from orket.core.domain.sandbox_lifecycle_records import SandboxLifecycleRecord
@@ -63,7 +63,9 @@ class SandboxOrchestrator:
         control_plane_db_path: str | None = None,
         environment: Mapping[str, str] | None = None,
         terminal_evidence_root: Path | None = None,
+        runtime_inputs: RuntimeInputService | None = None,
     ) -> None:
+        self.runtime_inputs = RuntimeInputService() if runtime_inputs is None else runtime_inputs
         observed_environment = dict(os.environ if environment is None else environment)
         self.workspace_root = workspace_root
         self.registry = registry or SandboxRegistry()
@@ -137,6 +139,7 @@ class SandboxOrchestrator:
         workspace_path: str,
     ) -> Sandbox:
         """Create and deploy a new sandbox environment."""
+        created_at = self.runtime_inputs.utc_now_iso()
         sandbox_id = self.sandbox_policy_node.build_sandbox_id(rock_id)
         if await self.lifecycle_service.repository.get_record(sandbox_id):
             raise ValueError(f"Sandbox lifecycle record already exists for {sandbox_id}")
@@ -152,8 +155,9 @@ class SandboxOrchestrator:
             workspace_path=workspace_path,
             api_url=f"http://localhost:{ports.api}",
             frontend_url=f"http://localhost:{ports.frontend}",
-            database_url=self._get_database_url(tech_stack, ports, db_password),
+            database_url=self.sandbox_policy_node.get_database_url(tech_stack, ports, db_password),
             admin_url=f"http://localhost:{ports.admin_tool}" if ports.admin_tool else None,
+            created_at=created_at,
         )
         reservation_id = None
         try:
@@ -496,9 +500,6 @@ class SandboxOrchestrator:
             admin_password=admin_password,
         )
 
-    def _get_database_url(self, tech_stack: TechStack, ports: PortAllocation, db_password: str = "") -> str:
-        return self.sandbox_policy_node.get_database_url(tech_stack, ports, db_password)
-
     @staticmethod
     def _compose_path(workspace_path: str | Path) -> Path:
         return Path(workspace_path) / AGENT_OUTPUT_DIR / "deployment" / "docker-compose.sandbox.yml"
@@ -565,9 +566,8 @@ class SandboxOrchestrator:
         self.registry.unregister(sandbox_id)
         log_event("sandbox_deleted", {"sandbox_id": sandbox_id}, Path(sandbox.workspace_path))
 
-    @staticmethod
-    def _now() -> str:
-        return datetime.now(UTC).replace(microsecond=0).isoformat()
+    def _now(self) -> str:
+        return self.runtime_inputs.utc_now().replace(microsecond=0).isoformat()
 
     def _sync_registry_with_lifecycle(self, record: SandboxLifecycleRecord) -> None:
         if record.state is not LifecycleState.CLEANED:

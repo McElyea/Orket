@@ -35,9 +35,11 @@ def _sandbox(tmp_path: Path) -> Sandbox:
         frontend_url="http://localhost:3001",
         database_url="postgresql://postgres:pw@localhost:5433/appdb",
         admin_url="http://localhost:8081",
+        created_at="2026-09-20T12:34:56.123456+00:00",
     )
 
 
+@pytest.mark.unit
 def test_sandbox_orchestrator_get_logs_uses_command_runner(tmp_path):
     registry = SandboxRegistry()
     runner = FakeRunner()
@@ -53,9 +55,10 @@ def test_sandbox_orchestrator_get_logs_uses_command_runner(tmp_path):
 
     assert logs == "logs-from-fake-runner"
     assert runner.sync_calls, "Expected command runner to receive docker-compose logs call"
-    assert "agent_output\\deployment\\docker-compose.sandbox.yml" in runner.sync_calls[0][0][2]
+    assert Path(runner.sync_calls[0][0][2]) == tmp_path / "agent_output/deployment/docker-compose.sandbox.yml"
 
 
+@pytest.mark.unit
 def test_sandbox_orchestrator_get_logs_rejects_unknown_service(tmp_path):
     registry = SandboxRegistry()
     runner = FakeRunner()
@@ -77,6 +80,7 @@ def test_sandbox_orchestrator_get_logs_rejects_unknown_service(tmp_path):
     assert runner.sync_calls == []
 
 
+@pytest.mark.unit
 def test_sandbox_orchestrator_get_logs_uses_env_allowed_service_list(monkeypatch, tmp_path):
     """Layer: unit. Verifies log-service allowlists can be narrowed or extended through env configuration."""
     monkeypatch.setenv("ORKET_SANDBOX_ALLOWED_LOG_SERVICES", "api,frontend,custom")
@@ -97,6 +101,7 @@ def test_sandbox_orchestrator_get_logs_uses_env_allowed_service_list(monkeypatch
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 async def test_sandbox_orchestrator_health_check_parses_compose_ndjson(tmp_path):
     registry = SandboxRegistry()
     runner = FakeRunner(
@@ -125,6 +130,7 @@ async def test_sandbox_orchestrator_health_check_parses_compose_ndjson(tmp_path)
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 async def test_sandbox_orchestrator_health_check_ignores_optional_admin_services(tmp_path):
     registry = SandboxRegistry()
     runner = FakeRunner(

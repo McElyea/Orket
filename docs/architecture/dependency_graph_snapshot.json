@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-20T19:28:25.933353+00:00",
+  "generated_at": "2026-09-20T20:29:52.452214+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -2517,7 +2517,7 @@
       },
       "orket.core.domain.sandbox": {
         "path": "orket/core/domain/sandbox.py",
-        "sha256": "4da9058e103a50eef079e9847af44a2fcbd701e872ab7f3a10ea48854b534355"
+        "sha256": "826d7052e43d32cdc7769fdd90e99e490ffba8e74ea93d483c1e41d585c27d72"
       },
       "orket.core.domain.sandbox_cleanup": {
         "path": "orket/core/domain/sandbox_cleanup.py",
@@ -4429,7 +4429,7 @@
       },
       "orket.services.sandbox_orchestrator": {
         "path": "orket/services/sandbox_orchestrator.py",
-        "sha256": "b47850bb20b13d1ea3354844a1c640b0764e882502285249e9c1a07803efcb76"
+        "sha256": "fe1173240e9d85d21f5544b2b7ee94ef63914ca90c6c11b67bc33ce30830fc79"
       },
       "orket.services.scoped_memory_store": {
         "path": "orket/services/scoped_memory_store.py",
@@ -28346,61 +28346,68 @@
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.adapters.storage.async_control_plane_execution_repository",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 17,
+        "line": 16,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.adapters.storage.async_control_plane_record_repository",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 18,
+        "line": 17,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.adapters.storage.async_executor_service",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 19,
+        "line": 18,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.adapters.storage.async_file_tools",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 20,
+        "line": 19,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.adapters.storage.async_sandbox_lifecycle_repository",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 21,
+        "line": 20,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.adapters.storage.command_runner",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 22,
+        "line": 21,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.application.services.control_plane_publication_service",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 23,
+        "line": 22,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.application.services.control_plane_workload_catalog",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 24,
+        "line": 23,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.application.services.decision_node_registry",
+        "path": "orket/services/sandbox_orchestrator.py",
+        "line": 26,
+        "kind": "from"
+      },
+      {
+        "source": "orket.services.sandbox_orchestrator",
+        "target": "orket.application.services.runtime_input_service",
         "path": "orket/services/sandbox_orchestrator.py",
         "line": 27,
         "kind": "from"
@@ -30012,7 +30019,7 @@
       {
         "source": "application",
         "target": "application",
-        "count": 1680
+        "count": 1681
       },
       {
         "source": "application",
@@ -30064,29 +30071,6 @@
     }
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-19T09:03:11.477547Z",
-      "changed": true,
-      "before_digest": "sha256:5156c087961200cb2c0fe347f42ac9cb67501472ef2230416680ef78639e0dde",
-      "after_digest": "sha256:5f4040f90a83ec06a91086f0143a0c57a75f67c72ccca5952638aa83d3acae57",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 4,
-        "initial_write": false,
-        "paths_total_previous": 44625,
-        "paths_total_current": 44625,
-        "paths_total_reference": 44625,
-        "churn_paths": 4,
-        "churn_ratio": 9e-05,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.modules.orket.application.services.driver_reforger_command.sha256",
-          "$.observed.modules.orket.application.services.driver_resource_commands.sha256",
-          "$.observed.modules.orket.application.services.driver_structural_service.sha256"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-19T10:00:17.569260Z",
       "changed": true,
@@ -31009,6 +30993,45 @@
           "$.observed.modules.orket.adapters.execution.extension_modules.sha256",
           "$.verdict.analysis_errors",
           "$.verdict.ok"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-20T20:30:08.895390Z",
+      "changed": true,
+      "before_digest": "sha256:8621bf377be9cab8739ca2961f0d659be16c70a244f1328dfe9f1e3530ba83b1",
+      "after_digest": "sha256:ccb98ef9eea5703bf10336fec335a4e3f5953b3fe7108bcba625a31b738da0f3",
+      "diff": {
+        "added_paths": 1,
+        "removed_paths": 0,
+        "changed_paths": 165,
+        "initial_write": false,
+        "paths_total_previous": 46273,
+        "paths_total_current": 46284,
+        "paths_total_reference": 46284,
+        "churn_paths": 166,
+        "churn_ratio": 0.003587,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.edges[3403].line",
+          "$.observed.edges[3404].line",
+          "$.observed.edges[3405].line",
+          "$.observed.edges[3406].line",
+          "$.observed.edges[3407].line",
+          "$.observed.edges[3408].line",
+          "$.observed.edges[3409].line",
+          "$.observed.edges[3410].line",
+          "$.observed.edges[3411].line",
+          "$.observed.edges[3412].line",
+          "$.observed.edges[3412].target",
+          "$.observed.edges[3413].line",
+          "$.observed.edges[3413].target",
+          "$.observed.edges[3414].line",
+          "$.observed.edges[3414].target",
+          "$.observed.edges[3415].line",
+          "$.observed.edges[3415].target",
+          "$.observed.edges[3416].line",
+          "$.observed.edges[3416].target"
         ]
       }
     }

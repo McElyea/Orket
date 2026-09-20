@@ -5,6 +5,16 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.44] - 2026-09-20
+
+### Fixed
+- Require explicit creation timestamps in sandbox core values and capture them through the existing runtime input service before application preflight awaits.
+- Preserve creation precision and the existing second precision of later orchestrator clock observations.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Direct `Sandbox` constructors supply `created_at`; existing orchestrator callers remain supported. Migration: `docs/architecture/CONTRACT_DELTA_SANDBOX_CREATION_INPUTS_D_2026-09-20.md`.
+
 ## [0.6.43] - 2026-09-20
 
 ### Fixed
