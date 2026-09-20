@@ -47,7 +47,7 @@ register also records review-discovered ship-risk and self-deception debt that i
 not accepted as target-architecture conformance.
 
 1. Dependency layering exceptions:
-   1. The generated graph has no forbidden static pairs or cross-layer cycles, but six unresolved dynamic-import/reflection sites still fail its verdict. Core purity and runtime ownership remain separate C/D obligations; zero static pairs does not establish full conformance.
+   1. Dependency analysis recognizes six bounded extension-loading/import-interception routes by inspecting their guards, bindings and forwarding bodies. Unknown routes still fail. Current source/installed acceptance belongs to the architectural-truth plan; core purity and runtime ownership remain separate C/D obligations.
 2. Decision-node purity exceptions:
    1. `orket/decision_nodes/builtins.py` still retains mutable planning/routing context. Loop limits now consume immutable explicit values; application owns registry selection, executable tool bindings, provider construction and organization overrides. API authentication, observed paths, board loading and calendar inputs now belong to application services; API strategy retains request/presentation recommendations. API/engine/pipeline construction, env bootstrap, and session-id minting on the touched runtime paths also live in explicit services.
 3. API runtime composition:
@@ -519,6 +519,16 @@ cross-layer strongly connected components. Git-visible inventory, source bytes
 and Python encodings define the observation; read/parse/discovery errors cannot
 produce a passing verdict. The graph exporter reports observation separately from
 the verdict. These are static dependency checks, not a runtime call graph.
+
+Argument-preserving installation of a standard importer can be recognized only
+from its actual unambiguous factory definition. External extension names require
+an inspected validator that rejects non-plain strings, relative names and the
+complete scanned namespace, with dominating local capture and no uncertain
+rebinding. Builtin, factory or validator ambiguity prevents recognition. Reports
+retain each proven route in `resolved_dynamic_routes`; they do not infer hidden
+repository edges or exempt an arbitrary module. Runtime module-origin checks
+remain independent. Scope and adversarial acceptance:
+`docs/architecture/CONTRACT_DELTA_DYNAMIC_IMPORT_ANALYSIS_C_2026-09-20.md`.
 
 Only exact source/target exceptions with owner, reason, introduction and removal
 metadata can waive an edge; expiry and unused exceptions fail closed. They cannot

@@ -87,7 +87,7 @@ jobs:
 
       - name: Enforce dependency direction rules
         run: |
-          python -m pytest -q tests/platform/test_dependency_policy_contract.py tests/platform/test_dependency_imports.py
+          python -m pytest -q tests/platform/test_dependency_policy_contract.py tests/platform/test_dependency_imports.py tests/platform/test_dependency_importer_interception.py tests/platform/test_dependency_external_names.py tests/contracts/test_extension_module_names.py tests/integration/test_extension_module_origin.py
           python scripts/governance/check_dependency_direction.py
 
       - name: Audit OS registry/spec sync
@@ -313,7 +313,7 @@ jobs:
 
       - name: Enforce dependency direction rules
         run: |
-          python -m pytest -q tests/platform/test_dependency_policy_contract.py tests/platform/test_dependency_imports.py
+          python -m pytest -q tests/platform/test_dependency_policy_contract.py tests/platform/test_dependency_imports.py tests/platform/test_dependency_importer_interception.py tests/platform/test_dependency_external_names.py tests/contracts/test_extension_module_names.py tests/integration/test_extension_module_origin.py
           python scripts/governance/check_dependency_direction.py
 
       - name: Enforce volatility boundary script

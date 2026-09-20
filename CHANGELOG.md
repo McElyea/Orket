@@ -5,6 +5,17 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.43] - 2026-09-20
+
+### Fixed
+- Resolve argument-preserving standard import-hook installation by inspecting actual factory bodies and unambiguous bindings; redirected or escaping importers remain failures.
+- Prove bounded external module-name lookups from explicit plain-string, absolute-name and namespace guards, while refusing uncertain builtins, validators and local bindings.
+- Require ordinary absolute strings at extension module lookup and expose each recognized route in dependency reports without adding policy exceptions or waiving analysis errors.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Extension entrypoints use plain strings; string subclasses are refused. Dependency report consumers may inspect `resolved_dynamic_routes` separately from repository edges and errors. Migration: `docs/architecture/CONTRACT_DELTA_DYNAMIC_IMPORT_ANALYSIS_C_2026-09-20.md`.
+
 ## [0.6.42] - 2026-09-20
 
 ### Fixed
@@ -1896,7 +1907,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - **Schema Migration**: Fixed backward compatibility issues with legacy priority strings
 - **Verification Aliases**: Corrected field alias mappings for verification fixtures
-- **Line Ending Warnings**: Normalized line endings across core modules (LF â†’ CRLF on Windows)
+- **Line Ending Warnings**: Normalized line endings across core modules (LF Ã¢â€ â€™ CRLF on Windows)
 
 ### Removed
 - **Obsolete Tests**: Removed deprecated test files (`test_examples_tictactoe.py`, `test_flow_loads.py`)
@@ -1964,7 +1975,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - iDesign enforcement framework
 - Prompt Engine updates
-- Book â†’ Card terminology migration
+- Book Ã¢â€ â€™ Card terminology migration
 
 ### Changed
 - Major architectural alignment with iDesign principles

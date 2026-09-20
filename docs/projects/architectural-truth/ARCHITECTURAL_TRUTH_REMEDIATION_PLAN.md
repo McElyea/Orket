@@ -10919,8 +10919,10 @@ Retains Workstreams 3, 4 and 5 and previous Slice C/D obligations.
    core-to-services/platform and runtime-to-interfaces edges.
 
 Exit: enforce documented architecture plus individually governed exceptions.
-Policy v2 now implements the cutover; the current repository verdict fails.
-The historical v1 transition-policy green is not C conformance evidence.
+Policy v2 implements the cutover. The .43 bounded dynamic-route checkpoint below
+passes the current repository verdict and four native governance cells. Earlier
+failed v2 observations remain historical; the old v1 transition-policy green is
+not C conformance evidence. Remaining D/E/CAP and whole-lane acceptance stay open.
 
 #### C counterexample preflight: 2026-09-14
 
@@ -12516,12 +12518,13 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
   Scoped installed-build/host acceptance now passes; this does not close the
   full plan or imply generic exactly-once effects or historical authenticity.
 
-Next action: continue the remaining numbered C/D requirements after the verified
-0.6.42 wake-input/provider-lifetime checkpoint. Resolve the six dynamic diagnostics
-with bounded analysis or repairs, then complete core input/effect and async
-reachability obligations before E1/E2 and CAP acceptance. Preserve the wake
-counterexamples and all retained proof below. The graph has zero forbidden
-static pairs, zero cross-layer cycles and six unresolved import/reflection diagnostics. Preserve every failed and
+Next action: complete D's remaining explicit core input/effect, immutable decision
+context, adapter-classification and async-reachability obligations after the verified
+0.6.43 bounded dynamic-route checkpoint. Begin with the remaining sandbox creation
+clock and schema identities, then continue numbered D requirements before E1/E2
+and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
+unknown modules or analysis errors; six bounded routes are explicitly recognized.
+Preserve every failed and
 passing source/native observation and the historical clock diagnosis. Canonical
 Ruff has 94 findings. The prior stale benchmark expectation passes in the
 new source/native selection. The unmodified published .39 complete rerun has
@@ -12530,8 +12533,11 @@ against the unchanged 89% gate. The two parent-Git-dependent fixture failures an
 authority-date mismatch are repaired in the published .40 checkpoint; a passing full suite
 is not yet established. Fresh Linux acceptance remains blocked by native clock
 instability; continue independent work without changing clocks or deadlines.
-Remaining core clocks, schema identities, async reachability and
-adapter classification remain actionable. E1/E2, CAP-1/2/3, hosted Quality, release
+The first overlapping .43 Windows 3.12 campaign also retains an unexplained
+30-second Git checkout timeout; five isolated repetitions and a fresh serial full
+cell pass without establishing its cause or repair. Preserve this D process/host
+and CAP-3 capacity debt. Remaining core clocks, schema identities, async reachability
+and adapter classification remain actionable. E1/E2, CAP-1/2/3, hosted Quality, release
 readiness and explicit whole-lane acceptance remain open.
 
 The final BT-3 audit accepts builtin evidence-based completion and scoped replay.
@@ -17923,3 +17929,151 @@ effect adapters); AC-07 pass (strict refusal and failure precedence); AC-08 pass
 (wire/event schemas unchanged); AC-09 partial (bounded real store, public CLI/API,
 replay and inference proof; broader D/CAP open); AC-10 pass (contract, spec,
 contributor, authority, Quality selections and plan).
+
+#### .43 bounded dynamic-route analysis checkpoint (2026-09-20)
+
+Reentry binds the clean published v0.6.42 commit/tag and preserves its 459-case
+source/Windows cohorts, eight actual llama.cpp cases and Linux clock blocker.
+C still requires truthful resolution of the six dynamic diagnostics. Architecture
+forbids waiving analysis errors; policy v2, classifications, edges and exception
+records remain unchanged. Candidate contract:
+`docs/architecture/CONTRACT_DELTA_DYNAMIC_IMPORT_ANALYSIS_C_2026-09-20.md`.
+
+Native checker probes under `.tmp/c-dynamic-boundaries/` retain two forwarding
+controls that fail before the change and two correctly rejected controls.
+The scanner now inspects actual local/imported factories and recognizes only
+same-importer installation with unchanged ordered arguments, no callback escape,
+decorator, ambiguous rebinding or unsafe namespace use. The expanded interception
+cohort passes 89 cases. Repeated identical namespace imports retain one known
+binding; distinct or reassigned bindings do not.
+
+The two lookup routes now share a runtime validator that rejects non-plain strings,
+relative names and reserved Orket/SDK namespaces before source/cache/import lookup.
+The scanner proves only a narrow validator shape and dominating local captures,
+invalidates rebindings and does not infer facts through unsupported branches,
+closures or comprehensions. Initial external-name probes retain two failed positive
+controls and three passing rejection controls. The initial combined 94-case run
+passes, but further adversarial tests expose a false green for overwritten
+`builtins.type` and an unjustified route claim after builtin namespace escape.
+Those 114-pass/two-failure receipts and the provisional green graph remain retained.
+Builtin mutation/escape now makes validation proof unavailable. The corrected
+130-case run includes the real-process extension-origin cohort and passes with
+unchanged inputs. A separate 55-case run passes actual extension-name refusal,
+plain-string source resolution, existing native origin checks and external-name
+analysis. No previous failed report or input is rewritten.
+
+The corrected preliminary repository observation has 1,099 modules, 3,473 import
+sites, zero forbidden pairs, unknown modules, authority cycles or analysis errors,
+and six separately reported recognized routes. This is bounded static analysis,
+not a runtime call graph, hostile containment or completed C acceptance. Graph
+export renders the recognized routes explicitly; ordinary imports and unsupported
+routes still retain their own verdicts. The new tests use canonical layers.
+
+The frozen source/installed acceptance scope now passes. Source Windows 3.11,
+installed Windows 3.11 and a fresh serial installed Windows 3.12 cell pass
+**487 cases across 65 modules**, with identical
+case identities and no failures, errors or skips. This retains the .42 cohort and
+adds actual extension-origin processes and explicit module-name contracts.
+
+| Runtime environment | Pass / fail / error / skip | Pytest seconds |
+| --- | --- | --- |
+| Source Windows 3.11 | 487 / 0 / 0 / 0 | 413.422 |
+| Installed win-py311 | 487 / 0 / 0 / 0 | 555.941 |
+| Installed isolated-win-py312 | 487 / 0 / 0 / 0 | 499.896 |
+
+The first installed Windows 3.12 run records 486 passes and one failure. Its
+`test_controller_workload_enablement_policy_blocks_run` fixture hit the unchanged
+30-second Git checkout timeout before policy assertions. That campaign overlapped
+the other native cell and later inference, but overlap is an observed condition,
+not an established cause. `native-initial-audit.json` binds the failed matrix,
+matching inputs/origins, successful CLI/ToolGate flows and confirmed teardown.
+`git-diagnostic/` separately records five passing predeclared exact-test repetitions
+after the other campaigns and server stop, each in 6.3-6.5 seconds; those observations
+do not establish a repair.
+The fresh `a43-isolated-win-py312` full cell uses the same wheel, harness and all
+487 tests with unchanged deadlines. Its pass establishes that serial scope only.
+The initial Git timeout remains unresolved D process/host and CAP-3 capacity debt;
+it is not erased by a passing rerun or described as fixed.
+
+Both installed cells verify 959 actual core module origins, the candidate wheel,
+unchanged copied inputs, real CLI primary/degraded board behavior, controlled
+ToolGate checks, no harness-root database and no surviving proof children. Package
+parity covers all 1,099 Python files and 1,115 wheel package files. Wheel SHA-256:
+`62e455187707f277dfcae0e638cdd53f42b70293b6a29769cb36b3fcf721f8e0`.
+Sdist SHA-256:
+`ede5794005f1680263e92f01f4deebf64074973bf46a3312f92e82263ce69ca5`.
+SDK/reference/starter artifacts remain unchanged. The manifest, source report and
+native audit live under `.tmp/c-dynamic-boundaries/`.
+
+A separate frozen **source/governance** harness passes the same 117 native CLI
+contract cases and full dependency command on Windows/Linux Python 3.11/3.12.
+The source inventory, policy, implementation and adversarial tests are identical
+across those cells. This proves analyzer behavior and actual CLI refusal/acceptance;
+it does not claim installed runtime origins or Linux lease-clock acceptance.
+
+| Governance environment | Pass / fail / error / skip | Measured pytest process seconds |
+| --- | --- | --- |
+| win-py311 | 117 / 0 / 0 / 0 | 21.687 |
+| win-py312 | 117 / 0 / 0 / 0 | 22.469 |
+| linux-py311 | 117 / 0 / 0 / 0 | 5.359 |
+| linux-py312 | 117 / 0 / 0 / 0 | 5.555 |
+
+The first governance harness omitted the canonical dependency policy file. Both
+launched 3.11 cells failed all 117 cases; their source archive, native logs and
+failure disposition remain under `governance/` and the named private environments.
+The corrected `governance-corrected/` archive explicitly includes that unchanged
+policy. Its driver initially hashed its own still-buffered summary log too early.
+The first audit correctly failed. The corrected auditor preserves those receipts,
+requires the sole stale hash to be the empty pre-flush driver log, verifies the
+exact final summary against the report, and checks the parent's independently
+captured closed-log hash. All other retained hashes must match. No runtime/test
+assertion or deadline changed, and no failed observation was relabeled.
+Governance audit SHA-256:
+`439b0f12ed2439112d093719df39861c38aaf0c21bba4b3e0c4c42995b4d7dbe`.
+
+All four actual dependency commands and the generated repository graph report
+1,099 modules, 3,473 import sites, six explicitly recognized routes, zero forbidden
+pairs, zero unknown modules, zero cycles and zero analysis errors. The six original
+diagnostics and each earlier counterexample remain historical evidence. Policy v2,
+layer assignments, allowed edges and exceptions are byte-identical to .42. No
+analysis-error waiver or filename/function allowlist was introduced. This closes
+the six-diagnostic C boundary at its declared static-analysis scope; it does not
+prove a general runtime call graph or excuse remaining D effects/input obligations.
+
+Eight unchanged actual llama.cpp tests pass on the installed Windows 3.11 wheel
+in 794.401 seconds: CLI continuation, API wake memory/replay, approval/denial
+effect restart and both abrupt API-process recovery windows. The model alias is
+`orcarouter_qwen3.8-27b-uncensored-q4_k_l`; the actual GGUF hash remains
+`431c4818df8a3ce941e2fe35bc37688ea9c30052339eae8f41a4c25cdd9a6fa7`.
+Package/extension/input identities, actual model receipts, terminal truth and
+proof-child teardown pass. The task-owned documented server is terminated and
+waited with no surviving descendants or port-8080 listener. These are finite
+provider-backed regression cases, not CAP family or capacity acceptance.
+
+Linux runtime acceptance remains blocked by the latest retained .42 passive clock
+preflight, which observed large opposing wall-clock steps and no required quiet
+interval. No new runtime Linux cell was launched for .43; the independent static
+governance cells above do not supersede that blocker. No clock or deadline changes.
+Changed-file Ruff, docs hygiene, release metadata and whitespace pass. Canonical
+Ruff still has the same 94 findings; full-suite passing status and the unchanged
+89% coverage gate remain unestablished. Baseline collection remains
+`release_ready=false`. Applicable Quality jobs include the new boundary tests;
+hosted Quality is still unavailable.
+
+All 21,713 handoff hashes and 125 .42 checkpoint evidence hashes revalidate, and
+the original checkout is unchanged. The final documentation delta is limited to
+this plan and its baseline. `checkpoint.json`, `index-check.json`,
+`publication.json` and `COMMITTED_CHANGESET.md` bind the verified scoped change and
+authorized branch/annotated-v0.6.43 publication; final tag-policy validation follows
+commit/tag creation. No whole-lane completion or retirement is claimed.
+
+The source-bound spelling inventory at `next-d-inventory.json` identifies the
+remaining sandbox creation clock and two schema UUID defaults. It is not an
+alias-complete effect/async verdict. `next-d-review.json` also identifies schema
+warning effects, legacy alias/warning contracts and nested card/role construction
+paths requiring disposition. Continue D's explicit input, immutable decision
+context, adapter classification and complete async-reachability requirements,
+then E1/E2 and CAP in order. AC-01 passes the changed bounded dependency contract;
+AC-02/03/05/06/07/08/09/10 pass within this checkpoint's scope. AC-04 remains partial
+for `orket/core/domain/sandbox.py` and `orket/schema.py`, owned by this active D
+lane; broader D/E/CAP and explicit user acceptance remain open.

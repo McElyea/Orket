@@ -57,6 +57,7 @@ def report_summary(report: dict) -> dict:
         "ok": verdict["ok"],
         "files": observed.get("files_scanned", 0),
         "edges": len(observed.get("edges", [])),
+        "resolved_dynamic_routes": len(observed.get("resolved_dynamic_routes", [])),
         **{
             name: len(verdict.get(name, []))
             for name in ("violations", "unknown_modules", "analysis_errors", "authority_cycles")

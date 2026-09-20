@@ -27,13 +27,23 @@ class ExtensionModuleSource:
     package_path: Path | None
 
 
+def _external_module_name(name: str) -> str:
+    if type(name) is not str:
+        raise TypeError("E_EXT_MODULE_NAME_INVALID: expected a plain string")
+    if name.startswith('.'):
+        raise ValueError(f"E_EXT_MODULE_NAME_INVALID: {name}")
+    if (name == 'orket' or name.startswith('orket.')
+            or name == 'orket_extension_sdk' or name.startswith('orket_extension_sdk.')):
+        raise ValueError(f"E_EXT_MODULE_NAME_RESERVED: {name}")
+    return name
+
+
 def extension_module_sources(root: Path, module_name: str) -> tuple[ExtensionModuleSource, ...]:
     """Resolve Python's package precedence and every parent without executing it."""
+    module_name = _external_module_name(module_name)
     parts = module_name.split('.')
     if not parts or any(not part.isidentifier() for part in parts):
         raise ValueError(f"E_EXT_MODULE_NAME_INVALID: {module_name}")
-    if parts[0] in {'orket', 'orket_extension_sdk'}:
-        raise ValueError(f"E_EXT_MODULE_NAME_RESERVED: {module_name}")
     root = root.resolve(strict=True)
     if not root.is_dir():
         raise NotADirectoryError(root)
@@ -88,14 +98,16 @@ def extension_module_scope(root: Path, module_name: str) -> Iterator[ModuleType]
         root = root.resolve(strict=True)
         sources = extension_module_sources(root, module_name)
         for source in sources:
-            cached = sys.modules.get(source.name)
+            name = _external_module_name(source.name)
+            cached = sys.modules.get(name)
             if cached is not None:
                 _verify_origin(cached, source)
         inserted = str(root)
         sys.path.insert(0, inserted)
         try:
             for source in sources:
-                module = importlib.import_module(source.name)
+                name = _external_module_name(source.name)
+                module = importlib.import_module(name)
                 _verify_origin(module, source)
             yield module
         finally:

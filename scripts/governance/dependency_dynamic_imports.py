@@ -148,7 +148,10 @@ def dynamic_target(node: ast.Call, origins: set[str], package: str) -> tuple[lis
     return targets, None
 
 
-def dynamic_observations(tree: ast.AST, module: str) -> tuple[list[tuple[int, str]], list[tuple[int, str]]]:
+def dynamic_observations(
+    tree: ast.AST, module: str, *, intercepted_nodes: frozenset[int] = frozenset(),
+    external_nodes: frozenset[int] = frozenset(),
+) -> tuple[list[tuple[int, str]], list[tuple[int, str]]]:
     aliases = import_aliases(tree)
     parents = {child: parent for parent in ast.walk(tree) for child in ast.iter_child_nodes(parent)}
     targets, errors = [], []
@@ -156,7 +159,7 @@ def dynamic_observations(tree: ast.AST, module: str) -> tuple[list[tuple[int, st
         origins = resolve(node, aliases)
         if isinstance(node, ast.Call):
             calls = resolve(node.func, aliases)
-            if calls & IMPORTERS:
+            if calls & IMPORTERS and id(node) not in external_nodes:
                 found, error = dynamic_target(node, calls, module)
                 targets.extend((node.lineno, name) for name in found)
                 if error:
@@ -176,7 +179,7 @@ def dynamic_observations(tree: ast.AST, module: str) -> tuple[list[tuple[int, st
                 and (len(node.args) < 2 or literal_string(node.args[1]) is None)
             ):
                 errors.append((node.lineno, "unresolved_import_attribute"))
-        if origins & IMPORTERS:
+        if origins & IMPORTERS and id(node) not in intercepted_nodes:
             parent = parents.get(node)
             called = isinstance(parent, ast.Call) and parent.func is node
             assigned = (
@@ -194,7 +197,8 @@ def dynamic_observations(tree: ast.AST, module: str) -> tuple[list[tuple[int, st
         found, failures = _registry_reads(node, aliases, module)
         targets.extend(found)
         errors.extend(failures)
-        errors.extend(_unresolved_namespaces(node, parents.get(node), aliases))
+        if id(node) not in external_nodes:
+            errors.extend(_unresolved_namespaces(node, parents.get(node), aliases))
     return sorted(set(targets)), sorted(set(errors))
 
 

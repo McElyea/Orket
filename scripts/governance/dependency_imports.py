@@ -10,6 +10,8 @@ from pathlib import Path
 
 from scripts.common.git_inventory import git_list_files
 from scripts.governance.dependency_dynamic_imports import dynamic_observations, literal_forwarding_targets
+from scripts.governance.dependency_external_names import external_module_routes
+from scripts.governance.dependency_importer_interception import importer_interceptions
 
 
 def module_from_path(path: Path, root: Path) -> str:
@@ -87,7 +89,8 @@ def _exported_names(tree: ast.AST) -> set[str]:
 
 
 def _imports_for_tree(
-    tree: ast.AST, path: Path, root: Path, known: dict[str, str], exports: dict[str, set[str]]
+    tree: ast.AST, path: Path, root: Path, known: dict[str, str], exports: dict[str, set[str]],
+    interceptions: list[dict],
 ) -> tuple[list[dict], list[dict]]:
     module = module_from_path(path, root)
     package = module.rsplit(".", 1)[0]
@@ -101,7 +104,12 @@ def _imports_for_tree(
             imports.extend((node.lineno, name, "from") for name in names)
             if error:
                 failures.append((node.lineno, error))
-    dynamic, errors = dynamic_observations(tree, module.removesuffix(".__init__"))
+    intercepted = frozenset(identity for row in interceptions if row["kind"] == "importer_interception"
+                            for identity in row["nodes"])
+    external = frozenset(identity for row in interceptions if row["kind"] != "importer_interception"
+                         for identity in row["nodes"])
+    dynamic, errors = dynamic_observations(tree, module.removesuffix(".__init__"),
+                                         intercepted_nodes=intercepted, external_nodes=external)
     imports.extend((line, name, "dynamic") for line, name in dynamic)
     failures.extend(errors)
     edges = []
@@ -140,10 +148,16 @@ def scan_dependencies(root: Path) -> dict:
             if additional:
                 exports[module].update(additional)
                 changed = True
+    interceptions = importer_interceptions({module_from_path(p, root): tree for p, tree in trees.items()})
+    external = external_module_routes({module_from_path(p, root): tree for p, tree in trees.items()}, namespace="orket")
+    resolved = []
     for path, tree in trees.items():
-        found, failures = _imports_for_tree(tree, path, root, known, exports)
+        matches = interceptions[module_from_path(path, root)] + external[module_from_path(path, root)]
+        found, failures = _imports_for_tree(tree, path, root, known, exports, matches)
         edges.extend(found)
         errors.extend(failures)
+        resolved.extend({"path": path.relative_to(root).as_posix(), **{k: v for k, v in row.items() if k != "nodes"}}
+                        for row in matches)
     after = [p for p in git_list_files(root) if p.suffix == ".py" and p.is_relative_to(root / "orket")]
     if after != paths:
         errors.append({"path": "orket", "line": 0, "code": "source_inventory_changed_during_scan"})
@@ -154,6 +168,7 @@ def scan_dependencies(root: Path) -> dict:
         "modules": modules,
         "edges": edges,
         "analysis_errors": errors,
+        "resolved_dynamic_routes": resolved,
         "files_scanned": len(paths),
         "scan_roots": ["orket"],
         "scope": "Git-visible declared imports and recognized dynamic routes; conservative static evidence, not a runtime call graph or hostile-code containment",

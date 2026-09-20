@@ -1,6 +1,6 @@
 {
   "schema_version": "architectural_truth.baseline.v1",
-  "generated_at": "2026-09-20T18:55:49.937711Z",
+  "generated_at": "2026-09-20T20:12:09.416118Z",
   "collection_ok": true,
   "release_ready": false,
   "release_ready_reason": "Active architectural exceptions and red/noisy proof gates remain.",
@@ -260,36 +260,57 @@
       }
     },
     "observed": {
-      "analysis_errors": [
+      "analysis_errors": [],
+      "resolved_dynamic_routes": [
         {
           "path": "orket/adapters/execution/extension_modules.py",
-          "line": 91,
-          "code": "unresolved_module_registry"
+          "line": 102,
+          "kind": "external_module_cache_read",
+          "validator": "orket.adapters.execution.extension_modules._external_module_name",
+          "excluded_namespace": "orket",
+          "plain_string": true,
+          "absolute_name": true
         },
         {
           "path": "orket/adapters/execution/extension_modules.py",
-          "line": 98,
-          "code": "unresolved_dynamic_import"
+          "line": 110,
+          "kind": "external_module_import",
+          "validator": "orket.adapters.execution.extension_modules._external_module_name",
+          "excluded_namespace": "orket",
+          "plain_string": true,
+          "absolute_name": true
         },
         {
           "path": "orket/extensions/agent_workload_subprocess.py",
           "line": 118,
-          "code": "importer_escape"
+          "kind": "importer_interception",
+          "target": "builtins.__import__",
+          "factory": "orket.extensions.sdk_workload_subprocess._guarded_import",
+          "forwarded_arguments": 5
         },
         {
           "path": "orket/extensions/agent_workload_subprocess.py",
           "line": 119,
-          "code": "importer_escape"
+          "kind": "importer_interception",
+          "target": "importlib.import_module",
+          "factory": "orket.extensions.sdk_workload_subprocess._guarded_import_module",
+          "forwarded_arguments": 2
         },
         {
           "path": "orket/extensions/sdk_workload_subprocess.py",
           "line": 131,
-          "code": "importer_escape"
+          "kind": "importer_interception",
+          "target": "builtins.__import__",
+          "factory": "orket.extensions.sdk_workload_subprocess._guarded_import",
+          "forwarded_arguments": 5
         },
         {
           "path": "orket/extensions/sdk_workload_subprocess.py",
           "line": 132,
-          "code": "importer_escape"
+          "kind": "importer_interception",
+          "target": "importlib.import_module",
+          "factory": "orket.extensions.sdk_workload_subprocess._guarded_import_module",
+          "forwarded_arguments": 2
         }
       ],
       "files_scanned": 1099,
@@ -356,42 +377,11 @@
       ]
     },
     "verdict": {
-      "ok": false,
+      "ok": true,
       "unknown_modules": [],
       "violations": [],
       "authority_cycles": [],
-      "analysis_errors": [
-        {
-          "path": "orket/adapters/execution/extension_modules.py",
-          "line": 91,
-          "code": "unresolved_module_registry"
-        },
-        {
-          "path": "orket/adapters/execution/extension_modules.py",
-          "line": 98,
-          "code": "unresolved_dynamic_import"
-        },
-        {
-          "path": "orket/extensions/agent_workload_subprocess.py",
-          "line": 118,
-          "code": "importer_escape"
-        },
-        {
-          "path": "orket/extensions/agent_workload_subprocess.py",
-          "line": 119,
-          "code": "importer_escape"
-        },
-        {
-          "path": "orket/extensions/sdk_workload_subprocess.py",
-          "line": 131,
-          "code": "importer_escape"
-        },
-        {
-          "path": "orket/extensions/sdk_workload_subprocess.py",
-          "line": 132,
-          "code": "importer_escape"
-        }
-      ],
+      "analysis_errors": [],
       "exceptions": {
         "consumed": [],
         "unused": [],
@@ -545,10 +535,10 @@
   },
   "test_taxonomy": {
     "schema_version": "test_taxonomy_report.v1",
-    "tests_total": 5308,
-    "missing_layer_total": 3707,
+    "tests_total": 5323,
+    "missing_layer_total": 3722,
     "by_layer": {
-      "unlabeled": 3707,
+      "unlabeled": 3722,
       "integration": 750,
       "unit": 168,
       "contract": 672,
@@ -1156,7 +1146,7 @@
         "layer": null
       }
     ],
-    "missing_layers_omitted": 3607
+    "missing_layers_omitted": 3622
   },
   "ruff": {
     "proof": "structural_lint",
@@ -1556,65 +1546,6 @@
     "parse_errors": []
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-19T12:16:52.890901Z",
-      "changed": true,
-      "before_digest": "sha256:1f8cf96033771bd5f3d1357087d1b743fb1bdccdc97bf3badda774f7be3f03e6",
-      "after_digest": "sha256:e47c3b0979eb0b4bb77698ebf7e28c67f79dcd9c553fc086dc3e2c6365e893db",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 3,
-        "changed_paths": 49,
-        "initial_write": false,
-        "paths_total_previous": 2439,
-        "paths_total_current": 2417,
-        "paths_total_reference": 2439,
-        "churn_paths": 52,
-        "churn_ratio": 0.02132,
-        "sample_paths": [
-          "$.dependency_graph.observed.files_scanned",
-          "$.dependency_graph.observed.layer_edges[0].count",
-          "$.dependency_graph.observed.layer_edges[2].count",
-          "$.dependency_graph.observed.layer_edges[3].count",
-          "$.dependency_graph.observed.layer_edges[4].count",
-          "$.dependency_graph.observed.layer_edges[5].count",
-          "$.dependency_graph.observed.layer_edges[10].count",
-          "$.dependency_graph.observed.layer_edges[10].target",
-          "$.dependency_graph.observed.layer_edges[11].count",
-          "$.dependency_graph.observed.layer_edges[11].target",
-          "$.dependency_graph.observed.layer_edges[12].count",
-          "$.dependency_graph.observed.layer_edges[12].target",
-          "$.dependency_graph.observed.layer_edges",
-          "$.dependency_graph.verdict.violations[2].sites[0].line",
-          "$.dependency_graph.verdict.violations[2].sites[0].path",
-          "$.dependency_graph.verdict.violations[2].source",
-          "$.dependency_graph.verdict.violations[2].target",
-          "$.dependency_graph.verdict.violations[3].sites[0].line",
-          "$.dependency_graph.verdict.violations[3].sites[0].path",
-          "$.dependency_graph.verdict.violations[3].source"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-19T12:27:14.761677Z",
-      "changed": true,
-      "before_digest": "sha256:e47c3b0979eb0b4bb77698ebf7e28c67f79dcd9c553fc086dc3e2c6365e893db",
-      "after_digest": "sha256:94b5aa95085eb8876e9d8b5d1923053e3aa7147c0a385b5afcfed9aee8ffd3d6",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 2417,
-        "paths_total_current": 2417,
-        "paths_total_reference": 2417,
-        "churn_paths": 1,
-        "churn_ratio": 0.000414,
-        "sample_paths": [
-          "$.generated_at"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-19T13:57:17.122287Z",
       "changed": true,
@@ -2377,6 +2308,54 @@
         "paths_total_previous": 2332,
         "paths_total_current": 2332,
         "paths_total_reference": 2332,
+        "churn_paths": 1,
+        "churn_ratio": 0.000429,
+        "sample_paths": [
+          "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-20T19:29:09.725782Z",
+      "changed": true,
+      "before_digest": "sha256:829e5816ff3a4eda139a70731e0b8a871e8a98038da3c7bf4ff2a92598c3c6e8",
+      "after_digest": "sha256:92b399e9daccff263edc40d93a6fb8f8bcabb32254f1883300d03cecba709a76",
+      "diff": {
+        "added_paths": 1,
+        "removed_paths": 12,
+        "changed_paths": 6,
+        "initial_write": false,
+        "paths_total_previous": 2332,
+        "paths_total_current": 2331,
+        "paths_total_reference": 2332,
+        "churn_paths": 19,
+        "churn_ratio": 0.008148,
+        "sample_paths": [
+          "$.dependency_graph.observed.resolved_dynamic_routes",
+          "$.dependency_graph.observed.analysis_errors",
+          "$.dependency_graph.verdict.analysis_errors",
+          "$.dependency_graph.verdict.ok",
+          "$.generated_at",
+          "$.test_taxonomy.by_layer.unlabeled",
+          "$.test_taxonomy.missing_layer_total",
+          "$.test_taxonomy.missing_layers_omitted",
+          "$.test_taxonomy.tests_total"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-20T20:12:09.419627Z",
+      "changed": true,
+      "before_digest": "sha256:92b399e9daccff263edc40d93a6fb8f8bcabb32254f1883300d03cecba709a76",
+      "after_digest": "sha256:e361a6b0826958cbf90e51b6134dfba50af76716ddbbb4eea08aae1b167b1852",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 2331,
+        "paths_total_current": 2331,
+        "paths_total_reference": 2331,
         "churn_paths": 1,
         "churn_ratio": 0.000429,
         "sample_paths": [

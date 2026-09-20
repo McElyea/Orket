@@ -22,6 +22,20 @@ def build_dependency_snapshot(*, root: Path = PROJECT_ROOT, policy_path: Path = 
     return build_dependency_report(root=root, policy_path=policy_path)
 
 
+def _dynamic_routes_markdown(snapshot: dict) -> list[str]:
+    routes = snapshot["observed"].get("resolved_dynamic_routes", [])
+    lines = ["", "## Bounded dynamic routes", "",
+             "These routes have an inspected syntactic proof; they are not analysis-error waivers.", "",
+             "| Source | Line | Kind | Proven boundary |", "|---|---:|---|---|"]
+    for row in routes:
+        boundary = (f"`{row['target']}` via `{row['factory']}`" if row["kind"] == "importer_interception"
+                    else f"Plain absolute name outside `{row['excluded_namespace']}` via `{row['validator']}`")
+        lines.append(f"| `{row['path']}` | {row['line']} | `{row['kind']}` | {boundary} |")
+    if not routes:
+        lines.append("| none | | | |")
+    return lines
+
+
 def _to_markdown(snapshot: dict) -> str:
     summary = report_summary(snapshot)
     lines = [
@@ -58,6 +72,7 @@ def _to_markdown(snapshot: dict) -> str:
         f"| `{row['source']}` | `{row['target']}` | {row['count']} |"
         for row in snapshot["observed"].get("layer_edges", [])
     ]
+    lines += _dynamic_routes_markdown(snapshot)
     exceptions = snapshot["verdict"].get("exceptions", {})
     lines += [
         "",

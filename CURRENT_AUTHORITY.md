@@ -310,9 +310,15 @@ Dependency authority now uses v2 of
 and baseline share Git-visible, encoding-aware import analysis and a separate
 allowed-edge verdict. The legacy-budget switches retire with their workflow
 callers. `docs/architecture/dependency_graph_snapshot.md` is generated evidence,
-not a second policy. Existing forbidden edges, unresolved imports and authority
-cycles keep C open; no broad exception grants conformance. Contract delta:
-`docs/architecture/CONTRACT_DELTA_DEPENDENCY_POLICY_C_2026-09-14.md`.
+not a second policy. Version 0.6.43 recognizes argument-preserving importer
+installation and validated absolute external names only through inspected bodies,
+unambiguous bindings and bounded local flow. Recognized routes remain explicit in
+reports; unknown routes, forbidden edges and authority cycles remain failures.
+Extension lookup requires plain strings and retains source/root/origin admission.
+The policy has no new exception or analysis-error waiver. Contracts:
+`docs/architecture/CONTRACT_DELTA_DEPENDENCY_POLICY_C_2026-09-14.md` and
+`docs/architecture/CONTRACT_DELTA_DYNAMIC_IMPORT_ANALYSIS_C_2026-09-20.md`.
+Current proof and remaining C/D/E/CAP acceptance are in the canonical plan.
 
 `orket/project_paths.py` selects the invocation project for discovery, driver and
 structural reconciliation; configuration passes that root to `ConfigLoader`.

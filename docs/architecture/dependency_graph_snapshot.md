@@ -1,12 +1,12 @@
 # Dependency Graph Snapshot
 
-Generated: `2026-09-20T18:25:14.606168+00:00`
+Generated: `2026-09-20T19:28:25.933353+00:00`
 
 Generated from the canonical dependency policy; do not edit this view by hand.
 This is conservative static import evidence, not a runtime call graph or a core-purity proof.
 
-Collection: `True`. Policy verdict: `False`.
-Files: 1099; import sites: 3473; forbidden pairs: 0; analysis errors: 6; authority cycles: 0.
+Collection: `True`. Policy verdict: `True`.
+Files: 1099; import sites: 3473; forbidden pairs: 0; analysis errors: 0; authority cycles: 0.
 
 ## Module classification
 
@@ -98,6 +98,19 @@ Side-effect-free adapter targets: none declared
 | `decision_nodes` | `decision_nodes` | 3 |
 | `interfaces` | `application` | 86 |
 | `interfaces` | `interfaces` | 44 |
+
+## Bounded dynamic routes
+
+These routes have an inspected syntactic proof; they are not analysis-error waivers.
+
+| Source | Line | Kind | Proven boundary |
+|---|---:|---|---|
+| `orket/adapters/execution/extension_modules.py` | 102 | `external_module_cache_read` | Plain absolute name outside `orket` via `orket.adapters.execution.extension_modules._external_module_name` |
+| `orket/adapters/execution/extension_modules.py` | 110 | `external_module_import` | Plain absolute name outside `orket` via `orket.adapters.execution.extension_modules._external_module_name` |
+| `orket/extensions/agent_workload_subprocess.py` | 118 | `importer_interception` | `builtins.__import__` via `orket.extensions.sdk_workload_subprocess._guarded_import` |
+| `orket/extensions/agent_workload_subprocess.py` | 119 | `importer_interception` | `importlib.import_module` via `orket.extensions.sdk_workload_subprocess._guarded_import_module` |
+| `orket/extensions/sdk_workload_subprocess.py` | 131 | `importer_interception` | `builtins.__import__` via `orket.extensions.sdk_workload_subprocess._guarded_import` |
+| `orket/extensions/sdk_workload_subprocess.py` | 132 | `importer_interception` | `importlib.import_module` via `orket.extensions.sdk_workload_subprocess._guarded_import_module` |
 
 ## Exceptions
 

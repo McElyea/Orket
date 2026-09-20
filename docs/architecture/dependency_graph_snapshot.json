@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-20T18:25:14.606168+00:00",
+  "generated_at": "2026-09-20T19:28:25.933353+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -137,7 +137,7 @@
       },
       "orket.adapters.execution.extension_modules": {
         "path": "orket/adapters/execution/extension_modules.py",
-        "sha256": "0f4944bd7ee3e8c56688841979bc98fb665a71b0b13bae100eb70dea100c5c18"
+        "sha256": "097f9c94f9e628d7c638353b1c9f82d212ad8540a42f327827ee1e3d3b91a52d"
       },
       "orket.adapters.execution.fixture_docker": {
         "path": "orket/adapters/execution/fixture_docker.py",
@@ -28833,36 +28833,57 @@
         "kind": "from"
       }
     ],
-    "analysis_errors": [
+    "analysis_errors": [],
+    "resolved_dynamic_routes": [
       {
         "path": "orket/adapters/execution/extension_modules.py",
-        "line": 91,
-        "code": "unresolved_module_registry"
+        "line": 102,
+        "kind": "external_module_cache_read",
+        "validator": "orket.adapters.execution.extension_modules._external_module_name",
+        "excluded_namespace": "orket",
+        "plain_string": true,
+        "absolute_name": true
       },
       {
         "path": "orket/adapters/execution/extension_modules.py",
-        "line": 98,
-        "code": "unresolved_dynamic_import"
+        "line": 110,
+        "kind": "external_module_import",
+        "validator": "orket.adapters.execution.extension_modules._external_module_name",
+        "excluded_namespace": "orket",
+        "plain_string": true,
+        "absolute_name": true
       },
       {
         "path": "orket/extensions/agent_workload_subprocess.py",
         "line": 118,
-        "code": "importer_escape"
+        "kind": "importer_interception",
+        "target": "builtins.__import__",
+        "factory": "orket.extensions.sdk_workload_subprocess._guarded_import",
+        "forwarded_arguments": 5
       },
       {
         "path": "orket/extensions/agent_workload_subprocess.py",
         "line": 119,
-        "code": "importer_escape"
+        "kind": "importer_interception",
+        "target": "importlib.import_module",
+        "factory": "orket.extensions.sdk_workload_subprocess._guarded_import_module",
+        "forwarded_arguments": 2
       },
       {
         "path": "orket/extensions/sdk_workload_subprocess.py",
         "line": 131,
-        "code": "importer_escape"
+        "kind": "importer_interception",
+        "target": "builtins.__import__",
+        "factory": "orket.extensions.sdk_workload_subprocess._guarded_import",
+        "forwarded_arguments": 5
       },
       {
         "path": "orket/extensions/sdk_workload_subprocess.py",
         "line": 132,
-        "code": "importer_escape"
+        "kind": "importer_interception",
+        "target": "importlib.import_module",
+        "factory": "orket.extensions.sdk_workload_subprocess._guarded_import_module",
+        "forwarded_arguments": 2
       }
     ],
     "files_scanned": 1099,
@@ -30031,42 +30052,11 @@
     ]
   },
   "verdict": {
-    "ok": false,
+    "ok": true,
     "unknown_modules": [],
     "violations": [],
     "authority_cycles": [],
-    "analysis_errors": [
-      {
-        "path": "orket/adapters/execution/extension_modules.py",
-        "line": 91,
-        "code": "unresolved_module_registry"
-      },
-      {
-        "path": "orket/adapters/execution/extension_modules.py",
-        "line": 98,
-        "code": "unresolved_dynamic_import"
-      },
-      {
-        "path": "orket/extensions/agent_workload_subprocess.py",
-        "line": 118,
-        "code": "importer_escape"
-      },
-      {
-        "path": "orket/extensions/agent_workload_subprocess.py",
-        "line": 119,
-        "code": "importer_escape"
-      },
-      {
-        "path": "orket/extensions/sdk_workload_subprocess.py",
-        "line": 131,
-        "code": "importer_escape"
-      },
-      {
-        "path": "orket/extensions/sdk_workload_subprocess.py",
-        "line": 132,
-        "code": "importer_escape"
-      }
-    ],
+    "analysis_errors": [],
     "exceptions": {
       "consumed": [],
       "unused": [],
@@ -30074,27 +30064,6 @@
     }
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-19T08:12:45.228110Z",
-      "changed": true,
-      "before_digest": "sha256:62ad59a30e169bda9ca423cbe99349f6863ba19293c079885eee8f0e31f9c1e3",
-      "after_digest": "sha256:5156c087961200cb2c0fe347f42ac9cb67501472ef2230416680ef78639e0dde",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 2,
-        "initial_write": false,
-        "paths_total_previous": 44625,
-        "paths_total_current": 44625,
-        "paths_total_reference": 44625,
-        "churn_paths": 2,
-        "churn_ratio": 4.5e-05,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.modules.orket.application.services.toolbox.sha256"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-19T09:03:11.477547Z",
       "changed": true,
@@ -31015,6 +30984,31 @@
         "churn_ratio": 2.2e-05,
         "sample_paths": [
           "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-20T19:28:43.150581Z",
+      "changed": true,
+      "before_digest": "sha256:d7b6c89d1ad888784ef057122e4f64d5f17fe3cfc1b6e77c90063df9a6e46f5e",
+      "after_digest": "sha256:8621bf377be9cab8739ca2961f0d659be16c70a244f1328dfe9f1e3530ba83b1",
+      "diff": {
+        "added_paths": 1,
+        "removed_paths": 12,
+        "changed_paths": 3,
+        "initial_write": false,
+        "paths_total_previous": 46274,
+        "paths_total_current": 46273,
+        "paths_total_reference": 46274,
+        "churn_paths": 16,
+        "churn_ratio": 0.000346,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.resolved_dynamic_routes",
+          "$.observed.analysis_errors",
+          "$.observed.modules.orket.adapters.execution.extension_modules.sha256",
+          "$.verdict.analysis_errors",
+          "$.verdict.ok"
         ]
       }
     }
