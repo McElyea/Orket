@@ -13,7 +13,7 @@ from orket.core.contracts.governed_agent_wake_records import (
     GovernedAgentWakeRequest,
     WakeSource,
 )
-from orket_extension_sdk import AgentIterationRequest, canonical_digest_sha256
+from orket_extension_sdk import FrozenJson, canonical_digest_sha256
 
 
 @dataclass(frozen=True, slots=True)
@@ -22,7 +22,7 @@ class GovernedAgentWakeSubmission:
     target_kind: Literal["existing_run", "new_run"]
     target_run_id: str | None
     workload_id: str | None
-    dispatch: Mapping[str, Any]
+    dispatch: FrozenJson
 
     @classmethod
     def from_mapping(cls, payload: Mapping[str, Any]) -> GovernedAgentWakeSubmission:
@@ -41,7 +41,7 @@ class GovernedAgentWakeSubmission:
         if "trigger" in dispatch:
             raise ValueError("E_AGENT_WAKE_TRIGGER_RESERVED")
         envelope = GovernedAgentWakeDispatchEnvelope.from_payload(dispatch)
-        request = AgentIterationRequest.from_wire(dict(envelope.request_payload))
+        request = envelope.request
         if target_kind == "existing_run" and (target_run_id != request.identity.run_id or workload_id is not None):
             raise ValueError("E_AGENT_WAKE_EXISTING_RUN_TARGET_INVALID")
         if target_kind == "new_run" and (workload_id is None or target_run_id is not None):
@@ -51,7 +51,7 @@ class GovernedAgentWakeSubmission:
             target_kind=cast(Literal["existing_run", "new_run"], target_kind),
             target_run_id=target_run_id,
             workload_id=workload_id,
-            dispatch=dict(dispatch),
+            dispatch=FrozenJson.freeze(dict(dispatch)),
         )
 
     def to_request(
@@ -68,9 +68,9 @@ class GovernedAgentWakeSubmission:
             "target_run_id": self.target_run_id,
             "workload_id": self.workload_id,
         }
-        dispatch = dict(self.dispatch)
+        dispatch = self.dispatch.thaw()
         if trigger is not None:
-            dispatch["trigger"] = dict(trigger)
+            dispatch["trigger"] = FrozenJson.freeze(dict(trigger)).thaw()
         digest = canonical_digest_sha256(identity)
         return GovernedAgentWakeRequest(
             wake_id=f"agent-wake:{digest[:32]}",

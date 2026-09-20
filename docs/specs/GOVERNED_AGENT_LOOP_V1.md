@@ -45,9 +45,21 @@ environment inputs let callers preserve an earlier admission boundary. This
 captures locations, not file contents or symlink targets. Local provider runtime
 preparation copies role-model and environment inputs before its first inventory
 await and retains those inputs through every role and client. Exact model
-matching, quarantine and strict prompt profiles still apply. These guarantees do
-not extend to the full wake-dispatch operation. Contract and migration:
+matching, quarantine and strict prompt profiles still apply. Contract and migration:
 `docs/architecture/CONTRACT_DELTA_GOVERNED_SUBMISSION_CAPTURE_D_2026-09-20.md`.
+
+Wake ingress separately retains validated dispatch JSON as an SDK `FrozenJson`
+value before persistence. Durable requests receive fresh payloads with captured
+host triggers; wire shape and canonical digest rules remain unchanged. Dispatch
+retains the validated SDK request and frozen continuation plan before its first
+fence await. Provider role mappings and environment bind at dispatcher construction;
+API composition forwards the factory's earlier environment snapshot. Wake cleanup
+and direct provider cleanup retain ownership through repeated cancellation and
+caller timeout. Remaining clients are drained after an earlier close failure,
+then the first failure propagates. Fences, leases, continuation and terminal
+validation remain mandatory. These scoped guarantees provide no hard stop for
+unresponsive cleanup. Contract and internal migration:
+`docs/architecture/CONTRACT_DELTA_GOVERNED_WAKE_OWNERSHIP_D_2026-09-20.md`.
 
 The first slice contains:
 

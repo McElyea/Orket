@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-20T17:44:30.392793+00:00",
+  "generated_at": "2026-09-20T18:25:14.606168+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -1173,7 +1173,7 @@
       },
       "orket.application.services.governed_agent_api_composition": {
         "path": "orket/application/services/governed_agent_api_composition.py",
-        "sha256": "6b5550c9d8c5024092990599fde5978cacc1f145a5b4324c7b76287ce421098d"
+        "sha256": "45c92d5134630a60fabc81f576a1bf36eb9f51b77a781bfbca67ae9a4a97f9e2"
       },
       "orket.application.services.governed_agent_authority": {
         "path": "orket/application/services/governed_agent_authority.py",
@@ -1241,7 +1241,7 @@
       },
       "orket.application.services.governed_agent_model_provider": {
         "path": "orket/application/services/governed_agent_model_provider.py",
-        "sha256": "06ce52391389b14f39b4bdb2a9e0e1fb390244b41bc736f34071c8cb4e75f5a8"
+        "sha256": "879b2c5423440cbf0245b9d0474587ffb3268eef4f59754acd5cb9e696a81313"
       },
       "orket.application.services.governed_agent_operator_service": {
         "path": "orket/application/services/governed_agent_operator_service.py",
@@ -1273,7 +1273,7 @@
       },
       "orket.application.services.governed_agent_scheduled_wake_service": {
         "path": "orket/application/services/governed_agent_scheduled_wake_service.py",
-        "sha256": "50bbd748fd955719037403177c20f81c99b3d38e11f24626c4a2a57ad0482312"
+        "sha256": "6503aa54b989b2ad9d1b03bde866e1a26a09ca7d970d4845b28baf2cdd21b40a"
       },
       "orket.application.services.governed_agent_submission_service": {
         "path": "orket/application/services/governed_agent_submission_service.py",
@@ -1301,11 +1301,11 @@
       },
       "orket.application.services.governed_agent_wake_dispatcher": {
         "path": "orket/application/services/governed_agent_wake_dispatcher.py",
-        "sha256": "d159320a22b378e66acf772ca522e4a70f4fc5b597748260b36a51367cce739f"
+        "sha256": "1128ba3c507dc5ba8592649c9d7ab447e45e353d24c6e68c673199834a6f6889"
       },
       "orket.application.services.governed_agent_wake_ingress_service": {
         "path": "orket/application/services/governed_agent_wake_ingress_service.py",
-        "sha256": "d6e82cd8a51a023590c56fd457de742cb73ff99223fc3c5783d7c48439990d8b"
+        "sha256": "a2d055b1d841c5543576a6b77277d922e1191b608511dd607f50484c6f68cd04"
       },
       "orket.application.services.governed_agent_webhook_ingress_service": {
         "path": "orket/application/services/governed_agent_webhook_ingress_service.py",
@@ -10510,196 +10510,196 @@
         "source": "orket.application.services.governed_agent_api_composition",
         "target": "orket.adapters.storage.async_control_plane_execution_repository",
         "path": "orket/application/services/governed_agent_api_composition.py",
-        "line": 10,
+        "line": 11,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_api_composition",
         "target": "orket.adapters.storage.async_control_plane_record_repository",
         "path": "orket/application/services/governed_agent_api_composition.py",
-        "line": 13,
+        "line": 14,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_api_composition",
         "target": "orket.adapters.storage.async_governed_agent_repository",
         "path": "orket/application/services/governed_agent_api_composition.py",
-        "line": 16,
+        "line": 17,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_api_composition",
         "target": "orket.adapters.storage.async_governed_agent_run_control_repository",
         "path": "orket/application/services/governed_agent_api_composition.py",
-        "line": 17,
+        "line": 18,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_api_composition",
         "target": "orket.adapters.storage.async_governed_agent_schedule_repository",
         "path": "orket/application/services/governed_agent_api_composition.py",
-        "line": 18,
+        "line": 19,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_api_composition",
         "target": "orket.adapters.storage.async_governed_agent_wake_control_repository",
         "path": "orket/application/services/governed_agent_api_composition.py",
-        "line": 21,
+        "line": 22,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_api_composition",
         "target": "orket.adapters.storage.async_governed_agent_wake_repository",
         "path": "orket/application/services/governed_agent_api_composition.py",
-        "line": 24,
+        "line": 25,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_api_composition",
         "target": "orket.adapters.storage.async_governed_agent_webhook_repository",
         "path": "orket/application/services/governed_agent_api_composition.py",
-        "line": 27,
+        "line": 28,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_api_composition",
         "target": "orket.adapters.storage.async_pending_gate_repository",
         "path": "orket/application/services/governed_agent_api_composition.py",
-        "line": 30,
+        "line": 31,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_api_composition",
         "target": "orket.adapters.storage.control_plane_transaction",
         "path": "orket/application/services/governed_agent_api_composition.py",
-        "line": 31,
+        "line": 32,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_api_composition",
         "target": "orket.adapters.storage.governed_agent_replay_store",
         "path": "orket/application/services/governed_agent_api_composition.py",
-        "line": 32,
+        "line": 33,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_api_composition",
         "target": "orket.adapters.tools.governed_agent_file_effect_executor",
         "path": "orket/application/services/governed_agent_api_composition.py",
-        "line": 33,
+        "line": 34,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_api_composition",
         "target": "orket.application.services.api_runtime_host_service",
         "path": "orket/application/services/governed_agent_api_composition.py",
-        "line": 34,
+        "line": 35,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_api_composition",
         "target": "orket.application.services.control_plane_publication_service",
         "path": "orket/application/services/governed_agent_api_composition.py",
-        "line": 35,
+        "line": 36,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_api_composition",
         "target": "orket.application.services.governed_agent_effect_control_service",
         "path": "orket/application/services/governed_agent_api_composition.py",
-        "line": 36,
+        "line": 37,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_api_composition",
         "target": "orket.application.services.governed_agent_effect_resume_service",
         "path": "orket/application/services/governed_agent_api_composition.py",
-        "line": 37,
+        "line": 38,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_api_composition",
         "target": "orket.application.services.governed_agent_effect_service",
         "path": "orket/application/services/governed_agent_api_composition.py",
-        "line": 38,
+        "line": 39,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_api_composition",
         "target": "orket.application.services.governed_agent_inspection_service",
         "path": "orket/application/services/governed_agent_api_composition.py",
-        "line": 39,
+        "line": 40,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_api_composition",
         "target": "orket.application.services.governed_agent_run_control_service",
         "path": "orket/application/services/governed_agent_api_composition.py",
-        "line": 40,
+        "line": 41,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_api_composition",
         "target": "orket.application.services.governed_agent_runtime",
         "path": "orket/application/services/governed_agent_api_composition.py",
-        "line": 41,
+        "line": 42,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_api_composition",
         "target": "orket.application.services.governed_agent_scheduled_wake_service",
         "path": "orket/application/services/governed_agent_api_composition.py",
-        "line": 42,
+        "line": 43,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_api_composition",
         "target": "orket.application.services.governed_agent_supervisor",
         "path": "orket/application/services/governed_agent_api_composition.py",
-        "line": 45,
+        "line": 46,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_api_composition",
         "target": "orket.application.services.governed_agent_wake_dispatcher",
         "path": "orket/application/services/governed_agent_api_composition.py",
-        "line": 46,
+        "line": 47,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_api_composition",
         "target": "orket.application.services.governed_agent_webhook_ingress_service",
         "path": "orket/application/services/governed_agent_api_composition.py",
-        "line": 52,
+        "line": 53,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_api_composition",
         "target": "orket.application.services.tool_gate_service",
         "path": "orket/application/services/governed_agent_api_composition.py",
-        "line": 55,
+        "line": 56,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_api_composition",
         "target": "orket.core.contracts.provider_runtime",
         "path": "orket/application/services/governed_agent_api_composition.py",
-        "line": 56,
+        "line": 57,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_api_composition",
         "target": "orket.extensions.__init__",
         "path": "orket/application/services/governed_agent_api_composition.py",
-        "line": 57,
+        "line": 58,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_api_composition",
         "target": "orket.runtime_paths",
         "path": "orket/application/services/governed_agent_api_composition.py",
-        "line": 58,
+        "line": 59,
         "kind": "from"
       },
       {
@@ -11425,44 +11425,51 @@
       },
       {
         "source": "orket.application.services.governed_agent_model_provider",
-        "target": "orket.adapters.llm.local_model_provider",
-        "path": "orket/application/services/governed_agent_model_provider.py",
-        "line": 13,
-        "kind": "from"
-      },
-      {
-        "source": "orket.application.services.governed_agent_model_provider",
-        "target": "orket.application.services.governed_agent_broker_service",
+        "target": "orket.adapters.execution.owned_io",
         "path": "orket/application/services/governed_agent_model_provider.py",
         "line": 14,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_model_provider",
+        "target": "orket.adapters.llm.local_model_provider",
+        "path": "orket/application/services/governed_agent_model_provider.py",
+        "line": 15,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.governed_agent_model_provider",
+        "target": "orket.application.services.governed_agent_broker_service",
+        "path": "orket/application/services/governed_agent_model_provider.py",
+        "line": 16,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.governed_agent_model_provider",
         "target": "orket.application.services.local_model_factory",
-        "path": "orket/application/services/governed_agent_model_provider.py",
-        "line": 19,
-        "kind": "from"
-      },
-      {
-        "source": "orket.application.services.governed_agent_model_provider",
-        "target": "orket.core.contracts.provider_runtime",
-        "path": "orket/application/services/governed_agent_model_provider.py",
-        "line": 20,
-        "kind": "from"
-      },
-      {
-        "source": "orket.application.services.governed_agent_model_provider",
-        "target": "orket.exceptions",
         "path": "orket/application/services/governed_agent_model_provider.py",
         "line": 21,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_model_provider",
-        "target": "orket.runtime.config.provider_runtime_target",
+        "target": "orket.core.contracts.provider_runtime",
         "path": "orket/application/services/governed_agent_model_provider.py",
         "line": 22,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.governed_agent_model_provider",
+        "target": "orket.exceptions",
+        "path": "orket/application/services/governed_agent_model_provider.py",
+        "line": 23,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.governed_agent_model_provider",
+        "target": "orket.runtime.config.provider_runtime_target",
+        "path": "orket/application/services/governed_agent_model_provider.py",
+        "line": 24,
         "kind": "from"
       },
       {
@@ -11896,105 +11903,105 @@
         "source": "orket.application.services.governed_agent_wake_dispatcher",
         "target": "orket.adapters.execution.owned_io",
         "path": "orket/application/services/governed_agent_wake_dispatcher.py",
-        "line": 8,
+        "line": 10,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_wake_dispatcher",
         "target": "orket.adapters.storage.async_control_plane_execution_repository",
         "path": "orket/application/services/governed_agent_wake_dispatcher.py",
-        "line": 9,
+        "line": 11,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_wake_dispatcher",
         "target": "orket.adapters.storage.async_control_plane_record_repository",
         "path": "orket/application/services/governed_agent_wake_dispatcher.py",
-        "line": 12,
+        "line": 14,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_wake_dispatcher",
         "target": "orket.adapters.storage.async_governed_agent_repository",
         "path": "orket/application/services/governed_agent_wake_dispatcher.py",
-        "line": 15,
+        "line": 17,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_wake_dispatcher",
         "target": "orket.application.services.governed_agent_context_plan",
         "path": "orket/application/services/governed_agent_wake_dispatcher.py",
-        "line": 16,
+        "line": 18,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_wake_dispatcher",
         "target": "orket.application.services.governed_agent_effect_resume_service",
         "path": "orket/application/services/governed_agent_wake_dispatcher.py",
-        "line": 17,
+        "line": 19,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_wake_dispatcher",
         "target": "orket.application.services.governed_agent_effect_service",
         "path": "orket/application/services/governed_agent_wake_dispatcher.py",
-        "line": 18,
+        "line": 20,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_wake_dispatcher",
         "target": "orket.application.services.governed_agent_execution_composition",
         "path": "orket/application/services/governed_agent_wake_dispatcher.py",
-        "line": 19,
+        "line": 21,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_wake_dispatcher",
         "target": "orket.application.services.governed_agent_loop_service",
         "path": "orket/application/services/governed_agent_wake_dispatcher.py",
-        "line": 26,
+        "line": 28,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_wake_dispatcher",
         "target": "orket.application.services.governed_agent_supervisor",
         "path": "orket/application/services/governed_agent_wake_dispatcher.py",
-        "line": 27,
+        "line": 29,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_wake_dispatcher",
         "target": "orket.core.contracts.__init__",
         "path": "orket/application/services/governed_agent_wake_dispatcher.py",
-        "line": 31,
+        "line": 33,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_wake_dispatcher",
         "target": "orket.core.contracts.governed_agent_wake_records",
         "path": "orket/application/services/governed_agent_wake_dispatcher.py",
-        "line": 32,
+        "line": 34,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_wake_dispatcher",
         "target": "orket.core.domain.__init__",
         "path": "orket/application/services/governed_agent_wake_dispatcher.py",
-        "line": 33,
+        "line": 35,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_wake_dispatcher",
         "target": "orket.extensions.manager",
         "path": "orket/application/services/governed_agent_wake_dispatcher.py",
-        "line": 34,
+        "line": 36,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_wake_dispatcher",
         "target": "orket.extensions.models",
         "path": "orket/application/services/governed_agent_wake_dispatcher.py",
-        "line": 35,
+        "line": 37,
         "kind": "from"
       },
       {
@@ -29979,7 +29986,7 @@
       {
         "source": "application",
         "target": "adapters",
-        "count": 393
+        "count": 394
       },
       {
         "source": "application",
@@ -30067,84 +30074,6 @@
     }
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-19T07:08:06.549961Z",
-      "changed": true,
-      "before_digest": "sha256:a92db570b306d4638eb1bc9f0ac30d516a4893fa327faa3661b0548eecdde961",
-      "after_digest": "sha256:bc136537aaada6fd2c9d92384af94264c89074de464b4a2527dd21d1db354549",
-      "diff": {
-        "added_paths": 17,
-        "removed_paths": 1,
-        "changed_paths": 9087,
-        "initial_write": false,
-        "paths_total_previous": 44284,
-        "paths_total_current": 44413,
-        "paths_total_reference": 44413,
-        "churn_paths": 9105,
-        "churn_ratio": 0.205008,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.edges[429].line",
-          "$.observed.edges[429].path",
-          "$.observed.edges[429].source",
-          "$.observed.edges[429].target",
-          "$.observed.edges[430].line",
-          "$.observed.edges[430].target",
-          "$.observed.edges[431].line",
-          "$.observed.edges[431].target",
-          "$.observed.edges[432].line",
-          "$.observed.edges[432].target",
-          "$.observed.edges[433].line",
-          "$.observed.edges[433].target",
-          "$.observed.edges[434].line",
-          "$.observed.edges[434].target",
-          "$.observed.edges[435].line",
-          "$.observed.edges[435].target",
-          "$.observed.edges[436].line",
-          "$.observed.edges[436].target",
-          "$.observed.edges[437].line"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-19T08:06:40.835726Z",
-      "changed": true,
-      "before_digest": "sha256:bc136537aaada6fd2c9d92384af94264c89074de464b4a2527dd21d1db354549",
-      "after_digest": "sha256:62ad59a30e169bda9ca423cbe99349f6863ba19293c079885eee8f0e31f9c1e3",
-      "diff": {
-        "added_paths": 37,
-        "removed_paths": 8,
-        "changed_paths": 11836,
-        "initial_write": false,
-        "paths_total_previous": 44413,
-        "paths_total_current": 44625,
-        "paths_total_reference": 44625,
-        "churn_paths": 11881,
-        "churn_ratio": 0.266241,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.edges[126].line",
-          "$.observed.edges[126].path",
-          "$.observed.edges[126].source",
-          "$.observed.edges[127].line",
-          "$.observed.edges[127].path",
-          "$.observed.edges[127].source",
-          "$.observed.edges[127].target",
-          "$.observed.edges[128].line",
-          "$.observed.edges[128].target",
-          "$.observed.edges[129].line",
-          "$.observed.edges[129].target",
-          "$.observed.edges[130].line",
-          "$.observed.edges[130].target",
-          "$.observed.edges[131].line",
-          "$.observed.edges[131].target",
-          "$.observed.edges[132].line",
-          "$.observed.edges[132].path",
-          "$.observed.edges[132].source",
-          "$.observed.edges[132].target"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-19T08:12:45.228110Z",
       "changed": true,
@@ -31027,6 +30956,65 @@
           "$.observed.modules.orket.application.services.governed_agent_execution_composition.sha256",
           "$.observed.modules.orket.application.services.governed_agent_model_provider.sha256",
           "$.observed.modules.orket.application.services.governed_agent_submission_service.sha256"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-20T18:24:41.951981Z",
+      "changed": true,
+      "before_digest": "sha256:17a5b7fa3eade60547ae3e59bec4f4906d384910bd1c8e435b50402bb6926135",
+      "after_digest": "sha256:c3d18d7e6179e0ed4a7d352c519c7863d43d45114abc6ef65991f1a67a71b693",
+      "diff": {
+        "added_paths": 1,
+        "removed_paths": 0,
+        "changed_paths": 6091,
+        "initial_write": false,
+        "paths_total_previous": 46263,
+        "paths_total_current": 46274,
+        "paths_total_reference": 46274,
+        "churn_paths": 6092,
+        "churn_ratio": 0.131651,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.edges[855].line",
+          "$.observed.edges[856].line",
+          "$.observed.edges[857].line",
+          "$.observed.edges[858].line",
+          "$.observed.edges[859].line",
+          "$.observed.edges[860].line",
+          "$.observed.edges[861].line",
+          "$.observed.edges[862].line",
+          "$.observed.edges[863].line",
+          "$.observed.edges[864].line",
+          "$.observed.edges[865].line",
+          "$.observed.edges[866].line",
+          "$.observed.edges[867].line",
+          "$.observed.edges[868].line",
+          "$.observed.edges[869].line",
+          "$.observed.edges[870].line",
+          "$.observed.edges[871].line",
+          "$.observed.edges[872].line",
+          "$.observed.edges[873].line"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-20T18:25:20.641072Z",
+      "changed": true,
+      "before_digest": "sha256:c3d18d7e6179e0ed4a7d352c519c7863d43d45114abc6ef65991f1a67a71b693",
+      "after_digest": "sha256:d7b6c89d1ad888784ef057122e4f64d5f17fe3cfc1b6e77c90063df9a6e46f5e",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 46274,
+        "paths_total_current": 46274,
+        "paths_total_reference": 46274,
+        "churn_paths": 1,
+        "churn_ratio": 2.2e-05,
+        "sample_paths": [
+          "$.generated_at"
         ]
       }
     }

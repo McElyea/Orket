@@ -261,7 +261,7 @@ def _candidate_payload(candidate: _ScheduleCandidate) -> dict[str, Any]:
         "target_kind": candidate.submission.target_kind,
         "target_run_id": candidate.submission.target_run_id,
         "workload_id": candidate.submission.workload_id,
-        "dispatch": dict(candidate.submission.dispatch),
+        "dispatch": candidate.submission.dispatch.thaw(),
     }
 
 

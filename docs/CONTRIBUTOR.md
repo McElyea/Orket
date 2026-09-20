@@ -137,6 +137,15 @@ Provider preparation copies role-model and environment inputs before inventory
 awaits. Both Quality jobs retain the queued-path and provider-input regressions.
 Scope and migration: `docs/architecture/CONTRACT_DELTA_GOVERNED_SUBMISSION_CAPTURE_D_2026-09-20.md`.
 
+Wake ingress retains validated JSON before persistence; dispatch retains the SDK
+request and continuation inputs before its first fence await. Dispatcher construction
+captures provider environment and role-model inputs, including the API factory's
+earlier snapshot. Cleanup drains owned clients through interruption and reports
+close failures after attempting remaining clients. Internal value consumers migrate
+to the existing SDK frozen values; public wake wire fields stay unchanged. Both
+Quality jobs retain these regressions. Contract:
+`docs/architecture/CONTRACT_DELTA_GOVERNED_WAKE_OWNERSHIP_D_2026-09-20.md`.
+
 Bootstrap synchronous settings before starting an event loop, or explicitly bind
 `set_runtime_settings_context(...)` for synchronous runtime consumers. Async
 settings APIs observe persistence through owned workers; they do not refresh a

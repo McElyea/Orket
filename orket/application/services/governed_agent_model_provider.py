@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import os
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -10,6 +11,7 @@ from typing import Any
 
 import httpx
 
+from orket.adapters.execution.owned_io import run_owned_io
 from orket.adapters.llm.local_model_provider import LocalModelProvider, ModelResponse
 from orket.application.services.governed_agent_broker_service import (
     GovernedAgentModelObservation,
@@ -22,6 +24,8 @@ from orket.exceptions import ModelTimeoutError
 from orket.runtime.config.provider_runtime_target import resolve_provider_runtime_target
 from orket_extension_sdk import AgentIterationRequest, AgentModelCallRequest
 from orket_extension_sdk.llm import nonnegative_int_or_none
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, slots=True)
@@ -69,8 +73,18 @@ class GovernedAgentLocalModelProvider:
         return _observation(model_response, response_mode=request.response_mode)
 
     async def close(self) -> None:
-        for client in self._clients.values():
-            await client.close()
+        await run_owned_io(self._close_clients, label="governed-agent-model-clients-close", preserve_failure=True)
+
+    async def _close_clients(self) -> None:
+        failures: list[BaseException] = []
+        for model, client in self._clients.items():
+            result, = await asyncio.gather(client.close(), return_exceptions=True)
+            if isinstance(result, BaseException):
+                logger.warning("Governed provider client close failed (model=%s)", model,
+                               exc_info=(type(result), result, result.__traceback__))
+                failures.append(result)
+        if failures:
+            raise failures[0]
 
 
 async def prepare_governed_agent_local_runtime(

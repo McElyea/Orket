@@ -5,6 +5,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
+from types import MappingProxyType
 from typing import cast
 
 from orket.adapters.storage.async_control_plane_execution_repository import (
@@ -64,7 +65,7 @@ class GovernedAgentApiSettings:
     db_path: Path
     provider_mode: str
     default_model: str
-    role_models: dict[str, str]
+    role_models: Mapping[str, str]
     ollama_base_url: str
     provider_base_url: str
     inventory_timeout_seconds: float
@@ -77,6 +78,9 @@ class GovernedAgentApiSettings:
     webhook_secret: str | None = field(repr=False)
     webhook_replay_window_seconds: int
 
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "role_models", MappingProxyType(dict(self.role_models)))
+
 
 def build_api_governed_agent_runtime(
     *,
@@ -85,6 +89,7 @@ def build_api_governed_agent_runtime(
     environment: Mapping[str, str] | None = None,
     invocation_root: Path | None = None,
 ) -> GovernedAgentRuntime:
+    environment = MappingProxyType(dict(os.environ if environment is None else environment))
     settings = _settings(environment=environment, invocation_root=invocation_root)
     execution = AsyncControlPlaneExecutionRepository(settings.db_path)
     iterations = AsyncGovernedAgentRepository(settings.db_path)
@@ -103,15 +108,10 @@ def build_api_governed_agent_runtime(
         publication=publication,
         pending=pending,
     )
-    provider = _provider_configuration(settings)
-    dispatcher = GovernedAgentWakeLoopDispatcher(
-        execution_repository=execution,
-        iteration_repository=iterations,
-        record_repository=records,
-        extension_manager=extension_manager,
-        provider=provider,
-        effect_service=effects,
-        effect_resume_service=effect_resumes,
+    dispatcher = _wake_dispatcher(
+        settings, execution=execution, iterations=iterations, records=records,
+        extension_manager=extension_manager, effects=effects, effect_resumes=effect_resumes,
+        environment=environment,
     )
     supervisor = _supervisor(settings, runtime_host, wakes, dispatcher)
     scheduled_wakes = _scheduled_wakes(schedules, supervisor)
@@ -187,8 +187,13 @@ def _scheduled_wakes(
     )
 
 
-def _provider_configuration(settings: GovernedAgentApiSettings) -> GovernedAgentProviderConfiguration:
-    return GovernedAgentProviderConfiguration(
+def _wake_dispatcher(
+    settings: GovernedAgentApiSettings, *, execution: AsyncControlPlaneExecutionRepository,
+    iterations: AsyncGovernedAgentRepository, records: AsyncControlPlaneRecordRepository,
+    extension_manager: ExtensionManager, effects: GovernedAgentEffectService,
+    effect_resumes: GovernedAgentEffectResumeService, environment: Mapping[str, str],
+) -> GovernedAgentWakeLoopDispatcher:
+    provider = GovernedAgentProviderConfiguration(
         mode=cast(ProviderMode, settings.provider_mode),
         default_model=settings.default_model,
         role_models=settings.role_models,
@@ -196,6 +201,11 @@ def _provider_configuration(settings: GovernedAgentApiSettings) -> GovernedAgent
         provider_base_url=settings.provider_base_url,
         inventory_timeout_seconds=settings.inventory_timeout_seconds,
         capacity_limit=settings.capacity_limit,
+    )
+    return GovernedAgentWakeLoopDispatcher(
+        execution_repository=execution, iteration_repository=iterations, record_repository=records,
+        extension_manager=extension_manager, provider=provider, effect_service=effects,
+        effect_resume_service=effect_resumes, environment=environment,
     )
 
 

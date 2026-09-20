@@ -1,6 +1,6 @@
 {
   "schema_version": "architectural_truth.baseline.v1",
-  "generated_at": "2026-09-20T18:01:42.139944Z",
+  "generated_at": "2026-09-20T18:55:49.937711Z",
   "collection_ok": true,
   "release_ready": false,
   "release_ready_reason": "Active architectural exceptions and red/noisy proof gates remain.",
@@ -311,7 +311,7 @@
         {
           "source": "application",
           "target": "adapters",
-          "count": 393
+          "count": 394
         },
         {
           "source": "application",
@@ -545,10 +545,10 @@
   },
   "test_taxonomy": {
     "schema_version": "test_taxonomy_report.v1",
-    "tests_total": 5301,
-    "missing_layer_total": 3700,
+    "tests_total": 5308,
+    "missing_layer_total": 3707,
     "by_layer": {
-      "unlabeled": 3700,
+      "unlabeled": 3707,
       "integration": 750,
       "unit": 168,
       "contract": 672,
@@ -1156,7 +1156,7 @@
         "layer": null
       }
     ],
-    "missing_layers_omitted": 3600
+    "missing_layers_omitted": 3607
   },
   "ruff": {
     "proof": "structural_lint",
@@ -1180,7 +1180,7 @@
     "proof": "structural_ast",
     "python_files_scanned": 1099,
     "files_over_400_total": 60,
-    "functions_over_70_total": 207,
+    "functions_over_70_total": 206,
     "largest_files": [
       {
         "path": "orket/interfaces/api.py",
@@ -1556,103 +1556,6 @@
     "parse_errors": []
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-19T10:00:32.954779Z",
-      "changed": true,
-      "before_digest": "sha256:96290ee7254c15e975d42e0c074d4be062e9f3a111f11f0827ee2cb797c1fd76",
-      "after_digest": "sha256:e01fead7900f0f3386fa438f778e65751a91fd1d5c9af2d2377c25c20c1d06cc",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 2,
-        "changed_paths": 14,
-        "initial_write": false,
-        "paths_total_previous": 2478,
-        "paths_total_current": 2452,
-        "paths_total_reference": 2478,
-        "churn_paths": 16,
-        "churn_ratio": 0.006457,
-        "sample_paths": [
-          "$.dependency_graph.observed.files_scanned",
-          "$.dependency_graph.observed.layer_edges[0].count",
-          "$.dependency_graph.observed.layer_edges[1].count",
-          "$.dependency_graph.observed.layer_edges[2].count",
-          "$.dependency_graph.observed.layer_edges[3].count",
-          "$.dependency_graph.observed.layer_edges[4].count",
-          "$.dependency_graph.observed.layer_edges[5].count",
-          "$.dependency_graph.verdict.violations",
-          "$.generated_at",
-          "$.noop_critical_paths.scanned_files",
-          "$.size_inventory.python_files_scanned",
-          "$.test_taxonomy.by_layer.unlabeled",
-          "$.test_taxonomy.missing_layer_total",
-          "$.test_taxonomy.missing_layers_omitted",
-          "$.test_taxonomy.tests_total"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-19T10:04:56.367966Z",
-      "changed": true,
-      "before_digest": "sha256:e01fead7900f0f3386fa438f778e65751a91fd1d5c9af2d2377c25c20c1d06cc",
-      "after_digest": "sha256:d81e5c563df43626fd9f41859581d702f1e3fbda642aebd06f24ccbb0541c97d",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 5,
-        "initial_write": false,
-        "paths_total_previous": 2452,
-        "paths_total_current": 2452,
-        "paths_total_reference": 2452,
-        "churn_paths": 5,
-        "churn_ratio": 0.002039,
-        "sample_paths": [
-          "$.generated_at",
-          "$.test_taxonomy.by_layer.unlabeled",
-          "$.test_taxonomy.missing_layer_total",
-          "$.test_taxonomy.missing_layers_omitted",
-          "$.test_taxonomy.tests_total"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-19T10:46:03.321338Z",
-      "changed": true,
-      "before_digest": "sha256:d81e5c563df43626fd9f41859581d702f1e3fbda642aebd06f24ccbb0541c97d",
-      "after_digest": "sha256:1f8cf96033771bd5f3d1357087d1b743fb1bdccdc97bf3badda774f7be3f03e6",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 1,
-        "changed_paths": 28,
-        "initial_write": false,
-        "paths_total_previous": 2452,
-        "paths_total_current": 2439,
-        "paths_total_reference": 2452,
-        "churn_paths": 29,
-        "churn_ratio": 0.011827,
-        "sample_paths": [
-          "$.dependency_graph.observed.files_scanned",
-          "$.dependency_graph.observed.layer_edges[0].count",
-          "$.dependency_graph.observed.layer_edges[3].count",
-          "$.dependency_graph.observed.layer_edges[10].count",
-          "$.dependency_graph.observed.layer_edges[11].count",
-          "$.dependency_graph.verdict.violations[1].sites[0].line",
-          "$.dependency_graph.verdict.violations[1].sites[0].path",
-          "$.dependency_graph.verdict.violations[1].source",
-          "$.dependency_graph.verdict.violations[1].target",
-          "$.dependency_graph.verdict.violations[2].sites[0].line",
-          "$.dependency_graph.verdict.violations[2].sites[0].path",
-          "$.dependency_graph.verdict.violations[2].source",
-          "$.dependency_graph.verdict.violations[2].target",
-          "$.dependency_graph.verdict.violations[3].sites[0].line",
-          "$.dependency_graph.verdict.violations[3].sites[0].path",
-          "$.dependency_graph.verdict.violations[3].source",
-          "$.dependency_graph.verdict.violations[3].target",
-          "$.dependency_graph.verdict.violations[4].sites[0].line",
-          "$.dependency_graph.verdict.violations[4].sites[0].path",
-          "$.dependency_graph.verdict.violations[4].source"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-19T12:16:52.890901Z",
       "changed": true,
@@ -2400,6 +2303,72 @@
       "changed": true,
       "before_digest": "sha256:0a80cff523dc91e4b2434a7a2bd08377f6883cb85d5b57e5b1d239d3f9e71b96",
       "after_digest": "sha256:d66f5ab00d0d6c5cb005d1cb7c113911a08d9cbeeee9e4e284091c0a374a2d53",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 2332,
+        "paths_total_current": 2332,
+        "paths_total_reference": 2332,
+        "churn_paths": 1,
+        "churn_ratio": 0.000429,
+        "sample_paths": [
+          "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-20T18:24:57.367430Z",
+      "changed": true,
+      "before_digest": "sha256:d66f5ab00d0d6c5cb005d1cb7c113911a08d9cbeeee9e4e284091c0a374a2d53",
+      "after_digest": "sha256:a47001cbd5f4f1c3fd3f2aa2e91edaa6271aa195b04d35da3204fc3e1ce61f20",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 7,
+        "initial_write": false,
+        "paths_total_previous": 2332,
+        "paths_total_current": 2332,
+        "paths_total_reference": 2332,
+        "churn_paths": 7,
+        "churn_ratio": 0.003002,
+        "sample_paths": [
+          "$.dependency_graph.observed.layer_edges[2].count",
+          "$.generated_at",
+          "$.size_inventory.functions_over_70_total",
+          "$.test_taxonomy.by_layer.unlabeled",
+          "$.test_taxonomy.missing_layer_total",
+          "$.test_taxonomy.missing_layers_omitted",
+          "$.test_taxonomy.tests_total"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-20T18:25:35.542744Z",
+      "changed": true,
+      "before_digest": "sha256:a47001cbd5f4f1c3fd3f2aa2e91edaa6271aa195b04d35da3204fc3e1ce61f20",
+      "after_digest": "sha256:2ba7b971780edb19d9d98a5983a0aa1eaf36ec15f8cf7935d539f44be970ac11",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 2332,
+        "paths_total_current": 2332,
+        "paths_total_reference": 2332,
+        "churn_paths": 1,
+        "churn_ratio": 0.000429,
+        "sample_paths": [
+          "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-20T18:55:49.945223Z",
+      "changed": true,
+      "before_digest": "sha256:2ba7b971780edb19d9d98a5983a0aa1eaf36ec15f8cf7935d539f44be970ac11",
+      "after_digest": "sha256:829e5816ff3a4eda139a70731e0b8a871e8a98038da3c7bf4ff2a92598c3c6e8",
       "diff": {
         "added_paths": 0,
         "removed_paths": 0,

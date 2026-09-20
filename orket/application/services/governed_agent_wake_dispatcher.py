@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import os
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from types import MappingProxyType
 from typing import Any, Literal
 
-from orket.adapters.execution.owned_io import run_owned_thread
+from orket.adapters.execution.owned_io import run_owned_io, run_owned_thread
 from orket.adapters.storage.async_control_plane_execution_repository import (
     AsyncControlPlaneExecutionRepository,
 )
@@ -33,7 +35,7 @@ from orket.core.contracts.governed_agent_wake_records import GovernedAgentWakeRe
 from orket.core.domain import RunState
 from orket.extensions.manager import ExtensionManager
 from orket.extensions.models import GovernedAgentWorkloadLaunch
-from orket_extension_sdk import AgentIterationRequest, AgentIterationResult
+from orket_extension_sdk import AgentIterationRequest, AgentIterationResult, FrozenJson
 
 ProviderMode = Literal["deterministic_fixture", "llama_cpp", "lmstudio", "ollama", "openai_compat"]
 
@@ -49,6 +51,7 @@ class GovernedAgentProviderConfiguration:
     provider_base_url: str = ""
 
     def __post_init__(self) -> None:
+        object.__setattr__(self, "role_models", MappingProxyType(dict(self.role_models)))
         if self.mode != "deterministic_fixture" and self.mode not in PROVIDER_CHOICES:
             raise ValueError("E_AGENT_PROVIDER_MODE_INVALID")
         if self.inventory_timeout_seconds <= 0 or self.capacity_limit < 1:
@@ -57,11 +60,11 @@ class GovernedAgentProviderConfiguration:
 
 @dataclass(frozen=True, slots=True)
 class GovernedAgentWakeDispatchEnvelope:
-    request_payload: Mapping[str, Any]
+    request: AgentIterationRequest
     creation_timestamp_utc: str
     decision_timestamps_utc: tuple[str, ...]
     next_lease_expiries_utc: tuple[str, ...]
-    continuation_inputs: Mapping[str, Any]
+    continuation_inputs: FrozenJson
 
     @classmethod
     def from_payload(cls, payload: Mapping[str, Any]) -> GovernedAgentWakeDispatchEnvelope:
@@ -92,11 +95,11 @@ class GovernedAgentWakeDispatchEnvelope:
         if len(next_lease_expiries) < max(0, request.remaining_run_budget.iterations - 1):
             raise ValueError("E_AGENT_WAKE_LEASE_EXPIRIES_INCOMPLETE")
         return cls(
-            request_payload=dict(request_payload),
+            request=request,
             creation_timestamp_utc=_utc_timestamp(payload.get("creation_timestamp_utc")),
             decision_timestamps_utc=decision_timestamps,
             next_lease_expiries_utc=next_lease_expiries,
-            continuation_inputs=validate_continuation_inputs(request, payload.get("continuation_inputs")),
+            continuation_inputs=FrozenJson.freeze(validate_continuation_inputs(request, payload.get("continuation_inputs"))),
         )
 
 
@@ -113,6 +116,7 @@ class GovernedAgentWakeLoopDispatcher:
         provider: GovernedAgentProviderConfiguration,
         effect_service: GovernedAgentEffectService,
         effect_resume_service: GovernedAgentEffectResumeService,
+        environment: Mapping[str, str] | None = None,
     ) -> None:
         self._execution = execution_repository
         self._iterations = iteration_repository
@@ -121,6 +125,7 @@ class GovernedAgentWakeLoopDispatcher:
         self._provider = provider
         self._effects = effect_service
         self._effect_resumes = effect_resume_service
+        self._environment = MappingProxyType(dict(os.environ if environment is None else environment))
 
     async def dispatch(
         self,
@@ -129,7 +134,7 @@ class GovernedAgentWakeLoopDispatcher:
         guard: GovernedAgentWakeClaimGuard,
     ) -> GovernedAgentWakeDispatchResult:
         envelope = GovernedAgentWakeDispatchEnvelope.from_payload(wake.payload)
-        request = AgentIterationRequest.from_wire(dict(envelope.request_payload))
+        request = envelope.request
         await guard.ensure_active()
         workload_id = await self._resolve_workload_id(wake, request)
         if not self._capacity_admits(request):
@@ -191,6 +196,7 @@ class GovernedAgentWakeLoopDispatcher:
             provider_base_url=self._provider.provider_base_url,
             ollama_base_url=self._provider.ollama_base_url,
             inventory_timeout_seconds=self._provider.inventory_timeout_seconds,
+            environment=self._environment,
         )
         try:
             service = build_governed_agent_loop_service(
@@ -202,7 +208,7 @@ class GovernedAgentWakeLoopDispatcher:
                 authority_guard=guard,
             )
             execution = await service.run_bounded(
-                initial_request_payload=envelope.request_payload,
+                initial_request_payload=envelope.request.to_wire(),
                 workload_record=WorkloadRecord.model_validate(launch.control_plane_workload_record),
                 extension_digest=launch.extension_digest,
                 configuration_digest=governed_agent_configuration_digest(
@@ -213,10 +219,10 @@ class GovernedAgentWakeLoopDispatcher:
                 creation_timestamp_utc=envelope.creation_timestamp_utc,
                 decision_timestamps_utc=envelope.decision_timestamps_utc,
                 next_lease_expiries_utc=envelope.next_lease_expiries_utc,
-                continuation_inputs_payload=envelope.continuation_inputs,
+                continuation_inputs_payload=envelope.continuation_inputs.thaw(),
             )
         finally:
-            await selection.close()
+            await run_owned_io(selection.close, label="governed-agent-wake-provider-close", preserve_failure=True)
         return execution
 
     async def _activate_resume_if_required(

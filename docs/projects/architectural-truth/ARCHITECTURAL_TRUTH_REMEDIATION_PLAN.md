@@ -12516,9 +12516,11 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
   Scoped installed-build/host acceptance now passes; this does not close the
   full plan or imply generic exactly-once effects or historical authenticity.
 
-Next action: repair governed wake-dispatch input capture and provider cleanup after
-the verified 0.6.41 direct-submission/provider checkpoint, preserving the wake
-counterexamples below, then all remaining numbered C/D requirements. The graph has zero forbidden
+Next action: continue the remaining numbered C/D requirements after the verified
+0.6.42 wake-input/provider-lifetime checkpoint. Resolve the six dynamic diagnostics
+with bounded analysis or repairs, then complete core input/effect and async
+reachability obligations before E1/E2 and CAP acceptance. Preserve the wake
+counterexamples and all retained proof below. The graph has zero forbidden
 static pairs, zero cross-layer cycles and six unresolved import/reflection diagnostics. Preserve every failed and
 passing source/native observation and the historical clock diagnosis. Canonical
 Ruff has 94 findings. The prior stale benchmark expectation passes in the
@@ -17799,3 +17801,125 @@ bound. These are remaining wake-dispatch defects; direct-submission capture does
 not claim to repair them. Continue by retaining immutable wake/provider inputs
 and owning provider cleanup through interruption, with the existing fence,
 admission, lease and terminal contracts intact.
+
+#### .42 wake input and provider lifetime checkpoint (2026-09-20)
+
+Observed path: primary; result: partial success. Reentry binds the clean published
+v0.6.41 checkpoint. The retained dispatch-identity and interrupted-client-close
+counterexamples remain under `.tmp/d-submission-capture/`. New observations under
+`.tmp/d-wake-capture/` confirm three additional boundaries. `ingress-inputs-before/`
+has one passing control and three failures: caller mutation after validation
+changes the request identity, continuation inputs or decision timestamps persisted
+by real SQLite ingress. `provider-inputs-before/` has one passing control and two
+failures: a constructed dispatcher follows later environment URL or role-model
+mapping changes. `provider-close-all-before/` has one passing control and one
+failure: an earlier real HTTP-client close error leaves a later client open.
+All owned pytest reports bind unchanged inputs. The first ingress launch helper
+incorrectly returned zero instead of propagating pytest's failure status; its
+original bytes and disposition remain retained. The actual pytest/JUnit report
+records failure. Subsequent helpers propagate the owned process result explicitly.
+
+The candidate uses the existing SDK `FrozenJson` and `AgentIterationRequest`
+authorities for validated ingress/dispatch values, captures role-model and
+environment inputs on dispatcher construction, and forwards the API factory's
+earlier environment snapshot. Schedules explicitly serialize the frozen dispatch
+value; wire shapes and canonical digest rules remain unchanged. Wake and direct
+provider cleanup use the existing retained-I/O owner, attempt remaining client
+closes after an earlier failure, log failures and propagate the first failure
+after draining. Internal envelope/value consumers migrate together without a
+compatibility alias. The API's wake-dispatch composition is extracted from its
+existing oversized builder instead of growing that function. Contract:
+`docs/architecture/CONTRACT_DELTA_GOVERNED_WAKE_OWNERSHIP_D_2026-09-20.md`.
+
+`boundary-initial-after/` passes 21 cases. The first permanent cohort retains
+32 passes and two failed API assertions: the test assumed missing run inventory
+would produce 404, while the existing strict inspector returns 409 with
+`E_AGENT_TERMINAL_AUTHORITY_CONFLICT:history_unreadable`. The corrected test
+requires that exact refusal and independently opens SQLite read-only to prove
+the run inventory is absent. No runtime inspection or terminal rule was relaxed.
+`permanent-corrected/` passes 60 cases with unchanged inputs, including actual
+authenticated API/webhook flows, scheduled wakes, native CLI/subprocess execution,
+controlled TCP inventory, read-only mapping admission, repeated cancellation,
+caller timeout and close-failure precedence. Product deadlines and the declared
+0.5-second controlled-hold response bound are unchanged. The frozen candidate proof below
+also covers subsequent API builder extraction and final normalization.
+
+Both Quality jobs include the six permanent regression modules.
+
+The frozen corrected candidate passes **459 cases across 63 modules** in source
+and each fresh installed Windows environment. It includes the six new boundary
+modules and the retained .41 cohort, with identical case identities and no
+failures, errors or skips. The first broad source launch accidentally used the
+.41 environment while importing the current source; it also passed 459 cases,
+but remains preliminary evidence at `source-final/`. The separate `candidate/`
+rerun uses the fresh .42 environment and is the source acceptance authority.
+Both runs preserve their exact inputs, logs and process receipts. No test,
+runtime deadline or response bound changed between them.
+
+| Environment | Pass / fail / error / skip | Pytest seconds |
+| --- | --- | --- |
+| Source Windows 3.11 | 459 / 0 / 0 / 0 | 391.694 |
+| Installed win-py311 | 459 / 0 / 0 / 0 | 407.071 |
+| Installed win-py312 | 459 / 0 / 0 / 0 | 446.838 |
+
+Each installed cell verifies 959 actual core module origins, exact wheel
+identities, unchanged support inputs, actual CLI primary/degraded board behavior,
+strict controlled ToolGate checks, no harness-root database and no surviving
+children. The wheel and sdist match all 1,099 runtime Python files; all 1,115 wheel
+package files match source. Wheel SHA-256:
+`437e107f034133008872f262af14a3e864a84b88f213e99c941850d1c9268bc5`.
+Sdist SHA-256:
+`c9d5093b7819db383b47ec02ccc97869408125f4ad3bf4621368690e0ec34f4b`.
+SDK/reference/starter artifacts are unchanged. The manifest, source report and
+native audit are under `.tmp/d-wake-capture/candidate/`.
+
+Fresh model inference is now verified for this checkpoint. The existing runbook
+binary, implementation DLL, GGUF and packaged template were identified before
+starting a task-owned hidden llama.cpp process with the documented command.
+Eight unchanged installed Windows 3.11 cases pass in 307.529 seconds:
+CLI continuation, API wake memory/replay, effect approval/denial with restart, and
+both abrupt API-process recovery windows. They require actual model receipts and
+verified terminal truth; no provider substitute or clock shim is used. Candidate
+wheel identity, installed origins, reference-extension bytes, copied inputs,
+retained results and proof-child teardown pass. The task-owned server was then
+terminated and waited; no descendants or loopback listener remained. This does
+not promote a new provider, prove arbitrary objectives or establish CAP capacity.
+The model alias is `orcarouter_qwen3.8-27b-uncensored-q4_k_l`; GGUF SHA-256:
+`431c4818df8a3ce941e2fe35bc37688ea9c30052339eae8f41a4c25cdd9a6fa7`.
+`model-service/` retains binary/template/model identity, startup, serving and
+teardown receipts. The earlier unavailable-provider observations remain intact.
+
+The repeated passive Linux preflight remains **blocked / environment blocker**.
+Over 240.006 seconds it observes +18.294637411 / -18.283677871 second wall-clock
+steps relative to monotonic time and no required 60-second synchronized quiet
+interval. `linux-clock-preflight.json` retains the native samples and time-service
+journal. No acceptance cell was launched, clock changed or deadline weakened.
+Its cause remains unidentified; continue independent work.
+
+Changed-file Ruff, docs hygiene, release metadata and whitespace pass. Canonical
+Ruff retains 94 findings with none introduced. The initial structural review's
+single new style finding is repaired and its failed report retained. All changed
+Python files remain below 400 lines; the longest affected function is 68 lines.
+New tests use canonical pytest layers, including the authenticated public API
+test's `end_to_end` marker and disclosed controlled provider inventory. The old
+prose-only taxonomy remains E1 work. The graph has 1,099 modules, 3,473 import sites,
+zero forbidden pairs/cycles/unknown modules and six unresolved dynamic diagnostics.
+Baseline collection remains `release_ready=false`.
+
+All 21,713 handoff hashes and 81 additional .41 checkpoint evidence hashes
+revalidate; the original checkout is unchanged. Final documentation changes only
+this plan and the baseline after frozen acceptance. `checkpoint.json`,
+`index-check.json`, `publication.json` and `COMMITTED_CHANGESET.md` bind the scoped
+change and authorized branch/annotated-v0.6.42 publication. Final release-tag
+validation follows commit/tag creation. Whole C/D/E/CAP, a passing complete suite
+and 89% coverage, hosted Quality, supported-host acceptance, release readiness and
+explicit whole-lane acceptance remain open. No lane is retired.
+
+AC disposition: AC-01 partial (six diagnostics and remaining C); AC-02 pass
+(decision-node authority unchanged); AC-03 pass (named immutable wake/provider
+inputs); AC-04 partial (remaining core clocks/schema identities and D inventory);
+AC-05 pass (retained cleanup and all-client failure drain); AC-06 pass (existing
+effect adapters); AC-07 pass (strict refusal and failure precedence); AC-08 pass
+(wire/event schemas unchanged); AC-09 partial (bounded real store, public CLI/API,
+replay and inference proof; broader D/CAP open); AC-10 pass (contract, spec,
+contributor, authority, Quality selections and plan).

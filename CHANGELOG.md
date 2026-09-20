@@ -5,6 +5,18 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.42] - 2026-09-20
+
+### Fixed
+- Freeze validated wake ingress and dispatch inputs so queued caller mutations cannot alter durable payloads or redirect execution to another run.
+- Capture dispatcher provider environment and role-model configuration, including the API factory's earlier environment snapshot.
+- Retain wake and direct provider cleanup through interruption, drain remaining clients after close failures, and preserve failure precedence.
+- Extract wake-dispatch composition from the API builder and retain the boundary regressions in both Quality jobs.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Internal envelope consumers use `request`; submission/continuation consumers explicitly thaw frozen JSON. Public wake wire fields stay unchanged. Migration: `docs/architecture/CONTRACT_DELTA_GOVERNED_WAKE_OWNERSHIP_D_2026-09-20.md`.
+
 ## [0.6.41] - 2026-09-20
 
 ### Fixed

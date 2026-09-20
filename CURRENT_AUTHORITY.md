@@ -343,6 +343,15 @@ the full wake-dispatch lifetime are outside this capture contract. Existing
 admission, quarantine, leases, terminal truth and cleanup retain authority.
 Contract: `docs/architecture/CONTRACT_DELTA_GOVERNED_SUBMISSION_CAPTURE_D_2026-09-20.md`.
 
+The 0.6.42 wake boundary uses the existing SDK frozen values for validated ingress
+JSON and dispatch request/continuation inputs. Dispatcher construction captures
+provider configuration and environment; API composition forwards its earlier
+environment snapshot. Wake and direct-provider cleanup retain their owners through
+interruption and attempt remaining client closes after an earlier failure. This
+extends the .41 capture scope to the named wake boundaries without replacing wake
+fences, transactions, wire payloads or terminal authority. Contract and migration:
+`docs/architecture/CONTRACT_DELTA_GOVERNED_WAKE_OWNERSHIP_D_2026-09-20.md`.
+
 The 0.6.39 API construction transition captures cwd, environment, settings
 and preferences in the synchronous factory, then acquires the graph in a
 lifespan-owned worker. Runtime services require lifespan entry; HTTP/WebSocket
