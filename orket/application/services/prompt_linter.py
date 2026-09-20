@@ -11,6 +11,7 @@ from orket.application.services.canonical_role_templates import (
     CANONICAL_PIPELINE_ROLES,
     canonical_role_conformance_violations,
 )
+from orket.application.services.schema_input_service import validate_config_asset
 from orket.core.contracts.prompt_assets import VALID_STATUSES
 from orket.schema import DialectConfig, RoleConfig
 
@@ -82,7 +83,7 @@ def lint_prompt_asset(path: Path, payload: dict[str, Any], kind: str) -> list[di
 
     try:
         if kind == "role":
-            RoleConfig.model_validate(payload)
+            validate_config_asset(RoleConfig, payload)
         elif kind == "dialect":
             DialectConfig.model_validate(payload)
         else:

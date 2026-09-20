@@ -20,6 +20,12 @@ class RuntimeInputService:
     def create_flow_revision_id(self) -> str:
         return f"frv_{uuid4().hex}"
 
+    def create_card_id(self) -> str:
+        return uuid4().hex
+
+    def create_verification_scenario_id(self) -> str:
+        return uuid4().hex[:4]
+
     def utc_now(self) -> datetime:
         return datetime.now(UTC)
 

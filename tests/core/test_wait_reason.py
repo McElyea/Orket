@@ -3,6 +3,8 @@ import pytest
 from orket.core.domain.state_machine import StateMachine, StateMachineError
 from orket.schema import CardStatus, CardType, IssueConfig, WaitReason
 
+pytestmark = pytest.mark.contract
+
 
 def test_wait_reason_enum_values():
     """Test that WaitReason has the expected values."""
@@ -14,7 +16,7 @@ def test_wait_reason_enum_values():
 
 def test_issue_config_accepts_wait_reason():
     """Test that IssueConfig accepts wait_reason field."""
-    issue = IssueConfig(
+    issue = IssueConfig(id="issueconfig-17",
         summary="Test issue",
         status=CardStatus.BLOCKED,
         wait_reason=WaitReason.RESOURCE
@@ -24,7 +26,7 @@ def test_issue_config_accepts_wait_reason():
 
 def test_issue_config_wait_reason_defaults_to_none():
     """Test that wait_reason defaults to None."""
-    issue = IssueConfig(summary="Test issue")
+    issue = IssueConfig(id="issueconfig-27", summary="Test issue")
     assert issue.wait_reason is None
 
 
@@ -113,7 +115,7 @@ def test_state_machine_allows_archive_from_done_issue():
 
 def test_wait_reason_resource():
     """Test RESOURCE wait reason usage."""
-    issue = IssueConfig(
+    issue = IssueConfig(id="issueconfig-116",
         summary="Waiting for LLM slot",
         status=CardStatus.BLOCKED,
         wait_reason=WaitReason.RESOURCE
@@ -124,7 +126,7 @@ def test_wait_reason_resource():
 
 def test_wait_reason_dependency():
     """Test DEPENDENCY wait reason usage."""
-    issue = IssueConfig(
+    issue = IssueConfig(id="issueconfig-127",
         summary="Waiting for parent card",
         status=CardStatus.BLOCKED,
         wait_reason=WaitReason.DEPENDENCY,
@@ -136,7 +138,7 @@ def test_wait_reason_dependency():
 
 def test_wait_reason_review():
     """Test REVIEW wait reason usage."""
-    issue = IssueConfig(
+    issue = IssueConfig(id="issueconfig-139",
         summary="Waiting for human review",
         status=CardStatus.WAITING_FOR_DEVELOPER,
         wait_reason=WaitReason.REVIEW
@@ -146,7 +148,7 @@ def test_wait_reason_review():
 
 def test_wait_reason_input():
     """Test INPUT wait reason usage."""
-    issue = IssueConfig(
+    issue = IssueConfig(id="issueconfig-149",
         summary="Waiting for clarification",
         status=CardStatus.WAITING_FOR_DEVELOPER,
         wait_reason=WaitReason.INPUT
@@ -156,7 +158,7 @@ def test_wait_reason_input():
 
 def test_wait_reason_can_be_cleared():
     """Test that wait_reason can be set to None when unblocking."""
-    issue = IssueConfig(
+    issue = IssueConfig(id="issueconfig-159",
         summary="Test issue",
         status=CardStatus.BLOCKED,
         wait_reason=WaitReason.RESOURCE

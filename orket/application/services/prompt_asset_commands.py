@@ -7,6 +7,7 @@ from typing import Any
 from orket.adapters.storage.prompt_asset_store import PromptAssetStore
 from orket.application.services.prompt_linter import lint_prompt_text
 from orket.application.services.prompt_resolver import PromptResolver
+from orket.application.services.schema_input_service import validate_config_asset
 from orket.core.contracts.prompt_assets import parse_prompt_id, prepare_prompt_metadata
 from orket.schema import DialectConfig, RoleConfig, SkillConfig
 
@@ -44,7 +45,7 @@ class PromptAssetCommands:
 
     def resolve(self, *, role: str, dialect: str, selection_policy: str = "stable", version_exact: str = "",
                 strict: bool = True, profile: str = "default") -> dict[str, Any]:
-        role_cfg = RoleConfig.model_validate(self.store.read(self.store.path("role", role)))
+        role_cfg = validate_config_asset(RoleConfig, self.store.read(self.store.path("role", role)))
         dialect_cfg = DialectConfig.model_validate(self.store.read(self.store.path("dialect", dialect)))
         skill = SkillConfig(name=role_cfg.name or role, intent=role_cfg.description,
                             responsibilities=[role_cfg.description], tools=list(role_cfg.tools or []),

@@ -2132,7 +2132,7 @@ Legacy `Agent.run()` direct tool execution remains noncanonical compatibility de
 
 Extension engine actions that normalize onto `run_card(...)` inherit that canonical governed runtime path, while SDK capability registry invocations inside extension workloads remain a separate authorization lane from the canonical tool-dispatch story even though the shipped first slice now publishes those capability calls into the extension workload control-plane run/effect boundary.
 
-`EnvironmentConfig` still warns and drops unknown keys at the compatibility Pydantic boundary, but authoritative runtime environment loading now fails closed with `E_ENVIRONMENT_CONFIG_UNKNOWN_KEYS:<keys>` before model work when a touched runtime path supplies undeclared keys.
+`EnvironmentConfig` rejects unknown keys without warning effects. Direct construction raises Pydantic extra-field validation errors; authoritative environment loading retains `E_ENVIRONMENT_CONFIG_UNKNOWN_KEYS:<keys>` before model work. Card and verification-scenario IDs are required core inputs. Authored asset loading and prompt role admission obtain missing IDs through the application schema input service and `RuntimeInputService`; accepted stored values are revalidated without inventing historical identities. Contract: `docs/specs/SCHEMA_INPUT_OWNERSHIP.md`.
 
 Session transcripts are schema-bound through `TranscriptTurn` / `ToolCallRecord` at `orket/session.py`; legacy dict rows are defensively migrated on `Session` construction and serialized back as versioned transcript turns.
 

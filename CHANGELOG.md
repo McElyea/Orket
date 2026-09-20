@@ -5,6 +5,17 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.45] - 2026-09-20
+
+### Fixed
+- Move missing authored card and verification-scenario identity generation into application admission through the existing runtime input service; require identities during core validation.
+- Preserve nested asset aliases, role maps, typed root models and JSON-mode validation, with explicit refusal of cyclic schema input.
+- Reject unknown environment fields without warning effects and migrate direct fixture/demo constructors to explicit IDs.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Authored callers use `ConfigLoader` or the application schema input service. Stored values retain authoritative IDs; direct environment callers remove unknown keys. Migration: `docs/architecture/CONTRACT_DELTA_SCHEMA_INPUTS_D_2026-09-20.md`.
+
 ## [0.6.44] - 2026-09-20
 
 ### Fixed

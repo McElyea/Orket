@@ -12520,8 +12520,8 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.44 sandbox creation-input checkpoint. Continue schema identities/warnings and
-the remaining numbered D requirements before E1/E2
+0.6.45 schema input checkpoint. Settle the remaining legacy-domain import effects,
+then continue immutable decision inputs, adapter classification and async reachability before E1/E2
 and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
 Preserve every failed and
@@ -18162,3 +18162,98 @@ the changed sandbox creation value; remaining schema identities and warnings in
 classification and async reachability remain owned by active D. The oversized
 orchestrator does not grow. Continue numbered D, then E1/E2 and CAP. No whole-lane
 completion or retirement is claimed.
+
+
+#### .45 schema identity and environment input checkpoint (2026-09-20)
+
+Core card and verification-scenario models now require identities. Application
+authored-asset admission captures missing IDs through `RuntimeInputService`,
+including nested issue aliases, verification scenarios, role maps, typed root
+models and card-detail children. Explicit values are preserved, invalid values and
+generation failures propagate, cyclic schema objects are refused, and ambiguous
+unions/custom identity aliases do not receive guessed IDs. JSON-mode validation is
+retained. Environment extras now fail without warning effects; the authoritative
+helper keeps its existing error code. `ConfigLoader`, prompt role admission and
+direct fixture/demo constructors migrate. Durable contract and breaking migration:
+`docs/specs/SCHEMA_INPUT_OWNERSHIP.md` and
+`docs/architecture/CONTRACT_DELTA_SCHEMA_INPUTS_D_2026-09-20.md`.
+
+The pre-change core probe retains three failures and one explicit-value pass.
+An initial 57-case source campaign passed but lacked typed-root and cyclic-input
+controls; those two added controls then failed. The repaired boundary passes its
+expanded controls. The first broader campaign has 551 passes and three failures
+in a catalog fixture patching the removed `orket.schema.uuid` symbol. That fixture
+now guards the application identity port, preserving the requirement that catalog
+reads do not mint identities. The corrected catalog and actual prompt command
+selection passes all 29 cases. All original receipts and inputs remain retained.
+
+Frozen fresh source and corrected serial installed Windows 3.11/3.12 campaigns
+pass **558 cases across 49 modules**, with identical case identities and zero
+failures, errors or skips. This includes affected schema/configuration consumers,
+card completion/control-plane regressions, fixture/HTTP verification, prompt
+commands and repository-asset loading. It is not the complete pytest suite.
+
+| Runtime environment | Pass / fail / error / skip | Pytest seconds |
+| --- | --- | --- |
+| Source Windows 3.11 | 558 / 0 / 0 / 0 | 84.048 |
+| Installed win-py311 | 558 / 0 / 0 / 0 | 94.206 |
+| Installed win-py312 | 558 / 0 / 0 / 0 | 97.556 |
+
+The first installed Windows 3.11 cell passed 557 cases and failed the unchanged
+challenge-asset test because the harness omitted its team JSON. Inspection also
+found the epic JSON absent. `native-initial-audit.json` preserves that failure,
+matching inputs/origins, successful CLI/ToolGate flows and confirmed teardown.
+`native-corrected/` adds exactly the two assets already hashed by the successful
+source campaign, retaining the same wheel, tests and deadlines. Both fresh corrected
+cells pass. No Windows 3.12 cell used the incomplete harness.
+
+Each accepted cell verifies 689 loaded core origins, exact copied inputs, actual
+CLI primary/degraded board behavior, controlled ToolGate checks, no harness-root
+database and no surviving proof children. Four new actual prompt CLI controls pass
+on source and both installed versions: resolve/validate admit absent authored IDs,
+reject explicit invalid IDs and leave source asset bytes unchanged. Those commands
+exercise the real application/worker/file boundary; they do not perform inference.
+Package parity covers 1,100 Python sources and 1,116 wheel members. Wheel SHA-256:
+`b9b6570ee2c120edfa3e946f920421b9896360caa952e174c4dd3ead300a37da`.
+Sdist SHA-256:
+`c7ddfca1eb1d272d545117ea5d48ced206e7e43356fc601d7ccca34c340fd08d`.
+
+A separate demo flow exposed a pre-existing call to the removed private
+`CriticalPathEngine._calculate_weight`. It fails on both installed .45 cores, and
+the same failure is reproduced with the published .44 demo and installed .44 core.
+The final unbundled demo has one additional caller change to public
+`calculate_weight`; no package, test or runtime implementation changes after the
+frozen campaign. Both final demos then run successfully against both accepted .45
+installed cores, with independent copied final source and the old accepted harness
+left intact. `demo-repair.json` binds the exact one-replacement delta and proves the
+demo is absent from both wheel and sdist; `demo-live.json` binds the final source,
+commands and outputs. This executable delta is reported separately from final
+documentation changes, rather than claiming the earlier 558-case campaign used it.
+
+The unchanged passive Linux clock gate remains **blocked** after
+240.011 seconds: no required 60-second synchronized quiet
+interval, with opposing wall-clock steps of +18.666208636 and
+-18.167079316 seconds relative to monotonic time. No
+Linux runtime cell was launched. Cause remains unidentified; no clock, assertion,
+deadline or provider-selection change is made. The earlier .43 overlapping Windows
+Git checkout timeout also remains unresolved and outside this scoped cohort.
+
+Both Quality jobs include the new boundary and CLI controls. Changed-file Ruff,
+dependency analysis, docs hygiene, release metadata and whitespace pass; canonical
+Ruff retains 94 findings with none introduced. The graph has 1,100 modules, 3,480
+import sites, six recognized routes and zero forbidden edges, unknown modules,
+cycles or analysis errors. Baseline collection does not establish release readiness,
+which remains false. No passing full-suite/89%-coverage, hosted Quality, fresh
+provider, hostile-code containment or capacity acceptance is claimed. The .44
+non-Python shipping ceiling is not closed by this schema change.
+
+All 21,713 handoff hashes and 83 .44 checkpoint evidence hashes revalidate; the
+original checkout is unchanged. Evidence under `.tmp/d-schema-inputs/` includes
+`checkpoint.json`, `index-check.json`, `publication.json` and
+`COMMITTED_CHANGESET.md` for the scoped branch/annotated-v0.6.45 publication.
+The new schema service and tests remain within size limits; no oversized runtime
+file grows. AC-01 through AC-10 pass within the changed schema/input scope, without
+asserting whole-D acceptance. Core-classified deprecated `orket.domain` still emits
+warnings and installs aliases; its contract disposition precedes any change.
+Immutable decision context, complete adapter classification, async reachability,
+remaining D/E/CAP gates and explicit user acceptance remain open. No lane retirement.

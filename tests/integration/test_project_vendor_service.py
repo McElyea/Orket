@@ -9,6 +9,7 @@ from orket.adapters.storage.async_card_repository import AsyncCardRepository
 from orket.application.services.local_project_vendor import LocalProjectVendor
 from orket.application.services.project_vendor_catalog import ProjectCatalogLocation
 from orket.application.services.project_vendor_factory import create_project_vendor
+from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.core.contracts.card_completion_commit import CardCompletionRejected
 from orket.exceptions import CardNotFound
 from orket.runtime.config.config_loader import ConfigLoader
@@ -66,10 +67,10 @@ async def test_catalog_projects_declared_card_metadata_without_minting_ids(tmp_p
         {"id": "C1", "summary": "Declared", "note": "Details", "status": "blocked", "priority": "High", "assignee": "human"},
     ]})
 
-    def forbidden_identity():
+    def forbidden_identity(_inputs):
         raise AssertionError("A catalog read must not mint identity")
 
-    monkeypatch.setattr("orket.schema.uuid.uuid4", forbidden_identity)
+    monkeypatch.setattr(RuntimeInputService, "create_card_id", forbidden_identity)
     vendor = _vendor(tmp_path, tmp_path / "cards.db")
     observed = await vendor.get_cards("work")
     assert [card.model_dump() for card in observed] == [{

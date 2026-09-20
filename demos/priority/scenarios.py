@@ -1,5 +1,6 @@
-from orket.schema import EpicConfig, IssueConfig, CardStatus
-from orket.domain.critical_path import CriticalPathEngine
+from orket.core.domain.critical_path import CriticalPathEngine
+from orket.schema import CardStatus, EpicConfig, IssueConfig
+
 
 def print_section(title):
     print(f"\n{'='*60}")
@@ -17,7 +18,7 @@ def print_issue_table(epic):
 
     weights = {}
     for issue_id in blocked_by_me:
-        weights[issue_id] = CriticalPathEngine._calculate_weight(issue_id, blocked_by_me)
+        weights[issue_id] = CriticalPathEngine.calculate_weight(issue_id, blocked_by_me)
 
     # Print table header
     print(f"\n{'ID':<10} {'Priority':<10} {'Weight':<10} {'Score':<10} {'Status':<15} {'Summary':<30}")
@@ -35,7 +36,7 @@ def run_basic_scenario():
     """Scenario 1: Simple priority ordering (no dependencies)"""
     print_section("Scenario 1: Basic Priority (No Dependencies)")
 
-    epic = EpicConfig(
+    epic = EpicConfig(id="epicconfig-38",
         name="Feature Launch",
         team="standard",
         environment="standard",
@@ -61,7 +62,7 @@ def run_dependency_scenario():
     """Scenario 2: Priority + Dependency weighting"""
     print_section("Scenario 2: Priority + Dependency Weight")
 
-    epic = EpicConfig(
+    epic = EpicConfig(id="epicconfig-64",
         name="API Refactor",
         team="standard",
         environment="standard",

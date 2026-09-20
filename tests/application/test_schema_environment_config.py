@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import pytest
+from pydantic import ValidationError
 
 from orket.schema import (
     EnvironmentConfig,
@@ -8,12 +9,10 @@ from orket.schema import (
 )
 
 
-def test_environment_config_warns_and_drops_unknown_keys_at_compatibility_boundary() -> None:
-    """Layer: contract. Verifies non-authoritative EnvironmentConfig construction stays compatibility-scoped."""
-    with pytest.warns(UserWarning, match="ignored unknown key"):
-        config = EnvironmentConfig(name="dev", model="test-model", legacy_key="ignored")
-
-    assert not hasattr(config, "legacy_key")
+@pytest.mark.contract
+def test_environment_config_rejects_unknown_keys_at_direct_boundary() -> None:
+    with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
+        EnvironmentConfig(name="dev", model="test-model", legacy_key="ignored")
 
 
 def test_authoritative_environment_config_validation_rejects_unknown_keys() -> None:

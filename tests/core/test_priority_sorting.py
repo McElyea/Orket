@@ -5,12 +5,14 @@ from pydantic import ValidationError
 from orket.core.domain.critical_path import CriticalPathEngine
 from orket.schema import CardStatus, EpicConfig, IssueConfig
 
+pytestmark = pytest.mark.contract
+
 
 def test_priority_field_migration_from_string():
     """Test that legacy string priorities are converted to floats."""
-    issue_high = IssueConfig(summary="High priority", priority="High")
-    issue_med = IssueConfig(summary="Medium priority", priority="Medium")
-    issue_low = IssueConfig(summary="Low priority", priority="Low")
+    issue_high = IssueConfig(id="issueconfig-11", summary="High priority", priority="High")
+    issue_med = IssueConfig(id="issueconfig-12", summary="Medium priority", priority="Medium")
+    issue_low = IssueConfig(id="issueconfig-13", summary="Low priority", priority="Low")
 
     assert issue_high.priority == 3.0
     assert issue_med.priority == 2.0
@@ -19,25 +21,25 @@ def test_priority_field_migration_from_string():
 
 def test_priority_field_accepts_floats():
     """Test that numeric priorities are accepted directly."""
-    issue = IssueConfig(summary="Custom priority", priority=2.5)
+    issue = IssueConfig(id="issueconfig-22", summary="Custom priority", priority=2.5)
     assert issue.priority == 2.5
 
 
 def test_priority_field_rejects_unknown_strings():
     """Test that unknown persisted string priorities fail at the schema boundary."""
     with pytest.raises(ValidationError, match="Unrecognized priority level"):
-        IssueConfig(summary="Invalid priority", priority="urgent")
+        IssueConfig(id="issueconfig-29", summary="Invalid priority", priority="urgent")
 
 
 def test_priority_default_value():
     """Test that priority defaults to 2.0 (Medium)."""
-    issue = IssueConfig(summary="Default priority")
+    issue = IssueConfig(id="issueconfig-34", summary="Default priority")
     assert issue.priority == 2.0
 
 
 def test_priority_queue_sorts_by_combined_score():
     """Test that queue sorts by base_priority + dependency_weight."""
-    epic = EpicConfig(
+    epic = EpicConfig(id="epicconfig-40",
         name="Test Epic",
         team="standard",
         environment="standard",
@@ -56,7 +58,7 @@ def test_priority_queue_sorts_by_combined_score():
 
 def test_priority_queue_combines_priority_and_dependencies():
     """Test that dependency weight is added to base priority."""
-    epic = EpicConfig(
+    epic = EpicConfig(id="epicconfig-59",
         name="Test Epic",
         team="standard",
         environment="standard",
@@ -79,7 +81,7 @@ def test_priority_queue_combines_priority_and_dependencies():
 
 def test_priority_queue_ignores_non_ready_cards():
     """Test that only READY cards appear in the priority queue."""
-    epic = EpicConfig(
+    epic = EpicConfig(id="epicconfig-82",
         name="Test Epic",
         team="standard",
         environment="standard",
@@ -99,7 +101,7 @@ def test_priority_queue_ignores_non_ready_cards():
 
 def test_priority_queue_high_weight_beats_high_priority():
     """Test that a low-priority card blocking many others gets prioritized."""
-    epic = EpicConfig(
+    epic = EpicConfig(id="epicconfig-102",
         name="Test Epic",
         team="standard",
         environment="standard",
@@ -128,9 +130,9 @@ def test_priority_queue_high_weight_beats_high_priority():
 
 def test_priority_migration_case_insensitive():
     """Test that priority string migration is case-insensitive."""
-    issue_upper = IssueConfig(summary="Test", priority="HIGH")
-    issue_lower = IssueConfig(summary="Test", priority="low")
-    issue_mixed = IssueConfig(summary="Test", priority="MeDiUm")
+    issue_upper = IssueConfig(id="issueconfig-131", summary="Test", priority="HIGH")
+    issue_lower = IssueConfig(id="issueconfig-132", summary="Test", priority="low")
+    issue_mixed = IssueConfig(id="issueconfig-133", summary="Test", priority="MeDiUm")
 
     assert issue_upper.priority == 3.0
     assert issue_lower.priority == 1.0
@@ -138,7 +140,7 @@ def test_priority_migration_case_insensitive():
 
 
 def test_priority_queue_counts_shared_descendants_per_branch():
-    epic = EpicConfig(
+    epic = EpicConfig(id="epicconfig-141",
         name="Diamond Dependencies",
         team="standard",
         environment="standard",

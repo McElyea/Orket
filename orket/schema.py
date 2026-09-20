@@ -1,11 +1,9 @@
 from __future__ import annotations
 
 import json
-import uuid
-import warnings
 from typing import Any, Literal
 
-from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator
 
 from orket.core.bottlenecks import BottleneckThresholds
 from orket.core.types import CardStatus, CardType, WaitReason
@@ -15,7 +13,7 @@ from orket.core.types import CardStatus, CardType, WaitReason
 # 1. Environment & Dialect
 # ---------------------------------------------------------------------------
 class EnvironmentConfig(BaseModel):
-    model_config = ConfigDict(extra="ignore")
+    model_config = ConfigDict(extra="forbid")
     schema_version: str = "1.0.0"
     name: str
     description: str | None = None
@@ -24,20 +22,6 @@ class EnvironmentConfig(BaseModel):
     seed: int | None = None
     timeout: int = 300
     params: dict[str, Any] = Field(default_factory=dict)
-
-    @model_validator(mode="before")
-    @classmethod
-    def warn_on_unknown_keys(cls, data: Any) -> Any:
-        if not isinstance(data, dict):
-            return data
-        unknown = sorted(frozenset(data) - frozenset(cls.model_fields))
-        if unknown:
-            warnings.warn(
-                "EnvironmentConfig ignored unknown key(s): " + ", ".join(unknown),
-                UserWarning,
-                stacklevel=2,
-            )
-        return data
 
 
 def validate_authoritative_environment_config_payload(data: Any) -> dict[str, Any]:
@@ -85,7 +69,7 @@ class BaseCardConfig(BaseModel):
     """
 
     model_config = ConfigDict(populate_by_name=True, extra="ignore")
-    id: str = Field(default_factory=lambda: uuid.uuid4().hex)
+    id: str
     name: str | None = Field(None, alias="summary")
     type: CardType = Field(default=CardType.ISSUE)
     status: CardStatus = Field(default=CardStatus.READY)
@@ -140,7 +124,7 @@ class IssueMetrics(BaseModel):
 
 
 class VerificationScenario(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4())[:4])
+    id: str
     description: str
     input_data: dict[str, Any]
     expected_output: Any

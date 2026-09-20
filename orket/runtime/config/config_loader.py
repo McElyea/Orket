@@ -14,6 +14,8 @@ from pydantic import BaseModel, ValidationError
 from orket.adapters.execution.owned_io import run_owned_thread
 from orket.adapters.storage.async_file_tools import AsyncFileTools
 from orket.application.services.decision_node_registry import DecisionNodeRegistry, build_decision_node_registry
+from orket.application.services.runtime_input_service import RuntimeInputService
+from orket.application.services.schema_input_service import validate_config_asset_json
 from orket.exceptions import CardNotFound
 from orket.logging import log_event
 
@@ -37,7 +39,9 @@ class ConfigLoader:
         decision_nodes: DecisionNodeRegistry | None = None,
         environment: Mapping[str, str] | None = None,
         user_settings: dict[str, Any] | None = None,
+        runtime_inputs: RuntimeInputService | None = None,
     ) -> None:
+        self.runtime_inputs = RuntimeInputService() if runtime_inputs is None else runtime_inputs
         self.root = root
         self.config_dir = root / "config"
         self.model_dir = root / "model"
@@ -133,7 +137,7 @@ class ConfigLoader:
 
     async def load_asset_async(self, category: str, name: str, model_type: type[BaseModel]) -> Any:
         raw = await self._load_asset_raw_async(category, name, self.department)
-        return model_type.model_validate_json(raw)
+        return validate_config_asset_json(model_type, raw, runtime_inputs=self.runtime_inputs)
 
     async def load_environment_asset_async(self, name: str) -> Any:
         from orket.schema import validate_authoritative_environment_config_json

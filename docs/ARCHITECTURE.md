@@ -175,8 +175,11 @@ Sandbox HTTP verification follows the same boundary: core captures explicit
 scenario/target/time values and compares observations; application owns HTTP
 dispatch, client cleanup and result adoption. Fixture subprocess support code
 resides in the execution adapter. Exact comparison and migration semantics are in
-`docs/specs/SANDBOX_HTTP_VERIFICATION.md`. Core clocks, schema identities and other
-remaining effects still require D acceptance.
+`docs/specs/SANDBOX_HTTP_VERIFICATION.md`. Sandbox creation timestamps and schema
+identities are explicit core inputs. Authored configuration obtains missing IDs
+through the application service; environment extras fail without warning effects.
+Contract: `docs/specs/SCHEMA_INPUT_OWNERSHIP.md`. Remaining effects, decision context,
+adapter classification and async reachability still require D acceptance.
 
 The orchestrator's supplied control-plane clock covers both issue dispatch and
 scheduler namespace publication, including activation-failure cleanup. Direct

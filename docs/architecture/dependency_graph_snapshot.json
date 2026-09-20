@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-20T20:29:52.452214+00:00",
+  "generated_at": "2026-09-20T21:02:09.018632+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -1601,7 +1601,7 @@
       },
       "orket.application.services.prompt_asset_commands": {
         "path": "orket/application/services/prompt_asset_commands.py",
-        "sha256": "c47a9198b9be71edf20a8fef0e094e03f35bde1d2566c69676113e69e0e405c7"
+        "sha256": "350f37440852028c44f166c0e9659c3f284da00e246a71bf0d69e77b08f48787"
       },
       "orket.application.services.prompt_asset_service": {
         "path": "orket/application/services/prompt_asset_service.py",
@@ -1613,7 +1613,7 @@
       },
       "orket.application.services.prompt_linter": {
         "path": "orket/application/services/prompt_linter.py",
-        "sha256": "9affb7d318968a0d349c8b1fd4d63d5a2b15a1307c1b22620df662fbb2d4c6b1"
+        "sha256": "86416ef437638541f7bdf6b59b05481d25a9b4da578b1a7feeaf27c326a19213"
       },
       "orket.application.services.prompt_resolver": {
         "path": "orket/application/services/prompt_resolver.py",
@@ -1669,7 +1669,7 @@
       },
       "orket.application.services.runtime_input_service": {
         "path": "orket/application/services/runtime_input_service.py",
-        "sha256": "172af48f0a2171c0edc1d447b43ac6efdc0bfbcd8dd1466541f4af94afaf20bd"
+        "sha256": "089f18e5622c81759ad5b8a54c16efffbd6262efbabc9afb85170758f6a8ff2f"
       },
       "orket.application.services.runtime_policy": {
         "path": "orket/application/services/runtime_policy.py",
@@ -1818,6 +1818,10 @@
       "orket.application.services.scaffolder": {
         "path": "orket/application/services/scaffolder.py",
         "sha256": "d2dcb440b62c38f93c98d9a4a6fb45ef3f1ea7d4a40e2927617fa911d0c775fa"
+      },
+      "orket.application.services.schema_input_service": {
+        "path": "orket/application/services/schema_input_service.py",
+        "sha256": "fa86503ba5c06e67c7663df15cdf37ff28cd0f420fbe1dd481024a2965313f77"
       },
       "orket.application.services.sdk_llm_provider": {
         "path": "orket/application/services/sdk_llm_provider.py",
@@ -3445,7 +3449,7 @@
       },
       "orket.runtime.config.config_loader": {
         "path": "orket/runtime/config/config_loader.py",
-        "sha256": "e58902083d02b6181825a297d261a5b98d5a422b5376feaa7744d01d7f6b003a"
+        "sha256": "fbcdf40019b4b5c16484da09f4e1b10e660cd8d675338891b07ef9494d747d87"
       },
       "orket.runtime.config.contract_assets": {
         "path": "orket/runtime/config/contract_assets.py",
@@ -4401,7 +4405,7 @@
       },
       "orket.schema": {
         "path": "orket/schema.py",
-        "sha256": "1ad32b44c3c93bc6e41176ef28b6c8c0b806f3bb23f29fd5900f5c13585a846a"
+        "sha256": "f7d2bc468b08366d85a57a40c8dee3f170ddc45e73a485723be6c94461fe247a"
       },
       "orket.services.ast_validator": {
         "path": "orket/services/ast_validator.py",
@@ -14785,16 +14789,23 @@
       },
       {
         "source": "orket.application.services.prompt_asset_commands",
-        "target": "orket.core.contracts.prompt_assets",
+        "target": "orket.application.services.schema_input_service",
         "path": "orket/application/services/prompt_asset_commands.py",
         "line": 10,
         "kind": "from"
       },
       {
         "source": "orket.application.services.prompt_asset_commands",
-        "target": "orket.schema",
+        "target": "orket.core.contracts.prompt_assets",
         "path": "orket/application/services/prompt_asset_commands.py",
         "line": 11,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.prompt_asset_commands",
+        "target": "orket.schema",
+        "path": "orket/application/services/prompt_asset_commands.py",
+        "line": 12,
         "kind": "from"
       },
       {
@@ -14848,16 +14859,23 @@
       },
       {
         "source": "orket.application.services.prompt_linter",
-        "target": "orket.core.contracts.prompt_assets",
+        "target": "orket.application.services.schema_input_service",
         "path": "orket/application/services/prompt_linter.py",
         "line": 14,
         "kind": "from"
       },
       {
         "source": "orket.application.services.prompt_linter",
-        "target": "orket.schema",
+        "target": "orket.core.contracts.prompt_assets",
         "path": "orket/application/services/prompt_linter.py",
         "line": 15,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.prompt_linter",
+        "target": "orket.schema",
+        "path": "orket/application/services/prompt_linter.py",
+        "line": 16,
         "kind": "from"
       },
       {
@@ -16419,6 +16437,20 @@
         "target": "orket.schema",
         "path": "orket/application/services/sandbox_verification_service.py",
         "line": 17,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.schema_input_service",
+        "target": "orket.application.services.runtime_input_service",
+        "path": "orket/application/services/schema_input_service.py",
+        "line": 11,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.schema_input_service",
+        "target": "orket.schema",
+        "path": "orket/application/services/schema_input_service.py",
+        "line": 12,
         "kind": "from"
       },
       {
@@ -24081,51 +24113,65 @@
       },
       {
         "source": "orket.runtime.config.config_loader",
-        "target": "orket.exceptions",
+        "target": "orket.application.services.runtime_input_service",
         "path": "orket/runtime/config/config_loader.py",
         "line": 17,
         "kind": "from"
       },
       {
         "source": "orket.runtime.config.config_loader",
-        "target": "orket.logging",
+        "target": "orket.application.services.schema_input_service",
         "path": "orket/runtime/config/config_loader.py",
         "line": 18,
         "kind": "from"
       },
       {
         "source": "orket.runtime.config.config_loader",
-        "target": "orket.schema",
+        "target": "orket.exceptions",
         "path": "orket/runtime/config/config_loader.py",
-        "line": 21,
+        "line": 19,
+        "kind": "from"
+      },
+      {
+        "source": "orket.runtime.config.config_loader",
+        "target": "orket.logging",
+        "path": "orket/runtime/config/config_loader.py",
+        "line": 20,
         "kind": "from"
       },
       {
         "source": "orket.runtime.config.config_loader",
         "target": "orket.schema",
         "path": "orket/runtime/config/config_loader.py",
-        "line": 78,
+        "line": 23,
+        "kind": "from"
+      },
+      {
+        "source": "orket.runtime.config.config_loader",
+        "target": "orket.schema",
+        "path": "orket/runtime/config/config_loader.py",
+        "line": 82,
         "kind": "from"
       },
       {
         "source": "orket.runtime.config.config_loader",
         "target": "orket.settings",
         "path": "orket/runtime/config/config_loader.py",
-        "line": 79,
+        "line": 83,
         "kind": "from"
       },
       {
         "source": "orket.runtime.config.config_loader",
         "target": "orket.schema",
         "path": "orket/runtime/config/config_loader.py",
-        "line": 122,
+        "line": 126,
         "kind": "from"
       },
       {
         "source": "orket.runtime.config.config_loader",
         "target": "orket.schema",
         "path": "orket/runtime/config/config_loader.py",
-        "line": 139,
+        "line": 143,
         "kind": "from"
       },
       {
@@ -28297,14 +28343,14 @@
         "source": "orket.schema",
         "target": "orket.core.bottlenecks",
         "path": "orket/schema.py",
-        "line": 10,
+        "line": 8,
         "kind": "from"
       },
       {
         "source": "orket.schema",
         "target": "orket.core.types",
         "path": "orket/schema.py",
-        "line": 11,
+        "line": 9,
         "kind": "from"
       },
       {
@@ -28893,7 +28939,7 @@
         "forwarded_arguments": 2
       }
     ],
-    "files_scanned": 1099,
+    "files_scanned": 1100,
     "scan_roots": [
       "orket"
     ],
@@ -29323,6 +29369,7 @@
       "orket.application.services.sandbox_terminal_outcome_service": "application",
       "orket.application.services.sandbox_verification_service": "application",
       "orket.application.services.scaffolder": "application",
+      "orket.application.services.schema_input_service": "application",
       "orket.application.services.sdk_llm_provider": "application",
       "orket.application.services.sdk_memory_provider": "application",
       "orket.application.services.setup_service": "application",
@@ -30019,12 +30066,12 @@
       {
         "source": "application",
         "target": "application",
-        "count": 1681
+        "count": 1686
       },
       {
         "source": "application",
         "target": "core",
-        "count": 741
+        "count": 742
       },
       {
         "source": "application",
@@ -30071,45 +30118,6 @@
     }
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-19T10:00:17.569260Z",
-      "changed": true,
-      "before_digest": "sha256:5f4040f90a83ec06a91086f0143a0c57a75f67c72ccca5952638aa83d3acae57",
-      "after_digest": "sha256:726f2a4bcb3ab12ed9050ad448c2b5503f332c96bf3c0b55710cc533461bda9e",
-      "diff": {
-        "added_paths": 9,
-        "removed_paths": 6,
-        "changed_paths": 8324,
-        "initial_write": false,
-        "paths_total_previous": 44625,
-        "paths_total_current": 44639,
-        "paths_total_reference": 44639,
-        "churn_paths": 8339,
-        "churn_ratio": 0.18681,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.edges[1063].line",
-          "$.observed.edges[1063].path",
-          "$.observed.edges[1063].source",
-          "$.observed.edges[1063].target",
-          "$.observed.edges[1064].line",
-          "$.observed.edges[1064].path",
-          "$.observed.edges[1064].source",
-          "$.observed.edges[1064].target",
-          "$.observed.edges[1065].line",
-          "$.observed.edges[1065].path",
-          "$.observed.edges[1065].source",
-          "$.observed.edges[1065].target",
-          "$.observed.edges[1066].line",
-          "$.observed.edges[1066].path",
-          "$.observed.edges[1066].source",
-          "$.observed.edges[1066].target",
-          "$.observed.edges[1067].line",
-          "$.observed.edges[1067].path",
-          "$.observed.edges[1067].source"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-19T10:04:41.453436Z",
       "changed": true,
@@ -31032,6 +31040,45 @@
           "$.observed.edges[3415].target",
           "$.observed.edges[3416].line",
           "$.observed.edges[3416].target"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-20T21:02:27.186605Z",
+      "changed": true,
+      "before_digest": "sha256:ccb98ef9eea5703bf10336fec335a4e3f5953b3fe7108bcba625a31b738da0f3",
+      "after_digest": "sha256:418892cb5d04fc9d01b8a66277580cc3ac0022b8fed949e2d0c15253be08575c",
+      "diff": {
+        "added_paths": 8,
+        "removed_paths": 0,
+        "changed_paths": 6188,
+        "initial_write": false,
+        "paths_total_previous": 46284,
+        "paths_total_current": 46357,
+        "paths_total_reference": 46357,
+        "churn_paths": 6196,
+        "churn_ratio": 0.133658,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.edges[1466].target",
+          "$.observed.edges[1467].target",
+          "$.observed.edges[1468].line",
+          "$.observed.edges[1468].path",
+          "$.observed.edges[1468].source",
+          "$.observed.edges[1468].target",
+          "$.observed.edges[1469].line",
+          "$.observed.edges[1469].target",
+          "$.observed.edges[1470].line",
+          "$.observed.edges[1470].target",
+          "$.observed.edges[1471].line",
+          "$.observed.edges[1471].target",
+          "$.observed.edges[1472].line",
+          "$.observed.edges[1472].target",
+          "$.observed.edges[1473].line",
+          "$.observed.edges[1473].path",
+          "$.observed.edges[1473].source",
+          "$.observed.edges[1473].target",
+          "$.observed.edges[1474].line"
         ]
       }
     }
