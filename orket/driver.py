@@ -5,11 +5,12 @@ import json
 import os
 from collections.abc import Mapping
 from pathlib import Path
+from types import MappingProxyType
 from typing import Any
 
 from orket.adapters.llm.local_model_provider import LocalModelProvider
 from orket.adapters.storage.async_file_tools import AsyncFileTools
-from orket.application.services.driver_command_service import DriverCommandService
+from orket.application.services.driver_command_service import DriverCommandService, collect_driver_inventory
 from orket.application.services.local_model_factory import create_local_model_provider
 from orket.application.services.model_selection_service import prepare_bootstrap_model_selection
 from orket.application.services.reforger_service import ReforgerService
@@ -49,6 +50,7 @@ class OrketDriver(DriverResourceMixin, DriverConversationMixin):
         environment: Mapping[str, str] | None = None,
     ) -> None:
         captured_environment = dict(os.environ if environment is None else environment)
+        self._environment = MappingProxyType(captured_environment)
         self.project_root = Path(project_root).resolve() if project_root is not None else _default_project_root()
         self.model_root = default_model_root(self.project_root)
         self.workspace_root = default_workspace_root(self.project_root)
@@ -111,7 +113,7 @@ class OrketDriver(DriverResourceMixin, DriverConversationMixin):
         self.config_dependency_classification.clear()
         self.config_load_failures.clear()
         self.config_degraded = False
-        loader = ConfigLoader(self.project_root, "core")
+        loader = ConfigLoader(self.project_root, "core", environment=self._environment)
         skill_dependency = "skill.operations_lead"
         self.config_dependency_classification[skill_dependency] = "degradable"
 
@@ -172,21 +174,6 @@ class OrketDriver(DriverResourceMixin, DriverConversationMixin):
                 "Driver strict config mode requires governed prompting assets. "
                 f"load_failures={self.config_load_failures}"
             )
-
-    async def _get_inventory(self) -> dict[str, Any]:
-        inventory: dict[str, Any] = {"departments": {}}
-        for dept_dir in self.model_root.iterdir():
-            if dept_dir.is_dir():
-                dept_name = dept_dir.name
-                inventory["departments"][dept_name] = {
-                    "teams": [f.stem for f in (dept_dir / "teams").glob("*.json")]
-                    if (dept_dir / "teams").exists()
-                    else [],
-                    "skills": [f.stem for f in (dept_dir / "skills").glob("*.json")]
-                    if (dept_dir / "skills").exists()
-                    else [],
-                }
-        return inventory
 
     def _canonical_action_registry(self) -> dict[str, tuple[str, ...]]:
         return {
@@ -333,14 +320,8 @@ class OrketDriver(DriverResourceMixin, DriverConversationMixin):
                 return model_reply
             return "I can chat normally and help with Orket operations when you ask explicitly."
 
-        loader = ConfigLoader(self.project_root, "core")
-        inventory = await self._get_inventory()
-        context = {
-            "inventory": inventory,
-            "active_rocks": loader.list_assets("rocks"),
-            "active_epics": loader.list_assets("epics"),
-            "request": message,
-        }
+        context = await collect_driver_inventory(self.project_root, self.model_root, self._environment)
+        context["request"] = message
 
         if self.skill and self.dialect:
             system_prompt = f"IDENTITY: {self.skill.name}\nINTENT: {self.skill.intent}\n\n"

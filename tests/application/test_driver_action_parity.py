@@ -48,11 +48,12 @@ async def test_execute_plan_handles_all_advertised_actions(monkeypatch):
 
 
 @pytest.mark.asyncio
-# Layer: contract
+@pytest.mark.contract
 async def test_process_request_returns_stable_unsupported_action_error(tmp_path):
     """Verifies the prompt/executor guard with controlled model-selected actions."""
     driver = OrketDriver.__new__(OrketDriver)
     driver.project_root, driver.model_root = tmp_path, tmp_path / "model"
+    driver._environment = {}
     await asyncio.to_thread(driver.model_root.mkdir)
     driver.skill = None
     driver.dialect = None
@@ -71,11 +72,12 @@ async def test_process_request_returns_stable_unsupported_action_error(tmp_path)
 
 
 @pytest.mark.asyncio
-# Layer: contract
+@pytest.mark.contract
 async def test_process_request_treats_adopt_issue_as_unsupported_action(tmp_path):
     """Verifies the contract refuses a controlled `adopt_issue` model response."""
     driver = OrketDriver.__new__(OrketDriver)
     driver.project_root, driver.model_root = tmp_path, tmp_path / "model"
+    driver._environment = {}
     await asyncio.to_thread(driver.model_root.mkdir)
     driver.skill = None
     driver.dialect = None

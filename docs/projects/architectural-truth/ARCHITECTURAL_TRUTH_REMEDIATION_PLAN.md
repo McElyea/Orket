@@ -12520,7 +12520,7 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.60 organization-loop ownership and 0.6.61 package-resource completeness. Preserve the governed legacy-export cutover;
+0.6.62 driver inventory ownership, retaining the .61 package-resource repair. Preserve the governed legacy-export cutover;
 continue remaining clock/input owners, adapter enforcement and async reachability before E1/E2
 and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
@@ -19612,3 +19612,68 @@ remaining D input/adapter/async work, E1/E2, CAP, .43 Git timeout cause and .59'
 four live-provider cases remain open. No general resource-consumer reachability
 or arbitrary external-asset claim is made. Accepted BT evidence is preserved;
 the lane remains active pending required work and explicit user acceptance.
+
+#### .62 Driver inventory ownership and captured environment (2026-09-21)
+
+Model-context preparation now captures project/model roots and the environment
+before one owned worker constructs the config loader and side-effecting resource
+store, traverses department/team/skill filenames and gathers active rock/epic
+names. This removes native filesystem work and synchronous config bridges from
+the event-loop request path. Both driver config paths receive its detached,
+read-only construction-time environment. Explicit empty input is respected;
+explicit retired model-client configuration remains refused. The former private
+inventory implementation moves to storage/application ownership. Driver public
+construction and request signatures are unchanged. Contract:
+`docs/architecture/CONTRACT_DELTA_DRIVER_INVENTORY_D_2026-09-21.md`.
+
+Six retained before cases fail the predeclared 0.5-second concurrent SQLite bound:
+0.809695300, 0.805904700, 0.805032900, 0.802750100, 0.805339100 and 0.805944600
+seconds. They hold actual standard-configuration file handles during native
+inventory/asset traversal. Three further before cases show an explicitly empty
+environment overridden by ambient retired settings before/after construction,
+and an explicit retired setting ignored by the old config path. All nine pass
+after the change. The focused 55-case run also preserves driver conversation,
+CLI, parse-mode and action behavior. Constructor-bypassing contract fixtures now
+supply the required captured environment; changed cases receive actual markers.
+
+Interruption retains native work and open handles until release, including
+repeated cancellation and worker failure. All probe timers join and files close;
+no provider dispatch follows interrupted/failed preparation. Real authored
+inventory survives root/CWD/environment rotation after admission, combines
+existing config/legacy active names, and preserves a missing-model-root failure.
+Provider outputs are controlled in these tests; these are actual local file,
+SQLite and application-flow observations, not fresh model inference. No atomic
+multi-directory snapshot, frozen entire prompt/provider context or forced
+thread-stop guarantee is claimed.
+
+The 20-module selection includes affected direct imports, changed tests and all
+25 .61 case identities. This is bounded discovery, not complete reachability.
+
+| Cell | Cases / failures / errors / skips | JUnit seconds | Installed origins |
+|---|---|---|---|
+| Source Windows Python 3.11 | 108 / 0 / 0 / 0 | 9.968 | Source run |
+| Installed win-py311 | 108 / 0 / 0 / 0 | 9.981 | 912 |
+| Installed win-py312 | 108 / 0 / 0 / 0 | 11.828 | 912 |
+
+All 18 new responsiveness readings meet the unchanged 0.5-second bound; maximum
+0.006086600 seconds. Installed audits verify exact case identities, origins,
+copied inputs, actual CLI startup, controlled tool-gate checks and teardown.
+Complete source/wheel/sdist parity retains all 1,106 Python files and the same
+19 .61 data resources (1,125 members), with 2,175 support inputs.
+Wheel SHA-256: `7be85939b1c48746043c5cde1d73eacc6295f9bd6e74b5ee11f618fb9944a3ac`;
+sdist SHA-256: `6e14bc6b609ee20c5b26f1ac932e02bc1ce8f0cd48546e6f8834448bf7967c1a`.
+Every timed cell releases its scoped system-sleep request; no persistent power
+or deadline change occurs. Dependency policy v2 passes its actual verdict without
+new exceptions. Changed Python is Ruff-clean; canonical Ruff records 94
+findings. Driver size decreases from 453 to 434 lines; broader E2 splitting
+remains open. Both Quality jobs include the regressions.
+
+Observed path/result: **primary / success** for scoped local live effects and
+structural package/authority binding. Evidence: `.tmp/d-driver-inventory/`.
+The latest .60 passive Linux clock gate remains **blocked / environment blocker**;
+no new Linux observation/application acceptance is claimed. Remaining CLI and
+driver lifecycle ownership, replay reads, ConfigLoader sync callers, immutable
+inputs/adapter classification/full async inventory, E1/E2, whole-suite/89%,
+hosted Quality, CAP and .43's unknown Git-timeout cause stay open. Four .59
+provider-gated packet1 cases remain unverified. Accepted BT proof is retained;
+the lane remains active pending required implementation and explicit acceptance.

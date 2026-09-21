@@ -30,6 +30,18 @@ class DriverResourceStore:
             raise ValueError("DRIVER_RESOURCE_EXPECTED_OBJECT")
         return payload
 
+    def inventory(self) -> dict:
+        inventory = {"departments": {}}
+        for dept_dir in self.root.iterdir():
+            if dept_dir.is_dir():
+                inventory["departments"][dept_dir.name] = {
+                    "teams": [f.stem for f in (dept_dir / "teams").glob("*.json")]
+                    if (dept_dir / "teams").exists() else [],
+                    "skills": [f.stem for f in (dept_dir / "skills").glob("*.json")]
+                    if (dept_dir / "skills").exists() else [],
+                }
+        return inventory
+
     def write(self, path: Path, payload: dict) -> None:
         checked = self.path(str(path))
         write_verified_bytes(checked, (json.dumps(payload, indent=2, allow_nan=False) + "\n").encode())

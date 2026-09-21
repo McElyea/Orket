@@ -186,6 +186,13 @@ through the application service; environment extras fail without warning effects
 Contract: `docs/specs/SCHEMA_INPUT_OWNERSHIP.md`. Remaining effects, decision context,
 adapter classification and async reachability still require D acceptance.
 
+Driver model-context preparation captures project/model roots and environment
+before owned configuration and inventory work. Interruption retains native reads;
+worker failures and missing roots remain visible before provider dispatch.
+Constructor and request config loaders consume the same captured environment,
+including explicit empty inputs. Contract and remaining constructor/CLI scope:
+`docs/architecture/CONTRACT_DELTA_DRIVER_INVENTORY_D_2026-09-21.md`.
+
 Organization-loop async creation captures settings, root and environment before
 owned configuration loading. Scans and card construction remain owned through
 interruption; required cleanup gates caller completion. The canonical CLI loop

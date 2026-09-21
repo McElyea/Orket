@@ -17,7 +17,7 @@ class _AlwaysMissingLoader:
         raise FileNotFoundError(f"missing {asset_kind}/{asset_name}")
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_load_engine_configs_marks_degraded_and_emits_mode_event(monkeypatch, tmp_path):
     """Layer: contract. Verifies explicit degradation markers and telemetry for config load failures."""
     events = []
@@ -29,6 +29,7 @@ def test_load_engine_configs_marks_degraded_and_emits_mode_event(monkeypatch, tm
     monkeypatch.setattr("orket.driver.log_event", _capture)
     driver = OrketDriver.__new__(OrketDriver)
     driver.project_root = tmp_path
+    driver._environment = {}
     driver.provider = SimpleNamespace(model="qwen2.5-coder")
     driver.strict_config_mode = False
     driver.config_degraded = False
@@ -45,13 +46,14 @@ def test_load_engine_configs_marks_degraded_and_emits_mode_event(monkeypatch, tm
     assert any(name == "driver_prompting_mode" and payload["mode"] == "fallback" for name, payload in events)
 
 
-# Layer: unit
+@pytest.mark.unit
 def test_load_engine_configs_strict_mode_fails_closed(monkeypatch, tmp_path):
     """Layer: unit. Verifies strict mode blocks fallback prompting on missing config assets."""
     monkeypatch.setattr("orket.driver.ConfigLoader", _AlwaysMissingLoader)
     monkeypatch.setattr("orket.driver.log_event", lambda *_args, **_kwargs: None)
     driver = OrketDriver.__new__(OrketDriver)
     driver.project_root = tmp_path
+    driver._environment = {}
     driver.provider = SimpleNamespace(model="llama3.1")
     driver.strict_config_mode = True
     driver.config_degraded = False

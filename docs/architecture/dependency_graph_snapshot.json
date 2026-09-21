@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-21T14:23:57.279619+00:00",
+  "generated_at": "2026-09-21T14:39:26.059695+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -373,7 +373,7 @@
       },
       "orket.adapters.storage.driver_resource_store": {
         "path": "orket/adapters/storage/driver_resource_store.py",
-        "sha256": "738ab93f93af4ad13c4b772fe05ce2c714ef8d039f671397ffd14f4ef0057fe3"
+        "sha256": "a64173285e013b2363872b10f707c9f14f5a60e870c6556a74f4013448da32b4"
       },
       "orket.adapters.storage.dual_write_intent_store": {
         "path": "orket/adapters/storage/dual_write_intent_store.py",
@@ -997,7 +997,7 @@
       },
       "orket.application.services.driver_command_service": {
         "path": "orket/application/services/driver_command_service.py",
-        "sha256": "b3babc9ad2d385d67e1fb8de034a40b108dbce519f23051fb16135530363a646"
+        "sha256": "39b9cfd41341e2c51e1c62b0251d9220d1eb8e1bf06bca583919a427f4c8697a"
       },
       "orket.application.services.driver_reforger_command": {
         "path": "orket/application/services/driver_reforger_command.py",
@@ -2633,7 +2633,7 @@
       },
       "orket.driver": {
         "path": "orket/driver.py",
-        "sha256": "849dfec462e9b50f9bff0e1363bd5ce2db703b96ce121aaec12ce06848ded3f4"
+        "sha256": "bb05c497f14ebc251f2a54c6afa636f7f9abb4546cd96ff783ad387f403a2480"
       },
       "orket.driver_support_conversation": {
         "path": "orket/driver_support_conversation.py",
@@ -9117,35 +9117,42 @@
         "source": "orket.application.services.driver_command_service",
         "target": "orket.adapters.execution.owned_io",
         "path": "orket/application/services/driver_command_service.py",
-        "line": 6,
+        "line": 7,
         "kind": "from"
       },
       {
         "source": "orket.application.services.driver_command_service",
         "target": "orket.adapters.storage.driver_resource_store",
         "path": "orket/application/services/driver_command_service.py",
-        "line": 7,
+        "line": 8,
         "kind": "from"
       },
       {
         "source": "orket.application.services.driver_command_service",
         "target": "orket.application.services.driver_reforger_command",
         "path": "orket/application/services/driver_command_service.py",
-        "line": 8,
+        "line": 9,
         "kind": "from"
       },
       {
         "source": "orket.application.services.driver_command_service",
         "target": "orket.application.services.driver_resource_commands",
         "path": "orket/application/services/driver_command_service.py",
-        "line": 9,
+        "line": 10,
         "kind": "from"
       },
       {
         "source": "orket.application.services.driver_command_service",
         "target": "orket.application.services.reforger_service",
         "path": "orket/application/services/driver_command_service.py",
-        "line": 10,
+        "line": 11,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.driver_command_service",
+        "target": "orket.runtime.config.config_loader",
+        "path": "orket/application/services/driver_command_service.py",
+        "line": 12,
         "kind": "from"
       },
       {
@@ -20772,89 +20779,82 @@
         "source": "orket.driver",
         "target": "orket.adapters.llm.local_model_provider",
         "path": "orket/driver.py",
-        "line": 10,
+        "line": 11,
         "kind": "from"
       },
       {
         "source": "orket.driver",
         "target": "orket.adapters.storage.async_file_tools",
         "path": "orket/driver.py",
-        "line": 11,
+        "line": 12,
         "kind": "from"
       },
       {
         "source": "orket.driver",
         "target": "orket.application.services.driver_command_service",
         "path": "orket/driver.py",
-        "line": 12,
+        "line": 13,
         "kind": "from"
       },
       {
         "source": "orket.driver",
         "target": "orket.application.services.local_model_factory",
         "path": "orket/driver.py",
-        "line": 13,
+        "line": 14,
         "kind": "from"
       },
       {
         "source": "orket.driver",
         "target": "orket.application.services.model_selection_service",
         "path": "orket/driver.py",
-        "line": 14,
+        "line": 15,
         "kind": "from"
       },
       {
         "source": "orket.driver",
         "target": "orket.application.services.reforger_service",
         "path": "orket/driver.py",
-        "line": 15,
+        "line": 16,
         "kind": "from"
       },
       {
         "source": "orket.driver",
         "target": "orket.driver_support_conversation",
         "path": "orket/driver.py",
-        "line": 16,
+        "line": 17,
         "kind": "from"
       },
       {
         "source": "orket.driver",
         "target": "orket.driver_support_resources",
         "path": "orket/driver.py",
-        "line": 17,
+        "line": 18,
         "kind": "from"
       },
       {
         "source": "orket.driver",
         "target": "orket.exceptions",
         "path": "orket/driver.py",
-        "line": 18,
+        "line": 19,
         "kind": "from"
       },
       {
         "source": "orket.driver",
         "target": "orket.logging",
         "path": "orket/driver.py",
-        "line": 19,
+        "line": 20,
         "kind": "from"
       },
       {
         "source": "orket.driver",
         "target": "orket.project_paths",
         "path": "orket/driver.py",
-        "line": 20,
-        "kind": "from"
-      },
-      {
-        "source": "orket.driver",
-        "target": "orket.runtime.__init__",
-        "path": "orket/driver.py",
         "line": 21,
         "kind": "from"
       },
       {
         "source": "orket.driver",
-        "target": "orket.schema",
+        "target": "orket.runtime.__init__",
         "path": "orket/driver.py",
         "line": 22,
         "kind": "from"
@@ -20863,7 +20863,14 @@
         "source": "orket.driver",
         "target": "orket.schema",
         "path": "orket/driver.py",
-        "line": 58,
+        "line": 23,
+        "kind": "from"
+      },
+      {
+        "source": "orket.driver",
+        "target": "orket.schema",
+        "path": "orket/driver.py",
+        "line": 60,
         "kind": "from"
       },
       {
@@ -30495,7 +30502,7 @@
       {
         "source": "application",
         "target": "application",
-        "count": 1717
+        "count": 1718
       },
       {
         "source": "application",
@@ -30547,27 +30554,6 @@
     }
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-20T16:51:42.304513Z",
-      "changed": true,
-      "before_digest": "sha256:167d31b269b033c085306360c0fe51f1538fdc9a3c94df7b1075582088b443a2",
-      "after_digest": "sha256:34c5606fe7128560c6625e0ed33921044c64e43389eeb9fa2726ba23e1a98e5b",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 2,
-        "initial_write": false,
-        "paths_total_previous": 46263,
-        "paths_total_current": 46263,
-        "paths_total_reference": 46263,
-        "churn_paths": 2,
-        "churn_ratio": 4.3e-05,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.modules.orket.application.services.extension_workload_control_plane_service.sha256"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-20T17:44:36.532698Z",
       "changed": true,
@@ -31543,6 +31529,45 @@
         "churn_ratio": 2.1e-05,
         "sample_paths": [
           "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-21T14:39:45.216639Z",
+      "changed": true,
+      "before_digest": "sha256:5960f3e46570da79349678374f9c6b48fcb4b80696731259d0a22fa5ff6da831",
+      "after_digest": "sha256:1f24b3291211089669f8eff295ae5798aaef03544e64cbdbab6ceef03164806c",
+      "diff": {
+        "added_paths": 1,
+        "removed_paths": 0,
+        "changed_paths": 6956,
+        "initial_write": false,
+        "paths_total_previous": 47026,
+        "paths_total_current": 47037,
+        "paths_total_reference": 47037,
+        "churn_paths": 6957,
+        "churn_ratio": 0.147905,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.edges[652].line",
+          "$.observed.edges[653].line",
+          "$.observed.edges[654].line",
+          "$.observed.edges[655].line",
+          "$.observed.edges[656].line",
+          "$.observed.edges[657].line",
+          "$.observed.edges[657].path",
+          "$.observed.edges[657].source",
+          "$.observed.edges[657].target",
+          "$.observed.edges[658].line",
+          "$.observed.edges[658].path",
+          "$.observed.edges[658].source",
+          "$.observed.edges[658].target",
+          "$.observed.edges[659].line",
+          "$.observed.edges[659].target",
+          "$.observed.edges[660].path",
+          "$.observed.edges[660].source",
+          "$.observed.edges[660].target",
+          "$.observed.edges[661].line"
         ]
       }
     }

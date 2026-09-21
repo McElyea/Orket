@@ -1,5 +1,6 @@
 """Captured operator commands with owned resource/compiler effects."""
 import shlex
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -8,6 +9,20 @@ from orket.adapters.storage.driver_resource_store import DriverResourceStore
 from orket.application.services.driver_reforger_command import DriverReforgerCommand
 from orket.application.services.driver_resource_commands import DriverResourceCommands
 from orket.application.services.reforger_service import ReforgerService
+from orket.runtime.config.config_loader import ConfigLoader
+
+
+async def collect_driver_inventory(project_root: Path, model_root: Path, environment: Mapping[str, str]) -> dict:
+    project, model, captured_environment = Path(project_root), Path(model_root), dict(environment)
+    if not project.is_absolute() or not model.is_absolute():
+        raise ValueError("DRIVER_INVENTORY_ROOTS_MUST_BE_ABSOLUTE")
+
+    def collect() -> dict:
+        loader = ConfigLoader(project, "core", environment=captured_environment)
+        return {"inventory": DriverResourceStore(model).inventory(),
+                "active_rocks": loader.list_assets("rocks"), "active_epics": loader.list_assets("epics")}
+
+    return await run_owned_thread(collect, label="driver-inventory")
 
 
 @dataclass(frozen=True)

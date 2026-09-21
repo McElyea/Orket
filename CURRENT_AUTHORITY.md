@@ -35,6 +35,13 @@ orchestrator clock observations keep their existing second precision. Migration
 and remaining lifecycle input scope:
 `docs/architecture/CONTRACT_DELTA_SANDBOX_CREATION_INPUTS_D_2026-09-20.md`.
 
+Driver model-context preparation captures project/model roots and environment
+before owned configuration and inventory work. Interruption retains native reads;
+worker failures and missing roots remain visible before provider dispatch.
+Constructor and request config loaders consume the same captured environment,
+including explicit empty inputs. Contract and remaining constructor/CLI scope:
+`docs/architecture/CONTRACT_DELTA_DRIVER_INVENTORY_D_2026-09-21.md`.
+
 Organization-loop async creation captures settings, root and environment before
 owned configuration loading. Scans and card construction remain owned through
 interruption; required cleanup gates caller completion. The canonical CLI loop

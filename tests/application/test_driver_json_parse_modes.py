@@ -92,11 +92,12 @@ def test_parse_model_plan_strict_mode_rejects_wrapped_json(monkeypatch):
 
 
 @pytest.mark.asyncio
-# Layer: contract
+@pytest.mark.contract
 async def test_process_request_strict_mode_rejects_non_json_envelope_output(tmp_path):
     """Verifies strict mode through the driver with controlled model output."""
     driver = OrketDriver.__new__(OrketDriver)
     driver.project_root, driver.model_root = tmp_path, tmp_path / "model"
+    driver._environment = {}
     await asyncio.to_thread(driver.model_root.mkdir)
     driver.skill = None
     driver.dialect = None
@@ -115,7 +116,7 @@ async def test_process_request_strict_mode_rejects_non_json_envelope_output(tmp_
 
 
 @pytest.mark.asyncio
-# Layer: contract
+@pytest.mark.contract
 async def test_process_request_compatibility_mode_surfaces_degraded_parse(monkeypatch, tmp_path):
     """Verifies controlled non-JSON output produces a visible compatibility warning."""
     events = []
@@ -126,6 +127,7 @@ async def test_process_request_compatibility_mode_surfaces_degraded_parse(monkey
     monkeypatch.setattr("orket.driver.log_event", _capture)
     driver = OrketDriver.__new__(OrketDriver)
     driver.project_root, driver.model_root = tmp_path, tmp_path / "model"
+    driver._environment = {}
     await asyncio.to_thread(driver.model_root.mkdir)
     driver.skill = None
     driver.dialect = None

@@ -5,6 +5,17 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.62] - 2026-09-21
+
+### Fixed
+- Own driver model-context inventory and configuration preparation through cancellation and timeout.
+- Carry the driver's captured environment through both config paths, including explicit empty inputs and retired-setting refusal.
+- Preserve authored inventory, config/legacy asset discovery and missing-root failures.
+- `compatibility_status`: `compatible`
+- `affected_audience`: `all`
+- `migration_requirement`: None for supported construction and invocation.
+- Contract and remaining scope: `docs/architecture/CONTRACT_DELTA_DRIVER_INVENTORY_D_2026-09-21.md`.
+
 ## [0.6.61] - 2026-09-21
 
 ### Fixed
