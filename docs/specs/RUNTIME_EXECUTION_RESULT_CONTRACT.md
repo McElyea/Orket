@@ -148,6 +148,25 @@ cancellation and cannot leave caller success after interrupted or failed cleanup
 The loop's running flag is cleared on exit. The ten-second idle wait and explicit
 yield after a card remain unchanged; no forced worker-stop deadline is introduced.
 
+## Runtime CLI construction and inspection
+
+The canonical runtime CLI captures construction inputs after startup settings are
+bound, resolves the workspace against that captured root, and admits the engine
+through the shared owned factory. A completed engine that cannot transfer to an
+interrupted caller closes before interruption is reported. Constructor failures
+remain visible under the existing unreturned-resource limit.
+
+Application inspection owns native path resolution, board/replay reads and
+manifest output through cancellation, timeout and worker failure. Relative path
+resolution binds its invocation root before worker admission. Required engine
+close still gates return. Existing typed results, fatal/cancellation exits and
+artifact-only replay classification are unchanged. Printed manifest fragments
+are not rolled back after interruption.
+
+This does not complete interactive-driver constructor/stdin/provider ownership,
+API read migration, all mutable inspection inputs or the full async inventory.
+Argument declarations moved to a grouped module without changing their grammar.
+
 ## Verification and limits
 
 Required proof includes actual successful and unsuccessful workloads through the

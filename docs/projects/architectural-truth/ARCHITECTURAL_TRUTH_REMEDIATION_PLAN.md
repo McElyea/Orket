@@ -12520,7 +12520,7 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.62 driver inventory ownership, retaining the .61 package-resource repair. Preserve the governed legacy-export cutover;
+0.6.63 runtime CLI construction and inspection ownership. Preserve the governed legacy-export cutover;
 continue remaining clock/input owners, adapter enforcement and async reachability before E1/E2
 and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
@@ -19677,3 +19677,102 @@ inputs/adapter classification/full async inventory, E1/E2, whole-suite/89%,
 hosted Quality, CAP and .43's unknown Git-timeout cause stay open. Four .59
 provider-gated packet1 cases remain unverified. Accepted BT proof is retained;
 the lane remains active pending required implementation and explicit acceptance.
+
+#### .63 Runtime CLI construction and inspection ownership (2026-09-21)
+
+The CLI captures runtime construction inputs after startup settings bind, resolves
+its workspace against that captured root and admits the engine through the shared
+owned factory. A completed engine that cannot transfer to its interrupted caller
+closes before return. Application inspection owns native path resolution,
+board/replay reads and manifest output through interruption and worker failure.
+Relative path resolution captures the invocation root before scheduling. Required
+engine cleanup and typed runtime result/exit semantics remain authoritative;
+artifact replay is still diagnostic-only. Canonical environment bootstrap remains
+before the event loop, with no second ambient .env load in the owned constructor.
+Contract: `docs/architecture/CONTRACT_DELTA_CLI_RUNTIME_OWNERSHIP_D_2026-09-21.md`.
+
+Twelve initial source counterexamples fail: nine construction/board/replay cases
+exceed the unchanged 0.5-second concurrent SQLite bound (0.801782900 to
+0.809087200 seconds), and three manifest cases let the caller finish while its
+native file remains held. The first candidate passes eleven and fails one:
+the test callback constructs an engine, then injects failure before returning it
+and incorrectly expects the factory to recover that hidden instance. The existing
+contract explicitly excludes recovery of resources never returned by a
+constructor. Original failure and inputs are retained. The corrected failure
+callback performs its held native read before constructing an owner and asserts
+that no instance is created; cancellation/timeout cases still require every
+returned engine to close. No product guarantee was broadened to hide this limit.
+
+All twelve corrected current test cases also fail against the isolated installed
+published v0.6.62 wheel, after every installed member is compared with that wheel.
+The candidate then passes 36 focused cases, including the actual native CLI
+pending/incomplete/signal/repeated-cancel outcomes for card/epic/rock aliases,
+organization-loop acceptance/refusal and startup contracts. Controlled startup
+and provider-inventory inputs in the boundary probes are explicit; the retained
+native lifecycle cases run actual bootstrap, SQLite and runtime publication with
+controlled workloads. The native lifecycle fixture accepts and passes the real
+captured construction inputs through its observed engine factory. Four additional
+path cases prove owned cancellation/timeout/failure and root capture across CWD
+rotation. These are local end-to-end/application effects, not fresh inference.
+
+The first full source run passes all 189 cases. The initial installed Windows
+3.11 run passes 188 and fails the construction-timeout probe in 0.061 seconds:
+its 50-millisecond whole-CLI deadline expires during startup, before the held
+constructor is admitted. The CLI returns cancellation; that case does not prove
+admitted-worker ownership. Its exact inputs and failure remain retained, and no
+initial Windows 3.12 cell was run. The corrected boundary probe arms its existing
+50-millisecond timeout at native admission within the five-second outer/admission
+bound. A separate actual-startup case retains the 50-millisecond whole-CLI deadline
+and proves that the startup worker is joined before exit 130, without constructing
+an engine. The 0.5-second SQLite bound, 0.8-second release timer and runtime
+deadlines remain unchanged. All 17 focused cases pass. Against byte-verified
+installed v0.6.62, the same final tests produce 16 failures and one pass: existing
+startup ownership already passes. Only this test file changed after the original
+freeze; it is absent from the sdist. Exact unchanged product artifacts and the
+source environment are reused for fresh full source and both installed cells.
+
+The parser's existing declarations move into command-family groups in one
+`cli_arguments.py` authority. Thirteen actual before/after argparse vectors match
+exactly, including defaults, option order/help, valid command families and invalid
+argument errors. CLI shrinks from 455 to 320 lines; the 150-line argument module
+and every new function meet size bounds. This is a scoped extraction, not full E2
+completion. Both Quality jobs include the ownership regressions.
+
+The 33-module selection retains all 108 .62 case identities and adds affected
+imports and explicit native CLI flows; it is bounded discovery, not a complete
+call graph.
+
+| Cell | Cases / failures / errors / skips | JUnit seconds | Installed origins |
+|---|---|---|---|
+| Source Windows Python 3.11 | 190 / 0 / 0 / 0 | 100.242 | Source run |
+| Installed win-py311 | 190 / 0 / 0 / 0 | 101.039 | 929 |
+| Installed win-py312 | 190 / 0 / 0 / 0 | 107.824 | 929 |
+
+All 48 new SQLite responsiveness readings meet 0.5 seconds; maximum
+0.045890100 seconds. Native audits bind exact cases, copied inputs, installed
+origins, actual CLI startup, controlled tool gates and teardown. Complete parity
+covers 1,108 Python files and all 19 unchanged .61 data resources,
+1,127 core members, and 2,178 support inputs.
+Wheel SHA-256: `1a131416c4d43fe3b1dd8b350efe624724c344743fef6cb87901dd1e028f9702`;
+sdist SHA-256: `8aa087bec9694fcf28cfed1954b8347f61a3bf2e7bb6ca145a4c43ed9ac04ec5`.
+Timed Windows cells release their scoped system-sleep requests; no persistent
+power or deadline change occurs. Policy v2's actual dependency verdict passes;
+changed Python is Ruff-clean and canonical Ruff records 94 findings.
+
+The fresh unchanged passive Linux gate remains **blocked / environment blocker**:
+240.012121 seconds observed, 8.965546
+synchronized quiet seconds against the required 60, maximum/minimum offset steps
+0.979471886/-0.255243864
+seconds against the unchanged 0.01 threshold. Journal query exits 0;
+cause remains unknown. This .63 observation supersedes .60 as the latest passive
+gate. No Linux application cell or clock adjustment is claimed.
+
+Observed Windows path/result: **primary / success**, with scoped live local
+effects and structural artifact/authority proof. Evidence:
+`.tmp/d-cli-runtime-ownership/` and the fresh final matrix
+`.tmp/d-cli-runtime-ownership-final/`. Interactive-driver construction/stdin/provider
+cleanup, API observation/replay reads, broader captured inputs, ConfigLoader sync
+callers, adapter classification/full async inventory, E1/E2, whole-suite/89%,
+hosted Quality and CAP remain open. The .43 Git timeout cause and four .59
+provider-gated packet1 cases remain unverified. Accepted BT evidence is retained;
+the lane remains active pending required work and explicit user acceptance.

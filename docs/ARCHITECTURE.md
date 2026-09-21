@@ -186,6 +186,13 @@ through the application service; environment extras fail without warning effects
 Contract: `docs/specs/SCHEMA_INPUT_OWNERSHIP.md`. Remaining effects, decision context,
 adapter classification and async reachability still require D acceptance.
 
+The runtime CLI captures engine inputs after startup and owns engine construction
+through interruption. Board/replay reads, manifest output and native path
+resolution retain their workers; a completed untransferred engine is closed.
+Argument declarations remain one authority in `orket/interfaces/cli_arguments.py`.
+Contract and remaining interactive-driver/API read scope:
+`docs/architecture/CONTRACT_DELTA_CLI_RUNTIME_OWNERSHIP_D_2026-09-21.md`.
+
 Driver model-context preparation captures project/model roots and environment
 before owned configuration and inventory work. Interruption retains native reads;
 worker failures and missing roots remain visible before provider dispatch.

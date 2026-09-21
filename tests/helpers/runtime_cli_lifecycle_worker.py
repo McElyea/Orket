@@ -59,8 +59,9 @@ async def native_workload(root, case):
 
 
 def configure_engine(root, case):
-    def create(workspace, department):
-        engine = OrchestrationEngine(workspace, department, db_path=str(root / "cards.db"), config_root=root)
+    def create(workspace, department, **kwargs):
+        kwargs.update(db_path=str(root / "cards.db"), config_root=root)
+        engine = OrchestrationEngine(workspace, department, **kwargs)
         pipeline = engine._pipeline
         if case == "pending":
             pipeline.orchestrator.loop_policy_node.approval_required_tools_for_seat = (

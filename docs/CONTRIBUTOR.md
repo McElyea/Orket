@@ -156,6 +156,13 @@ for child processes, then bind explicit empty snapshots in their fixture;
 production behavior does not inspect `PYTEST_CURRENT_TEST`. CLI startup binds
 persisted settings after onboarding before constructing runtime components.
 
+The canonical `orket runtime` command bootstraps environment before its event
+loop. Direct async CLI embeddings must do the same before entering the loop;
+engine construction captures the post-startup settings and environment, and does
+not reload a second ambient `.env` in its worker. CLI engine/read ownership and
+remaining interactive-driver scope are documented in
+`docs/architecture/CONTRACT_DELTA_CLI_RUNTIME_OWNERSHIP_D_2026-09-21.md`.
+
 Async organization embeddings await `OrganizationLoop.create()` before
 `run_forever()`; the canonical `orket runtime --loop` uses that factory. Direct
 synchronous construction refuses an event-loop thread before configuration I/O.

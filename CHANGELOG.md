@@ -5,6 +5,17 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.63] - 2026-09-21
+
+### Fixed
+- Own CLI engine construction, board/replay/manifest work and path resolution through interruption.
+- Capture engine construction inputs after startup and close a returned engine that cannot be transferred to its interrupted caller.
+- Split argument declarations without changing options, defaults, help text or error output.
+- `compatibility_status`: `compatible`
+- `affected_audience`: `all`
+- `migration_requirement`: None for the canonical `orket runtime` entrypoint; direct async embeddings bootstrap environment before entering their event loop.
+- Contract and remaining scope: `docs/architecture/CONTRACT_DELTA_CLI_RUNTIME_OWNERSHIP_D_2026-09-21.md`.
+
 ## [0.6.62] - 2026-09-21
 
 ### Fixed
