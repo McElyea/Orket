@@ -1,6 +1,6 @@
 # Epic bootstrap and summary time inputs
 
-Last updated: 2026-09-19
+Last updated: 2026-09-20
 Status: Active contract; scoped acceptance belongs to the architectural-truth plan.
 
 The standard `ExecutionPipeline` receives a `RuntimeInputService`. Epic bootstrap
@@ -14,6 +14,9 @@ publication retries preserve that captured timestamp. A worker failure remains
 unresolved; published bootstrap files can precede interruption of ledger startup.
 The publication budget, refusal and retained-evidence contract is
 `docs/architecture/CONTRACT_DELTA_RUN_START_PUBLICATION_D_2026-09-19.md`.
+
+Epic setup also takes one calendar observation before asset reads. Its separate
+sprint capture and baseline ownership are defined in `REMAINING_RUNTIME_INPUTS.md`.
 
 Epic outcome observation and preparation/publication continue to use that
 service's existing UTC input seam. Protocol-ledger event timestamps have their

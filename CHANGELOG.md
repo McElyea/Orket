@@ -5,6 +5,17 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.52] - 2026-09-20
+
+### Fixed
+- Capture Agent model-family configuration before role reads and refuse malformed operator JSON instead of silently defaulting.
+- Use the selected turn clock for Agent journal publication and retain explicit publication timestamps across awaits.
+- Capture one epic sprint from the selected runtime clock and immutable baseline before asset reads, preserving existing card values.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Use explicit model-family environment decoding and migrate custom epic setup/journal-builder callers. Migration: `docs/architecture/CONTRACT_DELTA_REMAINING_RUNTIME_INPUTS_D_2026-09-20.md`.
+
 ## [0.6.51] - 2026-09-20
 
 ### Fixed

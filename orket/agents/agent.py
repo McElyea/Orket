@@ -5,10 +5,11 @@ import hashlib
 import inspect
 import json
 import logging
+import os
 import re
 import threading
-from collections.abc import Callable
-from datetime import UTC, datetime
+from collections.abc import Callable, Mapping
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -97,12 +98,15 @@ class Agent:
         strict_config: bool = True,
         journal: ControlPlaneAuthorityService | NullControlPlaneAuthorityService | None = None,
         turn_clock: Callable[[], datetime] = utc_now_datetime,
+        environment: Mapping[str, str] | None = None,
     ) -> None:
         self.name = name
         self.turn_clock = turn_clock
         self.description = description
         self.tools = tools
         self.provider = provider
+        self._model_name = provider.model
+        self._model_family = ModelFamilyRegistry.from_environment(os.environ if environment is None else environment).resolve(self._model_name)
         self.next_member = next_member
         self._prompt_patch = prompt_patch
         if config_root is None:
@@ -118,8 +122,7 @@ class Agent:
 
         self.skill: SkillConfig | None = None
         self.dialect: DialectConfig | None = None
-        self._configs_loaded = False
-        self._config_load_lock = threading.Lock()
+        self._configs_loaded, self._config_load_lock = False, threading.Lock()
 
     def _load_configs(self) -> None:
         loader = ConfigLoader(self.config_root, "core")
@@ -137,13 +140,12 @@ class Agent:
                 role=self.name,
             )
 
-        model_name = self.provider.model.lower()
-        model_family_match = ModelFamilyRegistry.from_config().resolve(model_name)
+        model_family_match = self._model_family
         family = model_family_match.family
         if not model_family_match.recognized:
             log_event(
                 "model_family_unrecognized",
-                {"agent": self.name, "model": self.provider.model, "family": family},
+                {"agent": self.name, "model": self._model_name, "family": family},
                 workspace=Path("workspace/default"),
                 role=self.name,
                 level="warn",
@@ -155,7 +157,7 @@ class Agent:
             if self.strict_config:
                 raise AgentConfigurationError(
                     "agent dialect asset load failed: "
-                    f"agent={self.name} model={self.provider.model} family={family} config_root={self.config_root}"
+                    f"agent={self.name} model={self._model_name} family={family} config_root={self.config_root}"
                 ) from e
             log_event(
                 "agent_dialect_asset_missing",
@@ -191,7 +193,7 @@ class Agent:
         transcript: list[dict[str, Any]] | None = None,
     ) -> ExecutionTurn:
         """Executes the turn and returns a structured ExecutionTurn object."""
-        turn_clock = self.turn_clock
+        turn_clock, journal_timestamp = self.turn_clock, str(context.get("journal_publication_timestamp") or "")
         await self._ensure_configs_loaded_async()
 
         # 1. COMPILE INSTRUCTIONS
@@ -364,7 +366,7 @@ class Agent:
                     outcome=None,
                     error=str(e),
                     tool_index=index,
-                    previous_entry=previous_effect_entry,
+                    previous_entry=previous_effect_entry, publication_timestamp=journal_timestamp or turn_clock().isoformat(),
                 )
                 if previous_effect_entry is not None:
                     turn.raw.setdefault("effect_journal_entries", []).append(
@@ -379,7 +381,7 @@ class Agent:
                 outcome=res,
                 error=None,
                 tool_index=index,
-                previous_entry=previous_effect_entry,
+                previous_entry=previous_effect_entry, publication_timestamp=journal_timestamp or turn_clock().isoformat(),
             )
             if previous_effect_entry is not None:
                 turn.raw.setdefault("effect_journal_entries", []).append(
@@ -399,7 +401,7 @@ class Agent:
         outcome: Any | None,
         error: str | None,
         tool_index: int,
-        previous_entry: Any | None,
+        previous_entry: Any | None, publication_timestamp: str,
     ) -> Any | None:
         journal = self.journal
         if journal is None or isinstance(journal, NullControlPlaneAuthorityService):
@@ -422,9 +424,7 @@ class Agent:
             attempt_id=attempt_id,
             step_id=step_id,
             authorization_basis_ref=str(context.get("authorization_basis_ref") or f"agent-tool-auth:{tool_digest}"),
-            publication_timestamp=str(
-                context.get("journal_publication_timestamp") or datetime.now(UTC).isoformat()
-            ),
+            publication_timestamp=publication_timestamp,
             intended_target_ref=str(context.get("intended_target_ref") or f"tool:{tool_name}:{tool_digest}"),
             observed_result_ref=result_ref,
             uncertainty_classification=uncertainty,

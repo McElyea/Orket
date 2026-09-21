@@ -1,0 +1,523 @@
+{
+  "source_version": "0.6.51",
+  "wheel_sha256": "eb8288625f86c3e7302a03a0681b735cb625dc6a47fb43d42e07285fa7317a37",
+  "scope": "Explicit model-family normalization with empty operator environment; legacy calendar over explicit datetimes and independently controlled baseline environment, including observed rejection of naive dates. This is not elapsed-time or model-inference proof.",
+  "cases": [
+    {
+      "kind": "model_family",
+      "config": null,
+      "name": "probe-model",
+      "result": {
+        "family": "generic",
+        "recognized": false
+      }
+    },
+    {
+      "kind": "model_family",
+      "config": null,
+      "name": "qwen",
+      "result": {
+        "family": "qwen",
+        "recognized": true
+      }
+    },
+    {
+      "kind": "model_family",
+      "config": null,
+      "name": "llama",
+      "result": {
+        "family": "llama3",
+        "recognized": true
+      }
+    },
+    {
+      "kind": "model_family",
+      "config": null,
+      "name": "unknown",
+      "result": {
+        "family": "generic",
+        "recognized": false
+      }
+    },
+    {
+      "kind": "model_family",
+      "config": {},
+      "name": "probe-model",
+      "result": {
+        "family": "generic",
+        "recognized": false
+      }
+    },
+    {
+      "kind": "model_family",
+      "config": {},
+      "name": "qwen",
+      "result": {
+        "family": "qwen",
+        "recognized": true
+      }
+    },
+    {
+      "kind": "model_family",
+      "config": {},
+      "name": "llama",
+      "result": {
+        "family": "llama3",
+        "recognized": true
+      }
+    },
+    {
+      "kind": "model_family",
+      "config": {},
+      "name": "unknown",
+      "result": {
+        "family": "generic",
+        "recognized": false
+      }
+    },
+    {
+      "kind": "model_family",
+      "config": [],
+      "name": "probe-model",
+      "result": {
+        "family": "generic",
+        "recognized": false
+      }
+    },
+    {
+      "kind": "model_family",
+      "config": [],
+      "name": "qwen",
+      "result": {
+        "family": "qwen",
+        "recognized": true
+      }
+    },
+    {
+      "kind": "model_family",
+      "config": [],
+      "name": "llama",
+      "result": {
+        "family": "llama3",
+        "recognized": true
+      }
+    },
+    {
+      "kind": "model_family",
+      "config": [],
+      "name": "unknown",
+      "result": {
+        "family": "generic",
+        "recognized": false
+      }
+    },
+    {
+      "kind": "model_family",
+      "config": {
+        "probe": "owned"
+      },
+      "name": "probe-model",
+      "result": {
+        "family": "owned",
+        "recognized": true
+      }
+    },
+    {
+      "kind": "model_family",
+      "config": {
+        "probe": "owned"
+      },
+      "name": "qwen",
+      "result": {
+        "family": "qwen",
+        "recognized": true
+      }
+    },
+    {
+      "kind": "model_family",
+      "config": {
+        "probe": "owned"
+      },
+      "name": "llama",
+      "result": {
+        "family": "llama3",
+        "recognized": true
+      }
+    },
+    {
+      "kind": "model_family",
+      "config": {
+        "probe": "owned"
+      },
+      "name": "unknown",
+      "result": {
+        "family": "generic",
+        "recognized": false
+      }
+    },
+    {
+      "kind": "model_family",
+      "config": [
+        {
+          "contains": "probe",
+          "model_family": "alias"
+        }
+      ],
+      "name": "probe-model",
+      "result": {
+        "family": "alias",
+        "recognized": true
+      }
+    },
+    {
+      "kind": "model_family",
+      "config": [
+        {
+          "contains": "probe",
+          "model_family": "alias"
+        }
+      ],
+      "name": "qwen",
+      "result": {
+        "family": "qwen",
+        "recognized": true
+      }
+    },
+    {
+      "kind": "model_family",
+      "config": [
+        {
+          "contains": "probe",
+          "model_family": "alias"
+        }
+      ],
+      "name": "llama",
+      "result": {
+        "family": "llama3",
+        "recognized": true
+      }
+    },
+    {
+      "kind": "model_family",
+      "config": [
+        {
+          "contains": "probe",
+          "model_family": "alias"
+        }
+      ],
+      "name": "unknown",
+      "result": {
+        "family": "generic",
+        "recognized": false
+      }
+    },
+    {
+      "kind": "model_family",
+      "config": [
+        {},
+        {
+          "pattern": "",
+          "family": ""
+        }
+      ],
+      "name": "probe-model",
+      "result": {
+        "family": "generic",
+        "recognized": false
+      }
+    },
+    {
+      "kind": "model_family",
+      "config": [
+        {},
+        {
+          "pattern": "",
+          "family": ""
+        }
+      ],
+      "name": "qwen",
+      "result": {
+        "family": "qwen",
+        "recognized": true
+      }
+    },
+    {
+      "kind": "model_family",
+      "config": [
+        {},
+        {
+          "pattern": "",
+          "family": ""
+        }
+      ],
+      "name": "llama",
+      "result": {
+        "family": "llama3",
+        "recognized": true
+      }
+    },
+    {
+      "kind": "model_family",
+      "config": [
+        {},
+        {
+          "pattern": "",
+          "family": ""
+        }
+      ],
+      "name": "unknown",
+      "result": {
+        "family": "generic",
+        "recognized": false
+      }
+    },
+    {
+      "kind": "model_family",
+      "config": "unsupported",
+      "name": "probe-model",
+      "result": {
+        "family": "generic",
+        "recognized": false
+      }
+    },
+    {
+      "kind": "model_family",
+      "config": "unsupported",
+      "name": "qwen",
+      "result": {
+        "family": "qwen",
+        "recognized": true
+      }
+    },
+    {
+      "kind": "model_family",
+      "config": "unsupported",
+      "name": "llama",
+      "result": {
+        "family": "llama3",
+        "recognized": true
+      }
+    },
+    {
+      "kind": "model_family",
+      "config": "unsupported",
+      "name": "unknown",
+      "result": {
+        "family": "generic",
+        "recognized": false
+      }
+    },
+    {
+      "kind": "calendar",
+      "environment": {},
+      "stamp": "2026-02-02T12:00:00+00:00",
+      "result": "Q1 S6"
+    },
+    {
+      "kind": "calendar",
+      "environment": {},
+      "stamp": "2026-02-01T23:00:00-07:00",
+      "result": "Q1 S5"
+    },
+    {
+      "kind": "calendar",
+      "environment": {},
+      "stamp": "2026-02-09T00:00:00+12:00",
+      "result": "Q1 S7"
+    },
+    {
+      "kind": "calendar",
+      "environment": {},
+      "stamp": "2026-09-20T12:00:00+00:00",
+      "result": "Q3 S12"
+    },
+    {
+      "kind": "calendar",
+      "environment": {},
+      "stamp": "2025-12-31T00:00:00",
+      "result": {
+        "error": "TypeError",
+        "message": "can't subtract offset-naive and offset-aware datetimes"
+      }
+    },
+    {
+      "kind": "calendar",
+      "environment": {
+        "ORKET_EOS_SPRINT_BASE_DATE": "2026-02-02",
+        "ORKET_EOS_SPRINT_BASE_QUARTER": "1",
+        "ORKET_EOS_SPRINT_BASE_SPRINT": "6"
+      },
+      "stamp": "2026-02-02T12:00:00+00:00",
+      "result": "Q1 S6"
+    },
+    {
+      "kind": "calendar",
+      "environment": {
+        "ORKET_EOS_SPRINT_BASE_DATE": "2026-02-02",
+        "ORKET_EOS_SPRINT_BASE_QUARTER": "1",
+        "ORKET_EOS_SPRINT_BASE_SPRINT": "6"
+      },
+      "stamp": "2026-02-01T23:00:00-07:00",
+      "result": "Q1 S5"
+    },
+    {
+      "kind": "calendar",
+      "environment": {
+        "ORKET_EOS_SPRINT_BASE_DATE": "2026-02-02",
+        "ORKET_EOS_SPRINT_BASE_QUARTER": "1",
+        "ORKET_EOS_SPRINT_BASE_SPRINT": "6"
+      },
+      "stamp": "2026-02-09T00:00:00+12:00",
+      "result": "Q1 S7"
+    },
+    {
+      "kind": "calendar",
+      "environment": {
+        "ORKET_EOS_SPRINT_BASE_DATE": "2026-02-02",
+        "ORKET_EOS_SPRINT_BASE_QUARTER": "1",
+        "ORKET_EOS_SPRINT_BASE_SPRINT": "6"
+      },
+      "stamp": "2026-09-20T12:00:00+00:00",
+      "result": "Q3 S12"
+    },
+    {
+      "kind": "calendar",
+      "environment": {
+        "ORKET_EOS_SPRINT_BASE_DATE": "2026-02-02",
+        "ORKET_EOS_SPRINT_BASE_QUARTER": "1",
+        "ORKET_EOS_SPRINT_BASE_SPRINT": "6"
+      },
+      "stamp": "2025-12-31T00:00:00",
+      "result": {
+        "error": "TypeError",
+        "message": "can't subtract offset-naive and offset-aware datetimes"
+      }
+    },
+    {
+      "kind": "calendar",
+      "environment": {
+        "ORKET_EOS_SPRINT_BASE_DATE": "2026-01-01T00:00:00+00:00",
+        "ORKET_EOS_SPRINT_BASE_QUARTER": "2",
+        "ORKET_EOS_SPRINT_BASE_SPRINT": "13"
+      },
+      "stamp": "2026-02-02T12:00:00+00:00",
+      "result": "Q3 S4"
+    },
+    {
+      "kind": "calendar",
+      "environment": {
+        "ORKET_EOS_SPRINT_BASE_DATE": "2026-01-01T00:00:00+00:00",
+        "ORKET_EOS_SPRINT_BASE_QUARTER": "2",
+        "ORKET_EOS_SPRINT_BASE_SPRINT": "13"
+      },
+      "stamp": "2026-02-01T23:00:00-07:00",
+      "result": "Q3 S4"
+    },
+    {
+      "kind": "calendar",
+      "environment": {
+        "ORKET_EOS_SPRINT_BASE_DATE": "2026-01-01T00:00:00+00:00",
+        "ORKET_EOS_SPRINT_BASE_QUARTER": "2",
+        "ORKET_EOS_SPRINT_BASE_SPRINT": "13"
+      },
+      "stamp": "2026-02-09T00:00:00+12:00",
+      "result": "Q3 S5"
+    },
+    {
+      "kind": "calendar",
+      "environment": {
+        "ORKET_EOS_SPRINT_BASE_DATE": "2026-01-01T00:00:00+00:00",
+        "ORKET_EOS_SPRINT_BASE_QUARTER": "2",
+        "ORKET_EOS_SPRINT_BASE_SPRINT": "13"
+      },
+      "stamp": "2026-09-20T12:00:00+00:00",
+      "result": "Q5 S11"
+    },
+    {
+      "kind": "calendar",
+      "environment": {
+        "ORKET_EOS_SPRINT_BASE_DATE": "2026-01-01T00:00:00+00:00",
+        "ORKET_EOS_SPRINT_BASE_QUARTER": "2",
+        "ORKET_EOS_SPRINT_BASE_SPRINT": "13"
+      },
+      "stamp": "2025-12-31T00:00:00",
+      "result": {
+        "error": "TypeError",
+        "message": "can't subtract offset-naive and offset-aware datetimes"
+      }
+    },
+    {
+      "kind": "calendar",
+      "environment": {
+        "ORKET_EOS_SPRINT_BASE_DATE": "invalid",
+        "ORKET_EOS_SPRINT_BASE_QUARTER": "invalid",
+        "ORKET_EOS_SPRINT_BASE_SPRINT": "-2"
+      },
+      "stamp": "2026-02-02T12:00:00+00:00",
+      "result": "Q1 S6"
+    },
+    {
+      "kind": "calendar",
+      "environment": {
+        "ORKET_EOS_SPRINT_BASE_DATE": "invalid",
+        "ORKET_EOS_SPRINT_BASE_QUARTER": "invalid",
+        "ORKET_EOS_SPRINT_BASE_SPRINT": "-2"
+      },
+      "stamp": "2026-02-01T23:00:00-07:00",
+      "result": "Q1 S5"
+    },
+    {
+      "kind": "calendar",
+      "environment": {
+        "ORKET_EOS_SPRINT_BASE_DATE": "invalid",
+        "ORKET_EOS_SPRINT_BASE_QUARTER": "invalid",
+        "ORKET_EOS_SPRINT_BASE_SPRINT": "-2"
+      },
+      "stamp": "2026-02-09T00:00:00+12:00",
+      "result": "Q1 S7"
+    },
+    {
+      "kind": "calendar",
+      "environment": {
+        "ORKET_EOS_SPRINT_BASE_DATE": "invalid",
+        "ORKET_EOS_SPRINT_BASE_QUARTER": "invalid",
+        "ORKET_EOS_SPRINT_BASE_SPRINT": "-2"
+      },
+      "stamp": "2026-09-20T12:00:00+00:00",
+      "result": "Q3 S12"
+    },
+    {
+      "kind": "calendar",
+      "environment": {
+        "ORKET_EOS_SPRINT_BASE_DATE": "invalid",
+        "ORKET_EOS_SPRINT_BASE_QUARTER": "invalid",
+        "ORKET_EOS_SPRINT_BASE_SPRINT": "-2"
+      },
+      "stamp": "2025-12-31T00:00:00",
+      "result": {
+        "error": "TypeError",
+        "message": "can't subtract offset-naive and offset-aware datetimes"
+      }
+    }
+  ],
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-09-21T01:03:00.554150Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:61143d1c516575c1e8f27ceb923880aa143529e8a11ecdf128ab456dfbcfaff1",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 637,
+        "paths_total_reference": 637,
+        "churn_paths": 637,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    }
+  ]
+}

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import inspect
+import os
 from pathlib import Path
 from typing import Any
 
@@ -23,6 +24,7 @@ from orket.application.services.epic_publication_service import EpicPublicationS
 from orket.application.services.runtime_construction_inputs import RuntimeConstructionInputs
 from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.application.workflows.turn_artifact_writer import TurnArtifactWriter
+from orket.core.contracts.eos_calendar import EosSprintBaseline
 from orket.logging import log_event
 from orket.orchestration.orchestration_config import OrchestrationConfig, process_rule_value
 from orket.runtime.config_loader import ConfigLoader
@@ -227,7 +229,9 @@ class ExecutionPipeline(
         return OrchestrationConfig(self.org).resolve_gitea_state_pilot_enabled(user_settings=user_settings)
 
     def _build_epic_run_orchestrator(self) -> EpicRunOrchestrator:
+        inputs = self.runtime_context.construction_inputs
         return EpicRunOrchestrator(
+            eos_calendar=EosSprintBaseline.from_environment(inputs.environment if inputs else os.environ),
             approval_pauses=EpicApprovalPauseService(
                 transactions=self.cards_epic_control_plane.transactions,
                 locks=EpicContinuationLocks(self.epic_publication.repository.db_path),

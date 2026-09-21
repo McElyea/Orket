@@ -12520,8 +12520,8 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.51 execution-identity checkpoint. Preserve the governed legacy-export cutover;
-continue remaining deterministic input owners, adapter enforcement and async reachability before E1/E2
+0.6.52 runtime-observation checkpoint. Preserve the governed legacy-export cutover;
+continue the remaining input inventory, adapter enforcement and async reachability before E1/E2
 and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
 Preserve every failed and
@@ -18735,3 +18735,77 @@ initialization is not rolled back. Preserve governed legacy exports and proceed
 with remaining explicit-input review, adapter classification/enforcement and async
 reachability before E1/E2 and CAP. No hostile-code containment, whole-lane completion
 or user acceptance is inferred, and the lane remains active.
+
+
+#### .52 remaining runtime observation checkpoint (2026-09-20)
+
+Agent construction captures model name and model-family match before role reads.
+Explicit environment mappings, including empty mappings, override ambient input.
+Registry structured configuration is now independent of process environment;
+environment decoding requires an explicit mapping and malformed JSON fails with
+`E_MODEL_FAMILY_PATTERNS_JSON`. Existing supported normalization and generic
+fallback remain. Agent journal construction consumes an explicit publication
+timestamp: the captured caller override or a fresh observation from the clock
+selected at run entry after the tool outcome. No ambient journal clock remains.
+
+Epic owner construction captures an immutable EOS baseline, honoring supplied
+runtime construction inputs. Setup captures one local calendar observation from
+the selected UTC service before asset reads and carries its sprint into new cards.
+Existing stored values are retained; later setup/recovery entries observe their
+own values for new cards. This is not a durable run-wide calendar snapshot.
+Contract: `docs/specs/REMAINING_RUNTIME_INPUTS.md`; migration:
+`docs/architecture/CONTRACT_DELTA_REMAINING_RUNTIME_INPUTS_D_2026-09-20.md`.
+
+Three pre-change probes reached intended failures through actual operations:
+environment rotation during a held role read changed dialect selection; journal
+publication after a real file write ignored the selected clock; and SQLite card
+creation used ambient sprint inputs after a held asset read. All three pass after
+capture. The first affected cohort passed 39. Expanded checks cover explicit empty
+environment, retained timestamp/clock selection through a held provider, and clock
+failure after an effect without a fabricated returned receipt. A tool that writes
+then fails retains unresolved residual uncertainty and uses the selected clock.
+These use controlled providers/gates and the legacy Agent surface; they do not
+prove canonical governed dispatch, durable Agent journals or fresh inference.
+
+The final focused cohort passes 60. It includes 48 independently captured outcomes
+from the installed published .51 wheel: 28 model-family and 20 calendar outcomes.
+Four calendar outcomes retain the existing naive-datetime `TypeError`; no naive
+support is added. The initial reference harness assumed every call returned a
+value; its failure, exact helper and retained repeat remain in `parity-initial/`.
+The failed-tool test also initially guessed an uncertainty token; its failed
+inputs/result remain in `parity-complete/`, and the corrected test imports the
+canonical enum. Product behavior and deadlines were not weakened for these fixes.
+
+The final declaration selects 47 modules, preserving every .51 case identity.
+All frozen source and installed cases pass with no skips:
+
+| Cell | Cases / failures / errors / skips | JUnit seconds |
+|---|---|---|
+| Source Windows Python 3.11 | 498 / 0 / 0 / 0 | 254.031 |
+| Installed win-py311 | 498 / 0 / 0 / 0 | 266.838 |
+| Installed win-py312 | 498 / 0 / 0 / 0 | 263.740 |
+
+Each installed cell checks 958 origins, actual CLI startup,
+native teardown, copied inputs and package identity. Parity covers
+1,104 Python files,
+1,120 wheel members and
+2,114 support files.
+Wheel SHA-256: `d991a31efc43001197419424b3790f5a223718d44a690c91f51b218b0af7575e`;
+sdist SHA-256: `65fc27e5317ae830e8e73b6e8ae2165d0b7c7cdb05d5b549c29e22249391b4d3`.
+Evidence: `.tmp/d-remaining-runtime-inputs/`. Windows path/result is
+**primary / success**; whole-lane acceptance remains partial.
+
+The canonical dependency gate passes: 1,104 modules, 3,511 import sites, six
+recognized dynamic routes and zero unknown modules, analysis errors, forbidden
+edges or authority cycles. Policy v2 is unchanged. Changed Python is Ruff-clean,
+the oversized Agent file stays at 521 lines, and canonical Ruff retains 94 existing
+findings. Both Quality jobs include the new regressions; hosted Quality is unproved.
+
+No fresh .52 Linux clock observation or application cell is claimed. Latest .51
+passive proof remains **blocked / environment blocker**: only 14.478670403 quiet
+seconds in 240.048424382 seconds against the required 60, with
++19.167614301/-19.151998529-second wall steps. No clocks or deadlines changed.
+The .43 Git timeout cause, .44 package ceiling, whole-suite/89% coverage, hosted
+Quality, remaining explicit-input inventory, adapter enforcement, async safety,
+E1/E2 and CAP remain open. Preserve governed legacy exports and retained evidence;
+this checkpoint does not establish hostile-code containment or retire the lane.

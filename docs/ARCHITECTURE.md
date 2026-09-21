@@ -181,6 +181,11 @@ through the application service; environment extras fail without warning effects
 Contract: `docs/specs/SCHEMA_INPUT_OWNERSHIP.md`. Remaining effects, decision context,
 adapter classification and async reachability still require D acceptance.
 
+Agent construction captures model-family configuration; journal publication uses
+the selected clock or captured caller timestamp. Epic setup calculates one sprint
+from its selected time and immutable baseline before asset reads. Contracts and
+scope limits: `docs/specs/REMAINING_RUNTIME_INPUTS.md`.
+
 Execution setup and collection entry capture session/build identifiers before
 asset reads. Custom build selectors receive a sanitized string value; selected
 identities must be nonempty plain strings. Existing durable admission and child

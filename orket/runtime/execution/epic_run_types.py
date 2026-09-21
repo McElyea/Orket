@@ -99,6 +99,7 @@ class EpicRunSetup:
     cards_workload_contract: dict[str, Any]
     control_plane_workload_record: Any
     publication_request: dict[str, Any]
+    calendar_sprint: str
     admission: EpicRunAdmission | None = None
     epic_asset: str = ""
 

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-import os
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
@@ -34,19 +34,21 @@ class ModelFamilyRegistry:
 
     @classmethod
     def from_config(cls, config: Any | None = None) -> ModelFamilyRegistry:
-        raw_config = config
-        if raw_config is None:
-            raw = os.getenv(MODEL_FAMILY_PATTERNS_ENV, "").strip()
-            if not raw:
-                return cls()
-            try:
-                raw_config = json.loads(raw)
-            except json.JSONDecodeError:
-                return cls()
-        patterns = _parse_patterns(raw_config)
+        patterns = _parse_patterns(config)
         if not patterns:
             return cls()
         return cls((*patterns, *DEFAULT_MODEL_FAMILY_PATTERNS))
+
+    @classmethod
+    def from_environment(cls, environment: Mapping[str, str]) -> ModelFamilyRegistry:
+        raw = environment.get(MODEL_FAMILY_PATTERNS_ENV, "").strip()
+        if not raw:
+            return cls()
+        try:
+            config = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            raise ValueError("E_MODEL_FAMILY_PATTERNS_JSON") from exc
+        return cls.from_config(config)
 
     def resolve(self, model_name: str) -> ModelFamilyMatch:
         normalized = str(model_name or "").strip().lower()

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from pathlib import Path
 from typing import Any
 
@@ -56,11 +57,12 @@ class _MissingConfigLoader:
         raise FileNotFoundError(name)
 
 
+@pytest.mark.unit
 def test_model_family_registry_loads_operator_patterns_from_env(monkeypatch) -> None:
     """Layer: unit. Verifies model family registry can be extended without Agent code changes."""
     monkeypatch.setenv("ORKET_MODEL_FAMILY_PATTERNS", '[{"pattern": "mistral", "family": "mistral"}]')
 
-    match = ModelFamilyRegistry.from_config().resolve("mistral-7b-instruct")
+    match = ModelFamilyRegistry.from_environment(os.environ).resolve("mistral-7b-instruct")
 
     assert match.recognized is True
     assert match.family == "mistral"

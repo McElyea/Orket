@@ -30,6 +30,11 @@ orchestrator clock observations keep their existing second precision. Migration
 and remaining lifecycle input scope:
 `docs/architecture/CONTRACT_DELTA_SANDBOX_CREATION_INPUTS_D_2026-09-20.md`.
 
+Agent construction captures model-family configuration; journal publication uses
+the selected clock or captured caller timestamp. Epic setup calculates one sprint
+from its selected time and immutable baseline before asset reads. Contracts and
+scope limits: `docs/specs/REMAINING_RUNTIME_INPUTS.md`.
+
 Execution setup and collection entry capture session/build identifiers before
 asset reads. Custom build selectors receive a sanitized string value; selected
 identities must be nonempty plain strings. Existing durable admission and child
@@ -1246,6 +1251,7 @@ Trust Kernel and Portable Conformance completed lane authority is archived under
       "active_roadmap_source": "docs/ROADMAP.md",
       "process_source": "docs/CONTRIBUTOR.md",
       "core_runtime_contract_sources": [
+        "docs/specs/REMAINING_RUNTIME_INPUTS.md",
         "docs/specs/EXECUTION_IDENTITY_INPUTS.md",
         "docs/specs/API_STRATEGY_INPUTS.md",
         "docs/specs/SANDBOX_POLICY_INPUTS.md",

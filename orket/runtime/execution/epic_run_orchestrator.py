@@ -19,6 +19,7 @@ from orket.application.services.execution_policy_input_service import capture_ex
 from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.core.cards_runtime_contract import apply_epic_cards_runtime_defaults
 from orket.core.contracts import WorkloadContractV1
+from orket.core.contracts.eos_calendar import EosSprintBaseline
 from orket.core.contracts.epic_approval_recovery import EpicApprovalRecoveryRequest
 from orket.core.contracts.epic_export_recovery import EpicExportRecoveryRequest
 from orket.core.contracts.epic_publication import EpicAdmissionRecoveryRequest
@@ -47,7 +48,6 @@ from orket.runtime.phase_c_runtime_truth import normalize_truthful_runtime_polic
 from orket.runtime.route_decision_artifact import build_route_decision_artifact
 from orket.runtime.run_start_artifacts import capture_run_start_artifacts
 from orket.schema import CardStatus, EpicConfig, TeamConfig
-from orket.utils import get_eos_sprint
 
 
 @dataclass(frozen=True)
@@ -71,6 +71,7 @@ class EpicRunOrchestrator:
     publication: EpicPublicationService
     preparation: EpicPreparationService
     approval_pauses: EpicApprovalPauseService | None = None
+    eos_calendar: EosSprintBaseline = EosSprintBaseline()
 
     async def run(
         self,
@@ -124,6 +125,7 @@ class EpicRunOrchestrator:
     ) -> EpicRunSetup:
         run_id, active_build = capture_execution_identifiers(self.execution_runtime_node, self.runtime_input_service,
             name=epic_name, session_id=session_id, build_id=build_id)
+        calendar_sprint = self.eos_calendar.current_sprint(self.runtime_input_service.utc_now().astimezone())
         epic = await self.loader.load_asset_async("epics", epic_name, EpicConfig)
         team = await self.loader.load_asset_async("teams", epic.team, TeamConfig)
         env = await self.loader.load_environment_asset_async(epic.environment)
@@ -155,6 +157,7 @@ class EpicRunOrchestrator:
             phase_c_truth_policy=normalize_truthful_runtime_policy(epic_params.get("truthful_runtime")),
             cards_workload_contract=cards_workload_contract,
             control_plane_workload_record=control_plane_workload_record,
+            calendar_sprint=calendar_sprint,
             publication_request={"scope": self.publication.request_scope(run_id), "contract": cards_workload_contract,
                                  "epic": epic.model_dump(), "build_id": active_build, "department": self.department,
                                  "team": team.model_dump(), "environment": env.model_dump(),
@@ -237,7 +240,7 @@ class EpicRunOrchestrator:
             {
                 "session_id": setup.run_id,
                 "build_id": setup.build_id,
-                "sprint": get_eos_sprint(),
+                "sprint": setup.calendar_sprint,
                 "status": CardStatus.READY,
             }
         )
