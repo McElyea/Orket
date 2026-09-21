@@ -86,6 +86,7 @@ class ExtensionManager:
             project_root=self.project_root,
             reproducibility=self.reproducibility,
             registry_factory=_WorkloadRegistry,
+            utc_now=utc_now,
         )
 
     def _load_catalog_payload(self) -> dict[str, Any]:

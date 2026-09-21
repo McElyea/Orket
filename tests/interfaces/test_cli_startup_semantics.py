@@ -14,9 +14,10 @@ from tests.helpers.runtime_result import published_result
 
 
 class _DummyExtensionManager:
-    def __init__(self, catalog_path=None, project_root=None, *, invocation_root, environment):
+    def __init__(self, catalog_path=None, project_root=None, *, invocation_root, environment, utc_now):
         assert invocation_root.is_absolute()
         assert isinstance(environment, dict)
+        assert callable(utc_now)
 
     def list_extensions(self):
         return []
@@ -90,8 +91,9 @@ def test_parse_args_uses_explicit_runtime_vector_and_program_name(monkeypatch) -
 
 
 @pytest.mark.asyncio
+@pytest.mark.contract
 async def test_cli_startup_runs_reconciliation_without_bypass(monkeypatch, capsys) -> None:
-    """Layer: integration. Verifies CLI startup executes reconciliation and emits path markers."""
+    """Layer: contract. Verifies CLI startup dispatches reconciliation and emits path markers."""
     startup_events = []
     reconcile_calls = []
     captures = {}
@@ -202,8 +204,9 @@ def test_parse_args_hides_legacy_rock_alias_from_help(monkeypatch, capsys) -> No
 
 
 @pytest.mark.asyncio
+@pytest.mark.contract
 async def test_cli_startup_warns_when_reconciliation_failed(monkeypatch, capsys) -> None:
-    """Layer: integration. Verifies CLI surfaces degraded startup when reconciliation fails."""
+    """Layer: contract. Verifies CLI surfaces degraded startup when reconciliation fails."""
     monkeypatch.setattr(
         cli_module,
         "perform_first_run_setup",
@@ -226,6 +229,7 @@ async def test_cli_startup_warns_when_reconciliation_failed(monkeypatch, capsys)
 
 # Layer: integration
 @pytest.mark.asyncio
+@pytest.mark.integration
 async def test_cli_startup_runs_sync_setup_outside_the_event_loop(monkeypatch) -> None:
     """Layer: integration. Verifies sync first-run setup is isolated from the active CLI event loop."""
     setup_observation = {}
@@ -271,6 +275,7 @@ async def test_cli_known_fatal_error_returns_nonzero(monkeypatch, capsys) -> Non
 
 @pytest.mark.asyncio
 # Layer: contract
+@pytest.mark.contract
 async def test_cli_rock_runtime_preserves_flag_but_routes_directly_to_run_card(monkeypatch, capsys) -> None:
     """Layer: contract. Verifies the `--rock` CLI flag survives only as a hidden compatibility alias over the canonical card surface."""
 

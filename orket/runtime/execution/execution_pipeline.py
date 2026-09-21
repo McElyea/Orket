@@ -146,6 +146,7 @@ class ExecutionPipeline(
         )
         self.orchestrator.run_ledger = self.run_ledger
         self.cards_epic_control_plane = CardsEpicControlPlaneService(
+            utc_now=self.runtime_inputs.utc_now_iso,
             transactions=SQLiteControlPlaneTransactions(self.orchestrator.control_plane_execution_repository.db_path),
             execution_repository=self.orchestrator.control_plane_execution_repository,
             publication=self.orchestrator.control_plane_publication,

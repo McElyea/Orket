@@ -16,7 +16,7 @@ from orket.core.domain import AuthoritySourceClass, ResultClass
 from orket_extension_sdk.manifest import agent_discriminator_reasons
 
 from .contracts import ExtensionRegistry
-from .models import ExtensionRecord, ExtensionRunResult, _ExtensionManifestEntry
+from .models import ExtensionRecord, ExtensionRunResult, _ExtensionManifestEntry, utc_now_iso
 from .reproducibility import ReproducibilityEnforcer
 from .sdk_capability_authorization import build_host_authorization_envelope, split_host_capability_controls
 from .sdk_workload_runner import SdkSubprocessExecutionUncertain, SdkSubprocessRunError, run_sdk_workload_in_subprocess
@@ -48,11 +48,11 @@ class WorkloadExecutor:
         *,
         project_root: Path,
         reproducibility: ReproducibilityEnforcer,
-        registry_factory: Callable[[], ExtensionRegistry],
+        registry_factory: Callable[[], ExtensionRegistry], utc_now: Callable[[], str] = utc_now_iso,
     ) -> None:
-        self.loader = WorkloadLoader(registry_factory)
+        self.loader, self._utc_now = WorkloadLoader(registry_factory), utc_now
         self.artifacts = WorkloadArtifacts(project_root, reproducibility)
-        self.control_plane = build_extension_workload_control_plane_service(project_root=project_root)
+        self.control_plane = build_extension_workload_control_plane_service(project_root=project_root, utc_now=utc_now)
 
     async def run_legacy_workload(
         self,
@@ -90,7 +90,7 @@ class WorkloadExecutor:
             workload=workload,
             workspace=workspace,
             artifact_root=artifact_root,
-            input_identity=plan_hash,
+            input_identity=plan_hash, utc_now=self._utc_now,
             input_config=input_config,
             governed_identity=governed_identity,
             control_plane_workload_record=control_plane_workload_record,
@@ -224,7 +224,7 @@ class WorkloadExecutor:
         creation_timestamp, run_id = control_plane_identity(
             extension_id=extension.extension_id,
             workload_id=workload.workload_id,
-            input_identity=input_digest,
+            input_identity=input_digest, utc_now=self._utc_now,
         )
         authorization_envelope = build_host_authorization_envelope(
             extension_id=extension.extension_id,

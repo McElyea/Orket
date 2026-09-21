@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 import inspect
-from collections.abc import Sequence
-from datetime import UTC, datetime
+from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -19,7 +18,7 @@ from .governed_identity import (
     build_extension_governed_identity,
     digest_prefixed,
 )
-from .models import ExtensionRecord, _ExtensionManifestEntry
+from .models import ExtensionRecord, _ExtensionManifestEntry, utc_now_iso
 from .runtime import ExtensionEngineAdapter, RunContext
 from .sdk_workload_runner import SdkSubprocessRunError
 from .workload_policy import WorkloadPolicy
@@ -137,6 +136,7 @@ async def begin_control_plane_execution(
     control_plane_workload_record: dict[str, Any],
     creation_timestamp: str | None = None,
     run_id: str | None = None,
+    utc_now: Callable[[], str] = utc_now_iso,
 ) -> ExtensionWorkloadControlPlaneStart:
     resolved_creation_timestamp, resolved_run_id = (
         (str(creation_timestamp), str(run_id))
@@ -144,7 +144,7 @@ async def begin_control_plane_execution(
         else control_plane_identity(
             extension_id=extension.extension_id,
             workload_id=workload.workload_id,
-            input_identity=input_identity,
+            input_identity=input_identity, utc_now=utc_now,
         )
     )
     return await control_plane.begin_execution(
@@ -166,8 +166,10 @@ async def begin_control_plane_execution(
     )
 
 
-def control_plane_identity(*, extension_id: str, workload_id: str, input_identity: str) -> tuple[str, str]:
-    creation_timestamp = datetime.now(UTC).isoformat()
+def control_plane_identity(
+    *, extension_id: str, workload_id: str, input_identity: str, utc_now: Callable[[], str] = utc_now_iso,
+) -> tuple[str, str]:
+    creation_timestamp = utc_now()
     run_id = ExtensionWorkloadControlPlaneService.run_id_for(
         extension_id=extension_id,
         workload_id=workload_id,

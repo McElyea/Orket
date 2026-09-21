@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import UTC, datetime
+from collections.abc import Callable
 from pathlib import Path
 
 from orket.adapters.storage.async_control_plane_execution_repository import AsyncControlPlaneExecutionRepository
@@ -33,6 +33,7 @@ from orket.core.domain import (
     validate_run_state_transition,
 )
 from orket.runtime_paths import resolve_control_plane_db_path
+from orket.time_utils import utc_now_iso
 
 
 class ReviewRunControlPlaneError(ValueError):
@@ -50,10 +51,12 @@ class ReviewRunControlPlaneService:
         execution_repository: ControlPlaneExecutionRepository,
         publication: ControlPlanePublicationService,
         transactions: ControlPlaneTransactionFactory,
+        utc_now: Callable[[], str] = utc_now_iso,
     ) -> None:
         self.execution_repository = execution_repository
         self.publication = publication
         self.transactions = transactions
+        self._utc_now = utc_now
 
     async def begin_execution(
         self,
@@ -192,6 +195,7 @@ class ReviewRunControlPlaneService:
             execution_repository=transaction.execution,
             publication=ControlPlanePublicationService(repository=transaction.records, authority=self.publication.authority),
             transactions=self.transactions,
+            utc_now=self._utc_now,
         )
 
     async def read_execution_summary(self, *, run_id: str) -> dict[str, object]:
@@ -319,10 +323,6 @@ class ReviewRunControlPlaneService:
             return [f"review-repo:{repo_id}", f"review-source:{snapshot.source}"]
         return [f"review-source:{snapshot.source}"]
 
-    @staticmethod
-    def _utc_now() -> str:
-        return datetime.now(UTC).isoformat()
-
     async def _ensure_effect(
         self,
         *,
@@ -353,6 +353,7 @@ class ReviewRunControlPlaneService:
 
 def build_review_run_control_plane_service(
     db_path: str | Path | None = None,
+    *, utc_now: Callable[[], str] = utc_now_iso,
 ) -> ReviewRunControlPlaneService:
     resolved_db_path = resolve_control_plane_db_path(db_path)
     publication = ControlPlanePublicationService(repository=AsyncControlPlaneRecordRepository(resolved_db_path))
@@ -360,6 +361,7 @@ def build_review_run_control_plane_service(
         execution_repository=AsyncControlPlaneExecutionRepository(resolved_db_path),
         publication=publication,
         transactions=SQLiteControlPlaneTransactions(resolved_db_path),
+        utc_now=utc_now,
     )
 
 

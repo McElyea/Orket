@@ -12520,7 +12520,7 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.53 configured-calendar correction. Preserve the governed legacy-export cutover;
+0.6.54 selected control-plane clocks. Preserve the governed legacy-export cutover;
 continue remaining clock/input owners, adapter enforcement and async reachability before E1/E2
 and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
@@ -18901,3 +18901,80 @@ E1/E2, CAP, full-suite/89% coverage, .43 Git timeout cause and .44 package ceili
 remain open. Bounded clock composition followups are retained separately; they
 are not a complete inventory or runtime defect count. Preserve governed legacy
 exports and BT evidence. This checkpoint does not retire the lane.
+
+#### .54 selected control-plane clocks (2026-09-20)
+
+Cards, manual-review and trusted extension control-plane owners now select an
+optional UTC callable at construction and retain it in borrowed transaction
+owners. Pipeline composition supplies its selected runtime clock to cards.
+Extension manager composition carries its existing clock through workload
+identity and publication, including SDK execution. Async manager preparation and
+extension/review factories expose the same optional input. Existing defaults
+retain host UTC behavior; supplied creation timestamps and run IDs retain their
+meaning. Observations remain fresh at existing publication points, with no
+run-wide timestamp substitution or historical rewrite. Contract:
+`docs/specs/CONTROL_PLANE_TERMINAL_AUTHORITY.md`; delta:
+`docs/architecture/CONTRACT_DELTA_CONTROL_PLANE_CLOCK_INPUTS_D_2026-09-20.md`.
+
+Three pre-change actual cards/legacy/SDK flows completed their effects but stored
+host timestamps outside the explicitly selected clock observations. All three
+pass after wiring. The initial cards probe had supplied a string to a Path-only
+database fixture; that setup error is retained separately, and the corrected
+probe reproduced the intended cards failure. Import-order findings were fixed
+without changing assertions. Nine independent published .53 input cases supply
+eighteen reference IDs; the candidate preserves them and observes its selected
+identity clock once. Ten focused integration cases cover cards, manual review,
+legacy/SDK direct and async manager construction, terminal retries and all four
+family closeout clock failures. Actual readonly SQLite records show fresh selected
+timestamps on success. Retry with an unavailable clock preserves logical records.
+Clock failure at closeout retains executing authority, an unfinished attempt and
+the original start journal, with no final truth or fabricated success. These
+observations do not establish rollback of preceding workload effects or expand
+transaction atomicity or native containment.
+
+The declared 45-module cohort combines direct-import discovery with named
+terminal/history/transaction, pipeline calendar/identity and extension ownership
+regressions. It is a bounded affected-callers selection, not a full transitive
+inventory or whole-suite run. The first source run retained 433 passes and four
+CLI fixture failures: their shared dummy constructor rejected the new clock
+keyword. It now requires that callable, and affected tests have canonical layer
+markers. All ten CLI module cases pass. Only this test file changed after the
+failed run; every product byte and artifact is unchanged. The fresh .54 source
+environment and exact artifacts were reused for the complete final source rerun
+and two fresh installed cells. No initial installed cell ran. All final cases pass:
+
+| Cell | Cases / failures / errors / skips | JUnit seconds |
+|---|---|---|
+| Source Windows Python 3.11 | 437 / 0 / 0 / 0 | 518.522 |
+| Installed win-py311 | 437 / 0 / 0 / 0 | 472.374 |
+| Installed win-py312 | 437 / 0 / 0 / 0 | 431.239 |
+
+Each installed cell verifies 956 package origins, actual CLI
+startup, copied inputs, exact artifact binding and teardown. The .53 validated
+JUnit predicate admits metadata while still rejecting failures/errors/skips.
+Parity covers 1,104 package Python files,
+1,120 wheel package members and
+2,122 support files.
+Wheel SHA-256: `9cea16f1cf3cd2ab1b20ce942d7df26d459993b67f6244049b8fcb1a1231c039`;
+sdist SHA-256: `2849385a0a4c14557ccb1a635c5e9adaf6bbb6ac944e4c40993c2fdf52f0295e`.
+Evidence: `.tmp/d-control-plane-clocks/`; final matrix:
+`.tmp/d-control-plane-clocks-final/`. Observed Windows path/result:
+**primary / success**. Proof is live local Git/assets/files/SQLite/CLI with
+controlled clocks/providers, plus structural package and authority binding.
+No fresh model inference or whole-lane acceptance is claimed.
+
+Canonical dependency enforcement passes: 1,104 modules, 3,516 import sites, six
+recognized dynamic routes and zero unknown modules, analysis errors, forbidden
+edges or authority cycles. Policy v2 is unchanged. Changed Python is Ruff-clean;
+canonical Ruff retains 94 existing findings. Existing oversized service/executor
+files did not grow. Both Quality jobs include the new clock contracts; hosted
+Quality remains unverified.
+
+The .53 passive Linux clock result remains **blocked / environment blocker**:
+4.361091207 quiet seconds in 240.003684019 seconds against the unchanged required
+60, with +19.503006083/-19.018053111-second wall steps and unknown cause. This
+checkpoint makes no fresh clock observation or Linux application acceptance
+claim. Remaining clock/input owners, adapter enforcement, async reachability,
+E1/E2, CAP, full-suite/89% coverage, .43 Git timeout cause and .44 package ceiling
+remain open. Preserve governed legacy exports and BT evidence. The lane remains
+active pending the required implementation, acceptance and explicit user review.

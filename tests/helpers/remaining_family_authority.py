@@ -21,13 +21,14 @@ def database_for(family: str, folder: Path) -> Path:
     return folder / ("control_plane.sqlite3" if family == "review" else ".orket/durable/db/control_plane_records.sqlite3")
 
 
-def review_flow(folder: Path):
+def review_flow(folder: Path, *, control_plane_service=None):
     repo = folder / "review-source"
     _init_repo(repo)
     (repo / "sample.py").write_text("print('review fixture')\n", encoding="utf-8")
     _git(repo, "add", ".")
     _git(repo, "commit", "-m", "review fixture")
-    service = ReviewRunService(workspace=folder / "workspace", control_plane_db_path=database_for("review", folder))
+    service = ReviewRunService(workspace=folder / "workspace", control_plane_db_path=database_for("review", folder),
+        review_control_plane_service=control_plane_service)
     return service.run_files(repo_root=repo, ref="HEAD", paths=["sample.py"], bounds=SnapshotBounds())
 
 
@@ -55,14 +56,15 @@ async def records(db: Path) -> dict[str, list[dict]]:
         return result
 
 
-async def retained_request(family: str, folder: Path):
+async def retained_request(family: str, folder: Path, *, utc_now=None):
     rows = await records(database_for(family, folder))
     run = rows["control_plane_runs"][0]
+    clock_input = {} if utc_now is None else {"utc_now": utc_now}
     if family == "review":
-        return build_review_run_control_plane_service(database_for(family, folder)), {"run_id": run["run_id"]}
+        return build_review_run_control_plane_service(database_for(family, folder), **clock_input), {"run_id": run["run_id"]}
     truth = rows["final_truth_records"][0]
     step = next(row for row in rows["control_plane_steps"] if row["step_kind"].endswith("closeout"))
-    owner = await prepare_extension_workload_control_plane_service(project_root=folder)
+    owner = await prepare_extension_workload_control_plane_service(project_root=folder, **clock_input)
     return owner, dict(run_id=run["run_id"], outcome=ResultClass(truth["result_class"]),
         authoritative_result_ref=truth["authoritative_result_ref"], prior_step_ref=step["input_ref"],
         authority_sources=[AuthoritySourceClass(value) for value in truth["authority_sources"]])

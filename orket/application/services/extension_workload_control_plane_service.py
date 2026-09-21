@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
@@ -32,6 +32,7 @@ from orket.core.domain import (
     RunState,
 )
 from orket.naming import sanitize_name
+from orket.time_utils import utc_now_iso
 
 
 @dataclass(frozen=True)
@@ -66,10 +67,12 @@ class ExtensionWorkloadControlPlaneService:
         execution_repository: ControlPlaneExecutionRepository,
         publication: ControlPlanePublicationService,
         transactions: ControlPlaneTransactionFactory,
+        utc_now: Callable[[], str] = utc_now_iso,
     ) -> None:
         self.execution_repository = execution_repository
         self.publication = publication
         self.transactions = transactions
+        self._utc_now = utc_now
 
     async def begin_execution(
         self,
@@ -257,6 +260,7 @@ class ExtensionWorkloadControlPlaneService:
                 publication=ControlPlanePublicationService(
                     repository=transaction.records, authority=self.publication.authority),
                 transactions=self.transactions,
+                utc_now=self._utc_now,
             )
             values = await finalize_extension_workload(
                 owner, run_id=run_id, outcome=outcome, authoritative_result_ref=authoritative_result_ref,
@@ -458,10 +462,6 @@ class ExtensionWorkloadControlPlaneService:
             ResultClass.BLOCKED: "extension_workload_blocked",
             ResultClass.FAILED: "extension_workload_failed",
         }[outcome]
-
-    @staticmethod
-    def _utc_now() -> str:
-        return datetime.now(UTC).isoformat()
 
     async def _append_effect(
         self,

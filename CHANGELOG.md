@@ -5,6 +5,16 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.54] - 2026-09-20
+
+### Fixed
+- Carry selected clocks through cards, manual-review and trusted extension control-plane creation and transaction closeout.
+- Preserve fresh publication observations, terminal retry timestamps and unfinished authority when the selected clock fails.
+- `compatibility_status`: `compatible`
+- `affected_audience`: `all`
+- `migration_requirement`: `none`
+- Optional clock ports and proof limits: `docs/architecture/CONTRACT_DELTA_CONTROL_PLANE_CLOCK_INPUTS_D_2026-09-20.md`.
+
 ## [0.6.53] - 2026-09-20
 
 ### Fixed

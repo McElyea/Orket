@@ -1,0 +1,171 @@
+{
+  "source_version": "0.6.53",
+  "wheel_sha256": "89d23606334b587f67673ae1455b0150a96634962ee3537b53d5df7db3d3dcec",
+  "scope": "Published identity formatting over explicit timestamp/name inputs; no wall-clock or inference claim.",
+  "cases": [
+    {
+      "id": "identity-0",
+      "cards": {
+        "session_id": "clock-session",
+        "build_id": "build/clock-session",
+        "created_at": "2026-01-01T00:00:00+00:00"
+      },
+      "cards_result": "cards-epic-run:clock-session:build/clock-session:20260101T000000000000Z",
+      "extension": {
+        "extension_id": "clock-session",
+        "workload_id": "workload/clock-session",
+        "creation_timestamp": "2026-01-01T00:00:00+00:00",
+        "input_identity": "clock-session"
+      },
+      "extension_result": "extension-workload-run:clock-session:workload/clock-session:20260101T000000000000Z:clock-sessio"
+    },
+    {
+      "id": "identity-1",
+      "cards": {
+        "session_id": "Spaces / and punctuation!",
+        "build_id": "build/Spaces / and punctuation!",
+        "created_at": "2026-01-01T00:00:00+00:00"
+      },
+      "cards_result": "cards-epic-run:spaces_/_and_punctuation!:build/spaces_/_and_punctuation!:20260101T000000000000Z",
+      "extension": {
+        "extension_id": "Spaces / and punctuation!",
+        "workload_id": "workload/Spaces / and punctuation!",
+        "creation_timestamp": "2026-01-01T00:00:00+00:00",
+        "input_identity": "Spaces / and punctuation!"
+      },
+      "extension_result": "extension-workload-run:spaces_/_and_punctuation!:workload/spaces_/_and_punctuation!:20260101T000000000000Z:spaces_/_and"
+    },
+    {
+      "id": "identity-2",
+      "cards": {
+        "session_id": "",
+        "build_id": "build/",
+        "created_at": "2026-01-01T00:00:00+00:00"
+      },
+      "cards_result": "cards-epic-run:unknown:build/:20260101T000000000000Z",
+      "extension": {
+        "extension_id": "",
+        "workload_id": "workload/",
+        "creation_timestamp": "2026-01-01T00:00:00+00:00",
+        "input_identity": ""
+      },
+      "extension_result": "extension-workload-run:unknown:workload/:20260101T000000000000Z:unknown"
+    },
+    {
+      "id": "identity-3",
+      "cards": {
+        "session_id": "clock-session",
+        "build_id": "build/clock-session",
+        "created_at": "2026-06-01T18:32:14.123456-07:00"
+      },
+      "cards_result": "cards-epic-run:clock-session:build/clock-session:20260602T013214123456Z",
+      "extension": {
+        "extension_id": "clock-session",
+        "workload_id": "workload/clock-session",
+        "creation_timestamp": "2026-06-01T18:32:14.123456-07:00",
+        "input_identity": "clock-session"
+      },
+      "extension_result": "extension-workload-run:clock-session:workload/clock-session:20260602T013214123456Z:clock-sessio"
+    },
+    {
+      "id": "identity-4",
+      "cards": {
+        "session_id": "Spaces / and punctuation!",
+        "build_id": "build/Spaces / and punctuation!",
+        "created_at": "2026-06-01T18:32:14.123456-07:00"
+      },
+      "cards_result": "cards-epic-run:spaces_/_and_punctuation!:build/spaces_/_and_punctuation!:20260602T013214123456Z",
+      "extension": {
+        "extension_id": "Spaces / and punctuation!",
+        "workload_id": "workload/Spaces / and punctuation!",
+        "creation_timestamp": "2026-06-01T18:32:14.123456-07:00",
+        "input_identity": "Spaces / and punctuation!"
+      },
+      "extension_result": "extension-workload-run:spaces_/_and_punctuation!:workload/spaces_/_and_punctuation!:20260602T013214123456Z:spaces_/_and"
+    },
+    {
+      "id": "identity-5",
+      "cards": {
+        "session_id": "",
+        "build_id": "build/",
+        "created_at": "2026-06-01T18:32:14.123456-07:00"
+      },
+      "cards_result": "cards-epic-run:unknown:build/:20260602T013214123456Z",
+      "extension": {
+        "extension_id": "",
+        "workload_id": "workload/",
+        "creation_timestamp": "2026-06-01T18:32:14.123456-07:00",
+        "input_identity": ""
+      },
+      "extension_result": "extension-workload-run:unknown:workload/:20260602T013214123456Z:unknown"
+    },
+    {
+      "id": "identity-6",
+      "cards": {
+        "session_id": "clock-session",
+        "build_id": "build/clock-session",
+        "created_at": "2026-09-20T12:00:00Z"
+      },
+      "cards_result": "cards-epic-run:clock-session:build/clock-session:20260920T120000000000Z",
+      "extension": {
+        "extension_id": "clock-session",
+        "workload_id": "workload/clock-session",
+        "creation_timestamp": "2026-09-20T12:00:00Z",
+        "input_identity": "clock-session"
+      },
+      "extension_result": "extension-workload-run:clock-session:workload/clock-session:20260920T120000000000Z:clock-sessio"
+    },
+    {
+      "id": "identity-7",
+      "cards": {
+        "session_id": "Spaces / and punctuation!",
+        "build_id": "build/Spaces / and punctuation!",
+        "created_at": "2026-09-20T12:00:00Z"
+      },
+      "cards_result": "cards-epic-run:spaces_/_and_punctuation!:build/spaces_/_and_punctuation!:20260920T120000000000Z",
+      "extension": {
+        "extension_id": "Spaces / and punctuation!",
+        "workload_id": "workload/Spaces / and punctuation!",
+        "creation_timestamp": "2026-09-20T12:00:00Z",
+        "input_identity": "Spaces / and punctuation!"
+      },
+      "extension_result": "extension-workload-run:spaces_/_and_punctuation!:workload/spaces_/_and_punctuation!:20260920T120000000000Z:spaces_/_and"
+    },
+    {
+      "id": "identity-8",
+      "cards": {
+        "session_id": "",
+        "build_id": "build/",
+        "created_at": "2026-09-20T12:00:00Z"
+      },
+      "cards_result": "cards-epic-run:unknown:build/:20260920T120000000000Z",
+      "extension": {
+        "extension_id": "",
+        "workload_id": "workload/",
+        "creation_timestamp": "2026-09-20T12:00:00Z",
+        "input_identity": ""
+      },
+      "extension_result": "extension-workload-run:unknown:workload/:20260920T120000000000Z:unknown"
+    }
+  ],
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-09-21T03:01:11.247364Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:3cf0889ec17f09474f10a0e68bf9431bf8fb8c95a4c8ba0c2fe7478bff75c831",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 214,
+        "paths_total_reference": 214,
+        "churn_paths": 214,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    }
+  ]
+}

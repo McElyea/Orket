@@ -181,6 +181,12 @@ through the application service; environment extras fail without warning effects
 Contract: `docs/specs/SCHEMA_INPUT_OWNERSHIP.md`. Remaining effects, decision context,
 adapter classification and async reachability still require D acceptance.
 
+Cards, manual-review and trusted extension owners retain their selected UTC
+callable through transaction-scoped publication. Pipeline and extension-manager
+clocks reach those owners; terminal retries retain published timestamps, and
+clock failure cannot fabricate final success. Defaults retain host UTC behavior.
+Contract and limits: `docs/specs/CONTROL_PLANE_TERMINAL_AUTHORITY.md`.
+
 Agent construction captures model-family configuration; journal publication uses
 the selected clock or captured caller timestamp. Epic setup calculates one sprint
 from its selected time, immutable baseline and captured configured timezone

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Callable
 from datetime import UTC, datetime
 
 from orket.application.services.cards_epic_closeout import finalize_cards_epic_closeout
@@ -28,6 +29,7 @@ from orket.core.domain import (
     validate_attempt_state_transition,
     validate_run_state_transition,
 )
+from orket.time_utils import utc_now_iso
 from orket.utils import sanitize_name
 
 
@@ -44,10 +46,12 @@ class CardsEpicControlPlaneService:
         execution_repository: ControlPlaneExecutionRepository,
         publication: ControlPlanePublicationService,
         transactions: ControlPlaneTransactionFactory,
+        utc_now: Callable[[], str] = utc_now_iso,
     ) -> None:
         self.execution_repository = execution_repository
         self.publication = publication
         self.transactions = transactions
+        self._utc_now = utc_now
 
     async def begin_execution(
         self,
@@ -72,6 +76,7 @@ class CardsEpicControlPlaneService:
             execution_repository=transaction.execution,
             publication=ControlPlanePublicationService(repository=transaction.records, authority=self.publication.authority),
             transactions=self.transactions,
+            utc_now=self._utc_now,
         )
 
     async def _begin_execution(
@@ -286,10 +291,6 @@ class CardsEpicControlPlaneService:
         if attempt is None:
             raise CardsEpicControlPlaneError(f"cards epic control-plane attempt missing: {normalized_attempt_id}")
         return attempt
-
-    @staticmethod
-    def _utc_now() -> str:
-        return datetime.now(UTC).isoformat()
 
     @staticmethod
     def _timestamp_token(*, created_at: str) -> str:

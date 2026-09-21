@@ -30,6 +30,12 @@ orchestrator clock observations keep their existing second precision. Migration
 and remaining lifecycle input scope:
 `docs/architecture/CONTRACT_DELTA_SANDBOX_CREATION_INPUTS_D_2026-09-20.md`.
 
+Cards, manual-review and trusted extension owners retain their selected UTC
+callable through transaction-scoped publication. Pipeline and extension-manager
+clocks reach those owners; terminal retries retain published timestamps, and
+clock failure cannot fabricate final success. Defaults retain host UTC behavior.
+Contract and limits: `docs/specs/CONTROL_PLANE_TERMINAL_AUTHORITY.md`.
+
 Agent construction captures model-family configuration; journal publication uses
 the selected clock or captured caller timestamp. Epic setup calculates one sprint
 from its selected time, immutable baseline and captured configured timezone

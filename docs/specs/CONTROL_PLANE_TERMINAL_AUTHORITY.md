@@ -1,6 +1,6 @@
 # Control-plane terminal authority
 
-Last updated: 2026-09-18
+Last updated: 2026-09-20
 Status: Active contract; historical-consistency implementation acceptance remains scoped in the architectural-truth plan.
 
 ## Common record contract
@@ -370,6 +370,39 @@ extension containment or independent objective verification to these families.
 Their distinct executors and existing review replay scope remain explicit in the
 governed start-path matrix. Current repair acceptance is owned by the canonical
 architectural-truth plan; the original partial histories remain retained.
+
+## Cards, extension and manual-review clock inputs
+
+The cards-epic, extension-workload and manual-review control-plane services accept
+an explicit `utc_now` callable returning an aware UTC ISO timestamp string. The
+default is the existing host UTC adapter. Service construction selects the
+callable; every transaction-scoped service carries that same selection. It must
+not silently restore a host clock when borrowing transaction ports.
+
+Execution-pipeline composition supplies its existing `RuntimeInputService` clock
+to the cards-epic service. The review factory and both extension-service factories
+expose the same clock input. A review host can inject the resulting service through
+the existing `review_control_plane_service` port.
+
+Extension-manager construction supplies its selected `utc_now` to workload
+execution as well as catalog installation. Async manager preparation exposes that
+input. Workload creation identity, start effects and terminal publication consume
+the same selected clock. The identity and begin-execution helpers also accept an
+explicit clock; already supplied creation time/run identity retain their existing
+meaning and do not trigger a replacement time observation.
+
+These are clock-selection boundaries, not one timestamp reused for an entire run.
+Creation, journal and closeout observations remain at their existing application
+publication points. A closeout observes fresh values after the workload outcome;
+an identical terminal retry validates retained records without manufacturing a
+new end time. Clock failure propagates through the existing transaction and
+failure boundaries. Earlier effects remain retained; no fallback clock, clamped
+timestamp, fabricated receipt or automatic replay is introduced.
+
+This does not expand transaction scope, change family terminal authority or prove
+a monotonic host wall clock. Selected fixture timestamps are input values and do
+not measure elapsed duration. Current acceptance is recorded in the
+architectural-truth plan; remaining input owners and Linux clock proof stay open.
 
 ## Historical-state disposition
 
