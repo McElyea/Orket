@@ -221,13 +221,13 @@ async def _run_probe(args: argparse.Namespace) -> dict[str, Any]:
         ollama_host=str(args.ollama_host or "").strip() or None,
         disable_sandbox=True,
     ):
-        pipeline = ExecutionPipeline(
+        async with ExecutionPipeline.open(
             workspace=workspace,
             department="core",
             config_root=workspace,
             run_ledger_repo=AsyncProtocolRunLedgerRepository(workspace),
-        )
-        pipeline_result = await pipeline.run_card(issue_id, session_id=session_id, build_id=build_id)
+        ) as pipeline:
+            pipeline_result = await pipeline.run_card(issue_id, session_id=session_id, build_id=build_id)
 
     summary = run_summary(workspace, session_id)
     generated_file = workspace / artifact_path

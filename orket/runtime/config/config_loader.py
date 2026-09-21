@@ -4,14 +4,13 @@ import asyncio
 import json
 import os
 from collections.abc import Coroutine, Mapping
-from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, TypeVar
 
 from pydantic import BaseModel, ValidationError
 
-from orket.adapters.execution.owned_io import run_owned_thread
+from orket.adapters.execution.owned_io import require_sync_context, run_owned_thread
 from orket.adapters.storage.async_file_tools import AsyncFileTools
 from orket.application.services.decision_node_registry import DecisionNodeRegistry, build_decision_node_registry
 from orket.application.services.runtime_input_service import RuntimeInputService
@@ -54,13 +53,13 @@ class ConfigLoader:
         self.file_tools = AsyncFileTools(self.root)
 
     def _run_async(self, coro: Coroutine[Any, Any, T]) -> T:
-        """Run async file ops from sync callers without nested-loop failures."""
+        """Permit synchronous bootstrap only; loop callers use the async methods."""
         try:
-            asyncio.get_running_loop()
+            require_sync_context(code="E_CONFIG_LOADER_REQUIRES_ASYNC_METHOD")
         except RuntimeError:
-            return asyncio.run(coro)
-        with ThreadPoolExecutor(max_workers=1) as pool:
-            return pool.submit(lambda: asyncio.run(coro)).result()
+            coro.close()
+            raise
+        return asyncio.run(coro)
 
     def _relative_path_for_read(self, path: Path) -> str:
         try:

@@ -7,6 +7,7 @@ from functools import partial
 from pathlib import Path
 from typing import Any
 
+from orket.adapters.execution.owned_io import require_sync_context
 from orket.adapters.storage.async_card_repository import AsyncCardRepository
 from orket.adapters.storage.async_repositories import (
     AsyncSessionRepository,
@@ -24,7 +25,7 @@ from orket.application.services.epic_preparation_service import EpicPreparationS
 from orket.application.services.epic_publication_service import EpicPublicationService
 from orket.application.services.runtime_construction_inputs import RuntimeConstructionInputs
 from orket.application.services.runtime_input_service import RuntimeInputService
-from orket.application.services.runtime_result_lifetime import open_runtime_owner
+from orket.application.services.runtime_result_lifetime import open_configured_runtime, open_runtime_owner
 from orket.application.workflows.turn_artifact_writer import TurnArtifactWriter
 from orket.core.contracts.eos_calendar import EosSprintBaseline
 from orket.logging import log_event
@@ -75,6 +76,7 @@ class ExecutionPipeline(
         pipeline_wiring_service: PipelineWiringService | None = None,
         construction_inputs: RuntimeConstructionInputs | None = None,
     ):
+        require_sync_context(code="E_RUNTIME_CONSTRUCTION_REQUIRES_ASYNC_OWNER")
         from orket.orchestration.notes import NoteStore
 
         runtime_nodes = decision_nodes or (runtime_context.decision_nodes if runtime_context is not None
@@ -168,6 +170,10 @@ class ExecutionPipeline(
         self._initialize_lock = asyncio.Lock()
         self._initialized = False
         self._closed = False
+
+    @classmethod
+    def open(cls, workspace: Path, **options):
+        return open_configured_runtime(cls, workspace, label="pipeline-construction", **options)
 
     async def initialize(self) -> None:
         if self._initialized:

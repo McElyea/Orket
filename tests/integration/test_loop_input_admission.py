@@ -41,30 +41,30 @@ async def test_loop_advisor_cannot_mutate_inspected_backlog_or_claim_completion(
     team = json.loads(await asyncio.to_thread(team_path.read_text, encoding="utf-8"))
     team["seats"]["code_reviewer"] = {"name": "Reviewer", "roles": ["code_reviewer"]}
     await asyncio.to_thread(team_path.write_text, json.dumps(team), encoding="utf-8")
-    pipeline = ExecutionPipeline(workspace, department="core", db_path=db_path, config_root=test_root)
-    observed = []
-    class Mutation(DefaultOrchestrationLoopPolicyNode):
-        def no_candidate_outcome(self, inputs):
-            observed.extend(inputs)
-            with pytest.raises(ValidationError, match="frozen_instance"):
-                inputs[0].status = CardStatus.DONE
-            return {"is_done": True, "event_name": "orchestrator_epic_complete"}
-    pipeline.orchestrator.loop_policy_node = Mutation()
-    execute = pipeline.orchestrator.execute_epic
-    async def terminate_before_loop(**kwargs):
-        await pipeline.async_cards.update_status("ISSUE-1", CardStatus.CANCELED)
-        await execute(**kwargs)
-    monkeypatch.setattr(pipeline.orchestrator, "execute_epic", terminate_before_loop)
-    try:
-        result = await pipeline.run_epic("loop_input_epic", build_id="build", session_id="loop-input-session")
-        assert len(observed) == 1 and observed[0].status == CardStatus.CANCELED
-        assert not result.succeeded and result.observation == "published"
-        assert (await pipeline.async_cards.get_by_id("ISSUE-1")).status == CardStatus.CANCELED
-        ledger = await pipeline.run_ledger.get_run("loop-input-session")
-        assert ledger["status"] == "terminal_failure"
-        assert ledger["artifact_json"]["card_completion_outcome"]["acceptance_satisfied"] is False
-    finally:
-        await pipeline.close()
+    async with ExecutionPipeline.open(workspace, department="core", db_path=db_path, config_root=test_root) as pipeline:
+        observed = []
+        class Mutation(DefaultOrchestrationLoopPolicyNode):
+            def no_candidate_outcome(self, inputs):
+                observed.extend(inputs)
+                with pytest.raises(ValidationError, match="frozen_instance"):
+                    inputs[0].status = CardStatus.DONE
+                return {"is_done": True, "event_name": "orchestrator_epic_complete"}
+        pipeline.orchestrator.loop_policy_node = Mutation()
+        execute = pipeline.orchestrator.execute_epic
+        async def terminate_before_loop(**kwargs):
+            await pipeline.async_cards.update_status("ISSUE-1", CardStatus.CANCELED)
+            await execute(**kwargs)
+        monkeypatch.setattr(pipeline.orchestrator, "execute_epic", terminate_before_loop)
+        try:
+            result = await pipeline.run_epic("loop_input_epic", build_id="build", session_id="loop-input-session")
+            assert len(observed) == 1 and observed[0].status == CardStatus.CANCELED
+            assert not result.succeeded and result.observation == "published"
+            assert (await pipeline.async_cards.get_by_id("ISSUE-1")).status == CardStatus.CANCELED
+            ledger = await pipeline.run_ledger.get_run("loop-input-session")
+            assert ledger["status"] == "terminal_failure"
+            assert ledger["artifact_json"]["card_completion_outcome"]["acceptance_satisfied"] is False
+        finally:
+            await pipeline.close()
 
 
 @pytest.mark.asyncio

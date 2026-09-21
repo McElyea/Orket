@@ -197,15 +197,15 @@ async def test_boundary_illegal_state_transition_live(tmp_path: Path, monkeypatc
         ),
     )
 
-    engine = OrchestrationEngine(workspace, department="core", db_path=db_path, config_root=root)
-    with pytest.raises(ExecutionFailed):
-        await engine.run_card("boundary_illegal_transition_live")
+    async with OrchestrationEngine.open(workspace, department="core", db_path=db_path, config_root=root) as engine:
+        with pytest.raises(ExecutionFailed):
+            await engine.run_card("boundary_illegal_transition_live")
 
-    issue = await engine.cards.get_by_id("ISSUE-B")
-    report = _read_json(workspace / "agent_output" / "policy_violation_ISSUE-B.json")
-    print(f"[live][boundary][illegal_transition] model={_live_model()} report={report.get('violation_type')}")
-    assert issue.status == CardStatus.BLOCKED
-    assert report["violation_type"] == "state_transition"
+        issue = await engine.cards.get_by_id("ISSUE-B")
+        report = _read_json(workspace / "agent_output" / "policy_violation_ISSUE-B.json")
+        print(f"[live][boundary][illegal_transition] model={_live_model()} report={report.get('violation_type')}")
+        assert issue.status == CardStatus.BLOCKED
+        assert report["violation_type"] == "state_transition"
 
 
 @pytest.mark.asyncio
@@ -231,55 +231,55 @@ async def test_boundary_path_traversal_live(tmp_path: Path, monkeypatch) -> None
         ),
     )
 
-    engine = OrchestrationEngine(workspace, department="core", db_path=db_path, config_root=root)
-    with pytest.raises(ExecutionFailed):
-        await engine.run_card("boundary_path_traversal_live")
+    async with OrchestrationEngine.open(workspace, department="core", db_path=db_path, config_root=root) as engine:
+        with pytest.raises(ExecutionFailed):
+            await engine.run_card("boundary_path_traversal_live")
 
-    event_rows = _read_jsonl(workspace / "orket.log")
-    security_reprompt_seen = any(
-        str(row.get("event") or "") == "turn_corrective_reprompt"
-        and str((row.get("data") or {}).get("reason") or "") == "security_scope_contract_not_met"
-        for row in event_rows
-    )
-    sanitized_write_seen = any(
-        str(row.get("event") or "") == "tool_call_start"
-        and str((row.get("data") or {}).get("tool") or "") == "write_file"
-        and str(((row.get("data") or {}).get("args") or {}).get("path") or "").endswith("secret.txt")
-        for row in event_rows
-    )
-    sanitized_target_written = (workspace / "secret.txt").exists() or (workspace / "agent_output" / "secret.txt").exists()
-    report_path = workspace / "agent_output" / "policy_violation_ISSUE-B.json"
-    issue = await engine.cards.get_by_id("ISSUE-B")
-    run_roots = _run_roots(workspace)
-    assert len(run_roots) == 1
-    run_summary = read_validated_run_summary(run_roots[0] / "run_summary.json")
-    packet1 = run_summary["truthful_runtime_packet1"]
-    packet2 = run_summary["truthful_runtime_packet2"]
+        event_rows = _read_jsonl(workspace / "orket.log")
+        security_reprompt_seen = any(
+            str(row.get("event") or "") == "turn_corrective_reprompt"
+            and str((row.get("data") or {}).get("reason") or "") == "security_scope_contract_not_met"
+            for row in event_rows
+        )
+        sanitized_write_seen = any(
+            str(row.get("event") or "") == "tool_call_start"
+            and str((row.get("data") or {}).get("tool") or "") == "write_file"
+            and str(((row.get("data") or {}).get("args") or {}).get("path") or "").endswith("secret.txt")
+            for row in event_rows
+        )
+        sanitized_target_written = (workspace / "secret.txt").exists() or (workspace / "agent_output" / "secret.txt").exists()
+        report_path = workspace / "agent_output" / "policy_violation_ISSUE-B.json"
+        issue = await engine.cards.get_by_id("ISSUE-B")
+        run_roots = _run_roots(workspace)
+        assert len(run_roots) == 1
+        run_summary = read_validated_run_summary(run_roots[0] / "run_summary.json")
+        packet1 = run_summary["truthful_runtime_packet1"]
+        packet2 = run_summary["truthful_runtime_packet2"]
 
-    print(
-        "[live][boundary][path_traversal] "
-        f"model={_live_model()} status={run_summary['status']} "
-        f"repair_occurred={packet1['provenance']['repair_occurred']}"
-    )
-    assert security_reprompt_seen is True
-    assert packet1["provenance"]["repair_occurred"] is True
-    assert packet2["repair_ledger"]["repair_occurred"] is True
-    assert packet2["repair_ledger"]["final_disposition"] == "accepted_with_repair"
-    assert not (root / "secret.txt").exists()
-    if report_path.exists():
-        report = _read_json(report_path)
-        assert issue.status == CardStatus.BLOCKED
-        assert run_summary["status"] == "failed"
-        assert "after corrective reprompt" in run_summary["stop_reason"]
-        assert report["violation_type"] == "governance"
-        assert packet1["classification"]["classification_applicable"] is False
-    else:
-        assert sanitized_write_seen is True
-        assert sanitized_target_written is True
-        assert issue.status == CardStatus.IN_PROGRESS
-        assert run_summary["status"] == "failed"
-        assert run_summary["stop_reason"] == "No executable candidates while backlog incomplete."
-        assert packet1["classification"]["truth_classification"] == "repaired"
+        print(
+            "[live][boundary][path_traversal] "
+            f"model={_live_model()} status={run_summary['status']} "
+            f"repair_occurred={packet1['provenance']['repair_occurred']}"
+        )
+        assert security_reprompt_seen is True
+        assert packet1["provenance"]["repair_occurred"] is True
+        assert packet2["repair_ledger"]["repair_occurred"] is True
+        assert packet2["repair_ledger"]["final_disposition"] == "accepted_with_repair"
+        assert not (root / "secret.txt").exists()
+        if report_path.exists():
+            report = _read_json(report_path)
+            assert issue.status == CardStatus.BLOCKED
+            assert run_summary["status"] == "failed"
+            assert "after corrective reprompt" in run_summary["stop_reason"]
+            assert report["violation_type"] == "governance"
+            assert packet1["classification"]["classification_applicable"] is False
+        else:
+            assert sanitized_write_seen is True
+            assert sanitized_target_written is True
+            assert issue.status == CardStatus.IN_PROGRESS
+            assert run_summary["status"] == "failed"
+            assert run_summary["stop_reason"] == "No executable candidates while backlog incomplete."
+            assert packet1["classification"]["truth_classification"] == "repaired"
 
 
 @pytest.mark.asyncio
@@ -298,33 +298,33 @@ async def test_protocol_replay_missing_workspace_snapshot_live(tmp_path: Path, m
     db_path = str(root / "protocol_replay_missing_workspace_snapshot_live.db")
     _write_core_assets(root, epic_id="acceptance_pipeline_replay_live", environment_model=_live_model())
 
-    engine = OrchestrationEngine(workspace, department="core", db_path=db_path, config_root=root)
-    await engine.run_card("acceptance_pipeline_replay_live")
+    async with OrchestrationEngine.open(workspace, department="core", db_path=db_path, config_root=root) as engine:
+        await engine.run_card("acceptance_pipeline_replay_live")
 
-    for issue_id in ("REQ-1", "ARC-1", "COD-1", "REV-1"):
-        issue = await engine.cards.get_by_id(issue_id)
-        assert issue.status == CardStatus.DONE
+        for issue_id in ("REQ-1", "ARC-1", "COD-1", "REV-1"):
+            issue = await engine.cards.get_by_id(issue_id)
+            assert issue.status == CardStatus.DONE
 
-    run_roots = _run_roots(workspace)
-    assert len(run_roots) == 1
-    run_root = run_roots[0]
-    events_log = run_root / "events.log"
-    run_summary = run_root / "run_summary.json"
-    assert events_log.exists()
-    assert run_summary.exists()
+        run_roots = _run_roots(workspace)
+        assert len(run_roots) == 1
+        run_root = run_roots[0]
+        events_log = run_root / "events.log"
+        run_summary = run_root / "run_summary.json"
+        assert events_log.exists()
+        assert run_summary.exists()
 
-    mutated_events = root / "mutations" / run_root.name / "events.log"
-    _mutate_events_missing_workspace_snapshot(events_log, mutated_events)
+        mutated_events = root / "mutations" / run_root.name / "events.log"
+        _mutate_events_missing_workspace_snapshot(events_log, mutated_events)
 
-    replay_engine = ProtocolReplayEngine()
-    with pytest.raises(ValueError) as exc:
-        _ = replay_engine.replay_from_ledger(
-            events_log_path=mutated_events,
-            enforce_runtime_contract_compatibility=True,
-            require_replay_artifact_completeness=True,
-        )
+        replay_engine = ProtocolReplayEngine()
+        with pytest.raises(ValueError) as exc:
+            _ = replay_engine.replay_from_ledger(
+                events_log_path=mutated_events,
+                enforce_runtime_contract_compatibility=True,
+                require_replay_artifact_completeness=True,
+            )
 
-    message = str(exc.value)
-    print(f"[live][replay][missing_workspace_snapshot] run_id={run_root.name} error={message}")
-    assert "E_REPLAY_ARTIFACTS_MISSING:" in message
-    assert "workspace_state_snapshot.workspace_hash" in message
+        message = str(exc.value)
+        print(f"[live][replay][missing_workspace_snapshot] run_id={run_root.name} error={message}")
+        assert "E_REPLAY_ARTIFACTS_MISSING:" in message
+        assert "workspace_state_snapshot.workspace_hash" in message

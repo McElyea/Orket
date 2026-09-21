@@ -215,39 +215,39 @@ async def test_system_acceptance_role_pipeline_with_guard(tmp_path, monkeypatch)
     _write_core_assets(root, epic_id="acceptance_pipeline")
     _patch_dummy_model(monkeypatch, MultiRoleAcceptanceProvider())
 
-    engine = OrchestrationEngine(workspace, department="core", db_path=db_path, config_root=root)
-    try:
-        await engine.run_card("acceptance_pipeline")
+    async with OrchestrationEngine.open(workspace, department="core", db_path=db_path, config_root=root) as engine:
+        try:
+            await engine.run_card("acceptance_pipeline")
 
-        for issue_id in ("REQ-1", "ARC-1", "COD-1", "REV-1"):
-            issue = await engine.cards.get_by_id(issue_id)
-            assert issue.status == CardStatus.DONE, f"{issue_id} did not reach DONE"
-            assert await engine.cards.read_completion_receipt(issue_id) is not None
+            for issue_id in ("REQ-1", "ARC-1", "COD-1", "REV-1"):
+                issue = await engine.cards.get_by_id(issue_id)
+                assert issue.status == CardStatus.DONE, f"{issue_id} did not reach DONE"
+                assert await engine.cards.read_completion_receipt(issue_id) is not None
 
-        assert (workspace / "agent_output" / "requirements.txt").exists()
-        assert (workspace / "agent_output" / "design.txt").exists()
-        assert (workspace / "agent_output" / "main.py").exists()
-        runtime_report = workspace / "agent_output" / "verification" / "runtime_verification.json"
-        assert runtime_report.exists(), "runtime verification artifact missing in canonical acceptance run."
-        runtime_payload = json.loads(runtime_report.read_text(encoding="utf-8"))
-        run_roots = _run_roots(workspace)
-        assert len(run_roots) == 1, "Expected exactly one fresh run directory for acceptance proof."
-        _assert_runtime_verification_support_artifact(
-            workspace,
-            runtime_payload,
-            run_id=run_roots[0].name,
-            expected_issue_id="REV-1",
-        )
-        checkpoint_paths = list((workspace / "observability").rglob("checkpoint.json"))
-        assert checkpoint_paths, "Expected turn checkpoint artifacts for acceptance run."
-        for checkpoint_path in checkpoint_paths:
-            payload = json.loads(checkpoint_path.read_text(encoding="utf-8"))
-            metadata = payload.get("prompt_metadata", {})
-            assert isinstance(metadata, dict)
-            assert metadata.get("resolver_policy")
-            assert metadata.get("selection_policy")
-    finally:
-        await engine.close()
+            assert (workspace / "agent_output" / "requirements.txt").exists()
+            assert (workspace / "agent_output" / "design.txt").exists()
+            assert (workspace / "agent_output" / "main.py").exists()
+            runtime_report = workspace / "agent_output" / "verification" / "runtime_verification.json"
+            assert runtime_report.exists(), "runtime verification artifact missing in canonical acceptance run."
+            runtime_payload = json.loads(runtime_report.read_text(encoding="utf-8"))
+            run_roots = _run_roots(workspace)
+            assert len(run_roots) == 1, "Expected exactly one fresh run directory for acceptance proof."
+            _assert_runtime_verification_support_artifact(
+                workspace,
+                runtime_payload,
+                run_id=run_roots[0].name,
+                expected_issue_id="REV-1",
+            )
+            checkpoint_paths = list((workspace / "observability").rglob("checkpoint.json"))
+            assert checkpoint_paths, "Expected turn checkpoint artifacts for acceptance run."
+            for checkpoint_path in checkpoint_paths:
+                payload = json.loads(checkpoint_path.read_text(encoding="utf-8"))
+                metadata = payload.get("prompt_metadata", {})
+                assert isinstance(metadata, dict)
+                assert metadata.get("resolver_policy")
+                assert metadata.get("selection_policy")
+        finally:
+            await engine.close()
 
 
 @pytest.mark.asyncio
@@ -268,79 +268,79 @@ async def test_system_acceptance_role_pipeline_with_guard_live_reports_truthfull
 
     _write_core_assets(root, epic_id="acceptance_pipeline_live", environment_model=model_name)
 
-    engine = OrchestrationEngine(workspace, department="core", db_path=db_path, config_root=root)
-    run_error = None
-    try:
-        await engine.run_card("acceptance_pipeline_live")
-    except ExecutionFailed as exc:
-        run_error = exc
+    async with OrchestrationEngine.open(workspace, department="core", db_path=db_path, config_root=root) as engine:
+        run_error = None
+        try:
+            await engine.run_card("acceptance_pipeline_live")
+        except ExecutionFailed as exc:
+            run_error = exc
 
-    req_issue = await engine.cards.get_by_id("REQ-1")
-    arc_issue = await engine.cards.get_by_id("ARC-1")
-    cod_issue = await engine.cards.get_by_id("COD-1")
-    rev_issue = await engine.cards.get_by_id("REV-1")
+        req_issue = await engine.cards.get_by_id("REQ-1")
+        arc_issue = await engine.cards.get_by_id("ARC-1")
+        cod_issue = await engine.cards.get_by_id("COD-1")
+        rev_issue = await engine.cards.get_by_id("REV-1")
 
-    requirements_path = workspace / "agent_output" / "requirements.txt"
-    design_path = workspace / "agent_output" / "design.txt"
-    code_path = workspace / "agent_output" / "main.py"
-    runtime_report = workspace / "agent_output" / "verification" / "runtime_verification.json"
+        requirements_path = workspace / "agent_output" / "requirements.txt"
+        design_path = workspace / "agent_output" / "design.txt"
+        code_path = workspace / "agent_output" / "main.py"
+        runtime_report = workspace / "agent_output" / "verification" / "runtime_verification.json"
 
-    requirements_text = _read_text(requirements_path) if requirements_path.exists() else ""
-    design_text = _read_text(design_path) if design_path.exists() else ""
-    code_text = _read_text(code_path) if code_path.exists() else ""
+        requirements_text = _read_text(requirements_path) if requirements_path.exists() else ""
+        design_text = _read_text(design_path) if design_path.exists() else ""
+        code_text = _read_text(code_path) if code_path.exists() else ""
 
-    print(f"[live] model={model_name}")
-    print(f"[live] REQ-1 status={req_issue.status}")
-    print(f"[live] ARC-1 status={arc_issue.status}")
-    print(f"[live] COD-1 status={cod_issue.status}")
-    print(f"[live] REV-1 status={rev_issue.status}")
-    print("[live] requirements.txt")
-    print(_safe_console(requirements_text))
-    print("[live] design.txt")
-    print(_safe_console(design_text))
-    print("[live] main.py")
-    print(_safe_console(code_text))
+        print(f"[live] model={model_name}")
+        print(f"[live] REQ-1 status={req_issue.status}")
+        print(f"[live] ARC-1 status={arc_issue.status}")
+        print(f"[live] COD-1 status={cod_issue.status}")
+        print(f"[live] REV-1 status={rev_issue.status}")
+        print("[live] requirements.txt")
+        print(_safe_console(requirements_text))
+        print("[live] design.txt")
+        print(_safe_console(design_text))
+        print("[live] main.py")
+        print(_safe_console(code_text))
 
-    run_roots = _run_roots(workspace)
-    assert len(run_roots) == 1, "Expected exactly one fresh run directory for live acceptance proof."
-    run_root = run_roots[0]
-    run_summary_path = run_root / "run_summary.json"
-    assert run_summary_path.exists(), "run_summary.json missing from live run root"
-    run_summary = read_validated_run_summary(run_summary_path)
-    assert run_summary.get("run_id") == run_root.name
-    if runtime_report.exists():
-        runtime_payload = _read_json(runtime_report)
-        _assert_runtime_verification_support_artifact(workspace, runtime_payload, run_id=run_root.name)
+        run_roots = _run_roots(workspace)
+        assert len(run_roots) == 1, "Expected exactly one fresh run directory for live acceptance proof."
+        run_root = run_roots[0]
+        run_summary_path = run_root / "run_summary.json"
+        assert run_summary_path.exists(), "run_summary.json missing from live run root"
+        run_summary = read_validated_run_summary(run_summary_path)
+        assert run_summary.get("run_id") == run_root.name
+        if runtime_report.exists():
+            runtime_payload = _read_json(runtime_report)
+            _assert_runtime_verification_support_artifact(workspace, runtime_payload, run_id=run_root.name)
 
-    issues_done = all(
-        issue is not None and issue.status == CardStatus.DONE for issue in (req_issue, arc_issue, cod_issue, rev_issue)
-    )
-    if issues_done:
-        assert run_error is None
-        assert requirements_path.exists(), "requirements.txt not produced for completed REQ-1"
-        assert design_path.exists(), "design.txt not produced for completed ARC-1"
-        assert code_path.exists(), "main.py not produced for completed COD-1"
-        assert runtime_report.exists(), "runtime_verification.json missing for live acceptance run"
-        runtime_payload = _read_json(runtime_report)
-        _assert_runtime_verification_support_artifact(
-            workspace,
-            runtime_payload,
-            run_id=run_root.name,
-            expected_issue_id="REV-1",
+        issues_done = all(
+            issue is not None and issue.status == CardStatus.DONE for issue in (req_issue, arc_issue, cod_issue, rev_issue)
         )
-        assert run_summary.get("status") == "done"
-        assert "workspace_state_snapshot" in list(run_summary.get("artifact_ids") or [])
-    else:
-        assert run_error is not None or run_summary.get("status") in {"failed", "terminal_failure", "incomplete"}
-        assert run_summary.get("status") in {"failed", "terminal_failure", "incomplete"}
-        assert str(run_summary.get("stop_reason") or run_summary.get("failure_reason") or "").strip()
+        if issues_done:
+            assert run_error is None
+            assert requirements_path.exists(), "requirements.txt not produced for completed REQ-1"
+            assert design_path.exists(), "design.txt not produced for completed ARC-1"
+            assert code_path.exists(), "main.py not produced for completed COD-1"
+            assert runtime_report.exists(), "runtime_verification.json missing for live acceptance run"
+            runtime_payload = _read_json(runtime_report)
+            _assert_runtime_verification_support_artifact(
+                workspace,
+                runtime_payload,
+                run_id=run_root.name,
+                expected_issue_id="REV-1",
+            )
+            assert run_summary.get("status") == "done"
+            assert "workspace_state_snapshot" in list(run_summary.get("artifact_ids") or [])
+        else:
+            assert run_error is not None or run_summary.get("status") in {"failed", "terminal_failure", "incomplete"}
+            assert run_summary.get("status") in {"failed", "terminal_failure", "incomplete"}
+            assert str(run_summary.get("stop_reason") or run_summary.get("failure_reason") or "").strip()
 
-    run_ledger_mode = os.getenv("ORKET_RUN_LEDGER_MODE", "").strip().lower()
-    if run_ledger_mode in {"append_only", "append_only_protocol", "dual", "dual_write", "mirror", "protocol"}:
-        assert (run_root / "events.log").exists(), "events.log missing for protocol-capable live run"
+        run_ledger_mode = os.getenv("ORKET_RUN_LEDGER_MODE", "").strip().lower()
+        if run_ledger_mode in {"append_only", "append_only_protocol", "dual", "dual_write", "mirror", "protocol"}:
+            assert (run_root / "events.log").exists(), "events.log missing for protocol-capable live run"
 
-    print(f"[live] run_id={run_root.name}")
-    print(f"[live] run_root={run_root}")
+        print(f"[live] run_id={run_root.name}")
+        print(f"[live] run_root={run_root}")
 
 
 @pytest.mark.asyncio

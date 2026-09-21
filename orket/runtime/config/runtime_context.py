@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from orket.adapters.execution.owned_io import require_sync_context
 from orket.adapters.storage.async_card_repository import AsyncCardRepository
 from orket.adapters.storage.async_repositories import (
     AsyncSessionRepository,
@@ -101,6 +102,7 @@ class OrketRuntimeContext:
         primary_run_ledger_mode: str = "sqlite",
         construction_inputs: RuntimeConstructionInputs | None = None,
     ) -> OrketRuntimeContext:
+        require_sync_context(code="E_RUNTIME_CONSTRUCTION_REQUIRES_ASYNC_OWNER")
         # The legacy extension package imports the engine; compose after runtime types initialize.
         from orket.application.services.card_completion_composition import build_card_completion_service
         from orket.application.services.runtime_store_binding_service import RuntimeStoreBindingService

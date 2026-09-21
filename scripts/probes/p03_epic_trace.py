@@ -350,26 +350,26 @@ async def _run_probe(args: argparse.Namespace) -> dict[str, Any]:
         disable_sandbox=True,
     ):
         await seed_runtime_settings_context()
-        pipeline = ExecutionPipeline(
+        async with ExecutionPipeline.open(
             workspace=workspace,
             department="core",
             config_root=workspace,
             run_ledger_repo=AsyncProtocolRunLedgerRepository(workspace),
-        )
-        try:
-            pipeline_result = await pipeline.run_card(
-                EPIC_ID,
-                session_id=session_id,
-                build_id=build_id,
-            )
-        except Exception as exc:  # noqa: BLE001
-            run_error = exc
-            if is_environment_blocker(exc):
-                raise
-        try:
-            issue_rows = await pipeline.async_cards.get_by_build(build_id)
-        except Exception:  # noqa: BLE001
-            issue_rows = []
+        ) as pipeline:
+            try:
+                pipeline_result = await pipeline.run_card(
+                    EPIC_ID,
+                    session_id=session_id,
+                    build_id=build_id,
+                )
+            except Exception as exc:  # noqa: BLE001
+                run_error = exc
+                if is_environment_blocker(exc):
+                    raise
+            try:
+                issue_rows = await pipeline.async_cards.get_by_build(build_id)
+            except Exception:  # noqa: BLE001
+                issue_rows = []
 
     summary = run_summary(workspace, session_id)
     lifecycle_events = protocol_events(workspace, session_id)

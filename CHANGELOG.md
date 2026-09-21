@@ -5,6 +5,18 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.68] - 2026-09-21
+
+### Fixed
+- Refuse synchronous ConfigLoader calls on event loops without leaking their unstarted coroutines.
+- Own direct engine/pipeline construction and required close through async contexts, capturing bootstrap/path inputs before worker admission.
+- Migrate concrete async callers and retain witness engine cleanup before bundle publication.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Async callers use ConfigLoader async methods and engine/pipeline `.open(...)` contexts; direct runtime constructors remain pre-loop/worker only with caller-owned close.
+- Contract and limits: `docs/architecture/CONTRACT_DELTA_CONFIG_SYNC_BRIDGE_D_2026-09-21.md`.
+
 ## [0.6.67] - 2026-09-21
 
 ### Fixed

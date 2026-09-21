@@ -48,56 +48,56 @@ async def test_phase_e_live_acceptance_gate_and_evidence_package_closeout(tmp_pa
     db_path = str(root / "phase_e_live.db")
     _write_core_assets(root, epic_id="truthful_runtime_phase_e_live", environment_model=_live_model())
 
-    engine = OrchestrationEngine(workspace, department="core", db_path=db_path, config_root=root)
-    await engine.run_card("truthful_runtime_phase_e_live")
+    async with OrchestrationEngine.open(workspace, department="core", db_path=db_path, config_root=root) as engine:
+        await engine.run_card("truthful_runtime_phase_e_live")
 
-    run_roots = _run_roots(workspace)
-    assert len(run_roots) == 1
-    run_root = run_roots[0]
-    run_summary = read_validated_run_summary(run_root / "run_summary.json")
-    runtime_contracts = workspace / "observability" / run_root.name / "runtime_contracts"
+        run_roots = _run_roots(workspace)
+        assert len(run_roots) == 1
+        run_root = run_roots[0]
+        run_summary = read_validated_run_summary(run_root / "run_summary.json")
+        runtime_contracts = workspace / "observability" / run_root.name / "runtime_contracts"
 
-    assert run_summary["status"] == "done"
-    assert runtime_contracts.exists()
+        assert run_summary["status"] == "done"
+        assert runtime_contracts.exists()
 
-    conformance_governance = _read_json(runtime_contracts / "conformance_governance_contract.json")
-    governance_section_ids = {row["section_id"] for row in conformance_governance["sections"]}
-    assert "golden_transcript_diff_policy" in governance_section_ids
-    assert "operator_signoff_bundle" in governance_section_ids
-    assert "repo_introspection_report" in governance_section_ids
-    assert (runtime_contracts / "workspace_state_snapshot.json").exists()
-    assert (runtime_contracts / "capability_manifest.json").exists()
+        conformance_governance = _read_json(runtime_contracts / "conformance_governance_contract.json")
+        governance_section_ids = {row["section_id"] for row in conformance_governance["sections"]}
+        assert "golden_transcript_diff_policy" in governance_section_ids
+        assert "operator_signoff_bundle" in governance_section_ids
+        assert "repo_introspection_report" in governance_section_ids
+        assert (runtime_contracts / "workspace_state_snapshot.json").exists()
+        assert (runtime_contracts / "capability_manifest.json").exists()
 
-    gate_payload = await asyncio.to_thread(
-        evaluate_runtime_truth_acceptance_gate,
-        workspace=workspace.resolve(),
-        run_id=run_root.name,
-        check_drift=True,
-    )
-    assert gate_payload["ok"] is True
-    assert gate_payload["details"]["conformance_governance_contract_check"]["ok"] is True
-    assert gate_payload["details"]["release_confidence_scorecard_check"]["ok"] is True
-    assert gate_payload["details"]["trust_language_review_check"]["ok"] is True
-    assert gate_payload["details"]["workspace_hygiene_rules_check"]["ok"] is True
+        gate_payload = await asyncio.to_thread(
+            evaluate_runtime_truth_acceptance_gate,
+            workspace=workspace.resolve(),
+            run_id=run_root.name,
+            check_drift=True,
+        )
+        assert gate_payload["ok"] is True
+        assert gate_payload["details"]["conformance_governance_contract_check"]["ok"] is True
+        assert gate_payload["details"]["release_confidence_scorecard_check"]["ok"] is True
+        assert gate_payload["details"]["trust_language_review_check"]["ok"] is True
+        assert gate_payload["details"]["workspace_hygiene_rules_check"]["ok"] is True
 
-    exit_code, evidence_payload, evidence_out_path = await asyncio.to_thread(
-        generate_runtime_truth_evidence_package,
-        workspace=workspace.resolve(),
-        run_id=run_root.name,
-    )
-    assert exit_code == 0
-    assert evidence_payload["gate_summary"]["ok"] is True
-    assert evidence_payload["artifact_inventory"]["required_files_missing"] == []
-    assert evidence_payload["decision_record"]["promotion_recommendation"] == "eligible"
-    assert evidence_payload["decision_record"]["required_operator_action"] == "operator_signoff_required"
+        exit_code, evidence_payload, evidence_out_path = await asyncio.to_thread(
+            generate_runtime_truth_evidence_package,
+            workspace=workspace.resolve(),
+            run_id=run_root.name,
+        )
+        assert exit_code == 0
+        assert evidence_payload["gate_summary"]["ok"] is True
+        assert evidence_payload["artifact_inventory"]["required_files_missing"] == []
+        assert evidence_payload["decision_record"]["promotion_recommendation"] == "eligible"
+        assert evidence_payload["decision_record"]["required_operator_action"] == "operator_signoff_required"
 
-    written_evidence = _read_json(evidence_out_path)
-    assert written_evidence["schema_version"] == "runtime_truth_evidence_package.v1"
-    assert "diff_ledger" in written_evidence
+        written_evidence = _read_json(evidence_out_path)
+        assert written_evidence["schema_version"] == "runtime_truth_evidence_package.v1"
+        assert "diff_ledger" in written_evidence
 
-    print(
-        "[live][phase-e][closeout] "
-        f"run_id={run_root.name} gate_ok={gate_payload['ok']} "
-        f"promotion={evidence_payload['decision_record']['promotion_recommendation']} "
-        f"operator_action={evidence_payload['decision_record']['required_operator_action']}"
-    )
+        print(
+            "[live][phase-e][closeout] "
+            f"run_id={run_root.name} gate_ok={gate_payload['ok']} "
+            f"promotion={evidence_payload['decision_record']['promotion_recommendation']} "
+            f"operator_action={evidence_payload['decision_record']['required_operator_action']}"
+        )

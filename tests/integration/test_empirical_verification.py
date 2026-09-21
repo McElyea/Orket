@@ -13,7 +13,7 @@ def verify(input_data):
     return 0
 """
 
-@pytest.mark.asyncio
+@pytest.mark.integration
 # Layer: integration
 async def test_empirical_verification_pass_is_support_only(tmp_path, monkeypatch):
     root = tmp_path
@@ -99,24 +99,24 @@ async def test_empirical_verification_pass_is_support_only(tmp_path, monkeypatch
     monkeypatch.setattr(LocalModelProvider, "complete", p.complete)
 
     # 4. Run
-    engine = OrchestrationEngine(workspace, db_path=str(root/"test.db"), config_root=root)
-    try:
-        observed = await engine.run_card('verify_epic')
-        assert observed.observation == "published" and not observed.succeeded
-        assert re.search('E_CARD_COMPLETION_EVIDENCE_REQUIRED', observed.reason or "")
+    async with OrchestrationEngine.open(workspace, db_path=str(root/"test.db"), config_root=root) as engine:
+        try:
+            observed = await engine.run_card('verify_epic')
+            assert observed.observation == "published" and not observed.succeeded
+            assert re.search('E_CARD_COMPLETION_EVIDENCE_REQUIRED', observed.reason or "")
 
-        # 5. Assertions
-        issue = await engine.cards.get_by_id("I1")
-        assert issue.status != "done"
-        assert await engine.cards.read_completion_receipt("I1") is None
+            # 5. Assertions
+            issue = await engine.cards.get_by_id("I1")
+            assert issue.status != "done"
+            assert await engine.cards.read_completion_receipt("I1") is None
 
-        # Check that verification result was persisted
-        # Note: SQLiteCardRepository returns a dict where complex types are in 'verification' key
-        # after being loaded from 'verification_json'
-        assert hasattr(issue, "verification")
-        v = issue.verification
-        assert v["last_run"]["passed"] == 1
-        assert v["scenarios"][0]["status"] == "pass"
-    finally:
-        await engine.close()
+            # Check that verification result was persisted
+            # Note: SQLiteCardRepository returns a dict where complex types are in 'verification' key
+            # after being loaded from 'verification_json'
+            assert hasattr(issue, "verification")
+            v = issue.verification
+            assert v["last_run"]["passed"] == 1
+            assert v["scenarios"][0]["status"] == "pass"
+        finally:
+            await engine.close()
 

@@ -84,5 +84,7 @@ acceptance remain separately open. This contract grants no hostile-code
 containment, rollback of native effects or whole-lane acceptance.
 
 Legacy action engine construction and required close now follow
-`CONTRACT_DELTA_LEGACY_ACTION_ENGINE_D_2026-09-21.md`; broader ConfigLoader and
-direct runtime-constructor migration remains open.
+`CONTRACT_DELTA_LEGACY_ACTION_ENGINE_D_2026-09-21.md`. The synchronous ConfigLoader
+bridge and direct engine/pipeline/runtime-context construction now follow
+`CONTRACT_DELTA_CONFIG_SYNC_BRIDGE_D_2026-09-21.md`; broader constructor and
+caller reachability remains open.

@@ -207,17 +207,17 @@ async def _run_probe(args: argparse.Namespace) -> dict[str, Any]:
         disable_sandbox=True,
     ):
         await seed_runtime_settings_context()
-        pipeline = ExecutionPipeline(
+        async with ExecutionPipeline.open(
             workspace=workspace,
             department="core",
             config_root=workspace,
             run_ledger_repo=AsyncProtocolRunLedgerRepository(workspace),
-        )
-        pipeline_result = await pipeline.run_card(
-            issue_id,
-            session_id=session_id,
-            build_id=build_id,
-        )
+        ) as pipeline:
+            pipeline_result = await pipeline.run_card(
+                issue_id,
+                session_id=session_id,
+                build_id=build_id,
+            )
 
     summary = run_summary(workspace, session_id)
     lifecycle_events = protocol_events(workspace, session_id)

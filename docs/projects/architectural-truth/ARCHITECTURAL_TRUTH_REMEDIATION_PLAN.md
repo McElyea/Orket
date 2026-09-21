@@ -12519,8 +12519,8 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.67 legacy action engine and plan lifetime, retaining the 0.6.65 run-query and
-0.6.66 sandbox-query ownership checkpoints. Preserve the governed legacy-export cutover;
+0.6.68 synchronous configuration bridge and owned runtime callers, retaining
+the 0.6.65 run-query, 0.6.66 sandbox-query and 0.6.67 legacy action checkpoints. Preserve the governed legacy-export cutover;
 continue remaining clock/input owners, adapter enforcement and async reachability before E1/E2
 and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
@@ -20160,3 +20160,115 @@ and adapter classification/async inventory, E1/E2 and CAP remain open. Full-suit
 89% coverage, hosted Quality, .43 Git timeout cause and four .59 packet1 provider
 cases remain unverified. Accepted BT evidence is retained. Required work and
 explicit user acceptance still govern completion and lane retirement.
+
+
+#### .68 Synchronous configuration bridge and owned runtime callers (2026-09-21)
+
+ConfigLoader synchronous load/list methods now close unstarted coroutines and
+refuse an event-loop call with `E_CONFIG_LOADER_REQUIRES_ASYNC_METHOD`. Pre-loop
+and worker callers retain `asyncio.run`; async callers use the existing async
+methods. The loop-blocking ThreadPoolExecutor/result bridge is removed.
+Engine, pipeline and runtime-context constructors refuse event-loop construction
+before bootstrap/native effects. Engine/pipeline `.open(...)` contexts capture
+bootstrap/path inputs, construct through the shared worker owner, and require close
+before return. Relative workspace/config/database paths bind to the captured root.
+Explicit construction snapshots and injected capability identities are retained.
+Contract: `docs/architecture/CONTRACT_DELTA_CONFIG_SYNC_BRIDGE_D_2026-09-21.md`.
+
+Seventy direct constructor calls in 33 script/test files now use owned contexts.
+AST comparison proves their operation bodies and assertions are unchanged outside
+ownership scopes and explicit test-layer labels. A multi-context statement preserves
+the two p04 pipelines' acquisition order and reverse cleanup. The indirect witness
+bundle caller also owns its product-flow builder and closes before publication.
+That builder retains its existing environment preparation; it does not establish
+immutable inputs for every standalone helper. The five changed runtime files retain
+all other method ASTs; the three constructor changes are exact leading guards.
+The existing engine file remains 457 lines, with telemetry formatting compressed
+without changing its AST; ConfigLoader shrinks 184 to 183 lines. No oversized
+modified Python file grows.
+
+Eight initial guard cases fail, and the held native-read counterexample blocks
+the loop for 0.803177 seconds against the predeclared 0.5-second bound. Thirteen
+initial candidate/compatibility cases pass. The first routine caller run passes
+847 cases. New actual engine/pipeline lifetime proof covers construction, body
+and close under cancellation, 50ms timeout after native admission and native file
+failure. Actual initialization, filesystem handles and concurrent SQLite are used;
+no synthetic successful runtime action result is needed. Late construction owners
+close without entering the body. The existing failing-constructor resource limit
+remains: objects discarded before constructor return cannot be recovered here.
+Cleanup fault fixtures delegate actual close in finally; this does not cover every
+internal storage driver's partial-close failure. Native 0.8-second release and
+five-second join bounds remain unchanged.
+
+Input proof mutates cwd, environment and caller options while capture is held;
+the admitted organization, roots and database remain bound. Explicit snapshots
+avoid recapture. Actual missing-card failures close the returned owner, while
+pre-loop construction remains available. The first lifetime/input run passes 22
+and fails two fixture setups because the config parent directory was absent.
+Those inputs/results remain retained; creating that fixture parent yields 24
+passes. The final focused run, including explicit snapshots and prior pre-loop
+config behavior, passes 41 cases. Thirteen witness/related-script cases pass;
+actual witness refusal closes engine/pipeline and cleanup failure prevents a
+bundle artifact. These are local runtime/refusal observations, not inference or
+successful provider-script completion.
+
+Final eleven regressions all fail against the byte-verified local .67 wheel using
+identical current test bytes. The initial old-wheel control has eleven failures
+and one extra teardown error: its witness fault also fired during the old
+autouse cleanup. Limiting that fixture fault to the active command retains all
+eleven failures with zero teardown errors. Candidate command cleanup still must
+complete before return, and its native cleanup fault still prevents publication.
+Both original and corrected controls remain retained.
+
+The bounded lexical discovery records 76 candidates in 36 files; it is not a
+complete call graph or a violation count. The final 166-module routine cohort
+retains all 786 .67 cases plus affected imports and explicit script tests. Six
+provider-gated modules are recorded separately and are not claimed as accepted.
+Selection preparation initially failed on prior Git UTF-8 BOM bytes decoded with
+the Windows default encoding. A wrapper now reads those exact bytes as UTF-8-sig,
+preserving the sealed selector and limits. Three original BOM files, initial
+selection and correction receipts remain retained. No test or deadline is relaxed.
+
+| Cell | Cases / failures / errors / skips | JUnit seconds | Installed origins |
+|---|---|---|---|
+| Source Windows Python 3.11 | 1063 / 0 / 0 / 0 | 394.140 | Source run |
+| Installed win-py311 | 1063 / 0 / 0 / 0 | 396.187 | 1009 |
+| Installed win-py312 | 1063 / 0 / 0 / 0 | 478.810 | 1009 |
+
+All 57 new response observations meet 0.5 seconds; maximum 0.014254100s.
+The retained legacy CLI tests exercise actual local Git installation, empty-plan
+success, runtime refusal, SIGINT and cleanup failure in each cell. Complete
+source/wheel/sdist parity covers 1,112 Python files, all 19
+data resources, 1,131 core members and 2,206
+support inputs. Wheel SHA-256: `43020a0dc53aa17a55f4ad4f9f9380f0735fa7054f3ee775ea3d005ebac4dff3`;
+sdist SHA-256: `b4a8bc4d7644d9bb91cbafc30214bcab7186917c3af613b06678ef1baa01c267`.
+Scoped Windows sleep requests restore without persistent power changes.
+
+Actual dependency policy v2 passes with no new exceptions. Changed runtime/test
+Python is Ruff-clean, and canonical Ruff retains 94 findings. Raw all-changed-file
+Ruff **fails** on 45 pre-existing findings in seven CLI scripts. Exact .67/current
+rule/message/source/multiplicity comparison proves no new CLI finding; the two
+new style findings from development were fixed. CLI async exemptions retain their
+explicit contributor scope; import-bootstrap style and other existing findings
+remain recorded debt. Qualified structural review records C and lint nonregression,
+not a full lint or Quality pass. No suppression or Ruff setting was added.
+
+The fresh passive Linux gate is **blocked / environment blocker** after
+240.010775s: only 4.663277s synchronized
+quiet versus the required 60, with wall/monotonic steps from
+-0.030187614s to 1.572463036s
+against 0.01s. Journal collection exits 0; cause remains
+unestablished. No clocks changed and no Linux application cell ran. Ollama's CLI
+is unavailable on PATH and its local 11434 endpoint refused connection. That
+does not prove it is absent elsewhere on the host. No provider was started,
+downloaded or substituted; the .59 alias-dependent packet1 gap remains open.
+
+Evidence: `.tmp/d-config-sync-bridge/`. This is a local commit/annotated tag only,
+with no GitHub push. ConfigLoader construction, Agent root resolution, remaining
+synchronous helper/internal-cleanup lifetimes, CommandRunner async ownership,
+broader inputs and adapter classification/async inventory remain D work. The
+six migrated provider modules, cold-start benchmark and successful provider-script
+paths remain without fresh live acceptance. Successful witness-bundle generation
+also remains outside the observed refusal/cleanup scope. E1/E2, whole-suite 89%, hosted Quality, .43 Git timeout
+cause, CAP and explicit whole-lane acceptance remain open. Accepted BT evidence
+and failed observations are retained; the lane is not retired.

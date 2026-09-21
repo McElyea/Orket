@@ -1,4 +1,4 @@
-﻿import json
+import json
 import sys
 from pathlib import Path
 from typing import Any
@@ -179,15 +179,15 @@ async def async_engine(tmp_path):
     """Layer: integration. Provides an OrchestrationEngine with teardown."""
     from orket.orchestration.engine import OrchestrationEngine
 
-    engine = OrchestrationEngine(
+    async with OrchestrationEngine.open(
         workspace_root=tmp_path / "workspace",
         db_path=str(tmp_path / "orket.db"),
         config_root=tmp_path,
-    )
-    try:
-        yield engine
-    finally:
-        await engine.close()
+    ) as engine:
+        try:
+            yield engine
+        finally:
+            await engine.close()
 
 
 @pytest.fixture(autouse=True)

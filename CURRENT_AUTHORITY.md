@@ -55,6 +55,13 @@ refuses an event-loop thread; interrupted workloads without confirmed terminal
 evidence retain their existing unresolved control-plane state. Migration and scope:
 `docs/architecture/CONTRACT_DELTA_LEGACY_ACTION_ENGINE_D_2026-09-21.md`.
 
+Synchronous ConfigLoader methods refuse event-loop calls and close unstarted
+coroutines. Async engine/pipeline embeddings use their `.open(...)` contexts
+for captured bootstrap/path inputs, worker construction and required cleanup.
+Direct engine, pipeline and runtime-context construction is pre-loop/worker
+only. Existing action/result authority is retained. Migration and limits:
+`docs/architecture/CONTRACT_DELTA_CONFIG_SYNC_BRIDGE_D_2026-09-21.md`.
+
 Sandbox log requests capture invocation inputs before owned pipeline construction,
 retain native reads through interruption and close each ephemeral pipeline before
 return. Nonzero log-command exits are visible failures; the ten-second command

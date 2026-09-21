@@ -35,7 +35,7 @@ class GoldenFlowDummyProvider(LocalModelProvider):
                 raw={"model": "dummy", "total_tokens": 100}
             )
 
-@pytest.mark.asyncio
+@pytest.mark.integration
 # Layer: integration
 async def test_golden_flow(tmp_path, monkeypatch):
     # 1. Setup temporary directory structure
@@ -144,22 +144,22 @@ async def test_golden_flow(tmp_path, monkeypatch):
     monkeypatch.setattr(LocalModelProvider, "complete", dummy_provider.complete)
 
     # 4. Run the engine
-    engine = OrchestrationEngine(workspace, department="core", db_path=db_path, config_root=root)
-    try:
-        await engine.run_card("test_epic")
+    async with OrchestrationEngine.open(workspace, department="core", db_path=db_path, config_root=root) as engine:
+        try:
+            await engine.run_card("test_epic")
 
-        # 5. Assertions
-        sanity_file = workspace / "agent_output" / "sanity.txt"
-        assert sanity_file.exists()
-        assert sanity_file.read_text(encoding="utf-8") == "Orket is Operational"
+            # 5. Assertions
+            sanity_file = workspace / "agent_output" / "sanity.txt"
+            assert sanity_file.exists()
+            assert sanity_file.read_text(encoding="utf-8") == "Orket is Operational"
 
-        issue = await engine.cards.get_by_id("ISSUE-01")
-        assert issue.status == "done", f"Expected 'done' after verifier turn, got '{issue.status}'"
-        assert dummy_provider.turns >= 2, "Should have taken at least 2 turns (Dev + Verifier)"
-    finally:
-        await engine.close()
+            issue = await engine.cards.get_by_id("ISSUE-01")
+            assert issue.status == "done", f"Expected 'done' after verifier turn, got '{issue.status}'"
+            assert dummy_provider.turns >= 2, "Should have taken at least 2 turns (Dev + Verifier)"
+        finally:
+            await engine.close()
 
-@pytest.mark.asyncio
+@pytest.mark.integration
 # Layer: integration
 async def test_session_resumption(tmp_path, monkeypatch):
     root = tmp_path
@@ -225,24 +225,24 @@ async def test_session_resumption(tmp_path, monkeypatch):
     monkeypatch.setattr(LocalModelProvider, "__init__", mock_init)
     monkeypatch.setattr(LocalModelProvider, "complete", dummy_provider.complete)
 
-    engine = OrchestrationEngine(workspace, department="core", db_path=db_path, config_root=root)
-    try:
-        await engine.cards.save({"id": "I1", "summary": "Create sanity file", "seat": "lead_architect", "build_id": "build-resume_epic",
-                                 "params": {"completion_acceptance": text_acceptance("agent_output/sanity.txt", "Orket is Operational", workload_id="sanity-file").model_dump(mode="json")}})
-        await asyncio.to_thread((workspace / "agent_output/sanity.txt").write_bytes, b"Orket is Operational")
-        service = engine.runtime_context.card_completion
-        context = await service.begin_attempt(engine.cards, card_id="I1", run_id="seed-run", attempt_id="seed-attempt")
-        evaluation = await service.evaluate_attempt(engine.cards, context)
-        original_receipt = await engine.cards.update_status("I1", CardStatus.DONE, completion_request=evaluation.request)
-        await engine.run_card("resume_epic", target_issue_id="I2")
+    async with OrchestrationEngine.open(workspace, department="core", db_path=db_path, config_root=root) as engine:
+        try:
+            await engine.cards.save({"id": "I1", "summary": "Create sanity file", "seat": "lead_architect", "build_id": "build-resume_epic",
+                                     "params": {"completion_acceptance": text_acceptance("agent_output/sanity.txt", "Orket is Operational", workload_id="sanity-file").model_dump(mode="json")}})
+            await asyncio.to_thread((workspace / "agent_output/sanity.txt").write_bytes, b"Orket is Operational")
+            service = engine.runtime_context.card_completion
+            context = await service.begin_attempt(engine.cards, card_id="I1", run_id="seed-run", attempt_id="seed-attempt")
+            evaluation = await service.evaluate_attempt(engine.cards, context)
+            original_receipt = await engine.cards.update_status("I1", CardStatus.DONE, completion_request=evaluation.request)
+            await engine.run_card("resume_epic", target_issue_id="I2")
 
-        issue2 = await engine.cards.get_by_id("I2")
-        assert issue2.status == "done"
+            issue2 = await engine.cards.get_by_id("I2")
+            assert issue2.status == "done"
 
-        issue1 = await engine.cards.get_by_id("I1")
-        assert issue1.status == "done"
-        assert await engine.cards.read_completion_receipt("I1") == original_receipt
-    finally:
-        await engine.close()
+            issue1 = await engine.cards.get_by_id("I1")
+            assert issue1.status == "done"
+            assert await engine.cards.read_completion_receipt("I1") == original_receipt
+        finally:
+            await engine.close()
 
 

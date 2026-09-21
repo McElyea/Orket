@@ -44,20 +44,20 @@ async def test_governed_rejection_reaches_guard_events_and_published_epic_truth(
     await asyncio.to_thread(epic_path.write_text, json.dumps(epic), encoding='utf-8')
     _patch_provider(monkeypatch, GovernedRejectingProvider())
     monkeypatch.setenv('ORKET_PROTOCOL_GOVERNED_ENABLED', 'true')
-    engine = OrchestrationEngine(tmp_path / 'workspace', department='core',
-                                 db_path=str(tmp_path / 'cards.db'), config_root=tmp_path)
-    try:
-        result = await engine.run_card('governed_reject')
-        record = await engine.cards.get_by_id('ISSUE-A')
-        assert record.status == CardStatus.BLOCKED and record.completion_ref is None
-        assert not result.succeeded and result.observation == 'published'
-        assert result.final_truth.result_class.value != 'success'
-        events = [item.orket_record for item in caplog.records if hasattr(item, 'orket_record')]
-        reviews = [item for item in events if item['event'] == 'guard_review_payload']
-        assert len(reviews) == 1 and reviews[0]['data']['payload'] == REJECTION
-        assert not any(item['event'] == 'guard_payload_invalid' for item in events)
-        assert any(item['event'] == 'guard_rejected' for item in events)
-        support = [item for item in events if item['event'] == 'runtime_verifier_completed']
-        assert support and all(item['data']['ok'] for item in support)
-    finally:
-        await engine.close()
+    async with OrchestrationEngine.open(tmp_path / 'workspace', department='core',
+                                 db_path=str(tmp_path / 'cards.db'), config_root=tmp_path) as engine:
+        try:
+            result = await engine.run_card('governed_reject')
+            record = await engine.cards.get_by_id('ISSUE-A')
+            assert record.status == CardStatus.BLOCKED and record.completion_ref is None
+            assert not result.succeeded and result.observation == 'published'
+            assert result.final_truth.result_class.value != 'success'
+            events = [item.orket_record for item in caplog.records if hasattr(item, 'orket_record')]
+            reviews = [item for item in events if item['event'] == 'guard_review_payload']
+            assert len(reviews) == 1 and reviews[0]['data']['payload'] == REJECTION
+            assert not any(item['event'] == 'guard_payload_invalid' for item in events)
+            assert any(item['event'] == 'guard_rejected' for item in events)
+            support = [item for item in events if item['event'] == 'runtime_verifier_completed']
+            assert support and all(item['data']['ok'] for item in support)
+        finally:
+            await engine.close()

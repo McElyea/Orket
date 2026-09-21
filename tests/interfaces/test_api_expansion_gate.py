@@ -29,60 +29,60 @@ def test_api_expansion_gate_model_assignments_contract(monkeypatch):
         assert isinstance(item["demoted"], bool)
 
 
-@pytest.mark.asyncio
+@pytest.mark.integration
 async def test_api_expansion_gate_execution_graph_contract(monkeypatch, tmp_path):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     from orket.orchestration.engine import OrchestrationEngine
 
     workspace_root = Path(tmp_path) / "workspace"
     workspace_root.mkdir(parents=True, exist_ok=True)
-    real_engine = OrchestrationEngine(
+    async with OrchestrationEngine.open(
         workspace_root=workspace_root,
         db_path=str(Path(tmp_path) / "runtime.db"),
-    )
-    monkeypatch.setattr(api_module._runtime_context(client.app), "engine", real_engine)
+    ) as real_engine:
+        monkeypatch.setattr(api_module._runtime_context(client.app), "engine", real_engine)
 
-    session_id = "GATE-GRAPH-1"
-    await real_engine.sessions.start_session(
-        session_id,
-        {"type": "epic", "name": "gate-graph", "department": "core", "task_input": "demo"},
-    )
-    await real_engine.cards.save(
-        {
-            "id": "ROOT",
-            "session_id": session_id,
-            "build_id": "BUILD-GATE",
-            "seat": "COD-1",
-            "summary": "Root",
-            "priority": 2.0,
-            "depends_on": [],
-        }
-    )
-    await real_engine.cards.save(
-        {
-            "id": "CHILD",
-            "session_id": session_id,
-            "build_id": "BUILD-GATE",
-            "seat": "REV-1",
-            "summary": "Child",
-            "priority": 2.0,
-            "depends_on": ["ROOT"],
-        }
-    )
+        session_id = "GATE-GRAPH-1"
+        await real_engine.sessions.start_session(
+            session_id,
+            {"type": "epic", "name": "gate-graph", "department": "core", "task_input": "demo"},
+        )
+        await real_engine.cards.save(
+            {
+                "id": "ROOT",
+                "session_id": session_id,
+                "build_id": "BUILD-GATE",
+                "seat": "COD-1",
+                "summary": "Root",
+                "priority": 2.0,
+                "depends_on": [],
+            }
+        )
+        await real_engine.cards.save(
+            {
+                "id": "CHILD",
+                "session_id": session_id,
+                "build_id": "BUILD-GATE",
+                "seat": "REV-1",
+                "summary": "Child",
+                "priority": 2.0,
+                "depends_on": ["ROOT"],
+            }
+        )
 
-    response = client.get(f"/v1/runs/{session_id}/execution-graph", headers={"X-API-Key": "test-key"})
-    assert response.status_code == 200
-    payload = response.json()
-    assert payload["node_count"] == 2
-    assert payload["edge_count"] == 1
-    assert payload["has_cycle"] is False
-    assert payload["execution_order"] == ["ROOT", "CHILD"]
-    assert payload["edges"] == [{"source": "ROOT", "target": "CHILD"}]
+        response = client.get(f"/v1/runs/{session_id}/execution-graph", headers={"X-API-Key": "test-key"})
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["node_count"] == 2
+        assert payload["edge_count"] == 1
+        assert payload["has_cycle"] is False
+        assert payload["execution_order"] == ["ROOT", "CHILD"]
+        assert payload["edges"] == [{"source": "ROOT", "target": "CHILD"}]
 
-    nodes = {node["id"]: node for node in payload["nodes"]}
-    assert nodes["ROOT"]["blocked"] is False
-    assert nodes["CHILD"]["blocked"] is True
-    assert nodes["CHILD"]["blocked_by"] == ["ROOT"]
+        nodes = {node["id"]: node for node in payload["nodes"]}
+        assert nodes["ROOT"]["blocked"] is False
+        assert nodes["CHILD"]["blocked"] is True
+        assert nodes["CHILD"]["blocked_by"] == ["ROOT"]
 
 
 def test_api_expansion_gate_token_summary_contract(monkeypatch, tmp_path):
@@ -159,7 +159,7 @@ def test_api_expansion_gate_system_teams_contract(monkeypatch):
         assert isinstance(team["roles"], list)
 
 
-@pytest.mark.asyncio
+@pytest.mark.integration
 # Layer: integration
 async def test_api_expansion_gate_card_guard_history_contract(monkeypatch, tmp_path):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
@@ -167,33 +167,33 @@ async def test_api_expansion_gate_card_guard_history_contract(monkeypatch, tmp_p
 
     workspace_root = Path(tmp_path) / "workspace"
     workspace_root.mkdir(parents=True, exist_ok=True)
-    real_engine = OrchestrationEngine(
+    async with OrchestrationEngine.open(
         workspace_root=workspace_root,
         db_path=str(Path(tmp_path) / "runtime.db"),
-    )
-    monkeypatch.setattr(api_module._runtime_context(client.app), "engine", real_engine)
+    ) as real_engine:
+        monkeypatch.setattr(api_module._runtime_context(client.app), "engine", real_engine)
 
-    await real_engine.cards.save(
-        {
-            "id": "CARD-GUARD-1",
-            "session_id": "S-G1",
-            "build_id": "B-G1",
-            "seat": "REV-1",
-            "summary": "Guard card",
-            "priority": 2.0,
-        }
-    )
-    await real_engine.cards.update_status("CARD-GUARD-1", CardStatus.AWAITING_GUARD_REVIEW, assignee="guard")
-    await real_engine.cards.update_status("CARD-GUARD-1", CardStatus.GUARD_REQUESTED_CHANGES, assignee="guard")
-    await real_engine.cards.update_status("CARD-GUARD-1", CardStatus.AWAITING_GUARD_REVIEW, assignee="guard")
-    await complete_existing_card(real_engine.cards, "CARD-GUARD-1", workspace_root, service=real_engine.runtime_context.card_completion, target_status=CardStatus.GUARD_APPROVED)
+        await real_engine.cards.save(
+            {
+                "id": "CARD-GUARD-1",
+                "session_id": "S-G1",
+                "build_id": "B-G1",
+                "seat": "REV-1",
+                "summary": "Guard card",
+                "priority": 2.0,
+            }
+        )
+        await real_engine.cards.update_status("CARD-GUARD-1", CardStatus.AWAITING_GUARD_REVIEW, assignee="guard")
+        await real_engine.cards.update_status("CARD-GUARD-1", CardStatus.GUARD_REQUESTED_CHANGES, assignee="guard")
+        await real_engine.cards.update_status("CARD-GUARD-1", CardStatus.AWAITING_GUARD_REVIEW, assignee="guard")
+        await complete_existing_card(real_engine.cards, "CARD-GUARD-1", workspace_root, service=real_engine.runtime_context.card_completion, target_status=CardStatus.GUARD_APPROVED)
 
-    response = client.get("/v1/cards/CARD-GUARD-1/guard-history", headers={"X-API-Key": "test-key"})
-    assert response.status_code == 200
-    payload = response.json()
-    assert payload["card_id"] == "CARD-GUARD-1"
-    assert payload["count"] == 4
-    assert payload["summary"]["awaiting_guard_review"] == 2
-    assert payload["summary"]["guard_requested_changes"] == 1
-    assert payload["summary"]["guard_approved"] == 1
-    assert payload["summary"]["retry_count"] == 1
+        response = client.get("/v1/cards/CARD-GUARD-1/guard-history", headers={"X-API-Key": "test-key"})
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["card_id"] == "CARD-GUARD-1"
+        assert payload["count"] == 4
+        assert payload["summary"]["awaiting_guard_review"] == 2
+        assert payload["summary"]["guard_requested_changes"] == 1
+        assert payload["summary"]["guard_approved"] == 1
+        assert payload["summary"]["retry_count"] == 1

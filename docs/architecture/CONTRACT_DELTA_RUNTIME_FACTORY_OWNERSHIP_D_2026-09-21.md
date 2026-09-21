@@ -34,8 +34,10 @@ legacy-parent gap where a captured child still created its webhook store under
 a later working directory through an inherited, unconfigured wiring service.
 
 Partial resource acquisition inside a constructor that fails before returning
-remains the constructor's responsibility. Direct synchronous constructors and
-other callers remain subject to separate reachability work. Rollback restores
+remains the constructor's responsibility. Direct engine/pipeline/runtime-context
+construction and the ConfigLoader synchronous bridge now follow
+`CONTRACT_DELTA_CONFIG_SYNC_BRIDGE_D_2026-09-21.md`; other constructor and caller
+reachability remains open. Rollback restores
 the event-loop blocking defect and must disclose it; histories are unchanged.
 
 ## Versioning and verification

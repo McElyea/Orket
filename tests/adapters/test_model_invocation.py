@@ -171,7 +171,7 @@ class _FakeOpenAIClient:
         self.closed = True
 
 
-@pytest.mark.asyncio
+@pytest.mark.integration
 # Layer: integration
 async def test_model_invocation_uses_runtime_provider_and_executes_real_tools(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
@@ -194,45 +194,45 @@ async def test_model_invocation_uses_runtime_provider_and_executes_real_tools(
     monkeypatch.setattr(local_model_provider_module.httpx, "AsyncClient", lambda *args, **kwargs: fake_client)
     monkeypatch.setattr(model_client_factory, "create_local_model_provider", create_test_model_provider)
 
-    engine = OrchestrationEngine(workspace, department="core", db_path=db_path, config_root=root)
-    await engine.run_card("runtime_truth_epic", session_id="runtime-session-1")
+    async with OrchestrationEngine.open(workspace, department="core", db_path=db_path, config_root=root) as engine:
+        await engine.run_card("runtime_truth_epic", session_id="runtime-session-1")
 
-    issue = await engine.cards.get_by_id("ISSUE-1")
-    assert issue.status == CardStatus.DONE
-    receipt = await engine.cards.read_completion_receipt("ISSUE-1")
-    assert receipt is not None and receipt.digest == issue.completion_ref
-    assert receipt.context.run_id.startswith("orchestrator-issue-run:runtime-session-1:")
+        issue = await engine.cards.get_by_id("ISSUE-1")
+        assert issue.status == CardStatus.DONE
+        receipt = await engine.cards.read_completion_receipt("ISSUE-1")
+        assert receipt is not None and receipt.digest == issue.completion_ref
+        assert receipt.context.run_id.startswith("orchestrator-issue-run:runtime-session-1:")
 
-    output_path = workspace / "agent_output" / "runtime_truth.txt"
-    assert output_path.read_text(encoding="utf-8") == "runtime-ok"
+        output_path = workspace / "agent_output" / "runtime_truth.txt"
+        assert output_path.read_text(encoding="utf-8") == "runtime-ok"
 
-    assert fake_client.closed is True
-    assert len(fake_client.requests) >= 2
-    assert all(row["path"] == "/chat/completions" for row in fake_client.requests)
-    assert {row["headers"].get("x-orket-session-id", "") for row in fake_client.requests} == {"runtime-session-1"}
-    assert {row["headers"].get("x-client-session", "") for row in fake_client.requests} == {"runtime-session-1"}
-    assert any("Task 1" in json.dumps(row["payload"].get("messages", [])) for row in fake_client.requests)
+        assert fake_client.closed is True
+        assert len(fake_client.requests) >= 2
+        assert all(row["path"] == "/chat/completions" for row in fake_client.requests)
+        assert {row["headers"].get("x-orket-session-id", "") for row in fake_client.requests} == {"runtime-session-1"}
+        assert {row["headers"].get("x-client-session", "") for row in fake_client.requests} == {"runtime-session-1"}
+        assert any("Task 1" in json.dumps(row["payload"].get("messages", [])) for row in fake_client.requests)
 
-    receipt_rows: list[dict[str, Any]] = []
-    for receipt_path in (workspace / "observability").rglob("protocol_receipts.log"):
-        for line in receipt_path.read_text(encoding="utf-8").splitlines():
-            if line.strip():
-                receipt_rows.append(json.loads(line))
-    assert any(row.get("tool") == "write_file" for row in receipt_rows)
-    assert any(row.get("tool") == "read_file" for row in receipt_rows)
-    assert any(row.get("tool") == "update_issue_status" for row in receipt_rows)
+        receipt_rows: list[dict[str, Any]] = []
+        for receipt_path in (workspace / "observability").rglob("protocol_receipts.log"):
+            for line in receipt_path.read_text(encoding="utf-8").splitlines():
+                if line.strip():
+                    receipt_rows.append(json.loads(line))
+        assert any(row.get("tool") == "write_file" for row in receipt_rows)
+        assert any(row.get("tool") == "read_file" for row in receipt_rows)
+        assert any(row.get("tool") == "update_issue_status" for row in receipt_rows)
 
-    raw_payloads = [
-        json.loads(path.read_text(encoding="utf-8"))
-        for path in (workspace / "observability").rglob("model_response_raw.json")
-    ]
-    assert any(payload.get("provider") == "openai-compat" for payload in raw_payloads)
-    assert any(payload.get("profile_id") and payload.get("profile_id") != "unresolved" for payload in raw_payloads)
-    assert any(payload.get("task_class") == "strict_json" for payload in raw_payloads)
-    assert all(payload["runtime_target"]["inventory_source"] == "test_fixture" for payload in raw_payloads)
+        raw_payloads = [
+            json.loads(path.read_text(encoding="utf-8"))
+            for path in (workspace / "observability").rglob("model_response_raw.json")
+        ]
+        assert any(payload.get("provider") == "openai-compat" for payload in raw_payloads)
+        assert any(payload.get("profile_id") and payload.get("profile_id") != "unresolved" for payload in raw_payloads)
+        assert any(payload.get("task_class") == "strict_json" for payload in raw_payloads)
+        assert all(payload["runtime_target"]["inventory_source"] == "test_fixture" for payload in raw_payloads)
 
 
-@pytest.mark.asyncio
+@pytest.mark.integration
 @pytest.mark.parametrize("failure", ["no_plan", "wrong_behavior"])
 # Layer: integration
 async def test_standard_runtime_rejects_completion_despite_disabled_legacy_verifier(monkeypatch, tmp_path, failure):
@@ -251,14 +251,14 @@ async def test_standard_runtime_rejects_completion_despite_disabled_legacy_verif
     monkeypatch.setenv("ORKET_DISABLE_RUNTIME_VERIFIER", "true")
     monkeypatch.setattr(local_model_provider_module.httpx, "AsyncClient", lambda *args, **kwargs: fake_client)
     monkeypatch.setattr(model_client_factory, "create_local_model_provider", create_test_model_provider)
-    engine = OrchestrationEngine(workspace, department="core", db_path=str(tmp_path / "cards.db"), config_root=tmp_path)
-    try:
-        observed = await engine.run_card('runtime_truth_epic', session_id='rejected-session')
-        assert observed.observation == "published" and not observed.succeeded
-        assert re.search('E_CARD_COMPLETION_(EVIDENCE|ACCEPTANCE)_REQUIRED', observed.reason or "")
-        issue = await engine.cards.get_by_id("ISSUE-1")
-        assert issue.status == CardStatus.BLOCKED and issue.completion_ref is None
-        assert await engine.cards.read_completion_receipt("ISSUE-1") is None
-        assert len(fake_client.requests) >= 2 and fake_client.closed
-    finally:
-        await engine.close()
+    async with OrchestrationEngine.open(workspace, department="core", db_path=str(tmp_path / "cards.db"), config_root=tmp_path) as engine:
+        try:
+            observed = await engine.run_card('runtime_truth_epic', session_id='rejected-session')
+            assert observed.observation == "published" and not observed.succeeded
+            assert re.search('E_CARD_COMPLETION_(EVIDENCE|ACCEPTANCE)_REQUIRED', observed.reason or "")
+            issue = await engine.cards.get_by_id("ISSUE-1")
+            assert issue.status == CardStatus.BLOCKED and issue.completion_ref is None
+            assert await engine.cards.read_completion_receipt("ISSUE-1") is None
+            assert len(fake_client.requests) >= 2 and fake_client.closed
+        finally:
+            await engine.close()

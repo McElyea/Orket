@@ -168,24 +168,24 @@ async def test_packet1_live_failure_run_omits_classification_without_primary_out
         environment_model=_live_model(),
     )
 
-    engine = OrchestrationEngine(workspace, department="core", db_path=db_path, config_root=root)
-    with pytest.raises(ExecutionFailed):
-        await engine.run_card("packet1_failure_live")
+    async with OrchestrationEngine.open(workspace, department="core", db_path=db_path, config_root=root) as engine:
+        with pytest.raises(ExecutionFailed):
+            await engine.run_card("packet1_failure_live")
 
-    run_roots = _run_roots(workspace)
-    assert len(run_roots) == 1
-    run_summary = read_validated_run_summary(run_roots[0] / "run_summary.json")
-    packet1 = run_summary["truthful_runtime_packet1"]
+        run_roots = _run_roots(workspace)
+        assert len(run_roots) == 1
+        run_summary = read_validated_run_summary(run_roots[0] / "run_summary.json")
+        packet1 = run_summary["truthful_runtime_packet1"]
 
-    print(
-        "[live][packet1][failure-no-primary] "
-        f"run_id={run_summary['run_id']} status={run_summary['status']} "
-        f"primary_output_kind={packet1['provenance']['primary_output_kind']}"
-    )
-    assert run_summary["status"] == "failed"
-    assert packet1["provenance"]["primary_output_kind"] == "none"
-    assert packet1["classification"] == {"classification_applicable": False}
-    assert "truth_classification" not in packet1["provenance"]
+        print(
+            "[live][packet1][failure-no-primary] "
+            f"run_id={run_summary['run_id']} status={run_summary['status']} "
+            f"primary_output_kind={packet1['provenance']['primary_output_kind']}"
+        )
+        assert run_summary["status"] == "failed"
+        assert packet1["provenance"]["primary_output_kind"] == "none"
+        assert packet1["classification"] == {"classification_applicable": False}
+        assert "truth_classification" not in packet1["provenance"]
 
 
 @pytest.mark.asyncio
@@ -213,24 +213,24 @@ async def test_packet1_live_emission_failure_uses_runtime_event_fallback(tmp_pat
     db_path = str(root / "packet1_emission_failure_live.db")
     _write_core_assets(root, epic_id="packet1_emission_failure_live", environment_model=_live_model())
 
-    engine = OrchestrationEngine(workspace, department="core", db_path=db_path, config_root=root)
-    await engine.run_card("packet1_emission_failure_live")
+    async with OrchestrationEngine.open(workspace, department="core", db_path=db_path, config_root=root) as engine:
+        await engine.run_card("packet1_emission_failure_live")
 
-    run_roots = _run_roots(workspace)
-    assert len(run_roots) == 1
-    run_summary = read_validated_run_summary(run_roots[0] / "run_summary.json")
-    runtime_events = _read_jsonl(workspace / "agent_output" / "observability" / "runtime_events.jsonl")
-    packet1_failure = next(event for event in runtime_events if event.get("event") == "packet1_emission_failure")
+        run_roots = _run_roots(workspace)
+        assert len(run_roots) == 1
+        run_summary = read_validated_run_summary(run_roots[0] / "run_summary.json")
+        runtime_events = _read_jsonl(workspace / "agent_output" / "observability" / "runtime_events.jsonl")
+        packet1_failure = next(event for event in runtime_events if event.get("event") == "packet1_emission_failure")
 
-    print(
-        "[live][packet1][emission-failure] "
-        f"run_id={run_summary['run_id']} status={run_summary['status']} "
-        f"fallback_status={packet1_failure['packet1_conformance']['status']}"
-    )
-    assert run_summary["status"] == "done"
-    assert "truthful_runtime_packet1" not in run_summary
-    assert packet1_failure["packet1_conformance"]["status"] == "non_conformant"
-    assert packet1_failure["packet1_conformance"]["reasons"] == ["packet1_emission_failure"]
+        print(
+            "[live][packet1][emission-failure] "
+            f"run_id={run_summary['run_id']} status={run_summary['status']} "
+            f"fallback_status={packet1_failure['packet1_conformance']['status']}"
+        )
+        assert run_summary["status"] == "done"
+        assert "truthful_runtime_packet1" not in run_summary
+        assert packet1_failure["packet1_conformance"]["status"] == "non_conformant"
+        assert packet1_failure["packet1_conformance"]["reasons"] == ["packet1_emission_failure"]
 
 
 @pytest.mark.asyncio
@@ -257,29 +257,29 @@ async def test_packet1_live_fallback_profile_marks_degraded_truth(tmp_path: Path
         db_path = str(root / "packet1_fallback_live.db")
         _write_core_assets(root, epic_id="packet1_fallback_live", environment_model=alias_model)
 
-        engine = OrchestrationEngine(workspace, department="core", db_path=db_path, config_root=root)
-        await engine.run_card("packet1_fallback_live")
+        async with OrchestrationEngine.open(workspace, department="core", db_path=db_path, config_root=root) as engine:
+            await engine.run_card("packet1_fallback_live")
 
-        run_roots = _run_roots(workspace)
-        assert len(run_roots) == 1
-        run_summary = read_validated_run_summary(run_roots[0] / "run_summary.json")
-        packet1 = run_summary["truthful_runtime_packet1"]
+            run_roots = _run_roots(workspace)
+            assert len(run_roots) == 1
+            run_summary = read_validated_run_summary(run_roots[0] / "run_summary.json")
+            packet1 = run_summary["truthful_runtime_packet1"]
 
-        print(
-            "[live][packet1][fallback-profile] "
-            f"run_id={run_summary['run_id']} status={run_summary['status']} "
-            f"classification={packet1['classification']['truth_classification']} "
-            f"profile={packet1['provenance']['actual_profile']}"
-        )
-        assert run_summary["status"] == "done"
-        assert packet1["provenance"]["actual_model"] == alias_model
-        assert packet1["provenance"]["actual_profile"] == "ollama.qwen.chatml.v1"
-        assert packet1["provenance"]["primary_output_id"] == "agent_output/main.py"
-        assert packet1["provenance"]["fallback_occurred"] is True
-        assert packet1["provenance"]["execution_profile"] == "fallback"
-        assert packet1["classification"]["truth_classification"] == "degraded"
-        assert "silent_degraded_success" in packet1["defects"]["defect_families"]
-        assert packet1["packet1_conformance"]["status"] == "non_conformant"
+            print(
+                "[live][packet1][fallback-profile] "
+                f"run_id={run_summary['run_id']} status={run_summary['status']} "
+                f"classification={packet1['classification']['truth_classification']} "
+                f"profile={packet1['provenance']['actual_profile']}"
+            )
+            assert run_summary["status"] == "done"
+            assert packet1["provenance"]["actual_model"] == alias_model
+            assert packet1["provenance"]["actual_profile"] == "ollama.qwen.chatml.v1"
+            assert packet1["provenance"]["primary_output_id"] == "agent_output/main.py"
+            assert packet1["provenance"]["fallback_occurred"] is True
+            assert packet1["provenance"]["execution_profile"] == "fallback"
+            assert packet1["classification"]["truth_classification"] == "degraded"
+            assert "silent_degraded_success" in packet1["defects"]["defect_families"]
+            assert packet1["packet1_conformance"]["status"] == "non_conformant"
     finally:
         await _remove_ollama_alias(alias_model)
 
@@ -319,40 +319,40 @@ async def test_packet1_live_corrective_reprompt_marks_repaired_truth(tmp_path: P
     db_path = str(root / "packet1_repaired_live.db")
     _write_core_assets(root, epic_id="packet1_repaired_live", environment_model=_live_model())
 
-    engine = OrchestrationEngine(workspace, department="core", db_path=db_path, config_root=root)
-    await engine.run_card("packet1_repaired_live")
+    async with OrchestrationEngine.open(workspace, department="core", db_path=db_path, config_root=root) as engine:
+        await engine.run_card("packet1_repaired_live")
 
-    run_roots = _run_roots(workspace)
-    assert len(run_roots) == 1
-    run_summary = read_validated_run_summary(run_roots[0] / "run_summary.json")
-    packet1 = run_summary["truthful_runtime_packet1"]
-    packet2 = run_summary["truthful_runtime_packet2"]
-    event_rows = _read_jsonl(workspace / "orket.log")
+        run_roots = _run_roots(workspace)
+        assert len(run_roots) == 1
+        run_summary = read_validated_run_summary(run_roots[0] / "run_summary.json")
+        packet1 = run_summary["truthful_runtime_packet1"]
+        packet2 = run_summary["truthful_runtime_packet2"]
+        event_rows = _read_jsonl(workspace / "orket.log")
 
-    print(
-        "[live][packet1][corrective-reprompt] "
-        f"run_id={run_summary['run_id']} status={run_summary['status']} "
-        f"classification={packet1['classification']['truth_classification']}"
-    )
-    assert any(
-        str(row.get("event") or "") == "turn_corrective_reprompt"
-        and str((row.get("data") or {}).get("session_id") or "") == run_summary["run_id"]
-        for row in event_rows
-    )
-    assert run_summary["status"] == "done"
-    assert packet1["provenance"]["primary_output_id"] == "agent_output/main.py"
-    assert packet1["provenance"]["intended_model"] != PACKET1_MISSING_TOKEN
-    assert packet1["provenance"]["intended_profile"] != PACKET1_MISSING_TOKEN
-    assert packet1["provenance"]["repair_occurred"] is True
-    assert packet1["classification"]["truth_classification"] == "repaired"
-    assert packet1["defects"]["defect_families"] == ["silent_repaired_success"]
-    assert packet1["packet1_conformance"]["status"] == "non_conformant"
-    assert packet2["repair_ledger"]["repair_occurred"] is True
-    assert packet2["repair_ledger"]["repair_count"] >= 1
-    assert packet2["repair_ledger"]["final_disposition"] == "accepted_with_repair"
-    assert any(
-        entry["strategy"] == "corrective_reprompt"
-        and entry["source_event"] == "turn_corrective_reprompt"
-        and entry["material_change"] is True
-        for entry in packet2["repair_ledger"]["entries"]
-    )
+        print(
+            "[live][packet1][corrective-reprompt] "
+            f"run_id={run_summary['run_id']} status={run_summary['status']} "
+            f"classification={packet1['classification']['truth_classification']}"
+        )
+        assert any(
+            str(row.get("event") or "") == "turn_corrective_reprompt"
+            and str((row.get("data") or {}).get("session_id") or "") == run_summary["run_id"]
+            for row in event_rows
+        )
+        assert run_summary["status"] == "done"
+        assert packet1["provenance"]["primary_output_id"] == "agent_output/main.py"
+        assert packet1["provenance"]["intended_model"] != PACKET1_MISSING_TOKEN
+        assert packet1["provenance"]["intended_profile"] != PACKET1_MISSING_TOKEN
+        assert packet1["provenance"]["repair_occurred"] is True
+        assert packet1["classification"]["truth_classification"] == "repaired"
+        assert packet1["defects"]["defect_families"] == ["silent_repaired_success"]
+        assert packet1["packet1_conformance"]["status"] == "non_conformant"
+        assert packet2["repair_ledger"]["repair_occurred"] is True
+        assert packet2["repair_ledger"]["repair_count"] >= 1
+        assert packet2["repair_ledger"]["final_disposition"] == "accepted_with_repair"
+        assert any(
+            entry["strategy"] == "corrective_reprompt"
+            and entry["source_event"] == "turn_corrective_reprompt"
+            and entry["material_change"] is True
+            for entry in packet2["repair_ledger"]["entries"]
+        )

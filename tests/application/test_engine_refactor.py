@@ -79,7 +79,7 @@ class _FakeKernelGateway:
         return {"kind": "compare", "request": request}
 
 
-@pytest.mark.asyncio
+@pytest.mark.unit
 async def test_engine_explicit_calls(monkeypatch):
     """Layer: unit. Verifies the surviving compatibility wrappers collapse back to the canonical engine run_card surface."""
     workspace = Path("./test_workspace")
@@ -89,21 +89,21 @@ async def test_engine_explicit_calls(monkeypatch):
     monkeypatch.setattr("orket.orchestration.engine.ConfigLoader", _FakeLoader)
     monkeypatch.setattr("orket.orchestration.engine.ExecutionPipeline", lambda *args, **kwargs: fake_pipeline)
 
-    engine = OrchestrationEngine(workspace)
+    async with OrchestrationEngine.open(workspace) as engine:
 
-    await engine.run_epic("my-epic", target_issue_id="ISSUE-1")
-    await engine.run_issue("my-issue")
-    await engine.run_rock("my-rock")
+        await engine.run_epic("my-epic", target_issue_id="ISSUE-1")
+        await engine.run_issue("my-issue")
+        await engine.run_rock("my-rock")
 
-    assert ("run_card", "my-epic", None, None, False, "ISSUE-1", None, None, None, None) in fake_pipeline.calls
-    assert ("run_card", "my-issue", None, None, False, None, None, None, None, None) in fake_pipeline.calls
-    assert ("run_card", "my-rock", None, None, False, None, None, None, None, None) in fake_pipeline.calls
-    assert not any(call[0] == "run_epic" for call in fake_pipeline.calls)
-    assert not any(call[0] == "run_issue" for call in fake_pipeline.calls)
-    assert not any(call[0] == "run_rock" for call in fake_pipeline.calls)
+        assert ("run_card", "my-epic", None, None, False, "ISSUE-1", None, None, None, None) in fake_pipeline.calls
+        assert ("run_card", "my-issue", None, None, False, None, None, None, None, None) in fake_pipeline.calls
+        assert ("run_card", "my-rock", None, None, False, None, None, None, None, None) in fake_pipeline.calls
+        assert not any(call[0] == "run_epic" for call in fake_pipeline.calls)
+        assert not any(call[0] == "run_issue" for call in fake_pipeline.calls)
+        assert not any(call[0] == "run_rock" for call in fake_pipeline.calls)
 
 
-@pytest.mark.asyncio
+@pytest.mark.unit
 async def test_engine_run_card_is_canonical_public_surface(monkeypatch):
     """Layer: unit. Verifies the canonical card path reaches the generic pipeline surface."""
     workspace = Path("./test_workspace")
@@ -113,19 +113,19 @@ async def test_engine_run_card_is_canonical_public_surface(monkeypatch):
     monkeypatch.setattr("orket.orchestration.engine.ConfigLoader", _FakeLoader)
     monkeypatch.setattr("orket.orchestration.engine.ExecutionPipeline", lambda *args, **kwargs: fake_pipeline)
 
-    engine = OrchestrationEngine(workspace)
+    async with OrchestrationEngine.open(workspace) as engine:
 
-    recovery = {"request_id": "unit-forwarding-only"}
-    await engine.run_card("some-card", target_issue_id="I1", export_recovery=recovery)
+        recovery = {"request_id": "unit-forwarding-only"}
+        await engine.run_card("some-card", target_issue_id="I1", export_recovery=recovery)
 
-    assert ("run_card", "some-card", None, None, False, "I1", None, None, recovery, None) in fake_pipeline.calls
-    assert fake_pipeline.calls[-1][-2] is recovery
-    await engine.run_card("some-card", target_issue_id="I1", approval_recovery=recovery)
-    assert ("run_card", "some-card", None, None, False, "I1", None, None, None, recovery) in fake_pipeline.calls
-    assert fake_pipeline.calls[-1][-1] is recovery
+        assert ("run_card", "some-card", None, None, False, "I1", None, None, recovery, None) in fake_pipeline.calls
+        assert fake_pipeline.calls[-1][-2] is recovery
+        await engine.run_card("some-card", target_issue_id="I1", approval_recovery=recovery)
+        assert ("run_card", "some-card", None, None, False, "I1", None, None, None, recovery) in fake_pipeline.calls
+        assert fake_pipeline.calls[-1][-1] is recovery
 
 
-@pytest.mark.asyncio
+@pytest.mark.unit
 async def test_engine_run_card_forwards_model_override(monkeypatch):
     """Layer: unit. Verifies card execution preserves an explicit model override for downstream runtime selection."""
     workspace = Path("./test_workspace")
@@ -135,11 +135,11 @@ async def test_engine_run_card_forwards_model_override(monkeypatch):
     monkeypatch.setattr("orket.orchestration.engine.ConfigLoader", _FakeLoader)
     monkeypatch.setattr("orket.orchestration.engine.ExecutionPipeline", lambda *args, **kwargs: fake_pipeline)
 
-    engine = OrchestrationEngine(workspace)
+    async with OrchestrationEngine.open(workspace) as engine:
 
-    await engine.run_card("some-card", model_override="google/gemma-4-26b-a4b")
+        await engine.run_card("some-card", model_override="google/gemma-4-26b-a4b")
 
-    assert ("run_card", "some-card", None, None, False, None, "google/gemma-4-26b-a4b", None, None, None) in fake_pipeline.calls
+        assert ("run_card", "some-card", None, None, False, None, "google/gemma-4-26b-a4b", None, None, None) in fake_pipeline.calls
 
 
 def test_engine_replay_turn_reads_artifacts(monkeypatch, tmp_path):

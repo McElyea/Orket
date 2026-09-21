@@ -5,6 +5,7 @@ import argparse
 import asyncio
 import json
 import sys
+from functools import partial
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -30,10 +31,12 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
 
 
 async def _run(args: argparse.Namespace) -> tuple[dict[str, object], Path]:
+    from orket.application.services.runtime_result_lifetime import open_runtime_owner
+
     workspace_override = Path(str(args.workspace_root)).resolve() if str(args.workspace_root).strip() else None
     paths = resolve_productflow_paths(workspace_override)
-    engine = build_productflow_engine(paths)
-    bundle = await build_witness_bundle_payload(paths=paths, engine=engine, run_id=str(args.run_id))
+    async with open_runtime_owner(partial(build_productflow_engine, paths), label="witness-engine-construction") as engine:
+        bundle = await build_witness_bundle_payload(paths=paths, engine=engine, run_id=str(args.run_id))
     output = Path(str(args.output)).resolve() if str(args.output).strip() else _default_output(paths, bundle)
     persisted = write_payload_with_diff_ledger(output, bundle)
     return persisted, output

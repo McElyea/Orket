@@ -1,4 +1,4 @@
-﻿import asyncio
+import asyncio
 import shutil
 from datetime import UTC, datetime
 from pathlib import Path
@@ -49,41 +49,41 @@ class ColdStartReferee:
         self.setup_clean_room()
         subscribe_to_events(self.on_event)
 
-        engine = OrchestrationEngine(
+        async with OrchestrationEngine.open(
             workspace_root=self.workspace,
             db_path=str(self.workspace / "benchmark.db")
-        )
+        ) as engine:
 
-        print("  [REFEREE] Injecting Sacred Prompt...")
-        print(f'  [PROMPT] "{self.SACRED_PROMPT}"')
+            print("  [REFEREE] Injecting Sacred Prompt...")
+            print(f'  [PROMPT] "{self.SACRED_PROMPT}"')
 
-        # We trigger the engine on the prompt
-        # In a real cold start, we use the driver to turn prompt into an epic/issue
-        driver = await self.runtime_host.create_chat_driver()
+            # We trigger the engine on the prompt
+            # In a real cold start, we use the driver to turn prompt into an epic/issue
+            driver = await self.runtime_host.create_chat_driver()
 
-        try:
-            # We wrap the driver request to simulate a fresh start
-            response = await driver.process_request(self.SACRED_PROMPT)
-            print(f"  [SYSTEM] Initial response: {response}")
+            try:
+                # We wrap the driver request to simulate a fresh start
+                response = await driver.process_request(self.SACRED_PROMPT)
+                print(f"  [SYSTEM] Initial response: {response}")
 
-            # Now we find the issue/epic it created and run it
-            backlog = await engine.cards.get_by_build(f"build-{self.bench_id}")
-            if not backlog:
-                # If driver didn't create a build, check for recent session
-                print("  [REFEREE] No build found. Checking sessions...")
+                # Now we find the issue/epic it created and run it
+                backlog = await engine.cards.get_by_build(f"build-{self.bench_id}")
+                if not backlog:
+                    # If driver didn't create a build, check for recent session
+                    print("  [REFEREE] No build found. Checking sessions...")
 
-            # Simulate the 'Autonomous Execution' loop
-            # Note: We expect the system to run until DONE or CatastrophicFailure
-            # We don't call run_epic manually to avoid 'hints'.
+                # Simulate the 'Autonomous Execution' loop
+                # Note: We expect the system to run until DONE or CatastrophicFailure
+                # We don't call run_epic manually to avoid 'hints'.
 
-        except Exception as e:
-            print(f"  [FAIL] System crashed during cold start: {e}")
-        finally:
-            await self.runtime_host.close_chat_driver(driver)
-            await engine.close()
-            unsubscribe_from_events(self.on_event)
+            except Exception as e:
+                print(f"  [FAIL] System crashed during cold start: {e}")
+            finally:
+                await self.runtime_host.close_chat_driver(driver)
+                await engine.close()
+                unsubscribe_from_events(self.on_event)
 
-        self.evaluate()
+            self.evaluate()
 
     def evaluate(self):
         """Binary Scoring: Non-negotiable Criteria."""

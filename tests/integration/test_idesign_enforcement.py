@@ -1,4 +1,4 @@
-﻿import json
+import json
 
 import pytest
 
@@ -23,7 +23,7 @@ class MockiDesignProvider(LocalModelProvider):
 ```"""
         return ModelResponse(content=content, raw={"model": "dummy", "total_tokens": 10})
 
-@pytest.mark.asyncio
+@pytest.mark.integration
 async def test_force_idesign_policy_violation(tmp_path):
     root = tmp_path
     (root / "config").mkdir()
@@ -56,13 +56,13 @@ async def test_force_idesign_policy_violation(tmp_path):
         "issues": [{"id": "1", "seat": "S", "summary": "S"}, {"id": "2", "seat": "S", "summary": "S"}, {"id": "3", "seat": "S", "summary": "S"}]
     }))
 
-    engine = OrchestrationEngine(root / "ws", config_root=root)
-    with pytest.raises(ExecutionFailed) as exc:
-        await engine.run_card("messy_epic")
-    assert "Complexity Gate Violation" in str(exc.value)
+    async with OrchestrationEngine.open(root / "ws", config_root=root) as engine:
+        with pytest.raises(ExecutionFailed) as exc:
+            await engine.run_card("messy_epic")
+        assert "Complexity Gate Violation" in str(exc.value)
 
 
-@pytest.mark.asyncio
+@pytest.mark.integration
 async def test_force_none_policy_allows_non_idesign_above_threshold(tmp_path):
     root = tmp_path
     (root / "config").mkdir()
@@ -93,12 +93,12 @@ async def test_force_none_policy_allows_non_idesign_above_threshold(tmp_path):
         "issues": [{"id": "1", "seat": "S", "summary": "S"}, {"id": "2", "seat": "S", "summary": "S"}, {"id": "3", "seat": "S", "summary": "S"}]
     }))
 
-    engine = OrchestrationEngine(root / "ws", config_root=root)
-    # Should not fail on complexity gate when policy is force_none.
-    await engine.run_card("messy_epic")
+    async with OrchestrationEngine.open(root / "ws", config_root=root) as engine:
+        # Should not fail on complexity gate when policy is force_none.
+        await engine.run_card("messy_epic")
 
 
-@pytest.mark.asyncio
+@pytest.mark.integration
 async def test_architect_decides_policy_allows_non_idesign_above_threshold(tmp_path):
     root = tmp_path
     (root / "config").mkdir()
@@ -129,11 +129,11 @@ async def test_architect_decides_policy_allows_non_idesign_above_threshold(tmp_p
         "issues": [{"id": "1", "seat": "S", "summary": "S"}, {"id": "2", "seat": "S", "summary": "S"}, {"id": "3", "seat": "S", "summary": "S"}]
     }))
 
-    engine = OrchestrationEngine(root / "ws", config_root=root)
-    # Architect decision should be respected; no complexity gate exception.
-    await engine.run_card("messy_epic")
+    async with OrchestrationEngine.open(root / "ws", config_root=root) as engine:
+        # Architect decision should be respected; no complexity gate exception.
+        await engine.run_card("messy_epic")
 
-@pytest.mark.asyncio
+@pytest.mark.integration
 # Layer: integration
 async def test_idesign_structural_violation(tmp_path, monkeypatch):
     root = tmp_path
@@ -183,10 +183,10 @@ async def test_idesign_structural_violation(tmp_path, monkeypatch):
     monkeypatch.setattr(LocalModelProvider, "__init__", mock_init)
     monkeypatch.setattr(LocalModelProvider, "complete", bad_provider.complete)
 
-    engine = OrchestrationEngine(root / "ws", db_path=db_path, config_root=root)
+    async with OrchestrationEngine.open(root / "ws", db_path=db_path, config_root=root) as engine:
 
-    observed = await engine.run_card("strict_epic")
-    assert observed.observation == "published" and not observed.succeeded
-    assert "iDesign Violation" in observed.reason
-    await engine.close()
+        observed = await engine.run_card("strict_epic")
+        assert observed.observation == "published" and not observed.succeeded
+        assert "iDesign Violation" in observed.reason
+        await engine.close()
 

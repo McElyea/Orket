@@ -107,27 +107,27 @@ async def _assert_run_start_policy_block(
     _write_epic_assets(tmp_path, epic_id)
     workspace = tmp_path / "workspace"
     workspace.mkdir()
-    pipeline = ExecutionPipeline(
+    async with ExecutionPipeline.open(
         workspace=workspace,
         department="core",
         db_path=str(tmp_path / "runtime.db"),
         config_root=tmp_path,
         run_ledger_repo=AsyncProtocolRunLedgerRepository(workspace),
-    )
-    execute_calls = {"count": 0}
+    ) as pipeline:
+        execute_calls = {"count": 0}
 
-    async def _spy_execute_epic(**_: Any) -> None:
-        execute_calls["count"] += 1
+        async def _spy_execute_epic(**_: Any) -> None:
+            execute_calls["count"] += 1
 
-    monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _spy_execute_epic)
-    _override_snapshot_factory(monkeypatch, artifact_key=artifact_key, factory=invalid_factory)
+        monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _spy_execute_epic)
+        _override_snapshot_factory(monkeypatch, artifact_key=artifact_key, factory=invalid_factory)
 
-    observed = await pipeline.run_epic(epic_id, build_id=f"build-{epic_id}", session_id=f"sess-{epic_id}")
-    assert observed.observation == "unresolved" and not observed.succeeded
-    assert expected_error in observed.reason
-    await pipeline.close()
+        observed = await pipeline.run_epic(epic_id, build_id=f"build-{epic_id}", session_id=f"sess-{epic_id}")
+        assert observed.observation == "unresolved" and not observed.succeeded
+        assert expected_error in observed.reason
+        await pipeline.close()
 
-    assert execute_calls["count"] == 0
+        assert execute_calls["count"] == 0
 
 
 @pytest.mark.contract
@@ -214,28 +214,28 @@ async def test_unknown_environment_key_blocks_run_before_model_call(tmp_path: Pa
     )
     workspace = tmp_path / "workspace"
     workspace.mkdir()
-    pipeline = ExecutionPipeline(
+    async with ExecutionPipeline.open(
         workspace=workspace,
         department="core",
         db_path=str(tmp_path / "runtime.db"),
         config_root=tmp_path,
         run_ledger_repo=AsyncProtocolRunLedgerRepository(workspace),
-    )
-    execute_calls = {"count": 0}
+    ) as pipeline:
+        execute_calls = {"count": 0}
 
-    async def _spy_execute_epic(**_: Any) -> None:
-        execute_calls["count"] += 1
+        async def _spy_execute_epic(**_: Any) -> None:
+            execute_calls["count"] += 1
 
-    monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _spy_execute_epic)
+        monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _spy_execute_epic)
 
-    with pytest.raises(ValueError, match="E_ENVIRONMENT_CONFIG_UNKNOWN_KEYS:legacy_key"):
-        await pipeline.run_epic(
-            "environment-config-policy-block",
-            build_id="build-environment-config-policy-block",
-            session_id="sess-environment-config-policy-block",
-        )
+        with pytest.raises(ValueError, match="E_ENVIRONMENT_CONFIG_UNKNOWN_KEYS:legacy_key"):
+            await pipeline.run_epic(
+                "environment-config-policy-block",
+                build_id="build-environment-config-policy-block",
+                session_id="sess-environment-config-policy-block",
+            )
 
-    assert execute_calls["count"] == 0
+        assert execute_calls["count"] == 0
 
 
 class _NoOpToolbox:

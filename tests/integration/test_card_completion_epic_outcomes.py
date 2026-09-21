@@ -33,56 +33,56 @@ async def test_final_epic_outcome_requires_verified_cards(test_root, workspace, 
         epic = json.loads(await asyncio.to_thread(epic_path.read_text, encoding="utf-8"))
         epic["issues"].append({**epic["issues"][0], "id": "ISSUE-2"})
         await asyncio.to_thread(epic_path.write_text, json.dumps(epic), encoding="utf-8")
-    pipeline = ExecutionPipeline(workspace, department="core", db_path=db_path, config_root=test_root)
-    execute_epic = pipeline.orchestrator.execute_epic
+    async with ExecutionPipeline.open(workspace, department="core", db_path=db_path, config_root=test_root) as pipeline:
+        execute_epic = pipeline.orchestrator.execute_epic
 
-    async def execute_fixture(**kwargs):
-        if case in {"accepted", "guard_approved", "missing_evidence", "missing_card"}:
-            service = pipeline.runtime_context.card_completion
-            target = CardStatus.GUARD_APPROVED if case == "guard_approved" else CardStatus.DONE
-            await complete_existing_card(pipeline.async_cards, "ISSUE-1", workspace, service=service, target_status=target)
-            if case == "missing_evidence":
-                await asyncio.to_thread(service.acceptance.evidence_store.db_path.unlink)
-        if case in {"empty", "missing_card"}:
-            record = await pipeline.async_cards.get_by_id("ISSUE-2" if case == "missing_card" else "ISSUE-1")
-            record.build_id = "other-build"
-            await pipeline.async_cards.save(record)
-        elif case in {"archived", "canceled", "forged_event"}:
-            await pipeline.async_cards.update_status("ISSUE-1", CardStatus.CANCELED if case == "forged_event" else CardStatus(case))
-        if case == "forged_event":
-            monkeypatch.setattr(pipeline.orchestrator.loop_policy_node, "no_candidate_outcome",
-                                lambda backlog: {"is_done": True, "event_name": "orchestrator_epic_complete"})
-        await execute_epic(**kwargs)
+        async def execute_fixture(**kwargs):
+            if case in {"accepted", "guard_approved", "missing_evidence", "missing_card"}:
+                service = pipeline.runtime_context.card_completion
+                target = CardStatus.GUARD_APPROVED if case == "guard_approved" else CardStatus.DONE
+                await complete_existing_card(pipeline.async_cards, "ISSUE-1", workspace, service=service, target_status=target)
+                if case == "missing_evidence":
+                    await asyncio.to_thread(service.acceptance.evidence_store.db_path.unlink)
+            if case in {"empty", "missing_card"}:
+                record = await pipeline.async_cards.get_by_id("ISSUE-2" if case == "missing_card" else "ISSUE-1")
+                record.build_id = "other-build"
+                await pipeline.async_cards.save(record)
+            elif case in {"archived", "canceled", "forged_event"}:
+                await pipeline.async_cards.update_status("ISSUE-1", CardStatus.CANCELED if case == "forged_event" else CardStatus(case))
+            if case == "forged_event":
+                monkeypatch.setattr(pipeline.orchestrator.loop_policy_node, "no_candidate_outcome",
+                                    lambda backlog: {"is_done": True, "event_name": "orchestrator_epic_complete"})
+            await execute_epic(**kwargs)
 
-    monkeypatch.setattr(pipeline.orchestrator, "execute_epic", execute_fixture)
-    try:
-        result = await pipeline.run_epic("completion_epic", build_id="build", session_id="completion-session")
-        ledger = await pipeline.run_ledger.get_run("completion-session")
-        outcome = ledger["artifact_json"]["card_completion_outcome"]
-        accepted = case in {"accepted", "guard_approved"}
-        expected = "done" if accepted else "incomplete" if case == "empty" else "terminal_failure"
-        assert result.succeeded is accepted
-        assert result.observation == "published" and result.publication_ref in result.evidence_refs
-        assert result.run.model_dump(mode="json") == ledger["artifact_json"]["control_plane_run_record"]
-        assert ledger["status"] == expected
-        assert outcome["acceptance_satisfied"] is accepted
-        events = [record.message for record in caplog.records if record.name == "orket"]
-        assert "orchestrator_epic_stopped" in events
-        assert ("orchestrator_epic_complete" in events) is accepted
-        run = ledger["artifact_json"]["control_plane_run_record"]
-        truth = await pipeline.orchestrator.control_plane_repository.get_final_truth(run_id=run["run_id"])
-        assert result.final_truth == truth
-        if accepted:
-            receipt = await pipeline.async_cards.read_completion_receipt("ISSUE-1")
-            assert outcome["accepted_receipts"] == {"ISSUE-1": receipt.digest}
-            assert truth.result_class.value == "success"
-        elif case == "empty":
-            assert outcome["diagnostics"] == ["empty_backlog"] and truth is None
-        else:
-            assert ("ISSUE-2" if case == "missing_card" else "ISSUE-1") in outcome["unverified_cards"]
-            assert truth.result_class.value != "success"
-    finally:
-        await pipeline.close()
+        monkeypatch.setattr(pipeline.orchestrator, "execute_epic", execute_fixture)
+        try:
+            result = await pipeline.run_epic("completion_epic", build_id="build", session_id="completion-session")
+            ledger = await pipeline.run_ledger.get_run("completion-session")
+            outcome = ledger["artifact_json"]["card_completion_outcome"]
+            accepted = case in {"accepted", "guard_approved"}
+            expected = "done" if accepted else "incomplete" if case == "empty" else "terminal_failure"
+            assert result.succeeded is accepted
+            assert result.observation == "published" and result.publication_ref in result.evidence_refs
+            assert result.run.model_dump(mode="json") == ledger["artifact_json"]["control_plane_run_record"]
+            assert ledger["status"] == expected
+            assert outcome["acceptance_satisfied"] is accepted
+            events = [record.message for record in caplog.records if record.name == "orket"]
+            assert "orchestrator_epic_stopped" in events
+            assert ("orchestrator_epic_complete" in events) is accepted
+            run = ledger["artifact_json"]["control_plane_run_record"]
+            truth = await pipeline.orchestrator.control_plane_repository.get_final_truth(run_id=run["run_id"])
+            assert result.final_truth == truth
+            if accepted:
+                receipt = await pipeline.async_cards.read_completion_receipt("ISSUE-1")
+                assert outcome["accepted_receipts"] == {"ISSUE-1": receipt.digest}
+                assert truth.result_class.value == "success"
+            elif case == "empty":
+                assert outcome["diagnostics"] == ["empty_backlog"] and truth is None
+            else:
+                assert ("ISSUE-2" if case == "missing_card" else "ISSUE-1") in outcome["unverified_cards"]
+                assert truth.result_class.value != "success"
+        finally:
+            await pipeline.close()
 
 
 @pytest.mark.asyncio

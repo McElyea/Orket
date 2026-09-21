@@ -48,23 +48,23 @@ async def test_phase_c_live_required_source_attribution_blocks_missing_receipt(
         source_attribution_receipt_task=False,
     )
 
-    engine = OrchestrationEngine(workspace, department="core", db_path=db_path, config_root=root)
-    await engine.run_card("phase_c_blocked_live")
+    async with OrchestrationEngine.open(workspace, department="core", db_path=db_path, config_root=root) as engine:
+        await engine.run_card("phase_c_blocked_live")
 
-    run_roots = _run_roots(workspace)
-    assert len(run_roots) == 1
-    run_summary = read_validated_run_summary(run_roots[0] / "run_summary.json")
-    packet2 = run_summary["truthful_runtime_packet2"]
+        run_roots = _run_roots(workspace)
+        assert len(run_roots) == 1
+        run_summary = read_validated_run_summary(run_roots[0] / "run_summary.json")
+        packet2 = run_summary["truthful_runtime_packet2"]
 
-    print(
-        "[live][phase-c][blocked] "
-        f"run_id={run_summary['run_id']} status={run_summary['status']} "
-        f"failure_reason={run_summary['failure_reason']}"
-    )
-    assert run_summary["status"] == "terminal_failure"
-    assert run_summary["failure_reason"] == "source_attribution_receipt_missing"
-    assert packet2["source_attribution"]["synthesis_status"] == "blocked"
-    assert packet2["source_attribution"]["missing_requirements"] == ["source_attribution_receipt_missing"]
+        print(
+            "[live][phase-c][blocked] "
+            f"run_id={run_summary['run_id']} status={run_summary['status']} "
+            f"failure_reason={run_summary['failure_reason']}"
+        )
+        assert run_summary["status"] == "terminal_failure"
+        assert run_summary["failure_reason"] == "source_attribution_receipt_missing"
+        assert packet2["source_attribution"]["synthesis_status"] == "blocked"
+        assert packet2["source_attribution"]["missing_requirements"] == ["source_attribution_receipt_missing"]
 
 
 @pytest.mark.asyncio
@@ -90,30 +90,30 @@ async def test_phase_c_live_required_source_attribution_verifies_receipt(
         source_attribution_receipt_task=True,
     )
 
-    engine = OrchestrationEngine(workspace, department="core", db_path=db_path, config_root=root)
-    await engine.run_card("phase_c_verified_live")
+    async with OrchestrationEngine.open(workspace, department="core", db_path=db_path, config_root=root) as engine:
+        await engine.run_card("phase_c_verified_live")
 
-    run_roots = _run_roots(workspace)
-    assert len(run_roots) == 1
-    run_summary = read_validated_run_summary(run_roots[0] / "run_summary.json")
-    packet1 = run_summary["truthful_runtime_packet1"]
-    packet2 = run_summary["truthful_runtime_packet2"]
+        run_roots = _run_roots(workspace)
+        assert len(run_roots) == 1
+        run_summary = read_validated_run_summary(run_roots[0] / "run_summary.json")
+        packet1 = run_summary["truthful_runtime_packet1"]
+        packet2 = run_summary["truthful_runtime_packet2"]
 
-    print(
-        "[live][phase-c][verified] "
-        f"run_id={run_summary['run_id']} status={run_summary['status']} "
-        f"source_status={packet2['source_attribution']['synthesis_status']}"
-    )
-    assert run_summary["status"] == "done"
-    assert packet1["provenance"]["primary_output_id"] == "agent_output/main.py"
-    assert packet2["source_attribution"]["synthesis_status"] == "verified"
-    assert packet2["source_attribution"]["claim_count"] >= 1
-    assert packet2["source_attribution"]["source_count"] >= 3
-    assert packet2["narration_to_effect_audit"]["missing_effect_count"] == 0
-    surfaces = {row["surface"] for row in packet2["idempotency"]["surfaces"]}
-    assert "artifact_write" in surfaces
-    assert "status_update" in surfaces
-    assert "source_attribution_receipt" in surfaces
+        print(
+            "[live][phase-c][verified] "
+            f"run_id={run_summary['run_id']} status={run_summary['status']} "
+            f"source_status={packet2['source_attribution']['synthesis_status']}"
+        )
+        assert run_summary["status"] == "done"
+        assert packet1["provenance"]["primary_output_id"] == "agent_output/main.py"
+        assert packet2["source_attribution"]["synthesis_status"] == "verified"
+        assert packet2["source_attribution"]["claim_count"] >= 1
+        assert packet2["source_attribution"]["source_count"] >= 3
+        assert packet2["narration_to_effect_audit"]["missing_effect_count"] == 0
+        surfaces = {row["surface"] for row in packet2["idempotency"]["surfaces"]}
+        assert "artifact_write" in surfaces
+        assert "status_update" in surfaces
+        assert "source_attribution_receipt" in surfaces
 
 
 @pytest.mark.asyncio
@@ -149,25 +149,25 @@ async def test_phase_c_live_narration_effect_audit_detects_missing_source_receip
         source_attribution_receipt_task=True,
     )
 
-    engine = OrchestrationEngine(workspace, department="core", db_path=db_path, config_root=root)
-    await engine.run_card("phase_c_missing_effect_live")
+    async with OrchestrationEngine.open(workspace, department="core", db_path=db_path, config_root=root) as engine:
+        await engine.run_card("phase_c_missing_effect_live")
 
-    run_roots = _run_roots(workspace)
-    assert len(run_roots) == 1
-    run_summary = read_validated_run_summary(run_roots[0] / "run_summary.json")
-    packet2 = run_summary["truthful_runtime_packet2"]
-    missing_entry = next(
-        row
-        for row in packet2["narration_to_effect_audit"]["entries"]
-        if row["effect_target"] == "agent_output/source_attribution_receipt.json"
-    )
+        run_roots = _run_roots(workspace)
+        assert len(run_roots) == 1
+        run_summary = read_validated_run_summary(run_roots[0] / "run_summary.json")
+        packet2 = run_summary["truthful_runtime_packet2"]
+        missing_entry = next(
+            row
+            for row in packet2["narration_to_effect_audit"]["entries"]
+            if row["effect_target"] == "agent_output/source_attribution_receipt.json"
+        )
 
-    print(
-        "[live][phase-c][missing-effect] "
-        f"run_id={run_summary['run_id']} status={run_summary['status']} "
-        f"audit_failure={missing_entry['failure_reason']}"
-    )
-    assert run_summary["status"] == "done"
-    assert missing_entry["audit_status"] == "missing"
-    assert missing_entry["failure_reason"] == "workspace_artifact_missing"
-    assert packet2["source_attribution"]["synthesis_status"] == "optional_unverified"
+        print(
+            "[live][phase-c][missing-effect] "
+            f"run_id={run_summary['run_id']} status={run_summary['status']} "
+            f"audit_failure={missing_entry['failure_reason']}"
+        )
+        assert run_summary["status"] == "done"
+        assert missing_entry["audit_status"] == "missing"
+        assert missing_entry["failure_reason"] == "workspace_artifact_missing"
+        assert packet2["source_attribution"]["synthesis_status"] == "optional_unverified"

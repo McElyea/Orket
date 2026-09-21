@@ -3,6 +3,7 @@ import inspect
 from pathlib import Path
 from typing import Any
 
+from orket.adapters.execution.owned_io import require_sync_context
 from orket.adapters.storage.async_card_repository import AsyncCardRepository
 from orket.adapters.storage.async_repositories import (
     AsyncSessionRepository,
@@ -13,6 +14,7 @@ from orket.application.services.decision_node_registry import DecisionNodeRegist
 from orket.application.services.kernel_v1_gateway import KernelV1Gateway
 from orket.application.services.runtime_construction_inputs import RuntimeConstructionInputs
 from orket.application.services.runtime_input_service import RuntimeInputService
+from orket.application.services.runtime_result_lifetime import open_configured_runtime
 from orket.application.services.runtime_result_projection import RuntimeResult
 from orket.core.domain import OperatorCommandClass, OperatorInputClass
 from orket.logging import log_event
@@ -53,6 +55,7 @@ class OrchestrationEngine:
         runtime_inputs: RuntimeInputService | None = None,
         construction_inputs: RuntimeConstructionInputs | None = None,
     ) -> None:
+        require_sync_context(code="E_RUNTIME_CONSTRUCTION_REQUIRES_ASYNC_OWNER")
         if construction_inputs is not None:
             construction_inputs.bind_settings()
         self.decision_nodes = decision_nodes or build_decision_node_registry(
@@ -121,6 +124,10 @@ class OrchestrationEngine:
         self._initialized = False
         self._closed = False
 
+    @classmethod
+    def open(cls, workspace_root: Path, **options):
+        return open_configured_runtime(cls, workspace_root, label="engine-construction", **options)
+
     async def initialize(self) -> None:
         if self._initialized:
             return
@@ -144,14 +151,7 @@ class OrchestrationEngine:
         self._closed = True
 
     async def _emit_run_ledger_telemetry(self, payload: dict[str, Any]) -> None:
-        log_event(
-            "run_ledger_telemetry",
-            {
-                "run_ledger_mode": self.run_ledger_mode,
-                **dict(payload or {}),
-            },
-            workspace=self.workspace_root,
-        )
+        log_event("run_ledger_telemetry", {"run_ledger_mode": self.run_ledger_mode, **dict(payload or {})}, workspace=self.workspace_root)
 
     async def run_card(
         self,

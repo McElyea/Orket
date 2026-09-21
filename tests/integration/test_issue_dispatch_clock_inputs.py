@@ -65,16 +65,16 @@ async def test_pipeline_issue_dispatch_uses_supplied_runtime_clock(test_root, wo
     clock = ProtocolLedgerClock()
     clock.current = clock.current.replace(year=2041)
     expected = clock.current.isoformat()
-    pipeline = ExecutionPipeline(workspace=workspace, config_root=test_root, db_path=db_path, runtime_inputs=clock)
-    try:
-        service = pipeline.orchestrator.issue_control_plane
-        run_id = await admit(service)
-        before = await dispatch_state(service, run_id)
-        assert before[0]['creation_timestamp'] == expected
-        await service.close_from_observed_status(
-            session_id='clock-session', issue_id='clock-issue', observed_status='done')
-        after = await dispatch_state(service, run_id)
-        assert after[0]['lifecycle_state'] == 'completed'
-        assert after[1]['end_timestamp'].startswith('2041-')
-    finally:
-        await pipeline.close()
+    async with ExecutionPipeline.open(workspace=workspace, config_root=test_root, db_path=db_path, runtime_inputs=clock) as pipeline:
+        try:
+            service = pipeline.orchestrator.issue_control_plane
+            run_id = await admit(service)
+            before = await dispatch_state(service, run_id)
+            assert before[0]['creation_timestamp'] == expected
+            await service.close_from_observed_status(
+                session_id='clock-session', issue_id='clock-issue', observed_status='done')
+            after = await dispatch_state(service, run_id)
+            assert after[0]['lifecycle_state'] == 'completed'
+            assert after[1]['end_timestamp'].startswith('2041-')
+        finally:
+            await pipeline.close()

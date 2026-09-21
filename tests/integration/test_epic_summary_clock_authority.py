@@ -55,33 +55,33 @@ async def test_source_attribution_failure_preserves_explicit_clock_truth(test_ro
     # Keep ledger event time independently valid while reversing one outcome observation.
     ledger_time = clock.current.isoformat()
     ledger = AsyncProtocolRunLedgerRepository(workspace, timestamp_factory=lambda: ledger_time)
-    pipeline = ExecutionPipeline(workspace=workspace, department="core", db_path=db_path,
-        config_root=test_root, run_ledger_repo=ledger, runtime_inputs=clock)
+    async with ExecutionPipeline.open(workspace=workspace, department="core", db_path=db_path,
+        config_root=test_root, run_ledger_repo=ledger, runtime_inputs=clock) as pipeline:
 
-    async def work(**kwargs):
-        await execute_without_source_attribution(pipeline, workspace, str(kwargs["run_id"]))
-        clock.reverse_next = reverse
+        async def work(**kwargs):
+            await execute_without_source_attribution(pipeline, workspace, str(kwargs["run_id"]))
+            clock.reverse_next = reverse
 
-    monkeypatch.setattr(pipeline.orchestrator, "execute_epic", work)
-    try:
-        result = await pipeline.run_card("clock_source_attribution", build_id="clock-build", session_id="clock-source")
-        run = await ledger.get_run("clock-source")
-        events = await ledger.list_events("clock-source")
-        identity = run["artifact_json"]["run_identity"]
-        assert identity["start_time"] in clock.observations
-        assert not result.succeeded and run["status"] == "terminal_failure"
-        assert run["failure_reason"] == "source_attribution_receipt_missing"
-        summary = run["summary_json"]
-        emitted = json.loads(await asyncio.to_thread((workspace / "runs/clock-source/run_summary.json").read_text, encoding="utf-8"))
-        assert emitted == summary
-        errors = [event for event in events if event["kind"] == "packet1_emission_failure"]
-        if reverse:
-            assert summary["is_degraded"] and summary["duration_ms"] is None
-            assert [event["error"] for event in errors] == ["run_summary_duration_negative"]
-        else:
-            assert not summary["is_degraded"] and summary["duration_ms"] >= 0 and not errors
-            packet = summary["truthful_runtime_packet2"]["source_attribution"]
-            assert packet["synthesis_status"] == "blocked"
-            assert packet["missing_requirements"] == ["source_attribution_receipt_missing"]
-    finally:
-        await pipeline.close()
+        monkeypatch.setattr(pipeline.orchestrator, "execute_epic", work)
+        try:
+            result = await pipeline.run_card("clock_source_attribution", build_id="clock-build", session_id="clock-source")
+            run = await ledger.get_run("clock-source")
+            events = await ledger.list_events("clock-source")
+            identity = run["artifact_json"]["run_identity"]
+            assert identity["start_time"] in clock.observations
+            assert not result.succeeded and run["status"] == "terminal_failure"
+            assert run["failure_reason"] == "source_attribution_receipt_missing"
+            summary = run["summary_json"]
+            emitted = json.loads(await asyncio.to_thread((workspace / "runs/clock-source/run_summary.json").read_text, encoding="utf-8"))
+            assert emitted == summary
+            errors = [event for event in events if event["kind"] == "packet1_emission_failure"]
+            if reverse:
+                assert summary["is_degraded"] and summary["duration_ms"] is None
+                assert [event["error"] for event in errors] == ["run_summary_duration_negative"]
+            else:
+                assert not summary["is_degraded"] and summary["duration_ms"] >= 0 and not errors
+                packet = summary["truthful_runtime_packet2"]["source_attribution"]
+                assert packet["synthesis_status"] == "blocked"
+                assert packet["missing_requirements"] == ["source_attribution_receipt_missing"]
+        finally:
+            await pipeline.close()

@@ -220,32 +220,34 @@ async def _run_probe(args: argparse.Namespace) -> dict[str, Any]:
         disable_sandbox=True,
     ):
         await seed_runtime_settings_context()
-        non_odr_pipeline = ExecutionPipeline(
-            workspace=non_odr_workspace,
-            department="core",
-            config_root=non_odr_workspace,
-            run_ledger_repo=AsyncProtocolRunLedgerRepository(non_odr_workspace),
-        )
-        odr_pipeline = ExecutionPipeline(
-            workspace=odr_workspace,
-            department="core",
-            config_root=odr_workspace,
-            run_ledger_repo=AsyncProtocolRunLedgerRepository(odr_workspace),
-        )
-        non_odr_session_id = _session_id(args, variant_token=variant_token, label="non-odr")
-        non_odr_build_id = _build_id(args, variant_token=variant_token, label="non-odr")
-        odr_session_id = _session_id(args, variant_token=variant_token, label="odr")
-        odr_build_id = _build_id(args, variant_token=variant_token, label="odr")
-        non_odr_result = await non_odr_pipeline.run_card(
-            non_odr_issue_id,
-            session_id=non_odr_session_id,
-            build_id=non_odr_build_id,
-        )
-        odr_result = await odr_pipeline.run_card(
-            odr_issue_id,
-            session_id=odr_session_id,
-            build_id=odr_build_id,
-        )
+        async with (
+            ExecutionPipeline.open(
+                workspace=non_odr_workspace,
+                department="core",
+                config_root=non_odr_workspace,
+                run_ledger_repo=AsyncProtocolRunLedgerRepository(non_odr_workspace),
+            ) as non_odr_pipeline,
+            ExecutionPipeline.open(
+                workspace=odr_workspace,
+                department="core",
+                config_root=odr_workspace,
+                run_ledger_repo=AsyncProtocolRunLedgerRepository(odr_workspace),
+            ) as odr_pipeline,
+        ):
+            non_odr_session_id = _session_id(args, variant_token=variant_token, label="non-odr")
+            non_odr_build_id = _build_id(args, variant_token=variant_token, label="non-odr")
+            odr_session_id = _session_id(args, variant_token=variant_token, label="odr")
+            odr_build_id = _build_id(args, variant_token=variant_token, label="odr")
+            non_odr_result = await non_odr_pipeline.run_card(
+                non_odr_issue_id,
+                session_id=non_odr_session_id,
+                build_id=non_odr_build_id,
+            )
+            odr_result = await odr_pipeline.run_card(
+                odr_issue_id,
+                session_id=odr_session_id,
+                build_id=odr_build_id,
+            )
 
     non_odr_observation = _variant_observation(non_odr_workspace, non_odr_session_id)
     odr_observation = _variant_observation(odr_workspace, odr_session_id)
