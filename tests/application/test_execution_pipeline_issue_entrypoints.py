@@ -235,9 +235,9 @@ async def test_issue_dispatch_ignores_forwarded_target_issue_id(monkeypatch: pyt
 
 
 @pytest.mark.asyncio
-# Layer: contract
+@pytest.mark.unit
 async def test_epic_collection_entry_returns_collection_shaped_payload(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Layer: contract. Verifies the internal collection path no longer returns a rock-shaped payload."""
+    """Layer: unit. Controlled subpipeline ports retain the collection-shaped payload."""
     pipeline = object.__new__(ExecutionPipeline)
     pipeline.workspace = Path("workspace/default")
     seen: dict[str, object] = {"sub_calls": []}
@@ -263,7 +263,7 @@ async def test_epic_collection_entry_returns_collection_shaped_payload(monkeypat
             self,
             build_id: str | None,
             collection_name: str,
-            _sanitize_name: object,
+            _sanitized_name: str,
         ) -> str:
             seen["build"] = (build_id, collection_name)
             return "collection-build"

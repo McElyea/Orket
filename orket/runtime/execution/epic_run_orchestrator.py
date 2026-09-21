@@ -15,6 +15,7 @@ from orket.application.services.epic_approval_pause_service import EpicApprovalP
 from orket.application.services.epic_preparation_service import EpicPreparationService
 from orket.application.services.epic_publication_service import EpicPublicationService
 from orket.application.services.epic_workload_outcome_service import EpicWorkloadOutcomeService
+from orket.application.services.execution_policy_input_service import capture_execution_identifiers
 from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.core.cards_runtime_contract import apply_epic_cards_runtime_defaults
 from orket.core.contracts import WorkloadContractV1
@@ -46,7 +47,7 @@ from orket.runtime.phase_c_runtime_truth import normalize_truthful_runtime_polic
 from orket.runtime.route_decision_artifact import build_route_decision_artifact
 from orket.runtime.run_start_artifacts import capture_run_start_artifacts
 from orket.schema import CardStatus, EpicConfig, TeamConfig
-from orket.utils import get_eos_sprint, sanitize_name
+from orket.utils import get_eos_sprint
 
 
 @dataclass(frozen=True)
@@ -121,6 +122,8 @@ class EpicRunOrchestrator:
         target_issue_id: str | None,
         model_override: str,
     ) -> EpicRunSetup:
+        run_id, active_build = capture_execution_identifiers(self.execution_runtime_node, self.runtime_input_service,
+            name=epic_name, session_id=session_id, build_id=build_id)
         epic = await self.loader.load_asset_async("epics", epic_name, EpicConfig)
         team = await self.loader.load_asset_async("teams", epic.team, TeamConfig)
         env = await self.loader.load_environment_asset_async(epic.environment)
@@ -128,9 +131,6 @@ class EpicRunOrchestrator:
             env = env.model_copy(update={"model": model_override})
         epic_params = epic.params if isinstance(epic.params, dict) else {}
         self._validate_idesign_policy(epic=epic, issue_count=len(epic.issues))
-        requested_run_id = session_id or self.runtime_input_service.create_session_id()
-        run_id = self.execution_runtime_node.select_run_id(requested_run_id)
-        active_build = self.execution_runtime_node.select_epic_build_id(build_id, epic_name, sanitize_name)
         cards_workload_contract = build_cards_workload_contract(
             epic=epic,
             run_id=run_id,

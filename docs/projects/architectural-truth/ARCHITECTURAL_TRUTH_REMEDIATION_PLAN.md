@@ -12520,8 +12520,8 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.50 API-strategy input checkpoint. Preserve the governed legacy-export cutover;
-continue execution decision inputs, remaining deterministic input owners, adapter enforcement and async reachability before E1/E2
+0.6.51 execution-identity checkpoint. Preserve the governed legacy-export cutover;
+continue remaining deterministic input owners, adapter enforcement and async reachability before E1/E2
 and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
 Preserve every failed and
@@ -18672,3 +18672,66 @@ Quality and remaining D/E/CAP obligations stay open. Continue execution strategy
 callbacks and selected-input capture, remaining deterministic inputs, adapter
 enforcement and async reachability before E1/E2 and CAP. Governed legacy exports
 and explicit whole-lane acceptance remain; this checkpoint does not retire the lane.
+
+
+#### .51 execution identity checkpoint (2026-09-20)
+
+Application captures session/build recommendations at epic setup and collection
+entry, before asset-read awaits. The authoritative naming helper supplies a plain
+sanitized string to custom build selectors; no callable sanitizer enters decision
+policy. Selected identities must be nonempty plain strings. Default prefixes,
+explicit overrides and whitespace remain unchanged. Contract and migration:
+`docs/specs/EXECUTION_IDENTITY_INPUTS.md` and
+`docs/architecture/CONTRACT_DELTA_EXECUTION_IDENTITY_INPUTS_D_2026-09-20.md`.
+
+Three corrected pre-change probes reached intended failures through real asset
+reads: epic identities changed during a held read, collection policy replacement
+changed admitted identities, and a scalar-only selector received a callable.
+All three pass after capture. The initial epic fixture failed on uninitialized
+stores; both that failure and corrected inputs remain retained. Fixture migration
+also stopped at a renamed collection test; explicit remaining edits corrected it.
+The affected cohort passed 105 cases. Independent parity records 54 default
+outcomes from the published installed .50 wheel, rather than candidate-generated
+expectations. Strict invalid recommendations refuse before asset reads/publication.
+
+The final 40-module cohort includes actual SQLite completion/publication with
+accepted card evidence, held real reads, admission, approval, recovery/restart,
+child outcomes, existing callers and legacy contracts. The positive publication
+flow keeps captured identities despite policy/input changes and verifies durable
+session, ledger and final-truth success. Executors/providers are controlled;
+no fresh model inference is claimed. All frozen source/installed cases pass:
+
+| Cell | Cases / failures / errors / skips | JUnit seconds |
+|---|---|---|
+| Source Windows Python 3.11 | 411 / 0 / 0 / 0 | 233.858 |
+| Installed win-py311 | 411 / 0 / 0 / 0 | 233.180 |
+| Installed win-py312 | 411 / 0 / 0 / 0 | 230.310 |
+
+Each installed cell checks 955 imported origins, actual CLI
+startup, copied inputs, native teardown and package identity. Source/archive/wheel
+parity covers 1,104 Python files, 1,120 wheel members and 2,109 support files.
+Wheel SHA-256: `eb8288625f86c3e7302a03a0681b735cb625dc6a47fb43d42e07285fa7317a37`;
+sdist SHA-256: `a8f973f36f841ad2e46ffe4c8c39a6b6d03e60f4a05f536cb69b8a54aa843f91`.
+Evidence: `.tmp/d-execution-policy-inputs/`. Observed Windows path/result:
+**primary / success**; the checkpoint remains partial whole-lane acceptance.
+
+The actual dependency-policy gate passes: 1,104 modules, 3,510 import sites,
+six recognized dynamic routes and zero unknown modules, analysis errors,
+forbidden edges or authority cycles. Policy v2 is unchanged. Changed Python is
+Ruff-clean, oversized files do not grow, and canonical Ruff retains 94 existing
+findings. Both Quality jobs include the new regressions; hosted Quality is unproved.
+
+A fresh passive Linux clock preflight is **blocked / environment blocker**:
+240.048424382 elapsed seconds produced only
+14.478670403 synchronized quiet seconds against the required 60.
+Observed wall steps reached +19.167614301/-19.151998529 seconds. No Linux
+application cell was launched, clocks were unchanged and deadlines were preserved.
+Cause remains unresolved. The .43 Git timeout cause, .44 non-Python package
+ceiling, whole-suite/89% coverage and remaining D/E/CAP obligations stay open.
+
+This captures setup/collection identities, not all prior routing or later child
+configuration. Missing IDs may be observed before failed asset validation; earlier
+initialization is not rolled back. Preserve governed legacy exports and proceed
+with remaining explicit-input review, adapter classification/enforcement and async
+reachability before E1/E2 and CAP. No hostile-code containment, whole-lane completion
+or user acceptance is inferred, and the lane remains active.

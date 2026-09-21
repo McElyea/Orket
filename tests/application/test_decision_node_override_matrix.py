@@ -1,8 +1,11 @@
 from types import SimpleNamespace
 
+import pytest
+
 from orket.application.services.decision_node_registry import DecisionNodeRegistry, build_decision_node_registry
 
 
+@pytest.mark.contract
 def test_runtime_override_matrix_process_rules_resolution(monkeypatch):
     """Layer: contract. Verifies process-rule overrides still resolve for the surviving decision-node families."""
     monkeypatch.delenv("ORKET_API_RUNTIME_NODE", raising=False)
@@ -47,8 +50,8 @@ def test_runtime_override_matrix_process_rules_resolution(monkeypatch):
         "ExecutionCustom",
         (),
         {
-            "select_epic_build_id": lambda self, build_id, epic_name, sanitize_name: "BUILD",
-            "select_epic_collection_build_id": lambda self, build_id, collection_name, sanitize_name: "COLLECTIONBUILD",
+            "select_epic_build_id": lambda self, build_id, epic_name, sanitized_name: "BUILD",
+            "select_epic_collection_build_id": lambda self, build_id, collection_name, sanitized_name: "COLLECTIONBUILD",
         },
     )()
 

@@ -662,10 +662,10 @@ def test_registry_resolves_default_execution_runtime():
     node = registry.resolve_execution_runtime()
     assert isinstance(node, DefaultExecutionRuntimeStrategyNode)
     assert node.select_run_id("RUN-1") == "RUN-1"
-    assert node.select_epic_build_id(None, "My Epic", lambda s: s.lower().replace(" ", "-")) == "build-my-epic"
+    assert node.select_epic_build_id(None, "My Epic", "my-epic") == "build-my-epic"
     assert node.select_epic_collection_session_id("RUN-2") == "RUN-2"
     assert (
-        node.select_epic_collection_build_id(None, "My Collection", lambda s: s.lower().replace(" ", "-"))
+        node.select_epic_collection_build_id(None, "My Collection", "my-collection")
         == "epic-collection-build-my-collection"
     )
 
@@ -676,13 +676,13 @@ def test_registry_execution_runtime_env_override_wins(monkeypatch):
         def select_run_id(self, session_id):
             return "RUNX"
 
-        def select_epic_build_id(self, build_id, epic_name, sanitize_name):
+        def select_epic_build_id(self, build_id, epic_name, sanitized_name):
             return "BUILDX"
 
         def select_epic_collection_session_id(self, session_id):
             return "ROCKRUNX"
 
-        def select_epic_collection_build_id(self, build_id, collection_name, sanitize_name):
+        def select_epic_collection_build_id(self, build_id, collection_name, sanitized_name):
             return "ROCKBUILDX"
 
     monkeypatch.setenv("ORKET_EXECUTION_RUNTIME_NODE", "custom-runtime")

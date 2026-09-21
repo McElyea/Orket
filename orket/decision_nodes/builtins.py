@@ -497,8 +497,8 @@ class DefaultExecutionRuntimeStrategyNode:
             raise ValueError("session_id is required")
         return session_id
 
-    def select_epic_build_id(self, build_id: str | None, epic_name: str, sanitize_name: Any) -> str:
-        return build_id or f"build-{sanitize_name(epic_name)}"
+    def select_epic_build_id(self, build_id: str | None, epic_name: str, sanitized_name: str) -> str:
+        return build_id or f"build-{sanitized_name}"
 
     def select_epic_collection_session_id(self, session_id: str | None) -> str:
         if not session_id:
@@ -506,9 +506,9 @@ class DefaultExecutionRuntimeStrategyNode:
         return session_id
 
     def select_epic_collection_build_id(
-        self, build_id: str | None, collection_name: str, sanitize_name: Any
+        self, build_id: str | None, collection_name: str, sanitized_name: str
     ) -> str:
-        return build_id or f"epic-collection-build-{sanitize_name(collection_name)}"
+        return build_id or f"epic-collection-build-{sanitized_name}"
 
 class DefaultOrchestrationLoopPolicyNode:
     """

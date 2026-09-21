@@ -30,6 +30,11 @@ orchestrator clock observations keep their existing second precision. Migration
 and remaining lifecycle input scope:
 `docs/architecture/CONTRACT_DELTA_SANDBOX_CREATION_INPUTS_D_2026-09-20.md`.
 
+Execution setup and collection entry capture session/build identifiers before
+asset reads. Custom build selectors receive a sanitized string value; selected
+identities must be nonempty plain strings. Existing durable admission and child
+authority remain governed by `docs/specs/EXECUTION_IDENTITY_INPUTS.md`.
+
 API strategies receive immutable metrics, explorer, preview, archive and error
 facts. Application captures invocation recommendations before intervening awaits
 and refuses archive response claims that contradict observed results. Earlier
@@ -1241,6 +1246,7 @@ Trust Kernel and Portable Conformance completed lane authority is archived under
       "active_roadmap_source": "docs/ROADMAP.md",
       "process_source": "docs/CONTRIBUTOR.md",
       "core_runtime_contract_sources": [
+        "docs/specs/EXECUTION_IDENTITY_INPUTS.md",
         "docs/specs/API_STRATEGY_INPUTS.md",
         "docs/specs/SANDBOX_POLICY_INPUTS.md",
         "docs/specs/CORE_RUNTIME_STABILITY_REQUIREMENTS.md",

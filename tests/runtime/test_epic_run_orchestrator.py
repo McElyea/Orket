@@ -240,8 +240,8 @@ async def test_epic_run_orchestrator_rejects_unvalidated_collaborator_truth(tmp_
             utc_now_iso=lambda: "2026-09-12T12:00:00+00:00"),
         execution_runtime_node=SimpleNamespace(
             select_run_id=lambda session_id: str(session_id),
-            select_epic_build_id=lambda build_id, epic_name, sanitize_fn: str(
-                build_id or f"build-{sanitize_fn(epic_name)}"
+            select_epic_build_id=lambda build_id, epic_name, sanitized_name: str(
+                build_id or f"build-{sanitized_name}"
             ),
         ),
         pipeline_wiring_service=SimpleNamespace(),

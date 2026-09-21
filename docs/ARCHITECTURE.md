@@ -181,6 +181,11 @@ through the application service; environment extras fail without warning effects
 Contract: `docs/specs/SCHEMA_INPUT_OWNERSHIP.md`. Remaining effects, decision context,
 adapter classification and async reachability still require D acceptance.
 
+Execution setup and collection entry capture session/build identifiers before
+asset reads. Custom build selectors receive a sanitized string value; selected
+identities must be nonempty plain strings. Existing durable admission and child
+authority remain governed by `docs/specs/EXECUTION_IDENTITY_INPUTS.md`.
+
 API strategies receive immutable metrics, explorer, preview, archive and error
 facts. Application captures invocation recommendations before intervening awaits
 and refuses archive response claims that contradict observed results. Earlier

@@ -5,6 +5,16 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.51] - 2026-09-20
+
+### Fixed
+- Capture execution identities before epic setup and collection asset-read awaits; reject invalid selected identities before publication.
+- Pass a sanitized name value into build strategies instead of a callable sanitizer while preserving default identifiers and explicit overrides.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Custom execution build selectors accept a plain sanitized name as their third argument. Migration: `docs/architecture/CONTRACT_DELTA_EXECUTION_IDENTITY_INPUTS_D_2026-09-20.md`.
+
 ## [0.6.50] - 2026-09-20
 
 ### Fixed

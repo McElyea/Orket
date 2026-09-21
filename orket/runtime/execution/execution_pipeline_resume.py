@@ -3,13 +3,13 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from orket.application.services.execution_policy_input_service import capture_execution_identifiers
 from orket.application.services.runtime_execution_result_service import RuntimeExecutionCancelled
 from orket.application.services.runtime_result_lifetime import execute_collection_member
 from orket.core.contracts.runtime_execution_result import RuntimeCollectionMember, RuntimeCollectionResult
 from orket.exceptions import CardNotFound
 from orket.logging import log_event
 from orket.schema import CardStatus, EpicConfig, IssueConfig, RockConfig
-from orket.utils import sanitize_name
 
 
 class ExecutionPipelineResumeMixin:
@@ -31,12 +31,9 @@ class ExecutionPipelineResumeMixin:
         driver_steered: bool = False,
         model_override: str | None = None,
     ) -> RuntimeCollectionResult:
+        sid, active_build = capture_execution_identifiers(self.execution_runtime_node, self.runtime_inputs,
+            name=collection_name, session_id=session_id, build_id=build_id, collection=True)
         collection = await self.loader.load_asset_async("rocks", collection_name, RockConfig)
-        requested_session_id = session_id or self.runtime_inputs.create_session_id()
-        sid = self.execution_runtime_node.select_epic_collection_session_id(requested_session_id)
-        active_build = self.execution_runtime_node.select_epic_collection_build_id(
-            build_id, collection_name, sanitize_name
-        )
         results = []
         for index, entry in enumerate(collection.epics, start=1):
             epic_ws = self.workspace / entry["epic"]

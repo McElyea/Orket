@@ -1,0 +1,567 @@
+{
+  "source_version": "0.6.50",
+  "wheel_sha256": "0d09c6cd355c6e8fa8c68bc78a0114d9f29b8fbbd41150e5373a5d7bfe8fc308",
+  "scope": "Published execution defaults with the authoritative sanitizer; invalid custom recommendations are excluded.",
+  "cases": [
+    {
+      "collection": false,
+      "name": "My Epic",
+      "session_id": null,
+      "build_id": null,
+      "result": [
+        "generated-session",
+        "build-my_epic"
+      ]
+    },
+    {
+      "collection": false,
+      "name": "My Epic",
+      "session_id": null,
+      "build_id": "",
+      "result": [
+        "generated-session",
+        "build-my_epic"
+      ]
+    },
+    {
+      "collection": false,
+      "name": "My Epic",
+      "session_id": null,
+      "build_id": "explicit-build",
+      "result": [
+        "generated-session",
+        "explicit-build"
+      ]
+    },
+    {
+      "collection": false,
+      "name": "My Epic",
+      "session_id": "",
+      "build_id": null,
+      "result": [
+        "generated-session",
+        "build-my_epic"
+      ]
+    },
+    {
+      "collection": false,
+      "name": "My Epic",
+      "session_id": "",
+      "build_id": "",
+      "result": [
+        "generated-session",
+        "build-my_epic"
+      ]
+    },
+    {
+      "collection": false,
+      "name": "My Epic",
+      "session_id": "",
+      "build_id": "explicit-build",
+      "result": [
+        "generated-session",
+        "explicit-build"
+      ]
+    },
+    {
+      "collection": false,
+      "name": "My Epic",
+      "session_id": "explicit-session",
+      "build_id": null,
+      "result": [
+        "explicit-session",
+        "build-my_epic"
+      ]
+    },
+    {
+      "collection": false,
+      "name": "My Epic",
+      "session_id": "explicit-session",
+      "build_id": "",
+      "result": [
+        "explicit-session",
+        "build-my_epic"
+      ]
+    },
+    {
+      "collection": false,
+      "name": "My Epic",
+      "session_id": "explicit-session",
+      "build_id": "explicit-build",
+      "result": [
+        "explicit-session",
+        "explicit-build"
+      ]
+    },
+    {
+      "collection": false,
+      "name": " padded Name ",
+      "session_id": null,
+      "build_id": null,
+      "result": [
+        "generated-session",
+        "build-_padded_name_"
+      ]
+    },
+    {
+      "collection": false,
+      "name": " padded Name ",
+      "session_id": null,
+      "build_id": "",
+      "result": [
+        "generated-session",
+        "build-_padded_name_"
+      ]
+    },
+    {
+      "collection": false,
+      "name": " padded Name ",
+      "session_id": null,
+      "build_id": "explicit-build",
+      "result": [
+        "generated-session",
+        "explicit-build"
+      ]
+    },
+    {
+      "collection": false,
+      "name": " padded Name ",
+      "session_id": "",
+      "build_id": null,
+      "result": [
+        "generated-session",
+        "build-_padded_name_"
+      ]
+    },
+    {
+      "collection": false,
+      "name": " padded Name ",
+      "session_id": "",
+      "build_id": "",
+      "result": [
+        "generated-session",
+        "build-_padded_name_"
+      ]
+    },
+    {
+      "collection": false,
+      "name": " padded Name ",
+      "session_id": "",
+      "build_id": "explicit-build",
+      "result": [
+        "generated-session",
+        "explicit-build"
+      ]
+    },
+    {
+      "collection": false,
+      "name": " padded Name ",
+      "session_id": "explicit-session",
+      "build_id": null,
+      "result": [
+        "explicit-session",
+        "build-_padded_name_"
+      ]
+    },
+    {
+      "collection": false,
+      "name": " padded Name ",
+      "session_id": "explicit-session",
+      "build_id": "",
+      "result": [
+        "explicit-session",
+        "build-_padded_name_"
+      ]
+    },
+    {
+      "collection": false,
+      "name": " padded Name ",
+      "session_id": "explicit-session",
+      "build_id": "explicit-build",
+      "result": [
+        "explicit-session",
+        "explicit-build"
+      ]
+    },
+    {
+      "collection": false,
+      "name": "",
+      "session_id": null,
+      "build_id": null,
+      "result": [
+        "generated-session",
+        "build-unknown"
+      ]
+    },
+    {
+      "collection": false,
+      "name": "",
+      "session_id": null,
+      "build_id": "",
+      "result": [
+        "generated-session",
+        "build-unknown"
+      ]
+    },
+    {
+      "collection": false,
+      "name": "",
+      "session_id": null,
+      "build_id": "explicit-build",
+      "result": [
+        "generated-session",
+        "explicit-build"
+      ]
+    },
+    {
+      "collection": false,
+      "name": "",
+      "session_id": "",
+      "build_id": null,
+      "result": [
+        "generated-session",
+        "build-unknown"
+      ]
+    },
+    {
+      "collection": false,
+      "name": "",
+      "session_id": "",
+      "build_id": "",
+      "result": [
+        "generated-session",
+        "build-unknown"
+      ]
+    },
+    {
+      "collection": false,
+      "name": "",
+      "session_id": "",
+      "build_id": "explicit-build",
+      "result": [
+        "generated-session",
+        "explicit-build"
+      ]
+    },
+    {
+      "collection": false,
+      "name": "",
+      "session_id": "explicit-session",
+      "build_id": null,
+      "result": [
+        "explicit-session",
+        "build-unknown"
+      ]
+    },
+    {
+      "collection": false,
+      "name": "",
+      "session_id": "explicit-session",
+      "build_id": "",
+      "result": [
+        "explicit-session",
+        "build-unknown"
+      ]
+    },
+    {
+      "collection": false,
+      "name": "",
+      "session_id": "explicit-session",
+      "build_id": "explicit-build",
+      "result": [
+        "explicit-session",
+        "explicit-build"
+      ]
+    },
+    {
+      "collection": true,
+      "name": "My Epic",
+      "session_id": null,
+      "build_id": null,
+      "result": [
+        "generated-session",
+        "epic-collection-build-my_epic"
+      ]
+    },
+    {
+      "collection": true,
+      "name": "My Epic",
+      "session_id": null,
+      "build_id": "",
+      "result": [
+        "generated-session",
+        "epic-collection-build-my_epic"
+      ]
+    },
+    {
+      "collection": true,
+      "name": "My Epic",
+      "session_id": null,
+      "build_id": "explicit-build",
+      "result": [
+        "generated-session",
+        "explicit-build"
+      ]
+    },
+    {
+      "collection": true,
+      "name": "My Epic",
+      "session_id": "",
+      "build_id": null,
+      "result": [
+        "generated-session",
+        "epic-collection-build-my_epic"
+      ]
+    },
+    {
+      "collection": true,
+      "name": "My Epic",
+      "session_id": "",
+      "build_id": "",
+      "result": [
+        "generated-session",
+        "epic-collection-build-my_epic"
+      ]
+    },
+    {
+      "collection": true,
+      "name": "My Epic",
+      "session_id": "",
+      "build_id": "explicit-build",
+      "result": [
+        "generated-session",
+        "explicit-build"
+      ]
+    },
+    {
+      "collection": true,
+      "name": "My Epic",
+      "session_id": "explicit-session",
+      "build_id": null,
+      "result": [
+        "explicit-session",
+        "epic-collection-build-my_epic"
+      ]
+    },
+    {
+      "collection": true,
+      "name": "My Epic",
+      "session_id": "explicit-session",
+      "build_id": "",
+      "result": [
+        "explicit-session",
+        "epic-collection-build-my_epic"
+      ]
+    },
+    {
+      "collection": true,
+      "name": "My Epic",
+      "session_id": "explicit-session",
+      "build_id": "explicit-build",
+      "result": [
+        "explicit-session",
+        "explicit-build"
+      ]
+    },
+    {
+      "collection": true,
+      "name": " padded Name ",
+      "session_id": null,
+      "build_id": null,
+      "result": [
+        "generated-session",
+        "epic-collection-build-_padded_name_"
+      ]
+    },
+    {
+      "collection": true,
+      "name": " padded Name ",
+      "session_id": null,
+      "build_id": "",
+      "result": [
+        "generated-session",
+        "epic-collection-build-_padded_name_"
+      ]
+    },
+    {
+      "collection": true,
+      "name": " padded Name ",
+      "session_id": null,
+      "build_id": "explicit-build",
+      "result": [
+        "generated-session",
+        "explicit-build"
+      ]
+    },
+    {
+      "collection": true,
+      "name": " padded Name ",
+      "session_id": "",
+      "build_id": null,
+      "result": [
+        "generated-session",
+        "epic-collection-build-_padded_name_"
+      ]
+    },
+    {
+      "collection": true,
+      "name": " padded Name ",
+      "session_id": "",
+      "build_id": "",
+      "result": [
+        "generated-session",
+        "epic-collection-build-_padded_name_"
+      ]
+    },
+    {
+      "collection": true,
+      "name": " padded Name ",
+      "session_id": "",
+      "build_id": "explicit-build",
+      "result": [
+        "generated-session",
+        "explicit-build"
+      ]
+    },
+    {
+      "collection": true,
+      "name": " padded Name ",
+      "session_id": "explicit-session",
+      "build_id": null,
+      "result": [
+        "explicit-session",
+        "epic-collection-build-_padded_name_"
+      ]
+    },
+    {
+      "collection": true,
+      "name": " padded Name ",
+      "session_id": "explicit-session",
+      "build_id": "",
+      "result": [
+        "explicit-session",
+        "epic-collection-build-_padded_name_"
+      ]
+    },
+    {
+      "collection": true,
+      "name": " padded Name ",
+      "session_id": "explicit-session",
+      "build_id": "explicit-build",
+      "result": [
+        "explicit-session",
+        "explicit-build"
+      ]
+    },
+    {
+      "collection": true,
+      "name": "",
+      "session_id": null,
+      "build_id": null,
+      "result": [
+        "generated-session",
+        "epic-collection-build-unknown"
+      ]
+    },
+    {
+      "collection": true,
+      "name": "",
+      "session_id": null,
+      "build_id": "",
+      "result": [
+        "generated-session",
+        "epic-collection-build-unknown"
+      ]
+    },
+    {
+      "collection": true,
+      "name": "",
+      "session_id": null,
+      "build_id": "explicit-build",
+      "result": [
+        "generated-session",
+        "explicit-build"
+      ]
+    },
+    {
+      "collection": true,
+      "name": "",
+      "session_id": "",
+      "build_id": null,
+      "result": [
+        "generated-session",
+        "epic-collection-build-unknown"
+      ]
+    },
+    {
+      "collection": true,
+      "name": "",
+      "session_id": "",
+      "build_id": "",
+      "result": [
+        "generated-session",
+        "epic-collection-build-unknown"
+      ]
+    },
+    {
+      "collection": true,
+      "name": "",
+      "session_id": "",
+      "build_id": "explicit-build",
+      "result": [
+        "generated-session",
+        "explicit-build"
+      ]
+    },
+    {
+      "collection": true,
+      "name": "",
+      "session_id": "explicit-session",
+      "build_id": null,
+      "result": [
+        "explicit-session",
+        "epic-collection-build-unknown"
+      ]
+    },
+    {
+      "collection": true,
+      "name": "",
+      "session_id": "explicit-session",
+      "build_id": "",
+      "result": [
+        "explicit-session",
+        "epic-collection-build-unknown"
+      ]
+    },
+    {
+      "collection": true,
+      "name": "",
+      "session_id": "explicit-session",
+      "build_id": "explicit-build",
+      "result": [
+        "explicit-session",
+        "explicit-build"
+      ]
+    }
+  ],
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-09-21T00:27:21.810405Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:58cadce2ebd3a5f2790c91c8daddf724103e0a1132b8faa87b222df9a426211c",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 763,
+        "paths_total_reference": 763,
+        "churn_paths": 763,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    }
+  ]
+}
