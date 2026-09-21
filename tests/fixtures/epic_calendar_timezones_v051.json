@@ -1,0 +1,193 @@
+{
+  "source_version": "0.6.51",
+  "wheel_sha256": "eb8288625f86c3e7302a03a0681b735cb625dc6a47fb43d42e07285fa7317a37",
+  "scope": "Actual configured_timezone and get_eos_sprint over explicit UTC observations and controlled environment. Retains observed zone offsets including installed IANA availability/fallback. No elapsed-time or inference proof.",
+  "cases": [
+    {
+      "id": "zone-0",
+      "environment": {
+        "ORKET_EOS_SPRINT_BASE_DATE": "2026-02-02",
+        "ORKET_EOS_SPRINT_BASE_QUARTER": "1",
+        "ORKET_EOS_SPRINT_BASE_SPRINT": "6"
+      },
+      "utc": "2026-02-02T01:00:00+00:00",
+      "local": "2026-02-02T01:00:00+00:00",
+      "sprint": "Q1 S6"
+    },
+    {
+      "id": "zone-1",
+      "environment": {
+        "ORKET_EOS_SPRINT_BASE_DATE": "2026-02-02",
+        "ORKET_EOS_SPRINT_BASE_QUARTER": "1",
+        "ORKET_EOS_SPRINT_BASE_SPRINT": "6"
+      },
+      "utc": "2026-07-06T06:30:00+00:00",
+      "local": "2026-07-06T06:30:00+00:00",
+      "sprint": "Q3 S2"
+    },
+    {
+      "id": "zone-2",
+      "environment": {
+        "ORKET_EOS_SPRINT_BASE_DATE": "2026-02-02",
+        "ORKET_EOS_SPRINT_BASE_QUARTER": "1",
+        "ORKET_EOS_SPRINT_BASE_SPRINT": "6",
+        "ORKET_TIMEZONE": ""
+      },
+      "utc": "2026-02-02T01:00:00+00:00",
+      "local": "2026-02-02T01:00:00+00:00",
+      "sprint": "Q1 S6"
+    },
+    {
+      "id": "zone-3",
+      "environment": {
+        "ORKET_EOS_SPRINT_BASE_DATE": "2026-02-02",
+        "ORKET_EOS_SPRINT_BASE_QUARTER": "1",
+        "ORKET_EOS_SPRINT_BASE_SPRINT": "6",
+        "ORKET_TIMEZONE": ""
+      },
+      "utc": "2026-07-06T06:30:00+00:00",
+      "local": "2026-07-06T06:30:00+00:00",
+      "sprint": "Q3 S2"
+    },
+    {
+      "id": "zone-4",
+      "environment": {
+        "ORKET_EOS_SPRINT_BASE_DATE": "2026-02-02",
+        "ORKET_EOS_SPRINT_BASE_QUARTER": "1",
+        "ORKET_EOS_SPRINT_BASE_SPRINT": "6",
+        "ORKET_TIMEZONE": "UTC"
+      },
+      "utc": "2026-02-02T01:00:00+00:00",
+      "local": "2026-02-02T01:00:00+00:00",
+      "sprint": "Q1 S6"
+    },
+    {
+      "id": "zone-5",
+      "environment": {
+        "ORKET_EOS_SPRINT_BASE_DATE": "2026-02-02",
+        "ORKET_EOS_SPRINT_BASE_QUARTER": "1",
+        "ORKET_EOS_SPRINT_BASE_SPRINT": "6",
+        "ORKET_TIMEZONE": "UTC"
+      },
+      "utc": "2026-07-06T06:30:00+00:00",
+      "local": "2026-07-06T06:30:00+00:00",
+      "sprint": "Q3 S2"
+    },
+    {
+      "id": "zone-6",
+      "environment": {
+        "ORKET_EOS_SPRINT_BASE_DATE": "2026-02-02",
+        "ORKET_EOS_SPRINT_BASE_QUARTER": "1",
+        "ORKET_EOS_SPRINT_BASE_SPRINT": "6",
+        "ORKET_TIMEZONE": "MST"
+      },
+      "utc": "2026-02-02T01:00:00+00:00",
+      "local": "2026-02-01T18:00:00-07:00",
+      "sprint": "Q1 S5"
+    },
+    {
+      "id": "zone-7",
+      "environment": {
+        "ORKET_EOS_SPRINT_BASE_DATE": "2026-02-02",
+        "ORKET_EOS_SPRINT_BASE_QUARTER": "1",
+        "ORKET_EOS_SPRINT_BASE_SPRINT": "6",
+        "ORKET_TIMEZONE": "MST"
+      },
+      "utc": "2026-07-06T06:30:00+00:00",
+      "local": "2026-07-05T23:30:00-07:00",
+      "sprint": "Q3 S1"
+    },
+    {
+      "id": "zone-8",
+      "environment": {
+        "ORKET_EOS_SPRINT_BASE_DATE": "2026-02-02",
+        "ORKET_EOS_SPRINT_BASE_QUARTER": "1",
+        "ORKET_EOS_SPRINT_BASE_SPRINT": "6",
+        "ORKET_TIMEZONE": " mst "
+      },
+      "utc": "2026-02-02T01:00:00+00:00",
+      "local": "2026-02-01T18:00:00-07:00",
+      "sprint": "Q1 S5"
+    },
+    {
+      "id": "zone-9",
+      "environment": {
+        "ORKET_EOS_SPRINT_BASE_DATE": "2026-02-02",
+        "ORKET_EOS_SPRINT_BASE_QUARTER": "1",
+        "ORKET_EOS_SPRINT_BASE_SPRINT": "6",
+        "ORKET_TIMEZONE": " mst "
+      },
+      "utc": "2026-07-06T06:30:00+00:00",
+      "local": "2026-07-05T23:30:00-07:00",
+      "sprint": "Q3 S1"
+    },
+    {
+      "id": "zone-10",
+      "environment": {
+        "ORKET_EOS_SPRINT_BASE_DATE": "2026-02-02",
+        "ORKET_EOS_SPRINT_BASE_QUARTER": "1",
+        "ORKET_EOS_SPRINT_BASE_SPRINT": "6",
+        "ORKET_TIMEZONE": "Invalid/Zone"
+      },
+      "utc": "2026-02-02T01:00:00+00:00",
+      "local": "2026-02-02T01:00:00+00:00",
+      "sprint": "Q1 S6"
+    },
+    {
+      "id": "zone-11",
+      "environment": {
+        "ORKET_EOS_SPRINT_BASE_DATE": "2026-02-02",
+        "ORKET_EOS_SPRINT_BASE_QUARTER": "1",
+        "ORKET_EOS_SPRINT_BASE_SPRINT": "6",
+        "ORKET_TIMEZONE": "Invalid/Zone"
+      },
+      "utc": "2026-07-06T06:30:00+00:00",
+      "local": "2026-07-06T06:30:00+00:00",
+      "sprint": "Q3 S2"
+    },
+    {
+      "id": "zone-12",
+      "environment": {
+        "ORKET_EOS_SPRINT_BASE_DATE": "2026-02-02",
+        "ORKET_EOS_SPRINT_BASE_QUARTER": "1",
+        "ORKET_EOS_SPRINT_BASE_SPRINT": "6",
+        "ORKET_TIMEZONE": "Asia/Tokyo"
+      },
+      "utc": "2026-02-02T01:00:00+00:00",
+      "local": "2026-02-02T10:00:00+09:00",
+      "sprint": "Q1 S6"
+    },
+    {
+      "id": "zone-13",
+      "environment": {
+        "ORKET_EOS_SPRINT_BASE_DATE": "2026-02-02",
+        "ORKET_EOS_SPRINT_BASE_QUARTER": "1",
+        "ORKET_EOS_SPRINT_BASE_SPRINT": "6",
+        "ORKET_TIMEZONE": "Asia/Tokyo"
+      },
+      "utc": "2026-07-06T06:30:00+00:00",
+      "local": "2026-07-06T15:30:00+09:00",
+      "sprint": "Q3 S2"
+    }
+  ],
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-09-21T01:47:16.789466Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:5344441d86acfbc3cf3072ce3389e3093af85a2cb7c44687b17aeec897785306",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 255,
+        "paths_total_reference": 255,
+        "churn_paths": 255,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    }
+  ]
+}

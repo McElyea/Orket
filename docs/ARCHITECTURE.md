@@ -183,8 +183,10 @@ adapter classification and async reachability still require D acceptance.
 
 Agent construction captures model-family configuration; journal publication uses
 the selected clock or captured caller timestamp. Epic setup calculates one sprint
-from its selected time and immutable baseline before asset reads. Contracts and
-scope limits: `docs/specs/REMAINING_RUNTIME_INPUTS.md`.
+from its selected time, immutable baseline and captured configured timezone
+before asset reads. Timezone lookup has an owned worker; v0.6.53 corrects the
+v0.6.52 host-timezone regression. Contracts and scope limits:
+`docs/specs/REMAINING_RUNTIME_INPUTS.md`.
 
 Execution setup and collection entry capture session/build identifiers before
 asset reads. Custom build selectors receive a sanitized string value; selected

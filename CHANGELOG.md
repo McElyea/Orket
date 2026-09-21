@@ -5,6 +5,16 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.53] - 2026-09-20
+
+### Fixed
+- Restore configured epic calendar timezones, including default UTC and fixed MST, after the v0.6.52 host-timezone regression.
+- Capture the timezone name with the EOS baseline and retain its lookup worker through cancellation before asset reads or card publication.
+- `compatibility_status`: `compatible`
+- `affected_audience`: `all`
+- `migration_requirement`: `none`
+- Existing stored card sprints are retained. Correction and proof limits: `docs/architecture/CONTRACT_DELTA_EPIC_CALENDAR_ZONE_D_2026-09-20.md`.
+
 ## [0.6.52] - 2026-09-20
 
 ### Fixed

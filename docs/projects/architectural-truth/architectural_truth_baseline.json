@@ -1,6 +1,6 @@
 {
   "schema_version": "architectural_truth.baseline.v1",
-  "generated_at": "2026-09-21T01:31:33.511534Z",
+  "generated_at": "2026-09-21T02:34:33.636466Z",
   "collection_ok": true,
   "release_ready": false,
   "release_ready_reason": "Active architectural exceptions and red/noisy proof gates remain.",
@@ -332,7 +332,7 @@
         {
           "source": "application",
           "target": "adapters",
-          "count": 392
+          "count": 393
         },
         {
           "source": "application",
@@ -535,10 +535,10 @@
   },
   "test_taxonomy": {
     "schema_version": "test_taxonomy_report.v1",
-    "tests_total": 5423,
-    "missing_layer_total": 3825,
+    "tests_total": 5428,
+    "missing_layer_total": 3830,
     "by_layer": {
-      "unlabeled": 3825,
+      "unlabeled": 3830,
       "integration": 750,
       "unit": 166,
       "contract": 671,
@@ -1146,7 +1146,7 @@
         "layer": null
       }
     ],
-    "missing_layers_omitted": 3725
+    "missing_layers_omitted": 3730
   },
   "ruff": {
     "proof": "structural_lint",
@@ -1546,71 +1546,6 @@
     "parse_errors": []
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-20T17:20:10.833993Z",
-      "changed": true,
-      "before_digest": "sha256:1dd3aa6e3c9bfca9d6db11fea8f9858e28ea01649f742a93055e20ab80b2bc99",
-      "after_digest": "sha256:822df331ea9d95a44c04832a337ee7701e7a27b0086a89bad37b1f0c7e4095c4",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 2,
-        "initial_write": false,
-        "paths_total_previous": 2332,
-        "paths_total_current": 2332,
-        "paths_total_reference": 2332,
-        "churn_paths": 2,
-        "churn_ratio": 0.000858,
-        "sample_paths": [
-          "$.architecture_exceptions.exceptions[0].reason",
-          "$.generated_at"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-20T17:44:51.936644Z",
-      "changed": true,
-      "before_digest": "sha256:822df331ea9d95a44c04832a337ee7701e7a27b0086a89bad37b1f0c7e4095c4",
-      "after_digest": "sha256:0a80cff523dc91e4b2434a7a2bd08377f6883cb85d5b57e5b1d239d3f9e71b96",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 5,
-        "initial_write": false,
-        "paths_total_previous": 2332,
-        "paths_total_current": 2332,
-        "paths_total_reference": 2332,
-        "churn_paths": 5,
-        "churn_ratio": 0.002144,
-        "sample_paths": [
-          "$.generated_at",
-          "$.test_taxonomy.by_layer.unlabeled",
-          "$.test_taxonomy.missing_layer_total",
-          "$.test_taxonomy.missing_layers_omitted",
-          "$.test_taxonomy.tests_total"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-20T18:01:42.142947Z",
-      "changed": true,
-      "before_digest": "sha256:0a80cff523dc91e4b2434a7a2bd08377f6883cb85d5b57e5b1d239d3f9e71b96",
-      "after_digest": "sha256:d66f5ab00d0d6c5cb005d1cb7c113911a08d9cbeeee9e4e284091c0a374a2d53",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 2332,
-        "paths_total_current": 2332,
-        "paths_total_reference": 2332,
-        "churn_paths": 1,
-        "churn_ratio": 0.000429,
-        "sample_paths": [
-          "$.generated_at"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-20T18:24:57.367430Z",
       "changed": true,
@@ -2271,6 +2206,71 @@
       "changed": true,
       "before_digest": "sha256:955915d2d9b9dc632a8e7eb9f34a04a4c0e44aa3fb58336add16e97deaa509d1",
       "after_digest": "sha256:df0c239a36eb2345208e98d8458e9d4efa5b88ee2d940825619f4ed511013edc",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 2331,
+        "paths_total_current": 2331,
+        "paths_total_reference": 2331,
+        "churn_paths": 1,
+        "churn_ratio": 0.000429,
+        "sample_paths": [
+          "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-21T01:53:14.733393Z",
+      "changed": true,
+      "before_digest": "sha256:df0c239a36eb2345208e98d8458e9d4efa5b88ee2d940825619f4ed511013edc",
+      "after_digest": "sha256:25253dc4386cb1e296fec02ddc157bf49fadb30e935e7afe83322373c0e00a9b",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 6,
+        "initial_write": false,
+        "paths_total_previous": 2331,
+        "paths_total_current": 2331,
+        "paths_total_reference": 2331,
+        "churn_paths": 6,
+        "churn_ratio": 0.002574,
+        "sample_paths": [
+          "$.dependency_graph.observed.layer_edges[2].count",
+          "$.generated_at",
+          "$.test_taxonomy.by_layer.unlabeled",
+          "$.test_taxonomy.missing_layer_total",
+          "$.test_taxonomy.missing_layers_omitted",
+          "$.test_taxonomy.tests_total"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-21T02:16:43.145918Z",
+      "changed": true,
+      "before_digest": "sha256:25253dc4386cb1e296fec02ddc157bf49fadb30e935e7afe83322373c0e00a9b",
+      "after_digest": "sha256:e3ae07027272edb41224658962cf4dfeaa85d45377c512788d473003563883a8",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 2331,
+        "paths_total_current": 2331,
+        "paths_total_reference": 2331,
+        "churn_paths": 1,
+        "churn_ratio": 0.000429,
+        "sample_paths": [
+          "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-21T02:34:33.638547Z",
+      "changed": true,
+      "before_digest": "sha256:e3ae07027272edb41224658962cf4dfeaa85d45377c512788d473003563883a8",
+      "after_digest": "sha256:f5d5b8743d4eb29b498e853428467c785714bf268b1107f44f121308e825b99c",
       "diff": {
         "added_paths": 0,
         "removed_paths": 0,

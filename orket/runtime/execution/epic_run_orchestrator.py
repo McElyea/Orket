@@ -48,6 +48,7 @@ from orket.runtime.phase_c_runtime_truth import normalize_truthful_runtime_polic
 from orket.runtime.route_decision_artifact import build_route_decision_artifact
 from orket.runtime.run_start_artifacts import capture_run_start_artifacts
 from orket.schema import CardStatus, EpicConfig, TeamConfig
+from orket.time_utils import configured_timezone
 
 
 @dataclass(frozen=True)
@@ -72,6 +73,7 @@ class EpicRunOrchestrator:
     preparation: EpicPreparationService
     approval_pauses: EpicApprovalPauseService | None = None
     eos_calendar: EosSprintBaseline = EosSprintBaseline()
+    calendar_timezone_name: str = "UTC"
 
     async def run(
         self,
@@ -125,7 +127,10 @@ class EpicRunOrchestrator:
     ) -> EpicRunSetup:
         run_id, active_build = capture_execution_identifiers(self.execution_runtime_node, self.runtime_input_service,
             name=epic_name, session_id=session_id, build_id=build_id)
-        calendar_sprint = self.eos_calendar.current_sprint(self.runtime_input_service.utc_now().astimezone())
+        calendar_now = self.runtime_input_service.utc_now()
+        calendar_zone = await run_owned_thread(partial(configured_timezone, self.calendar_timezone_name),
+            label="epic-calendar-zone")
+        calendar_sprint = self.eos_calendar.current_sprint(calendar_now.astimezone(calendar_zone))
         epic = await self.loader.load_asset_async("epics", epic_name, EpicConfig)
         team = await self.loader.load_asset_async("teams", epic.team, TeamConfig)
         env = await self.loader.load_environment_asset_async(epic.environment)

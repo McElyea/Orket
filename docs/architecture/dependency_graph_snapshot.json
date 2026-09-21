@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-21T01:09:13.284519+00:00",
+  "generated_at": "2026-09-21T02:15:48.952723+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -3705,7 +3705,7 @@
       },
       "orket.runtime.execution.epic_run_orchestrator": {
         "path": "orket/runtime/execution/epic_run_orchestrator.py",
-        "sha256": "8474781c4b4030463de14d6bfbf50a2893f88baaf5f6b1a278955aebb09ffaa2"
+        "sha256": "794f0c014f61b60748cd0eb71e342c09b9d157335701b6989b6c34ec5c237c45"
       },
       "orket.runtime.execution.epic_run_result_boundary": {
         "path": "orket/runtime/execution/epic_run_result_boundary.py",
@@ -3721,7 +3721,7 @@
       },
       "orket.runtime.execution.execution_pipeline": {
         "path": "orket/runtime/execution/execution_pipeline.py",
-        "sha256": "a42cb11b87ce5ab4757d812758cc1ca0f0b81c166c3a9f3fa4a23943e8f5ed0c"
+        "sha256": "ddbd2932756b15b4996e5347eccea910714057329d279aa5c948ff13557e5467"
       },
       "orket.runtime.execution.execution_pipeline_artifact_provenance": {
         "path": "orket/runtime/execution/execution_pipeline_artifact_provenance.py",
@@ -25976,6 +25976,13 @@
         "kind": "from"
       },
       {
+        "source": "orket.runtime.execution.epic_run_orchestrator",
+        "target": "orket.time_utils",
+        "path": "orket/runtime/execution/epic_run_orchestrator.py",
+        "line": 51,
+        "kind": "from"
+      },
+      {
         "source": "orket.runtime.execution.epic_run_result_boundary",
         "target": "orket.application.services.epic_admission_service",
         "path": "orket/runtime/execution/epic_run_result_boundary.py",
@@ -30298,7 +30305,7 @@
       {
         "source": "application",
         "target": "adapters",
-        "count": 392
+        "count": 393
       },
       {
         "source": "application",
@@ -30355,66 +30362,6 @@
     }
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-19T17:54:44.526151Z",
-      "changed": true,
-      "before_digest": "sha256:60536f8e6e9b86a110b8cf4965b8d6ed94a904a089104cd73391519461f0a22f",
-      "after_digest": "sha256:b4fa4afa4e1224a0cf45fa070e363907135a0cede22aa879ed3e167fe7b490a2",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 2,
-        "initial_write": false,
-        "paths_total_previous": 45505,
-        "paths_total_current": 45505,
-        "paths_total_reference": 45505,
-        "churn_paths": 2,
-        "churn_ratio": 4.4e-05,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.modules.orket.extensions.sdk_workload_runner.sha256"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-19T18:35:28.619751Z",
-      "changed": true,
-      "before_digest": "sha256:b4fa4afa4e1224a0cf45fa070e363907135a0cede22aa879ed3e167fe7b490a2",
-      "after_digest": "sha256:3179e60578f6d14b23f8d77b66fd0c8652cfcedd9a52b27a0a1fa0063d26f14a",
-      "diff": {
-        "added_paths": 4,
-        "removed_paths": 0,
-        "changed_paths": 3043,
-        "initial_write": false,
-        "paths_total_previous": 45505,
-        "paths_total_current": 45534,
-        "paths_total_reference": 45534,
-        "churn_paths": 3047,
-        "churn_ratio": 0.066917,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.edges[2290].line",
-          "$.observed.edges[2290].path",
-          "$.observed.edges[2290].source",
-          "$.observed.edges[2290].target",
-          "$.observed.edges[2291].line",
-          "$.observed.edges[2291].path",
-          "$.observed.edges[2291].source",
-          "$.observed.edges[2291].target",
-          "$.observed.edges[2292].line",
-          "$.observed.edges[2292].target",
-          "$.observed.edges[2293].line",
-          "$.observed.edges[2293].target",
-          "$.observed.edges[2294].line",
-          "$.observed.edges[2294].target",
-          "$.observed.edges[2295].line",
-          "$.observed.edges[2295].path",
-          "$.observed.edges[2295].source",
-          "$.observed.edges[2295].target",
-          "$.observed.edges[2296].line"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-19T19:38:21.988709Z",
       "changed": true,
@@ -31351,6 +31298,65 @@
         "paths_total_previous": 46726,
         "paths_total_current": 46726,
         "paths_total_reference": 46726,
+        "churn_paths": 1,
+        "churn_ratio": 2.1e-05,
+        "sample_paths": [
+          "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-21T01:52:40.218786Z",
+      "changed": true,
+      "before_digest": "sha256:2c26cbc733da632835fa23ad9d4f84c4ccd705f98b89efd9031edf7238fe17dc",
+      "after_digest": "sha256:d6627ca18b31e5ed1331e6f9d4c63a69ed2702d5999849621ab378d55c7835e1",
+      "diff": {
+        "added_paths": 1,
+        "removed_paths": 0,
+        "changed_paths": 1189,
+        "initial_write": false,
+        "paths_total_previous": 46726,
+        "paths_total_current": 46737,
+        "paths_total_reference": 46737,
+        "churn_paths": 1190,
+        "churn_ratio": 0.025462,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.edges[3062].line",
+          "$.observed.edges[3062].path",
+          "$.observed.edges[3062].source",
+          "$.observed.edges[3062].target",
+          "$.observed.edges[3063].line",
+          "$.observed.edges[3063].target",
+          "$.observed.edges[3064].line",
+          "$.observed.edges[3064].target",
+          "$.observed.edges[3065].line",
+          "$.observed.edges[3065].target",
+          "$.observed.edges[3066].line",
+          "$.observed.edges[3066].target",
+          "$.observed.edges[3067].line",
+          "$.observed.edges[3067].target",
+          "$.observed.edges[3068].line",
+          "$.observed.edges[3068].target",
+          "$.observed.edges[3069].line",
+          "$.observed.edges[3069].target",
+          "$.observed.edges[3070].line"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-21T02:16:10.428795Z",
+      "changed": true,
+      "before_digest": "sha256:d6627ca18b31e5ed1331e6f9d4c63a69ed2702d5999849621ab378d55c7835e1",
+      "after_digest": "sha256:348469f4532c30a6e7743ccd58a5479a97aea203b8bea4900270d104d1d9ab1d",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 46737,
+        "paths_total_current": 46737,
+        "paths_total_reference": 46737,
         "churn_paths": 1,
         "churn_ratio": 2.1e-05,
         "sample_paths": [

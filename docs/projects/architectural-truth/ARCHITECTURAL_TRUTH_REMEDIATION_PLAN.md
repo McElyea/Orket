@@ -12520,8 +12520,8 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.52 runtime-observation checkpoint. Preserve the governed legacy-export cutover;
-continue the remaining input inventory, adapter enforcement and async reachability before E1/E2
+0.6.53 configured-calendar correction. Preserve the governed legacy-export cutover;
+continue remaining clock/input owners, adapter enforcement and async reachability before E1/E2
 and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
 Preserve every failed and
@@ -18809,3 +18809,95 @@ The .43 Git timeout cause, .44 package ceiling, whole-suite/89% coverage, hosted
 Quality, remaining explicit-input inventory, adapter enforcement, async safety,
 E1/E2 and CAP remain open. Preserve governed legacy exports and retained evidence;
 this checkpoint does not establish hostile-code containment or retire the lane.
+
+
+#### .53 configured epic calendar correction (2026-09-20)
+
+The .52 calendar capture had a real regression: it converted UTC to the host
+timezone, while the prior helper uses `ORKET_TIMEZONE`, defaulting to UTC. Its
+twenty calendar parity outcomes exercised already converted datetime values and
+did not prove runtime timezone selection. The historical .52 proof remains
+retained; its calendar-preservation claim is limited by this correction.
+
+Owner construction now captures a timezone name with the immutable EOS baseline
+from the same environment snapshot. Explicit construction inputs, including an
+empty mapping, are authoritative. Direct owners default to UTC and can supply
+`calendar_timezone_name`. Setup captures UTC before its first await and resolves
+the timezone in an owned worker using the existing authoritative resolver. The
+captured instant is converted and its sprint calculated before asset reads.
+Default UTC, fixed MST normalization and unknown-zone UTC fallback are preserved.
+Existing stored card values are not rewritten, including cards created by .52.
+Contract: `docs/specs/REMAINING_RUNTIME_INPUTS.md`; delta:
+`docs/architecture/CONTRACT_DELTA_EPIC_CALENDAR_ZONE_D_2026-09-20.md`.
+
+Fourteen independent reference outcomes come from the installed published .51
+wheel, including its actual UTC/MST/IANA offsets and unknown-zone fallback. The
+before probes performed actual SQLite card creation: seven failed and seven
+passed. All fourteen pass after correction. Expanded capture and worker tests
+bring the focused cohort to 43. The first test-path implementation unnecessarily
+called `Path.resolve` on the loop; Ruff caught ASYNC240. Removing that unneeded
+filesystem operation preserves the assertions; exact earlier inputs are retained.
+
+The first installed 3.11 cell passed all 527 tests, actual CLI/effect checks and
+teardown, but its legacy harness failed: it treated every JUnit child element as
+failure, including the three new timing-property elements. Its failed report and
+raw evidence are retained in `initial-native/`. A new proof driver changes only
+that predicate to reject `failure`, `error` and `skipped` elements while permitting
+metadata/log elements. Seven positive/negative XML controls verify the exact
+predicate. A fresh corrected 3.11 cell passed all checks. A separate adversarial
+probe then exposed inherited EOS baseline configuration in one new ambient-path
+test. The test now explicitly sets its baseline; the failure and successful
+counterprobe are retained. Ruff also caught the initial correction's unnecessary
+non-strict zip; explicit pairs replace it. Every product byte and package artifact
+is unchanged. The final full source run and both fresh installed cells below use
+the corrected test inputs and validated native driver; earlier results are history.
+
+The final 50-module declaration preserves every .52 case identity. All frozen
+source and serial installed cases pass without skips:
+
+| Cell | Cases / failures / errors / skips | JUnit seconds |
+|---|---|---|
+| Source Windows Python 3.11 | 527 / 0 / 0 / 0 | 260.851 |
+| Installed win-py311 | 527 / 0 / 0 / 0 | 269.390 |
+| Installed win-py312 | 527 / 0 / 0 / 0 | 263.259 |
+
+The nine held-worker cases report concurrent real SQLite reads up to 0.016
+seconds against the unchanged 0.5-second bound. Zero elapsed readings are limited
+by clock resolution and do not mean instantaneous I/O; actual native clock
+implementations/resolutions are retained with the observations. Repeated cancellation and timeout
+retain ownership until release and file closure. A worker error takes precedence
+over cancellation; no card is published on these interrupted setup paths. This
+does not assert universal timezone-I/O deadlines or host capacity.
+
+Each installed cell checks 958 package origins, actual CLI
+startup, copied inputs, artifact identity and native teardown. Parity covers
+1,104 package Python files,
+1,120 wheel package members and
+2,117 support files.
+Wheel SHA-256: `89d23606334b587f67673ae1455b0150a96634962ee3537b53d5df7db3d3dcec`;
+sdist SHA-256: `1bfed40b42283b76fe3fa464857fc2dfdf665561e84be889882e8c60cdada0fa`.
+Evidence: `.tmp/d-epic-calendar-zone-inputs/`; corrected installed matrix:
+`.tmp/d-epic-calendar-zone-inputs-final/`. The intermediate corrected cell remains
+in `.tmp/d-epic-calendar-zone-inputs-corrected/`. Observed Windows path/result:
+**primary / success**. This is live local assets/files/SQLite/CLI proof with
+controlled clocks/providers, plus structural package and authority binding.
+No fresh model inference or whole-lane acceptance is claimed.
+
+Canonical dependency enforcement passes: 1,104 modules, 3,512 import sites, six
+recognized dynamic routes and zero unknown modules, analysis errors, forbidden
+edges or authority cycles. Policy v2 is unchanged. Changed Python is Ruff-clean;
+canonical Ruff retains 94 existing findings. Both Quality jobs include the new
+calendar regression checks; hosted Quality remains unverified.
+
+The Windows selection declaration retained the prior .51 Linux blocker. A separate
+fresh .53 passive preflight now supersedes that observation and remains
+**blocked / environment blocker**: 4.361091207 quiet seconds in
+240.003684019 seconds against the unchanged required 60, with
++19.503006083/-19.018053111-second
+wall steps. The time-service journal read succeeded; the cause remains unknown.
+No Linux application cell was launched. No clocks, assertions or deadlines were
+weakened. Remaining clock/input owners, adapter enforcement, async reachability,
+E1/E2, CAP, full-suite/89% coverage, .43 Git timeout cause and .44 package ceiling
+remain open. Bounded clock composition followups are retained separately; they
+are not a complete inventory or runtime defect count. Preserve governed legacy
+exports and BT evidence. This checkpoint does not retire the lane.

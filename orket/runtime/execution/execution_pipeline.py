@@ -230,8 +230,10 @@ class ExecutionPipeline(
 
     def _build_epic_run_orchestrator(self) -> EpicRunOrchestrator:
         inputs = self.runtime_context.construction_inputs
+        environment = dict(inputs.environment if inputs else os.environ)
         return EpicRunOrchestrator(
-            eos_calendar=EosSprintBaseline.from_environment(inputs.environment if inputs else os.environ),
+            eos_calendar=EosSprintBaseline.from_environment(environment),
+            calendar_timezone_name=(environment.get("ORKET_TIMEZONE") or "UTC").strip(),
             approval_pauses=EpicApprovalPauseService(
                 transactions=self.cards_epic_control_plane.transactions,
                 locks=EpicContinuationLocks(self.epic_publication.repository.db_path),

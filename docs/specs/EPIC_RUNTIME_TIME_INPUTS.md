@@ -16,7 +16,8 @@ The publication budget, refusal and retained-evidence contract is
 `docs/architecture/CONTRACT_DELTA_RUN_START_PUBLICATION_D_2026-09-19.md`.
 
 Epic setup also takes one calendar observation before asset reads. Its separate
-sprint capture and baseline ownership are defined in `REMAINING_RUNTIME_INPUTS.md`.
+sprint capture, configured timezone and baseline ownership are defined in
+`REMAINING_RUNTIME_INPUTS.md`. UTC capture precedes the owned timezone lookup.
 
 Epic outcome observation and preparation/publication continue to use that
 service's existing UTC input seam. Protocol-ledger event timestamps have their
