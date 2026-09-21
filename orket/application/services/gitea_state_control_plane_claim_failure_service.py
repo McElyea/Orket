@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import hashlib
 from collections.abc import Mapping
-from datetime import UTC, datetime
 
 from orket.application.services.gitea_state_control_plane_execution_service import (
     GiteaStateControlPlaneExecutionService,
@@ -100,7 +99,7 @@ async def close_gitea_state_claim_failure(
         ],
         divergence_class=DivergenceClass.INSUFFICIENT_OBSERVATION,
         residual_uncertainty_classification=ResidualUncertaintyClassification.UNRESOLVED,
-        publication_timestamp=_utc_now(),
+        publication_timestamp=execution_service.now_utc(),
         safe_continuation_class=SafeContinuationClass.TERMINAL_WITHOUT_CLEANUP,
     )
 
@@ -119,7 +118,7 @@ async def close_gitea_state_claim_failure(
     updated_attempt = attempt.model_copy(
         update={
             "attempt_state": AttemptState.FAILED,
-            "end_timestamp": _utc_now(),
+            "end_timestamp": execution_service.now_utc(),
             "side_effect_boundary_class": SideEffectBoundaryClass.PRE_EFFECT_FAILURE,
             "failure_class": CLAIM_FAILURE_CLASS,
             "failure_plane": decision.failure_plane,
@@ -224,10 +223,6 @@ def _resources_touched(*, card_id: str) -> list[str]:
 
 def _reconciliation_id(*, run_id: str) -> str:
     return f"gitea-state-reconciliation:{run_id}:claim_failure"
-
-
-def _utc_now() -> str:
-    return datetime.now(UTC).isoformat()
 
 
 __all__ = [

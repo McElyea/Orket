@@ -7,28 +7,38 @@ from types import SimpleNamespace
 
 import pytest
 
+from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.runtime.execution_pipeline import ExecutionPipeline
 from tests.helpers.runtime_result import published_result
 
+pytestmark = pytest.mark.contract
 
-@pytest.mark.asyncio
-async def test_run_gitea_state_loop_requires_gitea_mode():
+
+def _pipeline(tmp_path, mode):
     pipeline = object.__new__(ExecutionPipeline)
     pipeline._initialized = True
-    pipeline.state_backend_mode = "local"
+    pipeline.state_backend_mode = mode
+    pipeline.org = SimpleNamespace(process_rules={})
+    pipeline.runtime_inputs = RuntimeInputService()
+    pipeline.runtime_context = SimpleNamespace(construction_inputs=None)
+    pipeline.orchestrator = SimpleNamespace(
+        control_plane_execution_repository=SimpleNamespace(db_path=tmp_path / 'control_plane.sqlite3'))
+    return pipeline
+
+
+@pytest.mark.asyncio
+async def test_run_gitea_state_loop_requires_gitea_mode(tmp_path):
+    pipeline = _pipeline(tmp_path, "local")
 
     with pytest.raises(ValueError, match="state_backend_mode='gitea'"):
         await pipeline.run_gitea_state_loop(worker_id="worker-1")
 
 
 @pytest.mark.asyncio
-# Layer: unit
+# Layer: contract
 async def test_run_gitea_state_loop_wires_adapter_worker_and_coordinator(monkeypatch, tmp_path):
-    """Layer: unit. Verifies the Gitea state loop dispatches claimed cards through the canonical card surface."""
-    pipeline = object.__new__(ExecutionPipeline)
-    pipeline._initialized = True
-    pipeline.state_backend_mode = "gitea"
-    pipeline.org = SimpleNamespace(process_rules={})
+    """Layer: contract. Verifies selected ports and canonical card dispatch through controlled collaborators."""
+    pipeline = _pipeline(tmp_path, "gitea")
     called_cards = []
 
     async def _run_card(card_id: str, **_kwargs):
@@ -42,7 +52,7 @@ async def test_run_gitea_state_loop_wires_adapter_worker_and_coordinator(monkeyp
     monkeypatch.setattr(
         module,
         "collect_gitea_state_pilot_inputs",
-        lambda: {
+        lambda *, environment: {
             "state_backend_mode": "gitea",
             "pilot_enabled": True,
             "gitea_url": "https://gitea.local",
@@ -63,6 +73,9 @@ async def test_run_gitea_state_loop_wires_adapter_worker_and_coordinator(monkeyp
         def __init__(self, **kwargs):
             seen["adapter"] = kwargs
 
+        async def close(self):
+            seen["closed"] = True
+
     class _FakeWorker:
         def __init__(self, **kwargs):
             seen["worker"] = kwargs
@@ -82,7 +95,7 @@ async def test_run_gitea_state_loop_wires_adapter_worker_and_coordinator(monkeyp
             }
             if summary_out is not None:
                 out = Path(summary_out)
-                out.parent.mkdir(parents=True, exist_ok=True)
+                await asyncio.to_thread(out.parent.mkdir, parents=True, exist_ok=True)
                 await asyncio.to_thread(out.write_text, json.dumps(summary, indent=2), encoding="utf-8")
             return summary
 
@@ -108,5 +121,8 @@ async def test_run_gitea_state_loop_wires_adapter_worker_and_coordinator(monkeyp
     assert seen["worker"]["control_plane_lease_service"] is not None
     assert seen["worker"]["control_plane_reservation_service"] is not None
     assert seen["coordinator"]["fetch_limit"] == 9
+    assert seen["coordinator"]["runtime_inputs"] is pipeline.runtime_inputs
+    assert seen["worker"]["control_plane_execution_service"].now_utc == pipeline.runtime_inputs.utc_now_iso
+    assert seen["closed"] is True
     assert payload["summary"]["consumed_count"] == 1
-    assert summary_path.exists()
+    assert await asyncio.to_thread(summary_path.exists)

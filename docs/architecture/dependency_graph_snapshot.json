@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-21T03:03:18.137425+00:00",
+  "generated_at": "2026-09-21T04:32:44.125086+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -1137,7 +1137,7 @@
       },
       "orket.application.services.gitea_state_control_plane_claim_failure_service": {
         "path": "orket/application/services/gitea_state_control_plane_claim_failure_service.py",
-        "sha256": "e699413d9374e8a9e44b4d63dca584d502b8fb2c923d0dde9255fba0a48c926a"
+        "sha256": "9f9b9aea8787d099ec1323b8db6fef2221585c0cc3ebecf762b4b6ad5ab0478f"
       },
       "orket.application.services.gitea_state_control_plane_closeout": {
         "path": "orket/application/services/gitea_state_control_plane_closeout.py",
@@ -1153,7 +1153,7 @@
       },
       "orket.application.services.gitea_state_control_plane_reservation_service": {
         "path": "orket/application/services/gitea_state_control_plane_reservation_service.py",
-        "sha256": "1093422fb86d07c930f417072c7db74df41b6ab9fb546e2efa5bcb7da64c21e4"
+        "sha256": "bbbbbf2805cd5a40dd3ca11e480b411e6df46a25dbe3453163cb7614b64a127c"
       },
       "orket.application.services.gitea_state_pilot": {
         "path": "orket/application/services/gitea_state_pilot.py",
@@ -1165,7 +1165,7 @@
       },
       "orket.application.services.gitea_state_worker_coordinator": {
         "path": "orket/application/services/gitea_state_worker_coordinator.py",
-        "sha256": "c901bd75aa6e1bedc518a1f64882c24af8b13c6c06c13ba368218672d483c48b"
+        "sha256": "b6061a3d5ae4553b73d55c39e1ecd5e16340f23b6f5167cf04584a9130f90b65"
       },
       "orket.application.services.gitea_webhook_runtime": {
         "path": "orket/application/services/gitea_webhook_runtime.py",
@@ -3729,7 +3729,7 @@
       },
       "orket.runtime.execution.execution_pipeline_card_dispatch": {
         "path": "orket/runtime/execution/execution_pipeline_card_dispatch.py",
-        "sha256": "3cd22c0f89ceb363805e749dd1a389faa53d63ce7eca2b9289447f7904511759"
+        "sha256": "26a385cff88b20084f2ea1aa794817dc97fb8985e53abea643d779a6c54d1d31"
       },
       "orket.runtime.execution.execution_pipeline_ledger_events": {
         "path": "orket/runtime/execution/execution_pipeline_ledger_events.py",
@@ -3749,7 +3749,7 @@
       },
       "orket.runtime.execution.gitea_state_loop": {
         "path": "orket/runtime/execution/gitea_state_loop.py",
-        "sha256": "7de825aae20267d45d793122b5c8191ef80fdc59d2f08b089e22d02edcfd3712"
+        "sha256": "dd46b371c38ceed032ea8a098ada1f3a1174fb5cc281ccc63349b35854255d0d"
       },
       "orket.runtime.execution.live_acceptance_assets": {
         "path": "orket/runtime/execution/live_acceptance_assets.py",
@@ -10131,35 +10131,35 @@
         "source": "orket.application.services.gitea_state_control_plane_claim_failure_service",
         "target": "orket.application.services.gitea_state_control_plane_execution_service",
         "path": "orket/application/services/gitea_state_control_plane_claim_failure_service.py",
-        "line": 7,
+        "line": 6,
         "kind": "from"
       },
       {
         "source": "orket.application.services.gitea_state_control_plane_claim_failure_service",
         "target": "orket.application.services.gitea_state_control_plane_lease_service",
         "path": "orket/application/services/gitea_state_control_plane_claim_failure_service.py",
-        "line": 10,
+        "line": 9,
         "kind": "from"
       },
       {
         "source": "orket.application.services.gitea_state_control_plane_claim_failure_service",
         "target": "orket.application.services.gitea_state_control_plane_reservation_service",
         "path": "orket/application/services/gitea_state_control_plane_claim_failure_service.py",
-        "line": 13,
+        "line": 12,
         "kind": "from"
       },
       {
         "source": "orket.application.services.gitea_state_control_plane_claim_failure_service",
         "target": "orket.core.contracts.__init__",
         "path": "orket/application/services/gitea_state_control_plane_claim_failure_service.py",
-        "line": 16,
+        "line": 15,
         "kind": "from"
       },
       {
         "source": "orket.application.services.gitea_state_control_plane_claim_failure_service",
         "target": "orket.core.domain.__init__",
         "path": "orket/application/services/gitea_state_control_plane_claim_failure_service.py",
-        "line": 17,
+        "line": 16,
         "kind": "from"
       },
       {
@@ -10341,42 +10341,49 @@
         "source": "orket.application.services.gitea_state_control_plane_reservation_service",
         "target": "orket.adapters.storage.async_control_plane_record_repository",
         "path": "orket/application/services/gitea_state_control_plane_reservation_service.py",
-        "line": 6,
+        "line": 8,
         "kind": "from"
       },
       {
         "source": "orket.application.services.gitea_state_control_plane_reservation_service",
         "target": "orket.application.services.control_plane_publication_service",
         "path": "orket/application/services/gitea_state_control_plane_reservation_service.py",
-        "line": 7,
+        "line": 9,
         "kind": "from"
       },
       {
         "source": "orket.application.services.gitea_state_control_plane_reservation_service",
         "target": "orket.application.services.gitea_state_control_plane_lease_service",
         "path": "orket/application/services/gitea_state_control_plane_reservation_service.py",
-        "line": 8,
+        "line": 10,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.gitea_state_control_plane_reservation_service",
+        "target": "orket.application.services.runtime_input_service",
+        "path": "orket/application/services/gitea_state_control_plane_reservation_service.py",
+        "line": 13,
         "kind": "from"
       },
       {
         "source": "orket.application.services.gitea_state_control_plane_reservation_service",
         "target": "orket.core.contracts.__init__",
         "path": "orket/application/services/gitea_state_control_plane_reservation_service.py",
-        "line": 11,
+        "line": 14,
         "kind": "from"
       },
       {
         "source": "orket.application.services.gitea_state_control_plane_reservation_service",
         "target": "orket.core.domain.__init__",
         "path": "orket/application/services/gitea_state_control_plane_reservation_service.py",
-        "line": 12,
+        "line": 15,
         "kind": "from"
       },
       {
         "source": "orket.application.services.gitea_state_control_plane_reservation_service",
         "target": "orket.runtime_paths",
         "path": "orket/application/services/gitea_state_control_plane_reservation_service.py",
-        "line": 13,
+        "line": 16,
         "kind": "from"
       },
       {
@@ -10447,6 +10454,20 @@
         "target": "orket.logging",
         "path": "orket/application/services/gitea_state_worker.py",
         "line": 24,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.gitea_state_worker_coordinator",
+        "target": "orket.adapters.execution.owned_io",
+        "path": "orket/application/services/gitea_state_worker_coordinator.py",
+        "line": 10,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.gitea_state_worker_coordinator",
+        "target": "orket.application.services.runtime_input_service",
+        "path": "orket/application/services/gitea_state_worker_coordinator.py",
+        "line": 11,
         "kind": "from"
       },
       {
@@ -26523,100 +26544,121 @@
       },
       {
         "source": "orket.runtime.execution.gitea_state_loop",
+        "target": "orket.adapters.execution.owned_io",
+        "path": "orket/runtime/execution/gitea_state_loop.py",
+        "line": 14,
+        "kind": "from"
+      },
+      {
+        "source": "orket.runtime.execution.gitea_state_loop",
         "target": "orket.adapters.storage.gitea_state_adapter",
-        "path": "orket/runtime/execution/gitea_state_loop.py",
-        "line": 8,
-        "kind": "from"
-      },
-      {
-        "source": "orket.runtime.execution.gitea_state_loop",
-        "target": "orket.application.services.gitea_state_control_plane_checkpoint_service",
-        "path": "orket/runtime/execution/gitea_state_loop.py",
-        "line": 9,
-        "kind": "from"
-      },
-      {
-        "source": "orket.runtime.execution.gitea_state_loop",
-        "target": "orket.application.services.gitea_state_control_plane_execution_service",
-        "path": "orket/runtime/execution/gitea_state_loop.py",
-        "line": 12,
-        "kind": "from"
-      },
-      {
-        "source": "orket.runtime.execution.gitea_state_loop",
-        "target": "orket.application.services.gitea_state_control_plane_lease_service",
         "path": "orket/runtime/execution/gitea_state_loop.py",
         "line": 15,
         "kind": "from"
       },
       {
         "source": "orket.runtime.execution.gitea_state_loop",
+        "target": "orket.application.services.application_runtime_lifetime",
+        "path": "orket/runtime/execution/gitea_state_loop.py",
+        "line": 16,
+        "kind": "from"
+      },
+      {
+        "source": "orket.runtime.execution.gitea_state_loop",
+        "target": "orket.application.services.gitea_state_control_plane_checkpoint_service",
+        "path": "orket/runtime/execution/gitea_state_loop.py",
+        "line": 17,
+        "kind": "from"
+      },
+      {
+        "source": "orket.runtime.execution.gitea_state_loop",
+        "target": "orket.application.services.gitea_state_control_plane_execution_service",
+        "path": "orket/runtime/execution/gitea_state_loop.py",
+        "line": 20,
+        "kind": "from"
+      },
+      {
+        "source": "orket.runtime.execution.gitea_state_loop",
+        "target": "orket.application.services.gitea_state_control_plane_lease_service",
+        "path": "orket/runtime/execution/gitea_state_loop.py",
+        "line": 23,
+        "kind": "from"
+      },
+      {
+        "source": "orket.runtime.execution.gitea_state_loop",
         "target": "orket.application.services.gitea_state_control_plane_reservation_service",
-        "path": "orket/runtime/execution/gitea_state_loop.py",
-        "line": 18,
-        "kind": "from"
-      },
-      {
-        "source": "orket.runtime.execution.gitea_state_loop",
-        "target": "orket.application.services.gitea_state_pilot",
-        "path": "orket/runtime/execution/gitea_state_loop.py",
-        "line": 21,
-        "kind": "from"
-      },
-      {
-        "source": "orket.runtime.execution.gitea_state_loop",
-        "target": "orket.application.services.gitea_state_worker",
-        "path": "orket/runtime/execution/gitea_state_loop.py",
-        "line": 25,
-        "kind": "from"
-      },
-      {
-        "source": "orket.runtime.execution.gitea_state_loop",
-        "target": "orket.application.services.gitea_state_worker_coordinator",
         "path": "orket/runtime/execution/gitea_state_loop.py",
         "line": 26,
         "kind": "from"
       },
       {
         "source": "orket.runtime.execution.gitea_state_loop",
-        "target": "orket.application.services.runtime_policy",
+        "target": "orket.application.services.gitea_state_pilot",
         "path": "orket/runtime/execution/gitea_state_loop.py",
-        "line": 27,
+        "line": 29,
         "kind": "from"
       },
       {
         "source": "orket.runtime.execution.gitea_state_loop",
-        "target": "orket.application.services.runtime_result_projection",
-        "path": "orket/runtime/execution/gitea_state_loop.py",
-        "line": 32,
-        "kind": "from"
-      },
-      {
-        "source": "orket.runtime.execution.gitea_state_loop",
-        "target": "orket.orchestration.orchestration_config",
+        "target": "orket.application.services.gitea_state_worker",
         "path": "orket/runtime/execution/gitea_state_loop.py",
         "line": 33,
         "kind": "from"
       },
       {
         "source": "orket.runtime.execution.gitea_state_loop",
-        "target": "orket.runtime.settings",
+        "target": "orket.application.services.gitea_state_worker_coordinator",
         "path": "orket/runtime/execution/gitea_state_loop.py",
         "line": 34,
         "kind": "from"
       },
       {
         "source": "orket.runtime.execution.gitea_state_loop",
-        "target": "orket.runtime_paths",
+        "target": "orket.application.services.runtime_construction_inputs",
         "path": "orket/runtime/execution/gitea_state_loop.py",
         "line": 35,
         "kind": "from"
       },
       {
         "source": "orket.runtime.execution.gitea_state_loop",
-        "target": "orket.settings",
+        "target": "orket.application.services.runtime_input_service",
         "path": "orket/runtime/execution/gitea_state_loop.py",
         "line": 36,
+        "kind": "from"
+      },
+      {
+        "source": "orket.runtime.execution.gitea_state_loop",
+        "target": "orket.application.services.runtime_policy",
+        "path": "orket/runtime/execution/gitea_state_loop.py",
+        "line": 37,
+        "kind": "from"
+      },
+      {
+        "source": "orket.runtime.execution.gitea_state_loop",
+        "target": "orket.application.services.runtime_result_projection",
+        "path": "orket/runtime/execution/gitea_state_loop.py",
+        "line": 42,
+        "kind": "from"
+      },
+      {
+        "source": "orket.runtime.execution.gitea_state_loop",
+        "target": "orket.orchestration.orchestration_config",
+        "path": "orket/runtime/execution/gitea_state_loop.py",
+        "line": 43,
+        "kind": "from"
+      },
+      {
+        "source": "orket.runtime.execution.gitea_state_loop",
+        "target": "orket.runtime_paths",
+        "path": "orket/runtime/execution/gitea_state_loop.py",
+        "line": 44,
+        "kind": "from"
+      },
+      {
+        "source": "orket.runtime.execution.gitea_state_loop",
+        "target": "orket.settings",
+        "path": "orket/runtime/execution/gitea_state_loop.py",
+        "line": 45,
         "kind": "from"
       },
       {
@@ -30333,12 +30375,12 @@
       {
         "source": "application",
         "target": "adapters",
-        "count": 397
+        "count": 399
       },
       {
         "source": "application",
         "target": "application",
-        "count": 1703
+        "count": 1707
       },
       {
         "source": "application",
@@ -30390,27 +30432,6 @@
     }
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-19T19:56:13.427715Z",
-      "changed": true,
-      "before_digest": "sha256:c831eea7c7b39494ab59f4c939d72e35ae0a27002eb64d6d7de10c22bf7e201b",
-      "after_digest": "sha256:a7873d64580af3d8308ee9efe4ec7490c23fe7f5b2a429b2b89ad86dad690b98",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 2,
-        "initial_write": false,
-        "paths_total_previous": 45669,
-        "paths_total_current": 45669,
-        "paths_total_reference": 45669,
-        "churn_paths": 2,
-        "churn_ratio": 4.4e-05,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.modules.orket.extensions.workload_publication.sha256"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-19T20:49:48.474539Z",
       "changed": true,
@@ -31389,6 +31410,45 @@
           "$.observed.edges[587].target",
           "$.observed.edges[588].line",
           "$.observed.edges[588].path"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-21T04:32:59.271395Z",
+      "changed": true,
+      "before_digest": "sha256:e886fbb9db17195ad7c206bc1a61011d194a11bafffe3ad67aed59962ccf5d97",
+      "after_digest": "sha256:89bc1b32a5e7dc408e0181dee8c981b5b69b54adade40dcc34da0367bc22b7c2",
+      "diff": {
+        "added_paths": 6,
+        "removed_paths": 0,
+        "changed_paths": 7906,
+        "initial_write": false,
+        "paths_total_previous": 46781,
+        "paths_total_current": 46847,
+        "paths_total_reference": 46847,
+        "churn_paths": 7912,
+        "churn_ratio": 0.16889,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.edges[798].line",
+          "$.observed.edges[799].line",
+          "$.observed.edges[800].line",
+          "$.observed.edges[801].line",
+          "$.observed.edges[802].line",
+          "$.observed.edges[828].line",
+          "$.observed.edges[829].line",
+          "$.observed.edges[830].line",
+          "$.observed.edges[831].line",
+          "$.observed.edges[831].target",
+          "$.observed.edges[832].line",
+          "$.observed.edges[832].target",
+          "$.observed.edges[833].line",
+          "$.observed.edges[833].target",
+          "$.observed.edges[834].line",
+          "$.observed.edges[834].path",
+          "$.observed.edges[834].source",
+          "$.observed.edges[834].target",
+          "$.observed.edges[835].line"
         ]
       }
     }

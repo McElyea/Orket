@@ -12520,7 +12520,7 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.54 selected control-plane clocks. Preserve the governed legacy-export cutover;
+0.6.55 Gitea loop input selection and ownership. Preserve the governed legacy-export cutover;
 continue remaining clock/input owners, adapter enforcement and async reachability before E1/E2
 and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
@@ -18978,3 +18978,101 @@ claim. Remaining clock/input owners, adapter enforcement, async reachability,
 E1/E2, CAP, full-suite/89% coverage, .43 Git timeout cause and .44 package ceiling
 remain open. Preserve governed legacy exports and BT evidence. The lane remains
 active pending the required implementation, acceptance and explicit user review.
+
+#### .55 Gitea loop input selection and ownership (2026-09-20)
+
+Gitea loop construction captures environment, invocation root and organization
+limit tokens; supplied construction settings are authoritative. Pipeline entry
+creates that owner before initialization awaits and supplies its selected runtime
+clock and control-plane database. Limit precedence and lexical zero behavior are
+unchanged. Relative database and summary paths retain the admitted root.
+Construction, acquired HTTP clients and summary writes remain owned through
+failure, cancellation, repeated interruption and timeout. Cleanup failure stays
+visible, including an earlier failure when both occur. Contracts:
+`docs/specs/GITEA_LOOP_INPUTS_AND_LIFETIME.md` and
+`docs/specs/CONTROL_PLANE_TERMINAL_AUTHORITY.md`; migration delta:
+`docs/architecture/CONTRACT_DELTA_GITEA_LOOP_INPUTS_D_2026-09-20.md`.
+
+Claim-failure reconciliation/attempt closeout now uses the execution owner's UTC
+provider. Reservation creation/promotion receive that same provider selection;
+explicit observations bypass it. Reversed promotion rollback observations reach
+the existing lease guard unchanged. Refusal does not clamp the timestamp, release
+the lease or invalidate the reservation; earlier promotion writes, if any, remain.
+The original promotion failure remains available as exception context. Explicit
+remote lease acquisition timestamps remain the run-creation source when present.
+Earlier histories are not rewritten and transaction atomicity is not expanded.
+
+The retained corrected counterexamples show three pre-change failures: ignored
+claim-failure clock, unclosed actual HTTP client, and environment rotation during
+settings collection. A fourth real-SQLite counterexample shows the removed
+rollback clamp. Subsequent focused checks pass. Four reservation cases exercise
+fresh selected/explicit timestamps and clock failure before publication with
+unchanged SQLite records. Sixty-six independently observed installed v0.6.54
+runner outcomes cover defaults, precedence, invalid values, booleans, negative
+values and numeric/string zero; the candidate preserves all of them.
+
+Ten ownership cases cover held construction/summary workers, native open files,
+actual clients, repeated interruption, worker failure and simultaneous body/cleanup
+failure. Eighteen source/native concurrent readonly SQLite measurements range
+below the unchanged 0.5-second bound, with maximum 0.002669300 seconds using
+independent `perf_counter`. The actual pipeline capture case retains its selected
+limit, root and database across held initialization while cwd/environment/rules
+change. A selected monotonic sequence drives the existing duration stop exactly.
+These are bounded observations, not universal I/O deadlines or capacity proof.
+
+The frozen 25-module selection combines direct-import discovery with named Gitea
+adapter, terminal transaction/reentry/process and pipeline regressions. It is not
+a complete transitive inventory or whole-suite run. All cases pass:
+
+| Cell | Cases / failures / errors / skips | JUnit seconds |
+|---|---|---|
+| Source Windows Python 3.11 | 254 / 0 / 0 / 0 | 32.282 |
+| Installed win-py311 | 254 / 0 / 0 / 0 | 32.671 |
+| Installed win-py312 | 254 / 0 / 0 / 0 | 38.917 |
+
+Each installed cell verifies 941 package origins, exact copied
+inputs and case identities, actual CLI startup, tool-gate audit and process
+teardown. The validated .53 JUnit metadata predicate is retained. Package parity
+covers 1,104 Python files,
+1,120 wheel package members and
+2,132 support files.
+Wheel SHA-256: `3c8f703b712937a3d649e61fde9bc408471ba44017d236aaee4504da303921fe`;
+sdist SHA-256: `949ddef10636b90258de04dd54597673a1e7c5df098dfa22f5cabc64c8cf3b81`.
+
+Separate actual Gitea acceptance passes six source and six isolated installed
+Windows Python 3.11 cases. The public pipeline loop runs real authored assets,
+native Python card acceptance, SQLite and remote issue/lease publication with a
+controlled executor. Successful work publishes two coherent terminal truths in
+the selected shared database. Unresolved executor work retains both unfinished
+runs, no final truth or remote release, no successful summary and a closed client.
+Four existing terminal cases cover success, work failure, lease expiry and local
+publication failure. Every temporary server is removed in the same execution;
+six teardown markers and unchanged before/after container inventories are retained
+for each final live run. Installed live elapsed: 30.297524 seconds.
+No provider inference is claimed. Observed Windows path/result: **primary / success**.
+
+Fixture failures remain visible: numeric zero was initially mistaken for an
+immediate stop; old synthetic pipelines lacked required ports; one authored
+pipeline lacked its organization; and initial live expectations missed direct
+UTC observations, the explicit remote acquisition source and unresolved-work
+semantics. Corrected fixtures prove the intended behavior without weakening
+product clocks, deadlines or authority. All failed reports and intermediate
+results are retained in `.tmp/d-gitea-loop-inputs/` alongside final evidence.
+The first separate installed live launch collected zero tests because its copied
+bundle lacked the existing live-test module. No application flow ran. A separate
+source-bound bundle adds that one file; its Gitea server helper was already
+present. The completed 254-case native matrices and manifests remain unchanged.
+
+Canonical dependency enforcement passes: 1,104 modules, 3,522 import sites, six
+recognized dynamic routes, no unknown modules, analysis errors, forbidden edges
+or authority cycles. Policy v2 is unchanged. Changed Python is Ruff-clean and
+within size limits; canonical Ruff retains 94 findings. Both Quality jobs include
+the new bounded contracts; hosted Quality remains unverified.
+
+The latest Linux preflight remains .53, **blocked / environment blocker**:
+4.361091207 quiet seconds in 240.003684019 seconds against the required 60, with
++19.503006083/-19.018053111-second steps and unknown cause. No fresh clock or Linux
+application result is claimed. Remaining D inputs/classification/async work,
+E1/E2, CAP, whole-suite/89% coverage, .43 Git timeout cause and .44 non-Python
+package ceiling remain open. Preserve BT behavior and evidence; the lane stays
+active until required acceptance and explicit user review.

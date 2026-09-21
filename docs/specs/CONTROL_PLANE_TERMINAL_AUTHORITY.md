@@ -172,10 +172,22 @@ back the complete closeout while preserving physical effects and earlier evidenc
 Terminal reuse validates the shared terminal join and the required closed resource
 state; it does not repair contradictory historical records or change the outcome.
 
-Execution and lease publishers accept explicit UTC providers. Default composition
+Execution, lease and reservation publishers accept explicit UTC providers.
+Claim-failure reconciliation and attempt closeout use the execution service's
+selected provider, including after intervening publication awaits. Reservation
+creation and promotion retain their explicit `observed_at` override; when absent,
+they observe the provider selected at construction. Default composition
 uses the existing `RuntimeInputService`; supplied clock values retain their exact
 meaning. Reversed timestamps remain rejected and are never clamped to an earlier
 record. Deterministic test clocks do not prove that a host wall clock cannot reverse.
+
+Reservation promotion-failure rollback also passes the observed timestamp through
+the existing lease guard. A guard refusal publishes neither a rollback lease nor
+the subsequent reservation invalidation; it does not substitute the prior lease
+timestamp to manufacture a release. Earlier promotion writes, if any, remain;
+this does not expand transaction atomicity. The promotion failure remains
+available as the exception context. Earlier records created by the clamping path
+are retained for explicit reconciliation.
 
 This transaction does not include Gitea itself or establish remote exactly-once
 execution, general restart recovery, atomic initial claim, or historical repair.

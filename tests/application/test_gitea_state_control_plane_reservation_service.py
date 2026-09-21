@@ -67,7 +67,8 @@ async def test_gitea_reservation_service_fail_closes_active_authority_on_promoti
     repository = InMemoryControlPlaneRecordRepository()
     publication = ControlPlanePublicationService(repository=repository)
     reservation_service = GiteaStateControlPlaneReservationService(publication=publication)
-    lease_service = GiteaStateControlPlaneLeaseService(publication=publication)
+    lease_service = GiteaStateControlPlaneLeaseService(publication=publication,
+        now_utc=lambda: "2026-03-24T12:05:00+00:00")
 
     reservation = await reservation_service.publish_claim_reservation(
         card_id="9",

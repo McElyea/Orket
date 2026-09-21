@@ -5,6 +5,17 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.55] - 2026-09-20
+
+### Fixed
+- Retain Gitea loop environment, limit rules, roots, selected clocks and pipeline control-plane database across awaits.
+- Own worker construction, HTTP transport cleanup and summary writes through cancellation and failures.
+- Preserve selected claim-failure timestamps and refuse reversed reservation rollback observations without clamping them.
+- `compatibility_status`: `compatible`
+- `affected_audience`: `all`
+- `migration_requirement`: `none`
+- Ports, retained remote lease timestamps and publication limits: `docs/architecture/CONTRACT_DELTA_GITEA_LOOP_INPUTS_D_2026-09-20.md`.
+
 ## [0.6.54] - 2026-09-20
 
 ### Fixed

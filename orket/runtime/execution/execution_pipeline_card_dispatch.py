@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any
 from orket.core.contracts.runtime_execution_result import RuntimeCollectionResult, RuntimeExecutionResult
 from orket.exceptions import CardNotFound
 from orket.logging import log_event
-from orket.runtime.gitea_state_loop import run_gitea_state_loop
+from orket.runtime.gitea_state_loop import GiteaStateLoopRunner
 from orket.runtime.settings import resolve_str
 
 
@@ -174,11 +174,16 @@ class ExecutionPipelineCardDispatchMixin:
         idle_sleep_seconds: float = 0.0,
         summary_out: str | Path | None = None,
     ) -> dict[str, Any]:
-        await self.initialize()
-        return await run_gitea_state_loop(
+        runner = GiteaStateLoopRunner(
             state_backend_mode=self.state_backend_mode,
             organization=getattr(self, "org", None),
             run_card=self.run_card,
+            runtime_inputs=self.runtime_inputs,
+            construction_inputs=self.runtime_context.construction_inputs,
+            control_plane_db_path=Path(self.orchestrator.control_plane_execution_repository.db_path),
+        )
+        await self.initialize()
+        return await runner.run(
             worker_id=worker_id,
             fetch_limit=fetch_limit,
             lease_seconds=lease_seconds,

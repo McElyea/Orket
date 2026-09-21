@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+import logging
+import sqlite3
+from collections.abc import Callable
 from pathlib import Path
 
 from orket.adapters.storage.async_control_plane_record_repository import AsyncControlPlaneRecordRepository
@@ -8,9 +10,12 @@ from orket.application.services.control_plane_publication_service import Control
 from orket.application.services.gitea_state_control_plane_lease_service import (
     GiteaStateControlPlaneLeaseService,
 )
+from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.core.contracts import ReservationRecord
 from orket.core.domain import LeaseStatus, ReservationKind, ReservationStatus
 from orket.runtime_paths import resolve_control_plane_db_path
+
+LOGGER = logging.getLogger(__name__)
 
 
 class GiteaStateControlPlaneReservationService:
@@ -18,8 +23,9 @@ class GiteaStateControlPlaneReservationService:
 
     PROMOTION_RULE = "promote_after_claim_transition"
 
-    def __init__(self, *, publication: ControlPlanePublicationService) -> None:
+    def __init__(self, *, publication: ControlPlanePublicationService, now_utc: Callable[[], str] | None = None) -> None:
         self.publication = publication
+        self.now_utc = RuntimeInputService().utc_now_iso if now_utc is None else now_utc
 
     @staticmethod
     def reservation_id_for(card_id: str, lease_epoch: int) -> str:
@@ -38,7 +44,7 @@ class GiteaStateControlPlaneReservationService:
         lease_epoch: int,
         observed_at: str | None = None,
     ) -> ReservationRecord:
-        timestamp = str(observed_at or self._utc_now()).strip()
+        timestamp = str(observed_at or self.now_utc()).strip()
         return await self.publication.publish_reservation(
             reservation_id=self.reservation_id_for(card_id, lease_epoch),
             holder_ref=GiteaStateControlPlaneLeaseService.holder_ref_for(worker_id),
@@ -58,7 +64,7 @@ class GiteaStateControlPlaneReservationService:
         lease_epoch: int,
         observed_at: str | None = None,
     ) -> ReservationRecord:
-        timestamp = str(observed_at or self._utc_now()).strip()
+        timestamp = str(observed_at or self.now_utc()).strip()
         try:
             return await self.publication.promote_reservation_to_lease(
                 reservation_id=self.reservation_id_for(card_id, lease_epoch),
@@ -69,7 +75,8 @@ class GiteaStateControlPlaneReservationService:
                     f";publication_timestamp={timestamp}"
                 ),
             )
-        except Exception:
+        except (OSError, ValueError, RuntimeError, TypeError, sqlite3.Error):
+            LOGGER.exception("Gitea reservation promotion failed", extra={"card_id": card_id, "lease_epoch": lease_epoch})
             await self._rollback_failed_promotion(
                 card_id=card_id,
                 lease_epoch=lease_epoch,
@@ -90,10 +97,6 @@ class GiteaStateControlPlaneReservationService:
             invalidation_basis=f"gitea_state_worker_claim_transition_failed:{str(reason or 'unknown').strip()}",
         )
 
-    @staticmethod
-    def _utc_now() -> str:
-        return datetime.now(UTC).isoformat()
-
     async def _rollback_failed_promotion(
         self,
         *,
@@ -105,17 +108,12 @@ class GiteaStateControlPlaneReservationService:
             lease_id=GiteaStateControlPlaneLeaseService.lease_id_for(card_id)
         )
         if lease is not None and lease.status is LeaseStatus.ACTIVE:
-            rollback_timestamp = (
-                observed_at
-                if observed_at >= lease.publication_timestamp
-                else lease.publication_timestamp
-            )
             released_lease = await self.publication.publish_lease(
                 lease_id=lease.lease_id,
                 resource_id=lease.resource_id,
                 holder_ref=lease.holder_ref,
                 lease_epoch=lease.lease_epoch,
-                publication_timestamp=rollback_timestamp,
+                publication_timestamp=observed_at,
                 expiry_basis=(
                     "gitea_state_worker_claim_promotion_failed"
                     f";lease_epoch={int(lease_epoch):08d}"
@@ -126,7 +124,7 @@ class GiteaStateControlPlaneReservationService:
                 cleanup_eligibility_rule=lease.cleanup_eligibility_rule,
                 source_reservation_id=lease.source_reservation_id,
             )
-            await GiteaStateControlPlaneLeaseService(publication=self.publication).publish_resource_snapshot(
+            await GiteaStateControlPlaneLeaseService(publication=self.publication, now_utc=self.now_utc).publish_resource_snapshot(
                 card_id=card_id,
                 lease=released_lease,
             )
@@ -149,10 +147,11 @@ class GiteaStateControlPlaneReservationService:
 
 def build_gitea_state_control_plane_reservation_service(
     db_path: str | Path | None = None,
+    *, now_utc: Callable[[], str] | None = None,
 ) -> GiteaStateControlPlaneReservationService:
     resolved_db_path = resolve_control_plane_db_path(db_path)
     publication = ControlPlanePublicationService(repository=AsyncControlPlaneRecordRepository(resolved_db_path))
-    return GiteaStateControlPlaneReservationService(publication=publication)
+    return GiteaStateControlPlaneReservationService(publication=publication, now_utc=now_utc)
 
 
 __all__ = [

@@ -30,6 +30,14 @@ orchestrator clock observations keep their existing second precision. Migration
 and remaining lifecycle input scope:
 `docs/architecture/CONTRACT_DELTA_SANDBOX_CREATION_INPUTS_D_2026-09-20.md`.
 
+Gitea loop owners capture environment, limit rules and roots before awaits;
+pipeline entry also supplies its selected clocks and control-plane database.
+Construction, summary I/O and acquired HTTP clients remain owned through
+interruption. Claim-failure publication uses the selected UTC provider; reservation
+rollback refuses reversed observations without clamping. Explicit remote lease
+timestamps and unresolved runtime authority remain retained. Contract and limits:
+`docs/specs/GITEA_LOOP_INPUTS_AND_LIFETIME.md`.
+
 Cards, manual-review and trusted extension owners retain their selected UTC
 callable through transaction-scoped publication. Pipeline and extension-manager
 clocks reach those owners; terminal retries retain published timestamps, and
