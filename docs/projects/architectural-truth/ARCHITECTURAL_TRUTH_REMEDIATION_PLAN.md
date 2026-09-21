@@ -19941,3 +19941,100 @@ async inventory, E1/E2, whole-suite/89%, hosted Quality and CAP remain open. The
 .43 Git timeout cause and four .59 packet1 provider cases remain unverified.
 Accepted BT evidence is retained. Required work and explicit user acceptance
 still govern completion and lane retirement.
+
+
+#### .66 Sandbox log request lifetime and native failure truth (2026-09-21)
+
+The API captures its selected pipeline factory, workspace and validated invocation
+before awaiting construction. Shared runtime ownership constructs the ephemeral
+pipeline on a worker, retains the native read and requires close before return.
+It closes an owner returned after interruption without dispatching the log command.
+Repeated cancellation, elapsed deadlines and shutdown cannot release admitted work
+early or hide a read/close failure. Supported method selection, service arguments,
+HTTP 400 and configured unsupported-detail responses remain intact. Contract:
+`docs/architecture/CONTRACT_DELTA_API_SANDBOX_LOGS_D_2026-09-21.md`.
+
+Direct synchronous `SandboxOrchestrator.get_logs` calls now refuse an event-loop
+thread before lookup/effects; async embeddings use the owned inspection service
+and retain pipeline ownership. This is documented as a breaking/required library
+migration; the canonical API is migrated and pre-loop sync callers remain valid.
+Nonzero native log-command exits raise a visible failure instead of returning
+stdout as successful logs. The API returns HTTP 500 for that dependency failure;
+the ten-second native timeout and service allowlist are unchanged. The existing
+constructor limit for resources discarded before returning an owner stays explicit.
+
+All ten initial before probes fail on .65: construction blocks the event loop,
+interrupted reads outlive their requests, required close is never admitted, and
+a real controlled child exiting 17 still returns HTTP 200 with stdout. The final
+15 lifetime/capture/guard cases all fail against the byte-verified installed local
+.65 wheel. Candidate cells below pass identical copied test bytes. No deadline
+is widened: 50ms from native admission, 0.5s responsiveness, 0.8s release timer,
+five-second admission/join and the existing ten-second command timeout remain.
+
+Focused proof passes 15, 114 and 11 cases. It exercises actual pipelines, file
+handles, native children/pipes, concurrent SQLite, authenticated API requests and
+six real TCP shutdown scenarios. Captured invocation mutation cannot alter the
+selected service; malformed strategy invocations cannot construct a pipeline.
+Five existing dispatch fixtures now share an explicit close-capable port and
+assert cleanup; their proof remains contract-level. Two fixture-edit attempts
+stop before changes (missing text anchor, then a size guard), leaving five failed
+fixtures in each 114-case run. Both failed runs and helper versions are retained.
+The corrected test file shrinks 2,479 to 2,475 lines. An initial import-order lint
+finding is fixed before the frozen final review.
+
+Actual Docker proof uses the installed wheel, authenticated TCP API, a trusted
+inventoried local nginx image, durable SQLite lifecycle lookup, real HTTP and
+native Docker commands. No container host ports, image builds, pulls or inference
+are added.
+The first live fixture is refused before Docker creation because it selects a
+workspace outside the engine's allowed root. Its reconciliation-required fixture
+records and failed cleanup attempt remain retained; the independent parent proves
+no exact-project resources or observed children remain. The corrected fixture
+uses a nested workspace inside the actual engine root; product containment is
+unchanged.
+
+The corrected .65 live control observes native exits 0/1 with API responses
+200/200 and two unclosed query pipelines. The probe closes those pipelines and
+completes application sandbox teardown; its path is explicitly fallback. On the
+installed .66 candidate, responses are 200/500, both query pipelines close without
+manual intervention, and the sandbox remains running between log queries and its
+explicit deletion. Empty query registries require actual retained-record lookup.
+The final lifecycle state is `cleaned`; deploy and cleanup effect records remain,
+the API closes, and exact-project containers/networks/volumes are absent. Parent
+inventory independently verifies cleanup and no observed child survives.
+Installed live elapsed seconds: 5.981402; observed path/result:
+**primary / success**. The pre-existing unrelated Docker service is untouched.
+
+The 103-module routine selection retains all 627 .65 cases and bounded affected
+direct imports. Four provider-gated modules and six broader Docker acceptance
+modules are explicitly unrun in this matrix; the targeted real Docker flow is
+separate proof, not a passing result for those families. Exact function-body
+comparison retains every other sandbox/API/inspection method from .65; the old
+private sync invocation helper is removed and the named owned read is added.
+API size falls 1,351 to 1,344; SandboxOrchestrator falls 569 to 564 lines.
+
+| Cell | Cases / failures / errors / skips | JUnit seconds | Installed origins |
+|---|---|---|---|
+| Source Windows Python 3.11 | 671 / 0 / 0 / 0 | 208.044 | Source run |
+| Installed win-py311 | 671 / 0 / 0 / 0 | 208.038 | 984 |
+| Installed win-py312 | 671 / 0 / 0 / 0 | 270.109 | 984 |
+
+All 27 new responsiveness readings meet the 0.5-second bound; maximum 0.154926900s.
+Exact cases, support bytes, installed origins, CLI startup and teardown bind the
+three cells. Complete source/wheel/sdist parity covers 1,112
+Python files and all 19 retained data resources, 1,131 core
+members and 2,194 support inputs.
+Wheel SHA-256: `d9f38dd9371e92a61308639622c1a34471a4d8c39d96c8908c586c599d962773`;
+sdist SHA-256: `245d4627624cc0199b5513c62371fb668ae27b16833f9b8f36c3144d1d6ac7d7`.
+Timed Windows operations restore scoped sleep requests without persistent power
+or deadline changes. Actual dependency policy v2 passes without new exceptions;
+changed Python is Ruff-clean and canonical Ruff records 94 findings.
+
+Evidence: `.tmp/d-api-sandbox-query/`. This is a local commit and annotated tag
+only, with no GitHub push or remote-publication claim. The latest .63 Linux clock
+gate remains **blocked / environment blocker**; no fresh clock or Linux application
+acceptance is claimed. Broader CommandRunner async ownership, ConfigLoader bridges,
+captured inputs, adapter classification/full async inventory, E1/E2, whole-suite/89%,
+hosted Quality and CAP remain open. The .43 Git timeout cause and four .59 packet1
+provider cases remain unverified. Accepted BT evidence is retained. Required work
+and explicit user acceptance continue to govern completion and lane retirement.

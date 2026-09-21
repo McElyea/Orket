@@ -170,6 +170,13 @@ must settle through a line, EOF or input failure before interrupted cleanup can
 finish; no forced thread stop or input deadline is promised. Contract:
 `docs/architecture/CONTRACT_DELTA_DRIVER_LIFETIME_D_2026-09-21.md`.
 
+Async sandbox-log embeddings pass a bound `SandboxOrchestrator.get_logs` callable
+to `read_runtime_sandbox_logs` and retain ownership of any constructed pipeline.
+Direct synchronous log reads refuse an event-loop thread; the API uses
+`open_runtime_owner` for construction and required cleanup. Nonzero command exits
+are failures. Contract and migration:
+`docs/architecture/CONTRACT_DELTA_API_SANDBOX_LOGS_D_2026-09-21.md`.
+
 Async organization embeddings await `OrganizationLoop.create()` before
 `run_forever()`; the canonical `orket runtime --loop` uses that factory. Direct
 synchronous construction refuses an event-loop thread before configuration I/O.

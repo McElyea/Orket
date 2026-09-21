@@ -5,6 +5,18 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.66] - 2026-09-21
+
+### Fixed
+- Own sandbox-log pipeline construction, native reads and required cleanup through interruption and shutdown.
+- Capture sandbox-log invocation policy before construction; preserve supported dispatch and error-detail contracts.
+- Refuse direct synchronous sandbox-log reads on an event loop and stop reporting failed native commands as successful logs.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Async library callers must use owned sandbox-log inspection and close their pipelines. Canonical API callers are migrated; pre-loop synchronous reads remain available.
+- Contract and limits: `docs/architecture/CONTRACT_DELTA_API_SANDBOX_LOGS_D_2026-09-21.md`.
+
 ## [0.6.65] - 2026-09-21
 
 ### Fixed

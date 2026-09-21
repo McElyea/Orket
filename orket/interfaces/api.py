@@ -7,6 +7,7 @@ from collections.abc import AsyncIterator, Callable, Mapping
 from contextlib import asynccontextmanager, suppress
 from contextvars import ContextVar
 from datetime import UTC, datetime
+from functools import partial
 from pathlib import Path
 from typing import Any, TypeVar, cast
 
@@ -39,7 +40,7 @@ from orket.application.services.run_ledger_summary_projection import (
     validated_run_ledger_record_projection,
 )
 from orket.application.services.runtime_construction_inputs import RuntimeConstructionInputs
-from orket.application.services.runtime_inspection_service import read_runtime_replay
+from orket.application.services.runtime_inspection_service import read_runtime_replay, read_runtime_sandbox_logs
 from orket.application.services.runtime_policy import (
     allowed_architecture_patterns,
     is_microservices_pilot_stable,
@@ -61,6 +62,7 @@ from orket.application.services.runtime_policy import (
     resolve_state_backend_mode,
     runtime_policy_options,
 )
+from orket.application.services.runtime_result_lifetime import open_runtime_owner
 from orket.interfaces.api_runtime_context import (
     ApiAppRuntimeContext,
     get_api_runtime_context,
@@ -173,11 +175,6 @@ def _runtime_task_summary(tasks: list[asyncio.Task[Any]]) -> tuple[bool, str]:
     if any(task.cancelled() for task in tasks):
         return False, "canceled"
     return False, "idle"
-
-
-def _invoke_sync_method(target: object, invocation: dict[str, Any], error_prefix: str) -> Any:
-    method = _resolve_method(target, invocation, error_prefix)
-    return method(*invocation.get("args", []), **invocation.get("kwargs", {}))
 
 
 SETTINGS_SCHEMA: dict[str, dict[str, Any]] = {
@@ -1268,17 +1265,13 @@ async def stop_sandbox(sandbox_id: str, request: Request) -> dict[str, bool]:
 @v1_router.get("/sandboxes/{sandbox_id}/logs")
 async def get_sandbox_logs(sandbox_id: str, service: str | None = None) -> dict[str, Any]:
     runtime_node = _get_api_runtime_node()
-    pipeline = _get_api_runtime_host().create_execution_pipeline(
-        runtime_node.resolve_sandbox_workspace(_project_root())
-    )
-    invocation = runtime_node.resolve_sandbox_logs_invocation(sandbox_id, service)
-    logs = await asyncio.to_thread(
-        _invoke_sync_method,
-        pipeline.sandbox_orchestrator,
-        invocation,
-        "sandbox logs",
-    )
-    return {"logs": logs}
+    construct = partial(_get_api_runtime_host().create_execution_pipeline,
+                        runtime_node.resolve_sandbox_workspace(_project_root()))
+    invocation = api_policy.capture_api_invocation(runtime_node.resolve_sandbox_logs_invocation(sandbox_id, service))
+    async with open_runtime_owner(construct, label="api-sandbox-log-construction") as pipeline:
+        method = _resolve_method(pipeline.sandbox_orchestrator, invocation, "sandbox logs")
+        read = partial(method, *invocation.get("args", []), **invocation.get("kwargs", {}))
+        return {"logs": await read_runtime_sandbox_logs(read)}
 
 
 def _coerce_datetime(value: str | None) -> datetime | None:

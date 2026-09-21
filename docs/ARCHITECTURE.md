@@ -200,6 +200,13 @@ resolved log/artifact paths; invalid paths map to HTTP 400. This is bounded path
 checking, not hostile-race containment or CAP-2 isolation. Contract and limits:
 `docs/architecture/CONTRACT_DELTA_API_RUN_OBSERVATION_D_2026-09-21.md`.
 
+Sandbox log requests capture invocation inputs before owned pipeline construction,
+retain native reads through interruption and close each ephemeral pipeline before
+return. Nonzero log-command exits are visible failures; the ten-second command
+timeout is unchanged. Direct sync log reads refuse an event-loop thread. Contract,
+async embedding migration and remaining ownership limits:
+`docs/architecture/CONTRACT_DELTA_API_SANDBOX_LOGS_D_2026-09-21.md`.
+
 Driver async creation captures root, environment and settings before owned
 construction; direct synchronous construction refuses an event-loop thread.
 API chat and interactive CLI use shared runtime owners. Console reads settle

@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-21T16:27:03.346557+00:00",
+  "generated_at": "2026-09-21T17:12:17.969740+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -1701,7 +1701,7 @@
       },
       "orket.application.services.runtime_inspection_service": {
         "path": "orket/application/services/runtime_inspection_service.py",
-        "sha256": "253a8d80af1f036f7747b2fd2553b4c644b0ef596bcf96ef5311cb776a7e30ac"
+        "sha256": "fa7767407af7ed9c2565957064fd79c9c619a0c8f62db0772ddb8aca4e6eb893"
       },
       "orket.application.services.runtime_policy": {
         "path": "orket/application/services/runtime_policy.py",
@@ -2809,7 +2809,7 @@
       },
       "orket.interfaces.api": {
         "path": "orket/interfaces/api.py",
-        "sha256": "d37503aee6f3a3da077b422238d6ce2837009984dd4d44ba89bcf8e3a6598430"
+        "sha256": "c68806a55acafebf7c003ceb666e4fd5934d160c2e6a8ab856934068fdb1dcac"
       },
       "orket.interfaces.api_app_context_middleware": {
         "path": "orket/interfaces/api_app_context_middleware.py",
@@ -4481,7 +4481,7 @@
       },
       "orket.services.sandbox_orchestrator": {
         "path": "orket/services/sandbox_orchestrator.py",
-        "sha256": "efb6df957d0a899b146c551cd09357e15a1c27e27afbc454bcfe0ba4630c7f88"
+        "sha256": "e72809c41f2854d25a138f0ace26de3748429d27a6318cd4e084dd341dab90b7"
       },
       "orket.services.scoped_memory_store": {
         "path": "orket/services/scoped_memory_store.py",
@@ -21895,210 +21895,217 @@
         "source": "orket.interfaces.api",
         "target": "orket.__init__",
         "path": "orket/interfaces/api.py",
-        "line": 17,
+        "line": 18,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.application.interactions.manager",
         "path": "orket/interfaces/api.py",
-        "line": 18,
+        "line": 19,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.application.services.__init__",
         "path": "orket/interfaces/api.py",
-        "line": 19,
+        "line": 20,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.application.services.api_policy_input_service",
         "path": "orket/interfaces/api.py",
-        "line": 19,
+        "line": 20,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.application.services.api_runtime_host_service",
         "path": "orket/interfaces/api.py",
-        "line": 20,
+        "line": 21,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.application.services.api_runtime_preparation",
         "path": "orket/interfaces/api.py",
-        "line": 21,
+        "line": 22,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.application.services.api_startup_service",
         "path": "orket/interfaces/api.py",
-        "line": 22,
+        "line": 23,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.application.services.execution_graph_service",
         "path": "orket/interfaces/api.py",
-        "line": 23,
+        "line": 24,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.application.services.outward_run_execution_service",
         "path": "orket/interfaces/api.py",
-        "line": 28,
+        "line": 29,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.application.services.outward_run_inspection_service",
         "path": "orket/interfaces/api.py",
-        "line": 31,
+        "line": 32,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.application.services.outward_run_service",
         "path": "orket/interfaces/api.py",
-        "line": 34,
+        "line": 35,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.application.services.run_ledger_summary_projection",
         "path": "orket/interfaces/api.py",
-        "line": 38,
+        "line": 39,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.application.services.runtime_construction_inputs",
         "path": "orket/interfaces/api.py",
-        "line": 41,
+        "line": 42,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.application.services.runtime_inspection_service",
         "path": "orket/interfaces/api.py",
-        "line": 42,
+        "line": 43,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.application.services.runtime_policy",
         "path": "orket/interfaces/api.py",
-        "line": 43,
+        "line": 44,
+        "kind": "from"
+      },
+      {
+        "source": "orket.interfaces.api",
+        "target": "orket.application.services.runtime_result_lifetime",
+        "path": "orket/interfaces/api.py",
+        "line": 65,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.interfaces.api_runtime_context",
         "path": "orket/interfaces/api.py",
-        "line": 64,
+        "line": 66,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.interfaces.api_transport_composition",
         "path": "orket/interfaces/api.py",
-        "line": 69,
+        "line": 71,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.interfaces.routers.card_authoring",
         "path": "orket/interfaces/api.py",
-        "line": 70,
+        "line": 72,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.interfaces.routers.cards",
         "path": "orket/interfaces/api.py",
-        "line": 71,
+        "line": 73,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.interfaces.routers.extension_runtime",
         "path": "orket/interfaces/api.py",
-        "line": 72,
+        "line": 74,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.interfaces.routers.flows",
         "path": "orket/interfaces/api.py",
-        "line": 73,
+        "line": 75,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.interfaces.routers.governed_agents",
         "path": "orket/interfaces/api.py",
-        "line": 74,
+        "line": 76,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.interfaces.routers.kernel",
         "path": "orket/interfaces/api.py",
-        "line": 75,
+        "line": 77,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.interfaces.routers.outward_ledger",
         "path": "orket/interfaces/api.py",
-        "line": 76,
+        "line": 78,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.interfaces.routers.runs",
         "path": "orket/interfaces/api.py",
-        "line": 77,
+        "line": 79,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.interfaces.routers.sessions",
         "path": "orket/interfaces/api.py",
-        "line": 78,
+        "line": 80,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.interfaces.routers.settings",
         "path": "orket/interfaces/api.py",
-        "line": 79,
+        "line": 81,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.interfaces.routers.system",
         "path": "orket/interfaces/api.py",
-        "line": 80,
+        "line": 82,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.kernel.v1.outbound_policy_gate",
         "path": "orket/interfaces/api.py",
-        "line": 81,
+        "line": 83,
         "kind": "from"
       },
       {
         "source": "orket.interfaces.api",
         "target": "orket.settings",
         "path": "orket/interfaces/api.py",
-        "line": 85,
+        "line": 87,
         "kind": "from"
       },
       {
@@ -28949,161 +28956,161 @@
       },
       {
         "source": "orket.services.sandbox_orchestrator",
-        "target": "orket.adapters.storage.async_control_plane_execution_repository",
+        "target": "orket.adapters.execution.owned_io",
         "path": "orket/services/sandbox_orchestrator.py",
         "line": 15,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
-        "target": "orket.adapters.storage.async_control_plane_record_repository",
+        "target": "orket.adapters.storage.async_control_plane_execution_repository",
         "path": "orket/services/sandbox_orchestrator.py",
         "line": 16,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
-        "target": "orket.adapters.storage.async_executor_service",
+        "target": "orket.adapters.storage.async_control_plane_record_repository",
         "path": "orket/services/sandbox_orchestrator.py",
         "line": 17,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
-        "target": "orket.adapters.storage.async_file_tools",
+        "target": "orket.adapters.storage.async_executor_service",
         "path": "orket/services/sandbox_orchestrator.py",
         "line": 18,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
-        "target": "orket.adapters.storage.async_sandbox_lifecycle_repository",
+        "target": "orket.adapters.storage.async_file_tools",
         "path": "orket/services/sandbox_orchestrator.py",
         "line": 19,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
-        "target": "orket.adapters.storage.command_runner",
+        "target": "orket.adapters.storage.async_sandbox_lifecycle_repository",
         "path": "orket/services/sandbox_orchestrator.py",
         "line": 20,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
-        "target": "orket.application.services.control_plane_publication_service",
+        "target": "orket.adapters.storage.command_runner",
         "path": "orket/services/sandbox_orchestrator.py",
         "line": 21,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
-        "target": "orket.application.services.control_plane_workload_catalog",
+        "target": "orket.application.services.control_plane_publication_service",
         "path": "orket/services/sandbox_orchestrator.py",
         "line": 22,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
-        "target": "orket.application.services.decision_node_registry",
+        "target": "orket.application.services.control_plane_workload_catalog",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 25,
+        "line": 23,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
-        "target": "orket.application.services.runtime_input_service",
+        "target": "orket.application.services.decision_node_registry",
         "path": "orket/services/sandbox_orchestrator.py",
         "line": 26,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
-        "target": "orket.application.services.sandbox_control_plane_effect_service",
+        "target": "orket.application.services.runtime_input_service",
         "path": "orket/services/sandbox_orchestrator.py",
         "line": 27,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
-        "target": "orket.application.services.sandbox_control_plane_execution_service",
+        "target": "orket.application.services.sandbox_control_plane_effect_service",
         "path": "orket/services/sandbox_orchestrator.py",
         "line": 28,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
-        "target": "orket.application.services.sandbox_control_plane_operator_service",
+        "target": "orket.application.services.sandbox_control_plane_execution_service",
         "path": "orket/services/sandbox_orchestrator.py",
         "line": 29,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
-        "target": "orket.application.services.sandbox_control_plane_reservation_service",
+        "target": "orket.application.services.sandbox_control_plane_operator_service",
         "path": "orket/services/sandbox_orchestrator.py",
         "line": 30,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
+        "target": "orket.application.services.sandbox_control_plane_reservation_service",
+        "path": "orket/services/sandbox_orchestrator.py",
+        "line": 31,
+        "kind": "from"
+      },
+      {
+        "source": "orket.services.sandbox_orchestrator",
         "target": "orket.application.services.sandbox_control_plane_resource_service",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 33,
+        "line": 34,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.application.services.sandbox_policy_input_service",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 36,
+        "line": 37,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.application.services.sandbox_restart_policy_service",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 42,
+        "line": 43,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.application.services.sandbox_runtime_inspection_service",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 43,
+        "line": 44,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.application.services.sandbox_runtime_lifecycle_service",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 44,
+        "line": 45,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.application.services.sandbox_runtime_recovery_service",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 45,
+        "line": 46,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.core.domain.__init__",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 46,
-        "kind": "from"
-      },
-      {
-        "source": "orket.services.sandbox_orchestrator",
-        "target": "orket.core.domain.sandbox",
-        "path": "orket/services/sandbox_orchestrator.py",
         "line": 47,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
-        "target": "orket.core.domain.sandbox_lifecycle",
+        "target": "orket.core.domain.sandbox",
         "path": "orket/services/sandbox_orchestrator.py",
         "line": 48,
         "kind": "from"
@@ -29117,30 +29124,37 @@
       },
       {
         "source": "orket.services.sandbox_orchestrator",
-        "target": "orket.core.domain.sandbox_lifecycle_records",
+        "target": "orket.core.domain.sandbox_lifecycle",
         "path": "orket/services/sandbox_orchestrator.py",
         "line": 50,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
-        "target": "orket.core.domain.verification",
+        "target": "orket.core.domain.sandbox_lifecycle_records",
         "path": "orket/services/sandbox_orchestrator.py",
         "line": 51,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
-        "target": "orket.logging",
+        "target": "orket.core.domain.verification",
         "path": "orket/services/sandbox_orchestrator.py",
         "line": 52,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
-        "target": "orket.runtime_paths",
+        "target": "orket.logging",
         "path": "orket/services/sandbox_orchestrator.py",
         "line": 53,
+        "kind": "from"
+      },
+      {
+        "source": "orket.services.sandbox_orchestrator",
+        "target": "orket.runtime_paths",
+        "path": "orket/services/sandbox_orchestrator.py",
+        "line": 54,
         "kind": "from"
       },
       {
@@ -30639,7 +30653,7 @@
       {
         "source": "application",
         "target": "adapters",
-        "count": 407
+        "count": 408
       },
       {
         "source": "application",
@@ -30674,7 +30688,7 @@
       {
         "source": "interfaces",
         "target": "application",
-        "count": 97
+        "count": 98
       },
       {
         "source": "interfaces",
@@ -30696,45 +30710,6 @@
     }
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-20T20:30:08.895390Z",
-      "changed": true,
-      "before_digest": "sha256:8621bf377be9cab8739ca2961f0d659be16c70a244f1328dfe9f1e3530ba83b1",
-      "after_digest": "sha256:ccb98ef9eea5703bf10336fec335a4e3f5953b3fe7108bcba625a31b738da0f3",
-      "diff": {
-        "added_paths": 1,
-        "removed_paths": 0,
-        "changed_paths": 165,
-        "initial_write": false,
-        "paths_total_previous": 46273,
-        "paths_total_current": 46284,
-        "paths_total_reference": 46284,
-        "churn_paths": 166,
-        "churn_ratio": 0.003587,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.edges[3403].line",
-          "$.observed.edges[3404].line",
-          "$.observed.edges[3405].line",
-          "$.observed.edges[3406].line",
-          "$.observed.edges[3407].line",
-          "$.observed.edges[3408].line",
-          "$.observed.edges[3409].line",
-          "$.observed.edges[3410].line",
-          "$.observed.edges[3411].line",
-          "$.observed.edges[3412].line",
-          "$.observed.edges[3412].target",
-          "$.observed.edges[3413].line",
-          "$.observed.edges[3413].target",
-          "$.observed.edges[3414].line",
-          "$.observed.edges[3414].target",
-          "$.observed.edges[3415].line",
-          "$.observed.edges[3415].target",
-          "$.observed.edges[3416].line",
-          "$.observed.edges[3416].target"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-20T21:02:27.186605Z",
       "changed": true,
@@ -31734,6 +31709,45 @@
           "$.observed.edges[39].target",
           "$.observed.edges[40].line",
           "$.observed.edges[40].target"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-21T17:12:34.463792Z",
+      "changed": true,
+      "before_digest": "sha256:2d7d420ad80e9bcaf4c8a0a0fa787beac5e8d3d18a88e2ded1f7b34b0f5114b7",
+      "after_digest": "sha256:bf9f781a89c6f8f983a910d35d1b038df8154b339702025072580c7a2b22d38e",
+      "diff": {
+        "added_paths": 2,
+        "removed_paths": 0,
+        "changed_paths": 2737,
+        "initial_write": false,
+        "paths_total_previous": 47255,
+        "paths_total_current": 47277,
+        "paths_total_reference": 47277,
+        "churn_paths": 2739,
+        "churn_ratio": 0.057935,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.edges[2474].line",
+          "$.observed.edges[2475].line",
+          "$.observed.edges[2476].line",
+          "$.observed.edges[2477].line",
+          "$.observed.edges[2478].line",
+          "$.observed.edges[2479].line",
+          "$.observed.edges[2480].line",
+          "$.observed.edges[2481].line",
+          "$.observed.edges[2482].line",
+          "$.observed.edges[2483].line",
+          "$.observed.edges[2484].line",
+          "$.observed.edges[2485].line",
+          "$.observed.edges[2486].line",
+          "$.observed.edges[2487].line",
+          "$.observed.edges[2488].line",
+          "$.observed.edges[2489].line",
+          "$.observed.edges[2489].target",
+          "$.observed.edges[2490].line",
+          "$.observed.edges[2490].target"
         ]
       }
     }

@@ -12,6 +12,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
+from orket.adapters.execution.owned_io import require_sync_context
 from orket.adapters.storage.async_control_plane_execution_repository import AsyncControlPlaneExecutionRepository
 from orket.adapters.storage.async_control_plane_record_repository import AsyncControlPlaneRecordRepository
 from orket.adapters.storage.async_executor_service import run_coroutine_blocking
@@ -433,16 +434,8 @@ class SandboxOrchestrator:
         return record.model_dump(mode="json")
 
     def get_logs(self, sandbox_id: str, service: str | None = None) -> str:
-        """
-        Retrieve logs from sandbox containers.
-
-        Args:
-            sandbox_id: Sandbox ID
-            service: Optional service name (api, frontend, database)
-
-        Returns:
-            Log output
-        """
+        """Read logs from a pre-loop or owned worker context."""
+        require_sync_context(code="E_SANDBOX_LOGS_REQUIRES_WORKER")
         sandbox = self.registry.get(sandbox_id)
         record = None
         if sandbox is None:
@@ -476,6 +469,8 @@ class SandboxOrchestrator:
             cmd.append(service_name)
 
         result = self.command_runner.run_sync(*cmd, timeout=10)
+        if result.returncode:
+            raise RuntimeError(f"Sandbox {sandbox_id} log command failed with exit code {result.returncode}")
         return result.stdout
 
     # -------------------------------------------------------------------------

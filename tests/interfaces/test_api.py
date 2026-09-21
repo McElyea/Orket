@@ -15,6 +15,7 @@ from orket.schema import CardStatus
 from orket.settings import load_user_settings_async, save_user_settings
 from tests.helpers.card_completion import complete_existing_card
 from tests.helpers.interactions import create_interaction_manager
+from tests.helpers.sandbox_log_pipeline import SandboxLogPipeline
 
 pytestmark = pytest.mark.contract
 
@@ -1025,18 +1026,16 @@ def test_run_metrics_uses_runtime_workspace(monkeypatch):
 
 
 def test_sandbox_logs_uses_runtime_pipeline_factory(monkeypatch):
-    """Layer: integration. Verifies sandbox-log pipeline construction now comes from the explicit API runtime host."""
+    """Layer: contract. Verifies sandbox-log pipeline construction now comes from the explicit API runtime host."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
 
     captured = {}
 
-    class FakeSandboxOrchestrator:
-        def get_logs(self, sandbox_id, service):
-            captured["log_args"] = (sandbox_id, service)
-            return "fake-logs"
+    def get_logs(sandbox_id, service):
+        captured["log_args"] = (sandbox_id, service)
+        return "fake-logs"
 
-    class FakePipeline:
-        sandbox_orchestrator = FakeSandboxOrchestrator()
+    pipeline = SandboxLogPipeline(get_logs=get_logs)
 
     def fake_workspace(project_root):
         captured["workspace_root"] = project_root
@@ -1044,7 +1043,7 @@ def test_sandbox_logs_uses_runtime_pipeline_factory(monkeypatch):
 
     def fake_create_pipeline(workspace_root):
         captured["pipeline_workspace"] = workspace_root
-        return FakePipeline()
+        return pipeline
 
     monkeypatch.setattr(api_module._get_api_runtime_node(client.app), "resolve_sandbox_workspace", fake_workspace)
     monkeypatch.setattr(api_module._get_api_runtime_host(client.app), "create_execution_pipeline", fake_create_pipeline)
@@ -1057,23 +1056,22 @@ def test_sandbox_logs_uses_runtime_pipeline_factory(monkeypatch):
     assert response.status_code == 200
     assert response.json() == {"logs": "fake-logs"}
     assert captured["log_args"] == ("sb-1", "api")
+    assert pipeline.closed
 
 
 def test_sandbox_logs_forwards_optional_service_param(monkeypatch):
-    """Layer: integration. Verifies sandbox-log requests still forward the optional service selector after the host-service move."""
+    """Layer: contract. Verifies sandbox-log requests still forward the optional service selector after the host-service move."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     captured = {}
 
-    class FakeSandboxOrchestrator:
-        def get_logs(self, sandbox_id, service):
-            captured["log_args"] = (sandbox_id, service)
-            return "fake-logs"
+    def get_logs(sandbox_id, service):
+        captured["log_args"] = (sandbox_id, service)
+        return "fake-logs"
 
-    class FakePipeline:
-        sandbox_orchestrator = FakeSandboxOrchestrator()
+    pipeline = SandboxLogPipeline(get_logs=get_logs)
 
     monkeypatch.setattr(api_module._get_api_runtime_node(client.app), "resolve_sandbox_workspace", lambda root: root / "workspace" / "default")
-    monkeypatch.setattr(api_module._get_api_runtime_host(client.app), "create_execution_pipeline", lambda _workspace_root: FakePipeline())
+    monkeypatch.setattr(api_module._get_api_runtime_host(client.app), "create_execution_pipeline", lambda _workspace_root: pipeline)
 
     response = client.get(
         "/v1/sandboxes/sb-1/logs",
@@ -1083,23 +1081,22 @@ def test_sandbox_logs_forwards_optional_service_param(monkeypatch):
     assert response.status_code == 200
     assert response.json() == {"logs": "fake-logs"}
     assert captured["log_args"] == ("sb-1", None)
+    assert pipeline.closed
 
 
 def test_sandbox_logs_use_runtime_invocation_policy(monkeypatch):
-    """Layer: integration. Verifies sandbox-log invocation policy still controls the sandbox orchestrator method after the host-service move."""
+    """Layer: contract. Verifies sandbox-log invocation policy still controls the sandbox orchestrator method after the host-service move."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     captured = {}
 
-    class FakeSandboxOrchestrator:
-        def fetch_logs(self, sandbox_id, service):
-            captured["log_args"] = (sandbox_id, service)
-            return "policy-logs"
+    def fetch_logs(sandbox_id, service):
+        captured["log_args"] = (sandbox_id, service)
+        return "policy-logs"
 
-    class FakePipeline:
-        sandbox_orchestrator = FakeSandboxOrchestrator()
+    pipeline = SandboxLogPipeline(fetch_logs=fetch_logs)
 
     monkeypatch.setattr(api_module._get_api_runtime_node(client.app), "resolve_sandbox_workspace", lambda root: root / "workspace" / "default")
-    monkeypatch.setattr(api_module._get_api_runtime_host(client.app), "create_execution_pipeline", lambda _workspace_root: FakePipeline())
+    monkeypatch.setattr(api_module._get_api_runtime_host(client.app), "create_execution_pipeline", lambda _workspace_root: pipeline)
     monkeypatch.setattr(
         api_module._get_api_runtime_node(client.app),
         "resolve_sandbox_logs_invocation",
@@ -1114,21 +1111,20 @@ def test_sandbox_logs_use_runtime_invocation_policy(monkeypatch):
     assert response.status_code == 200
     assert response.json() == {"logs": "policy-logs"}
     assert captured["log_args"] == ("sb-9", "frontend")
+    assert pipeline.closed
 
 
 def test_sandbox_logs_reject_unsupported_runtime_method(monkeypatch):
     """Layer: contract. Verifies sandbox logs still fail closed when runtime policy names a missing sandbox-orchestrator method."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
 
-    class FakeSandboxOrchestrator:
-        def get_logs(self, sandbox_id, service):
-            return f"{sandbox_id}:{service}"
+    def get_logs(sandbox_id, service):
+        return f"{sandbox_id}:{service}"
 
-    class FakePipeline:
-        sandbox_orchestrator = FakeSandboxOrchestrator()
+    pipeline = SandboxLogPipeline(get_logs=get_logs)
 
     monkeypatch.setattr(api_module._get_api_runtime_node(client.app), "resolve_sandbox_workspace", lambda root: root / "workspace" / "default")
-    monkeypatch.setattr(api_module._get_api_runtime_host(client.app), "create_execution_pipeline", lambda _workspace_root: FakePipeline())
+    monkeypatch.setattr(api_module._get_api_runtime_host(client.app), "create_execution_pipeline", lambda _workspace_root: pipeline)
     monkeypatch.setattr(
         api_module._get_api_runtime_node(client.app),
         "resolve_sandbox_logs_invocation",
@@ -1142,21 +1138,20 @@ def test_sandbox_logs_reject_unsupported_runtime_method(monkeypatch):
 
     assert response.status_code == 400
     assert "Unsupported sandbox logs method" in response.json()["detail"]
+    assert pipeline.closed
 
 
 def test_sandbox_logs_uses_runtime_unsupported_detail(monkeypatch):
     """Layer: contract. Verifies sandbox-log unsupported-detail shaping survives the move to explicit host-owned pipeline construction."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
 
-    class FakeSandboxOrchestrator:
-        def get_logs(self, sandbox_id, service):
-            return f"{sandbox_id}:{service}"
+    def get_logs(sandbox_id, service):
+        return f"{sandbox_id}:{service}"
 
-    class FakePipeline:
-        sandbox_orchestrator = FakeSandboxOrchestrator()
+    pipeline = SandboxLogPipeline(get_logs=get_logs)
 
     monkeypatch.setattr(api_module._get_api_runtime_node(client.app), "resolve_sandbox_workspace", lambda root: root / "workspace" / "default")
-    monkeypatch.setattr(api_module._get_api_runtime_host(client.app), "create_execution_pipeline", lambda _workspace_root: FakePipeline())
+    monkeypatch.setattr(api_module._get_api_runtime_host(client.app), "create_execution_pipeline", lambda _workspace_root: pipeline)
     monkeypatch.setattr(
         api_module._get_api_runtime_node(client.app),
         "resolve_sandbox_logs_invocation",
@@ -1174,6 +1169,7 @@ def test_sandbox_logs_uses_runtime_unsupported_detail(monkeypatch):
 
     assert response.status_code == 400
     assert response.json()["detail"] == "Sandbox log provider unavailable for sb-9"
+    assert pipeline.closed
 
 
 def test_session_detail_returns_404_when_missing(monkeypatch):

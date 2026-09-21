@@ -36,7 +36,8 @@ Containment checks cover the observed paths, including native directory aliases.
 They are not descriptor-bound protection against hostile concurrent path changes,
 hard-link provenance, an atomic filesystem snapshot, or CAP-2 isolation. Legitimate
 artifacts remain under the captured roots; no new compatibility forwarding helper
-is introduced. Remaining sandbox log ownership, other synchronous bridges,
+is introduced. Sandbox log ownership now follows
+`CONTRACT_DELTA_API_SANDBOX_LOGS_D_2026-09-21.md`. Other synchronous bridges,
 captured inputs, adapter classification and complete async reachability stay open.
 
 Proof: the canonical architectural-truth plan and `.tmp/d-api-run-observation/`.

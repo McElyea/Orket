@@ -27,5 +27,9 @@ async def read_runtime_replay(
     return await run_owned_thread(read, label="runtime-replay-read")
 
 
+async def read_runtime_sandbox_logs(read: Callable[[], str]) -> str:
+    return await run_owned_thread(read, label="runtime-sandbox-log-read")
+
+
 async def emit_runtime_manifest(emit: Callable[[str], None], department: str) -> None:
     await run_owned_thread(partial(emit, department), label="runtime-manifest")
