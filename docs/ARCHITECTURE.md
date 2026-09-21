@@ -190,8 +190,15 @@ The runtime CLI captures engine inputs after startup and owns engine constructio
 through interruption. Board/replay reads, manifest output and native path
 resolution retain their workers; a completed untransferred engine is closed.
 Argument declarations remain one authority in `orket/interfaces/cli_arguments.py`.
-Contract and remaining API read scope (driver lifetime is specified below):
+CLI inspection contract (subsequent API and driver contracts are specified below):
 `docs/architecture/CONTRACT_DELTA_CLI_RUNTIME_OWNERSHIP_D_2026-09-21.md`.
+
+API run queries own log, token, replay-list and graph observation workers;
+targeted replay shares the CLI's owned inspection service. Pure record projections
+preserve response semantics and diagnostic meaning. Captured roots constrain
+resolved log/artifact paths; invalid paths map to HTTP 400. This is bounded path
+checking, not hostile-race containment or CAP-2 isolation. Contract and limits:
+`docs/architecture/CONTRACT_DELTA_API_RUN_OBSERVATION_D_2026-09-21.md`.
 
 Driver async creation captures root, environment and settings before owned
 construction; direct synchronous construction refuses an event-loop thread.

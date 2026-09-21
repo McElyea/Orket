@@ -29,9 +29,10 @@ The canonical CLI entrypoint continues to import and use that single definition;
 no duplicate parser or compatibility forwarding implementation is introduced.
 
 This is a bounded ownership change. Driver construction, stdin and provider
-cleanup now follow `CONTRACT_DELTA_DRIVER_LIFETIME_D_2026-09-21.md`. API
-diagnostic/observation reads, broader captured inspection inputs and the complete
-async inventory remain open. No forced thread termination,
+cleanup now follow `CONTRACT_DELTA_DRIVER_LIFETIME_D_2026-09-21.md`. API run
+diagnostic/observation reads follow `CONTRACT_DELTA_API_RUN_OBSERVATION_D_2026-09-21.md`.
+Sandbox log ownership, broader captured inspection inputs and the complete async
+inventory remain open. No forced thread termination,
 atomic filesystem snapshot, new model inference or universal response bound is
 claimed. The remediation plan records measured source/installed acceptance and
 the latest passive Linux clock disposition.

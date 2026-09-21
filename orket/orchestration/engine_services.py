@@ -261,6 +261,8 @@ class ReplayDiagnosticsService:
     """Artifact-backed replay diagnostics. This is not a canonical replay-verdict authority path."""
 
     def __init__(self, workspace_root: Path) -> None:
+        if not workspace_root.is_absolute():
+            raise ValueError("E_REPLAY_WORKSPACE_ABSOLUTE_REQUIRED")
         self.workspace_root = workspace_root
 
     def replay_turn_diagnostics(
@@ -271,7 +273,10 @@ class ReplayDiagnosticsService:
         turn_index: int,
         role: str | None = None,
     ) -> dict[str, Any]:
-        run_root = self.workspace_root / "observability" / session_id / issue_id
+        workspace = self.workspace_root
+        observability = self._contained(workspace / "observability", workspace)
+        session_root = self._contained(observability / session_id, observability)
+        run_root = self._contained(session_root / issue_id, session_root)
         if not run_root.exists():
             raise FileNotFoundError(f"No observability artifacts found for run={session_id} issue={issue_id}")
 
@@ -283,11 +288,11 @@ class ReplayDiagnosticsService:
         if not candidates:
             raise FileNotFoundError(f"No turn artifacts found for turn_index={turn_index}")
 
-        target = sorted(candidates)[0]
-        checkpoint_path = target / "checkpoint.json"
-        messages_path = target / "messages.json"
-        model_path = target / "model_response.txt"
-        parsed_tools_path = target / "parsed_tool_calls.json"
+        target = self._contained(sorted(candidates)[0], run_root)
+        checkpoint_path = self._contained(target / "checkpoint.json", target)
+        messages_path = self._contained(target / "messages.json", target)
+        model_path = self._contained(target / "model_response.txt", target)
+        parsed_tools_path = self._contained(target / "parsed_tool_calls.json", target)
 
         def _read_json(path: Path) -> Any:
             if not path.exists():
@@ -302,3 +307,10 @@ class ReplayDiagnosticsService:
             "model_response": model_path.read_text(encoding="utf-8") if model_path.exists() else None,
             "parsed_tool_calls": _read_json(parsed_tools_path),
         }
+
+    @staticmethod
+    def _contained(path: Path, root: Path) -> Path:
+        resolved = path.resolve()
+        if not resolved.is_relative_to(root):
+            raise PermissionError("Replay artifact path is outside its declared root.")
+        return resolved

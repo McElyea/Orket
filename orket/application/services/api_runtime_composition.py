@@ -11,6 +11,7 @@ from orket.adapters.tools.registry import DEFAULT_BUILTIN_CONNECTOR_REGISTRY
 from orket.application.interactions.commit import CommitOrchestrator
 from orket.application.interactions.manager import InteractionManager
 from orket.application.services.api_authentication_service import ApiAuthenticationService
+from orket.application.services.api_run_query_service import ApiRunQueryService
 from orket.application.services.api_runtime_container import ApiRuntimeContainer
 from orket.application.services.api_runtime_host_service import ApiRuntimeHostService
 from orket.application.services.api_system_query_service import ApiSystemQueryService
@@ -75,6 +76,7 @@ def build_api_runtime_container(
         authentication=authentication,
         system_queries=ApiSystemQueryService(root, environment=authentication.environment,
                                             runtime_inputs=runtime_host.runtime_inputs),
+        run_queries=ApiRunQueryService(root),
         stream_bus=stream_bus,
         interaction_manager=interactions,
         extension_manager=extension_manager,

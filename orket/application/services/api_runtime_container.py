@@ -32,6 +32,7 @@ class ApiRuntimeContainer(ApplicationRuntimeLifetime):
     events: ApiEventService = field(init=False)
     authentication: Any | None = None
     system_queries: Any | None = None
+    run_queries: Any | None = None
     stream_bus: Any | None = None
     interaction_manager: Any | None = None
     extension_manager: Any | None = None

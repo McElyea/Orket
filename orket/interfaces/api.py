@@ -39,6 +39,7 @@ from orket.application.services.run_ledger_summary_projection import (
     validated_run_ledger_record_projection,
 )
 from orket.application.services.runtime_construction_inputs import RuntimeConstructionInputs
+from orket.application.services.runtime_inspection_service import read_runtime_replay
 from orket.application.services.runtime_policy import (
     allowed_architecture_patterns,
     is_microservices_pilot_stable,
@@ -110,16 +111,6 @@ def _configured_project_root(target_app: FastAPI | None = None) -> Path:
 
 def _project_root(target_app: FastAPI | None = None) -> Path:
     return Path(_runtime_context(target_app).project_root)
-
-
-def _validate_session_path(session_id: str, *, project_root: Path | None = None) -> Path:
-    """Validate session_id does not traverse outside the runs directory."""
-    root = Path(project_root).resolve() if project_root is not None else _project_root()
-    base = (root / "workspace" / "runs").resolve()
-    candidate = (base / session_id).resolve()
-    if not candidate.is_relative_to(base):
-        raise HTTPException(status_code=400, detail="Invalid session_id")
-    return candidate
 
 
 def _resolve_method(target: object, invocation: dict[str, Any], error_prefix: str) -> Callable[..., Any]:
@@ -1062,196 +1053,10 @@ async def get_run_token_summary(session_id: str) -> dict[str, Any]:
     if run_record is None and session is None:
         raise HTTPException(status_code=404, detail=f"Run '{session_id}' not found")
 
-    run_path = _validate_session_path(session_id)
-    candidate_files = [_project_root() / "workspace" / "default" / "orket.log"]
-    candidate_files.append(run_path / "orket.log")
-
-    records: list[dict[str, Any]] = []
-    seen: set[tuple[Any, ...]] = set()
-    for path in candidate_files:
-        path_records = await asyncio.to_thread(_read_log_records, path)
-        for record in path_records:
-            signature = (
-                record.get("timestamp"),
-                record.get("event"),
-                str((record.get("data") or {}).get("turn_trace_id") or ""),
-                str(record.get("role") or ""),
-                str((record.get("data") or {}).get("issue_id") or ""),
-            )
-            if signature in seen:
-                continue
-            seen.add(signature)
-            records.append(record)
-
-    model_by_turn_trace: dict[str, str] = {}
-    turns: list[dict[str, Any]] = []
-    role_totals: dict[str, int] = {}
-    model_totals: dict[str, int] = {}
-    role_model_totals: dict[str, int] = {}
-    total_tokens = 0
-
-    for record in records:
-        if _record_session_id(record) != session_id:
-            continue
-        event = str(record.get("event") or "")
-        data = record.get("data", {})
-        if not isinstance(data, dict):
-            continue
-        runtime_event = data.get("runtime_event", {})
-        runtime_event = runtime_event if isinstance(runtime_event, dict) else {}
-        turn_trace_id = str(runtime_event.get("turn_trace_id") or data.get("turn_trace_id") or "").strip()
-
-        if event == "turn_start":
-            selected_model = str(runtime_event.get("selected_model") or data.get("selected_model") or "").strip()
-            if turn_trace_id and selected_model:
-                model_by_turn_trace[turn_trace_id] = selected_model
-            continue
-
-        if event != "turn_complete":
-            continue
-
-        role = str(record.get("role") or runtime_event.get("role") or data.get("role") or "unknown").strip().lower()
-        model = (
-            str(
-                model_by_turn_trace.get(turn_trace_id)
-                or runtime_event.get("selected_model")
-                or data.get("selected_model")
-                or "unknown"
-            )
-            .strip()
-            .lower()
-        )
-        issue_id = str(runtime_event.get("issue_id") or data.get("issue_id") or "").strip()
-        turn_index_raw = runtime_event.get("turn_index") or data.get("turn_index") or 0
-        try:
-            turn_index = int(turn_index_raw)
-        except (TypeError, ValueError):
-            turn_index = 0
-        tokens_total = _extract_total_tokens(runtime_event.get("tokens"))
-        if not tokens_total:
-            tokens_total = _extract_total_tokens(data.get("tokens"))
-        if not tokens_total:
-            tokens_total = _extract_total_tokens(data.get("total_tokens"))
-
-        turn_row = {
-            "turn_trace_id": turn_trace_id or None,
-            "issue_id": issue_id or None,
-            "turn_index": turn_index,
-            "role": role,
-            "model": model,
-            "tokens_total": tokens_total,
-        }
-        turns.append(turn_row)
-        total_tokens += tokens_total
-        role_totals[role] = role_totals.get(role, 0) + tokens_total
-        model_totals[model] = model_totals.get(model, 0) + tokens_total
-        role_model_key = f"{role}:{model}"
-        role_model_totals[role_model_key] = role_model_totals.get(role_model_key, 0) + tokens_total
-
-    turns.sort(key=lambda item: (item["turn_index"], str(item["issue_id"] or ""), str(item["role"])))
-    by_role = [
-        {"role": role, "tokens_total": value} for role, value in sorted(role_totals.items(), key=lambda item: item[0])
-    ]
-    by_model = [
-        {"model": model, "tokens_total": value}
-        for model, value in sorted(model_totals.items(), key=lambda item: item[0])
-    ]
-
-    by_role_model: list[dict[str, Any]] = []
-    for key, value in sorted(role_model_totals.items(), key=lambda item: item[0]):
-        role, model = key.split(":", 1)
-        by_role_model.append({"role": role, "model": model, "tokens_total": value})
-
-    return {
-        "session_id": session_id,
-        "total_tokens": total_tokens,
-        "turn_count": len(turns),
-        "by_role": by_role,
-        "by_model": by_model,
-        "by_role_model": by_role_model,
-        "turns": turns,
-    }
-
-
-def _collect_replay_turns(session_id: str, role: str | None = None) -> list[dict[str, Any]]:
-    run_path = _validate_session_path(session_id)
-    candidate_files = [_project_root() / "workspace" / "default" / "orket.log"]
-    candidate_files.append(run_path / "orket.log")
-
-    records: list[dict[str, Any]] = []
-    seen: set[tuple[Any, ...]] = set()
-    for path in candidate_files:
-        for record in _read_log_records(path):
-            signature = (
-                record.get("timestamp"),
-                record.get("event"),
-                str((record.get("data") or {}).get("turn_trace_id") or ""),
-                str(record.get("role") or ""),
-                str((record.get("data") or {}).get("issue_id") or ""),
-                str((record.get("data") or {}).get("turn_index") or ""),
-            )
-            if signature in seen:
-                continue
-            seen.add(signature)
-            records.append(record)
-
-    model_by_turn_trace: dict[str, str] = {}
-    turns: list[dict[str, Any]] = []
-    role_filter = str(role or "").strip().lower()
-
-    for record in records:
-        if _record_session_id(record) != session_id:
-            continue
-        event = str(record.get("event") or "")
-        data = record.get("data", {})
-        if not isinstance(data, dict):
-            continue
-        runtime_event = data.get("runtime_event", {})
-        runtime_event = runtime_event if isinstance(runtime_event, dict) else {}
-        turn_trace_id = str(runtime_event.get("turn_trace_id") or data.get("turn_trace_id") or "").strip()
-
-        if event == "turn_start":
-            selected_model = str(runtime_event.get("selected_model") or data.get("selected_model") or "").strip()
-            if turn_trace_id and selected_model:
-                model_by_turn_trace[turn_trace_id] = selected_model
-            continue
-
-        if event != "turn_complete":
-            continue
-
-        normalized_role = (
-            str(record.get("role") or runtime_event.get("role") or data.get("role") or "unknown").strip().lower()
-        )
-        if role_filter and normalized_role != role_filter:
-            continue
-
-        issue_id = str(runtime_event.get("issue_id") or data.get("issue_id") or "").strip()
-        turn_index_raw = runtime_event.get("turn_index") or data.get("turn_index") or 0
-        try:
-            turn_index = int(turn_index_raw)
-        except (TypeError, ValueError):
-            turn_index = 0
-
-        turns.append(
-            {
-                "session_id": session_id,
-                "issue_id": issue_id or None,
-                "turn_index": turn_index,
-                "role": normalized_role,
-                "turn_trace_id": turn_trace_id or None,
-                "selected_model": str(
-                    model_by_turn_trace.get(turn_trace_id)
-                    or runtime_event.get("selected_model")
-                    or data.get("selected_model")
-                    or ""
-                ).strip()
-                or None,
-                "timestamp": str(record.get("timestamp") or ""),
-            }
-        )
-
-    turns.sort(key=lambda item: (item["turn_index"], str(item["issue_id"] or ""), str(item["role"]), item["timestamp"]))
-    return turns
+    try:
+        return await _runtime_context().run_queries.token_summary(session_id)
+    except PermissionError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @v1_router.get("/runs/{session_id}/replay")
@@ -1261,7 +1066,10 @@ async def list_run_replay_turns(session_id: str, role: str | None = None) -> dic
     session = await runtime_engine.sessions.get_session(session_id)
     if run_record is None and session is None:
         raise HTTPException(status_code=404, detail=f"Run '{session_id}' not found")
-    turns = await asyncio.to_thread(_collect_replay_turns, session_id=session_id, role=role)
+    try:
+        turns = await _runtime_context().run_queries.replay_turns(session_id, role)
+    except PermissionError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     return {
         "session_id": session_id,
         "turn_count": len(turns),
@@ -1288,9 +1096,12 @@ async def get_execution_graph(session_id: str) -> dict[str, Any]:
 
     graph = await inspect_execution_graph(cards=runtime_engine.cards, session_id=session_id)
     index = {node["id"]: node["order_index"] for node in graph["nodes"]}
-    handoffs = await asyncio.to_thread(_derive_handoff_edges, session_id, index)
+    try:
+        handoffs = await _runtime_context().run_queries.handoffs(session_id, index)
+        run_path = await _runtime_context().run_queries.run_path(session_id)
+    except PermissionError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     payload = execution_graph_payload(session_id=session_id, graph=graph, handoffs=handoffs)
-    run_path = await asyncio.to_thread(_validate_session_path, session_id)
     await persist_execution_graph_snapshot(cards=runtime_engine.cards, run_path=run_path, payload=payload)
     return payload
 
@@ -1398,7 +1209,8 @@ async def replay_session_turn(
                 detail="Targeted replay is not supported for interaction sessions.",
             )
     try:
-        replay = runtime_engine.replay_turn_diagnostics(
+        replay = await read_runtime_replay(
+            runtime_engine,
             session_id=session_id,
             issue_id=str(issue_id),
             turn_index=turn_index,
@@ -1406,6 +1218,8 @@ async def replay_session_turn(
         )
     except FileNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except PermissionError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     return replay
 
 
@@ -1479,96 +1293,6 @@ def _coerce_datetime(value: str | None) -> datetime | None:
         raise HTTPException(status_code=400, detail=f"Invalid datetime: '{value}'") from exc
 
 
-def _derive_handoff_edges(session_id: str, index_by_id: dict[str, int]) -> list[dict[str, Any]]:
-    records: list[dict[str, Any]] = []
-    run_path = _validate_session_path(session_id)
-    run_log = run_path / "orket.log"
-    default_log = _project_root() / "workspace" / "default" / "orket.log"
-
-    for path in [run_log, default_log]:
-        records.extend(_read_log_records(path))
-
-    turns: list[tuple[int, str, str]] = []
-    for record in records:
-        if _record_session_id(record) != session_id:
-            continue
-        if str(record.get("event") or "").strip() != "turn_complete":
-            continue
-
-        data = record.get("data", {})
-        data = data if isinstance(data, dict) else {}
-        runtime_event = data.get("runtime_event", {})
-        runtime_event = runtime_event if isinstance(runtime_event, dict) else {}
-
-        issue_id = str(runtime_event.get("issue_id") or data.get("issue_id") or "").strip()
-        if not issue_id or issue_id not in index_by_id:
-            continue
-
-        try:
-            turn_index = int(runtime_event.get("turn_index") or data.get("turn_index") or 0)
-        except (TypeError, ValueError):
-            turn_index = 0
-
-        timestamp = str(record.get("timestamp") or "")
-        turns.append((turn_index, timestamp, issue_id))
-
-    turns.sort(key=lambda row: (row[0], row[1]))
-
-    handoff_edges: list[dict[str, Any]] = []
-    previous_issue: str | None = None
-    for turn_index, timestamp, issue_id in turns:
-        if previous_issue and previous_issue != issue_id:
-            handoff_edges.append(
-                {
-                    "source": previous_issue,
-                    "target": issue_id,
-                    "kind": "handoff",
-                    "source_event": "turn_complete",
-                    "timestamp": timestamp,
-                    "turn_index": turn_index,
-                }
-            )
-        previous_issue = issue_id
-
-    return handoff_edges
-
-
-def _record_session_id(record: dict[str, Any]) -> str:
-    data = record.get("data", {})
-    if isinstance(data, dict):
-        runtime_event = data.get("runtime_event", {})
-        if isinstance(runtime_event, dict):
-            return str(runtime_event.get("session_id") or "")
-        return str(data.get("session_id") or "")
-    return ""
-
-
-def _extract_total_tokens(value: Any) -> int:
-    raw = value.get("total_tokens") if isinstance(value, dict) else value
-    try:
-        parsed = int(raw or 0)
-    except (TypeError, ValueError):
-        parsed = 0
-    return parsed if parsed > 0 else 0
-
-
-def _read_log_records(path: Path) -> list[dict[str, Any]]:
-    if not path.exists():
-        return []
-    records: list[dict[str, Any]] = []
-    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
-        line = line.strip()
-        if not line:
-            continue
-        try:
-            parsed = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-        if isinstance(parsed, dict):
-            records.append(parsed)
-    return records
-
-
 @v1_router.get("/logs")
 async def list_logs(
     session_id: str | None = None,
@@ -1582,56 +1306,15 @@ async def list_logs(
     start_dt = _coerce_datetime(start_time)
     end_dt = _coerce_datetime(end_time)
 
-    candidate_files = [_project_root() / "workspace" / "default" / "orket.log"]
-    if session_id:
-        run_path = _validate_session_path(session_id)
-        candidate_files.append(run_path / "orket.log")
-
-    records: list[dict[str, Any]] = []
-    for path in candidate_files:
-        records.extend(await asyncio.to_thread(_read_log_records, path))
-
-    filtered: list[dict[str, Any]] = []
-    for record in records:
-        rec_event = str(record.get("event") or "")
-        rec_role = str(record.get("role") or "")
-        rec_timestamp = str(record.get("timestamp") or "")
-        rec_session_id = _record_session_id(record)
-
-        if session_id and rec_session_id != session_id:
-            continue
-        if event and rec_event != event:
-            continue
-        if role and rec_role != role:
-            continue
-
-        try:
-            ts_dt = datetime.fromisoformat(rec_timestamp)
-        except ValueError:
-            ts_dt = None
-        if start_dt and (ts_dt is None or ts_dt < start_dt):
-            continue
-        if end_dt and (ts_dt is None or ts_dt > end_dt):
-            continue
-
-        filtered.append(record)
-
-    filtered.sort(key=lambda item: str(item.get("timestamp") or ""), reverse=True)
-    page = filtered[offset : offset + limit]
-    return {
-        "items": page,
-        "count": len(page),
-        "total": len(filtered),
-        "limit": limit,
-        "offset": offset,
-        "filters": {
-            "session_id": session_id,
-            "event": event,
-            "role": role,
-            "start_time": start_time,
-            "end_time": end_time,
-        },
-    }
+    try:
+        page = await _runtime_context().run_queries.logs(
+            session_id=session_id, event=event, role=role, start_dt=start_dt, end_dt=end_dt,
+            limit=limit, offset=offset,
+        )
+    except PermissionError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {**page, "filters": {"session_id": session_id, "event": event, "role": role,
+                               "start_time": start_time, "end_time": end_time}}
 
 
 async def event_broadcaster(state: Any, runtime_node: Any) -> None:

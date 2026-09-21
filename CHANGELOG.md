@@ -5,6 +5,17 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.65] - 2026-09-21
+
+### Fixed
+- Own API log, token, replay and graph observation reads through interruption and shutdown; preserve native failures.
+- Refuse observed log/artifact paths outside captured roots, including directory aliases and targeted replay traversal.
+- Move diagnostic aggregation to pure core projections while preserving supported response semantics and accepted graph authority.
+- `compatibility_status`: `preserved`
+- `affected_audience`: `all`
+- `migration_requirement`: `none`
+- Contract and bounded containment limits: `docs/architecture/CONTRACT_DELTA_API_RUN_OBSERVATION_D_2026-09-21.md`.
+
 ## [0.6.64] - 2026-09-21
 
 ### Fixed

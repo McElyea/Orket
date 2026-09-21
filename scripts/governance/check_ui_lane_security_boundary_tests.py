@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import HTTPException
+from fastapi.testclient import TestClient
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
@@ -68,18 +69,18 @@ def _explorer_path_traversal_blocked() -> dict[str, Any]:
 
 def _session_workspace_escape_blocked() -> dict[str, Any]:
     with tempfile.TemporaryDirectory(prefix="ui-lane-session-boundary-") as tmp_dir:
-        try:
-            _ = api_module._validate_session_path("../../secrets", project_root=Path(tmp_dir))
-        except HTTPException as exc:
-            return {
-                "check": "session_workspace_escape_blocked",
-                "ok": int(exc.status_code) == 400,
-                "status_code": int(exc.status_code),
-            }
+        root = Path(tmp_dir).resolve()
+        app = api_module.create_api_app(project_root=root, environment={
+            "ORKET_API_KEY": "boundary-fixture", "ORKET_DISABLE_SANDBOX": "1",
+            "ORKET_DURABLE_ROOT": str(root / "durable"), "ORKET_OUTWARD_PIPELINE_DB_PATH": str(root / "outward.db"),
+        })
+        with TestClient(app) as client:
+            response = client.get("/v1/logs", params={"session_id": "../../secrets"},
+                                  headers={"X-API-Key": "boundary-fixture"})
     return {
         "check": "session_workspace_escape_blocked",
-        "ok": False,
-        "status_code": 200,
+        "ok": response.status_code == 400,
+        "status_code": response.status_code,
     }
 
 

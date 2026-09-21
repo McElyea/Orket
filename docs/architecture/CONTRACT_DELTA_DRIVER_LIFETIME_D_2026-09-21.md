@@ -35,6 +35,7 @@ borrowed from the process and is not closed by the driver.
 
 Model parsing and fallback prompt behavior move to the existing conversation
 owner without a forwarding implementation. Broader mutable driver state,
-remaining synchronous ConfigLoader callers, API observation/replay reads and
-full D/E/CAP acceptance remain open. Proof records distinguish controlled local
+remaining synchronous ConfigLoader callers, sandbox log ownership and full D/E/CAP
+acceptance remain open. API run observations now follow
+`CONTRACT_DELTA_API_RUN_OBSERVATION_D_2026-09-21.md`. Proof records distinguish controlled local
 HTTP/console effects from fresh model inference.

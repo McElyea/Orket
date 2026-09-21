@@ -19864,3 +19864,80 @@ inputs, adapter classification/full async inventory, E1/E2, whole-suite/89%, hos
 Quality and CAP remain open. The .43 Git-timeout cause and four .59 provider-gated
 packet1 cases remain unverified. Accepted BT evidence is retained. Required work
 and explicit user acceptance still govern lane completion and retirement.
+
+
+#### .65 API run observation ownership and contained paths (2026-09-21)
+
+`ApiRunQueryService` owns log, token-summary, replay-list and execution-graph
+observations. Its side-effecting reader retains native path/read work through
+repeated cancellation, elapsed deadlines and shutdown; read failures remain
+visible. Targeted API replay shares the CLI's owned runtime inspection service.
+Pure diagnostic projections preserve existing file ordering, distinct deduplication
+keys, model/token semantics, filters, pagination and handoff ordering. Accepted
+BT-3 graph and snapshot authorities remain intact. API size falls 1,668 to 1,351
+lines; new adapter/application/core modules are 57/35/172 lines. Contract:
+`docs/architecture/CONTRACT_DELTA_API_RUN_OBSERVATION_D_2026-09-21.md`.
+
+Captured roots constrain resolved default/run/log and workspace/observability/
+session/issue/turn/artifact paths. Traversal and native directory aliases outside
+those roots fail as HTTP 400. Missing targeted artifacts and partial/unsupported
+targets preserve 404/422 behavior. The governance boundary check now exercises
+the actual authenticated log route. This is bounded resolved-path checking,
+not descriptor-bound hostile-race containment, hard-link provenance, atomic
+multi-file reads or CAP-2 isolation. Malformed record-field behavior remains
+outside this ownership change; diagnostics cannot prove accepted completion.
+
+The first 15-case probe run fails in setup because its session fixture omits
+`task_input`; it reaches no target native read and is not a product counterexample.
+After correcting the fixture, all 15 fail on .64: four routes finish interrupted
+requests while reads remain admitted, and targeted replay blocks the event loop.
+Eleven initial path probes also expose outside-root observations/acceptance.
+The final 27 interruption/path cases, including workspace replacement, all fail
+against the byte-verified installed .64 wheel. Final candidate cells below pass
+the same test bytes. Deadlines remain unchanged: 50ms from native admission,
+0.5s responsiveness, 0.8s release timer and five-second admission/join bounds.
+
+Focused runs pass 145 and 51 cases. Ten real TCP shutdown scenarios retain native
+reads until settlement, including native-failure precedence; authenticated ASGI
+probes retain actual file handles and exercise concurrent SQLite/heartbeat work.
+Native Windows junction fixtures are removed in their own execution path while
+external target contents remain intact. Seventy-two differential comparisons
+over a fixed 12-corpus input set match extracted .64 projection behavior; this is
+bounded structural comparison alongside live effects, not universal equivalence.
+Contract controls also preserve role filtering before turn-index conversion.
+An early ad-hoc lint run finds import ordering and a test's synchronous relpath;
+both are corrected before the frozen final review. No test deadline is widened.
+
+The 94-module selection retains all 222 .64 cases and bounded affected direct
+imports. Four provider-gated direct-import modules are explicitly unrun, including
+three governed-agent live provider modules and companion voice truth. Their
+prerequisites remain recorded; they are not counted as passing candidate inference.
+
+| Cell | Cases / failures / errors / skips | JUnit seconds | Installed origins |
+|---|---|---|---|
+| Source Windows Python 3.11 | 627 / 0 / 0 / 0 | 199.797 | Source run |
+| Installed win-py311 | 627 / 0 / 0 / 0 | 198.132 | 984 |
+| Installed win-py312 | 627 / 0 / 0 / 0 | 256.645 | 984 |
+
+All 45 new responsiveness readings meet 0.5 seconds; maximum 0.143168200s.
+Exact cases, support inputs, installed origins, CLI startup and teardown bind
+the source and both native cells. Complete source/wheel/sdist parity covers
+1,112 Python files, all 19 retained data resources,
+1,131 core members and 2,189 support inputs.
+Wheel SHA-256: `9ad7cb6b02ddd7d8b41c861719fefe27fa10bf2167e91a6f3bd24421920c9c95`;
+sdist SHA-256: `7c87524787c75f3778944bb2e4d0937b9d58032e4c2d1f094916ac8f199472aa`.
+Scoped Windows sleep requests are released; persistent power settings and test
+deadlines are unchanged. Actual dependency policy v2 passes without new exceptions.
+Changed Python is Ruff-clean; canonical Ruff records 94 findings.
+
+Observed path/result: **primary / success**, scoped live local file/SQLite/HTTP
+effects with structural artifact/authority proof. Evidence:
+`.tmp/d-api-run-observation/`. Per the user's latest instruction, .65 is a local
+commit and annotated tag only; no GitHub push or remote publication is claimed.
+The latest .63 Linux clock gate remains **blocked / environment blocker**, with
+no fresh clock observation or Linux application acceptance. Sandbox log ownership,
+ConfigLoader sync bridges, broader captured inputs, adapter classification/full
+async inventory, E1/E2, whole-suite/89%, hosted Quality and CAP remain open. The
+.43 Git timeout cause and four .59 packet1 provider cases remain unverified.
+Accepted BT evidence is retained. Required work and explicit user acceptance
+still govern completion and lane retirement.
