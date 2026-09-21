@@ -5,6 +5,16 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.61] - 2026-09-21
+
+### Fixed
+- Include the existing permission example/schema and ODR artifact schema in core wheels and source archives.
+- Verify all package data in clean builds and read the three repaired resources from installed packages.
+- `compatibility_status`: `compatible`
+- `affected_audience`: `all`
+- `migration_requirement`: None. Package availability does not change runtime policy authority.
+- Contract: `docs/architecture/CONTRACT_DELTA_PACKAGE_DATA_C_2026-09-21.md`.
+
 ## [0.6.60] - 2026-09-21
 
 ### Fixed

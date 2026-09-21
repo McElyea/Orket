@@ -7,11 +7,14 @@ import tarfile
 import zipfile
 from pathlib import Path
 
+import pytest
 from setuptools import build_meta
+
+pytestmark = pytest.mark.integration
 
 
 def test_clean_core_artifacts_own_the_default_prompt_registry(tmp_path: Path, monkeypatch) -> None:
-    """Layer: integration. Real core builds retain the single registry, without checkout build caches."""
+    """Real clean builds retain package data exactly, including the single prompt registry."""
     root = Path(__file__).resolve().parents[2]
     source = tmp_path / "source"
     source.mkdir()
@@ -25,22 +28,21 @@ def test_clean_core_artifacts_own_the_default_prompt_registry(tmp_path: Path, mo
     wheel_name = build_meta.build_wheel(str(dist))
     sdist_name = build_meta.build_sdist(str(dist))
 
-    registry = "orket/runtime/config/local_prompt_profiles.json"
-    expected = (root / registry).read_bytes()
-    template = "orket/runtime/config/qwen38_text_chatml.jinja"
-    expected_template = (root / template).read_bytes()
+    expected = {path.relative_to(source).as_posix(): path.read_bytes()
+                for path in (source / "orket").rglob("*")
+                if path.is_file() and path.suffix not in {".py", ".pyc"}}
+    assert "orket/runtime/config/local_prompt_profiles.json" in expected
+    assert "orket/runtime/config/qwen38_text_chatml.jinja" in expected
     with zipfile.ZipFile(dist / wheel_name) as wheel:
-        assert wheel.read(registry) == expected
-        assert wheel.read(template) == expected_template
+        actual = {name: wheel.read(name) for name in wheel.namelist()
+                  if name.startswith("orket/") and not name.endswith(("/", ".py", ".pyc"))}
+        assert actual == expected
         assert not any("orket_extension_sdk/" in name for name in wheel.namelist())
     with tarfile.open(dist / sdist_name, mode="r:gz") as sdist:
-        matches = [name for name in sdist.getnames() if name.endswith("/" + registry)]
-        assert len(matches) == 1
-        member = sdist.extractfile(matches[0])
-        assert member is not None and member.read() == expected
-        template_names = [name for name in sdist.getnames() if name.endswith("/" + template)]
-        assert len(template_names) == 1
-        template_member = sdist.extractfile(template_names[0])
-        assert template_member is not None and template_member.read() == expected_template
+        actual = {member.name.partition("/")[2]: sdist.extractfile(member).read()
+                  for member in sdist.getmembers() if member.isfile()
+                  and member.name.partition("/")[2].startswith("orket/")
+                  and not member.name.endswith((".py", ".pyc"))}
+        assert actual == expected
         assert not any("orket_extension_sdk/" in name for name in sdist.getnames())
     assert not (root / "model/core/contracts/local_prompt_profiles.json").exists()

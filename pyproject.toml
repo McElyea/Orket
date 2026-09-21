@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "orket"
-version = "0.6.60"
+version = "0.6.61"
 description = "Local-first workflow runtime for card-based execution"
 authors = [
     { name = "Jonathan McElyea" }
@@ -103,6 +103,8 @@ where = ["."]
 include = ["orket", "orket.*"]
 
 [tool.setuptools.package-data]
+"orket" = ["permissions.json", "permissions.schema.json"]
+"orket.kernel.v1.odr" = ["artifact.schema.json"]
 "orket.quickstart" = ["*.yaml"]
 "orket.runtime.config" = ["local_prompt_profiles.json", "*.jinja", "assets/artifacts/*", "assets/policies/*", "assets/tools/*", "assets/contracts/*", "assets/extension_templates/*.zip"]
 

@@ -4,6 +4,11 @@ Last updated: 2026-09-21
 
 This file is the current canonical authority snapshot for high-impact runtime and governance paths.
 
+Core package-data declarations include the existing permission example/schema
+and ODR artifact schema. Shipping these resources does not admit them as runtime
+authorization or completion-verifier authority. Distribution parity and scope:
+`docs/architecture/CONTRACT_DELTA_PACKAGE_DATA_C_2026-09-21.md`.
+
 Controller runtime hooks capture policy and invocation roots before dispatch.
 Dispatch prepares its own manager through the retained application worker;
 disabled controllers do not construct one. Direct dispatchers require an explicit

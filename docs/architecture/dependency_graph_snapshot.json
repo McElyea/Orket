@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-21T10:40:53.919262+00:00",
+  "generated_at": "2026-09-21T14:23:57.279619+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -30548,45 +30548,6 @@
   },
   "diff_ledger": [
     {
-      "run_at_utc": "2026-09-20T16:50:42.461224Z",
-      "changed": true,
-      "before_digest": "sha256:a11f7dcb422ec0d96019b2210a77be442ac0d4e5bb836a6c1d3bd74e7614e027",
-      "after_digest": "sha256:167d31b269b033c085306360c0fe51f1538fdc9a3c94df7b1075582088b443a2",
-      "diff": {
-        "added_paths": 6,
-        "removed_paths": 0,
-        "changed_paths": 8041,
-        "initial_write": false,
-        "paths_total_previous": 46212,
-        "paths_total_current": 46263,
-        "paths_total_reference": 46263,
-        "churn_paths": 8047,
-        "churn_ratio": 0.17394,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.edges[747].line",
-          "$.observed.edges[747].path",
-          "$.observed.edges[747].source",
-          "$.observed.edges[747].target",
-          "$.observed.edges[748].line",
-          "$.observed.edges[748].path",
-          "$.observed.edges[748].source",
-          "$.observed.edges[748].target",
-          "$.observed.edges[749].line",
-          "$.observed.edges[749].path",
-          "$.observed.edges[749].source",
-          "$.observed.edges[749].target",
-          "$.observed.edges[750].line",
-          "$.observed.edges[750].path",
-          "$.observed.edges[750].source",
-          "$.observed.edges[750].target",
-          "$.observed.edges[751].line",
-          "$.observed.edges[751].path",
-          "$.observed.edges[751].source"
-        ]
-      }
-    },
-    {
       "run_at_utc": "2026-09-20T16:51:42.304513Z",
       "changed": true,
       "before_digest": "sha256:167d31b269b033c085306360c0fe51f1538fdc9a3c94df7b1075582088b443a2",
@@ -31550,6 +31511,26 @@
       "changed": true,
       "before_digest": "sha256:0aab6fe056ba5fc5bdcc00507ee8d0002b029d50adfac2efa385e97241127d4a",
       "after_digest": "sha256:254865511af2fdefba09cc15c3aef64c614e8c5546168aae3353dfcfc11635f1",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 47026,
+        "paths_total_current": 47026,
+        "paths_total_reference": 47026,
+        "churn_paths": 1,
+        "churn_ratio": 2.1e-05,
+        "sample_paths": [
+          "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-21T14:24:16.807034Z",
+      "changed": true,
+      "before_digest": "sha256:254865511af2fdefba09cc15c3aef64c614e8c5546168aae3353dfcfc11635f1",
+      "after_digest": "sha256:5960f3e46570da79349678374f9c6b48fcb4b80696731259d0a22fa5ff6da831",
       "diff": {
         "added_paths": 0,
         "removed_paths": 0,

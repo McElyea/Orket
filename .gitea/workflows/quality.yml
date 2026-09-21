@@ -149,6 +149,10 @@ jobs:
         run: |
           python -m pytest -q tests/contracts/test_sandbox_creation_inputs.py tests/integration/test_sandbox_creation_capture.py tests/adapters/test_sandbox_command_runner.py tests/adapters/test_sandbox_compose_generation.py
 
+      - name: Enforce core package resource completeness
+        run: |
+          python -m pytest -q tests/integration/test_packaged_local_prompt_registry.py tests/integration/test_core_json_package_resources.py
+
       - name: Enforce packaged extension template parity
         run: |
           python scripts/governance/sync_extension_templates.py --check
@@ -442,6 +446,10 @@ jobs:
       - name: Enforce sandbox creation input contract
         run: |
           python -m pytest -q tests/contracts/test_sandbox_creation_inputs.py tests/integration/test_sandbox_creation_capture.py tests/adapters/test_sandbox_command_runner.py tests/adapters/test_sandbox_compose_generation.py
+
+      - name: Enforce core package resource completeness
+        run: |
+          python -m pytest -q tests/integration/test_packaged_local_prompt_registry.py tests/integration/test_core_json_package_resources.py
 
       - name: Enforce packaged extension template parity
         run: |

@@ -10,6 +10,11 @@ Rules in this document are normative for target-state architecture and for new/m
 
 The architecture is intentionally minimal. Each rule exists to prevent a real systemic failure mode.
 
+Core package data retains authored resource bytes in wheels and source archives.
+The permission example/schema and ODR artifact schema are explicitly shipped;
+availability does not activate runtime policy or completion-verifier authority.
+Contract: `docs/architecture/CONTRACT_DELTA_PACKAGE_DATA_C_2026-09-21.md`.
+
 Run-start bootstrap retains its worker through interruption; side-effecting storage
 owns bounded native directory publication. Retry timing does not replace captured
 run time. The concrete refusal and partial-effect limits live in

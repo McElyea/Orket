@@ -12520,7 +12520,7 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.60 organization-loop ownership and authored selection. Preserve the governed legacy-export cutover;
+0.6.60 organization-loop ownership and 0.6.61 package-resource completeness. Preserve the governed legacy-export cutover;
 continue remaining clock/input owners, adapter enforcement and async reachability before E1/E2
 and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
@@ -19551,3 +19551,64 @@ ConfigLoader bridge work, full input/adapter inventory, E1/E2, CAP, .43 Git time
 cause and .44 non-Python package ceiling stay open. Accepted BT behavior/evidence
 are retained; the lane remains active pending required implementation, acceptance
 and explicit user review.
+
+#### .61 Complete tracked package resources (2026-09-21)
+
+Explicit setuptools package-data declarations now include the unchanged
+`orket/permissions.json`, `orket/permissions.schema.json` and
+`orket/kernel/v1/odr/artifact.schema.json`. The .44 three-resource omission is
+closed for the complete current Git-tracked package inventory: 1,106 Python files
+and all 19 non-Python resources, totaling 1,125 exact source/wheel/sdist members.
+Every existing 1,122 wheel member and all authored product Python/data bytes match
+published v0.6.60. No runtime policy reader, fallback or authorization is added;
+shipping examples/schemas does not make them runtime policy or completion-verifier
+authority. Contract:
+`docs/architecture/CONTRACT_DELTA_PACKAGE_DATA_C_2026-09-21.md`.
+
+Three actual resource reads against the isolated installed published v0.6.60
+wheel fail with FileNotFoundError, after its installed member bytes are compared
+with its retained wheel. The same test bytes read the repaired resources from
+foreign working directories, ignore a caller-side permission-file impostor,
+validate both JSON Schemas and validate the permission example against its
+packaged schema. A separate identical clean-build regression fails with v0.6.60
+metadata and passes with the candidate declarations, comparing actual wheel and
+source-archive data bytes against fresh copied authored resources. That build
+test requires source files and is explicitly source-only; it is not counted in
+the installed runtime selection. Both Quality jobs now run these regressions.
+
+The first complete-parity helper assertion mistakenly compared core members
+with a combined manifest containing 35 separately distributed SDK source files.
+Its original helper and failure record are retained. The corrected audit selects
+the exact core prefix, still requires complete byte equality, and separately
+asserts unchanged SDK artifacts. No product, test or artifact was changed.
+
+The bounded six-module selection also retains runtime package-owned defaults,
+extension scaffolding, quickstart ledger, authority dates and install-surface
+contracts. The full .60 runtime cohort is not rerun: no product Python or data
+content changed, as independently compared with its artifact/source manifest.
+
+| Cell | Cases / failures / errors / skips | JUnit seconds | Installed origins |
+|---|---|---|---|
+| Source Windows Python 3.11 | 25 / 0 / 0 / 0 | 5.619 | Source run |
+| Installed win-py311 | 25 / 0 / 0 / 0 | 5.660 | 445 |
+| Installed win-py312 | 25 / 0 / 0 / 0 | 6.245 | 445 |
+
+Installed cells audit exact case identities, copied support inputs, package
+origins, actual CLI startup, controlled tool-gate behavior and teardown. Artifact
+parity binds 2,171 support files. Wheel SHA-256:
+`eb4ff7fdede9ea7d7fce53f898f91b84964791b55e3ac20a2c72a5c37c1e732d`; sdist SHA-256:
+`b8aa43d10127337e79e703099e05695bc271686b08961207415a32ee8ad2373f`.
+Scoped Windows system-sleep requests are released after every timed cell; no
+persistent power-plan change or deadline relaxation occurs. Prior suspension
+failures remain historical, not repaired by these runs.
+
+Observed path/result: **primary / success** for real clean builds and selected
+local installed-resource/CLI effects, with structural complete-inventory binding.
+Evidence: `.tmp/c-package-data/`. The .60 Linux passive clock gate remains
+**blocked / environment blocker**; no fresh clock or Linux application run is
+claimed. Dependency policy v2 remains unchanged and passes its actual verdict;
+canonical Ruff retains 94 findings. Whole-suite/89%, hosted Quality, inference,
+remaining D input/adapter/async work, E1/E2, CAP, .43 Git timeout cause and .59's
+four live-provider cases remain open. No general resource-consumer reachability
+or arbitrary external-asset claim is made. Accepted BT evidence is preserved;
+the lane remains active pending required work and explicit user acceptance.
