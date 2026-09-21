@@ -63,13 +63,15 @@ class FileSystemTools(BaseTools):
     async def write_file(self, args: dict[str, Any], context: dict[str, Any] | None = None) -> dict[str, Any]:
         try:
             path_str = self._require_path_arg(args)
-            content = self._require_write_content(args)
-            resolved = self.async_fs._resolve_safe_path(path_str, write=True)
+            captured = self.async_fs.capture()
+            content = captured._serialized_content(self._require_write_content(args))
+            mutation_authority = self.mutation_authority
+            resolved = await captured.resolve_path_async(path_str, write=True)
             lock = self._get_path_lock(resolved)
             async with lock:
                 async def write():
-                    return await self.async_fs.write_file(str(resolved), content)
-                path = await self.mutation_authority.run(write) if self.mutation_authority else await write()
+                    return await captured.write_file(str(resolved), content)
+                path = await mutation_authority.run(write) if mutation_authority else await write()
             return {"ok": True, "path": path}
         except (PermissionError, OSError, ValueError, TypeError) as exc:
             return {"ok": False, "error": str(exc)}
@@ -77,12 +79,14 @@ class FileSystemTools(BaseTools):
     async def create_directory(self, args: dict[str, Any], context: dict[str, Any] | None = None) -> dict[str, Any]:
         try:
             path_str = self._require_path_arg(args)
-            resolved = self.async_fs._resolve_safe_path(path_str, write=True)
+            captured = self.async_fs.capture()
+            mutation_authority = self.mutation_authority
+            resolved = await captured.resolve_path_async(path_str, write=True)
             lock = self._get_path_lock(resolved)
             async with lock:
                 async def create():
-                    return await self.async_fs.create_directory(str(resolved))
-                path = await self.mutation_authority.run(create) if self.mutation_authority else await create()
+                    return await captured.create_directory(str(resolved))
+                path = await mutation_authority.run(create) if mutation_authority else await create()
             return {"ok": True, "path": path}
         except (PermissionError, OSError, ValueError, TypeError) as exc:
             return {"ok": False, "error": str(exc)}

@@ -190,6 +190,13 @@ groups, and failed cleanup cannot set the engine/pipeline closed flag. Port
 migration, failure handling and proof limits:
 `docs/architecture/CONTRACT_DELTA_RUNTIME_RESOURCE_CLEANUP_D_2026-09-21.md`.
 
+Async file operations own native path/file work through interruption and capture
+standard path/reference values and serialized write content. Filesystem tools
+retain the admitted mutation authority and existing path locks; authorized
+connector dispatch keeps its bound-filesystem authority. Migration, native
+current-directory observation and containment limits:
+`docs/architecture/CONTRACT_DELTA_ASYNC_FILE_OPERATIONS_D_2026-09-21.md`.
+
 Async sandbox-log embeddings pass a bound `SandboxOrchestrator.get_logs` callable
 to `read_runtime_sandbox_logs` and retain ownership of any constructed pipeline.
 Direct synchronous log reads refuse an event-loop thread; the API uses

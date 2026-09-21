@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-21T19:50:52.189843+00:00",
+  "generated_at": "2026-09-21T21:18:45.929489+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -249,7 +249,7 @@
       },
       "orket.adapters.storage.async_file_tools": {
         "path": "orket/adapters/storage/async_file_tools.py",
-        "sha256": "b5b7701bf43221453fd940e854b87d05d3f515bd9be165c8ca4fa12d5b14b5a6"
+        "sha256": "daa6d861ed10a28ed7a6c66c53a424588087bc7da0b4e2efae45756847795858"
       },
       "orket.adapters.storage.async_flow_repository": {
         "path": "orket/adapters/storage/async_flow_repository.py",
@@ -617,7 +617,7 @@
       },
       "orket.adapters.tools.builtin_connectors": {
         "path": "orket/adapters/tools/builtin_connectors.py",
-        "sha256": "b8517fefae1f570990c322eb7eb757e8be0a8c496f8d51d5971b9008e239a10d"
+        "sha256": "50eed93f41e124a80c48bfb2bb21f821100da2e27d2123afede6494fec7f152f"
       },
       "orket.adapters.tools.families.__init__": {
         "path": "orket/adapters/tools/families/__init__.py",
@@ -637,7 +637,7 @@
       },
       "orket.adapters.tools.families.filesystem": {
         "path": "orket/adapters/tools/families/filesystem.py",
-        "sha256": "367d67854534cff4f4c99ce7ca39a7d8bf9e8858727b3f0297da051bd370cf0e"
+        "sha256": "3e975ac1ecb1de5a49258e38d9e69f46a463ffcd7efc2744b617de896351cda8"
       },
       "orket.adapters.tools.families.governance": {
         "path": "orket/adapters/tools/families/governance.py",
@@ -4985,9 +4985,16 @@
       },
       {
         "source": "orket.adapters.storage.async_file_tools",
+        "target": "orket.adapters.execution.owned_io",
+        "path": "orket/adapters/storage/async_file_tools.py",
+        "line": 19,
+        "kind": "from"
+      },
+      {
+        "source": "orket.adapters.storage.async_file_tools",
         "target": "orket.adapters.storage.async_executor_service",
         "path": "orket/adapters/storage/async_file_tools.py",
-        "line": 22,
+        "line": 21,
         "kind": "from"
       },
       {
@@ -6688,35 +6695,35 @@
         "source": "orket.adapters.tools.builtin_connectors",
         "target": "orket.adapters.execution.owned_io",
         "path": "orket/adapters/tools/builtin_connectors.py",
-        "line": 11,
+        "line": 10,
         "kind": "from"
       },
       {
         "source": "orket.adapters.tools.builtin_connectors",
         "target": "orket.adapters.storage.bound_filesystem",
         "path": "orket/adapters/tools/builtin_connectors.py",
-        "line": 12,
+        "line": 11,
         "kind": "from"
       },
       {
         "source": "orket.adapters.tools.builtin_connectors",
         "target": "orket.adapters.tools.families.filesystem",
         "path": "orket/adapters/tools/builtin_connectors.py",
-        "line": 13,
+        "line": 12,
         "kind": "from"
       },
       {
         "source": "orket.adapters.tools.builtin_connectors",
         "target": "orket.core.contracts.owned_command",
         "path": "orket/adapters/tools/builtin_connectors.py",
-        "line": 14,
+        "line": 13,
         "kind": "from"
       },
       {
         "source": "orket.adapters.tools.builtin_connectors",
         "target": "orket.core.domain.outward_authorization",
         "path": "orket/adapters/tools/builtin_connectors.py",
-        "line": 15,
+        "line": 14,
         "kind": "from"
       },
       {
@@ -30732,7 +30739,7 @@
       {
         "source": "adapters",
         "target": "adapters",
-        "count": 234
+        "count": 235
       },
       {
         "source": "adapters",
@@ -30799,84 +30806,6 @@
     }
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-20T22:47:29.468472Z",
-      "changed": true,
-      "before_digest": "sha256:efaf52878879b75f1621c391d5ba08b7b09765dba4b0b3363a3823f3d8dee4d7",
-      "after_digest": "sha256:d449cfe4e97758a4f03feb68cf0511c71bea9e2264ba69ba7370c34c33d02fc6",
-      "diff": {
-        "added_paths": 21,
-        "removed_paths": 0,
-        "changed_paths": 8840,
-        "initial_write": false,
-        "paths_total_previous": 46412,
-        "paths_total_current": 46617,
-        "paths_total_reference": 46617,
-        "churn_paths": 8861,
-        "churn_ratio": 0.190081,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.edges[1150].line",
-          "$.observed.edges[1150].path",
-          "$.observed.edges[1150].source",
-          "$.observed.edges[1150].target",
-          "$.observed.edges[1151].line",
-          "$.observed.edges[1151].path",
-          "$.observed.edges[1151].source",
-          "$.observed.edges[1151].target",
-          "$.observed.edges[1152].line",
-          "$.observed.edges[1152].path",
-          "$.observed.edges[1152].source",
-          "$.observed.edges[1152].target",
-          "$.observed.edges[1153].line",
-          "$.observed.edges[1153].path",
-          "$.observed.edges[1153].source",
-          "$.observed.edges[1153].target",
-          "$.observed.edges[1154].line",
-          "$.observed.edges[1154].path",
-          "$.observed.edges[1154].source"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-20T22:52:51.505645Z",
-      "changed": true,
-      "before_digest": "sha256:d449cfe4e97758a4f03feb68cf0511c71bea9e2264ba69ba7370c34c33d02fc6",
-      "after_digest": "sha256:7a46ab9b132492d15c6a25c07fb848ce60161a9d5872afc19a7c6d828a5ef720",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 9,
-        "changed_paths": 6855,
-        "initial_write": false,
-        "paths_total_previous": 46617,
-        "paths_total_current": 46529,
-        "paths_total_reference": 46617,
-        "churn_paths": 6864,
-        "churn_ratio": 0.147242,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.edges[1153].line",
-          "$.observed.edges[1153].target",
-          "$.observed.edges[1154].line",
-          "$.observed.edges[1154].target",
-          "$.observed.edges[1155].line",
-          "$.observed.edges[1155].path",
-          "$.observed.edges[1155].source",
-          "$.observed.edges[1155].target",
-          "$.observed.edges[1156].line",
-          "$.observed.edges[1156].target",
-          "$.observed.edges[1157].line",
-          "$.observed.edges[1157].path",
-          "$.observed.edges[1157].source",
-          "$.observed.edges[1157].target",
-          "$.observed.edges[1158].line",
-          "$.observed.edges[1158].target",
-          "$.observed.edges[1159].line",
-          "$.observed.edges[1159].target",
-          "$.observed.edges[1160].line"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-20T23:31:05.613150Z",
       "changed": true,
@@ -31823,6 +31752,65 @@
           "$.observed.edges[1581].source",
           "$.observed.edges[1581].target",
           "$.observed.edges[1582].line"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-21T20:40:50.598781Z",
+      "changed": true,
+      "before_digest": "sha256:ea076e943a3c4d32599b96f2d108d11b11d21164ce38760058bd1d7293377f9a",
+      "after_digest": "sha256:d53b402ecdb14a9aaccf5b21e4192ca265f52b881d3dc0ae866085e7f0e3e05d",
+      "diff": {
+        "added_paths": 1,
+        "removed_paths": 0,
+        "changed_paths": 8519,
+        "initial_write": false,
+        "paths_total_previous": 47416,
+        "paths_total_current": 47427,
+        "paths_total_reference": 47427,
+        "churn_paths": 8520,
+        "churn_ratio": 0.179645,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.edges[58].line",
+          "$.observed.edges[58].target",
+          "$.observed.edges[59].line",
+          "$.observed.edges[59].path",
+          "$.observed.edges[59].source",
+          "$.observed.edges[59].target",
+          "$.observed.edges[60].line",
+          "$.observed.edges[60].target",
+          "$.observed.edges[61].line",
+          "$.observed.edges[61].path",
+          "$.observed.edges[61].source",
+          "$.observed.edges[61].target",
+          "$.observed.edges[62].line",
+          "$.observed.edges[62].target",
+          "$.observed.edges[63].line",
+          "$.observed.edges[63].target",
+          "$.observed.edges[64].line",
+          "$.observed.edges[64].target",
+          "$.observed.edges[65].line"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-21T21:19:07.431369Z",
+      "changed": true,
+      "before_digest": "sha256:d53b402ecdb14a9aaccf5b21e4192ca265f52b881d3dc0ae866085e7f0e3e05d",
+      "after_digest": "sha256:db1e40505626009870655412cb6996aaaf2fc9c680138deb78369ac704c7ce04",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 47427,
+        "paths_total_current": 47427,
+        "paths_total_reference": 47427,
+        "churn_paths": 1,
+        "churn_ratio": 2.1e-05,
+        "sample_paths": [
+          "$.generated_at"
         ]
       }
     }

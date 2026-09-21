@@ -5,6 +5,20 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.70] - 2026-09-21
+
+### Fixed
+- Own native path and file operations through cancellation, timeout and worker failure.
+- Capture standard filesystem permissions, write content and mutation authority before await boundaries.
+- Preserve legacy file results, per-path locking and authorized bound-filesystem dispatch; own unbound delete work.
+- Require drained Gitea setup queues and observed merge readiness before the native review success fixture.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- File operations retain admitted work through interruption; drive-qualified relative roots must become absolute or ordinary relative roots.
+- Write serialization errors now occur before filesystem effects. Custom snapshot hooks must respect the documented capability limits.
+- Contract and limits: `docs/architecture/CONTRACT_DELTA_ASYNC_FILE_OPERATIONS_D_2026-09-21.md`.
+
 ## [0.6.69] - 2026-09-21
 
 ### Fixed

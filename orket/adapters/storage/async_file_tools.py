@@ -1,27 +1,27 @@
-"""
-Async File Tools - The Reconstruction
+"""Own asynchronous file operations and capture their standard path permissions.
 
-Provides non-blocking file I/O operations using aiofiles.
-Enforces security boundaries using Path.is_relative_to().
-
-This replaces the blocking Path.write_text and Path.read_text
-calls in the agent tools.
+Native path traversal and file work stay owned through caller interruption.
+Resolved-path containment is not handle-bound confinement against replacement.
 """
 
 from __future__ import annotations
 
-import asyncio
 import json
 import os
 from collections.abc import Coroutine
+from copy import copy
+from functools import partial
 from pathlib import Path
 from typing import Any, TypeVar
 
 import aiofiles
 
+from orket.adapters.execution.owned_io import run_owned_io, run_owned_thread
+
 from .async_executor_service import run_coroutine_blocking
 
 ResultT = TypeVar("ResultT")
+side_effecting = True
 
 
 class AsyncFileTools:
@@ -35,6 +35,25 @@ class AsyncFileTools:
 
     def _run_async(self, coro: Coroutine[Any, Any, ResultT]) -> ResultT:
         return run_coroutine_blocking(coro)
+
+    def capture(self) -> AsyncFileTools:
+        """Copy path permissions and bind relative roots before the first await."""
+        roots = [Path(self.workspace_root), *(Path(path) for path in self.references)]
+        if any(path.drive and not path.is_absolute() for path in roots):
+            raise ValueError("E_FILE_TOOL_DRIVE_RELATIVE_ROOT_UNSUPPORTED")
+        invocation_root = Path.cwd() if any(not path.is_absolute() for path in roots) else None
+        bound = [invocation_root / path if not path.is_absolute() else path for path in roots]
+        captured = copy(self)
+        captured.workspace_root, captured.references = bound[0], bound[1:]
+        return captured
+
+    @staticmethod
+    def _serialized_content(content: str | dict[str, Any]) -> str:
+        return content if isinstance(content, str) else json.dumps(content, indent=2)
+
+    async def resolve_path_async(self, path_str: str, *, write: bool = False) -> Path:
+        captured = self.capture()
+        return await run_owned_thread(partial(captured._resolve_safe_path, path_str, write=write), label="file-path")
 
     def _resolve_safe_path(self, path_str: str, write: bool = False) -> Path:
         """
@@ -74,49 +93,41 @@ class AsyncFileTools:
         return resolved
 
     async def read_file(self, path_str: str) -> str:
-        """
-        Read file content asynchronously.
-        """
-        path = self._resolve_safe_path(path_str)
-        if not path.exists():
-            raise FileNotFoundError(f"File not found: {path_str}")
-
-        async with aiofiles.open(path, encoding="utf-8") as f:
-            return await f.read()
+        return await self._operate("read", path_str)
 
     async def write_file(self, path_str: str, content: str | dict[str, Any]) -> str:
-        """
-        Write content to file asynchronously.
-        """
-        path = self._resolve_safe_path(path_str, write=True)
-        await asyncio.to_thread(path.parent.mkdir, parents=True, exist_ok=True)
-
-        if not isinstance(content, str):
-            content = json.dumps(content, indent=2)
-
-        async with aiofiles.open(path, mode="w", encoding="utf-8") as f:
-            await f.write(content)
-
-        return str(path)
+        return await self._operate("write", path_str, content=self._serialized_content(content))
 
     async def create_directory(self, path_str: str) -> str:
-        """
-        Create a workspace-scoped directory asynchronously.
-        """
-        path = self._resolve_safe_path(path_str, write=True)
-        await asyncio.to_thread(path.mkdir, parents=True, exist_ok=True)
-        return str(path)
+        return await self._operate("create", path_str)
 
     async def list_directory(self, path_str: str = ".") -> list[str]:
-        """
-        List directory contents asynchronously (using thread pool for os.listdir).
-        """
-        path = self._resolve_safe_path(path_str)
-        if not path.exists():
-            raise FileNotFoundError(f"Directory not found: {path_str}")
+        return await self._operate("list", path_str)
 
-        items = await asyncio.to_thread(os.listdir, path)
-        return sorted(items)
+    async def _operate(self, operation: str, path_str: str, *, content: str | None = None):
+        captured = self.capture()
+
+        async def execute():
+            path = await captured.resolve_path_async(path_str, write=operation in {"write", "create"})
+            if operation in {"read", "list"} and not await run_owned_thread(path.exists, label="file-exists"):
+                kind = "File" if operation == "read" else "Directory"
+                raise FileNotFoundError(f"{kind} not found: {path_str}")
+            if operation == "read":
+                async with aiofiles.open(path, encoding="utf-8") as stream:
+                    return await stream.read()
+            if operation == "write":
+                await run_owned_thread(partial(path.parent.mkdir, parents=True, exist_ok=True), label="file-parent")
+                async with aiofiles.open(path, mode="w", encoding="utf-8") as stream:
+                    await stream.write(content)
+                return str(path)
+            if operation == "create":
+                await run_owned_thread(partial(path.mkdir, parents=True, exist_ok=True), label="file-directory")
+                return str(path)
+            if operation == "list":
+                return sorted(await run_owned_thread(partial(os.listdir, path), label="file-list"))
+            raise ValueError("E_FILE_TOOL_OPERATION_UNSUPPORTED")
+
+        return await run_owned_io(execute, label=f"file-{operation}", preserve_failure=True)
 
     def read_file_sync(self, path_str: str) -> str:
         return self._run_async(self.read_file(path_str))

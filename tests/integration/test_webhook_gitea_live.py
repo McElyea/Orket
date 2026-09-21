@@ -11,7 +11,7 @@ import httpx
 import pytest
 
 from orket.adapters.storage.async_file_tools import AsyncFileTools
-from tests.helpers.gitea_server import local_gitea
+from tests.helpers.gitea_server import local_gitea, ready_for_review
 from tests.helpers.webhook import application
 from tests.helpers.webhook_listener import webhook_listener
 
@@ -172,6 +172,7 @@ async def test_native_review_reaches_policy_once(tmp_path, event, expected):
             repo.raise_for_status()
             path = f"/api/v1/repos/{server.username}/review-proof"
             number = await _reviewable_pull(client, server, path, repo.json()["default_branch"])
+            await files.write_file("review-ready.txt", await ready_for_review(server, client, path, number))
             async with webhook_listener(app) as (receiver, address):
                 hook = await client.post(
                     path + "/hooks",

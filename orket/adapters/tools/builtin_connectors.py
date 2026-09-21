@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 import shlex
 from pathlib import Path
 from typing import Any
@@ -8,7 +7,7 @@ from urllib.parse import urlparse
 
 import httpx
 
-from orket.adapters.execution.owned_io import run_owned_io
+from orket.adapters.execution.owned_io import run_owned_io, run_owned_thread
 from orket.adapters.storage.bound_filesystem import BOUND_FILESYSTEM_TOOLS, BoundFilesystemExecutor
 from orket.adapters.tools.families.filesystem import FileSystemTools
 from orket.core.contracts.owned_command import CommandExecutionUncertain, CommandRunner
@@ -78,13 +77,18 @@ class BuiltInConnectorExecutor:
     async def _delete_file(self, args: dict[str, Any]) -> dict[str, Any]:
         try:
             path_str = FileSystemTools._require_path_arg(args)
-            resolved = self.file_tools.async_fs._resolve_safe_path(path_str, write=True)
-            if not await asyncio.to_thread(resolved.exists):
-                return {"ok": False, "error": "File not found"}
-            if await asyncio.to_thread(resolved.is_dir):
-                return {"ok": False, "error": "delete_file only deletes files"}
-            await asyncio.to_thread(resolved.unlink)
-            return {"ok": True, "path": str(resolved)}
+            captured = self.file_tools.async_fs.capture()
+
+            def delete():
+                resolved = captured._resolve_safe_path(path_str, write=True)
+                if not resolved.exists():
+                    return {"ok": False, "error": "File not found"}
+                if resolved.is_dir():
+                    return {"ok": False, "error": "delete_file only deletes files"}
+                resolved.unlink()
+                return {"ok": True, "path": str(resolved)}
+
+            return await run_owned_thread(delete, label="connector-delete")
         except (PermissionError, OSError, ValueError, TypeError) as exc:
             return {"ok": False, "error": str(exc)}
 

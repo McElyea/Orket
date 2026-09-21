@@ -68,6 +68,17 @@ async def get_visible(server: LocalGitea, path: str, *, params: dict[str, str] |
             await asyncio.sleep(0.1)
 
 
+async def ready_for_review(server: LocalGitea, client: httpx.AsyncClient, path: str, number: int) -> dict:
+    """Drain fixture setup work before asserting a successful review/merge path."""
+    await docker("exec", "--user", "git", server.container_id, "gitea", "manager", "flush-queues", "--timeout", "20s")
+    response = await client.get(path + f"/pulls/{number}")
+    response.raise_for_status()
+    pull = response.json()
+    assert pull["state"] == "open" and pull["merged"] is False and pull["mergeable"] is True
+    return {"queue_flush": "completed", "state": pull["state"], "merged": pull["merged"],
+            "mergeable": pull["mergeable"], "head_sha": pull["head"]["sha"], "base_sha": pull["base"]["sha"]}
+
+
 @asynccontextmanager
 async def local_gitea(*, webhook_host: str | None = None):
     name = "orket-acceptance-gitea-" + uuid.uuid4().hex

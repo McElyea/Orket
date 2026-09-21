@@ -12519,8 +12519,8 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.69 runtime resource cleanup, retaining the 0.6.65 run-query, 0.6.66
-sandbox-query, 0.6.67 legacy action and 0.6.68 runtime construction checkpoints. Preserve the governed legacy-export cutover;
+0.6.70 owned async file operations, retaining the 0.6.65 run-query, 0.6.66
+sandbox-query, 0.6.67 legacy action, 0.6.68 construction and 0.6.69 cleanup checkpoints. Preserve the governed legacy-export cutover;
 continue remaining clock/input owners, adapter enforcement and async reachability before E1/E2
 and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
@@ -20365,3 +20365,117 @@ file/process/input boundaries and adapter classification remain D work. E1/E2,
 whole-suite 89%, hosted Quality, provider gaps, .43 Git timeout cause, CAP and
 explicit whole-lane acceptance remain open. Accepted BT evidence is preserved
 and the lane is not retired.
+
+
+#### .70 Owned async file operations and mutation inputs (2026-09-21)
+
+AsyncFileTools read/write/create/list now own their complete admitted operation.
+Native traversal, existence and directory work run in owned workers; aiofiles
+open/read/write/close remain inside the owned async sequence. Repeated cancellation
+joins admitted work and native failure remains visible. Standard root/reference
+values and serialized write content bind before the first await. Windows drive
+relative roots are explicitly refused; ordinary relative roots bind to invocation
+cwd. Pre-loop bridges, UTF-8/JSON formatting, returned values and read-only
+references retain their tested behavior. The mixed file adapter now explicitly
+declares `side_effecting = True`; this does not close classification enforcement.
+Contract: `docs/architecture/CONTRACT_DELTA_ASYNC_FILE_OPERATIONS_D_2026-09-21.md`.
+
+FileSystemTools write/create retain their existing path-lock algorithm and capture
+the mutation-authority capability before path/lock waits. Legacy unbound delete
+owns captured permissions, path validation, existence/type checks and unlink in
+one worker. Authorized bound-filesystem dispatch and other connector methods keep
+their exact AST. Sync file bridges/resolver and family read/list/path-lock methods
+also retain exact AST. Runtime files remain 142, 105 and 189 lines.
+
+All 20 opening cases fail: eight held path observations block the loop and twelve
+native open cases return while admitted work remains running. The initial candidate
+passes 32 cases and the expanded connector/bound-filesystem run passes 37. Four
+input cases pass while cwd, root/reference values, arguments and nested content
+change after native admission. A development counterexample then records two
+failures: changing the tool's authority field to None during path observation
+bypasses the real card completion writer guard. Capturing that capability before
+the await yields 13 authority/input/existing-guard passes. Both failed candidate
+observations remain retained and were never committed as acceptance.
+
+Twelve native directory lifetime cases pass. The focused cohort passes 70 cases;
+two subsequently added serialization cases also pass, proving rejection before
+directory creation or file truncation. All final 37 selected regressions fail
+against the byte-verified local .69 wheel using identical current test bytes.
+That control includes path, open, mkdir/list, content-capture and serialization
+cases. Its nine path responses range from 0.802070000s to
+0.812747500s against the unchanged 0.5-second bound. The old Windows wheel
+is a retained local checkpoint, not a newly published or remote artifact.
+
+Native proof distinguishes cancellation, 50ms timeout after admission and actual
+failure concurrent with cancellation. Opened file handles close before return;
+directory observations separately confirm admitted mkdir effects. The directory
+failure port performs an actual missing-directory read, so it is not proof of
+every mkdir-specific OS failure. Native release remains 0.8 seconds and joins
+remain five seconds. The actual completion guard prevents both write and mkdir
+while another owner holds it. Standard path snapshots retain additional injected
+capability identities; they do not deep-freeze arbitrary subclass state.
+
+| Cell | Cases / failures / errors / skips | JUnit seconds | Installed origins |
+|---|---|---|---|
+| Source Windows Python 3.11 | 1408 / 0 / 0 / 0 | 522.266 | Source run |
+| Installed win-py311 | 1408 / 0 / 0 / 0 | 529.877 | 1010 |
+| Installed win-py312 | 1408 / 0 / 0 / 0 | 610.871 | 1010 |
+
+The initial source run recorded 1,398 passes and ten opt-in Gitea skips. It remains
+retained as incomplete acceptance. Enabling actual Gitea then records 1,407 passes
+and one approved-review failure: Gitea 1.25.4 returns HTTP 405 with "Please try again
+later"; Orket reports an error rather than a successful merge. All ten containers
+were removed and nine tests reached their completion markers. The delivery payload
+advertised mergeability, but the server's intervening state transition was not
+captured. Upstream source maps that refusal to a non-mergeable internal state;
+the exact transition cause remains unestablished. Original logs, wire bytes,
+database and upstream source identities remain retained.
+The versioned [upstream refusal mapping](https://github.com/go-gitea/gitea/blob/v1.25.4/routers/api/v1/repo/pull.go#L896)
+and [merge-state check](https://github.com/go-gitea/gitea/blob/v1.25.4/services/pull/check.go#L151)
+support the bounded diagnosis.
+
+The success fixture now drains its owned server's setup queues with the native
+Gitea manager command, then requires a current open, unmerged, mergeable PR before
+review submission. Its focused four-case actual webhook run passes. No runtime
+merge retry, alternate expected outcome or deadline relaxation is introduced;
+the original 30-second delivery deadline and remote merge assertions remain.
+This is a fixture precondition correction, not proof of generic merge availability
+or the original transition cause. The final matrix enables actual disposable
+localhost Gitea for the same 203 modules and exact reused runtime artifacts.
+Each cell records three ready-review receipts and runs ten live Gitea cases;
+all thirty owned servers in the accepted matrix have
+same-path verified teardown, unchanged preexisting container inventories and
+the admitted image identity. The flow exercises SQLite/card publication and signed
+webhook review with a controlled work executor; it does not run model inference.
+
+The 203-module cohort retains all 1,097 .69 cases and includes all 45 new cases.
+All 99 selected response observations meet 0.5 seconds; maximum 0.090857200s.
+Retained native CLI, ownership, authorization and completion checks remain included.
+Complete source/wheel/sdist parity covers 1,113 Python files,
+all 19 data resources, 1,132 core members and
+2,218 support inputs. Wheel SHA-256:
+`d733adcedeec131860e719b7ef700b2abc8b22bc89478d2d73b909bfa0e2b674`; sdist SHA-256:
+`b6e8a447c67ab00892dfa31f936b8b989f880e38e7ddbe4235cd12ed87366470`. Native cells verify exact origins,
+unchanged support, no unowned child and no root database. Scoped Windows sleep
+requests restore without persistent power changes.
+
+Actual dependency policy v2, changed-file Ruff, docs hygiene, release metadata and
+whitespace pass. The graph has 1,113 files, 3,569 edges and six dynamic routes,
+with no violations, unknown modules, analysis errors or authority cycles.
+Canonical Ruff retains 94 findings, so this is not whole Quality acceptance.
+The latest passive Linux clock and Ollama availability observations remain .68's
+retained blockers. No fresh Linux Orket application cell or provider inference is claimed.
+Broader Docker workload/sandbox families were not rerun. The .59 alias-dependent
+packet1 gap remains open.
+
+Evidence: `.tmp/d-file-tool-ownership/`, `.tmp/d-file-tool-ownership-final/`
+(retained refusal), and `.tmp/d-file-tool-ownership-ready/` (accepted matrix).
+This is a local commit/annotated tag only;
+no GitHub push. Relative-root `Path.cwd()` capture remains a native observation
+before the first await; its platform syscall latency and arbitrary custom copy
+hooks are outside the measured bound. Resolved-path containment is not a snapshot,
+hard-link/TOCTOU guarantee or CAP-2 admission. The unchanged path-lock cache policy,
+raw-worker authorization-context collection, other async/core inputs and lifetimes,
+adapter enforcement, E1/E2, whole-suite 89%, hosted Quality, .43 Git timeout cause,
+provider gaps, CAP and explicit lane acceptance remain open. Accepted BT evidence
+and every retained failure remain preserved; the lane is not retired.
