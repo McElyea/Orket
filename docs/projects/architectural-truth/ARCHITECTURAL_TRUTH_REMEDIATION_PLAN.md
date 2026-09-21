@@ -12520,7 +12520,7 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.59 public and collection runtime factory ownership. Preserve the governed legacy-export cutover;
+0.6.60 organization-loop ownership and authored selection. Preserve the governed legacy-export cutover;
 continue remaining clock/input owners, adapter enforcement and async reachability before E1/E2
 and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
@@ -19423,3 +19423,131 @@ CAP, .43 Git timeout cause and .44 non-Python package ceiling remain open. The
 .58 source suspension evidence remains retained. Accepted BT behavior/evidence
 are preserved; the lane remains active pending implementation, acceptance and
 explicit user review.
+
+#### .60 Organization-loop ownership and authored selection (2026-09-21)
+
+`OrganizationLoop.create` captures construction inputs before owned configuration
+loading. Direct sync construction refuses an event-loop thread before effects;
+the canonical `orket runtime --loop` now uses the async factory. Relative paths,
+workspace, environment and the loaded department tuple remain bound across caller
+rotation. Scans use the captured project root, correcting the prior doubled model
+directory. They retain admitted native work through cancellation/timeout and keep
+worker failures visible. Card construction and required cleanup reuse the shared
+runtime owner. Actual typed `run_card` results gate continuation; the running flag
+is cleared on exit. Idle wait and yielding behavior remain unchanged.
+
+The schema normalizes named priorities to numbers. Two real-asset controls exposed
+the old global named-label map selecting LOW before HIGH for both authored names
+and numeric values. Selection now sorts by existing ready-queue weight and then
+descending numeric priority, preserving stable ties. The pure critical-path
+engine remains authoritative within each epic; this caller no longer needs its
+legacy forwarding shim. This does not establish globally optimal scheduling,
+dispatch de-duplication or an atomic snapshot across authored files. Contracts:
+`docs/specs/RUNTIME_EXECUTION_RESULT_CONTRACT.md` and
+`docs/architecture/CONTRACT_DELTA_ORGANIZATION_LOOP_OWNERSHIP_D_2026-09-21.md`.
+
+Seven retained before cases fail: one misses an actual ready authored card, four
+return from interrupted scans while a native file remains held, and two block
+concurrent SQLite for 0.802204800/0.804988900 seconds against the predeclared
+0.5-second bound. The first follow-up has seven passes and one assertion failure:
+the new scan test incorrectly expected the authored label High instead of the
+schema's normalized 3.0. That assertion was corrected; its failure is retained.
+The later two priority counterexamples and all corrected focused cases are also
+retained. The final focused set has 23 passes, including configuration worker
+failure/cancellation, captured-root rotation, actual card acceptance/publication,
+unfinished-result refusal and required-close interruption/failure.
+
+An independent control executes the same two native CLI cases and observer bytes
+against the isolated installed published v0.6.59 wheel, after comparing every
+installed package member with that wheel. Both fail at the existing synchronous
+file bridge before organization dispatch; the outer CLI engine still closes.
+The candidate's native CLI cases use actual bootstrap, authored discovery,
+runtime, Python card acceptance and SQLite authority with a controlled workload
+and bounded single-iteration observer. Accepted work returns 0; unfinished work
+returns 1 and cannot publish success. Runtime owners close in both cases. This
+is local end-to-end CLI proof, not model inference or a stock indefinite-loop
+capacity measurement. The retained prior artifacts and readonly failure audit
+remain under `.tmp/d-organization-loop-ownership/prior-cli/` and
+`prior-cli-audit.json`.
+
+The 96-module selection retains all 865 .59 case identities and adds affected
+direct CLI/organization imports and the new cases. It is bounded discovery, not
+a complete transitive call graph. The initial full source run records 915 passes
+and one structural authority failure: its visible Sep 21 date differed from its
+embedded JSON's Sep 20 date. The JSON date is corrected; all seven isolated
+authority checks pass. Product and test bytes are unchanged. Initial artifacts
+and the source environment are reused; the authority document is not an sdist
+member. The complete source and fresh installed cells rerun all original cases.
+
+| Cell | Cases / failures / errors / skips | JUnit seconds |
+|---|---|---|
+| Source Windows Python 3.11 | 916 / 0 / 0 / 0 | 264.314 |
+| Installed win-py311 | 916 / 0 / 0 / 0 | 267.708 |
+| Installed win-py312 | 916 / 0 / 0 / 0 | 286.830 |
+
+Each installed cell verifies 991 actual package origins, exact
+source case identities and copied inputs, actual CLI startup, controlled tool-gate
+checks and process teardown. Parity covers 1,106
+Python files, 1,122 wheel package members
+and 2,169 support files. Wheel SHA-256:
+`53298c9a0a4088f8411caf27938d7e699c184092d3c36412eeea870bc0d0767a`; sdist SHA-256:
+`aba3f12119468752d43ab0d91d0195100f3e9b9f44ad59d7c2a12efb37df3f94`.
+Twenty-four new concurrent SQLite readings across the final cells meet the
+unchanged 0.5-second bound; maximum 0.011952900 seconds. Final Windows path/result:
+**primary / success**, with live local effects under controlled scheduling and
+structural artifact binding. Initial evidence is retained at
+`.tmp/d-organization-loop-ownership/`; final matrix:
+`.tmp/d-organization-loop-ownership-final/`.
+
+The first installed Python 3.12 run remains **primary / failure**, with 915 passes
+and one failure in `test_concurrent_continuation_consumes_pause_once`. Cancellation
+surfaced during actual SQLite publication and was reported as
+`RuntimeExecutionCancelled` after cleanup observation. Its JUnit case lasts
+10892.060 seconds; the suite lasts 11181.788
+seconds. Read-only Windows Power-Troubleshooter record 233121 records sleep from
+2026-09-21T10:55:42.3396538Z to 2026-09-21T13:57:16.8522282Z, an interval of
+10894.512575 seconds overlapping the run and closely
+matching the long case. This supports host suspension as the environment
+explanation; scheduler-level causality was not traced. That failed run does not
+prove the 1,800-second native or 2,100-second wrapper wall-time bound.
+
+The final audit retains the already-passed source and installed Python 3.11 cells
+and repeats only Python 3.12 in fresh `a60w-win-py312`, with identical product,
+tests, harness, artifacts and deadlines. Its CLI supervisor holds a temporary
+Windows system-sleep request for the active operation, then restores its original
+thread execution state. Separate live API controls confirm restoration on normal
+and intentional exceptional exits; the actual retry also confirms release.
+The retry request spans 322.489363 wall seconds and
+322.489381 perf_counter seconds. No display/away-mode request,
+persistent power-plan change, clock adjustment or product deadline change is made.
+The API does not prevent manual sleep; this is not a physical suspension test.
+API semantics: [Microsoft SetThreadExecutionState documentation](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-setthreadexecutionstate).
+The passing retry is not a runtime repair or proof of execution across suspension.
+Initial failed native bytes, Windows event, request controls and retry declaration
+remain under the main evidence root. The shared helper is
+`.tmp/d_windows_awake_context.py`; it owns no request after the operation exits.
+
+A fresh passive Linux clock observation uses the unchanged preflight helper and
+records **blocked / environment blocker**. Its 240.017493-second
+observation ends with 8.463947 synchronized quiet seconds,
+below the required 60; maximum/minimum observed offset steps are
+0.536586101/-0.000026225
+seconds against the unchanged 0.01-second threshold. The synchronization journal
+query exits 0; cause is not established. No Linux application
+cell, clock adjustment, persistent power-plan change or deadline relaxation occurred.
+The .57 observation remains historical; this .60 observation is the latest.
+This passive observation predates the later Windows suspension; it is not a
+post-resume Linux application acceptance claim.
+
+Dependency enforcement passes with 1,106 modules, 3,537 import sites, six recognized
+dynamic routes and zero unknown modules, analysis errors, forbidden edges or
+authority cycles. Policy v2 is unchanged. Changed Python is Ruff-clean; canonical
+Ruff retains 94 findings. CLI remains 455 lines without growth; its broader split
+belongs to E2. Both Quality jobs include the organization regressions. The four
+.59 provider-gated packet1 cases remain explicitly unverified, not counted as
+passes or environment blockers. No fresh inference, Docker, whole-suite/89%,
+hosted Quality or general capacity claim is made. Remaining CLI/driver and
+ConfigLoader bridge work, full input/adapter inventory, E1/E2, CAP, .43 Git timeout
+cause and .44 non-Python package ceiling stay open. Accepted BT behavior/evidence
+are retained; the lane remains active pending required implementation, acceptance
+and explicit user review.

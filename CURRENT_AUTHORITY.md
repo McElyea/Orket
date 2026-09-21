@@ -1,6 +1,6 @@
 # CURRENT_AUTHORITY.md
 
-Last updated: 2026-09-20
+Last updated: 2026-09-21
 
 This file is the current canonical authority snapshot for high-impact runtime and governance paths.
 
@@ -29,6 +29,13 @@ captures it through `RuntimeInputService` before preflight awaits; later
 orchestrator clock observations keep their existing second precision. Migration
 and remaining lifecycle input scope:
 `docs/architecture/CONTRACT_DELTA_SANDBOX_CREATION_INPUTS_D_2026-09-20.md`.
+
+Organization-loop async creation captures settings, root and environment before
+owned configuration loading. Scans and card construction remain owned through
+interruption; required cleanup gates caller completion. The canonical CLI loop
+uses that factory. Discovery uses the captured project root and orders normalized
+numeric priority after critical-path weight. Contract:
+`docs/specs/RUNTIME_EXECUTION_RESULT_CONTRACT.md`.
 
 The public orchestration helper and collection-member supervisor own runtime
 construction and close through interruption. Prepared child factories retain
@@ -1201,7 +1208,7 @@ Trust Kernel and Portable Conformance completed lane authority is archived under
 ```json
 {
   "version": 1,
-  "last_updated": "2026-09-20",
+  "last_updated": "2026-09-21",
   "authority": {
     "dependency_authority": {
       "primary": "pyproject.toml",

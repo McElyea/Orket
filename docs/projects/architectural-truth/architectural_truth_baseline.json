@@ -1,6 +1,6 @@
 {
   "schema_version": "architectural_truth.baseline.v1",
-  "generated_at": "2026-09-21T10:17:04.208552Z",
+  "generated_at": "2026-09-21T14:16:55.694154Z",
   "collection_ok": true,
   "release_ready": false,
   "release_ready_reason": "Active architectural exceptions and red/noisy proof gates remain.",
@@ -332,12 +332,12 @@
         {
           "source": "application",
           "target": "adapters",
-          "count": 402
+          "count": 403
         },
         {
           "source": "application",
           "target": "application",
-          "count": 1715
+          "count": 1717
         },
         {
           "source": "application",
@@ -535,10 +535,10 @@
   },
   "test_taxonomy": {
     "schema_version": "test_taxonomy_report.v1",
-    "tests_total": 5467,
-    "missing_layer_total": 3870,
+    "tests_total": 5477,
+    "missing_layer_total": 3880,
     "by_layer": {
-      "unlabeled": 3870,
+      "unlabeled": 3880,
       "integration": 750,
       "unit": 165,
       "contract": 671,
@@ -1146,7 +1146,7 @@
         "layer": null
       }
     ],
-    "missing_layers_omitted": 3770
+    "missing_layers_omitted": 3780
   },
   "ruff": {
     "proof": "structural_lint",
@@ -1546,85 +1546,6 @@
     "parse_errors": []
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-20T22:17:19.523466Z",
-      "changed": true,
-      "before_digest": "sha256:0314ba858b7cf38621606908835f2d55ed958ba90668109bb8ba72e27d146a9c",
-      "after_digest": "sha256:ce6e4d1feabae5a41380f2a60ba7c48517578c903c14402f591e3c049cff8662",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 2331,
-        "paths_total_current": 2331,
-        "paths_total_reference": 2331,
-        "churn_paths": 1,
-        "churn_ratio": 0.000429,
-        "sample_paths": [
-          "$.generated_at"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-20T22:30:11.359407Z",
-      "changed": true,
-      "before_digest": "sha256:ce6e4d1feabae5a41380f2a60ba7c48517578c903c14402f591e3c049cff8662",
-      "after_digest": "sha256:baf4ec69d2c68fc99481be1a3e567a86535b1ff1ed287db7734898ebe8229090",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 2331,
-        "paths_total_current": 2331,
-        "paths_total_reference": 2331,
-        "churn_paths": 1,
-        "churn_ratio": 0.000429,
-        "sample_paths": [
-          "$.generated_at"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-20T22:48:02.539012Z",
-      "changed": true,
-      "before_digest": "sha256:baf4ec69d2c68fc99481be1a3e567a86535b1ff1ed287db7734898ebe8229090",
-      "after_digest": "sha256:16bd851d62ed9298a790c1d6ea31e579ab81648a8b03b907e34396eaa4705b20",
-      "diff": {
-        "added_paths": 2,
-        "removed_paths": 0,
-        "changed_paths": 35,
-        "initial_write": false,
-        "paths_total_previous": 2331,
-        "paths_total_current": 2357,
-        "paths_total_reference": 2357,
-        "churn_paths": 37,
-        "churn_ratio": 0.015698,
-        "sample_paths": [
-          "$.dependency_graph.observed.files_scanned",
-          "$.dependency_graph.observed.layer_edges[3].count",
-          "$.dependency_graph.observed.layer_edges[4].count",
-          "$.dependency_graph.observed.layer_edges[6].count",
-          "$.dependency_graph.verdict.ok",
-          "$.dependency_graph.verdict.violations",
-          "$.generated_at",
-          "$.noop_critical_paths.scanned_files",
-          "$.size_inventory.largest_files[1].lines",
-          "$.size_inventory.largest_files[10].lines",
-          "$.size_inventory.largest_functions[10].line",
-          "$.size_inventory.largest_functions[10].lines",
-          "$.size_inventory.largest_functions[10].name",
-          "$.size_inventory.largest_functions[10].path",
-          "$.size_inventory.largest_functions[11].line",
-          "$.size_inventory.largest_functions[11].lines",
-          "$.size_inventory.largest_functions[11].name",
-          "$.size_inventory.largest_functions[11].path",
-          "$.size_inventory.largest_functions[18].line",
-          "$.size_inventory.largest_functions[22].line"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-20T22:53:23.801555Z",
       "changed": true,
@@ -2261,6 +2182,72 @@
       "changed": true,
       "before_digest": "sha256:6586a8c1afb1d22a18f41ecb855a71948cade3dffe5e4efa032f72c85e750942",
       "after_digest": "sha256:87c23c03a092fe85b6f39763d2731e11de0df503a1ae395d7a9a8565c408ad6b",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 2331,
+        "paths_total_current": 2331,
+        "paths_total_reference": 2331,
+        "churn_paths": 1,
+        "churn_ratio": 0.000429,
+        "sample_paths": [
+          "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-21T10:31:58.845667Z",
+      "changed": true,
+      "before_digest": "sha256:87c23c03a092fe85b6f39763d2731e11de0df503a1ae395d7a9a8565c408ad6b",
+      "after_digest": "sha256:2468b4ff363cefff6dce8a6d3205be833f4263ac7951139b7598e9f0e8a99db0",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 7,
+        "initial_write": false,
+        "paths_total_previous": 2331,
+        "paths_total_current": 2331,
+        "paths_total_reference": 2331,
+        "churn_paths": 7,
+        "churn_ratio": 0.003003,
+        "sample_paths": [
+          "$.dependency_graph.observed.layer_edges[2].count",
+          "$.dependency_graph.observed.layer_edges[3].count",
+          "$.generated_at",
+          "$.test_taxonomy.by_layer.unlabeled",
+          "$.test_taxonomy.missing_layer_total",
+          "$.test_taxonomy.missing_layers_omitted",
+          "$.test_taxonomy.tests_total"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-21T10:41:42.674712Z",
+      "changed": true,
+      "before_digest": "sha256:2468b4ff363cefff6dce8a6d3205be833f4263ac7951139b7598e9f0e8a99db0",
+      "after_digest": "sha256:19733832666d106bcbdfd1c2cb40bc08ea8b91070e908a73d8217edce540f229",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 2331,
+        "paths_total_current": 2331,
+        "paths_total_reference": 2331,
+        "churn_paths": 1,
+        "churn_ratio": 0.000429,
+        "sample_paths": [
+          "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-21T14:16:55.696044Z",
+      "changed": true,
+      "before_digest": "sha256:19733832666d106bcbdfd1c2cb40bc08ea8b91070e908a73d8217edce540f229",
+      "after_digest": "sha256:10ce0a1ac00b88086787b670a504be719d75b306bc4db14d39dfccfe630c0a4e",
       "diff": {
         "added_paths": 0,
         "removed_paths": 0,

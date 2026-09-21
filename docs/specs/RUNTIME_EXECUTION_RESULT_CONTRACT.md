@@ -117,6 +117,37 @@ Existing typed collection member identities and terminal-evidence rules remain.
 The factory migration does not make every synchronous public constructor safe to
 call on an event loop or complete the broader async-reachability inventory.
 
+## Organization-loop ownership and selection
+
+Async callers await `OrganizationLoop.create(...)` before `run_forever()`.
+The factory captures root, environment and independently bound or persisted
+runtime settings before owned configuration loading. Direct synchronous
+construction remains a pre-loop API and refuses an event-loop thread before I/O.
+The canonical `orket runtime --loop` uses the async factory.
+
+Relative organization paths bind to the captured invocation root; the existing
+missing-file fallback is `<root>/model/organization.json`. Configuration and
+workspace paths, environment selection and the loaded department tuple remain
+bound to that owner across later caller changes. Scans give ConfigLoader the
+project root, not its `model` subdirectory. Each scan observes current authored
+files; this is not an atomic snapshot across departments or scans.
+
+Within each epic, the existing pure critical-path engine chooses the first ready
+card. Across candidates, longer ready queues sort first, then higher normalized
+numeric priority; ties retain department order and sorted asset order. The schema
+normalizes named priorities before selection, so sorting cannot reinterpret a
+numeric priority as an unknown named label. This is the existing simplified
+weight policy, not a claim of global optimal scheduling or dispatch de-duplication.
+
+Owned configuration/scanning workers settle before cancellation or timeout is
+reported; worker failures remain visible. Card construction uses the same shared
+runtime owner as the public helper, including closure of a completed owner that
+cannot be handed to its interrupted caller. Actual `run_card` results pass
+`require_runtime_success` before continuation. Required close retains repeated
+cancellation and cannot leave caller success after interrupted or failed cleanup.
+The loop's running flag is cleared on exit. The ten-second idle wait and explicit
+yield after a card remain unchanged; no forced worker-stop deadline is introduced.
+
 ## Verification and limits
 
 Required proof includes actual successful and unsuccessful workloads through the

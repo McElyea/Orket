@@ -156,6 +156,12 @@ for child processes, then bind explicit empty snapshots in their fixture;
 production behavior does not inspect `PYTEST_CURRENT_TEST`. CLI startup binds
 persisted settings after onboarding before constructing runtime components.
 
+Async organization embeddings await `OrganizationLoop.create()` before
+`run_forever()`; the canonical `orket runtime --loop` uses that factory. Direct
+synchronous construction refuses an event-loop thread before configuration I/O.
+The ownership, captured-input and selection contract lives in
+`docs/specs/RUNTIME_EXECUTION_RESULT_CONTRACT.md`.
+
 Handled fatal outcomes from `orket runtime` must return a nonzero process status. The
 governed-run demo default is package-owned and must not depend on the caller's current
 working directory.

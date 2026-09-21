@@ -1,6 +1,6 @@
 # Orket Architecture (Target State)
 
-Last updated: 2026-09-20
+Last updated: 2026-09-21
 Status: Active target architecture (transitioning)
 
 Canonical architecture specification for the Orket runtime.
@@ -180,6 +180,13 @@ identities are explicit core inputs. Authored configuration obtains missing IDs
 through the application service; environment extras fail without warning effects.
 Contract: `docs/specs/SCHEMA_INPUT_OWNERSHIP.md`. Remaining effects, decision context,
 adapter classification and async reachability still require D acceptance.
+
+Organization-loop async creation captures settings, root and environment before
+owned configuration loading. Scans and card construction remain owned through
+interruption; required cleanup gates caller completion. The canonical CLI loop
+uses that factory. Discovery uses the captured project root and orders normalized
+numeric priority after critical-path weight. Contract:
+`docs/specs/RUNTIME_EXECUTION_RESULT_CONTRACT.md`.
 
 The public orchestration helper and collection-member supervisor own runtime
 construction and close through interruption. Prepared child factories retain

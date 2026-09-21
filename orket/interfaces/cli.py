@@ -353,7 +353,7 @@ async def run_cli(argv: list[str] | None = None, *, prog: str | None = None) -> 
         if args.loop:
             from orket.organization_loop import OrganizationLoop
 
-            await OrganizationLoop().run_forever()
+            await (await OrganizationLoop.create()).run_forever()
             return 0
 
         if args.archive_card or args.archive_build or args.archive_related:
