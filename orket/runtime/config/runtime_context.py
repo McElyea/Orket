@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import inspect
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
@@ -15,6 +14,7 @@ from orket.adapters.storage.async_repositories import (
 )
 from orket.application.services.decision_node_registry import DecisionNodeRegistry, build_decision_node_registry
 from orket.application.services.runtime_construction_inputs import RuntimeConstructionInputs
+from orket.application.services.runtime_resource_cleanup import close_runtime_resources
 from orket.orchestration.orchestration_config import OrchestrationConfig
 from orket.runtime_paths import resolve_runtime_db_path
 from orket.settings import load_user_settings
@@ -65,19 +65,13 @@ class OrketRuntimeContext:
             await initialize()
 
     async def close(self) -> None:
-        for target in (
+        await close_runtime_resources((
             self.run_ledger,
             self.success_repo,
             self.snapshots_repo,
             self.sessions_repo,
             self.cards_repo,
-        ):
-            close = getattr(target, "aclose", None) or getattr(target, "close", None)
-            if not callable(close):
-                continue
-            maybe_awaitable = close()
-            if inspect.isawaitable(maybe_awaitable):
-                await maybe_awaitable
+        ), label="runtime-context-cleanup")
 
     @classmethod
     def from_env(

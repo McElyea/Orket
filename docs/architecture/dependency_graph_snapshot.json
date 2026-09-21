@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-21T19:12:16.661667+00:00",
+  "generated_at": "2026-09-21T19:50:52.189843+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -1707,6 +1707,10 @@
         "path": "orket/application/services/runtime_policy.py",
         "sha256": "aaa36d04fe6a0c953ff750ab846ca989f5b86e90d5332a4eb6de02adf5ac4a9b"
       },
+      "orket.application.services.runtime_resource_cleanup": {
+        "path": "orket/application/services/runtime_resource_cleanup.py",
+        "sha256": "b2f6f27416da81ee706016bf5603528dbb97e77408437e92a49ba80b8845e12c"
+      },
       "orket.application.services.runtime_result_lifetime": {
         "path": "orket/application/services/runtime_result_lifetime.py",
         "sha256": "a5fe2ae8b78abd05d5232da058561069b4ba3afe10e3cafaf1339db7d77e7015"
@@ -3201,7 +3205,7 @@
       },
       "orket.orchestration.engine": {
         "path": "orket/orchestration/engine.py",
-        "sha256": "77e80e05cd61f361262697631b0162bb8807af257a0abd7ca309bd2fc6e3da36"
+        "sha256": "ee3e38e3f97ada5f666793c3deab263dc1307f3d1c1e2cc8d837b092e6a104c1"
       },
       "orket.orchestration.engine_approvals": {
         "path": "orket/orchestration/engine_approvals.py",
@@ -3549,7 +3553,7 @@
       },
       "orket.runtime.config.runtime_context": {
         "path": "orket/runtime/config/runtime_context.py",
-        "sha256": "22890c9892f9b590788fe0896f864e2eedae742b26572cdf60b22cdccb937ae9"
+        "sha256": "ad64273c1c60ae1eb0c0f99cdae686d04b8e03d2170f54986f60dd83ce3888f1"
       },
       "orket.runtime.config.settings": {
         "path": "orket/runtime/config/settings.py",
@@ -3753,7 +3757,7 @@
       },
       "orket.runtime.execution.execution_pipeline": {
         "path": "orket/runtime/execution/execution_pipeline.py",
-        "sha256": "98770b947a0c175825623656c047fb254bb216b732871c0661a902fae69e8e75"
+        "sha256": "53e08da85661ca592bfae4b872deaf0460128d022a960e5763b2ebe8f27338df"
       },
       "orket.runtime.execution.execution_pipeline_artifact_provenance": {
         "path": "orket/runtime/execution/execution_pipeline_artifact_provenance.py",
@@ -15599,6 +15603,13 @@
         "kind": "from"
       },
       {
+        "source": "orket.application.services.runtime_resource_cleanup",
+        "target": "orket.adapters.execution.owned_io",
+        "path": "orket/application/services/runtime_resource_cleanup.py",
+        "line": 6,
+        "kind": "from"
+      },
+      {
         "source": "orket.application.services.runtime_result_lifetime",
         "target": "orket.adapters.execution.owned_io",
         "path": "orket/application/services/runtime_result_lifetime.py",
@@ -23589,47 +23600,54 @@
         "source": "orket.orchestration.engine",
         "target": "orket.adapters.execution.owned_io",
         "path": "orket/orchestration/engine.py",
-        "line": 6,
+        "line": 5,
         "kind": "from"
       },
       {
         "source": "orket.orchestration.engine",
         "target": "orket.adapters.storage.async_card_repository",
         "path": "orket/orchestration/engine.py",
-        "line": 7,
+        "line": 6,
         "kind": "from"
       },
       {
         "source": "orket.orchestration.engine",
         "target": "orket.adapters.storage.async_repositories",
         "path": "orket/orchestration/engine.py",
-        "line": 8,
+        "line": 7,
         "kind": "from"
       },
       {
         "source": "orket.orchestration.engine",
         "target": "orket.application.services.decision_node_registry",
         "path": "orket/orchestration/engine.py",
-        "line": 13,
+        "line": 12,
         "kind": "from"
       },
       {
         "source": "orket.orchestration.engine",
         "target": "orket.application.services.kernel_v1_gateway",
         "path": "orket/orchestration/engine.py",
-        "line": 14,
+        "line": 13,
         "kind": "from"
       },
       {
         "source": "orket.orchestration.engine",
         "target": "orket.application.services.runtime_construction_inputs",
         "path": "orket/orchestration/engine.py",
-        "line": 15,
+        "line": 14,
         "kind": "from"
       },
       {
         "source": "orket.orchestration.engine",
         "target": "orket.application.services.runtime_input_service",
+        "path": "orket/orchestration/engine.py",
+        "line": 15,
+        "kind": "from"
+      },
+      {
+        "source": "orket.orchestration.engine",
+        "target": "orket.application.services.runtime_resource_cleanup",
         "path": "orket/orchestration/engine.py",
         "line": 16,
         "kind": "from"
@@ -23729,7 +23747,7 @@
         "source": "orket.orchestration.engine",
         "target": "orket.board",
         "path": "orket/orchestration/engine.py",
-        "line": 261,
+        "line": 255,
         "kind": "from"
       },
       {
@@ -24919,33 +24937,40 @@
         "source": "orket.runtime.config.runtime_context",
         "target": "orket.adapters.execution.owned_io",
         "path": "orket/runtime/config/runtime_context.py",
-        "line": 9,
+        "line": 8,
         "kind": "from"
       },
       {
         "source": "orket.runtime.config.runtime_context",
         "target": "orket.adapters.storage.async_card_repository",
         "path": "orket/runtime/config/runtime_context.py",
-        "line": 10,
+        "line": 9,
         "kind": "from"
       },
       {
         "source": "orket.runtime.config.runtime_context",
         "target": "orket.adapters.storage.async_repositories",
         "path": "orket/runtime/config/runtime_context.py",
-        "line": 11,
+        "line": 10,
         "kind": "from"
       },
       {
         "source": "orket.runtime.config.runtime_context",
         "target": "orket.application.services.decision_node_registry",
         "path": "orket/runtime/config/runtime_context.py",
-        "line": 16,
+        "line": 15,
         "kind": "from"
       },
       {
         "source": "orket.runtime.config.runtime_context",
         "target": "orket.application.services.runtime_construction_inputs",
+        "path": "orket/runtime/config/runtime_context.py",
+        "line": 16,
+        "kind": "from"
+      },
+      {
+        "source": "orket.runtime.config.runtime_context",
+        "target": "orket.application.services.runtime_resource_cleanup",
         "path": "orket/runtime/config/runtime_context.py",
         "line": 17,
         "kind": "from"
@@ -24989,14 +25014,14 @@
         "source": "orket.runtime.config.runtime_context",
         "target": "orket.application.services.card_completion_composition",
         "path": "orket/runtime/config/runtime_context.py",
-        "line": 107,
+        "line": 101,
         "kind": "from"
       },
       {
         "source": "orket.runtime.config.runtime_context",
         "target": "orket.application.services.runtime_store_binding_service",
         "path": "orket/runtime/config/runtime_context.py",
-        "line": 108,
+        "line": 102,
         "kind": "from"
       },
       {
@@ -26438,96 +26463,103 @@
         "source": "orket.runtime.execution.execution_pipeline",
         "target": "orket.adapters.execution.owned_io",
         "path": "orket/runtime/execution/execution_pipeline.py",
-        "line": 10,
+        "line": 9,
         "kind": "from"
       },
       {
         "source": "orket.runtime.execution.execution_pipeline",
         "target": "orket.adapters.storage.async_card_repository",
         "path": "orket/runtime/execution/execution_pipeline.py",
-        "line": 11,
+        "line": 10,
         "kind": "from"
       },
       {
         "source": "orket.runtime.execution.execution_pipeline",
         "target": "orket.adapters.storage.async_repositories",
         "path": "orket/runtime/execution/execution_pipeline.py",
-        "line": 12,
+        "line": 11,
         "kind": "from"
       },
       {
         "source": "orket.runtime.execution.execution_pipeline",
         "target": "orket.adapters.storage.control_plane_transaction",
         "path": "orket/runtime/execution/execution_pipeline.py",
-        "line": 17,
+        "line": 16,
         "kind": "from"
       },
       {
         "source": "orket.runtime.execution.execution_pipeline",
         "target": "orket.adapters.storage.epic_continuation_lock",
         "path": "orket/runtime/execution/execution_pipeline.py",
-        "line": 18,
+        "line": 17,
         "kind": "from"
       },
       {
         "source": "orket.runtime.execution.execution_pipeline",
         "target": "orket.adapters.storage.epic_publication_repository",
         "path": "orket/runtime/execution/execution_pipeline.py",
-        "line": 19,
+        "line": 18,
         "kind": "from"
       },
       {
         "source": "orket.runtime.execution.execution_pipeline",
         "target": "orket.adapters.vcs.gitea_artifact_exporter",
         "path": "orket/runtime/execution/execution_pipeline.py",
-        "line": 20,
+        "line": 19,
         "kind": "from"
       },
       {
         "source": "orket.runtime.execution.execution_pipeline",
         "target": "orket.application.services.cards_epic_control_plane_service",
         "path": "orket/runtime/execution/execution_pipeline.py",
-        "line": 21,
+        "line": 20,
         "kind": "from"
       },
       {
         "source": "orket.runtime.execution.execution_pipeline",
         "target": "orket.application.services.decision_node_registry",
         "path": "orket/runtime/execution/execution_pipeline.py",
-        "line": 22,
+        "line": 21,
         "kind": "from"
       },
       {
         "source": "orket.runtime.execution.execution_pipeline",
         "target": "orket.application.services.epic_approval_pause_service",
         "path": "orket/runtime/execution/execution_pipeline.py",
-        "line": 23,
+        "line": 22,
         "kind": "from"
       },
       {
         "source": "orket.runtime.execution.execution_pipeline",
         "target": "orket.application.services.epic_preparation_service",
         "path": "orket/runtime/execution/execution_pipeline.py",
-        "line": 24,
+        "line": 23,
         "kind": "from"
       },
       {
         "source": "orket.runtime.execution.execution_pipeline",
         "target": "orket.application.services.epic_publication_service",
         "path": "orket/runtime/execution/execution_pipeline.py",
-        "line": 25,
+        "line": 24,
         "kind": "from"
       },
       {
         "source": "orket.runtime.execution.execution_pipeline",
         "target": "orket.application.services.runtime_construction_inputs",
         "path": "orket/runtime/execution/execution_pipeline.py",
-        "line": 26,
+        "line": 25,
         "kind": "from"
       },
       {
         "source": "orket.runtime.execution.execution_pipeline",
         "target": "orket.application.services.runtime_input_service",
+        "path": "orket/runtime/execution/execution_pipeline.py",
+        "line": 26,
+        "kind": "from"
+      },
+      {
+        "source": "orket.runtime.execution.execution_pipeline",
+        "target": "orket.application.services.runtime_resource_cleanup",
         "path": "orket/runtime/execution/execution_pipeline.py",
         "line": 27,
         "kind": "from"
@@ -29575,7 +29607,7 @@
         "forwarded_arguments": 2
       }
     ],
-    "files_scanned": 1112,
+    "files_scanned": 1113,
     "scan_roots": [
       "orket"
     ],
@@ -29977,6 +30009,7 @@
       "orket.application.services.runtime_input_service": "application",
       "orket.application.services.runtime_inspection_service": "application",
       "orket.application.services.runtime_policy": "application",
+      "orket.application.services.runtime_resource_cleanup": "application",
       "orket.application.services.runtime_result_lifetime": "application",
       "orket.application.services.runtime_result_projection": "application",
       "orket.application.services.runtime_store_binding_service": "application",
@@ -30709,12 +30742,12 @@
       {
         "source": "application",
         "target": "adapters",
-        "count": 412
+        "count": 413
       },
       {
         "source": "application",
         "target": "application",
-        "count": 1725
+        "count": 1728
       },
       {
         "source": "application",
@@ -30766,26 +30799,6 @@
     }
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-20T22:29:37.626050Z",
-      "changed": true,
-      "before_digest": "sha256:c3f12fbbd5cc71c7bb928321461f6882a57f730354635c859975c416c973d1a6",
-      "after_digest": "sha256:efaf52878879b75f1621c391d5ba08b7b09765dba4b0b3363a3823f3d8dee4d7",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 46412,
-        "paths_total_current": 46412,
-        "paths_total_reference": 46412,
-        "churn_paths": 1,
-        "churn_ratio": 2.2e-05,
-        "sample_paths": [
-          "$.generated_at"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-20T22:47:29.468472Z",
       "changed": true,
@@ -31771,6 +31784,45 @@
         "churn_ratio": 2.1e-05,
         "sample_paths": [
           "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-21T19:51:13.391545Z",
+      "changed": true,
+      "before_digest": "sha256:7fe014b4c639c3a03345522f43a792cff63164013b4d331de38e11fc93dad716",
+      "after_digest": "sha256:ea076e943a3c4d32599b96f2d108d11b11d21164ce38760058bd1d7293377f9a",
+      "diff": {
+        "added_paths": 6,
+        "removed_paths": 0,
+        "changed_paths": 5163,
+        "initial_write": false,
+        "paths_total_previous": 47365,
+        "paths_total_current": 47416,
+        "paths_total_reference": 47416,
+        "churn_paths": 5169,
+        "churn_ratio": 0.109014,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.edges[1575].line",
+          "$.observed.edges[1575].path",
+          "$.observed.edges[1575].source",
+          "$.observed.edges[1576].line",
+          "$.observed.edges[1576].target",
+          "$.observed.edges[1577].line",
+          "$.observed.edges[1577].target",
+          "$.observed.edges[1578].line",
+          "$.observed.edges[1578].target",
+          "$.observed.edges[1579].line",
+          "$.observed.edges[1579].path",
+          "$.observed.edges[1579].source",
+          "$.observed.edges[1580].line",
+          "$.observed.edges[1580].target",
+          "$.observed.edges[1581].line",
+          "$.observed.edges[1581].path",
+          "$.observed.edges[1581].source",
+          "$.observed.edges[1581].target",
+          "$.observed.edges[1582].line"
         ]
       }
     }

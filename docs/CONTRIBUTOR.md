@@ -183,6 +183,13 @@ Direct engine, pipeline and runtime-context construction is pre-loop/worker
 only. Existing action/result authority is retained. Migration and limits:
 `docs/architecture/CONTRACT_DELTA_CONFIG_SYNC_BRIDGE_D_2026-09-21.md`.
 
+Runtime cleanup attempts every declared resource after an earlier close failure.
+Synchronous close ports use owned workers; admitted cleanup remains owned
+through repeated cancellation. Multiple failures remain visible in exception
+groups, and failed cleanup cannot set the engine/pipeline closed flag. Port
+migration, failure handling and proof limits:
+`docs/architecture/CONTRACT_DELTA_RUNTIME_RESOURCE_CLEANUP_D_2026-09-21.md`.
+
 Async sandbox-log embeddings pass a bound `SandboxOrchestrator.get_logs` callable
 to `read_runtime_sandbox_logs` and retain ownership of any constructed pipeline.
 Direct synchronous log reads refuse an event-loop thread; the API uses

@@ -1,5 +1,4 @@
 import asyncio
-import inspect
 from pathlib import Path
 from typing import Any
 
@@ -14,6 +13,7 @@ from orket.application.services.decision_node_registry import DecisionNodeRegist
 from orket.application.services.kernel_v1_gateway import KernelV1Gateway
 from orket.application.services.runtime_construction_inputs import RuntimeConstructionInputs
 from orket.application.services.runtime_input_service import RuntimeInputService
+from orket.application.services.runtime_resource_cleanup import close_runtime_resources
 from orket.application.services.runtime_result_lifetime import open_configured_runtime
 from orket.application.services.runtime_result_projection import RuntimeResult
 from orket.core.domain import OperatorCommandClass, OperatorInputClass
@@ -141,13 +141,7 @@ class OrchestrationEngine:
     async def close(self) -> None:
         if self._closed:
             return
-        for target in (self._pipeline, self.runtime_context):
-            close = getattr(target, "aclose", None) or getattr(target, "close", None)
-            if not callable(close):
-                continue
-            maybe_awaitable = close()
-            if inspect.isawaitable(maybe_awaitable):
-                await maybe_awaitable
+        await close_runtime_resources((self._pipeline, self.runtime_context), label="engine-cleanup")
         self._closed = True
 
     async def _emit_run_ledger_telemetry(self, payload: dict[str, Any]) -> None:

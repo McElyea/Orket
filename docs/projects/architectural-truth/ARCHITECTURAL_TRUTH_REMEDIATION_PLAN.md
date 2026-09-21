@@ -12519,8 +12519,8 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.68 synchronous configuration bridge and owned runtime callers, retaining
-the 0.6.65 run-query, 0.6.66 sandbox-query and 0.6.67 legacy action checkpoints. Preserve the governed legacy-export cutover;
+0.6.69 runtime resource cleanup, retaining the 0.6.65 run-query, 0.6.66
+sandbox-query, 0.6.67 legacy action and 0.6.68 runtime construction checkpoints. Preserve the governed legacy-export cutover;
 continue remaining clock/input owners, adapter enforcement and async reachability before E1/E2
 and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
@@ -20272,3 +20272,96 @@ paths remain without fresh live acceptance. Successful witness-bundle generation
 also remains outside the observed refusal/cleanup scope. E1/E2, whole-suite 89%, hosted Quality, .43 Git timeout
 cause, CAP and explicit whole-lane acceptance remain open. Accepted BT evidence
 and failed observations are retained; the lane is not retired.
+
+
+#### .69 Runtime resource cleanup sequence (2026-09-21)
+
+Engine, pipeline and runtime-context cleanup now attempt every declared resource
+in the existing order after an earlier close failure. A shared application
+supervisor prefers `aclose`, runs synchronous close ports through an owned worker,
+awaits returned awaitables, and retains the admitted sequence through repeated
+caller cancellation. Individual failures retain their identity; multiple failures
+remain visible in exception groups, including nested owned-runtime failures.
+An unsuccessful cleanup cannot set the engine/pipeline `_closed` flag. Existing
+resource lists and other runtime method ASTs are unchanged; the engine shrinks
+457 to 451 lines. Contract and port migration:
+`docs/architecture/CONTRACT_DELTA_RUNTIME_RESOURCE_CLEANUP_D_2026-09-21.md`.
+
+The initial counterexample has 30 failures with no setup/teardown errors. Twelve
+native failure cases show later resources left unattempted. Six synchronous
+close observations exceed the predeclared 0.5-second response bound, ranging from
+0.801599700s to 0.802950300s. Async cleanup interruption/failure also
+leaves later native resources open. Three synchronous timeout controls fail
+before recording responsiveness: the blocked event loop resumes only after
+close has already returned, so rescheduling the finished timeout raises
+`Cannot change state of finished Timeout`. They do not establish an admitted
+old-version timeout. An initial closeout helper incorrectly expected nine
+measured violations and refused to write the plan; its original bytes and
+correction receipt are retained. Runtime tests and their deadlines are unchanged.
+These use actual engine/pipeline construction
+and SQLite connections through supported injected repository ports. A controlled
+cleanup transaction fails in SQLite before releasing its connection. This does
+not claim that default per-operation repositories hold persistent connections.
+
+The first candidate passes 56 cleanup/constructor cases. Four additional cases
+place real failing native ports at the outer engine/pipeline cleanup boundaries
+and require the later runtime context to close its resources. The original owner
+is restored before final fixture cleanup. All final 34 regression cases fail
+against the byte-verified local .68 wheel using identical current test/helper
+bytes. The final focused candidate passes 60 cases. Original failures and current
+inputs remain retained; no deadline, assertion or test is weakened.
+
+Actual native proof covers one or multiple cleanup failures, remaining-resource
+attempts, error identity, failure flags, a successful retry, cancellation, 50ms
+timeout after native admission, and failure concurrent with cancellation. Closed
+handles are independently queried to confirm SQLite refuses further access.
+The native release timer remains 0.8 seconds and the join limit five seconds.
+Only the controlled failing connections remain open until explicit fixture
+cleanup; their failure is never labelled success.
+
+| Cell | Cases / failures / errors / skips | JUnit seconds | Installed origins |
+|---|---|---|---|
+| Source Windows Python 3.11 | 1097 / 0 / 0 / 0 | 396.996 | Source run |
+| Installed win-py311 | 1097 / 0 / 0 / 0 | 403.064 | 1010 |
+| Installed win-py312 | 1097 / 0 / 0 / 0 | 468.707 | 1010 |
+
+The 168-module cohort retains all 1,063 .68 cases. All 54 new response observations
+meet 0.5 seconds; maximum 0.005097600s. Retained native CLI installation,
+refusal, SIGINT and cleanup flows remain included. Complete source/wheel/sdist
+parity covers 1,113 Python files, all 19 data resources,
+1,132 core members and 2,210 support
+inputs. Wheel SHA-256: `4fe856ef6cef6546a89af95250f64470bf3a32b23df43029e66bd2b502cd175e`;
+sdist SHA-256: `d9213fd5a94b7cd1921ed3181354b9eac3de53afbde53f45bb198fcc8454f8f3`.
+Both Windows cells retain exact inputs/origins and confirm no unowned child or
+root database. Scoped sleep requests restore without persistent power changes.
+
+Actual dependency policy v2, changed-file Ruff, docs hygiene, release metadata and
+whitespace checks pass. Canonical Ruff retains 94 prior findings; this is not full
+Quality acceptance. No new classification exception or lint suppression is added.
+The latest passive Linux clock gate remains .68's blocked observation; there is
+no fresh Linux application cell. The .68 Ollama PATH/endpoint blocker and .59
+alias-dependent packet1 gap remain. No fresh inference or Docker acceptance is
+claimed here; earlier scoped proofs remain retained.
+
+Read-only next-boundary discovery corrects an imprecise constructor inference:
+`AsyncFileTools.__init__` only assigns values. ConfigLoader's default registry
+reads a bound settings snapshot or refuses an unbound loop call before files;
+its constructor name does not establish blocking root observation. Actual
+AsyncFileTools read/write/create/list methods and FileSystemTools write/create
+still perform synchronous path observations on async paths, with separate worker
+and input-lifetime questions. Those findings are structural, not yet native
+counterexamples. Discovery is `.tmp/d-file-tools-discovery/inventory.json`.
+Its supplemental caller-boundary record distinguishes accepted bound filesystem
+dispatch from legacy file-tool calls and preserves mutation/locking obligations.
+A fresh declaration/import/base inventory records 160 adapter modules, 33 module
+declarations and 168 classes at `.tmp/d-adapter-classification-reentry/`. Those
+counts are not missing-declaration violations, behavioral purity or enforcement.
+
+Evidence: `.tmp/d-resource-cleanup/`. This is a local commit/annotated tag only;
+no GitHub push. No new timeout or concurrent-close serialization is promised,
+and an uncooperative close port is not proven bounded. Failures before a
+constructor returns an owner, omitted owners, helper lifetimes, remaining async
+file/process/input boundaries and adapter classification remain D work. E1/E2,
+whole-suite 89%, hosted Quality, provider gaps, .43 Git timeout cause, CAP and
+explicit whole-lane acceptance remain open. Accepted BT evidence is preserved
+and the lane is not retired.

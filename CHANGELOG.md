@@ -5,6 +5,18 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.69] - 2026-09-21
+
+### Fixed
+- Attempt all declared engine, pipeline and runtime-context cleanup ports even after an earlier failure.
+- Own synchronous native close work and retain asynchronous cleanup through repeated caller cancellation.
+- Preserve individual failures and aggregate multiple failures without marking unsuccessful cleanup closed.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Loop-dependent close ports must be async; cleanup callers must handle exception groups when multiple resources fail.
+- Contract and limits: `docs/architecture/CONTRACT_DELTA_RUNTIME_RESOURCE_CLEANUP_D_2026-09-21.md`.
+
 ## [0.6.68] - 2026-09-21
 
 ### Fixed

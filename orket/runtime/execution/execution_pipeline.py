@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import inspect
 import os
 from functools import partial
 from pathlib import Path
@@ -25,6 +24,7 @@ from orket.application.services.epic_preparation_service import EpicPreparationS
 from orket.application.services.epic_publication_service import EpicPublicationService
 from orket.application.services.runtime_construction_inputs import RuntimeConstructionInputs
 from orket.application.services.runtime_input_service import RuntimeInputService
+from orket.application.services.runtime_resource_cleanup import close_runtime_resources
 from orket.application.services.runtime_result_lifetime import open_configured_runtime, open_runtime_owner
 from orket.application.workflows.turn_artifact_writer import TurnArtifactWriter
 from orket.core.contracts.eos_calendar import EosSprintBaseline
@@ -187,17 +187,11 @@ class ExecutionPipeline(
     async def close(self) -> None:
         if self._closed:
             return
-        for target in (
+        await close_runtime_resources((
             self.sandbox_orchestrator,
             self.webhook_db,
             self.runtime_context,
-        ):
-            close = getattr(target, "aclose", None) or getattr(target, "close", None)
-            if not callable(close):
-                continue
-            maybe_awaitable = close()
-            if inspect.isawaitable(maybe_awaitable):
-                await maybe_awaitable
+        ), label="pipeline-cleanup")
         self._closed = True
 
     def _process_rules_value(self, key: str) -> str:
