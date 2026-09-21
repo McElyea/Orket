@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 import hashlib
 import inspect
 import json
@@ -13,6 +12,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Protocol
 
+from orket.adapters.execution.owned_io import run_owned_thread
 from orket.agents.model_family_registry import ModelFamilyRegistry
 from orket.application.services.control_plane_authority_service import ControlPlaneAuthorityService
 from orket.application.services.prompt_compiler import PromptCompiler
@@ -176,7 +176,7 @@ class Agent:
             self._configs_loaded = True
 
     async def _ensure_configs_loaded_async(self) -> None:
-        await asyncio.to_thread(self._ensure_configs_loaded)
+        await run_owned_thread(self._ensure_configs_loaded, label="agent-config-load")
 
     def get_compiled_prompt(self) -> str:
         """Returns the fully compiled system instructions for this agent."""

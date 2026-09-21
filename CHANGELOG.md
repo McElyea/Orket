@@ -5,6 +5,16 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.58] - 2026-09-21
+
+### Fixed
+- Own Agent configuration and synchronous turn asset workers through cancellation, timeout and failure.
+- Propagate an admitted async asset loader failure without retrying a synchronous loader.
+- `compatibility_status`: `compatible`
+- `affected_audience`: `all`
+- `migration_requirement`: `none`
+- Lifetime limits: `docs/architecture/CONTRACT_DELTA_ASSET_WORKER_OWNERSHIP_D_2026-09-20.md`.
+
 ## [0.6.57] - 2026-09-20
 
 ### Fixed

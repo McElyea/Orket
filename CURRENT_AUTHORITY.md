@@ -30,6 +30,12 @@ orchestrator clock observations keep their existing second precision. Migration
 and remaining lifecycle input scope:
 `docs/architecture/CONTRACT_DELTA_SANDBOX_CREATION_INPUTS_D_2026-09-20.md`.
 
+Agent configuration and turn preparation's sync-only asset loading use owned
+workers. Cancellation and timeout retain the admitted work through settlement;
+worker failure remains visible. Available async asset loaders are invoked once,
+and their TypeError is not retried through another loader. Synchronous public
+configuration bridges remain separate work: `docs/specs/REMAINING_RUNTIME_INPUTS.md`.
+
 Async kernel invocations retain request targets and operator values before
 calling the kernel or awaiting publication. Direct control-plane publishers also
 capture request, response and ledger JSON before their first await, preventing

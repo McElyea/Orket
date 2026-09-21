@@ -1,7 +1,7 @@
 # Agent configuration, journal and epic calendar inputs
 
-Status: Active contract for the 0.6.53 candidate
-Last updated: 2026-09-20
+Status: Active contract for the 0.6.58 candidate
+Last updated: 2026-09-21
 Owner: Orket Core
 
 `Agent` captures its provider model name and model-family match at construction.
@@ -9,6 +9,20 @@ Its optional `environment` mapping is authoritative, including an empty mapping;
 otherwise application construction observes the process environment. Later role
 reads, environment changes and provider-name changes cannot select a different
 dialect for that Agent. A new Agent is required to adopt new configuration.
+
+`Agent.run` owns configuration loading until the admitted worker settles. Caller
+cancellation, repeated cancellation and timeout cannot report completion while
+that worker still runs. A worker failure remains visible and takes precedence
+over cancellation. Existing configuration locking, cached success and partially
+loaded fields on failure are unchanged; this is lifetime ownership, not rollback.
+
+Turn preparation selects an available async asset loader once. Its `TypeError`
+or other failure propagates without invoking a second loader. An existing
+sync-only loader remains supported through the same owned-worker primitive;
+its work does not execute on the event-loop thread. The worker settles before
+interrupted dispatch returns, and prior card transitions are not rolled back.
+Synchronous public configuration APIs and the ConfigLoader sync bridge are
+separate async-reachability obligations.
 
 `ModelFamilyRegistry.from_config` consumes only its explicit structured value.
 An absent value selects built-in defaults. Operator environment decoding uses

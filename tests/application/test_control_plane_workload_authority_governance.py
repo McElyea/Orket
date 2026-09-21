@@ -3,6 +3,8 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
+import pytest
+
 from tests.helpers.source_paths import ORKET_ROOT, REPO_ROOT, relative_source_path, source_path
 
 SCAN_ROOTS = (ORKET_ROOT, REPO_ROOT / "scripts")
@@ -686,9 +688,8 @@ def test_private_extension_manifest_type_is_only_imported_inside_extensions_pack
     ) == PRIVATE_EXTENSION_MANIFEST_IMPORT_OWNERS
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_public_runtime_wrappers_collapse_to_run_card() -> None:
-    """Layer: contract. Verifies public runtime compatibility wrappers delegate to run_card instead of owning dispatch."""
     engine_issue_targets = _call_targets(
         _load_class_method(
             ORKET_ROOT / "orchestration" / "engine.py",
@@ -755,7 +756,6 @@ def test_public_runtime_wrappers_collapse_to_run_card() -> None:
             function_name="run_cli",
         )
     )
-
     assert engine_issue_targets == {"run_card"}
     assert engine_epic_targets == {"run_card"}
     assert engine_rock_targets == {"run_card"}
@@ -780,7 +780,7 @@ def test_public_runtime_wrappers_collapse_to_run_card() -> None:
     assert "run_epic" in cli_targets
     assert "run_rock" not in cli_targets
     assert "run_issue" not in cli_targets
-    assert "run_gitea_state_loop" in gitea_loop_targets
+    assert {"GiteaStateLoopRunner", "initialize", "run"} <= gitea_loop_targets
     assert "run_card" in gitea_loop_worker_targets
     assert "run_issue" not in gitea_loop_targets
     assert "run_issue" not in gitea_loop_worker_targets

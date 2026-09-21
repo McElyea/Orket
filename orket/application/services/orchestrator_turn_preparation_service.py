@@ -2,10 +2,12 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
+from functools import partial
 from pathlib import Path
 from types import MappingProxyType
 from typing import Any
 
+from orket.adapters.execution.owned_io import run_owned_thread
 from orket.application.services.cards_odr_stage import run_cards_odr_prebuild
 from orket.application.services.decision_context_service import recommend_routing_seat
 from orket.application.services.loop_decision_service import admit_policy_names
@@ -107,11 +109,8 @@ class OrchestratorTurnPreparationService:
     async def _load_asset(self, category: str, name: str, model_type: Any) -> Any:
         async_loader = getattr(self.loader, "load_asset_async", None)
         if callable(async_loader):
-            try:
-                return await async_loader(category, name, model_type)
-            except TypeError:
-                pass
-        return self.loader.load_asset(category, name, model_type)
+            return await async_loader(category, name, model_type)
+        return await run_owned_thread(partial(self.loader.load_asset, category, name, model_type), label="turn-asset-load")
 
     async def _resolve_dispatch_target(
         self,

@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-21T05:29:58.364781+00:00",
+  "generated_at": "2026-09-21T09:05:31.986047+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -681,7 +681,7 @@
       },
       "orket.agents.agent": {
         "path": "orket/agents/agent.py",
-        "sha256": "d79392332652cb87d9ce3e68cf367c5037ece60bb3e280e13a36f0e18c3afa71"
+        "sha256": "ef91f74dc982e0ac52728363e3f0a1d308c82739f3e774a9cf1c451b45323986"
       },
       "orket.agents.agent_factory": {
         "path": "orket/agents/agent_factory.py",
@@ -1489,7 +1489,7 @@
       },
       "orket.application.services.orchestrator_turn_preparation_service": {
         "path": "orket/application/services/orchestrator_turn_preparation_service.py",
-        "sha256": "dbf985f5ad125d14139729b6b9292b4132b1d190ada7c440743996b5886cef01"
+        "sha256": "88ae105a93be61b0b4f7ae65fff5967dcb4a9fa4682c3ca46c4f5e9d1133a420"
       },
       "orket.application.services.orchestrator_turn_success_handler": {
         "path": "orket/application/services/orchestrator_turn_success_handler.py",
@@ -7004,6 +7004,13 @@
         "target": "orket.core.domain.bug_fix_phase",
         "path": "orket/adapters/vcs/webhook_db.py",
         "line": 248,
+        "kind": "from"
+      },
+      {
+        "source": "orket.agents.agent",
+        "target": "orket.adapters.execution.owned_io",
+        "path": "orket/agents/agent.py",
+        "line": 15,
         "kind": "from"
       },
       {
@@ -13315,72 +13322,79 @@
       },
       {
         "source": "orket.application.services.orchestrator_turn_preparation_service",
-        "target": "orket.application.services.cards_odr_stage",
-        "path": "orket/application/services/orchestrator_turn_preparation_service.py",
-        "line": 9,
-        "kind": "from"
-      },
-      {
-        "source": "orket.application.services.orchestrator_turn_preparation_service",
-        "target": "orket.application.services.decision_context_service",
+        "target": "orket.adapters.execution.owned_io",
         "path": "orket/application/services/orchestrator_turn_preparation_service.py",
         "line": 10,
         "kind": "from"
       },
       {
         "source": "orket.application.services.orchestrator_turn_preparation_service",
-        "target": "orket.application.services.loop_decision_service",
+        "target": "orket.application.services.cards_odr_stage",
         "path": "orket/application/services/orchestrator_turn_preparation_service.py",
         "line": 11,
         "kind": "from"
       },
       {
         "source": "orket.application.services.orchestrator_turn_preparation_service",
-        "target": "orket.application.services.orchestrator_prompt_preparation_service",
+        "target": "orket.application.services.decision_context_service",
         "path": "orket/application/services/orchestrator_turn_preparation_service.py",
         "line": 12,
         "kind": "from"
       },
       {
         "source": "orket.application.services.orchestrator_turn_preparation_service",
+        "target": "orket.application.services.loop_decision_service",
+        "path": "orket/application/services/orchestrator_turn_preparation_service.py",
+        "line": 13,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.orchestrator_turn_preparation_service",
+        "target": "orket.application.services.orchestrator_prompt_preparation_service",
+        "path": "orket/application/services/orchestrator_turn_preparation_service.py",
+        "line": 14,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.orchestrator_turn_preparation_service",
         "target": "orket.core.cards_runtime_contract",
-        "path": "orket/application/services/orchestrator_turn_preparation_service.py",
-        "line": 15,
-        "kind": "from"
-      },
-      {
-        "source": "orket.application.services.orchestrator_turn_preparation_service",
-        "target": "orket.core.contracts.decision_inputs",
-        "path": "orket/application/services/orchestrator_turn_preparation_service.py",
-        "line": 16,
-        "kind": "from"
-      },
-      {
-        "source": "orket.application.services.orchestrator_turn_preparation_service",
-        "target": "orket.exceptions",
         "path": "orket/application/services/orchestrator_turn_preparation_service.py",
         "line": 17,
         "kind": "from"
       },
       {
         "source": "orket.application.services.orchestrator_turn_preparation_service",
-        "target": "orket.logging",
+        "target": "orket.core.contracts.decision_inputs",
         "path": "orket/application/services/orchestrator_turn_preparation_service.py",
         "line": 18,
         "kind": "from"
       },
       {
         "source": "orket.application.services.orchestrator_turn_preparation_service",
-        "target": "orket.schema",
+        "target": "orket.exceptions",
         "path": "orket/application/services/orchestrator_turn_preparation_service.py",
         "line": 19,
         "kind": "from"
       },
       {
         "source": "orket.application.services.orchestrator_turn_preparation_service",
-        "target": "orket.utils",
+        "target": "orket.logging",
         "path": "orket/application/services/orchestrator_turn_preparation_service.py",
         "line": 20,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.orchestrator_turn_preparation_service",
+        "target": "orket.schema",
+        "path": "orket/application/services/orchestrator_turn_preparation_service.py",
+        "line": 21,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.orchestrator_turn_preparation_service",
+        "target": "orket.utils",
+        "path": "orket/application/services/orchestrator_turn_preparation_service.py",
+        "line": 22,
         "kind": "from"
       },
       {
@@ -30441,7 +30455,7 @@
       {
         "source": "application",
         "target": "adapters",
-        "count": 399
+        "count": 401
       },
       {
         "source": "application",
@@ -30498,84 +30512,6 @@
     }
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-19T22:00:17.281217Z",
-      "changed": true,
-      "before_digest": "sha256:9f55a1baa4b2d33cb0d50a37846d87cd81c04367f8572a96cf2abe498a1a9894",
-      "after_digest": "sha256:63214094b8c4a82b4c1f8fb09efa527291321dd43b850deb4b9de6d556d40391",
-      "diff": {
-        "added_paths": 29,
-        "removed_paths": 0,
-        "changed_paths": 7417,
-        "initial_write": false,
-        "paths_total_previous": 45709,
-        "paths_total_current": 45966,
-        "paths_total_reference": 45966,
-        "churn_paths": 7446,
-        "churn_ratio": 0.161989,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.edges[1038].line",
-          "$.observed.edges[1038].target",
-          "$.observed.edges[1039].line",
-          "$.observed.edges[1039].target",
-          "$.observed.edges[1040].line",
-          "$.observed.edges[1040].target",
-          "$.observed.edges[1041].line",
-          "$.observed.edges[1041].target",
-          "$.observed.edges[1042].line",
-          "$.observed.edges[1042].target",
-          "$.observed.edges[1043].line",
-          "$.observed.edges[1043].target",
-          "$.observed.edges[1044].line",
-          "$.observed.edges[1044].target",
-          "$.observed.edges[1045].line",
-          "$.observed.edges[1045].target",
-          "$.observed.edges[1046].line",
-          "$.observed.edges[1046].target",
-          "$.observed.edges[1047].line"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-19T22:01:58.890425Z",
-      "changed": true,
-      "before_digest": "sha256:63214094b8c4a82b4c1f8fb09efa527291321dd43b850deb4b9de6d556d40391",
-      "after_digest": "sha256:cb2f793a6a7436f1b98d2a144b70ee9ce908d9abd6558e3ae1c3bbb36605cc37",
-      "diff": {
-        "added_paths": 5,
-        "removed_paths": 2,
-        "changed_paths": 8254,
-        "initial_write": false,
-        "paths_total_previous": 45966,
-        "paths_total_current": 45986,
-        "paths_total_reference": 45986,
-        "churn_paths": 8261,
-        "churn_ratio": 0.179642,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.edges[704].line",
-          "$.observed.edges[704].path",
-          "$.observed.edges[704].source",
-          "$.observed.edges[704].target",
-          "$.observed.edges[705].line",
-          "$.observed.edges[705].path",
-          "$.observed.edges[705].source",
-          "$.observed.edges[705].target",
-          "$.observed.edges[706].line",
-          "$.observed.edges[706].path",
-          "$.observed.edges[706].source",
-          "$.observed.edges[706].target",
-          "$.observed.edges[707].line",
-          "$.observed.edges[707].target",
-          "$.observed.edges[708].line",
-          "$.observed.edges[708].path",
-          "$.observed.edges[708].source",
-          "$.observed.edges[708].target",
-          "$.observed.edges[709].line"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-19T23:46:49.626749Z",
       "changed": true,
@@ -31534,6 +31470,65 @@
           "$.observed.edges[1122].line",
           "$.observed.edges[1122].target",
           "$.observed.edges[1123].line"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-21T05:49:35.693626Z",
+      "changed": true,
+      "before_digest": "sha256:414c681041f5abc08f6ba89abc2ff7906a0bd99e55bb0bb1a84e2b3a94e0bca8",
+      "after_digest": "sha256:d58f40e8f5429bc3ecec2ba0fdbb163024150e0bda1e05c641e250446a491b46",
+      "diff": {
+        "added_paths": 2,
+        "removed_paths": 0,
+        "changed_paths": 8254,
+        "initial_write": false,
+        "paths_total_previous": 46949,
+        "paths_total_current": 46971,
+        "paths_total_reference": 46971,
+        "churn_paths": 8256,
+        "churn_ratio": 0.175768,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.edges[351].line",
+          "$.observed.edges[351].target",
+          "$.observed.edges[352].line",
+          "$.observed.edges[352].target",
+          "$.observed.edges[353].line",
+          "$.observed.edges[353].target",
+          "$.observed.edges[354].line",
+          "$.observed.edges[354].target",
+          "$.observed.edges[355].line",
+          "$.observed.edges[355].target",
+          "$.observed.edges[356].line",
+          "$.observed.edges[356].target",
+          "$.observed.edges[357].line",
+          "$.observed.edges[357].target",
+          "$.observed.edges[358].line",
+          "$.observed.edges[358].target",
+          "$.observed.edges[359].line",
+          "$.observed.edges[359].target",
+          "$.observed.edges[360].line"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-21T09:05:51.134957Z",
+      "changed": true,
+      "before_digest": "sha256:d58f40e8f5429bc3ecec2ba0fdbb163024150e0bda1e05c641e250446a491b46",
+      "after_digest": "sha256:1044fd77749b57de5181af17650ee8ea30a0a8c6a30bdd4985a7b476bad37c0e",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 46971,
+        "paths_total_current": 46971,
+        "paths_total_reference": 46971,
+        "churn_paths": 1,
+        "churn_ratio": 2.1e-05,
+        "sample_paths": [
+          "$.generated_at"
         ]
       }
     }

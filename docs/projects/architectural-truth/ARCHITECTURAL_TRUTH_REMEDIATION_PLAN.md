@@ -1,7 +1,7 @@
 # Architectural Truth Remediation Plan
 
 Date: 2026-07-29
-Last updated: 2026-09-20
+Last updated: 2026-09-21
 Status: Active implementation plan; scoped BT-1 through BT-5 accepted; C/D is the next ordered gate
 Roadmap state: Priority Now
 Owner: Orket Core
@@ -12520,7 +12520,7 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.57 kernel publication input retention. Preserve the governed legacy-export cutover;
+0.6.58 configuration and turn asset worker ownership. Preserve the governed legacy-export cutover;
 continue remaining clock/input owners, adapter enforcement and async reachability before E1/E2
 and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
@@ -19244,3 +19244,89 @@ is the latest observation. Remaining D input/adapter/async work, E1/E2, CAP,
 whole-suite/89% coverage, .43 Git timeout cause and .44 non-Python package ceiling
 stay open. BT behavior/evidence and the active lane remain preserved pending
 required acceptance and explicit user review.
+
+#### .58 Configuration and turn asset worker ownership (2026-09-21)
+
+Agent configuration and turn preparation's existing sync-only asset loaders now
+use the shared owned worker boundary. Cancellation, repeated cancellation and
+timeout retain admitted work through settlement; worker failure takes precedence
+over cancellation. An available async loader is invoked once and its TypeError
+propagates without retrying a second loader. Existing configuration locking,
+cached success, partially loaded fields and prior card transitions are unchanged.
+This is ownership, not rollback or a new loader compatibility shim. Contracts:
+`docs/specs/REMAINING_RUNTIME_INPUTS.md` and
+`docs/architecture/CONTRACT_DELTA_ASSET_WORKER_OWNERSHIP_D_2026-09-20.md`.
+
+Eight retained before cases fail: six Agent cancellation/timeout/failure cases
+return while a real native asset file is still held, an async failure invokes a
+second loader, and a sync-only adapter blocks concurrent SQLite for 0.964125700
+seconds against the predeclared 0.5-second bound. All eight pass after the change.
+The Agent cases load actual authored role/dialect files and prevent provider
+dispatch. Turn cases run actual orchestrator/card SQLite paths with controlled
+loader behavior; the card's existing IN_PROGRESS transition remains visible.
+Tests verify native file closure, worker settlement and timer teardown. Pure
+timeout and timeout followed by external cancellation have separate expectations;
+neither a timeout nor a worker deadline was weakened.
+
+The selected 63-module cohort retains all 527 .53 Agent/calendar case identities,
+adds affected direct imports, changed tests and explicit orchestrator/Gitea
+regressions. It is a bounded selection, not a complete transitive inventory.
+
+| Cell | Cases / failures / errors / skips | JUnit seconds |
+|---|---|---|
+| Source Windows Python 3.11 | 651 / 0 / 0 / 0 | 219.628 |
+| Installed win-py311 | 651 / 0 / 0 / 0 | 221.789 |
+| Installed win-py312 | 651 / 0 / 0 / 0 | 224.215 |
+
+Each fresh installed cell verifies 967 actual package origins,
+exact source case identities and copied inputs, actual CLI startup, the controlled
+tool-gate audit and process teardown. Package parity covers
+1,106 Python files,
+1,122 wheel package members and
+2,153 support files. Wheel SHA-256:
+`47d5919028b6638bb6d14885448f0a1308eb16476d8aae066d93f72c508a674a`; sdist SHA-256:
+`e8afc324cf857d1ef4a9168fc6c2210ee1312429d121b9bae7fbcbf4284a88c2`.
+Twenty-one new concurrent SQLite readings across the three final cells are below
+0.5 seconds; maximum 0.165137800 seconds. They use perf_counter and prove only
+the declared held-worker scenarios. Final Windows path/result: **primary /
+success**, with live local assets/SQLite/CLI and controlled scheduling plus
+structural package binding. No fresh inference or general capacity claim.
+
+The initial source run is retained as **primary / failure**, 649 passes and two
+failures. One structural assertion still required the wrapper replaced by .55;
+it now requires runner construction, initialization and run, preserving the
+worker's run_card-only dispatch checks. The modified test is marked contract and
+the oversized file did not grow. The other failure occurred before the intended
+publication fault: the negative Python acceptance command timed out after its
+positive companion passed. Retained readonly SQLite evidence records timeout
+exit 124 and confirmed cleanup; that case records 10,891.127 seconds, within a
+source run reporting 11,139.719 seconds despite its declared 1,500-second wrapper
+budget. A subsequent read-only Windows Power-Troubleshooter event records host
+sleep from 2026-09-21T05:54:03.1838555Z to 2026-09-21T08:55:39.1331524Z, an interval of
+10895.949297 seconds overlapping the failed case. This
+supports host suspension as the environment explanation for the elapsed span;
+scheduler-level causality was not traced. No claim is made that the suspended
+run satisfied the wrapper's wall-time budget or proved deadline enforcement.
+
+An isolated unchanged publication case and the 57-case corrected focused set
+pass. The final full source and two installed cells rerun every original case
+identity. Product/test deadlines and the publication runtime/fixture are unchanged;
+these passing reruns are not a runtime repair or general deadline proof.
+Exact product artifacts and the source environment were reused; fresh source
+execution and installed environments use the corrected structural test. Initial
+reports, artifact hashes and read-only evidence audit remain under
+`.tmp/d-asset-worker-ownership/`; final matrix:
+`.tmp/d-asset-worker-ownership-final/`.
+
+Canonical dependency enforcement passes with 1,106 modules, 3,532 import sites,
+six recognized dynamic routes and zero unknown modules, analysis errors,
+forbidden edges or authority cycles; policy v2 is unchanged. Changed Python is
+Ruff-clean, canonical Ruff retains 94 findings, and both Quality jobs include the
+new worker tests. Hosted Quality and whole-suite/89% acceptance remain unverified.
+The latest passive Linux clock observation remains .57's **blocked / environment
+blocker**; no new Linux application run or clock/deadline adjustment is claimed.
+The synchronous ConfigLoader bridge, remaining async/input/adapter inventory,
+E1/E2, CAP, .43 Git timeout cause and .44 non-Python package ceiling remain open.
+The host-suspension event is separately retained; no power setting was changed.
+Accepted BT behavior/evidence remain preserved;
+the lane stays active pending required implementation, acceptance and user review.
