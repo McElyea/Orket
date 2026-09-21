@@ -1,0 +1,1621 @@
+{
+  "source_version": "0.6.56",
+  "wheel_sha256": "4f0ab9bdae1f377811fdc974327f72e5919bb37f33416161ec57047b7ae27ab6",
+  "cases": [
+    {
+      "id": "admission-0",
+      "operation": "admission",
+      "payload": {},
+      "observed": {
+        "result": [
+          {
+            "contract_version": "control_plane.contract.v1",
+            "state_revision": 0,
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "workload_id": "kernel-action-path",
+            "workload_version": "kernel_api.v1",
+            "policy_snapshot_id": "kernel-admission-decision:parity-session:parity-trace",
+            "policy_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "configuration_snapshot_id": "kernel-proposal:parity-session:parity-trace",
+            "configuration_digest": "5de46cd7c342f60968c2721f96f778e454fdd2fbec0ee3d78e4f92a8f1e5bd6d",
+            "creation_timestamp": "2026-09-20T12:00:00+00:00",
+            "admission_decision_receipt_ref": "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "namespace_scope": "session:parity-session",
+            "lifecycle_state": "admitted",
+            "current_attempt_id": "kernel-action-attempt:parity-session:parity-trace:0001",
+            "final_truth_record_id": null
+          },
+          {
+            "contract_version": "control_plane.contract.v1",
+            "state_revision": 0,
+            "attempt_id": "kernel-action-attempt:parity-session:parity-trace:0001",
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "attempt_ordinal": 1,
+            "attempt_state": "attempt_created",
+            "starting_state_snapshot_ref": "kernel-proposal:parity-session:parity-trace:5de46cd7c342f60968c2721f96f778e454fdd2fbec0ee3d78e4f92a8f1e5bd6d",
+            "start_timestamp": "2026-09-20T12:00:00+00:00",
+            "end_timestamp": null,
+            "side_effect_boundary_class": null,
+            "failure_plane": null,
+            "failure_classification": null,
+            "failure_class": null,
+            "recovery_decision_id": null
+          }
+        ],
+        "policy": {
+          "schema_version": "control_plane.snapshot.v1",
+          "snapshot_id": "kernel-admission-decision:parity-session:parity-trace",
+          "snapshot_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "created_at": "2026-09-20T12:00:00+00:00",
+          "source_refs": [
+            "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          ],
+          "policy_payload": {
+            "decision_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "admission_decision": {
+              "decision": "ACCEPT_TO_UNIFY",
+              "reason_codes": []
+            },
+            "namespace_scope_rule": "session_scoped_kernel_action"
+          }
+        },
+        "configuration": {
+          "schema_version": "control_plane.snapshot.v1",
+          "snapshot_id": "kernel-proposal:parity-session:parity-trace",
+          "snapshot_digest": "5de46cd7c342f60968c2721f96f778e454fdd2fbec0ee3d78e4f92a8f1e5bd6d",
+          "created_at": "2026-09-20T12:00:00+00:00",
+          "source_refs": [
+            "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          ],
+          "configuration_payload": {
+            "proposal_digest": "5de46cd7c342f60968c2721f96f778e454fdd2fbec0ee3d78e4f92a8f1e5bd6d",
+            "proposal": {
+              "proposal_type": "action.tool_call",
+              "payload": {}
+            },
+            "session_id": "parity-session",
+            "trace_id": "parity-trace",
+            "namespace_scope": "session:parity-session"
+          }
+        }
+      }
+    },
+    {
+      "id": "admission-1",
+      "operation": "admission",
+      "payload": {
+        "tool_name": "local.echo",
+        "args": {
+          "text": "é",
+          "values": [
+            true,
+            null,
+            5
+          ]
+        }
+      },
+      "observed": {
+        "result": [
+          {
+            "contract_version": "control_plane.contract.v1",
+            "state_revision": 0,
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "workload_id": "kernel-action-path",
+            "workload_version": "kernel_api.v1",
+            "policy_snapshot_id": "kernel-admission-decision:parity-session:parity-trace",
+            "policy_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "configuration_snapshot_id": "kernel-proposal:parity-session:parity-trace",
+            "configuration_digest": "935486e3ec0f40f86b783dc685f89f2bcecdfc055c3e1b3bee29694564368619",
+            "creation_timestamp": "2026-09-20T12:00:00+00:00",
+            "admission_decision_receipt_ref": "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "namespace_scope": "session:parity-session",
+            "lifecycle_state": "admitted",
+            "current_attempt_id": "kernel-action-attempt:parity-session:parity-trace:0001",
+            "final_truth_record_id": null
+          },
+          {
+            "contract_version": "control_plane.contract.v1",
+            "state_revision": 0,
+            "attempt_id": "kernel-action-attempt:parity-session:parity-trace:0001",
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "attempt_ordinal": 1,
+            "attempt_state": "attempt_created",
+            "starting_state_snapshot_ref": "kernel-proposal:parity-session:parity-trace:935486e3ec0f40f86b783dc685f89f2bcecdfc055c3e1b3bee29694564368619",
+            "start_timestamp": "2026-09-20T12:00:00+00:00",
+            "end_timestamp": null,
+            "side_effect_boundary_class": null,
+            "failure_plane": null,
+            "failure_classification": null,
+            "failure_class": null,
+            "recovery_decision_id": null
+          }
+        ],
+        "policy": {
+          "schema_version": "control_plane.snapshot.v1",
+          "snapshot_id": "kernel-admission-decision:parity-session:parity-trace",
+          "snapshot_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "created_at": "2026-09-20T12:00:00+00:00",
+          "source_refs": [
+            "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          ],
+          "policy_payload": {
+            "decision_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "admission_decision": {
+              "decision": "ACCEPT_TO_UNIFY",
+              "reason_codes": []
+            },
+            "namespace_scope_rule": "session_scoped_kernel_action"
+          }
+        },
+        "configuration": {
+          "schema_version": "control_plane.snapshot.v1",
+          "snapshot_id": "kernel-proposal:parity-session:parity-trace",
+          "snapshot_digest": "935486e3ec0f40f86b783dc685f89f2bcecdfc055c3e1b3bee29694564368619",
+          "created_at": "2026-09-20T12:00:00+00:00",
+          "source_refs": [
+            "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          ],
+          "configuration_payload": {
+            "proposal_digest": "935486e3ec0f40f86b783dc685f89f2bcecdfc055c3e1b3bee29694564368619",
+            "proposal": {
+              "proposal_type": "action.tool_call",
+              "payload": {
+                "tool_name": "local.echo",
+                "args": {
+                  "text": "é",
+                  "values": [
+                    true,
+                    null,
+                    5
+                  ]
+                }
+              }
+            },
+            "session_id": "parity-session",
+            "trace_id": "parity-trace",
+            "namespace_scope": "session:parity-session"
+          }
+        }
+      }
+    },
+    {
+      "id": "admission-2",
+      "operation": "admission",
+      "payload": {
+        "tool_name": "fs.write_patch",
+        "args": {
+          "path": "./workspace/notes.md",
+          "patch": "hello"
+        }
+      },
+      "observed": {
+        "result": [
+          {
+            "contract_version": "control_plane.contract.v1",
+            "state_revision": 0,
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "workload_id": "kernel-action-path",
+            "workload_version": "kernel_api.v1",
+            "policy_snapshot_id": "kernel-admission-decision:parity-session:parity-trace",
+            "policy_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "configuration_snapshot_id": "kernel-proposal:parity-session:parity-trace",
+            "configuration_digest": "55e3c0fce0a8a785415f5647db7957db3ae217218dbf1b824dfeec82286078a0",
+            "creation_timestamp": "2026-09-20T12:00:00+00:00",
+            "admission_decision_receipt_ref": "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "namespace_scope": "session:parity-session",
+            "lifecycle_state": "admitted",
+            "current_attempt_id": "kernel-action-attempt:parity-session:parity-trace:0001",
+            "final_truth_record_id": null
+          },
+          {
+            "contract_version": "control_plane.contract.v1",
+            "state_revision": 0,
+            "attempt_id": "kernel-action-attempt:parity-session:parity-trace:0001",
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "attempt_ordinal": 1,
+            "attempt_state": "attempt_created",
+            "starting_state_snapshot_ref": "kernel-proposal:parity-session:parity-trace:55e3c0fce0a8a785415f5647db7957db3ae217218dbf1b824dfeec82286078a0",
+            "start_timestamp": "2026-09-20T12:00:00+00:00",
+            "end_timestamp": null,
+            "side_effect_boundary_class": null,
+            "failure_plane": null,
+            "failure_classification": null,
+            "failure_class": null,
+            "recovery_decision_id": null
+          }
+        ],
+        "policy": {
+          "schema_version": "control_plane.snapshot.v1",
+          "snapshot_id": "kernel-admission-decision:parity-session:parity-trace",
+          "snapshot_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "created_at": "2026-09-20T12:00:00+00:00",
+          "source_refs": [
+            "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          ],
+          "policy_payload": {
+            "decision_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "admission_decision": {
+              "decision": "ACCEPT_TO_UNIFY",
+              "reason_codes": []
+            },
+            "namespace_scope_rule": "session_scoped_kernel_action"
+          }
+        },
+        "configuration": {
+          "schema_version": "control_plane.snapshot.v1",
+          "snapshot_id": "kernel-proposal:parity-session:parity-trace",
+          "snapshot_digest": "55e3c0fce0a8a785415f5647db7957db3ae217218dbf1b824dfeec82286078a0",
+          "created_at": "2026-09-20T12:00:00+00:00",
+          "source_refs": [
+            "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          ],
+          "configuration_payload": {
+            "proposal_digest": "55e3c0fce0a8a785415f5647db7957db3ae217218dbf1b824dfeec82286078a0",
+            "proposal": {
+              "proposal_type": "action.tool_call",
+              "payload": {
+                "tool_name": "fs.write_patch",
+                "args": {
+                  "path": "./workspace/notes.md",
+                  "patch": "hello"
+                }
+              }
+            },
+            "session_id": "parity-session",
+            "trace_id": "parity-trace",
+            "namespace_scope": "session:parity-session"
+          }
+        }
+      }
+    },
+    {
+      "id": "commit-rejected-0",
+      "operation": "commit-rejected",
+      "payload": {},
+      "observed": {
+        "result": [
+          {
+            "contract_version": "control_plane.contract.v1",
+            "state_revision": 2,
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "workload_id": "kernel-action-path",
+            "workload_version": "kernel_api.v1",
+            "policy_snapshot_id": "kernel-admission-decision:parity-session:parity-trace",
+            "policy_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "configuration_snapshot_id": "kernel-proposal:parity-session:parity-trace",
+            "configuration_digest": "5de46cd7c342f60968c2721f96f778e454fdd2fbec0ee3d78e4f92a8f1e5bd6d",
+            "creation_timestamp": "2026-09-20T12:00:00+00:00",
+            "admission_decision_receipt_ref": "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "namespace_scope": "session:parity-session",
+            "lifecycle_state": "failed_terminal",
+            "current_attempt_id": "kernel-action-attempt:parity-session:parity-trace:0001",
+            "final_truth_record_id": "kernel-action-final-truth:kernel-action-run:parity-session:parity-trace"
+          },
+          {
+            "contract_version": "control_plane.contract.v1",
+            "state_revision": 1,
+            "attempt_id": "kernel-action-attempt:parity-session:parity-trace:0001",
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "attempt_ordinal": 1,
+            "attempt_state": "attempt_abandoned",
+            "starting_state_snapshot_ref": "kernel-proposal:parity-session:parity-trace:5de46cd7c342f60968c2721f96f778e454fdd2fbec0ee3d78e4f92a8f1e5bd6d",
+            "start_timestamp": "2026-09-20T12:00:00+00:00",
+            "end_timestamp": "2026-09-20T12:00:01+00:00",
+            "side_effect_boundary_class": null,
+            "failure_plane": null,
+            "failure_classification": null,
+            "failure_class": null,
+            "recovery_decision_id": null
+          },
+          {
+            "contract_version": "control_plane.contract.v1",
+            "final_truth_record_id": "kernel-action-final-truth:kernel-action-run:parity-session:parity-trace",
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "result_class": "blocked",
+            "completion_classification": "completion_unsatisfied",
+            "evidence_sufficiency_classification": "evidence_sufficient",
+            "residual_uncertainty_classification": "no_residual_uncertainty",
+            "degradation_classification": "no_degradation",
+            "closure_basis": "policy_terminal_stop",
+            "terminality_basis": "policy_terminal",
+            "authority_sources": [
+              "receipt_evidence",
+              "validated_artifact"
+            ],
+            "authoritative_result_ref": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+          },
+          null
+        ],
+        "policy": {
+          "schema_version": "control_plane.snapshot.v1",
+          "snapshot_id": "kernel-admission-decision:parity-session:parity-trace",
+          "snapshot_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "created_at": "2026-09-20T12:00:00+00:00",
+          "source_refs": [
+            "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          ],
+          "policy_payload": {
+            "decision_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "admission_decision": {
+              "decision": "ACCEPT_TO_UNIFY",
+              "reason_codes": []
+            },
+            "namespace_scope_rule": "session_scoped_kernel_action"
+          }
+        },
+        "configuration": {
+          "schema_version": "control_plane.snapshot.v1",
+          "snapshot_id": "kernel-proposal:parity-session:parity-trace",
+          "snapshot_digest": "5de46cd7c342f60968c2721f96f778e454fdd2fbec0ee3d78e4f92a8f1e5bd6d",
+          "created_at": "2026-09-20T12:00:00+00:00",
+          "source_refs": [
+            "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          ],
+          "configuration_payload": {
+            "proposal_digest": "5de46cd7c342f60968c2721f96f778e454fdd2fbec0ee3d78e4f92a8f1e5bd6d",
+            "proposal": {
+              "proposal_type": "action.tool_call",
+              "payload": {}
+            },
+            "session_id": "parity-session",
+            "trace_id": "parity-trace",
+            "namespace_scope": "session:parity-session"
+          }
+        }
+      }
+    },
+    {
+      "id": "commit-rejected-1",
+      "operation": "commit-rejected",
+      "payload": {
+        "tool_name": "local.echo",
+        "args": {
+          "text": "é",
+          "values": [
+            true,
+            null,
+            5
+          ]
+        }
+      },
+      "observed": {
+        "result": [
+          {
+            "contract_version": "control_plane.contract.v1",
+            "state_revision": 2,
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "workload_id": "kernel-action-path",
+            "workload_version": "kernel_api.v1",
+            "policy_snapshot_id": "kernel-admission-decision:parity-session:parity-trace",
+            "policy_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "configuration_snapshot_id": "kernel-proposal:parity-session:parity-trace",
+            "configuration_digest": "935486e3ec0f40f86b783dc685f89f2bcecdfc055c3e1b3bee29694564368619",
+            "creation_timestamp": "2026-09-20T12:00:00+00:00",
+            "admission_decision_receipt_ref": "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "namespace_scope": "session:parity-session",
+            "lifecycle_state": "failed_terminal",
+            "current_attempt_id": "kernel-action-attempt:parity-session:parity-trace:0001",
+            "final_truth_record_id": "kernel-action-final-truth:kernel-action-run:parity-session:parity-trace"
+          },
+          {
+            "contract_version": "control_plane.contract.v1",
+            "state_revision": 1,
+            "attempt_id": "kernel-action-attempt:parity-session:parity-trace:0001",
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "attempt_ordinal": 1,
+            "attempt_state": "attempt_abandoned",
+            "starting_state_snapshot_ref": "kernel-proposal:parity-session:parity-trace:935486e3ec0f40f86b783dc685f89f2bcecdfc055c3e1b3bee29694564368619",
+            "start_timestamp": "2026-09-20T12:00:00+00:00",
+            "end_timestamp": "2026-09-20T12:00:01+00:00",
+            "side_effect_boundary_class": null,
+            "failure_plane": null,
+            "failure_classification": null,
+            "failure_class": null,
+            "recovery_decision_id": null
+          },
+          {
+            "contract_version": "control_plane.contract.v1",
+            "final_truth_record_id": "kernel-action-final-truth:kernel-action-run:parity-session:parity-trace",
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "result_class": "blocked",
+            "completion_classification": "completion_unsatisfied",
+            "evidence_sufficiency_classification": "evidence_sufficient",
+            "residual_uncertainty_classification": "no_residual_uncertainty",
+            "degradation_classification": "no_degradation",
+            "closure_basis": "policy_terminal_stop",
+            "terminality_basis": "policy_terminal",
+            "authority_sources": [
+              "receipt_evidence",
+              "validated_artifact"
+            ],
+            "authoritative_result_ref": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+          },
+          null
+        ],
+        "policy": {
+          "schema_version": "control_plane.snapshot.v1",
+          "snapshot_id": "kernel-admission-decision:parity-session:parity-trace",
+          "snapshot_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "created_at": "2026-09-20T12:00:00+00:00",
+          "source_refs": [
+            "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          ],
+          "policy_payload": {
+            "decision_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "admission_decision": {
+              "decision": "ACCEPT_TO_UNIFY",
+              "reason_codes": []
+            },
+            "namespace_scope_rule": "session_scoped_kernel_action"
+          }
+        },
+        "configuration": {
+          "schema_version": "control_plane.snapshot.v1",
+          "snapshot_id": "kernel-proposal:parity-session:parity-trace",
+          "snapshot_digest": "935486e3ec0f40f86b783dc685f89f2bcecdfc055c3e1b3bee29694564368619",
+          "created_at": "2026-09-20T12:00:00+00:00",
+          "source_refs": [
+            "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          ],
+          "configuration_payload": {
+            "proposal_digest": "935486e3ec0f40f86b783dc685f89f2bcecdfc055c3e1b3bee29694564368619",
+            "proposal": {
+              "proposal_type": "action.tool_call",
+              "payload": {
+                "tool_name": "local.echo",
+                "args": {
+                  "text": "é",
+                  "values": [
+                    true,
+                    null,
+                    5
+                  ]
+                }
+              }
+            },
+            "session_id": "parity-session",
+            "trace_id": "parity-trace",
+            "namespace_scope": "session:parity-session"
+          }
+        }
+      }
+    },
+    {
+      "id": "commit-rejected-2",
+      "operation": "commit-rejected",
+      "payload": {
+        "tool_name": "fs.write_patch",
+        "args": {
+          "path": "./workspace/notes.md",
+          "patch": "hello"
+        }
+      },
+      "observed": {
+        "result": [
+          {
+            "contract_version": "control_plane.contract.v1",
+            "state_revision": 2,
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "workload_id": "kernel-action-path",
+            "workload_version": "kernel_api.v1",
+            "policy_snapshot_id": "kernel-admission-decision:parity-session:parity-trace",
+            "policy_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "configuration_snapshot_id": "kernel-proposal:parity-session:parity-trace",
+            "configuration_digest": "55e3c0fce0a8a785415f5647db7957db3ae217218dbf1b824dfeec82286078a0",
+            "creation_timestamp": "2026-09-20T12:00:00+00:00",
+            "admission_decision_receipt_ref": "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "namespace_scope": "session:parity-session",
+            "lifecycle_state": "failed_terminal",
+            "current_attempt_id": "kernel-action-attempt:parity-session:parity-trace:0001",
+            "final_truth_record_id": "kernel-action-final-truth:kernel-action-run:parity-session:parity-trace"
+          },
+          {
+            "contract_version": "control_plane.contract.v1",
+            "state_revision": 1,
+            "attempt_id": "kernel-action-attempt:parity-session:parity-trace:0001",
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "attempt_ordinal": 1,
+            "attempt_state": "attempt_abandoned",
+            "starting_state_snapshot_ref": "kernel-proposal:parity-session:parity-trace:55e3c0fce0a8a785415f5647db7957db3ae217218dbf1b824dfeec82286078a0",
+            "start_timestamp": "2026-09-20T12:00:00+00:00",
+            "end_timestamp": "2026-09-20T12:00:01+00:00",
+            "side_effect_boundary_class": null,
+            "failure_plane": null,
+            "failure_classification": null,
+            "failure_class": null,
+            "recovery_decision_id": null
+          },
+          {
+            "contract_version": "control_plane.contract.v1",
+            "final_truth_record_id": "kernel-action-final-truth:kernel-action-run:parity-session:parity-trace",
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "result_class": "blocked",
+            "completion_classification": "completion_unsatisfied",
+            "evidence_sufficiency_classification": "evidence_sufficient",
+            "residual_uncertainty_classification": "no_residual_uncertainty",
+            "degradation_classification": "no_degradation",
+            "closure_basis": "policy_terminal_stop",
+            "terminality_basis": "policy_terminal",
+            "authority_sources": [
+              "receipt_evidence",
+              "validated_artifact"
+            ],
+            "authoritative_result_ref": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+          },
+          null
+        ],
+        "policy": {
+          "schema_version": "control_plane.snapshot.v1",
+          "snapshot_id": "kernel-admission-decision:parity-session:parity-trace",
+          "snapshot_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "created_at": "2026-09-20T12:00:00+00:00",
+          "source_refs": [
+            "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          ],
+          "policy_payload": {
+            "decision_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "admission_decision": {
+              "decision": "ACCEPT_TO_UNIFY",
+              "reason_codes": []
+            },
+            "namespace_scope_rule": "session_scoped_kernel_action"
+          }
+        },
+        "configuration": {
+          "schema_version": "control_plane.snapshot.v1",
+          "snapshot_id": "kernel-proposal:parity-session:parity-trace",
+          "snapshot_digest": "55e3c0fce0a8a785415f5647db7957db3ae217218dbf1b824dfeec82286078a0",
+          "created_at": "2026-09-20T12:00:00+00:00",
+          "source_refs": [
+            "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          ],
+          "configuration_payload": {
+            "proposal_digest": "55e3c0fce0a8a785415f5647db7957db3ae217218dbf1b824dfeec82286078a0",
+            "proposal": {
+              "proposal_type": "action.tool_call",
+              "payload": {
+                "tool_name": "fs.write_patch",
+                "args": {
+                  "path": "./workspace/notes.md",
+                  "patch": "hello"
+                }
+              }
+            },
+            "session_id": "parity-session",
+            "trace_id": "parity-trace",
+            "namespace_scope": "session:parity-session"
+          }
+        }
+      }
+    },
+    {
+      "id": "commit-error-0",
+      "operation": "commit-error",
+      "payload": {},
+      "observed": {
+        "result": [
+          {
+            "contract_version": "control_plane.contract.v1",
+            "state_revision": 2,
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "workload_id": "kernel-action-path",
+            "workload_version": "kernel_api.v1",
+            "policy_snapshot_id": "kernel-admission-decision:parity-session:parity-trace",
+            "policy_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "configuration_snapshot_id": "kernel-proposal:parity-session:parity-trace",
+            "configuration_digest": "5de46cd7c342f60968c2721f96f778e454fdd2fbec0ee3d78e4f92a8f1e5bd6d",
+            "creation_timestamp": "2026-09-20T12:00:00+00:00",
+            "admission_decision_receipt_ref": "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "namespace_scope": "session:parity-session",
+            "lifecycle_state": "failed_terminal",
+            "current_attempt_id": "kernel-action-attempt:parity-session:parity-trace:0001",
+            "final_truth_record_id": "kernel-action-final-truth:kernel-action-run:parity-session:parity-trace"
+          },
+          {
+            "contract_version": "control_plane.contract.v1",
+            "state_revision": 1,
+            "attempt_id": "kernel-action-attempt:parity-session:parity-trace:0001",
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "attempt_ordinal": 1,
+            "attempt_state": "attempt_abandoned",
+            "starting_state_snapshot_ref": "kernel-proposal:parity-session:parity-trace:5de46cd7c342f60968c2721f96f778e454fdd2fbec0ee3d78e4f92a8f1e5bd6d",
+            "start_timestamp": "2026-09-20T12:00:00+00:00",
+            "end_timestamp": "2026-09-20T12:00:01+00:00",
+            "side_effect_boundary_class": null,
+            "failure_plane": null,
+            "failure_classification": null,
+            "failure_class": null,
+            "recovery_decision_id": null
+          },
+          {
+            "contract_version": "control_plane.contract.v1",
+            "final_truth_record_id": "kernel-action-final-truth:kernel-action-run:parity-session:parity-trace",
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "result_class": "failed",
+            "completion_classification": "completion_unsatisfied",
+            "evidence_sufficiency_classification": "evidence_insufficient",
+            "residual_uncertainty_classification": "unresolved_residual_uncertainty",
+            "degradation_classification": "no_degradation",
+            "closure_basis": "policy_terminal_stop",
+            "terminality_basis": "policy_terminal",
+            "authority_sources": [
+              "receipt_evidence"
+            ],
+            "authoritative_result_ref": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+          },
+          null
+        ],
+        "policy": {
+          "schema_version": "control_plane.snapshot.v1",
+          "snapshot_id": "kernel-admission-decision:parity-session:parity-trace",
+          "snapshot_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "created_at": "2026-09-20T12:00:00+00:00",
+          "source_refs": [
+            "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          ],
+          "policy_payload": {
+            "decision_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "admission_decision": {
+              "decision": "ACCEPT_TO_UNIFY",
+              "reason_codes": []
+            },
+            "namespace_scope_rule": "session_scoped_kernel_action"
+          }
+        },
+        "configuration": {
+          "schema_version": "control_plane.snapshot.v1",
+          "snapshot_id": "kernel-proposal:parity-session:parity-trace",
+          "snapshot_digest": "5de46cd7c342f60968c2721f96f778e454fdd2fbec0ee3d78e4f92a8f1e5bd6d",
+          "created_at": "2026-09-20T12:00:00+00:00",
+          "source_refs": [
+            "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          ],
+          "configuration_payload": {
+            "proposal_digest": "5de46cd7c342f60968c2721f96f778e454fdd2fbec0ee3d78e4f92a8f1e5bd6d",
+            "proposal": {
+              "proposal_type": "action.tool_call",
+              "payload": {}
+            },
+            "session_id": "parity-session",
+            "trace_id": "parity-trace",
+            "namespace_scope": "session:parity-session"
+          }
+        }
+      }
+    },
+    {
+      "id": "commit-error-1",
+      "operation": "commit-error",
+      "payload": {
+        "tool_name": "local.echo",
+        "args": {
+          "text": "é",
+          "values": [
+            true,
+            null,
+            5
+          ]
+        }
+      },
+      "observed": {
+        "result": [
+          {
+            "contract_version": "control_plane.contract.v1",
+            "state_revision": 2,
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "workload_id": "kernel-action-path",
+            "workload_version": "kernel_api.v1",
+            "policy_snapshot_id": "kernel-admission-decision:parity-session:parity-trace",
+            "policy_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "configuration_snapshot_id": "kernel-proposal:parity-session:parity-trace",
+            "configuration_digest": "935486e3ec0f40f86b783dc685f89f2bcecdfc055c3e1b3bee29694564368619",
+            "creation_timestamp": "2026-09-20T12:00:00+00:00",
+            "admission_decision_receipt_ref": "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "namespace_scope": "session:parity-session",
+            "lifecycle_state": "failed_terminal",
+            "current_attempt_id": "kernel-action-attempt:parity-session:parity-trace:0001",
+            "final_truth_record_id": "kernel-action-final-truth:kernel-action-run:parity-session:parity-trace"
+          },
+          {
+            "contract_version": "control_plane.contract.v1",
+            "state_revision": 1,
+            "attempt_id": "kernel-action-attempt:parity-session:parity-trace:0001",
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "attempt_ordinal": 1,
+            "attempt_state": "attempt_abandoned",
+            "starting_state_snapshot_ref": "kernel-proposal:parity-session:parity-trace:935486e3ec0f40f86b783dc685f89f2bcecdfc055c3e1b3bee29694564368619",
+            "start_timestamp": "2026-09-20T12:00:00+00:00",
+            "end_timestamp": "2026-09-20T12:00:01+00:00",
+            "side_effect_boundary_class": null,
+            "failure_plane": null,
+            "failure_classification": null,
+            "failure_class": null,
+            "recovery_decision_id": null
+          },
+          {
+            "contract_version": "control_plane.contract.v1",
+            "final_truth_record_id": "kernel-action-final-truth:kernel-action-run:parity-session:parity-trace",
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "result_class": "failed",
+            "completion_classification": "completion_unsatisfied",
+            "evidence_sufficiency_classification": "evidence_insufficient",
+            "residual_uncertainty_classification": "unresolved_residual_uncertainty",
+            "degradation_classification": "no_degradation",
+            "closure_basis": "policy_terminal_stop",
+            "terminality_basis": "policy_terminal",
+            "authority_sources": [
+              "receipt_evidence"
+            ],
+            "authoritative_result_ref": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+          },
+          null
+        ],
+        "policy": {
+          "schema_version": "control_plane.snapshot.v1",
+          "snapshot_id": "kernel-admission-decision:parity-session:parity-trace",
+          "snapshot_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "created_at": "2026-09-20T12:00:00+00:00",
+          "source_refs": [
+            "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          ],
+          "policy_payload": {
+            "decision_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "admission_decision": {
+              "decision": "ACCEPT_TO_UNIFY",
+              "reason_codes": []
+            },
+            "namespace_scope_rule": "session_scoped_kernel_action"
+          }
+        },
+        "configuration": {
+          "schema_version": "control_plane.snapshot.v1",
+          "snapshot_id": "kernel-proposal:parity-session:parity-trace",
+          "snapshot_digest": "935486e3ec0f40f86b783dc685f89f2bcecdfc055c3e1b3bee29694564368619",
+          "created_at": "2026-09-20T12:00:00+00:00",
+          "source_refs": [
+            "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          ],
+          "configuration_payload": {
+            "proposal_digest": "935486e3ec0f40f86b783dc685f89f2bcecdfc055c3e1b3bee29694564368619",
+            "proposal": {
+              "proposal_type": "action.tool_call",
+              "payload": {
+                "tool_name": "local.echo",
+                "args": {
+                  "text": "é",
+                  "values": [
+                    true,
+                    null,
+                    5
+                  ]
+                }
+              }
+            },
+            "session_id": "parity-session",
+            "trace_id": "parity-trace",
+            "namespace_scope": "session:parity-session"
+          }
+        }
+      }
+    },
+    {
+      "id": "commit-error-2",
+      "operation": "commit-error",
+      "payload": {
+        "tool_name": "fs.write_patch",
+        "args": {
+          "path": "./workspace/notes.md",
+          "patch": "hello"
+        }
+      },
+      "observed": {
+        "result": [
+          {
+            "contract_version": "control_plane.contract.v1",
+            "state_revision": 2,
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "workload_id": "kernel-action-path",
+            "workload_version": "kernel_api.v1",
+            "policy_snapshot_id": "kernel-admission-decision:parity-session:parity-trace",
+            "policy_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "configuration_snapshot_id": "kernel-proposal:parity-session:parity-trace",
+            "configuration_digest": "55e3c0fce0a8a785415f5647db7957db3ae217218dbf1b824dfeec82286078a0",
+            "creation_timestamp": "2026-09-20T12:00:00+00:00",
+            "admission_decision_receipt_ref": "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "namespace_scope": "session:parity-session",
+            "lifecycle_state": "failed_terminal",
+            "current_attempt_id": "kernel-action-attempt:parity-session:parity-trace:0001",
+            "final_truth_record_id": "kernel-action-final-truth:kernel-action-run:parity-session:parity-trace"
+          },
+          {
+            "contract_version": "control_plane.contract.v1",
+            "state_revision": 1,
+            "attempt_id": "kernel-action-attempt:parity-session:parity-trace:0001",
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "attempt_ordinal": 1,
+            "attempt_state": "attempt_abandoned",
+            "starting_state_snapshot_ref": "kernel-proposal:parity-session:parity-trace:55e3c0fce0a8a785415f5647db7957db3ae217218dbf1b824dfeec82286078a0",
+            "start_timestamp": "2026-09-20T12:00:00+00:00",
+            "end_timestamp": "2026-09-20T12:00:01+00:00",
+            "side_effect_boundary_class": null,
+            "failure_plane": null,
+            "failure_classification": null,
+            "failure_class": null,
+            "recovery_decision_id": null
+          },
+          {
+            "contract_version": "control_plane.contract.v1",
+            "final_truth_record_id": "kernel-action-final-truth:kernel-action-run:parity-session:parity-trace",
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "result_class": "failed",
+            "completion_classification": "completion_unsatisfied",
+            "evidence_sufficiency_classification": "evidence_insufficient",
+            "residual_uncertainty_classification": "unresolved_residual_uncertainty",
+            "degradation_classification": "no_degradation",
+            "closure_basis": "policy_terminal_stop",
+            "terminality_basis": "policy_terminal",
+            "authority_sources": [
+              "receipt_evidence"
+            ],
+            "authoritative_result_ref": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+          },
+          null
+        ],
+        "policy": {
+          "schema_version": "control_plane.snapshot.v1",
+          "snapshot_id": "kernel-admission-decision:parity-session:parity-trace",
+          "snapshot_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "created_at": "2026-09-20T12:00:00+00:00",
+          "source_refs": [
+            "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          ],
+          "policy_payload": {
+            "decision_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "admission_decision": {
+              "decision": "ACCEPT_TO_UNIFY",
+              "reason_codes": []
+            },
+            "namespace_scope_rule": "session_scoped_kernel_action"
+          }
+        },
+        "configuration": {
+          "schema_version": "control_plane.snapshot.v1",
+          "snapshot_id": "kernel-proposal:parity-session:parity-trace",
+          "snapshot_digest": "55e3c0fce0a8a785415f5647db7957db3ae217218dbf1b824dfeec82286078a0",
+          "created_at": "2026-09-20T12:00:00+00:00",
+          "source_refs": [
+            "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          ],
+          "configuration_payload": {
+            "proposal_digest": "55e3c0fce0a8a785415f5647db7957db3ae217218dbf1b824dfeec82286078a0",
+            "proposal": {
+              "proposal_type": "action.tool_call",
+              "payload": {
+                "tool_name": "fs.write_patch",
+                "args": {
+                  "path": "./workspace/notes.md",
+                  "patch": "hello"
+                }
+              }
+            },
+            "session_id": "parity-session",
+            "trace_id": "parity-trace",
+            "namespace_scope": "session:parity-session"
+          }
+        }
+      }
+    },
+    {
+      "id": "commit-success-0",
+      "operation": "commit-success",
+      "payload": {},
+      "observed": {
+        "result": [
+          {
+            "contract_version": "control_plane.contract.v1",
+            "state_revision": 2,
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "workload_id": "kernel-action-path",
+            "workload_version": "kernel_api.v1",
+            "policy_snapshot_id": "kernel-admission-decision:parity-session:parity-trace",
+            "policy_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "configuration_snapshot_id": "kernel-proposal:parity-session:parity-trace",
+            "configuration_digest": "5de46cd7c342f60968c2721f96f778e454fdd2fbec0ee3d78e4f92a8f1e5bd6d",
+            "creation_timestamp": "2026-09-20T12:00:00+00:00",
+            "admission_decision_receipt_ref": "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "namespace_scope": "session:parity-session",
+            "lifecycle_state": "completed",
+            "current_attempt_id": "kernel-action-attempt:parity-session:parity-trace:0001",
+            "final_truth_record_id": "kernel-action-final-truth:kernel-action-run:parity-session:parity-trace"
+          },
+          {
+            "contract_version": "control_plane.contract.v1",
+            "state_revision": 2,
+            "attempt_id": "kernel-action-attempt:parity-session:parity-trace:0001",
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "attempt_ordinal": 1,
+            "attempt_state": "attempt_completed",
+            "starting_state_snapshot_ref": "kernel-proposal:parity-session:parity-trace:5de46cd7c342f60968c2721f96f778e454fdd2fbec0ee3d78e4f92a8f1e5bd6d",
+            "start_timestamp": "2026-09-20T12:00:01+00:00",
+            "end_timestamp": "2026-09-20T12:00:01+00:00",
+            "side_effect_boundary_class": null,
+            "failure_plane": null,
+            "failure_classification": null,
+            "failure_class": null,
+            "recovery_decision_id": null
+          },
+          {
+            "contract_version": "control_plane.contract.v1",
+            "final_truth_record_id": "kernel-action-final-truth:kernel-action-run:parity-session:parity-trace",
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "result_class": "success",
+            "completion_classification": "completion_satisfied",
+            "evidence_sufficiency_classification": "evidence_sufficient",
+            "residual_uncertainty_classification": "no_residual_uncertainty",
+            "degradation_classification": "no_degradation",
+            "closure_basis": "normal_execution",
+            "terminality_basis": "completed_terminal",
+            "authority_sources": [
+              "receipt_evidence",
+              "validated_artifact"
+            ],
+            "authoritative_result_ref": "kernel-execution-result:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+          },
+          {
+            "contract_version": "control_plane.contract.v1",
+            "journal_entry_id": "kernel-action-journal:kernel-action-run:parity-session:parity-trace:commit",
+            "effect_id": "kernel-action-effect:kernel-action-run:parity-session:parity-trace:commit",
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "attempt_id": "kernel-action-attempt:parity-session:parity-trace:0001",
+            "step_id": "kernel-action-step:kernel-action-run:parity-session:parity-trace:commit",
+            "authorization_basis_ref": "kernel-authorization:5de46cd7c342f60968c2721f96f778e454fdd2fbec0ee3d78e4f92a8f1e5bd6d:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "publication_sequence": 1,
+            "publication_timestamp": "2026-09-20T12:00:01+00:00",
+            "intended_target_ref": "kernel-action-target:parity-session:parity-trace",
+            "observed_result_ref": "kernel-execution-result:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+            "uncertainty_classification": "no_residual_uncertainty",
+            "integrity_verification_ref": "kernel-ledger-event:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+            "prior_journal_entry_id": null,
+            "prior_entry_digest": null,
+            "contradictory_entry_refs": [],
+            "superseding_entry_refs": [],
+            "entry_digest": "2a3c445cad69a62db7b320da2e3c2713e030475a621fcf4e1e03eef1461222e3"
+          }
+        ],
+        "policy": {
+          "schema_version": "control_plane.snapshot.v1",
+          "snapshot_id": "kernel-admission-decision:parity-session:parity-trace",
+          "snapshot_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "created_at": "2026-09-20T12:00:00+00:00",
+          "source_refs": [
+            "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          ],
+          "policy_payload": {
+            "decision_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "admission_decision": {
+              "decision": "ACCEPT_TO_UNIFY",
+              "reason_codes": []
+            },
+            "namespace_scope_rule": "session_scoped_kernel_action"
+          }
+        },
+        "configuration": {
+          "schema_version": "control_plane.snapshot.v1",
+          "snapshot_id": "kernel-proposal:parity-session:parity-trace",
+          "snapshot_digest": "5de46cd7c342f60968c2721f96f778e454fdd2fbec0ee3d78e4f92a8f1e5bd6d",
+          "created_at": "2026-09-20T12:00:00+00:00",
+          "source_refs": [
+            "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          ],
+          "configuration_payload": {
+            "proposal_digest": "5de46cd7c342f60968c2721f96f778e454fdd2fbec0ee3d78e4f92a8f1e5bd6d",
+            "proposal": {
+              "proposal_type": "action.tool_call",
+              "payload": {}
+            },
+            "session_id": "parity-session",
+            "trace_id": "parity-trace",
+            "namespace_scope": "session:parity-session"
+          }
+        }
+      }
+    },
+    {
+      "id": "commit-success-1",
+      "operation": "commit-success",
+      "payload": {
+        "tool_name": "local.echo",
+        "args": {
+          "text": "é",
+          "values": [
+            true,
+            null,
+            5
+          ]
+        }
+      },
+      "observed": {
+        "result": [
+          {
+            "contract_version": "control_plane.contract.v1",
+            "state_revision": 2,
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "workload_id": "kernel-action-path",
+            "workload_version": "kernel_api.v1",
+            "policy_snapshot_id": "kernel-admission-decision:parity-session:parity-trace",
+            "policy_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "configuration_snapshot_id": "kernel-proposal:parity-session:parity-trace",
+            "configuration_digest": "935486e3ec0f40f86b783dc685f89f2bcecdfc055c3e1b3bee29694564368619",
+            "creation_timestamp": "2026-09-20T12:00:00+00:00",
+            "admission_decision_receipt_ref": "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "namespace_scope": "session:parity-session",
+            "lifecycle_state": "completed",
+            "current_attempt_id": "kernel-action-attempt:parity-session:parity-trace:0001",
+            "final_truth_record_id": "kernel-action-final-truth:kernel-action-run:parity-session:parity-trace"
+          },
+          {
+            "contract_version": "control_plane.contract.v1",
+            "state_revision": 2,
+            "attempt_id": "kernel-action-attempt:parity-session:parity-trace:0001",
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "attempt_ordinal": 1,
+            "attempt_state": "attempt_completed",
+            "starting_state_snapshot_ref": "kernel-proposal:parity-session:parity-trace:935486e3ec0f40f86b783dc685f89f2bcecdfc055c3e1b3bee29694564368619",
+            "start_timestamp": "2026-09-20T12:00:01+00:00",
+            "end_timestamp": "2026-09-20T12:00:01+00:00",
+            "side_effect_boundary_class": null,
+            "failure_plane": null,
+            "failure_classification": null,
+            "failure_class": null,
+            "recovery_decision_id": null
+          },
+          {
+            "contract_version": "control_plane.contract.v1",
+            "final_truth_record_id": "kernel-action-final-truth:kernel-action-run:parity-session:parity-trace",
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "result_class": "success",
+            "completion_classification": "completion_satisfied",
+            "evidence_sufficiency_classification": "evidence_sufficient",
+            "residual_uncertainty_classification": "no_residual_uncertainty",
+            "degradation_classification": "no_degradation",
+            "closure_basis": "normal_execution",
+            "terminality_basis": "completed_terminal",
+            "authority_sources": [
+              "receipt_evidence",
+              "validated_artifact"
+            ],
+            "authoritative_result_ref": "kernel-execution-result:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+          },
+          {
+            "contract_version": "control_plane.contract.v1",
+            "journal_entry_id": "kernel-action-journal:kernel-action-run:parity-session:parity-trace:commit",
+            "effect_id": "kernel-action-effect:kernel-action-run:parity-session:parity-trace:commit",
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "attempt_id": "kernel-action-attempt:parity-session:parity-trace:0001",
+            "step_id": "kernel-action-step:kernel-action-run:parity-session:parity-trace:commit",
+            "authorization_basis_ref": "kernel-authorization:935486e3ec0f40f86b783dc685f89f2bcecdfc055c3e1b3bee29694564368619:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "publication_sequence": 1,
+            "publication_timestamp": "2026-09-20T12:00:01+00:00",
+            "intended_target_ref": "kernel-action-target:parity-session:parity-trace",
+            "observed_result_ref": "kernel-execution-result:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+            "uncertainty_classification": "no_residual_uncertainty",
+            "integrity_verification_ref": "kernel-ledger-event:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+            "prior_journal_entry_id": null,
+            "prior_entry_digest": null,
+            "contradictory_entry_refs": [],
+            "superseding_entry_refs": [],
+            "entry_digest": "314d1969c8a2e1d194c83a97d51eb50efb171bd9542dc5e4d34a161260705f18"
+          }
+        ],
+        "policy": {
+          "schema_version": "control_plane.snapshot.v1",
+          "snapshot_id": "kernel-admission-decision:parity-session:parity-trace",
+          "snapshot_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "created_at": "2026-09-20T12:00:00+00:00",
+          "source_refs": [
+            "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          ],
+          "policy_payload": {
+            "decision_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "admission_decision": {
+              "decision": "ACCEPT_TO_UNIFY",
+              "reason_codes": []
+            },
+            "namespace_scope_rule": "session_scoped_kernel_action"
+          }
+        },
+        "configuration": {
+          "schema_version": "control_plane.snapshot.v1",
+          "snapshot_id": "kernel-proposal:parity-session:parity-trace",
+          "snapshot_digest": "935486e3ec0f40f86b783dc685f89f2bcecdfc055c3e1b3bee29694564368619",
+          "created_at": "2026-09-20T12:00:00+00:00",
+          "source_refs": [
+            "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          ],
+          "configuration_payload": {
+            "proposal_digest": "935486e3ec0f40f86b783dc685f89f2bcecdfc055c3e1b3bee29694564368619",
+            "proposal": {
+              "proposal_type": "action.tool_call",
+              "payload": {
+                "tool_name": "local.echo",
+                "args": {
+                  "text": "é",
+                  "values": [
+                    true,
+                    null,
+                    5
+                  ]
+                }
+              }
+            },
+            "session_id": "parity-session",
+            "trace_id": "parity-trace",
+            "namespace_scope": "session:parity-session"
+          }
+        }
+      }
+    },
+    {
+      "id": "commit-success-2",
+      "operation": "commit-success",
+      "payload": {
+        "tool_name": "fs.write_patch",
+        "args": {
+          "path": "./workspace/notes.md",
+          "patch": "hello"
+        }
+      },
+      "observed": {
+        "result": [
+          {
+            "contract_version": "control_plane.contract.v1",
+            "state_revision": 2,
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "workload_id": "kernel-action-path",
+            "workload_version": "kernel_api.v1",
+            "policy_snapshot_id": "kernel-admission-decision:parity-session:parity-trace",
+            "policy_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "configuration_snapshot_id": "kernel-proposal:parity-session:parity-trace",
+            "configuration_digest": "55e3c0fce0a8a785415f5647db7957db3ae217218dbf1b824dfeec82286078a0",
+            "creation_timestamp": "2026-09-20T12:00:00+00:00",
+            "admission_decision_receipt_ref": "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "namespace_scope": "session:parity-session",
+            "lifecycle_state": "completed",
+            "current_attempt_id": "kernel-action-attempt:parity-session:parity-trace:0001",
+            "final_truth_record_id": "kernel-action-final-truth:kernel-action-run:parity-session:parity-trace"
+          },
+          {
+            "contract_version": "control_plane.contract.v1",
+            "state_revision": 2,
+            "attempt_id": "kernel-action-attempt:parity-session:parity-trace:0001",
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "attempt_ordinal": 1,
+            "attempt_state": "attempt_completed",
+            "starting_state_snapshot_ref": "kernel-proposal:parity-session:parity-trace:55e3c0fce0a8a785415f5647db7957db3ae217218dbf1b824dfeec82286078a0",
+            "start_timestamp": "2026-09-20T12:00:01+00:00",
+            "end_timestamp": "2026-09-20T12:00:01+00:00",
+            "side_effect_boundary_class": null,
+            "failure_plane": null,
+            "failure_classification": null,
+            "failure_class": null,
+            "recovery_decision_id": null
+          },
+          {
+            "contract_version": "control_plane.contract.v1",
+            "final_truth_record_id": "kernel-action-final-truth:kernel-action-run:parity-session:parity-trace",
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "result_class": "success",
+            "completion_classification": "completion_satisfied",
+            "evidence_sufficiency_classification": "evidence_sufficient",
+            "residual_uncertainty_classification": "no_residual_uncertainty",
+            "degradation_classification": "no_degradation",
+            "closure_basis": "normal_execution",
+            "terminality_basis": "completed_terminal",
+            "authority_sources": [
+              "receipt_evidence",
+              "validated_artifact"
+            ],
+            "authoritative_result_ref": "kernel-execution-result:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+          },
+          {
+            "contract_version": "control_plane.contract.v1",
+            "journal_entry_id": "kernel-action-journal:kernel-action-run:parity-session:parity-trace:commit",
+            "effect_id": "kernel-action-effect:kernel-action-run:parity-session:parity-trace:commit",
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "attempt_id": "kernel-action-attempt:parity-session:parity-trace:0001",
+            "step_id": "kernel-action-step:kernel-action-run:parity-session:parity-trace:commit",
+            "authorization_basis_ref": "kernel-authorization:55e3c0fce0a8a785415f5647db7957db3ae217218dbf1b824dfeec82286078a0:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "publication_sequence": 1,
+            "publication_timestamp": "2026-09-20T12:00:01+00:00",
+            "intended_target_ref": "kernel-action-target:parity-session:parity-trace",
+            "observed_result_ref": "kernel-execution-result:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+            "uncertainty_classification": "no_residual_uncertainty",
+            "integrity_verification_ref": "kernel-ledger-event:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+            "prior_journal_entry_id": null,
+            "prior_entry_digest": null,
+            "contradictory_entry_refs": [],
+            "superseding_entry_refs": [],
+            "entry_digest": "e714ac515253fbb74c5f74c151edeb81cef59643f26bfaf8ca40e07a814b4dc4"
+          }
+        ],
+        "policy": {
+          "schema_version": "control_plane.snapshot.v1",
+          "snapshot_id": "kernel-admission-decision:parity-session:parity-trace",
+          "snapshot_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "created_at": "2026-09-20T12:00:00+00:00",
+          "source_refs": [
+            "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          ],
+          "policy_payload": {
+            "decision_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "admission_decision": {
+              "decision": "ACCEPT_TO_UNIFY",
+              "reason_codes": []
+            },
+            "namespace_scope_rule": "session_scoped_kernel_action"
+          }
+        },
+        "configuration": {
+          "schema_version": "control_plane.snapshot.v1",
+          "snapshot_id": "kernel-proposal:parity-session:parity-trace",
+          "snapshot_digest": "55e3c0fce0a8a785415f5647db7957db3ae217218dbf1b824dfeec82286078a0",
+          "created_at": "2026-09-20T12:00:00+00:00",
+          "source_refs": [
+            "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          ],
+          "configuration_payload": {
+            "proposal_digest": "55e3c0fce0a8a785415f5647db7957db3ae217218dbf1b824dfeec82286078a0",
+            "proposal": {
+              "proposal_type": "action.tool_call",
+              "payload": {
+                "tool_name": "fs.write_patch",
+                "args": {
+                  "path": "./workspace/notes.md",
+                  "patch": "hello"
+                }
+              }
+            },
+            "session_id": "parity-session",
+            "trace_id": "parity-trace",
+            "namespace_scope": "session:parity-session"
+          }
+        }
+      }
+    },
+    {
+      "id": "session-end-0",
+      "operation": "session-end",
+      "payload": {},
+      "observed": {
+        "result": [
+          {
+            "contract_version": "control_plane.contract.v1",
+            "state_revision": 1,
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "workload_id": "kernel-action-path",
+            "workload_version": "kernel_api.v1",
+            "policy_snapshot_id": "kernel-admission-decision:parity-session:parity-trace",
+            "policy_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "configuration_snapshot_id": "kernel-proposal:parity-session:parity-trace",
+            "configuration_digest": "5de46cd7c342f60968c2721f96f778e454fdd2fbec0ee3d78e4f92a8f1e5bd6d",
+            "creation_timestamp": "2026-09-20T12:00:00+00:00",
+            "admission_decision_receipt_ref": "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "namespace_scope": "session:parity-session",
+            "lifecycle_state": "cancelled",
+            "current_attempt_id": "kernel-action-attempt:parity-session:parity-trace:0001",
+            "final_truth_record_id": "kernel-action-final-truth:kernel-action-run:parity-session:parity-trace"
+          },
+          {
+            "contract_version": "control_plane.contract.v1",
+            "state_revision": 1,
+            "attempt_id": "kernel-action-attempt:parity-session:parity-trace:0001",
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "attempt_ordinal": 1,
+            "attempt_state": "attempt_abandoned",
+            "starting_state_snapshot_ref": "kernel-proposal:parity-session:parity-trace:5de46cd7c342f60968c2721f96f778e454fdd2fbec0ee3d78e4f92a8f1e5bd6d",
+            "start_timestamp": "2026-09-20T12:00:00+00:00",
+            "end_timestamp": "2026-09-20T12:00:01+00:00",
+            "side_effect_boundary_class": null,
+            "failure_plane": null,
+            "failure_classification": null,
+            "failure_class": null,
+            "recovery_decision_id": null
+          },
+          {
+            "contract_version": "control_plane.contract.v1",
+            "final_truth_record_id": "kernel-action-final-truth:kernel-action-run:parity-session:parity-trace",
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "result_class": "blocked",
+            "completion_classification": "completion_unsatisfied",
+            "evidence_sufficiency_classification": "evidence_sufficient",
+            "residual_uncertainty_classification": "no_residual_uncertainty",
+            "degradation_classification": "no_degradation",
+            "closure_basis": "cancelled_by_authority",
+            "terminality_basis": "cancelled_terminal",
+            "authority_sources": [
+              "receipt_evidence"
+            ],
+            "authoritative_result_ref": "kernel-ledger-event:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+          }
+        ],
+        "policy": {
+          "schema_version": "control_plane.snapshot.v1",
+          "snapshot_id": "kernel-admission-decision:parity-session:parity-trace",
+          "snapshot_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "created_at": "2026-09-20T12:00:00+00:00",
+          "source_refs": [
+            "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          ],
+          "policy_payload": {
+            "decision_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "admission_decision": {
+              "decision": "ACCEPT_TO_UNIFY",
+              "reason_codes": []
+            },
+            "namespace_scope_rule": "session_scoped_kernel_action"
+          }
+        },
+        "configuration": {
+          "schema_version": "control_plane.snapshot.v1",
+          "snapshot_id": "kernel-proposal:parity-session:parity-trace",
+          "snapshot_digest": "5de46cd7c342f60968c2721f96f778e454fdd2fbec0ee3d78e4f92a8f1e5bd6d",
+          "created_at": "2026-09-20T12:00:00+00:00",
+          "source_refs": [
+            "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          ],
+          "configuration_payload": {
+            "proposal_digest": "5de46cd7c342f60968c2721f96f778e454fdd2fbec0ee3d78e4f92a8f1e5bd6d",
+            "proposal": {
+              "proposal_type": "action.tool_call",
+              "payload": {}
+            },
+            "session_id": "parity-session",
+            "trace_id": "parity-trace",
+            "namespace_scope": "session:parity-session"
+          }
+        }
+      }
+    },
+    {
+      "id": "session-end-1",
+      "operation": "session-end",
+      "payload": {
+        "tool_name": "local.echo",
+        "args": {
+          "text": "é",
+          "values": [
+            true,
+            null,
+            5
+          ]
+        }
+      },
+      "observed": {
+        "result": [
+          {
+            "contract_version": "control_plane.contract.v1",
+            "state_revision": 1,
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "workload_id": "kernel-action-path",
+            "workload_version": "kernel_api.v1",
+            "policy_snapshot_id": "kernel-admission-decision:parity-session:parity-trace",
+            "policy_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "configuration_snapshot_id": "kernel-proposal:parity-session:parity-trace",
+            "configuration_digest": "935486e3ec0f40f86b783dc685f89f2bcecdfc055c3e1b3bee29694564368619",
+            "creation_timestamp": "2026-09-20T12:00:00+00:00",
+            "admission_decision_receipt_ref": "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "namespace_scope": "session:parity-session",
+            "lifecycle_state": "cancelled",
+            "current_attempt_id": "kernel-action-attempt:parity-session:parity-trace:0001",
+            "final_truth_record_id": "kernel-action-final-truth:kernel-action-run:parity-session:parity-trace"
+          },
+          {
+            "contract_version": "control_plane.contract.v1",
+            "state_revision": 1,
+            "attempt_id": "kernel-action-attempt:parity-session:parity-trace:0001",
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "attempt_ordinal": 1,
+            "attempt_state": "attempt_abandoned",
+            "starting_state_snapshot_ref": "kernel-proposal:parity-session:parity-trace:935486e3ec0f40f86b783dc685f89f2bcecdfc055c3e1b3bee29694564368619",
+            "start_timestamp": "2026-09-20T12:00:00+00:00",
+            "end_timestamp": "2026-09-20T12:00:01+00:00",
+            "side_effect_boundary_class": null,
+            "failure_plane": null,
+            "failure_classification": null,
+            "failure_class": null,
+            "recovery_decision_id": null
+          },
+          {
+            "contract_version": "control_plane.contract.v1",
+            "final_truth_record_id": "kernel-action-final-truth:kernel-action-run:parity-session:parity-trace",
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "result_class": "blocked",
+            "completion_classification": "completion_unsatisfied",
+            "evidence_sufficiency_classification": "evidence_sufficient",
+            "residual_uncertainty_classification": "no_residual_uncertainty",
+            "degradation_classification": "no_degradation",
+            "closure_basis": "cancelled_by_authority",
+            "terminality_basis": "cancelled_terminal",
+            "authority_sources": [
+              "receipt_evidence"
+            ],
+            "authoritative_result_ref": "kernel-ledger-event:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+          }
+        ],
+        "policy": {
+          "schema_version": "control_plane.snapshot.v1",
+          "snapshot_id": "kernel-admission-decision:parity-session:parity-trace",
+          "snapshot_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "created_at": "2026-09-20T12:00:00+00:00",
+          "source_refs": [
+            "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          ],
+          "policy_payload": {
+            "decision_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "admission_decision": {
+              "decision": "ACCEPT_TO_UNIFY",
+              "reason_codes": []
+            },
+            "namespace_scope_rule": "session_scoped_kernel_action"
+          }
+        },
+        "configuration": {
+          "schema_version": "control_plane.snapshot.v1",
+          "snapshot_id": "kernel-proposal:parity-session:parity-trace",
+          "snapshot_digest": "935486e3ec0f40f86b783dc685f89f2bcecdfc055c3e1b3bee29694564368619",
+          "created_at": "2026-09-20T12:00:00+00:00",
+          "source_refs": [
+            "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          ],
+          "configuration_payload": {
+            "proposal_digest": "935486e3ec0f40f86b783dc685f89f2bcecdfc055c3e1b3bee29694564368619",
+            "proposal": {
+              "proposal_type": "action.tool_call",
+              "payload": {
+                "tool_name": "local.echo",
+                "args": {
+                  "text": "é",
+                  "values": [
+                    true,
+                    null,
+                    5
+                  ]
+                }
+              }
+            },
+            "session_id": "parity-session",
+            "trace_id": "parity-trace",
+            "namespace_scope": "session:parity-session"
+          }
+        }
+      }
+    },
+    {
+      "id": "session-end-2",
+      "operation": "session-end",
+      "payload": {
+        "tool_name": "fs.write_patch",
+        "args": {
+          "path": "./workspace/notes.md",
+          "patch": "hello"
+        }
+      },
+      "observed": {
+        "result": [
+          {
+            "contract_version": "control_plane.contract.v1",
+            "state_revision": 1,
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "workload_id": "kernel-action-path",
+            "workload_version": "kernel_api.v1",
+            "policy_snapshot_id": "kernel-admission-decision:parity-session:parity-trace",
+            "policy_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "configuration_snapshot_id": "kernel-proposal:parity-session:parity-trace",
+            "configuration_digest": "55e3c0fce0a8a785415f5647db7957db3ae217218dbf1b824dfeec82286078a0",
+            "creation_timestamp": "2026-09-20T12:00:00+00:00",
+            "admission_decision_receipt_ref": "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "namespace_scope": "session:parity-session",
+            "lifecycle_state": "cancelled",
+            "current_attempt_id": "kernel-action-attempt:parity-session:parity-trace:0001",
+            "final_truth_record_id": "kernel-action-final-truth:kernel-action-run:parity-session:parity-trace"
+          },
+          {
+            "contract_version": "control_plane.contract.v1",
+            "state_revision": 1,
+            "attempt_id": "kernel-action-attempt:parity-session:parity-trace:0001",
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "attempt_ordinal": 1,
+            "attempt_state": "attempt_abandoned",
+            "starting_state_snapshot_ref": "kernel-proposal:parity-session:parity-trace:55e3c0fce0a8a785415f5647db7957db3ae217218dbf1b824dfeec82286078a0",
+            "start_timestamp": "2026-09-20T12:00:00+00:00",
+            "end_timestamp": "2026-09-20T12:00:01+00:00",
+            "side_effect_boundary_class": null,
+            "failure_plane": null,
+            "failure_classification": null,
+            "failure_class": null,
+            "recovery_decision_id": null
+          },
+          {
+            "contract_version": "control_plane.contract.v1",
+            "final_truth_record_id": "kernel-action-final-truth:kernel-action-run:parity-session:parity-trace",
+            "run_id": "kernel-action-run:parity-session:parity-trace",
+            "result_class": "blocked",
+            "completion_classification": "completion_unsatisfied",
+            "evidence_sufficiency_classification": "evidence_sufficient",
+            "residual_uncertainty_classification": "no_residual_uncertainty",
+            "degradation_classification": "no_degradation",
+            "closure_basis": "cancelled_by_authority",
+            "terminality_basis": "cancelled_terminal",
+            "authority_sources": [
+              "receipt_evidence"
+            ],
+            "authoritative_result_ref": "kernel-ledger-event:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+          }
+        ],
+        "policy": {
+          "schema_version": "control_plane.snapshot.v1",
+          "snapshot_id": "kernel-admission-decision:parity-session:parity-trace",
+          "snapshot_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "created_at": "2026-09-20T12:00:00+00:00",
+          "source_refs": [
+            "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          ],
+          "policy_payload": {
+            "decision_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "admission_decision": {
+              "decision": "ACCEPT_TO_UNIFY",
+              "reason_codes": []
+            },
+            "namespace_scope_rule": "session_scoped_kernel_action"
+          }
+        },
+        "configuration": {
+          "schema_version": "control_plane.snapshot.v1",
+          "snapshot_id": "kernel-proposal:parity-session:parity-trace",
+          "snapshot_digest": "55e3c0fce0a8a785415f5647db7957db3ae217218dbf1b824dfeec82286078a0",
+          "created_at": "2026-09-20T12:00:00+00:00",
+          "source_refs": [
+            "kernel-admission-event:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          ],
+          "configuration_payload": {
+            "proposal_digest": "55e3c0fce0a8a785415f5647db7957db3ae217218dbf1b824dfeec82286078a0",
+            "proposal": {
+              "proposal_type": "action.tool_call",
+              "payload": {
+                "tool_name": "fs.write_patch",
+                "args": {
+                  "path": "./workspace/notes.md",
+                  "patch": "hello"
+                }
+              }
+            },
+            "session_id": "parity-session",
+            "trace_id": "parity-trace",
+            "namespace_scope": "session:parity-session"
+          }
+        }
+      }
+    }
+  ],
+  "scope": "Stable JSON publication to real SQLite under supplied ledger times and controlled result claims; no actual tool effect.",
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-09-21T05:27:38.735566Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:94b43f2aa62797e870200682e2ea5b795df848a2ef51f2832aee17bd93ba85a5",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 2348,
+        "paths_total_reference": 2348,
+        "churn_paths": 2348,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    }
+  ]
+}

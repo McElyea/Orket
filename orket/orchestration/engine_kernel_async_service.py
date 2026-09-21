@@ -6,6 +6,7 @@ from orket.application.services.kernel_action_control_plane_resource_lifecycle i
 from orket.application.services.kernel_action_control_plane_support import (
     run_id_for as kernel_action_run_id_for,
 )
+from orket.application.services.kernel_action_input_service import capture_kernel_request
 from orket.application.services.tool_approval_control_plane_reservation_service import (
     ToolApprovalControlPlaneReservationService,
 )
@@ -98,6 +99,7 @@ class KernelAsyncControlPlaneService:
         )
 
     async def admit_proposal_async(self, request: dict[str, Any]) -> dict[str, Any]:
+        request = capture_kernel_request(request)
         response = self.gateway_facade.admit_proposal(request)
         ledger = self.gateway_facade.list_ledger_events(
             {
@@ -136,6 +138,7 @@ class KernelAsyncControlPlaneService:
         return response
 
     async def commit_proposal_async(self, request: dict[str, Any]) -> dict[str, Any]:
+        request = capture_kernel_request(request)
         response = self.gateway_facade.commit_proposal(request)
         ledger = self.gateway_facade.list_ledger_events(
             {
@@ -157,6 +160,7 @@ class KernelAsyncControlPlaneService:
         )
 
     async def end_session_async(self, request: dict[str, Any]) -> dict[str, Any]:
+        request = capture_kernel_request(request)
         response = self.gateway_facade.end_session(request)
         ledger = self.gateway_facade.list_ledger_events(
             {

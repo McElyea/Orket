@@ -181,6 +181,12 @@ through the application service; environment extras fail without warning effects
 Contract: `docs/specs/SCHEMA_INPUT_OWNERSHIP.md`. Remaining effects, decision context,
 adapter classification and async reachability still require D acceptance.
 
+Async kernel invocations retain request targets and operator values before
+calling the kernel or awaiting publication. Direct control-plane publishers also
+capture request, response and ledger JSON before their first await, preventing
+borrowed mutations from changing snapshots or terminal claims. Stable JSON and
+existing durability/transaction limits remain: `docs/specs/KERNEL_PUBLICATION_INPUTS.md`.
+
 Kernel proposal admission selects immutable operator enablement/resolver flags
 before request validation or hashing. Trusted Python callers may supply the typed
 input; request and HTTP payload fields cannot supply it. Default calls observe

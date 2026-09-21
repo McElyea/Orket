@@ -12520,7 +12520,7 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.56 kernel admission policy inputs. Preserve the governed legacy-export cutover;
+0.6.57 kernel publication input retention. Preserve the governed legacy-export cutover;
 continue remaining clock/input owners, adapter enforcement and async reachability before E1/E2
 and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
@@ -19156,3 +19156,91 @@ Linux application acceptance or deadline change is claimed. Remaining D, E1/E2,
 CAP, whole-suite/89% coverage, .43 Git timeout cause and .44 non-Python package
 ceiling stay open. Preserve BT behavior and retained evidence; the lane remains
 active pending all required acceptance and explicit user review.
+
+#### .57 Kernel publication input retention (2026-09-20)
+
+Public async kernel admission, commit and session-end entrypoints now capture
+request JSON before the kernel call or first await. Direct control-plane
+publication also captures request, response and ledger inputs before waiting.
+The existing SDK immutable JSON codec transfers detached, operation-owned values;
+no second serialization authority or request-controlled policy override is added.
+Contracts: `docs/specs/KERNEL_PUBLICATION_INPUTS.md`; migration delta:
+`docs/architecture/CONTRACT_DELTA_KERNEL_PUBLICATION_INPUTS_D_2026-09-20.md`.
+
+Three retained real-SQLite counterexamples showed changed proposal bytes stored
+under an earlier digest, a rejected commit becoming a successful final-truth
+record after borrowed-input mutation, and changed session-end time/receipt data.
+Three public engine probes also lost the originally admitted run's response
+references when the caller changed its session during publication. All six pass
+after capture. The public cases run the canonical app lifespan and actual engine,
+kernel and SQLite, preserving nested operator attestation and actor values and
+confirming owner close. Controlled scheduling holds real repository operations;
+no tool effect or provider inference is implied by claimed kernel result data.
+
+The corrected 56-case focused set passes, including existing namespace, retry,
+resource, recovery and terminal guards. Nineteen further controls prove malformed
+JSON refusal before actual database mutation and no caller-payload mutation.
+Fifteen independently observed installed v0.6.56 SQLite scenarios preserve full
+returned run/attempt/truth/effect records and policy/configuration snapshots for
+stable JSON. They cover admission, rejected/error/successful commit claims and
+session end over three payload shapes. Supplied ledger timestamps and synthetic
+result claims are explicit; these are not independently verified tool outcomes.
+
+Existing run/attempt/resource consistency checks have one owner in the resource
+lifecycle module, with the same error class and messages. The publisher shrank
+from 428 to 364 lines; the resource module is 324 lines. New functions meet the
+size bounds. Failure, cancellation, transaction and in-memory kernel-ledger
+limitations are unchanged. Existing histories are not rewritten.
+
+The final 36-module selection includes every prior .56 module and all 346 prior
+case identities, every changed test, affected direct-import callers and explicit
+run-immutability coverage. All current selected cases pass:
+
+| Cell | Cases / failures / errors / skips | JUnit seconds |
+|---|---|---|
+| Source Windows Python 3.11 | 421 / 0 / 0 / 0 | 41.437 |
+| Installed win-py311 | 421 / 0 / 0 / 0 | 42.145 |
+| Installed win-py312 | 421 / 0 / 0 / 0 | 49.946 |
+
+Each installed cell verifies 943 actual package origins, exact
+copied inputs and source case identities, actual CLI startup, tool-gate audit and
+process teardown. The .56 corrected support bundle and validated .53 JUnit
+predicate remain bound. Package parity covers
+1,106 Python files,
+1,122 wheel package members and
+2,149 support files.
+Wheel SHA-256: `424d383c876f27d453754ae1dc49b15b2d22399f2fd065f70e0b9e6a18da62e7`;
+sdist SHA-256: `c3d9568b19bcc076481e17a04a51c8b63ffa5bda81922691300c1508957ad8b9`.
+Observed Windows path/result: **primary / success**. Proof is live local
+application/SQLite/ASGI and controlled-input execution plus structural binding;
+no fresh inference, network-listener or whole-suite claim is made.
+
+The initial extraction helper failed AST parsing before writing product files;
+its original bytes remain retained. Import formatting was corrected before
+testing. The first 56-case after run passed 55 and exposed one incorrect fixture
+expectation for the attestation enum string. The test now uses the authoritative
+enum and readonly SQL; the complete 56-case set then passed. Failed and corrected
+reports remain under `.tmp/d-kernel-publication-inputs/`. No assertion, product
+clock or deadline was relaxed.
+
+Canonical dependency enforcement passes: 1,106 modules, 3,530 import sites, six
+recognized dynamic routes, no unknown modules, analysis errors, forbidden edges
+or authority cycles; policy v2 is unchanged. Changed Python is Ruff-clean;
+canonical Ruff retains 94 findings. Both Quality jobs include the new tests,
+but hosted Quality remains unverified. Fresh Git-visible runtime AST inventory
+observes 480 application, 265 adapter and 131 interface candidate spellings,
+with none in 113 core and four decision-node modules. This is not alias-complete
+or a purity/reachability verdict; collectors and owned workers still require
+disposition. Prior inventories are retained unchanged.
+
+A fresh passive native Linux clock gate remains **blocked / environment blocker**:
+2.470584683 quiet seconds in 240.000317864 seconds,
+against the unchanged 60-second requirement and 240-second observation budget.
+Maximum/minimum observed steps: +0.020898286/
+-0.326288833 seconds. Cause remains unknown;
+no Linux application cell or clock adjustment occurred. The frozen Windows
+declaration's .53 clock reference is historical; this separate fresh preflight
+is the latest observation. Remaining D input/adapter/async work, E1/E2, CAP,
+whole-suite/89% coverage, .43 Git timeout cause and .44 non-Python package ceiling
+stay open. BT behavior/evidence and the active lane remain preserved pending
+required acceptance and explicit user review.

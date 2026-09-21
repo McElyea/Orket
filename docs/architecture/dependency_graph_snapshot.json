@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-21T04:57:26.891062+00:00",
+  "generated_at": "2026-09-21T05:29:58.364781+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -1357,11 +1357,11 @@
       },
       "orket.application.services.kernel_action_control_plane_resource_lifecycle": {
         "path": "orket/application/services/kernel_action_control_plane_resource_lifecycle.py",
-        "sha256": "309eac0b131777c5a403b02ad02376f10c8d7aa017971531d5adf470b0987e62"
+        "sha256": "51cd9ced1756e91aa6563370af230be3df415cf633f39f1cd166c72a52045319"
       },
       "orket.application.services.kernel_action_control_plane_service": {
         "path": "orket/application/services/kernel_action_control_plane_service.py",
-        "sha256": "35efa5484e748c0ca67923c4da779212d84d3e6e1bb2661ca8db6a7f5841bcab"
+        "sha256": "b4ba4addcaeda6d6aa27357c9252d5e6583cc9cfd9ddb7d2d972de5c85e11f81"
       },
       "orket.application.services.kernel_action_control_plane_support": {
         "path": "orket/application/services/kernel_action_control_plane_support.py",
@@ -1370,6 +1370,10 @@
       "orket.application.services.kernel_action_control_plane_view_service": {
         "path": "orket/application/services/kernel_action_control_plane_view_service.py",
         "sha256": "2a0c5997091b2da43c9378dc753c8dd8d27e454a752c731e24d7b9a128b5dde7"
+      },
+      "orket.application.services.kernel_action_input_service": {
+        "path": "orket/application/services/kernel_action_input_service.py",
+        "sha256": "96bf4156bd38d9f2fcc259b5c0eff835123b0ab0153670f87d4a2e98c2055236"
       },
       "orket.application.services.kernel_action_pending_approval_reservation": {
         "path": "orket/application/services/kernel_action_pending_approval_reservation.py",
@@ -3181,7 +3185,7 @@
       },
       "orket.orchestration.engine_kernel_async_service": {
         "path": "orket/orchestration/engine_kernel_async_service.py",
-        "sha256": "d41198858c1afcdfceaced786f4dc737e6603c7fce0d355696f8a2ede88d2c48"
+        "sha256": "7d8a6547d0a19b71a9c8d44a7aea6f859eeb9ed692d72768ad9d59e88c603c5a"
       },
       "orket.orchestration.engine_services": {
         "path": "orket/orchestration/engine_services.py",
@@ -12345,16 +12349,30 @@
       },
       {
         "source": "orket.application.services.kernel_action_control_plane_resource_lifecycle",
-        "target": "orket.core.contracts.__init__",
+        "target": "orket.application.services.control_plane_resource_authority_checks",
         "path": "orket/application/services/kernel_action_control_plane_resource_lifecycle.py",
         "line": 4,
         "kind": "from"
       },
       {
         "source": "orket.application.services.kernel_action_control_plane_resource_lifecycle",
-        "target": "orket.core.domain.__init__",
+        "target": "orket.core.contracts.__init__",
         "path": "orket/application/services/kernel_action_control_plane_resource_lifecycle.py",
         "line": 5,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.kernel_action_control_plane_resource_lifecycle",
+        "target": "orket.core.contracts.repositories",
+        "path": "orket/application/services/kernel_action_control_plane_resource_lifecycle.py",
+        "line": 6,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.kernel_action_control_plane_resource_lifecycle",
+        "target": "orket.core.domain.__init__",
+        "path": "orket/application/services/kernel_action_control_plane_resource_lifecycle.py",
+        "line": 7,
         "kind": "from"
       },
       {
@@ -12366,72 +12384,72 @@
       },
       {
         "source": "orket.application.services.kernel_action_control_plane_service",
-        "target": "orket.application.services.control_plane_resource_authority_checks",
+        "target": "orket.application.services.control_plane_snapshot_publication",
         "path": "orket/application/services/kernel_action_control_plane_service.py",
         "line": 7,
         "kind": "from"
       },
       {
         "source": "orket.application.services.kernel_action_control_plane_service",
-        "target": "orket.application.services.control_plane_snapshot_publication",
-        "path": "orket/application/services/kernel_action_control_plane_service.py",
-        "line": 10,
-        "kind": "from"
-      },
-      {
-        "source": "orket.application.services.kernel_action_control_plane_service",
         "target": "orket.application.services.control_plane_workload_catalog",
         "path": "orket/application/services/kernel_action_control_plane_service.py",
-        "line": 11,
+        "line": 8,
         "kind": "from"
       },
       {
         "source": "orket.application.services.kernel_action_control_plane_service",
         "target": "orket.application.services.kernel_action_control_plane_failure",
         "path": "orket/application/services/kernel_action_control_plane_service.py",
-        "line": 12,
+        "line": 9,
         "kind": "from"
       },
       {
         "source": "orket.application.services.kernel_action_control_plane_service",
         "target": "orket.application.services.kernel_action_control_plane_outcome",
         "path": "orket/application/services/kernel_action_control_plane_service.py",
-        "line": 16,
+        "line": 13,
         "kind": "from"
       },
       {
         "source": "orket.application.services.kernel_action_control_plane_service",
         "target": "orket.application.services.kernel_action_control_plane_resource_lifecycle",
         "path": "orket/application/services/kernel_action_control_plane_service.py",
-        "line": 21,
+        "line": 18,
         "kind": "from"
       },
       {
         "source": "orket.application.services.kernel_action_control_plane_service",
         "target": "orket.application.services.kernel_action_control_plane_support",
         "path": "orket/application/services/kernel_action_control_plane_service.py",
-        "line": 29,
+        "line": 24,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.kernel_action_control_plane_service",
+        "target": "orket.application.services.kernel_action_input_service",
+        "path": "orket/application/services/kernel_action_control_plane_service.py",
+        "line": 45,
         "kind": "from"
       },
       {
         "source": "orket.application.services.kernel_action_control_plane_service",
         "target": "orket.core.contracts.__init__",
         "path": "orket/application/services/kernel_action_control_plane_service.py",
-        "line": 50,
+        "line": 46,
         "kind": "from"
       },
       {
         "source": "orket.application.services.kernel_action_control_plane_service",
         "target": "orket.core.contracts.repositories",
         "path": "orket/application/services/kernel_action_control_plane_service.py",
-        "line": 51,
+        "line": 47,
         "kind": "from"
       },
       {
         "source": "orket.application.services.kernel_action_control_plane_service",
         "target": "orket.core.domain.__init__",
         "path": "orket/application/services/kernel_action_control_plane_service.py",
-        "line": 52,
+        "line": 48,
         "kind": "from"
       },
       {
@@ -23566,9 +23584,16 @@
       },
       {
         "source": "orket.orchestration.engine_kernel_async_service",
-        "target": "orket.application.services.tool_approval_control_plane_reservation_service",
+        "target": "orket.application.services.kernel_action_input_service",
         "path": "orket/orchestration/engine_kernel_async_service.py",
         "line": 9,
+        "kind": "from"
+      },
+      {
+        "source": "orket.orchestration.engine_kernel_async_service",
+        "target": "orket.application.services.tool_approval_control_plane_reservation_service",
+        "path": "orket/orchestration/engine_kernel_async_service.py",
+        "line": 10,
         "kind": "from"
       },
       {
@@ -29288,7 +29313,7 @@
         "forwarded_arguments": 2
       }
     ],
-    "files_scanned": 1105,
+    "files_scanned": 1106,
     "scan_roots": [
       "orket"
     ],
@@ -29606,6 +29631,7 @@
       "orket.application.services.kernel_action_control_plane_service": "application",
       "orket.application.services.kernel_action_control_plane_support": "application",
       "orket.application.services.kernel_action_control_plane_view_service": "application",
+      "orket.application.services.kernel_action_input_service": "application",
       "orket.application.services.kernel_action_pending_approval_reservation": "application",
       "orket.application.services.kernel_v1_gateway": "application",
       "orket.application.services.local_model_factory": "application",
@@ -30420,12 +30446,12 @@
       {
         "source": "application",
         "target": "application",
-        "count": 1712
+        "count": 1714
       },
       {
         "source": "application",
         "target": "core",
-        "count": 754
+        "count": 755
       },
       {
         "source": "application",
@@ -30472,26 +30498,6 @@
     }
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-19T20:51:39.408118Z",
-      "changed": true,
-      "before_digest": "sha256:351a8f94ee222d453ca6c35915f89a8aacd3a7e31043c049e248702e43f6f4dd",
-      "after_digest": "sha256:9f55a1baa4b2d33cb0d50a37846d87cd81c04367f8572a96cf2abe498a1a9894",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 45709,
-        "paths_total_current": 45709,
-        "paths_total_reference": 45709,
-        "churn_paths": 1,
-        "churn_ratio": 2.2e-05,
-        "sample_paths": [
-          "$.generated_at"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-19T22:00:17.281217Z",
       "changed": true,
@@ -31489,6 +31495,45 @@
           "$.observed.edges[2593].line",
           "$.observed.edges[2593].path",
           "$.observed.edges[2593].source"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-21T05:30:13.237154Z",
+      "changed": true,
+      "before_digest": "sha256:072084575bd4609a923cc2afb74cb5ee472fae41726f8d9638c2c0e3e0372f1e",
+      "after_digest": "sha256:414c681041f5abc08f6ba89abc2ff7906a0bd99e55bb0bb1a84e2b3a94e0bca8",
+      "diff": {
+        "added_paths": 5,
+        "removed_paths": 0,
+        "changed_paths": 6946,
+        "initial_write": false,
+        "paths_total_previous": 46909,
+        "paths_total_current": 46949,
+        "paths_total_reference": 46949,
+        "churn_paths": 6951,
+        "churn_ratio": 0.148054,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.edges[1114].target",
+          "$.observed.edges[1115].target",
+          "$.observed.edges[1116].path",
+          "$.observed.edges[1116].source",
+          "$.observed.edges[1116].target",
+          "$.observed.edges[1117].path",
+          "$.observed.edges[1117].source",
+          "$.observed.edges[1117].target",
+          "$.observed.edges[1118].line",
+          "$.observed.edges[1118].target",
+          "$.observed.edges[1119].line",
+          "$.observed.edges[1119].target",
+          "$.observed.edges[1120].line",
+          "$.observed.edges[1120].target",
+          "$.observed.edges[1121].line",
+          "$.observed.edges[1121].target",
+          "$.observed.edges[1122].line",
+          "$.observed.edges[1122].target",
+          "$.observed.edges[1123].line"
         ]
       }
     }

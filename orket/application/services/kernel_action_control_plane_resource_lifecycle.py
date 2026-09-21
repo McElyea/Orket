@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
-from orket.core.contracts import LeaseRecord, ReservationRecord, ResourceRecord, RunRecord
+from orket.application.services.control_plane_resource_authority_checks import require_resource_snapshot_matches_lease
+from orket.core.contracts import AttemptRecord, LeaseRecord, ReservationRecord, ResourceRecord, RunRecord
+from orket.core.contracts.repositories import ControlPlaneExecutionRepository
 from orket.core.domain import (
     CleanupAuthorityClass,
     LeaseStatus,
@@ -9,6 +11,8 @@ from orket.core.domain import (
     OwnershipClass,
     ReservationKind,
     ReservationStatus,
+    is_terminal_attempt_state,
+    is_terminal_run_state,
 )
 
 
@@ -248,6 +252,73 @@ __all__ = [
     "lease_id_for_run",
     "resource_id_for_run",
     "release_execution_authority_if_present",
+    "require_consistent_existing_kernel_run_attempt",
+    "require_existing_kernel_resource_authority",
     "reservation_id_for_run",
     "target_scope_ref_for_run",
 ]
+
+
+async def require_consistent_existing_kernel_run_attempt(
+    *, execution_repository: ControlPlaneExecutionRepository, publication: ControlPlanePublicationService,
+    run: RunRecord, attempt: AttemptRecord | None, expected_attempt_id: str, error_factory: type[ValueError],
+) -> AttemptRecord:
+    current_attempt_id = str(run.current_attempt_id or "").strip()
+    if not current_attempt_id:
+        raise error_factory(f"kernel-action run missing current attempt id: {run.run_id}")
+    if current_attempt_id != expected_attempt_id:
+        raise error_factory(
+            "kernel-action run current attempt mismatch: "
+            f"run_current_attempt={current_attempt_id!r} expected={expected_attempt_id!r}"
+        )
+    resolved_attempt = attempt
+    if resolved_attempt is None:
+        resolved_attempt = await execution_repository.get_attempt_record(attempt_id=current_attempt_id)
+    if resolved_attempt is None:
+        raise error_factory(
+            f"kernel-action run current attempt record missing: {run.run_id}:{current_attempt_id}"
+        )
+    run_terminal = is_terminal_run_state(run.lifecycle_state)
+    attempt_terminal = is_terminal_attempt_state(resolved_attempt.attempt_state)
+    if run_terminal and run.final_truth_record_id is None:
+        raise error_factory(f"kernel-action terminal run missing final truth: {run.run_id}")
+    if run_terminal and not attempt_terminal:
+        raise error_factory(
+            f"kernel-action terminal run has non-terminal attempt: {run.run_id}:{resolved_attempt.attempt_id}"
+        )
+    if not run_terminal and attempt_terminal:
+        raise error_factory(
+            f"kernel-action active run has terminal attempt drift: {run.run_id}:{resolved_attempt.attempt_id}"
+        )
+    await require_existing_kernel_resource_authority(publication=publication, run=run, error_factory=error_factory)
+    return resolved_attempt
+
+
+async def require_existing_kernel_resource_authority(
+    *, publication: ControlPlanePublicationService, run: RunRecord, error_factory: type[ValueError],
+) -> None:
+    reservation = await publication.repository.get_latest_reservation_record(
+        reservation_id=reservation_id_for_run(run_id=run.run_id)
+    )
+    lease = await publication.repository.get_latest_lease_record(lease_id=lease_id_for_run(run_id=run.run_id))
+    if lease is None:
+        return
+    if reservation is None:
+        raise error_factory(
+            f"kernel-action run has lease authority without reservation: {run.run_id}"
+        )
+    if lease.source_reservation_id != reservation.reservation_id:
+        raise error_factory(
+            f"kernel-action run lease source mismatch: {run.run_id}"
+        )
+    resource = await publication.repository.get_latest_resource_record(
+        resource_id=resource_id_for_run(run=run)
+    )
+    require_resource_snapshot_matches_lease(
+        resource=resource,
+        lease=lease,
+        expected_resource_kind="kernel_action_scope",
+        expected_namespace_scope=str(run.namespace_scope or "").strip(),
+        error_context=f"kernel-action run {run.run_id}",
+        error_factory=error_factory,
+    )
