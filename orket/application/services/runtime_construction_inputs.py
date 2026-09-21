@@ -9,7 +9,12 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any
 
-from orket.settings import load_user_preferences, load_user_settings, set_runtime_settings_context
+from orket.settings import (
+    capture_runtime_settings_async,
+    load_user_preferences,
+    load_user_settings,
+    set_runtime_settings_context,
+)
 
 
 @dataclass(frozen=True)
@@ -35,6 +40,13 @@ class RuntimeConstructionInputs:
 
     def user_settings(self) -> dict[str, Any]:
         return json.loads(self.user_settings_json)
+
+    @classmethod
+    async def capture_async(cls, *, environment: Mapping[str, str] | None = None) -> RuntimeConstructionInputs:
+        root = Path.cwd()
+        observed = dict(os.environ if environment is None else environment)
+        settings, preferences = await capture_runtime_settings_async()
+        return cls(root, observed, json.dumps(settings, allow_nan=False), json.dumps(preferences, allow_nan=False))
 
     def user_preferences(self) -> dict[str, Any]:
         return json.loads(self.user_preferences_json)

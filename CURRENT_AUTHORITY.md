@@ -30,6 +30,14 @@ orchestrator clock observations keep their existing second precision. Migration
 and remaining lifecycle input scope:
 `docs/architecture/CONTRACT_DELTA_SANDBOX_CREATION_INPUTS_D_2026-09-20.md`.
 
+The public orchestration helper and collection-member supervisor own runtime
+construction and close through interruption. Prepared child factories retain
+selected parent inputs; runtime composition passes its snapshot to subordinate
+factories. Async runtime settings capture honors bound settings/preferences
+independently and owns selected persistence reads. Direct synchronous constructors
+remain separate work. Contracts: `docs/specs/RUNTIME_EXECUTION_RESULT_CONTRACT.md`
+and `docs/specs/SETTINGS_INPUT_OWNERSHIP.md`.
+
 Agent configuration and turn preparation's sync-only asset loading use owned
 workers. Cancellation and timeout retain the admitted work through settlement;
 worker failure remains visible. Available async asset loaders are invoked once,

@@ -1,7 +1,7 @@
 # Runtime execution results
 
 Status: Active contract; scoped BT-4 combined acceptance recorded in the canonical plan
-Last updated: 2026-09-13
+Last updated: 2026-09-21
 Owner: Orket Core
 
 ## Authority and scope
@@ -83,6 +83,39 @@ Typed cancellation output retains the observed run and evidence references after
 cleanup, with exit 130 even when an interrupted collection's ordinary result
 projection would be non-success exit 1. A generic interruption before a typed
 observation is available cannot invent run identity or references.
+
+## Public helper and collection runtime ownership
+
+The `orchestrate_card` helper and collection-member supervisor admit synchronous
+runtime construction through an owned worker. They retain construction through
+cancellation and timeout. If construction returns an owner after interruption,
+that owner is closed before interruption is reported and is never dispatched.
+Construction failures remain visible; this does not recover resources that a
+constructor acquires internally and then fails to return.
+
+`orchestrate_card` selects explicit `RuntimeConstructionInputs`, or captures its
+environment/root and asynchronously collects runtime settings before worker
+admission. Bound settings and preferences remain authoritative independently;
+unbound values use their selected persistence locations through an owned worker.
+Locations and bound JSON values are retained before collection waits. Existing
+preference migration remains owned by the settings service; this is not an atomic
+transaction across independent settings reads. An unbound synchronous settings
+read on an event loop remains an error. The helper does not load a second `.env`.
+Collection wiring prepares a constructor from selected parent fields before
+admitting its worker; it does not defer reading the mutable parent until later.
+Runtime ports remain selected object identities, not serialized implementations.
+Pipeline composition supplies that runtime's selected construction inputs to its
+sandbox, webhook and orchestrator factories. Explicit per-call inputs take
+precedence over the wiring service's default; absence retains its prior default.
+An inherited wiring service without defaults cannot silently reselect ambient
+paths or policy for an already captured child runtime.
+
+Work and required close retain their existing failure semantics. Repeated caller
+cancellation cannot release a running close. Cancellation during successful
+cleanup is reported after cleanup; cleanup failure cannot preserve caller success.
+Existing typed collection member identities and terminal-evidence rules remain.
+The factory migration does not make every synchronous public constructor safe to
+call on an event loop or complete the broader async-reachability inventory.
 
 ## Verification and limits
 

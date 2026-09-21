@@ -38,8 +38,9 @@ class ExecutionPipelineResumeMixin:
         for index, entry in enumerate(collection.epics, start=1):
             epic_ws = self.workspace / entry["epic"]
             try:
-                res = await execute_collection_member(create=self.pipeline_wiring_service.create_sub_pipeline,
-                    creation={"parent_pipeline": self, "epic_workspace": epic_ws, "department": entry["department"]},
+                construct = await self.pipeline_wiring_service.prepare_sub_pipeline(
+                    parent_pipeline=self, epic_workspace=epic_ws, department=entry["department"])
+                res = await execute_collection_member(create=construct, creation={},
                     target=entry["epic"], build_id=f"{active_build}-member-{index}", session_id=f"{sid}-member-{index}",
                     execution={"driver_steered": driver_steered, "model_override": model_override})
             except RuntimeExecutionCancelled as exc:

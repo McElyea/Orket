@@ -1,7 +1,10 @@
 """Keep runtime owners alive until cleanup can be reflected in their result."""
 import asyncio
 import logging
+from contextlib import asynccontextmanager
+from functools import partial
 
+from orket.adapters.execution.owned_io import run_owned_thread
 from orket.application.services.runtime_execution_result_service import RuntimeExecutionCancelled
 from orket.core.contracts.runtime_execution_result import RuntimeExecutionResult
 
@@ -9,11 +12,12 @@ logger = logging.getLogger(__name__)
 
 
 async def execute_collection_member(*, create, creation, target, session_id, build_id, execution):
+    construct, execution = partial(create, **creation), dict(execution)
     child = None
     cancelled = False
     result = RuntimeExecutionResult(session_id=session_id, build_id=build_id, observation="unresolved")
     try:
-        child = create(**creation)
+        child = await create_runtime_owner(construct, label="collection-member-construction")
         result = await child.run_card(target, session_id=session_id, build_id=build_id, **execution)
         if not isinstance(result, RuntimeExecutionResult):
             raise TypeError("E_RUNTIME_COLLECTION_EPIC_RESULT_REQUIRED")
@@ -52,3 +56,33 @@ async def close_runtime_owner(owner) -> bool:
             cancelled = True
     task.result()
     return cancelled
+
+
+async def create_runtime_owner(construct, *, label):
+    """Close a completed runtime if interruption prevents transferring it to its caller."""
+    created = []
+
+    def create():
+        owner = construct()
+        created.append(owner)
+        return owner
+
+    try:
+        return await run_owned_thread(create, label=label)
+    except asyncio.CancelledError:
+        if created:
+            await close_runtime_owner(created[0])
+        raise
+
+
+@asynccontextmanager
+async def open_runtime_owner(construct, *, label):
+    owner = await create_runtime_owner(construct, label=label)
+    body_returned = False
+    try:
+        yield owner
+        body_returned = True
+    finally:
+        interrupted = await close_runtime_owner(owner)
+        if interrupted and body_returned:
+            raise asyncio.CancelledError("Runtime cleanup completed after caller cancellation")

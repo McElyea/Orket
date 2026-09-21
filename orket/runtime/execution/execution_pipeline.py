@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import inspect
 import os
+from functools import partial
 from pathlib import Path
 from typing import Any
 
@@ -23,6 +24,7 @@ from orket.application.services.epic_preparation_service import EpicPreparationS
 from orket.application.services.epic_publication_service import EpicPublicationService
 from orket.application.services.runtime_construction_inputs import RuntimeConstructionInputs
 from orket.application.services.runtime_input_service import RuntimeInputService
+from orket.application.services.runtime_result_lifetime import open_runtime_owner
 from orket.application.workflows.turn_artifact_writer import TurnArtifactWriter
 from orket.core.contracts.eos_calendar import EosSprintBaseline
 from orket.logging import log_event
@@ -124,8 +126,10 @@ class ExecutionPipeline(
         self.sandbox_orchestrator = self.pipeline_wiring_service.create_sandbox_orchestrator(
             workspace=self.workspace,
             organization=self.org,
+            construction_inputs=self.runtime_context.construction_inputs,
         )
-        self.webhook_db = self.pipeline_wiring_service.create_webhook_database()
+        self.webhook_db = self.pipeline_wiring_service.create_webhook_database(
+            construction_inputs=self.runtime_context.construction_inputs)
         self.bug_fix_manager = self.pipeline_wiring_service.create_bug_fix_manager(
             organization=self.org,
             webhook_db=self.webhook_db,
@@ -143,6 +147,7 @@ class ExecutionPipeline(
             sandbox_orchestrator=self.sandbox_orchestrator,
             card_completion=self.runtime_context.card_completion,
             control_plane_clock=self.runtime_inputs.utc_now_iso,
+            construction_inputs=self.runtime_context.construction_inputs,
         )
         self.orchestrator.run_ledger = self.run_ledger
         self.cards_epic_control_plane = CardsEpicControlPlaneService(
@@ -289,12 +294,14 @@ class ExecutionPipeline(
             target_issue_id=request["target_issue_id"], model_override=pause.model_override)
 
 
-async def orchestrate_card(card_id: str, workspace: Path, **kwargs: Any) -> Any:
-    pipeline = ExecutionPipeline(workspace, kwargs.pop("department", "core"))
-    try:
+async def orchestrate_card(
+    card_id: str, workspace: Path, *, construction_inputs: RuntimeConstructionInputs | None = None, **kwargs: Any,
+) -> Any:
+    inputs = construction_inputs if construction_inputs is not None else await RuntimeConstructionInputs.capture_async()
+    construct = partial(ExecutionPipeline, inputs.invocation_root / workspace, kwargs.pop("department", "core"),
+                        construction_inputs=inputs)
+    async with open_runtime_owner(construct, label="public-runtime-construction") as pipeline:
         return await pipeline.run_card(card_id, **kwargs)
-    finally:
-        await pipeline.close()
 
 
 async def orchestrate(epic_name: str, workspace: Path, **kwargs: Any) -> Any:

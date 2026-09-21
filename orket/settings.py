@@ -129,6 +129,21 @@ def load_user_settings() -> dict[str, Any]:
     return _run_settings_sync(load_user_settings_async(), operation="load_user_settings")
 
 
+async def capture_runtime_settings_async() -> tuple[dict[str, Any], dict[str, Any]]:
+    """Retain bound snapshots or selected persistence locations before owned collection."""
+    settings, preferences = _RUNTIME_USER_SETTINGS.get(), _RUNTIME_USER_PREFERENCES.get()
+    if settings is not None and preferences is not None:
+        return json.loads(settings), json.loads(preferences)
+    location = _capture_location()
+
+    def collect():
+        source = UserSettingsService(location)
+        return (json.loads(settings) if settings is not None else source.read_settings(),
+                json.loads(preferences) if preferences is not None else source.read_preferences())
+
+    return await run_owned_thread(collect, label="runtime-settings-capture")
+
+
 async def save_user_settings_async(
     settings: dict[str, Any], *, expected: dict[str, Any] | None = None,
 ) -> None:

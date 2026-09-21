@@ -5,6 +5,16 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.59] - 2026-09-21
+
+### Fixed
+- Own public and collection runtime construction and required cleanup through interruption.
+- Capture child constructor fields and runtime settings sources before owned work; retain selected subordinate paths and policy.
+- `compatibility_status`: `compatible`
+- `affected_audience`: `all`
+- `migration_requirement`: `none`
+- Ownership limits and internal wiring migration: `docs/architecture/CONTRACT_DELTA_RUNTIME_FACTORY_OWNERSHIP_D_2026-09-21.md`.
+
 ## [0.6.58] - 2026-09-21
 
 ### Fixed

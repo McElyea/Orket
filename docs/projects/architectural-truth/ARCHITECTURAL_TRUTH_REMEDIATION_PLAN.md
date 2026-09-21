@@ -12520,7 +12520,7 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.58 configuration and turn asset worker ownership. Preserve the governed legacy-export cutover;
+0.6.59 public and collection runtime factory ownership. Preserve the governed legacy-export cutover;
 continue remaining clock/input owners, adapter enforcement and async reachability before E1/E2
 and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
@@ -19330,3 +19330,96 @@ E1/E2, CAP, .43 Git timeout cause and .44 non-Python package ceiling remain open
 The host-suspension event is separately retained; no power setting was changed.
 Accepted BT behavior/evidence remain preserved;
 the lane stays active pending required implementation, acceptance and user review.
+
+#### .59 Public and collection runtime factory ownership (2026-09-21)
+
+Public `orchestrate_card` and collection-member construction now use the shared
+owned worker boundary and required-close supervisor. A completed owner that
+cannot be handed to an interrupted caller is closed before interruption escapes.
+Public helper cleanup retains repeated cancellation; cleanup failure remains
+visible, and caller success is withheld after interrupted required cleanup.
+Existing collection identities, typed results, uncertainty and terminal gates
+remain authoritative. This does not recover resources acquired by a constructor
+that fails before returning an owner, or make direct synchronous constructors
+safe on an event-loop thread.
+
+Runtime construction captures invocation root and environment before awaiting
+settings collection. Independently bound settings/preferences are retained;
+unbound values use captured persistence locations in an owned worker, including
+existing migration behavior. Empty bound objects remain authoritative. Captured
+values are detached and invalid selected JSON is refused without replacement.
+These independent reads are not an atomic multi-file snapshot. Collection wiring
+prepares one factory with retained parent ports and input selection; the selected
+runtime inputs also reach sandbox, webhook and orchestrator subordinate factories.
+The internal wiring port now prepares its factory asynchronously and accepts the
+explicit construction-input keyword. Contract and migration details are in
+`docs/specs/RUNTIME_EXECUTION_RESULT_CONTRACT.md`,
+`docs/specs/SETTINGS_INPUT_OWNERSHIP.md` and
+`docs/architecture/CONTRACT_DELTA_RUNTIME_FACTORY_OWNERSHIP_D_2026-09-21.md`.
+
+All four retained before ownership cases fail: public/collection construction
+blocks concurrent SQLite for 0.802168300–0.815202300 seconds against the declared
+0.5-second bound. The corrected cases exercise real runtime constructors and
+held native asset files, cancellation and timeout, no dispatch after interruption,
+owner closure and timer teardown. Additional public flows run real authored
+assets, Python card acceptance and SQLite publication with a controlled workload;
+held required cleanup and an actual SQLite failure prove cancellation retention
+and failure visibility. Input cases rotate caller state while construction is
+queued and verify original workspace, state database, config root, selected ports,
+preferences and subordinate paths. No provider inference is represented by these
+controlled workload cases.
+
+Compatibility verification caught an initial candidate regression: a caller with
+bound settings and independently persisted preferences was newly rejected.
+The same two test cases pass against the isolated installed published v0.6.58
+artifact; both pass after the async settings collector correction. The first
+attempt to launch that control used a wrong interpreter path and failed with
+WinError 2 before application execution; it is retained separately. Another
+initial input test lacked a standard environment fixture and was corrected to use
+the existing seeded root. A later retained failure showed legacy parent inputs
+leaving a subordinate webhook path under a rotated invocation root; explicit
+secondary wiring inputs correct it. Final full proof follows all these changes.
+
+The 84-module routine selection retains all 651 .58 case identities and includes
+direct affected imports, compatibility aliases and execution-pipeline tests. It
+is bounded discovery, not a complete transitive reachability inventory.
+
+| Cell | Cases / failures / errors / skips | JUnit seconds |
+|---|---|---|
+| Source Windows Python 3.11 | 865 / 0 / 0 / 0 | 254.834 |
+| Installed win-py311 | 865 / 0 / 0 / 0 | 258.835 |
+| Installed win-py312 | 865 / 0 / 0 / 0 | 271.774 |
+
+Each installed cell verifies 987 actual package origins, exact
+source case identities and copied inputs, actual CLI startup, controlled tool-gate
+checks and process teardown. Package parity covers
+1,106 Python files,
+1,122 wheel package members and
+2,161 support files. Wheel SHA-256:
+`b0131325fcd335049a3e63aaf9cb8695435efce0c67498179933d04878d925a7`; sdist SHA-256:
+`3d1e1d935976bf02a8788fcb410136c7cb5d3cd3d563563b417c529c8460b7df`.
+Eighteen new concurrent SQLite perf_counter readings meet the unchanged 0.5-second
+bound; maximum 0.008458800 seconds. Final Windows path/result: **primary /
+success**, with live local assets/acceptance/SQLite/CLI and controlled scheduling,
+plus structural artifact binding. Evidence: `.tmp/d-runtime-factory-ownership/`.
+
+Before execution, discovery separately declared four cases in
+`tests/live/test_truthful_runtime_packet1_live.py` **unverified**: missing primary
+output, emission-failure fallback, degraded fallback profile and corrective
+reprompt truth. They require live-provider setup; the fallback-profile case has
+Ollama-specific alias creation/removal. They were not executed, counted as passes
+or declared environment-blocked. They remain required review/acceptance work.
+No fresh inference, Docker, whole-suite/89%, hosted Quality or capacity claim is
+made. Dependency enforcement passes with 1,106 modules, 3,534 import sites, six
+recognized dynamic routes and zero unknown modules, analysis errors, forbidden
+edges or authority cycles; policy v2 is unchanged. Changed Python is Ruff-clean;
+canonical Ruff retains 94 findings. Both Quality jobs include factory, cleanup
+and settings coverage.
+
+The latest Linux observation remains .57's **blocked / environment blocker**;
+no new Linux application cell, clock, power-setting or deadline change is claimed.
+Remaining async callers and ConfigLoader bridge, input/adapter inventory, E1/E2,
+CAP, .43 Git timeout cause and .44 non-Python package ceiling remain open. The
+.58 source suspension evidence remains retained. Accepted BT behavior/evidence
+are preserved; the lane remains active pending implementation, acceptance and
+explicit user review.

@@ -73,24 +73,29 @@ async def test_collection_uses_distinct_retained_members_and_stops_on_failure(
         {"epic": "publication_epic", "department": "core"}, {"epic": "second_epic", "department": "core"}]}
     await asyncio.to_thread((model / "rocks/group.json").write_text, json.dumps(collection), encoding="utf-8")
     created = []
-    create = pipeline.pipeline_wiring_service.create_sub_pipeline
+    prepare = pipeline.pipeline_wiring_service.prepare_sub_pipeline
 
-    def create_member(**kwargs):
-        child = create(**kwargs)
-        index = len(created) + 1
-        created.append(child)
+    async def prepare_member(**kwargs):
+        construct = await prepare(**kwargs)
 
-        async def workload(**_kwargs):
-            if index == failed_member:
-                await child.async_cards.update_status(f"ISSUE-{index}", CardStatus.CANCELED)
-            else:
-                await complete_existing_card(child.async_cards, f"ISSUE-{index}", child.workspace,
-                                             service=child.runtime_context.card_completion)
+        def create_member():
+            child = construct()
+            index = len(created) + 1
+            created.append(child)
 
-        child.orchestrator.execute_epic = workload
-        return child
+            async def workload(**_kwargs):
+                if index == failed_member:
+                    await child.async_cards.update_status(f"ISSUE-{index}", CardStatus.CANCELED)
+                else:
+                    await complete_existing_card(child.async_cards, f"ISSUE-{index}", child.workspace,
+                                                 service=child.runtime_context.card_completion)
 
-    monkeypatch.setattr(pipeline.pipeline_wiring_service, "create_sub_pipeline", create_member)
+            child.orchestrator.execute_epic = workload
+            return child
+
+        return create_member
+
+    monkeypatch.setattr(pipeline.pipeline_wiring_service, "prepare_sub_pipeline", prepare_member)
     try:
         result = await pipeline.run_card("group", build_id="group-build", session_id="group-session")
         assert result.succeeded is (failed_member is None)

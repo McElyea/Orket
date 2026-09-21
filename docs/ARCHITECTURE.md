@@ -181,6 +181,14 @@ through the application service; environment extras fail without warning effects
 Contract: `docs/specs/SCHEMA_INPUT_OWNERSHIP.md`. Remaining effects, decision context,
 adapter classification and async reachability still require D acceptance.
 
+The public orchestration helper and collection-member supervisor own runtime
+construction and close through interruption. Prepared child factories retain
+selected parent inputs; runtime composition passes its snapshot to subordinate
+factories. Async runtime settings capture honors bound settings/preferences
+independently and owns selected persistence reads. Direct synchronous constructors
+remain separate work. Contracts: `docs/specs/RUNTIME_EXECUTION_RESULT_CONTRACT.md`
+and `docs/specs/SETTINGS_INPUT_OWNERSHIP.md`.
+
 Agent configuration and turn preparation's sync-only asset loading use owned
 workers. Cancellation and timeout retain the admitted work through settlement;
 worker failure remains visible. Available async asset loaders are invoked once,

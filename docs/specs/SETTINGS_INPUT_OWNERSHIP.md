@@ -1,7 +1,7 @@
 # Settings input ownership
 
 Owner: Orket Core
-Last updated: 2026-09-18
+Last updated: 2026-09-21
 Status: Active contract
 
 ## Inputs and selection
@@ -36,8 +36,9 @@ environment captured with that context. Rebinding is explicit input rotation.
 
 Synchronous getters use a bound snapshot or a pre-loop bootstrap bridge. A cold
 read in an active event loop raises `SettingsBridgeError` before filesystem
-probing, even when no settings file exists. Async reads observe persistence and
-do not overwrite the caller's explicit runtime snapshots. Saves likewise do not
+probing, even when no settings file exists. `load_user_settings_async` and
+`load_user_preferences_async` observe persistence and do not overwrite the
+caller's explicit runtime snapshots. Saves likewise do not
 silently rotate active runtime inputs. The historical bridge warning that
 `asyncio.run` loses context is removed; it propagates caller context.
 
@@ -61,6 +62,17 @@ CLI startup awaits persisted preferences and settings after onboarding, then
 explicitly binds both snapshots in its calling task before constructing runtime
 components. Cold synchronous application construction from an async embedding
 must run in an owned worker or receive explicitly bound settings first.
+
+`capture_runtime_settings_async` collects inputs for asynchronous runtime
+construction. Settings and preferences independently retain their bound JSON
+snapshot when present; unbound values use the settings service at a location
+captured before the first await. An empty bound object is authoritative. The
+collector returns detached values without rotating the caller's context. It
+retains the admitted worker, including selected preference migration, through
+cancellation; interruption does not imply rollback. Existing malformed-data,
+ownership and migration refusals remain visible. This is not an atomic snapshot
+across independent file reads. `RuntimeConstructionInputs.capture_async` retains
+the invocation root and environment before that collection begins.
 
 ## File effects and interruption
 

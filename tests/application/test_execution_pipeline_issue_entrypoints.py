@@ -281,9 +281,9 @@ async def test_epic_collection_entry_returns_collection_shaped_payload(monkeypat
             pass
 
     class _PipelineWiringService:
-        def create_sub_pipeline(self, *, parent_pipeline: object, epic_workspace: Path, department: str) -> object:
+        async def prepare_sub_pipeline(self, *, parent_pipeline: object, epic_workspace: Path, department: str) -> object:
             seen["parent_pipeline"] = parent_pipeline
-            return _SubPipeline(department=department, epic_workspace=epic_workspace)
+            return lambda: _SubPipeline(department=department, epic_workspace=epic_workspace)
 
     class _BugFixManager:
         async def start_phase(self, collection_id: str) -> None:
