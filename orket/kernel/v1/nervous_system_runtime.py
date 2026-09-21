@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from .canonical import digest_of
+from .nervous_system_admission import admission_from_proposal
 from .nervous_system_approvals import (
     create_approval_request,
     get_approval,
@@ -15,12 +16,10 @@ from .nervous_system_contract import (
 )
 from .nervous_system_leaks import find_leak_hits, sanitize_text
 from .nervous_system_policy import (
-    allow_pre_resolved_policy_flags,
-    is_exfil_payload,
+    NervousSystemPolicyInputs,
+    capture_nervous_system_policy_inputs,
     require_nervous_system_enabled,
-    use_tool_profile_resolver,
 )
-from .nervous_system_resolver import resolve_tool_policy_flags
 from .nervous_system_runtime_state import (
     _ADMISSIONS_BY_PROPOSAL,
     _COMMIT_RESULTS_BY_KEY,
@@ -38,15 +37,6 @@ from .nervous_system_tokens import (
     invalidate_tokens_for_session,
 )
 from .outbound_policy_gate import apply_outbound_policy_gate
-
-_POLICY_FLAG_KEYS = (
-    "policy_forbidden",
-    "scope_violation",
-    "unknown_tool_profile",
-    "approval_required_destructive",
-    "approval_required_exfil",
-    "approval_required_credentialed",
-)
 
 
 def projection_pack_v1(request: dict[str, Any]) -> dict[str, Any]:
@@ -137,63 +127,16 @@ def projection_pack_v1(request: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _admission_from_proposal(proposal: dict[str, Any]) -> tuple[str, list[str], list[str]]:
-    proposal_type = proposal.get("proposal_type")
-    if proposal_type != "action.tool_call":
-        return "REJECT", ["SCHEMA_INVALID"], []
-
-    payload = proposal.get("payload")
-    if not isinstance(payload, dict):
-        return "REJECT", ["SCHEMA_INVALID"], []
-
-    effective_payload = dict(payload)
-    if use_tool_profile_resolver():
-        resolved_flags = resolve_tool_policy_flags(payload)
-        for key in _POLICY_FLAG_KEYS:
-            effective_payload[key] = bool(payload.get(key)) or bool(resolved_flags.get(key))
-    elif not allow_pre_resolved_policy_flags():
-        effective_payload["unknown_tool_profile"] = True
-        effective_payload["policy_forbidden"] = False
-        effective_payload["scope_violation"] = False
-        effective_payload["approval_required_destructive"] = False
-        effective_payload["approval_required_exfil"] = False
-        effective_payload["approval_required_credentialed"] = False
-
-    if bool(effective_payload.get("policy_forbidden")):
-        return "REJECT", ["POLICY_FORBIDDEN"], []
-
-    leak_hits = find_leak_hits(payload.get("outbound_payload", payload))
-    if bool(effective_payload.get("leak_detected")) or (leak_hits and is_exfil_payload(effective_payload)):
-        return "REJECT", ["LEAK_DETECTED"], leak_hits
-
-    if bool(effective_payload.get("scope_violation")):
-        return "REJECT", ["SCOPE_VIOLATION"], []
-
-    if bool(effective_payload.get("unknown_tool_profile")):
-        return "NEEDS_APPROVAL", ["UNKNOWN_TOOL_PROFILE"], []
-
-    approval_reasons: list[str] = []
-    if bool(effective_payload.get("approval_required_destructive")):
-        approval_reasons.append("APPROVAL_REQUIRED_DESTRUCTIVE")
-    if bool(effective_payload.get("approval_required_exfil")) or is_exfil_payload(effective_payload):
-        approval_reasons.append("APPROVAL_REQUIRED_EXFIL")
-    if bool(effective_payload.get("approval_required_credentialed")):
-        approval_reasons.append("APPROVAL_REQUIRED_CREDENTIALED")
-    if approval_reasons:
-        return "NEEDS_APPROVAL", ordered_reason_codes_v1(approval_reasons), []
-
-    return "ACCEPT_TO_UNIFY", [], []
-
-
 def _admit_proposal_internal(
     *,
     session_id: str,
     trace_id: str,
     request_id: str | None,
     proposal: dict[str, Any],
+    policy_inputs: NervousSystemPolicyInputs,
 ) -> dict[str, Any]:
     proposal_digest = digest_of(proposal)
-    decision, reason_codes, leak_hits = _admission_from_proposal(proposal)
+    decision, reason_codes, leak_hits = admission_from_proposal(proposal, policy_inputs)
     if decision not in ADMISSION_DECISIONS_V1:
         raise ValueError("invalid admission decision")
 
@@ -270,8 +213,11 @@ def _admit_proposal_internal(
     return response
 
 
-def admit_proposal_v1(request: dict[str, Any]) -> dict[str, Any]:
-    require_nervous_system_enabled()
+def admit_proposal_v1(
+    request: dict[str, Any], *, policy_inputs: NervousSystemPolicyInputs | None = None,
+) -> dict[str, Any]:
+    selected = capture_nervous_system_policy_inputs() if policy_inputs is None else policy_inputs
+    require_nervous_system_enabled(selected)
     if request.get("contract_version") != CONTRACT_VERSION:
         raise ValueError("contract_version must be kernel_api/v1")
 
@@ -287,6 +233,7 @@ def admit_proposal_v1(request: dict[str, Any]) -> dict[str, Any]:
         trace_id=trace_id,
         request_id=request_id,
         proposal=proposal,
+        policy_inputs=selected,
     )
 
 

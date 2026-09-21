@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from .experiments.runner import run_experiment_v1
+from .nervous_system_policy import NervousSystemPolicyInputs
 from .nervous_system_runtime import (
     admit_proposal_v1,
     commit_proposal_v1,
@@ -59,8 +60,10 @@ def projection_pack(request: dict[str, Any]) -> dict[str, Any]:
     return projection_pack_v1(request)
 
 
-def admit_proposal(request: dict[str, Any]) -> dict[str, Any]:
-    return admit_proposal_v1(request)
+def admit_proposal(
+    request: dict[str, Any], *, policy_inputs: NervousSystemPolicyInputs | None = None,
+) -> dict[str, Any]:
+    return admit_proposal_v1(request, policy_inputs=policy_inputs)
 
 
 def commit_proposal(request: dict[str, Any]) -> dict[str, Any]:

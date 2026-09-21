@@ -12520,7 +12520,7 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.55 Gitea loop input selection and ownership. Preserve the governed legacy-export cutover;
+0.6.56 kernel admission policy inputs. Preserve the governed legacy-export cutover;
 continue remaining clock/input owners, adapter enforcement and async reachability before E1/E2
 and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
@@ -19076,3 +19076,83 @@ application result is claimed. Remaining D inputs/classification/async work,
 E1/E2, CAP, whole-suite/89% coverage, .43 Git timeout cause and .44 non-Python
 package ceiling remain open. Preserve BT behavior and evidence; the lane stays
 active until required acceptance and explicit user review.
+
+#### .56 Kernel admission policy inputs (2026-09-20)
+
+Kernel proposal admission now receives one immutable selection of enabled,
+pre-resolved-policy and profile-resolver flags. Default collection snapshots the
+environment before validation, proposal hashing or ledger publication. Trusted
+Python callers may supply the typed value; request dictionaries and HTTP JSON
+cannot replace it. Plain booleans are required. Later default invocations capture
+the then-current environment. This is a per-invocation contract, not an API-app
+construction snapshot. The existing decision body has one extracted owner;
+the runtime file shrank from 482 to 429 lines. Contracts:
+`docs/specs/KERNEL_POLICY_INPUTS.md`; migration delta:
+`docs/architecture/CONTRACT_DELTA_KERNEL_POLICY_INPUTS_D_2026-09-20.md`.
+
+Two retained pre-change counterexamples held actual proposal hashing while the
+operator flags rotated: scope refusal became acceptance, and the inverse became
+refusal. Both now retain the initially selected result and matching in-memory
+admission event. The independent installed v0.6.55 reference covers 144 stable
+inputs, including all flag combinations, absent/default values and accepted or
+invalid lexical tokens. Decisions, proposal/decision digests and refusals remain
+identical. The focused 172-case contract/capture run, 34-case initial regression
+run and two actual API cases pass. These overlap the final matrix below.
+
+The API cases run the canonical lifespan, engine, kernel and actual SQLite through
+ASGI transport. Unauthenticated requests return 403 without events. An HTTP
+policy override cannot bypass the selected operator settings. Enabled scope
+refusal, disabled admission and later default invocation with changed flags are
+observed. Independent readonly SQLite queries bind control-plane run and policy
+snapshot to the response and actual in-memory event digest; the runtime owner
+closes. No real delete, network listener, durable kernel ledger or inference is
+claimed by these cases.
+
+The final 30-module selection uses direct-import discovery and named kernel,
+approval, control-plane and BT terminal/history regressions. The new API module
+was missing from the initial selection because it imports the app factory, not
+the changed kernel modules. It was explicitly added before source environment
+setup or any matrix execution. Original selection/declaration/support records
+remain under `selection-initial/`; the correction and built artifact are bound.
+The first installed cell then stopped during collection because its copied
+bundle omitted the attack corpus. Review found two subprocess fixture helpers
+also absent. The corrected bundle adds those three exact source-bound files;
+product/test bytes, artifacts and the source result are reused unchanged.
+Both installed cells run fresh under `.tmp/d-kernel-policy-inputs-corrected/`.
+The failed original cell and manifest remain unchanged; no source rerun is claimed.
+This is a bounded selection, not a complete transitive or whole-suite inventory.
+
+| Cell | Cases / failures / errors / skips | JUnit seconds |
+|---|---|---|
+| Source Windows Python 3.11 | 346 / 0 / 0 / 0 | 35.965 |
+| Installed win-py311 | 346 / 0 / 0 / 0 | 36.462 |
+| Installed win-py312 | 346 / 0 / 0 / 0 | 44.226 |
+
+Both installed cells verify 942 actual package origins, copied
+inputs and exact source case identities, actual CLI startup, tool-gate audit and
+process teardown. The validated .53 JUnit metadata predicate is retained.
+Package parity covers 1,105 Python files,
+1,121 wheel package members and
+2,141 support files.
+Wheel SHA-256: `4f0ab9bdae1f377811fdc974327f72e5919bb37f33416161ec57047b7ae27ab6`;
+sdist SHA-256: `5b587adc22137af08a43189f16874f227711865b04f66b1904fa45ae4ac64779`.
+Observed Windows path/result: **primary / success**. Proof includes actual local
+ASGI/SQLite/application execution, controlled environment rotation and structural
+package/dependency binding. There is no fresh provider proof.
+
+Canonical dependency enforcement passes: 1,105 modules, 3,527 import sites, six
+recognized dynamic routes, no unknown modules, analysis errors, forbidden edges
+or authority cycles. Policy v2 is unchanged. Changed Python is Ruff-clean;
+canonical Ruff retains 94 findings. Both Quality jobs include the new tests;
+hosted Quality remains unverified. The existing policy-digest snapshot remains
+authoritative and unchanged. Builtin profile mutability, other kernel clocks and
+runtime state, broader configuration ownership and remaining D adapter/async
+obligations are not closed by this admission change.
+
+The latest Linux preflight remains .53, **blocked / environment blocker**:
+4.361091207 quiet seconds in 240.003684019 seconds against the required 60, with
++19.503006083/-19.018053111-second steps and unknown cause. No fresh measurement,
+Linux application acceptance or deadline change is claimed. Remaining D, E1/E2,
+CAP, whole-suite/89% coverage, .43 Git timeout cause and .44 non-Python package
+ceiling stay open. Preserve BT behavior and retained evidence; the lane remains
+active pending all required acceptance and explicit user review.

@@ -30,6 +30,12 @@ orchestrator clock observations keep their existing second precision. Migration
 and remaining lifecycle input scope:
 `docs/architecture/CONTRACT_DELTA_SANDBOX_CREATION_INPUTS_D_2026-09-20.md`.
 
+Kernel proposal admission selects immutable operator enablement/resolver flags
+before request validation or hashing. Trusted Python callers may supply the typed
+input; request and HTTP payload fields cannot supply it. Default calls observe
+the current environment per invocation. Existing decision, approval, digest and
+in-memory ledger limits remain: `docs/specs/KERNEL_POLICY_INPUTS.md`.
+
 Gitea loop owners capture environment, limit rules and roots before awaits;
 pipeline entry also supplies its selected clocks and control-plane database.
 Construction, summary I/O and acquired HTTP clients remain owned through

@@ -1,29 +1,58 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Mapping
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
 
-def require_nervous_system_enabled() -> None:
-    raw = str(os.environ.get("ORKET_ENABLE_NERVOUS_SYSTEM") or "").strip().lower()
-    if raw in {"1", "true", "yes", "on"}:
+@dataclass(frozen=True)
+class NervousSystemPolicyInputs:
+    enabled: bool
+    allow_pre_resolved_flags: bool
+    use_profile_resolver: bool
+
+    def __post_init__(self) -> None:
+        if any(type(value) is not bool for value in (
+            self.enabled, self.allow_pre_resolved_flags, self.use_profile_resolver,
+        )):
+            raise TypeError("E_KERNEL_POLICY_BOOLEAN_REQUIRED")
+
+
+def _flag(raw: str | None, *, default: bool = False) -> bool:
+    if raw is None:
+        return default
+    return str(raw).strip().lower() in {"1", "true", "yes", "on"}
+
+
+def capture_nervous_system_policy_inputs(
+    *, environment: Mapping[str, str] | None = None,
+) -> NervousSystemPolicyInputs:
+    observed = dict(os.environ if environment is None else environment)
+    return NervousSystemPolicyInputs(
+        enabled=_flag(observed.get("ORKET_ENABLE_NERVOUS_SYSTEM")),
+        allow_pre_resolved_flags=_flag(observed.get("ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS")),
+        use_profile_resolver=_flag(observed.get("ORKET_USE_TOOL_PROFILE_RESOLVER"), default=True),
+    )
+
+
+def require_nervous_system_enabled(policy_inputs: NervousSystemPolicyInputs | None = None) -> None:
+    selected = capture_nervous_system_policy_inputs() if policy_inputs is None else policy_inputs
+    if not isinstance(selected, NervousSystemPolicyInputs):
+        raise TypeError("E_KERNEL_POLICY_INPUT_REQUIRED")
+    if selected.enabled:
         return
     raise ValueError("Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true).")
 
 
 def allow_pre_resolved_policy_flags() -> bool:
-    raw = str(os.environ.get("ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS") or "").strip().lower()
-    return raw in {"1", "true", "yes", "on"}
+    return capture_nervous_system_policy_inputs().allow_pre_resolved_flags
 
 
 def use_tool_profile_resolver() -> bool:
-    raw_value = os.environ.get("ORKET_USE_TOOL_PROFILE_RESOLVER")
-    if raw_value is None:
-        return True
-    raw = str(raw_value).strip().lower()
-    return raw in {"1", "true", "yes", "on"}
+    return capture_nervous_system_policy_inputs().use_profile_resolver
 
 
 def is_exfil_payload(payload: dict[str, Any]) -> bool:
@@ -64,6 +93,8 @@ def _is_non_local_target(target: str) -> bool:
 
 
 __all__ = [
+    "NervousSystemPolicyInputs",
+    "capture_nervous_system_policy_inputs",
     "allow_pre_resolved_policy_flags",
     "is_exfil_payload",
     "require_nervous_system_enabled",

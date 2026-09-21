@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-21T04:32:44.125086+00:00",
+  "generated_at": "2026-09-21T04:57:26.891062+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -2957,7 +2957,7 @@
       },
       "orket.kernel.v1.api": {
         "path": "orket/kernel/v1/api.py",
-        "sha256": "74e1805be4496196bb50636119f28456e001d75ed8064e1b75aeb97d86738143"
+        "sha256": "970ef33b1d890ee24bed64a3373dda31154e241b537d60e4a78236e3567bce36"
       },
       "orket.kernel.v1.canonical": {
         "path": "orket/kernel/v1/canonical.py",
@@ -2987,6 +2987,10 @@
         "path": "orket/kernel/v1/experiments/spec.py",
         "sha256": "12607cb62e1fd2bb06261dcfbd7f6677e142b78526612ece5cd33a6dc91a92f9"
       },
+      "orket.kernel.v1.nervous_system_admission": {
+        "path": "orket/kernel/v1/nervous_system_admission.py",
+        "sha256": "f6ae16c5e9184f4f8500a179e79d0d9d22866ce6570e44dd4cf3b48ce038253f"
+      },
       "orket.kernel.v1.nervous_system_approvals": {
         "path": "orket/kernel/v1/nervous_system_approvals.py",
         "sha256": "e6d5ff3b24c758199695f5ed17f1f474e2cefd0635c897be5e7c5b5a0f27df12"
@@ -3001,7 +3005,7 @@
       },
       "orket.kernel.v1.nervous_system_policy": {
         "path": "orket/kernel/v1/nervous_system_policy.py",
-        "sha256": "61a17a576f8ec4d17be450ed5421dfda96a626375d3ded1d9c56163529e0e483"
+        "sha256": "a97a0b10eaf3437d3878439580ff8256961a27b65e6feb16c9dc119782d90b49"
       },
       "orket.kernel.v1.nervous_system_policy_snapshot": {
         "path": "orket/kernel/v1/nervous_system_policy_snapshot.py",
@@ -3013,7 +3017,7 @@
       },
       "orket.kernel.v1.nervous_system_runtime": {
         "path": "orket/kernel/v1/nervous_system_runtime.py",
-        "sha256": "a1270705dd72643efb0a2baa99a9a637d1a4ec24ae93d7944e52df771c87cf18"
+        "sha256": "dc99120fa4bb7fb5d84f2ea2036c57979c4ab97eef0bd12b5378b4af53062fc1"
       },
       "orket.kernel.v1.nervous_system_runtime_extensions": {
         "path": "orket/kernel/v1/nervous_system_runtime_extensions.py",
@@ -22638,30 +22642,37 @@
       },
       {
         "source": "orket.kernel.v1.api",
-        "target": "orket.kernel.v1.nervous_system_runtime",
+        "target": "orket.kernel.v1.nervous_system_policy",
         "path": "orket/kernel/v1/api.py",
         "line": 6,
         "kind": "from"
       },
       {
         "source": "orket.kernel.v1.api",
+        "target": "orket.kernel.v1.nervous_system_runtime",
+        "path": "orket/kernel/v1/api.py",
+        "line": 7,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.api",
         "target": "orket.kernel.v1.nervous_system_runtime_extensions",
         "path": "orket/kernel/v1/api.py",
-        "line": 12,
+        "line": 13,
         "kind": "from"
       },
       {
         "source": "orket.kernel.v1.api",
         "target": "orket.kernel.v1.nervous_system_runtime_state",
         "path": "orket/kernel/v1/api.py",
-        "line": 18,
+        "line": 19,
         "kind": "from"
       },
       {
         "source": "orket.kernel.v1.api",
         "target": "orket.kernel.v1.validator",
         "path": "orket/kernel/v1/api.py",
-        "line": 19,
+        "line": 20,
         "kind": "from"
       },
       {
@@ -22735,6 +22746,34 @@
         "kind": "from"
       },
       {
+        "source": "orket.kernel.v1.nervous_system_admission",
+        "target": "orket.kernel.v1.nervous_system_contract",
+        "path": "orket/kernel/v1/nervous_system_admission.py",
+        "line": 6,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.nervous_system_admission",
+        "target": "orket.kernel.v1.nervous_system_leaks",
+        "path": "orket/kernel/v1/nervous_system_admission.py",
+        "line": 7,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.nervous_system_admission",
+        "target": "orket.kernel.v1.nervous_system_policy",
+        "path": "orket/kernel/v1/nervous_system_admission.py",
+        "line": 8,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.nervous_system_admission",
+        "target": "orket.kernel.v1.nervous_system_resolver",
+        "path": "orket/kernel/v1/nervous_system_admission.py",
+        "line": 9,
+        "kind": "from"
+      },
+      {
         "source": "orket.kernel.v1.nervous_system_approvals",
         "target": "orket.kernel.v1.canonical",
         "path": "orket/kernel/v1/nervous_system_approvals.py",
@@ -22792,58 +22831,58 @@
       },
       {
         "source": "orket.kernel.v1.nervous_system_runtime",
-        "target": "orket.kernel.v1.nervous_system_approvals",
+        "target": "orket.kernel.v1.nervous_system_admission",
         "path": "orket/kernel/v1/nervous_system_runtime.py",
         "line": 6,
         "kind": "from"
       },
       {
         "source": "orket.kernel.v1.nervous_system_runtime",
+        "target": "orket.kernel.v1.nervous_system_approvals",
+        "path": "orket/kernel/v1/nervous_system_runtime.py",
+        "line": 7,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.nervous_system_runtime",
         "target": "orket.kernel.v1.nervous_system_contract",
         "path": "orket/kernel/v1/nervous_system_runtime.py",
-        "line": 10,
+        "line": 11,
         "kind": "from"
       },
       {
         "source": "orket.kernel.v1.nervous_system_runtime",
         "target": "orket.kernel.v1.nervous_system_leaks",
         "path": "orket/kernel/v1/nervous_system_runtime.py",
-        "line": 16,
+        "line": 17,
         "kind": "from"
       },
       {
         "source": "orket.kernel.v1.nervous_system_runtime",
         "target": "orket.kernel.v1.nervous_system_policy",
         "path": "orket/kernel/v1/nervous_system_runtime.py",
-        "line": 17,
-        "kind": "from"
-      },
-      {
-        "source": "orket.kernel.v1.nervous_system_runtime",
-        "target": "orket.kernel.v1.nervous_system_resolver",
-        "path": "orket/kernel/v1/nervous_system_runtime.py",
-        "line": 23,
+        "line": 18,
         "kind": "from"
       },
       {
         "source": "orket.kernel.v1.nervous_system_runtime",
         "target": "orket.kernel.v1.nervous_system_runtime_state",
         "path": "orket/kernel/v1/nervous_system_runtime.py",
-        "line": 24,
+        "line": 23,
         "kind": "from"
       },
       {
         "source": "orket.kernel.v1.nervous_system_runtime",
         "target": "orket.kernel.v1.nervous_system_tokens",
         "path": "orket/kernel/v1/nervous_system_runtime.py",
-        "line": 37,
+        "line": 36,
         "kind": "from"
       },
       {
         "source": "orket.kernel.v1.nervous_system_runtime",
         "target": "orket.kernel.v1.outbound_policy_gate",
         "path": "orket/kernel/v1/nervous_system_runtime.py",
-        "line": 40,
+        "line": 39,
         "kind": "from"
       },
       {
@@ -29249,7 +29288,7 @@
         "forwarded_arguments": 2
       }
     ],
-    "files_scanned": 1104,
+    "files_scanned": 1105,
     "scan_roots": [
       "orket"
     ],
@@ -29971,6 +30010,7 @@
       "orket.kernel.v1.experiments.runner": "application",
       "orket.kernel.v1.experiments.scoring": "application",
       "orket.kernel.v1.experiments.spec": "application",
+      "orket.kernel.v1.nervous_system_admission": "application",
       "orket.kernel.v1.nervous_system_approvals": "application",
       "orket.kernel.v1.nervous_system_contract": "application",
       "orket.kernel.v1.nervous_system_leaks": "application",
@@ -30380,7 +30420,7 @@
       {
         "source": "application",
         "target": "application",
-        "count": 1707
+        "count": 1712
       },
       {
         "source": "application",
@@ -30432,45 +30472,6 @@
     }
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-19T20:49:48.474539Z",
-      "changed": true,
-      "before_digest": "sha256:a7873d64580af3d8308ee9efe4ec7490c23fe7f5b2a429b2b89ad86dad690b98",
-      "after_digest": "sha256:351a8f94ee222d453ca6c35915f89a8aacd3a7e31043c049e248702e43f6f4dd",
-      "diff": {
-        "added_paths": 5,
-        "removed_paths": 0,
-        "changed_paths": 3416,
-        "initial_write": false,
-        "paths_total_previous": 45669,
-        "paths_total_current": 45709,
-        "paths_total_reference": 45709,
-        "churn_paths": 3421,
-        "churn_ratio": 0.074843,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.edges[2284].line",
-          "$.observed.edges[2285].line",
-          "$.observed.edges[2286].line",
-          "$.observed.edges[2287].line",
-          "$.observed.edges[2287].target",
-          "$.observed.edges[2320].line",
-          "$.observed.edges[2320].target",
-          "$.observed.edges[2353].line",
-          "$.observed.edges[2353].path",
-          "$.observed.edges[2353].source",
-          "$.observed.edges[2353].target",
-          "$.observed.edges[2354].line",
-          "$.observed.edges[2354].target",
-          "$.observed.edges[2355].line",
-          "$.observed.edges[2355].target",
-          "$.observed.edges[2356].line",
-          "$.observed.edges[2356].target",
-          "$.observed.edges[2357].line",
-          "$.observed.edges[2357].target"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-19T20:51:39.408118Z",
       "changed": true,
@@ -31449,6 +31450,45 @@
           "$.observed.edges[834].source",
           "$.observed.edges[834].target",
           "$.observed.edges[835].line"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-21T04:57:41.754011Z",
+      "changed": true,
+      "before_digest": "sha256:89bc1b32a5e7dc408e0181dee8c981b5b69b54adade40dcc34da0367bc22b7c2",
+      "after_digest": "sha256:072084575bd4609a923cc2afb74cb5ee472fae41726f8d9638c2c0e3e0372f1e",
+      "diff": {
+        "added_paths": 7,
+        "removed_paths": 0,
+        "changed_paths": 3196,
+        "initial_write": false,
+        "paths_total_previous": 46847,
+        "paths_total_current": 46909,
+        "paths_total_reference": 46909,
+        "churn_paths": 3203,
+        "churn_ratio": 0.068281,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.edges[2585].target",
+          "$.observed.edges[2586].line",
+          "$.observed.edges[2586].target",
+          "$.observed.edges[2587].line",
+          "$.observed.edges[2587].target",
+          "$.observed.edges[2588].target",
+          "$.observed.edges[2589].line",
+          "$.observed.edges[2589].path",
+          "$.observed.edges[2589].source",
+          "$.observed.edges[2589].target",
+          "$.observed.edges[2590].line",
+          "$.observed.edges[2590].target",
+          "$.observed.edges[2591].line",
+          "$.observed.edges[2591].target",
+          "$.observed.edges[2592].line",
+          "$.observed.edges[2592].target",
+          "$.observed.edges[2593].line",
+          "$.observed.edges[2593].path",
+          "$.observed.edges[2593].source"
         ]
       }
     }

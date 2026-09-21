@@ -1,0 +1,3909 @@
+{
+  "source_version": "0.6.55",
+  "wheel_sha256": "3c8f703b712937a3d649e61fde9bc408471ba44017d236aaee4504da303921fe",
+  "cases": [
+    {
+      "id": "case-0",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "0",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "0",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {}
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-1",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "0",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "0",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": []
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-2",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "0",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "0",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "local.echo"
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-3",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "0",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "0",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.delete",
+            "args": {
+              "path": "./workspace/important.txt"
+            }
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-4",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "0",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "0",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.write_patch"
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-5",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "0",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "0",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "demo.credentialed_echo"
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-6",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "0",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "0",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "demo.exfil_http"
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-7",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "0",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "0",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "unrecognized"
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-8",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "0",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "0",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "policy_forbidden": true,
+            "scope_violation": true,
+            "approval_required_exfil": true
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-9",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "0",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "0",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "demo.exfil_http",
+            "outbound_payload": "-----BEGIN PRIVATE KEY-----"
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-10",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "0",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "0",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {}
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-11",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "0",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "0",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": []
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-12",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "0",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "0",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "local.echo"
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-13",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "0",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "0",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.delete",
+            "args": {
+              "path": "./workspace/important.txt"
+            }
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-14",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "0",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "0",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.write_patch"
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-15",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "0",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "0",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "demo.credentialed_echo"
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-16",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "0",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "0",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "demo.exfil_http"
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-17",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "0",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "0",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "unrecognized"
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-18",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "0",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "0",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "policy_forbidden": true,
+            "scope_violation": true,
+            "approval_required_exfil": true
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-19",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "0",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "0",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "demo.exfil_http",
+            "outbound_payload": "-----BEGIN PRIVATE KEY-----"
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-20",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "0",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {}
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-21",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "0",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": []
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-22",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "0",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "local.echo"
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-23",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "0",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.delete",
+            "args": {
+              "path": "./workspace/important.txt"
+            }
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-24",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "0",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.write_patch"
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-25",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "0",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "demo.credentialed_echo"
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-26",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "0",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "demo.exfil_http"
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-27",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "0",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "unrecognized"
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-28",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "0",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "policy_forbidden": true,
+            "scope_violation": true,
+            "approval_required_exfil": true
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-29",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "0",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "demo.exfil_http",
+            "outbound_payload": "-----BEGIN PRIVATE KEY-----"
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-30",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "0",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {}
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-31",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "0",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": []
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-32",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "0",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "local.echo"
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-33",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "0",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.delete",
+            "args": {
+              "path": "./workspace/important.txt"
+            }
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-34",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "0",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.write_patch"
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-35",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "0",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "demo.credentialed_echo"
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-36",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "0",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "demo.exfil_http"
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-37",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "0",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "unrecognized"
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-38",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "0",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "policy_forbidden": true,
+            "scope_violation": true,
+            "approval_required_exfil": true
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-39",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "0",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "demo.exfil_http",
+            "outbound_payload": "-----BEGIN PRIVATE KEY-----"
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-40",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "0",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {}
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "REJECT",
+            "reason_codes": [
+              "SCHEMA_INVALID"
+            ]
+          },
+          "proposal_digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+          "decision_digest": "f5f1e212beab21cacc1239ac859fb0be324b629894d02356f715313c9ab5a175"
+        }
+      }
+    },
+    {
+      "id": "case-41",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "0",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": []
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "REJECT",
+            "reason_codes": [
+              "SCHEMA_INVALID"
+            ]
+          },
+          "proposal_digest": "3ac22c796fd95c8b90c321b9942829df59e6e0bfdafd16f6af877cdf9ba658ea",
+          "decision_digest": "f5f1e212beab21cacc1239ac859fb0be324b629894d02356f715313c9ab5a175"
+        }
+      }
+    },
+    {
+      "id": "case-42",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "0",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "local.echo"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "NEEDS_APPROVAL",
+            "reason_codes": [
+              "UNKNOWN_TOOL_PROFILE"
+            ]
+          },
+          "proposal_digest": "efb312980bbb6850ae76d021c7718fcc6ea3d1ea97a0065cc0a0c527290e0925",
+          "decision_digest": "512ae266b3e5ba54acfa822107b5a1cbc92266b5f1babc1f8c64542d975fc236"
+        }
+      }
+    },
+    {
+      "id": "case-43",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "0",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.delete",
+            "args": {
+              "path": "./workspace/important.txt"
+            }
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "NEEDS_APPROVAL",
+            "reason_codes": [
+              "UNKNOWN_TOOL_PROFILE"
+            ]
+          },
+          "proposal_digest": "ea0f1300251d17ad90289015f5cefb26f90a1cac8b604e9531488c5309d7c7de",
+          "decision_digest": "512ae266b3e5ba54acfa822107b5a1cbc92266b5f1babc1f8c64542d975fc236"
+        }
+      }
+    },
+    {
+      "id": "case-44",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "0",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.write_patch"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "NEEDS_APPROVAL",
+            "reason_codes": [
+              "UNKNOWN_TOOL_PROFILE"
+            ]
+          },
+          "proposal_digest": "977bc3d985997bc31dbb8c17c3f4c6a254333386101584088c45298bc88187f0",
+          "decision_digest": "512ae266b3e5ba54acfa822107b5a1cbc92266b5f1babc1f8c64542d975fc236"
+        }
+      }
+    },
+    {
+      "id": "case-45",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "0",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "demo.credentialed_echo"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "NEEDS_APPROVAL",
+            "reason_codes": [
+              "UNKNOWN_TOOL_PROFILE"
+            ]
+          },
+          "proposal_digest": "627aa79fe72c9ac1bbeee46180ca675ac24ca308f9765ef3fbff05eaccb45879",
+          "decision_digest": "512ae266b3e5ba54acfa822107b5a1cbc92266b5f1babc1f8c64542d975fc236"
+        }
+      }
+    },
+    {
+      "id": "case-46",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "0",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "demo.exfil_http"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "NEEDS_APPROVAL",
+            "reason_codes": [
+              "UNKNOWN_TOOL_PROFILE"
+            ]
+          },
+          "proposal_digest": "679bc3c08057a62daa978cc3bda94c443516c9202f50fc308082d792c88a3066",
+          "decision_digest": "512ae266b3e5ba54acfa822107b5a1cbc92266b5f1babc1f8c64542d975fc236"
+        }
+      }
+    },
+    {
+      "id": "case-47",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "0",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "unrecognized"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "NEEDS_APPROVAL",
+            "reason_codes": [
+              "UNKNOWN_TOOL_PROFILE"
+            ]
+          },
+          "proposal_digest": "d40b3f58084d209782cbac0e57e55db1396242cd61370f7ff9eaa7413d73b396",
+          "decision_digest": "512ae266b3e5ba54acfa822107b5a1cbc92266b5f1babc1f8c64542d975fc236"
+        }
+      }
+    },
+    {
+      "id": "case-48",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "0",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "policy_forbidden": true,
+            "scope_violation": true,
+            "approval_required_exfil": true
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "NEEDS_APPROVAL",
+            "reason_codes": [
+              "UNKNOWN_TOOL_PROFILE"
+            ]
+          },
+          "proposal_digest": "de3ab6cbff34928604df8ffbebb0c3ac0b41127737bb3442c5717ecd1d4698cd",
+          "decision_digest": "512ae266b3e5ba54acfa822107b5a1cbc92266b5f1babc1f8c64542d975fc236"
+        }
+      }
+    },
+    {
+      "id": "case-49",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "0",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "demo.exfil_http",
+            "outbound_payload": "-----BEGIN PRIVATE KEY-----"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "NEEDS_APPROVAL",
+            "reason_codes": [
+              "UNKNOWN_TOOL_PROFILE"
+            ]
+          },
+          "proposal_digest": "f0f1219110b4db3436265a89c6bb4f6c4d07833883b1e31fc989aad1e20487d4",
+          "decision_digest": "512ae266b3e5ba54acfa822107b5a1cbc92266b5f1babc1f8c64542d975fc236"
+        }
+      }
+    },
+    {
+      "id": "case-50",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "0",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {}
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "REJECT",
+            "reason_codes": [
+              "SCHEMA_INVALID"
+            ]
+          },
+          "proposal_digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+          "decision_digest": "f5f1e212beab21cacc1239ac859fb0be324b629894d02356f715313c9ab5a175"
+        }
+      }
+    },
+    {
+      "id": "case-51",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "0",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": []
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "REJECT",
+            "reason_codes": [
+              "SCHEMA_INVALID"
+            ]
+          },
+          "proposal_digest": "3ac22c796fd95c8b90c321b9942829df59e6e0bfdafd16f6af877cdf9ba658ea",
+          "decision_digest": "f5f1e212beab21cacc1239ac859fb0be324b629894d02356f715313c9ab5a175"
+        }
+      }
+    },
+    {
+      "id": "case-52",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "0",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "local.echo"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "ACCEPT_TO_UNIFY",
+            "reason_codes": []
+          },
+          "proposal_digest": "efb312980bbb6850ae76d021c7718fcc6ea3d1ea97a0065cc0a0c527290e0925",
+          "decision_digest": "f024542354bd8e2459fbfff14aa3de42cc2d01723f731691defa83cac8fb7084"
+        }
+      }
+    },
+    {
+      "id": "case-53",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "0",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.delete",
+            "args": {
+              "path": "./workspace/important.txt"
+            }
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "REJECT",
+            "reason_codes": [
+              "SCOPE_VIOLATION"
+            ]
+          },
+          "proposal_digest": "ea0f1300251d17ad90289015f5cefb26f90a1cac8b604e9531488c5309d7c7de",
+          "decision_digest": "9d00f4e7d573b2d1aae97f4ad5d36d09f870e2d156542d6f0c3a5ddc9b5d1918"
+        }
+      }
+    },
+    {
+      "id": "case-54",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "0",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.write_patch"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "NEEDS_APPROVAL",
+            "reason_codes": [
+              "APPROVAL_REQUIRED_DESTRUCTIVE"
+            ]
+          },
+          "proposal_digest": "977bc3d985997bc31dbb8c17c3f4c6a254333386101584088c45298bc88187f0",
+          "decision_digest": "cb6e1a3fe44a618ed47051de6f7e1082a6d49c67506cbbb1d58c669ce6d57e8c"
+        }
+      }
+    },
+    {
+      "id": "case-55",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "0",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "demo.credentialed_echo"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "NEEDS_APPROVAL",
+            "reason_codes": [
+              "APPROVAL_REQUIRED_CREDENTIALED"
+            ]
+          },
+          "proposal_digest": "627aa79fe72c9ac1bbeee46180ca675ac24ca308f9765ef3fbff05eaccb45879",
+          "decision_digest": "8228b8e59215e6fdd873dd733bc1db49c04abd1d5c4a2e875766f9c7088e00ea"
+        }
+      }
+    },
+    {
+      "id": "case-56",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "0",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "demo.exfil_http"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "NEEDS_APPROVAL",
+            "reason_codes": [
+              "APPROVAL_REQUIRED_EXFIL"
+            ]
+          },
+          "proposal_digest": "679bc3c08057a62daa978cc3bda94c443516c9202f50fc308082d792c88a3066",
+          "decision_digest": "13b55311e56da1acf829cebd1565587d275d0b3779a518a5a54bb3c492b2bb3e"
+        }
+      }
+    },
+    {
+      "id": "case-57",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "0",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "unrecognized"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "NEEDS_APPROVAL",
+            "reason_codes": [
+              "UNKNOWN_TOOL_PROFILE"
+            ]
+          },
+          "proposal_digest": "d40b3f58084d209782cbac0e57e55db1396242cd61370f7ff9eaa7413d73b396",
+          "decision_digest": "512ae266b3e5ba54acfa822107b5a1cbc92266b5f1babc1f8c64542d975fc236"
+        }
+      }
+    },
+    {
+      "id": "case-58",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "0",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "policy_forbidden": true,
+            "scope_violation": true,
+            "approval_required_exfil": true
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "REJECT",
+            "reason_codes": [
+              "POLICY_FORBIDDEN"
+            ]
+          },
+          "proposal_digest": "de3ab6cbff34928604df8ffbebb0c3ac0b41127737bb3442c5717ecd1d4698cd",
+          "decision_digest": "81d43bb2d4efef8db31ab1f06ecd5fb3041f0e469413aa10fe7af7b38a47befb"
+        }
+      }
+    },
+    {
+      "id": "case-59",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "0",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "demo.exfil_http",
+            "outbound_payload": "-----BEGIN PRIVATE KEY-----"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "NEEDS_APPROVAL",
+            "reason_codes": [
+              "APPROVAL_REQUIRED_EXFIL"
+            ]
+          },
+          "proposal_digest": "f0f1219110b4db3436265a89c6bb4f6c4d07833883b1e31fc989aad1e20487d4",
+          "decision_digest": "13b55311e56da1acf829cebd1565587d275d0b3779a518a5a54bb3c492b2bb3e"
+        }
+      }
+    },
+    {
+      "id": "case-60",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {}
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "REJECT",
+            "reason_codes": [
+              "SCHEMA_INVALID"
+            ]
+          },
+          "proposal_digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+          "decision_digest": "f5f1e212beab21cacc1239ac859fb0be324b629894d02356f715313c9ab5a175"
+        }
+      }
+    },
+    {
+      "id": "case-61",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": []
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "REJECT",
+            "reason_codes": [
+              "SCHEMA_INVALID"
+            ]
+          },
+          "proposal_digest": "3ac22c796fd95c8b90c321b9942829df59e6e0bfdafd16f6af877cdf9ba658ea",
+          "decision_digest": "f5f1e212beab21cacc1239ac859fb0be324b629894d02356f715313c9ab5a175"
+        }
+      }
+    },
+    {
+      "id": "case-62",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "local.echo"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "ACCEPT_TO_UNIFY",
+            "reason_codes": []
+          },
+          "proposal_digest": "efb312980bbb6850ae76d021c7718fcc6ea3d1ea97a0065cc0a0c527290e0925",
+          "decision_digest": "f024542354bd8e2459fbfff14aa3de42cc2d01723f731691defa83cac8fb7084"
+        }
+      }
+    },
+    {
+      "id": "case-63",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.delete",
+            "args": {
+              "path": "./workspace/important.txt"
+            }
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "ACCEPT_TO_UNIFY",
+            "reason_codes": []
+          },
+          "proposal_digest": "ea0f1300251d17ad90289015f5cefb26f90a1cac8b604e9531488c5309d7c7de",
+          "decision_digest": "f024542354bd8e2459fbfff14aa3de42cc2d01723f731691defa83cac8fb7084"
+        }
+      }
+    },
+    {
+      "id": "case-64",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.write_patch"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "ACCEPT_TO_UNIFY",
+            "reason_codes": []
+          },
+          "proposal_digest": "977bc3d985997bc31dbb8c17c3f4c6a254333386101584088c45298bc88187f0",
+          "decision_digest": "f024542354bd8e2459fbfff14aa3de42cc2d01723f731691defa83cac8fb7084"
+        }
+      }
+    },
+    {
+      "id": "case-65",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "demo.credentialed_echo"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "ACCEPT_TO_UNIFY",
+            "reason_codes": []
+          },
+          "proposal_digest": "627aa79fe72c9ac1bbeee46180ca675ac24ca308f9765ef3fbff05eaccb45879",
+          "decision_digest": "f024542354bd8e2459fbfff14aa3de42cc2d01723f731691defa83cac8fb7084"
+        }
+      }
+    },
+    {
+      "id": "case-66",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "demo.exfil_http"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "ACCEPT_TO_UNIFY",
+            "reason_codes": []
+          },
+          "proposal_digest": "679bc3c08057a62daa978cc3bda94c443516c9202f50fc308082d792c88a3066",
+          "decision_digest": "f024542354bd8e2459fbfff14aa3de42cc2d01723f731691defa83cac8fb7084"
+        }
+      }
+    },
+    {
+      "id": "case-67",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "unrecognized"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "ACCEPT_TO_UNIFY",
+            "reason_codes": []
+          },
+          "proposal_digest": "d40b3f58084d209782cbac0e57e55db1396242cd61370f7ff9eaa7413d73b396",
+          "decision_digest": "f024542354bd8e2459fbfff14aa3de42cc2d01723f731691defa83cac8fb7084"
+        }
+      }
+    },
+    {
+      "id": "case-68",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "policy_forbidden": true,
+            "scope_violation": true,
+            "approval_required_exfil": true
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "REJECT",
+            "reason_codes": [
+              "POLICY_FORBIDDEN"
+            ]
+          },
+          "proposal_digest": "de3ab6cbff34928604df8ffbebb0c3ac0b41127737bb3442c5717ecd1d4698cd",
+          "decision_digest": "81d43bb2d4efef8db31ab1f06ecd5fb3041f0e469413aa10fe7af7b38a47befb"
+        }
+      }
+    },
+    {
+      "id": "case-69",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "demo.exfil_http",
+            "outbound_payload": "-----BEGIN PRIVATE KEY-----"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "ACCEPT_TO_UNIFY",
+            "reason_codes": []
+          },
+          "proposal_digest": "f0f1219110b4db3436265a89c6bb4f6c4d07833883b1e31fc989aad1e20487d4",
+          "decision_digest": "f024542354bd8e2459fbfff14aa3de42cc2d01723f731691defa83cac8fb7084"
+        }
+      }
+    },
+    {
+      "id": "case-70",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {}
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "REJECT",
+            "reason_codes": [
+              "SCHEMA_INVALID"
+            ]
+          },
+          "proposal_digest": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+          "decision_digest": "f5f1e212beab21cacc1239ac859fb0be324b629894d02356f715313c9ab5a175"
+        }
+      }
+    },
+    {
+      "id": "case-71",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": []
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "REJECT",
+            "reason_codes": [
+              "SCHEMA_INVALID"
+            ]
+          },
+          "proposal_digest": "3ac22c796fd95c8b90c321b9942829df59e6e0bfdafd16f6af877cdf9ba658ea",
+          "decision_digest": "f5f1e212beab21cacc1239ac859fb0be324b629894d02356f715313c9ab5a175"
+        }
+      }
+    },
+    {
+      "id": "case-72",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "local.echo"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "ACCEPT_TO_UNIFY",
+            "reason_codes": []
+          },
+          "proposal_digest": "efb312980bbb6850ae76d021c7718fcc6ea3d1ea97a0065cc0a0c527290e0925",
+          "decision_digest": "f024542354bd8e2459fbfff14aa3de42cc2d01723f731691defa83cac8fb7084"
+        }
+      }
+    },
+    {
+      "id": "case-73",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.delete",
+            "args": {
+              "path": "./workspace/important.txt"
+            }
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "REJECT",
+            "reason_codes": [
+              "SCOPE_VIOLATION"
+            ]
+          },
+          "proposal_digest": "ea0f1300251d17ad90289015f5cefb26f90a1cac8b604e9531488c5309d7c7de",
+          "decision_digest": "9d00f4e7d573b2d1aae97f4ad5d36d09f870e2d156542d6f0c3a5ddc9b5d1918"
+        }
+      }
+    },
+    {
+      "id": "case-74",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.write_patch"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "NEEDS_APPROVAL",
+            "reason_codes": [
+              "APPROVAL_REQUIRED_DESTRUCTIVE"
+            ]
+          },
+          "proposal_digest": "977bc3d985997bc31dbb8c17c3f4c6a254333386101584088c45298bc88187f0",
+          "decision_digest": "cb6e1a3fe44a618ed47051de6f7e1082a6d49c67506cbbb1d58c669ce6d57e8c"
+        }
+      }
+    },
+    {
+      "id": "case-75",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "demo.credentialed_echo"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "NEEDS_APPROVAL",
+            "reason_codes": [
+              "APPROVAL_REQUIRED_CREDENTIALED"
+            ]
+          },
+          "proposal_digest": "627aa79fe72c9ac1bbeee46180ca675ac24ca308f9765ef3fbff05eaccb45879",
+          "decision_digest": "8228b8e59215e6fdd873dd733bc1db49c04abd1d5c4a2e875766f9c7088e00ea"
+        }
+      }
+    },
+    {
+      "id": "case-76",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "demo.exfil_http"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "NEEDS_APPROVAL",
+            "reason_codes": [
+              "APPROVAL_REQUIRED_EXFIL"
+            ]
+          },
+          "proposal_digest": "679bc3c08057a62daa978cc3bda94c443516c9202f50fc308082d792c88a3066",
+          "decision_digest": "13b55311e56da1acf829cebd1565587d275d0b3779a518a5a54bb3c492b2bb3e"
+        }
+      }
+    },
+    {
+      "id": "case-77",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "unrecognized"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "NEEDS_APPROVAL",
+            "reason_codes": [
+              "UNKNOWN_TOOL_PROFILE"
+            ]
+          },
+          "proposal_digest": "d40b3f58084d209782cbac0e57e55db1396242cd61370f7ff9eaa7413d73b396",
+          "decision_digest": "512ae266b3e5ba54acfa822107b5a1cbc92266b5f1babc1f8c64542d975fc236"
+        }
+      }
+    },
+    {
+      "id": "case-78",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "policy_forbidden": true,
+            "scope_violation": true,
+            "approval_required_exfil": true
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "REJECT",
+            "reason_codes": [
+              "POLICY_FORBIDDEN"
+            ]
+          },
+          "proposal_digest": "de3ab6cbff34928604df8ffbebb0c3ac0b41127737bb3442c5717ecd1d4698cd",
+          "decision_digest": "81d43bb2d4efef8db31ab1f06ecd5fb3041f0e469413aa10fe7af7b38a47befb"
+        }
+      }
+    },
+    {
+      "id": "case-79",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "demo.exfil_http",
+            "outbound_payload": "-----BEGIN PRIVATE KEY-----"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "NEEDS_APPROVAL",
+            "reason_codes": [
+              "APPROVAL_REQUIRED_EXFIL"
+            ]
+          },
+          "proposal_digest": "f0f1219110b4db3436265a89c6bb4f6c4d07833883b1e31fc989aad1e20487d4",
+          "decision_digest": "13b55311e56da1acf829cebd1565587d275d0b3779a518a5a54bb3c492b2bb3e"
+        }
+      }
+    },
+    {
+      "id": "case-80",
+      "environment": {},
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {}
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-81",
+      "environment": {},
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": []
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-82",
+      "environment": {},
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "local.echo"
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-83",
+      "environment": {},
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.delete",
+            "args": {
+              "path": "./workspace/important.txt"
+            }
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-84",
+      "environment": {},
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.write_patch"
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-85",
+      "environment": {},
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "demo.credentialed_echo"
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-86",
+      "environment": {},
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "demo.exfil_http"
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-87",
+      "environment": {},
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "unrecognized"
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-88",
+      "environment": {},
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "policy_forbidden": true,
+            "scope_violation": true,
+            "approval_required_exfil": true
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-89",
+      "environment": {},
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "demo.exfil_http",
+            "outbound_payload": "-----BEGIN PRIVATE KEY-----"
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-90",
+      "environment": {},
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "local.echo"
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-91",
+      "environment": {},
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.delete",
+            "args": {
+              "path": "./workspace/important.txt"
+            }
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-92",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": ""
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "local.echo"
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-93",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": ""
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.delete",
+            "args": {
+              "path": "./workspace/important.txt"
+            }
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-94",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "true"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "local.echo"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "ACCEPT_TO_UNIFY",
+            "reason_codes": []
+          },
+          "proposal_digest": "efb312980bbb6850ae76d021c7718fcc6ea3d1ea97a0065cc0a0c527290e0925",
+          "decision_digest": "f024542354bd8e2459fbfff14aa3de42cc2d01723f731691defa83cac8fb7084"
+        }
+      }
+    },
+    {
+      "id": "case-95",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "true"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.delete",
+            "args": {
+              "path": "./workspace/important.txt"
+            }
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "REJECT",
+            "reason_codes": [
+              "SCOPE_VIOLATION"
+            ]
+          },
+          "proposal_digest": "ea0f1300251d17ad90289015f5cefb26f90a1cac8b604e9531488c5309d7c7de",
+          "decision_digest": "9d00f4e7d573b2d1aae97f4ad5d36d09f870e2d156542d6f0c3a5ddc9b5d1918"
+        }
+      }
+    },
+    {
+      "id": "case-96",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "  YES "
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "local.echo"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "ACCEPT_TO_UNIFY",
+            "reason_codes": []
+          },
+          "proposal_digest": "efb312980bbb6850ae76d021c7718fcc6ea3d1ea97a0065cc0a0c527290e0925",
+          "decision_digest": "f024542354bd8e2459fbfff14aa3de42cc2d01723f731691defa83cac8fb7084"
+        }
+      }
+    },
+    {
+      "id": "case-97",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "  YES "
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.delete",
+            "args": {
+              "path": "./workspace/important.txt"
+            }
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "REJECT",
+            "reason_codes": [
+              "SCOPE_VIOLATION"
+            ]
+          },
+          "proposal_digest": "ea0f1300251d17ad90289015f5cefb26f90a1cac8b604e9531488c5309d7c7de",
+          "decision_digest": "9d00f4e7d573b2d1aae97f4ad5d36d09f870e2d156542d6f0c3a5ddc9b5d1918"
+        }
+      }
+    },
+    {
+      "id": "case-98",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "on"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "local.echo"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "ACCEPT_TO_UNIFY",
+            "reason_codes": []
+          },
+          "proposal_digest": "efb312980bbb6850ae76d021c7718fcc6ea3d1ea97a0065cc0a0c527290e0925",
+          "decision_digest": "f024542354bd8e2459fbfff14aa3de42cc2d01723f731691defa83cac8fb7084"
+        }
+      }
+    },
+    {
+      "id": "case-99",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "on"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.delete",
+            "args": {
+              "path": "./workspace/important.txt"
+            }
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "REJECT",
+            "reason_codes": [
+              "SCOPE_VIOLATION"
+            ]
+          },
+          "proposal_digest": "ea0f1300251d17ad90289015f5cefb26f90a1cac8b604e9531488c5309d7c7de",
+          "decision_digest": "9d00f4e7d573b2d1aae97f4ad5d36d09f870e2d156542d6f0c3a5ddc9b5d1918"
+        }
+      }
+    },
+    {
+      "id": "case-100",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "local.echo"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "ACCEPT_TO_UNIFY",
+            "reason_codes": []
+          },
+          "proposal_digest": "efb312980bbb6850ae76d021c7718fcc6ea3d1ea97a0065cc0a0c527290e0925",
+          "decision_digest": "f024542354bd8e2459fbfff14aa3de42cc2d01723f731691defa83cac8fb7084"
+        }
+      }
+    },
+    {
+      "id": "case-101",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.delete",
+            "args": {
+              "path": "./workspace/important.txt"
+            }
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "REJECT",
+            "reason_codes": [
+              "SCOPE_VIOLATION"
+            ]
+          },
+          "proposal_digest": "ea0f1300251d17ad90289015f5cefb26f90a1cac8b604e9531488c5309d7c7de",
+          "decision_digest": "9d00f4e7d573b2d1aae97f4ad5d36d09f870e2d156542d6f0c3a5ddc9b5d1918"
+        }
+      }
+    },
+    {
+      "id": "case-102",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "false"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "local.echo"
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-103",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "false"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.delete",
+            "args": {
+              "path": "./workspace/important.txt"
+            }
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-104",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "local.echo"
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-105",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.delete",
+            "args": {
+              "path": "./workspace/important.txt"
+            }
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-106",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "invalid"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "local.echo"
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-107",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "invalid"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.delete",
+            "args": {
+              "path": "./workspace/important.txt"
+            }
+          }
+        }
+      },
+      "observed": {
+        "error": "ValueError",
+        "message": "Nervous System v1 is disabled (set ORKET_ENABLE_NERVOUS_SYSTEM=true)."
+      }
+    },
+    {
+      "id": "case-108",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "local.echo"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "ACCEPT_TO_UNIFY",
+            "reason_codes": []
+          },
+          "proposal_digest": "efb312980bbb6850ae76d021c7718fcc6ea3d1ea97a0065cc0a0c527290e0925",
+          "decision_digest": "f024542354bd8e2459fbfff14aa3de42cc2d01723f731691defa83cac8fb7084"
+        }
+      }
+    },
+    {
+      "id": "case-109",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.delete",
+            "args": {
+              "path": "./workspace/important.txt"
+            }
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "REJECT",
+            "reason_codes": [
+              "SCOPE_VIOLATION"
+            ]
+          },
+          "proposal_digest": "ea0f1300251d17ad90289015f5cefb26f90a1cac8b604e9531488c5309d7c7de",
+          "decision_digest": "9d00f4e7d573b2d1aae97f4ad5d36d09f870e2d156542d6f0c3a5ddc9b5d1918"
+        }
+      }
+    },
+    {
+      "id": "case-110",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": ""
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "local.echo"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "ACCEPT_TO_UNIFY",
+            "reason_codes": []
+          },
+          "proposal_digest": "efb312980bbb6850ae76d021c7718fcc6ea3d1ea97a0065cc0a0c527290e0925",
+          "decision_digest": "f024542354bd8e2459fbfff14aa3de42cc2d01723f731691defa83cac8fb7084"
+        }
+      }
+    },
+    {
+      "id": "case-111",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": ""
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.delete",
+            "args": {
+              "path": "./workspace/important.txt"
+            }
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "REJECT",
+            "reason_codes": [
+              "SCOPE_VIOLATION"
+            ]
+          },
+          "proposal_digest": "ea0f1300251d17ad90289015f5cefb26f90a1cac8b604e9531488c5309d7c7de",
+          "decision_digest": "9d00f4e7d573b2d1aae97f4ad5d36d09f870e2d156542d6f0c3a5ddc9b5d1918"
+        }
+      }
+    },
+    {
+      "id": "case-112",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "true"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "local.echo"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "ACCEPT_TO_UNIFY",
+            "reason_codes": []
+          },
+          "proposal_digest": "efb312980bbb6850ae76d021c7718fcc6ea3d1ea97a0065cc0a0c527290e0925",
+          "decision_digest": "f024542354bd8e2459fbfff14aa3de42cc2d01723f731691defa83cac8fb7084"
+        }
+      }
+    },
+    {
+      "id": "case-113",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "true"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.delete",
+            "args": {
+              "path": "./workspace/important.txt"
+            }
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "REJECT",
+            "reason_codes": [
+              "SCOPE_VIOLATION"
+            ]
+          },
+          "proposal_digest": "ea0f1300251d17ad90289015f5cefb26f90a1cac8b604e9531488c5309d7c7de",
+          "decision_digest": "9d00f4e7d573b2d1aae97f4ad5d36d09f870e2d156542d6f0c3a5ddc9b5d1918"
+        }
+      }
+    },
+    {
+      "id": "case-114",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "  YES "
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "local.echo"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "ACCEPT_TO_UNIFY",
+            "reason_codes": []
+          },
+          "proposal_digest": "efb312980bbb6850ae76d021c7718fcc6ea3d1ea97a0065cc0a0c527290e0925",
+          "decision_digest": "f024542354bd8e2459fbfff14aa3de42cc2d01723f731691defa83cac8fb7084"
+        }
+      }
+    },
+    {
+      "id": "case-115",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "  YES "
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.delete",
+            "args": {
+              "path": "./workspace/important.txt"
+            }
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "REJECT",
+            "reason_codes": [
+              "SCOPE_VIOLATION"
+            ]
+          },
+          "proposal_digest": "ea0f1300251d17ad90289015f5cefb26f90a1cac8b604e9531488c5309d7c7de",
+          "decision_digest": "9d00f4e7d573b2d1aae97f4ad5d36d09f870e2d156542d6f0c3a5ddc9b5d1918"
+        }
+      }
+    },
+    {
+      "id": "case-116",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "on"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "local.echo"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "ACCEPT_TO_UNIFY",
+            "reason_codes": []
+          },
+          "proposal_digest": "efb312980bbb6850ae76d021c7718fcc6ea3d1ea97a0065cc0a0c527290e0925",
+          "decision_digest": "f024542354bd8e2459fbfff14aa3de42cc2d01723f731691defa83cac8fb7084"
+        }
+      }
+    },
+    {
+      "id": "case-117",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "on"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.delete",
+            "args": {
+              "path": "./workspace/important.txt"
+            }
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "REJECT",
+            "reason_codes": [
+              "SCOPE_VIOLATION"
+            ]
+          },
+          "proposal_digest": "ea0f1300251d17ad90289015f5cefb26f90a1cac8b604e9531488c5309d7c7de",
+          "decision_digest": "9d00f4e7d573b2d1aae97f4ad5d36d09f870e2d156542d6f0c3a5ddc9b5d1918"
+        }
+      }
+    },
+    {
+      "id": "case-118",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "local.echo"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "ACCEPT_TO_UNIFY",
+            "reason_codes": []
+          },
+          "proposal_digest": "efb312980bbb6850ae76d021c7718fcc6ea3d1ea97a0065cc0a0c527290e0925",
+          "decision_digest": "f024542354bd8e2459fbfff14aa3de42cc2d01723f731691defa83cac8fb7084"
+        }
+      }
+    },
+    {
+      "id": "case-119",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.delete",
+            "args": {
+              "path": "./workspace/important.txt"
+            }
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "REJECT",
+            "reason_codes": [
+              "SCOPE_VIOLATION"
+            ]
+          },
+          "proposal_digest": "ea0f1300251d17ad90289015f5cefb26f90a1cac8b604e9531488c5309d7c7de",
+          "decision_digest": "9d00f4e7d573b2d1aae97f4ad5d36d09f870e2d156542d6f0c3a5ddc9b5d1918"
+        }
+      }
+    },
+    {
+      "id": "case-120",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "false"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "local.echo"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "ACCEPT_TO_UNIFY",
+            "reason_codes": []
+          },
+          "proposal_digest": "efb312980bbb6850ae76d021c7718fcc6ea3d1ea97a0065cc0a0c527290e0925",
+          "decision_digest": "f024542354bd8e2459fbfff14aa3de42cc2d01723f731691defa83cac8fb7084"
+        }
+      }
+    },
+    {
+      "id": "case-121",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "false"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.delete",
+            "args": {
+              "path": "./workspace/important.txt"
+            }
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "REJECT",
+            "reason_codes": [
+              "SCOPE_VIOLATION"
+            ]
+          },
+          "proposal_digest": "ea0f1300251d17ad90289015f5cefb26f90a1cac8b604e9531488c5309d7c7de",
+          "decision_digest": "9d00f4e7d573b2d1aae97f4ad5d36d09f870e2d156542d6f0c3a5ddc9b5d1918"
+        }
+      }
+    },
+    {
+      "id": "case-122",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "local.echo"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "ACCEPT_TO_UNIFY",
+            "reason_codes": []
+          },
+          "proposal_digest": "efb312980bbb6850ae76d021c7718fcc6ea3d1ea97a0065cc0a0c527290e0925",
+          "decision_digest": "f024542354bd8e2459fbfff14aa3de42cc2d01723f731691defa83cac8fb7084"
+        }
+      }
+    },
+    {
+      "id": "case-123",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.delete",
+            "args": {
+              "path": "./workspace/important.txt"
+            }
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "REJECT",
+            "reason_codes": [
+              "SCOPE_VIOLATION"
+            ]
+          },
+          "proposal_digest": "ea0f1300251d17ad90289015f5cefb26f90a1cac8b604e9531488c5309d7c7de",
+          "decision_digest": "9d00f4e7d573b2d1aae97f4ad5d36d09f870e2d156542d6f0c3a5ddc9b5d1918"
+        }
+      }
+    },
+    {
+      "id": "case-124",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "invalid"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "local.echo"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "ACCEPT_TO_UNIFY",
+            "reason_codes": []
+          },
+          "proposal_digest": "efb312980bbb6850ae76d021c7718fcc6ea3d1ea97a0065cc0a0c527290e0925",
+          "decision_digest": "f024542354bd8e2459fbfff14aa3de42cc2d01723f731691defa83cac8fb7084"
+        }
+      }
+    },
+    {
+      "id": "case-125",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS": "invalid"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.delete",
+            "args": {
+              "path": "./workspace/important.txt"
+            }
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "REJECT",
+            "reason_codes": [
+              "SCOPE_VIOLATION"
+            ]
+          },
+          "proposal_digest": "ea0f1300251d17ad90289015f5cefb26f90a1cac8b604e9531488c5309d7c7de",
+          "decision_digest": "9d00f4e7d573b2d1aae97f4ad5d36d09f870e2d156542d6f0c3a5ddc9b5d1918"
+        }
+      }
+    },
+    {
+      "id": "case-126",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "local.echo"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "ACCEPT_TO_UNIFY",
+            "reason_codes": []
+          },
+          "proposal_digest": "efb312980bbb6850ae76d021c7718fcc6ea3d1ea97a0065cc0a0c527290e0925",
+          "decision_digest": "f024542354bd8e2459fbfff14aa3de42cc2d01723f731691defa83cac8fb7084"
+        }
+      }
+    },
+    {
+      "id": "case-127",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.delete",
+            "args": {
+              "path": "./workspace/important.txt"
+            }
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "REJECT",
+            "reason_codes": [
+              "SCOPE_VIOLATION"
+            ]
+          },
+          "proposal_digest": "ea0f1300251d17ad90289015f5cefb26f90a1cac8b604e9531488c5309d7c7de",
+          "decision_digest": "9d00f4e7d573b2d1aae97f4ad5d36d09f870e2d156542d6f0c3a5ddc9b5d1918"
+        }
+      }
+    },
+    {
+      "id": "case-128",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": ""
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "local.echo"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "NEEDS_APPROVAL",
+            "reason_codes": [
+              "UNKNOWN_TOOL_PROFILE"
+            ]
+          },
+          "proposal_digest": "efb312980bbb6850ae76d021c7718fcc6ea3d1ea97a0065cc0a0c527290e0925",
+          "decision_digest": "512ae266b3e5ba54acfa822107b5a1cbc92266b5f1babc1f8c64542d975fc236"
+        }
+      }
+    },
+    {
+      "id": "case-129",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": ""
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.delete",
+            "args": {
+              "path": "./workspace/important.txt"
+            }
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "NEEDS_APPROVAL",
+            "reason_codes": [
+              "UNKNOWN_TOOL_PROFILE"
+            ]
+          },
+          "proposal_digest": "ea0f1300251d17ad90289015f5cefb26f90a1cac8b604e9531488c5309d7c7de",
+          "decision_digest": "512ae266b3e5ba54acfa822107b5a1cbc92266b5f1babc1f8c64542d975fc236"
+        }
+      }
+    },
+    {
+      "id": "case-130",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "true"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "local.echo"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "ACCEPT_TO_UNIFY",
+            "reason_codes": []
+          },
+          "proposal_digest": "efb312980bbb6850ae76d021c7718fcc6ea3d1ea97a0065cc0a0c527290e0925",
+          "decision_digest": "f024542354bd8e2459fbfff14aa3de42cc2d01723f731691defa83cac8fb7084"
+        }
+      }
+    },
+    {
+      "id": "case-131",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "true"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.delete",
+            "args": {
+              "path": "./workspace/important.txt"
+            }
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "REJECT",
+            "reason_codes": [
+              "SCOPE_VIOLATION"
+            ]
+          },
+          "proposal_digest": "ea0f1300251d17ad90289015f5cefb26f90a1cac8b604e9531488c5309d7c7de",
+          "decision_digest": "9d00f4e7d573b2d1aae97f4ad5d36d09f870e2d156542d6f0c3a5ddc9b5d1918"
+        }
+      }
+    },
+    {
+      "id": "case-132",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "  YES "
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "local.echo"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "ACCEPT_TO_UNIFY",
+            "reason_codes": []
+          },
+          "proposal_digest": "efb312980bbb6850ae76d021c7718fcc6ea3d1ea97a0065cc0a0c527290e0925",
+          "decision_digest": "f024542354bd8e2459fbfff14aa3de42cc2d01723f731691defa83cac8fb7084"
+        }
+      }
+    },
+    {
+      "id": "case-133",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "  YES "
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.delete",
+            "args": {
+              "path": "./workspace/important.txt"
+            }
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "REJECT",
+            "reason_codes": [
+              "SCOPE_VIOLATION"
+            ]
+          },
+          "proposal_digest": "ea0f1300251d17ad90289015f5cefb26f90a1cac8b604e9531488c5309d7c7de",
+          "decision_digest": "9d00f4e7d573b2d1aae97f4ad5d36d09f870e2d156542d6f0c3a5ddc9b5d1918"
+        }
+      }
+    },
+    {
+      "id": "case-134",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "on"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "local.echo"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "ACCEPT_TO_UNIFY",
+            "reason_codes": []
+          },
+          "proposal_digest": "efb312980bbb6850ae76d021c7718fcc6ea3d1ea97a0065cc0a0c527290e0925",
+          "decision_digest": "f024542354bd8e2459fbfff14aa3de42cc2d01723f731691defa83cac8fb7084"
+        }
+      }
+    },
+    {
+      "id": "case-135",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "on"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.delete",
+            "args": {
+              "path": "./workspace/important.txt"
+            }
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "REJECT",
+            "reason_codes": [
+              "SCOPE_VIOLATION"
+            ]
+          },
+          "proposal_digest": "ea0f1300251d17ad90289015f5cefb26f90a1cac8b604e9531488c5309d7c7de",
+          "decision_digest": "9d00f4e7d573b2d1aae97f4ad5d36d09f870e2d156542d6f0c3a5ddc9b5d1918"
+        }
+      }
+    },
+    {
+      "id": "case-136",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "local.echo"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "ACCEPT_TO_UNIFY",
+            "reason_codes": []
+          },
+          "proposal_digest": "efb312980bbb6850ae76d021c7718fcc6ea3d1ea97a0065cc0a0c527290e0925",
+          "decision_digest": "f024542354bd8e2459fbfff14aa3de42cc2d01723f731691defa83cac8fb7084"
+        }
+      }
+    },
+    {
+      "id": "case-137",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "1"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.delete",
+            "args": {
+              "path": "./workspace/important.txt"
+            }
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "REJECT",
+            "reason_codes": [
+              "SCOPE_VIOLATION"
+            ]
+          },
+          "proposal_digest": "ea0f1300251d17ad90289015f5cefb26f90a1cac8b604e9531488c5309d7c7de",
+          "decision_digest": "9d00f4e7d573b2d1aae97f4ad5d36d09f870e2d156542d6f0c3a5ddc9b5d1918"
+        }
+      }
+    },
+    {
+      "id": "case-138",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "false"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "local.echo"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "NEEDS_APPROVAL",
+            "reason_codes": [
+              "UNKNOWN_TOOL_PROFILE"
+            ]
+          },
+          "proposal_digest": "efb312980bbb6850ae76d021c7718fcc6ea3d1ea97a0065cc0a0c527290e0925",
+          "decision_digest": "512ae266b3e5ba54acfa822107b5a1cbc92266b5f1babc1f8c64542d975fc236"
+        }
+      }
+    },
+    {
+      "id": "case-139",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "false"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.delete",
+            "args": {
+              "path": "./workspace/important.txt"
+            }
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "NEEDS_APPROVAL",
+            "reason_codes": [
+              "UNKNOWN_TOOL_PROFILE"
+            ]
+          },
+          "proposal_digest": "ea0f1300251d17ad90289015f5cefb26f90a1cac8b604e9531488c5309d7c7de",
+          "decision_digest": "512ae266b3e5ba54acfa822107b5a1cbc92266b5f1babc1f8c64542d975fc236"
+        }
+      }
+    },
+    {
+      "id": "case-140",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "local.echo"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "NEEDS_APPROVAL",
+            "reason_codes": [
+              "UNKNOWN_TOOL_PROFILE"
+            ]
+          },
+          "proposal_digest": "efb312980bbb6850ae76d021c7718fcc6ea3d1ea97a0065cc0a0c527290e0925",
+          "decision_digest": "512ae266b3e5ba54acfa822107b5a1cbc92266b5f1babc1f8c64542d975fc236"
+        }
+      }
+    },
+    {
+      "id": "case-141",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "0"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.delete",
+            "args": {
+              "path": "./workspace/important.txt"
+            }
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "NEEDS_APPROVAL",
+            "reason_codes": [
+              "UNKNOWN_TOOL_PROFILE"
+            ]
+          },
+          "proposal_digest": "ea0f1300251d17ad90289015f5cefb26f90a1cac8b604e9531488c5309d7c7de",
+          "decision_digest": "512ae266b3e5ba54acfa822107b5a1cbc92266b5f1babc1f8c64542d975fc236"
+        }
+      }
+    },
+    {
+      "id": "case-142",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "invalid"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "local.echo"
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "NEEDS_APPROVAL",
+            "reason_codes": [
+              "UNKNOWN_TOOL_PROFILE"
+            ]
+          },
+          "proposal_digest": "efb312980bbb6850ae76d021c7718fcc6ea3d1ea97a0065cc0a0c527290e0925",
+          "decision_digest": "512ae266b3e5ba54acfa822107b5a1cbc92266b5f1babc1f8c64542d975fc236"
+        }
+      }
+    },
+    {
+      "id": "case-143",
+      "environment": {
+        "ORKET_ENABLE_NERVOUS_SYSTEM": "1",
+        "ORKET_USE_TOOL_PROFILE_RESOLVER": "invalid"
+      },
+      "request": {
+        "contract_version": "kernel_api/v1",
+        "session_id": "parity-session",
+        "trace_id": "parity-trace",
+        "proposal": {
+          "proposal_type": "action.tool_call",
+          "payload": {
+            "tool_name": "fs.delete",
+            "args": {
+              "path": "./workspace/important.txt"
+            }
+          }
+        }
+      },
+      "observed": {
+        "result": {
+          "admission_decision": {
+            "decision": "NEEDS_APPROVAL",
+            "reason_codes": [
+              "UNKNOWN_TOOL_PROFILE"
+            ]
+          },
+          "proposal_digest": "ea0f1300251d17ad90289015f5cefb26f90a1cac8b604e9531488c5309d7c7de",
+          "decision_digest": "512ae266b3e5ba54acfa822107b5a1cbc92266b5f1babc1f8c64542d975fc236"
+        }
+      }
+    }
+  ],
+  "scope": "Stable-input public kernel admission decisions/digests/refusals. Controlled operator environment; excludes clock/event identities.",
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-09-21T04:53:03.588475Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:8342cda9f20dc2a08c5f08a7927c991dcc125b4867e302b86805cdac0ea583dc",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 4456,
+        "paths_total_reference": 4456,
+        "churn_paths": 4456,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    }
+  ]
+}

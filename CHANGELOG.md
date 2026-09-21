@@ -5,6 +5,16 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.56] - 2026-09-20
+
+### Fixed
+- Capture kernel admission enablement, resolver and pre-resolved flags once before request hashing and evaluation.
+- Pass immutable typed policy inputs into the extracted evaluator; retain existing decisions and request trust boundaries.
+- `compatibility_status`: `compatible`
+- `affected_audience`: `all`
+- `migration_requirement`: `none`
+- Optional trusted Python input and proof limits: `docs/architecture/CONTRACT_DELTA_KERNEL_POLICY_INPUTS_D_2026-09-20.md`.
+
 ## [0.6.55] - 2026-09-20
 
 ### Fixed
