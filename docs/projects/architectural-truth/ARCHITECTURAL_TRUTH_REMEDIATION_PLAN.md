@@ -12520,8 +12520,8 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.49 sandbox-policy input checkpoint. Preserve the governed legacy-export cutover;
-continue API/execution decision inputs, remaining deterministic input owners, adapter enforcement and async reachability before E1/E2
+0.6.50 API-strategy input checkpoint. Preserve the governed legacy-export cutover;
+continue execution decision inputs, remaining deterministic input owners, adapter enforcement and async reachability before E1/E2
 and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
 Preserve every failed and
@@ -18587,3 +18587,88 @@ ceiling, whole-suite/89% coverage and remaining D/E/CAP requirements stay open.
 Continue API/execution strategy inputs, remaining deterministic inputs, adapter
 enforcement and async reachability before E1/E2 and CAP. Retain governed legacy
 exports and explicit whole-lane acceptance; this checkpoint does not retire the lane.
+
+
+#### .50 captured API-strategy checkpoint (2026-09-20)
+
+Application API admission captures archive selectors, actor and reason before its
+first await. Custom selector/normalization strategies receive tuples rather than
+borrowed request/result lists. Metrics use SDK FrozenJson, explorer/preview chaining
+uses read-only captured values, and websocket removal receives a scalar error
+category. Boolean recommendations require booleans. Invocation recommendations are
+validated/copied before preview construction and run-event publication awaits;
+dispatch also admits its own copy. No entered strategy is retried under a different
+signature. Scalar/path/calendar contracts otherwise remain supported.
+Contract: `docs/specs/API_STRATEGY_INPUTS.md`; migration:
+`docs/architecture/CONTRACT_DELTA_API_STRATEGY_INPUTS_D_2026-09-20.md`.
+
+Three real SQLite/ASGI pre-change counterexamples reached intended failures: a
+strategy appended an unrequested archive target, request rotation during an await
+expanded the later related-card effect, and a response strategy reported 999 after
+one archive. All three pass after admission changes. An existing controlled test
+had explicitly blessed 999; it now proves custom presentation fields with the
+observed count, while separate negative tests require contradictory reserved
+fields to fail. Earlier archive commits remain durable after a later response
+refusal; this is not atomic rollback or new global count deduplication.
+
+The affected initial corrected cohort passes 183. Real held preview construction
+retains the admitted invocation through the actual filesystem-backed preview
+builder, and actual explorer observations cannot be rewritten by its sorter.
+A controlled dispatcher additionally proves held event publication cannot replace
+the subsequent real file effect; it does not claim background engine execution.
+The focused input/parity cohort passes 78; the final full scoped cohort below also
+includes the strengthened explicit archive-mutation refusal assertion.
+
+Independent default parity retains 45 outcomes from published installed .49 wheel
+`5c683b8466db974f067de02dd8a2e959664e99d82663f8c02632ecc4626db488`.
+It covers metrics, explorer, preview, archive and websocket default decisions.
+The intentionally corrected false custom count is not a supported parity promise.
+Fixture setup initially assumed a following function after the last test and
+stopped; a dependent launch then failed before pytest collection. Its partial
+directory and correction record remain retained. Ruff import fixes and a one-line
+oversized-test size refusal were corrected without changing product deadlines or
+weakening assertions. New and modified tests retain canonical markers.
+
+The final declaration selects 45 modules. Four discovered provider/voice opt-in
+modules are explicitly outside this no-inference cohort; their omission is not a
+fresh live-provider pass. All selected source/installed cases pass without skips:
+
+| Cell | Cases / failures / errors / skips | JUnit seconds |
+|---|---|---|
+| Source Windows Python 3.11 | 426 / 0 / 0 / 0 | 66.244 |
+| Installed win-py311 | 426 / 0 / 0 / 0 | 66.190 |
+| Installed win-py312 | 426 / 0 / 0 / 0 | 102.764 |
+
+Each installed cell verifies 967 imported origins, actual CLI
+startup, copied inputs, package identity and native teardown. Source/archive/wheel
+parity covers 1,103 Python sources, 1,119 wheel members and 2,104 support files.
+Wheel SHA-256: `0d09c6cd355c6e8fa8c68bc78a0114d9f29b8fbbd41150e5373a5d7bfe8fc308`;
+sdist SHA-256: `24183bd649d026d757148acebd0df9961b6c47767bc96f672c2934c376bf396a`.
+
+An additional **primary / success** installed Windows Python 3.11 proof runs the
+byte-identical canonical `server.py` using isolated installed Python and actual
+local HTTP. Authentication refuses an unauthenticated request. Card authoring creates
+requested/protected records; archival reports one actual archived card and one
+missing ID, while the protected card stays ready. Independent read-only SQLite
+inspection confirms the matching archive transaction. Metrics, authorized explorer,
+forbidden traversal and real rock preview succeed. The ephemeral authentication key
+is absent from receipts. Elapsed proof time: 4.237252 seconds.
+Canonical shutdown returns zero, publishes completed shutdown, and leaves no owned
+parent/child processes; no forced cleanup occurred. No sandbox or model inference
+flow is claimed. Evidence is under `.tmp/d-api-policy-inputs/`, including `live-http/`.
+
+The actual canonical dependency gate passes: 1,103 modules, 3,507 import sites,
+six recognized dynamic routes and zero unknown modules, analysis errors, forbidden
+edges or authority cycles. Policy v2 remains unchanged. Changed Python is Ruff-clean,
+oversized files do not grow and canonical Ruff retains 94 pre-existing findings.
+Both Quality jobs include the new API regressions; no hosted Quality run is claimed.
+
+No fresh Linux clock observation or runtime acceptance is claimed. The retained .45
+passive observation could not find 60 synchronized quiet seconds within
+240.011222449 seconds and observed +18.666208636/-18.167079316-second wall steps.
+The cause remains unresolved; no clocks or deadlines were weakened. The .43 Git
+timeout cause, .44 non-Python package ceiling, whole-suite/89% coverage, hosted
+Quality and remaining D/E/CAP obligations stay open. Continue execution strategy
+callbacks and selected-input capture, remaining deterministic inputs, adapter
+enforcement and async reachability before E1/E2 and CAP. Governed legacy exports
+and explicit whole-lane acceptance remain; this checkpoint does not retire the lane.

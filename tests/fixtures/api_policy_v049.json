@@ -1,0 +1,569 @@
+{
+  "source_version": "0.6.49",
+  "wheel_sha256": "5c683b8466db974f067de02dd8a2e959664e99d82663f8c02632ecc4626db488",
+  "scope": "Published default outcomes; error-category labels map to original exception instances. The false custom archive claim is intentionally excluded from supported parity and separately refused.",
+  "cases": [
+    {
+      "method": "normalize_metrics",
+      "args": [
+        {}
+      ],
+      "result": {}
+    },
+    {
+      "method": "normalize_metrics",
+      "args": [
+        {
+          "cpu_percent": 12,
+          "ram_percent": 34
+        }
+      ],
+      "result": {
+        "cpu_percent": 12,
+        "ram_percent": 34,
+        "cpu": 12,
+        "memory": 34
+      }
+    },
+    {
+      "method": "normalize_metrics",
+      "args": [
+        {
+          "cpu": 2,
+          "memory": 3,
+          "cpu_percent": 90,
+          "ram_percent": 80
+        }
+      ],
+      "result": {
+        "cpu": 2,
+        "memory": 3,
+        "cpu_percent": 90,
+        "ram_percent": 80
+      }
+    },
+    {
+      "method": "sort_explorer_items",
+      "args": [
+        []
+      ],
+      "result": []
+    },
+    {
+      "method": "sort_explorer_items",
+      "args": [
+        [
+          {
+            "name": "z.txt",
+            "ext": ".txt",
+            "is_dir": false
+          },
+          {
+            "name": "A",
+            "ext": "",
+            "is_dir": true
+          }
+        ]
+      ],
+      "result": [
+        {
+          "name": "A",
+          "ext": "",
+          "is_dir": true
+        },
+        {
+          "name": "z.txt",
+          "ext": ".txt",
+          "is_dir": false
+        }
+      ]
+    },
+    {
+      "method": "resolve_preview_target",
+      "args": [
+        "model/core/rocks/demo.json",
+        null
+      ],
+      "result": {
+        "mode": "rock",
+        "asset_name": "demo",
+        "department": "core"
+      }
+    },
+    {
+      "method": "resolve_preview_target",
+      "args": [
+        "model/core/rocks/demo.json",
+        "ISSUE"
+      ],
+      "result": {
+        "mode": "issue",
+        "asset_name": "demo",
+        "department": "core"
+      }
+    },
+    {
+      "method": "resolve_preview_target",
+      "args": [
+        "model/product/epics/work.json",
+        null
+      ],
+      "result": {
+        "mode": "epic",
+        "asset_name": "work",
+        "department": "product"
+      }
+    },
+    {
+      "method": "resolve_preview_target",
+      "args": [
+        "model/product/epics/work.json",
+        "ISSUE"
+      ],
+      "result": {
+        "mode": "issue",
+        "asset_name": "work",
+        "department": "product"
+      }
+    },
+    {
+      "method": "resolve_preview_target",
+      "args": [
+        "x.json",
+        null
+      ],
+      "result": {
+        "mode": "epic",
+        "asset_name": "x",
+        "department": "core"
+      }
+    },
+    {
+      "method": "resolve_preview_target",
+      "args": [
+        "x.json",
+        "ISSUE"
+      ],
+      "result": {
+        "mode": "issue",
+        "asset_name": "x",
+        "department": "core"
+      }
+    },
+    {
+      "method": "resolve_preview_invocation",
+      "args": [
+        {
+          "mode": "issue",
+          "asset_name": "demo",
+          "department": "core"
+        },
+        "ISSUE"
+      ],
+      "result": {
+        "method_name": "build_issue_preview",
+        "args": [
+          "ISSUE",
+          "demo",
+          "core"
+        ],
+        "unsupported_detail": "Unsupported preview mode 'issue'."
+      }
+    },
+    {
+      "method": "resolve_preview_invocation",
+      "args": [
+        {
+          "mode": "rock",
+          "asset_name": "demo",
+          "department": "core"
+        },
+        null
+      ],
+      "result": {
+        "method_name": "build_rock_preview",
+        "args": [
+          "demo",
+          "core"
+        ],
+        "unsupported_detail": "Unsupported preview mode 'rock'."
+      }
+    },
+    {
+      "method": "resolve_preview_invocation",
+      "args": [
+        {
+          "mode": "epic",
+          "asset_name": "demo",
+          "department": "core"
+        },
+        null
+      ],
+      "result": {
+        "method_name": "build_epic_preview",
+        "args": [
+          "demo",
+          "core"
+        ],
+        "unsupported_detail": "Unsupported preview mode 'epic'."
+      }
+    },
+    {
+      "method": "resolve_preview_invocation",
+      "args": [
+        {
+          "mode": "custom",
+          "asset_name": "demo",
+          "department": "core"
+        },
+        null
+      ],
+      "result": {
+        "method_name": "build_epic_preview",
+        "args": [
+          "demo",
+          "core"
+        ],
+        "unsupported_detail": "Unsupported preview mode 'custom'."
+      }
+    },
+    {
+      "method": "has_archive_selector",
+      "args": [
+        null,
+        null,
+        null
+      ],
+      "result": false
+    },
+    {
+      "method": "has_archive_selector",
+      "args": [
+        null,
+        null,
+        []
+      ],
+      "result": false
+    },
+    {
+      "method": "has_archive_selector",
+      "args": [
+        null,
+        null,
+        [
+          "token"
+        ]
+      ],
+      "result": true
+    },
+    {
+      "method": "has_archive_selector",
+      "args": [
+        null,
+        "build",
+        null
+      ],
+      "result": true
+    },
+    {
+      "method": "has_archive_selector",
+      "args": [
+        null,
+        "build",
+        []
+      ],
+      "result": true
+    },
+    {
+      "method": "has_archive_selector",
+      "args": [
+        null,
+        "build",
+        [
+          "token"
+        ]
+      ],
+      "result": true
+    },
+    {
+      "method": "has_archive_selector",
+      "args": [
+        [],
+        null,
+        null
+      ],
+      "result": false
+    },
+    {
+      "method": "has_archive_selector",
+      "args": [
+        [],
+        null,
+        []
+      ],
+      "result": false
+    },
+    {
+      "method": "has_archive_selector",
+      "args": [
+        [],
+        null,
+        [
+          "token"
+        ]
+      ],
+      "result": true
+    },
+    {
+      "method": "has_archive_selector",
+      "args": [
+        [],
+        "build",
+        null
+      ],
+      "result": true
+    },
+    {
+      "method": "has_archive_selector",
+      "args": [
+        [],
+        "build",
+        []
+      ],
+      "result": true
+    },
+    {
+      "method": "has_archive_selector",
+      "args": [
+        [],
+        "build",
+        [
+          "token"
+        ]
+      ],
+      "result": true
+    },
+    {
+      "method": "has_archive_selector",
+      "args": [
+        [
+          "A"
+        ],
+        null,
+        null
+      ],
+      "result": true
+    },
+    {
+      "method": "has_archive_selector",
+      "args": [
+        [
+          "A"
+        ],
+        null,
+        []
+      ],
+      "result": true
+    },
+    {
+      "method": "has_archive_selector",
+      "args": [
+        [
+          "A"
+        ],
+        null,
+        [
+          "token"
+        ]
+      ],
+      "result": true
+    },
+    {
+      "method": "has_archive_selector",
+      "args": [
+        [
+          "A"
+        ],
+        "build",
+        null
+      ],
+      "result": true
+    },
+    {
+      "method": "has_archive_selector",
+      "args": [
+        [
+          "A"
+        ],
+        "build",
+        []
+      ],
+      "result": true
+    },
+    {
+      "method": "has_archive_selector",
+      "args": [
+        [
+          "A"
+        ],
+        "build",
+        [
+          "token"
+        ]
+      ],
+      "result": true
+    },
+    {
+      "method": "normalize_archive_response",
+      "args": [
+        [],
+        [],
+        0
+      ],
+      "result": {
+        "ok": true,
+        "archived_count": 0,
+        "archived_ids": [],
+        "missing_ids": []
+      }
+    },
+    {
+      "method": "normalize_archive_response",
+      "args": [
+        [
+          "A"
+        ],
+        [
+          "Z"
+        ],
+        0
+      ],
+      "result": {
+        "ok": true,
+        "archived_count": 1,
+        "archived_ids": [
+          "A"
+        ],
+        "missing_ids": [
+          "Z"
+        ]
+      }
+    },
+    {
+      "method": "normalize_archive_response",
+      "args": [
+        [
+          "B",
+          "A",
+          "A"
+        ],
+        [
+          "Z",
+          "Z"
+        ],
+        2
+      ],
+      "result": {
+        "ok": true,
+        "archived_count": 4,
+        "archived_ids": [
+          "A",
+          "B"
+        ],
+        "missing_ids": [
+          "Z"
+        ]
+      }
+    },
+    {
+      "method": "normalize_archive_response",
+      "args": [
+        [],
+        [],
+        3
+      ],
+      "result": {
+        "ok": true,
+        "archived_count": 3,
+        "archived_ids": [],
+        "missing_ids": []
+      }
+    },
+    {
+      "method": "include_explorer_entry",
+      "args": [
+        ".git"
+      ],
+      "result": false
+    },
+    {
+      "method": "include_explorer_entry",
+      "args": [
+        "node_modules"
+      ],
+      "result": false
+    },
+    {
+      "method": "include_explorer_entry",
+      "args": [
+        "some__pycache__file"
+      ],
+      "result": false
+    },
+    {
+      "method": "include_explorer_entry",
+      "args": [
+        "app.py"
+      ],
+      "result": true
+    },
+    {
+      "method": "include_explorer_entry",
+      "args": [
+        "folder"
+      ],
+      "result": true
+    },
+    {
+      "method": "should_remove_websocket",
+      "args": [
+        "runtime_error"
+      ],
+      "result": true
+    },
+    {
+      "method": "should_remove_websocket",
+      "args": [
+        "value_error"
+      ],
+      "result": true
+    },
+    {
+      "method": "should_remove_websocket",
+      "args": [
+        "other"
+      ],
+      "result": false
+    }
+  ],
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-09-20T23:55:50.831958Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:a5cc52d928c778b2d0be46c0e60446177c234fa9e599f469a2bc333066bfb6af",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 641,
+        "paths_total_reference": 641,
+        "churn_paths": 641,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    }
+  ]
+}

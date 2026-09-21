@@ -6,6 +6,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
+from orket.application.services import api_policy_input_service as api_policy
 from orket.application.services.operator_completion_service import (
     load_operator_run_projection,
     read_operator_card,
@@ -238,30 +239,32 @@ def build_cards_router(engine_getter: Callable[[], Any], api_runtime_node_getter
     async def archive_cards(req: ArchiveCardsRequest) -> Any:
         engine = engine_getter()
         api_runtime_node = api_runtime_node_getter()
-        if not api_runtime_node.has_archive_selector(req.card_ids, req.build_id, req.related_tokens):
+        inputs = api_policy.capture_archive_inputs(req)
+        if not api_policy.admit_api_bool(api_runtime_node.has_archive_selector(
+                inputs.card_ids, inputs.build_id, inputs.related_tokens)):
             raise HTTPException(status_code=400, detail=api_runtime_node.archive_selector_missing_detail())
 
         archived_ids: list[str] = []
         missing_ids: list[str] = []
         archived_count = 0
-        archived_by = req.archived_by or "api"
+        archived_by = inputs.archived_by
 
-        if req.card_ids:
-            result = await engine.archive_cards(req.card_ids, archived_by=archived_by, reason=req.reason)
+        if inputs.card_ids:
+            result = await engine.archive_cards(list(inputs.card_ids), archived_by=archived_by, reason=inputs.reason)
             archived_ids.extend(result.get("archived", []))
             missing_ids.extend(result.get("missing", []))
 
-        if req.build_id:
-            count = await engine.archive_build(req.build_id, archived_by=archived_by, reason=req.reason)
+        if inputs.build_id:
+            count = await engine.archive_build(inputs.build_id, archived_by=archived_by, reason=inputs.reason)
             archived_count += count
 
-        if req.related_tokens:
-            result = await engine.archive_related_cards(req.related_tokens, archived_by=archived_by, reason=req.reason)
+        if inputs.related_tokens:
+            result = await engine.archive_related_cards(list(inputs.related_tokens), archived_by=archived_by, reason=inputs.reason)
             archived_ids.extend(result.get("archived", []))
             missing_ids.extend(result.get("missing", []))
 
-        return api_runtime_node.normalize_archive_response(
-            archived_ids=archived_ids,
+        return api_policy.normalize_archive_result(
+            api_runtime_node, archived_ids=archived_ids,
             missing_ids=missing_ids,
             archived_count=archived_count,
         )

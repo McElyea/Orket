@@ -16,6 +16,7 @@ from fastapi.security import APIKeyHeader
 
 from orket import __version__
 from orket.application.interactions.manager import InteractionManager
+from orket.application.services import api_policy_input_service as api_policy
 from orket.application.services.api_runtime_host_service import ApiRuntimeHostService
 from orket.application.services.api_runtime_preparation import build_api_runtime_preparation
 from orket.application.services.api_startup_service import api_runtime_lifespan
@@ -133,6 +134,7 @@ def _resolve_method(target: object, invocation: dict[str, Any], error_prefix: st
 
 
 async def _invoke_async_method(target: object, invocation: dict[str, Any], error_prefix: str) -> Any:
+    invocation = api_policy.capture_api_invocation(invocation)
     method = _resolve_method(target, invocation, error_prefix)
     return await method(*invocation.get("args", []), **invocation.get("kwargs", {}))
 
@@ -143,6 +145,7 @@ async def _schedule_async_invocation_task(
     error_prefix: str,
     session_id: str,
 ) -> None:
+    invocation = api_policy.capture_api_invocation(invocation)
     method = _resolve_method(target, invocation, error_prefix)
     task = asyncio.create_task(method(*invocation.get("args", []), **invocation.get("kwargs", {})))
     context = _runtime_context()
@@ -1631,9 +1634,6 @@ async def list_logs(
     }
 
 
-# --- WS ---
-
-
 async def event_broadcaster(state: Any, runtime_node: Any) -> None:
     while True:
         record = await state.event_queue.get()
@@ -1642,7 +1642,7 @@ async def event_broadcaster(state: Any, runtime_node: Any) -> None:
                 try:
                     await ws.send_json(record)
                 except (WebSocketDisconnect, RuntimeError, ValueError) as exc:
-                    if isinstance(exc, WebSocketDisconnect) or runtime_node.should_remove_websocket(exc):
+                    if isinstance(exc, WebSocketDisconnect) or api_policy.recommend_websocket_removal(runtime_node, exc):
                         await state.remove_websocket(ws)
         finally:
             state.event_queue.task_done()

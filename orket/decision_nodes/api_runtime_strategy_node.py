@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import timedelta
 from pathlib import Path
+from types import MappingProxyType
 from typing import Any
+
+from orket_extension_sdk import FrozenJson
 
 
 class DefaultApiRuntimeStrategyNode:
@@ -79,8 +83,8 @@ class DefaultApiRuntimeStrategyNode:
     def resolve_save_invocation(self, path: str, content: str) -> dict[str, Any]:
         return {"method_name": "write_file", "args": [path, content]}
 
-    def normalize_metrics(self, snapshot: dict[str, Any]) -> dict[str, Any]:
-        normalized = dict(snapshot)
+    def normalize_metrics(self, snapshot: FrozenJson) -> dict[str, Any]:
+        normalized = snapshot.thaw()
         if "cpu" not in normalized and "cpu_percent" in normalized:
             normalized["cpu"] = normalized["cpu_percent"]
         if "memory" not in normalized and "ram_percent" in normalized:
@@ -100,8 +104,8 @@ class DefaultApiRuntimeStrategyNode:
             return False
         return entry_name != "node_modules"
 
-    def sort_explorer_items(self, items: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        return sorted(items, key=lambda item: (not item["is_dir"], item["name"].lower()))
+    def sort_explorer_items(self, items: tuple[Mapping[str, Any], ...]) -> list[dict[str, Any]]:
+        return sorted([dict(item) for item in items], key=lambda item: (not item["is_dir"], item["name"].lower()))
 
     def resolve_preview_target(self, path: str, issue_id: str | None) -> dict[str, str]:
         resolved_path = Path(path)
@@ -126,11 +130,11 @@ class DefaultApiRuntimeStrategyNode:
         }
         return method_map.get(mode, "build_epic_preview")
 
-    def resolve_preview_invocation(self, target: dict[str, str], issue_id: str | None) -> dict[str, Any]:
+    def resolve_preview_invocation(self, target: Mapping[str, str], issue_id: str | None) -> dict[str, Any]:
         method_name = self.select_preview_build_method(target["mode"])
         unsupported_detail = self.preview_unsupported_detail(
             target,
-            {"method_name": method_name},
+            MappingProxyType({"method_name": method_name}),
         )
         if target["mode"] == "issue":
             return {
@@ -144,7 +148,7 @@ class DefaultApiRuntimeStrategyNode:
             "unsupported_detail": unsupported_detail,
         }
 
-    def preview_unsupported_detail(self, target: dict[str, str], invocation: dict[str, Any]) -> str:
+    def preview_unsupported_detail(self, target: Mapping[str, str], invocation: Mapping[str, Any]) -> str:
         return f"Unsupported preview mode '{target['mode']}'."
 
     def resolve_chat_driver_invocation(self, message: str) -> dict[str, Any]:
@@ -159,14 +163,14 @@ class DefaultApiRuntimeStrategyNode:
     def resolve_api_workspace(self, project_root: Any) -> Any:
         return project_root / "workspace" / "default"
 
-    def should_remove_websocket(self, exception: Exception) -> bool:
-        return isinstance(exception, (RuntimeError, ValueError))
+    def should_remove_websocket(self, error_category: str) -> bool:
+        return error_category in ("runtime_error", "value_error")
 
     def has_archive_selector(
         self,
-        card_ids: list[str] | None,
+        card_ids: tuple[str, ...] | None,
         build_id: str | None,
-        related_tokens: list[str] | None,
+        related_tokens: tuple[str, ...] | None,
     ) -> bool:
         return any([bool(card_ids), bool(build_id), bool(related_tokens)])
 
@@ -175,8 +179,8 @@ class DefaultApiRuntimeStrategyNode:
 
     def normalize_archive_response(
         self,
-        archived_ids: list[str],
-        missing_ids: list[str],
+        archived_ids: tuple[str, ...],
+        missing_ids: tuple[str, ...],
         archived_count: int,
     ) -> dict[str, Any]:
         unique_archived_ids = sorted(set(archived_ids))

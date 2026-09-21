@@ -2456,7 +2456,7 @@ def test_cards_archive_uses_runtime_response_normalization(monkeypatch):
         "normalize_archive_response",
         lambda archived_ids, missing_ids, archived_count: {
             "ok": True,
-            "archived_count": 999,
+            "archived_count": 2,
             "archived_ids": sorted(set(archived_ids)),
             "missing_ids": sorted(set(missing_ids)),
             "policy": "custom",
@@ -2472,7 +2472,7 @@ def test_cards_archive_uses_runtime_response_normalization(monkeypatch):
     assert response.status_code == 200
     assert response.json() == {
         "ok": True,
-        "archived_count": 999,
+        "archived_count": 2,
         "archived_ids": ["A", "B"],
         "missing_ids": ["Z"],
         "policy": "custom",

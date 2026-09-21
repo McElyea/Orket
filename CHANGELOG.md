@@ -5,6 +5,16 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.50] - 2026-09-20
+
+### Fixed
+- Capture immutable API strategy inputs and detach invocation recommendations before preview construction or event-publication awaits.
+- Retain archive selectors, actor and reason at entry; refuse response claims that contradict observed archive results while preserving completed transactions.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Custom API strategies migrate to frozen metrics, tuples/read-only mappings and scalar websocket error categories. Migration: `docs/architecture/CONTRACT_DELTA_API_STRATEGY_INPUTS_D_2026-09-20.md`.
+
 ## [0.6.49] - 2026-09-20
 
 ### Fixed

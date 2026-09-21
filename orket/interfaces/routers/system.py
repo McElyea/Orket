@@ -8,6 +8,7 @@ from typing import Any, cast
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
+from orket.application.services import api_policy_input_service as api_policy
 from orket.interfaces.operator_view_support import build_provider_status_view, build_system_health_view
 
 
@@ -78,7 +79,7 @@ def build_system_router(
     async def get_metrics() -> dict[str, Any]:
         api_runtime_node = api_runtime_node_getter()
         metrics = await system_queries_getter().hardware_metrics()
-        return cast(dict[str, Any], api_runtime_node.normalize_metrics(metrics))
+        return cast(dict[str, Any], api_policy.normalize_api_metrics(api_runtime_node, metrics))
 
     @router.get("/system/explorer")
     async def list_system_files(path: str = ".") -> dict[str, Any]:
@@ -212,6 +213,7 @@ def build_system_router(
             session_id=session_id,
             request_type=req.type,
         )
+        invocation = api_policy.capture_api_invocation(invocation)
         method_name = invocation["method_name"]
 
         await events_getter().emit(
@@ -234,8 +236,8 @@ def build_system_router(
     async def preview_asset(path: str, issue_id: str | None = None) -> Any:
         api_runtime_node = api_runtime_node_getter()
         runtime_host = runtime_host_getter()
-        target = api_runtime_node.resolve_preview_target(path, issue_id)
-        invocation = api_runtime_node.resolve_preview_invocation(target, issue_id)
+        target = api_policy.capture_preview_target(api_runtime_node.resolve_preview_target(path, issue_id))
+        invocation = api_policy.capture_api_invocation(api_runtime_node.resolve_preview_invocation(target, issue_id))
         builder = await runtime_host.create_preview_builder(project_root_getter() / "model")
         return await invoke_async_method(builder, invocation, "preview")
 

@@ -30,6 +30,12 @@ orchestrator clock observations keep their existing second precision. Migration
 and remaining lifecycle input scope:
 `docs/architecture/CONTRACT_DELTA_SANDBOX_CREATION_INPUTS_D_2026-09-20.md`.
 
+API strategies receive immutable metrics, explorer, preview, archive and error
+facts. Application captures invocation recommendations before intervening awaits
+and refuses archive response claims that contradict observed results. Earlier
+archive commits remain durable on later refusal. Input migration and boundaries:
+`docs/specs/API_STRATEGY_INPUTS.md`.
+
 Sandbox policy input ownership, strict recommendation admission and partial-effect
 limits live in `docs/specs/SANDBOX_POLICY_INPUTS.md`. Creation captures its selected
 policy and fresh secrets before preflight; strategies receive immutable port and
@@ -1235,6 +1241,7 @@ Trust Kernel and Portable Conformance completed lane authority is archived under
       "active_roadmap_source": "docs/ROADMAP.md",
       "process_source": "docs/CONTRIBUTOR.md",
       "core_runtime_contract_sources": [
+        "docs/specs/API_STRATEGY_INPUTS.md",
         "docs/specs/SANDBOX_POLICY_INPUTS.md",
         "docs/specs/CORE_RUNTIME_STABILITY_REQUIREMENTS.md",
         "docs/specs/CORE_TOOL_RINGS_COMPATIBILITY_REQUIREMENTS.md",

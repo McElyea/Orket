@@ -17,6 +17,7 @@ from orket.decision_nodes.builtins import (
 from orket.decision_nodes.contracts import PlanningInput
 from orket.exceptions import CatastrophicFailure, ExecutionFailed, GovernanceViolation
 from orket.schema import CardStatus
+from orket_extension_sdk import FrozenJson
 
 pytestmark = pytest.mark.contract
 
@@ -421,7 +422,6 @@ def test_registry_tool_strategy_env_override_wins(monkeypatch):
 
 
 def test_default_api_runtime_strategy_parity():
-    """Layer: contract. Verifies the API runtime strategy contract now stays on pure request-shaping and path-selection behavior."""
     node = DefaultApiRuntimeStrategyNode()
 
     assert node.resolve_asset_id(path="model/core/issues/demo.json", issue_id=None) == "demo"
@@ -473,7 +473,7 @@ def test_default_api_runtime_strategy_parity():
         "method_name": "write_file",
         "args": ["x.txt", "hello"],
     }
-    assert node.normalize_metrics({"cpu_percent": 12, "ram_percent": 34}) == {
+    assert node.normalize_metrics(FrozenJson.freeze({"cpu_percent": 12, "ram_percent": 34})) == {
         "cpu_percent": 12,
         "ram_percent": 34,
         "cpu": 12,
@@ -524,9 +524,9 @@ def test_default_api_runtime_strategy_parity():
         "args": ["sb-1", "api"],
     }
     assert node.resolve_api_workspace(Path("/tmp/root")) == Path("/tmp/root/workspace/default")
-    assert node.should_remove_websocket(RuntimeError("x")) is True
-    assert node.should_remove_websocket(ValueError("x")) is True
-    assert node.should_remove_websocket(Exception("x")) is False
+    assert node.should_remove_websocket("runtime_error") is True
+    assert node.should_remove_websocket("value_error") is True
+    assert node.should_remove_websocket("other") is False
 
 
 def test_registry_resolves_custom_api_runtime_from_process_rules(monkeypatch):

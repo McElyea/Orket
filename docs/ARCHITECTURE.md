@@ -181,6 +181,12 @@ through the application service; environment extras fail without warning effects
 Contract: `docs/specs/SCHEMA_INPUT_OWNERSHIP.md`. Remaining effects, decision context,
 adapter classification and async reachability still require D acceptance.
 
+API strategies receive immutable metrics, explorer, preview, archive and error
+facts. Application captures invocation recommendations before intervening awaits
+and refuses archive response claims that contradict observed results. Earlier
+archive commits remain durable on later refusal. Input migration and boundaries:
+`docs/specs/API_STRATEGY_INPUTS.md`.
+
 Sandbox policy input ownership, strict recommendation admission and partial-effect
 limits live in `docs/specs/SANDBOX_POLICY_INPUTS.md`. Creation captures its selected
 policy and fresh secrets before preflight; strategies receive immutable port and
