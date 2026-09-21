@@ -5,6 +5,18 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.64] - 2026-09-21
+
+### Fixed
+- Own interactive driver construction, console input and provider cleanup through interruption; preserve EOF, fatal and cancelled exits.
+- Share driver lifetime primitives with API chat and capture async construction inputs before owned work.
+- Move existing parser and fallback prompt behavior into the conversation owner without duplication.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Async library embeddings must replace direct `OrketDriver(...)` construction with `await OrketDriver.create(...)` and close returned drivers. Canonical CLI/API callers are migrated; synchronous pre-loop construction remains available.
+- Contract and remaining scope: `docs/architecture/CONTRACT_DELTA_DRIVER_LIFETIME_D_2026-09-21.md`.
+
 ## [0.6.63] - 2026-09-21
 
 ### Fixed

@@ -163,9 +163,30 @@ close still gates return. Existing typed results, fatal/cancellation exits and
 artifact-only replay classification are unchanged. Printed manifest fragments
 are not rolled back after interruption.
 
-This does not complete interactive-driver constructor/stdin/provider ownership,
-API read migration, all mutable inspection inputs or the full async inventory.
+This does not complete API read migration, all mutable inspection inputs or the
+full async inventory. Interactive-driver ownership is specified below.
 Argument declarations moved to a grouped module without changing their grammar.
+
+## Interactive driver lifetime
+
+Async embeddings await `OrketDriver.create(...)`; direct synchronous construction
+is a pre-loop/worker API and refuses a running loop before I/O. The async factory
+captures invocation root, environment and runtime settings before owned
+construction. Relative project roots bind to that captured root. Injected port
+identities are retained; their internals and authored files are not frozen.
+
+A returned driver owns its provider cleanup, including an explicitly supplied
+provider. The shared runtime factory closes a returned driver if interruption
+prevents transfer. The existing unreturned-resource limit still applies.
+`close()` retains provider cleanup through repeated cancellation and exposes
+failure. API chat and the interactive CLI use these ownership primitives; the
+CLI uses its post-startup captured inputs and closes on EOF/quit, failure and
+interruption. Cleanup failure cannot yield success.
+
+The console worker owns an admitted blocking input read until line, EOF or
+failure. EOF is a normal input result; pending cancellation still wins over
+normal EOF. Native failures remain visible. No forced thread stop or new input
+deadline is introduced. The driver does not close borrowed process stdin.
 
 ## Verification and limits
 

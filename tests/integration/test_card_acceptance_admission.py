@@ -1,6 +1,7 @@
 """Model structural proposals cannot publish their own completion authority."""
 from __future__ import annotations
 
+import asyncio
 import json
 from types import SimpleNamespace
 
@@ -32,7 +33,7 @@ def _asset_snapshot(root):
 # Layer: integration
 async def test_model_structural_acceptance_is_rejected_before_any_asset_write(tmp_path, monkeypatch, shape):
     monkeypatch.chdir(tmp_path)
-    driver = _driver(tmp_path)
+    driver = await asyncio.to_thread(_driver, tmp_path)
     definition = text_acceptance("agent_output/proposed.txt", "trivial", workload_id="proposal").model_dump(mode="json")
     child = {"id": "PROPOSED-1", "summary": "Task", "seat": "coder", "params": {"completion_acceptance": definition}}
     asset = {"name": "proposed"}
@@ -56,7 +57,7 @@ async def test_model_structural_acceptance_is_rejected_before_any_asset_write(tm
 # Layer: integration
 async def test_model_created_epic_has_no_implicit_acceptance(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    driver = _driver(tmp_path)
+    driver = await asyncio.to_thread(_driver, tmp_path)
     asset = {"name": "proposed", "issues": [{"id": "PROPOSED-1", "summary": "Write output", "seat": "coder",
              "note": 'Proposed completion_acceptance: {"expected_text":"trivial"}'}]}
     result = await driver.execute_plan({"action": "create_epic", "new_asset": asset, "target_parent": "parent"})

@@ -12520,7 +12520,7 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.63 runtime CLI construction and inspection ownership. Preserve the governed legacy-export cutover;
+0.6.64 driver construction, console input and provider lifetime. Preserve the governed legacy-export cutover;
 continue remaining clock/input owners, adapter enforcement and async reachability before E1/E2
 and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
@@ -19776,3 +19776,91 @@ callers, adapter classification/full async inventory, E1/E2, whole-suite/89%,
 hosted Quality and CAP remain open. The .43 Git timeout cause and four .59
 provider-gated packet1 cases remain unverified. Accepted BT evidence is retained;
 the lane remains active pending required work and explicit user acceptance.
+
+#### .64 Driver construction, console input and provider lifetime (2026-09-21)
+
+Async driver embeddings use `await OrketDriver.create(...)`; direct synchronous
+construction now refuses an event loop before effects. The factory captures root,
+environment and runtime settings before owned construction and binds relative
+project paths to that root. Supplied port identities remain intact. Shared runtime
+factory ownership closes a returned driver if interruption prevents transfer;
+the existing unreturned-resource limit remains explicit. Driver close owns provider
+cleanup, including supplied providers, through repeated cancellation and exposes
+failure. API chat uses this factory; the interactive CLI uses its post-startup
+captured inputs and the same runtime owner primitives. The release note marks the
+direct-async embedding migration as breaking/required. Canonical callers are
+migrated; pre-loop/worker construction remains available.
+
+Blocking console input is owned until a line, EOF or input failure. EOF is a
+normal result, so it cannot erase pending cancellation. Normal quit/EOF, request
+failure and interrupted CLI exits all pass through provider close. A close failure
+cannot yield success. Process stdin remains borrowed. No forced thread stop or
+new input deadline is promised. Contract:
+`docs/architecture/CONTRACT_DELTA_DRIVER_LIFETIME_D_2026-09-21.md`.
+
+All nine original boundary cases fail on .63: six callers finish while their
+constructor/file or native pipe work remains admitted, and three exit without
+ever reaching required provider close. The same nine final test cases also fail
+against the isolated, byte-verified installed published .63 wheel. All nine pass
+after remediation. Their 50ms timeout starts at native admission; the 0.5s SQLite,
+0.8s release timer and five-second admission/join bounds are unchanged.
+
+The 82-case focused run passes. Six native canonical CLI scenarios use real pipe
+input and HTTP clients with a controlled local provider server: ordinary EOF,
+conversation/quit, repeated cancellation followed by EOF or line, SIGINT followed
+by EOF, and injected close failure. They verify return codes 0/130/1, actual client
+and engine closure, runtime origin, one expected HTTP request for conversation and
+no provider dispatch after interruption. A return marker independently stays
+absent while interrupted input is still held. Direct pipe controls separately
+preserve cancellation/timeout at EOF. API chat retains actual ASGI/HTTP behavior
+and transport cleanup; factory controls exercise root/environment/settings
+rotation and supplied-port identity/close. No fresh inference is claimed.
+
+Failed development observations remain retained: initial extraction accidentally
+removed the following method header, producing one collection error; restoring it
+preserves `process_request` exactly. The extraction's first receipt writer also
+passed a string to a Path-only hash helper after moving the methods; a separate
+audit verifies those moves. One of 76 cases initially constructs a provider without
+its required ports; the fixture now uses the canonical provider factory. One of
+nine native/factory cases fails only a Windows CRLF output comparison; the test
+normalizes line endings before exact expected-content comparison. The first
+structural review reports an import-format finding; the final review passes.
+These failures are not erased or represented as product acceptance.
+
+Parser and fallback-prompt methods move unchanged into the existing conversation
+owner; remaining pre-existing driver methods match .63, with only the constructor's
+pre-effect guard added. Driver size falls 434 to 366 lines, conversation grows
+224 to 318, API host falls 93 to 80, and CLI is 324. New functions meet size bounds.
+Existing parser telemetry fixtures follow the moved authority. Card-acceptance
+fixtures now construct on a worker and retain their rejection/evidence assertions.
+Both Quality jobs include the new regressions; this is not full E2 completion.
+
+The 39-module selection retains all 190 .63 identities and affected direct imports;
+selection remains bounded rather than a complete call graph.
+
+| Cell | Cases / failures / errors / skips | JUnit seconds | Installed origins |
+|---|---|---|---|
+| Source Windows Python 3.11 | 222 / 0 / 0 / 0 | 115.511 | Source run |
+| Installed win-py311 | 222 / 0 / 0 / 0 | 115.917 | 930 |
+| Installed win-py312 | 222 / 0 / 0 / 0 | 128.038 | 930 |
+
+All 27 new responsiveness readings meet the 0.5-second bound; maximum
+0.167381700 seconds. Audits bind exact cases, copied inputs, installed origins,
+actual CLI startup, controlled tool gates and teardown. Complete source/wheel/sdist
+parity covers 1,109 Python files and all 19 retained data resources,
+1,128 core members and 2,184 support inputs.
+Wheel SHA-256: `fdc14f5504752a733b27d0f3c7595bb1f4a7db035a9666485890a9648f6e3071`;
+sdist SHA-256: `f927b918c146d3b0f6b88518f24dc7735b8dda0a61b8e5ae661c71142cc45d11`.
+Timed Windows cells restore scoped sleep requests; no persistent power or deadline
+change occurs. Actual dependency policy v2 passes without new exceptions. Changed
+Python is Ruff-clean; canonical Ruff records 94 findings.
+
+Observed path/result: **primary / success**, scoped live local effects with
+structural artifact/authority binding. Evidence: `.tmp/d-driver-lifetime/`.
+The latest .63 passive Linux gate remains **blocked / environment blocker**;
+no new clock observation or Linux application acceptance is claimed. API
+diagnostic/observation reads, remaining ConfigLoader sync callers, broader mutable
+inputs, adapter classification/full async inventory, E1/E2, whole-suite/89%, hosted
+Quality and CAP remain open. The .43 Git-timeout cause and four .59 provider-gated
+packet1 cases remain unverified. Accepted BT evidence is retained. Required work
+and explicit user acceptance still govern lane completion and retirement.

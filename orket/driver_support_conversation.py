@@ -222,3 +222,97 @@ class DriverConversationMixin:
         if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)):
             return float(node.value)
         raise ValueError("Unsupported expression")
+
+    def _build_fallback_system_prompt(self) -> str:
+        registry = self._canonical_action_registry()
+        grouped_actions = []
+        for group in ("suggestion", "directive", "conversation", "structural"):
+            actions = ", ".join(registry[group])
+            grouped_actions.append(f"- {group}: {actions}")
+        return (
+            "You are the Orket Operator.\n\n"
+            "Operate in a precise, high-context, non-repetitive reasoning mode.\n"
+            "Your job is to interpret the user's request and decide the correct action\n"
+            "within the Orket Schema. You are a constrained action router, not a general\n"
+            "project-board controller.\n\n"
+            "CORE RULES:\n"
+            "- Always return VALID JSON matching the Orket Schema.\n"
+            "- Never invent assets, departments, or relationships that do not exist.\n"
+            "- Never propose structural changes unless the user request clearly requires it.\n"
+            "- Never repeat instructions back to the user.\n"
+            "- Never explain JSON; just produce it.\n\n"
+            "SUPPORTED ACTIONS:\n" + "\n".join(grouped_actions) + "\n\n"
+            "If the request needs an unsupported action, return action='converse' with a short clarification.\n\n"
+            "THINKING STYLE:\n"
+            "- Be concise, explicit, and deterministic.\n"
+            "- Use first-principles reasoning.\n"
+            "- Prefer minimal changes over broad restructuring.\n"
+            "- If uncertain, choose the safest, least-destructive action.\n\n"
+            "MODES:\n"
+            "1. Conversational input (greeting, clarification, meta-discussion)\n"
+            "   -> respond with:\n"
+            "   {\n"
+            '     "action": "converse",\n'
+            '     "response": "<natural response>",\n'
+            '     "reasoning": "<brief explanation>"\n'
+            "   }\n\n"
+            "2. Structural request matching supported structural actions\n"
+            "   -> choose the correct Orket action and produce only the JSON.\n\n"
+            "3. Ambiguous request\n"
+            '   -> ask a single clarifying question using action: "converse".\n\n'
+            "CONTEXT PROVIDED:\n"
+            "- inventory: current assets\n"
+            "- active_rocks: available rocks\n"
+            "- active_epics: available epics\n"
+            "- request: the user message\n\n"
+            "Your output must always be a single JSON object with:\n"
+            "- action\n"
+            "- reasoning\n"
+            "- and any required fields for that action.\n\n"
+            "Do not include commentary outside the JSON.\n"
+        )
+
+    def _parse_model_plan(self, raw_text: str) -> dict[str, Any]:
+        workspace_root = self._operator_workspace_root()
+        parse_mode = str(getattr(self, "json_parse_mode", "compatibility")).strip().lower()
+        self._compatibility_parse_fallback_used = False
+        if parse_mode == "strict":
+            log_event(
+                "driver_json_parse_mode_strict",
+                {"mode": "strict"},
+                workspace_root,
+                role="DRIVER",
+            )
+            stripped = str(raw_text or "").strip()
+            try:
+                payload = json.loads(stripped)
+            except json.JSONDecodeError as exc:
+                raise json.JSONDecodeError("Strict JSON mode requires pure JSON envelope output.", stripped, 0) from exc
+            except TypeError as exc:
+                raise json.JSONDecodeError("Strict JSON mode requires pure JSON envelope output.", stripped, 0) from exc
+            if not isinstance(payload, dict):
+                raise json.JSONDecodeError("Strict JSON mode requires a JSON object envelope.", stripped, 0)
+            return payload
+
+        log_event(
+            "driver_json_parse_mode_compatibility",
+            {"mode": "compatibility"},
+            workspace_root,
+            role="DRIVER",
+        )
+        text = str(raw_text or "")
+        stripped = text.strip()
+        if stripped.startswith("{") and stripped.endswith("}"):
+            payload = json.loads(stripped)
+            if not isinstance(payload, dict):
+                raise json.JSONDecodeError("Compatibility mode requires a JSON object envelope.", stripped, 0)
+            return payload
+        start = text.find("{")
+        end = text.rfind("}")
+        if start == -1 or end == -1:
+            raise json.JSONDecodeError("Compatibility mode could not find JSON envelope in model output.", text, 0)
+        self._compatibility_parse_fallback_used = True
+        payload = json.loads(text[start : end + 1])
+        if not isinstance(payload, dict):
+            raise json.JSONDecodeError("Compatibility mode requires a JSON object envelope.", text[start : end + 1], 0)
+        return payload

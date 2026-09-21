@@ -160,8 +160,15 @@ The canonical `orket runtime` command bootstraps environment before its event
 loop. Direct async CLI embeddings must do the same before entering the loop;
 engine construction captures the post-startup settings and environment, and does
 not reload a second ambient `.env` in its worker. CLI engine/read ownership and
-remaining interactive-driver scope are documented in
+inspection scope are documented in
 `docs/architecture/CONTRACT_DELTA_CLI_RUNTIME_OWNERSHIP_D_2026-09-21.md`.
+
+Async driver embeddings await `OrketDriver.create(...)` and close the returned
+driver; direct synchronous construction is restricted to pre-loop/worker use.
+The interactive CLI and API chat own provider cleanup. Admitted console reads
+must settle through a line, EOF or input failure before interrupted cleanup can
+finish; no forced thread stop or input deadline is promised. Contract:
+`docs/architecture/CONTRACT_DELTA_DRIVER_LIFETIME_D_2026-09-21.md`.
 
 Async organization embeddings await `OrganizationLoop.create()` before
 `run_forever()`; the canonical `orket runtime --loop` uses that factory. Direct

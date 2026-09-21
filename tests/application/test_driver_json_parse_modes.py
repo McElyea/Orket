@@ -9,6 +9,7 @@ from orket.driver import OrketDriver
 from tests.helpers.model_selection import prepared_model_selection
 
 
+@pytest.mark.contract
 def test_parse_model_plan_compatibility_mode_accepts_wrapped_json(monkeypatch):
     """Layer: contract. Verifies compatibility mode supports envelope extraction and emits mode telemetry."""
     events = []
@@ -16,7 +17,7 @@ def test_parse_model_plan_compatibility_mode_accepts_wrapped_json(monkeypatch):
     def _capture(event_name, payload, *args, **kwargs):
         events.append((event_name, payload))
 
-    monkeypatch.setattr("orket.driver.log_event", _capture)
+    monkeypatch.setattr("orket.driver_support_conversation.log_event", _capture)
     driver = OrketDriver.__new__(OrketDriver)
     driver.json_parse_mode = "compatibility"
 
@@ -74,6 +75,7 @@ def test_driver_explicit_compatibility_override_survives_governed_prompting(monk
     assert driver.json_parse_mode == "compatibility"
 
 
+@pytest.mark.unit
 def test_parse_model_plan_strict_mode_rejects_wrapped_json(monkeypatch):
     """Layer: unit. Verifies strict mode rejects non-envelope output and emits strict mode telemetry."""
     events = []
@@ -81,7 +83,7 @@ def test_parse_model_plan_strict_mode_rejects_wrapped_json(monkeypatch):
     def _capture(event_name, payload, *args, **kwargs):
         events.append((event_name, payload))
 
-    monkeypatch.setattr("orket.driver.log_event", _capture)
+    monkeypatch.setattr("orket.driver_support_conversation.log_event", _capture)
     driver = OrketDriver.__new__(OrketDriver)
     driver.json_parse_mode = "strict"
 

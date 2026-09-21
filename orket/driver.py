@@ -8,12 +8,15 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any
 
+from orket.adapters.execution.owned_io import require_sync_context, run_owned_io
 from orket.adapters.llm.local_model_provider import LocalModelProvider
 from orket.adapters.storage.async_file_tools import AsyncFileTools
 from orket.application.services.driver_command_service import DriverCommandService, collect_driver_inventory
 from orket.application.services.local_model_factory import create_local_model_provider
 from orket.application.services.model_selection_service import prepare_bootstrap_model_selection
 from orket.application.services.reforger_service import ReforgerService
+from orket.application.services.runtime_construction_inputs import RuntimeConstructionInputs
+from orket.application.services.runtime_result_lifetime import create_runtime_owner
 from orket.driver_support_conversation import DriverConversationMixin
 from orket.driver_support_resources import DriverResourceMixin
 from orket.exceptions import CardNotFound
@@ -49,6 +52,7 @@ class OrketDriver(DriverResourceMixin, DriverConversationMixin):
         project_root: Path | None = None,
         environment: Mapping[str, str] | None = None,
     ) -> None:
+        require_sync_context(code="E_DRIVER_CONSTRUCTION_REQUIRES_WORKER")
         captured_environment = dict(os.environ if environment is None else environment)
         self._environment = MappingProxyType(captured_environment)
         self.project_root = Path(project_root).resolve() if project_root is not None else _default_project_root()
@@ -90,6 +94,28 @@ class OrketDriver(DriverResourceMixin, DriverConversationMixin):
         if self.provider is None:
             self.provider = create_local_model_provider(model=self._configured_model_name, temperature=0.1,
                                                environment=captured_environment)
+
+    @classmethod
+    async def create(
+        cls, model: str | None = None, *, provider: LocalModelProvider | None = None,
+        fs: AsyncFileTools | None = None, reforger_tools: ReforgerService | None = None,
+        strict_config: bool | None = None, json_parse_mode: str | None = None,
+        project_root: Path | None = None, environment: Mapping[str, str] | None = None,
+    ) -> OrketDriver:
+        relative_root = Path() if project_root is None else Path(project_root)
+        inputs = await RuntimeConstructionInputs.capture_async(environment=environment)
+        root = inputs.invocation_root / relative_root
+
+        def construct():
+            inputs.bind_settings()
+            return cls(model, provider=provider, fs=fs, reforger_tools=reforger_tools,
+                       strict_config=strict_config, json_parse_mode=json_parse_mode,
+                       project_root=root, environment=inputs.environment)
+
+        return await create_runtime_owner(construct, label="driver-construction")
+
+    async def close(self) -> None:
+        await run_owned_io(self.provider.close, label="driver-provider-close", preserve_failure=True)
 
     def _operator_workspace_root(self) -> Path:
         return Path(getattr(self, "workspace_root", _default_workspace_root()))
@@ -204,100 +230,6 @@ class OrketDriver(DriverResourceMixin, DriverConversationMixin):
     def _supported_action_error_text(self, attempted_action: str) -> str:
         summary = "\n".join(self._supported_action_summary_lines())
         return f"Unsupported action '{attempted_action}'.\n{summary}"
-
-    def _build_fallback_system_prompt(self) -> str:
-        registry = self._canonical_action_registry()
-        grouped_actions = []
-        for group in ("suggestion", "directive", "conversation", "structural"):
-            actions = ", ".join(registry[group])
-            grouped_actions.append(f"- {group}: {actions}")
-        return (
-            "You are the Orket Operator.\n\n"
-            "Operate in a precise, high-context, non-repetitive reasoning mode.\n"
-            "Your job is to interpret the user's request and decide the correct action\n"
-            "within the Orket Schema. You are a constrained action router, not a general\n"
-            "project-board controller.\n\n"
-            "CORE RULES:\n"
-            "- Always return VALID JSON matching the Orket Schema.\n"
-            "- Never invent assets, departments, or relationships that do not exist.\n"
-            "- Never propose structural changes unless the user request clearly requires it.\n"
-            "- Never repeat instructions back to the user.\n"
-            "- Never explain JSON; just produce it.\n\n"
-            "SUPPORTED ACTIONS:\n" + "\n".join(grouped_actions) + "\n\n"
-            "If the request needs an unsupported action, return action='converse' with a short clarification.\n\n"
-            "THINKING STYLE:\n"
-            "- Be concise, explicit, and deterministic.\n"
-            "- Use first-principles reasoning.\n"
-            "- Prefer minimal changes over broad restructuring.\n"
-            "- If uncertain, choose the safest, least-destructive action.\n\n"
-            "MODES:\n"
-            "1. Conversational input (greeting, clarification, meta-discussion)\n"
-            "   -> respond with:\n"
-            "   {\n"
-            '     "action": "converse",\n'
-            '     "response": "<natural response>",\n'
-            '     "reasoning": "<brief explanation>"\n'
-            "   }\n\n"
-            "2. Structural request matching supported structural actions\n"
-            "   -> choose the correct Orket action and produce only the JSON.\n\n"
-            "3. Ambiguous request\n"
-            '   -> ask a single clarifying question using action: "converse".\n\n'
-            "CONTEXT PROVIDED:\n"
-            "- inventory: current assets\n"
-            "- active_rocks: available rocks\n"
-            "- active_epics: available epics\n"
-            "- request: the user message\n\n"
-            "Your output must always be a single JSON object with:\n"
-            "- action\n"
-            "- reasoning\n"
-            "- and any required fields for that action.\n\n"
-            "Do not include commentary outside the JSON.\n"
-        )
-
-    def _parse_model_plan(self, raw_text: str) -> dict[str, Any]:
-        workspace_root = self._operator_workspace_root()
-        parse_mode = str(getattr(self, "json_parse_mode", "compatibility")).strip().lower()
-        self._compatibility_parse_fallback_used = False
-        if parse_mode == "strict":
-            log_event(
-                "driver_json_parse_mode_strict",
-                {"mode": "strict"},
-                workspace_root,
-                role="DRIVER",
-            )
-            stripped = str(raw_text or "").strip()
-            try:
-                payload = json.loads(stripped)
-            except json.JSONDecodeError as exc:
-                raise json.JSONDecodeError("Strict JSON mode requires pure JSON envelope output.", stripped, 0) from exc
-            except TypeError as exc:
-                raise json.JSONDecodeError("Strict JSON mode requires pure JSON envelope output.", stripped, 0) from exc
-            if not isinstance(payload, dict):
-                raise json.JSONDecodeError("Strict JSON mode requires a JSON object envelope.", stripped, 0)
-            return payload
-
-        log_event(
-            "driver_json_parse_mode_compatibility",
-            {"mode": "compatibility"},
-            workspace_root,
-            role="DRIVER",
-        )
-        text = str(raw_text or "")
-        stripped = text.strip()
-        if stripped.startswith("{") and stripped.endswith("}"):
-            payload = json.loads(stripped)
-            if not isinstance(payload, dict):
-                raise json.JSONDecodeError("Compatibility mode requires a JSON object envelope.", stripped, 0)
-            return payload
-        start = text.find("{")
-        end = text.rfind("}")
-        if start == -1 or end == -1:
-            raise json.JSONDecodeError("Compatibility mode could not find JSON envelope in model output.", text, 0)
-        self._compatibility_parse_fallback_used = True
-        payload = json.loads(text[start : end + 1])
-        if not isinstance(payload, dict):
-            raise json.JSONDecodeError("Compatibility mode requires a JSON object envelope.", text[start : end + 1], 0)
-        return payload
 
     async def process_request(self, message: str) -> str:
         request_text = str(message or "").strip()

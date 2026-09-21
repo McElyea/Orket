@@ -63,14 +63,13 @@ async def test_real_api_chat_closes_request_driver(tmp_path, monkeypatch):
     import orket.driver as driver_module
 
     created = []
-    actual = driver_module.OrketDriver
+    actual = driver_module.OrketDriver.__init__
 
-    def observe(**kwargs):
-        value = actual(**kwargs)
-        created.append(value)
-        return value
+    def observe(self, *args, **kwargs):
+        actual(self, *args, **kwargs)
+        created.append(self)
 
-    monkeypatch.setattr(driver_module, "OrketDriver", observe)
+    monkeypatch.setattr(driver_module.OrketDriver, "__init__", observe)
     with provider_server() as (endpoint, calls):
         app = create_api_app(project_root=tmp_path, environment=_environment(endpoint))
         async with app.router.lifespan_context(app):
@@ -87,17 +86,16 @@ async def test_cancelled_driver_bootstrap_drains_worker_and_closes_actual_transp
 
     started, release = threading.Event(), threading.Event()
     created, worker_threads = [], []
-    actual = driver_module.OrketDriver
+    actual = driver_module.OrketDriver.__init__
 
-    def held(**kwargs):
-        value = actual(**kwargs)
-        created.append(value)
+    def held(self, *args, **kwargs):
+        actual(self, *args, **kwargs)
+        created.append(self)
         worker_threads.append(threading.get_ident())
         started.set()
         assert release.wait(10)
-        return value
 
-    monkeypatch.setattr(driver_module, "OrketDriver", held)
+    monkeypatch.setattr(driver_module.OrketDriver, "__init__", held)
     host = ApiRuntimeHostService(tmp_path, environment=_environment("http://127.0.0.1:1/v1"))
     task = asyncio.create_task(host.create_chat_driver())
     try:

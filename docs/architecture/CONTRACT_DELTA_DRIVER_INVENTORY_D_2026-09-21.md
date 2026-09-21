@@ -24,10 +24,10 @@ remains a failure rather than a fabricated successful empty inventory.
 
 This moves the former private driver inventory implementation into the storage
 adapter and composes its effects in application. Supported driver construction
-and request methods remain unchanged. It does not authorize direct synchronous
-construction on an event-loop thread, close the remaining CLI constructor/input
-ownership work, freeze every mutable prompt/provider field, or establish
-alias-complete async reachability. Stored settings, broader driver lifecycle,
-remaining ConfigLoader sync callers and full D purity/classification obligations
-retain their existing open disposition. Scoped acceptance and retained failures
+and request behavior remain unchanged within this inventory scope. The subsequent
+`CONTRACT_DELTA_DRIVER_LIFETIME_D_2026-09-21.md` defines async construction,
+settings capture, console ownership and provider cleanup; direct synchronous
+construction refuses an event-loop thread. This does not freeze every mutable
+prompt/provider field or establish alias-complete async reachability. Remaining
+ConfigLoader sync callers and full D purity/classification obligations stay open. Scoped acceptance and retained failures
 belong to the architectural-truth remediation plan.

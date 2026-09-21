@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 import os
 from collections.abc import Mapping
 from pathlib import Path
@@ -45,22 +44,10 @@ class ApiRuntimeHostService:
     async def create_chat_driver(self) -> Any:
         from orket.driver import OrketDriver
 
-        created = []
-
-        def construct():
-            driver = OrketDriver(project_root=self.project_root, environment=self.environment)
-            created.append(driver)
-            return driver
-
-        try:
-            return await run_owned_thread(construct, label="api-chat-driver-bootstrap")
-        except asyncio.CancelledError:
-            if created:
-                await self.close_chat_driver(created[0])
-            raise
+        return await OrketDriver.create(project_root=self.project_root, environment=self.environment)
 
     async def close_chat_driver(self, driver: Any) -> None:
-        await run_owned_io(driver.provider.close, label="api-chat-driver-close", preserve_failure=True)
+        await run_owned_io(driver.close, label="api-chat-driver-close", preserve_failure=True)
 
     def create_execution_pipeline(self, workspace_root: Path | None = None) -> Any:
         from orket.runtime.execution_pipeline import ExecutionPipeline

@@ -9,6 +9,7 @@ from typing import Any
 
 from orket.application.services.extension_catalog_commands import list_installed_extensions, prepare_extension_manager
 from orket.application.services.protocol_command_service import ProtocolCommand, execute_protocol_command
+from orket.application.services.runtime_console_service import read_console_line
 from orket.application.services.runtime_construction_inputs import RuntimeConstructionInputs
 from orket.application.services.runtime_execution_result_service import RuntimeExecutionCancelled
 from orket.application.services.runtime_inspection_service import (
@@ -19,7 +20,11 @@ from orket.application.services.runtime_inspection_service import (
 from orket.application.services.runtime_inspection_service import (
     resolve_runtime_path as _resolve_path,
 )
-from orket.application.services.runtime_result_lifetime import close_runtime_owner, create_runtime_owner
+from orket.application.services.runtime_result_lifetime import (
+    close_runtime_owner,
+    create_runtime_owner,
+    open_runtime_owner,
+)
 from orket.application.services.runtime_result_projection import runtime_result_exit_code, runtime_result_lines
 from orket.discovery import perform_first_run_setup, print_orket_manifest, run_startup_checks
 from orket.extensions import ExtensionManager
@@ -279,19 +284,18 @@ async def run_cli(argv: list[str] | None = None, *, prog: str | None = None) -> 
             from orket.driver import OrketDriver
 
             print(f"\n{'=' * 60}\n ORKET DRIVER (Interactive)\n{'=' * 60}")
-            driver = await asyncio.to_thread(OrketDriver, model=args.model)
-            while True:
-                try:
-                    user_input = await asyncio.to_thread(input, "Driver> ")
-                    if user_input.lower() in ["exit", "quit", "q"]:
+            construct = partial(OrketDriver, model=args.model, project_root=construction_inputs.invocation_root,
+                                environment=construction_inputs.environment)
+            async with open_runtime_owner(construct, label="interactive-driver-construction") as driver:
+                while True:
+                    user_input = await read_console_line("Driver> ")
+                    if user_input is None or user_input.lower() in ["exit", "quit", "q"]:
                         break
                     if not user_input:
                         continue
                     print("Thinking...", end="", flush=True)
                     response = await driver.process_request(user_input)
                     print(f"\r{response}\n")
-                except EOFError:
-                    break
             return 0
 
         print(f"Running Orket Epic: {args.epic}")

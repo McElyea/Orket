@@ -190,8 +190,16 @@ The runtime CLI captures engine inputs after startup and owns engine constructio
 through interruption. Board/replay reads, manifest output and native path
 resolution retain their workers; a completed untransferred engine is closed.
 Argument declarations remain one authority in `orket/interfaces/cli_arguments.py`.
-Contract and remaining interactive-driver/API read scope:
+Contract and remaining API read scope (driver lifetime is specified below):
 `docs/architecture/CONTRACT_DELTA_CLI_RUNTIME_OWNERSHIP_D_2026-09-21.md`.
+
+Driver async creation captures root, environment and settings before owned
+construction; direct synchronous construction refuses an event-loop thread.
+API chat and interactive CLI use shared runtime owners. Console reads settle
+before interrupted return; normal EOF cannot erase pending cancellation.
+Provider close gates CLI exits and remains owned through repeated interruption.
+Contract, embedding migration and blocking-input limit:
+`docs/architecture/CONTRACT_DELTA_DRIVER_LIFETIME_D_2026-09-21.md`.
 
 Driver model-context preparation captures project/model roots and environment
 before owned configuration and inventory work. Interruption retains native reads;
