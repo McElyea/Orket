@@ -5,6 +5,18 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.67] - 2026-09-21
+
+### Fixed
+- Own legacy extension engine construction and required close through interruption; refuse direct loop-thread construction.
+- Capture compiled and dispatched action plans before later callbacks can mutate nested values.
+- Bind legacy action engine root, environment and settings before construction; retain canonical action aliases and result authority.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Async direct callers use `ExtensionEngineAdapter.open(...)` as an async context. Pre-loop constructors remain available with caller-owned close; canonical legacy execution is migrated.
+- Contract and limits: `docs/architecture/CONTRACT_DELTA_LEGACY_ACTION_ENGINE_D_2026-09-21.md`.
+
 ## [0.6.66] - 2026-09-21
 
 ### Fixed

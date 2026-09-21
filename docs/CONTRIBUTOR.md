@@ -170,6 +170,12 @@ must settle through a line, EOF or input failure before interrupted cleanup can
 finish; no forced thread stop or input deadline is promised. Contract:
 `docs/architecture/CONTRACT_DELTA_DRIVER_LIFETIME_D_2026-09-21.md`.
 
+Async legacy extension embeddings use
+`async with ExtensionEngineAdapter.open(RunContext(...))` to own construction and
+required engine cleanup. Pre-loop direct constructors remain available with
+caller-owned `await adapter.close()`. Direct loop-thread construction is refused.
+Contract: `docs/architecture/CONTRACT_DELTA_LEGACY_ACTION_ENGINE_D_2026-09-21.md`.
+
 Async sandbox-log embeddings pass a bound `SandboxOrchestrator.get_logs` callable
 to `read_runtime_sandbox_logs` and retain ownership of any constructed pipeline.
 Direct synchronous log reads refuse an event-loop thread; the API uses

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import inspect
 from collections.abc import Callable, Sequence
+from contextlib import nullcontext
+from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
@@ -36,7 +38,7 @@ def compile_workload(workload: Any, input_config: dict[str, Any], interaction_co
         run_plan = compile_fn(compile_input)
     if not isinstance(run_plan, RunPlan):
         raise TypeError("compile(input_config) must return RunPlan")
-    return run_plan
+    return deepcopy(run_plan)
 
 
 async def execute_plan_actions(
@@ -46,11 +48,13 @@ async def execute_plan_actions(
     department: str,
     interaction_context: Any | None,
 ) -> dict[str, Any]:
+    run_plan = deepcopy(run_plan)
     action_results: list[dict[str, Any]] = []
-    if interaction_context is not None:
-        await emit_default_model_events(interaction_context, sdk=False)
-    if run_plan.actions:
-        adapter = ExtensionEngineAdapter(RunContext(workspace=workspace, department=department))
+    context = RunContext(workspace=workspace, department=department)
+    owner = ExtensionEngineAdapter.open(context) if run_plan.actions else nullcontext(None)
+    async with owner as adapter:
+        if interaction_context is not None:
+            await emit_default_model_events(interaction_context, sdk=False)
         for action in run_plan.actions:
             action_results.append(await adapter.execute_action(action))
     return {"plan_hash": run_plan.plan_hash(), "action_count": len(run_plan.actions), "action_results": action_results}

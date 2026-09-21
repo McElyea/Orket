@@ -12474,13 +12474,12 @@ Close the whole lane only after user acceptance of proof and explicit closure or
 retirement of remaining scope. Archive completed slice documents under
 `docs/projects/archive/architectural-truth/` while this umbrella remains active
 for later slices. Extract durable contracts before archiving project history.
-Follow contributor version/changelog/tag policy when committing. The user has
-requested a versioned GitHub checkpoint and continued commits on the existing
-branch; its proof and publication disposition are recorded in the C/D checkpoint.
-The user has since reauthorized GitHub pushes, superseding the earlier
-10 AM-6 PM local-only restriction. Earlier local-only checkpoint notes remain
-historical records; current versioned branch checkpoints and their annotated
-tags are published together after verification.
+Follow contributor version/changelog/tag policy when committing. The latest user instruction requires local commits and annotated
+version tags only, with no GitHub pushes during this session. Earlier publication
+authorizations and published checkpoint notes remain historical records.
+Version 0.6.64 is the last remotely published checkpoint; 0.6.65 onward are local
+only. Do not infer renewed push authorization from elapsed time or work hours.
+Each checkpoint records its exact verification and publication disposition.
 
 Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
@@ -12520,7 +12519,8 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.64 driver construction, console input and provider lifetime. Preserve the governed legacy-export cutover;
+0.6.67 legacy action engine and plan lifetime, retaining the 0.6.65 run-query and
+0.6.66 sandbox-query ownership checkpoints. Preserve the governed legacy-export cutover;
 continue remaining clock/input owners, adapter enforcement and async reachability before E1/E2
 and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
@@ -20038,3 +20038,125 @@ captured inputs, adapter classification/full async inventory, E1/E2, whole-suite
 hosted Quality and CAP remain open. The .43 Git timeout cause and four .59 packet1
 provider cases remain unverified. Accepted BT evidence is retained. Required work
 and explicit user acceptance continue to govern completion and lane retirement.
+
+
+#### .67 Legacy extension action engine and plan lifetime (2026-09-21)
+
+Legacy actions use `ExtensionEngineAdapter.open(...)` and the shared runtime
+owner for worker construction and required engine close. Direct synchronous
+adapter construction refuses a running loop before engine effects; pre-loop and
+worker callers retain it with explicit close. Async embeddings require the owned
+context. Captured root, environment and settings govern construction, including
+relative workspace binding. An owner returned after interruption closes without
+dispatching an action. Repeated cancellation and elapsed deadlines retain cleanup,
+and native construction/read/close failure remains visible. The existing limit
+for resources discarded inside a failing constructor is unchanged. Contract:
+`docs/architecture/CONTRACT_DELTA_LEGACY_ACTION_ENGINE_D_2026-09-21.md`.
+
+Compilation copies nested plan values before later material callbacks can rewrite
+them. Direct action admission also captures the plan before construction and
+interaction awaits. The copied plan governs parameters and returned hash. Exact
+method-body comparison preserves legacy aliases and the shared runtime result
+projection; unrelated workload support functions also retain their .66 bodies.
+Three explicitly non-authoritative model observations retain their payloads and
+now follow engine admission for nonempty plans. Empty plans create no engine.
+
+Nine corrected before probes all fail: native construction blocks the event loop,
+interrupted action paths return without engine close, and successful action-port
+results return before required close is ever admitted. The construction readings
+are about 0.80 seconds against the predeclared 0.5-second bound. The initial run
+also contains one fixture teardown error: its injected close failure was repeated
+by the existing autouse cleanup after the real engine was already closed. The
+fixture correction preserves the engine's existing idempotent-close behavior;
+the initial 9 failures/1 error and exact inputs remain retained. The separate
+compilation counterexample proves a material callback changes admitted plan
+parameters/hash. Final 13 regressions all fail against the byte-verified retained
+local .66 wheel, using identical copied test bytes.
+
+Focused candidate proof passes 9, 5, 95, 14 and 4 cases. Actual engine construction,
+initialization, filesystem handles and SQLite run under controlled holds, repeated
+cancellation, timeout and failure. Synthetic published action results are explicit
+ports used only to reach lifecycle boundaries, not completion evidence. The
+separate actual missing-card path uses the real runtime and closes both engine
+and pipeline. Input mutation during interaction events cannot alter the admitted
+parameters, hash, organization selection or workspace. Pre-loop construction and
+empty-plan behavior remain verified; existing alias/deny-all gate contract tests
+now explicitly own and assert engine close. The oversized component test file
+shrinks 593 to 591 lines; the gate-contract file stays 316 lines.
+
+Four native canonical CLI flows run in every cell below. They install an actual
+local Git extension, then exercise zero-action success (exit 0), actual missing-card
+refusal (exit 1), SIGINT during admitted construction (exit 130) and a real missing
+file during required close (exit 1). Transparent observers delegate actual engine
+operations and verify close before CLI return. The parent verifies native exits,
+core origins, closed engine/pipeline flags and actual retained control-plane
+records. Empty-plan success is not runtime action success. Interrupted admission
+remains `executing` without final truth; the two failure cases retain failed
+terminal truth. This preserves the outer workload lifecycle rather than inventing
+confirmed no-effect completion. No Docker resources or model inference are needed.
+
+The bounded ConfigLoader discovery records 153 AST candidates in 63 files,
+including 44 production constructor/method candidates, 12 standalone script
+constructors and 97 test candidates. Those are discovery counts, not proven
+blocking violations or a complete call graph. The legacy action constructor was
+a concrete canonical caller requiring this ownership migration before changing
+the broader synchronous bridge. Discovery inputs and limits are retained at
+`.tmp/d-config-bridge-discovery/inventory.json`.
+
+The final 117-module routine selection retains all 671 .66 cases and bounded affected
+imports. Its first scope-check draft incorrectly rejected an already-qualified
+retained packaged-extension end-to-end module before running structural checks;
+the corrected check distinguishes new additions from the retained manifest.
+The draft and correction receipt remain in evidence. No provider-gated family
+is newly selected or claimed as passing. The separate .66 actual Docker proof
+is retained and is not labelled fresh .67 acceptance.
+
+The initial source run passed 784 cases, and the initial installed Python 3.11
+cell also passed those pytest cases, CLI flows, origins and process checks. That
+installed cell **failed overall**: its separate ToolGate audit still constructed
+the adapter directly on the event loop. The audit now owns the adapter context
+and requires its controlled engine port to close before returning its blocked verdict.
+The audit script shrinks 496 to 495 lines; two integration tests include adapter
+close through that controlled port followed by an injected `OSError`, which must
+prevent a passing audit artifact. This is not native engine-cleanup proof; the
+separate actual engine and native CLI cases provide that evidence. The earlier
+correction receipt's "native-close-failure" wording is qualified by this recorded
+scope clarification. Thirteen
+focused corrected-caller cases and the actual strict audit command pass.
+The failed installed cell and all initial evidence remain retained.
+
+The fresh final matrix below includes the audit tests and corrected script.
+Core and SDK bytes are unchanged; the existing wheel and sdist are reused with
+exact hashes, and both changed audit inputs are absent from the sdist. Setup
+initially refused a stale audit-input hash after review normalized CRLF to LF.
+An exact comparison against retained pre-normalization inputs proves that only
+line endings changed; a separate receipt binds both hashes. The original setup
+helper remains preserved. No test or product deadline was changed.
+
+| Cell | Cases / failures / errors / skips | JUnit seconds | Installed origins |
+|---|---|---|---|
+| Source Windows Python 3.11 | 786 / 0 / 0 / 0 | 285.071 | Source run |
+| Installed win-py311 | 786 / 0 / 0 / 0 | 285.839 | 984 |
+| Installed win-py312 | 786 / 0 / 0 / 0 | 351.678 | 984 |
+
+All 27 new responsiveness observations meet 0.5 seconds; maximum 0.089811800s.
+The 50ms deadline after native admission, 0.8s release timer and five-second worker
+join bounds remain unchanged. Twelve native CLI observations bind the three cells.
+Complete source/wheel/sdist parity covers 1,112 Python files,
+all 19 retained data resources, 1,131 core members and
+2,200 support inputs. Wheel SHA-256:
+`f77b9951a29f3c1449bb8a5c81a5b81fec43404433cfbd910c128278984ad90a`; sdist SHA-256:
+`500d7b44849cf21e30fcd001800e3d8233ba86c4fb21e7e11335bdb5a46b900e`. Windows proof restores scoped
+sleep requests without persistent power/deadline changes. Actual dependency policy
+v2 passes without new exceptions; changed Python is Ruff-clean and canonical Ruff
+retains 94 findings.
+
+Evidence: `.tmp/d-legacy-action-lifetime/` and
+`.tmp/d-legacy-action-lifetime-final/`. This is a local commit and annotated
+tag only; no GitHub push or remote-publication claim. The latest .63 Linux clock
+gate remains **blocked / environment blocker**, with no fresh Linux acceptance.
+ConfigLoader bridge/caller migration, CommandRunner async lifetime, broader input
+and adapter classification/async inventory, E1/E2 and CAP remain open. Full-suite
+89% coverage, hosted Quality, .43 Git timeout cause and four .59 packet1 provider
+cases remain unverified. Accepted BT evidence is retained. Required work and
+explicit user acceptance still govern completion and lane retirement.

@@ -234,7 +234,7 @@ async def test_run_card_primary_path_blocks_before_tool_execution(tmp_path: Path
 
 
 @pytest.mark.asyncio
-# Layer: contract
+@pytest.mark.contract
 async def test_extension_action_primary_path_reenters_run_card_under_same_deny_all_gate(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
@@ -243,8 +243,7 @@ async def test_extension_action_primary_path_reenters_run_card_under_same_deny_a
     workspace_root = tmp_path / "workspace"
     workspace_root.mkdir()
     harness = _RunCardHarness(
-        workspace_root=workspace_root,
-        tool_gate=_DenyAllToolGate(workspace_root),
+        workspace_root=workspace_root, tool_gate=_DenyAllToolGate(workspace_root),
         tool_args={"path": "agent_output/extension-denied.txt", "content": "x"},
     )
 
@@ -258,14 +257,15 @@ async def test_extension_action_primary_path_reenters_run_card_under_same_deny_a
             assert not payload["success"]
             return RuntimeExecutionResult(session_id="sess-1", observation="unresolved", reason=payload["error"])
 
+        async def close(self) -> None:
+            self.closed = True
+
     monkeypatch.setattr("orket.extensions.runtime.OrchestrationEngine", _EngineProxy)
-
-    adapter = ExtensionEngineAdapter(RunContext(workspace=workspace_root, department="core"))
     with pytest.raises(RuntimeOutcomeError) as rejected:
-        await adapter.execute_action(RunAction(op="run_issue", target="ISSUE-9", params={"session_id": "sess-1"}))
-
-    assert not rejected.value.result.succeeded
-    assert harness.toolbox.calls == 0
+        async with ExtensionEngineAdapter.open(RunContext(workspace=workspace_root, department="core")) as adapter:
+            await adapter.execute_action(RunAction("run_issue", "ISSUE-9", {"session_id": "sess-1"}))
+    assert adapter.engine.closed
+    assert not rejected.value.result.succeeded and harness.toolbox.calls == 0
     assert not (workspace_root / "agent_output" / "extension-denied.txt").exists()
     assert "deny_all:write_file:write_file" in rejected.value.result.reason
 

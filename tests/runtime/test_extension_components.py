@@ -497,11 +497,11 @@ def test_workload_artifacts_build_sdk_capability_registry_honors_voice_bounds(tm
 
 
 @pytest.mark.asyncio
-# Layer: unit
+@pytest.mark.contract
 async def test_extension_engine_adapter_normalizes_legacy_run_ops_to_run_card(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    """Layer: unit. Verifies extension run actions normalize compatibility ops onto the canonical card surface."""
+    """Layer: contract. Legacy aliases use run_card within explicit engine ownership."""
     calls: list[tuple[str, dict[str, object]]] = []
 
     class _FakeEngine:
@@ -512,20 +512,18 @@ async def test_extension_engine_adapter_normalizes_legacy_run_ops_to_run_card(
             calls.append((card_id, dict(kwargs)))
             return published_result(session_id=card_id)
 
+        async def close(self) -> None:
+            self.closed = True
+
     monkeypatch.setattr("orket.extensions.runtime.OrchestrationEngine", _FakeEngine)
-
-    adapter = ExtensionEngineAdapter(RunContext(workspace=tmp_path, department="core"))
-
-    epic_result = await adapter.execute_action(
-        RunAction(op="run_epic", target="demo-epic", params={"build_id": "build-1"})
-    )
-    rock_result = await adapter.execute_action(
-        RunAction(op="run_rock", target="demo-rock", params={"build_id": "build-2"})
-    )
-    issue_result = await adapter.execute_action(
-        RunAction(op="run_issue", target="ISSUE-7", params={"session_id": "session-7"})
-    )
-
+    async with ExtensionEngineAdapter.open(RunContext(workspace=tmp_path, department="core")) as adapter:
+        epic_result = await adapter.execute_action(
+            RunAction(op="run_epic", target="demo-epic", params={"build_id": "build-1"}))
+        rock_result = await adapter.execute_action(
+            RunAction(op="run_rock", target="demo-rock", params={"build_id": "build-2"}))
+        issue_result = await adapter.execute_action(
+            RunAction(op="run_issue", target="ISSUE-7", params={"session_id": "session-7"}))
+    assert adapter.engine.closed
     assert calls == [
         ("demo-epic", {"build_id": "build-1"}),
         ("demo-rock", {"build_id": "build-2"}),

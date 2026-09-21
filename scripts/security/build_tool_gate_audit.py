@@ -300,7 +300,7 @@ async def _collect_rows(project_root: Path) -> list[dict[str, Any]]:
 
     class _EngineProxy:
         def __init__(self, *_args: Any, **_kwargs: Any) -> None:
-            return None
+            self.closed = False
 
         async def run_card(self, card_id: str, **kwargs: Any) -> RuntimeExecutionResult:
             payload = await extension_harness.run_card(card_id)
@@ -308,23 +308,22 @@ async def _collect_rows(project_root: Path) -> list[dict[str, Any]]:
                 raise RuntimeError("Audit unexpectedly allowed a denied tool")
             return RuntimeExecutionResult(session_id="sess-1", observation="unresolved", reason="audit gate denied")
 
+        async def close(self) -> None:
+            self.closed = True
+
     original_engine = extension_runtime_module.OrchestrationEngine
     extension_runtime_module.OrchestrationEngine = _EngineProxy
     try:
         extension_harness = _RunCardHarness(workspace_root=workspace_root, tool_gate=deny_gate, tool_args=tool_args)
-        adapter = ExtensionEngineAdapter(RunContext(workspace=workspace_root, department="core"))
         try:
-            await adapter.execute_action(RunAction(op="run_issue", target="ISSUE-9", params={"session_id": "sess-1"}))
+            async with ExtensionEngineAdapter.open(RunContext(workspace=workspace_root, department="core")) as adapter:
+                await adapter.execute_action(RunAction(op="run_issue", target="ISSUE-9", params={"session_id": "sess-1"}))
             extension_blocked = False
         except RuntimeOutcomeError as exc:
             extension_blocked = not exc.result.succeeded
     finally:
         extension_runtime_module.OrchestrationEngine = original_engine
-    extension_result = (
-        "blocked"
-        if (extension_blocked and extension_harness.toolbox.calls == 0)
-        else "allowed"
-    )
+    extension_result = "blocked" if extension_blocked and extension_harness.toolbox.calls == 0 and adapter.engine.closed else "allowed"
 
     agent_calls: list[dict[str, Any]] = []
     original_loader = agent_module.ConfigLoader

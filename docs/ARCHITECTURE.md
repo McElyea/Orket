@@ -200,6 +200,12 @@ resolved log/artifact paths; invalid paths map to HTTP 400. This is bounded path
 checking, not hostile-race containment or CAP-2 isolation. Contract and limits:
 `docs/architecture/CONTRACT_DELTA_API_RUN_OBSERVATION_D_2026-09-21.md`.
 
+Legacy extension actions capture plan/bootstrap inputs and use an owned engine
+context that closes before returning. Direct synchronous adapter construction
+refuses an event-loop thread; interrupted workloads without confirmed terminal
+evidence retain their existing unresolved control-plane state. Migration and scope:
+`docs/architecture/CONTRACT_DELTA_LEGACY_ACTION_ENGINE_D_2026-09-21.md`.
+
 Sandbox log requests capture invocation inputs before owned pipeline construction,
 retain native reads through interruption and close each ephemeral pipeline before
 return. Nonzero log-command exits are visible failures; the ten-second command

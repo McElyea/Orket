@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-21T17:12:17.969740+00:00",
+  "generated_at": "2026-09-21T18:13:50.101179+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -2757,7 +2757,7 @@
       },
       "orket.extensions.runtime": {
         "path": "orket/extensions/runtime.py",
-        "sha256": "e69f75588e4f78400c78ccddc015f5d3d4b52a4ac1df1701de4a076a35bf41e9"
+        "sha256": "93ff5f0b60e69f2c71e35c2f6d426716ace7722a67f265dec7235178fdf48a0b"
       },
       "orket.extensions.sdk_capability_authorization": {
         "path": "orket/extensions/sdk_capability_authorization.py",
@@ -2789,7 +2789,7 @@
       },
       "orket.extensions.workload_executor_support": {
         "path": "orket/extensions/workload_executor_support.py",
-        "sha256": "a0a0a18aabd075bc26823f76c3faa8104df635623dc6079d2c6f66b032e8043b"
+        "sha256": "b2f597b09088653249632d479e915c7731afd8bf381a4eb6e0dead979c04b889"
       },
       "orket.extensions.workload_loader": {
         "path": "orket/extensions/workload_loader.py",
@@ -21410,23 +21410,44 @@
       },
       {
         "source": "orket.extensions.runtime",
+        "target": "orket.adapters.execution.owned_io",
+        "path": "orket/extensions/runtime.py",
+        "line": 9,
+        "kind": "from"
+      },
+      {
+        "source": "orket.extensions.runtime",
+        "target": "orket.application.services.runtime_construction_inputs",
+        "path": "orket/extensions/runtime.py",
+        "line": 10,
+        "kind": "from"
+      },
+      {
+        "source": "orket.extensions.runtime",
+        "target": "orket.application.services.runtime_result_lifetime",
+        "path": "orket/extensions/runtime.py",
+        "line": 11,
+        "kind": "from"
+      },
+      {
+        "source": "orket.extensions.runtime",
         "target": "orket.application.services.runtime_result_projection",
         "path": "orket/extensions/runtime.py",
-        "line": 7,
+        "line": 12,
         "kind": "from"
       },
       {
         "source": "orket.extensions.runtime",
         "target": "orket.orchestration.engine",
         "path": "orket/extensions/runtime.py",
-        "line": 8,
+        "line": 13,
         "kind": "from"
       },
       {
         "source": "orket.extensions.runtime",
         "target": "orket.extensions.contracts",
         "path": "orket/extensions/runtime.py",
-        "line": 10,
+        "line": 15,
         "kind": "from"
       },
       {
@@ -21748,63 +21769,63 @@
         "source": "orket.extensions.workload_executor_support",
         "target": "orket.application.services.extension_workload_control_plane_service",
         "path": "orket/extensions/workload_executor_support.py",
-        "line": 8,
+        "line": 10,
         "kind": "from"
       },
       {
         "source": "orket.extensions.workload_executor_support",
         "target": "orket.core.contracts.interaction_stream",
         "path": "orket/extensions/workload_executor_support.py",
-        "line": 12,
+        "line": 14,
         "kind": "from"
       },
       {
         "source": "orket.extensions.workload_executor_support",
         "target": "orket.core.domain.__init__",
         "path": "orket/extensions/workload_executor_support.py",
-        "line": 13,
+        "line": 15,
         "kind": "from"
       },
       {
         "source": "orket.extensions.workload_executor_support",
         "target": "orket.extensions.contracts",
         "path": "orket/extensions/workload_executor_support.py",
-        "line": 15,
+        "line": 17,
         "kind": "from"
       },
       {
         "source": "orket.extensions.workload_executor_support",
         "target": "orket.extensions.governed_identity",
         "path": "orket/extensions/workload_executor_support.py",
-        "line": 16,
+        "line": 18,
         "kind": "from"
       },
       {
         "source": "orket.extensions.workload_executor_support",
         "target": "orket.extensions.models",
         "path": "orket/extensions/workload_executor_support.py",
-        "line": 21,
+        "line": 23,
         "kind": "from"
       },
       {
         "source": "orket.extensions.workload_executor_support",
         "target": "orket.extensions.runtime",
         "path": "orket/extensions/workload_executor_support.py",
-        "line": 22,
+        "line": 24,
         "kind": "from"
       },
       {
         "source": "orket.extensions.workload_executor_support",
         "target": "orket.extensions.sdk_workload_runner",
         "path": "orket/extensions/workload_executor_support.py",
-        "line": 23,
+        "line": 25,
         "kind": "from"
       },
       {
         "source": "orket.extensions.workload_executor_support",
         "target": "orket.extensions.workload_policy",
         "path": "orket/extensions/workload_executor_support.py",
-        "line": 24,
+        "line": 26,
         "kind": "from"
       },
       {
@@ -30653,12 +30674,12 @@
       {
         "source": "application",
         "target": "adapters",
-        "count": 408
+        "count": 409
       },
       {
         "source": "application",
         "target": "application",
-        "count": 1721
+        "count": 1723
       },
       {
         "source": "application",
@@ -30710,84 +30731,6 @@
     }
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-20T21:02:27.186605Z",
-      "changed": true,
-      "before_digest": "sha256:ccb98ef9eea5703bf10336fec335a4e3f5953b3fe7108bcba625a31b738da0f3",
-      "after_digest": "sha256:418892cb5d04fc9d01b8a66277580cc3ac0022b8fed949e2d0c15253be08575c",
-      "diff": {
-        "added_paths": 8,
-        "removed_paths": 0,
-        "changed_paths": 6188,
-        "initial_write": false,
-        "paths_total_previous": 46284,
-        "paths_total_current": 46357,
-        "paths_total_reference": 46357,
-        "churn_paths": 6196,
-        "churn_ratio": 0.133658,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.edges[1466].target",
-          "$.observed.edges[1467].target",
-          "$.observed.edges[1468].line",
-          "$.observed.edges[1468].path",
-          "$.observed.edges[1468].source",
-          "$.observed.edges[1468].target",
-          "$.observed.edges[1469].line",
-          "$.observed.edges[1469].target",
-          "$.observed.edges[1470].line",
-          "$.observed.edges[1470].target",
-          "$.observed.edges[1471].line",
-          "$.observed.edges[1471].target",
-          "$.observed.edges[1472].line",
-          "$.observed.edges[1472].target",
-          "$.observed.edges[1473].line",
-          "$.observed.edges[1473].path",
-          "$.observed.edges[1473].source",
-          "$.observed.edges[1473].target",
-          "$.observed.edges[1474].line"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-20T21:46:13.683012Z",
-      "changed": true,
-      "before_digest": "sha256:418892cb5d04fc9d01b8a66277580cc3ac0022b8fed949e2d0c15253be08575c",
-      "after_digest": "sha256:b647fdd59d307b39b5696d430d1c6750d285dc86023bd8ae233af20d960c065b",
-      "diff": {
-        "added_paths": 2,
-        "removed_paths": 0,
-        "changed_paths": 7469,
-        "initial_write": false,
-        "paths_total_previous": 46357,
-        "paths_total_current": 46379,
-        "paths_total_reference": 46379,
-        "churn_paths": 7471,
-        "churn_ratio": 0.161086,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.edges[569].target",
-          "$.observed.edges[644].line",
-          "$.observed.edges[644].path",
-          "$.observed.edges[644].source",
-          "$.observed.edges[644].target",
-          "$.observed.edges[645].line",
-          "$.observed.edges[645].target",
-          "$.observed.edges[646].line",
-          "$.observed.edges[646].target",
-          "$.observed.edges[647].line",
-          "$.observed.edges[647].target",
-          "$.observed.edges[648].line",
-          "$.observed.edges[648].path",
-          "$.observed.edges[648].source",
-          "$.observed.edges[648].target",
-          "$.observed.edges[649].line",
-          "$.observed.edges[649].target",
-          "$.observed.edges[650].line",
-          "$.observed.edges[650].target"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-20T21:48:31.543048Z",
       "changed": true,
@@ -31748,6 +31691,65 @@
           "$.observed.edges[2489].target",
           "$.observed.edges[2490].line",
           "$.observed.edges[2490].target"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-21T17:54:37.461057Z",
+      "changed": true,
+      "before_digest": "sha256:bf9f781a89c6f8f983a910d35d1b038df8154b339702025072580c7a2b22d38e",
+      "after_digest": "sha256:c922424f5aed354a2cda17493bc5065a3b563d63aab39ac93f4f5861de374ffd",
+      "diff": {
+        "added_paths": 3,
+        "removed_paths": 0,
+        "changed_paths": 3619,
+        "initial_write": false,
+        "paths_total_previous": 47277,
+        "paths_total_current": 47310,
+        "paths_total_reference": 47310,
+        "churn_paths": 3622,
+        "churn_ratio": 0.076559,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.edges[2405].line",
+          "$.observed.edges[2405].target",
+          "$.observed.edges[2406].line",
+          "$.observed.edges[2406].target",
+          "$.observed.edges[2407].line",
+          "$.observed.edges[2407].target",
+          "$.observed.edges[2408].line",
+          "$.observed.edges[2408].path",
+          "$.observed.edges[2408].source",
+          "$.observed.edges[2408].target",
+          "$.observed.edges[2409].line",
+          "$.observed.edges[2409].path",
+          "$.observed.edges[2409].source",
+          "$.observed.edges[2409].target",
+          "$.observed.edges[2410].line",
+          "$.observed.edges[2410].path",
+          "$.observed.edges[2410].source",
+          "$.observed.edges[2410].target",
+          "$.observed.edges[2411].line"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-21T18:14:11.489666Z",
+      "changed": true,
+      "before_digest": "sha256:c922424f5aed354a2cda17493bc5065a3b563d63aab39ac93f4f5861de374ffd",
+      "after_digest": "sha256:a180f943cf4bde805f73c39c5f25f5b566b01297580cab41ccd86fbbf67ec0b4",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 47310,
+        "paths_total_current": 47310,
+        "paths_total_reference": 47310,
+        "churn_paths": 1,
+        "churn_ratio": 2.1e-05,
+        "sample_paths": [
+          "$.generated_at"
         ]
       }
     }
