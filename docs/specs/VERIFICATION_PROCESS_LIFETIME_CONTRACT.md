@@ -1,7 +1,7 @@
 # Native command and verification process lifetime
 
 Status: Active durable contract
-Last updated: 2026-09-13
+Last updated: 2026-09-22
 Owner: architectural-truth BT-4
 
 ## Scope and authority
@@ -24,6 +24,15 @@ containment remain separate BT-4/CAP-2 obligations. A passing command does not
 establish card completion.
 
 ## Admission and termination
+
+OpenClaw's sequential JSONL exchange also uses this supervisor, through the core
+`JsonlCommandRunner` port and `CommandProcessSupervisor.run_jsonl`. Its write,
+response, stdin-close and exit stages each retain a finite configured deadline;
+the overall command bound is `(2 * request_count + 2) * io_timeout_seconds`.
+The native protocol reader validates each response before admitting the next request,
+while stderr is drained concurrently. Existing batch command calls retain their
+input and deadline behavior. Interactive rules, line limits and partial responses:
+`docs/specs/OPENCLAW_PROCESS_OWNERSHIP.md`.
 
 1. Commands retain argv-only admission, workspace-contained working directories,
    caller-selected environment and the existing command timeout. The application
@@ -62,7 +71,9 @@ diagnostics. Backend is `windows_job`, `linux_subreaper`, `unavailable`, or
 observations, not durable authority to signal a later process with the same PID.
 
 Reasons are `completed`, `timeout`, `cancelled`, `launch_failed`,
-`cleanup_unconfirmed`, `output_limit`, or `capture_incomplete`. Completed commands
+`cleanup_unconfirmed`, `output_limit`, `capture_incomplete`, or `protocol_failed`.
+The last reason denotes interactive framing/response failure and cannot produce a
+passing command receipt. Completed commands
 retain their actual return code. Timeout maps to verifier exit 124, launch failure
 to 127, and other non-completed reasons to 125. Only completed, fully captured,
 confirmed-cleanup execution can produce a passing command receipt.

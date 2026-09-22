@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-22T14:37:45.663349+00:00",
+  "generated_at": "2026-09-22T15:44:41.841486+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -149,11 +149,15 @@
       },
       "orket.adapters.execution.openclaw_jsonl_adapter": {
         "path": "orket/adapters/execution/openclaw_jsonl_adapter.py",
-        "sha256": "4123d7c0b715ca906b1fe06b22621a2ceba07fc0bf7b0eb0c4f935168e4e36f2"
+        "sha256": "6674ee1f36a1d8d0c8f592b1e3a20c82829707b070960eca57c147367f2835ee"
+      },
+      "orket.adapters.execution.owned_command_jsonl": {
+        "path": "orket/adapters/execution/owned_command_jsonl.py",
+        "sha256": "d08f29f45c461b2dd194272b71af5ed6d6a533107173a3e03a7302f9a1531808"
       },
       "orket.adapters.execution.owned_command_limits": {
         "path": "orket/adapters/execution/owned_command_limits.py",
-        "sha256": "cdbb12da7dec5f3a83c961e6e8de807816de587dca7ff7e727bd3f64847d3dae"
+        "sha256": "66daa1cd405444dcfbaebfe5d1b567b218713078b0b1cd960573e7d39c6ec561"
       },
       "orket.adapters.execution.owned_command_linux": {
         "path": "orket/adapters/execution/owned_command_linux.py",
@@ -161,7 +165,7 @@
       },
       "orket.adapters.execution.owned_command_process": {
         "path": "orket/adapters/execution/owned_command_process.py",
-        "sha256": "a64f199cf3e11458a6ab026eb233a5af3aa24bb8ed12682372637120e7ef171a"
+        "sha256": "59a2596c353b6394558f33d1d4736b33ff967c6b081019c777fcb21f7ec70455"
       },
       "orket.adapters.execution.owned_command_windows": {
         "path": "orket/adapters/execution/owned_command_windows.py",
@@ -169,7 +173,7 @@
       },
       "orket.adapters.execution.owned_command_worker": {
         "path": "orket/adapters/execution/owned_command_worker.py",
-        "sha256": "81886370fba9d6abc47bcea4a323e5425aded856fe2f07a0c1678673ed77120e"
+        "sha256": "fbfde53ecbb6bdabb307333dc07d4343e47d34910c92e285aa9cab108cea12eb"
       },
       "orket.adapters.execution.owned_io": {
         "path": "orket/adapters/execution/owned_io.py",
@@ -949,7 +953,7 @@
       },
       "orket.application.services.command_process_supervisor": {
         "path": "orket/application/services/command_process_supervisor.py",
-        "sha256": "0fc139072a5b8086ef4e5a99ad03feb7ca0041a2b64b7b59b88b8367348663fb"
+        "sha256": "80c8a7cd20abdd7445a87eca5df96453e385d0865b0c397046be479882bafe91"
       },
       "orket.application.services.companion_config_models": {
         "path": "orket/application/services/companion_config_models.py",
@@ -2445,7 +2449,7 @@
       },
       "orket.core.contracts.owned_command": {
         "path": "orket/core/contracts/owned_command.py",
-        "sha256": "98767fa8fac09865905a229bcf34484d82c41a7f573aa42ae2199101398f9179"
+        "sha256": "8912cc1d60030ed24a8af5de37bfafc16b6d54496c4562da4c2d7753d73384b4"
       },
       "orket.core.contracts.owned_container": {
         "path": "orket/core/contracts/owned_container.py",
@@ -4779,22 +4783,35 @@
       "orket.adapters.execution.openclaw_jsonl_adapter": {
         "module": [
           {
-            "line": 10,
+            "line": 14,
             "kind": "Assign",
             "direct": true,
             "literal": true
           }
         ],
         "classes": {
-          "OpenClawSubprocessError@13": [],
-          "PartialAdapterResult@22": [],
-          "OpenClawJsonlSubprocessAdapter@36": []
+          "OpenClawSubprocessError@17": [],
+          "PartialAdapterResult@26": [],
+          "OpenClawJsonlSubprocessAdapter@40": []
+        }
+      },
+      "orket.adapters.execution.owned_command_jsonl": {
+        "module": [
+          {
+            "line": 8,
+            "kind": "Assign",
+            "direct": true,
+            "literal": true
+          }
+        ],
+        "classes": {
+          "JsonlExchange@11": []
         }
       },
       "orket.adapters.execution.owned_command_limits": {
         "module": [
           {
-            "line": 6,
+            "line": 9,
             "kind": "Assign",
             "direct": true,
             "literal": false
@@ -4818,7 +4835,7 @@
       "orket.adapters.execution.owned_command_process": {
         "module": [
           {
-            "line": 17,
+            "line": 18,
             "kind": "Assign",
             "direct": true,
             "literal": true
@@ -4846,7 +4863,7 @@
       "orket.adapters.execution.owned_command_worker": {
         "module": [
           {
-            "line": 22,
+            "line": 23,
             "kind": "Assign",
             "direct": true,
             "literal": true
@@ -7276,6 +7293,20 @@
         "kind": "from"
       },
       {
+        "source": "orket.adapters.execution.openclaw_jsonl_adapter",
+        "target": "orket.adapters.execution.owned_command_limits",
+        "path": "orket/adapters/execution/openclaw_jsonl_adapter.py",
+        "line": 11,
+        "kind": "from"
+      },
+      {
+        "source": "orket.adapters.execution.openclaw_jsonl_adapter",
+        "target": "orket.core.contracts.owned_command",
+        "path": "orket/adapters/execution/openclaw_jsonl_adapter.py",
+        "line": 12,
+        "kind": "from"
+      },
+      {
         "source": "orket.adapters.execution.owned_command_process",
         "target": "orket.adapters.execution.owned_command_limits",
         "path": "orket/adapters/execution/owned_command_process.py",
@@ -7284,9 +7315,16 @@
       },
       {
         "source": "orket.adapters.execution.owned_command_process",
-        "target": "orket.core.contracts.owned_command",
+        "target": "orket.adapters.execution.owned_command_limits",
         "path": "orket/adapters/execution/owned_command_process.py",
         "line": 15,
+        "kind": "from"
+      },
+      {
+        "source": "orket.adapters.execution.owned_command_process",
+        "target": "orket.core.contracts.owned_command",
+        "path": "orket/adapters/execution/owned_command_process.py",
+        "line": 16,
         "kind": "from"
       },
       {
@@ -11533,23 +11571,30 @@
       },
       {
         "source": "orket.application.services.command_process_supervisor",
-        "target": "orket.adapters.execution.owned_command_process",
-        "path": "orket/application/services/command_process_supervisor.py",
-        "line": 7,
-        "kind": "from"
-      },
-      {
-        "source": "orket.application.services.command_process_supervisor",
-        "target": "orket.core.contracts.owned_command",
+        "target": "orket.adapters.execution.owned_command_limits",
         "path": "orket/application/services/command_process_supervisor.py",
         "line": 8,
         "kind": "from"
       },
       {
         "source": "orket.application.services.command_process_supervisor",
-        "target": "orket.logging",
+        "target": "orket.adapters.execution.owned_command_process",
         "path": "orket/application/services/command_process_supervisor.py",
         "line": 9,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.command_process_supervisor",
+        "target": "orket.core.contracts.owned_command",
+        "path": "orket/application/services/command_process_supervisor.py",
+        "line": 10,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.command_process_supervisor",
+        "target": "orket.logging",
+        "path": "orket/application/services/command_process_supervisor.py",
+        "line": 11,
         "kind": "from"
       },
       {
@@ -33467,7 +33512,7 @@
         "forwarded_arguments": 2
       }
     ],
-    "files_scanned": 1146,
+    "files_scanned": 1147,
     "scan_roots": [
       "orket"
     ],
@@ -33480,6 +33525,7 @@
       "orket.adapters.execution.fixture_docker": "adapters",
       "orket.adapters.execution.fixture_runner": "adapters",
       "orket.adapters.execution.openclaw_jsonl_adapter": "adapters",
+      "orket.adapters.execution.owned_command_jsonl": "adapters",
       "orket.adapters.execution.owned_command_limits": "adapters",
       "orket.adapters.execution.owned_command_linux": "adapters",
       "orket.adapters.execution.owned_command_process": "adapters",
@@ -34625,17 +34671,17 @@
       {
         "source": "adapters",
         "target": "adapters",
-        "count": 248
+        "count": 250
       },
       {
         "source": "adapters",
         "target": "core",
-        "count": 141
+        "count": 142
       },
       {
         "source": "application",
         "target": "adapters",
-        "count": 449
+        "count": 450
       },
       {
         "source": "application",
@@ -34779,33 +34825,52 @@
       {
         "module": "orket.adapters.execution.openclaw_jsonl_adapter",
         "path": "orket/adapters/execution/openclaw_jsonl_adapter.py",
-        "sha256": "4123d7c0b715ca906b1fe06b22621a2ceba07fc0bf7b0eb0c4f935168e4e36f2",
+        "sha256": "6674ee1f36a1d8d0c8f592b1e3a20c82829707b070960eca57c147367f2835ee",
         "side_effecting": true,
         "declarations": {
           "module": [
             {
-              "line": 10,
+              "line": 14,
               "kind": "Assign",
               "direct": true,
               "literal": true
             }
           ],
           "classes": {
-            "OpenClawSubprocessError@13": [],
-            "PartialAdapterResult@22": [],
-            "OpenClawJsonlSubprocessAdapter@36": []
+            "OpenClawSubprocessError@17": [],
+            "PartialAdapterResult@26": [],
+            "OpenClawJsonlSubprocessAdapter@40": []
+          }
+        }
+      },
+      {
+        "module": "orket.adapters.execution.owned_command_jsonl",
+        "path": "orket/adapters/execution/owned_command_jsonl.py",
+        "sha256": "d08f29f45c461b2dd194272b71af5ed6d6a533107173a3e03a7302f9a1531808",
+        "side_effecting": true,
+        "declarations": {
+          "module": [
+            {
+              "line": 8,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "JsonlExchange@11": []
           }
         }
       },
       {
         "module": "orket.adapters.execution.owned_command_limits",
         "path": "orket/adapters/execution/owned_command_limits.py",
-        "sha256": "cdbb12da7dec5f3a83c961e6e8de807816de587dca7ff7e727bd3f64847d3dae",
+        "sha256": "66daa1cd405444dcfbaebfe5d1b567b218713078b0b1cd960573e7d39c6ec561",
         "side_effecting": false,
         "declarations": {
           "module": [
             {
-              "line": 6,
+              "line": 9,
               "kind": "Assign",
               "direct": true,
               "literal": false
@@ -34836,12 +34901,12 @@
       {
         "module": "orket.adapters.execution.owned_command_process",
         "path": "orket/adapters/execution/owned_command_process.py",
-        "sha256": "a64f199cf3e11458a6ab026eb233a5af3aa24bb8ed12682372637120e7ef171a",
+        "sha256": "59a2596c353b6394558f33d1d4736b33ff967c6b081019c777fcb21f7ec70455",
         "side_effecting": true,
         "declarations": {
           "module": [
             {
-              "line": 17,
+              "line": 18,
               "kind": "Assign",
               "direct": true,
               "literal": true
@@ -34876,12 +34941,12 @@
       {
         "module": "orket.adapters.execution.owned_command_worker",
         "path": "orket/adapters/execution/owned_command_worker.py",
-        "sha256": "81886370fba9d6abc47bcea4a323e5425aded856fe2f07a0c1678673ed77120e",
+        "sha256": "fbfde53ecbb6bdabb307333dc07d4343e47d34910c92e285aa9cab108cea12eb",
         "side_effecting": true,
         "declarations": {
           "module": [
             {
-              "line": 22,
+              "line": 23,
               "kind": "Assign",
               "direct": true,
               "literal": true
@@ -38234,85 +38299,6 @@
   },
   "diff_ledger": [
     {
-      "run_at_utc": "2026-09-21T21:19:07.431369Z",
-      "changed": true,
-      "before_digest": "sha256:d53b402ecdb14a9aaccf5b21e4192ca265f52b881d3dc0ae866085e7f0e3e05d",
-      "after_digest": "sha256:db1e40505626009870655412cb6996aaaf2fc9c680138deb78369ac704c7ce04",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 47427,
-        "paths_total_current": 47427,
-        "paths_total_reference": 47427,
-        "churn_paths": 1,
-        "churn_ratio": 2.1e-05,
-        "sample_paths": [
-          "$.generated_at"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-21T22:06:41.568022Z",
-      "changed": true,
-      "before_digest": "sha256:db1e40505626009870655412cb6996aaaf2fc9c680138deb78369ac704c7ce04",
-      "after_digest": "sha256:7386edd5cf10a53b299ba3af0364cff10361373e20613f6ea26e4fd0e28dc899",
-      "diff": {
-        "added_paths": 1,
-        "removed_paths": 0,
-        "changed_paths": 5501,
-        "initial_write": false,
-        "paths_total_previous": 47427,
-        "paths_total_current": 47438,
-        "paths_total_reference": 47438,
-        "churn_paths": 5502,
-        "churn_ratio": 0.115983,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.edges[1307].line",
-          "$.observed.edges[1308].line",
-          "$.observed.edges[1309].line",
-          "$.observed.edges[1310].line",
-          "$.observed.edges[1311].line",
-          "$.observed.edges[1312].line",
-          "$.observed.edges[1313].line",
-          "$.observed.edges[1313].target",
-          "$.observed.edges[1314].line",
-          "$.observed.edges[1314].target",
-          "$.observed.edges[1315].line",
-          "$.observed.edges[1315].target",
-          "$.observed.edges[1316].line",
-          "$.observed.edges[1316].target",
-          "$.observed.edges[1317].line",
-          "$.observed.edges[1317].target",
-          "$.observed.edges[1318].line",
-          "$.observed.edges[1318].target",
-          "$.observed.edges[1319].line"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-21T22:43:10.950747Z",
-      "changed": true,
-      "before_digest": "sha256:7386edd5cf10a53b299ba3af0364cff10361373e20613f6ea26e4fd0e28dc899",
-      "after_digest": "sha256:2da61ab549e833ef00e7ccc70768d870b205a37f078e0f4e14ca5f1aa275dfbf",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 47438,
-        "paths_total_current": 47438,
-        "paths_total_reference": 47438,
-        "churn_paths": 1,
-        "churn_ratio": 2.1e-05,
-        "sample_paths": [
-          "$.generated_at"
-        ]
-      }
-    },
-    {
       "run_at_utc": "2026-09-21T22:45:59.358116Z",
       "changed": true,
       "before_digest": "sha256:2da61ab549e833ef00e7ccc70768d870b205a37f078e0f4e14ca5f1aa275dfbf",
@@ -39172,6 +39158,97 @@
           "$.observed.edges[11].source",
           "$.observed.edges[11].target",
           "$.observed.edges[12].line"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T15:25:49.782785Z",
+      "changed": true,
+      "before_digest": "sha256:90d5c7a72041ccb020e562a35b16c7faa00413f3a45f76b4ef146bedc5eaf68e",
+      "after_digest": "sha256:40db2e66278f63bdf0154216a5a70d973cb88d30e224822907335013ff36d583",
+      "diff": {
+        "added_paths": 181,
+        "removed_paths": 173,
+        "changed_paths": 12288,
+        "initial_write": false,
+        "paths_total_previous": 56457,
+        "paths_total_current": 56543,
+        "paths_total_reference": 56543,
+        "churn_paths": 12642,
+        "churn_ratio": 0.223582,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.adapter_effects[5].declarations.classes.OpenClawJsonlSubprocessAdapter@36",
+          "$.observed.adapter_effects[5].declarations.classes.OpenClawSubprocessError@13",
+          "$.observed.adapter_effects[5].declarations.classes.PartialAdapterResult@22",
+          "$.observed.adapter_effects[5].declarations.classes.OpenClawJsonlSubprocessAdapter@40",
+          "$.observed.adapter_effects[5].declarations.classes.OpenClawSubprocessError@17",
+          "$.observed.adapter_effects[5].declarations.classes.PartialAdapterResult@26",
+          "$.observed.adapter_effects[5].declarations.module[0].line",
+          "$.observed.adapter_effects[5].sha256",
+          "$.observed.adapter_effects[6].declarations.classes.JsonlExchange@13",
+          "$.observed.adapter_effects[6].declarations.module[0].line",
+          "$.observed.adapter_effects[6].declarations.module[0].literal",
+          "$.observed.adapter_effects[6].module",
+          "$.observed.adapter_effects[6].path",
+          "$.observed.adapter_effects[6].sha256",
+          "$.observed.adapter_effects[6].side_effecting",
+          "$.observed.adapter_effects[7].declarations.classes.LinuxChildren@12",
+          "$.observed.adapter_effects[7].declarations.module[0].literal",
+          "$.observed.adapter_effects[7].module",
+          "$.observed.adapter_effects[7].path"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T15:29:51.116591Z",
+      "changed": true,
+      "before_digest": "sha256:40db2e66278f63bdf0154216a5a70d973cb88d30e224822907335013ff36d583",
+      "after_digest": "sha256:4d87d3804a69d9e1f6195d4b19035cd1d55e31b48e72d0a3847d2ae912449c35",
+      "diff": {
+        "added_paths": 2,
+        "removed_paths": 2,
+        "changed_paths": 7,
+        "initial_write": false,
+        "paths_total_previous": 56543,
+        "paths_total_current": 56543,
+        "paths_total_reference": 56543,
+        "churn_paths": 11,
+        "churn_ratio": 0.000195,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.adapter_effects[6].declarations.classes.JsonlExchange@13",
+          "$.observed.adapter_effects[6].declarations.classes.JsonlExchange@11",
+          "$.observed.adapter_effects[6].declarations.module[0].line",
+          "$.observed.adapter_effects[6].sha256",
+          "$.observed.adapter_effects[11].sha256",
+          "$.observed.effect_declarations.orket.adapters.execution.owned_command_jsonl.classes.JsonlExchange@13",
+          "$.observed.effect_declarations.orket.adapters.execution.owned_command_jsonl.classes.JsonlExchange@11",
+          "$.observed.effect_declarations.orket.adapters.execution.owned_command_jsonl.module[0].line",
+          "$.observed.modules.orket.adapters.execution.owned_command_jsonl.sha256",
+          "$.observed.modules.orket.adapters.execution.owned_command_worker.sha256"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T15:45:04.282478Z",
+      "changed": true,
+      "before_digest": "sha256:4d87d3804a69d9e1f6195d4b19035cd1d55e31b48e72d0a3847d2ae912449c35",
+      "after_digest": "sha256:66d15f34f2b1632e77a79d3fe50c7f03d690d6af7a0722153397a2548bebd86e",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 3,
+        "initial_write": false,
+        "paths_total_previous": 56543,
+        "paths_total_current": 56543,
+        "paths_total_reference": 56543,
+        "churn_paths": 3,
+        "churn_ratio": 5.3e-05,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.adapter_effects[7].sha256",
+          "$.observed.modules.orket.adapters.execution.owned_command_limits.sha256"
         ]
       }
     }

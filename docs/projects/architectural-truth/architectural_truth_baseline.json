@@ -1,6 +1,6 @@
 {
   "schema_version": "architectural_truth.baseline.v1",
-  "generated_at": "2026-09-22T14:55:40.967163Z",
+  "generated_at": "2026-09-22T16:08:37.733573Z",
   "collection_ok": true,
   "release_ready": false,
   "release_ready_reason": "Active architectural exceptions and red/noisy proof gates remain.",
@@ -331,22 +331,35 @@
         "orket.adapters.execution.openclaw_jsonl_adapter": {
           "module": [
             {
-              "line": 10,
+              "line": 14,
               "kind": "Assign",
               "direct": true,
               "literal": true
             }
           ],
           "classes": {
-            "OpenClawSubprocessError@13": [],
-            "PartialAdapterResult@22": [],
-            "OpenClawJsonlSubprocessAdapter@36": []
+            "OpenClawSubprocessError@17": [],
+            "PartialAdapterResult@26": [],
+            "OpenClawJsonlSubprocessAdapter@40": []
+          }
+        },
+        "orket.adapters.execution.owned_command_jsonl": {
+          "module": [
+            {
+              "line": 8,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "JsonlExchange@11": []
           }
         },
         "orket.adapters.execution.owned_command_limits": {
           "module": [
             {
-              "line": 6,
+              "line": 9,
               "kind": "Assign",
               "direct": true,
               "literal": false
@@ -370,7 +383,7 @@
         "orket.adapters.execution.owned_command_process": {
           "module": [
             {
-              "line": 17,
+              "line": 18,
               "kind": "Assign",
               "direct": true,
               "literal": true
@@ -398,7 +411,7 @@
         "orket.adapters.execution.owned_command_worker": {
           "module": [
             {
-              "line": 22,
+              "line": 23,
               "kind": "Assign",
               "direct": true,
               "literal": true
@@ -2851,7 +2864,7 @@
           "forwarded_arguments": 2
         }
       ],
-      "files_scanned": 1146,
+      "files_scanned": 1147,
       "scan_roots": [
         "orket"
       ],
@@ -2860,17 +2873,17 @@
         {
           "source": "adapters",
           "target": "adapters",
-          "count": 248
+          "count": 250
         },
         {
           "source": "adapters",
           "target": "core",
-          "count": 141
+          "count": 142
         },
         {
           "source": "application",
           "target": "adapters",
-          "count": 449
+          "count": 450
         },
         {
           "source": "application",
@@ -3014,33 +3027,52 @@
         {
           "module": "orket.adapters.execution.openclaw_jsonl_adapter",
           "path": "orket/adapters/execution/openclaw_jsonl_adapter.py",
-          "sha256": "4123d7c0b715ca906b1fe06b22621a2ceba07fc0bf7b0eb0c4f935168e4e36f2",
+          "sha256": "6674ee1f36a1d8d0c8f592b1e3a20c82829707b070960eca57c147367f2835ee",
           "side_effecting": true,
           "declarations": {
             "module": [
               {
-                "line": 10,
+                "line": 14,
                 "kind": "Assign",
                 "direct": true,
                 "literal": true
               }
             ],
             "classes": {
-              "OpenClawSubprocessError@13": [],
-              "PartialAdapterResult@22": [],
-              "OpenClawJsonlSubprocessAdapter@36": []
+              "OpenClawSubprocessError@17": [],
+              "PartialAdapterResult@26": [],
+              "OpenClawJsonlSubprocessAdapter@40": []
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.execution.owned_command_jsonl",
+          "path": "orket/adapters/execution/owned_command_jsonl.py",
+          "sha256": "d08f29f45c461b2dd194272b71af5ed6d6a533107173a3e03a7302f9a1531808",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 8,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "JsonlExchange@11": []
             }
           }
         },
         {
           "module": "orket.adapters.execution.owned_command_limits",
           "path": "orket/adapters/execution/owned_command_limits.py",
-          "sha256": "cdbb12da7dec5f3a83c961e6e8de807816de587dca7ff7e727bd3f64847d3dae",
+          "sha256": "66daa1cd405444dcfbaebfe5d1b567b218713078b0b1cd960573e7d39c6ec561",
           "side_effecting": false,
           "declarations": {
             "module": [
               {
-                "line": 6,
+                "line": 9,
                 "kind": "Assign",
                 "direct": true,
                 "literal": false
@@ -3071,12 +3103,12 @@
         {
           "module": "orket.adapters.execution.owned_command_process",
           "path": "orket/adapters/execution/owned_command_process.py",
-          "sha256": "a64f199cf3e11458a6ab026eb233a5af3aa24bb8ed12682372637120e7ef171a",
+          "sha256": "59a2596c353b6394558f33d1d4736b33ff967c6b081019c777fcb21f7ec70455",
           "side_effecting": true,
           "declarations": {
             "module": [
               {
-                "line": 17,
+                "line": 18,
                 "kind": "Assign",
                 "direct": true,
                 "literal": true
@@ -3111,12 +3143,12 @@
         {
           "module": "orket.adapters.execution.owned_command_worker",
           "path": "orket/adapters/execution/owned_command_worker.py",
-          "sha256": "81886370fba9d6abc47bcea4a323e5425aded856fe2f07a0c1678673ed77120e",
+          "sha256": "fbfde53ecbb6bdabb307333dc07d4343e47d34910c92e285aa9cab108cea12eb",
           "side_effecting": true,
           "declarations": {
             "module": [
               {
-                "line": 22,
+                "line": 23,
                 "kind": "Assign",
                 "direct": true,
                 "literal": true
@@ -6614,10 +6646,10 @@
   },
   "test_taxonomy": {
     "schema_version": "test_taxonomy_report.v1",
-    "tests_total": 5760,
-    "missing_layer_total": 4173,
+    "tests_total": 5772,
+    "missing_layer_total": 4185,
     "by_layer": {
-      "unlabeled": 4173,
+      "unlabeled": 4185,
       "integration": 752,
       "unit": 161,
       "contract": 663,
@@ -7225,7 +7257,7 @@
         "layer": null
       }
     ],
-    "missing_layers_omitted": 4073
+    "missing_layers_omitted": 4085
   },
   "ruff": {
     "proof": "structural_lint",
@@ -7246,7 +7278,7 @@
   },
   "size_inventory": {
     "proof": "structural_ast",
-    "python_files_scanned": 1146,
+    "python_files_scanned": 1147,
     "files_over_400_total": 53,
     "functions_over_70_total": 199,
     "largest_files": [
@@ -7624,113 +7656,6 @@
     "parse_errors": []
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-22T05:07:51.600154Z",
-      "changed": true,
-      "before_digest": "sha256:c2634bbb674a4624e07abc2fa1adb1cec6809247bfc2febb5aa97334fc14c4a4",
-      "after_digest": "sha256:6ff65e26bdfbea11c0c4991c8d31ccc91401ca74d5e7865a0e4fa56c60bc389e",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 14,
-        "initial_write": false,
-        "paths_total_previous": 2329,
-        "paths_total_current": 2329,
-        "paths_total_reference": 2329,
-        "churn_paths": 14,
-        "churn_ratio": 0.006011,
-        "sample_paths": [
-          "$.architecture_exceptions.exceptions[0].reason",
-          "$.architecture_exceptions.exceptions[5].reason",
-          "$.architecture_exceptions.exceptions[6].reason",
-          "$.dependency_graph.observed.files_scanned",
-          "$.dependency_graph.observed.layer_edges[2].count",
-          "$.dependency_graph.observed.layer_edges[3].count",
-          "$.dependency_graph.observed.layer_edges[4].count",
-          "$.generated_at",
-          "$.noop_critical_paths.scanned_files",
-          "$.size_inventory.python_files_scanned",
-          "$.test_taxonomy.by_layer.unlabeled",
-          "$.test_taxonomy.missing_layer_total",
-          "$.test_taxonomy.missing_layers_omitted",
-          "$.test_taxonomy.tests_total"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-22T05:09:58.614952Z",
-      "changed": true,
-      "before_digest": "sha256:6ff65e26bdfbea11c0c4991c8d31ccc91401ca74d5e7865a0e4fa56c60bc389e",
-      "after_digest": "sha256:e9bc665d1d07fd1c5b148334e50ec204ee0824701a31516dfd2b4308f3bd2bce",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 2329,
-        "paths_total_current": 2329,
-        "paths_total_reference": 2329,
-        "churn_paths": 1,
-        "churn_ratio": 0.000429,
-        "sample_paths": [
-          "$.generated_at"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-22T05:24:22.189730Z",
-      "changed": true,
-      "before_digest": "sha256:e9bc665d1d07fd1c5b148334e50ec204ee0824701a31516dfd2b4308f3bd2bce",
-      "after_digest": "sha256:53f3b038b2f9c8d878a89ba6168f314171f937ce75548579835b4708b2337fee",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 2329,
-        "paths_total_current": 2329,
-        "paths_total_reference": 2329,
-        "churn_paths": 1,
-        "churn_ratio": 0.000429,
-        "sample_paths": [
-          "$.generated_at"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-22T05:47:21.268571Z",
-      "changed": true,
-      "before_digest": "sha256:53f3b038b2f9c8d878a89ba6168f314171f937ce75548579835b4708b2337fee",
-      "after_digest": "sha256:dcc64192255ca7f6c9c51d02a3160b0544bc2d2eba56ed342bf20a569a83c560",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 15,
-        "initial_write": false,
-        "paths_total_previous": 2329,
-        "paths_total_current": 2329,
-        "paths_total_reference": 2329,
-        "churn_paths": 15,
-        "churn_ratio": 0.006441,
-        "sample_paths": [
-          "$.dependency_graph.observed.files_scanned",
-          "$.dependency_graph.observed.layer_edges[0].count",
-          "$.dependency_graph.observed.layer_edges[2].count",
-          "$.dependency_graph.observed.layer_edges[3].count",
-          "$.dependency_graph.observed.layer_edges[4].count",
-          "$.generated_at",
-          "$.noop_critical_paths.scanned_files",
-          "$.size_inventory.largest_files[4].lines",
-          "$.size_inventory.largest_functions[4].line",
-          "$.size_inventory.largest_functions[4].lines",
-          "$.size_inventory.python_files_scanned",
-          "$.test_taxonomy.by_layer.unlabeled",
-          "$.test_taxonomy.missing_layer_total",
-          "$.test_taxonomy.missing_layers_omitted",
-          "$.test_taxonomy.tests_total"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-22T05:49:20.307764Z",
       "changed": true,
@@ -8376,6 +8301,114 @@
         "paths_total_reference": 9269,
         "churn_paths": 1,
         "churn_ratio": 0.000108,
+        "sample_paths": [
+          "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T15:26:23.735340Z",
+      "changed": true,
+      "before_digest": "sha256:12cfa880bf4dd7d91ab7712a482e0fc9438abcb483bcea0cbe9107afb4507511",
+      "after_digest": "sha256:b7e376d19da4ece4f220c47b222b864146356529b9d35dedf3d1277dd7e6651c",
+      "diff": {
+        "added_paths": 175,
+        "removed_paths": 173,
+        "changed_paths": 747,
+        "initial_write": false,
+        "paths_total_previous": 9269,
+        "paths_total_current": 9304,
+        "paths_total_reference": 9304,
+        "churn_paths": 1095,
+        "churn_ratio": 0.117691,
+        "sample_paths": [
+          "$.dependency_graph.observed.adapter_effects[5].declarations.classes.OpenClawJsonlSubprocessAdapter@36",
+          "$.dependency_graph.observed.adapter_effects[5].declarations.classes.OpenClawSubprocessError@13",
+          "$.dependency_graph.observed.adapter_effects[5].declarations.classes.PartialAdapterResult@22",
+          "$.dependency_graph.observed.adapter_effects[5].declarations.classes.OpenClawJsonlSubprocessAdapter@40",
+          "$.dependency_graph.observed.adapter_effects[5].declarations.classes.OpenClawSubprocessError@17",
+          "$.dependency_graph.observed.adapter_effects[5].declarations.classes.PartialAdapterResult@26",
+          "$.dependency_graph.observed.adapter_effects[5].declarations.module[0].line",
+          "$.dependency_graph.observed.adapter_effects[5].sha256",
+          "$.dependency_graph.observed.adapter_effects[6].declarations.classes.JsonlExchange@13",
+          "$.dependency_graph.observed.adapter_effects[6].declarations.module[0].line",
+          "$.dependency_graph.observed.adapter_effects[6].declarations.module[0].literal",
+          "$.dependency_graph.observed.adapter_effects[6].module",
+          "$.dependency_graph.observed.adapter_effects[6].path",
+          "$.dependency_graph.observed.adapter_effects[6].sha256",
+          "$.dependency_graph.observed.adapter_effects[6].side_effecting",
+          "$.dependency_graph.observed.adapter_effects[7].declarations.classes.LinuxChildren@12",
+          "$.dependency_graph.observed.adapter_effects[7].declarations.module[0].literal",
+          "$.dependency_graph.observed.adapter_effects[7].module",
+          "$.dependency_graph.observed.adapter_effects[7].path",
+          "$.dependency_graph.observed.adapter_effects[7].sha256"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T15:30:24.877841Z",
+      "changed": true,
+      "before_digest": "sha256:b7e376d19da4ece4f220c47b222b864146356529b9d35dedf3d1277dd7e6651c",
+      "after_digest": "sha256:f38e2eaf149dc252d493071813761dd8b9b6b0cdca04686e780f6bedb108951d",
+      "diff": {
+        "added_paths": 2,
+        "removed_paths": 2,
+        "changed_paths": 5,
+        "initial_write": false,
+        "paths_total_previous": 9304,
+        "paths_total_current": 9304,
+        "paths_total_reference": 9304,
+        "churn_paths": 9,
+        "churn_ratio": 0.000967,
+        "sample_paths": [
+          "$.dependency_graph.observed.adapter_effects[6].declarations.classes.JsonlExchange@13",
+          "$.dependency_graph.observed.adapter_effects[6].declarations.classes.JsonlExchange@11",
+          "$.dependency_graph.observed.adapter_effects[6].declarations.module[0].line",
+          "$.dependency_graph.observed.adapter_effects[6].sha256",
+          "$.dependency_graph.observed.adapter_effects[11].sha256",
+          "$.dependency_graph.observed.effect_declarations.orket.adapters.execution.owned_command_jsonl.classes.JsonlExchange@13",
+          "$.dependency_graph.observed.effect_declarations.orket.adapters.execution.owned_command_jsonl.classes.JsonlExchange@11",
+          "$.dependency_graph.observed.effect_declarations.orket.adapters.execution.owned_command_jsonl.module[0].line",
+          "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T15:45:37.947502Z",
+      "changed": true,
+      "before_digest": "sha256:f38e2eaf149dc252d493071813761dd8b9b6b0cdca04686e780f6bedb108951d",
+      "after_digest": "sha256:5827eb9fb73e278fe7fdeaca14aec457d6982959ec1a70e0324f44a758467ac2",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 2,
+        "initial_write": false,
+        "paths_total_previous": 9304,
+        "paths_total_current": 9304,
+        "paths_total_reference": 9304,
+        "churn_paths": 2,
+        "churn_ratio": 0.000215,
+        "sample_paths": [
+          "$.dependency_graph.observed.adapter_effects[7].sha256",
+          "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T16:08:37.741690Z",
+      "changed": true,
+      "before_digest": "sha256:5827eb9fb73e278fe7fdeaca14aec457d6982959ec1a70e0324f44a758467ac2",
+      "after_digest": "sha256:97123844e542b179f7e7ecbc2eba034e9cdac2f5c05ad2e041fc637b70c7cf2e",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 9304,
+        "paths_total_current": 9304,
+        "paths_total_reference": 9304,
+        "churn_paths": 1,
+        "churn_ratio": 0.000107,
         "sample_paths": [
           "$.generated_at"
         ]

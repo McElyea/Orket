@@ -11,12 +11,13 @@ import subprocess
 import sys
 from pathlib import Path
 
+from orket.adapters.execution.owned_command_limits import jsonl_request_frames
 from orket.adapters.execution.owned_command_limits import output_limit_bytes as validate_output_limit
 from orket.core.contracts.owned_command import OwnedCommandResult
 
 side_effecting = True
 WORKER = Path(__file__).with_name("owned_command_worker.py")
-_REASONS = {"completed", "timeout", "cancelled", "launch_failed", "cleanup_unconfirmed", "output_limit", "capture_incomplete"}
+_REASONS = {"completed", "timeout", "cancelled", "launch_failed", "cleanup_unconfirmed", "output_limit", "capture_incomplete", "protocol_failed"}
 
 
 def _unconfirmed(process, diagnostic):
@@ -102,7 +103,8 @@ async def _finish_stop(process, collected, buffers, request_id):
                 cleanup = asyncio.create_task(_stop_and_collect(process, collected, buffers, request_id))
 
 
-async def execute_owned_command(*, argv, cwd, environment, timeout_seconds, input_data, stop, output_limit_bytes=None):
+async def execute_owned_command(*, argv, cwd, environment, timeout_seconds, input_data, stop, output_limit_bytes=None,
+                                jsonl_requests=None, io_timeout_seconds=None):
     if not math.isfinite(timeout_seconds) or timeout_seconds <= 0:
         raise ValueError("E_VERIFICATION_COMMAND_TIMEOUT_INVALID")
     # Windows venv launchers have a different PID from the actual interpreter.
@@ -112,6 +114,12 @@ async def execute_owned_command(*, argv, cwd, environment, timeout_seconds, inpu
                "output_limit_bytes": validate_output_limit(output_limit_bytes),
                "stop_requested": False,
                "input": base64.b64encode(input_data).decode("ascii") if input_data is not None else None}
+    if jsonl_requests is not None:
+        if (input_data is not None or io_timeout_seconds is None
+                or not math.isfinite(io_timeout_seconds) or io_timeout_seconds <= 0):
+            raise ValueError("E_COMMAND_JSONL_OPTIONS_INVALID")
+        request.update(jsonl_frames=[base64.b64encode(frame).decode("ascii") for frame in jsonl_request_frames(jsonl_requests)],
+                       jsonl_timeout=io_timeout_seconds)
     payload = json.dumps(request).encode() + b"\n"
     if len(payload) > 8 * 1024 * 1024:
         raise ValueError("E_VERIFICATION_COMMAND_INPUT_LIMIT")

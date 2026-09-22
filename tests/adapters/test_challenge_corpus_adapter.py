@@ -7,13 +7,16 @@ from pathlib import Path
 import pytest
 
 from orket.adapters.execution.openclaw_jsonl_adapter import OpenClawJsonlSubprocessAdapter
+from orket.application.services.command_process_supervisor import CommandProcessSupervisor
 
 
 # Layer: integration
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_challenge_corpus_adapter_serves_corpus_cases() -> None:
     adapter = OpenClawJsonlSubprocessAdapter(
         command=[sys.executable, "tools/fake_challenge_corpus_adapter.py"],
+        runner=CommandProcessSupervisor(Path.cwd(), cancellation_event="openclaw_fixture_interrupted"),
         io_timeout_seconds=10.0,
     )
     result = await adapter.run_requests(

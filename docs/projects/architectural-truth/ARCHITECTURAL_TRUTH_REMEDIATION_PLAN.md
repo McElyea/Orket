@@ -12519,7 +12519,8 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.88 Worker native entry and renewal ownership, retaining
+0.6.89 OpenClaw interactive process ownership, retaining
+0.6.88 Worker native entry and renewal ownership,
 0.6.87 provider inventory and governance command ownership,
 0.6.86 runtime architecture policy inputs and owned observations,
 0.6.85 adapter module classification and decision-admission gate,
@@ -12539,7 +12540,7 @@ and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
 Preserve every failed and
 passing source/native observation and the historical clock diagnosis. Canonical
-Ruff has 89 findings at the .88 checkpoint. The prior stale benchmark expectation passes in the
+Ruff has 89 findings at the .89 checkpoint. The prior stale benchmark expectation passes in the
 new source/native selection. The unmodified published .39 complete rerun has
 7,260 passes, three failures and 89 skips; its coverage is 84.56120595327887%
 against the unchanged 89% gate. The two parent-Git-dependent fixture failures and
@@ -22185,3 +22186,100 @@ open. Preserve all BT-1 through BT-5 behavior and prior evidence. No whole-plan
 completion, main merge, release readiness or lane retirement; user acceptance is required.
 
 Retained proof: `.tmp/d-worker-renewal-ownership/`.
+
+
+#### .89 OpenClaw interactive process ownership (2026-09-22)
+
+Responsible maintainer: Codex for Orket Core. Continuing canonical D3 after .88.
+OpenClaw now requires an application-owned `JsonlCommandRunner`. The existing native
+supervisor supports sequential JSONL exchange inside the same Windows job/Linux
+subreaper lifetime. No second process-tree owner or direct-child fallback is added.
+The adapter captures command, directory, environment and serialized requests before
+dispatch. A shared pure decoder admits JSON-object responses up to the existing
+64 KiB line bound, including valid EOF-terminated final lines. Single-line request
+frames are validated before admission. Each write, response wait, stdin close and
+exit has its configured finite deadline; overall bound is `(2 * count + 2) * timeout`.
+The adapter retains its one-second minimum and default thirty-second I/O budget.
+
+Stdout/stderr drain concurrently under the existing four-MiB-per-stream default.
+Invalid responses stop later requests; ordinary failure preserves only the accepted
+prefix. `protocol_failed` is a non-success lifetime reason. Incomplete capture or
+uncertain cleanup raises the existing typed uncertainty. Cancellation retains the
+existing application lifetime event and observed cleanup. Batch calls keep their
+input/deadline semantics; backend and cleanup functions retain exact bodies. Worker,
+provider command behavior and BT authority remain retained. Accepted external effects
+are not rolled back by process cleanup; hostile-code containment is not established.
+
+| Cell | Tests / failures / errors / skips | Pytest seconds | Installed origins |
+|---|---|---|---|
+| Fresh source | 1584 / 0 / 0 / 0 | 263.276 | source |
+| Installed a89v-win-py311 | 1584 / 0 / 0 / 0 | 265.081 | 981 |
+| Installed a89v-win-py312 | 1584 / 0 / 0 / 0 | 295.460 | 981 |
+
+All 1535 .88 identities remain across 156 modules. Added scope is 43 new cases and
+six existing adapter cases. Ten opening process controls fail on source and verified
+installed .88, with zero errors/skips. They independently observe live descendants
+following leader exit/failure, cancellation/repeated cancellation and timeout; fixture
+cleanup reaps those identities. Final tests retain every opening assertion, migrate
+fixture construction to the required application runner, add actual lifetime receipts
+and add inherited-pipe descendants. Published opening evidence is not claimed to be
+an identical final-constructor test run. Final focused 59/59 passes after the decoder repair.
+
+Real tests cover sequential input admission, valid partial prefixes, invalid/oversized
+responses, UTF-8 refusal, a final line without newline, empty requests, missing command,
+concurrent stderr pressure, output-limit uncertainty, blocked request writes, and
+captured nested inputs/environment/directory/command. Independent PID/create-time and
+heartbeat observers prove stopped fixture effects; supervisor/transport PIDs are
+absent on return. Thirteen synthetic refusal/invalid-frame cases are contract proof only.
+Two real script CLIs run declared fixture adapters: four live scenarios and eleven
+attack-corpus cases, including committed approvals and refused token replay. Kernel
+scenario and main-function bodies remain unchanged. Actual OpenClaw/model execution
+is not claimed. Exact CLI artifacts are retained in `cli-observations.json` and
+`retained-cli/` below the proof root.
+
+Retained intermediate evidence: owned20pass, protocol32pass; admission/CLI24pass2fail
+from incorrect test decision names and an unstaged corpus location. Correcting the
+fixture to canonical paths/Kernel decisions yields both CLI flows passing. Initial
+structural collection stopped on a legacy UTF-8 BOM in a modified test; removal keeps
+its exact AST. The new native helper initially failed package-namespace import; the
+native worker now injects the one authoritative decoder/limit. Import success is
+structural proof only; the 57 real/contract cases pass again after that repair.
+Two subsequent deep-JSON probes expose uncaught decoder recursion in both response
+and request admission. The shared decoder now refuses it as invalid JSON; affected
+26/26 and final59/59 pass. The earlier1582-case source run remains preserved but is
+not final acceptance. The corrected1584-case matrix has a separate frozen root:
+`.tmp/d-openclaw-process-ownership-validated/`.
+No deadline, assertion or policy was weakened. All failed observations are retained.
+
+Complete core parity: 1147 Python +20 unchanged data =1167 files;
+2354 frozen support inputs. Both Quality jobs include the
+new controls with sandbox creation disabled. Hosted execution remains unverified.
+Canonical C scans 1147 files/3742
+edges with six resolved routes and zero violations, analysis errors, unknown modules
+or authority cycles. Ruff remains89existing/0introduced. Scoped lint, size, docs,
+release metadata, whitespace and exact Python index binding pass. Eighty actual SQLite
+observations per cell meet the unchanged .5s bound; maximum 0.144307800s. Baseline
+collection does not establish release readiness. Durable contracts:
+`docs/specs/OPENCLAW_PROCESS_OWNERSHIP.md` and the updated shared
+`docs/specs/VERIFICATION_PROCESS_LIFETIME_CONTRACT.md`.
+
+Compliance: affected dependency direction, effect ownership, adapter classification,
+failure truth and authority alignment pass. Existing command result classes/port and
+cancellation record functions retain their bodies. D2/D3/D4 completion remains partial.
+Next canonical D2 gap: provider methods capture environment, but CLI inventory/load
+calls do not receive it; `_owned_inventory` defers native cwd/environment capture until
+worker entry. GGUF receives environment but relative-root capture needs review.
+Bounded source discovery: `.tmp/d-openclaw-process-ownership/next-provider-inputs.json`.
+Continue broader deterministic-input and async-reachability inventory after that scope.
+
+Remaining blockers or drift: retain the .72 Linux clock failure without a new
+measurement or settings/deadline changes. Windows latency/physical-sleep and prior Git
+timeout causes remain unknown. .87 LMStudio inventory success was not inference;
+Ollama CLI absence/loopback timeout remain retained observations. ProductFlow replay,
+legacy Kernel completion, full89%coverage and hostedGitea remain open. E1 taxonomy,
+no-op/Ruff, E2 bounded generated authority, CAP1 actual-model workload families, CAP2
+accepted containment and CAP3 capacity/recovery remain required. Preserve BT1-5 and
+all prior evidence. No whole-plan completion, main merge, release readiness or lane
+retirement; explicit user acceptance is still required.
+
+Retained proof: `.tmp/d-openclaw-process-ownership/`.

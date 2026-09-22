@@ -1,16 +1,21 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import sys
+from pathlib import Path
 
 import pytest
 
 from orket.adapters.execution.openclaw_jsonl_adapter import OpenClawJsonlSubprocessAdapter
+from orket.application.services.command_process_supervisor import CommandProcessSupervisor
+
+pytestmark = pytest.mark.integration
 
 
 @pytest.mark.asyncio
 async def test_openclaw_jsonl_subprocess_adapter_runs_stub_end_to_end() -> None:
     adapter = OpenClawJsonlSubprocessAdapter(
         command=[sys.executable, "tools/fake_openclaw_adapter_strict.py"],
+        runner=CommandProcessSupervisor(Path.cwd(), cancellation_event="openclaw_fixture_interrupted"),
         io_timeout_seconds=10.0,
     )
 
@@ -51,7 +56,8 @@ async def test_openclaw_jsonl_subprocess_adapter_returns_partial_result_on_crash
         ),
         encoding="utf-8",
     )
-    adapter = OpenClawJsonlSubprocessAdapter(command=[sys.executable, str(script)], io_timeout_seconds=10.0)
+    adapter = OpenClawJsonlSubprocessAdapter(command=[sys.executable, str(script)], io_timeout_seconds=10.0,
+        runner=CommandProcessSupervisor(tmp_path, cancellation_event="openclaw_fixture_interrupted"))
 
     result = await adapter.run_requests(
         [

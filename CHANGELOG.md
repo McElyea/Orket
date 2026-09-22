@@ -5,6 +5,19 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.89] - 2026-09-22
+
+### Fixed
+- Own OpenClaw JSONL exchange and descendants through the existing OS supervisor, including leader exit, cancellation, timeout and inherited pipes.
+- Bound request writes, response waits, stdin closure and exit; drain stderr concurrently and retain accepted partial responses.
+- Capture command, directory, environment and serialized requests before dispatch; refuse invalid framing, incomplete capture and uncertain cleanup.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Adapter composition must supply the application command supervisor through `JsonlCommandRunner`. Handle typed uncertainty and bounded protocol errors.
+- Batch command semantics and OS backends remain unchanged. Nervous-system CLI proof uses declared fixtures, not actual OpenClaw/model execution.
+- Contract: `docs/architecture/CONTRACT_DELTA_OPENCLAW_PROCESS_D_2026-09-22.md`.
+
 ## [0.6.88] - 2026-09-22
 
 ### Fixed

@@ -387,6 +387,9 @@ cleanup cannot become normal output. Native inventory retains its worker and adm
 budget; governance commands have a 300-second default. The existing 4 MiB capture bound
 applies. Inventory parsing, model-load observation and alias ownership remain unchanged.
 This does not establish daemon-effect rollback, alias exclusivity or provider inference.
+See `docs/specs/PROVIDER_GOVERNANCE_COMMAND_OWNERSHIP.md` and
+`docs/architecture/CONTRACT_DELTA_PROVIDER_GOVERNANCE_COMMANDS_D_2026-09-22.md`.
+
 Worker requires native execution before synchronous HTTP, sleep or random-delay
 effects. An invocation joins its renewal owner through every exit and surfaces
 renewal failure before completion. Async callers retain the native worker and its
@@ -395,8 +398,14 @@ authority remains unchanged. No arbitrary-client termination or effect rollback 
 claimed. See `docs/specs/WORKER_RENEWAL_OWNERSHIP.md` and
 `docs/architecture/CONTRACT_DELTA_WORKER_RENEWAL_D_2026-09-22.md`.
 
-See `docs/specs/PROVIDER_GOVERNANCE_COMMAND_OWNERSHIP.md` and
-`docs/architecture/CONTRACT_DELTA_PROVIDER_GOVERNANCE_COMMANDS_D_2026-09-22.md`.
+OpenClaw interactive JSONL uses the existing application OS supervisor through a
+core `JsonlCommandRunner` port. It captures invocation inputs before dispatch and
+owns sequential writes, response validation, stream bounds and descendant cleanup.
+Ordinary failures retain accepted response prefixes; incomplete capture or uncertain
+cleanup cannot become success. The native owner supports this protocol without
+changing batch command semantics or adding another OS backend. See
+`docs/specs/OPENCLAW_PROCESS_OWNERSHIP.md` and
+`docs/architecture/CONTRACT_DELTA_OPENCLAW_PROCESS_D_2026-09-22.md`.
 
 Driver async creation captures root, environment and settings before owned
 construction; direct synchronous construction refuses an event-loop thread.

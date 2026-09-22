@@ -14,6 +14,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from orket.adapters.execution import OpenClawJsonlSubprocessAdapter  # noqa: E402
+from orket.application.services.command_process_supervisor import CommandProcessSupervisor  # noqa: E402
 from orket.application.services.kernel_runtime_owner import KernelRuntime, capture_kernel_observation  # noqa: E402
 from orket.kernel.v1.nervous_system_runtime import (  # noqa: E402
     admit_proposal_v1,
@@ -275,6 +276,7 @@ async def _run_torture(corpus_path: Path) -> dict[str, Any]:
 
     adapter = OpenClawJsonlSubprocessAdapter(
         command=[sys.executable, "tools/fake_challenge_corpus_adapter.py"],
+        runner=CommandProcessSupervisor(Path.cwd(), cancellation_event="openclaw_command_interrupted"),
         io_timeout_seconds=15.0,
     )
     adapter_result = await adapter.run_requests(requests)

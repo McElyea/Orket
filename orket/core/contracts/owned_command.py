@@ -42,3 +42,10 @@ class CommandRunner(Protocol):
         environment: dict[str, str] | None = None, input_data: bytes | None = None,
         output_limit_bytes: int | None = None,
     ) -> OwnedCommandResult: ...
+
+
+class JsonlCommandRunner(Protocol):
+    async def run_jsonl(
+        self, argv: Sequence[str], *, requests: Sequence[bytes], cwd: Path,
+        io_timeout_seconds: float, environment: dict[str, str],
+    ) -> OwnedCommandResult: ...

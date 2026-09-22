@@ -16,22 +16,28 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from owned_command_limits import output_limit_bytes
+from owned_command_jsonl import JsonlExchange
+from owned_command_limits import JSONL_RESPONSE_LIMIT, decode_jsonl_response, output_limit_bytes
 
 CLEANUP_SECONDS = 3.0
 side_effecting = True
 
 
-def _read_stream(stream, buffer, limited, errors, limit):
+def _read_stream(stream, buffer, limited, errors, limit, exchange=None):
     try:
-        while chunk := stream.read(8192):
+        read = stream.read if exchange is None else stream.read1
+        while chunk := read(8192):
             remaining = limit - len(buffer)
             buffer.extend(chunk[:remaining])
             if len(chunk) > remaining:
                 limited.set()
+            if exchange is not None:
+                exchange.observe(chunk)
     except OSError as exc:
         errors.append(f"capture:{type(exc).__name__}:{exc.errno}")
     finally:
+        if exchange is not None:
+            exchange.eof()
         stream.close()
 
 
@@ -109,23 +115,28 @@ def _cleanup(backend, process, admitted, errors):
     return _empty(backend, process)
 
 
-def _capture(process, input_data, stdout, stderr, limited, errors, limit):
-    threads = [threading.Thread(target=_read_stream, args=(stream, buffer, limited, errors, limit), daemon=True)
+def _capture(process, input_data, stdout, stderr, limited, errors, limit, exchange=None):
+    threads = [threading.Thread(target=_read_stream, args=(stream, buffer, limited, errors, limit,
+                exchange if stream is process.stdout else None), daemon=True)
                for stream, buffer in ((process.stdout, stdout), (process.stderr, stderr))]
-    if input_data is not None:
+    if exchange is not None:
+        threads.append(threading.Thread(target=exchange.write, args=(process.stdin,), daemon=True))
+    elif input_data is not None:
         threads.append(threading.Thread(target=_write_input, args=(process.stdin, input_data, errors), daemon=True))
     for thread in threads:
         thread.start()
     return threads
 
 
-def _run_until_stop(backend, process, stop, limited, timeout):
+def _run_until_stop(backend, process, stop, limited, timeout, exchange=None):
     deadline = time.monotonic() + timeout
     while True:
         if stop.is_set():
             return "cancelled"
         if limited.is_set():
             return "output_limit"
+        if exchange is not None and (reason := exchange.reason()) is not None:
+            return reason
         if os.name == "nt":
             process.poll()
         else:
@@ -138,7 +149,7 @@ def _run_until_stop(backend, process, stop, limited, timeout):
 
 
 def execute(payload, stop_received=False):
-    backend, process, admitted = None, None, False
+    backend, process, admitted, exchange = None, None, False, None
     stdout, stderr, errors, threads = bytearray(), bytearray(), [], []
     stop, limited = threading.Event(), threading.Event()
     if stop_received or payload.get("stop_requested") is True:
@@ -155,17 +166,20 @@ def execute(payload, stop_received=False):
             # CREATE_SUSPENDED is a Win32 flag not exported by subprocess.
             options = {"creationflags": 0x00000004 | subprocess.CREATE_NO_WINDOW} if os.name == "nt" else {"start_new_session": True}
             input_data = base64.b64decode(payload["input"], validate=True) if payload.get("input") is not None else None
+            if "jsonl_frames" in payload:
+                exchange = JsonlExchange(payload["jsonl_frames"], payload["jsonl_timeout"], stop,
+                                        decode_response=decode_jsonl_response, line_limit=JSONL_RESPONSE_LIMIT)
             process = subprocess.Popen(payload["argv"], cwd=payload["cwd"], env=payload["env"],
-                                       stdin=subprocess.PIPE if input_data is not None else subprocess.DEVNULL,
+                                       stdin=subprocess.PIPE if input_data is not None or exchange is not None else subprocess.DEVNULL,
                                        stdout=subprocess.PIPE, stderr=subprocess.PIPE, **options)
             record["command_pid"] = process.pid
             if os.name == "nt":
                 backend.admit(process)
             admitted = True
-            threads = _capture(process, input_data, stdout, stderr, limited, errors, limit)
+            threads = _capture(process, input_data, stdout, stderr, limited, errors, limit, exchange)
             if os.name == "nt" and not stop.is_set():
                 backend.release(process)
-            record["reason"] = _run_until_stop(backend, process, stop, limited, float(payload["timeout"]))
+            record["reason"] = _run_until_stop(backend, process, stop, limited, float(payload["timeout"]), exchange)
     except (OSError, ValueError, KeyError, TypeError) as exc:
         errors.append(f"launch:{type(exc).__name__}:{getattr(exc, 'errno', None)}")
     finally:
@@ -180,7 +194,12 @@ def execute(payload, stop_received=False):
                 backend.close()
             except OSError as exc:
                 errors.append(f"job_close:{type(exc).__name__}:{exc.errno}")
-    return _result(record, process, stdout, stderr, errors, threads, limited)
+    if exchange is not None and exchange.failure is not None and record["reason"] == "completed":
+        record["reason"] = "protocol_failed"
+    result = _result(record, process, stdout, stderr, errors, threads, limited)
+    if exchange is not None and exchange.failure is not None:
+        result["diagnostics"].append(exchange.failure)
+    return result
 
 
 def _result(record, process, stdout, stderr, errors, threads, limited):

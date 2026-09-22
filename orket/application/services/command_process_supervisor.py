@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 import asyncio
+import math
 from pathlib import Path
 
+from orket.adapters.execution.owned_command_limits import jsonl_request_frames
 from orket.adapters.execution.owned_command_process import execute_owned_command
 from orket.core.contracts.owned_command import OwnedCommandResult
 from orket.logging import log_event
@@ -35,11 +37,13 @@ class CommandProcessSupervisor:
         self.cancellation_event = cancellation_event
 
     async def run(self, argv, *, cwd, timeout_seconds, environment=None, input_data=None,
-                  output_limit_bytes=None) -> OwnedCommandResult:
+                  output_limit_bytes=None, jsonl_requests=None, io_timeout_seconds=None) -> OwnedCommandResult:
         stop = asyncio.Event()
+        protocol = ({} if jsonl_requests is None else
+                    dict(jsonl_requests=jsonl_requests, io_timeout_seconds=io_timeout_seconds))
         owner = asyncio.create_task(execute_owned_command(
             argv=argv, cwd=cwd, timeout_seconds=timeout_seconds, environment=environment, input_data=input_data,
-            stop=stop, output_limit_bytes=output_limit_bytes))
+            stop=stop, output_limit_bytes=output_limit_bytes, **protocol))
         cancelled = False
         while True:
             try:
@@ -57,3 +61,11 @@ class CommandProcessSupervisor:
                 raise CommandProcessCancelled(result) from exc
             raise CommandProcessCancelled(result)
         return result
+
+    async def run_jsonl(self, argv, *, requests, cwd, io_timeout_seconds, environment) -> OwnedCommandResult:
+        frames, timeout = jsonl_request_frames(requests), float(io_timeout_seconds)
+        if not math.isfinite(timeout) or timeout <= 0:
+            raise ValueError("E_COMMAND_JSONL_TIMEOUT_INVALID")
+        return await self.run(argv, cwd=cwd, environment=environment,
+                              timeout_seconds=(2 * len(frames) + 2) * timeout,
+                              jsonl_requests=frames, io_timeout_seconds=timeout)

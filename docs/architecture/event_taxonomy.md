@@ -352,6 +352,12 @@ nullable `process_lifetime` with that schema. It reports retained uncertainty;
 diagnostic publication failure remains attached to the typed exception and cannot
 authorize final truth. Request bytes and child output are absent from the event.
 
+5. `openclaw_command_interrupted` uses the `owned_command.v1` fields above.
+The shared native owner emits this observation after cleanup and before caller
+cancellation propagates. Command arguments, environment and output are absent.
+It does not establish exchange success, undo accepted effects or authorize replay.
+Contract: `docs/specs/OPENCLAW_PROCESS_OWNERSHIP.md`.
+
 ## Guard Lifecycle
 1. `guard_approved`
    - `run_id`, `issue_id`, `seat`, `review_payload`

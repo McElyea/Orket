@@ -66,6 +66,13 @@
 
 ## Canonical Commands
 
+OpenClaw JSONL callers supply the existing application command supervisor through
+`JsonlCommandRunner`; adapters do not create a second process-tree owner. Preserve
+sequential request admission, accepted partial responses, bounded writes/capture
+and cleanup uncertainty. Both Quality jobs exercise real process/pipe controls and
+the nervous-system CLIs with explicitly declared fixture adapters. Those runs are
+not actual OpenClaw/model acceptance. Contract: `docs/specs/OPENCLAW_PROCESS_OWNERSHIP.md`.
+
 Worker's synchronous adapter refuses event-loop entry. Async callers use the
 existing owned native worker and retain the borrowed, finitely bounded HTTP client
 until work and renewal settle. Exercise native refusal, actual HTTP/SQLite renewal

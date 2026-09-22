@@ -2,6 +2,15 @@
 
 Last updated: 2026-09-22
 
+OpenClaw JSONL composition requires the application-owned `JsonlCommandRunner`.
+The existing OS supervisor owns sequential request/response exchange, finite write,
+response, close and exit deadlines, concurrent stream capture and descendant cleanup.
+Inputs are captured before dispatch. Accepted response prefixes remain available on
+ordinary protocol failure; incomplete capture or uncertain cleanup refuses normal
+output. Batch command behavior and OS backends remain authoritative. Contract:
+`docs/specs/OPENCLAW_PROCESS_OWNERSHIP.md`; migration:
+`docs/architecture/CONTRACT_DELTA_OPENCLAW_PROCESS_D_2026-09-22.md`.
+
 Worker synchronous HTTP, sleep and random-delay entry requires native execution.
 Async callers retain it through `run_owned_thread`. Each claimed-work invocation
 joins its renewal owner on every exit; renewal failure reaches the caller before

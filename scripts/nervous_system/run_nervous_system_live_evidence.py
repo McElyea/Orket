@@ -11,6 +11,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from orket.adapters.execution import OpenClawJsonlSubprocessAdapter  # noqa: E402
+from orket.application.services.command_process_supervisor import CommandProcessSupervisor  # noqa: E402
 from orket.application.services.kernel_runtime_owner import KernelRuntime, capture_kernel_observation  # noqa: E402
 from orket.kernel.v1 import api as kernel_api  # noqa: E402
 from orket.kernel.v1.nervous_system_contract import tool_profile_digest  # noqa: E402
@@ -342,7 +343,8 @@ async def _run_live() -> dict[str, Any]:
     os.environ["ORKET_ENABLE_NERVOUS_SYSTEM"] = "true"
     os.environ["ORKET_USE_TOOL_PROFILE_RESOLVER"] = "true"
     os.environ.pop("ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS", None)
-    adapter = OpenClawJsonlSubprocessAdapter(command=[sys.executable, "tools/fake_openclaw_adapter_strict.py"], io_timeout_seconds=15.0)
+    adapter = OpenClawJsonlSubprocessAdapter(command=[sys.executable, "tools/fake_openclaw_adapter_strict.py"],
+        runner=CommandProcessSupervisor(Path.cwd(), cancellation_event="openclaw_command_interrupted"), io_timeout_seconds=15.0)
     requests = [
         {"type": "next_action", "scenario_kind": "blocked_destructive"},
         {"type": "next_action", "scenario_kind": "approval_required"},
