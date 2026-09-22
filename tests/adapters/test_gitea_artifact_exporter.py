@@ -8,13 +8,13 @@ from urllib import parse
 
 import pytest
 
-from orket.adapters.vcs.gitea_artifact_exporter import GiteaArtifactExporter
+from orket.application.services.gitea_artifact_exporter_factory import create_gitea_artifact_exporter
 
 
 @pytest.mark.unit
 # Layer: unit
 def test_build_repo_url_does_not_embed_credentials(tmp_path: Path) -> None:
-    exporter = GiteaArtifactExporter(workspace=tmp_path)
+    exporter = create_gitea_artifact_exporter(workspace=tmp_path)
 
     repo_url = exporter._build_repo_url("https://gitea.example.com", "owner", "repo")
     assert repo_url == "https://gitea.example.com/owner/repo.git"
@@ -26,7 +26,7 @@ def test_build_repo_url_does_not_embed_credentials(tmp_path: Path) -> None:
 @pytest.mark.unit
 # Layer: unit
 def test_build_repo_url_preserves_base_path(tmp_path: Path) -> None:
-    exporter = GiteaArtifactExporter(workspace=tmp_path)
+    exporter = create_gitea_artifact_exporter(workspace=tmp_path)
 
     repo_url = exporter._build_repo_url("https://gitea.example.com/git", "owner", "repo")
     assert repo_url == "https://gitea.example.com/git/owner/repo.git"
@@ -39,7 +39,7 @@ def test_git_auth_env_appends_http_header_config(monkeypatch, tmp_path: Path) ->
     monkeypatch.setenv("GIT_CONFIG_KEY_0", "color.ui")
     monkeypatch.setenv("GIT_CONFIG_VALUE_0", "auto")
 
-    exporter = GiteaArtifactExporter(workspace=tmp_path)
+    exporter = create_gitea_artifact_exporter(workspace=tmp_path)
     env = exporter._git_auth_env("alice", "s3cr3t")
 
     assert env["GIT_CONFIG_COUNT"] == "2"
@@ -56,7 +56,7 @@ def test_git_auth_env_appends_http_header_config(monkeypatch, tmp_path: Path) ->
 def test_export_binding_is_frozen_and_omits_authentication_secrets(monkeypatch, tmp_path):
     monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "fixture-secret")
     monkeypatch.setenv("ORKET_GITEA_ARTIFACT_REPO", "original")
-    exporter = GiteaArtifactExporter(tmp_path)
+    exporter = create_gitea_artifact_exporter(tmp_path)
     before = exporter.binding()
     monkeypatch.setenv("ORKET_GITEA_ARTIFACT_REPO", "changed")
     assert exporter.binding() == before
@@ -70,7 +70,7 @@ def test_export_binding_is_frozen_and_omits_authentication_secrets(monkeypatch, 
 def test_export_binding_rejects_credential_bearing_target(monkeypatch, tmp_path):
     monkeypatch.setenv("GITEA_URL", "https://fixture-user:fixture-password@gitea.invalid")
     with pytest.raises(ValueError, match="E_GITEA_EXPORT_CREDENTIAL_URL"):
-        GiteaArtifactExporter(tmp_path)
+        create_gitea_artifact_exporter(tmp_path)
 
 
 @pytest.mark.asyncio
@@ -84,7 +84,7 @@ async def test_export_rejects_unsafe_components_before_preparation(monkeypatch, 
     monkeypatch.setenv("GITEA_ADMIN_USER", "fixture-user")
     monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "fixture-password")
     monkeypatch.setenv(setting, value)
-    exporter = GiteaArtifactExporter(tmp_path)
+    exporter = await asyncio.to_thread(create_gitea_artifact_exporter, tmp_path)
     with pytest.raises(ValueError, match="E_GITEA_EXPORT_COMPONENT|E_GITEA_EXPORT_PREFIX"):
         await exporter.prepare_export(run_id="rejected")
 
@@ -114,7 +114,7 @@ async def test_export_rejects_top_level_junction_before_remote_access(monkeypatc
         for key, value in settings.items():
             monkeypatch.setenv(key, value)
         with pytest.raises(ValueError, match="E_GITEA_EXPORT_SOURCE_ESCAPE"):
-            await GiteaArtifactExporter(tmp_path).prepare_export(
+            await (await asyncio.to_thread(create_gitea_artifact_exporter, tmp_path)).prepare_export(
                 run_id="junction", run_type="epic", run_name="proof", build_id="build", session_status="done",
                 summary={}, export_day="2026-09-12", export_time="2026-09-12T12:00:00+00:00")
     finally:

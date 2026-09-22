@@ -1,6 +1,6 @@
 {
   "schema_version": "architectural_truth.baseline.v1",
-  "generated_at": "2026-09-22T22:59:46.746551Z",
+  "generated_at": "2026-09-22T23:45:40.014113Z",
   "collection_ok": true,
   "release_ready": false,
   "release_ready_reason": "Active architectural exceptions and red/noisy proof gates remain.",
@@ -2297,15 +2297,15 @@
         "orket.adapters.tools.builtin_connectors": {
           "module": [
             {
-              "line": 27,
+              "line": 28,
               "kind": "Assign",
               "direct": true,
               "literal": true
             }
           ],
           "classes": {
-            "BuiltInConnectorExecutionError@30": [],
-            "BuiltInConnectorExecutor@34": []
+            "BuiltInConnectorExecutionError@31": [],
+            "BuiltInConnectorExecutor@35": []
           }
         },
         "orket.adapters.tools.families.__init__": {
@@ -2481,16 +2481,16 @@
         "orket.adapters.vcs.gitea_artifact_exporter": {
           "module": [
             {
-              "line": 24,
+              "line": 26,
               "kind": "Assign",
               "direct": true,
               "literal": true
             }
           ],
           "classes": {
-            "GiteaArtifactExporter@36": [
+            "GiteaArtifactExporter@38": [
               {
-                "line": 39,
+                "line": 41,
                 "kind": "Assign",
                 "direct": true,
                 "literal": true
@@ -2888,7 +2888,7 @@
           "forwarded_arguments": 2
         }
       ],
-      "files_scanned": 1159,
+      "files_scanned": 1161,
       "scan_roots": [
         "orket"
       ],
@@ -2897,22 +2897,22 @@
         {
           "source": "adapters",
           "target": "adapters",
-          "count": 254
+          "count": 255
         },
         {
           "source": "adapters",
           "target": "core",
-          "count": 148
+          "count": 150
         },
         {
           "source": "application",
           "target": "adapters",
-          "count": 460
+          "count": 461
         },
         {
           "source": "application",
           "target": "application",
-          "count": 1843
+          "count": 1851
         },
         {
           "source": "application",
@@ -5779,20 +5779,20 @@
         {
           "module": "orket.adapters.tools.builtin_connectors",
           "path": "orket/adapters/tools/builtin_connectors.py",
-          "sha256": "13b3374077d110caf35eaed1c1d3dc5d5ba2d568527a2279a45be41ff4f4ad9c",
+          "sha256": "9e46a3157f3ac5cbbaec1532d9ed91b7c98454b3d53912bf6a57b1f2e37294a9",
           "side_effecting": true,
           "declarations": {
             "module": [
               {
-                "line": 27,
+                "line": 28,
                 "kind": "Assign",
                 "direct": true,
                 "literal": true
               }
             ],
             "classes": {
-              "BuiltInConnectorExecutionError@30": [],
-              "BuiltInConnectorExecutor@34": []
+              "BuiltInConnectorExecutionError@31": [],
+              "BuiltInConnectorExecutor@35": []
             }
           }
         },
@@ -6035,21 +6035,21 @@
         {
           "module": "orket.adapters.vcs.gitea_artifact_exporter",
           "path": "orket/adapters/vcs/gitea_artifact_exporter.py",
-          "sha256": "6fc931fba6f0c63efd4349bc77b39deacfd72ab5128e2ffbc5d2d6d605a103ef",
+          "sha256": "79c2c7dc62052e2bb90d18c3f1acc8b5439fedbcca1c3907d80a3b741189cfdb",
           "side_effecting": true,
           "declarations": {
             "module": [
               {
-                "line": 24,
+                "line": 26,
                 "kind": "Assign",
                 "direct": true,
                 "literal": true
               }
             ],
             "classes": {
-              "GiteaArtifactExporter@36": [
+              "GiteaArtifactExporter@38": [
                 {
-                  "line": 39,
+                  "line": 41,
                   "kind": "Assign",
                   "direct": true,
                   "literal": true
@@ -6706,10 +6706,10 @@
   },
   "test_taxonomy": {
     "schema_version": "test_taxonomy_report.v1",
-    "tests_total": 5832,
-    "missing_layer_total": 4245,
+    "tests_total": 5846,
+    "missing_layer_total": 4259,
     "by_layer": {
-      "unlabeled": 4245,
+      "unlabeled": 4259,
       "integration": 752,
       "unit": 161,
       "contract": 663,
@@ -7317,7 +7317,7 @@
         "layer": null
       }
     ],
-    "missing_layers_omitted": 4145
+    "missing_layers_omitted": 4159
   },
   "ruff": {
     "proof": "structural_lint",
@@ -7338,7 +7338,7 @@
   },
   "size_inventory": {
     "proof": "structural_ast",
-    "python_files_scanned": 1159,
+    "python_files_scanned": 1161,
     "files_over_400_total": 53,
     "functions_over_70_total": 199,
     "largest_files": [
@@ -7605,7 +7605,7 @@
       "C:\\Source\\Orket-architectural-truth\\orket\\runtime",
       "C:\\Source\\Orket-architectural-truth\\orket\\interfaces"
     ],
-    "scanned_files": 675,
+    "scanned_files": 677,
     "findings": [
       {
         "path": "C:\\Source\\Orket-architectural-truth\\orket\\runtime\\execution\\execution_pipeline_card_dispatch.py",
@@ -7716,65 +7716,6 @@
     "parse_errors": []
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-22T12:37:20.608993Z",
-      "changed": true,
-      "before_digest": "sha256:261faca6af718cdcf1171db41c567c3bf7be3d524a5ab8d2620bd92a1551b442",
-      "after_digest": "sha256:37a04e81b808b7c66f58899427a7aff06e73a0a74d3dae34036be6c072379d3f",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 9236,
-        "paths_total_current": 9236,
-        "paths_total_reference": 9236,
-        "churn_paths": 1,
-        "churn_ratio": 0.000108,
-        "sample_paths": [
-          "$.generated_at"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-22T13:20:44.220383Z",
-      "changed": true,
-      "before_digest": "sha256:37a04e81b808b7c66f58899427a7aff06e73a0a74d3dae34036be6c072379d3f",
-      "after_digest": "sha256:2fefc14d451eba0cf9a0714943a8dbca649338f3b6fca12e93751a4f34e46441",
-      "diff": {
-        "added_paths": 61,
-        "removed_paths": 57,
-        "changed_paths": 258,
-        "initial_write": false,
-        "paths_total_previous": 9236,
-        "paths_total_current": 9302,
-        "paths_total_reference": 9302,
-        "churn_paths": 376,
-        "churn_ratio": 0.040421,
-        "sample_paths": [
-          "$.dependency_graph.observed.adapter_effects[114].declarations.classes.RuntimeStoreBindingRepository@20",
-          "$.dependency_graph.observed.adapter_effects[114].declarations.module[0].line",
-          "$.dependency_graph.observed.adapter_effects[114].declarations.module[0].literal",
-          "$.dependency_graph.observed.adapter_effects[114].module",
-          "$.dependency_graph.observed.adapter_effects[114].path",
-          "$.dependency_graph.observed.adapter_effects[114].sha256",
-          "$.dependency_graph.observed.adapter_effects[114].side_effecting",
-          "$.dependency_graph.observed.adapter_effects[115].declarations.classes.RuntimeStoreMigrationIO@56",
-          "$.dependency_graph.observed.adapter_effects[115].declarations.classes.RuntimeStoreBindingRepository@20",
-          "$.dependency_graph.observed.adapter_effects[115].declarations.module[0].line",
-          "$.dependency_graph.observed.adapter_effects[115].module",
-          "$.dependency_graph.observed.adapter_effects[115].path",
-          "$.dependency_graph.observed.adapter_effects[115].sha256",
-          "$.dependency_graph.observed.adapter_effects[116].declarations.classes.RuntimeStoreMigrationIO@56",
-          "$.dependency_graph.observed.adapter_effects[116].declarations.module[0].line",
-          "$.dependency_graph.observed.adapter_effects[116].declarations.module[0].literal",
-          "$.dependency_graph.observed.adapter_effects[116].module",
-          "$.dependency_graph.observed.adapter_effects[116].path",
-          "$.dependency_graph.observed.adapter_effects[116].sha256",
-          "$.dependency_graph.observed.adapter_effects[116].side_effecting"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-22T13:24:00.351917Z",
       "changed": true,
@@ -8506,6 +8447,65 @@
       "changed": true,
       "before_digest": "sha256:d55de30c068a451254d0cea31d1d6c032ec9e5a81da8d2951e4d3fd0d539168b",
       "after_digest": "sha256:c1407e6a378c361317cc2cd4a63255372bfff4205d92bb25f5a61d1714a682bb",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 9372,
+        "paths_total_current": 9372,
+        "paths_total_reference": 9372,
+        "churn_paths": 1,
+        "churn_ratio": 0.000107,
+        "sample_paths": [
+          "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T23:16:30.439560Z",
+      "changed": true,
+      "before_digest": "sha256:c1407e6a378c361317cc2cd4a63255372bfff4205d92bb25f5a61d1714a682bb",
+      "after_digest": "sha256:b67320ab85c293120da2660f6711fe88c016ce3f5576e27f5f5f14a9aa568ea0",
+      "diff": {
+        "added_paths": 6,
+        "removed_paths": 6,
+        "changed_paths": 18,
+        "initial_write": false,
+        "paths_total_previous": 9372,
+        "paths_total_current": 9372,
+        "paths_total_reference": 9372,
+        "churn_paths": 30,
+        "churn_ratio": 0.003201,
+        "sample_paths": [
+          "$.dependency_graph.observed.adapter_effects[132].declarations.classes.BuiltInConnectorExecutionError@30",
+          "$.dependency_graph.observed.adapter_effects[132].declarations.classes.BuiltInConnectorExecutor@34",
+          "$.dependency_graph.observed.adapter_effects[132].declarations.classes.BuiltInConnectorExecutionError@31",
+          "$.dependency_graph.observed.adapter_effects[132].declarations.classes.BuiltInConnectorExecutor@35",
+          "$.dependency_graph.observed.adapter_effects[132].declarations.module[0].line",
+          "$.dependency_graph.observed.adapter_effects[132].sha256",
+          "$.dependency_graph.observed.adapter_effects[144].declarations.classes.GiteaArtifactExporter@36",
+          "$.dependency_graph.observed.adapter_effects[144].declarations.classes.GiteaArtifactExporter@38",
+          "$.dependency_graph.observed.adapter_effects[144].declarations.module[0].line",
+          "$.dependency_graph.observed.adapter_effects[144].sha256",
+          "$.dependency_graph.observed.effect_declarations.orket.adapters.tools.builtin_connectors.classes.BuiltInConnectorExecutionError@30",
+          "$.dependency_graph.observed.effect_declarations.orket.adapters.tools.builtin_connectors.classes.BuiltInConnectorExecutor@34",
+          "$.dependency_graph.observed.effect_declarations.orket.adapters.tools.builtin_connectors.classes.BuiltInConnectorExecutionError@31",
+          "$.dependency_graph.observed.effect_declarations.orket.adapters.tools.builtin_connectors.classes.BuiltInConnectorExecutor@35",
+          "$.dependency_graph.observed.effect_declarations.orket.adapters.tools.builtin_connectors.module[0].line",
+          "$.dependency_graph.observed.effect_declarations.orket.adapters.vcs.gitea_artifact_exporter.classes.GiteaArtifactExporter@36",
+          "$.dependency_graph.observed.effect_declarations.orket.adapters.vcs.gitea_artifact_exporter.classes.GiteaArtifactExporter@38",
+          "$.dependency_graph.observed.effect_declarations.orket.adapters.vcs.gitea_artifact_exporter.module[0].line",
+          "$.dependency_graph.observed.files_scanned",
+          "$.dependency_graph.observed.layer_edges[0].count"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T23:45:40.022326Z",
+      "changed": true,
+      "before_digest": "sha256:b67320ab85c293120da2660f6711fe88c016ce3f5576e27f5f5f14a9aa568ea0",
+      "after_digest": "sha256:5e12caa886781b5257ccbd99cc917d4b84dd47decf78c3ae06324d3312f5ff2f",
       "diff": {
         "added_paths": 0,
         "removed_paths": 0,

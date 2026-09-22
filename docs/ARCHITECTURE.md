@@ -44,6 +44,13 @@ renewal use a body-size limit compiled from the captured construction environmen
 Raw native embeddings supply that integer; recreate adapters to change policy.
 Request-input migration: `docs/architecture/CONTRACT_DELTA_GITEA_REQUEST_INPUTS_D_2026-09-22.md`.
 
+Artifact-export and builtin HTTP use the application short-request owner for captured
+network inputs, native construction and complete resource cleanup. Exporters retain
+construction configuration; builtin HTTP observes configuration per request. Raw
+embeddings supply the request port; async exporter construction retains the native
+factory. Contract: `docs/specs/SHORT_HTTP_REQUEST_OWNERSHIP.md`; migration:
+`docs/architecture/CONTRACT_DELTA_SHORT_HTTP_OWNERSHIP_D_2026-09-22.md`.
+
 SDK workload parents validate configured capability identifiers before dispatch without
 constructing unused providers. The native child owns default model clients through
 construction, authorization, execution and cleanup; a cleanup failure cannot publish

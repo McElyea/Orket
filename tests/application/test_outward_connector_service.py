@@ -123,13 +123,10 @@ async def test_connector_service_http_allowlist_admits_matching_host(
         def __init__(self, *args: Any, **kwargs: Any) -> None:
             pass
 
-        async def __aenter__(self) -> "_Client":
-            return self
-
-        async def __aexit__(self, _exc_type: Any, _exc: Any, _tb: Any) -> None:
+        async def aclose(self) -> None:
             return None
 
-        async def get(self, url: str) -> httpx.Response:
+        async def request(self, method: str, url: str, **_options: Any) -> httpx.Response:
             assert url == "https://example.com/resource"
             return httpx.Response(200, text="ok")
 

@@ -23,6 +23,7 @@ from orket.adapters.tools.registry import (
 )
 from orket.application.services.command_process_supervisor import CommandProcessCancelled, CommandProcessSupervisor
 from orket.application.services.connector_invocation_timing import ConnectorInvocationTimer
+from orket.application.services.owned_http_request_service import OwnedHttpRequestService
 from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.core.contracts.owned_command import CommandExecutionUncertain
 from orket.core.domain.outward_authorization import OutwardAuthorization, args_hash
@@ -81,6 +82,7 @@ class OutwardConnectorService:
         self.executor = executor or BuiltInConnectorExecutor(
             workspace_root=workspace_root,
             command_runner=CommandProcessSupervisor(workspace_root, cancellation_event="outward_command_cancelled"),
+            http_requester=OwnedHttpRequestService(),
             http_allowlist=http_allowlist,
         )
 
@@ -158,7 +160,7 @@ class OutwardConnectorService:
         self, connector_name: str, args: dict[str, Any], *, authorization: OutwardAuthorization | None = None,
     ) -> tuple[dict[str, Any], dict[str, Any]]:
         metadata = self._require_metadata(connector_name)
-        validated_args = self.validate_args(metadata.name, args)
+        validated_args = deepcopy(self.validate_args(metadata.name, args))
         bound = {"authorization": authorization} if authorization is not None and metadata.name in BOUND_FILESYSTEM_TOOLS else {}
         timer = ConnectorInvocationTimer(self._monotonic_ns, clock_ref=self._clock_ref)
         finished, interruption = False, "unresolved"

@@ -6,7 +6,7 @@ import os
 
 import pytest
 
-from orket.adapters.vcs.gitea_artifact_exporter import GiteaArtifactExporter
+from orket.application.services.gitea_artifact_exporter_factory import create_gitea_artifact_exporter
 from tests.helpers.epic_export_recovery import recovery_request
 from tests.helpers.gitea_server import get_visible, local_gitea
 from tests.integration.test_epic_closeout_process import read_barrier
@@ -99,7 +99,7 @@ async def test_exact_export_recovery_refuses_changed_remote_history(test_root, w
                 preparation, owner = await transaction.get_preparation(), await transaction.export_dispatch.get()
             other_workspace = test_root / "unrelated-workspace"
             await asyncio.to_thread((other_workspace / "agent_output").mkdir, parents=True)
-            other = await asyncio.to_thread(GiteaArtifactExporter, other_workspace)
+            other = await asyncio.to_thread(create_gitea_artifact_exporter, other_workspace)
             run = {"run_id": "unrelated", "run_type": "epic", "run_name": "external-fixture", "build_id": "other",
                    "session_status": "done", "summary": {}, "export_day": "2026-09-13",
                    "export_time": "2026-09-13T12:00:00+00:00"}

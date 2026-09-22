@@ -5,6 +5,17 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.95] - 2026-09-22
+
+### Fixed
+- Own exporter and builtin HTTP native construction, loaded responses and cleanup through interruption using the existing captured network and lifetime authorities.
+- Preserve captured exporter network inputs and per-request builtin configuration; snapshot borrowed request values before native dispatch.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Raw exporter/builtin executor embeddings supply `HttpRequestPort`; normal application composition supplies it. Async exporter construction uses the owned native factory. Migration: `docs/architecture/CONTRACT_DELTA_SHORT_HTTP_OWNERSHIP_D_2026-09-22.md`.
+- Scoped proof leaves exporter Git/filesystem, Linux clock, wider D/E/CAP and full release acceptance open.
+
 ## [0.6.94] - 2026-09-22
 
 ### Fixed

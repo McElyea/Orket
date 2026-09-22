@@ -11,6 +11,7 @@ from orket.adapters.execution.owned_io import run_owned_io, run_owned_thread
 from orket.adapters.storage.bound_filesystem import BOUND_FILESYSTEM_TOOLS, BoundFilesystemExecutor
 from orket.adapters.tools.families.filesystem import FileSystemTools
 from orket.core.contracts.owned_command import CommandExecutionUncertain, CommandRunner
+from orket.core.contracts.provider_http import HttpRequestPort
 from orket.core.domain.outward_authorization import OutwardAuthorization
 
 BUILTIN_CONNECTOR_SIDE_EFFECTS: dict[str, bool] = {
@@ -39,10 +40,12 @@ class BuiltInConnectorExecutor:
         *,
         workspace_root: Path,
         command_runner: CommandRunner,
+        http_requester: HttpRequestPort,
         http_allowlist: tuple[str, ...] = (),
     ) -> None:
         self.workspace_root = workspace_root
         self.command_runner = command_runner
+        self.http_requester = http_requester
         self.file_tools = FileSystemTools(workspace_root, references=[])
         self.bound_filesystem = BoundFilesystemExecutor()
         self.http_allowlist = tuple(host.strip().lower() for host in http_allowlist if host.strip())
@@ -127,8 +130,7 @@ class BuiltInConnectorExecutor:
         try:
             url = _require_url(args)
             self._require_allowlisted_url(url)
-            async with httpx.AsyncClient(timeout=timeout_seconds) as client:
-                response = await client.get(url)
+            response = await self.http_requester.request("GET", url, timeout_s=timeout_seconds)
             return _http_result(response)
         except (httpx.HTTPError, PermissionError, ValueError, TypeError) as exc:
             return {"ok": False, "error": str(exc)}
@@ -138,8 +140,8 @@ class BuiltInConnectorExecutor:
             url = _require_url(args)
             self._require_allowlisted_url(url)
             body = args.get("body")
-            async with httpx.AsyncClient(timeout=timeout_seconds) as client:
-                response = await client.post(url, json=body if isinstance(body, dict) else None, content=body if isinstance(body, str) else None)
+            response = await self.http_requester.request("POST", url, timeout_s=timeout_seconds,
+                json=body if isinstance(body, dict) else None, content=body if isinstance(body, str) else None)
             return _http_result(response)
         except (httpx.HTTPError, PermissionError, ValueError, TypeError) as exc:
             return {"ok": False, "error": str(exc)}

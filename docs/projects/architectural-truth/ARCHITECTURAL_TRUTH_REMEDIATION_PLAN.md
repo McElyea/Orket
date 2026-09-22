@@ -22777,3 +22777,98 @@ causes; ProductFlow replay, legacy Kernel completion, fresh full-suite 89% cover
 hosted Gitea Quality, E1 taxonomy/no-op/Ruff, E2 bounded authority/decomposition and
 all CAP-1/2/3 criteria. No whole-plan completion, main merge, release readiness or
 lane retirement. Explicit user acceptance remains required for retirement.
+
+
+#### .95 Exporter and builtin HTTP request ownership (2026-09-22)
+
+Responsible maintainer: Codex for Orket Core. Canonical D2/D3 after .94.
+`compatibility_status`: `breaking`; `affected_audience`: `all`;
+`migration_requirement`: `required`.
+
+Application composition supplies HttpRequestPort through OwnedHttpRequestService.
+Each request reuses captured network policy, native construction, runtime lifetime
+and acquired-resource cleanup. Exporter factory captures binding and network inputs
+together; builtin HTTP retains per-request ambient observation. Nested request
+values and invocation arguments are copied before dispatch so the sent body and
+reported argument identity agree. Native exporter construction refuses loop entry.
+Raw exporter/builtin embeddings supply the port. Allowlist, Basic authentication,
+statuses, existing HTTP error envelopes, export intent/recovery and deadlines stay
+intact; the underlying ownership authorities remain byte-identical.
+
+Identical source/installed .94 opening: 16 cases, 15 failures, one healthy proxy
+control. Three routing failures, three native TLS/SQLite stalls and nine abandoned
+connection-pool closes reproduce. A further actual POST identity case fails on
+source and .94; the final exact installed module records 17 cases / 16 failures /
+one pass. Its bytes match the accepted module. Two earlier client/transport hooks
+missed HTTPX context-manager exit and are retained as invalid cleanup diagnostics.
+Retain the initial syntax error, a POST fixture missing its required body, and
+helper/path/lint corrections; they do not establish runtime defects or acceptance.
+The final focused run passes 73 cases, including all 57 new integration cases.
+Every previous test assertion and untouched domain method remains AST-identical.
+
+| Cell | Tests / failures / errors / skips | JUnit seconds | Installed origins |
+|---|---|---|---|
+| Fresh source | 2290 / 0 / 0 / 0 | 403.328 | source |
+| Installed a95-win-py311 | 2290 / 0 / 0 / 0 | 405.636 | 1047 |
+| Installed a95-win-py312 | 2290 / 0 / 0 / 0 | 510.271 | 1047 |
+
+All 2214 .94 identities remain across 220 modules. Each cell has 140 actual SQLite
+observations under the unchanged 0.5s bound; maximum 0.171278000s. Complete
+source/wheel/sdist parity: 1161 Python plus 20 unchanged data files (1181 total),
+2400 frozen support inputs. Canonical C: 1161 modules,
+3810 edges, six dynamic routes, no violations, unknown modules, cycles, collection
+errors or adapter-effect violations. Ruff has 88 existing findings / zero introduced;
+the migrated mock removes one unused context-manager method with an old lint finding.
+Scoped lint, size, docs hygiene, release policy, staged binding and whitespace pass.
+Scoped AC-01 through AC-08 and AC-10 pass; AC-09 remains partial for wider replay.
+Baseline collection stays true and release readiness false. Both Quality jobs select
+the new controls; hosted Quality itself remains unavailable.
+
+Separate actual disposable Gitea proof: 19 cases pass, covering state/pipeline,
+signed webhook review, export/lost-reply recovery, dispatch-owner fencing, retained
+payload/commit identity and changed-history refusal. Owned containers are removed;
+the pre-existing container is unchanged. Workload execution is controlled, not live
+model correctness. No fresh model inference or installed public CLI proof is claimed.
+The original September20 snapshot and all 121 .94 hashes are verified; the original
+C:/Source/Orket checkout remains unchanged.
+
+Fresh passive Linux clock observation: environment blocker; elapsed
+240.019511342s, synchronized quiet 25.211878083s;
+wall-minus-monotonic steps -6.018610816s to
+6.026590404s. Original 240s maximum, 60s quiet and
+0.01s step thresholds are unchanged. No settings changed or Linux application cell
+launched. Retain the earlier .72 failure; a passive observation cannot establish
+clock-cause repair or application acceptance. Receipt: .tmp/d-short-http-ownership/linux-clock-preflight.json.
+
+Next ordered scope: exporter Git/filesystem input capture and ownership. Independent
+source observations in next-export/observations.json show a borrowed environment
+changing actual Git author identity (healthy unchanged control passes), and a
+cancelled prepare_export returning before its native worker writes a manifest with
+a later-mutated summary. The probe explicitly releases and joins that worker; no
+remote HTTP or Git push occurs. These are unrepaired next-scope counterexamples.
+A further real local Git fixture returns zero while its child survives with closed
+standard handles; after an independent release, that child writes a late effect.
+The probe waits and reaps the child. next-git-child/observation.json retains this
+command-lifetime counterexample; it is not hostile-code containment or a .95 repair.
+Preserve export intent, path containment, recovery, command bounds and credentials
+while reusing existing native and command owners. A separate actual builtin HTTP
+interruption probe holds logging directory preparation for 0.75s on the event loop,
+delaying actual SQLite to 0.774241100s. Client/listener
+teardown and probe-owned logging-queue drain complete. The first diagnostic held
+an unused legacy path and observed no hold; retain it as a non-reproduction.
+The corrected next-logging-verified/ observation concerns synchronous setup_logging,
+not ordinary filesystem latency or repaired .95 behavior. Follow exporter work
+with this telemetry boundary. Lazy TLS directory I/O and wider async reachability
+remain separate obligations. The Git-visible structural async inventory records
+251 direct call-spelling candidates in 81 of 1161 modules, with source hashes and
+explicit analysis limits in async-effect-discovery.json. These are review candidates,
+not 251 proven violations; synchronous callees, receiver types, ownership and CLI
+exemptions still require disposition before whole-D3 acceptance.
+
+Authority: docs/specs/SHORT_HTTP_REQUEST_OWNERSHIP.md and its .95 contract delta.
+Proof root: .tmp/d-short-http-ownership/. Wider D2/D3/D4, fresh full-suite 89%
+coverage, E1 taxonomy/no-op/Ruff, E2 bounded authority/decomposition, ProductFlow
+replay, legacy Kernel cutover, actual selected llama.cpp and CAP-1/2/3 remain open.
+Prior unknown Git timeout, physical-sleep/Windows latency and CPython3.12 shutdown
+observations remain retained. No whole-plan completion, main merge, release
+readiness or retirement. Explicit user acceptance remains required for retirement.

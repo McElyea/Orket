@@ -16,12 +16,12 @@ from orket.adapters.storage.async_repositories import (
 from orket.adapters.storage.control_plane_transaction import SQLiteControlPlaneTransactions
 from orket.adapters.storage.epic_continuation_lock import EpicContinuationLocks
 from orket.adapters.storage.epic_publication_repository import SQLiteEpicPublicationRepository
-from orket.adapters.vcs.gitea_artifact_exporter import GiteaArtifactExporter
 from orket.application.services.cards_epic_control_plane_service import CardsEpicControlPlaneService
 from orket.application.services.decision_node_registry import DecisionNodeRegistry, build_decision_node_registry
 from orket.application.services.epic_approval_pause_service import EpicApprovalPauseService
 from orket.application.services.epic_preparation_service import EpicPreparationService
 from orket.application.services.epic_publication_service import EpicPublicationService
+from orket.application.services.gitea_artifact_exporter_factory import create_gitea_artifact_exporter
 from orket.application.services.runtime_construction_inputs import RuntimeConstructionInputs
 from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.application.services.runtime_resource_cleanup import close_runtime_resources
@@ -120,7 +120,7 @@ class ExecutionPipeline(
         self.success = self.runtime_context.success_repo
         self.run_ledger = self.runtime_context.run_ledger
         inputs = self.runtime_context.construction_inputs
-        self.artifact_exporter = GiteaArtifactExporter(self.workspace,
+        self.artifact_exporter = create_gitea_artifact_exporter(self.workspace,
             environment=inputs.environment if inputs else None, invocation_root=inputs.invocation_root if inputs else None)
 
         self.notes = NoteStore()

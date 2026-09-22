@@ -16,8 +16,10 @@ from urllib import parse
 
 import httpx
 
+from orket.adapters.execution.owned_io import require_sync_context
 from orket.adapters.vcs.gitea_export_git import GiteaExportGit
 from orket.core.contracts.gitea_export import GiteaExportIntent
+from orket.core.contracts.provider_http import HttpRequestPort
 from orket.core.domain.outward_authorization import canonical_json
 from orket.runtime_paths import resolve_gitea_artifact_cache_root
 
@@ -38,8 +40,10 @@ class GiteaArtifactExporter:
 
     side_effecting = True
 
-    def __init__(self, workspace: Path, *, environment: Mapping[str, str] | None = None,
+    def __init__(self, workspace: Path, *, http_requester: HttpRequestPort, environment: Mapping[str, str] | None = None,
                  invocation_root: Path | None = None):
+        require_sync_context(code="E_GITEA_EXPORT_CONSTRUCTION_REQUIRES_ASYNC_OWNER")
+        self._http_requester = http_requester
         observed, root = dict(os.environ if environment is None else environment), invocation_root or Path.cwd()
         self.workspace = (root / workspace).resolve()
         self._username = observed.get("GITEA_ADMIN_USER", "").strip()
@@ -159,11 +163,11 @@ class GiteaArtifactExporter:
                               self._git_auth_env(self._username, self._password, environment))
 
     async def _request(self, method: str, path: str, payload: dict[str, Any] | None = None) -> int:
-        async with httpx.AsyncClient(timeout=30, auth=(self._username, self._password)) as client:
-            try:
-                response = await client.request(method, self._binding["gitea_url"].rstrip("/") + path, json=payload)
-            except httpx.HTTPError as exc:
-                raise RuntimeError("E_GITEA_EXPORT_HTTP_UNAVAILABLE") from exc
+        try:
+            response = await self._http_requester.request(method, self._binding["gitea_url"].rstrip("/") + path,
+                timeout_s=30, auth=(self._username, self._password), json=payload)
+        except httpx.HTTPError as exc:
+            raise RuntimeError("E_GITEA_EXPORT_HTTP_UNAVAILABLE") from exc
         if response.status_code not in {200, 201, 404, 409}:
             raise RuntimeError("E_GITEA_EXPORT_HTTP_STATUS:" + str(response.status_code))
         return response.status_code

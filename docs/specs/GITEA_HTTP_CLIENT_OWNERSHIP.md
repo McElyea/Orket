@@ -46,8 +46,8 @@ transport, input and lifetime behavior. Actual disposable Gitea proof is separat
 and must verify container/listener/client teardown. Neither proves model correctness,
 CAP acceptance, remote-effect rollback or a stuck-thread termination bound.
 Trust-directory contents remain live and OpenSSL can load them during handshake.
-HTTP artifact export, builtin connectors and wider
-D2/D3/D4 effect coverage remain separate work. Linux clock, full coverage, hosted
+HTTP artifact export and builtin connector ownership follow
+`SHORT_HTTP_REQUEST_OWNERSHIP.md`. Wider D2/D3/D4 effect coverage remains open. Linux clock, full coverage, hosted
 Quality and E/CAP acceptance are not inferred from this contract.
 
 The async webhook builder snapshots a supplied configuration mapping before its

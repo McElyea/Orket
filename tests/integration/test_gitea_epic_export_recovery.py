@@ -8,7 +8,7 @@ import os
 import httpx
 import pytest
 
-from orket.adapters.vcs.gitea_artifact_exporter import GiteaArtifactExporter
+from orket.application.services.gitea_artifact_exporter_factory import create_gitea_artifact_exporter
 from tests.helpers.gitea_server import docker, get_visible, local_gitea
 from tests.integration.test_epic_closeout_process import read_barrier
 from tests.integration.test_epic_completion_publication import accept_publication_card, publication_pipeline
@@ -112,7 +112,7 @@ async def test_retained_export_commit_binds_payload_and_rejects_substitution(tes
         await asyncio.to_thread(output.mkdir, exist_ok=True)
         original_payload = " original payload\n"
         await asyncio.to_thread((output / "result.txt").write_bytes, original_payload.encode("utf-8"))
-        exporter = GiteaArtifactExporter(workspace)
+        exporter = await asyncio.to_thread(create_gitea_artifact_exporter, workspace)
         run = {"run_id": "frozen-export", "run_type": "epic", "run_name": "proof", "build_id": "build",
                "session_status": "done", "summary": {"status": "done"}, "export_day": "2026-09-12",
                "export_time": "2026-09-12T12:00:00+00:00"}

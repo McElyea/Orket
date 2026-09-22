@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-22T22:30:00.458105+00:00",
+  "generated_at": "2026-09-22T23:15:33.601618+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -657,7 +657,7 @@
       },
       "orket.adapters.tools.builtin_connectors": {
         "path": "orket/adapters/tools/builtin_connectors.py",
-        "sha256": "13b3374077d110caf35eaed1c1d3dc5d5ba2d568527a2279a45be41ff4f4ad9c"
+        "sha256": "9e46a3157f3ac5cbbaec1532d9ed91b7c98454b3d53912bf6a57b1f2e37294a9"
       },
       "orket.adapters.tools.families.__init__": {
         "path": "orket/adapters/tools/families/__init__.py",
@@ -705,7 +705,7 @@
       },
       "orket.adapters.vcs.gitea_artifact_exporter": {
         "path": "orket/adapters/vcs/gitea_artifact_exporter.py",
-        "sha256": "6fc931fba6f0c63efd4349bc77b39deacfd72ab5128e2ffbc5d2d6d605a103ef"
+        "sha256": "79c2c7dc62052e2bb90d18c3f1acc8b5439fedbcca1c3907d80a3b741189cfdb"
       },
       "orket.adapters.vcs.gitea_export_git": {
         "path": "orket/adapters/vcs/gitea_export_git.py",
@@ -1171,6 +1171,10 @@
         "path": "orket/application/services/flow_runtime_service.py",
         "sha256": "d06a79f59514acfba95bb6693112c5fbad279380855f8a2ed8d7bdab13d00bed"
       },
+      "orket.application.services.gitea_artifact_exporter_factory": {
+        "path": "orket/application/services/gitea_artifact_exporter_factory.py",
+        "sha256": "17bde3dd0b1957affe3be6ac20e648644722a8318eb9511d3e5c8f286a98ac7e"
+      },
       "orket.application.services.gitea_pr_lifecycle_service": {
         "path": "orket/application/services/gitea_pr_lifecycle_service.py",
         "sha256": "8a464f5461b6b30bf71224edeb08fe20a7ad8bd6d1bbeb108f99fed10168e323"
@@ -1609,7 +1613,7 @@
       },
       "orket.application.services.outward_connector_service": {
         "path": "orket/application/services/outward_connector_service.py",
-        "sha256": "02f9fceb1eca36c236774ecebc98c8207a91bb4b0e0bb0ea4d5143ac5d34ccae"
+        "sha256": "4ca3da0002043f06742a99955ef736042de553eb4704ac8a019ce7bc0710cab4"
       },
       "orket.application.services.outward_control_plane_service": {
         "path": "orket/application/services/outward_control_plane_service.py",
@@ -1694,6 +1698,10 @@
       "orket.application.services.outward_terminal_service": {
         "path": "orket/application/services/outward_terminal_service.py",
         "sha256": "51eaa8f7891a4efe85e9ce8cc4a9757294587861b61a8fb1e7cd14325bd7d3ea"
+      },
+      "orket.application.services.owned_http_request_service": {
+        "path": "orket/application/services/owned_http_request_service.py",
+        "sha256": "8c533a9a6de47615ab1ef89039d52f5b806b92f982e9773582ad90100a92e96a"
       },
       "orket.application.services.pending_gate_control_plane_operator_service": {
         "path": "orket/application/services/pending_gate_control_plane_operator_service.py",
@@ -2517,7 +2525,7 @@
       },
       "orket.core.contracts.provider_http": {
         "path": "orket/core/contracts/provider_http.py",
-        "sha256": "861a3576af16a8a5b54be678de26c2a2bb4aeb366e2e835e030694f04fd2810f"
+        "sha256": "356129f581e526720b97b66497a75bcfe99642199523a5b065154b90fa86f445"
       },
       "orket.core.contracts.provider_preparation": {
         "path": "orket/core/contracts/provider_preparation.py",
@@ -3941,7 +3949,7 @@
       },
       "orket.runtime.execution.execution_pipeline": {
         "path": "orket/runtime/execution/execution_pipeline.py",
-        "sha256": "53e08da85661ca592bfae4b872deaf0460128d022a960e5763b2ebe8f27338df"
+        "sha256": "86284dc734f8c01b9ac43a292ff0a65018a962c6c727876b672885bf66491dc1"
       },
       "orket.runtime.execution.execution_pipeline_artifact_provenance": {
         "path": "orket/runtime/execution/execution_pipeline_artifact_provenance.py",
@@ -6797,15 +6805,15 @@
       "orket.adapters.tools.builtin_connectors": {
         "module": [
           {
-            "line": 27,
+            "line": 28,
             "kind": "Assign",
             "direct": true,
             "literal": true
           }
         ],
         "classes": {
-          "BuiltInConnectorExecutionError@30": [],
-          "BuiltInConnectorExecutor@34": []
+          "BuiltInConnectorExecutionError@31": [],
+          "BuiltInConnectorExecutor@35": []
         }
       },
       "orket.adapters.tools.families.__init__": {
@@ -6981,16 +6989,16 @@
       "orket.adapters.vcs.gitea_artifact_exporter": {
         "module": [
           {
-            "line": 24,
+            "line": 26,
             "kind": "Assign",
             "direct": true,
             "literal": true
           }
         ],
         "classes": {
-          "GiteaArtifactExporter@36": [
+          "GiteaArtifactExporter@38": [
             {
-              "line": 39,
+              "line": 41,
               "kind": "Assign",
               "direct": true,
               "literal": true
@@ -9662,9 +9670,16 @@
       },
       {
         "source": "orket.adapters.tools.builtin_connectors",
-        "target": "orket.core.domain.outward_authorization",
+        "target": "orket.core.contracts.provider_http",
         "path": "orket/adapters/tools/builtin_connectors.py",
         "line": 14,
+        "kind": "from"
+      },
+      {
+        "source": "orket.adapters.tools.builtin_connectors",
+        "target": "orket.core.domain.outward_authorization",
+        "path": "orket/adapters/tools/builtin_connectors.py",
+        "line": 15,
         "kind": "from"
       },
       {
@@ -9914,30 +9929,44 @@
       },
       {
         "source": "orket.adapters.vcs.gitea_artifact_exporter",
-        "target": "orket.adapters.vcs.gitea_export_git",
+        "target": "orket.adapters.execution.owned_io",
         "path": "orket/adapters/vcs/gitea_artifact_exporter.py",
         "line": 19,
         "kind": "from"
       },
       {
         "source": "orket.adapters.vcs.gitea_artifact_exporter",
-        "target": "orket.core.contracts.gitea_export",
+        "target": "orket.adapters.vcs.gitea_export_git",
         "path": "orket/adapters/vcs/gitea_artifact_exporter.py",
         "line": 20,
         "kind": "from"
       },
       {
         "source": "orket.adapters.vcs.gitea_artifact_exporter",
-        "target": "orket.core.domain.outward_authorization",
+        "target": "orket.core.contracts.gitea_export",
         "path": "orket/adapters/vcs/gitea_artifact_exporter.py",
         "line": 21,
         "kind": "from"
       },
       {
         "source": "orket.adapters.vcs.gitea_artifact_exporter",
-        "target": "orket.runtime_paths",
+        "target": "orket.core.contracts.provider_http",
         "path": "orket/adapters/vcs/gitea_artifact_exporter.py",
         "line": 22,
+        "kind": "from"
+      },
+      {
+        "source": "orket.adapters.vcs.gitea_artifact_exporter",
+        "target": "orket.core.domain.outward_authorization",
+        "path": "orket/adapters/vcs/gitea_artifact_exporter.py",
+        "line": 23,
+        "kind": "from"
+      },
+      {
+        "source": "orket.adapters.vcs.gitea_artifact_exporter",
+        "target": "orket.runtime_paths",
+        "path": "orket/adapters/vcs/gitea_artifact_exporter.py",
+        "line": 24,
         "kind": "from"
       },
       {
@@ -13137,6 +13166,34 @@
         "target": "orket.exceptions",
         "path": "orket/application/services/flow_runtime_service.py",
         "line": 15,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.gitea_artifact_exporter_factory",
+        "target": "orket.adapters.execution.owned_io",
+        "path": "orket/application/services/gitea_artifact_exporter_factory.py",
+        "line": 5,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.gitea_artifact_exporter_factory",
+        "target": "orket.adapters.vcs.gitea_artifact_exporter",
+        "path": "orket/application/services/gitea_artifact_exporter_factory.py",
+        "line": 6,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.gitea_artifact_exporter_factory",
+        "target": "orket.application.services.owned_http_request_service",
+        "path": "orket/application/services/gitea_artifact_exporter_factory.py",
+        "line": 7,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.gitea_artifact_exporter_factory",
+        "target": "orket.application.services.process_input_service",
+        "path": "orket/application/services/gitea_artifact_exporter_factory.py",
+        "line": 8,
         "kind": "from"
       },
       {
@@ -17243,30 +17300,37 @@
       },
       {
         "source": "orket.application.services.outward_connector_service",
-        "target": "orket.application.services.runtime_input_service",
+        "target": "orket.application.services.owned_http_request_service",
         "path": "orket/application/services/outward_connector_service.py",
         "line": 26,
         "kind": "from"
       },
       {
         "source": "orket.application.services.outward_connector_service",
-        "target": "orket.core.contracts.owned_command",
+        "target": "orket.application.services.runtime_input_service",
         "path": "orket/application/services/outward_connector_service.py",
         "line": 27,
         "kind": "from"
       },
       {
         "source": "orket.application.services.outward_connector_service",
-        "target": "orket.core.domain.outward_authorization",
+        "target": "orket.core.contracts.owned_command",
         "path": "orket/application/services/outward_connector_service.py",
         "line": 28,
         "kind": "from"
       },
       {
         "source": "orket.application.services.outward_connector_service",
-        "target": "orket.logging",
+        "target": "orket.core.domain.outward_authorization",
         "path": "orket/application/services/outward_connector_service.py",
         "line": 29,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.outward_connector_service",
+        "target": "orket.logging",
+        "path": "orket/application/services/outward_connector_service.py",
+        "line": 30,
         "kind": "from"
       },
       {
@@ -18352,6 +18416,34 @@
         "target": "orket.core.domain.outward_runs",
         "path": "orket/application/services/outward_terminal_service.py",
         "line": 29,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.owned_http_request_service",
+        "target": "orket.application.services.captured_http_client_service",
+        "path": "orket/application/services/owned_http_request_service.py",
+        "line": 9,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.owned_http_request_service",
+        "target": "orket.application.services.native_resource_construction",
+        "path": "orket/application/services/owned_http_request_service.py",
+        "line": 10,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.owned_http_request_service",
+        "target": "orket.application.services.process_input_service",
+        "path": "orket/application/services/owned_http_request_service.py",
+        "line": 11,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.owned_http_request_service",
+        "target": "orket.application.services.runtime_result_lifetime",
+        "path": "orket/application/services/owned_http_request_service.py",
+        "line": 12,
         "kind": "from"
       },
       {
@@ -30781,42 +30873,42 @@
       },
       {
         "source": "orket.runtime.execution.execution_pipeline",
-        "target": "orket.adapters.vcs.gitea_artifact_exporter",
+        "target": "orket.application.services.cards_epic_control_plane_service",
         "path": "orket/runtime/execution/execution_pipeline.py",
         "line": 19,
         "kind": "from"
       },
       {
         "source": "orket.runtime.execution.execution_pipeline",
-        "target": "orket.application.services.cards_epic_control_plane_service",
+        "target": "orket.application.services.decision_node_registry",
         "path": "orket/runtime/execution/execution_pipeline.py",
         "line": 20,
         "kind": "from"
       },
       {
         "source": "orket.runtime.execution.execution_pipeline",
-        "target": "orket.application.services.decision_node_registry",
+        "target": "orket.application.services.epic_approval_pause_service",
         "path": "orket/runtime/execution/execution_pipeline.py",
         "line": 21,
         "kind": "from"
       },
       {
         "source": "orket.runtime.execution.execution_pipeline",
-        "target": "orket.application.services.epic_approval_pause_service",
+        "target": "orket.application.services.epic_preparation_service",
         "path": "orket/runtime/execution/execution_pipeline.py",
         "line": 22,
         "kind": "from"
       },
       {
         "source": "orket.runtime.execution.execution_pipeline",
-        "target": "orket.application.services.epic_preparation_service",
+        "target": "orket.application.services.epic_publication_service",
         "path": "orket/runtime/execution/execution_pipeline.py",
         "line": 23,
         "kind": "from"
       },
       {
         "source": "orket.runtime.execution.execution_pipeline",
-        "target": "orket.application.services.epic_publication_service",
+        "target": "orket.application.services.gitea_artifact_exporter_factory",
         "path": "orket/runtime/execution/execution_pipeline.py",
         "line": 24,
         "kind": "from"
@@ -33976,7 +34068,7 @@
         "forwarded_arguments": 2
       }
     ],
-    "files_scanned": 1159,
+    "files_scanned": 1161,
     "scan_roots": [
       "orket"
     ],
@@ -34244,6 +34336,7 @@
       "orket.application.services.fixture_verification_service": "application",
       "orket.application.services.flow_authoring_service": "application",
       "orket.application.services.flow_runtime_service": "application",
+      "orket.application.services.gitea_artifact_exporter_factory": "application",
       "orket.application.services.gitea_pr_lifecycle_service": "application",
       "orket.application.services.gitea_pr_review_service": "application",
       "orket.application.services.gitea_sandbox_webhook_service": "application",
@@ -34375,6 +34468,7 @@
       "orket.application.services.outward_run_service": "application",
       "orket.application.services.outward_terminal_evidence": "application",
       "orket.application.services.outward_terminal_service": "application",
+      "orket.application.services.owned_http_request_service": "application",
       "orket.application.services.pending_gate_control_plane_operator_service": "application",
       "orket.application.services.preview_service": "application",
       "orket.application.services.process_input_service": "application",
@@ -35147,22 +35241,22 @@
       {
         "source": "adapters",
         "target": "adapters",
-        "count": 254
+        "count": 255
       },
       {
         "source": "adapters",
         "target": "core",
-        "count": 148
+        "count": 150
       },
       {
         "source": "application",
         "target": "adapters",
-        "count": 460
+        "count": 461
       },
       {
         "source": "application",
         "target": "application",
-        "count": 1843
+        "count": 1851
       },
       {
         "source": "application",
@@ -38029,20 +38123,20 @@
       {
         "module": "orket.adapters.tools.builtin_connectors",
         "path": "orket/adapters/tools/builtin_connectors.py",
-        "sha256": "13b3374077d110caf35eaed1c1d3dc5d5ba2d568527a2279a45be41ff4f4ad9c",
+        "sha256": "9e46a3157f3ac5cbbaec1532d9ed91b7c98454b3d53912bf6a57b1f2e37294a9",
         "side_effecting": true,
         "declarations": {
           "module": [
             {
-              "line": 27,
+              "line": 28,
               "kind": "Assign",
               "direct": true,
               "literal": true
             }
           ],
           "classes": {
-            "BuiltInConnectorExecutionError@30": [],
-            "BuiltInConnectorExecutor@34": []
+            "BuiltInConnectorExecutionError@31": [],
+            "BuiltInConnectorExecutor@35": []
           }
         }
       },
@@ -38285,21 +38379,21 @@
       {
         "module": "orket.adapters.vcs.gitea_artifact_exporter",
         "path": "orket/adapters/vcs/gitea_artifact_exporter.py",
-        "sha256": "6fc931fba6f0c63efd4349bc77b39deacfd72ab5128e2ffbc5d2d6d605a103ef",
+        "sha256": "79c2c7dc62052e2bb90d18c3f1acc8b5439fedbcca1c3907d80a3b741189cfdb",
         "side_effecting": true,
         "declarations": {
           "module": [
             {
-              "line": 24,
+              "line": 26,
               "kind": "Assign",
               "direct": true,
               "literal": true
             }
           ],
           "classes": {
-            "GiteaArtifactExporter@36": [
+            "GiteaArtifactExporter@38": [
               {
-                "line": 39,
+                "line": 41,
                 "kind": "Assign",
                 "direct": true,
                 "literal": true
@@ -38810,45 +38904,6 @@
     "adapter_effect_violations": []
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-22T06:29:05.385356Z",
-      "changed": true,
-      "before_digest": "sha256:a8b23338b69eed851370ad99cbcdfcb312dfb87a7fa5e757394e6145273ca3e5",
-      "after_digest": "sha256:35003a9ee410cb811f8602903855e523b76c203c5b351583f66c45a73f4943d6",
-      "diff": {
-        "added_paths": 16,
-        "removed_paths": 0,
-        "changed_paths": 8886,
-        "initial_write": false,
-        "paths_total_previous": 48528,
-        "paths_total_current": 48674,
-        "paths_total_reference": 48674,
-        "churn_paths": 8902,
-        "churn_ratio": 0.18289,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.edges[1164].line",
-          "$.observed.edges[1164].path",
-          "$.observed.edges[1164].source",
-          "$.observed.edges[1164].target",
-          "$.observed.edges[1165].line",
-          "$.observed.edges[1165].path",
-          "$.observed.edges[1165].source",
-          "$.observed.edges[1165].target",
-          "$.observed.edges[1166].line",
-          "$.observed.edges[1166].target",
-          "$.observed.edges[1167].path",
-          "$.observed.edges[1167].source",
-          "$.observed.edges[1167].target",
-          "$.observed.edges[1168].path",
-          "$.observed.edges[1168].source",
-          "$.observed.edges[1169].line",
-          "$.observed.edges[1169].path",
-          "$.observed.edges[1169].source",
-          "$.observed.edges[1169].target"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-22T06:40:28.163183Z",
       "changed": true,
@@ -39769,6 +39824,45 @@
           "$.observed.edges[840].target",
           "$.observed.edges[841].line",
           "$.observed.edges[841].target"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T23:15:56.229546Z",
+      "changed": true,
+      "before_digest": "sha256:3311f506d6b488930f062fedbe9876f71910b9fcd08180a60edcc4c1403a3d6a",
+      "after_digest": "sha256:a7b760b29a2f4ed288fcb8ff6cdbdc5c5bd679932b182681b68a6b9376471ee6",
+      "diff": {
+        "added_paths": 22,
+        "removed_paths": 6,
+        "changed_paths": 12157,
+        "initial_write": false,
+        "paths_total_previous": 57311,
+        "paths_total_current": 57457,
+        "paths_total_reference": 57457,
+        "churn_paths": 12185,
+        "churn_ratio": 0.212072,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.adapter_effects[132].declarations.classes.BuiltInConnectorExecutionError@30",
+          "$.observed.adapter_effects[132].declarations.classes.BuiltInConnectorExecutor@34",
+          "$.observed.adapter_effects[132].declarations.classes.BuiltInConnectorExecutionError@31",
+          "$.observed.adapter_effects[132].declarations.classes.BuiltInConnectorExecutor@35",
+          "$.observed.adapter_effects[132].declarations.module[0].line",
+          "$.observed.adapter_effects[132].sha256",
+          "$.observed.adapter_effects[144].declarations.classes.GiteaArtifactExporter@36",
+          "$.observed.adapter_effects[144].declarations.classes.GiteaArtifactExporter@38",
+          "$.observed.adapter_effects[144].declarations.module[0].line",
+          "$.observed.adapter_effects[144].sha256",
+          "$.observed.edges[332].target",
+          "$.observed.edges[333].line",
+          "$.observed.edges[333].path",
+          "$.observed.edges[333].source",
+          "$.observed.edges[333].target",
+          "$.observed.edges[334].line",
+          "$.observed.edges[334].target",
+          "$.observed.edges[335].line",
+          "$.observed.edges[335].target"
         ]
       }
     }
