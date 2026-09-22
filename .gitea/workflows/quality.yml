@@ -86,6 +86,7 @@ jobs:
           python -m pytest -q tests/platform/test_adapter_effect_classification.py tests/platform/test_dependency_policy_contract.py tests/platform/test_dependency_imports.py tests/platform/test_dependency_importer_interception.py tests/platform/test_dependency_external_names.py
           python -m pytest -q tests/application/test_runtime_policy_inputs.py tests/integration/test_runtime_policy_request_inputs.py tests/integration/test_runtime_policy_request_lifetime.py
           python -m pytest -q tests/integration/test_provider_governance_command_lifetime.py tests/integration/test_provider_governance_command_outputs.py tests/contracts/test_provider_governance_command_refusals.py
+          python -m pytest -q tests/contracts/test_worker_native_entry.py tests/integration/test_worker_renewal_lifetime.py tests/integration/test_coordinator_lifetime.py tests/platform/test_leases.py tests/platform/test_hedged.py
 
       - name: Enforce governance proof engine and alias ownership
         run: |
@@ -482,6 +483,7 @@ jobs:
           python -m pytest -q tests/platform/test_adapter_effect_classification.py tests/platform/test_dependency_policy_contract.py tests/platform/test_dependency_imports.py tests/platform/test_dependency_importer_interception.py tests/platform/test_dependency_external_names.py
           python -m pytest -q tests/application/test_runtime_policy_inputs.py tests/integration/test_runtime_policy_request_inputs.py tests/integration/test_runtime_policy_request_lifetime.py
           python -m pytest -q tests/integration/test_provider_governance_command_lifetime.py tests/integration/test_provider_governance_command_outputs.py tests/contracts/test_provider_governance_command_refusals.py
+          python -m pytest -q tests/contracts/test_worker_native_entry.py tests/integration/test_worker_renewal_lifetime.py tests/integration/test_coordinator_lifetime.py tests/platform/test_leases.py tests/platform/test_hedged.py
 
       - name: Enforce governance proof engine and alias ownership
         run: |

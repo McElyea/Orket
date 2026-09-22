@@ -5,6 +5,19 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.88] - 2026-09-22
+
+### Fixed
+- Refuse Worker synchronous HTTP, sleep and random-delay effects on a running event loop.
+- Join renewal on every claimed-work exit and surface renewal failures before completion, retaining a concurrent work failure in the exception chain.
+- Preserve coordinator lease and hedged-result authority and caller ownership of the borrowed HTTP client.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Async callers must use the existing owned native worker, retain a finitely bounded HTTP client until the invocation settles, and handle propagated renewal errors.
+- Accepted coordinator effects survive interruption; `run_once` still reports a claimed-work attempt, not verified completion.
+- Contract: `docs/architecture/CONTRACT_DELTA_WORKER_RENEWAL_D_2026-09-22.md`.
+
 ## [0.6.87] - 2026-09-22
 
 ### Fixed

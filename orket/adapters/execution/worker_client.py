@@ -4,7 +4,10 @@ import random
 import threading
 import time
 from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Protocol
+
+from orket.adapters.execution.owned_io import require_sync_context
 
 side_effecting = True
 
@@ -47,6 +50,7 @@ class Worker:
         self.network_delay_fn = network_delay_fn
 
     def _delay(self) -> None:
+        require_sync_context(code="E_WORKER_REQUIRES_ASYNC_OWNER")
         if self.network_delay_fn is not None:
             self.network_delay_fn()
 
@@ -92,6 +96,7 @@ class Worker:
         )
 
     def _renew_loop(self, card_id: str, stop_event: threading.Event) -> None:
+        require_sync_context(code="E_WORKER_REQUIRES_ASYNC_OWNER")
         next_renew = self.monotonic_fn() + self.renew_interval
         while not stop_event.is_set():
             now = self.monotonic_fn()
@@ -105,18 +110,25 @@ class Worker:
     def run_claimed_work(
         self, card_id: str, *, work_duration: float, completion_result: dict[str, Any]
     ) -> ResponseLike:
-        """Sync-only helper. It spawns a renewal thread and must stay off the server event loop."""
+        """Retain native renewal and its failures before releasing work or completing."""
+        require_sync_context(code="E_WORKER_REQUIRES_ASYNC_OWNER")
         stop_event = threading.Event()
-        renew_thread = threading.Thread(target=self._renew_loop, args=(card_id, stop_event), daemon=True)
-        renew_thread.start()
-        deadline = self.monotonic_fn() + work_duration
-        while self.monotonic_fn() < deadline:
-            self.sleep_fn(0.005)
-        stop_event.set()
-        renew_thread.join()
+        with ThreadPoolExecutor(max_workers=1, thread_name_prefix="orket-worker-renewal") as owner:
+            renewal = owner.submit(self._renew_loop, card_id, stop_event)
+            try:
+                deadline = self.monotonic_fn() + work_duration
+                while self.monotonic_fn() < deadline:
+                    if renewal.done() and renewal.exception() is not None:
+                        break
+                    self.sleep_fn(0.005)
+            finally:
+                stop_event.set()
+                # A renewal failure remains visible, with any work failure chained.
+                renewal.result()
         return self.complete(card_id, completion_result)
 
     def run_once(self, *, work_duration: float = 0.1) -> bool:
+        require_sync_context(code="E_WORKER_REQUIRES_ASYNC_OWNER")
         cards = self.poll_open_cards()
         if not cards:
             self.sleep_fn(self.poll_interval)
@@ -139,6 +151,7 @@ def make_random_delay(seed: int, minimum: float = 0.0, maximum: float = 0.02) ->
     rng = random.Random(seed)
 
     def _delay() -> None:
+        require_sync_context(code="E_WORKER_REQUIRES_ASYNC_OWNER")
         time.sleep(rng.uniform(minimum, maximum))
 
     return _delay

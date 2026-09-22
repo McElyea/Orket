@@ -1,16 +1,15 @@
 """Layer: integration. Retained coordinator transitions with real SQLite and workers."""
 import asyncio
-import socket
 import threading
 
 import httpx
 import pytest
-import uvicorn
 
 from orket.application.services.coordinator_runtime_service import CoordinatorUnavailableError
 from orket.application.services.coordinator_store import InMemoryCoordinatorStore
 from orket.core.domain import LeaseStatus
 from tests.helpers.coordinator import Inputs, app_for, client_for
+from tests.helpers.coordinator_server import coordinator_server
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 
@@ -176,31 +175,12 @@ async def test_reversed_wall_time_is_refused_without_clamping(tmp_path):
 async def test_real_http_server_runs_coordinator_and_lifespan_close(tmp_path):
     app = app_for(tmp_path)
     owner = app.state.coordinator
-    with socket.socket() as listener:
-        listener.bind(("127.0.0.1", 0))
-        listener.listen()
-        port = listener.getsockname()[1]
-        server = uvicorn.Server(uvicorn.Config(app, lifespan="on", log_level="error"))
-        serving = asyncio.create_task(server.serve(sockets=[listener]))
-
-        async def wait_started():
-            while not server.started:
-                if serving.done():
-                    await serving
-                    raise AssertionError("HTTP server stopped before startup")
-                await asyncio.sleep(0.01)
-
-        try:
-            await asyncio.wait_for(wait_started(), 5)
-            async with httpx.AsyncClient(base_url=f"http://127.0.0.1:{port}", trust_env=False) as client:
-                listed = await client.get("/cards")
-                assert listed.status_code == 200 and listed.json()[0]["state"] == "OPEN"
-                claimed = await client.post("/cards/card/claim", json={"node_id": "node", "lease_duration": 20})
-                assert claimed.status_code == 200
-                completed = await client.post("/cards/card/complete", json={"node_id": "node", "result": {"ok": True}})
-                assert completed.status_code == 200 and completed.json()["state"] == "DONE"
-        finally:
-            server.should_exit = True
-            await asyncio.wait_for(serving, 5)
+    async with coordinator_server(app) as url, httpx.AsyncClient(base_url=url, trust_env=False) as client:
+        listed = await client.get("/cards")
+        assert listed.status_code == 200 and listed.json()[0]["state"] == "OPEN"
+        claimed = await client.post("/cards/card/claim", json={"node_id": "node", "lease_duration": 20})
+        assert claimed.status_code == 200
+        completed = await client.post("/cards/card/complete", json={"node_id": "node", "result": {"ok": True}})
+        assert completed.status_code == 200 and completed.json()["state"] == "DONE"
     lease = await owner.repository.get_latest_lease_record(lease_id="coordinator-lease:card")
-    assert owner.closed and serving.done() and lease.status is LeaseStatus.RELEASED
+    assert owner.closed and lease.status is LeaseStatus.RELEASED

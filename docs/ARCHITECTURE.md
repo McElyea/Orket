@@ -387,6 +387,14 @@ cleanup cannot become normal output. Native inventory retains its worker and adm
 budget; governance commands have a 300-second default. The existing 4 MiB capture bound
 applies. Inventory parsing, model-load observation and alias ownership remain unchanged.
 This does not establish daemon-effect rollback, alias exclusivity or provider inference.
+Worker requires native execution before synchronous HTTP, sleep or random-delay
+effects. An invocation joins its renewal owner through every exit and surfaces
+renewal failure before completion. Async callers retain the native worker and its
+borrowed client through interruption. Coordinator lease, hedging and terminal-result
+authority remains unchanged. No arbitrary-client termination or effect rollback is
+claimed. See `docs/specs/WORKER_RENEWAL_OWNERSHIP.md` and
+`docs/architecture/CONTRACT_DELTA_WORKER_RENEWAL_D_2026-09-22.md`.
+
 See `docs/specs/PROVIDER_GOVERNANCE_COMMAND_OWNERSHIP.md` and
 `docs/architecture/CONTRACT_DELTA_PROVIDER_GOVERNANCE_COMMANDS_D_2026-09-22.md`.
 

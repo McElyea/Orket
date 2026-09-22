@@ -12519,7 +12519,8 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.87 provider inventory and governance command ownership, retaining
+0.6.88 Worker native entry and renewal ownership, retaining
+0.6.87 provider inventory and governance command ownership,
 0.6.86 runtime architecture policy inputs and owned observations,
 0.6.85 adapter module classification and decision-admission gate,
 0.6.84 governance proof runtime and local alias ownership,
@@ -12538,7 +12539,7 @@ and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
 Preserve every failed and
 passing source/native observation and the historical clock diagnosis. Canonical
-Ruff has 89 findings at the .87 checkpoint. The prior stale benchmark expectation passes in the
+Ruff has 89 findings at the .88 checkpoint. The prior stale benchmark expectation passes in the
 new source/native selection. The unmodified published .39 complete rerun has
 7,260 passes, three failures and 89 skips; its coverage is 84.56120595327887%
 against the unchanged 89% gate. The two parent-Git-dependent fixture failures and
@@ -22112,3 +22113,75 @@ Preserve BT-1 through BT-5 and all prior evidence. No whole-plan completion, mai
 readiness or lane retirement; explicit user acceptance is still required.
 
 Retained proof: `.tmp/d-provider-governance-command-ownership/`.
+
+
+#### .88 Worker native entry and renewal ownership (2026-09-22)
+
+Responsible maintainer: Codex for Orket Core. Continuing canonical D3 after .87.
+Worker now refuses event-loop entry before synchronous HTTP, injected delay, sleep,
+random-delay mutation or renewal admission. Async callers use the existing owned
+native worker. Each claimed-work invocation owns a local renewal executor, stops
+and joins it on every exit, and observes renewal failure before completion. Concurrent
+work failure stays in the exception chain; repeated waiter cancellation cannot erase
+the native failure. Normal renewal refusal and completion responses keep coordinator
+authority. `run_once` remains a claimed-work attempt, not completion verification.
+
+The client is borrowed: its caller supplies finite request bounds and retains it
+until work settles, then closes it. Arbitrarily blocked Python callbacks/clients are
+not forcibly terminable; this change retains actual work instead of claiming cleanup.
+Already accepted HTTP/SQLite effects survive cancellation or later failure. Eight
+Worker method ASTs, coordinator/store/API code, owned I/O and lease/hedging test bytes
+are unchanged. Only native guards and claimed-work renewal lifetime change production
+behavior. Shared real TCP test-server extraction preserves five-second startup and
+teardown bounds and the existing coordinator transition/lifespan assertions.
+
+| Cell | Tests / failures / errors / skips | Pytest seconds | Installed origins |
+|---|---|---|---|
+| Fresh source | 1535 / 0 / 0 / 0 | 233.630 | source |
+| Installed a88-win-py311 | 1535 / 0 / 0 / 0 | 233.976 | 981 |
+| Installed a88-win-py312 | 1535 / 0 / 0 / 0 | 265.555 | 981 |
+
+All 1509 .87 identities remain across 150 modules: 17 new cases plus nine existing
+coordinator/lease/hedging cases. Final focused 26/26 passes. Thirteen exact final
+controls fail verified installed .87 with no errors/skips. Eight native-entry cases
+use synthetic collaborators and prove contract refusal only. Real TCP/SQLite probes
+observe accepted renewal, held HTTP response, joined native thread, visible work and
+renewal failures, concurrent failures, cancellation/repeated cancellation/timeout,
+retained server state, usable borrowed client and its later close, plus server shutdown.
+The .87 daemon path detaches renewal on work failure and loses renewal exceptions.
+
+Opening observations are retained: two 15-failure runs each included four incorrect
+fixture assumptions about the cards API. It lists OPEN only and rejects a claimed-state
+filter. Correcting the test to the actual 200/empty-list contract yields 11 expected
+failures and four passes before production changes. Owned 24/24 passes before final
+failure/cancellation expansion. No product test deadline or success assertion was weakened.
+
+Complete core parity: 1146 Python +20 unchanged data =1166 files;
+2344 frozen support inputs. Both Quality jobs include the controls;
+hosted execution remains unverified. Canonical C scans 1146
+files/3738 edges, with six resolved routes and zero violations,
+errors, unknown modules or authority cycles. Ruff remains 89 existing/0 introduced;
+scoped lint, size, docs, release metadata, whitespace and exact index binding pass.
+Sixty-five actual SQLite observations per cell satisfy .5s; maximum 0.141381000s.
+Baseline collection is not release readiness. Contract and migration are in
+`docs/specs/WORKER_RENEWAL_OWNERSHIP.md` and
+`docs/architecture/CONTRACT_DELTA_WORKER_RENEWAL_D_2026-09-22.md`.
+
+Compliance: affected dependency direction, effect ownership, classification, failure
+truth and authority alignment pass. Decision/event schemas are unchanged. Complete
+async inventory, input determinism and replay remain partial under D2/D3/D4. Next
+D3 review is OpenClaw interactive JSONL child/pipe/descendant ownership; preserve its
+per-request semantics. Upstream inventory pre-worker process-input capture remains D2.
+Bounded source discovery: `.tmp/d-worker-renewal-ownership/next-adapter-inventory.json`.
+
+Remaining blockers or drift: latest .72 Linux clock failure remains retained without
+new measurement or settings/deadline changes. Windows latency/physical-sleep and Git
+timeout causes remain unknown. .87 actual LMStudio CLI inventory succeeded but did
+not prove inference; Ollama CLI absent and loopback HTTP timeout remain observations,
+not fresh .88 measurements. ProductFlow replay, legacy Kernel completion, full 89%
+coverage, hosted Gitea Quality, E1 taxonomy/no-op/Ruff, E2 bounded generated authority,
+CAP1 actual-model workloads, CAP2 accepted containment and CAP3 capacity/recovery stay
+open. Preserve all BT-1 through BT-5 behavior and prior evidence. No whole-plan
+completion, main merge, release readiness or lane retirement; user acceptance is required.
+
+Retained proof: `.tmp/d-worker-renewal-ownership/`.

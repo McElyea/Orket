@@ -2,6 +2,15 @@
 
 Last updated: 2026-09-22
 
+Worker synchronous HTTP, sleep and random-delay entry requires native execution.
+Async callers retain it through `run_owned_thread`. Each claimed-work invocation
+joins its renewal owner on every exit; renewal failure reaches the caller before
+completion, with concurrent work failure chained. The client remains borrowed and
+must have finite request bounds. Coordinator lease and hedged-result authority is
+unchanged; accepted effects are not rolled back by cancellation. Contract:
+`docs/specs/WORKER_RENEWAL_OWNERSHIP.md` and migration:
+`docs/architecture/CONTRACT_DELTA_WORKER_RENEWAL_D_2026-09-22.md`.
+
 Provider CLI inventory and Packet 1 governance commands use the existing OS command
 supervisor with captured arguments, directory and environment. Leader exit is not
 completion until descendants settle. Incomplete output or uncertain cleanup refuses;

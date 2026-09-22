@@ -66,6 +66,12 @@
 
 ## Canonical Commands
 
+Worker's synchronous adapter refuses event-loop entry. Async callers use the
+existing owned native worker and retain the borrowed, finitely bounded HTTP client
+until work and renewal settle. Exercise native refusal, actual HTTP/SQLite renewal
+lifetime and existing lease/hedging controls in both Quality jobs. Accepted server
+effects can survive interruption. Contract: `docs/specs/WORKER_RENEWAL_OWNERSHIP.md`.
+
 Provider inventory native commands and Packet 1 alias commands use the package-owned
 OS supervisor. Preserve finite budgets, bounded capture, cleanup uncertainty and native
 event-loop refusal when editing these paths. Exercise real descendant trees and output
