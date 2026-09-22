@@ -19,9 +19,10 @@ async def test_empty_loop_captures_limits_and_closes_actual_transport(tmp_path, 
     created = []
     fetches = []
     adapter_type = loop_module.GiteaStateAdapter
+    adapter_factory = loop_module.create_gitea_state_adapter
 
     def capture_adapter(**values):
-        adapter = adapter_type(**values)
+        adapter = adapter_factory(**values)
         created.append(adapter)
         return adapter
 
@@ -37,7 +38,7 @@ async def test_empty_loop_captures_limits_and_closes_actual_transport(tmp_path, 
         fetches.append(limit)
         return []
 
-    monkeypatch.setattr(loop_module, 'GiteaStateAdapter', capture_adapter)
+    monkeypatch.setattr(loop_module, 'create_gitea_state_adapter', capture_adapter)
     monkeypatch.setattr(adapter_type, 'fetch_ready_cards', empty_queue)
     monkeypatch.setattr(loop_module, 'load_user_settings_async', observed_settings)
     try:

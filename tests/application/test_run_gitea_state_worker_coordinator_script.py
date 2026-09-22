@@ -4,7 +4,11 @@ import argparse
 import asyncio
 import json
 
+import pytest
+
 from scripts.gitea import run_gitea_state_worker_coordinator as script
+
+pytestmark = pytest.mark.contract
 
 
 def _args(**overrides) -> argparse.Namespace:
@@ -63,15 +67,18 @@ def test_run_loop_uses_policy_env_defaults_for_bounds(monkeypatch) -> None:
     monkeypatch.setenv("ORKET_GITEA_WORKER_MAX_ITERATIONS", "33")
     monkeypatch.setenv("ORKET_GITEA_WORKER_MAX_IDLE_STREAK", "4")
     monkeypatch.setenv("ORKET_GITEA_WORKER_MAX_DURATION_SECONDS", "90")
-    monkeypatch.setattr(script, "collect_gitea_state_pilot_inputs", lambda: {})
+    monkeypatch.setattr(script, "collect_gitea_state_pilot_inputs", lambda *, environment: {})
     monkeypatch.setattr(script, "evaluate_gitea_state_pilot_readiness", lambda _inputs: {"ready": True})
-    monkeypatch.setattr(script, "_required_env", lambda _name: "x")
+    monkeypatch.setattr(script, "_required_env", lambda _name, environment: "x")
     monkeypatch.setattr(script, "_resolve_worker_id", lambda _raw: "worker-1")
 
     seen = {}
 
     class _FakeAdapter:
         def __init__(self, **_kwargs):
+            pass
+
+        async def close(self):
             pass
 
     class _FakeWorker:
@@ -85,7 +92,7 @@ def test_run_loop_uses_policy_env_defaults_for_bounds(monkeypatch) -> None:
         async def run(self, *, work_fn):
             return {"iterations": 0, "consumed_count": 0, "idle_count": 0, "stop_reason": "max_idle_streak", "elapsed_ms": 0}
 
-    monkeypatch.setattr(script, "GiteaStateAdapter", _FakeAdapter)
+    monkeypatch.setattr(script, "create_gitea_state_adapter", _FakeAdapter)
     monkeypatch.setattr(script, "GiteaStateWorker", _FakeWorker)
     monkeypatch.setattr(script, "GiteaStateWorkerCoordinator", _FakeCoordinator)
 

@@ -24,7 +24,13 @@ async def observed_http_server(response_for_request, *, allow_disconnect=False, 
             body = await reader.readexactly(length)
             request = (first, json.loads(body) if body else None)
             requests.append(request)
-            status, payload = await response_for_request(request)
+            response = await response_for_request(request)
+            if response is None:
+                # Interruption controls observe actual peer EOF instead of racing
+                # a response against the cancelled client's socket shutdown.
+                assert await asyncio.wait_for(reader.read(1), timeout=5) == b""
+                return
+            status, payload = response
             content = payload if isinstance(payload, bytes) else json.dumps(payload).encode()
             writer.write(f"HTTP/1.1 {status} Controlled\r\nContent-Type: {content_type}\r\n".encode() +
                          b"".join(f"{key}: {value}\r\n".encode() for key, value in response_headers) +
@@ -50,7 +56,7 @@ async def observed_http_server(response_for_request, *, allow_disconnect=False, 
         yield f"{scheme}://127.0.0.1:{server.sockets[0].getsockname()[1]}", requests
     finally:
         server.close()
-        await server.wait_closed()
+        await asyncio.wait_for(server.wait_closed(), timeout=5)
         if owners or completed:
             await asyncio.wait_for(asyncio.gather(*(owners | completed)), timeout=5)
         assert not owners and not errors

@@ -6,6 +6,7 @@ from typing import Any
 import httpx
 from pydantic import ValidationError
 
+from orket.adapters.execution.owned_io import require_sync_context
 from orket.adapters.storage.gitea_http_client import GiteaHTTPClient
 from orket.adapters.storage.gitea_lease_manager import GiteaLeaseManager
 from orket.adapters.storage.gitea_state_errors import (
@@ -22,6 +23,7 @@ from orket.adapters.storage.gitea_state_models import (
     parse_event_comment,
 )
 from orket.adapters.storage.gitea_state_transitioner import GiteaStateTransitioner
+from orket.core.contracts.provider_http import CapturedHttpClientPort
 from orket.core.contracts.state_backend import StateBackendContract
 
 side_effecting = True
@@ -51,12 +53,14 @@ class GiteaStateAdapter(StateBackendContract):
         owner: str,
         repo: str,
         token: str,
+        http_client_owner: CapturedHttpClientPort,
         ready_label: str = "status/ready",
         timeout_seconds: float = 20.0,
         max_retries: int = 2,
         backoff_base_seconds: float = 0.1,
         backoff_max_seconds: float = 1.0,
     ):
+        require_sync_context(code="E_GITEA_ADAPTER_REQUIRES_ASYNC_OWNER")
         self.base_url = base_url.rstrip("/")
         self.owner = owner
         self.repo = repo
@@ -67,7 +71,7 @@ class GiteaStateAdapter(StateBackendContract):
         self.backoff_max_seconds = max(self.backoff_base_seconds, float(backoff_max_seconds))
         self._token = SecretToken(token)
 
-        self.http = GiteaHTTPClient(self)
+        self.http = GiteaHTTPClient(self, http_client_owner=http_client_owner)
         self.leases = GiteaLeaseManager(self)
         self.transitions = GiteaStateTransitioner(self)
 

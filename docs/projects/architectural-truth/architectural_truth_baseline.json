@@ -1,6 +1,6 @@
 {
   "schema_version": "architectural_truth.baseline.v1",
-  "generated_at": "2026-09-22T20:28:57.784435Z",
+  "generated_at": "2026-09-22T22:21:18.354882Z",
   "collection_ok": true,
   "release_ready": false,
   "release_ready_reason": "Active architectural exceptions and red/noisy proof gates remain.",
@@ -1451,14 +1451,14 @@
         "orket.adapters.storage.gitea_http_client": {
           "module": [
             {
-              "line": 22,
+              "line": 24,
               "kind": "Assign",
               "direct": true,
               "literal": true
             }
           ],
           "classes": {
-            "GiteaHTTPClient@25": []
+            "GiteaHTTPClient@27": []
           }
         },
         "orket.adapters.storage.gitea_lease_manager": {
@@ -1477,15 +1477,15 @@
         "orket.adapters.storage.gitea_state_adapter": {
           "module": [
             {
-              "line": 27,
+              "line": 29,
               "kind": "Assign",
               "direct": true,
               "literal": true
             }
           ],
           "classes": {
-            "SecretToken@30": [],
-            "GiteaStateAdapter@44": []
+            "SecretToken@32": [],
+            "GiteaStateAdapter@46": []
           }
         },
         "orket.adapters.storage.gitea_state_errors": {
@@ -2521,7 +2521,7 @@
         "orket.adapters.vcs.gitea_webhook_client": {
           "module": [
             {
-              "line": 11,
+              "line": 13,
               "kind": "Assign",
               "direct": true,
               "literal": true
@@ -2888,7 +2888,7 @@
           "forwarded_arguments": 2
         }
       ],
-      "files_scanned": 1155,
+      "files_scanned": 1158,
       "scan_roots": [
         "orket"
       ],
@@ -2897,27 +2897,27 @@
         {
           "source": "adapters",
           "target": "adapters",
-          "count": 253
+          "count": 254
         },
         {
           "source": "adapters",
           "target": "core",
-          "count": 145
+          "count": 148
         },
         {
           "source": "application",
           "target": "adapters",
-          "count": 456
+          "count": 460
         },
         {
           "source": "application",
           "target": "application",
-          "count": 1832
+          "count": 1843
         },
         {
           "source": "application",
           "target": "core",
-          "count": 788
+          "count": 789
         },
         {
           "source": "application",
@@ -4591,19 +4591,19 @@
         {
           "module": "orket.adapters.storage.gitea_http_client",
           "path": "orket/adapters/storage/gitea_http_client.py",
-          "sha256": "aab87d9ea363aae8807909e320700a1ec078993e37c3580a0a74a3ac0ce1c554",
+          "sha256": "74d9f56cc15d871fe33779a2b06da6b6e319c1bc3fa31508e8bd1a923ddcdf00",
           "side_effecting": true,
           "declarations": {
             "module": [
               {
-                "line": 22,
+                "line": 24,
                 "kind": "Assign",
                 "direct": true,
                 "literal": true
               }
             ],
             "classes": {
-              "GiteaHTTPClient@25": []
+              "GiteaHTTPClient@27": []
             }
           }
         },
@@ -4629,20 +4629,20 @@
         {
           "module": "orket.adapters.storage.gitea_state_adapter",
           "path": "orket/adapters/storage/gitea_state_adapter.py",
-          "sha256": "47fac6b1adb2ffeedaa32be267ef691b78b69a177a5993ec39d9a0b6ffa96e6f",
+          "sha256": "c214246f0bd57b8d358296dc44b522d6ea9a15e67be99c5bfca628ad2225e7b4",
           "side_effecting": true,
           "declarations": {
             "module": [
               {
-                "line": 27,
+                "line": 29,
                 "kind": "Assign",
                 "direct": true,
                 "literal": true
               }
             ],
             "classes": {
-              "SecretToken@30": [],
-              "GiteaStateAdapter@44": []
+              "SecretToken@32": [],
+              "GiteaStateAdapter@46": []
             }
           }
         },
@@ -6087,12 +6087,12 @@
         {
           "module": "orket.adapters.vcs.gitea_webhook_client",
           "path": "orket/adapters/vcs/gitea_webhook_client.py",
-          "sha256": "159e119f014bd8f7da1bd43dcb569ef759a247cf9ee258ba6ecb2dd00f54d66f",
+          "sha256": "da30d6141e0a01fd78b2a5b863975f1b0213d0ef602944fa02e805d06acc3204",
           "side_effecting": true,
           "declarations": {
             "module": [
               {
-                "line": 11,
+                "line": 13,
                 "kind": "Assign",
                 "direct": true,
                 "literal": true
@@ -6706,10 +6706,10 @@
   },
   "test_taxonomy": {
     "schema_version": "test_taxonomy_report.v1",
-    "tests_total": 5817,
-    "missing_layer_total": 4230,
+    "tests_total": 5829,
+    "missing_layer_total": 4242,
     "by_layer": {
-      "unlabeled": 4230,
+      "unlabeled": 4242,
       "integration": 752,
       "unit": 161,
       "contract": 663,
@@ -6946,193 +6946,193 @@
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_state_adapter.py",
-        "line": 20,
+        "line": 23,
         "test_name": "test_fetch_ready_cards_ignores_non_orket_issues",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_state_adapter.py",
-        "line": 49,
+        "line": 52,
         "test_name": "test_append_event_posts_orket_comment",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_state_adapter.py",
-        "line": 72,
+        "line": 76,
         "test_name": "test_gitea_state_adapter_redacts_token_repr_and_builds_headers_lazily",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_state_adapter.py",
-        "line": 90,
+        "line": 94,
         "test_name": "test_acquire_lease_returns_none_for_nonnumeric_card_id",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_state_adapter.py",
-        "line": 110,
+        "line": 114,
         "test_name": "test_append_event_with_idempotency_key_skips_duplicate",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_state_adapter.py",
-        "line": 135,
+        "line": 139,
         "test_name": "test_append_event_with_idempotency_key_posts_when_missing",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_state_adapter.py",
-        "line": 163,
+        "line": 167,
         "test_name": "test_unimplemented_mutating_operations_are_explicit",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_state_adapter.py",
-        "line": 175,
+        "line": 179,
         "test_name": "test_transition_state_uses_canonical_state_machine_validation",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_state_adapter.py",
-        "line": 187,
+        "line": 191,
         "test_name": "test_transition_state_persists_with_if_match",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_state_adapter.py",
-        "line": 221,
+        "line": 225,
         "test_name": "test_transition_state_rejects_stale_from_state",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_state_adapter.py",
-        "line": 239,
+        "line": 243,
         "test_name": "test_transition_state_is_idempotent_when_target_state_already_applied",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_state_adapter.py",
-        "line": 260,
+        "line": 264,
         "test_name": "test_transition_state_rejects_etag_conflict",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_state_adapter.py",
-        "line": 291,
+        "line": 295,
         "test_name": "test_acquire_lease_claims_unowned_card_with_epoch_increment",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_state_adapter.py",
-        "line": 328,
+        "line": 332,
         "test_name": "test_acquire_lease_returns_none_when_another_owner_has_active_lease",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_state_adapter.py",
-        "line": 353,
+        "line": 357,
         "test_name": "test_acquire_lease_reclaims_expired_lease_and_increments_epoch",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_state_adapter.py",
-        "line": 395,
+        "line": 399,
         "test_name": "test_acquire_lease_is_idempotent_for_same_owner",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_state_adapter.py",
-        "line": 426,
+        "line": 429,
         "test_name": "test_acquire_lease_returns_none_on_etag_conflict",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_state_adapter.py",
-        "line": 448,
+        "line": 451,
         "test_name": "test_renew_lease_updates_expiry_for_same_owner",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_state_adapter.py",
-        "line": 489,
+        "line": 492,
         "test_name": "test_renew_lease_returns_none_for_non_owner",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_state_adapter.py",
-        "line": 518,
+        "line": 520,
         "test_name": "test_renew_lease_returns_none_for_nonnumeric_card_id",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_state_adapter.py",
-        "line": 537,
+        "line": 539,
         "test_name": "test_classify_http_error_maps_status_codes",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_state_adapter.py",
-        "line": 546,
+        "line": 548,
         "test_name": "test_extract_card_id_from_issue_paths",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_state_adapter.py",
-        "line": 553,
+        "line": 555,
         "test_name": "test_request_response_logs_structured_failure_with_card_id",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_state_adapter.py",
-        "line": 579,
+        "line": 580,
         "test_name": "test_request_response_with_retry_recovers_from_transient_error",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_state_adapter.py",
-        "line": 604,
+        "line": 605,
         "test_name": "test_request_response_with_retry_exhausts_and_raises",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_state_adapter.py",
-        "line": 627,
+        "line": 628,
         "test_name": "test_gitea_http_client_reuses_pooled_async_client_and_closes_once",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_state_adapter.py",
-        "line": 673,
+        "line": 674,
         "test_name": "test_acquire_lease_rejects_snapshot_body_that_exceeds_limit",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_state_adapter.py",
-        "line": 700,
+        "line": 701,
         "test_name": "test_release_or_fail_persists_terminal_state_and_clears_lease",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_state_adapter.py",
-        "line": 752,
+        "line": 753,
         "test_name": "test_release_or_fail_is_idempotent_when_already_final_and_unleased",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_state_adapter.py",
-        "line": 773,
+        "line": 774,
         "test_name": "test_release_or_fail_rejects_cas_conflict",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_state_adapter_contention.py",
-        "line": 78,
+        "line": 81,
         "test_name": "test_two_runners_do_not_dual_acquire_active_lease",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_state_adapter_contention.py",
-        "line": 94,
+        "line": 97,
         "test_name": "test_expired_lease_can_be_taken_over_by_second_runner",
         "layer": null
       },
@@ -7162,13 +7162,13 @@
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_state_multi_runner_simulation.py",
-        "line": 81,
+        "line": 84,
         "test_name": "test_multi_runner_lease_lifecycle_with_renew_and_takeover",
         "layer": null
       },
       {
         "file": "C:\\Source\\Orket-architectural-truth\\tests\\adapters\\test_gitea_state_multi_runner_simulation.py",
-        "line": 121,
+        "line": 124,
         "test_name": "test_worker_takeover_after_expired_foreign_lease",
         "layer": null
       },
@@ -7317,7 +7317,7 @@
         "layer": null
       }
     ],
-    "missing_layers_omitted": 4130
+    "missing_layers_omitted": 4142
   },
   "ruff": {
     "proof": "structural_lint",
@@ -7338,7 +7338,7 @@
   },
   "size_inventory": {
     "proof": "structural_ast",
-    "python_files_scanned": 1155,
+    "python_files_scanned": 1158,
     "files_over_400_total": 53,
     "functions_over_70_total": 199,
     "largest_files": [
@@ -7605,7 +7605,7 @@
       "C:\\Source\\Orket-architectural-truth\\orket\\runtime",
       "C:\\Source\\Orket-architectural-truth\\orket\\interfaces"
     ],
-    "scanned_files": 672,
+    "scanned_files": 675,
     "findings": [
       {
         "path": "C:\\Source\\Orket-architectural-truth\\orket\\runtime\\execution\\execution_pipeline_card_dispatch.py",
@@ -7716,128 +7716,6 @@
     "parse_errors": []
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-22T09:52:54.679320Z",
-      "changed": true,
-      "before_digest": "sha256:970b850e1be71c9a6a261254529c6ed168af74c7819f0fa66b07fc1029fdf625",
-      "after_digest": "sha256:b85b908133cd67ed4b9c488e1505740c423d4e19a7d2985575d931121b32856d",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 8,
-        "initial_write": false,
-        "paths_total_previous": 2329,
-        "paths_total_current": 2329,
-        "paths_total_reference": 2329,
-        "churn_paths": 8,
-        "churn_ratio": 0.003435,
-        "sample_paths": [
-          "$.dependency_graph.observed.layer_edges[2].count",
-          "$.generated_at",
-          "$.test_taxonomy.by_layer.integration",
-          "$.test_taxonomy.by_layer.unit",
-          "$.test_taxonomy.by_layer.unlabeled",
-          "$.test_taxonomy.missing_layer_total",
-          "$.test_taxonomy.missing_layers_omitted",
-          "$.test_taxonomy.tests_total"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-22T10:05:46.692522Z",
-      "changed": true,
-      "before_digest": "sha256:b85b908133cd67ed4b9c488e1505740c423d4e19a7d2985575d931121b32856d",
-      "after_digest": "sha256:400545cb62436ec810274adfff773d086288eaa84ae90ae5ad06f98b89c57c04",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 2329,
-        "paths_total_current": 2329,
-        "paths_total_reference": 2329,
-        "churn_paths": 1,
-        "churn_ratio": 0.000429,
-        "sample_paths": [
-          "$.generated_at"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-22T10:26:44.948432Z",
-      "changed": true,
-      "before_digest": "sha256:400545cb62436ec810274adfff773d086288eaa84ae90ae5ad06f98b89c57c04",
-      "after_digest": "sha256:b4634446b3d8ab795d3a73430cf85a4cff0c3ca31498d84624f96c67c71244be",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 5,
-        "initial_write": false,
-        "paths_total_previous": 2329,
-        "paths_total_current": 2329,
-        "paths_total_reference": 2329,
-        "churn_paths": 5,
-        "churn_ratio": 0.002147,
-        "sample_paths": [
-          "$.generated_at",
-          "$.test_taxonomy.by_layer.unlabeled",
-          "$.test_taxonomy.missing_layer_total",
-          "$.test_taxonomy.missing_layers_omitted",
-          "$.test_taxonomy.tests_total"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-22T10:38:33.175961Z",
-      "changed": true,
-      "before_digest": "sha256:b4634446b3d8ab795d3a73430cf85a4cff0c3ca31498d84624f96c67c71244be",
-      "after_digest": "sha256:8d1791d816a37cc069c762b7c6d702a0f0e73f3f973c7de0983700ac4968bba6",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 2329,
-        "paths_total_current": 2329,
-        "paths_total_reference": 2329,
-        "churn_paths": 1,
-        "churn_ratio": 0.000429,
-        "sample_paths": [
-          "$.generated_at"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-22T11:48:45.907307Z",
-      "changed": true,
-      "before_digest": "sha256:8d1791d816a37cc069c762b7c6d702a0f0e73f3f973c7de0983700ac4968bba6",
-      "after_digest": "sha256:c09b9420db7508123686c6c1bdd0863d38cd2ca4832dac23e6ab44bed6372592",
-      "diff": {
-        "added_paths": 3,
-        "removed_paths": 0,
-        "changed_paths": 9,
-        "initial_write": false,
-        "paths_total_previous": 2329,
-        "paths_total_current": 9236,
-        "paths_total_reference": 9236,
-        "churn_paths": 12,
-        "churn_ratio": 0.001299,
-        "sample_paths": [
-          "$.dependency_graph.observed.adapter_effects",
-          "$.dependency_graph.observed.effect_declarations",
-          "$.dependency_graph.verdict.adapter_effect_violations",
-          "$.generated_at",
-          "$.size_inventory.functions_over_70_total",
-          "$.size_inventory.largest_files[15].lines",
-          "$.size_inventory.largest_files[16].lines",
-          "$.size_inventory.largest_functions[24].line",
-          "$.test_taxonomy.by_layer.unlabeled",
-          "$.test_taxonomy.missing_layer_total",
-          "$.test_taxonomy.missing_layers_omitted",
-          "$.test_taxonomy.tests_total"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-22T12:07:54.176840Z",
       "changed": true,
@@ -8486,6 +8364,129 @@
       "changed": true,
       "before_digest": "sha256:651e7a2e9e9f3db33c121984135cd40342d438b560b06ad8730ba01fc3b46be0",
       "after_digest": "sha256:6ea03d6e5b23aa7e711062d98871b493f9e5dfab2c7e134a7910950ccbc29b34",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 9372,
+        "paths_total_current": 9372,
+        "paths_total_reference": 9372,
+        "churn_paths": 1,
+        "churn_ratio": 0.000107,
+        "sample_paths": [
+          "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T21:02:33.431445Z",
+      "changed": true,
+      "before_digest": "sha256:6ea03d6e5b23aa7e711062d98871b493f9e5dfab2c7e134a7910950ccbc29b34",
+      "after_digest": "sha256:9cca4ac32bd47f43b58f0813b19c7f4f5e99cad58d0706255208c38fc17a9a7f",
+      "diff": {
+        "added_paths": 6,
+        "removed_paths": 6,
+        "changed_paths": 56,
+        "initial_write": false,
+        "paths_total_previous": 9372,
+        "paths_total_current": 9372,
+        "paths_total_reference": 9372,
+        "churn_paths": 68,
+        "churn_ratio": 0.007256,
+        "sample_paths": [
+          "$.dependency_graph.observed.adapter_effects[75].declarations.classes.GiteaHTTPClient@25",
+          "$.dependency_graph.observed.adapter_effects[75].declarations.classes.GiteaHTTPClient@27",
+          "$.dependency_graph.observed.adapter_effects[75].declarations.module[0].line",
+          "$.dependency_graph.observed.adapter_effects[75].sha256",
+          "$.dependency_graph.observed.adapter_effects[77].declarations.classes.GiteaStateAdapter@44",
+          "$.dependency_graph.observed.adapter_effects[77].declarations.classes.SecretToken@30",
+          "$.dependency_graph.observed.adapter_effects[77].declarations.classes.GiteaStateAdapter@46",
+          "$.dependency_graph.observed.adapter_effects[77].declarations.classes.SecretToken@32",
+          "$.dependency_graph.observed.adapter_effects[77].declarations.module[0].line",
+          "$.dependency_graph.observed.adapter_effects[77].sha256",
+          "$.dependency_graph.observed.adapter_effects[146].declarations.module[0].line",
+          "$.dependency_graph.observed.adapter_effects[146].sha256",
+          "$.dependency_graph.observed.effect_declarations.orket.adapters.storage.gitea_http_client.classes.GiteaHTTPClient@25",
+          "$.dependency_graph.observed.effect_declarations.orket.adapters.storage.gitea_http_client.classes.GiteaHTTPClient@27",
+          "$.dependency_graph.observed.effect_declarations.orket.adapters.storage.gitea_http_client.module[0].line",
+          "$.dependency_graph.observed.effect_declarations.orket.adapters.storage.gitea_state_adapter.classes.GiteaStateAdapter@44",
+          "$.dependency_graph.observed.effect_declarations.orket.adapters.storage.gitea_state_adapter.classes.SecretToken@30",
+          "$.dependency_graph.observed.effect_declarations.orket.adapters.storage.gitea_state_adapter.classes.GiteaStateAdapter@46",
+          "$.dependency_graph.observed.effect_declarations.orket.adapters.storage.gitea_state_adapter.classes.SecretToken@32",
+          "$.dependency_graph.observed.effect_declarations.orket.adapters.storage.gitea_state_adapter.module[0].line"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T21:08:52.695959Z",
+      "changed": true,
+      "before_digest": "sha256:9cca4ac32bd47f43b58f0813b19c7f4f5e99cad58d0706255208c38fc17a9a7f",
+      "after_digest": "sha256:e919cc215dc55d5675658301f60e466333d9d2cc0c603b65161fc5a734a0eb98",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 5,
+        "initial_write": false,
+        "paths_total_previous": 9372,
+        "paths_total_current": 9372,
+        "paths_total_reference": 9372,
+        "churn_paths": 5,
+        "churn_ratio": 0.000534,
+        "sample_paths": [
+          "$.generated_at",
+          "$.test_taxonomy.by_layer.unlabeled",
+          "$.test_taxonomy.missing_layer_total",
+          "$.test_taxonomy.missing_layers_omitted",
+          "$.test_taxonomy.tests_total"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T21:13:52.331546Z",
+      "changed": true,
+      "before_digest": "sha256:e919cc215dc55d5675658301f60e466333d9d2cc0c603b65161fc5a734a0eb98",
+      "after_digest": "sha256:4cc398dfcfc592a4f1fe922f7c751e6bfc5849070b6e09aa4f48ace6e7d92196",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 9372,
+        "paths_total_current": 9372,
+        "paths_total_reference": 9372,
+        "churn_paths": 1,
+        "churn_ratio": 0.000107,
+        "sample_paths": [
+          "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T21:51:04.563593Z",
+      "changed": true,
+      "before_digest": "sha256:4cc398dfcfc592a4f1fe922f7c751e6bfc5849070b6e09aa4f48ace6e7d92196",
+      "after_digest": "sha256:e62ef7a196cfd8400e4f24f4b94f706305ce1beda380cd2151dbfcc5b219e66d",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 9372,
+        "paths_total_current": 9372,
+        "paths_total_reference": 9372,
+        "churn_paths": 1,
+        "churn_ratio": 0.000107,
+        "sample_paths": [
+          "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T22:21:18.362908Z",
+      "changed": true,
+      "before_digest": "sha256:e62ef7a196cfd8400e4f24f4b94f706305ce1beda380cd2151dbfcc5b219e66d",
+      "after_digest": "sha256:4136f7c70e7ada19431847a5565323a6c4a963a6a4fe8efad3c8dcf7ee5bc057",
       "diff": {
         "added_paths": 0,
         "removed_paths": 0,

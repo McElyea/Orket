@@ -16,7 +16,9 @@ class ProviderHttpResources:
         if not any(resource is existing for existing in self._acquired):
             self._acquired.append(resource)
 
-    async def close(self):
+    async def close(self, client=None):
+        if client is not None:
+            self.retain(client)
         await run_owned_io(self._close, label="provider-http-cleanup", preserve_failure=True)
 
     async def _close(self):

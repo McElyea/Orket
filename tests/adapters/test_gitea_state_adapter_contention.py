@@ -4,6 +4,9 @@ import pytest
 
 from orket.adapters.storage.gitea_state_adapter import GiteaStateAdapter
 from orket.adapters.storage.gitea_state_models import CardSnapshot, encode_snapshot
+from tests.helpers.gitea_state_adapter_fixture import gitea_adapter_factory as gitea_adapter_factory
+
+pytestmark = pytest.mark.contract
 
 
 class _SimResponse:
@@ -75,10 +78,10 @@ def _wire_adapter(adapter: GiteaStateAdapter, store: _FakeGiteaIssueStore):
 
 
 @pytest.mark.asyncio
-async def test_two_runners_do_not_dual_acquire_active_lease():
+async def test_two_runners_do_not_dual_acquire_active_lease(gitea_adapter_factory):
     store = _FakeGiteaIssueStore()
-    runner_a = GiteaStateAdapter(base_url="https://gitea.local", owner="acme", repo="orket", token="x")
-    runner_b = GiteaStateAdapter(base_url="https://gitea.local", owner="acme", repo="orket", token="x")
+    runner_a = await gitea_adapter_factory(base_url="https://gitea.local", owner="acme", repo="orket", token="x")
+    runner_b = await gitea_adapter_factory(base_url="https://gitea.local", owner="acme", repo="orket", token="x")
     _wire_adapter(runner_a, store)
     _wire_adapter(runner_b, store)
 
@@ -91,10 +94,10 @@ async def test_two_runners_do_not_dual_acquire_active_lease():
 
 
 @pytest.mark.asyncio
-async def test_expired_lease_can_be_taken_over_by_second_runner():
+async def test_expired_lease_can_be_taken_over_by_second_runner(gitea_adapter_factory):
     store = _FakeGiteaIssueStore()
-    runner_a = GiteaStateAdapter(base_url="https://gitea.local", owner="acme", repo="orket", token="x")
-    runner_b = GiteaStateAdapter(base_url="https://gitea.local", owner="acme", repo="orket", token="x")
+    runner_a = await gitea_adapter_factory(base_url="https://gitea.local", owner="acme", repo="orket", token="x")
+    runner_b = await gitea_adapter_factory(base_url="https://gitea.local", owner="acme", repo="orket", token="x")
     _wire_adapter(runner_a, store)
     _wire_adapter(runner_b, store)
 

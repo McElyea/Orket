@@ -6,13 +6,13 @@ import pytest
 
 from orket.adapters.storage.async_control_plane_record_repository import AsyncControlPlaneRecordRepository
 from orket.adapters.storage.async_file_tools import AsyncFileTools
-from orket.adapters.storage.gitea_state_adapter import GiteaStateAdapter
 from orket.adapters.storage.gitea_state_models import (
     CardSnapshot,
     decode_snapshot,
     encode_snapshot,
     parse_event_comment,
 )
+from orket.application.services.gitea_state_adapter_factory import create_gitea_state_adapter_async
 from orket.application.services.gitea_state_control_plane_checkpoint_service import (
     build_gitea_state_control_plane_checkpoint_service,
 )
@@ -48,7 +48,7 @@ async def _create_card(server, client):
     response = await client.post(f'/api/v1/users/{server.username}/tokens',
                                  json={'name': 'worker-proof', 'scopes': ['all']})
     response.raise_for_status()
-    adapter = GiteaStateAdapter(base_url=server.url, owner=server.username, repo='worker-proof', token=response.json()['sha1'])
+    adapter = await create_gitea_state_adapter_async(base_url=server.url, owner=server.username, repo='worker-proof', token=response.json()['sha1'])
     return adapter, path+'/issues/'+number, number
 
 

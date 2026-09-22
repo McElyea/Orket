@@ -5,6 +5,17 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.93] - 2026-09-22
+
+### Fixed
+- Capture Gitea state/webhook proxy, trust and key-log inputs through the existing HTTP authority; own partial native construction and cleanup through interruption.
+- Close coordinator/reconciliation CLI adapters across their full lifetime and retain invocation inputs. Coordinator summaries keep the canonical path and append the shared diff ledger.
+- Raw state constructors now require a client ownership port; async callers use owned application factories. Preserve authentication, retries, URL admission and deadlines. Migration: `docs/architecture/CONTRACT_DELTA_GITEA_HTTP_INPUTS_D_2026-09-22.md`.
+- Controlled protocol proof remains distinct from disposable Gitea and actual-model acceptance. Linux clock, broader D/E/CAP and release-readiness gates remain open.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+
 ## [0.6.92] - 2026-09-22
 
 - Retain card-provider cleanup through repeated cancellation so completed close results are adopted.

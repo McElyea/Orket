@@ -1,4 +1,4 @@
-"""Immutable network inputs for one owned provider catalog client."""
+"""Immutable network inputs and ownership ports for captured HTTP clients."""
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Protocol
@@ -15,5 +15,11 @@ class ProviderHttpInputs:
 
 class ProviderInferenceHttpPort(Protocol):
     def create_client(self, *, backend: str, base_url: str, timeout_s: float, connect_timeout_s: float) -> Any: ...
+
+    async def close(self, client: Any = None) -> None: ...
+
+
+class CapturedHttpClientPort(Protocol):
+    def create_client(self, *, timeout_s: float, auth: tuple[str, str] | None = None) -> Any: ...
 
     async def close(self, client: Any = None) -> None: ...

@@ -27,9 +27,10 @@ def construction_inputs(root, *, environment=None, settings=None):
 def local_runner(root, monkeypatch, *, fetch_failure=False, runtime_inputs=None):
     created = []
     adapter_type = loop_module.GiteaStateAdapter
+    adapter_factory = loop_module.create_gitea_state_adapter
 
     def capture_adapter(**values):
-        adapter = adapter_type(**values)
+        adapter = adapter_factory(**values)
         created.append(adapter)
         return adapter
 
@@ -42,7 +43,7 @@ def local_runner(root, monkeypatch, *, fetch_failure=False, runtime_inputs=None)
     async def forbidden_work(_card):
         raise AssertionError('An empty ready queue must not execute a workload')
 
-    monkeypatch.setattr(loop_module, 'GiteaStateAdapter', capture_adapter)
+    monkeypatch.setattr(loop_module, 'create_gitea_state_adapter', capture_adapter)
     monkeypatch.setattr(adapter_type, 'fetch_ready_cards', empty_queue)
     runner = loop_module.GiteaStateLoopRunner(state_backend_mode='gitea', organization=None, run_card=forbidden_work,
         construction_inputs=construction_inputs(root),

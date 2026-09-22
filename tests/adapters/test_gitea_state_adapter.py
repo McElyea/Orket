@@ -14,11 +14,14 @@ from orket.adapters.storage.gitea_state_adapter import (
     SecretToken,
 )
 from orket.adapters.storage.gitea_state_models import CardSnapshot, encode_snapshot
+from tests.helpers.gitea_state_adapter_fixture import gitea_adapter_factory as gitea_adapter_factory
+
+pytestmark = pytest.mark.contract
 
 
 @pytest.mark.asyncio
-async def test_fetch_ready_cards_ignores_non_orket_issues(monkeypatch):
-    adapter = GiteaStateAdapter(
+async def test_fetch_ready_cards_ignores_non_orket_issues(monkeypatch, gitea_adapter_factory):
+    adapter = await gitea_adapter_factory(
         base_url="https://gitea.local",
         owner="acme",
         repo="orket",
@@ -46,8 +49,8 @@ async def test_fetch_ready_cards_ignores_non_orket_issues(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_append_event_posts_orket_comment(monkeypatch):
-    adapter = GiteaStateAdapter(
+async def test_append_event_posts_orket_comment(monkeypatch, gitea_adapter_factory):
+    adapter = await gitea_adapter_factory(
         base_url="https://gitea.local",
         owner="acme",
         repo="orket",
@@ -69,9 +72,10 @@ async def test_append_event_posts_orket_comment(monkeypatch):
     assert captured["payload"]["body"].startswith("[ORKET_EVENT_V1]")
 
 
-def test_gitea_state_adapter_redacts_token_repr_and_builds_headers_lazily() -> None:
+@pytest.mark.asyncio
+async def test_gitea_state_adapter_redacts_token_repr_and_builds_headers_lazily(gitea_adapter_factory) -> None:
     """Layer: unit. Verifies the adapter does not keep a long-lived plaintext headers dict with the token."""
-    adapter = GiteaStateAdapter(
+    adapter = await gitea_adapter_factory(
         base_url="https://gitea.local",
         owner="acme",
         repo="orket",
@@ -87,9 +91,9 @@ def test_gitea_state_adapter_redacts_token_repr_and_builds_headers_lazily() -> N
 
 
 @pytest.mark.asyncio
-async def test_acquire_lease_returns_none_for_nonnumeric_card_id(monkeypatch, caplog) -> None:
+async def test_acquire_lease_returns_none_for_nonnumeric_card_id(monkeypatch, caplog, gitea_adapter_factory) -> None:
     """Layer: unit. Verifies invalid Gitea card IDs fail closed before any HTTP request."""
-    adapter = GiteaStateAdapter(
+    adapter = await gitea_adapter_factory(
         base_url="https://gitea.local",
         owner="acme",
         repo="orket",
@@ -107,8 +111,8 @@ async def test_acquire_lease_returns_none_for_nonnumeric_card_id(monkeypatch, ca
 
 
 @pytest.mark.asyncio
-async def test_append_event_with_idempotency_key_skips_duplicate(monkeypatch):
-    adapter = GiteaStateAdapter(
+async def test_append_event_with_idempotency_key_skips_duplicate(monkeypatch, gitea_adapter_factory):
+    adapter = await gitea_adapter_factory(
         base_url="https://gitea.local",
         owner="acme",
         repo="orket",
@@ -132,8 +136,8 @@ async def test_append_event_with_idempotency_key_skips_duplicate(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_append_event_with_idempotency_key_posts_when_missing(monkeypatch):
-    adapter = GiteaStateAdapter(
+async def test_append_event_with_idempotency_key_posts_when_missing(monkeypatch, gitea_adapter_factory):
+    adapter = await gitea_adapter_factory(
         base_url="https://gitea.local",
         owner="acme",
         repo="orket",
@@ -160,8 +164,8 @@ async def test_append_event_with_idempotency_key_posts_when_missing(monkeypatch)
 
 
 @pytest.mark.asyncio
-async def test_unimplemented_mutating_operations_are_explicit():
-    adapter = GiteaStateAdapter(
+async def test_unimplemented_mutating_operations_are_explicit(gitea_adapter_factory):
+    adapter = await gitea_adapter_factory(
         base_url="https://gitea.local",
         owner="acme",
         repo="orket",
@@ -172,8 +176,8 @@ async def test_unimplemented_mutating_operations_are_explicit():
 
 
 @pytest.mark.asyncio
-async def test_transition_state_uses_canonical_state_machine_validation():
-    adapter = GiteaStateAdapter(
+async def test_transition_state_uses_canonical_state_machine_validation(gitea_adapter_factory):
+    adapter = await gitea_adapter_factory(
         base_url="https://gitea.local",
         owner="acme",
         repo="orket",
@@ -184,8 +188,8 @@ async def test_transition_state_uses_canonical_state_machine_validation():
 
 
 @pytest.mark.asyncio
-async def test_transition_state_persists_with_if_match(monkeypatch):
-    adapter = GiteaStateAdapter(
+async def test_transition_state_persists_with_if_match(monkeypatch, gitea_adapter_factory):
+    adapter = await gitea_adapter_factory(
         base_url="https://gitea.local",
         owner="acme",
         repo="orket",
@@ -218,8 +222,8 @@ async def test_transition_state_persists_with_if_match(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_transition_state_rejects_stale_from_state(monkeypatch):
-    adapter = GiteaStateAdapter(
+async def test_transition_state_rejects_stale_from_state(monkeypatch, gitea_adapter_factory):
+    adapter = await gitea_adapter_factory(
         base_url="https://gitea.local",
         owner="acme",
         repo="orket",
@@ -236,8 +240,8 @@ async def test_transition_state_rejects_stale_from_state(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_transition_state_is_idempotent_when_target_state_already_applied(monkeypatch):
-    adapter = GiteaStateAdapter(
+async def test_transition_state_is_idempotent_when_target_state_already_applied(monkeypatch, gitea_adapter_factory):
+    adapter = await gitea_adapter_factory(
         base_url="https://gitea.local",
         owner="acme",
         repo="orket",
@@ -257,8 +261,8 @@ async def test_transition_state_is_idempotent_when_target_state_already_applied(
 
 
 @pytest.mark.asyncio
-async def test_transition_state_rejects_etag_conflict(monkeypatch):
-    adapter = GiteaStateAdapter(
+async def test_transition_state_rejects_etag_conflict(monkeypatch, gitea_adapter_factory):
+    adapter = await gitea_adapter_factory(
         base_url="https://gitea.local",
         owner="acme",
         repo="orket",
@@ -288,8 +292,8 @@ class _FakeResponse:
 
 
 @pytest.mark.asyncio
-async def test_acquire_lease_claims_unowned_card_with_epoch_increment(monkeypatch):
-    adapter = GiteaStateAdapter(
+async def test_acquire_lease_claims_unowned_card_with_epoch_increment(monkeypatch, gitea_adapter_factory):
+    adapter = await gitea_adapter_factory(
         base_url="https://gitea.local",
         owner="acme",
         repo="orket",
@@ -325,8 +329,8 @@ async def test_acquire_lease_claims_unowned_card_with_epoch_increment(monkeypatc
 
 
 @pytest.mark.asyncio
-async def test_acquire_lease_returns_none_when_another_owner_has_active_lease(monkeypatch):
-    adapter = GiteaStateAdapter(
+async def test_acquire_lease_returns_none_when_another_owner_has_active_lease(monkeypatch, gitea_adapter_factory):
+    adapter = await gitea_adapter_factory(
         base_url="https://gitea.local",
         owner="acme",
         repo="orket",
@@ -350,8 +354,8 @@ async def test_acquire_lease_returns_none_when_another_owner_has_active_lease(mo
 
 
 @pytest.mark.asyncio
-async def test_acquire_lease_reclaims_expired_lease_and_increments_epoch(monkeypatch):
-    adapter = GiteaStateAdapter(
+async def test_acquire_lease_reclaims_expired_lease_and_increments_epoch(monkeypatch, gitea_adapter_factory):
+    adapter = await gitea_adapter_factory(
         base_url="https://gitea.local",
         owner="acme",
         repo="orket",
@@ -392,8 +396,8 @@ async def test_acquire_lease_reclaims_expired_lease_and_increments_epoch(monkeyp
 
 
 @pytest.mark.asyncio
-async def test_acquire_lease_is_idempotent_for_same_owner(monkeypatch):
-    adapter = GiteaStateAdapter(
+async def test_acquire_lease_is_idempotent_for_same_owner(monkeypatch, gitea_adapter_factory):
+    adapter = await gitea_adapter_factory(
         base_url="https://gitea.local",
         owner="acme",
         repo="orket",
@@ -407,7 +411,6 @@ async def test_acquire_lease_is_idempotent_for_same_owner(monkeypatch):
             lease={"owner_id": "runner-a", "acquired_at": "2026-02-15T10:00:00+00:00", "expires_at": "3026-02-15T10:00:00+00:00", "epoch": 3},
         )
     )
-
     async def fake_request_response(method, path, *, params=None, payload=None, extra_headers=None):
         return _FakeResponse({"number": 7, "body": body}, headers={"ETag": '"v8"'})
 
@@ -423,8 +426,8 @@ async def test_acquire_lease_is_idempotent_for_same_owner(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_acquire_lease_returns_none_on_etag_conflict(monkeypatch):
-    adapter = GiteaStateAdapter(
+async def test_acquire_lease_returns_none_on_etag_conflict(monkeypatch, gitea_adapter_factory):
+    adapter = await gitea_adapter_factory(
         base_url="https://gitea.local",
         owner="acme",
         repo="orket",
@@ -445,8 +448,8 @@ async def test_acquire_lease_returns_none_on_etag_conflict(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_renew_lease_updates_expiry_for_same_owner(monkeypatch):
-    adapter = GiteaStateAdapter(
+async def test_renew_lease_updates_expiry_for_same_owner(monkeypatch, gitea_adapter_factory):
+    adapter = await gitea_adapter_factory(
         base_url="https://gitea.local",
         owner="acme",
         repo="orket",
@@ -486,8 +489,8 @@ async def test_renew_lease_updates_expiry_for_same_owner(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_renew_lease_returns_none_for_non_owner(monkeypatch):
-    adapter = GiteaStateAdapter(
+async def test_renew_lease_returns_none_for_non_owner(monkeypatch, gitea_adapter_factory):
+    adapter = await gitea_adapter_factory(
         base_url="https://gitea.local",
         owner="acme",
         repo="orket",
@@ -501,7 +504,6 @@ async def test_renew_lease_returns_none_for_non_owner(monkeypatch):
             lease={"owner_id": "runner-a", "epoch": 1},
         )
     )
-
     async def fake_request_response(method, path, *, params=None, payload=None, extra_headers=None):
         return _FakeResponse({"number": 31, "body": body}, headers={"ETag": '"v4"'})
 
@@ -515,9 +517,9 @@ async def test_renew_lease_returns_none_for_non_owner(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_renew_lease_returns_none_for_nonnumeric_card_id(monkeypatch, caplog) -> None:
+async def test_renew_lease_returns_none_for_nonnumeric_card_id(monkeypatch, caplog, gitea_adapter_factory) -> None:
     """Layer: unit. Verifies invalid renew lease card IDs fail closed before any HTTP request."""
-    adapter = GiteaStateAdapter(
+    adapter = await gitea_adapter_factory(
         base_url="https://gitea.local",
         owner="acme",
         repo="orket",
@@ -550,14 +552,13 @@ def test_extract_card_id_from_issue_paths():
 
 
 @pytest.mark.asyncio
-async def test_request_response_logs_structured_failure_with_card_id(monkeypatch, caplog):
-    adapter = GiteaStateAdapter(
+async def test_request_response_logs_structured_failure_with_card_id(monkeypatch, caplog, gitea_adapter_factory):
+    adapter = await gitea_adapter_factory(
         base_url="https://gitea.local",
         owner="acme",
         repo="orket",
         token="secret",
     )
-
     async def fake_request(self, method, url, headers=None, params=None, json=None):
         raise httpx.TimeoutException("simulated timeout")
 
@@ -576,8 +577,8 @@ async def test_request_response_logs_structured_failure_with_card_id(monkeypatch
 
 
 @pytest.mark.asyncio
-async def test_request_response_with_retry_recovers_from_transient_error(monkeypatch):
-    adapter = GiteaStateAdapter(
+async def test_request_response_with_retry_recovers_from_transient_error(monkeypatch, gitea_adapter_factory):
+    adapter = await gitea_adapter_factory(
         base_url="https://gitea.local",
         owner="acme",
         repo="orket",
@@ -601,8 +602,8 @@ async def test_request_response_with_retry_recovers_from_transient_error(monkeyp
 
 
 @pytest.mark.asyncio
-async def test_request_response_with_retry_exhausts_and_raises(monkeypatch):
-    adapter = GiteaStateAdapter(
+async def test_request_response_with_retry_exhausts_and_raises(monkeypatch, gitea_adapter_factory):
+    adapter = await gitea_adapter_factory(
         base_url="https://gitea.local",
         owner="acme",
         repo="orket",
@@ -624,7 +625,7 @@ async def test_request_response_with_retry_exhausts_and_raises(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_gitea_http_client_reuses_pooled_async_client_and_closes_once(monkeypatch):
+async def test_gitea_http_client_reuses_pooled_async_client_and_closes_once(monkeypatch, gitea_adapter_factory):
     """Layer: unit. Verifies the Gitea adapter reuses one pooled AsyncClient instead of constructing one per request."""
 
     class _FakeHttpClient:
@@ -658,7 +659,7 @@ async def test_gitea_http_client_reuses_pooled_async_client_and_closes_once(monk
         return fake_client
 
     monkeypatch.setattr("orket.adapters.storage.gitea_http_client.httpx.AsyncClient", _fake_async_client)
-    adapter = GiteaStateAdapter(base_url="https://gitea.local", owner="acme", repo="orket", token="secret")
+    adapter = await gitea_adapter_factory(base_url="https://gitea.local", owner="acme", repo="orket", token="secret")
 
     await adapter._request_response("GET", "/issues/1")
     await adapter._request_response("GET", "/issues/2")
@@ -670,10 +671,10 @@ async def test_gitea_http_client_reuses_pooled_async_client_and_closes_once(monk
 
 
 @pytest.mark.asyncio
-async def test_acquire_lease_rejects_snapshot_body_that_exceeds_limit(monkeypatch):
+async def test_acquire_lease_rejects_snapshot_body_that_exceeds_limit(monkeypatch, gitea_adapter_factory):
     """Layer: unit. Verifies snapshot writes fail closed before PATCH when the encoded issue body exceeds the configured cap."""
     monkeypatch.setenv("ORKET_GITEA_ISSUE_BODY_MAX_BYTES", "8")
-    adapter = GiteaStateAdapter(
+    adapter = await gitea_adapter_factory(
         base_url="https://gitea.local",
         owner="acme",
         repo="orket",
@@ -697,8 +698,8 @@ async def test_acquire_lease_rejects_snapshot_body_that_exceeds_limit(monkeypatc
 
 
 @pytest.mark.asyncio
-async def test_release_or_fail_persists_terminal_state_and_clears_lease(monkeypatch):
-    adapter = GiteaStateAdapter(
+async def test_release_or_fail_persists_terminal_state_and_clears_lease(monkeypatch, gitea_adapter_factory):
+    adapter = await gitea_adapter_factory(
         base_url="https://gitea.local",
         owner="acme",
         repo="orket",
@@ -749,8 +750,8 @@ async def test_release_or_fail_persists_terminal_state_and_clears_lease(monkeypa
 
 
 @pytest.mark.asyncio
-async def test_release_or_fail_is_idempotent_when_already_final_and_unleased(monkeypatch):
-    adapter = GiteaStateAdapter(
+async def test_release_or_fail_is_idempotent_when_already_final_and_unleased(monkeypatch, gitea_adapter_factory):
+    adapter = await gitea_adapter_factory(
         base_url="https://gitea.local",
         owner="acme",
         repo="orket",
@@ -770,8 +771,8 @@ async def test_release_or_fail_is_idempotent_when_already_final_and_unleased(mon
 
 
 @pytest.mark.asyncio
-async def test_release_or_fail_rejects_cas_conflict(monkeypatch):
-    adapter = GiteaStateAdapter(
+async def test_release_or_fail_rejects_cas_conflict(monkeypatch, gitea_adapter_factory):
+    adapter = await gitea_adapter_factory(
         base_url="https://gitea.local",
         owner="acme",
         repo="orket",
@@ -785,7 +786,6 @@ async def test_release_or_fail_rejects_cas_conflict(monkeypatch):
             lease={"owner_id": "runner-a", "epoch": 4},
         )
     )
-
     async def fake_request_response(method, path, *, params=None, payload=None, extra_headers=None):
         return _FakeResponse({"number": 22, "body": body}, headers={"ETag": '"v7"'})
 

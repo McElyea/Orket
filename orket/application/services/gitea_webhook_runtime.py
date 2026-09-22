@@ -5,24 +5,30 @@ from __future__ import annotations
 import asyncio
 import json
 from collections.abc import Mapping
+from dataclasses import replace
+from functools import partial
 from pathlib import Path
-from types import TracebackType
+from types import MappingProxyType, TracebackType
 from typing import Any, ClassVar
 
 from pydantic import ValidationError
 
-from orket.adapters.execution.owned_io import run_owned_io, run_owned_thread
+from orket.adapters.execution.owned_io import require_sync_context, run_owned_io, run_owned_thread
 from orket.adapters.vcs.gitea_webhook_client import build_webhook_http_client, validate_gitea_url
 from orket.adapters.vcs.gitea_webhook_event import normalize_gitea_review
 from orket.adapters.vcs.webhook_db import WebhookDatabase
 from orket.application.services.application_runtime_lifetime import ApplicationRuntimeLifetime
+from orket.application.services.captured_http_client_service import CapturedHttpClientService
 from orket.application.services.gitea_pr_lifecycle_service import PRLifecycleHandler
 from orket.application.services.gitea_pr_review_service import PRReviewHandler
 from orket.application.services.gitea_sandbox_webhook_service import SandboxDeploymentHandler
+from orket.application.services.native_resource_construction import construct_with_owned_cleanup
 from orket.application.services.runtime_input_service import RuntimeInputService
+from orket.application.services.runtime_result_lifetime import create_runtime_owner
 from orket.application.services.webhook_configuration import WebhookConfiguration, capture_webhook_configuration
 from orket.application.services.webhook_ingress_policy import WebhookIngressPolicy
 from orket.core.contracts.gitea_webhook import PullRequestDispatchWebhookPayload, webhook_payload_validation_error
+from orket.core.contracts.provider_http import CapturedHttpClientPort
 from orket.core.domain.sandbox import SandboxRegistry
 from orket.logging import log_event
 from orket.runtime_paths import resolve_runtime_db_path, resolve_sandbox_lifecycle_db_path
@@ -47,7 +53,9 @@ class GiteaWebhookHandler(ApplicationRuntimeLifetime):
         configuration: WebhookConfiguration | None = None,
         runtime_inputs: RuntimeInputService | None = None,
         require_credentials: bool = True,
+        http_client_owner: CapturedHttpClientPort | None = None,
     ) -> None:
+        require_sync_context(code="E_WEBHOOK_CONSTRUCTION_REQUIRES_ASYNC_OWNER")
         super().__init__()
         self.configuration = configuration or capture_webhook_configuration(
             workspace,
@@ -88,7 +96,12 @@ class GiteaWebhookHandler(ApplicationRuntimeLifetime):
             PRLifecycleHandler(self),
             SandboxDeploymentHandler(self),
         )
-        self.client = build_webhook_http_client(username=self.gitea_user, password=self.gitea_password)
+        self._http_client_owner = http_client_owner if http_client_owner is not None else CapturedHttpClientService(
+            environment=self.configuration.environment, cwd=self.configuration.invocation_root)
+        self.client = construct_with_owned_cleanup(
+            lambda: build_webhook_http_client(username=self.gitea_user, password=self.gitea_password,
+                                              http_client_owner=self._http_client_owner),
+            owner=self._http_client_owner, label="Webhook HTTP construction")
 
     async def _log_event(self, name: str, payload: dict[str, Any]) -> None:
         await run_owned_thread(lambda: log_event(name, payload, self.workspace), label="webhook-event-publication")
@@ -129,7 +142,7 @@ class GiteaWebhookHandler(ApplicationRuntimeLifetime):
         await self.close()
 
     async def _close_final_resource(self) -> None:
-        await run_owned_io(self.client.aclose, label="webhook-http-close", preserve_failure=True)
+        await self._http_client_owner.close(self.client)
 
     async def handle_webhook(self, event_type: str, payload: dict[str, Any]) -> dict[str, Any]:
         captured = json.loads(json.dumps(payload, allow_nan=False))
@@ -218,22 +231,9 @@ class GiteaWebhookHandler(ApplicationRuntimeLifetime):
 async def build_webhook_runtime(
     configuration: WebhookConfiguration, *, runtime_inputs: RuntimeInputService | None = None
 ) -> GiteaWebhookHandler:
-    created = []
-
-    def construct():
-        handler = GiteaWebhookHandler(
-            gitea_url=configuration.gitea_url,
-            configuration=configuration,
-            runtime_inputs=runtime_inputs,
-            allow_insecure=configuration.allow_insecure,
-            require_credentials=False,
-        )
-        created.append(handler)
-        return handler
-
-    try:
-        return await run_owned_thread(construct, label="webhook-runtime-bootstrap")
-    except asyncio.CancelledError:
-        if created:
-            await created[0].close()
-        raise
+    configuration = replace(configuration, environment=MappingProxyType(dict(configuration.environment)))
+    http_owner = CapturedHttpClientService(environment=configuration.environment, cwd=configuration.invocation_root)
+    return await create_runtime_owner(partial(GiteaWebhookHandler,
+        gitea_url=configuration.gitea_url, configuration=configuration, runtime_inputs=runtime_inputs,
+        allow_insecure=configuration.allow_insecure, require_credentials=False, http_client_owner=http_owner),
+        label="webhook-runtime-bootstrap")

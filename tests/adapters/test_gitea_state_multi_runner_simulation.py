@@ -8,6 +8,9 @@ import pytest
 from orket.adapters.storage.gitea_state_adapter import GiteaStateAdapter
 from orket.adapters.storage.gitea_state_models import CardSnapshot, encode_snapshot
 from orket.application.services.gitea_state_worker import GiteaStateWorker
+from tests.helpers.gitea_state_adapter_fixture import gitea_adapter_factory as gitea_adapter_factory
+
+pytestmark = pytest.mark.contract
 
 
 class _SimResponse:
@@ -78,10 +81,10 @@ def _wire(adapter: GiteaStateAdapter, store: _Store):
 
 
 @pytest.mark.asyncio
-async def test_multi_runner_lease_lifecycle_with_renew_and_takeover(monkeypatch):
+async def test_multi_runner_lease_lifecycle_with_renew_and_takeover(monkeypatch, gitea_adapter_factory):
     store = _Store()
-    runner_a = GiteaStateAdapter(base_url="https://gitea.local", owner="acme", repo="orket", token="x")
-    runner_b = GiteaStateAdapter(base_url="https://gitea.local", owner="acme", repo="orket", token="x")
+    runner_a = await gitea_adapter_factory(base_url="https://gitea.local", owner="acme", repo="orket", token="x")
+    runner_b = await gitea_adapter_factory(base_url="https://gitea.local", owner="acme", repo="orket", token="x")
     _wire(runner_a, store)
     _wire(runner_b, store)
 
@@ -118,10 +121,10 @@ async def test_multi_runner_lease_lifecycle_with_renew_and_takeover(monkeypatch)
 
 
 @pytest.mark.asyncio
-async def test_worker_takeover_after_expired_foreign_lease(monkeypatch):
+async def test_worker_takeover_after_expired_foreign_lease(monkeypatch, gitea_adapter_factory):
     store = _Store()
-    adapter_a = GiteaStateAdapter(base_url="https://gitea.local", owner="acme", repo="orket", token="x")
-    adapter_b = GiteaStateAdapter(base_url="https://gitea.local", owner="acme", repo="orket", token="x")
+    adapter_a = await gitea_adapter_factory(base_url="https://gitea.local", owner="acme", repo="orket", token="x")
+    adapter_b = await gitea_adapter_factory(base_url="https://gitea.local", owner="acme", repo="orket", token="x")
     _wire(adapter_a, store)
     _wire(adapter_b, store)
 

@@ -99,7 +99,7 @@ async def test_run_gitea_state_loop_wires_adapter_worker_and_coordinator(monkeyp
                 await asyncio.to_thread(out.write_text, json.dumps(summary, indent=2), encoding="utf-8")
             return summary
 
-    monkeypatch.setattr(module, "GiteaStateAdapter", _FakeAdapter)
+    monkeypatch.setattr(module, "create_gitea_state_adapter", _FakeAdapter)
     monkeypatch.setattr(module, "GiteaStateWorker", _FakeWorker)
     monkeypatch.setattr(module, "GiteaStateWorkerCoordinator", _FakeCoordinator)
 

@@ -14,6 +14,7 @@ from typing import Any
 from orket.adapters.execution.owned_io import run_owned_io, run_owned_thread
 from orket.adapters.storage.gitea_state_adapter import GiteaStateAdapter
 from orket.application.services.application_runtime_lifetime import close_owned_resource
+from orket.application.services.gitea_state_adapter_factory import create_gitea_state_adapter
 from orket.application.services.gitea_state_control_plane_checkpoint_service import (
     build_gitea_state_control_plane_checkpoint_service,
 )
@@ -177,7 +178,8 @@ class GiteaStateLoopRunner:
     ) -> GiteaStateWorker:
         control_plane_db_path = resolve_control_plane_db_path(self.control_plane_db_path,
             invocation_root=self._invocation_root, environment=self._environment)
-        adapter = GiteaStateAdapter(
+        adapter = create_gitea_state_adapter(
+            environment=self._environment, cwd=self._invocation_root,
             base_url=str(inputs.get("gitea_url") or ""),
             token=str(inputs.get("gitea_token") or ""),
             owner=str(inputs.get("gitea_owner") or ""),

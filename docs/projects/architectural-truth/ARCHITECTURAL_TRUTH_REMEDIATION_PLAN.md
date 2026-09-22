@@ -22579,3 +22579,116 @@ Proof roots: .tmp/d-provider-inference-close-validated/ (accepted);
 .tmp/d-provider-inference-sdk-validated/ (rejected installed cleanup candidate);
 .tmp/d-provider-inference-inputs-validated/ (incomplete intermediate candidate);
 .tmp/d-provider-inference-inputs/ (rejected initial candidate and retained observations).
+
+
+#### .93 Gitea HTTP input and construction ownership (2026-09-22)
+
+Responsible maintainer: Codex for Orket Core. Continuing canonical D2/D3 after .92.
+Release-note classification: `compatibility_status`: `breaking`;
+`affected_audience`: `all`; `migration_requirement`: `required`.
+The linked contract delta specifies the owned-factory migration.
+Gitea state and webhook clients now share captured proxy/trust/key-log policy and
+one acquired-resource owner. Native entry refuses event-loop construction before
+effects. Async factories retain partial and completed-but-unadopted clients through
+cleanup; constructor and cleanup failure remain observable together. Native provider
+construction uses the same cleanup supervisor. Authentication, retry/error handling,
+URL admission, redirects and finite deadlines are preserved.
+
+Both Gitea CLI paths capture invocation/argument inputs and own adapters across
+construction, body and teardown. Coordinator summaries use the shared diff ledger
+at the existing canonical output path; reconciliation remains read-only. The async
+webhook builder snapshots supplied configuration mappings before awaiting dispatch,
+so storage roots and HTTP settings cannot observe different versions of that mapping.
+Existing runtime lifetime/cancellation machinery and BT1-5 authority are preserved.
+All assertions in modified existing tests remain AST-identical.
+
+| Cell | Tests / failures / errors / skips | Pytest seconds | Installed origins |
+|---|---|---|---|
+| Fresh source | 2186 / 0 / 0 / 0 | 397.672 | source |
+| Installed a93e-win-py311 | 2186 / 0 / 0 / 0 | 403.290 | 1044 |
+| Installed a93e-win-py312 | 2186 / 0 / 0 / 0 | 494.368 | 1044 |
+
+All 2007 published .92 identities remain across 213 modules. The selection adds 71 new
+integration cases and 108 previously existing preservation cases. Final focused
+selection: 607 passes with unchanged inputs. Actual TCP/TLS, proxy credentials,
+certificate selection, key-log files, native/request interruption, partial failures,
+CLI SQLite and cleanup outcomes are observed. Each source/native cell records 128
+actual SQLite observations under the unchanged 0.5s bound; maximum 0.152583300s.
+Controlled protocol responses establish transport/ownership behavior, not CAP.
+
+Complete core source/wheel/sdist parity: 1158 Python + 20 unchanged data = 1178 files;
+2393 frozen support inputs. Canonical C policy observes
+1158 files / 3797 edges / six resolved routes,
+with zero violations, collection errors, unknown modules or authority cycles.
+Ruff remains 89 existing findings / zero introduced. Scoped lint, docs hygiene, release
+metadata, whitespace and exact Python index binding pass. New Python files<=400
+lines/new functions<=70lines; the existing 800-line adapter test does not grow.
+Both Quality jobs retain the four new integration modules; hosted execution is unverified.
+
+Separate live proof: 12 actual disposable Gitea cases pass after the configuration
+repair, exercising state closeout, public pipeline/card publication, signed webhook
+delivery and review behavior. Native clients/listeners and all owned containers
+are torn down; the pre-existing vibe-rail-gitea container remains unchanged.
+This is source live Gitea proof with controlled workload execution, not model proof.
+Separately, five public CLI subprocess invocations pass against controlled loopback
+HTTP and actual SQLite: two coordinator and two reconciliation successes, plus
+pre-request mutation refusal. Both stable summary paths retain two diff-ledger entries;
+all processes/server handlers close and the SQLite record is unchanged. This is
+source end-to-end CLI proof, not an installed CLI or actual-Gitea claim.
+Renewed already-loaded LMStudio dark-osmosis-24b-v1.0 returns text and its client
+closes, but fails the single-word OK instruction. Transport succeeds; task result is
+partial success. Ollama still reports a 2s ConnectTimeout. Bound provider bytes match
+this final candidate; no model load, provider substitution or llama.cpp/CAP acceptance.
+
+Retained counterexamples and incomplete candidates:
+- Identical routing controls on source and byte-verified installed v0.6.92: 8 cases,
+  six failures and two ambient controls passing. Initial repair: 97 passes; caller
+  migration: 74 passes. No test deadline or old assertion was weakened.
+- New TLS/lifetime selection: 71 cases / 3 failures used the wrong expected webhook
+  teardown envelope. Corrected assertions verify RuntimeError and its exact retained
+  cleanup cause; expanded selection: 81 passes. Production failure wrapping is unchanged.
+- Initial 606 focused and 12 live Gitea passes preceded a separate borrowed-configuration
+  counterexample: 1 failure showed storage using changed inputs while HTTP retained
+  original inputs. Snapshot repair: 80 passes. Preserve the initial passing observations
+  as incomplete coverage, not final acceptance. The earlier trust fixture's escaped
+  empty durable directories are preserved under the initial proof root; corrected
+  fixtures keep their durable paths beneath their temporary roots.
+- Corrected 607 focused and 12 live cases preceded final diff review, which restored
+  two historical changelog lines after a Windows default-decoder edit. That rebuilt
+  candidate passed 2186 source and installed311 cases, but installed312 stalled in
+  timeout-coordinator teardown. Three bounded diagnostics captured ConnectionResetError
+  in CPython3.12.2 Proactor socket shutdown before server detach. The identified pytest
+  child was explicitly stopped and reaped; the outer owner returned15 and restored its
+  execution state. This failed candidate and all diagnostic observations are retained.
+- The interruption fixture waits for actual peer termination instead of sending a
+  response after cancellation. A clean read must return EOF; the shared helper retains
+  its existing allowed-connection-reset handling. Every existing assertion remains; one EOF
+  assertion and a five-second server-close bound are added. No runtime/test deadline
+  is extended. Fresh 607 focused, 12 disposable Gitea, source and both installed cells
+  bind the corrected fixture and final artifacts. Earlier passes are not promoted.
+  This does not repair CPython shutdown when a response races a disconnected peer.
+
+Authority: docs/specs/GITEA_HTTP_CLIENT_OWNERSHIP.md and its contract delta at
+ docs/architecture/CONTRACT_DELTA_GITEA_HTTP_INPUTS_D_2026-09-22.md.
+Scoped AC-01 through AC-08 direction, inputs, ownership and failure truth pass; replay and wider
+D2/D3/D4 remain partial. Next bounded review: borrowed Gitea retry request values and
+ambient lease body-size policy, then artifact-export/builtin-connector HTTP ownership.
+next-gitea-request-inputs.json retains read-only discovery. A separate isolated
+source TCP probe at .tmp/d-gitea-request-discovery/observation.json confirms four
+counterexamples: retry body/query/header drift, ignored captured high/low lease caps,
+and ambient leakage into an explicit empty lease-policy environment. One ambient
+control passes and all clients close. These are next-scope gaps, not repaired .93
+behavior or installed .94 acceptance; their exact source bytes are retained.
+
+Remaining blockers or drift: retained .72 Linux clock instability without fresh
+measurement, settings changes or weaker deadlines; lazy TLS directory I/O, Ollama
+availability and actual-model instruction failure; unknown Windows latency/sleep and
+Git timeout causes; ProductFlow replay, legacy Kernel completion, fresh full-suite 89%
+coverage, hosted Gitea, E1 taxonomy/no-op/Ruff, E2 bounded authority/decomposition and
+all CAP-1/2/3 criteria. No main merge, whole-plan completion, release readiness or lane
+retirement. Explicit user acceptance remains required for retirement.
+
+Proof roots: .tmp/d-gitea-http-inputs-eof/ (accepted final source/native candidate),
+.tmp/d-gitea-http-inputs-validated/ (earlier 607 focused / 12 live proof),
+.tmp/d-gitea-http-inputs-final/ (rejected source/311 pass,312 hang and diagnostics),
+.tmp/d-gitea-http-inputs/ (initial and corrected counterexamples/probes).

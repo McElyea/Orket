@@ -20,6 +20,4 @@ class ProviderInferenceHttpService:
             own_resource=self._resources.retain)
 
     async def close(self, client: Any = None) -> None:
-        if client is not None:
-            self._resources.retain(client)
-        await self._resources.close()
+        await self._resources.close(client)

@@ -32,6 +32,14 @@ run time. The concrete refusal and partial-effect limits live in
 
 ## Implementation Status
 
+Gitea state/webhook HTTP composition uses captured network policy and one native
+resource owner. Async callers use owned factories; native constructors refuse
+entry on the event loop. Both Gitea CLI paths retain adapters through cleanup,
+and coordinator summaries use the shared diff ledger at the existing output path.
+Authorization, retries, URL admission, finite deadlines and webhook failure envelopes
+remain authoritative. Contract: `docs/specs/GITEA_HTTP_CLIENT_OWNERSHIP.md`;
+migration: `docs/architecture/CONTRACT_DELTA_GITEA_HTTP_INPUTS_D_2026-09-22.md`.
+
 SDK workload parents validate configured capability identifiers before dispatch without
 constructing unused providers. The native child owns default model clients through
 construction, authorization, execution and cleanup; a cleanup failure cannot publish

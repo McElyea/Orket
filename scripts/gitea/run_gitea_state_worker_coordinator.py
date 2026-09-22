@@ -1,3 +1,5 @@
+# ruff: noqa: E402 -- Direct CLI bootstrap must put the repository on sys.path before local imports.
+
 from __future__ import annotations
 
 import argparse
@@ -5,27 +7,31 @@ import asyncio
 import json
 import os
 import socket
-from datetime import UTC, datetime
-from pathlib import Path
 import sys
-from typing import Any, Dict
+from datetime import UTC, datetime
+from functools import partial
+from pathlib import Path
+from typing import Any
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from orket.adapters.storage.gitea_state_adapter import GiteaStateAdapter
+from orket.application.services.gitea_state_adapter_factory import create_gitea_state_adapter
 from orket.application.services.gitea_state_pilot import (
     collect_gitea_state_pilot_inputs,
     evaluate_gitea_state_pilot_readiness,
 )
+from orket.application.services.gitea_state_worker import GiteaStateWorker
+from orket.application.services.gitea_state_worker_coordinator import GiteaStateWorkerCoordinator
+from orket.application.services.process_input_service import capture_process_context
 from orket.application.services.runtime_policy import (
     resolve_gitea_worker_max_duration_seconds,
     resolve_gitea_worker_max_idle_streak,
     resolve_gitea_worker_max_iterations,
 )
-from orket.application.services.gitea_state_worker import GiteaStateWorker
-from orket.application.services.gitea_state_worker_coordinator import GiteaStateWorkerCoordinator
+from orket.application.services.runtime_result_lifetime import open_runtime_owner
+from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
 
 
 def _parse_args() -> argparse.Namespace:
@@ -68,8 +74,8 @@ def _parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _required_env(name: str) -> str:
-    value = str(os.environ.get(name) or "").strip()
+def _required_env(name: str, environment) -> str:
+    value = str(environment.get(name) or "").strip()
     if not value:
         raise ValueError(f"missing required environment variable: {name}")
     return value
@@ -82,51 +88,54 @@ def _resolve_worker_id(raw: str) -> str:
     return f"{socket.gethostname()}-{os.getpid()}"
 
 
-async def _run_loop(args: argparse.Namespace) -> Dict[str, Any]:
-    readiness = evaluate_gitea_state_pilot_readiness(collect_gitea_state_pilot_inputs())
+async def _run_loop(args: argparse.Namespace) -> dict[str, Any]:
+    directory, environment = capture_process_context()
+    args = argparse.Namespace(**vars(args))
+    readiness = evaluate_gitea_state_pilot_readiness(collect_gitea_state_pilot_inputs(environment=environment))
     if not bool(readiness.get("ready")):
         failures = ", ".join(list(readiness.get("failures") or [])) or "unknown readiness failure"
         raise RuntimeError(f"gitea state pilot readiness failed: {failures}")
 
     max_iterations = resolve_gitea_worker_max_iterations(
         args.max_iterations,
-        os.environ.get("ORKET_GITEA_WORKER_MAX_ITERATIONS"),
+        environment.get("ORKET_GITEA_WORKER_MAX_ITERATIONS"),
     )
     max_idle_streak = resolve_gitea_worker_max_idle_streak(
         args.max_idle_streak,
-        os.environ.get("ORKET_GITEA_WORKER_MAX_IDLE_STREAK"),
+        environment.get("ORKET_GITEA_WORKER_MAX_IDLE_STREAK"),
     )
     max_duration_seconds = resolve_gitea_worker_max_duration_seconds(
         args.max_duration_seconds,
-        os.environ.get("ORKET_GITEA_WORKER_MAX_DURATION_SECONDS"),
+        environment.get("ORKET_GITEA_WORKER_MAX_DURATION_SECONDS"),
     )
 
-    adapter = GiteaStateAdapter(
-        base_url=_required_env("ORKET_GITEA_URL"),
-        token=_required_env("ORKET_GITEA_TOKEN"),
-        owner=_required_env("ORKET_GITEA_OWNER"),
-        repo=_required_env("ORKET_GITEA_REPO"),
+    construct = partial(create_gitea_state_adapter, environment=environment, cwd=directory,
+        base_url=_required_env("ORKET_GITEA_URL", environment),
+        token=_required_env("ORKET_GITEA_TOKEN", environment),
+        owner=_required_env("ORKET_GITEA_OWNER", environment),
+        repo=_required_env("ORKET_GITEA_REPO", environment),
     )
     worker_id = _resolve_worker_id(args.worker_id)
-    worker = GiteaStateWorker(
-        adapter=adapter,
-        worker_id=worker_id,
-        lease_seconds=args.lease_seconds,
-        renew_interval_seconds=args.renew_interval_seconds,
-    )
-    coordinator = GiteaStateWorkerCoordinator(
-        worker=worker,
-        fetch_limit=args.fetch_limit,
-        max_iterations=max_iterations,
-        max_idle_streak=max_idle_streak,
-        max_duration_seconds=max_duration_seconds,
-        idle_sleep_seconds=args.idle_sleep_seconds,
-    )
+    async with open_runtime_owner(construct, label="gitea-coordinator-adapter") as adapter:
+        worker = GiteaStateWorker(
+            adapter=adapter,
+            worker_id=worker_id,
+            lease_seconds=args.lease_seconds,
+            renew_interval_seconds=args.renew_interval_seconds,
+        )
+        coordinator = GiteaStateWorkerCoordinator(
+            worker=worker,
+            fetch_limit=args.fetch_limit,
+            max_iterations=max_iterations,
+            max_idle_streak=max_idle_streak,
+            max_duration_seconds=max_duration_seconds,
+            idle_sleep_seconds=args.idle_sleep_seconds,
+        )
 
-    async def _work_fn(_card: Dict[str, Any]) -> Dict[str, Any]:
-        return {"result": "ok"}
+        async def _work_fn(_card: dict[str, Any]) -> dict[str, Any]:
+            return {"result": "ok"}
 
-    summary = await coordinator.run(work_fn=_work_fn)
+        summary = await coordinator.run(work_fn=_work_fn)
     return {
         "timestamp_utc": datetime.now(UTC).isoformat(),
         "worker_id": worker_id,
@@ -159,8 +168,7 @@ def main() -> int:
         return 1
 
     out_path = Path(args.summary_out)
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    write_payload_with_diff_ledger(out_path, payload)
     print(json.dumps(payload, indent=2))
     return 0
 
