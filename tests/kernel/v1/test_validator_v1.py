@@ -14,8 +14,9 @@ from orket.kernel.v1.validator import (
     resolve_capability_v1,
     start_run_v1,
 )
+from tests.helpers.kernel_runtime import kernel_runtime as kernel_runtime
 
-pytestmark = pytest.mark.integration
+pytestmark = [pytest.mark.integration, pytest.mark.usefixtures("kernel_runtime")]
 
 
 def test_start_run_v1_returns_run_handle_shape() -> None:

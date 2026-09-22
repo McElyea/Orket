@@ -7,10 +7,15 @@ from contextlib import asynccontextmanager, contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass, field
 from datetime import datetime
+from pathlib import Path
 from threading import RLock
 from typing import Any
 
 from orket.adapters.execution.owned_io import require_sync_context, run_owned_thread
+from orket.application.services.kernel_invocation_inputs import (
+    bind_kernel_invocation_root,
+    capture_kernel_invocation_root,
+)
 from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.core.contracts.kernel_observation import KernelObservation
 
@@ -20,10 +25,11 @@ class KernelInputSources:
     utc_now: Callable[[], datetime] = field(repr=False)
     create_secret_token: Callable[[], str] = field(repr=False)
     create_credential_token_id: Callable[[], str] = field(repr=False)
+    create_kernel_run_id: Callable[[], str] = field(repr=False)
 
     @classmethod
     def capture(cls, source: RuntimeInputService) -> KernelInputSources:
-        return cls(source.utc_now, source.create_secret_token, source.create_credential_token_id)
+        return cls(source.utc_now, source.create_secret_token, source.create_credential_token_id, source.create_kernel_run_id)
 
 
 class KernelStateLock:
@@ -51,9 +57,10 @@ class KernelStateLock:
 class KernelRuntime:
     """One caller-owned volatile state lifetime; no implicit default instance."""
 
-    def __init__(self, *, runtime_inputs: RuntimeInputService | None = None) -> None:
+    def __init__(self, *, runtime_inputs: RuntimeInputService | None = None, invocation_root: Path | None = None) -> None:
         selected = RuntimeInputService() if runtime_inputs is None else runtime_inputs
         self.sources = KernelInputSources.capture(selected)
+        self.workspace_inputs = capture_kernel_invocation_root(invocation_root)
         self.lock = KernelStateLock()
         self.next_ledger_id = 1
         self.session_event_heads: dict[str, str] = {}
@@ -76,7 +83,8 @@ class KernelRuntime:
             raise RuntimeError("Kernel runtime is closed.")
         token = _active_runtime.set(self)
         try:
-            yield self
+            with bind_kernel_invocation_root(self.workspace_inputs):
+                yield self
         finally:
             _active_runtime.reset(token)
 
@@ -86,8 +94,9 @@ class KernelRuntime:
 
     @classmethod
     @asynccontextmanager
-    async def open(cls, *, runtime_inputs: RuntimeInputService | None = None) -> AsyncIterator[KernelRuntime]:
-        owner = cls(runtime_inputs=runtime_inputs)
+    async def open(cls, *, runtime_inputs: RuntimeInputService | None = None,
+                   invocation_root: Path | None = None) -> AsyncIterator[KernelRuntime]:
+        owner = cls(runtime_inputs=runtime_inputs, invocation_root=invocation_root)
         try:
             with owner.activate():
                 yield owner

@@ -1,6 +1,6 @@
 # CURRENT_AUTHORITY.md
 
-Last updated: 2026-09-21
+Last updated: 2026-09-22
 
 Legacy Kernel capability evaluation uses a package-owned default and one validated
 immutable policy observation. Application capture owns the read-only adapter;
@@ -92,6 +92,16 @@ credential consumption time is still sampled after native lock acquisition.
 Volatile state, partial failure and trusted-Python limits remain; this is not
 durable recovery, hostile-code isolation or per-user authorization.
 Migration and proof scope: `docs/architecture/CONTRACT_DELTA_KERNEL_RUNTIME_OWNER_D_2026-09-21.md`.
+
+Kernel owners bind selected run-identity ports and immutable lexical roots.
+Standard engines supply their project root; returned start handles carry absolute
+workspace paths. Native invocation and publication retain admitted roots before
+worker scheduling. Requests detach before native locks or identity callbacks wait.
+Pure typed start has no ambient identity/root observation; implicit start requires
+an active native owner. This does not provide path confinement, durable run
+admission, uniqueness enforcement or rollback. Migration and proof scope:
+`docs/specs/KERNEL_RUN_INPUTS.md` and
+`docs/architecture/CONTRACT_DELTA_KERNEL_RUN_INPUTS_D_2026-09-22.md`.
 
 The runtime CLI captures engine inputs after startup and owns engine construction
 through interruption. Board/replay reads, manifest output and native path
@@ -1345,7 +1355,7 @@ Trust Kernel and Portable Conformance completed lane authority is archived under
 ```json
 {
   "version": 1,
-  "last_updated": "2026-09-21",
+  "last_updated": "2026-09-22",
   "authority": {
     "dependency_authority": {
       "primary": "pyproject.toml",

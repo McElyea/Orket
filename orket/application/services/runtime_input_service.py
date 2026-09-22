@@ -12,6 +12,9 @@ class RuntimeInputService:
     def create_session_id(self) -> str:
         return str(uuid4())[:8]
 
+    def create_kernel_run_id(self) -> str:
+        return f"run-{uuid4().hex[:8]}"
+
     def create_effect_owner_id(self) -> str:
         return str(uuid4())
 

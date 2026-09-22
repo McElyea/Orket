@@ -4,6 +4,7 @@ import json
 import tempfile
 from pathlib import Path
 
+import pytest
 from jsonschema import Draft202012Validator
 from referencing import Registry, Resource
 
@@ -16,6 +17,9 @@ from orket.kernel.v1.validator import (
     resolve_capability_v1,
     start_run_v1,
 )
+from tests.helpers.kernel_runtime import kernel_runtime as kernel_runtime
+
+pytestmark = [pytest.mark.contract, pytest.mark.usefixtures("kernel_runtime")]
 
 CONTRACTS_ROOT = Path("docs/projects/archive/OS-Stale-2026-02-28/contracts")
 

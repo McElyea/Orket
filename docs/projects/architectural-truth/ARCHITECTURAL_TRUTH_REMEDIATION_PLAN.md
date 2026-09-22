@@ -12519,9 +12519,10 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.78 immutable packaged Kernel capability policy, retaining 0.6.77 explicit
-runtime/inputs/shutdown, 0.6.76 state/publication, 0.6.75 credential
-expiry/authorization and 0.6.74 memory,
+0.6.79 selected Kernel run identity and captured workspace inputs, retaining
+0.6.78 immutable packaged capability policy, 0.6.77 explicit runtime/inputs/
+shutdown, 0.6.76 state/publication, 0.6.75 credential expiry/authorization
+and 0.6.74 memory,
 0.6.73 sandbox commands, 0.6.72 approval submission, 0.6.71 authorization,
 0.6.65/0.6.66 API queries, 0.6.67 legacy action, 0.6.68 construction,
 0.6.69 cleanup and 0.6.70 files. Preserve the governed legacy-export cutover;
@@ -12530,7 +12531,7 @@ and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
 Preserve every failed and
 passing source/native observation and the historical clock diagnosis. Canonical
-Ruff has 94 findings. The prior stale benchmark expectation passes in the
+Ruff has 89 findings at the .79 checkpoint. The prior stale benchmark expectation passes in the
 new source/native selection. The unmodified published .39 complete rerun has
 7,260 passes, three failures and 89 skips; its coverage is 84.56120595327887%
 against the unchanged 89% gate. The two parent-Git-dependent fixture failures and
@@ -21228,3 +21229,93 @@ Preserve BT-1 through BT-5; explicit user acceptance is required to retire the l
 Evidence: `.tmp/d-kernel-validator/`. Retained September20 and .77 hashes and
 original checkout preservation are separately verified. Scoped checkpoint only;
 no whole-plan completion, release-ready claim or lane retirement.
+
+
+#### .79 Selected Kernel run identity and captured workspace inputs (2026-09-22)
+
+Kernel start now consumes immutable `KernelRunInputs`: a nonempty plain-string
+identity and an absolute lexical workspace value. Pure response construction
+does not mint identity or inspect a filesystem. Application capture validates
+the request, captures its root, then samples the explicit owner's selected
+`create_kernel_run_id` method once. The default preserves the existing UUID-based
+format. Invalid identity or source failure refuses without another source/retry.
+Trusted Python callers can provide typed inputs; request JSON cannot impersonate
+that authority. Implicit start requires an active owner and native execution;
+typed start is pure and safe on the event loop without an owner.
+
+Each Kernel owner captures an invocation root. Standard engines supply their
+selected project/config root. Owner activation binds that value; relative run
+workspaces resolve against it, and start handles return absolute lexical paths.
+Direct async invocation/publication captures its surrounding root before worker
+admission. Direct execute-turn captures its relative workspace before policy I/O
+or staging. Gateway requests detach before native lock waits; lifecycle input
+lists and nested bodies detach before the start callback. Neither root capture
+nor start creates files. Drive-relative Windows paths refuse.
+
+This is lexical capture, not symlink resolution, hostile path confinement or
+per-user path authorization. It does not make process-wide chdir safe or enforce
+run-ID uniqueness, durable admission/recovery, rollback or exactly-once work.
+Owner roots take precedence over a surrounding invocation root. Legacy finish
+still echoes host-supplied PASS/FAIL and reports zero turns; it is not an aggregate
+execution verdict or independent completion evidence. Existing LSI/promotion
+partial-effect behavior remains. Migration and limits live in
+`docs/specs/KERNEL_RUN_INPUTS.md` and the matching contract delta.
+
+Live local proof with controlled input callbacks and structural binding:
+
+| Cell | Tests / failures / errors / skips | Pytest seconds | Installed import origins |
+| --- | --- | --- | --- |
+| Fresh source | 691 / 0 / 0 / 0 | 72.008 | source checkout |
+| Installed win-py311 | 691 / 0 / 0 / 0 | 73.123 | 925 |
+| Installed win-py312 | 691 / 0 / 0 / 0 | 78.948 | 925 |
+
+The frozen 77-module selection retains every 659-case .78 identity and adds 32
+cases. All three successful cells have identical cases and unchanged frozen
+inputs. Tests independently observe actual staging after cwd changes, callback
+mutation, native lock and queued worker waits, invalid/failed selected identity,
+concurrent owners, and authenticated in-process ASGI lifecycle. Cancellation,
+timeout and close retain admitted work; source failure stays visible. Independent
+SQLite completes below 0.5s during all ten measured waits per cell; maximum
+0.013946300s. Existing holds and deadlines are unchanged. No deployed HTTP,
+provider inference, outward connector, durable Kernel restart, Linux, physical
+sleep or whole-suite acceptance is claimed. Both Quality jobs select the four
+new modules; hosted execution remains unavailable.
+
+Five final current counterexamples fail against the byte-verified installed .78
+wheel without collection errors or skips. The five opening failures are retained;
+the repaired focused runs pass 5 and 57 cases. Initial selection Ruff B023 failure
+was repaired by binding the loop value in its callback; the failed helper remains.
+The first frozen source run passed 690 and failed one authority-date contract:
+Markdown said September22 while embedded JSON still said September21. Its full
+declaration, build artifacts and output remain under `.tmp/d-kernel-run-inputs/`.
+The separate corrected candidate repairs that JSON date, reruns structural
+collection, rebuilds, and requires fresh source and both installed cells. Product
+and test Python bytes remain identical; no test or deadline was weakened.
+
+Canonical C passes: 1134 Python files,
+3669 edges, six resolved dynamic routes, zero violations,
+analysis errors, unknown modules or authority cycles. Complete source/sdist/wheel
+parity covers 1134 Python and 20 unchanged data files (1154 members total);
+2289 support files are frozen. Full Ruff remains 89 existing
+findings, none introduced. Scoped lint, size, docs and release metadata pass.
+Baseline collection remains distinct from release readiness. Retained September20
+and .78 evidence hashes and preservation of the original checkout are verified
+separately before sealing the checkpoint.
+
+Remaining blockers or drift: the latest Linux preflight remains the retained .72
+environment blocker (240.006951941s observed; final quiet 18.843389227s versus 60s;
+clock steps outside 0.01s; cause unknown). No new Linux measurement or deadline
+change. Continue D with other Kernel LSI/promotion filesystem/effect inputs,
+outbound policy reads, complete adapter/effect and async-reachability inventories,
+shared SDK synchronous bridge lifetime and helper-runtime owners. Then E1
+marker/no-op/Ruff/full-coverage, E2 generated authority/history decomposition,
+and CAP1/2/3 implementation and acceptance remain. Legacy finish truth must not
+be used as independent capability acceptance. Full-suite 89%, hosted Gitea Quality,
+Ollama-specific alias flows, earlier Git timeout cause and physical-sleep timing
+remain unverified. Preserve BT-1 through BT-5; explicit user acceptance is required
+to retire the lane.
+
+Evidence: `.tmp/d-kernel-run-inputs/`; accepted fresh source, installed manifest,
+harness and audit: `.tmp/d-kernel-run-inputs-corrected/`. Future artifact/support
+inheritance must use the corrected manifest. Scoped checkpoint only; no whole-plan
+completion, release-ready claim or lane retirement.

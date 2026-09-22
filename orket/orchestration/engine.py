@@ -109,7 +109,7 @@ class OrchestrationEngine:
         self.kernel_action_control_plane = control_plane_services.kernel_action_control_plane
         self.kernel_action_control_plane_operator = control_plane_services.kernel_action_control_plane_operator
         self.kernel_action_control_plane_view = control_plane_services.kernel_action_control_plane_view
-        self.kernel_gateway = kernel_gateway or KernelV1Gateway(runtime_inputs=self.runtime_inputs)
+        self.kernel_gateway = kernel_gateway or KernelV1Gateway(runtime_inputs=self.runtime_inputs, invocation_root=self.config_root)
         self.kernel_runtime_lifetime = KernelRuntimeLifetime(self.kernel_gateway.runtime)
         self._pipeline = ExecutionPipeline(
             self.workspace_root,

@@ -4,19 +4,23 @@ import hashlib
 import json
 from pathlib import Path
 from typing import Any
-from uuid import uuid4
 
 from orket.adapters.execution.owned_io import require_sync_context
 from orket.application.services.kernel_action_input_service import capture_kernel_request
 from orket.application.services.kernel_capability_policy_service import selected_kernel_capability_policy
+from orket.application.services.kernel_invocation_inputs import capture_kernel_invocation_root
+from orket.application.services.kernel_run_input_service import capture_kernel_run_inputs
 from orket.core.contracts.kernel_capability_policy import KernelCapabilityPolicy
+from orket.core.contracts.kernel_run_inputs import (
+    CONTRACT_VERSION,
+    DEFAULT_VISIBILITY_MODE,
+    DEFAULT_WORKSPACE_ROOT,
+    KernelRunInputs,
+    build_start_run_response,
+)
 from orket.kernel.v1.canonical import compute_turn_result_digest
 from orket.kernel.v1.state.lsi import LocalSovereignIndex
 from orket.kernel.v1.state.promotion import promote_turn
-
-CONTRACT_VERSION = "kernel_api/v1"
-DEFAULT_VISIBILITY_MODE = "local_only"
-DEFAULT_WORKSPACE_ROOT = ".orket_kernel"
 
 
 def _issue(
@@ -258,25 +262,19 @@ def _build_replay_report(
     }
 
 
-def start_run_v1(request: dict[str, Any]) -> dict[str, Any]:
+def start_run_v1(
+    request: dict[str, Any], *, run_inputs: KernelRunInputs | None = None,
+) -> dict[str, Any]:
+    request = capture_kernel_request(request)
     if request.get("contract_version") != CONTRACT_VERSION:
         raise ValueError("contract_version must be kernel_api/v1")
     workflow_id = request.get("workflow_id")
     if not isinstance(workflow_id, str) or not workflow_id:
         raise ValueError("workflow_id is required")
 
-    run_id = f"run-{uuid4().hex[:8]}"
-    visibility_mode = request.get("visibility_mode") or DEFAULT_VISIBILITY_MODE
-    workspace_root = request.get("workspace_root") or DEFAULT_WORKSPACE_ROOT
-    return {
-        "contract_version": CONTRACT_VERSION,
-        "run_handle": {
-            "contract_version": CONTRACT_VERSION,
-            "run_id": run_id,
-            "visibility_mode": visibility_mode,
-            "workspace_root": workspace_root,
-        },
-    }
+    selected = run_inputs if run_inputs is not None else capture_kernel_run_inputs(
+        request.get("workspace_root") or DEFAULT_WORKSPACE_ROOT)
+    return build_start_run_response(selected, request.get("visibility_mode") or DEFAULT_VISIBILITY_MODE)
 
 
 def execute_turn_v1(
@@ -372,7 +370,7 @@ def execute_turn_v1(
         )
 
     workspace_root = run_handle.get("workspace_root") or DEFAULT_WORKSPACE_ROOT
-    root = Path(str(workspace_root))
+    root = Path(capture_kernel_invocation_root(str(workspace_root)).root)
     lsi = LocalSovereignIndex(str(root))
 
     turn_input = request.get("turn_input")

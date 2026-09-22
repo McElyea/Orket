@@ -98,7 +98,10 @@ Do not restore global-map or test-reset defaults to migrate a caller.
 Legacy capability policy reads and native execute-turn use owned workers. Typed
 policy inputs and the package-owned default follow
 `docs/specs/KERNEL_CAPABILITY_POLICY_INPUTS.md`; do not restore CWD lookup or
-silent empty-policy fallback.
+silent empty-policy fallback. Implicit Kernel start also requires an active
+owner and native execution; typed run inputs permit pure start. Preserve bound
+project/invocation roots across worker waits and use the selected run-ID port:
+`docs/specs/KERNEL_RUN_INPUTS.md`.
 
 Prompt commands use `python -m orket.interfaces.prompts_cli --root <project> ...`.
 Prompt reads share model-file ownership with writers and can create native lock

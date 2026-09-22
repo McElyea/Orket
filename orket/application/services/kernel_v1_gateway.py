@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 from orket.adapters.execution.owned_io import require_sync_context
+from orket.application.services.kernel_action_input_service import capture_kernel_request
 from orket.application.services.kernel_runtime_owner import KernelRuntime
 from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.kernel.v1 import api as kernel_api
@@ -11,16 +13,17 @@ from orket.kernel.v1 import api as kernel_api
 class KernelV1Gateway:
     """Application-facing gateway for the kernel v1 API surface."""
 
-    def __init__(self, *, runtime_inputs: RuntimeInputService | None = None) -> None:
-        self.runtime = KernelRuntime(runtime_inputs=runtime_inputs)
+    def __init__(self, *, runtime_inputs: RuntimeInputService | None = None, invocation_root: Path | None = None) -> None:
+        self.runtime = KernelRuntime(runtime_inputs=runtime_inputs, invocation_root=invocation_root)
 
     def close(self) -> None:
         self.runtime.close()
 
     def _call(self, operation, request):
         require_sync_context(code="E_KERNEL_INVOCATION_REQUIRES_ASYNC_OWNER")
+        captured = capture_kernel_request(request)
         with self.runtime.activate(), self.runtime.lock:
-            return operation(request)
+            return operation(captured)
 
     def start_run(self, request: dict[str, Any]) -> dict[str, Any]:
         return self._call(kernel_api.start_run, request)
@@ -75,18 +78,20 @@ class KernelV1Gateway:
         finish_outcome: str = "PASS",
         start_request: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
+        captured = capture_kernel_request({"workflow_id": workflow_id, "start_request": start_request,
+            "execute_turn_requests": execute_turn_requests, "finish_outcome": finish_outcome})
         start_payload = {
             "contract_version": "kernel_api/v1",
-            "workflow_id": workflow_id,
+            "workflow_id": captured["workflow_id"],
         }
-        if isinstance(start_request, dict):
-            start_payload.update(start_request)
+        if isinstance(captured["start_request"], dict):
+            start_payload.update(captured["start_request"])
 
         start_response = self.start_run(start_payload)
         run_handle = start_response["run_handle"]
 
         turns: list[dict[str, Any]] = []
-        for request in execute_turn_requests:
+        for request in captured["execute_turn_requests"]:
             payload = {"contract_version": "kernel_api/v1", **request, "run_handle": run_handle}
             turns.append(self.execute_turn(payload))
 
@@ -94,7 +99,7 @@ class KernelV1Gateway:
             {
                 "contract_version": "kernel_api/v1",
                 "run_handle": run_handle,
-                "outcome": finish_outcome,
+                "outcome": captured["finish_outcome"],
             }
         )
         return {

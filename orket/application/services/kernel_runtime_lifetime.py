@@ -8,7 +8,12 @@ from contextvars import ContextVar
 from typing import Any, TypeVar
 
 from orket.application.services.application_runtime_lifetime import ApplicationRuntimeLifetime
-from orket.application.services.kernel_invocation_inputs import bind_kernel_environment, capture_kernel_environment
+from orket.application.services.kernel_invocation_inputs import (
+    bind_kernel_environment,
+    bind_kernel_invocation_root,
+    capture_kernel_environment,
+    capture_kernel_invocation_root,
+)
 from orket.application.services.kernel_invocation_service import own_kernel_publication
 from orket.application.services.kernel_runtime_owner import KernelRuntime
 from orket.application.services.runtime_resource_cleanup import close_runtime_resources
@@ -29,6 +34,7 @@ class KernelRuntimeLifetime(ApplicationRuntimeLifetime):
         if _admitted.get() == (self, asyncio.current_task()):
             return await operation()
         environment = capture_kernel_environment()
+        root = capture_kernel_invocation_root()
         result: list[Result] = []
 
         async def publish() -> None:
@@ -42,7 +48,7 @@ class KernelRuntimeLifetime(ApplicationRuntimeLifetime):
         async def admitted() -> None:
             await own_kernel_publication(publish)
 
-        with bind_kernel_environment(environment):
+        with bind_kernel_environment(environment), bind_kernel_invocation_root(root):
             await self.run_request(admitted)
         return result[0]
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from orket.core.contracts.kernel_capability_policy import KernelCapabilityPolicy
+from orket.core.contracts.kernel_run_inputs import KernelRunInputs
 
 from .experiments.runner import run_experiment_v1
 from .nervous_system_policy import NervousSystemPolicyInputs
@@ -30,8 +31,10 @@ from .validator import (
 )
 
 
-def start_run(request: dict[str, Any]) -> dict[str, Any]:
-    return start_run_v1(request)
+def start_run(
+    request: dict[str, Any], *, run_inputs: KernelRunInputs | None = None,
+) -> dict[str, Any]:
+    return start_run_v1(request, run_inputs=run_inputs)
 
 
 def execute_turn(
