@@ -7,6 +7,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+side_effecting = True
+
 
 class OpenClawSubprocessError(RuntimeError):
     """Subprocess failure carrying the number of completed adapter responses."""

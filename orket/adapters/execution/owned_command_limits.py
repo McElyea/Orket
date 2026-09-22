@@ -3,6 +3,9 @@ DEFAULT_OUTPUT_LIMIT = 4 * 1024 * 1024
 MAX_OUTPUT_LIMIT = 64 * 1024 * 1024
 
 
+side_effecting = False
+
+
 def output_limit_bytes(value: int | None) -> int:
     if value is None:
         return DEFAULT_OUTPUT_LIMIT

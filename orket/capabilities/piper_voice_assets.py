@@ -12,6 +12,8 @@ from typing import Any
 
 from orket.adapters.execution.owned_io import run_owned_thread
 
+side_effecting = True
+
 
 @dataclass(frozen=True)
 class PiperVoiceAsset:

@@ -7,6 +7,8 @@ from typing import Any
 from orket.adapters.tools.families.base import BaseTools
 from orket.time_utils import now_local
 
+side_effecting = True
+
 
 class AcademyTools(BaseTools):
     def __init__(self, workspace_root: Path, references: list[Path]):

@@ -8,6 +8,9 @@ from orket.adapters.execution.sync_coroutine_owner import SyncCoroutineOwner, re
 ResultT = TypeVar("ResultT")
 
 
+side_effecting = True
+
+
 def run_coro_sync(coro: Coroutine[Any, Any, ResultT], *, owner: SyncCoroutineOwner | None = None) -> ResultT:
     require_native_coroutine(coro)
     if owner is not None:

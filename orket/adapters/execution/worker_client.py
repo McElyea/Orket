@@ -6,6 +6,8 @@ import time
 from collections.abc import Callable
 from typing import Any, Protocol
 
+side_effecting = True
+
 
 class ResponseLike(Protocol):
     status_code: int

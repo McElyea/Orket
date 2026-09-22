@@ -4,6 +4,8 @@ from dataclasses import dataclass
 
 import aiosqlite
 
+side_effecting = True
+
 
 @dataclass(frozen=True)
 class SQLiteMigration:

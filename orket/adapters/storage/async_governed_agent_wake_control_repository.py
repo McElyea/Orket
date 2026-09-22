@@ -24,6 +24,9 @@ from orket.core.contracts.governed_agent_wake_records import (
 ResultT = TypeVar("ResultT")
 
 
+side_effecting = True
+
+
 class AsyncGovernedAgentWakeControlRepository:
     """Durable operator-control receipts and wake transitions."""
 

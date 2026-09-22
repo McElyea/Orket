@@ -5,6 +5,8 @@ import shutil
 from collections.abc import Mapping
 from pathlib import Path
 
+side_effecting = True
+
 
 def durable_root(*, invocation_root: Path | None = None, environment: Mapping[str, str] | None = None) -> Path:
     root = invocation_root or Path.cwd()

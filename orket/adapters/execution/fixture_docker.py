@@ -12,6 +12,9 @@ from orket.core.contracts.owned_command import OwnedCommandResult
 OWNER_LABEL = "org.orket.verification.owner"
 
 
+side_effecting = True
+
+
 class DockerObservationError(RuntimeError):
     """The daemon observation cannot establish the requested fact."""
 

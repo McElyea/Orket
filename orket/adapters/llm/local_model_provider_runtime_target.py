@@ -6,6 +6,8 @@ from typing import Any
 from orket.core.contracts.provider_preparation import ProviderPreparationRequest, require_prepared_target
 from orket.core.contracts.provider_runtime import DEFAULT_OLLAMA_BASE_URL, ProviderRuntimeTarget
 
+side_effecting = True
+
 
 async def ensure_provider_runtime_target(provider: Any) -> str:
     if getattr(provider, "_runtime_target", None) is not None:

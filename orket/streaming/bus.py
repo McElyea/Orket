@@ -16,6 +16,8 @@ from orket.core.contracts.interaction_stream import (
 )
 from orket.streaming.clocks import mono_ts_ms_now, wall_ts_now_iso
 
+side_effecting = True
+
 
 @dataclass
 class _TurnBusState:

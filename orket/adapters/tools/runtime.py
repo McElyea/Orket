@@ -9,6 +9,8 @@ from typing import Any
 from orket.core.contracts.card_completion_commit import CardWorkspaceMutationAuthority
 from orket.logging import log_event
 
+side_effecting = True
+
 
 class ToolRuntimeExecutor:
     """Stable runtime seam for invoking mapped tool callables."""

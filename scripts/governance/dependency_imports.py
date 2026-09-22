@@ -10,6 +10,7 @@ from pathlib import Path
 
 from scripts.common.git_inventory import git_list_files
 from scripts.governance.dependency_dynamic_imports import dynamic_observations, literal_forwarding_targets
+from scripts.governance.dependency_effects import effect_declarations
 from scripts.governance.dependency_external_names import external_module_routes
 from scripts.governance.dependency_importer_interception import importer_interceptions
 
@@ -130,7 +131,7 @@ def scan_dependencies(root: Path) -> dict:
     if not paths:
         raise ValueError("No Git-visible Python files in the required orket scan root")
     known = _index(paths, root)
-    modules, trees, edges, errors = {}, {}, [], []
+    modules, trees, edges, errors, effects = {}, {}, [], [], {}
     for path in paths:
         tree, digest, failures = _read_source(path)
         module, relative = module_from_path(path, root), path.relative_to(root).as_posix()
@@ -138,6 +139,9 @@ def scan_dependencies(root: Path) -> dict:
         errors.extend({"path": relative, **row} for row in failures)
         if tree is not None:
             trees[path] = tree
+            facts = effect_declarations(tree)
+            if facts["module"] or any(facts["classes"].values()):
+                effects[module] = facts
     exports = {module_from_path(p, root): _exported_names(tree) for p, tree in trees.items()}
     forwarding = {module_from_path(p, root): literal_forwarding_targets(tree) for p, tree in trees.items()}
     changed = True
@@ -166,6 +170,7 @@ def scan_dependencies(root: Path) -> dict:
             errors.append({"path": row["path"], "line": 0, "code": "source_changed_during_scan"})
     return {
         "modules": modules,
+        "effect_declarations": effects,
         "edges": edges,
         "analysis_errors": errors,
         "resolved_dynamic_routes": resolved,

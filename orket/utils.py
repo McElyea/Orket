@@ -23,6 +23,9 @@ __all__ = [
 ]
 
 
+side_effecting = True
+
+
 def dedupe_ordered(values: Iterable[Any]) -> list[str]:
     ordered: list[str] = []
     seen: set[str] = set()

@@ -5,6 +5,8 @@ import aiosqlite
 
 from orket.core.contracts.epic_export_recovery import EpicExportDispatch, export_dispatch_transition_allowed
 
+side_effecting = True
+
 
 class EpicExportDispatchStore:
     side_effecting = True

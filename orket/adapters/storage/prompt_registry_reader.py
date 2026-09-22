@@ -5,6 +5,8 @@ import hashlib
 from dataclasses import dataclass
 from pathlib import Path
 
+side_effecting = False
+
 
 @dataclass(frozen=True)
 class PromptRegistryBytes:

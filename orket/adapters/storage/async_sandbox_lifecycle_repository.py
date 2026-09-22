@@ -26,6 +26,9 @@ from orket.core.domain.sandbox_lifecycle_records import (
 ResultT = TypeVar("ResultT")
 
 
+side_effecting = True
+
+
 class SandboxOperationIntegrityError(SandboxLifecycleError):
     """Raised when an operation id is reused with a different payload hash."""
 
@@ -160,7 +163,6 @@ class AsyncSandboxLifecycleRepository:
 
     async def save_record(self, record: SandboxLifecycleRecord) -> None:
         payload = record.model_dump(mode="json")
-
         async def _op(conn: aiosqlite.Connection) -> None:
             await conn.execute(
                 """
@@ -204,7 +206,6 @@ class AsyncSandboxLifecycleRepository:
                     payload["docker_host_id"],
                 ),
             )
-
         await self._execute(_op, commit=True)
 
     async def apply_record_mutation(
@@ -225,7 +226,6 @@ class AsyncSandboxLifecycleRepository:
             "cleanup_state": record.cleanup_state.value,
             "requires_reconciliation": record.requires_reconciliation,
         }
-
         async def _op(conn: aiosqlite.Connection) -> dict[str, object]:
             existing_cursor = await conn.execute(
                 "SELECT * FROM sandbox_operation_dedupe WHERE operation_id = ?",

@@ -9,6 +9,8 @@ from orket.adapters.execution.owned_io import run_owned_thread
 from orket.adapters.storage.file_admission import require_regular_or_absent
 from orket.adapters.storage.local_file_lock import NativeFileLocks
 
+side_effecting = True
+
 
 @dataclass(frozen=True)
 class CrashLogStore:

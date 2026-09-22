@@ -8,6 +8,8 @@ from orket.adapters.storage.outward_model_admission_migrations import OUTWARD_MO
 from orket.adapters.storage.sqlite_migrations import SQLiteMigrationRunner
 from orket.core.domain.outward_model_admission import OutwardModelAdmission
 
+side_effecting = True
+
 
 async def ensure_outward_model_admission_schema(connection: aiosqlite.Connection) -> None:
     await SQLiteMigrationRunner(namespace="outward_model_admissions").apply(connection, OUTWARD_MODEL_ADMISSION_MIGRATIONS)

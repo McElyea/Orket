@@ -31,6 +31,9 @@ _AUDITOR_LABELS = [
 ]
 
 
+side_effecting = False
+
+
 def _dict_payload(value: Any) -> dict[str, Any]:
     return dict(value) if isinstance(value, dict) else {}
 

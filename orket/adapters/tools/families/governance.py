@@ -6,6 +6,8 @@ from typing import Any
 from orket.adapters.tools.families.base import BaseTools
 from orket.core.types import CardStatus
 
+side_effecting = True
+
 
 class GovernanceTools(BaseTools):
     """Process/governance-oriented tools separated from toolbox wiring mechanics."""

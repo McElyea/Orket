@@ -21,3 +21,4 @@ __all__ = [
     "ProviderTurnRequest",
     "StubModelStreamProvider",
 ]
+side_effecting = True

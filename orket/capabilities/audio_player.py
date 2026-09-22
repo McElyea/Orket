@@ -5,6 +5,8 @@ from typing import Any
 
 from orket_extension_sdk.audio import AudioClip, AudioPlayer, NullAudioPlayer
 
+side_effecting = True
+
 
 class SounddevicePlayer:
     """Optional sounddevice-backed audio player."""

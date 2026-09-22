@@ -19,6 +19,9 @@ from .gitea_state_errors import (
 logger = logging.getLogger("orket.gitea_state_adapter")
 
 
+side_effecting = True
+
+
 class GiteaHTTPClient:
     """HTTP request and retry handling for Gitea state operations."""
 

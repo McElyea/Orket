@@ -25,6 +25,9 @@ _TOOL_INVOCATION_KINDS = {"tool_call", "operation_result", "tool_result"}
 _TOOL_RESULT_KINDS = {"operation_result", "tool_result"}
 
 
+side_effecting = True
+
+
 def _default_event_timestamp() -> str:
     return datetime.now(UTC).isoformat()
 
@@ -351,7 +354,6 @@ class AsyncProtocolRunLedgerRepository:
         next_seq = 1
         if existing_events:
             next_seq = max(self._event_sequence(row) for row in existing_events) + 1
-
         if normalized_kind == "run_finalized" and open_tool_calls:
             first_open = sorted(open_tool_calls)[0]
             return self._contract_rejection(
@@ -359,7 +361,6 @@ class AsyncProtocolRunLedgerRepository:
                 error_code="E_ORPHANED_TOOL_CALL",
                 open_call_sequence_number=first_open,
             )
-
         if normalized_kind == "tool_call" and open_tool_calls:
             first_open = sorted(open_tool_calls)[0]
             return self._contract_rejection(
@@ -367,7 +368,6 @@ class AsyncProtocolRunLedgerRepository:
                 error_code="E_LEDGER_CALL_RESULT_ORDER",
                 open_call_sequence_number=first_open,
             )
-
         if normalized_kind in _TOOL_RESULT_KINDS:
             raw_call_seq = payload.get("call_sequence_number")
             call_seq = _coerce_int(raw_call_seq)

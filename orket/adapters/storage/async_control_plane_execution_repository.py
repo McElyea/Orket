@@ -21,6 +21,9 @@ from orket.core.domain.control_plane_state_revision import (
 ResultT = TypeVar("ResultT")
 
 
+side_effecting = True
+
+
 class ControlPlaneExecutionConflictError(ValueError):
     """Raised when a control-plane execution record cannot be updated truthfully."""
 

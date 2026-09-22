@@ -35,6 +35,9 @@ from .sqlite_connection import connect_sqlite_wal
 ResultT = TypeVar("ResultT")
 
 
+side_effecting = True
+
+
 class AsyncCardRepository(CardRepository):
     """Async implementation of CardRepository using aiosqlite."""
 

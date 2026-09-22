@@ -6,6 +6,8 @@ from typing import Any, cast
 from orket.adapters.tools.families.filesystem import FileSystemTools
 from orket.core.policies.tool_gate import ToolGateValidator
 
+side_effecting = True
+
 
 class GovernedAgentFileEffectExecutor:
     """Issue-scoped adapter over the existing tool gate and filesystem tool."""

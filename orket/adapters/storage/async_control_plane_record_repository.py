@@ -45,6 +45,9 @@ from orket.core.contracts.repositories import ControlPlaneRecordRepository
 ResultT = TypeVar("ResultT")
 
 
+side_effecting = True
+
+
 class ControlPlaneRecordConflictError(ValueError):
     """Raised when a control-plane record id is reused with different content."""
 
@@ -240,7 +243,6 @@ class AsyncControlPlaneRecordRepository(ControlPlaneRecordRepository):
                     raise ControlPlaneRecordConflictError(f"{table}.{id_field} reused with different payload")
                 return parse_existing(existing_payload)
             return await insert_op(conn)
-
         return await self._execute(_op, row_factory=True, commit=True)
 
     async def save_resolved_policy_snapshot(
@@ -249,7 +251,6 @@ class AsyncControlPlaneRecordRepository(ControlPlaneRecordRepository):
         snapshot: ResolvedPolicySnapshot,
     ) -> ResolvedPolicySnapshot:
         payload_json = snapshot.model_dump_json()
-
         async def _insert(conn: aiosqlite.Connection) -> ResolvedPolicySnapshot:
             await conn.execute(
                 """
@@ -264,7 +265,6 @@ class AsyncControlPlaneRecordRepository(ControlPlaneRecordRepository):
                 ),
             )
             return snapshot
-
         return await self._insert_or_return_existing(
             table="resolved_policy_snapshots",
             id_field="snapshot_id",

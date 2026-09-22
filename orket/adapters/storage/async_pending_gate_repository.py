@@ -11,6 +11,8 @@ import aiosqlite
 
 from orket.adapters.storage.sqlite_connection import sqlite_connection_scope
 
+side_effecting = True
+
 
 class AsyncPendingGateRepository:
     """

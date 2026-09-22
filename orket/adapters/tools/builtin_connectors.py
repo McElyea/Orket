@@ -24,6 +24,9 @@ BUILTIN_CONNECTOR_SIDE_EFFECTS: dict[str, bool] = {
 }
 
 
+side_effecting = True
+
+
 class BuiltInConnectorExecutionError(RuntimeError):
     pass
 

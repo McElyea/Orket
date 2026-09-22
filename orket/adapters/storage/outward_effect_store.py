@@ -20,6 +20,8 @@ from orket.adapters.storage.sqlite_migrations import SQLiteMigrationRunner
 from orket.core.contracts.control_plane_effect_journal_models import EffectJournalEntryRecord
 from orket.core.domain.outward_effects import OutwardEffectRecord
 
+side_effecting = True
+
 
 async def ensure_outward_effect_schema(conn: aiosqlite.Connection) -> None:
     await ensure_effect_journal_schema(conn)

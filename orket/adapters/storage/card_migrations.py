@@ -60,6 +60,9 @@ CARD_BOOTSTRAP_MIGRATIONS = [
 ]
 
 
+side_effecting = True
+
+
 class CardMigrations:
     """Database schema bootstrap and additive migrations for issue storage."""
 

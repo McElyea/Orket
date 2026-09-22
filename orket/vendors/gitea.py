@@ -3,6 +3,8 @@ import httpx
 
 from orket.vendors.base import VendorCard, VendorEpic, VendorInterface, VendorRock
 
+side_effecting = True
+
 
 class GiteaVendor(VendorInterface):
     """

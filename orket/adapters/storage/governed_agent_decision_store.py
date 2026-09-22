@@ -25,6 +25,9 @@ from orket.core.contracts.governed_agent_ports import (
 ResultT = TypeVar("ResultT")
 
 
+side_effecting = True
+
+
 class _ConnectionExecutor(Protocol):
     async def __call__(
         self,

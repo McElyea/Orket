@@ -13,6 +13,8 @@ from orket.adapters.storage.governed_agent_repository_support import ensure_gove
 from orket.adapters.storage.sqlite_connection import connect_sqlite_wal
 from orket.core.contracts import OperatorActionRecord
 
+side_effecting = True
+
 
 async def agent_control_actions(conn: aiosqlite.Connection, invocation_id: str) -> tuple[OperatorActionRecord, ...]:
     await ensure_operator_action_schema(conn)

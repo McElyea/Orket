@@ -15,6 +15,9 @@ _MAX_ROWS = 10000
 _MAX_BYTES = 64 * 1024 * 1024
 
 
+side_effecting = False
+
+
 class ReplayEvidenceError(ValueError):
     """A bounded diagnostic that contains no retained request or secret data."""
 

@@ -5,6 +5,20 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.85] - 2026-09-22
+
+### Changed
+- Enforce explicit module effect bounds for every policy-classified adapter in the native dependency gate.
+- Reject invalid declarations and unsafe decision-adapter admission, including observed transitive adapter dependencies.
+- Preserve existing runtime statements and class declarations while adding conservative module bounds.
+- Read-only classification remains separate from deterministic purity and explicit decision context.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Adapter modules and positive governance fixtures must declare one unconditional literal boolean.
+- The decision adapter allowlist remains empty; no new effect or capability admission.
+- Contract: `docs/architecture/CONTRACT_DELTA_ADAPTER_EFFECT_CLASSIFICATION_D_2026-09-22.md`.
+
 ## [0.6.84] - 2026-09-22
 
 ### Fixed

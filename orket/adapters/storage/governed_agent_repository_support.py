@@ -17,6 +17,8 @@ from orket.core.contracts.governed_agent_ports import (
 from orket.core.domain import AttemptState, RunState
 from orket_extension_sdk import canonical_digest_sha256
 
+side_effecting = True
+
 
 async def ensure_governed_agent_schema(conn: aiosqlite.Connection) -> None:
     await conn.executescript(

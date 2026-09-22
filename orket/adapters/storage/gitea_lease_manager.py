@@ -9,6 +9,8 @@ from pydantic import ValidationError
 from .gitea_state_errors import GiteaAdapterConflictError
 from .gitea_state_models import CardSnapshot, LeaseInfo, decode_snapshot, encode_snapshot
 
+side_effecting = True
+
 
 class GiteaLeaseManager:
     """Lease acquisition and renewal operations for Gitea-backed cards."""

@@ -34,6 +34,9 @@ from orket.core.contracts.governed_agent_wake_records import (
 ResultT = TypeVar("ResultT")
 
 
+side_effecting = True
+
+
 class AsyncGovernedAgentWakeRepository:
     """Durable CAS queue for bounded governed-agent wake ownership."""
 

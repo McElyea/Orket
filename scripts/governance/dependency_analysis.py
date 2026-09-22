@@ -6,6 +6,7 @@ from collections import Counter
 from dataclasses import asdict
 from pathlib import Path
 
+from scripts.governance.dependency_effects import evaluate_adapter_effects
 from scripts.governance.dependency_imports import scan_dependencies
 from scripts.governance.dependency_policy import DependencyPolicy
 
@@ -88,4 +89,10 @@ def evaluate_dependencies(observed: dict, policy: DependencyPolicy) -> dict:
 
 
 def analyze_repository(root: Path, policy: DependencyPolicy) -> dict:
-    return evaluate_dependencies(scan_dependencies(root), policy)
+    observed = scan_dependencies(root)
+    result = evaluate_dependencies(observed, policy)
+    effects = evaluate_adapter_effects(observed, policy)
+    result["observed"]["adapter_effects"] = effects["modules"]
+    result["verdict"]["adapter_effect_violations"] = effects["violations"]
+    result["verdict"]["ok"] = result["verdict"]["ok"] and not effects["violations"]
+    return result

@@ -5,6 +5,8 @@ from typing import Any
 
 from orket.core.contracts.interaction_stream import StreamEvent, StreamEventType
 
+side_effecting = True
+
 
 class StreamLawViolation(Exception):
     pass

@@ -11,6 +11,8 @@ from orket.core.contracts.epic_approval_recovery import (
     approval_claim_transition_allowed,
 )
 
+side_effecting = True
+
 
 class EpicApprovalPauseStore:
     side_effecting = True

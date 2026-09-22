@@ -7,6 +7,8 @@ import aiosqlite
 
 from orket.schema import CardStatus
 
+side_effecting = True
+
 
 class CardMiscOps:
     """Miscellaneous card operations delegated from AsyncCardRepository."""

@@ -118,6 +118,9 @@ See `docs/specs/SCRIPT_RUNTIME_OWNERSHIP.md`.
 The three truthful-runtime governance recorders own their engines on their event loop;
 call their native entrypoints outside a running loop. Alias simulation is contract proof,
 not Ollama acceptance; preserve existing aliases and surface owned cleanup failures.
+Declare an explicit literal module effect bound for each policy-classified adapter.
+The canonical dependency gate enforces the declaration and decision-admission contract
+in `docs/specs/ADAPTER_EFFECT_CLASSIFICATION.md`; read-only is not deterministic purity.
 
 Prompt commands use `python -m orket.interfaces.prompts_cli --root <project> ...`.
 Prompt reads share model-file ownership with writers and can create native lock

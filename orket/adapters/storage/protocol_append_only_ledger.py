@@ -19,6 +19,9 @@ from orket.core.contracts.protocol_hashing import canonical_json
 MAX_LEDGER_PAYLOAD_BYTES = 4 * 1024 * 1024
 
 
+side_effecting = True
+
+
 class LedgerFramingError(ValueError):
     """Deterministic append-only ledger framing/replay error."""
 

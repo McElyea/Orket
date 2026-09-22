@@ -60,6 +60,6 @@ def report_summary(report: dict) -> dict:
         "resolved_dynamic_routes": len(observed.get("resolved_dynamic_routes", [])),
         **{
             name: len(verdict.get(name, []))
-            for name in ("violations", "unknown_modules", "analysis_errors", "authority_cycles")
+            for name in ("violations", "unknown_modules", "analysis_errors", "authority_cycles", "adapter_effect_violations")
         },
     }

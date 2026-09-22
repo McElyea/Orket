@@ -4,6 +4,8 @@ import json
 
 from orket.core.domain.sandbox_lifecycle_records import SandboxOperationDedupeEntry
 
+side_effecting = False
+
 
 def deserialize_record_row(row: dict[str, object]) -> dict[str, object]:
     row["managed_resource_inventory"] = json.loads(str(row.pop("managed_resource_inventory_json")))

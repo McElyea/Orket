@@ -13,6 +13,8 @@ import aiosqlite
 from orket.adapters.execution.owned_io import run_owned_io, run_owned_thread
 from orket.core.domain.outward_authorization import args_hash
 
+side_effecting = True
+
 
 def _logical_snapshot(path: Path) -> str:
     """Runs only in an owned thread; excludes migration metadata, not workload data."""

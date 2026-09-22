@@ -3,3 +3,4 @@
 from orket.core.contracts.repositories import CardRepository, SessionRepository, SnapshotRepository
 
 __all__ = ["CardRepository", "SessionRepository", "SnapshotRepository"]
+side_effecting = False

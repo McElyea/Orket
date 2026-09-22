@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 
 from pydantic import BaseModel
 
+side_effecting = True
+
 
 class VendorRock(BaseModel):
     id: str

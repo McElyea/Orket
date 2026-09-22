@@ -5,6 +5,8 @@ from orket.adapters.storage.file_admission import require_regular_or_absent
 from orket.adapters.storage.local_file_lock import NativeFileLocks
 from orket.adapters.storage.verified_file import write_verified_bytes
 
+side_effecting = True
+
 
 class SetupProjectStore:
     side_effecting = True

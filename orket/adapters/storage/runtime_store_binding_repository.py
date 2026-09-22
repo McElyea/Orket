@@ -14,6 +14,8 @@ from orket.adapters.storage.sqlite_connection import sqlite_connection_scope
 from orket.core.contracts.control_plane_models import ResolvedConfigurationSnapshot, RunRecord
 from orket.core.contracts.runtime_store_binding import RuntimeStoreMigrationBinding
 
+side_effecting = True
+
 
 class RuntimeStoreBindingRepository:
     side_effecting = True

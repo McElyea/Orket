@@ -13,6 +13,9 @@ if TYPE_CHECKING:
     from orket.core.policies.tool_gate import ToolGateValidator as ToolGate
 
 
+side_effecting = True
+
+
 class CardManagementTools(BaseTools):
     side_effecting = True
 

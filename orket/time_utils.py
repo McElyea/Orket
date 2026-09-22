@@ -4,6 +4,8 @@ import os
 from datetime import UTC, datetime, timedelta, timezone, tzinfo
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
+side_effecting = False
+
 
 def configured_timezone_name() -> str:
     return (os.getenv("ORKET_TIMEZONE") or "UTC").strip()

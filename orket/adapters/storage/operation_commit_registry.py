@@ -13,6 +13,8 @@ from orket.core.contracts.local_file_lock import LocalFileLockError
 from orket.core.contracts.protocol_error_codes import E_OPERATION_REGISTRY_PREFIX, format_protocol_error
 from orket.core.contracts.protocol_hashing import canonical_json
 
+side_effecting = True
+
 
 class OperationCommitRegistry:
     """Retain the first operation commit; contention and corrupt history fail closed."""

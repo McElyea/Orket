@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+side_effecting = False
+
 
 def default_project_root() -> Path:
     """Select caller-owned project state independently of package installation."""

@@ -22,6 +22,8 @@ from orket.core.contracts.governed_agent_wake_records import (
     WakeTargetKind,
 )
 
+side_effecting = True
+
 
 async def enqueue_transaction(
     conn: aiosqlite.Connection,

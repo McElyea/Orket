@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+side_effecting = False
+
 
 class GiteaAdapterError(RuntimeError):
     pass

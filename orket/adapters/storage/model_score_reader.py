@@ -8,6 +8,8 @@ from pathlib import Path
 
 from orket.core.contracts.model_selection import ModelScoreObservation
 
+side_effecting = False
+
 
 def read_model_scores(report_path: str) -> ModelScoreObservation:
     path = Path(report_path).resolve()

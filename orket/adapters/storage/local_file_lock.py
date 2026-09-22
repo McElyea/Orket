@@ -11,6 +11,8 @@ from pathlib import Path
 
 from orket.core.contracts.local_file_lock import LocalFileLockError, LocalFileLockRef
 
+side_effecting = True
+
 
 class NativeFileLocks:
     side_effecting = True

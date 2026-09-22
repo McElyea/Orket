@@ -23,3 +23,4 @@ __all__ = [
     "OutwardRunEventStore",
     "OutwardRunStore",
 ]
+side_effecting = True

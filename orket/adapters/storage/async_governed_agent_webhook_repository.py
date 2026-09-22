@@ -28,6 +28,9 @@ from orket.core.contracts.governed_agent_webhook_records import (
 ResultT = TypeVar("ResultT")
 
 
+side_effecting = True
+
+
 class AsyncGovernedAgentWebhookRepository:
     """Atomically retain authenticated webhook deliveries and their wake."""
 

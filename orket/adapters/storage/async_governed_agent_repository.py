@@ -48,6 +48,9 @@ from orket_extension_sdk import (
 ResultT = TypeVar("ResultT")
 
 
+side_effecting = True
+
+
 class AsyncGovernedAgentRepository:
     """Atomic SQLite authority for agent dispatch, results, and broker calls."""
 
@@ -67,7 +70,6 @@ class AsyncGovernedAgentRepository:
         request_json = json.dumps(request.to_wire(), sort_keys=True, separators=(",", ":"))
         if binding.request_digest != agent_digest(json.loads(request_json)):
             return GovernedAgentDispatchPreparation("conflict", None, None)
-
         async def _op(conn: aiosqlite.Connection) -> GovernedAgentDispatchPreparation:
             await conn.execute("BEGIN IMMEDIATE")
             if not await parent_matches(conn, binding):
@@ -91,7 +93,6 @@ class AsyncGovernedAgentRepository:
                 (binding.invocation_id, binding_json(binding), request_json),
             )
             return GovernedAgentDispatchPreparation("prepared", binding, dispatch_ref(binding.invocation_id))
-
         return await self._execute(_op)
 
     async def get_dispatch_binding(

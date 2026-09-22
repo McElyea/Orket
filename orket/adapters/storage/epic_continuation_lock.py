@@ -8,6 +8,8 @@ from orket.adapters.storage.local_file_lock import NativeFileLocks
 from orket.core.contracts.epic_approval_recovery import EpicContinuationLockRef
 from orket.core.contracts.local_file_lock import LocalFileLockError
 
+side_effecting = True
+
 
 class EpicContinuationLocks:
     side_effecting = True

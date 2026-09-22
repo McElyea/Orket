@@ -1,6 +1,6 @@
 {
   "schema_version": "architectural_truth.baseline.v1",
-  "generated_at": "2026-09-22T10:38:33.173570Z",
+  "generated_at": "2026-09-22T12:37:20.601127Z",
   "collection_ok": true,
   "release_ready": false,
   "release_ready_reason": "Active architectural exceptions and red/noisy proof gates remain.",
@@ -260,6 +260,2533 @@
       }
     },
     "observed": {
+      "effect_declarations": {
+        "orket.adapters.__init__": {
+          "module": [
+            {
+              "line": 2,
+              "kind": "Assign",
+              "direct": true,
+              "literal": false
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.execution.__init__": {
+          "module": [
+            {
+              "line": 6,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.execution.extension_modules": {
+          "module": [
+            {
+              "line": 20,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "ExtensionModuleSource@24": []
+          }
+        },
+        "orket.adapters.execution.fixture_docker": {
+          "module": [
+            {
+              "line": 15,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "DockerObservationError@18": [],
+            "FixtureDockerAdapter@28": [
+              {
+                "line": 29,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.execution.fixture_runner": {
+          "module": [
+            {
+              "line": 4,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.execution.openclaw_jsonl_adapter": {
+          "module": [
+            {
+              "line": 10,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "OpenClawSubprocessError@13": [],
+            "PartialAdapterResult@22": [],
+            "OpenClawJsonlSubprocessAdapter@36": []
+          }
+        },
+        "orket.adapters.execution.owned_command_limits": {
+          "module": [
+            {
+              "line": 6,
+              "kind": "Assign",
+              "direct": true,
+              "literal": false
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.execution.owned_command_linux": {
+          "module": [
+            {
+              "line": 9,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "LinuxChildren@12": []
+          }
+        },
+        "orket.adapters.execution.owned_command_process": {
+          "module": [
+            {
+              "line": 17,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.execution.owned_command_windows": {
+          "module": [
+            {
+              "line": 7,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "BasicLimits@10": [],
+            "ExtendedLimits@17": [],
+            "Accounting@23": [],
+            "ThreadEntry@28": [],
+            "WindowsJob@62": []
+          }
+        },
+        "orket.adapters.execution.owned_command_worker": {
+          "module": [
+            {
+              "line": 22,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.execution.owned_io": {
+          "module": [
+            {
+              "line": 11,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.execution.process_lifecycle": {
+          "module": [
+            {
+              "line": 9,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.execution.sandbox_http": {
+          "module": [
+            {
+              "line": 10,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "SandboxHttpAdapter@13": []
+          }
+        },
+        "orket.adapters.execution.sync_coroutine_owner": {
+          "module": [
+            {
+              "line": 15,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "SyncCoroutineOwner@32": []
+          }
+        },
+        "orket.adapters.execution.worker_client": {
+          "module": [
+            {
+              "line": 9,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "ResponseLike@12": [],
+            "ClientLike@19": [],
+            "Worker@25": []
+          }
+        },
+        "orket.adapters.llm.__init__": {
+          "module": [
+            {
+              "line": 2,
+              "kind": "Assign",
+              "direct": true,
+              "literal": false
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.llm.llama_cpp_render_verification": {
+          "module": [
+            {
+              "line": 19,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.llm.local_model_provider": {
+          "module": [
+            {
+              "line": 45,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "ModelResponse@49": [],
+            "LocalModelProvider@54": [
+              {
+                "line": 56,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.llm.local_model_provider_runtime_target": {
+          "module": [
+            {
+              "line": 9,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.llm.openai_compat_runtime": {
+          "module": [
+            {
+              "line": 34,
+              "kind": "Assign",
+              "direct": true,
+              "literal": false
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.llm.openai_native_tools": {
+          "module": [
+            {
+              "line": 12,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.llm.prompt_canonicalization": {
+          "module": [
+            {
+              "line": 4,
+              "kind": "Assign",
+              "direct": true,
+              "literal": false
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.llm.provider_extractors": {
+          "module": [
+            {
+              "line": 14,
+              "kind": "Assign",
+              "direct": true,
+              "literal": false
+            }
+          ],
+          "classes": {
+            "ProviderExtractor@17": [],
+            "OpenAIExtractor@27": [],
+            "OllamaExtractor@41": []
+          }
+        },
+        "orket.adapters.storage.__init__": {
+          "module": [
+            {
+              "line": 26,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.storage.api_run_log_reader": {
+          "module": [
+            {
+              "line": 11,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "ApiRunLogReader@14": [
+              {
+                "line": 15,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.api_workspace_reader": {
+          "module": [
+            {
+              "line": 10,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "DirectoryEntry@14": [],
+            "ApiWorkspaceReader@20": [
+              {
+                "line": 21,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.async_card_repository": {
+          "module": [
+            {
+              "line": 38,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "AsyncCardRepository@41": [
+              {
+                "line": 44,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.async_control_plane_execution_repository": {
+          "module": [
+            {
+              "line": 24,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "ControlPlaneExecutionConflictError@27": [],
+            "AsyncControlPlaneExecutionRepository@31": [
+              {
+                "line": 34,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.async_control_plane_record_repository": {
+          "module": [
+            {
+              "line": 48,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "ControlPlaneRecordConflictError@51": [],
+            "AsyncControlPlaneRecordRepository@55": [
+              {
+                "line": 58,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.async_executor_service": {
+          "module": [
+            {
+              "line": 9,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "AsyncExecutorService@12": []
+          }
+        },
+        "orket.adapters.storage.async_file_tools": {
+          "module": [
+            {
+              "line": 24,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "AsyncFileTools@36": []
+          }
+        },
+        "orket.adapters.storage.async_flow_repository": {
+          "module": [
+            {
+              "line": 17,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "AsyncFlowRepository@20": [
+              {
+                "line": 23,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.async_governed_agent_repository": {
+          "module": [
+            {
+              "line": 51,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "AsyncGovernedAgentRepository@54": []
+          }
+        },
+        "orket.adapters.storage.async_governed_agent_run_control_repository": {
+          "module": [
+            {
+              "line": 16,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "AsyncGovernedAgentRunControlRepository@29": [
+              {
+                "line": 32,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.async_governed_agent_schedule_repository": {
+          "module": [
+            {
+              "line": 31,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "AsyncGovernedAgentScheduleRepository@34": [
+              {
+                "line": 37,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.async_governed_agent_wake_control_repository": {
+          "module": [
+            {
+              "line": 27,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "AsyncGovernedAgentWakeControlRepository@30": [
+              {
+                "line": 33,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.async_governed_agent_wake_repository": {
+          "module": [
+            {
+              "line": 37,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "AsyncGovernedAgentWakeRepository@40": [
+              {
+                "line": 43,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.async_governed_agent_webhook_repository": {
+          "module": [
+            {
+              "line": 31,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "AsyncGovernedAgentWebhookRepository@34": [
+              {
+                "line": 37,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.async_pending_gate_repository": {
+          "module": [
+            {
+              "line": 14,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "AsyncPendingGateRepository@17": [
+              {
+                "line": 22,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.async_protocol_run_ledger": {
+          "module": [
+            {
+              "line": 28,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "AsyncProtocolRunLedgerRepository@53": []
+          }
+        },
+        "orket.adapters.storage.async_repositories": {
+          "module": [
+            {
+              "line": 18,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "AsyncSessionRepository@21": [
+              {
+                "line": 23,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "AsyncSnapshotRepository@133": [
+              {
+                "line": 135,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "AsyncSuccessRepository@181": [
+              {
+                "line": 183,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "AsyncRunLedgerRepository@229": []
+          }
+        },
+        "orket.adapters.storage.async_sandbox_lifecycle_repository": {
+          "module": [
+            {
+              "line": 29,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "SandboxOperationIntegrityError@32": [],
+            "SandboxLifecycleConflictError@36": [],
+            "AsyncSandboxLifecycleRepository@40": []
+          }
+        },
+        "orket.adapters.storage.bound_filesystem": {
+          "module": [
+            {
+              "line": 17,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "BoundFilesystemExecutor@20": [
+              {
+                "line": 21,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.bound_filesystem_posix": {
+          "module": [
+            {
+              "line": 10,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.storage.bound_filesystem_windows": {
+          "module": [
+            {
+              "line": 17,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "_AttributeTagInfo@20": []
+          }
+        },
+        "orket.adapters.storage.bundle_store": {
+          "module": [
+            {
+              "line": 18,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "BundleManifestSource@22": [],
+            "BundleArchiveSource@29": [],
+            "BundleSourceChangedError@43": [],
+            "BundleStore@47": [
+              {
+                "line": 49,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.card_acceptance_artifacts": {
+          "module": [
+            {
+              "line": 15,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "CapturedCardArtifact@19": [],
+            "CardAcceptanceArtifacts@28": [
+              {
+                "line": 29,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.card_acceptance_evidence_store": {
+          "module": [
+            {
+              "line": 14,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "CardAcceptanceEvidenceStore@17": [
+              {
+                "line": 18,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.card_archive_ops": {
+          "module": [
+            {
+              "line": 9,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "CardArchiveOps@12": []
+          }
+        },
+        "orket.adapters.storage.card_completion_migrations": {
+          "module": [
+            {
+              "line": 58,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.storage.card_migrations": {
+          "module": [
+            {
+              "line": 63,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "CardMigrations@66": [
+              {
+                "line": 69,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.card_misc_ops": {
+          "module": [
+            {
+              "line": 10,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "CardMiscOps@13": []
+          }
+        },
+        "orket.adapters.storage.card_record_codec": {
+          "module": [
+            {
+              "line": 6,
+              "kind": "Assign",
+              "direct": true,
+              "literal": false
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.storage.card_write_ops": {
+          "module": [
+            {
+              "line": 25,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.storage.command_runner": {
+          "module": [
+            {
+              "line": 15,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "CommandResult@19": [],
+            "SandboxCommandUncertain@26": [],
+            "SandboxCommandTimeout@34": [],
+            "CommandRunner@41": []
+          }
+        },
+        "orket.adapters.storage.control_plane_effect_journal_store": {
+          "module": [
+            {
+              "line": 7,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.storage.control_plane_final_truth_store": {
+          "module": [
+            {
+              "line": 9,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "FinalTruthReadLimitError@12": []
+          }
+        },
+        "orket.adapters.storage.control_plane_operator_action_support": {
+          "module": [
+            {
+              "line": 7,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.storage.control_plane_recovery_store": {
+          "module": [
+            {
+              "line": 8,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "ControlPlaneRecoveryTransactionStore@29": [
+              {
+                "line": 32,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.control_plane_transaction": {
+          "module": [
+            {
+              "line": 14,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "SQLiteControlPlaneTransactions@17": [
+              {
+                "line": 18,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.controller_schema_store": {
+          "module": [
+            {
+              "line": 9,
+              "kind": "Assign",
+              "direct": true,
+              "literal": false
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.storage.crash_log_store": {
+          "module": [
+            {
+              "line": 12,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "CrashLogStore@16": [
+              {
+                "line": 17,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.driver_resource_store": {
+          "module": [
+            {
+              "line": 8,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "DriverResourceStore@11": [
+              {
+                "line": 12,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.dual_write_intent_store": {
+          "module": [
+            {
+              "line": 13,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "DualWriteIntentStore@16": [
+              {
+                "line": 17,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.epic_approval_pause_store": {
+          "module": [
+            {
+              "line": 14,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "EpicApprovalPauseStore@17": [
+              {
+                "line": 18,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.epic_continuation_lock": {
+          "module": [
+            {
+              "line": 11,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "EpicContinuationLocks@14": [
+              {
+                "line": 15,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.epic_export_dispatch_store": {
+          "module": [
+            {
+              "line": 8,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "EpicExportDispatchStore@11": [
+              {
+                "line": 12,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.epic_publication_repository": {
+          "module": [
+            {
+              "line": 27,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "SQLiteEpicPublicationTransaction@30": [
+              {
+                "line": 31,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "SQLiteEpicPublicationRepository@122": [
+              {
+                "line": 123,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.extension_install_store": {
+          "module": [
+            {
+              "line": 8,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.storage.extension_template_store": {
+          "module": [
+            {
+              "line": 13,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "ExtensionTemplateMissing@16": [],
+            "ExtensionTargetExists@20": [],
+            "MaterializedTemplate@25": [],
+            "ExtensionTemplateStore@30": [
+              {
+                "line": 31,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.file_admission": {
+          "module": [
+            {
+              "line": 5,
+              "kind": "Assign",
+              "direct": true,
+              "literal": false
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.storage.gitea_http_client": {
+          "module": [
+            {
+              "line": 22,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "GiteaHTTPClient@25": []
+          }
+        },
+        "orket.adapters.storage.gitea_lease_manager": {
+          "module": [
+            {
+              "line": 12,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "GiteaLeaseManager@15": []
+          }
+        },
+        "orket.adapters.storage.gitea_state_adapter": {
+          "module": [
+            {
+              "line": 27,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "SecretToken@30": [],
+            "GiteaStateAdapter@44": []
+          }
+        },
+        "orket.adapters.storage.gitea_state_errors": {
+          "module": [
+            {
+              "line": 3,
+              "kind": "Assign",
+              "direct": true,
+              "literal": false
+            }
+          ],
+          "classes": {
+            "GiteaAdapterError@6": [],
+            "GiteaAdapterRateLimitError@10": [],
+            "GiteaAdapterAuthError@14": [],
+            "GiteaAdapterConflictError@18": [],
+            "GiteaAdapterTimeoutError@22": [],
+            "GiteaAdapterNetworkError@26": []
+          }
+        },
+        "orket.adapters.storage.gitea_state_models": {
+          "module": [
+            {
+              "line": 13,
+              "kind": "Assign",
+              "direct": true,
+              "literal": false
+            }
+          ],
+          "classes": {
+            "LeaseInfo@16": [],
+            "CardSnapshot@23": [],
+            "StateEvent@32": []
+          }
+        },
+        "orket.adapters.storage.gitea_state_transitioner": {
+          "module": [
+            {
+              "line": 12,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "GiteaStateTransitioner@15": []
+          }
+        },
+        "orket.adapters.storage.governed_agent_decision_store": {
+          "module": [
+            {
+              "line": 28,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "_ConnectionExecutor@31": [],
+            "GovernedAgentDecisionStore@38": []
+          }
+        },
+        "orket.adapters.storage.governed_agent_replay_store": {
+          "module": [
+            {
+              "line": 18,
+              "kind": "Assign",
+              "direct": true,
+              "literal": false
+            }
+          ],
+          "classes": {
+            "ReplayEvidenceError@21": [],
+            "GovernedAgentReplayStore@25": [
+              {
+                "line": 28,
+                "kind": "Assign",
+                "direct": true,
+                "literal": false
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.governed_agent_repository_support": {
+          "module": [
+            {
+              "line": 20,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.storage.governed_agent_wake_control_support": {
+          "module": [
+            {
+              "line": 33,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.storage.governed_agent_wake_repository_support": {
+          "module": [
+            {
+              "line": 25,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.storage.interaction_artifact_store": {
+          "module": [
+            {
+              "line": 14,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "InteractionArtifactStore@18": [
+              {
+                "line": 19,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.kernel_capability_policy_reader": {
+          "module": [
+            {
+              "line": 9,
+              "kind": "Assign",
+              "direct": true,
+              "literal": false
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.storage.kernel_state_store": {
+          "module": [
+            {
+              "line": 10,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.storage.local_file_lock": {
+          "module": [
+            {
+              "line": 14,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "NativeFileLocks@17": [
+              {
+                "line": 18,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.model_score_reader": {
+          "module": [
+            {
+              "line": 11,
+              "kind": "Assign",
+              "direct": true,
+              "literal": false
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.storage.operation_commit_registry": {
+          "module": [
+            {
+              "line": 16,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "OperationCommitRegistry@19": [
+              {
+                "line": 22,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.outbound_policy_reader": {
+          "module": [
+            {
+              "line": 9,
+              "kind": "Assign",
+              "direct": true,
+              "literal": false
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.storage.outward_approval_migrations": {
+          "module": [
+            {
+              "line": 42,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.storage.outward_approval_store": {
+          "module": [
+            {
+              "line": 15,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "OutwardApprovalStore@18": []
+          }
+        },
+        "orket.adapters.storage.outward_approval_upgrade": {
+          "module": [
+            {
+              "line": 10,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.storage.outward_effect_migrations": {
+          "module": [
+            {
+              "line": 59,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.storage.outward_effect_store": {
+          "module": [
+            {
+              "line": 23,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "OutwardEffectTransactionStore@33": [
+              {
+                "line": 36,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.outward_ledger_append_store": {
+          "module": [
+            {
+              "line": 46,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "OutwardEventAppend@76": [
+              {
+                "line": 79,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.outward_ledger_file_store": {
+          "module": [
+            {
+              "line": 10,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "OutwardLedgerFileStore@13": [
+              {
+                "line": 15,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.outward_ledger_legacy_import": {
+          "module": [
+            {
+              "line": 19,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.storage.outward_ledger_snapshot_store": {
+          "module": [
+            {
+              "line": 26,
+              "kind": "Assign",
+              "direct": true,
+              "literal": false
+            }
+          ],
+          "classes": {
+            "OutwardLedgerSnapshotStore@29": [
+              {
+                "line": 30,
+                "kind": "Assign",
+                "direct": true,
+                "literal": false
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.outward_ledger_upgrade": {
+          "module": [
+            {
+              "line": 16,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.storage.outward_model_admission_migrations": {
+          "module": [
+            {
+              "line": 100,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.storage.outward_model_admission_store": {
+          "module": [
+            {
+              "line": 11,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "OutwardModelAdmissionStore@18": [
+              {
+                "line": 21,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.outward_run_event_store": {
+          "module": [
+            {
+              "line": 47,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "OutwardRunEventStore@50": [
+              {
+                "line": 51,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.outward_run_store": {
+          "module": [
+            {
+              "line": 50,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "OutwardRunStore@53": [
+              {
+                "line": 54,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.outward_store_transaction": {
+          "module": [
+            {
+              "line": 28,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "OutwardStoreTransaction@31": [
+              {
+                "line": 34,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "OutwardStoreUnitOfWork@86": [
+              {
+                "line": 87,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.project_memory_repository": {
+          "module": [
+            {
+              "line": 13,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "ProjectMemoryRepository@16": []
+          }
+        },
+        "orket.adapters.storage.prompt_asset_store": {
+          "module": [
+            {
+              "line": 11,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "PromptAssetStore@14": [
+              {
+                "line": 15,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.prompt_registry_reader": {
+          "module": [
+            {
+              "line": 8,
+              "kind": "Assign",
+              "direct": true,
+              "literal": false
+            }
+          ],
+          "classes": {
+            "PromptRegistryBytes@12": []
+          }
+        },
+        "orket.adapters.storage.protocol_append_only_ledger": {
+          "module": [
+            {
+              "line": 22,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "LedgerFramingError@25": [],
+            "AppendOnlyRunLedger@101": []
+          }
+        },
+        "orket.adapters.storage.protocol_ledger_io": {
+          "module": [
+            {
+              "line": 6,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.storage.protocol_receipt_store": {
+          "module": [
+            {
+              "line": 18,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "ProtocolReceiptStore@21": [
+              {
+                "line": 22,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.reforger_output": {
+          "module": [
+            {
+              "line": 8,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.storage.run_graph_artifact": {
+          "module": [
+            {
+              "line": 11,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.storage.run_start_publication": {
+          "module": [
+            {
+              "line": 9,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.storage.runtime_store_binding_repository": {
+          "module": [
+            {
+              "line": 17,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "RuntimeStoreBindingRepository@20": [
+              {
+                "line": 21,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.runtime_store_migration_io": {
+          "module": [
+            {
+              "line": 16,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "RuntimeStoreMigrationIO@56": [
+              {
+                "line": 57,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.sandbox_lifecycle_row_serialization": {
+          "module": [
+            {
+              "line": 7,
+              "kind": "Assign",
+              "direct": true,
+              "literal": false
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.storage.scoped_memory_repository": {
+          "module": [
+            {
+              "line": 12,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "ScopedMemoryRepository@15": []
+          }
+        },
+        "orket.adapters.storage.sdk_workload_exchange": {
+          "module": [
+            {
+              "line": 8,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "SdkWorkloadExchange@11": [
+              {
+                "line": 12,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.settings_file_store": {
+          "module": [
+            {
+              "line": 14,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.storage.setup_project_store": {
+          "module": [
+            {
+              "line": 8,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "SetupProjectStore@11": [
+              {
+                "line": 12,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.sqlite_backup": {
+          "module": [
+            {
+              "line": 10,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "SQLiteMigrationCopy@14": []
+          }
+        },
+        "orket.adapters.storage.sqlite_connection": {
+          "module": [
+            {
+              "line": 13,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.storage.sqlite_migrations": {
+          "module": [
+            {
+              "line": 7,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "SQLiteMigration@11": [],
+            "SQLiteMigrationRunner@17": []
+          }
+        },
+        "orket.adapters.storage.structural_board_store": {
+          "module": [
+            {
+              "line": 12,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "StructuralBoardStore@15": [
+              {
+                "line": 16,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.storage.verified_file": {
+          "module": [
+            {
+              "line": 8,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.storage.workload_artifact_store": {
+          "module": [
+            {
+              "line": 11,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.tools.__init__": {
+          "module": [
+            {
+              "line": 42,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.tools.builtin_connectors": {
+          "module": [
+            {
+              "line": 27,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "BuiltInConnectorExecutionError@30": [],
+            "BuiltInConnectorExecutor@34": []
+          }
+        },
+        "orket.adapters.tools.families.__init__": {
+          "module": [
+            {
+              "line": 16,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.tools.families.academy": {
+          "module": [
+            {
+              "line": 10,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "AcademyTools@13": []
+          }
+        },
+        "orket.adapters.tools.families.base": {
+          "module": [
+            {
+              "line": 5,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "BaseTools@8": []
+          }
+        },
+        "orket.adapters.tools.families.cards": {
+          "module": [
+            {
+              "line": 16,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "CardManagementTools@19": [
+              {
+                "line": 20,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.tools.families.filesystem": {
+          "module": [
+            {
+              "line": 14,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "FileSystemTools@17": [
+              {
+                "line": 18,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.tools.families.governance": {
+          "module": [
+            {
+              "line": 9,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "GovernanceTools@12": []
+          }
+        },
+        "orket.adapters.tools.families.vision": {
+          "module": [
+            {
+              "line": 13,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "VisionTools@16": [
+              {
+                "line": 19,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.tools.governed_agent_file_effect_executor": {
+          "module": [
+            {
+              "line": 9,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "GovernedAgentFileEffectExecutor@12": []
+          }
+        },
+        "orket.adapters.tools.registry": {
+          "module": [
+            {
+              "line": 10,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "ToolArgumentSchema@14": [],
+            "BuiltInConnectorMetadata@23": [],
+            "BuiltInConnectorRegistry@33": [],
+            "ToolRegistry@68": []
+          }
+        },
+        "orket.adapters.tools.runtime": {
+          "module": [
+            {
+              "line": 12,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "ToolRuntimeExecutor@15": [
+              {
+                "line": 18,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.vcs.__init__": {
+          "module": [
+            {
+              "line": 2,
+              "kind": "Assign",
+              "direct": true,
+              "literal": false
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.vcs.gitea_artifact_exporter": {
+          "module": [
+            {
+              "line": 24,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "GiteaArtifactExporter@36": [
+              {
+                "line": 39,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.vcs.gitea_export_git": {
+          "module": [
+            {
+              "line": 12,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "GiteaExportGit@15": [
+              {
+                "line": 16,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.adapters.vcs.gitea_webhook_client": {
+          "module": [
+            {
+              "line": 11,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.vcs.gitea_webhook_event": {
+          "module": [
+            {
+              "line": 7,
+              "kind": "Assign",
+              "direct": true,
+              "literal": false
+            }
+          ],
+          "classes": {}
+        },
+        "orket.adapters.vcs.webhook_db": {
+          "module": [
+            {
+              "line": 28,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "WebhookDatabase@35": []
+          }
+        },
+        "orket.capabilities.__init__": {
+          "module": [
+            {
+              "line": 5,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {}
+        },
+        "orket.capabilities.audio_player": {
+          "module": [
+            {
+              "line": 8,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "SounddevicePlayer@11": []
+          }
+        },
+        "orket.capabilities.piper_voice_assets": {
+          "module": [
+            {
+              "line": 15,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "PiperVoiceAsset@19": []
+          }
+        },
+        "orket.capabilities.sdk_static_provider": {
+          "module": [
+            {
+              "line": 5,
+              "kind": "Assign",
+              "direct": true,
+              "literal": false
+            }
+          ],
+          "classes": {
+            "StaticLLMCapabilityProvider@8": []
+          }
+        },
+        "orket.capabilities.sdk_voice_provider": {
+          "module": [
+            {
+              "line": 17,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "HostSTTCapabilityProvider@20": [],
+            "HostVoiceTurnController@35": []
+          }
+        },
+        "orket.capabilities.sync_bridge": {
+          "module": [
+            {
+              "line": 11,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {}
+        },
+        "orket.capabilities.tts_piper": {
+          "module": [
+            {
+              "line": 27,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "PiperConfig@31": [],
+            "PiperSynthesisError@44": [],
+            "PiperSynthesisResult@51": [],
+            "PiperTTSProvider@57": []
+          }
+        },
+        "orket.hardware": {
+          "module": [
+            {
+              "line": 20,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "HardwareProfile@24": [],
+            "ToolTier@107": [],
+            "ModelTier@117": []
+          }
+        },
+        "orket.logging": {
+          "module": [
+            {
+              "line": 34,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "_MemberMetrics@52": []
+          }
+        },
+        "orket.project_paths": {
+          "module": [
+            {
+              "line": 5,
+              "kind": "Assign",
+              "direct": true,
+              "literal": false
+            }
+          ],
+          "classes": {}
+        },
+        "orket.repositories": {
+          "module": [
+            {
+              "line": 6,
+              "kind": "Assign",
+              "direct": true,
+              "literal": false
+            }
+          ],
+          "classes": {}
+        },
+        "orket.runtime_paths": {
+          "module": [
+            {
+              "line": 8,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {}
+        },
+        "orket.streaming.__init__": {
+          "module": [
+            {
+              "line": 24,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {}
+        },
+        "orket.streaming.bus": {
+          "module": [
+            {
+              "line": 19,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "_TurnBusState@23": [],
+            "StreamBusConfig@37": [],
+            "StreamBus@46": [
+              {
+                "line": 47,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ]
+          }
+        },
+        "orket.streaming.clocks": {
+          "module": [
+            {
+              "line": 5,
+              "kind": "Assign",
+              "direct": true,
+              "literal": false
+            }
+          ],
+          "classes": {}
+        },
+        "orket.streaming.law_checker": {
+          "module": [
+            {
+              "line": 8,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "StreamLawViolation@11": [],
+            "TurnLawState@16": [],
+            "StreamLawChecker@25": []
+          }
+        },
+        "orket.streaming.model_provider": {
+          "module": [
+            {
+              "line": 16,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "ProviderEventType@19": [],
+            "ProviderEvent@28": [],
+            "ProviderTurnRequest@35": [],
+            "ModelStreamProvider@40": [],
+            "StubModelStreamProvider@86": [],
+            "OllamaModelStreamProvider@168": [],
+            "OpenAICompatModelStreamProvider@315": []
+          }
+        },
+        "orket.time_utils": {
+          "module": [
+            {
+              "line": 7,
+              "kind": "Assign",
+              "direct": true,
+              "literal": false
+            }
+          ],
+          "classes": {}
+        },
+        "orket.utils": {
+          "module": [
+            {
+              "line": 26,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {}
+        },
+        "orket.vendors.base": {
+          "module": [
+            {
+              "line": 5,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "VendorRock@8": [],
+            "VendorEpic@15": [],
+            "VendorCard@22": [],
+            "VendorInterface@32": []
+          }
+        },
+        "orket.vendors.gitea": {
+          "module": [
+            {
+              "line": 6,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "GiteaVendor@9": []
+          }
+        }
+      },
       "analysis_errors": [],
       "resolved_dynamic_routes": [
         {
@@ -374,6 +2901,3529 @@
           "target": "interfaces",
           "count": 45
         }
+      ],
+      "adapter_effects": [
+        {
+          "module": "orket.adapters.__init__",
+          "path": "orket/adapters/__init__.py",
+          "sha256": "f066659116433c7d378a2622ddcf84583d0eff68377d145fd06575d120257f38",
+          "side_effecting": false,
+          "declarations": {
+            "module": [
+              {
+                "line": 2,
+                "kind": "Assign",
+                "direct": true,
+                "literal": false
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.execution.__init__",
+          "path": "orket/adapters/execution/__init__.py",
+          "sha256": "7846fd4020cf3d72256f0caea8d886715dd23942ee42d4f683b7f05c28de2371",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 6,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.execution.extension_modules",
+          "path": "orket/adapters/execution/extension_modules.py",
+          "sha256": "097f9c94f9e628d7c638353b1c9f82d212ad8540a42f327827ee1e3d3b91a52d",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 20,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "ExtensionModuleSource@24": []
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.execution.fixture_docker",
+          "path": "orket/adapters/execution/fixture_docker.py",
+          "sha256": "cf97c0a671dcb64d718fc39a217541ced00eb8a431d06ec2e6729e5da3ea18d5",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 15,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "DockerObservationError@18": [],
+              "FixtureDockerAdapter@28": [
+                {
+                  "line": 29,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.execution.fixture_runner",
+          "path": "orket/adapters/execution/fixture_runner.py",
+          "sha256": "40e5e7a07c5e2f0e2a7f117aeff33d23a59de963a65c2b3a9facc8edddebf786",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 4,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.execution.openclaw_jsonl_adapter",
+          "path": "orket/adapters/execution/openclaw_jsonl_adapter.py",
+          "sha256": "4123d7c0b715ca906b1fe06b22621a2ceba07fc0bf7b0eb0c4f935168e4e36f2",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 10,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "OpenClawSubprocessError@13": [],
+              "PartialAdapterResult@22": [],
+              "OpenClawJsonlSubprocessAdapter@36": []
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.execution.owned_command_limits",
+          "path": "orket/adapters/execution/owned_command_limits.py",
+          "sha256": "cdbb12da7dec5f3a83c961e6e8de807816de587dca7ff7e727bd3f64847d3dae",
+          "side_effecting": false,
+          "declarations": {
+            "module": [
+              {
+                "line": 6,
+                "kind": "Assign",
+                "direct": true,
+                "literal": false
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.execution.owned_command_linux",
+          "path": "orket/adapters/execution/owned_command_linux.py",
+          "sha256": "48efae0957327a444a19e7dc1e5223cf48cc498ae658ea038faa4d7a78952d93",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 9,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "LinuxChildren@12": []
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.execution.owned_command_process",
+          "path": "orket/adapters/execution/owned_command_process.py",
+          "sha256": "a64f199cf3e11458a6ab026eb233a5af3aa24bb8ed12682372637120e7ef171a",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 17,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.execution.owned_command_windows",
+          "path": "orket/adapters/execution/owned_command_windows.py",
+          "sha256": "0f6dc140255e8192f626a4b982952ed02f0558b096b5472639c984ff38823941",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 7,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "BasicLimits@10": [],
+              "ExtendedLimits@17": [],
+              "Accounting@23": [],
+              "ThreadEntry@28": [],
+              "WindowsJob@62": []
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.execution.owned_command_worker",
+          "path": "orket/adapters/execution/owned_command_worker.py",
+          "sha256": "81886370fba9d6abc47bcea4a323e5425aded856fe2f07a0c1678673ed77120e",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 22,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.execution.owned_io",
+          "path": "orket/adapters/execution/owned_io.py",
+          "sha256": "aef1c74ea472387902cfa6f424fa971843f67354948f8987ee7bf6ad20ee4b89",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 11,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.execution.process_lifecycle",
+          "path": "orket/adapters/execution/process_lifecycle.py",
+          "sha256": "3c851567d37cb46e7dbf5643904c57fd6ed8e1cc46ac4b8e2f7484b8fa85487c",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 9,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.execution.sandbox_http",
+          "path": "orket/adapters/execution/sandbox_http.py",
+          "sha256": "2a2b0614cecb3478c6c197e02376fff7a8fb5285902fab372090a119057528a8",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 10,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "SandboxHttpAdapter@13": []
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.execution.sync_coroutine_owner",
+          "path": "orket/adapters/execution/sync_coroutine_owner.py",
+          "sha256": "69e45b6b80aebdadbb9542888a0812966f77a4e74d52ad9b1bfc654295aae3ec",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 15,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "SyncCoroutineOwner@32": []
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.execution.worker_client",
+          "path": "orket/adapters/execution/worker_client.py",
+          "sha256": "dfc2a3d83ed51281b28ea08c5cd4e744f7a5ebe88caeb759a107a015beeddd33",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 9,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "ResponseLike@12": [],
+              "ClientLike@19": [],
+              "Worker@25": []
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.llm.__init__",
+          "path": "orket/adapters/llm/__init__.py",
+          "sha256": "154773a16c4ae56e34796d1e8da1f2706a14ce629853b4fff17db17abb8ca99d",
+          "side_effecting": false,
+          "declarations": {
+            "module": [
+              {
+                "line": 2,
+                "kind": "Assign",
+                "direct": true,
+                "literal": false
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.llm.llama_cpp_render_verification",
+          "path": "orket/adapters/llm/llama_cpp_render_verification.py",
+          "sha256": "7f6bdb54812f8a335cf5c3c2ecf783f8808fb184d99350f85740edf1038ead91",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 19,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.llm.local_model_provider",
+          "path": "orket/adapters/llm/local_model_provider.py",
+          "sha256": "875494215536adda2ff6afa8ce400d077c56bd1c0f0cbcc340462d035d118e6d",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 45,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "ModelResponse@49": [],
+              "LocalModelProvider@54": [
+                {
+                  "line": 56,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.llm.local_model_provider_runtime_target",
+          "path": "orket/adapters/llm/local_model_provider_runtime_target.py",
+          "sha256": "e0477eceee9c5d7a674fac909815cc6d041f247a22f7ba98337275b27855286b",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 9,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.llm.openai_compat_runtime",
+          "path": "orket/adapters/llm/openai_compat_runtime.py",
+          "sha256": "a6fd6860fbcba947e0e865a10f8edaa22d42d8ee27ff6d8c4090454744059893",
+          "side_effecting": false,
+          "declarations": {
+            "module": [
+              {
+                "line": 34,
+                "kind": "Assign",
+                "direct": true,
+                "literal": false
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.llm.openai_native_tools",
+          "path": "orket/adapters/llm/openai_native_tools.py",
+          "sha256": "b8c24baf6a0a1c201e15e1925698d0cbea7cd0de89998f993847c6c230658063",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 12,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.llm.prompt_canonicalization",
+          "path": "orket/adapters/llm/prompt_canonicalization.py",
+          "sha256": "fc7d93587a8cb168b484779d157003fa0197eefe6ecbe2fd8f45d4c401795021",
+          "side_effecting": false,
+          "declarations": {
+            "module": [
+              {
+                "line": 4,
+                "kind": "Assign",
+                "direct": true,
+                "literal": false
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.llm.provider_extractors",
+          "path": "orket/adapters/llm/provider_extractors.py",
+          "sha256": "6bd1d54a84ce8d1e9ac010ce7b75662f748e57fa86361f29430dde36dd1cc570",
+          "side_effecting": false,
+          "declarations": {
+            "module": [
+              {
+                "line": 14,
+                "kind": "Assign",
+                "direct": true,
+                "literal": false
+              }
+            ],
+            "classes": {
+              "ProviderExtractor@17": [],
+              "OpenAIExtractor@27": [],
+              "OllamaExtractor@41": []
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.__init__",
+          "path": "orket/adapters/storage/__init__.py",
+          "sha256": "41624dac125f15f5a5606b99b256976cdec230a94fc65ed0e5148edd84dd226c",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 26,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.storage.api_run_log_reader",
+          "path": "orket/adapters/storage/api_run_log_reader.py",
+          "sha256": "83d5a9eea03cd158fa5be34e948631dafee49a6c3bf0b16220fe29532ee01bfe",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 11,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "ApiRunLogReader@14": [
+                {
+                  "line": 15,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.api_workspace_reader",
+          "path": "orket/adapters/storage/api_workspace_reader.py",
+          "sha256": "f7a807025eee88726d854d7cdf37489e43e3b7f67d40ada16e1d75b696d4f3b4",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 10,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "DirectoryEntry@14": [],
+              "ApiWorkspaceReader@20": [
+                {
+                  "line": 21,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.async_card_repository",
+          "path": "orket/adapters/storage/async_card_repository.py",
+          "sha256": "52d3188c0632cd4b868e509f506a9928caee97f46fb049ea15ecb855f2ab1965",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 38,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "AsyncCardRepository@41": [
+                {
+                  "line": 44,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.async_control_plane_execution_repository",
+          "path": "orket/adapters/storage/async_control_plane_execution_repository.py",
+          "sha256": "e066202c281c560e693393f88d52a08ab9fe0f2fd5605dea2ed786716b022b71",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 24,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "ControlPlaneExecutionConflictError@27": [],
+              "AsyncControlPlaneExecutionRepository@31": [
+                {
+                  "line": 34,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.async_control_plane_record_repository",
+          "path": "orket/adapters/storage/async_control_plane_record_repository.py",
+          "sha256": "205869ce4791da97979087d574c72300bbcf6487beac528e61af313ea482970c",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 48,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "ControlPlaneRecordConflictError@51": [],
+              "AsyncControlPlaneRecordRepository@55": [
+                {
+                  "line": 58,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.async_executor_service",
+          "path": "orket/adapters/storage/async_executor_service.py",
+          "sha256": "4e31a06a5dabe3bebaaeedfc74cd771562b4c8903c9f3b23ea7c6efb2d41be80",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 9,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "AsyncExecutorService@12": []
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.async_file_tools",
+          "path": "orket/adapters/storage/async_file_tools.py",
+          "sha256": "dfe3631d1352c6045236878f5baa43c6b430ed21b39a451495a3e6a69c036f25",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 24,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "AsyncFileTools@36": []
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.async_flow_repository",
+          "path": "orket/adapters/storage/async_flow_repository.py",
+          "sha256": "e498f69b3121fe23b867fb178d0a17b61c6985a01dcd2a94eeabc21ae6d26ace",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 17,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "AsyncFlowRepository@20": [
+                {
+                  "line": 23,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.async_governed_agent_repository",
+          "path": "orket/adapters/storage/async_governed_agent_repository.py",
+          "sha256": "b2c6e0c6e9203f3c4e4faf382d2c89c82b68e473433c8ecd0df8f84d083a4520",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 51,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "AsyncGovernedAgentRepository@54": []
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.async_governed_agent_run_control_repository",
+          "path": "orket/adapters/storage/async_governed_agent_run_control_repository.py",
+          "sha256": "7b4cec2fbc12d8847a1999d313194b6c2ede72cc6c7211ecad052314dac1d827",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 16,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "AsyncGovernedAgentRunControlRepository@29": [
+                {
+                  "line": 32,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.async_governed_agent_schedule_repository",
+          "path": "orket/adapters/storage/async_governed_agent_schedule_repository.py",
+          "sha256": "fcd606ead95901b67e758ed5098d60790b8b42bd28dc29d355cd1bd35b91f86f",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 31,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "AsyncGovernedAgentScheduleRepository@34": [
+                {
+                  "line": 37,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.async_governed_agent_wake_control_repository",
+          "path": "orket/adapters/storage/async_governed_agent_wake_control_repository.py",
+          "sha256": "1c6d12269429706ee24714597af5127fd47ed30e87e48c85fa36f88832df00a7",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 27,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "AsyncGovernedAgentWakeControlRepository@30": [
+                {
+                  "line": 33,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.async_governed_agent_wake_repository",
+          "path": "orket/adapters/storage/async_governed_agent_wake_repository.py",
+          "sha256": "94edc32900699071109e6112df214842f7ab0399b15a113caf1ee30273abfb91",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 37,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "AsyncGovernedAgentWakeRepository@40": [
+                {
+                  "line": 43,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.async_governed_agent_webhook_repository",
+          "path": "orket/adapters/storage/async_governed_agent_webhook_repository.py",
+          "sha256": "9827294cc35e0985d3561c51e942bd1bb367039d4d50e739f4b1d39fbf094702",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 31,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "AsyncGovernedAgentWebhookRepository@34": [
+                {
+                  "line": 37,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.async_pending_gate_repository",
+          "path": "orket/adapters/storage/async_pending_gate_repository.py",
+          "sha256": "7452327845f22d7cb7ed73b9379555c8f59ac78ebba671adda169215859ac66d",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 14,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "AsyncPendingGateRepository@17": [
+                {
+                  "line": 22,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.async_protocol_run_ledger",
+          "path": "orket/adapters/storage/async_protocol_run_ledger.py",
+          "sha256": "320debac78d3d8469c1d22dec3e84f3872a462ab385d853c8abd689175be345c",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 28,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "AsyncProtocolRunLedgerRepository@53": []
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.async_repositories",
+          "path": "orket/adapters/storage/async_repositories.py",
+          "sha256": "fb3bb7893b281393cddccdea8b642c129423ac60babebdc6ba0a698eccd7aedf",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 18,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "AsyncSessionRepository@21": [
+                {
+                  "line": 23,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ],
+              "AsyncSnapshotRepository@133": [
+                {
+                  "line": 135,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ],
+              "AsyncSuccessRepository@181": [
+                {
+                  "line": 183,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ],
+              "AsyncRunLedgerRepository@229": []
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.async_sandbox_lifecycle_repository",
+          "path": "orket/adapters/storage/async_sandbox_lifecycle_repository.py",
+          "sha256": "dc506e5da4e5493080bdec75833907092dc2e7fd1b077b6270ff4a4c2e427293",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 29,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "SandboxOperationIntegrityError@32": [],
+              "SandboxLifecycleConflictError@36": [],
+              "AsyncSandboxLifecycleRepository@40": []
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.bound_filesystem",
+          "path": "orket/adapters/storage/bound_filesystem.py",
+          "sha256": "c2e8e78ec122be7b66849683b544d60e6db6bbff6bef8c034f2fb616023eb31f",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 17,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "BoundFilesystemExecutor@20": [
+                {
+                  "line": 21,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.bound_filesystem_posix",
+          "path": "orket/adapters/storage/bound_filesystem_posix.py",
+          "sha256": "4ca542aff36f0ad5e6aa1bb735f13b5931e9103965b0233851ce93d308afe952",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 10,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.storage.bound_filesystem_windows",
+          "path": "orket/adapters/storage/bound_filesystem_windows.py",
+          "sha256": "54e5cd82ae73a2cf2f0d6ba0513dd645b6e58089511c807e382d986435c2490b",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 17,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "_AttributeTagInfo@20": []
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.bundle_store",
+          "path": "orket/adapters/storage/bundle_store.py",
+          "sha256": "fe0267292b8b32f97117c9c7293fa361adbb998c58b546d6220f4f7e6c8fecda",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 18,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "BundleManifestSource@22": [],
+              "BundleArchiveSource@29": [],
+              "BundleSourceChangedError@43": [],
+              "BundleStore@47": [
+                {
+                  "line": 49,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.card_acceptance_artifacts",
+          "path": "orket/adapters/storage/card_acceptance_artifacts.py",
+          "sha256": "d7496c546eeadafef490a12494b88f7a0f812f916d5c230103981feadf5fd3de",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 15,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "CapturedCardArtifact@19": [],
+              "CardAcceptanceArtifacts@28": [
+                {
+                  "line": 29,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.card_acceptance_evidence_store",
+          "path": "orket/adapters/storage/card_acceptance_evidence_store.py",
+          "sha256": "700d7c4b4fdc123250ebc3a893de4ea0e1dfd31c8eb59e93dc97cc16fdf9df78",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 14,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "CardAcceptanceEvidenceStore@17": [
+                {
+                  "line": 18,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.card_archive_ops",
+          "path": "orket/adapters/storage/card_archive_ops.py",
+          "sha256": "c24e10ae848c12e9d6b4e1c33d84a9057738e03f7f702b59503e6fc56a447281",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 9,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "CardArchiveOps@12": []
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.card_completion_migrations",
+          "path": "orket/adapters/storage/card_completion_migrations.py",
+          "sha256": "f9bd1ad4d0f9d5123b1e370f3008f37abdfc341bfa41610af726f5825743277c",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 58,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.storage.card_migrations",
+          "path": "orket/adapters/storage/card_migrations.py",
+          "sha256": "562ed01821e514568752ec658d3df3130e553eb2001ac79ec4b16f6133ce83ca",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 63,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "CardMigrations@66": [
+                {
+                  "line": 69,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.card_misc_ops",
+          "path": "orket/adapters/storage/card_misc_ops.py",
+          "sha256": "556cbe078d81d115b10910db3486700cc636c1606c778f95820307b966cd61ef",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 10,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "CardMiscOps@13": []
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.card_record_codec",
+          "path": "orket/adapters/storage/card_record_codec.py",
+          "sha256": "535762a32b5d3db8029684384bb5afafca6a4a7b273f4cb99e33d083a15607a6",
+          "side_effecting": false,
+          "declarations": {
+            "module": [
+              {
+                "line": 6,
+                "kind": "Assign",
+                "direct": true,
+                "literal": false
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.storage.card_write_ops",
+          "path": "orket/adapters/storage/card_write_ops.py",
+          "sha256": "6abe1f4c86b20d32d3b66d88e498921e23302c3b913acbd5a97aed838e37cd09",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 25,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.storage.command_runner",
+          "path": "orket/adapters/storage/command_runner.py",
+          "sha256": "203f0ed5942364522ddfd547ea62019eadbbc74c20d8ca8fc960363073518b12",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 15,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "CommandResult@19": [],
+              "SandboxCommandUncertain@26": [],
+              "SandboxCommandTimeout@34": [],
+              "CommandRunner@41": []
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.control_plane_effect_journal_store",
+          "path": "orket/adapters/storage/control_plane_effect_journal_store.py",
+          "sha256": "063c80170ae6ce68a56daa6a970b3210ed131c2c987a133820e0339784ed6c43",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 7,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.storage.control_plane_final_truth_store",
+          "path": "orket/adapters/storage/control_plane_final_truth_store.py",
+          "sha256": "bfd1723f3d8d47c59dfdfac6c9a54e282504839d334a9327a311f80f44ff7416",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 9,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "FinalTruthReadLimitError@12": []
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.control_plane_operator_action_support",
+          "path": "orket/adapters/storage/control_plane_operator_action_support.py",
+          "sha256": "48e5577d753ad441a835717c9ece27411f55d2669a8445133836ca1e63b9a4ee",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 7,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.storage.control_plane_recovery_store",
+          "path": "orket/adapters/storage/control_plane_recovery_store.py",
+          "sha256": "f2a4f14c582d5250dd2100fe9ac50d8303e39db3c4fb8b138f97164726d68251",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 8,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "ControlPlaneRecoveryTransactionStore@29": [
+                {
+                  "line": 32,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.control_plane_transaction",
+          "path": "orket/adapters/storage/control_plane_transaction.py",
+          "sha256": "7609cc4ea81ca3e8f9fd946da7c25d1b74d10e0d3c1b137139d31be52bc8206d",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 14,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "SQLiteControlPlaneTransactions@17": [
+                {
+                  "line": 18,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.controller_schema_store",
+          "path": "orket/adapters/storage/controller_schema_store.py",
+          "sha256": "bd67cc51cd5115e0b1384c1c71727eb449d9cb97f32670c41a94d7013e96b1f6",
+          "side_effecting": false,
+          "declarations": {
+            "module": [
+              {
+                "line": 9,
+                "kind": "Assign",
+                "direct": true,
+                "literal": false
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.storage.crash_log_store",
+          "path": "orket/adapters/storage/crash_log_store.py",
+          "sha256": "bb3c0a76020007886d2f0ffebd453458db607b830ed580cd1a4c9cb3bacd18ca",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 12,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "CrashLogStore@16": [
+                {
+                  "line": 17,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.driver_resource_store",
+          "path": "orket/adapters/storage/driver_resource_store.py",
+          "sha256": "197c32cd8408a199d9508058d49cd3aff813fa6a49edeb88a5b1f30f1851b5e3",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 8,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "DriverResourceStore@11": [
+                {
+                  "line": 12,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.dual_write_intent_store",
+          "path": "orket/adapters/storage/dual_write_intent_store.py",
+          "sha256": "6a32043d27e860b40f3e8fd064f64526dd268b2dd78a33d67778e5d366c357d5",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 13,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "DualWriteIntentStore@16": [
+                {
+                  "line": 17,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.epic_approval_pause_store",
+          "path": "orket/adapters/storage/epic_approval_pause_store.py",
+          "sha256": "4fcd922be9d5c4c19fcdffed9db5d0cbbd9dbac287c7358e359f59f98edabd18",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 14,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "EpicApprovalPauseStore@17": [
+                {
+                  "line": 18,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.epic_continuation_lock",
+          "path": "orket/adapters/storage/epic_continuation_lock.py",
+          "sha256": "82639fba90ef448e0251761a7db6127b2e1b2fe6e1444db6592da02b9904809e",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 11,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "EpicContinuationLocks@14": [
+                {
+                  "line": 15,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.epic_export_dispatch_store",
+          "path": "orket/adapters/storage/epic_export_dispatch_store.py",
+          "sha256": "63c668b899f7c7a46b994e3684aa1ea6fa3717de56e880825e0f6ece5192f6df",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 8,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "EpicExportDispatchStore@11": [
+                {
+                  "line": 12,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.epic_publication_repository",
+          "path": "orket/adapters/storage/epic_publication_repository.py",
+          "sha256": "59ce53de202ee340640d2dd40a57875179e3ccbedd94b1d20e5ec779b85d6b5c",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 27,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "SQLiteEpicPublicationTransaction@30": [
+                {
+                  "line": 31,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ],
+              "SQLiteEpicPublicationRepository@122": [
+                {
+                  "line": 123,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.extension_install_store",
+          "path": "orket/adapters/storage/extension_install_store.py",
+          "sha256": "2eee1fa7edec896df50786d9d4459f2c9ab5311c624c9bbe4737cbb0fee8d682",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 8,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.storage.extension_template_store",
+          "path": "orket/adapters/storage/extension_template_store.py",
+          "sha256": "230844155f11afdccd8c85a01effa891635a996a87c2217549a470c2de0a0292",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 13,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "ExtensionTemplateMissing@16": [],
+              "ExtensionTargetExists@20": [],
+              "MaterializedTemplate@25": [],
+              "ExtensionTemplateStore@30": [
+                {
+                  "line": 31,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.file_admission",
+          "path": "orket/adapters/storage/file_admission.py",
+          "sha256": "9721687e2a27493a6e7a2eace05964c1d7054d14d5c253049fe94c17ddc46a2f",
+          "side_effecting": false,
+          "declarations": {
+            "module": [
+              {
+                "line": 5,
+                "kind": "Assign",
+                "direct": true,
+                "literal": false
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.storage.gitea_http_client",
+          "path": "orket/adapters/storage/gitea_http_client.py",
+          "sha256": "aab87d9ea363aae8807909e320700a1ec078993e37c3580a0a74a3ac0ce1c554",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 22,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "GiteaHTTPClient@25": []
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.gitea_lease_manager",
+          "path": "orket/adapters/storage/gitea_lease_manager.py",
+          "sha256": "3a0ab7ce6d61bd0b23d9b7ef4c3e90e52c78b2e234b7a5b047887a7c83eca40b",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 12,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "GiteaLeaseManager@15": []
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.gitea_state_adapter",
+          "path": "orket/adapters/storage/gitea_state_adapter.py",
+          "sha256": "47fac6b1adb2ffeedaa32be267ef691b78b69a177a5993ec39d9a0b6ffa96e6f",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 27,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "SecretToken@30": [],
+              "GiteaStateAdapter@44": []
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.gitea_state_errors",
+          "path": "orket/adapters/storage/gitea_state_errors.py",
+          "sha256": "9d9134b46e6cb286cac24d8f02a3cd94bc530be6b307b68c1ee1f96757ae284d",
+          "side_effecting": false,
+          "declarations": {
+            "module": [
+              {
+                "line": 3,
+                "kind": "Assign",
+                "direct": true,
+                "literal": false
+              }
+            ],
+            "classes": {
+              "GiteaAdapterError@6": [],
+              "GiteaAdapterRateLimitError@10": [],
+              "GiteaAdapterAuthError@14": [],
+              "GiteaAdapterConflictError@18": [],
+              "GiteaAdapterTimeoutError@22": [],
+              "GiteaAdapterNetworkError@26": []
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.gitea_state_models",
+          "path": "orket/adapters/storage/gitea_state_models.py",
+          "sha256": "c9a3d22280ef3f3dc7162ae83a5d0f1dc7a1e691cf52dc57b171e0ed175be177",
+          "side_effecting": false,
+          "declarations": {
+            "module": [
+              {
+                "line": 13,
+                "kind": "Assign",
+                "direct": true,
+                "literal": false
+              }
+            ],
+            "classes": {
+              "LeaseInfo@16": [],
+              "CardSnapshot@23": [],
+              "StateEvent@32": []
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.gitea_state_transitioner",
+          "path": "orket/adapters/storage/gitea_state_transitioner.py",
+          "sha256": "9d79a9d70f2921832d3aa0c699ff2440bf782d5180cbe7e3b6a5f223a095b358",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 12,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "GiteaStateTransitioner@15": []
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.governed_agent_decision_store",
+          "path": "orket/adapters/storage/governed_agent_decision_store.py",
+          "sha256": "385629822741d0ee9cfa8fe2a14d73a7087fac988fd6c3df087a4c7b5db89845",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 28,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "_ConnectionExecutor@31": [],
+              "GovernedAgentDecisionStore@38": []
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.governed_agent_replay_store",
+          "path": "orket/adapters/storage/governed_agent_replay_store.py",
+          "sha256": "e5d99ac0abb3558615faed895ddb1438152b0c4ece8ceafaae662061fb1bc273",
+          "side_effecting": false,
+          "declarations": {
+            "module": [
+              {
+                "line": 18,
+                "kind": "Assign",
+                "direct": true,
+                "literal": false
+              }
+            ],
+            "classes": {
+              "ReplayEvidenceError@21": [],
+              "GovernedAgentReplayStore@25": [
+                {
+                  "line": 28,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.governed_agent_repository_support",
+          "path": "orket/adapters/storage/governed_agent_repository_support.py",
+          "sha256": "ab861df5da248b7690ea883a5165a43d162b2d59528504e29d66b1c0efe079f1",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 20,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.storage.governed_agent_wake_control_support",
+          "path": "orket/adapters/storage/governed_agent_wake_control_support.py",
+          "sha256": "c506422699eb1c48c764745e2e5ae1eb76f120ec672b77556b08a3a25cfa9df4",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 33,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.storage.governed_agent_wake_repository_support",
+          "path": "orket/adapters/storage/governed_agent_wake_repository_support.py",
+          "sha256": "49e2bd5408c6f40edcb87deb6959bf29b2524dd4951f399beaea57e43c565eb3",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 25,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.storage.interaction_artifact_store",
+          "path": "orket/adapters/storage/interaction_artifact_store.py",
+          "sha256": "e68c145ab9ed9b5e1b78d06ed44b2b8e9b89986ee8669473e1f7928338645f5a",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 14,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "InteractionArtifactStore@18": [
+                {
+                  "line": 19,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.kernel_capability_policy_reader",
+          "path": "orket/adapters/storage/kernel_capability_policy_reader.py",
+          "sha256": "fcc42bf153ab10ea8bb7c6d699be3e8d2003d1a54cb5ef0296d2e2ce5ff55132",
+          "side_effecting": false,
+          "declarations": {
+            "module": [
+              {
+                "line": 9,
+                "kind": "Assign",
+                "direct": true,
+                "literal": false
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.storage.kernel_state_store",
+          "path": "orket/adapters/storage/kernel_state_store.py",
+          "sha256": "95ffc1a275bd8ad0545401d809a93250f78d7cd20337f99febece6fb38d295a5",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 10,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.storage.local_file_lock",
+          "path": "orket/adapters/storage/local_file_lock.py",
+          "sha256": "6e6d2230f1945bb29220c52decae3225daab360c4e3534c343232f8d10350bde",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 14,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "NativeFileLocks@17": [
+                {
+                  "line": 18,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.model_score_reader",
+          "path": "orket/adapters/storage/model_score_reader.py",
+          "sha256": "96f6049350ba9eb33f301f4bbeb8f6e362534c853c2ee9c4a8149ae2553abdb3",
+          "side_effecting": false,
+          "declarations": {
+            "module": [
+              {
+                "line": 11,
+                "kind": "Assign",
+                "direct": true,
+                "literal": false
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.storage.operation_commit_registry",
+          "path": "orket/adapters/storage/operation_commit_registry.py",
+          "sha256": "d52f4f15163dc3fa1db699834b0bd723a34102e506b5106bbaba5f8caf359827",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 16,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "OperationCommitRegistry@19": [
+                {
+                  "line": 22,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.outbound_policy_reader",
+          "path": "orket/adapters/storage/outbound_policy_reader.py",
+          "sha256": "8696aad204683c486a1e4fc3385464a2d4b54cfcae3f720fa8d8b7e09d0f131c",
+          "side_effecting": false,
+          "declarations": {
+            "module": [
+              {
+                "line": 9,
+                "kind": "Assign",
+                "direct": true,
+                "literal": false
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.storage.outward_approval_migrations",
+          "path": "orket/adapters/storage/outward_approval_migrations.py",
+          "sha256": "23a5e7c4ab5bbe3bd97d0775e610af20f9c18ce79f53b75b004224c46d8c0e97",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 42,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.storage.outward_approval_store",
+          "path": "orket/adapters/storage/outward_approval_store.py",
+          "sha256": "91ea387e19f90b5f71b0a3a4974b1cd6982b2a360a837b49b182bd78a701f620",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 15,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "OutwardApprovalStore@18": []
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.outward_approval_upgrade",
+          "path": "orket/adapters/storage/outward_approval_upgrade.py",
+          "sha256": "be5517cf1306a5558e9cf29af19f29758525d253c0ca896f50223696fc4dfb7a",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 10,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.storage.outward_effect_migrations",
+          "path": "orket/adapters/storage/outward_effect_migrations.py",
+          "sha256": "61461024c6c2c873bfb4ec65f9d1ad8126f74145d546416ae5cc1d8c89313813",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 59,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.storage.outward_effect_store",
+          "path": "orket/adapters/storage/outward_effect_store.py",
+          "sha256": "08164bd8a90e630bc0f9a8e364986d8ea714829b0c12ee57cd12fdc99181c76e",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 23,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "OutwardEffectTransactionStore@33": [
+                {
+                  "line": 36,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.outward_ledger_append_store",
+          "path": "orket/adapters/storage/outward_ledger_append_store.py",
+          "sha256": "45ddbac1ea6a0afe5bf960ed35c15e5459cf31d085665e0816888b76a09d143d",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 46,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "OutwardEventAppend@76": [
+                {
+                  "line": 79,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.outward_ledger_file_store",
+          "path": "orket/adapters/storage/outward_ledger_file_store.py",
+          "sha256": "9f78310d75dd185981b36891b1cd21fc420cc6c5ee6f3279e557d028abec0e0a",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 10,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "OutwardLedgerFileStore@13": [
+                {
+                  "line": 15,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.outward_ledger_legacy_import",
+          "path": "orket/adapters/storage/outward_ledger_legacy_import.py",
+          "sha256": "2797f96989e1b0d52b0616afffe4165144bd8adf57bbd73d8b82bfd74109019d",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 19,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.storage.outward_ledger_snapshot_store",
+          "path": "orket/adapters/storage/outward_ledger_snapshot_store.py",
+          "sha256": "235b54d0a0ae42ba88dd611a27253804a503b466772b21d6eeb978f47a573cc0",
+          "side_effecting": false,
+          "declarations": {
+            "module": [
+              {
+                "line": 26,
+                "kind": "Assign",
+                "direct": true,
+                "literal": false
+              }
+            ],
+            "classes": {
+              "OutwardLedgerSnapshotStore@29": [
+                {
+                  "line": 30,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.outward_ledger_upgrade",
+          "path": "orket/adapters/storage/outward_ledger_upgrade.py",
+          "sha256": "99ca82a0eada341628bf7d7b343e0b9ca98eedbca5b11f19ad4a8e3ce1edb520",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 16,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.storage.outward_model_admission_migrations",
+          "path": "orket/adapters/storage/outward_model_admission_migrations.py",
+          "sha256": "11babce5713e927d66968e00d1c24436bc9a253720f7010d652f18aad54e294e",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 100,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.storage.outward_model_admission_store",
+          "path": "orket/adapters/storage/outward_model_admission_store.py",
+          "sha256": "7156d10e00ab722ee44568c239d94e358b3a66472e8e95e32b63d7fe0abf90b5",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 11,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "OutwardModelAdmissionStore@18": [
+                {
+                  "line": 21,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.outward_run_event_store",
+          "path": "orket/adapters/storage/outward_run_event_store.py",
+          "sha256": "33a80bae4fc0da50c3ade353b7dc8bf6e5b19842f3326913a4848d6e167288fa",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 47,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "OutwardRunEventStore@50": [
+                {
+                  "line": 51,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.outward_run_store",
+          "path": "orket/adapters/storage/outward_run_store.py",
+          "sha256": "ac27fd56a37f744405d2d63a34815964f0deca7dff868d63310219d0b1ee34be",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 50,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "OutwardRunStore@53": [
+                {
+                  "line": 54,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.outward_store_transaction",
+          "path": "orket/adapters/storage/outward_store_transaction.py",
+          "sha256": "54769f75726f3f2ccfdc4ce658547be62926c9890b37ad3428c765e65f8b6b37",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 28,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "OutwardStoreTransaction@31": [
+                {
+                  "line": 34,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ],
+              "OutwardStoreUnitOfWork@86": [
+                {
+                  "line": 87,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.project_memory_repository",
+          "path": "orket/adapters/storage/project_memory_repository.py",
+          "sha256": "e1dd6e9378c9cd04fd85b88a66273ff6dbb75c13921a2038d8fa56d6493949c8",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 13,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "ProjectMemoryRepository@16": []
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.prompt_asset_store",
+          "path": "orket/adapters/storage/prompt_asset_store.py",
+          "sha256": "6330715b962cda39a9b5fcd18e40a7cfc089be98064a01c54116544ab8b11253",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 11,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "PromptAssetStore@14": [
+                {
+                  "line": 15,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.prompt_registry_reader",
+          "path": "orket/adapters/storage/prompt_registry_reader.py",
+          "sha256": "050a460d44df840ce10d96ee257e82799014eb01ae9988683ee9e631a27b1db7",
+          "side_effecting": false,
+          "declarations": {
+            "module": [
+              {
+                "line": 8,
+                "kind": "Assign",
+                "direct": true,
+                "literal": false
+              }
+            ],
+            "classes": {
+              "PromptRegistryBytes@12": []
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.protocol_append_only_ledger",
+          "path": "orket/adapters/storage/protocol_append_only_ledger.py",
+          "sha256": "55cbf5bb2542869b0606e775534be6ef16e28f56b0956a1024ab059a6cd522c9",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 22,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "LedgerFramingError@25": [],
+              "AppendOnlyRunLedger@101": []
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.protocol_ledger_io",
+          "path": "orket/adapters/storage/protocol_ledger_io.py",
+          "sha256": "c213a1aad3289fce0d1abc64f48b5665beea812502b653ed34de5fd4b1434973",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 6,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.storage.protocol_receipt_store",
+          "path": "orket/adapters/storage/protocol_receipt_store.py",
+          "sha256": "c7be70fdf5ade71c612cdd298f9e871ca12b0cdcd3e91d9e04bcbeac768a9cbd",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 18,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "ProtocolReceiptStore@21": [
+                {
+                  "line": 22,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.reforger_output",
+          "path": "orket/adapters/storage/reforger_output.py",
+          "sha256": "0888300f85c2b3bfb3d6500274ba851bbb8f1d3909beb52778c8699acc8fdc49",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 8,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.storage.run_graph_artifact",
+          "path": "orket/adapters/storage/run_graph_artifact.py",
+          "sha256": "48b27e9cab78260b053a0cbad134aa6c13e061e290bbc6845a9afc2f0b5c03e2",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 11,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.storage.run_start_publication",
+          "path": "orket/adapters/storage/run_start_publication.py",
+          "sha256": "0c666abd538eaccf345dc0689e2d10e317bdde4a4a8f05f19a07ddf7027f97c3",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 9,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.storage.runtime_store_binding_repository",
+          "path": "orket/adapters/storage/runtime_store_binding_repository.py",
+          "sha256": "36e6111058e8736093995b175e57f7b8095aedc2e3609859d979fc9c2b317642",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 17,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "RuntimeStoreBindingRepository@20": [
+                {
+                  "line": 21,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.runtime_store_migration_io",
+          "path": "orket/adapters/storage/runtime_store_migration_io.py",
+          "sha256": "8206acb9d45294e48e8893a29d4a47c0da7e5ae3f066a428a114546c006bc022",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 16,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "RuntimeStoreMigrationIO@56": [
+                {
+                  "line": 57,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.sandbox_lifecycle_row_serialization",
+          "path": "orket/adapters/storage/sandbox_lifecycle_row_serialization.py",
+          "sha256": "1750a9cced327a9b17f11db7630c95a4b1d188e326713e72ffeb206860a31648",
+          "side_effecting": false,
+          "declarations": {
+            "module": [
+              {
+                "line": 7,
+                "kind": "Assign",
+                "direct": true,
+                "literal": false
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.storage.scoped_memory_repository",
+          "path": "orket/adapters/storage/scoped_memory_repository.py",
+          "sha256": "de345eaf29b1cf25f5dd99175e414bcd94fe3b2dbe3d1b8097a3327b57388175",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 12,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "ScopedMemoryRepository@15": []
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.sdk_workload_exchange",
+          "path": "orket/adapters/storage/sdk_workload_exchange.py",
+          "sha256": "da7ee48cb106660bf23faae195ffd53663a550dab8dfbf02648a789a394ad31d",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 8,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "SdkWorkloadExchange@11": [
+                {
+                  "line": 12,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.settings_file_store",
+          "path": "orket/adapters/storage/settings_file_store.py",
+          "sha256": "7f054967700cc946cd46e3fd3bf17f7fcaa1fe5a26113fe636a71afc42b5ad2b",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 14,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.storage.setup_project_store",
+          "path": "orket/adapters/storage/setup_project_store.py",
+          "sha256": "b5be873fe571173a64bb742f1d826b173956fa15942996b3a0434e4bb6bbec8a",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 8,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "SetupProjectStore@11": [
+                {
+                  "line": 12,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.sqlite_backup",
+          "path": "orket/adapters/storage/sqlite_backup.py",
+          "sha256": "f84eb1ae385157be19c3f91d81e7f0f55d1c660306a90128cc5616588a631ca6",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 10,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "SQLiteMigrationCopy@14": []
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.sqlite_connection",
+          "path": "orket/adapters/storage/sqlite_connection.py",
+          "sha256": "696407dbaec4929053fcd920cc54e19b4488d5445ecd0531c512b79d515c6cce",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 13,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.storage.sqlite_migrations",
+          "path": "orket/adapters/storage/sqlite_migrations.py",
+          "sha256": "bd1a50c046446a820ae7384eb3943ad7480c31177c86444d105efa225ce3e189",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 7,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "SQLiteMigration@11": [],
+              "SQLiteMigrationRunner@17": []
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.structural_board_store",
+          "path": "orket/adapters/storage/structural_board_store.py",
+          "sha256": "8b682cc2d75f124971f9295ce79b90cc5128b7737158076f52ca34b33ed53e89",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 12,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "StructuralBoardStore@15": [
+                {
+                  "line": 16,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.storage.verified_file",
+          "path": "orket/adapters/storage/verified_file.py",
+          "sha256": "1bdf0b4954dfbd586031e361890b6d89d98407113f5c5c371a4f296891c8bde1",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 8,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.storage.workload_artifact_store",
+          "path": "orket/adapters/storage/workload_artifact_store.py",
+          "sha256": "02b10459004777c071dd506e23132cf7e96312becc09c0929cbadd92eb128185",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 11,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.tools.__init__",
+          "path": "orket/adapters/tools/__init__.py",
+          "sha256": "9234d848d97f681c1ef11ebf8ad6672412eeda1f2b5b52a335664191f1db7c19",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 42,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.tools.builtin_connectors",
+          "path": "orket/adapters/tools/builtin_connectors.py",
+          "sha256": "13b3374077d110caf35eaed1c1d3dc5d5ba2d568527a2279a45be41ff4f4ad9c",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 27,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "BuiltInConnectorExecutionError@30": [],
+              "BuiltInConnectorExecutor@34": []
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.tools.families.__init__",
+          "path": "orket/adapters/tools/families/__init__.py",
+          "sha256": "5837cc06b6de4ff5e0e10cb2e1e583f49e53f6e05b34740ed69c318ff7153e41",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 16,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.tools.families.academy",
+          "path": "orket/adapters/tools/families/academy.py",
+          "sha256": "4eae3621a2f452166eab5c824722b439eca52f1bdabb07c9dadac39c8591b3d9",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 10,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "AcademyTools@13": []
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.tools.families.base",
+          "path": "orket/adapters/tools/families/base.py",
+          "sha256": "d6e6d4f7d416c97866c6bc01b2aa8d390e80478822501376cba88978c2121e8b",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 5,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "BaseTools@8": []
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.tools.families.cards",
+          "path": "orket/adapters/tools/families/cards.py",
+          "sha256": "1d4643e14e1ff07e14733b3e0d53a72161ed7815d9c7b8670a08d4ae6b43f515",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 16,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "CardManagementTools@19": [
+                {
+                  "line": 20,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.tools.families.filesystem",
+          "path": "orket/adapters/tools/families/filesystem.py",
+          "sha256": "07228c21c78cb115420e14f87723f69a77035a52b44486a7b0f67b2786792db8",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 14,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "FileSystemTools@17": [
+                {
+                  "line": 18,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.tools.families.governance",
+          "path": "orket/adapters/tools/families/governance.py",
+          "sha256": "e4d68a729cec4b019bf51faaf738866260ad5964fe756144593004b50f99003f",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 9,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "GovernanceTools@12": []
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.tools.families.vision",
+          "path": "orket/adapters/tools/families/vision.py",
+          "sha256": "bb4f36a91bd183f460d2defc9c2875e04536fcd45fa0d69d20935460c56b551a",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 13,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "VisionTools@16": [
+                {
+                  "line": 19,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.tools.governed_agent_file_effect_executor",
+          "path": "orket/adapters/tools/governed_agent_file_effect_executor.py",
+          "sha256": "98c425f882c0c65c50de88de51a6fb6eb9ba3b696d97aa3b867ee368f0d1b696",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 9,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "GovernedAgentFileEffectExecutor@12": []
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.tools.registry",
+          "path": "orket/adapters/tools/registry.py",
+          "sha256": "276f45769a110be667ff5fab39f958bcbdc54797ad2a94f9e3071df23cd51a6e",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 10,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "ToolArgumentSchema@14": [],
+              "BuiltInConnectorMetadata@23": [],
+              "BuiltInConnectorRegistry@33": [],
+              "ToolRegistry@68": []
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.tools.runtime",
+          "path": "orket/adapters/tools/runtime.py",
+          "sha256": "1084f8bb8f1bb037d48e5b9b04aa37ab87e23bb3fd020f1273b98baf2a40b8fc",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 12,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "ToolRuntimeExecutor@15": [
+                {
+                  "line": 18,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.vcs.__init__",
+          "path": "orket/adapters/vcs/__init__.py",
+          "sha256": "a860cfcbacf06f856353868b8bc31714419ff793db41d1ec4ce599efa9665de9",
+          "side_effecting": false,
+          "declarations": {
+            "module": [
+              {
+                "line": 2,
+                "kind": "Assign",
+                "direct": true,
+                "literal": false
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.vcs.gitea_artifact_exporter",
+          "path": "orket/adapters/vcs/gitea_artifact_exporter.py",
+          "sha256": "6fc931fba6f0c63efd4349bc77b39deacfd72ab5128e2ffbc5d2d6d605a103ef",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 24,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "GiteaArtifactExporter@36": [
+                {
+                  "line": 39,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.vcs.gitea_export_git",
+          "path": "orket/adapters/vcs/gitea_export_git.py",
+          "sha256": "dfe287f2de1c5f9c91ba6883dfd85c0e72173021a58048c366ee1a8a5979a6fe",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 12,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "GiteaExportGit@15": [
+                {
+                  "line": 16,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.adapters.vcs.gitea_webhook_client",
+          "path": "orket/adapters/vcs/gitea_webhook_client.py",
+          "sha256": "159e119f014bd8f7da1bd43dcb569ef759a247cf9ee258ba6ecb2dd00f54d66f",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 11,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.vcs.gitea_webhook_event",
+          "path": "orket/adapters/vcs/gitea_webhook_event.py",
+          "sha256": "b51be9d505e82ef355799034c5bb6a4854b1faaf60d9658d3644bfbf3bd9a91f",
+          "side_effecting": false,
+          "declarations": {
+            "module": [
+              {
+                "line": 7,
+                "kind": "Assign",
+                "direct": true,
+                "literal": false
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.adapters.vcs.webhook_db",
+          "path": "orket/adapters/vcs/webhook_db.py",
+          "sha256": "5908e31237d054edec41785032fac742ca4a256f5319b3434900496921a647c1",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 28,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "WebhookDatabase@35": []
+            }
+          }
+        },
+        {
+          "module": "orket.capabilities.__init__",
+          "path": "orket/capabilities/__init__.py",
+          "sha256": "69031eab6f44228d2d1ba652a42148f6dde1f9ee65504c40e949c9fd712680fd",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 5,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.capabilities.audio_player",
+          "path": "orket/capabilities/audio_player.py",
+          "sha256": "7e746e84780d99deced871357d0fff68cb28b806929f633d44e3b58dd8902b37",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 8,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "SounddevicePlayer@11": []
+            }
+          }
+        },
+        {
+          "module": "orket.capabilities.piper_voice_assets",
+          "path": "orket/capabilities/piper_voice_assets.py",
+          "sha256": "1ae593b4b31e153aeff8d1afc7117697c10103324f2619884c7f3eac70a0f5cd",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 15,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "PiperVoiceAsset@19": []
+            }
+          }
+        },
+        {
+          "module": "orket.capabilities.sdk_static_provider",
+          "path": "orket/capabilities/sdk_static_provider.py",
+          "sha256": "5a54c9ea5557e14811eaf0c74ad6ea8ff7fded7b09b3aecb96c901ab4381f0b9",
+          "side_effecting": false,
+          "declarations": {
+            "module": [
+              {
+                "line": 5,
+                "kind": "Assign",
+                "direct": true,
+                "literal": false
+              }
+            ],
+            "classes": {
+              "StaticLLMCapabilityProvider@8": []
+            }
+          }
+        },
+        {
+          "module": "orket.capabilities.sdk_voice_provider",
+          "path": "orket/capabilities/sdk_voice_provider.py",
+          "sha256": "7115be9d7eddb3340f5f9fc55dc0dab008c8e846dced1f49188698ba86093896",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 17,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "HostSTTCapabilityProvider@20": [],
+              "HostVoiceTurnController@35": []
+            }
+          }
+        },
+        {
+          "module": "orket.capabilities.sync_bridge",
+          "path": "orket/capabilities/sync_bridge.py",
+          "sha256": "d8bda70fa74dce69a13623ab5ffbd8600476b82218941d5cc087fba6dda54284",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 11,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.capabilities.tts_piper",
+          "path": "orket/capabilities/tts_piper.py",
+          "sha256": "1a56885e949a380d69a49fca2eb62cbcb6856f8f2b29611c7f1c257e00a74c16",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 27,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "PiperConfig@31": [],
+              "PiperSynthesisError@44": [],
+              "PiperSynthesisResult@51": [],
+              "PiperTTSProvider@57": []
+            }
+          }
+        },
+        {
+          "module": "orket.hardware",
+          "path": "orket/hardware.py",
+          "sha256": "60f1ffbd3c800994be8edb042d979e55c40caa8dae155be93aac5f1f0767e6e8",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 20,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "HardwareProfile@24": [],
+              "ToolTier@107": [],
+              "ModelTier@117": []
+            }
+          }
+        },
+        {
+          "module": "orket.logging",
+          "path": "orket/logging.py",
+          "sha256": "2ce6da7eb8cdd1fb15c26f22636d327857465d13a59126ff548ba933861215d1",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 34,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "_MemberMetrics@52": []
+            }
+          }
+        },
+        {
+          "module": "orket.project_paths",
+          "path": "orket/project_paths.py",
+          "sha256": "1d97ceb5aea97e5196727156e3a8c535b6e9f29258c97b2ccbf6ccec29b8b579",
+          "side_effecting": false,
+          "declarations": {
+            "module": [
+              {
+                "line": 5,
+                "kind": "Assign",
+                "direct": true,
+                "literal": false
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.repositories",
+          "path": "orket/repositories.py",
+          "sha256": "6d5fa5a5a566f778d05a294823db338a8798cdeff4563288f9bc366181223721",
+          "side_effecting": false,
+          "declarations": {
+            "module": [
+              {
+                "line": 6,
+                "kind": "Assign",
+                "direct": true,
+                "literal": false
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.runtime_paths",
+          "path": "orket/runtime_paths.py",
+          "sha256": "c2216ab146b3623a6727c9c196cf22561879bffd8ea125bd01c75d2f9a84baa1",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 8,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.streaming.__init__",
+          "path": "orket/streaming/__init__.py",
+          "sha256": "e7a1a9510babe64ffe57ab75ee0bca28caa3b9eae541e9350e0b93e519aa9e00",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 24,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.streaming.bus",
+          "path": "orket/streaming/bus.py",
+          "sha256": "56b26dcc0609f687ab3cd1f68d5dc12ef064f631a43186d8f72b4233e6ad1942",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 19,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "_TurnBusState@23": [],
+              "StreamBusConfig@37": [],
+              "StreamBus@46": [
+                {
+                  "line": 47,
+                  "kind": "Assign",
+                  "direct": true,
+                  "literal": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "module": "orket.streaming.clocks",
+          "path": "orket/streaming/clocks.py",
+          "sha256": "b75da6aad75f51c0bb620661742631acaabaffe8cb147173552f4692276ffcee",
+          "side_effecting": false,
+          "declarations": {
+            "module": [
+              {
+                "line": 5,
+                "kind": "Assign",
+                "direct": true,
+                "literal": false
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.streaming.law_checker",
+          "path": "orket/streaming/law_checker.py",
+          "sha256": "67aae2de0640c3dcb4e709cea86a52686dc63256fd857540674cfa1bc25d98a8",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 8,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "StreamLawViolation@11": [],
+              "TurnLawState@16": [],
+              "StreamLawChecker@25": []
+            }
+          }
+        },
+        {
+          "module": "orket.streaming.model_provider",
+          "path": "orket/streaming/model_provider.py",
+          "sha256": "f3885a1edf2362b0d211db2e8d0054179b96a5b38b03c0545375c4ff76bb78a5",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 16,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "ProviderEventType@19": [],
+              "ProviderEvent@28": [],
+              "ProviderTurnRequest@35": [],
+              "ModelStreamProvider@40": [],
+              "StubModelStreamProvider@86": [],
+              "OllamaModelStreamProvider@168": [],
+              "OpenAICompatModelStreamProvider@315": []
+            }
+          }
+        },
+        {
+          "module": "orket.time_utils",
+          "path": "orket/time_utils.py",
+          "sha256": "1945b5067fc8b016e5dc377fb5df5720d81af5c7781ca9a23f6f0aa1a19c84bc",
+          "side_effecting": false,
+          "declarations": {
+            "module": [
+              {
+                "line": 7,
+                "kind": "Assign",
+                "direct": true,
+                "literal": false
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.utils",
+          "path": "orket/utils.py",
+          "sha256": "461b7531258689e06d3e85c3c68b25dce3604fe8d2c34a6dfa595d8ed49def12",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 26,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {}
+          }
+        },
+        {
+          "module": "orket.vendors.base",
+          "path": "orket/vendors/base.py",
+          "sha256": "9d652e7ddb14cdface71bb7d31669ef1bb68a36da403112eeb494631e1cf716b",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 5,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "VendorRock@8": [],
+              "VendorEpic@15": [],
+              "VendorCard@22": [],
+              "VendorInterface@32": []
+            }
+          }
+        },
+        {
+          "module": "orket.vendors.gitea",
+          "path": "orket/vendors/gitea.py",
+          "sha256": "ef9ef0782cb534687960fe3f4e087d241d345594cccee73a96190b4a44010168",
+          "side_effecting": true,
+          "declarations": {
+            "module": [
+              {
+                "line": 6,
+                "kind": "Assign",
+                "direct": true,
+                "literal": true
+              }
+            ],
+            "classes": {
+              "GiteaVendor@9": []
+            }
+          }
+        }
       ]
     },
     "verdict": {
@@ -386,7 +6436,8 @@
         "consumed": [],
         "unused": [],
         "redundant": []
-      }
+      },
+      "adapter_effect_violations": []
     }
   },
   "architecture_exceptions": {
@@ -535,10 +6586,10 @@
   },
   "test_taxonomy": {
     "schema_version": "test_taxonomy_report.v1",
-    "tests_total": 5733,
-    "missing_layer_total": 4146,
+    "tests_total": 5738,
+    "missing_layer_total": 4151,
     "by_layer": {
-      "unlabeled": 4146,
+      "unlabeled": 4151,
       "integration": 752,
       "unit": 161,
       "contract": 663,
@@ -1146,7 +7197,7 @@
         "layer": null
       }
     ],
-    "missing_layers_omitted": 4046
+    "missing_layers_omitted": 4051
   },
   "ruff": {
     "proof": "structural_lint",
@@ -1169,7 +7220,7 @@
     "proof": "structural_ast",
     "python_files_scanned": 1143,
     "files_over_400_total": 53,
-    "functions_over_70_total": 200,
+    "functions_over_70_total": 199,
     "largest_files": [
       {
         "path": "orket/application/workflows/orchestrator_ops.py",
@@ -1233,11 +7284,11 @@
       },
       {
         "path": "orket/adapters/llm/local_model_provider.py",
-        "lines": 591
+        "lines": 590
       },
       {
         "path": "orket/streaming/model_provider.py",
-        "lines": 577
+        "lines": 576
       },
       {
         "path": "orket/application/review/models.py",
@@ -1419,7 +7470,7 @@
       },
       {
         "path": "orket/adapters/llm/local_model_provider.py",
-        "line": 370,
+        "line": 369,
         "name": "_complete_openai_compat",
         "lines": 194
       }
@@ -1545,104 +7596,6 @@
     "parse_errors": []
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-22T00:38:07.612831Z",
-      "changed": true,
-      "before_digest": "sha256:ceffb999b8776079aebce3912ae7b37d78934da0281b14de219650c18a773572",
-      "after_digest": "sha256:62fc4d9d2287d8ae620b791ae158246e576d89a6e8fa83d35dd5cde854d29403",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 5,
-        "initial_write": false,
-        "paths_total_previous": 2331,
-        "paths_total_current": 2331,
-        "paths_total_reference": 2331,
-        "churn_paths": 5,
-        "churn_ratio": 0.002145,
-        "sample_paths": [
-          "$.generated_at",
-          "$.test_taxonomy.by_layer.unlabeled",
-          "$.test_taxonomy.missing_layer_total",
-          "$.test_taxonomy.missing_layers_omitted",
-          "$.test_taxonomy.tests_total"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-22T01:04:24.254232Z",
-      "changed": true,
-      "before_digest": "sha256:62fc4d9d2287d8ae620b791ae158246e576d89a6e8fa83d35dd5cde854d29403",
-      "after_digest": "sha256:86828c106f0b8e9c9231292caecc03ebcaaad3f9d1d20f0f71528866454387b9",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 2331,
-        "paths_total_current": 2331,
-        "paths_total_reference": 2331,
-        "churn_paths": 1,
-        "churn_ratio": 0.000429,
-        "sample_paths": [
-          "$.generated_at"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-22T01:39:17.064692Z",
-      "changed": true,
-      "before_digest": "sha256:86828c106f0b8e9c9231292caecc03ebcaaad3f9d1d20f0f71528866454387b9",
-      "after_digest": "sha256:2664cff1e85c3308e28c3591a5f0c9a03c522d6c0991fa9fa64f853c953e1eff",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 15,
-        "initial_write": false,
-        "paths_total_previous": 2331,
-        "paths_total_current": 2331,
-        "paths_total_reference": 2331,
-        "churn_paths": 15,
-        "churn_ratio": 0.006435,
-        "sample_paths": [
-          "$.dependency_graph.observed.files_scanned",
-          "$.dependency_graph.observed.layer_edges[0].count",
-          "$.dependency_graph.observed.layer_edges[1].count",
-          "$.dependency_graph.observed.layer_edges[2].count",
-          "$.dependency_graph.observed.layer_edges[3].count",
-          "$.generated_at",
-          "$.noop_critical_paths.scanned_files",
-          "$.size_inventory.python_files_scanned",
-          "$.test_taxonomy.by_layer.unlabeled",
-          "$.test_taxonomy.missing_layer_total",
-          "$.test_taxonomy.missing_layers_omitted",
-          "$.test_taxonomy.missing_layers_sample[8].line",
-          "$.test_taxonomy.missing_layers_sample[9].line",
-          "$.test_taxonomy.missing_layers_sample[10].line",
-          "$.test_taxonomy.tests_total"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-22T01:50:08.532734Z",
-      "changed": true,
-      "before_digest": "sha256:2664cff1e85c3308e28c3591a5f0c9a03c522d6c0991fa9fa64f853c953e1eff",
-      "after_digest": "sha256:6050c25b3c214d94f837a0452961031fa8ff4c8d3a7ff23318b174ac87d881b8",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 2331,
-        "paths_total_current": 2331,
-        "paths_total_reference": 2331,
-        "churn_paths": 1,
-        "churn_ratio": 0.000429,
-        "sample_paths": [
-          "$.generated_at"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-22T02:31:45.519893Z",
       "changed": true,
@@ -2304,6 +8257,97 @@
         "paths_total_reference": 2329,
         "churn_paths": 1,
         "churn_ratio": 0.000429,
+        "sample_paths": [
+          "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T11:48:45.907307Z",
+      "changed": true,
+      "before_digest": "sha256:8d1791d816a37cc069c762b7c6d702a0f0e73f3f973c7de0983700ac4968bba6",
+      "after_digest": "sha256:c09b9420db7508123686c6c1bdd0863d38cd2ca4832dac23e6ab44bed6372592",
+      "diff": {
+        "added_paths": 3,
+        "removed_paths": 0,
+        "changed_paths": 9,
+        "initial_write": false,
+        "paths_total_previous": 2329,
+        "paths_total_current": 9236,
+        "paths_total_reference": 9236,
+        "churn_paths": 12,
+        "churn_ratio": 0.001299,
+        "sample_paths": [
+          "$.dependency_graph.observed.adapter_effects",
+          "$.dependency_graph.observed.effect_declarations",
+          "$.dependency_graph.verdict.adapter_effect_violations",
+          "$.generated_at",
+          "$.size_inventory.functions_over_70_total",
+          "$.size_inventory.largest_files[15].lines",
+          "$.size_inventory.largest_files[16].lines",
+          "$.size_inventory.largest_functions[24].line",
+          "$.test_taxonomy.by_layer.unlabeled",
+          "$.test_taxonomy.missing_layer_total",
+          "$.test_taxonomy.missing_layers_omitted",
+          "$.test_taxonomy.tests_total"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T12:07:54.176840Z",
+      "changed": true,
+      "before_digest": "sha256:c09b9420db7508123686c6c1bdd0863d38cd2ca4832dac23e6ab44bed6372592",
+      "after_digest": "sha256:108043cca079f92e8db66c1ac4c11b4747cbe3cc785835b60229346ab0344966",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 9236,
+        "paths_total_current": 9236,
+        "paths_total_reference": 9236,
+        "churn_paths": 1,
+        "churn_ratio": 0.000108,
+        "sample_paths": [
+          "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T12:25:36.500870Z",
+      "changed": true,
+      "before_digest": "sha256:108043cca079f92e8db66c1ac4c11b4747cbe3cc785835b60229346ab0344966",
+      "after_digest": "sha256:261faca6af718cdcf1171db41c567c3bf7be3d524a5ab8d2620bd92a1551b442",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 9236,
+        "paths_total_current": 9236,
+        "paths_total_reference": 9236,
+        "churn_paths": 1,
+        "churn_ratio": 0.000108,
+        "sample_paths": [
+          "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T12:37:20.608993Z",
+      "changed": true,
+      "before_digest": "sha256:261faca6af718cdcf1171db41c567c3bf7be3d524a5ab8d2620bd92a1551b442",
+      "after_digest": "sha256:37a04e81b808b7c66f58899427a7aff06e73a0a74d3dae34036be6c072379d3f",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 9236,
+        "paths_total_current": 9236,
+        "paths_total_reference": 9236,
+        "churn_paths": 1,
+        "churn_ratio": 0.000108,
         "sample_paths": [
           "$.generated_at"
         ]

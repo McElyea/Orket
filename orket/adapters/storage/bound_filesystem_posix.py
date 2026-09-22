@@ -7,6 +7,8 @@ import stat
 from contextlib import ExitStack, contextmanager, suppress
 from pathlib import Path
 
+side_effecting = True
+
 
 @contextmanager
 def open_target(root: Path, target: Path, requested: Path, *, operation: str):

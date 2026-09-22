@@ -42,6 +42,8 @@ from orket.core.contracts.provider_runtime import (
 from orket.exceptions import ModelConnectionError, ModelProviderError, ModelTimeoutError
 from orket.logging import log_event
 
+side_effecting = True
+
 
 @dataclass
 class ModelResponse:
@@ -98,7 +100,6 @@ class LocalModelProvider:
         self.ollama_host = self._resolve_ollama_host()
         validate_pinned_runtime_target(self, runtime_target)
         self.client: Any
-
         if self.provider_backend == "openai_compat":
             self.client = httpx.AsyncClient(
                 base_url=self.openai_base_url,
@@ -263,10 +264,8 @@ class LocalModelProvider:
         if local_prompting_policy.task_class in {"strict_json", "tool_call"} and not native_tools:
             request_format = "json"
         native_tool_names = self._native_tool_names(native_tools)
-
         max_retries = 3
         retry_delay = 1
-
         for attempt in range(max_retries):
             try:
                 started_at = time.perf_counter()

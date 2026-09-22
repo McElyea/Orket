@@ -25,6 +25,8 @@ from orket.core.domain.outward_approvals import OutwardApprovalProposal
 from orket.core.domain.outward_run_events import LedgerEvent
 from orket.core.domain.outward_runs import OutwardRunRecord
 
+side_effecting = True
+
 
 class OutwardStoreTransaction:
     """Explicit store operations sharing one owning transaction; contains no policy."""

@@ -24,6 +24,8 @@ from orket.capabilities.sync_bridge import run_coro_sync
 from orket.core.contracts.owned_command import CommandExecutionUncertain, CommandRunner, OwnedCommandResult
 from orket_extension_sdk.audio import AudioClip, NullTTSProvider, TTSProvider, VoiceInfo
 
+side_effecting = True
+
 
 @dataclass(frozen=True)
 class PiperConfig:

@@ -17,6 +17,9 @@ _VRAM_CACHE = {
 _VRAM_CACHE_LOCK = threading.Lock()
 
 
+side_effecting = True
+
+
 @dataclass
 class HardwareProfile:
     cpu_cores: int

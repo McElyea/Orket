@@ -12,6 +12,8 @@ from orket.adapters.storage.sqlite_connection import connect_sqlite_wal, sqlite_
 from orket.adapters.storage.sqlite_migrations import SQLiteMigrationRunner
 from orket.core.domain.outward_approvals import OutwardApprovalProposal
 
+side_effecting = True
+
 
 class OutwardApprovalStore:
     def __init__(self, db_path: str | Path) -> None:

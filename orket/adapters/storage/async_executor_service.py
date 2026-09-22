@@ -6,6 +6,9 @@ from typing import Any, Coroutine, TypeVar
 ResultT = TypeVar("ResultT")
 
 
+side_effecting = True
+
+
 class AsyncExecutorService:
     """
     Sync/async boundary helper.

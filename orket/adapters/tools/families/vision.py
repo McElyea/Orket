@@ -10,6 +10,8 @@ from orket.adapters.storage.verified_file import write_verified_bytes
 from orket.adapters.tools.families.base import BaseTools
 from orket.logging import log_event
 
+side_effecting = True
+
 
 class VisionTools(BaseTools):
     """Blocking inference adapter; the application retains its worker and supplied model."""

@@ -10,6 +10,9 @@ SNAPSHOT_MARKER = "<!-- ORKET_SNAPSHOT_V1 -->"
 EVENT_MARKER = "[ORKET_EVENT_V1]"
 
 
+side_effecting = False
+
+
 class LeaseInfo(BaseModel):
     owner_id: str | None = None
     acquired_at: str | None = None

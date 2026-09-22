@@ -14,6 +14,9 @@ from .sqlite_connection import connect_sqlite_wal
 ResultT = TypeVar("ResultT")
 
 
+side_effecting = True
+
+
 class AsyncFlowRepository:
     """Async SQLite repository for persisted flow definitions."""
 

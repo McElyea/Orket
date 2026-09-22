@@ -152,6 +152,15 @@ failed removal of its own alias. This does not establish Ollama live acceptance 
 cross-process alias fencing. See the script ownership contract and
 `docs/architecture/CONTRACT_DELTA_GOVERNANCE_RUNTIME_OWNERSHIP_D_2026-09-22.md`.
 
+The native dependency gate now validates one explicit literal module effect bound
+for every policy-classified adapter, including packages and legacy locations.
+Existing class declarations cannot weaken that bound. Decision-adapter entries
+must be present, read-only and free of observed paths to effectful/unclassified
+adapters. The admission list remains empty. Read-only does not imply deterministic
+purity or permission to acquire missing decision context. Contract and limits:
+`docs/specs/ADAPTER_EFFECT_CLASSIFICATION.md` and
+`docs/architecture/CONTRACT_DELTA_ADAPTER_EFFECT_CLASSIFICATION_D_2026-09-22.md`.
+
 The runtime CLI captures engine inputs after startup and owns engine construction
 through interruption. Board/replay reads, manifest output and native path
 resolution retain their workers; a completed untransferred engine is closed.

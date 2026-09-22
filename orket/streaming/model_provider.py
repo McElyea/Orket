@@ -13,6 +13,8 @@ from typing import Any
 import httpx
 from pydantic import BaseModel, Field
 
+side_effecting = True
+
 
 class ProviderEventType(str, Enum):
     SELECTED = "selected"
@@ -113,7 +115,6 @@ class StubModelStreamProvider(ModelStreamProvider):
                     "load_ms": 120 if cold_load else 0,
                 },
             )
-
             delta_count = _int_value(req.input_config.get("delta_count"), 1 if mode == "basic" else 512, minimum=1)
             chunk_size = _int_value(req.input_config.get("chunk_size"), 4 if mode == "basic" else 2, minimum=1)
             delay_ms = _int_value(req.input_config.get("delta_delay_ms"), 0, minimum=0)
@@ -146,7 +147,6 @@ class StubModelStreamProvider(ModelStreamProvider):
                 )
                 if delay_ms > 0:
                     await asyncio.sleep(delay_ms / 1000.0)
-
             yield ProviderEvent(
                 provider_turn_id=provider_turn_id,
                 event_type=ProviderEventType.STOPPED,
@@ -444,7 +444,6 @@ class OpenAICompatModelStreamProvider(ModelStreamProvider):
                         payload={"delta": completion_text, "index": index},
                     )
                     index += 1
-
             if index == 0:
                 if fallback_body is None:
                     fallback_payload = dict(payload)

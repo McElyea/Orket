@@ -21,6 +21,8 @@ from orket.core.contracts.gitea_export import GiteaExportIntent
 from orket.core.domain.outward_authorization import canonical_json
 from orket.runtime_paths import resolve_gitea_artifact_cache_root
 
+side_effecting = True
+
 
 def _env_enabled(name: str, default: str = "0", *, environment: Mapping[str, str]) -> bool:
     return environment.get(name, default).strip().lower() in {"1", "true", "yes", "on"}

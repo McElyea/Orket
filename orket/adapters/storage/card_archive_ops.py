@@ -6,6 +6,8 @@ import aiosqlite
 
 from orket.schema import CardStatus
 
+side_effecting = True
+
 
 class CardArchiveOps:
     """Archive and related-card lookup operations for AsyncCardRepository."""

@@ -56,3 +56,4 @@ OUTWARD_EFFECT_MIGRATIONS = [
             BEGIN SELECT RAISE(ABORT, 'E_OUTWARD_EFFECT_TRANSITION'); END""",
     )),
 ]
+side_effecting = True

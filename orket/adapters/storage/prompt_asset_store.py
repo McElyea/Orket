@@ -8,6 +8,8 @@ from orket.adapters.storage.driver_resource_store import DriverResourceStore
 from orket.adapters.storage.file_admission import require_regular_or_absent
 from orket.core.contracts.prompt_assets import prompt_asset_name
 
+side_effecting = True
+
 
 class PromptAssetStore:
     side_effecting = True

@@ -55,3 +55,4 @@ CARD_COMPLETION_MIGRATION = SQLiteMigration(
             BEGIN SELECT RAISE(ABORT, 'E_CARD_COMPLETION_REOPEN_REQUIRED'); END""",
     ),
 )
+side_effecting = True

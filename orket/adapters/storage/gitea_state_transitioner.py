@@ -9,6 +9,8 @@ from orket.schema import CardStatus, CardType, WaitReason
 from .gitea_state_errors import GiteaAdapterConflictError
 from .gitea_state_models import CardSnapshot, LeaseInfo, decode_snapshot, encode_snapshot
 
+side_effecting = True
+
 
 class GiteaStateTransitioner:
     """State transition and finalization operations for Gitea cards."""

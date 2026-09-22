@@ -9,6 +9,8 @@ from pathlib import Path
 
 from orket.adapters.execution.process_lifecycle import drain_diagnostic_tail, terminate_process_tree
 
+side_effecting = True
+
 
 class GiteaExportGit:
     side_effecting = True

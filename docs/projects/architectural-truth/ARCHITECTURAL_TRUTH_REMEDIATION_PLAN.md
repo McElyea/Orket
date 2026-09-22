@@ -12519,7 +12519,8 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.84 governance proof runtime and local alias ownership, retaining
+0.6.85 adapter module classification and decision-admission gate, retaining
+0.6.84 governance proof runtime and local alias ownership,
 0.6.83 script runtime owners and checkpoint-bound witness observations,
 0.6.82 native synchronous coroutine ownership,
 0.6.81 immutable outbound policy and owned file observations,
@@ -12535,7 +12536,7 @@ and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
 Preserve every failed and
 passing source/native observation and the historical clock diagnosis. Canonical
-Ruff has 89 findings at the .84 checkpoint. The prior stale benchmark expectation passes in the
+Ruff has 89 findings at the .85 checkpoint. The prior stale benchmark expectation passes in the
 new source/native selection. The unmodified published .39 complete rerun has
 7,260 passes, three failures and 89 skips; its coverage is 84.56120595327887%
 against the unchanged 89% gate. The two parent-Git-dependent fixture failures and
@@ -21807,3 +21808,125 @@ Explicit user acceptance is required for retirement. No whole-plan completion.
 
 Accepted source/installed manifest and retained evidence:
 `.tmp/d-governance-runtime-ownership/`. Scoped checkpoint; release readiness remains false.
+
+
+#### .85 Adapter module classification and decision-admission gate (2026-09-22)
+
+Responsible maintainer: Codex for Orket Core. Continuing D after published .84.
+This closes explicit module-declaration and observed dependency-admission checks;
+actual effect truth, full decision-input/async inventories and whole D remain open.
+No new capability admission, whole-plan completion or lane retirement.
+
+The canonical policy selects 166 adapter modules, including legacy locations and
+package initializers. All now have an unconditional literal module boolean:
+141 conservative effectful bounds and 25 read-only bounds. The 125 added declarations
+preserve every original runtime AST statement, existing class flag and literal string.
+Whitespace-only reductions keep oversized files from growing. A module bound covers
+its exported/inherited surfaces; narrower class declarations cannot weaken admission.
+Read-only permits observation/value processing and does not mean immutable-input or
+referential purity: existing file, clock and environment readers remain read-only.
+
+The native dependency checker collects declarations from the same bytes and inventory
+as imports. It refuses missing, nonliteral, conditional, rebound or conflicting class
+metadata. It checks listed decision adapters for existence and valid False bounds,
+including observed paths to effectful/unclassified adapters. Exact import exceptions
+cannot waive this gate. The canonical policy bytes and empty decision-adapter allowlist
+are unchanged. Decision nodes still cannot acquire missing context from files, runtime,
+databases, environment or caches. This is static declaration/admission enforcement,
+not a general Python effect system, runtime call graph or hostile-code containment.
+
+Scoped proof and artifact binding:
+
+| Cell | Tests / failures / errors / skips | Pytest seconds | Installed origins |
+|---|---|---|---|
+| Fresh source | 1173 / 0 / 0 / 0 | 133.496 | source |
+| Installed win-py311 | 1173 / 0 / 0 / 0 | 136.292 | 964 |
+| Installed win-py312 | 1173 / 0 / 0 / 0 | 147.954 | 964 |
+
+All 1031 prior .84 identities are retained across 124 modules. The added scope contains
+25 new native classification contracts and 117 existing dependency controls. Both final and portable
+focused 137/137 pass; final syntax-focused 142/142 passes. Twenty-one exact current counterexamples fail on frozen .84
+governance scripts and verified installed core, with current exact fixture support;
+zero errors/skips. Those controls test actual native commands over disposable Git
+repositories. They establish structural enforcement, not live adapter purity.
+Retained runtime cases exercise their existing real files, SQLite, HTTP and process
+scopes. Forty independent SQLite observations per cell meet the unchanged 0.5s bound;
+maximum 0.022461700s. No deadline or success assertion was weakened.
+
+Canonical C: 1143 files,
+3722 import sites, six resolved routes, zero ordinary
+or adapter-effect violations, analysis errors, unknown modules and authority cycles.
+Complete core source/wheel/sdist parity covers 1143 Python and the same 20 data files
+(1163 total), with 2327 frozen support inputs. The new checker
+module is included in the installed harness; installed commands do not borrow it from
+the checkout. Both Quality jobs select the controls; hosted execution remains absent.
+Canonical Ruff remains 89 existing/0 introduced. Code/test edits pass scoped lint;
+six preexisting findings in metadata-only files remain E1 debt and are reported rather
+than suppressed. Source hashes and exact original AST comparison bind that limited
+lint treatment. Documentation, release metadata, whitespace, sizes and index pass.
+Contract: `docs/specs/ADAPTER_EFFECT_CLASSIFICATION.md` and its September 22 delta;
+authority, architecture section 14 and contributor workflow share that boundary.
+
+Retained failures and verification limits:
+- Initial installed Python 3.11 run: 1168 cases, 137 failures, zero errors/skips.
+  All 137 added dependency cases fail on a missing canonical policy JSON in the harness;
+  the 1031 retained cases pass. The separate complete harness includes exact policy bytes.
+  The all-module Git contract also now materializes the actual source/installed package
+  into a disposable repository and checks the exact module path set, retaining all
+  layer and unknown-module assertions. Fresh source and both installed cells rerun with
+  the final 1173 identities and unchanged deadlines; no skipped or dropped test.
+  Earlier successful source proof and failed installed reports remain byte-preserved.
+- The intermediate complete harness passes 1168 cases in source and both installed
+  cells, but additional native probes expose three accepted invalid declarations:
+  mapping-rest rebinding and assignments in function defaults or class bases. Final
+  collection now includes definition headers and mapping-rest captures, excludes
+  function/lambda bodies and target-name reads, and requires a direct flag target
+  for a literal declaration. Five new negative cases include lambda defaults and
+  destructuring; positive cases retain local bindings and flag-indexed writes.
+  All 1173 final identities rerun. Intermediate green results are not final acceptance.
+- Initial native opening 9/9 fails. First gate 26/27 exposes a positive import-exception
+  fixture without metadata. Generic import fixtures now append an explicit conservative
+  bound without moving import-site lines; classification controls opt out. Declared
+  gate 126/126 passes.
+- The first metadata helper refuses a blank-line removal inside a docstring before
+  writing that file. A separate helper reconstructs from verified .84 wheel bytes and
+  excludes literal lines. All 125 original ASTs match. Initial placement introduced 69
+  import-spacing findings; a separate whitespace-only pass removes them, retaining the
+  six existing findings. The invoked helpers and intermediate input snapshots remain.
+- Expanded diagnostic emits partial failures during severe command latency, then is
+  explicitly stopped using its recorded PID/create-time/command binding. Its two owned
+  pytest processes exit; parent is reaped. The report has exit 15, no JUnit and 0 reported
+  cases: incomplete failure, never zero-case acceptance. Its test-process observation
+  lasts 1458.312s; the acquired/restored Windows execution-state request spans 2267.630s.
+  One unchanged previously passing control then passes in 2.563s, and final 137/137 passes.
+  Selected Windows power-event query reports no matching events; the transient cause
+  remains unknown. No physical-sleep, clock repair or host-stability claim follows.
+- Portable frozen review was invoked before its verdict existed and refused; the
+  unchanged helper passed after structural completion. Complete source bootstrap
+  refused missing before.json, then an existing execution-state receipt. Neither
+  launched tests. Exact prior before.json was supplied; empty preflight directory
+  and receipts remain under named retained paths. Fresh source then passed.
+- The first frozen-review helper refuses raw Git-LF versus untouched working-CRLF policy
+  comparison. A separately named helper binds the exact prior working-byte hash and
+  normalized Git content. The policy is unchanged; no product rule was relaxed.
+
+Remaining blockers or drift: .72 Linux preflight remains the retained environment
+blocker (240.006951941s observed, quiet 18.843389227 vs 60, steps outside 0.01, cause unknown).
+No new Linux measurement or setting/deadline change. The Windows transient above also
+has no established cause. Continue independent D work: complete async reachability,
+remaining clock/environment/identity/decision inputs and actual classification truth.
+Settings and orchestrator runtime-policy helpers still read global environment/report
+files during evaluation; captured observations and owned reads remain required.
+Governance alias and provider-inventory command descendants remain unsupervised;
+module labels do not repair resource lifetime. ProductFlow .83 replay remains blocked/
+not_evaluable for its workload-specific completeness gap. Actual Ollama alias fallback
+acceptance is unverified; no provider substitution. E1 taxonomy/no-op/Ruff/full coverage,
+E2 bounded generated authority/history, CAP1 actual-model workloads, CAP2 accepted
+containment and CAP3 capacity/recovery remain required. Full-suite 89% coverage, hosted Gitea,
+earlier Git timeout cause, physical-sleep timing and full legacy Kernel completion
+integrity remain unverified. Preserve BT-1 through BT-5 and all retained guarantees.
+Explicit user acceptance is required for retirement. Baseline collection does not
+imply release readiness or whole-plan acceptance.
+
+Accepted source/installed manifest: `.tmp/d-adapter-effect-enforcement/native-bindings/`.
+Retained evidence: `.tmp/d-adapter-effect-enforcement/`. Scoped checkpoint; release readiness remains false.

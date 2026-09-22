@@ -24,6 +24,8 @@ from orket.adapters.storage.gitea_state_models import (
 from orket.adapters.storage.gitea_state_transitioner import GiteaStateTransitioner
 from orket.core.contracts.state_backend import StateBackendContract
 
+side_effecting = True
+
 
 class SecretToken(str):
     def reveal(self) -> str:

@@ -5,6 +5,8 @@ from pathlib import Path
 from orket.adapters.storage.local_file_lock import NativeFileLocks
 from orket.adapters.storage.verified_file import write_verified_bytes
 
+side_effecting = True
+
 
 class DriverResourceStore:
     side_effecting = True

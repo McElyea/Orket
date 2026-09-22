@@ -39,3 +39,4 @@ __all__ = [
     "GovernanceTools",
     "AcademyTools",
 ]
+side_effecting = True

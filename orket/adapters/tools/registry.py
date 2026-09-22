@@ -7,6 +7,9 @@ ConnectorRiskLevel = Literal["read", "write", "destructive", "network", "command
 CONNECTOR_RISK_LEVELS: frozenset[str] = frozenset({"read", "write", "destructive", "network", "command"})
 
 
+side_effecting = True
+
+
 @dataclass(frozen=True)
 class ToolArgumentSchema:
     tool_name: str

@@ -11,6 +11,9 @@ from orket.adapters.storage.sqlite_connection import connect_sqlite_wal
 MAX_EVIDENCE_BYTES = 33_554_432
 
 
+side_effecting = True
+
+
 class CardAcceptanceEvidenceStore:
     side_effecting = True
 

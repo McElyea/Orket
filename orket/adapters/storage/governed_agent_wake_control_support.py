@@ -30,6 +30,8 @@ from orket.core.contracts.governed_agent_wake_records import (
 )
 from orket.core.domain import OperatorCommandClass, OperatorInputClass
 
+side_effecting = True
+
 
 async def apply_cancellation_transaction(
     conn: aiosqlite.Connection,

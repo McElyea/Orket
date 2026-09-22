@@ -11,6 +11,8 @@ from orket.adapters.storage.async_pending_gate_repository import AsyncPendingGat
 from orket.adapters.storage.sqlite_connection import connect_sqlite_wal
 from orket.core.contracts.control_plane_transaction import ControlPlaneTransaction
 
+side_effecting = True
+
 
 class SQLiteControlPlaneTransactions:
     side_effecting = True

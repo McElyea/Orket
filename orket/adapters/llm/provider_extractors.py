@@ -11,6 +11,8 @@ from orket.adapters.llm.openai_compat_runtime import (
 )
 from orket.core.contracts.model_timing import nanoseconds_to_ms
 
+side_effecting = False
+
 
 class ProviderExtractor(Protocol):
     def extract_content(self, payload: Any) -> str | None: ...

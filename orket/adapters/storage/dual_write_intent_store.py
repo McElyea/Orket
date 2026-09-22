@@ -10,6 +10,8 @@ from orket.core.contracts.dual_write_intent import DualWriteLedgerError, validat
 from orket.core.contracts.local_file_lock import LocalFileLockError
 from orket.core.contracts.protocol_error_codes import E_DUAL_WRITE_PREFIX, format_protocol_error
 
+side_effecting = True
+
 
 class DualWriteIntentStore:
     side_effecting = True

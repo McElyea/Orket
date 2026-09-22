@@ -9,6 +9,8 @@ from pathlib import Path
 from orket.adapters.execution.owned_io import run_owned_thread
 from orket.core.domain.reconciler import ReconciliationWrite, StructuralAsset
 
+side_effecting = True
+
 
 class StructuralBoardStore:
     side_effecting = True

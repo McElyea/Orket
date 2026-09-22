@@ -39,3 +39,4 @@ OUTWARD_APPROVAL_MIGRATIONS = [
             BEGIN SELECT RAISE(ABORT, 'E_OUTWARD_HISTORY_RETAINED'); END""",
     )),
 ]
+side_effecting = True

@@ -44,6 +44,9 @@ _MIGRATIONS = [
 ]
 
 
+side_effecting = True
+
+
 class OutwardRunEventStore:
     side_effecting = True
 

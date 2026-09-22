@@ -25,6 +25,9 @@ if TYPE_CHECKING:
     from orket.core.domain.bug_fix_phase import BugFixPhase
 
 
+side_effecting = True
+
+
 def _row_to_dict(row: aiosqlite.Row) -> dict[str, Any]:
     return dict(zip(row.keys(), row, strict=True))
 

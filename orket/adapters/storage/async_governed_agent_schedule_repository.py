@@ -28,6 +28,9 @@ from orket.core.contracts.governed_agent_schedule_records import (
 ResultT = TypeVar("ResultT")
 
 
+side_effecting = True
+
+
 class AsyncGovernedAgentScheduleRepository:
     """Atomically retain schedule evaluations and their selected wake."""
 

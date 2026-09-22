@@ -361,6 +361,15 @@ failed removal of its own alias. This does not establish Ollama live acceptance 
 cross-process alias fencing. See the script ownership contract and
 `docs/architecture/CONTRACT_DELTA_GOVERNANCE_RUNTIME_OWNERSHIP_D_2026-09-22.md`.
 
+The native dependency gate now validates one explicit literal module effect bound
+for every policy-classified adapter, including packages and legacy locations.
+Existing class declarations cannot weaken that bound. Decision-adapter entries
+must be present, read-only and free of observed paths to effectful/unclassified
+adapters. The admission list remains empty. Read-only does not imply deterministic
+purity or permission to acquire missing decision context. Contract and limits:
+`docs/specs/ADAPTER_EFFECT_CLASSIFICATION.md` and
+`docs/architecture/CONTRACT_DELTA_ADAPTER_EFFECT_CLASSIFICATION_D_2026-09-22.md`.
+
 Driver async creation captures root, environment and settings before owned
 construction; direct synchronous construction refuses an event-loop thread.
 API chat and interactive CLI use shared runtime owners. Console reads settle
@@ -918,7 +927,9 @@ Decision nodes must never cause side effects.
 
 ## 14. Adapter Side-Effect Classification
 
-Adapters must declare side-effect class:
+Every policy-classified adapter module must declare its conservative effect bound
+as one unconditional module-level literal boolean. Existing class declarations
+describe narrower surfaces and cannot weaken module admission:
 
 ```text
 side_effecting = true | false
@@ -931,7 +942,10 @@ Rules:
 | `decision_nodes` | `side_effecting = false` |
 | `application_services` | both |
 
-This prevents architecture drift via implicit side effects.
+The native dependency gate enforces declarations and decision-adapter admission.
+`False` permits read-only observation/value processing; it does not imply purity
+or allow decision nodes to acquire missing external context. The current exact
+decision-adapter allowlist is empty. See `docs/specs/ADAPTER_EFFECT_CLASSIFICATION.md`.
 
 ## 15. Runtime Truth Rule
 

@@ -8,20 +8,26 @@ from pathlib import Path
 
 import pytest
 
+import orket
 from scripts.common.git_inventory import git_list_files
 from scripts.governance.dependency_imports import module_from_path
-from scripts.governance.dependency_policy import LAYERS, PROJECT_ROOT, load_dependency_policy
+from scripts.governance.dependency_policy import LAYERS, load_dependency_policy
 from tests.helpers.dependency_repository import make_repository, run_command
 
 pytestmark = pytest.mark.contract
 
 
-def test_dependency_policy_maps_all_git_visible_modules() -> None:
-    """Layer: contract. Every source module maps to one of the five normative layers."""
+def test_dependency_policy_maps_all_git_visible_modules(tmp_path: Path) -> None:
+    """Layer: contract. All actual package modules map through a real Git inventory."""
     policy = load_dependency_policy()
-    paths = [p for p in git_list_files(PROJECT_ROOT) if p.suffix == ".py" and p.is_relative_to(PROJECT_ROOT / "orket")]
+    package = Path(orket.__file__).resolve().parent
+    files = {path.relative_to(package.parent).as_posix(): path.read_bytes() for path in package.rglob("*.py")}
+    # Observe the actual source or installed package; never borrow a checkout in installed proof.
+    make_repository(tmp_path, files, adapter_effect_bound=None)
+    paths = [p for p in git_list_files(tmp_path) if p.suffix == ".py" and p.is_relative_to(tmp_path / "orket")]
     assert paths
-    assert all(policy.layer_for_module(module_from_path(p, PROJECT_ROOT)) in LAYERS for p in paths)
+    assert {path.relative_to(tmp_path).as_posix() for path in paths} == set(files)
+    assert all(policy.layer_for_module(module_from_path(p, tmp_path)) in LAYERS for p in paths)
     with pytest.raises(ValueError, match="Unclassified"):
         policy.layer_for_module("orket.unknown_namespace.module")
 
@@ -89,7 +95,9 @@ def test_exception_consumption_does_not_hide_another_edge(tmp_path: Path) -> Non
     process, report = run_command(tmp_path)
     assert process.returncode == 0
     assert report["verdict"]["exceptions"]["consumed"] == [_exception()]
-    (tmp_path / "orket/adapters/second.py").write_text("import orket.application.target", encoding="utf-8")
+    (tmp_path / "orket/adapters/second.py").write_text(
+        "import orket.application.target\nside_effecting = True\n", encoding="utf-8"
+    )
     process, report = run_command(tmp_path)
     assert process.returncode == 1
     assert report["verdict"]["violations"][0]["source"] == "orket.adapters.second"

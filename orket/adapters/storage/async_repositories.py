@@ -15,6 +15,8 @@ from orket.core.contracts.result_error_invariants import validate_result_error_i
 
 from .sqlite_connection import connect_sqlite_wal, ensure_wal_mode
 
+side_effecting = True
+
 
 class AsyncSessionRepository(SessionRepository):
     """Session persistence using aiosqlite."""

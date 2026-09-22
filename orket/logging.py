@@ -31,6 +31,9 @@ LOG_QUEUE_MAX_ENV = "ORKET_LOG_QUEUE_MAX"
 DEFAULT_LOG_QUEUE_MAX = 10_000
 
 
+side_effecting = True
+
+
 def _resolve_log_queue_max() -> int:
     try:
         configured = int(str(os.getenv(LOG_QUEUE_MAX_ENV, "")).strip())
@@ -206,14 +209,12 @@ def _resolve_workspace(workspace: Path | None) -> tuple[Path, dict[str, Any]]:
 def _log_path(workspace: Path, role: str | None = None) -> Path:
     root_log = Path("workspace/default/orket.log")
     root_log.parent.mkdir(parents=True, exist_ok=True)
-
     if role:
         agent_dir = workspace / "agents"
         agent_dir.mkdir(parents=True, exist_ok=True)
         # Sanitize name for filename consistency
         safe_name = sanitize_name(role)
         return agent_dir / f"{safe_name}.log"
-
     workspace.mkdir(parents=True, exist_ok=True)
     return workspace / "orket.log"
 
@@ -322,7 +323,6 @@ def log_event(
         actual_data = role if isinstance(role, dict) else {}
         # Recurse with unified signature
         return log_event(actual_event, actual_data, role=component, level=level)
-
     if data is None:
         data = {}
     workspace, context_marker = _resolve_workspace(workspace)

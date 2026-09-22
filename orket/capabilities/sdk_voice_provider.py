@@ -14,6 +14,8 @@ from orket_extension_sdk.voice import (
     VoiceTurnState,
 )
 
+side_effecting = True
+
 
 class HostSTTCapabilityProvider(STTProvider):
     def __init__(self, transcriber: Callable[[TranscribeRequest], TranscribeResponse] | None = None) -> None:

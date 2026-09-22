@@ -11,6 +11,8 @@ from orket.adapters.storage.file_admission import require_regular_or_absent
 from orket.adapters.storage.local_file_lock import NativeFileLocks
 from orket.core.contracts.interaction_stream import validate_interaction_id
 
+side_effecting = True
+
 
 @dataclass(frozen=True)
 class InteractionArtifactStore:

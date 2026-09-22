@@ -16,6 +16,9 @@ QWEN38_TEXT_TEMPLATE_VERSION = "orket_qwen38_text_chatml_2026_09"
 QWEN38_TEXT_TEMPLATE_PATH = Path(__file__).resolve().parents[2] / "runtime/config/qwen38_text_chatml.jinja"
 
 
+side_effecting = True
+
+
 def expected_text_render(messages: list[dict[str, Any]]) -> str:
     """Independent reference renderer; preserve content and roles without branching on text."""
     turns = []

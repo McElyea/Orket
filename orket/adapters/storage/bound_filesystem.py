@@ -14,6 +14,9 @@ from orket.core.domain.outward_authorization import OutwardAuthorization, args_h
 BOUND_FILESYSTEM_TOOLS = frozenset({"read_file", "write_file", "create_directory", "delete_file"})
 
 
+side_effecting = True
+
+
 class BoundFilesystemExecutor:
     side_effecting = True
 

@@ -12,6 +12,9 @@ MAX_ARTIFACT_BYTES = 1_048_576
 MAX_SNAPSHOT_BYTES = 8_388_608
 
 
+side_effecting = True
+
+
 @dataclass(frozen=True)
 class CapturedCardArtifact:
     path: str

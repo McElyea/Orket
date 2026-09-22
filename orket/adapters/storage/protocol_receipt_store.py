@@ -15,6 +15,8 @@ from orket.core.contracts.protocol_error_codes import (
 from orket.core.contracts.protocol_hashing import hash_canonical_json
 from orket.core.contracts.tool_invocation_contracts import PROTOCOL_RECEIPT_SCHEMA_VERSION
 
+side_effecting = True
+
 
 class ProtocolReceiptStore:
     side_effecting = True

@@ -43,6 +43,9 @@ LEDGER_APPEND_MIGRATION = SQLiteMigration(
 )
 
 
+side_effecting = True
+
+
 async def read_append_head(connection: aiosqlite.Connection, run_id: str) -> LedgerAnchor:
     cursor = await connection.execute(
         "SELECT event_count, chain_hash, origin_ref FROM outward_ledger_heads_v2 WHERE run_id=?", (run_id,),

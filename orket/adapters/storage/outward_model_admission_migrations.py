@@ -97,3 +97,4 @@ OUTWARD_MODEL_ADMISSION_MIGRATIONS.append(SQLiteMigration(version=2, name="retai
     """CREATE TRIGGER outward_model_attempt_delete BEFORE DELETE ON outward_model_attempts_v2
     BEGIN SELECT RAISE(ABORT, 'E_OUTWARD_MODEL_ADMISSION_RETAINED'); END""",
 )))
+side_effecting = True

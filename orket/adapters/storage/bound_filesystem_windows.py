@@ -14,6 +14,9 @@ _BACKUP_SEMANTICS, _OPEN_REPARSE_POINT = 0x02000000, 0x00200000
 _DIRECTORY, _REPARSE_POINT = 0x10, 0x400
 
 
+side_effecting = True
+
+
 class _AttributeTagInfo(ctypes.Structure):
     _fields_ = [("attributes", wintypes.DWORD), ("tag", wintypes.DWORD)]
 

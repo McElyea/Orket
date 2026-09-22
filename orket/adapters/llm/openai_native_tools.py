@@ -9,6 +9,9 @@ from orket.utils import dedupe_ordered
 LOGGER = logging.getLogger(__name__)
 
 
+side_effecting = True
+
+
 def _dedupe(values: list[str]) -> list[str]:
     return dedupe_ordered(values)
 

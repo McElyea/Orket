@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from orket_extension_sdk.llm import GenerateRequest, GenerateResponse
 
+side_effecting = False
+
 
 class StaticLLMCapabilityProvider:
     """Deterministic SDK provider used for bounded host-configured capability tests."""

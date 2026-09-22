@@ -11,6 +11,9 @@ from orket.core.contracts.card_completion_commit import CardWorkspaceMutationAut
 _MAX_PATH_LOCKS = 1024
 
 
+side_effecting = True
+
+
 class FileSystemTools(BaseTools):
     side_effecting = True
 

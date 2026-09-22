@@ -23,6 +23,8 @@ from orket.core.domain.outward_ledger_integrity import (
 )
 from orket.core.domain.outward_run_events import LedgerEvent, validate_ledger_event
 
+side_effecting = False
+
 
 class OutwardLedgerSnapshotStore:
     side_effecting = False

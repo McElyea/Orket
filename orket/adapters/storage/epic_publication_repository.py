@@ -24,6 +24,9 @@ RecordT = TypeVar("RecordT", EpicPublicationRecord, EpicPreparationRecord, EpicW
 JournalTable = Literal["epic_publications", "epic_preparations", "epic_workload_outcomes", "epic_run_admissions"]
 
 
+side_effecting = True
+
+
 class SQLiteEpicPublicationTransaction:
     side_effecting = True
 
