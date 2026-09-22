@@ -41,6 +41,14 @@ Incomplete execution retains reconciliation rather than a completion receipt.
 Constructor/input migration, cancellation and daemon-effect limits:
 `docs/architecture/CONTRACT_DELTA_SANDBOX_COMMAND_OWNERSHIP_D_2026-09-21.md`.
 
+Memory services capture nested metadata, lexical database roots and explicit UTC
+observations. Side-effecting repositories own native effects; profile policy,
+publication and readback share one writer transaction. Namespaced facts require
+explicit correction, and stale unchanged-value metadata is refused. Admitted
+writes may commit before cancellation returns. Classifiers/renderers require
+timezone-aware `observed_at`. Migration, legacy parity and ownership limits:
+`docs/architecture/CONTRACT_DELTA_MEMORY_STATE_D_2026-09-21.md`.
+
 The runtime CLI captures engine inputs after startup and owns engine construction
 through interruption. Board/replay reads, manifest output and native path
 resolution retain their workers; a completed untransferred engine is closed.

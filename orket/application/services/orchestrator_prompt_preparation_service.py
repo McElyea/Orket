@@ -4,6 +4,7 @@ import hashlib
 from collections.abc import Awaitable, Callable
 from typing import Any
 
+from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.application.services.skill_adapter import synthesize_role_tool_profile_bindings
 from orket.core.domain.guard_rule_catalog import resolve_runtime_guard_rule_ids
 from orket.runtime.truthful_memory_policy import render_reference_context_rows
@@ -28,6 +29,7 @@ class OrchestratorPromptPreparationService:
         resolve_prompt_patch_label: Callable[[], str],
         should_suppress_reference_context_for_cards_runtime: Callable[[dict[str, Any] | None], bool],
         load_asset: Callable[[str, str, Any], Awaitable[Any]],
+        runtime_inputs: RuntimeInputService | None = None,
     ) -> None:
         self.organization = organization
         self.memory = memory
@@ -43,6 +45,7 @@ class OrchestratorPromptPreparationService:
             should_suppress_reference_context_for_cards_runtime
         )
         self.load_asset = load_asset
+        self._runtime_inputs = RuntimeInputService() if runtime_inputs is None else runtime_inputs
 
     async def build(
         self,
@@ -73,7 +76,7 @@ class OrchestratorPromptPreparationService:
         skill_tool_bindings = synthesize_role_tool_profile_bindings(role_config.tools)
         search_query = (issue.name or "") + " " + (issue.note or "")
         memories = await self.memory.search(search_query.strip())
-        memory_context = render_reference_context_rows(memories)
+        memory_context = render_reference_context_rows(memories, observed_at=self._runtime_inputs.utc_now())
 
         prompt_mode = self.resolve_prompt_resolver_mode()
         selection_policy = self.resolve_prompt_selection_policy()

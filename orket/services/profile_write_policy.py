@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from orket.core.contracts.memory_inputs import logical_profile_key_name
+
 ALLOWED_PROFILE_KEY_PREFIXES: tuple[str, ...] = (
     "user_preference.",
     "user_fact.",
@@ -11,8 +13,9 @@ ALLOWED_PROFILE_KEY_PREFIXES: tuple[str, ...] = (
 )
 
 
-@dataclass(frozen=True)
+@dataclass
 class ProfileWritePolicyError(ValueError):
+    # Python context managers must be able to attach exception traceback state.
     code: str
     message: str
 
@@ -26,7 +29,7 @@ class ProfileWritePolicy:
 
     def validate(self, *, key: str, metadata: dict[str, Any] | None) -> None:
         key_name = str(key or "").strip()
-        logical_key_name = _logical_profile_key_name(key_name)
+        logical_key_name = logical_profile_key_name(key_name)
         if not key_name:
             raise ProfileWritePolicyError(
                 code="E_PROFILE_MEMORY_KEY_REQUIRED",
@@ -43,10 +46,3 @@ class ProfileWritePolicy:
                 code="E_PROFILE_MEMORY_CONFIRMATION_REQUIRED",
                 message=f"Profile memory key '{key_name}' requires metadata.user_confirmed=true.",
             )
-
-
-def _logical_profile_key_name(key_name: str) -> str:
-    parts = str(key_name or "").split(":", 2)
-    if len(parts) == 3 and parts[0] == "ext" and parts[1].strip() and parts[2].strip():
-        return parts[2].strip()
-    return str(key_name or "").strip()

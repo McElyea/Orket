@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
+import pytest
+
 from orket.runtime.truthful_memory_policy import (
     classify_memory_trust_level,
     evaluate_memory_write_policy,
@@ -7,6 +11,9 @@ from orket.runtime.truthful_memory_policy import (
     synthesis_disposition_for_trust_level,
     truthful_memory_policy_snapshot,
 )
+
+pytestmark = pytest.mark.contract
+OBSERVED_AT = datetime(2026, 9, 21, tzinfo=UTC)
 
 
 # Layer: contract
@@ -52,6 +59,7 @@ def test_truthful_memory_policy_rejects_stale_durable_updates() -> None:
 # Layer: contract
 def test_truthful_memory_policy_marks_stale_reference_context_as_excluded_from_governed_synthesis() -> None:
     trust_level = classify_memory_trust_level(
+        observed_at=OBSERVED_AT,
         scope="project_memory",
         metadata={"type": "decision", "stale_at": "2000-01-01T00:00:00+00:00"},
         timestamp="2026-03-17T14:00:00+00:00",
@@ -75,7 +83,7 @@ def test_truthful_memory_policy_renders_only_governed_reference_context_rows() -
                 "metadata": {"type": "decision", "stale_at": "2000-01-01T00:00:00+00:00"},
                 "timestamp": "2026-03-17T14:00:00+00:00",
             },
-        ]
+        ], observed_at=OBSERVED_AT,
     )
 
     assert "[reference_context][trust=advisory]" in rendered

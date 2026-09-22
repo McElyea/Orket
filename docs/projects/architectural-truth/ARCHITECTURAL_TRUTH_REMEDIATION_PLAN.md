@@ -12519,9 +12519,9 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.73 sandbox command ownership and process inputs, retaining the 0.6.72 approval
-submission, 0.6.71 authorization, 0.6.65/0.6.66 API queries, 0.6.67 legacy action,
-0.6.68 construction, 0.6.69 cleanup and 0.6.70 file-operation checkpoints. Preserve the governed legacy-export cutover;
+0.6.74 memory input, policy and publication ownership, retaining 0.6.73 sandbox
+commands, 0.6.72 approval submission, 0.6.71 authorization, 0.6.65/0.6.66 API
+queries, 0.6.67 legacy action, 0.6.68 construction, 0.6.69 cleanup and 0.6.70 files. Preserve the governed legacy-export cutover;
 continue remaining clock/input owners, adapter enforcement and async reachability before E1/E2
 and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
@@ -20754,3 +20754,80 @@ E1/E2 and CAP stay open. No provider substitution or whole-lane retirement.
 Evidence: `.tmp/d-sandbox-command/`. This is scoped process/input acceptance;
 arbitrary custom owners, mutable decision context, complete adapter enforcement,
 remaining ambient/async owners and explicit whole-lane acceptance remain open.
+
+
+#### .74 Captured memory state and atomic publication (2026-09-21)
+
+Memory application services capture nested metadata, construction-time lexical
+database roots and explicit UTC mutation/observation time. Native directory and
+SQLite effects move into declared side-effecting repositories. Profile existing
+state, policy, publication and returned readback now share one writer transaction;
+project content-hash deduplication and FTS publication are atomic. Namespaced facts
+require correction and stale same-value metadata is rejected. Contract/migration:
+`docs/architecture/CONTRACT_DELTA_MEMORY_STATE_D_2026-09-21.md`.
+
+All twelve opening cases failed, reproducing nested-input drift during native
+initialization/session admission, cwd-dependent storage, competing first facts,
+namespaced correction bypass, stale metadata and duplicate-content unique errors.
+The exact unchanged twelve cases also fail against the byte-verified published
+.73 wheel, without collection errors or skips. Connection teardown assertions
+passed. The first repaired 38-case run retained six failures: a frozen policy
+exception masked rejection when Python attached context-manager traceback state.
+The exception retains its public type/code/message and now permits interpreter
+traceback state. The corrected 38 cases pass; no failure evidence was overwritten.
+
+| Cell | Cases / failures / errors / skips | Pytest seconds | Native origins |
+|---|---|---|---|
+| Source Windows 3.11 | 177 / 0 / 0 / 0 | 39.113 | source checkout |
+| Installed win-py311 | 177 / 0 / 0 / 0 | 38.986 | 903 |
+| Installed win-py312 | 177 / 0 / 0 / 0 | 39.784 | 903 |
+
+The explicit 19-module cohort includes affected memory, SDK/application/API,
+orchestrator consumers, shared native SQLite and current authority regressions.
+Twenty-four native lifetime cases per cell hold actual SQLite statements or a
+real directory worker through cancellation, repeated cancellation and external
+timeout. Admitted writes can commit before cancellation is reported. Actual
+connection workers are joined and independently confirmed closed. Seventy-two
+independent SQLite operations remain below the predeclared 0.5-second bound,
+maximum 0.009498800 seconds, using high-resolution perf_counter observations.
+The 0.8-second controlled hold and bounded fixture release/drain do not change
+the shared 5,000ms SQLite busy policy, WAL admission or caller retry restrictions.
+
+Real persistence checks preserve legacy SQL defaults and stored timestamps,
+content-hash migration, FTS retrieval and recency ordering. Native trigger refusal
+rolls back both base/FTS changes and permits a later successful write. Concurrent
+cold stores retain every row. Competing overwrite tests hold an actual published
+transaction via an observation wrapper; each returned row belongs to its writer.
+Injected clocks prove pre-wait UTC mutation capture and one observation per search;
+pure classifier/render tests require explicit aware clocks with unchanged strict
+expiry boundaries. SDK pre-bridge capture and extension pre-session deep capture
+remain covered. Authenticated in-process ASGI startup, correction/refusal, restart,
+SDK retrieval and independent SQLite rows agree; no deployed HTTP claim is made.
+
+Separately, all three opted-in real SQLite/SDK acceptance cases pass in source
+and each installed Windows environment: nine cases, no skips. Model/prompt fixtures
+elsewhere are controlled dependencies, not live inference. No sandbox resources
+are created. All 1,117 core Python files and nineteen data
+resources match source, wheel and source archive (1,136 core
+members; 2,238 support inputs). The scoped store shrinks
+from 440 to 301 lines; six original query/normalization ASTs are preserved. New
+repositories are 87/107 lines. Shared SQLite, owned-I/O, sync bridge and existing
+policy alias bytes remain unchanged. Both Quality selections include the new tests.
+
+Canonical dependency enforcement passes with 1117
+files, 3593 edges and six bounded dynamic routes;
+changed Ruff, documentation and release metadata pass. Canonical Ruff decreases from 94 to 93: extracting SQLite removes the existing
+unused aiosqlite import from the scoped service. No new finding is introduced.
+This checkpoint is authorized for branch/tag publication after its seal. No main
+merge, 0.7 cutover, full-suite/89%, hosted Quality or lane retirement is implied.
+
+The .72 passive Linux clock preflight remains the latest retained blocker, not a
+new measurement: 240.006951941 seconds, ending synchronized quiet 18.843389227
+against sixty seconds, with steps beyond 0.01 seconds. Clock settings/deadlines
+remain unchanged. Ollama alias-dependent packet1 proof, .43 Git timeout cause,
+complete adapter enforcement, other ambient/mutable inputs and native owners,
+shared synchronous bridge lifecycle, E1/E2 and CAP remain open. Lexical path
+capture is not handle containment or CAP-2. Continue remaining D in canonical
+order; explicit user acceptance is required before lane retirement.
+
+Evidence: `.tmp/d-memory-state/`. This is scoped memory boundary acceptance.

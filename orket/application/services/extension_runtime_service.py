@@ -5,6 +5,7 @@ import base64
 import binascii
 import os
 from collections.abc import Mapping
+from copy import deepcopy
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -200,7 +201,7 @@ class ExtensionRuntimeService:
         normalized_key = str(key or "").strip()
         if not normalized_key:
             raise ValueError("E_EXTENSION_RUNTIME_MEMORY_KEY_REQUIRED")
-        payload_metadata = dict(metadata or {})
+        payload_metadata = deepcopy(metadata or {})
 
         if normalized_scope == "profile_memory":
             try:

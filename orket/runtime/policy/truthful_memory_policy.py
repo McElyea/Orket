@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any, Literal
 
+from orket.core.contracts.memory_inputs import logical_profile_key_name, memory_observation_time
+
 TRUTHFUL_MEMORY_POLICY_SCHEMA_VERSION = "truthful_memory_policy.v1"
 
 MemoryClass = Literal["working_memory", "durable_memory", "reference_context"]
@@ -132,7 +134,7 @@ def evaluate_memory_write_policy(
         return _evaluate_session_write(metadata_payload)
     if scope_name == "profile_memory":
         return _evaluate_profile_write(
-            key=key_name,
+            key=logical_profile_key_name(key_name),
             value=value_text,
             metadata=metadata_payload,
             existing_value=str(existing_value or ""),
@@ -144,11 +146,12 @@ def evaluate_memory_write_policy(
 def classify_memory_trust_level(
     *,
     scope: str,
+    observed_at: datetime,
     metadata: Mapping[str, Any] | None = None,
     timestamp: str = "",
 ) -> MemoryTrustLevel:
     metadata_payload = dict(metadata or {})
-    if _is_stale(metadata_payload, fallback_timestamp=timestamp):
+    if _is_stale(metadata_payload, fallback_timestamp=timestamp, observed_at=memory_observation_time(observed_at)):
         return "stale_risk"
 
     explicit = str(metadata_payload.get("trust_level") or "").strip().lower()
@@ -170,7 +173,8 @@ def synthesis_disposition_for_trust_level(trust_level: str) -> str:
     return "include" if str(trust_level or "").strip().lower() in {"authoritative", "advisory"} else "exclude"
 
 
-def render_reference_context_rows(rows: list[Mapping[str, Any]]) -> str:
+def render_reference_context_rows(rows: list[Mapping[str, Any]], *, observed_at: datetime) -> str:
+    observed_at = memory_observation_time(observed_at)
     lines: list[str] = []
     for row in rows:
         content = str(row.get("content") or "").strip()
@@ -179,6 +183,7 @@ def render_reference_context_rows(rows: list[Mapping[str, Any]]) -> str:
         metadata = dict(row.get("metadata") or {})
         trust_level = classify_memory_trust_level(
             scope="project_memory",
+            observed_at=observed_at,
             metadata=metadata,
             timestamp=str(row.get("timestamp") or ""),
         )
@@ -188,7 +193,8 @@ def render_reference_context_rows(rows: list[Mapping[str, Any]]) -> str:
     return "\n".join(lines)
 
 
-def render_scoped_memory_rows(rows: list[Any], *, prefix: str) -> list[str]:
+def render_scoped_memory_rows(rows: list[Any], *, prefix: str, observed_at: datetime) -> list[str]:
+    observed_at = memory_observation_time(observed_at)
     rendered: list[str] = []
     for row in rows:
         key = str(getattr(row, "key", "") or "").strip()
@@ -198,6 +204,7 @@ def render_scoped_memory_rows(rows: list[Any], *, prefix: str) -> list[str]:
         metadata = dict(getattr(row, "metadata", {}) or {})
         trust_level = classify_memory_trust_level(
             scope=str(getattr(row, "scope", "") or ""),
+            observed_at=observed_at,
             metadata=metadata,
             timestamp=str(getattr(row, "updated_at", "") or getattr(row, "created_at", "") or ""),
         )
@@ -253,9 +260,7 @@ def _evaluate_profile_write(
     metadata["trust_level"] = "authoritative"
     conflict_resolution: MemoryConflictResolution = "none"
 
-    if existing_value and existing_value == value:
-        conflict_resolution = "no_change"
-    elif _is_older_observation(metadata, existing_metadata):
+    if _is_older_observation(metadata, existing_metadata):
         conflict_resolution = "stale_update_rejected"
         return _rejected_profile_decision(
             metadata=metadata,
@@ -263,6 +268,8 @@ def _evaluate_profile_write(
             error_code="E_PROFILE_MEMORY_STALE_UPDATE",
             error_message=f"Profile memory key '{key}' rejected a stale update.",
         )
+    elif existing_value and existing_value == value:
+        conflict_resolution = "no_change"
     elif existing_value and existing_value != value and key.startswith("user_fact."):
         if not _is_truthy(metadata.get("user_correction")):
             conflict_resolution = "contradiction_requires_correction"
@@ -342,10 +349,10 @@ def _is_older_observation(metadata: Mapping[str, Any], existing_metadata: Mappin
     return incoming is not None and existing is not None and incoming < existing
 
 
-def _is_stale(metadata: Mapping[str, Any], *, fallback_timestamp: str) -> bool:
+def _is_stale(metadata: Mapping[str, Any], *, fallback_timestamp: str, observed_at: datetime) -> bool:
     stale_at = _parse_datetime(metadata.get("stale_at") or metadata.get("expires_at"))
     if stale_at is not None:
-        return datetime.now(UTC) > stale_at
+        return observed_at > stale_at
     explicit = str(metadata.get("trust_level") or "").strip().lower()
     if explicit == "stale_risk":
         return True
@@ -364,7 +371,7 @@ def _is_stale(metadata: Mapping[str, Any], *, fallback_timestamp: str) -> bool:
     max_age = _coerce_float(max_age_minutes)
     if max_age is None:
         return False
-    age_seconds = (datetime.now(UTC) - timestamp_value).total_seconds()
+    age_seconds = (observed_at - timestamp_value).total_seconds()
     return age_seconds > (max_age * 60.0)
 
 

@@ -5,6 +5,19 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.74] - 2026-09-21
+
+### Fixed
+- Capture memory metadata, database roots and explicit UTC observations before storage waits; own native storage through interruption.
+- Serialize profile policy, publication and readback; enforce correction for namespaced facts and refuse stale unchanged-value metadata.
+- Publish project content deduplication and FTS atomically; preserve legacy rows and query ordering.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Direct trust classifiers/renderers supply timezone-aware `observed_at`; reconstruct stores to change database selection.
+- Interrupted writes may already be committed; inspect durable state before replay.
+- Contract: `docs/architecture/CONTRACT_DELTA_MEMORY_STATE_D_2026-09-21.md`.
+
 ## [0.6.73] - 2026-09-21
 
 ### Fixed

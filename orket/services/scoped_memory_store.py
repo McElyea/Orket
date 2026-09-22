@@ -1,13 +1,17 @@
 from __future__ import annotations
 
 import json
+from copy import deepcopy
 from dataclasses import dataclass, field
+from functools import partial
 from pathlib import Path
 from typing import Any, Literal
 
-import aiosqlite
-
-from orket.adapters.storage.sqlite_connection import connect_sqlite_wal
+from orket.adapters.execution.owned_io import run_owned_io
+from orket.adapters.storage.async_file_tools import capture_file_roots
+from orket.adapters.storage.scoped_memory_repository import ScopedMemoryRepository
+from orket.application.services.runtime_input_service import RuntimeInputService
+from orket.core.contracts.memory_inputs import memory_timestamp
 from orket.runtime.truthful_memory_policy import evaluate_memory_write_policy
 
 from .profile_write_policy import ProfileWritePolicy, ProfileWritePolicyError
@@ -43,59 +47,113 @@ class MemoryControls:
 
 
 class ScopedMemoryStore:
-    def __init__(self, db_path: Path, *, profile_write_policy: ProfileWritePolicy | None = None) -> None:
-        self._db_path = db_path.resolve()
+    def __init__(
+        self,
+        db_path: Path,
+        *,
+        profile_write_policy: ProfileWritePolicy | None = None,
+        runtime_inputs: RuntimeInputService | None = None,
+    ) -> None:
+        (captured_path,) = capture_file_roots([db_path])
+        self._repository = ScopedMemoryRepository(captured_path)
         self._profile_write_policy = profile_write_policy or ProfileWritePolicy()
+        self._runtime_inputs = RuntimeInputService() if runtime_inputs is None else runtime_inputs
 
     async def ensure_initialized(self) -> None:
-        self._db_path.parent.mkdir(parents=True, exist_ok=True)
-        async with connect_sqlite_wal(self._db_path) as conn:
-            await conn.execute(
-                """
-                CREATE TABLE IF NOT EXISTS extension_memory (
-                    scope TEXT NOT NULL CHECK(scope IN ('session_memory', 'profile_memory')),
-                    session_id TEXT NOT NULL,
-                    memory_key TEXT NOT NULL,
-                    memory_value TEXT NOT NULL,
-                    metadata_json TEXT NOT NULL DEFAULT '{}',
-                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                    PRIMARY KEY(scope, session_id, memory_key)
+        await run_owned_io(self._repository.initialize, label="scoped-memory initialization", preserve_failure=True)
+
+    async def write_session(
+        self, *, session_id: str, key: str, value: str, metadata: dict[str, Any] | None = None
+    ) -> ScopedMemoryRecord:
+        return await self._write_reference("session_memory", session_id, key, value, metadata)
+
+    async def write_episodic(
+        self, *, session_id: str, key: str, value: str, metadata: dict[str, Any] | None = None
+    ) -> ScopedMemoryRecord:
+        return await self._write_reference("episodic_memory", session_id, key, value, metadata)
+
+    async def _write_reference(self, scope, session_id, key, value, metadata):
+        key, value = str(key or "").strip(), str(value or "")
+        decision = evaluate_memory_write_policy(scope=scope, key=key, value=value, metadata=deepcopy(metadata or {}))
+        captured = dict(
+            scope=scope,
+            session_id=self.normalize_session_id(scope, session_id),
+            key=key,
+            value=value,
+            metadata_json=json.dumps(decision.metadata, sort_keys=True, separators=(",", ":")),
+            timestamp=memory_timestamp(self._runtime_inputs.utc_now()),
+        )
+        return await run_owned_io(
+            partial(self._persist_record, captured), label="scoped-memory write", preserve_failure=True
+        )
+
+    async def write_profile(
+        self, *, key: str, value: str, metadata: dict[str, Any] | None = None
+    ) -> ScopedMemoryRecord:
+        key, value, captured = str(key or "").strip(), str(value or ""), deepcopy(metadata or {})
+        self._profile_write_policy.validate(key=key, metadata=captured)
+        payload = json.dumps(captured, sort_keys=True, separators=(",", ":"))
+        timestamp = memory_timestamp(self._runtime_inputs.utc_now())
+        return await run_owned_io(
+            partial(self._persist_profile, key, value, payload, timestamp),
+            label="profile-memory transaction",
+            preserve_failure=True,
+        )
+
+    async def _persist_profile(self, key, value, payload, timestamp):
+        await self.ensure_initialized()
+        identity = dict(scope="profile_memory", session_id=self.normalize_session_id("profile_memory", ""), key=key)
+        async with self._repository.transaction() as connection:
+            raw = await self._repository.read(connection, **identity)
+            existing = _row_to_record(raw) if raw is not None else None
+            decision = evaluate_memory_write_policy(
+                scope="profile_memory",
+                key=key,
+                value=value,
+                metadata=json.loads(payload),
+                existing_value=existing.value if existing else "",
+                existing_metadata=existing.metadata if existing else {},
+            )
+            if not decision.allow_write:
+                raise ProfileWritePolicyError(
+                    code=str(decision.error_code or "E_PROFILE_MEMORY_WRITE_REJECTED"),
+                    message=decision.error_message or f"Profile memory key '{key}' was rejected by memory policy.",
                 )
-                """
+            row = await self._repository.publish(
+                connection,
+                **identity,
+                value=value,
+                timestamp=timestamp,
+                metadata_json=json.dumps(decision.metadata, sort_keys=True, separators=(",", ":")),
             )
-            await conn.execute(
-                """
-                CREATE INDEX IF NOT EXISTS idx_extension_memory_scope_session_updated
-                ON extension_memory(scope, session_id, updated_at DESC, memory_key ASC)
-                """
-            )
-            await conn.execute(
-                """
-                CREATE INDEX IF NOT EXISTS idx_extension_memory_profile_key
-                ON extension_memory(scope, memory_key ASC, created_at ASC)
-                """
-            )
-            await conn.execute(
-                """
-                CREATE TABLE IF NOT EXISTS extension_episodic_memory (
-                    session_id TEXT NOT NULL,
-                    memory_key TEXT NOT NULL,
-                    memory_value TEXT NOT NULL,
-                    metadata_json TEXT NOT NULL DEFAULT '{}',
-                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                    PRIMARY KEY(session_id, memory_key)
-                )
-                """
-            )
-            await conn.execute(
-                """
-                CREATE INDEX IF NOT EXISTS idx_extension_episodic_memory_session_updated
-                ON extension_episodic_memory(session_id, updated_at DESC, memory_key ASC)
-                """
-            )
-            await conn.commit()
+            record = _required_record(row, scope="profile_memory")
+        return record
+
+    async def _persist_record(self, captured):
+        await self.ensure_initialized()
+        async with self._repository.transaction() as connection:
+            row = await self._repository.publish(connection, **captured)
+            record = _required_record(row, scope=captured["scope"])
+        return record
+
+    async def clear_session(self, *, session_id: str) -> int:
+        return await self._clear("session_memory", self.normalize_session_id("session_memory", session_id))
+
+    async def clear_episodic(self, *, session_id: str) -> int:
+        return await self._clear("episodic_memory", self.normalize_session_id("episodic_memory", session_id))
+
+    async def _clear(self, scope, session_id):
+        async def operation():
+            await self.ensure_initialized()
+            return await self._repository.clear(scope=scope, session_id=session_id)
+
+        return await run_owned_io(operation, label="scoped-memory clear", preserve_failure=True)
+
+    async def _query_records(self, *, sql: str, args: tuple[Any, ...]) -> list[ScopedMemoryRecord]:
+        rows = await run_owned_io(
+            partial(self._repository.query, sql=sql, args=args), label="scoped-memory query", preserve_failure=True
+        )
+        return [_row_to_record(row) for row in rows]
 
     @staticmethod
     def normalize_session_id(scope: MemoryScope, session_id: str) -> str:
@@ -103,108 +161,6 @@ class ScopedMemoryStore:
             return "__profile__"
         normalized = str(session_id or "").strip()
         return normalized or "__default_session__"
-
-    async def write_session(
-        self,
-        *,
-        session_id: str,
-        key: str,
-        value: str,
-        metadata: dict[str, Any] | None = None,
-    ) -> ScopedMemoryRecord:
-        decision = evaluate_memory_write_policy(
-            scope="session_memory",
-            key=key,
-            value=value,
-            metadata=metadata or {},
-        )
-        return await self._write_record(
-            scope="session_memory",
-            session_id=self.normalize_session_id("session_memory", session_id),
-            key=key,
-            value=value,
-            metadata=decision.metadata,
-        )
-
-    async def write_episodic(
-        self,
-        *,
-        session_id: str,
-        key: str,
-        value: str,
-        metadata: dict[str, Any] | None = None,
-    ) -> ScopedMemoryRecord:
-        decision = evaluate_memory_write_policy(
-            scope="episodic_memory",
-            key=key,
-            value=value,
-            metadata=metadata or {},
-        )
-        return await self._write_episodic_record(
-            session_id=self.normalize_session_id("episodic_memory", session_id),
-            key=key,
-            value=value,
-            metadata=decision.metadata,
-        )
-
-    async def write_profile(
-        self,
-        *,
-        key: str,
-        value: str,
-        metadata: dict[str, Any] | None = None,
-    ) -> ScopedMemoryRecord:
-        metadata_payload = dict(metadata or {})
-        self._profile_write_policy.validate(key=key, metadata=metadata_payload)
-        existing = await self.read_profile(key=key)
-        decision = evaluate_memory_write_policy(
-            scope="profile_memory",
-            key=key,
-            value=value,
-            metadata=metadata_payload,
-            existing_value=(existing.value if existing is not None else ""),
-            existing_metadata=(existing.metadata if existing is not None else {}),
-        )
-        if not decision.allow_write:
-            raise ProfileWritePolicyError(
-                code=str(decision.error_code or "E_PROFILE_MEMORY_WRITE_REJECTED"),
-                message=decision.error_message or f"Profile memory key '{key}' was rejected by memory policy.",
-            )
-        return await self._write_record(
-            scope="profile_memory",
-            session_id=self.normalize_session_id("profile_memory", ""),
-            key=key,
-            value=value,
-            metadata=decision.metadata,
-        )
-
-    async def clear_session(self, *, session_id: str) -> int:
-        await self.ensure_initialized()
-        resolved_session = self.normalize_session_id("session_memory", session_id)
-        async with connect_sqlite_wal(self._db_path) as conn:
-            cursor = await conn.execute(
-                """
-                DELETE FROM extension_memory
-                WHERE scope = 'session_memory' AND session_id = ?
-                """,
-                (resolved_session,),
-            )
-            await conn.commit()
-            return int(cursor.rowcount or 0)
-
-    async def clear_episodic(self, *, session_id: str) -> int:
-        await self.ensure_initialized()
-        resolved_session = self.normalize_session_id("episodic_memory", session_id)
-        async with connect_sqlite_wal(self._db_path) as conn:
-            cursor = await conn.execute(
-                """
-                DELETE FROM extension_episodic_memory
-                WHERE session_id = ?
-                """,
-                (resolved_session,),
-            )
-            await conn.commit()
-            return int(cursor.rowcount or 0)
 
     async def query_session(self, *, session_id: str, query: str, limit: int) -> list[ScopedMemoryRecord]:
         await self.ensure_initialized()
@@ -301,112 +257,6 @@ class ScopedMemoryStore:
             args=(self.normalize_session_id("profile_memory", ""), like_query, like_query, _bounded_limit(limit)),
         )
 
-    async def _write_episodic_record(
-        self,
-        *,
-        session_id: str,
-        key: str,
-        value: str,
-        metadata: dict[str, Any],
-    ) -> ScopedMemoryRecord:
-        await self.ensure_initialized()
-        async with connect_sqlite_wal(self._db_path) as conn:
-            await conn.execute(
-                """
-                INSERT INTO extension_episodic_memory
-                (
-                    session_id, memory_key, memory_value, metadata_json,
-                    created_at, updated_at
-                )
-                VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-                ON CONFLICT(session_id, memory_key)
-                DO UPDATE SET
-                    memory_value = excluded.memory_value,
-                    metadata_json = excluded.metadata_json,
-                    updated_at = CURRENT_TIMESTAMP
-                """,
-                (
-                    session_id,
-                    str(key or "").strip(),
-                    str(value or ""),
-                    json.dumps(metadata, sort_keys=True, separators=(",", ":")),
-                ),
-            )
-            await conn.commit()
-        record = await self._read_episodic_record(session_id=session_id, key=key)
-        if record is None:
-            raise RuntimeError("E_SCOPED_MEMORY_EPISODIC_WRITE_READBACK_FAILED")
-        return record
-
-    async def _write_record(
-        self,
-        *,
-        scope: MemoryScope,
-        session_id: str,
-        key: str,
-        value: str,
-        metadata: dict[str, Any],
-    ) -> ScopedMemoryRecord:
-        await self.ensure_initialized()
-        async with connect_sqlite_wal(self._db_path) as conn:
-            await conn.execute(
-                """
-                INSERT INTO extension_memory
-                (
-                    scope, session_id, memory_key, memory_value, metadata_json,
-                    created_at, updated_at
-                )
-                VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-                ON CONFLICT(scope, session_id, memory_key)
-                DO UPDATE SET
-                    memory_value = excluded.memory_value,
-                    metadata_json = excluded.metadata_json,
-                    updated_at = CURRENT_TIMESTAMP
-                """,
-                (
-                    scope,
-                    session_id,
-                    str(key or "").strip(),
-                    str(value or ""),
-                    json.dumps(metadata, sort_keys=True, separators=(",", ":")),
-                ),
-            )
-            await conn.commit()
-        record = await self._read_record(scope=scope, session_id=session_id, key=key)
-        if record is None:
-            raise RuntimeError("E_SCOPED_MEMORY_WRITE_READBACK_FAILED")
-        return record
-
-    async def _read_episodic_record(self, *, session_id: str, key: str) -> ScopedMemoryRecord | None:
-        rows = await self._query_records(
-            sql="""
-                SELECT 'episodic_memory', session_id, memory_key, memory_value, metadata_json, created_at, updated_at
-                FROM extension_episodic_memory
-                WHERE session_id = ? AND memory_key = ?
-                LIMIT 1
-                """,
-            args=(session_id, str(key or "").strip()),
-        )
-        return rows[0] if rows else None
-
-    async def _read_record(self, *, scope: MemoryScope, session_id: str, key: str) -> ScopedMemoryRecord | None:
-        rows = await self._query_records(
-            sql="""
-                SELECT scope, session_id, memory_key, memory_value, metadata_json, created_at, updated_at
-                FROM extension_memory
-                WHERE scope = ? AND session_id = ? AND memory_key = ?
-                LIMIT 1
-                """,
-            args=(scope, session_id, str(key or "").strip()),
-        )
-        return rows[0] if rows else None
-
-    async def _query_records(self, *, sql: str, args: tuple[Any, ...]) -> list[ScopedMemoryRecord]:
-        async with connect_sqlite_wal(self._db_path) as conn:
-            cursor = await conn.execute(sql, args)
-            rows = await cursor.fetchall()
-        return [_row_to_record(tuple(row)) for row in rows]
-
 
 def _bounded_limit(limit: int) -> int:
     return max(1, min(200, int(limit)))
@@ -438,3 +288,14 @@ def _parse_metadata(payload: Any) -> dict[str, Any]:
     if isinstance(decoded, dict):
         return {str(key): value for key, value in decoded.items()}
     return {}
+
+
+def _required_record(row, *, scope):
+    if row is None:
+        code = (
+            "E_SCOPED_MEMORY_EPISODIC_WRITE_READBACK_FAILED"
+            if scope == "episodic_memory"
+            else "E_SCOPED_MEMORY_WRITE_READBACK_FAILED"
+        )
+        raise RuntimeError(code)
+    return _row_to_record(row)

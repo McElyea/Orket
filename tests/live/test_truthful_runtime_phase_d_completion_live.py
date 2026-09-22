@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -94,10 +95,11 @@ async def test_phase_d_live_companion_governed_memory_context_filters_stale_rows
 
     profile_rows = await store.list_profile(limit=10)
     episodic_rows = await store.query_episodic(session_id="phase-d-live", query="", limit=10)
+    observed_at = datetime.now(UTC)
     context = "\n".join(
         [
-            *render_scoped_memory_rows(profile_rows, prefix="profile"),
-            *render_scoped_memory_rows(episodic_rows, prefix="episodic"),
+            *render_scoped_memory_rows(profile_rows, prefix="profile", observed_at=observed_at),
+            *render_scoped_memory_rows(episodic_rows, prefix="episodic", observed_at=observed_at),
         ]
     )
 
@@ -121,7 +123,7 @@ async def test_phase_d_live_reference_context_rendering_filters_stale_project_me
     await store.remember("Stale decision note", {"type": "decision", "stale_at": "2000-01-01T00:00:00+00:00"})
 
     results = await store.search("decision", limit=10)
-    rendered = render_reference_context_rows(results)
+    rendered = render_reference_context_rows(results, observed_at=datetime.now(UTC))
 
     print(
         "[live][phase-d][reference-context] "

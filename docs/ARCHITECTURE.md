@@ -250,6 +250,14 @@ a finite application-selected budget. Incomplete receipts retain reconciliation;
 native CLI cleanup is not Docker resource absence. Migration and limits:
 `docs/architecture/CONTRACT_DELTA_SANDBOX_COMMAND_OWNERSHIP_D_2026-09-21.md`.
 
+Memory services capture nested metadata, lexical database roots and explicit UTC
+observations. Side-effecting repositories own native effects; profile policy,
+publication and readback share one writer transaction. Namespaced facts require
+explicit correction, and stale unchanged-value metadata is refused. Admitted
+writes may commit before cancellation returns. Classifiers/renderers require
+timezone-aware `observed_at`. Migration, legacy parity and ownership limits:
+`docs/architecture/CONTRACT_DELTA_MEMORY_STATE_D_2026-09-21.md`.
+
 Driver async creation captures root, environment and settings before owned
 construction; direct synchronous construction refuses an event-loop thread.
 API chat and interactive CLI use shared runtime owners. Console reads settle

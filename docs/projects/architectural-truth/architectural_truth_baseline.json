@@ -1,6 +1,6 @@
 {
   "schema_version": "architectural_truth.baseline.v1",
-  "generated_at": "2026-09-22T01:50:08.530388Z",
+  "generated_at": "2026-09-22T02:40:47.932938Z",
   "collection_ok": true,
   "release_ready": false,
   "release_ready_reason": "Active architectural exceptions and red/noisy proof gates remain.",
@@ -313,7 +313,7 @@
           "forwarded_arguments": 2
         }
       ],
-      "files_scanned": 1114,
+      "files_scanned": 1117,
       "scan_roots": [
         "orket"
       ],
@@ -322,7 +322,7 @@
         {
           "source": "adapters",
           "target": "adapters",
-          "count": 237
+          "count": 241
         },
         {
           "source": "adapters",
@@ -332,17 +332,17 @@
         {
           "source": "application",
           "target": "adapters",
-          "count": 416
+          "count": 420
         },
         {
           "source": "application",
           "target": "application",
-          "count": 1730
+          "count": 1733
         },
         {
           "source": "application",
           "target": "core",
-          "count": 757
+          "count": 761
         },
         {
           "source": "application",
@@ -535,10 +535,10 @@
   },
   "test_taxonomy": {
     "schema_version": "test_taxonomy_report.v1",
-    "tests_total": 5558,
-    "missing_layer_total": 3971,
+    "tests_total": 5579,
+    "missing_layer_total": 3992,
     "by_layer": {
-      "unlabeled": 3971,
+      "unlabeled": 3992,
       "integration": 750,
       "unit": 163,
       "contract": 663,
@@ -1146,16 +1146,16 @@
         "layer": null
       }
     ],
-    "missing_layers_omitted": 3871
+    "missing_layers_omitted": 3892
   },
   "ruff": {
     "proof": "structural_lint",
     "executed": true,
     "exit_code": 1,
-    "issues_total": 79,
+    "issues_total": 78,
     "by_code": {
       "B905": 2,
-      "F401": 6,
+      "F401": 5,
       "I001": 7,
       "PTH108": 1,
       "SIM118": 1,
@@ -1168,8 +1168,8 @@
   },
   "size_inventory": {
     "proof": "structural_ast",
-    "python_files_scanned": 1114,
-    "files_over_400_total": 57,
+    "python_files_scanned": 1117,
+    "files_over_400_total": 56,
     "functions_over_70_total": 203,
     "largest_files": [
       {
@@ -1546,69 +1546,6 @@
     "parse_errors": []
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-21T15:09:02.310581Z",
-      "changed": true,
-      "before_digest": "sha256:91f1343b71bd8587a9ea84db3cb31ea8f22b86d2bd85f39f602e855a8a18f377",
-      "after_digest": "sha256:c33efd36ca207a3697fafcece76a3a17415f2440cc2b16e778be0f2916b67c40",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 24,
-        "initial_write": false,
-        "paths_total_previous": 2331,
-        "paths_total_current": 2331,
-        "paths_total_reference": 2331,
-        "churn_paths": 24,
-        "churn_ratio": 0.010296,
-        "sample_paths": [
-          "$.dependency_graph.observed.files_scanned",
-          "$.dependency_graph.observed.layer_edges[2].count",
-          "$.dependency_graph.observed.layer_edges[9].count",
-          "$.dependency_graph.observed.layer_edges[10].count",
-          "$.generated_at",
-          "$.noop_critical_paths.scanned_files",
-          "$.size_inventory.files_over_400_total",
-          "$.size_inventory.functions_over_70_total",
-          "$.size_inventory.largest_functions[18].line",
-          "$.size_inventory.largest_functions[18].lines",
-          "$.size_inventory.largest_functions[18].name",
-          "$.size_inventory.largest_functions[18].path",
-          "$.size_inventory.largest_functions[19].line",
-          "$.size_inventory.largest_functions[19].lines",
-          "$.size_inventory.largest_functions[19].name",
-          "$.size_inventory.largest_functions[19].path",
-          "$.size_inventory.largest_functions[20].line",
-          "$.size_inventory.largest_functions[20].name",
-          "$.size_inventory.largest_functions[20].path",
-          "$.size_inventory.python_files_scanned"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-21T15:36:46.701920Z",
-      "changed": true,
-      "before_digest": "sha256:c33efd36ca207a3697fafcece76a3a17415f2440cc2b16e778be0f2916b67c40",
-      "after_digest": "sha256:f5fa91e781176e7f5a926748f76f1be41aff314cab86e3ecd194e00922b8f4fb",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 5,
-        "initial_write": false,
-        "paths_total_previous": 2331,
-        "paths_total_current": 2331,
-        "paths_total_reference": 2331,
-        "churn_paths": 5,
-        "churn_ratio": 0.002145,
-        "sample_paths": [
-          "$.generated_at",
-          "$.test_taxonomy.by_layer.unlabeled",
-          "$.test_taxonomy.missing_layer_total",
-          "$.test_taxonomy.missing_layers_omitted",
-          "$.test_taxonomy.tests_total"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-21T15:53:30.402360Z",
       "changed": true,
@@ -2260,6 +2197,59 @@
       "changed": true,
       "before_digest": "sha256:2664cff1e85c3308e28c3591a5f0c9a03c522d6c0991fa9fa64f853c953e1eff",
       "after_digest": "sha256:6050c25b3c214d94f837a0452961031fa8ff4c8d3a7ff23318b174ac87d881b8",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 2331,
+        "paths_total_current": 2331,
+        "paths_total_reference": 2331,
+        "churn_paths": 1,
+        "churn_ratio": 0.000429,
+        "sample_paths": [
+          "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T02:31:45.519893Z",
+      "changed": true,
+      "before_digest": "sha256:6050c25b3c214d94f837a0452961031fa8ff4c8d3a7ff23318b174ac87d881b8",
+      "after_digest": "sha256:f921275d166cd3501628669866d60e77f4d008c34cb090b229020f14894fe1aa",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 14,
+        "initial_write": false,
+        "paths_total_previous": 2331,
+        "paths_total_current": 2331,
+        "paths_total_reference": 2331,
+        "churn_paths": 14,
+        "churn_ratio": 0.006006,
+        "sample_paths": [
+          "$.dependency_graph.observed.files_scanned",
+          "$.dependency_graph.observed.layer_edges[0].count",
+          "$.dependency_graph.observed.layer_edges[2].count",
+          "$.dependency_graph.observed.layer_edges[3].count",
+          "$.dependency_graph.observed.layer_edges[4].count",
+          "$.generated_at",
+          "$.ruff.by_code.F401",
+          "$.ruff.issues_total",
+          "$.size_inventory.files_over_400_total",
+          "$.size_inventory.python_files_scanned",
+          "$.test_taxonomy.by_layer.unlabeled",
+          "$.test_taxonomy.missing_layer_total",
+          "$.test_taxonomy.missing_layers_omitted",
+          "$.test_taxonomy.tests_total"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T02:40:47.935057Z",
+      "changed": true,
+      "before_digest": "sha256:f921275d166cd3501628669866d60e77f4d008c34cb090b229020f14894fe1aa",
+      "after_digest": "sha256:c82ce8e6ccbb5fe70d97603db869c13eaed1b32ee8ebd1f9221403b5294d6c1e",
       "diff": {
         "added_paths": 0,
         "removed_paths": 0,

@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-22T01:38:23.198702+00:00",
+  "generated_at": "2026-09-22T02:30:49.481361+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -531,6 +531,10 @@
         "path": "orket/adapters/storage/outward_store_transaction.py",
         "sha256": "6553d278484985d28ad2ee920ce79e4543cc703bf2602ac11fc7d6cf50a26113"
       },
+      "orket.adapters.storage.project_memory_repository": {
+        "path": "orket/adapters/storage/project_memory_repository.py",
+        "sha256": "e1dd6e9378c9cd04fd85b88a66273ff6dbb75c13921a2038d8fa56d6493949c8"
+      },
       "orket.adapters.storage.prompt_asset_store": {
         "path": "orket/adapters/storage/prompt_asset_store.py",
         "sha256": "12ea850f2008dda7f89b0ca249a83642f017b2f2567cd6df00b6345e172cf128"
@@ -574,6 +578,10 @@
       "orket.adapters.storage.sandbox_lifecycle_row_serialization": {
         "path": "orket/adapters/storage/sandbox_lifecycle_row_serialization.py",
         "sha256": "e33d408a726464d15829ab219fb76738c10b28b5e741e5ca4d3ce307ce040587"
+      },
+      "orket.adapters.storage.scoped_memory_repository": {
+        "path": "orket/adapters/storage/scoped_memory_repository.py",
+        "sha256": "de345eaf29b1cf25f5dd99175e414bcd94fe3b2dbe3d1b8097a3327b57388175"
       },
       "orket.adapters.storage.sdk_workload_exchange": {
         "path": "orket/adapters/storage/sdk_workload_exchange.py",
@@ -1085,7 +1093,7 @@
       },
       "orket.application.services.extension_runtime_service": {
         "path": "orket/application/services/extension_runtime_service.py",
-        "sha256": "efa55eba3797280a2eacabe8550d50118c6d9d860975a1d15b88ded27c9b9b05"
+        "sha256": "18d16f1ad17678cdca2e940bfb79dfd96e7ef8373c9d3b52d452840352b89517"
       },
       "orket.application.services.extension_runtime_support": {
         "path": "orket/application/services/extension_runtime_support.py",
@@ -1465,7 +1473,7 @@
       },
       "orket.application.services.orchestrator_prompt_preparation_service": {
         "path": "orket/application/services/orchestrator_prompt_preparation_service.py",
-        "sha256": "6fc0449d733bb402ce720de23c72307ae2c47ff392d71388a0062820c188ce6d"
+        "sha256": "4162f49518b38ba361a0850fe58f464e141c8225793d17a59fdd4cb1467408ba"
       },
       "orket.application.services.orchestrator_review_preflight_service": {
         "path": "orket/application/services/orchestrator_review_preflight_service.py",
@@ -1873,7 +1881,7 @@
       },
       "orket.application.services.sdk_memory_provider": {
         "path": "orket/application/services/sdk_memory_provider.py",
-        "sha256": "de8ef4f72c3743f4e8930ac35f428f1f1807554a588cea564b5f9553ce2a2bb2"
+        "sha256": "fb3be729c2343615686b414ed4165910f4b7c666aa8350dd2fedb46732ad6519"
       },
       "orket.application.services.setup_service": {
         "path": "orket/application/services/setup_service.py",
@@ -2318,6 +2326,10 @@
       "orket.core.contracts.local_prompting": {
         "path": "orket/core/contracts/local_prompting.py",
         "sha256": "c91436b7eaf3ea8e420a999b36cb82c39e124fcbe3b7727d48fd11ab4c587cb8"
+      },
+      "orket.core.contracts.memory_inputs": {
+        "path": "orket/core/contracts/memory_inputs.py",
+        "sha256": "f1c23024472bfb7b837051fae7d65998601ce3cc711ba7552510f076992a5e34"
       },
       "orket.core.contracts.memory_models": {
         "path": "orket/core/contracts/memory_models.py",
@@ -4125,7 +4137,7 @@
       },
       "orket.runtime.policy.truthful_memory_policy": {
         "path": "orket/runtime/policy/truthful_memory_policy.py",
-        "sha256": "30dc3a45e1de94c18277629efd1e81cc6f2a7d4466dc71e07ef76d6aea3e52ea"
+        "sha256": "4482d4f3f8fdf363aacbe7baf4c81f8cc33956c3b934d23b8df73395021caf22"
       },
       "orket.runtime.policy.ui_lane_security_boundary_test_contract": {
         "path": "orket/runtime/policy/ui_lane_security_boundary_test_contract.py",
@@ -4481,11 +4493,11 @@
       },
       "orket.services.memory_store": {
         "path": "orket/services/memory_store.py",
-        "sha256": "a9d02ab5bf8788bac28a2c2a69d0bff650e249fee831694e8b050ef2f7100c6f"
+        "sha256": "ace5c26fa1be9d5396faa3cf2d0e29857f8e1fc9a2d698d5e31bf9177384939c"
       },
       "orket.services.profile_write_policy": {
         "path": "orket/services/profile_write_policy.py",
-        "sha256": "4b9d7bb8ed1356b9662aae99b29e40e4d21ef4ad24ceabfb642fac071a68741a"
+        "sha256": "715decc0aad551ac6126080fa7b17d9051f51442db3906498d326b36d1ecc0ce"
       },
       "orket.services.sandbox_orchestrator": {
         "path": "orket/services/sandbox_orchestrator.py",
@@ -4493,7 +4505,7 @@
       },
       "orket.services.scoped_memory_store": {
         "path": "orket/services/scoped_memory_store.py",
-        "sha256": "379e0ab3fdc277f80c0976f1d8bdb16cff01ab7f08ae72d41cda0e3c5f9b6431"
+        "sha256": "2530ea117e248cbb56c0d1e2ee4b62434d947a8d5dee6c6170435d24930a16f2"
       },
       "orket.services.tool_gate": {
         "path": "orket/services/tool_gate.py",
@@ -6423,6 +6435,20 @@
         "kind": "from"
       },
       {
+        "source": "orket.adapters.storage.project_memory_repository",
+        "target": "orket.adapters.execution.owned_io",
+        "path": "orket/adapters/storage/project_memory_repository.py",
+        "line": 10,
+        "kind": "from"
+      },
+      {
+        "source": "orket.adapters.storage.project_memory_repository",
+        "target": "orket.adapters.storage.sqlite_connection",
+        "path": "orket/adapters/storage/project_memory_repository.py",
+        "line": 11,
+        "kind": "from"
+      },
+      {
         "source": "orket.adapters.storage.prompt_asset_store",
         "target": "orket.adapters.storage.driver_resource_store",
         "path": "orket/adapters/storage/prompt_asset_store.py",
@@ -6581,6 +6607,20 @@
         "target": "orket.core.domain.sandbox_lifecycle_records",
         "path": "orket/adapters/storage/sandbox_lifecycle_row_serialization.py",
         "line": 5,
+        "kind": "from"
+      },
+      {
+        "source": "orket.adapters.storage.scoped_memory_repository",
+        "target": "orket.adapters.execution.owned_io",
+        "path": "orket/adapters/storage/scoped_memory_repository.py",
+        "line": 9,
+        "kind": "from"
+      },
+      {
+        "source": "orket.adapters.storage.scoped_memory_repository",
+        "target": "orket.adapters.storage.sqlite_connection",
+        "path": "orket/adapters/storage/scoped_memory_repository.py",
+        "line": 10,
         "kind": "from"
       },
       {
@@ -9744,84 +9784,84 @@
         "source": "orket.application.services.extension_runtime_service",
         "target": "orket.adapters.execution.owned_io",
         "path": "orket/application/services/extension_runtime_service.py",
-        "line": 12,
+        "line": 13,
         "kind": "from"
       },
       {
         "source": "orket.application.services.extension_runtime_service",
         "target": "orket.application.services.api_event_service",
         "path": "orket/application/services/extension_runtime_service.py",
-        "line": 13,
+        "line": 14,
         "kind": "from"
       },
       {
         "source": "orket.application.services.extension_runtime_service",
         "target": "orket.application.services.command_process_supervisor",
         "path": "orket/application/services/extension_runtime_service.py",
-        "line": 14,
+        "line": 15,
         "kind": "from"
       },
       {
         "source": "orket.application.services.extension_runtime_service",
         "target": "orket.application.services.extension_model_catalog",
         "path": "orket/application/services/extension_runtime_service.py",
-        "line": 15,
+        "line": 16,
         "kind": "from"
       },
       {
         "source": "orket.application.services.extension_runtime_service",
         "target": "orket.application.services.sdk_llm_provider",
         "path": "orket/application/services/extension_runtime_service.py",
-        "line": 16,
+        "line": 17,
         "kind": "from"
       },
       {
         "source": "orket.application.services.extension_runtime_service",
         "target": "orket.capabilities.sdk_voice_provider",
         "path": "orket/application/services/extension_runtime_service.py",
-        "line": 17,
+        "line": 18,
         "kind": "from"
       },
       {
         "source": "orket.application.services.extension_runtime_service",
         "target": "orket.capabilities.tts_piper",
         "path": "orket/application/services/extension_runtime_service.py",
-        "line": 18,
+        "line": 19,
         "kind": "from"
       },
       {
         "source": "orket.application.services.extension_runtime_service",
         "target": "orket.core.contracts.provider_runtime",
         "path": "orket/application/services/extension_runtime_service.py",
-        "line": 19,
+        "line": 20,
         "kind": "from"
       },
       {
         "source": "orket.application.services.extension_runtime_service",
         "target": "orket.services.extension_memory_namespace",
         "path": "orket/application/services/extension_runtime_service.py",
-        "line": 20,
+        "line": 21,
         "kind": "from"
       },
       {
         "source": "orket.application.services.extension_runtime_service",
         "target": "orket.services.profile_write_policy",
         "path": "orket/application/services/extension_runtime_service.py",
-        "line": 21,
+        "line": 22,
         "kind": "from"
       },
       {
         "source": "orket.application.services.extension_runtime_service",
         "target": "orket.services.scoped_memory_store",
         "path": "orket/application/services/extension_runtime_service.py",
-        "line": 22,
+        "line": 23,
         "kind": "from"
       },
       {
         "source": "orket.application.services.extension_runtime_service",
         "target": "orket.application.services.extension_runtime_support",
         "path": "orket/application/services/extension_runtime_service.py",
-        "line": 30,
+        "line": 31,
         "kind": "from"
       },
       {
@@ -13144,30 +13184,37 @@
       },
       {
         "source": "orket.application.services.orchestrator_prompt_preparation_service",
-        "target": "orket.application.services.skill_adapter",
+        "target": "orket.application.services.runtime_input_service",
         "path": "orket/application/services/orchestrator_prompt_preparation_service.py",
         "line": 7,
         "kind": "from"
       },
       {
         "source": "orket.application.services.orchestrator_prompt_preparation_service",
-        "target": "orket.core.domain.guard_rule_catalog",
+        "target": "orket.application.services.skill_adapter",
         "path": "orket/application/services/orchestrator_prompt_preparation_service.py",
         "line": 8,
         "kind": "from"
       },
       {
         "source": "orket.application.services.orchestrator_prompt_preparation_service",
-        "target": "orket.runtime.truthful_memory_policy",
+        "target": "orket.core.domain.guard_rule_catalog",
         "path": "orket/application/services/orchestrator_prompt_preparation_service.py",
         "line": 9,
         "kind": "from"
       },
       {
         "source": "orket.application.services.orchestrator_prompt_preparation_service",
-        "target": "orket.schema",
+        "target": "orket.runtime.truthful_memory_policy",
         "path": "orket/application/services/orchestrator_prompt_preparation_service.py",
         "line": 10,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.orchestrator_prompt_preparation_service",
+        "target": "orket.schema",
+        "path": "orket/application/services/orchestrator_prompt_preparation_service.py",
+        "line": 11,
         "kind": "from"
       },
       {
@@ -28074,6 +28121,13 @@
         "kind": "from"
       },
       {
+        "source": "orket.runtime.policy.truthful_memory_policy",
+        "target": "orket.core.contracts.memory_inputs",
+        "path": "orket/runtime/policy/truthful_memory_policy.py",
+        "line": 8,
+        "kind": "from"
+      },
+      {
         "source": "orket.runtime.policy.workspace_hygiene_rules",
         "target": "orket.runtime.contract_schema",
         "path": "orket/runtime/policy/workspace_hygiene_rules.py",
@@ -29097,16 +29151,51 @@
       },
       {
         "source": "orket.services.memory_store",
-        "target": "orket.adapters.storage.sqlite_connection",
+        "target": "orket.adapters.execution.owned_io",
         "path": "orket/services/memory_store.py",
-        "line": 10,
+        "line": 14,
+        "kind": "from"
+      },
+      {
+        "source": "orket.services.memory_store",
+        "target": "orket.adapters.storage.async_file_tools",
+        "path": "orket/services/memory_store.py",
+        "line": 15,
+        "kind": "from"
+      },
+      {
+        "source": "orket.services.memory_store",
+        "target": "orket.adapters.storage.project_memory_repository",
+        "path": "orket/services/memory_store.py",
+        "line": 16,
+        "kind": "from"
+      },
+      {
+        "source": "orket.services.memory_store",
+        "target": "orket.application.services.runtime_input_service",
+        "path": "orket/services/memory_store.py",
+        "line": 17,
+        "kind": "from"
+      },
+      {
+        "source": "orket.services.memory_store",
+        "target": "orket.core.contracts.memory_inputs",
+        "path": "orket/services/memory_store.py",
+        "line": 18,
         "kind": "from"
       },
       {
         "source": "orket.services.memory_store",
         "target": "orket.runtime.truthful_memory_policy",
         "path": "orket/services/memory_store.py",
-        "line": 11,
+        "line": 19,
+        "kind": "from"
+      },
+      {
+        "source": "orket.services.profile_write_policy",
+        "target": "orket.core.contracts.memory_inputs",
+        "path": "orket/services/profile_write_policy.py",
+        "line": 6,
         "kind": "from"
       },
       {
@@ -29321,23 +29410,51 @@
       },
       {
         "source": "orket.services.scoped_memory_store",
-        "target": "orket.adapters.storage.sqlite_connection",
+        "target": "orket.adapters.execution.owned_io",
         "path": "orket/services/scoped_memory_store.py",
         "line": 10,
         "kind": "from"
       },
       {
         "source": "orket.services.scoped_memory_store",
-        "target": "orket.runtime.truthful_memory_policy",
+        "target": "orket.adapters.storage.async_file_tools",
         "path": "orket/services/scoped_memory_store.py",
         "line": 11,
         "kind": "from"
       },
       {
         "source": "orket.services.scoped_memory_store",
-        "target": "orket.services.profile_write_policy",
+        "target": "orket.adapters.storage.scoped_memory_repository",
+        "path": "orket/services/scoped_memory_store.py",
+        "line": 12,
+        "kind": "from"
+      },
+      {
+        "source": "orket.services.scoped_memory_store",
+        "target": "orket.application.services.runtime_input_service",
         "path": "orket/services/scoped_memory_store.py",
         "line": 13,
+        "kind": "from"
+      },
+      {
+        "source": "orket.services.scoped_memory_store",
+        "target": "orket.core.contracts.memory_inputs",
+        "path": "orket/services/scoped_memory_store.py",
+        "line": 14,
+        "kind": "from"
+      },
+      {
+        "source": "orket.services.scoped_memory_store",
+        "target": "orket.runtime.truthful_memory_policy",
+        "path": "orket/services/scoped_memory_store.py",
+        "line": 15,
+        "kind": "from"
+      },
+      {
+        "source": "orket.services.scoped_memory_store",
+        "target": "orket.services.profile_write_policy",
+        "path": "orket/services/scoped_memory_store.py",
+        "line": 17,
         "kind": "from"
       },
       {
@@ -29681,7 +29798,7 @@
         "forwarded_arguments": 2
       }
     ],
-    "files_scanned": 1114,
+    "files_scanned": 1117,
     "scan_roots": [
       "orket"
     ],
@@ -29789,6 +29906,7 @@
       "orket.adapters.storage.outward_run_event_store": "adapters",
       "orket.adapters.storage.outward_run_store": "adapters",
       "orket.adapters.storage.outward_store_transaction": "adapters",
+      "orket.adapters.storage.project_memory_repository": "adapters",
       "orket.adapters.storage.prompt_asset_store": "adapters",
       "orket.adapters.storage.prompt_registry_reader": "adapters",
       "orket.adapters.storage.protocol_append_only_ledger": "adapters",
@@ -29800,6 +29918,7 @@
       "orket.adapters.storage.runtime_store_binding_repository": "adapters",
       "orket.adapters.storage.runtime_store_migration_io": "adapters",
       "orket.adapters.storage.sandbox_lifecycle_row_serialization": "adapters",
+      "orket.adapters.storage.scoped_memory_repository": "adapters",
       "orket.adapters.storage.sdk_workload_exchange": "adapters",
       "orket.adapters.storage.settings_file_store": "adapters",
       "orket.adapters.storage.setup_project_store": "adapters",
@@ -30236,6 +30355,7 @@
       "orket.core.contracts.invocation_timing": "core",
       "orket.core.contracts.local_file_lock": "core",
       "orket.core.contracts.local_prompting": "core",
+      "orket.core.contracts.memory_inputs": "core",
       "orket.core.contracts.memory_models": "core",
       "orket.core.contracts.model_generation_options": "core",
       "orket.core.contracts.model_selection": "core",
@@ -30807,7 +30927,7 @@
       {
         "source": "adapters",
         "target": "adapters",
-        "count": 237
+        "count": 241
       },
       {
         "source": "adapters",
@@ -30817,17 +30937,17 @@
       {
         "source": "application",
         "target": "adapters",
-        "count": 416
+        "count": 420
       },
       {
         "source": "application",
         "target": "application",
-        "count": 1730
+        "count": 1733
       },
       {
         "source": "application",
         "target": "core",
-        "count": 757
+        "count": 761
       },
       {
         "source": "application",
@@ -30874,45 +30994,6 @@
     }
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-21T03:03:39.491898Z",
-      "changed": true,
-      "before_digest": "sha256:348469f4532c30a6e7743ccd58a5479a97aea203b8bea4900270d104d1d9ab1d",
-      "after_digest": "sha256:e886fbb9db17195ad7c206bc1a61011d194a11bafffe3ad67aed59962ccf5d97",
-      "diff": {
-        "added_paths": 4,
-        "removed_paths": 0,
-        "changed_paths": 8726,
-        "initial_write": false,
-        "paths_total_previous": 46737,
-        "paths_total_current": 46781,
-        "paths_total_reference": 46781,
-        "churn_paths": 8730,
-        "churn_ratio": 0.186614,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.edges[577].line",
-          "$.observed.edges[578].line",
-          "$.observed.edges[579].line",
-          "$.observed.edges[580].line",
-          "$.observed.edges[581].line",
-          "$.observed.edges[582].line",
-          "$.observed.edges[583].line",
-          "$.observed.edges[584].line",
-          "$.observed.edges[584].target",
-          "$.observed.edges[585].line",
-          "$.observed.edges[585].path",
-          "$.observed.edges[585].source",
-          "$.observed.edges[585].target",
-          "$.observed.edges[586].line",
-          "$.observed.edges[586].target",
-          "$.observed.edges[587].line",
-          "$.observed.edges[587].target",
-          "$.observed.edges[588].line",
-          "$.observed.edges[588].path"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-21T04:32:59.271395Z",
       "changed": true,
@@ -31836,6 +31917,45 @@
           "$.observed.edges[121].path",
           "$.observed.edges[121].source",
           "$.observed.edges[121].target"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T02:31:11.312100Z",
+      "changed": true,
+      "before_digest": "sha256:da7492ddefd24c7efe34a13d643fd26ae42bf5d50f866eea61c3b02722f8c147",
+      "after_digest": "sha256:3595c50aa61d668c466a8414d993e6c489ac9d6edc1fd6f3a92a8368e0443bb6",
+      "diff": {
+        "added_paths": 21,
+        "removed_paths": 0,
+        "changed_paths": 10723,
+        "initial_write": false,
+        "paths_total_previous": 47533,
+        "paths_total_current": 47719,
+        "paths_total_reference": 47719,
+        "churn_paths": 10744,
+        "churn_ratio": 0.225151,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.edges[263].line",
+          "$.observed.edges[263].path",
+          "$.observed.edges[263].source",
+          "$.observed.edges[263].target",
+          "$.observed.edges[264].line",
+          "$.observed.edges[264].path",
+          "$.observed.edges[264].source",
+          "$.observed.edges[264].target",
+          "$.observed.edges[265].line",
+          "$.observed.edges[265].target",
+          "$.observed.edges[266].line",
+          "$.observed.edges[266].path",
+          "$.observed.edges[266].source",
+          "$.observed.edges[266].target",
+          "$.observed.edges[267].line",
+          "$.observed.edges[267].path",
+          "$.observed.edges[267].source",
+          "$.observed.edges[267].target",
+          "$.observed.edges[268].line"
         ]
       }
     }

@@ -1,11 +1,14 @@
 import asyncio
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 
-import orket.services.memory_store as memory_store_module
+from orket.adapters.storage import sqlite_connection
 from orket.runtime.truthful_memory_policy import render_reference_context_rows
 from orket.services.memory_store import MemoryStore
+
+pytestmark = pytest.mark.integration
 
 
 @pytest.mark.asyncio
@@ -51,7 +54,7 @@ async def test_memory_store_search_exposes_trust_and_filters_stale_context_rende
 
     results = await store.search("note", limit=10)
     assert any(row["trust_level"] == "advisory" for row in results)
-    rendered = render_reference_context_rows(results)
+    rendered = render_reference_context_rows(results, observed_at=datetime.now(UTC))
     assert "Fresh durable note" in rendered
     assert "Stale note" not in rendered
 
@@ -60,13 +63,13 @@ async def test_memory_store_search_exposes_trust_and_filters_stale_context_rende
 async def test_memory_store_initializes_once_under_concurrent_calls(monkeypatch, tmp_path: Path) -> None:
     """Layer: integration. Concurrent first use initializes one real SQLite connection."""
     connects = {"count": 0}
-    original_connect = memory_store_module.aiosqlite.connect
+    original_connect = sqlite_connection.aiosqlite.connect
 
     def _connect(*args, **kwargs):
         connects["count"] += 1
         return original_connect(*args, **kwargs)
 
-    monkeypatch.setattr(memory_store_module.aiosqlite, "connect", _connect)
+    monkeypatch.setattr(sqlite_connection.aiosqlite, "connect", _connect)
     store = MemoryStore(tmp_path / "memory.db")
 
     await asyncio.gather(store._ensure_initialized(), store._ensure_initialized(), store._ensure_initialized())

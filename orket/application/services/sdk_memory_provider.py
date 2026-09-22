@@ -36,7 +36,7 @@ class SQLiteMemoryCapabilityProvider(MemoryProvider):
         profile_write_policy: ProfileWritePolicy | None = None,
         extension_id: str = "",
     ) -> None:
-        self._store = ScopedMemoryStore(db_path.resolve(), profile_write_policy=profile_write_policy)
+        self._store = ScopedMemoryStore(db_path, profile_write_policy=profile_write_policy)
         self._controls = controls or MemoryControls()
         self._extension_id = validate_extension_id(extension_id) if str(extension_id or "").strip() else ""
 
