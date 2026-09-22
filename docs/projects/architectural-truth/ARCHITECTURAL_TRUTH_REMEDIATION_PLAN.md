@@ -12519,8 +12519,8 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.71 owned authorization observation and captured binding inputs, retaining
-the 0.6.65/0.6.66 API queries, 0.6.67 legacy action, 0.6.68 construction,
+0.6.72 captured approval-submission arguments, retaining the 0.6.71 authorization
+observation, 0.6.65/0.6.66 API queries, 0.6.67 legacy action, 0.6.68 construction,
 0.6.69 cleanup and 0.6.70 file-operation checkpoints. Preserve the governed legacy-export cutover;
 continue remaining clock/input owners, adapter enforcement and async reachability before E1/E2
 and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
@@ -20610,3 +20610,75 @@ or configuration snapshot, handle-bound confinement, or CAP-2 admission. Remaini
 core/async input owners, adapter enforcement, E1/E2, whole-suite coverage, hosted
 Quality, .43 Git timeout cause, CAP and explicit lane acceptance remain open.
 Accepted BT evidence and all prior failures are preserved; the lane is not retired.
+
+
+#### .72 Captured approval-submission arguments (2026-09-21)
+
+The public approval-submission entrypoint now copies caller arguments before
+transaction acquisition. Direct transaction submission independently copies them
+before its first storage wait. Nested mutation during writer acquisition, the run
+read or proposal count no longer replaces the preview or authorization arguments
+retained in atomic proposal/run/event publication. Contract and migration:
+`docs/architecture/CONTRACT_DELTA_APPROVAL_SUBMISSION_INPUTS_D_2026-09-21.md`.
+
+The original four-case source control records three failures and one compatibility
+pass, without errors/skips. The failures show changed path and nested content in
+the returned authorization binding. The existing post-writer timestamp behavior
+passes. The repaired focused approval, rollback and binding cohort passes forty
+cases. The same four final cases against the exact locally committed .71 wheel
+again record three failures and the timestamp compatibility pass. All original
+test bytes, storage fixtures and reports remain retained.
+
+The new flow uses actual ASGI admission and SQLite writer/read waits, then checks
+the stored proposal, run queue and pending event plus absence of file effects.
+Clock/model values are controlled fixtures, not provider inference. Whole-module
+AST parity leaves only the deepcopy import and two argument-copy statements as
+runtime changes. Run authority, policy, numbering and time remain sampled inside
+the acquired transaction. Existing rollback, dispatch, claim/intent and effect
+publication owners retain their behavior. The runtime module grows 288 to 291
+lines; its new integration module is 101 lines.
+
+| Cell | Cases / failures / errors / skips | JUnit seconds | Installed origins |
+|---|---|---|---|
+| Source Windows Python 3.11 | 442 / 0 / 0 / 0 | 328.639 | Source run |
+| Installed win-py311 | 442 / 0 / 0 / 0 | 329.737 | 955 |
+| Installed win-py312 | 442 / 0 / 0 / 0 | 378.988 | 955 |
+
+This explicitly selected 61-module cohort covers direct imports, all named
+outward authority/ledger/recovery tests, shared-family authority, the four new
+cases and retained .71 authorization regressions. The structural impact inventory
+is not a complete call graph. The full .71 cohort remains preserved evidence;
+it is not claimed as a fresh complete rerun in this narrower change. All 27
+retained authorization responsiveness observations meet 0.5 seconds; maximum
+0.002715500s. Installed cells verify exact case identities, module origins,
+unchanged support, terminal owned processes and no root database. Scoped Windows
+sleep requests restore without persistent power changes.
+
+New source/wheel/sdist parity covers 1,113 Python files,
+nineteen data resources, 1,132 core members and
+2,224 support inputs. Wheel SHA-256:
+`b41ea5035b7a4687089833d10f1e20688e1c4aa66465d73c7e29e54f874f6370`; sdist SHA-256:
+`a37865042e617739eba3e501b2a251ef71de5dad035b6c36526c806002b8ed15`. Actual dependency policy v2,
+changed-file Ruff, docs hygiene, release metadata and whitespace pass. The graph
+has 1,113 files, 3,570 edges and
+6 bounded dynamic routes, with no violations,
+unknown modules, analysis errors or authority cycles. Canonical Ruff remains 94;
+baseline collection succeeds while release readiness remains false.
+
+The fresh passive Linux gate is blocked/environment blocker. Over
+240.006952s it ends with 18.843389s of synchronized
+quiet time, below the unchanged 60-second requirement. Observed wall-minus-
+monotonic steps range -2.064471381s to
+2.499476152s against the unchanged 0.01-second limit.
+The cause is unestablished. No clock setting or deadline changes, Linux application
+cell, provider inference, or fresh real Gitea/Docker acceptance is claimed here.
+The accepted .71 Gitea matrix and both failures remain retained. Ollama's latest
+availability observation remains .68; the .59 alias-dependent packet1 gap stays
+open without provider substitution.
+
+Evidence: `.tmp/d-approval-submission/`. Local commit and annotated tag only;
+no GitHub push. Arbitrary custom copying/configuration, remaining explicit
+input/async owners and complete adapter enforcement remain outside this scope.
+E1/E2, whole-suite/89% acceptance, hosted Quality, the .43 Git timeout cause,
+CAP and explicit whole-lane acceptance remain open. Accepted BT behavior and
+retained proof are preserved. This checkpoint does not retire the lane.

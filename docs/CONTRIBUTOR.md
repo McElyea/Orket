@@ -203,6 +203,11 @@ its run/argument inputs; dispatch rechecks argument drift after observation.
 Canonical target naming, migration and bounded snapshot/ownership limits:
 `docs/architecture/CONTRACT_DELTA_AUTHORIZATION_INPUTS_D_2026-09-21.md`.
 
+Approval submission captures caller argument values before transaction acquisition
+and direct transaction storage waits. Run policy, numbering and submission time
+remain sampled inside the acquired transaction. Contract and migration:
+`docs/architecture/CONTRACT_DELTA_APPROVAL_SUBMISSION_INPUTS_D_2026-09-21.md`.
+
 Async sandbox-log embeddings pass a bound `SandboxOrchestrator.get_logs` callable
 to `read_runtime_sandbox_logs` and retain ownership of any constructed pipeline.
 Direct synchronous log reads refuse an event-loop thread; the API uses

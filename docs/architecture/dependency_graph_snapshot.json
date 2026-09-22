@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-21T23:46:22.891475+00:00",
+  "generated_at": "2026-09-22T00:37:12.354469+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -1505,7 +1505,7 @@
       },
       "orket.application.services.outward_approval_service": {
         "path": "orket/application/services/outward_approval_service.py",
-        "sha256": "a49693a18bbbab58ad67f6686f74543214b7b02f17dbeb242ebaa2e89f518b00"
+        "sha256": "5207c3f920dd6568afb6fcdacb933c7c9c607fb1f0b9dfc5963781b42e02573c"
       },
       "orket.application.services.outward_authority_migration_evidence": {
         "path": "orket/application/services/outward_authority_migration_evidence.py",
@@ -13520,91 +13520,91 @@
         "source": "orket.application.services.outward_approval_service",
         "target": "orket.adapters.storage.outward_approval_store",
         "path": "orket/application/services/outward_approval_service.py",
-        "line": 9,
+        "line": 10,
         "kind": "from"
       },
       {
         "source": "orket.application.services.outward_approval_service",
         "target": "orket.adapters.storage.outward_run_event_store",
         "path": "orket/application/services/outward_approval_service.py",
-        "line": 10,
+        "line": 11,
         "kind": "from"
       },
       {
         "source": "orket.application.services.outward_approval_service",
         "target": "orket.adapters.storage.outward_run_store",
         "path": "orket/application/services/outward_approval_service.py",
-        "line": 11,
+        "line": 12,
         "kind": "from"
       },
       {
         "source": "orket.application.services.outward_approval_service",
         "target": "orket.adapters.storage.outward_store_transaction",
         "path": "orket/application/services/outward_approval_service.py",
-        "line": 12,
+        "line": 13,
         "kind": "from"
       },
       {
         "source": "orket.application.services.outward_approval_service",
         "target": "orket.adapters.tools.registry",
         "path": "orket/application/services/outward_approval_service.py",
-        "line": 13,
+        "line": 14,
         "kind": "from"
       },
       {
         "source": "orket.application.services.outward_approval_service",
         "target": "orket.application.services.outward_authorization_service",
         "path": "orket/application/services/outward_approval_service.py",
-        "line": 14,
+        "line": 15,
         "kind": "from"
       },
       {
         "source": "orket.application.services.outward_approval_service",
         "target": "orket.application.services.outward_connector_service",
         "path": "orket/application/services/outward_approval_service.py",
-        "line": 15,
+        "line": 16,
         "kind": "from"
       },
       {
         "source": "orket.application.services.outward_approval_service",
         "target": "orket.application.services.outward_control_plane_service",
         "path": "orket/application/services/outward_approval_service.py",
-        "line": 16,
+        "line": 17,
         "kind": "from"
       },
       {
         "source": "orket.application.services.outward_approval_service",
         "target": "orket.application.services.outward_run_lifecycle",
         "path": "orket/application/services/outward_approval_service.py",
-        "line": 17,
+        "line": 18,
         "kind": "from"
       },
       {
         "source": "orket.application.services.outward_approval_service",
         "target": "orket.application.services.outward_terminal_service",
         "path": "orket/application/services/outward_approval_service.py",
-        "line": 18,
+        "line": 19,
         "kind": "from"
       },
       {
         "source": "orket.application.services.outward_approval_service",
         "target": "orket.core.domain.outward_approvals",
         "path": "orket/application/services/outward_approval_service.py",
-        "line": 19,
+        "line": 20,
         "kind": "from"
       },
       {
         "source": "orket.application.services.outward_approval_service",
         "target": "orket.core.domain.outward_run_events",
         "path": "orket/application/services/outward_approval_service.py",
-        "line": 20,
+        "line": 21,
         "kind": "from"
       },
       {
         "source": "orket.application.services.outward_approval_service",
         "target": "orket.core.domain.outward_runs",
         "path": "orket/application/services/outward_approval_service.py",
-        "line": 21,
+        "line": 22,
         "kind": "from"
       },
       {
@@ -30814,45 +30814,6 @@
   },
   "diff_ledger": [
     {
-      "run_at_utc": "2026-09-21T01:52:40.218786Z",
-      "changed": true,
-      "before_digest": "sha256:2c26cbc733da632835fa23ad9d4f84c4ccd705f98b89efd9031edf7238fe17dc",
-      "after_digest": "sha256:d6627ca18b31e5ed1331e6f9d4c63a69ed2702d5999849621ab378d55c7835e1",
-      "diff": {
-        "added_paths": 1,
-        "removed_paths": 0,
-        "changed_paths": 1189,
-        "initial_write": false,
-        "paths_total_previous": 46726,
-        "paths_total_current": 46737,
-        "paths_total_reference": 46737,
-        "churn_paths": 1190,
-        "churn_ratio": 0.025462,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.edges[3062].line",
-          "$.observed.edges[3062].path",
-          "$.observed.edges[3062].source",
-          "$.observed.edges[3062].target",
-          "$.observed.edges[3063].line",
-          "$.observed.edges[3063].target",
-          "$.observed.edges[3064].line",
-          "$.observed.edges[3064].target",
-          "$.observed.edges[3065].line",
-          "$.observed.edges[3065].target",
-          "$.observed.edges[3066].line",
-          "$.observed.edges[3066].target",
-          "$.observed.edges[3067].line",
-          "$.observed.edges[3067].target",
-          "$.observed.edges[3068].line",
-          "$.observed.edges[3068].target",
-          "$.observed.edges[3069].line",
-          "$.observed.edges[3069].target",
-          "$.observed.edges[3070].line"
-        ]
-      }
-    },
-    {
       "run_at_utc": "2026-09-21T02:16:10.428795Z",
       "changed": true,
       "before_digest": "sha256:d6627ca18b31e5ed1331e6f9d4c63a69ed2702d5999849621ab378d55c7835e1",
@@ -31761,6 +31722,40 @@
         "churn_ratio": 2.1e-05,
         "sample_paths": [
           "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T00:37:34.077326Z",
+      "changed": true,
+      "before_digest": "sha256:4b448e81b2014902dc4c76edf2315dc4e74bb22454c118f13d0d2efcd8352273",
+      "after_digest": "sha256:bfe73705120a521370c7373b063062d6d8705d6bb5aeff1cd4d595448d87f99b",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 15,
+        "initial_write": false,
+        "paths_total_previous": 47438,
+        "paths_total_current": 47438,
+        "paths_total_reference": 47438,
+        "churn_paths": 15,
+        "churn_ratio": 0.000316,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.edges[1277].line",
+          "$.observed.edges[1278].line",
+          "$.observed.edges[1279].line",
+          "$.observed.edges[1280].line",
+          "$.observed.edges[1281].line",
+          "$.observed.edges[1282].line",
+          "$.observed.edges[1283].line",
+          "$.observed.edges[1284].line",
+          "$.observed.edges[1285].line",
+          "$.observed.edges[1286].line",
+          "$.observed.edges[1287].line",
+          "$.observed.edges[1288].line",
+          "$.observed.edges[1289].line",
+          "$.observed.modules.orket.application.services.outward_approval_service.sha256"
         ]
       }
     }

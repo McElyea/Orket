@@ -5,6 +5,17 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.72] - 2026-09-21
+
+### Fixed
+- Capture approval arguments before transaction acquisition and direct transaction storage waits.
+- Preserve post-lock run/policy/time sampling and atomic proposal, run and event publication.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Submit intended argument values at invocation; use a new invocation for changed values.
+- Contract and limits: `docs/architecture/CONTRACT_DELTA_APPROVAL_SUBMISSION_INPUTS_D_2026-09-21.md`.
+
 ## [0.6.71] - 2026-09-21
 
 ### Fixed

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from copy import deepcopy
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -60,6 +61,7 @@ class OutwardApprovalService:
         context_summary: str,
         timeout_seconds: int = 300,
     ) -> OutwardApprovalProposal:
+        args = deepcopy(args)
         async with self.unit_of_work.transaction() as transaction:
             return await self.request_in_transaction(
                 transaction, run_id=run_id, tool=tool, args=args, context_summary=context_summary,
@@ -70,6 +72,7 @@ class OutwardApprovalService:
         self, transaction: OutwardStoreTransaction, *, run_id: str, tool: str,
         args: dict[str, Any], context_summary: str, timeout_seconds: int = 300,
     ) -> OutwardApprovalProposal:
+        args = deepcopy(args)
         connector = self.connector_registry.get(tool)
         if connector is None:
             raise OutwardApprovalValidationError(f"approval-required tool is not registered: {tool}")

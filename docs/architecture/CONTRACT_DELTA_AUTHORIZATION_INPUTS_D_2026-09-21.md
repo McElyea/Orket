@@ -46,8 +46,9 @@ claim/intent/publication authority remain with their existing owners.
 Relative-root capture still calls `Path.cwd()` before the first await; its syscall
 latency and custom copy callbacks are outside the measured bound. Capturing path
 values is not an atomic filesystem or configuration snapshot, handle-bound
-confinement, or CAP-2 admission. Earlier awaits in proposal construction, arbitrary
-runtime reconfiguration and other ambient inputs still require their own review.
+confinement, or CAP-2 admission. Earlier approval-submission waits are governed by
+`CONTRACT_DELTA_APPROVAL_SUBMISSION_INPUTS_D_2026-09-21.md`.
+Arbitrary runtime reconfiguration and other ambient inputs require their own review.
 Adapter enforcement, Linux/provider gaps, whole Quality, E1/E2/CAP and explicit
 whole-lane acceptance remain separate obligations.
 

@@ -1,6 +1,6 @@
 {
   "schema_version": "architectural_truth.baseline.v1",
-  "generated_at": "2026-09-22T00:32:05.483408Z",
+  "generated_at": "2026-09-22T01:04:24.252054Z",
   "collection_ok": true,
   "release_ready": false,
   "release_ready_reason": "Active architectural exceptions and red/noisy proof gates remain.",
@@ -535,10 +535,10 @@
   },
   "test_taxonomy": {
     "schema_version": "test_taxonomy_report.v1",
-    "tests_total": 5546,
-    "missing_layer_total": 3959,
+    "tests_total": 5548,
+    "missing_layer_total": 3961,
     "by_layer": {
-      "unlabeled": 3959,
+      "unlabeled": 3961,
       "integration": 750,
       "unit": 163,
       "contract": 663,
@@ -1146,7 +1146,7 @@
         "layer": null
       }
     ],
-    "missing_layers_omitted": 3859
+    "missing_layers_omitted": 3861
   },
   "ruff": {
     "proof": "structural_lint",
@@ -1546,50 +1546,6 @@
     "parse_errors": []
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-21T14:24:45.995476Z",
-      "changed": true,
-      "before_digest": "sha256:10ce0a1ac00b88086787b670a504be719d75b306bc4db14d39dfccfe630c0a4e",
-      "after_digest": "sha256:b38f778688f4e9f3e6ac37f6c4a285dca46dc5579cd93fbfd1c0962441cd8241",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 5,
-        "initial_write": false,
-        "paths_total_previous": 2331,
-        "paths_total_current": 2331,
-        "paths_total_reference": 2331,
-        "churn_paths": 5,
-        "churn_ratio": 0.002145,
-        "sample_paths": [
-          "$.generated_at",
-          "$.test_taxonomy.by_layer.unlabeled",
-          "$.test_taxonomy.missing_layer_total",
-          "$.test_taxonomy.missing_layers_omitted",
-          "$.test_taxonomy.tests_total"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-21T14:31:56.850197Z",
-      "changed": true,
-      "before_digest": "sha256:b38f778688f4e9f3e6ac37f6c4a285dca46dc5579cd93fbfd1c0962441cd8241",
-      "after_digest": "sha256:3ef35f59b09e32a0319c95f0a4672a0b97eee5b35da61827053eae5b8ea9fd13",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 2331,
-        "paths_total_current": 2331,
-        "paths_total_reference": 2331,
-        "churn_paths": 1,
-        "churn_ratio": 0.000429,
-        "sample_paths": [
-          "$.generated_at"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-21T14:40:13.995740Z",
       "changed": true,
@@ -2253,6 +2209,50 @@
       "changed": true,
       "before_digest": "sha256:b32b93777f2ac6a9460be4a269d000db8b95060e7a8e77e6f6792fb1c5d50d74",
       "after_digest": "sha256:ceffb999b8776079aebce3912ae7b37d78934da0281b14de219650c18a773572",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 2331,
+        "paths_total_current": 2331,
+        "paths_total_reference": 2331,
+        "churn_paths": 1,
+        "churn_ratio": 0.000429,
+        "sample_paths": [
+          "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T00:38:07.612831Z",
+      "changed": true,
+      "before_digest": "sha256:ceffb999b8776079aebce3912ae7b37d78934da0281b14de219650c18a773572",
+      "after_digest": "sha256:62fc4d9d2287d8ae620b791ae158246e576d89a6e8fa83d35dd5cde854d29403",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 5,
+        "initial_write": false,
+        "paths_total_previous": 2331,
+        "paths_total_current": 2331,
+        "paths_total_reference": 2331,
+        "churn_paths": 5,
+        "churn_ratio": 0.002145,
+        "sample_paths": [
+          "$.generated_at",
+          "$.test_taxonomy.by_layer.unlabeled",
+          "$.test_taxonomy.missing_layer_total",
+          "$.test_taxonomy.missing_layers_omitted",
+          "$.test_taxonomy.tests_total"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T01:04:24.254232Z",
+      "changed": true,
+      "before_digest": "sha256:62fc4d9d2287d8ae620b791ae158246e576d89a6e8fa83d35dd5cde854d29403",
+      "after_digest": "sha256:86828c106f0b8e9c9231292caecc03ebcaaad3f9d1d20f0f71528866454387b9",
       "diff": {
         "added_paths": 0,
         "removed_paths": 0,
