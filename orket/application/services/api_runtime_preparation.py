@@ -13,9 +13,10 @@ from orket.adapters.execution.owned_io import run_owned_io, run_owned_thread
 from orket.application.services.api_runtime_composition import build_api_runtime_container
 from orket.application.services.api_runtime_container import ApiRuntimeContainer
 from orket.application.services.application_runtime_lifetime import close_owned_resource
+from orket.application.services.outbound_policy_input_service import capture_api_outbound_policy
 from orket.application.services.runtime_construction_inputs import RuntimeConstructionInputs
 from orket.application.services.runtime_input_service import RuntimeInputService
-from orket.kernel.v1.outbound_policy_gate import load_outbound_policy_config_file
+from orket.core.contracts.outbound_policy import OutboundPolicyInputs
 
 LOGGER = logging.getLogger(__name__)
 
@@ -23,7 +24,7 @@ LOGGER = logging.getLogger(__name__)
 @dataclass(frozen=True)
 class PreparedApiRuntime:
     container: ApiRuntimeContainer
-    outbound_policy: dict[str, Any]
+    outbound_policy: OutboundPolicyInputs
 
 
 class ApiRuntimePreparation:
@@ -39,20 +40,19 @@ class ApiRuntimePreparation:
             raise RuntimeError("E_API_RESTART_REQUIRES_NEW_APP")
         self._started = True
         acquired: list[Any] = []
-        completed: list[PreparedApiRuntime] = []
+        completed: list[ApiRuntimeContainer] = []
 
         def construct() -> PreparedApiRuntime:
             self.inputs.bind_settings()
             container = build_api_runtime_container(self.project_root, runtime_inputs=self.runtime_inputs,
                 construction_inputs=self.inputs, own_resource=acquired.append)
             # Capture the completed owner before another preparation step can fail.
-            prepared = PreparedApiRuntime(container, {})
-            completed.append(prepared)
-            prepared.outbound_policy.update(_outbound_policy(container.project_root, self.inputs))
-            return prepared
+            completed.append(container)
+            policy = capture_api_outbound_policy(container.project_root, self.inputs.environment)
+            return PreparedApiRuntime(container, policy)
 
         async def cleanup() -> None:
-            owners = [completed[0].container] if completed else list(reversed(acquired))
+            owners = [completed[0]] if completed else list(reversed(acquired))
             await _close_acquired(owners)
 
         failure: BaseException | None = None
@@ -80,11 +80,6 @@ class ApiRuntimePreparation:
 def build_api_runtime_preparation(project_root: Path, *, inputs: RuntimeConstructionInputs,
                                   runtime_inputs: RuntimeInputService | None = None) -> ApiRuntimePreparation:
     return ApiRuntimePreparation(project_root, inputs=inputs, runtime_inputs=runtime_inputs)
-
-
-def _outbound_policy(project_root: Path, inputs: RuntimeConstructionInputs) -> dict[str, Any]:
-    raw = str(inputs.environment.get("ORKET_OUTBOUND_POLICY_CONFIG_PATH") or "").strip()
-    return dict(load_outbound_policy_config_file(project_root / raw)) if raw else {}
 
 
 async def _close_acquired(resources: list[Any]) -> None:

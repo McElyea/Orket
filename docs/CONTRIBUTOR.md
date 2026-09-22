@@ -105,6 +105,9 @@ project/invocation roots across worker waits and use the selected run-ID port:
 and ledger repair also require native owned execution. Missing staging is a
 no-op, not deletion intent; use explicit tombstones and inspect retained recovery
 directories after failures. See `docs/specs/KERNEL_STATE_EFFECTS.md`.
+Outbound policy-file loading also requires owned native execution. API policy
+is captured during preparation; construct a new app to reconfigure it. Explicit
+policy inputs bypass ambient lookup. See `docs/specs/OUTBOUND_POLICY_INPUTS.md`.
 
 Prompt commands use `python -m orket.interfaces.prompts_cli --root <project> ...`.
 Prompt reads share model-file ownership with writers and can create native lock

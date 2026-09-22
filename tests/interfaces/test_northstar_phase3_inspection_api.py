@@ -52,7 +52,8 @@ async def test_phase3_events_summary_stream_and_gate_are_read_only(tmp_path, mon
     """Layer: integration. Verifies Phase 3 inspection APIs filter, summarize, stream, and stay read-only."""
     calls: list[str] = []
 
-    def _fake_gate(payload: Any, config: dict[str, Any] | None = None) -> tuple[Any, dict[str, Any]]:
+    def _fake_gate(payload: Any, config: dict[str, Any] | None = None, *, policy_inputs=None) -> tuple[Any, dict[str, Any]]:
+        assert policy_inputs is not None
         calls.append(str((config or {}).get("surface") or ""))
         return payload, {"applied": True}
 

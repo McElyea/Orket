@@ -160,7 +160,8 @@ async def test_outward_approval_payloads_traverse_outbound_gate(tmp_path, monkey
     """Layer: contract. Verifies approval list, review, and decision payloads pass through the outbound gate."""
     calls: list[str] = []
 
-    def _fake_gate(payload: Any, config: dict[str, Any] | None = None) -> tuple[Any, dict[str, Any]]:
+    def _fake_gate(payload: Any, config: dict[str, Any] | None = None, *, policy_inputs=None) -> tuple[Any, dict[str, Any]]:
+        assert policy_inputs is not None
         calls.append(str((config or {}).get("surface") or ""))
         return payload, {"applied": True}
 

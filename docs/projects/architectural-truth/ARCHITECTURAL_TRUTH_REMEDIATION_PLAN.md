@@ -12519,8 +12519,9 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.80 captured local Kernel state and owned filesystem effects, retaining
-0.6.79 run identity/workspace inputs, 0.6.78 immutable packaged capability policy,
+0.6.81 immutable outbound policy and owned file observations, retaining
+0.6.80 captured local Kernel state/filesystem effects, 0.6.79 run identity/workspace
+inputs and 0.6.78 immutable packaged capability policy,
 0.6.77 explicit runtime/inputs/shutdown, 0.6.76 state/publication, 0.6.75
 credential expiry/authorization and 0.6.74 memory,
 0.6.73 sandbox commands, 0.6.72 approval submission, 0.6.71 authorization,
@@ -12531,7 +12532,7 @@ and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
 Preserve every failed and
 passing source/native observation and the historical clock diagnosis. Canonical
-Ruff has 89 findings at the .80 checkpoint. The prior stale benchmark expectation passes in the
+Ruff has 89 findings at the .81 checkpoint. The prior stale benchmark expectation passes in the
 new source/native selection. The unmodified published .39 complete rerun has
 7,260 passes, three failures and 89 skips; its coverage is 84.56120595327887%
 against the unchanged 89% gate. The two parent-Git-dependent fixture failures and
@@ -21413,3 +21414,91 @@ through BT-5; explicit user acceptance is required to retire the lane.
 
 Evidence and accepted source/installed manifest: `.tmp/d-kernel-state-effects/`.
 Scoped checkpoint only; no whole-plan completion, release-ready claim or retirement.
+
+
+#### .81 Immutable outbound policy and owned file observations (2026-09-22)
+
+Responsible maintainer: Codex for Orket Core. Continuing D after published .80;
+no new capability admission, whole-plan completion or lane retirement.
+
+Core `OutboundPolicyInputs` owns normalization/defaults, immutable tuples and a
+detached read-only allowed-fields mapping. Existing gate constructors detach their
+borrowed policy values. Explicit `policy_inputs` evaluation uses those values and
+optional config overlays without ambient capture. Application input service owns
+environment capture and selected-file observation through a read-only classified
+adapter. Direct policy-file loads refuse an event-loop thread before I/O and use
+an admitted absolute lexical path. File/read/decode/object-shape failures remain
+failures; invalid regular expressions refuse input admission.
+
+API preparation merges its captured construction environment with the selected
+file, validates before readiness and binds one immutable policy. Responses overlay
+their surface; changing process environment or the file cannot reconfigure an
+already prepared app. Reconfiguration requires a new app. Projection captures one
+policy before its observation callback and uses it for both contexts before
+digesting. Acquired API container ownership survives held reads, cancellation,
+timeout and native failures through cleanup. No global policy cache or silent
+empty-policy fallback was introduced. Public Kernel entrypoints retain one
+canonical implementation of normalization/loading. Filtering, configured-field matching and
+ledger disclosure function ASTs are unchanged from .80; BT-2 redaction continues
+to disclose a verifiable partial ledger rather than altered canonical event bytes.
+
+Live local proof and structural artifact binding:
+
+| Cell | Tests / failures / errors / skips | Pytest seconds | Installed import origins |
+| --- | --- | --- | --- |
+| Fresh source | 781 / 0 / 0 / 0 | 74.696 | source checkout |
+| Installed win-py311 | 781 / 0 / 0 / 0 | 76.228 | 933 |
+| Installed win-py312 | 781 / 0 / 0 / 0 | 86.775 | 933 |
+
+The 88-module selection retains all 740 .80 identities and adds 41 cases: 30 new
+input/observation/ownership cases and 11 existing affected API traversal cases.
+All three cells have identical identities and frozen inputs. Authenticated
+in-process ASGI requests prove independent prepared apps, explicit-empty environment,
+file/environment capture and filtering without rereading. Real selected files,
+invalid/missing observations and acquired container cleanup are exercised. Held
+reads stay owned through repeated cancellation, the existing .02s timeout and
+failure; independent SQLite completes below .5s in all 18 observations per cell,
+maximum 0.015432600s. The 10s fixture holds and all existing deadlines are unchanged.
+No deployed HTTP, inference, outward connector, durable restart, physical-sleep,
+Linux or whole-suite acceptance is inferred. Both Quality jobs select the new
+modules and retained gate tests; hosted execution remains unavailable.
+
+Opening 10/10 counterexamples failed. First repair40, expanded60 and final
+formatted62 focused cases passed. All 10 exact final counterexamples fail on the
+byte-verified installed .80 wheel with zero collection errors or skips. Its first
+control attempt omitted the new test helper, causing one collection error; that
+failed attempt is retained at `prior-installed/`. Separate complete-support proof
+at `prior-installed-complete/` copies and hashes both test and helper. The missing
+helper was also explicitly included in the new frozen native support declaration
+before candidate initialization. No failed artifact or result was overwritten.
+The first formatting/selection helper stopped on one remaining SIM117 finding;
+the combined-context correction and separately named final helper pass. This was
+a structural tooling correction; no behavior assertion or deadline was weakened.
+
+Canonical C passes: 1142 Python files,
+3713 edges, six resolved dynamic routes and zero
+violations/errors/unknown modules/authority cycles. Complete source/wheel/sdist
+parity covers 1142 Python plus the same 20 data files (1162 total), with
+2301 frozen support inputs. Ruff remains 89 existing
+findings, none introduced. Scoped lint, size, docs and release metadata pass.
+Sixteen changed/new Python files are bound to final focused proof. Baseline
+collection remains separate from release readiness; original checkout and retained
+September20/.80 evidence are checked before sealing. Contract and migration:
+`docs/specs/OUTBOUND_POLICY_INPUTS.md` and its matching September22 delta.
+
+Remaining blockers or drift: .72 Linux clock preflight remains an environment
+blocker (240.006951941s observed; final quiet18.843389227s versus60s; steps outside
+.01s; cause unknown). No fresh measurement/settings/deadline change. Continue D's
+complete adapter/effect and async-reachability inventory, shared SDK synchronous
+bridge/global daemon loop/blocking result/shutdown, helper runtimes and remaining
+clock/input owners. This scoped policy work does not establish regex worst-case
+execution bounds, complete PII detection, hostile-path confinement or full legacy
+Kernel integrity/completion semantics. E1 marker/no-op/Ruff/full coverage, E2
+generated authority/history, CAP1 real-model workloads, CAP2 accepted containment
+and CAP3 measured capacity/recovery remain required. Full-suite89%, hosted Gitea
+Quality, Ollama-specific aliases, earlier Git timeout cause and physical-sleep
+timing are unverified. Preserve BT-1 through BT-5. Explicit user acceptance is
+required to retire the lane.
+
+Accepted source/installed manifest and retained evidence:
+`.tmp/d-kernel-outbound-policy/`. Scoped checkpoint only; release readiness remains false.

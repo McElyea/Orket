@@ -48,7 +48,8 @@ def test_v1_response_path_traverses_outbound_policy_gate(monkeypatch: pytest.Mon
     """Layer: contract. Verifies a representative /v1 response calls the outbound policy gate before serialization."""
     calls: list[tuple[Any, dict[str, Any]]] = []
 
-    def _fake_gate(payload: Any, config: dict[str, Any] | None = None) -> tuple[Any, dict[str, Any]]:
+    def _fake_gate(payload: Any, config: dict[str, Any] | None = None, *, policy_inputs=None) -> tuple[Any, dict[str, Any]]:
+        assert policy_inputs is not None
         calls.append((payload, dict(config or {})))
         return payload, {"applied": True}
 

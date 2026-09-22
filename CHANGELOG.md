@@ -5,6 +5,21 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.81] - 2026-09-22
+
+### Fixed
+- Detach outbound gate policy into immutable core values; explicit evaluation uses supplied inputs.
+- Bind captured environment/file policy before API admission and once before Kernel projection observations.
+- Route policy-file reads through a classified native adapter; preserve failures and owned cleanup.
+- Invalid patterns now refuse preparation before API admission.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Construct a new app to change policy; use owned native workers for file loading and an admitted root for relative paths.
+- Supply valid typed values and patterns; do not mutate gate mappings to reconfigure policy.
+- Existing redaction and ledger partial-disclosure rules remain unchanged.
+- Contract: `docs/architecture/CONTRACT_DELTA_OUTBOUND_POLICY_INPUTS_D_2026-09-22.md`.
+
 ## [0.6.80] - 2026-09-22
 
 ### Fixed

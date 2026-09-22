@@ -1,26 +1,23 @@
 from __future__ import annotations
 
-import json
 import re
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import Any
 
-from orket.application.services.kernel_invocation_inputs import capture_kernel_environment
+from orket.application.services.outbound_policy_input_service import (
+    capture_outbound_policy_inputs,
+    load_outbound_policy_config,
+    load_outbound_policy_config_file,
+)
+from orket.core.contracts.outbound_policy import (
+    DEFAULT_SENSITIVE_KEY_TOKENS,
+    OutboundPolicyInputs,
+    merge_outbound_policy_config,
+)
 
 from .nervous_system_leaks import sanitize_text
 
-_DEFAULT_SENSITIVE_KEY_TOKENS = (
-    "api_key",
-    "apikey",
-    "credential",
-    "email",
-    "password",
-    "secret",
-    "ssn",
-    "token",
-)
 _PII_PATTERNS: tuple[re.Pattern[str], ...] = (
     re.compile(r"\b[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}\b"),
 )
@@ -32,7 +29,13 @@ class OutboundPolicyGate:
     forbidden_patterns: tuple[str, ...] = ()
     allowed_output_fields: Mapping[str, tuple[str, ...]] = field(default_factory=dict)
     placeholder: str = "[REDACTED]"
-    sensitive_key_tokens: tuple[str, ...] = _DEFAULT_SENSITIVE_KEY_TOKENS
+    sensitive_key_tokens: tuple[str, ...] = DEFAULT_SENSITIVE_KEY_TOKENS
+
+    def __post_init__(self) -> None:
+        inputs = OutboundPolicyInputs(self.pii_field_paths, self.forbidden_patterns,
+            self.allowed_output_fields, self.placeholder, self.sensitive_key_tokens)
+        for name in ("pii_field_paths", "forbidden_patterns", "allowed_output_fields", "placeholder", "sensitive_key_tokens"):
+            object.__setattr__(self, name, getattr(inputs, name))
 
     def filter(self, event_type: str, payload: dict[str, Any]) -> dict[str, Any]:
         filtered, _report = self.filter_with_report(event_type, payload)
@@ -98,62 +101,19 @@ class OutboundPolicyGate:
         return scrubbed_payload, report
 
 
-def load_outbound_policy_config_file(path: Path | str) -> dict[str, Any]:
-    payload = json.loads(Path(path).read_bytes().decode("utf-8"))
-    if not isinstance(payload, Mapping):
-        raise ValueError("outbound policy config file must contain a JSON object")
-    return dict(payload)
-
-
-def load_outbound_policy_config(config: Mapping[str, Any] | None = None) -> dict[str, Any]:
-    return merge_outbound_policy_config(_environment_policy_config(capture_kernel_environment().values), dict(config or {}))
-
-
-def merge_outbound_policy_config(*configs: Mapping[str, Any] | None) -> dict[str, Any]:
-    merged: dict[str, Any] = {}
-    for config in configs:
-        if not config:
-            continue
-        for key, value in dict(config).items():
-            if key == "allowed_output_fields":
-                current = dict(merged.get(key) or {})
-                current.update(_normalize_allowed_output_fields(value))
-                merged[key] = current
-            elif key in {"pii_field_paths", "redact_paths"}:
-                merged["pii_field_paths"] = _dedupe_tuple((*_string_tuple(merged.get("pii_field_paths")), *_string_tuple(value)))
-            elif key == "forbidden_patterns":
-                merged[key] = _dedupe_tuple((*_string_tuple(merged.get(key)), *_string_tuple(value)))
-            else:
-                merged[key] = value
-    return merged
-
-
-def apply_outbound_policy_gate(payload: Any, config: Mapping[str, Any] | None = None) -> tuple[Any, dict[str, Any]]:
-    gate_config = load_outbound_policy_config(config)
-    event_type = _resolve_event_type(payload, gate_config)
-    gate = OutboundPolicyGate(
-        pii_field_paths=_string_tuple(gate_config.get("pii_field_paths")),
-        forbidden_patterns=_string_tuple(gate_config.get("forbidden_patterns")),
-        allowed_output_fields=_normalize_allowed_output_fields(gate_config.get("allowed_output_fields")),
-        placeholder=str(gate_config.get("placeholder") or "[REDACTED]"),
-        sensitive_key_tokens=tuple(
-            str(token).strip().lower()
-            for token in gate_config.get("sensitive_keys", _DEFAULT_SENSITIVE_KEY_TOKENS)
-            if str(token).strip()
-        ),
-    )
+def apply_outbound_policy_gate(payload: Any, config: Mapping[str, Any] | None = None, *,
+                               policy_inputs: OutboundPolicyInputs | None = None) -> tuple[Any, dict[str, Any]]:
+    if policy_inputs is None:
+        inputs = capture_outbound_policy_inputs(config)
+    else:
+        if not isinstance(policy_inputs, OutboundPolicyInputs):
+            raise TypeError("E_OUTBOUND_POLICY_INPUTS_REQUIRED")
+        inputs = (OutboundPolicyInputs.from_config(merge_outbound_policy_config(policy_inputs.to_config(), config))
+                  if config else policy_inputs)
+    event_type = _resolve_event_type(payload, inputs.to_config())
+    gate = OutboundPolicyGate(inputs.pii_field_paths, inputs.forbidden_patterns, inputs.allowed_output_fields,
+        inputs.placeholder, inputs.sensitive_key_tokens)
     return gate.filter_with_report(event_type, payload)
-
-
-def _environment_policy_config(environ: Mapping[str, str]) -> dict[str, Any]:
-    config: dict[str, Any] = {}
-    if environ.get("ORKET_OUTBOUND_POLICY_PII_FIELD_PATHS"):
-        config["pii_field_paths"] = _split_config_list(str(environ["ORKET_OUTBOUND_POLICY_PII_FIELD_PATHS"]))
-    if environ.get("ORKET_OUTBOUND_POLICY_FORBIDDEN_PATTERNS"):
-        config["forbidden_patterns"] = _split_config_list(str(environ["ORKET_OUTBOUND_POLICY_FORBIDDEN_PATTERNS"]))
-    if environ.get("ORKET_OUTBOUND_POLICY_ALLOWED_OUTPUT_FIELDS"):
-        config["allowed_output_fields"] = json.loads(str(environ["ORKET_OUTBOUND_POLICY_ALLOWED_OUTPUT_FIELDS"]))
-    return config
 
 
 def _resolve_event_type(payload: Any, config: Mapping[str, Any]) -> str:
@@ -180,45 +140,6 @@ def _path_is_configured(path: tuple[str, ...], configured_paths: tuple[str, ...]
         if all(configured_part == "*" or configured_part == actual for configured_part, actual in zip(configured_parts, path, strict=True)):
             return True
     return False
-
-
-def _split_config_list(raw: str) -> tuple[str, ...]:
-    text = str(raw or "").strip()
-    if not text:
-        return ()
-    if text.startswith("["):
-        payload = json.loads(text)
-        return _string_tuple(payload)
-    return _dedupe_tuple(tuple(item.strip() for item in re.split(r"[\n,]", text) if item.strip()))
-
-
-def _string_tuple(value: Any) -> tuple[str, ...]:
-    if value is None:
-        return ()
-    if isinstance(value, str):
-        return (value.strip(),) if value.strip() else ()
-    if isinstance(value, Mapping):
-        return tuple(str(item).strip() for item in value.values() if str(item).strip())
-    try:
-        return tuple(str(item).strip() for item in value if str(item).strip())
-    except TypeError:
-        return (str(value).strip(),) if str(value).strip() else ()
-
-
-def _dedupe_tuple(values: tuple[str, ...]) -> tuple[str, ...]:
-    return tuple(dict.fromkeys(value for value in values if value))
-
-
-def _normalize_allowed_output_fields(value: Any) -> dict[str, tuple[str, ...]]:
-    if value is None:
-        return {}
-    if not isinstance(value, Mapping):
-        raise ValueError("allowed_output_fields must be an object")
-    return {
-        str(event_type).strip(): _string_tuple(fields)
-        for event_type, fields in value.items()
-        if str(event_type).strip()
-    }
 
 
 def _preserve_ledger_export_truth(original: Any, scrubbed: Any) -> tuple[Any, dict[str, Any]]:

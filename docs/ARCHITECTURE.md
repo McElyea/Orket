@@ -322,6 +322,17 @@ crash-atomic transaction and failures are not rollback. Migration and exact scop
 `docs/specs/KERNEL_STATE_EFFECTS.md` and
 `docs/architecture/CONTRACT_DELTA_KERNEL_STATE_EFFECTS_D_2026-09-22.md`.
 
+Outbound policy normalization and immutable values live in core contracts.
+Application capture binds environment and selected file observations before API
+admission; projections capture once before observation callbacks. Explicit policy
+evaluation does not consult ambient environment. Gate mappings are detached;
+policy-file reads require owned native execution through a read-only adapter.
+Invalid file/pattern observations fail visibly and acquired resources close.
+Reconfiguration requires a new app. Existing redaction and ledger disclosure
+rules remain; regex worst-case bounds and complete PII detection are not claimed.
+See `docs/specs/OUTBOUND_POLICY_INPUTS.md` and
+`docs/architecture/CONTRACT_DELTA_OUTBOUND_POLICY_INPUTS_D_2026-09-22.md`.
+
 Driver async creation captures root, environment and settings before owned
 construction; direct synchronous construction refuses an event-loop thread.
 API chat and interactive CLI use shared runtime owners. Console reads settle

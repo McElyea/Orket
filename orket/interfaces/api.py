@@ -82,7 +82,6 @@ from orket.interfaces.routers.settings import build_settings_router
 from orket.interfaces.routers.system import build_system_router
 from orket.kernel.v1.outbound_policy_gate import (
     apply_outbound_policy_gate,
-    merge_outbound_policy_config,
 )
 from orket.settings import load_user_settings_async, save_user_settings_async
 
@@ -512,10 +511,10 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
 
 
 def _filter_operator_payload(payload: _PayloadT, *, surface: str) -> _PayloadT:
-    base_config = dict(getattr(_current_api_app().state, "outbound_policy_config", {}) or {})
     filtered, _report = apply_outbound_policy_gate(
         payload,
-        merge_outbound_policy_config(base_config, {"surface": surface}),
+        {"surface": surface},
+        policy_inputs=_current_api_app().state.outbound_policy_config,
     )
     return cast(_PayloadT, filtered)
 

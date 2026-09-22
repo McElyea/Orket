@@ -51,7 +51,8 @@ async def test_phase4_ledger_export_verify_filter_audit_and_gate(tmp_path, monke
     """Layer: integration. Verifies Phase 4 ledger API export, verification, partial views, audit, and gate traversal."""
     calls: list[str] = []
 
-    def _fake_gate(payload: Any, config: dict[str, Any] | None = None) -> tuple[Any, dict[str, Any]]:
+    def _fake_gate(payload: Any, config: dict[str, Any] | None = None, *, policy_inputs=None) -> tuple[Any, dict[str, Any]]:
+        assert policy_inputs is not None
         calls.append(str((config or {}).get("surface") or ""))
         return payload, {"applied": True}
 

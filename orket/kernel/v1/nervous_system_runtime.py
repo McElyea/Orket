@@ -5,6 +5,7 @@ from typing import Any
 
 from orket.application.services.kernel_action_input_service import capture_kernel_request
 from orket.application.services.kernel_runtime_owner import capture_kernel_observation, current_kernel_runtime
+from orket.application.services.outbound_policy_input_service import capture_outbound_policy_inputs
 from orket.core.contracts.kernel_observation import KernelObservation
 
 from .canonical import digest_of
@@ -35,6 +36,10 @@ from .outbound_policy_gate import apply_outbound_policy_gate
 def projection_pack_v1(request: dict[str, Any], *, observation: KernelObservation | None = None) -> dict[str, Any]:
     require_nervous_system_enabled()
     request = capture_kernel_request(request)
+    outbound_policy_config = request.get("outbound_policy")
+    if outbound_policy_config is not None and not isinstance(outbound_policy_config, dict):
+        raise ValueError("outbound_policy must be an object")
+    outbound_policy = capture_outbound_policy_inputs(outbound_policy_config)
     observed = capture_kernel_observation() if observation is None else observation
     if request.get("contract_version") != CONTRACT_VERSION:
         raise ValueError("contract_version must be kernel_api/v1")
@@ -61,14 +66,9 @@ def projection_pack_v1(request: dict[str, Any], *, observation: KernelObservatio
         tool_context_summary = {}
     if not isinstance(tool_context_summary, dict):
         raise ValueError("tool_context_summary must be an object")
-    outbound_policy_config = request.get("outbound_policy")
-    if outbound_policy_config is not None and not isinstance(outbound_policy_config, dict):
-        raise ValueError("outbound_policy must be an object")
-    policy_context, policy_gate_report = apply_outbound_policy_gate(policy_context, outbound_policy_config)
+    policy_context, policy_gate_report = apply_outbound_policy_gate(policy_context, policy_inputs=outbound_policy)
     tool_context_summary, tool_context_gate_report = apply_outbound_policy_gate(
-        tool_context_summary,
-        outbound_policy_config,
-    )
+        tool_context_summary, policy_inputs=outbound_policy)
 
     contract_digest = digest_of(
         {

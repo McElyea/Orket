@@ -70,7 +70,8 @@ def test_run_api_payloads_traverse_outbound_policy_gate(
     """Layer: contract. Verifies submit, status, and list responses call the outbound gate before serialization."""
     calls: list[str] = []
 
-    def _fake_gate(payload: Any, config: dict[str, Any] | None = None) -> tuple[Any, dict[str, Any]]:
+    def _fake_gate(payload: Any, config: dict[str, Any] | None = None, *, policy_inputs=None) -> tuple[Any, dict[str, Any]]:
+        assert policy_inputs is not None
         calls.append(str((config or {}).get("surface") or ""))
         return payload, {"applied": True}
 
