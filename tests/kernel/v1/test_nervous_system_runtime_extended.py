@@ -1,7 +1,8 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import pytest
 
+from orket.application.services.kernel_runtime_owner import current_kernel_runtime
 from orket.kernel.v1.nervous_system_runtime import admit_proposal_v1, commit_proposal_v1, end_session_v1
 from orket.kernel.v1.nervous_system_runtime_extensions import (
     consume_credential_token_v1,
@@ -11,7 +12,9 @@ from orket.kernel.v1.nervous_system_runtime_extensions import (
     list_approvals_v1,
     rebuild_pending_approvals_v1,
 )
-from orket.kernel.v1.nervous_system_runtime_state import _PENDING_APPROVALS_CACHE, reset_runtime_state_for_tests
+from tests.helpers.kernel_runtime import kernel_runtime as kernel_runtime
+
+pytestmark = pytest.mark.usefixtures("kernel_runtime")
 
 
 @pytest.fixture(autouse=True)
@@ -19,7 +22,6 @@ def _enable_nervous_system(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("ORKET_ENABLE_NERVOUS_SYSTEM", "true")
     monkeypatch.setenv("ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS", "true")
     monkeypatch.setenv("ORKET_USE_TOOL_PROFILE_RESOLVER", "false")
-    reset_runtime_state_for_tests()
 
 
 def _base_request(*, session_id: str, trace_id: str) -> dict[str, str]:
@@ -120,7 +122,7 @@ def test_rebuild_pending_approvals_replays_ledger_as_source_of_truth() -> None:
     )
     approval_id = str(admitted["approval_id"])
 
-    _PENDING_APPROVALS_CACHE["sess-approval-d"] = []
+    current_kernel_runtime().pending_approvals_cache["sess-approval-d"] = []
     rebuilt = rebuild_pending_approvals_v1("sess-approval-d")
     assert len(rebuilt) == 1
     assert rebuilt[0]["approval_id"] == approval_id

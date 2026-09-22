@@ -6,7 +6,7 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 
 from orket.application.services.kernel_action_input_service import capture_kernel_request
-from orket.application.services.kernel_invocation_service import invoke_kernel, own_kernel_publication
+from orket.application.services.kernel_invocation_service import invoke_kernel
 from orket.kernel.v1.nervous_system_runtime_extensions import decide_approval_v1, get_approval_v1, list_approvals_v1
 
 EnrichApproval = Callable[[dict[str, Any]], Awaitable[dict[str, Any]]]
@@ -53,4 +53,14 @@ async def decide_kernel_approval(
             result["approval"] = await enrich(approval)
         return result
 
-    return await own_kernel_publication(operation)
+    return await operation()
+
+
+async def run_engine_approval(engine, operation, /, *args, **kwargs):
+    captured = capture_kernel_request({"args": list(args), "kwargs": kwargs})
+
+    async def admitted():
+        await engine.initialize()
+        return await operation(engine, *captured["args"], **captured["kwargs"])
+
+    return await engine.kernel_runtime_lifetime.invoke(admitted)

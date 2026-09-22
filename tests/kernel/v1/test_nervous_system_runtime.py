@@ -10,6 +10,9 @@ from orket.kernel.v1.nervous_system_runtime import (
     projection_pack_v1,
 )
 from orket.kernel.v1.nervous_system_runtime_extensions import get_session_ledger_events_v1
+from tests.helpers.kernel_runtime import kernel_runtime as kernel_runtime
+
+pytestmark = pytest.mark.usefixtures("kernel_runtime")
 
 
 def _base_request(*, session_id: str, trace_id: str) -> dict[str, str]:

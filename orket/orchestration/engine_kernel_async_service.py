@@ -8,7 +8,8 @@ from orket.application.services.kernel_action_control_plane_support import (
     run_id_for as kernel_action_run_id_for,
 )
 from orket.application.services.kernel_action_input_service import capture_kernel_request
-from orket.application.services.kernel_invocation_service import invoke_kernel, own_kernel_publication
+from orket.application.services.kernel_invocation_service import invoke_kernel
+from orket.application.services.kernel_runtime_lifetime import KernelRuntimeLifetime
 from orket.application.services.tool_approval_control_plane_reservation_service import (
     ToolApprovalControlPlaneReservationService,
 )
@@ -17,6 +18,7 @@ from orket.application.services.tool_approval_control_plane_reservation_service 
 def build_kernel_async_control_plane(engine: Any) -> KernelAsyncControlPlaneService:
     return KernelAsyncControlPlaneService(
         gateway_facade=engine.kernel_gateway_facade,
+        lifetime=engine.kernel_runtime_lifetime,
         kernel_action_control_plane=engine.kernel_action_control_plane,
         kernel_action_control_plane_operator=engine.kernel_action_control_plane_operator,
         kernel_action_control_plane_view=engine.kernel_action_control_plane_view,
@@ -33,6 +35,7 @@ class KernelAsyncControlPlaneService:
         self,
         *,
         gateway_facade: Any,
+        lifetime: KernelRuntimeLifetime,
         kernel_action_control_plane: Any,
         kernel_action_control_plane_operator: Any,
         kernel_action_control_plane_view: Any,
@@ -41,6 +44,7 @@ class KernelAsyncControlPlaneService:
         get_approval: Any,
     ) -> None:
         self.gateway_facade = gateway_facade
+        self.lifetime = lifetime
         self.kernel_action_control_plane = kernel_action_control_plane
         self.kernel_action_control_plane_operator = kernel_action_control_plane_operator
         self.kernel_action_control_plane_view = kernel_action_control_plane_view
@@ -53,15 +57,15 @@ class KernelAsyncControlPlaneService:
 
     async def admit_proposal_async(self, request: dict[str, Any]) -> dict[str, Any]:
         captured = capture_kernel_request(request)
-        return await own_kernel_publication(partial(self._admit_proposal_owned, captured))
+        return await self.lifetime.invoke(partial(self._admit_proposal_owned, captured))
 
     async def commit_proposal_async(self, request: dict[str, Any]) -> dict[str, Any]:
         captured = capture_kernel_request(request)
-        return await own_kernel_publication(partial(self._commit_proposal_owned, captured))
+        return await self.lifetime.invoke(partial(self._commit_proposal_owned, captured))
 
     async def end_session_async(self, request: dict[str, Any]) -> dict[str, Any]:
         captured = capture_kernel_request(request)
-        return await own_kernel_publication(partial(self._end_session_owned, captured))
+        return await self.lifetime.invoke(partial(self._end_session_owned, captured))
 
     async def _augment_kernel_response(
         self,

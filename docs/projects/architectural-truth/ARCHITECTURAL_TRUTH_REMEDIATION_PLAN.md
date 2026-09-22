@@ -12519,10 +12519,11 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.76 Kernel state and async publication ownership, retaining 0.6.75 credential
-expiry/authorization, 0.6.74 memory, 0.6.73 sandbox commands, 0.6.72 approval
-submission, 0.6.71 authorization, 0.6.65/0.6.66 API queries, 0.6.67 legacy
-action, 0.6.68 construction, 0.6.69 cleanup and 0.6.70 files. Preserve the governed legacy-export cutover;
+0.6.77 explicit Kernel runtime, selected inputs and shutdown, retaining 0.6.76
+state/publication, 0.6.75 credential expiry/authorization, 0.6.74 memory,
+0.6.73 sandbox commands, 0.6.72 approval submission, 0.6.71 authorization,
+0.6.65/0.6.66 API queries, 0.6.67 legacy action, 0.6.68 construction,
+0.6.69 cleanup and 0.6.70 files. Preserve the governed legacy-export cutover;
 continue remaining clock/input owners, adapter enforcement and async reachability before E1/E2
 and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
@@ -21023,3 +21024,114 @@ order. Lane retirement still requires explicit user acceptance.
 
 Evidence: `.tmp/d-kernel-state/`; exact committed files and sealed local proof are
 bound by that checkpoint. Scoped Kernel state/publication acceptance only.
+
+
+#### .77 Explicit Kernel runtime, selected inputs and shutdown (2026-09-21)
+
+Each standard engine now owns distinct volatile Kernel state, a native lock,
+selected clock/secret-token/credential-id ports and one publication lifetime.
+Independent application roots cannot read or resolve each other's approvals,
+observe each other's ledger, or commit against each other's admission even when
+session/proposal identifiers coincide. Module-global maps, lock, sequence and
+test-reset fallback are removed. Direct embeddings explicitly create, activate
+and close `KernelRuntime`; unbound and closed owners refuse. Native gateway
+invocation and close refuse a running event loop. Async direct embeddings may use
+`KernelRuntime.open()` and must retain their workers; standard callers use the
+engine's async methods and composed gateway.
+
+`KernelRuntimeLifetime` reuses the existing application lifetime supervisor and
+owned worker/publication helpers. Close stops admission, joins admitted native
+effects and required SQLite publication, then closes the Kernel owner before
+other engine resources. Required same-task nested approval observation continues
+during close; a different child task cannot borrow that admission through copied
+context. Repeated cancellation and timeout retain publication; actual SQLite
+failure remains visible to the invocation and repeated close. Direct native close
+waits on the real lock in a worker while an independent owner's Kernel admission
+and SQLite remain responsive. No new supervisor or global compatibility proxy
+was introduced.
+
+Frozen UTC `KernelObservation` values reach projection, admission, approval,
+commit and session-end event publication. Default composition samples the selected
+owner ports; replacing the original source object's methods cannot replace those
+ports. Two independent owners with identical explicit inputs produce equal real
+state/event chains and digests. Credential consume still captures its key before
+validation and samples default expiry after acquiring the native lock. Existing
+.75/.76 JSON ownership, environment capture, exact authority, successful same-key
+reuse and partial-publication behavior remain. One unchanged pure execution-
+evidence classifier moved to core to keep the touched extension below 400 lines;
+the Kernel-specific approval unit test moved out of its oversized module.
+
+Kernel state remains volatile and is empty on owner replacement. Durable SQLite
+control-plane records are not reconstructed into Kernel state. Partial effects
+and duplicate events after failed publication/retry remain possible. Caller
+execution payloads are observations, not independent connector proof. Trusted
+Python access to an owner is not containment; this does not establish hostile-code
+isolation, OS containment or per-user API authorization.
+
+Proof is live local behavior with controlled inputs/scheduling, plus structural
+binding. Final frozen 58-module acceptance:
+
+| Cell | Tests / failures / errors / skips | Pytest seconds | Installed import origins |
+| --- | --- | --- | --- |
+| Fresh source | 557 / 0 / 0 / 0 | 67.044 | source checkout |
+| Installed win-py311 | 557 / 0 / 0 / 0 | 67.601 | 919 |
+| Installed win-py312 | 557 / 0 / 0 / 0 | 74.750 | 919 |
+
+Cases match across cells and source inputs remain unchanged. Four real independent
+SQLite responsiveness observations per cell remain below 0.5 seconds; measured
+maximum 0.011603300s. Existing fixed holds and deadlines are unchanged. The
+cohort includes affected non-Kernel epic/store approval continuations. Both
+Quality jobs select the new owner/input/close cases; hosted execution is not
+claimed. Six existing isolated script tests per cell (18 total) execute actual
+Kernel effects with controlled fake OpenClaw JSONL child processes and retain
+rerunnable output ledgers. These are not model inference, outward connector,
+deployed HTTP, durable Kernel restart or Linux proof.
+
+All six opening isolation/close probes failed on .76. Repaired six and migrated
+335 passed. The new fourteen boundary/input cases first had one failure because
+approval resolution lacked its explicit observation argument; the completed
+interface passed all fourteen. The selected candidate passed 556; the added
+event-loop gateway refusal passed its 34-case affected cohort before the final
+557-case freeze. The same final six isolation/close tests all fail on a
+byte-verified installed .76 wheel, with no collection error or skip. Original
+failures, inputs, one partially applied edit-helper syntax failure, one trailing
+EOF whitespace rejection and a build attempt from the test environment lacking
+the build frontend are retained. The established build environment succeeds;
+these failures were not discarded or called product acceptance. A closeout
+collector also retained its stale 90-finding assertion: the measured count is
+89 after one earlier finding was removed. Its dependent baseline call refused
+before mutation until this corrected closeout existed.
+
+Canonical C passes: 1129 files,
+3647 edges, six resolved dynamic routes, zero
+violations/analysis errors/unknown modules/authority cycles. Complete source,
+source archive and wheel parity covers 1129 Python plus 19 data files (1148 total),
+with 2265 frozen support inputs. Ruff now has 89 earlier
+findings with no introduced finding; scoped checks, size bounds, docs hygiene and
+release metadata pass. Baseline collection remains distinct from release
+readiness. Retained September20 handoff and .76 checkpoint hashes and original
+checkout preservation are verified separately.
+
+Authority erratum: .76's current planner/router attribution to .48/.49 was wrong.
+Canonical plan/git evidence places immutable planner/router introduction in .46,
+evaluator in .47 and loop-policy expansion in .48. Current ARCHITECTURE, dispatch
+spec and exception register now say so. Earlier sealed proof/history remains
+unchanged. The exception register also no longer describes the six already-
+resolved C dynamic routes as unresolved. Neither correction grants whole-lane
+acceptance.
+
+Remaining blockers or drift: the latest Linux preflight remains the retained .72
+environment blocker (240.006951941s observed, final quiet 18.843389227s versus 60s,
+clock steps outside 0.01s, cause unknown). No fresh Linux application cell,
+clock-setting change or deadline relaxation is claimed. Continue D in canonical
+order: validator filesystem/policy cache and UUID inputs, remaining explicit
+decision inputs, complete adapter/effect and async-reachability inventories,
+shared SDK synchronous bridge lifetime and helper-runtime owners. Then E1 marker/
+no-op/coverage/Ruff work, E2 authority generation/history decomposition and CAP1/2/3
+implementation and acceptance remain. Full-suite 89%, hosted Gitea Quality,
+Ollama-specific alias flows, the earlier Git timeout cause and physical-sleep
+timing are still unverified. Preserve BT-1 through BT-5. Lane retirement requires
+explicit user acceptance.
+
+Evidence: `.tmp/d-kernel-owner/`; the scoped checkpoint binds exact files and
+retained proof. No whole-plan completion or release-ready claim.

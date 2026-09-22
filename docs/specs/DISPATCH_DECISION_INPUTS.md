@@ -1,6 +1,6 @@
 # Dispatch decision input ownership
 
-Status: Active contract since 0.6.48; scoped acceptance recorded in the architectural-truth plan
+Status: Active contract since 0.6.46; evaluator expanded in 0.6.47 and loop policy in 0.6.48; scoped acceptance recorded in the architectural-truth plan
 Owner: Orket Core
 Last updated: 2026-09-21
 

@@ -4,9 +4,9 @@ import threading
 
 import pytest
 
+from orket.application.services.kernel_runtime_owner import KernelRuntime
 from orket.kernel.v1 import nervous_system_runtime_extensions as extensions
 from orket.kernel.v1.nervous_system_runtime import admit_proposal_v1
-from orket.kernel.v1.nervous_system_runtime_state import reset_runtime_state_for_tests
 
 
 @pytest.fixture
@@ -15,11 +15,12 @@ def credential_runtime(monkeypatch):
     monkeypatch.setenv("ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS", "true")
     monkeypatch.setenv("ORKET_USE_TOOL_PROFILE_RESOLVER", "false")
     monkeypatch.setenv("ORKET_NERVOUS_SYSTEM_TOKEN_HMAC_KEY", "credential-fixture-before")
-    reset_runtime_state_for_tests()
+    owner = KernelRuntime()
     try:
-        yield
+        with owner.activate():
+            yield owner
     finally:
-        reset_runtime_state_for_tests()
+        owner.close()
 
 
 def admitted_request(*, session="credential-session", target="first", **flags):

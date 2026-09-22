@@ -5,6 +5,20 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.77] - 2026-09-21
+
+### Fixed
+- Give each engine an explicit Kernel state, native lock, selected input sources and owned publication lifetime.
+- Isolate independent applications and refuse unbound or closed direct Kernel action-path owners.
+- Join admitted Kernel publications before engine cleanup; retain selected clocks, credential identity and failure truth.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Direct Kernel embeddings must create, bind and close a `KernelRuntime`; global test-reset/map surfaces are removed.
+- Custom engine gateways must expose their owned runtime; use engine async calls for owned publication.
+- Kernel state remains volatile; cancellation and publication failure can follow partial effects.
+- Contract: `docs/architecture/CONTRACT_DELTA_KERNEL_RUNTIME_OWNER_D_2026-09-21.md`.
+
 ## [0.6.76] - 2026-09-21
 
 ### Fixed

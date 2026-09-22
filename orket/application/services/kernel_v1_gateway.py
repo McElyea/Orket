@@ -2,56 +2,70 @@ from __future__ import annotations
 
 from typing import Any
 
+from orket.adapters.execution.owned_io import require_sync_context
+from orket.application.services.kernel_runtime_owner import KernelRuntime
+from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.kernel.v1 import api as kernel_api
 
 
 class KernelV1Gateway:
     """Application-facing gateway for the kernel v1 API surface."""
 
+    def __init__(self, *, runtime_inputs: RuntimeInputService | None = None) -> None:
+        self.runtime = KernelRuntime(runtime_inputs=runtime_inputs)
+
+    def close(self) -> None:
+        self.runtime.close()
+
+    def _call(self, operation, request):
+        require_sync_context(code="E_KERNEL_INVOCATION_REQUIRES_ASYNC_OWNER")
+        with self.runtime.activate(), self.runtime.lock:
+            return operation(request)
+
     def start_run(self, request: dict[str, Any]) -> dict[str, Any]:
-        return kernel_api.start_run(request)
+        return self._call(kernel_api.start_run, request)
 
     def execute_turn(self, request: dict[str, Any]) -> dict[str, Any]:
-        return kernel_api.execute_turn(request)
+        return self._call(kernel_api.execute_turn, request)
 
     def finish_run(self, request: dict[str, Any]) -> dict[str, Any]:
-        return kernel_api.finish_run(request)
+        return self._call(kernel_api.finish_run, request)
 
     def resolve_capability(self, request: dict[str, Any]) -> dict[str, Any]:
-        return kernel_api.resolve_capability(request)
+        return self._call(kernel_api.resolve_capability, request)
 
     def authorize_tool_call(self, request: dict[str, Any]) -> dict[str, Any]:
-        return kernel_api.authorize_tool_call(request)
+        return self._call(kernel_api.authorize_tool_call, request)
 
     def replay_run(self, request: dict[str, Any]) -> dict[str, Any]:
-        return kernel_api.replay_run(request)
+        return self._call(kernel_api.replay_run, request)
 
     def compare_runs(self, request: dict[str, Any]) -> dict[str, Any]:
-        return kernel_api.compare_runs(request)
+        return self._call(kernel_api.compare_runs, request)
 
     def projection_pack(self, request: dict[str, Any]) -> dict[str, Any]:
-        return kernel_api.projection_pack(request)
+        return self._call(kernel_api.projection_pack, request)
 
     def admit_proposal(self, request: dict[str, Any]) -> dict[str, Any]:
-        return kernel_api.admit_proposal(request)
+        return self._call(kernel_api.admit_proposal, request)
 
     def commit_proposal(self, request: dict[str, Any]) -> dict[str, Any]:
-        return kernel_api.commit_proposal(request)
+        return self._call(kernel_api.commit_proposal, request)
 
     def end_session(self, request: dict[str, Any]) -> dict[str, Any]:
-        return kernel_api.end_session(request)
+        return self._call(kernel_api.end_session, request)
 
     def list_ledger_events(self, request: dict[str, Any]) -> dict[str, Any]:
-        return kernel_api.list_ledger_events(request)
+        return self._call(kernel_api.list_ledger_events, request)
 
     def rebuild_pending_approvals(self, request: dict[str, Any]) -> dict[str, Any]:
-        return kernel_api.rebuild_pending_approvals(request)
+        return self._call(kernel_api.rebuild_pending_approvals, request)
 
     def replay_action_lifecycle(self, request: dict[str, Any]) -> dict[str, Any]:
-        return kernel_api.replay_action_lifecycle(request)
+        return self._call(kernel_api.replay_action_lifecycle, request)
 
     def audit_action_lifecycle(self, request: dict[str, Any]) -> dict[str, Any]:
-        return kernel_api.audit_action_lifecycle(request)
+        return self._call(kernel_api.audit_action_lifecycle, request)
 
     def run_lifecycle(
         self,

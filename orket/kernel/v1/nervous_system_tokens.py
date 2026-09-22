@@ -7,6 +7,7 @@ from copy import deepcopy
 from datetime import datetime, timedelta
 from typing import Any
 
+from orket.application.services.kernel_runtime_owner import current_kernel_runtime
 from orket.core.contracts.kernel_credentials import (
     CredentialBinding,
     CredentialIssueInputs,
@@ -20,7 +21,6 @@ from orket.core.contracts.kernel_credentials import (
 )
 
 from .nervous_system_contract import canonical_scope_digest, tool_profile_digest
-from .nervous_system_runtime_state import _RUNTIME_LOCK, _TOKENS_BY_HASH
 
 AppendEventFn = Callable[..., dict[str, Any]]
 
@@ -40,6 +40,7 @@ def issue_credential_token(
     executor_instance_id: str | None = None,
     expires_in_seconds: int = 900,
 ) -> dict[str, Any]:
+    owner = current_kernel_runtime()
     if not isinstance(inputs, CredentialIssueInputs):
         raise TypeError("E_CREDENTIAL_ISSUE_INPUTS_REQUIRED")
     scope_json, tool_profile_definition = deepcopy(scope_json), deepcopy(tool_profile_definition)
@@ -48,12 +49,12 @@ def issue_credential_token(
     token_hash = credential_hash(inputs.raw_token, inputs)
     token_id_h = credential_id_hash(inputs.token_id)
     scope_digest, profile_digest = canonical_scope_digest(scope_json), tool_profile_digest(tool_profile_definition)
-    with _RUNTIME_LOCK:
-        if token_hash in _TOKENS_BY_HASH or any(
-            record.get("token_id_hash") == token_id_h for record in _TOKENS_BY_HASH.values()
+    with owner.lock:
+        if token_hash in owner.tokens_by_hash or any(
+            record.get("token_id_hash") == token_id_h for record in owner.tokens_by_hash.values()
         ):
             raise ValueError("E_CREDENTIAL_IDENTITY_REUSE")
-        _TOKENS_BY_HASH[token_hash] = {
+        owner.tokens_by_hash[token_hash] = {
             "token_id_hash": token_id_h,
             "session_id": session_id,
             "trace_id": trace_id,
@@ -113,6 +114,7 @@ def consume_credential_token(
     executor_instance_id: str | None = None,
     expected_tool_profile_digest: str | None = None,
 ) -> dict[str, Any]:
+    owner = current_kernel_runtime()
     if not isinstance(inputs, CredentialObservation):
         raise TypeError("E_CREDENTIAL_OBSERVATION_REQUIRED")
     normalized_raw = str(raw_token or "").strip()
@@ -129,8 +131,8 @@ def consume_credential_token(
         str(expected_tool_profile_digest or ""),
     )
     observed_at = inputs.observed_at.isoformat()
-    with _RUNTIME_LOCK:
-        record = _TOKENS_BY_HASH.get(token_hash)
+    with owner.lock:
+        record = owner.tokens_by_hash.get(token_hash)
         if not record:
             return {"ok": False, "reason_code": "TOKEN_INVALID"}
         reason = credential_refusal(_record_view(record), binding, inputs)
@@ -189,10 +191,11 @@ def invalidate_tokens_for_proposal(*, session_id: str, proposal_digest: str, rea
 
 
 def _invalidate(*, session_id, proposal_digest, reason, observed_at) -> int:
+    owner = current_kernel_runtime()
     timestamp = credential_observation_time(observed_at).isoformat()
     invalidated = 0
-    with _RUNTIME_LOCK:
-        for record in _TOKENS_BY_HASH.values():
+    with owner.lock:
+        for record in owner.tokens_by_hash.values():
             if str(record.get("session_id") or "") != session_id or record.get("invalidated_at"):
                 continue
             if proposal_digest is not None and str(record.get("proposal_digest") or "") != proposal_digest:

@@ -54,7 +54,7 @@ not accepted as target-architecture conformance.
 1. Dependency layering exceptions:
    1. Dependency analysis recognizes six bounded extension-loading/import-interception routes by inspecting their guards, bindings and forwarding bodies. Unknown routes still fail. Current source/installed acceptance belongs to the architectural-truth plan; core purity and runtime ownership remain separate C/D obligations.
 2. Decision-node purity exceptions:
-   1. Covered planning/routing strategies consume frozen `PlanningInput`/`RoutingInput` values; application dispatch owns model inspection and maps recommendations back to admitted records (`docs/specs/DISPATCH_DECISION_INPUTS.md`, .48/.49 scoped proof in the architectural-truth plan). Complete decision-node and adapter-effect classification remains open. Loop limits now consume immutable explicit values; application owns registry selection, executable tool bindings, provider construction and organization overrides. API authentication, observed paths, board loading and calendar inputs now belong to application services; API strategy retains request/presentation recommendations. API/engine/pipeline construction, env bootstrap, and session-id minting on the touched runtime paths also live in explicit services.
+   1. Covered planning/routing strategies consume frozen `PlanningInput`/`RoutingInput` values; application dispatch owns model inspection and maps recommendations back to admitted records (`docs/specs/DISPATCH_DECISION_INPUTS.md`, .46 planner/router, .47 evaluator and .48 loop-policy scoped proof in the architectural-truth plan). Complete decision-node and adapter-effect classification remains open. Loop limits now consume immutable explicit values; application owns registry selection, executable tool bindings, provider construction and organization overrides. API authentication, observed paths, board loading and calendar inputs now belong to application services; API strategy retains request/presentation recommendations. API/engine/pipeline construction, env bootstrap, and session-id minting on the touched runtime paths also live in explicit services.
 3. API runtime composition:
    1. `create_api_app()` returns a distinct FastAPI transport with captured construction inputs. Its lifespan acquires the application-owned `ApiRuntimeContainer`, runtime state, host, engine, decision node, outbound-policy snapshot, stream/interaction/extension owners and outward stores/services through an owned preparation worker. HTTP/WebSocket admission requires completed initialization and retains ownership through streaming and awaited connectors. Shutdown waits for active invocation cleanup before resources and engine. The 0.6.39 construction transition and its scoped source/installed verification limits live in `docs/specs/API_RUNTIME_LIFECYCLE.md` and the canonical architectural-truth plan.
    2. `orket/interfaces/api.py` is import-pure with respect to FastAPI/runtime owners: it exports no module-default app or mutable owner aliases and constructs no application, adapter, decision-node, kernel, or orchestration implementation. Production callers use `orket.interfaces.runtime_entrypoints.create_api_app(...)` and retain the returned app.
@@ -278,6 +278,19 @@ environment before worker admission and shares it with nested workers.
 Partial effects can survive publication failure or cancellation; Kernel maps
 are still process-local, without durable transactions or restart recovery.
 Contract, scoped proof and migration: `docs/architecture/CONTRACT_DELTA_KERNEL_STATE_OWNERSHIP_D_2026-09-21.md`.
+
+Each standard engine now owns an explicit volatile Kernel runtime: its state,
+native lock and clock/credential-identity ports belong to that engine. Independent
+applications do not share Kernel authority even with equal session identifiers.
+The existing application lifetime supervisor retains admitted Kernel publication
+before engine resources close; new admission refuses during or after close.
+Direct embeddings explicitly bind and close `KernelRuntime`; unbound calls
+refuse. Immutable event-time observations replace low-level ambient clock reads.
+No default global maps, reset hook or proxy fallback selects a runtime. Selected
+credential consumption time is still sampled after native lock acquisition.
+Volatile state, partial failure and trusted-Python limits remain; this is not
+durable recovery, hostile-code isolation or per-user authorization.
+Migration and proof scope: `docs/architecture/CONTRACT_DELTA_KERNEL_RUNTIME_OWNER_D_2026-09-21.md`.
 
 Driver async creation captures root, environment and settings before owned
 construction; direct synchronous construction refuses an event-loop thread.

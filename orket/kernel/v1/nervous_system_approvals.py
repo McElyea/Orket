@@ -3,15 +3,10 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any
 
+from orket.application.services.kernel_runtime_owner import current_kernel_runtime
+
 from .canonical import digest_of
-from .nervous_system_runtime_state import (
-    _APPROVALS_BY_ID,
-    _LEDGER_BY_SESSION,
-    _PENDING_APPROVALS_CACHE,
-    _RUNTIME_LOCK,
-    append_event,
-    utc_iso_now,
-)
+from .nervous_system_runtime_state import append_event
 
 APPROVAL_STATUSES = (
     "PENDING",
@@ -63,13 +58,15 @@ def create_approval_request(
     proposal_digest: str,
     decision_digest: str,
     reason_codes: list[str],
+    created_at: str,
 ) -> dict[str, Any]:
+    owner = current_kernel_runtime()
     reason_codes = deepcopy(reason_codes)
     approval_id = _approval_id(session_id, proposal_digest, decision_digest)
-    now = utc_iso_now()
+    now = created_at
 
-    with _RUNTIME_LOCK:
-        existing = _APPROVALS_BY_ID.get(approval_id)
+    with owner.lock:
+        existing = owner.approvals_by_id.get(approval_id)
         if existing is not None:
             return deepcopy(existing)
 
@@ -88,13 +85,14 @@ def create_approval_request(
             "updated_at": now,
             "resolved_at": None,
         }
-        _APPROVALS_BY_ID[approval_id] = approval
+        owner.approvals_by_id[approval_id] = approval
 
         append_event(
             session_id=session_id,
             trace_id=trace_id,
             request_id=request_id,
             event_type="approval.requested",
+            created_at=now,
             body={
                 "approval_id": approval_id,
                 "proposal_digest": proposal_digest,
@@ -107,9 +105,10 @@ def create_approval_request(
 
 
 def rebuild_pending_approvals(session_id: str) -> list[dict[str, Any]]:
+    owner = current_kernel_runtime()
     pending: list[dict[str, Any]] = []
-    with _RUNTIME_LOCK:
-        events = list(_LEDGER_BY_SESSION.get(session_id, []))
+    with owner.lock:
+        events = list(owner.ledger_by_session.get(session_id, []))
         rebuilt: dict[str, dict[str, Any]] = {}
         for event in events:
             body = event.get("body")
@@ -120,7 +119,7 @@ def rebuild_pending_approvals(session_id: str) -> list[dict[str, Any]]:
                 approval_id = str(body.get("approval_id") or "").strip()
                 if not approval_id:
                     continue
-                existing = _APPROVALS_BY_ID.get(approval_id)
+                existing = owner.approvals_by_id.get(approval_id)
                 base: dict[str, Any] = {
                     "approval_id": approval_id,
                     "request_id": approval_id,
@@ -151,7 +150,7 @@ def rebuild_pending_approvals(session_id: str) -> list[dict[str, Any]]:
                 approval_id = str(body.get("approval_id") or "").strip()
                 if not approval_id:
                     continue
-                current = rebuilt.get(approval_id) or deepcopy(_APPROVALS_BY_ID.get(approval_id) or {})
+                current = rebuilt.get(approval_id) or deepcopy(owner.approvals_by_id.get(approval_id) or {})
                 if not current:
                     continue
                 current["status"] = _normalize_status(str(body.get("status") or "PENDING"))
@@ -162,16 +161,16 @@ def rebuild_pending_approvals(session_id: str) -> list[dict[str, Any]]:
                 rebuilt[approval_id] = current
 
         for approval_id, record in rebuilt.items():
-            _APPROVALS_BY_ID[approval_id] = record
+            owner.approvals_by_id[approval_id] = record
             if str(record.get("status") or "") == "PENDING":
                 pending.append(deepcopy(record))
-        _PENDING_APPROVALS_CACHE[session_id] = sorted(
+        owner.pending_approvals_cache[session_id] = sorted(
             pending,
             key=lambda row: (str(row.get("created_at") or ""), str(row.get("approval_id") or "")),
             reverse=True,
         )
 
-        return deepcopy(_PENDING_APPROVALS_CACHE.get(session_id, []))
+        return deepcopy(owner.pending_approvals_cache.get(session_id, []))
 
 
 def list_approvals(
@@ -181,17 +180,18 @@ def list_approvals(
     request_id: str | None,
     limit: int,
 ) -> list[dict[str, Any]]:
+    owner = current_kernel_runtime()
     status_filter = _normalize_status(status) if status else None
     request_filter = str(request_id or "").strip()
 
-    with _RUNTIME_LOCK:
+    with owner.lock:
         if session_id:
             rebuild_pending_approvals(session_id)
         else:
-            for sid in sorted(_LEDGER_BY_SESSION.keys()):
+            for sid in sorted(owner.ledger_by_session.keys()):
                 rebuild_pending_approvals(sid)
 
-        rows = [deepcopy(item) for item in _APPROVALS_BY_ID.values()]
+        rows = [deepcopy(item) for item in owner.approvals_by_id.values()]
 
     if session_id:
         rows = [row for row in rows if row.get("session_id") == session_id]
@@ -205,11 +205,12 @@ def list_approvals(
 
 
 def get_approval(approval_id: str) -> dict[str, Any] | None:
+    owner = current_kernel_runtime()
     normalized = str(approval_id or "").strip()
     if not normalized:
         return None
-    with _RUNTIME_LOCK:
-        row = _APPROVALS_BY_ID.get(normalized)
+    with owner.lock:
+        row = owner.approvals_by_id.get(normalized)
         return deepcopy(row) if row is not None else None
 
 
@@ -219,7 +220,9 @@ def decide_approval(
     decision: str,
     edited_proposal: dict[str, Any] | None,
     notes: str | None,
+    observed_at: str,
 ) -> dict[str, Any]:
+    owner = current_kernel_runtime()
     normalized_id = str(approval_id or "").strip()
     if not normalized_id:
         raise ValueError("approval not found")
@@ -232,8 +235,8 @@ def decide_approval(
     if note_text:
         resolution["notes"] = note_text
 
-    with _RUNTIME_LOCK:
-        existing = _APPROVALS_BY_ID.get(normalized_id)
+    with owner.lock:
+        existing = owner.approvals_by_id.get(normalized_id)
         if not existing:
             raise ValueError("approval not found")
 
@@ -245,19 +248,20 @@ def decide_approval(
                 return {"status": "idempotent", "approval": deepcopy(existing)}
             raise RuntimeError("approval already resolved with a conflicting decision")
 
-        now = utc_iso_now()
+        now = observed_at
         existing["status"] = target_status
         existing["resolution"] = deepcopy(resolution)
         existing["updated_at"] = now
         if target_status != "PENDING":
             existing["resolved_at"] = now
-        _APPROVALS_BY_ID[normalized_id] = existing
+        owner.approvals_by_id[normalized_id] = existing
 
         append_event(
             session_id=str(existing.get("session_id") or ""),
             trace_id=str(existing.get("trace_id") or ""),
             request_id=existing.get("request_ref"),
             event_type="approval.decided",
+            created_at=now,
             body={
                 "approval_id": normalized_id,
                 "proposal_digest": str(existing.get("proposal_digest") or ""),
@@ -268,7 +272,7 @@ def decide_approval(
         )
 
         rebuild_pending_approvals(str(existing.get("session_id") or ""))
-        return {"status": "resolved", "approval": deepcopy(_APPROVALS_BY_ID[normalized_id])}
+        return {"status": "resolved", "approval": deepcopy(owner.approvals_by_id[normalized_id])}
 
 
 __all__ = [

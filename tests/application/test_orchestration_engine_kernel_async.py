@@ -14,6 +14,8 @@ from orket.application.services.kernel_action_control_plane_service import Kerne
 from orket.application.services.kernel_action_control_plane_view_service import (
     KernelActionControlPlaneViewService,
 )
+from orket.application.services.kernel_runtime_lifetime import KernelRuntimeLifetime
+from orket.application.services.kernel_runtime_owner import KernelRuntime
 from orket.orchestration.engine import OrchestrationEngine
 from orket.orchestration.engine_kernel_async_service import KernelAsyncControlPlaneService
 from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
@@ -71,8 +73,10 @@ def _make_engine(*, facade: _FakeKernelGatewayFacade) -> OrchestrationEngine:
         record_repository=record_repo,
         execution_repository=execution_repo,
     )
+    engine.kernel_runtime_lifetime = KernelRuntimeLifetime(KernelRuntime())
     engine.kernel_gateway_facade = facade
     engine.kernel_async_control_plane = KernelAsyncControlPlaneService(
+        lifetime=engine.kernel_runtime_lifetime,
         gateway_facade=facade,
         kernel_action_control_plane=engine.kernel_action_control_plane,
         kernel_action_control_plane_operator=engine.kernel_action_control_plane_operator,

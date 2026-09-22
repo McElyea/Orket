@@ -8,6 +8,7 @@ from datetime import UTC, datetime, timedelta
 import pytest
 
 from orket.application.services.kernel_credential_input_service import capture_credential_observation
+from orket.application.services.kernel_runtime_owner import current_kernel_runtime
 from orket.core.contracts.kernel_credentials import CredentialIssueInputs, CredentialObservation
 from orket.kernel.v1 import nervous_system_runtime_extensions as extensions
 from orket.kernel.v1 import nervous_system_runtime_state as state
@@ -36,7 +37,7 @@ def test_explicit_issue_consume_and_event_time_ignore_later_environment(monkeypa
     observed = CredentialObservation(observed_at=NOW + timedelta(seconds=1), hmac_key=inputs.hmac_key)
     result = extensions.consume_credential_token_v1(consume_request(request, issued), inputs=observed)
     assert result["ok"]
-    record = state._TOKENS_BY_HASH[issued["token_hash"]]
+    record = current_kernel_runtime().tokens_by_hash[issued["token_hash"]]
     events = [
         row
         for row in state.list_events_for_session(request["session_id"])
@@ -59,11 +60,11 @@ def test_identity_reuse_cannot_overwrite_a_used_credential(identity):
         if identity == "token"
         else replace(inputs, raw_token="different-token")
     )
-    before = json.dumps(state._TOKENS_BY_HASH, sort_keys=True)
+    before = json.dumps(current_kernel_runtime().tokens_by_hash, sort_keys=True)
     events = state.list_events_for_session(request["session_id"])
     with pytest.raises(ValueError, match="E_CREDENTIAL_IDENTITY_REUSE"):
         extensions.issue_credential_token_v1(request, inputs=again)
-    assert json.dumps(state._TOKENS_BY_HASH, sort_keys=True) == before
+    assert json.dumps(current_kernel_runtime().tokens_by_hash, sort_keys=True) == before
     assert state.list_events_for_session(request["session_id"]) == events
     assert (
         extensions.consume_credential_token_v1(consume_request(request, issued), inputs=inputs)["reason_code"]
@@ -87,7 +88,7 @@ def test_explicit_invalidation_retains_time_and_cannot_be_replayed(kind):
         )
         == 0
     )
-    assert state._TOKENS_BY_HASH[issued["token_hash"]]["invalidated_at"] == observed.isoformat()
+    assert current_kernel_runtime().tokens_by_hash[issued["token_hash"]]["invalidated_at"] == observed.isoformat()
     assert (
         extensions.consume_credential_token_v1(consume_request(request, issued), inputs=inputs)["reason_code"]
         == "TOKEN_INVALID"
@@ -121,8 +122,8 @@ def test_event_failure_remains_visible_without_resetting_credential_state(monkey
         else:
             extensions.consume_credential_token_v1(consume_request(request, issued), inputs=inputs)
     assert state.list_events_for_session(request["session_id"]) == events
-    assert len(state._TOKENS_BY_HASH) == 1
-    record = next(iter(state._TOKENS_BY_HASH.values()))
+    assert len(current_kernel_runtime().tokens_by_hash) == 1
+    record = next(iter(current_kernel_runtime().tokens_by_hash.values()))
     if operation == "issue":
         assert record["used_at"] is None
         with pytest.raises(ValueError, match="E_CREDENTIAL_IDENTITY_REUSE"):
@@ -140,7 +141,7 @@ def test_expiry_refusal_preserves_record_and_event_semantics(condition):
     _, request = admitted_request()
     inputs = explicit_inputs()
     issued = extensions.issue_credential_token_v1(request, inputs=inputs)
-    record = state._TOKENS_BY_HASH[issued["token_hash"]]
+    record = current_kernel_runtime().tokens_by_hash[issued["token_hash"]]
     # Controlled existing-record faults exercise the actual public consume path.
     prior_time = (NOW - timedelta(seconds=1)).isoformat()
     if condition == "malformed":

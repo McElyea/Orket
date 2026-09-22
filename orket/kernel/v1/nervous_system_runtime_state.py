@@ -1,36 +1,15 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from datetime import UTC, datetime
-from threading import RLock
 from typing import Any, Literal, overload
 
 from orket.application.services.kernel_action_input_service import capture_kernel_request
+from orket.application.services.kernel_runtime_owner import current_kernel_runtime
 
 from .canonical import digest_of
 from .nervous_system_contract import GENESIS_STATE_DIGEST
 
 CONTRACT_VERSION = "kernel_api/v1"
-
-_RUNTIME_LOCK = RLock()
-
-_NEXT_LEDGER_ID = 1
-_SESSION_EVENT_HEADS: dict[str, str] = {}
-_SESSION_CANONICAL_STATE: dict[str, str] = {}
-_LEDGER_BY_SESSION: dict[str, list[dict[str, Any]]] = {}
-_EVENTS_BY_DIGEST: dict[str, dict[str, Any]] = {}
-
-_ADMISSIONS_BY_PROPOSAL: dict[tuple[str, str], dict[str, Any]] = {}
-_COMMIT_RESULTS_BY_KEY: dict[tuple[str, str, str, str, str | None, str | None], dict[str, Any]] = {}
-
-_APPROVALS_BY_ID: dict[str, dict[str, Any]] = {}
-_PENDING_APPROVALS_CACHE: dict[str, list[dict[str, Any]]] = {}
-
-_TOKENS_BY_HASH: dict[str, dict[str, Any]] = {}
-
-
-def utc_iso_now() -> str:
-    return datetime.now(UTC).isoformat()
 
 
 @overload
@@ -57,13 +36,15 @@ def normalized_optional_str(value: Any) -> str:
 
 
 def get_current_canonical_state_digest(session_id: str) -> str:
-    with _RUNTIME_LOCK:
-        return _SESSION_CANONICAL_STATE.get(session_id, GENESIS_STATE_DIGEST)
+    owner = current_kernel_runtime()
+    with owner.lock:
+        return owner.session_canonical_state.get(session_id, GENESIS_STATE_DIGEST)
 
 
 def set_current_canonical_state_digest(session_id: str, canonical_state_digest: str) -> None:
-    with _RUNTIME_LOCK:
-        _SESSION_CANONICAL_STATE[session_id] = canonical_state_digest
+    owner = current_kernel_runtime()
+    with owner.lock:
+        owner.session_canonical_state[session_id] = canonical_state_digest
 
 
 def append_event(
@@ -73,16 +54,15 @@ def append_event(
     event_type: str,
     body: dict[str, Any],
     request_id: str | None = None,
-    created_at: str | None = None,
+    created_at: str,
 ) -> dict[str, Any]:
-    global _NEXT_LEDGER_ID
 
+    owner = current_kernel_runtime()
     body = capture_kernel_request(body)
-    created_at = utc_iso_now() if created_at is None else created_at
-    with _RUNTIME_LOCK:
-        previous = _SESSION_EVENT_HEADS.get(session_id)
+    with owner.lock:
+        previous = owner.session_event_heads.get(session_id)
         event = {
-            "id": _NEXT_LEDGER_ID,
+            "id": owner.next_ledger_id,
             "contract_version": CONTRACT_VERSION,
             "session_id": session_id,
             "trace_id": trace_id,
@@ -93,20 +73,21 @@ def append_event(
             "body": body,
         }
         event_digest = digest_of(event)
-        if event_digest in _EVENTS_BY_DIGEST:
+        if event_digest in owner.events_by_digest:
             raise RuntimeError("event_digest collision detected")
         event["event_digest"] = event_digest
 
-        _NEXT_LEDGER_ID += 1
-        _LEDGER_BY_SESSION.setdefault(session_id, []).append(event)
-        _EVENTS_BY_DIGEST[event_digest] = event
-        _SESSION_EVENT_HEADS[session_id] = event_digest
+        owner.next_ledger_id += 1
+        owner.ledger_by_session.setdefault(session_id, []).append(event)
+        owner.events_by_digest[event_digest] = event
+        owner.session_event_heads[session_id] = event_digest
         return deepcopy(event)
 
 
 def list_events_for_session(session_id: str) -> list[dict[str, Any]]:
-    with _RUNTIME_LOCK:
-        return deepcopy(_LEDGER_BY_SESSION.get(session_id, []))
+    owner = current_kernel_runtime()
+    with owner.lock:
+        return deepcopy(owner.ledger_by_session.get(session_id, []))
 
 
 def has_admission_event(
@@ -115,7 +96,8 @@ def has_admission_event(
     proposal_digest: str,
     admission_decision_digest: str,
 ) -> bool:
-    for event in _LEDGER_BY_SESSION.get(session_id, []):
+    owner = current_kernel_runtime()
+    for event in owner.ledger_by_session.get(session_id, []):
         if event.get("event_type") != "admission.decided":
             continue
         body = event.get("body")
@@ -130,34 +112,13 @@ def has_admission_event(
 
 
 def list_session_ids() -> list[str]:
-    with _RUNTIME_LOCK:
-        return sorted(_LEDGER_BY_SESSION.keys())
-
-
-def reset_runtime_state_for_tests() -> None:
-    global _NEXT_LEDGER_ID
-    with _RUNTIME_LOCK:
-        _NEXT_LEDGER_ID = 1
-        _SESSION_EVENT_HEADS.clear()
-        _SESSION_CANONICAL_STATE.clear()
-        _LEDGER_BY_SESSION.clear()
-        _EVENTS_BY_DIGEST.clear()
-        _ADMISSIONS_BY_PROPOSAL.clear()
-        _COMMIT_RESULTS_BY_KEY.clear()
-        _APPROVALS_BY_ID.clear()
-        _PENDING_APPROVALS_CACHE.clear()
-        _TOKENS_BY_HASH.clear()
+    owner = current_kernel_runtime()
+    with owner.lock:
+        return sorted(owner.ledger_by_session.keys())
 
 
 __all__ = [
     "CONTRACT_VERSION",
-    "_ADMISSIONS_BY_PROPOSAL",
-    "_APPROVALS_BY_ID",
-    "_COMMIT_RESULTS_BY_KEY",
-    "_LEDGER_BY_SESSION",
-    "_PENDING_APPROVALS_CACHE",
-    "_RUNTIME_LOCK",
-    "_TOKENS_BY_HASH",
     "append_event",
     "get_current_canonical_state_digest",
     "get_str",
@@ -165,7 +126,5 @@ __all__ = [
     "list_events_for_session",
     "list_session_ids",
     "normalized_optional_str",
-    "reset_runtime_state_for_tests",
     "set_current_canonical_state_digest",
-    "utc_iso_now",
 ]

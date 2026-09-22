@@ -90,7 +90,11 @@ routes synchronous Kernel work through application-owned workers. Retain the
 caller until required publication settles, including cancellation or timeout.
 Cancellation can follow an effect; inspect retained state before retrying.
 Owned JSON/environment and partial-publication limits live in
-`docs/specs/KERNEL_PUBLICATION_INPUTS.md`.
+`docs/specs/KERNEL_PUBLICATION_INPUTS.md`. Direct action-path embeddings must
+create and bind an explicit `KernelRuntime` and close it after related calls;
+async direct embeddings use `KernelRuntime.open()` and retain any workers they
+start. Engine callers use the engine-owned gateway/runtime and async methods.
+Do not restore global-map or test-reset defaults to migrate a caller.
 
 Prompt commands use `python -m orket.interfaces.prompts_cli --root <project> ...`.
 Prompt reads share model-file ownership with writers and can create native lock

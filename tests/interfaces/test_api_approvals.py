@@ -28,7 +28,6 @@ from orket.core.domain import (
     ResidualUncertaintyClassification,
     ResultClass,
 )
-from orket.kernel.v1.nervous_system_runtime_state import reset_runtime_state_for_tests
 from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
 from tests.application.test_engine_approvals import (
     _FakePendingGates,
@@ -162,7 +161,6 @@ def test_approvals_endpoints_real_nervous_system_flow(monkeypatch) -> None:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setenv("ORKET_ENABLE_NERVOUS_SYSTEM", "true")
     monkeypatch.setenv("ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS", "true")
-    reset_runtime_state_for_tests()
     repository = InMemoryControlPlaneRecordRepository()
     publication = ControlPlanePublicationService(repository=repository)
     monkeypatch.setattr(api_module._get_engine(client.app), "control_plane_repository", repository, raising=False)

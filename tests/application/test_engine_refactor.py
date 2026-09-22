@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+from orket.application.services.kernel_runtime_owner import KernelRuntime
 from orket.orchestration.engine import OrchestrationEngine
 from orket.runtime.runtime_context import OrketRuntimeContext
 
@@ -48,6 +49,7 @@ class _FakeLoader:
 
 class _FakeKernelGateway:
     def __init__(self):
+        self.runtime = KernelRuntime()
         self.calls = []
 
     def start_run(self, request):

@@ -8,6 +8,8 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from orket.application.services.kernel_action_input_service import capture_kernel_request
+from orket.application.services.kernel_runtime_owner import capture_kernel_observation, current_kernel_runtime
+from orket.core.contracts.kernel_observation import KernelObservation
 
 from .canonical import digest_of
 from .nervous_system_authorization import authorization_refusal_for_admission
@@ -15,9 +17,6 @@ from .nervous_system_contract import COMMIT_STATUSES_V1, ordered_reason_codes_v1
 from .nervous_system_leaks import find_leak_hits, sanitize_text
 from .nervous_system_policy import require_nervous_system_enabled
 from .nervous_system_runtime_state import (
-    _ADMISSIONS_BY_PROPOSAL,
-    _COMMIT_RESULTS_BY_KEY,
-    _RUNTIME_LOCK,
     CONTRACT_VERSION,
     append_event,
     get_current_canonical_state_digest,
@@ -38,7 +37,8 @@ class CommitObservation:
     validation_performed: bool = False
 
 
-def commit_proposal_v1(request: dict[str, Any]) -> dict[str, Any]:
+def commit_proposal_v1(request: dict[str, Any], *, observation: KernelObservation | None = None) -> dict[str, Any]:
+    owner = current_kernel_runtime()
     require_nervous_system_enabled()
     request = capture_kernel_request(request)
     if request.get("contract_version") != CONTRACT_VERSION:
@@ -52,10 +52,11 @@ def commit_proposal_v1(request: dict[str, Any]) -> dict[str, Any]:
     result_digest = normalized_optional_str(request.get("execution_result_digest"))
     key = (session_id, trace_id, proposal_digest, decision_digest, approval_id, result_digest)
     event_context = dict(session_id=session_id, trace_id=trace_id, request_id=request_id)
-    with _RUNTIME_LOCK:
-        existing = _COMMIT_RESULTS_BY_KEY.get(key)
+    with owner.lock:
+        existing = owner.commit_results_by_key.get(key)
         if existing is not None:
             return deepcopy(existing)
+        event_context["created_at"] = (capture_kernel_observation() if observation is None else observation).timestamp
         observed = CommitObservation(sanitization_digest=normalized_optional_str(request.get("sanitization_digest")))
         try:
             _evaluate_commit(request, observed, event_context, proposal_digest, decision_digest, approval_id)
@@ -89,13 +90,14 @@ def commit_proposal_v1(request: dict[str, Any]) -> dict[str, Any]:
         )
         if observed.sanitization_digest:
             response["sanitization_digest"] = observed.sanitization_digest
-        _COMMIT_RESULTS_BY_KEY[key] = deepcopy(response)
+        owner.commit_results_by_key[key] = deepcopy(response)
         return response
 
 
 def _evaluate_commit(request, observed, event_context, proposal_digest, decision_digest, approval_id) -> None:
+    owner = current_kernel_runtime()
     session_id = event_context["session_id"]
-    admission = _ADMISSIONS_BY_PROPOSAL.get((session_id, proposal_digest))
+    admission = owner.admissions_by_proposal.get((session_id, proposal_digest))
     if (
         not admission
         or admission.get("decision_digest") != decision_digest

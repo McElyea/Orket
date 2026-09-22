@@ -14,6 +14,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from orket.adapters.execution import OpenClawJsonlSubprocessAdapter  # noqa: E402
+from orket.application.services.kernel_runtime_owner import KernelRuntime, capture_kernel_observation  # noqa: E402
 from orket.kernel.v1.nervous_system_runtime import (  # noqa: E402
     admit_proposal_v1,
     commit_proposal_v1,
@@ -25,7 +26,6 @@ from orket.kernel.v1.nervous_system_runtime_extensions import (  # noqa: E402
     get_session_ledger_events_v1,
     issue_credential_token_v1,
 )
-from orket.kernel.v1.nervous_system_runtime_state import reset_runtime_state_for_tests, utc_iso_now  # noqa: E402
 from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger  # noqa: E402
 
 REQUIRED_EVENT_TYPES = [
@@ -260,7 +260,6 @@ async def _run_torture(corpus_path: Path) -> dict[str, Any]:
     os.environ["ORKET_ENABLE_NERVOUS_SYSTEM"] = "true"
     os.environ["ORKET_USE_TOOL_PROFILE_RESOLVER"] = "true"
     os.environ.pop("ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS", None)
-    reset_runtime_state_for_tests()
 
     cases = _load_corpus(corpus_path)
     requests = [
@@ -299,7 +298,7 @@ async def _run_torture(corpus_path: Path) -> dict[str, Any]:
         and item["commit_status_match"]
     ]
     return {
-        "generated_at": utc_iso_now(),
+        "generated_at": capture_kernel_observation().timestamp,
         "policy_flag_mode": "resolver_canonical",
         "corpus_path": corpus_path.as_posix(),
         "adapter_run": {
@@ -331,7 +330,8 @@ def _parse_args() -> argparse.Namespace:
 async def main() -> int:
     args = _parse_args()
     corpus_path = Path(args.corpus)
-    artifact = await _run_torture(corpus_path)
+    async with KernelRuntime.open():
+        artifact = await _run_torture(corpus_path)
 
     output_path = Path(args.out)
     await asyncio.to_thread(write_payload_with_diff_ledger, output_path, artifact)

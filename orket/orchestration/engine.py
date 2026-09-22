@@ -10,6 +10,7 @@ from orket.adapters.storage.async_repositories import (
     AsyncSuccessRepository,
 )
 from orket.application.services.decision_node_registry import DecisionNodeRegistry, build_decision_node_registry
+from orket.application.services.kernel_runtime_lifetime import KernelRuntimeLifetime
 from orket.application.services.kernel_v1_gateway import KernelV1Gateway
 from orket.application.services.runtime_construction_inputs import RuntimeConstructionInputs
 from orket.application.services.runtime_input_service import RuntimeInputService
@@ -19,6 +20,7 @@ from orket.application.services.runtime_result_projection import RuntimeResult
 from orket.core.domain import OperatorCommandClass, OperatorInputClass
 from orket.logging import log_event
 from orket.orchestration import engine_approvals
+from orket.orchestration.engine_kernel_approvals import run_engine_approval
 from orket.orchestration.engine_kernel_async_service import build_kernel_async_control_plane
 from orket.orchestration.engine_services import (
     CardArchiver,
@@ -107,7 +109,8 @@ class OrchestrationEngine:
         self.kernel_action_control_plane = control_plane_services.kernel_action_control_plane
         self.kernel_action_control_plane_operator = control_plane_services.kernel_action_control_plane_operator
         self.kernel_action_control_plane_view = control_plane_services.kernel_action_control_plane_view
-        self.kernel_gateway = kernel_gateway or KernelV1Gateway()
+        self.kernel_gateway = kernel_gateway or KernelV1Gateway(runtime_inputs=self.runtime_inputs)
+        self.kernel_runtime_lifetime = KernelRuntimeLifetime(self.kernel_gateway.runtime)
         self._pipeline = ExecutionPipeline(
             self.workspace_root,
             self.department,
@@ -141,7 +144,7 @@ class OrchestrationEngine:
     async def close(self) -> None:
         if self._closed:
             return
-        await close_runtime_resources((self._pipeline, self.runtime_context), label="engine-cleanup")
+        await close_runtime_resources((self.kernel_runtime_lifetime, self._pipeline, self.runtime_context), label="engine-cleanup")
         self._closed = True
 
     async def _emit_run_ledger_telemetry(self, payload: dict[str, Any]) -> None:
@@ -292,9 +295,8 @@ class OrchestrationEngine:
         request_id: str | None = None,
         limit: int = 100,
     ) -> list[dict[str, Any]]:
-        await self.initialize()
-        return await engine_approvals.list_approvals(
-            self,
+        return await run_engine_approval(
+            self, engine_approvals.list_approvals,
             session_id=session_id,
             status=status,
             request_id=request_id,
@@ -302,8 +304,7 @@ class OrchestrationEngine:
         )
 
     async def get_approval(self, approval_id: str) -> dict[str, Any] | None:
-        await self.initialize()
-        return await engine_approvals.get_approval(self, approval_id)
+        return await run_engine_approval(self, engine_approvals.get_approval, approval_id)
 
     async def decide_approval(
         self,
@@ -314,9 +315,8 @@ class OrchestrationEngine:
         notes: str | None = None,
         operator_actor_ref: str | None = None,
     ) -> dict[str, Any]:
-        await self.initialize()
-        return await engine_approvals.decide_approval(
-            self,
+        return await run_engine_approval(
+            self, engine_approvals.decide_approval,
             approval_id=approval_id,
             decision=decision,
             edited_proposal=edited_proposal,

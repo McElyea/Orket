@@ -7,17 +7,11 @@ import pytest
 
 from orket.kernel.v1 import api
 from orket.kernel.v1.nervous_system_policy import NervousSystemPolicyInputs, capture_nervous_system_policy_inputs
-from orket.kernel.v1.nervous_system_runtime_state import list_events_for_session, reset_runtime_state_for_tests
+from orket.kernel.v1.nervous_system_runtime_state import list_events_for_session
+from tests.helpers.kernel_runtime import kernel_runtime as kernel_runtime
 
-pytestmark = pytest.mark.contract
+pytestmark = [pytest.mark.contract, pytest.mark.usefixtures("kernel_runtime")]
 REFERENCE = json.loads((Path(__file__).parents[1] / 'fixtures/kernel_policy_inputs_v055.json').read_text(encoding='utf-8'))
-
-
-@pytest.fixture(autouse=True)
-def isolated_kernel_ledger():
-    reset_runtime_state_for_tests()
-    yield
-    reset_runtime_state_for_tests()
 
 
 @pytest.mark.parametrize('case', REFERENCE['cases'], ids=lambda case: case['id'])

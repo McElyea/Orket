@@ -7,8 +7,8 @@ import aiosqlite
 import pytest
 
 from orket.core.domain import AttemptState
-from orket.kernel.v1.nervous_system_runtime_state import list_events_for_session
 from tests.helpers.kernel_credential_probe import credential_runtime as credential_runtime
+from tests.helpers.kernel_runtime import engine_events
 from tests.helpers.kernel_state_probe import hold_native, interrupt_owned, kernel_app, responsive_sqlite
 from tests.integration.test_kernel_publication_input_capture import hold_first_lookup
 
@@ -85,7 +85,7 @@ async def test_engine_interruption_waits_for_real_publication(tmp_path, monkeypa
                 "commit_proposal": "commit.recorded",
                 "end_session": "session.ended",
             }[operation]
-            assert len([row for row in list_events_for_session("owned-session") if row["event_type"] == event]) == 1
+            assert len([row for row in await engine_events(engine, "owned-session") if row["event_type"] == event]) == 1
         finally:
             release.set()
             await asyncio.gather(task, waiter, return_exceptions=True)
@@ -110,7 +110,7 @@ async def test_publication_failure_is_visible_after_cancel(tmp_path, monkeypatch
             await interrupt_owned(task, release, timed=False)
             with pytest.raises(aiosqlite.OperationalError, match="absent_publication_table"):
                 await asyncio.wait_for(task, 10)
-            assert any(row["event_type"] == "admission.decided" for row in list_events_for_session("owned-session"))
+            assert any(row["event_type"] == "admission.decided" for row in await engine_events(engine, "owned-session"))
         finally:
             release.set()
             await asyncio.gather(task, return_exceptions=True)

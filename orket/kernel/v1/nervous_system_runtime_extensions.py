@@ -7,19 +7,15 @@ from orket.application.services.kernel_credential_input_service import (
     capture_credential_issue_inputs,
     capture_credential_key,
 )
-from orket.application.services.runtime_input_service import RuntimeInputService
+from orket.application.services.kernel_runtime_owner import capture_kernel_observation, current_kernel_runtime
 from orket.core.contracts.kernel_credentials import CredentialIssueInputs, CredentialObservation
+from orket.core.contracts.kernel_execution_evidence import execution_evidence_status
+from orket.core.contracts.kernel_observation import KernelObservation
 
 from .nervous_system_approvals import decide_approval, get_approval, list_approvals, rebuild_pending_approvals
 from .nervous_system_authorization import authorization_refusal_for_admission
 from .nervous_system_policy import require_nervous_system_enabled
-from .nervous_system_runtime_state import (
-    _ADMISSIONS_BY_PROPOSAL,
-    _RUNTIME_LOCK,
-    append_event,
-    get_str,
-    list_events_for_session,
-)
+from .nervous_system_runtime_state import append_event, get_str, list_events_for_session
 from .nervous_system_tokens import (
     consume_credential_token,
     invalidate_tokens_for_proposal,
@@ -43,24 +39,29 @@ def decide_approval_v1(
     decision: str,
     edited_proposal: dict[str, Any] | None,
     notes: str | None,
+    observation: KernelObservation | None = None,
 ) -> dict[str, Any]:
-    observed_at = RuntimeInputService().utc_now()
-    result = decide_approval(
-        approval_id=approval_id,
-        decision=decision,
-        edited_proposal=edited_proposal,
-        notes=notes,
-    )
-    approval = result.get("approval") or {}
-    status = str(approval.get("status") or "")
-    if status == "DENIED":
-        invalidate_tokens_for_proposal(
-            session_id=str(approval.get("session_id") or ""),
-            proposal_digest=str(approval.get("proposal_digest") or ""),
-            reason=f"approval_{status.lower()}",
-            observed_at=observed_at,
+    captured = capture_kernel_request(dict(edited_proposal=edited_proposal, notes=notes))
+    edited_proposal, notes = captured["edited_proposal"], captured["notes"]
+    with current_kernel_runtime().lock:
+        observed_at = (capture_kernel_observation() if observation is None else observation).observed_at
+        result = decide_approval(
+            approval_id=approval_id,
+            decision=decision,
+            edited_proposal=edited_proposal,
+            notes=notes,
+            observed_at=observed_at.isoformat(),
         )
-    return result
+        approval = result.get("approval") or {}
+        status = str(approval.get("status") or "")
+        if status == "DENIED":
+            invalidate_tokens_for_proposal(
+                session_id=str(approval.get("session_id") or ""),
+                proposal_digest=str(approval.get("proposal_digest") or ""),
+                reason=f"approval_{status.lower()}",
+                observed_at=observed_at,
+            )
+        return result
 
 
 def rebuild_pending_approvals_v1(session_id: str) -> list[dict[str, Any]]:
@@ -153,7 +154,7 @@ def replay_action_lifecycle_v1(*, session_id: str, trace_id: str) -> dict[str, A
             "execution_claimed": execution_claimed,
             "executed": execution_event is not None,
             "validated": validation_event is not None,
-            "evidence_status": _execution_evidence_status(
+            "evidence_status": execution_evidence_status(
                 execution_claimed=execution_claimed,
                 executed=execution_event is not None,
                 validated=validation_event is not None,
@@ -238,30 +239,41 @@ def audit_action_lifecycle_v1(*, session_id: str, trace_id: str) -> dict[str, An
 
 
 def issue_credential_token_v1(
-    request: dict[str, Any], *, inputs: CredentialIssueInputs | None = None,
+    request: dict[str, Any],
+    *,
+    inputs: CredentialIssueInputs | None = None,
 ) -> dict[str, Any]:
+    owner = current_kernel_runtime()
     require_nervous_system_enabled()
-    inputs = capture_credential_issue_inputs() if inputs is None else inputs
+    inputs = (
+        capture_credential_issue_inputs(runtime_inputs=current_kernel_runtime().sources) if inputs is None else inputs
+    )
     request = capture_kernel_request(request)
-    with _RUNTIME_LOCK:
+    with owner.lock:
         return _issue_credential_token_locked(request, inputs)
 
 
 def _issue_credential_token_locked(request: dict[str, Any], inputs: CredentialIssueInputs) -> dict[str, Any]:
+    owner = current_kernel_runtime()
     session_id = get_str(request, "session_id", required=True)
     trace_id = get_str(request, "trace_id", required=True)
     request_id = get_str(request, "request_id", required=False)
     proposal_digest = get_str(request, "proposal_digest", required=True)
     decision_digest = get_str(request, "admission_decision_digest", required=True)
     tool_name = get_str(request, "tool_name", required=True)
-    admission = _ADMISSIONS_BY_PROPOSAL.get((session_id, proposal_digest))
+    admission = owner.admissions_by_proposal.get((session_id, proposal_digest))
     if not admission or str(admission.get("decision_digest") or "") != decision_digest:
         raise ValueError("invalid proposal_digest/admission_decision_digest binding")
 
     admission_decision = str((admission.get("admission_decision") or {}).get("decision") or "")
     approval_id = get_str(request, "approval_id", required=False) if admission_decision == "NEEDS_APPROVAL" else None
-    refusal = authorization_refusal_for_admission(admission=admission, session_id=session_id,
-        proposal_digest=proposal_digest, decision_digest=decision_digest, approval_id=approval_id)
+    refusal = authorization_refusal_for_admission(
+        admission=admission,
+        session_id=session_id,
+        proposal_digest=proposal_digest,
+        decision_digest=decision_digest,
+        approval_id=approval_id,
+    )
     if refusal == "REJECTED_POLICY":
         raise ValueError("credential token requires an accepted admission")
     if refusal:
@@ -290,8 +302,11 @@ def _issue_credential_token_locked(request: dict[str, Any], inputs: CredentialIs
 
 
 def consume_credential_token_v1(
-    request: dict[str, Any], *, inputs: CredentialObservation | None = None,
+    request: dict[str, Any],
+    *,
+    inputs: CredentialObservation | None = None,
 ) -> dict[str, Any]:
+    owner = current_kernel_runtime()
     require_nervous_system_enabled()
     key = capture_credential_key() if inputs is None else None
     request = capture_kernel_request(request)
@@ -304,9 +319,9 @@ def consume_credential_token_v1(
     scope_json = request.get("scope_json")
     if not isinstance(scope_json, dict):
         raise ValueError("scope_json must be an object")
-    with _RUNTIME_LOCK:
+    with owner.lock:
         if inputs is None:
-            inputs = CredentialObservation(observed_at=RuntimeInputService().utc_now(), hmac_key=key)
+            inputs = CredentialObservation(observed_at=capture_kernel_observation().observed_at, hmac_key=key)
         return consume_credential_token(
             session_id=session_id,
             trace_id=trace_id,
@@ -356,20 +371,6 @@ def _execution_path_consistent(*, commit_status: str, event_digests_by_type: dic
     if commit_status != "COMMITTED" and (executed or validated):
         return False
     return not (executed and not validated)
-
-
-def _execution_evidence_status(*, execution_claimed: bool, executed: bool, validated: bool) -> str:
-    if executed and validated:
-        return "validated_execution"
-    if executed:
-        return "execution_observed_only"
-    if execution_claimed and validated:
-        return "claimed_result_validated_only"
-    if execution_claimed:
-        return "claimed_only"
-    if validated:
-        return "result_validated_without_execution_claim"
-    return "absent"
 
 
 def _approval_queue_rebuild_consistent(

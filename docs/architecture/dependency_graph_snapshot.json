@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-22T04:14:24.499039+00:00",
+  "generated_at": "2026-09-22T05:09:14.959588+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -1397,7 +1397,7 @@
       },
       "orket.application.services.kernel_credential_input_service": {
         "path": "orket/application/services/kernel_credential_input_service.py",
-        "sha256": "adb008a51cb43ace5c2a4049982ef806058468f47a01f89d8c5833e4c4b51187"
+        "sha256": "039331eb0c917c2722f29ce1734283361ea1b6abc523e1906ff93566c4002acd"
       },
       "orket.application.services.kernel_invocation_inputs": {
         "path": "orket/application/services/kernel_invocation_inputs.py",
@@ -1407,9 +1407,17 @@
         "path": "orket/application/services/kernel_invocation_service.py",
         "sha256": "4b479eaffa925370bb9b924d49968b6a826bf28c38db8622853dee2bf0be805c"
       },
+      "orket.application.services.kernel_runtime_lifetime": {
+        "path": "orket/application/services/kernel_runtime_lifetime.py",
+        "sha256": "4c71e8b56f90badc7be86d0cde831535e545084add7266b56766ef1eb11036be"
+      },
+      "orket.application.services.kernel_runtime_owner": {
+        "path": "orket/application/services/kernel_runtime_owner.py",
+        "sha256": "1b9f8a95adef0ddf8bce487fd584211b0db328d5fd839f8886917fab57ed20b8"
+      },
       "orket.application.services.kernel_v1_gateway": {
         "path": "orket/application/services/kernel_v1_gateway.py",
-        "sha256": "0e43c7778439d5ca2dfb32c79249889d955e0a23c651e84585575178f9104fff"
+        "sha256": "15728c4cdf457b931c59f3eb14962d7e049688c07b6f7f5f933ecfebabb9157d"
       },
       "orket.application.services.local_model_factory": {
         "path": "orket/application/services/local_model_factory.py",
@@ -2339,6 +2347,14 @@
         "path": "orket/core/contracts/kernel_credentials.py",
         "sha256": "020225e06ce618983f195a7b5eccd609ea7c9f955de1ce7f064e25ba69a353dd"
       },
+      "orket.core.contracts.kernel_execution_evidence": {
+        "path": "orket/core/contracts/kernel_execution_evidence.py",
+        "sha256": "f9c2eeb5c5456f8b8d581b03ee277e1d2e26c0f20800a65be6db971394814826"
+      },
+      "orket.core.contracts.kernel_observation": {
+        "path": "orket/core/contracts/kernel_observation.py",
+        "sha256": "6cff242686f3b76283ac4a253b63bbe1ebba6291093c2549187ebd011c7af95e"
+      },
       "orket.core.contracts.local_file_lock": {
         "path": "orket/core/contracts/local_file_lock.py",
         "sha256": "80939dfd3297b2e0c6b505747cc14ee47bd10128743f026d8bf12058efb450aa"
@@ -3061,7 +3077,7 @@
       },
       "orket.kernel.v1.nervous_system_approvals": {
         "path": "orket/kernel/v1/nervous_system_approvals.py",
-        "sha256": "11bf801851139b6ee5adb2d32a9fed2c683502f7068b344e21231057524e4222"
+        "sha256": "a3dad7fc5529eaa4f2a0069d81b63ea1842c8c718884bb07fe40ebabb3c79ec1"
       },
       "orket.kernel.v1.nervous_system_authorization": {
         "path": "orket/kernel/v1/nervous_system_authorization.py",
@@ -3069,7 +3085,7 @@
       },
       "orket.kernel.v1.nervous_system_commit": {
         "path": "orket/kernel/v1/nervous_system_commit.py",
-        "sha256": "e8cb0a1ebd808d282ef28de88917fe41ad2907c61cde987a0ea6288dfbf9075a"
+        "sha256": "742511f0af01787fde0b127c9c570abf28ce3fe4939c1e0016ba35ef53b63426"
       },
       "orket.kernel.v1.nervous_system_contract": {
         "path": "orket/kernel/v1/nervous_system_contract.py",
@@ -3093,19 +3109,19 @@
       },
       "orket.kernel.v1.nervous_system_runtime": {
         "path": "orket/kernel/v1/nervous_system_runtime.py",
-        "sha256": "b58e4d7cf641bfcd3ce934d96f90d7ad446f3410ff63d90df29dde4699ec1f1f"
+        "sha256": "aefd2e9ce66700079f9c25f2a99638f4c523bcf78492f9db90a371f69566b85f"
       },
       "orket.kernel.v1.nervous_system_runtime_extensions": {
         "path": "orket/kernel/v1/nervous_system_runtime_extensions.py",
-        "sha256": "94027d113134c432d406b956fef44bbca2567438e7147814a66ec9e4701a23c4"
+        "sha256": "f41dff8c27e1b37bb273595a0886c76a973346dcba0eb5ca575da261b89cb628"
       },
       "orket.kernel.v1.nervous_system_runtime_state": {
         "path": "orket/kernel/v1/nervous_system_runtime_state.py",
-        "sha256": "8c5dc1a638c88cfc8d2b2b80b633d6f9c1c1480ce3257318e5b9330e59837c76"
+        "sha256": "bb90cc8ced6269ef0c14a94d7de9f841413f0bfb39357a342f467a2e06daa975"
       },
       "orket.kernel.v1.nervous_system_tokens": {
         "path": "orket/kernel/v1/nervous_system_tokens.py",
-        "sha256": "d33a3ac65c3dbdb0a5c87d72d1735c72de48878e2ab19ff3b47216d44e6ccd98"
+        "sha256": "36dcba273e34da264dd6971d0b97a9e7e69b454e725fecdb964c6af4738617e9"
       },
       "orket.kernel.v1.odr.__init__": {
         "path": "orket/kernel/v1/odr/__init__.py",
@@ -3249,7 +3265,7 @@
       },
       "orket.orchestration.engine": {
         "path": "orket/orchestration/engine.py",
-        "sha256": "ee3e38e3f97ada5f666793c3deab263dc1307f3d1c1e2cc8d837b092e6a104c1"
+        "sha256": "4bc44760e6bc586c8f049ecc16eb24bde4ebf4322f780b6d65c23462c94bdd43"
       },
       "orket.orchestration.engine_approvals": {
         "path": "orket/orchestration/engine_approvals.py",
@@ -3257,11 +3273,11 @@
       },
       "orket.orchestration.engine_kernel_approvals": {
         "path": "orket/orchestration/engine_kernel_approvals.py",
-        "sha256": "4efbed2f8bbefe2658d72cc28453268b4e87443279e2fca6abb5c55b0c1bb9f8"
+        "sha256": "162f147e2474872af312621e2879705def84bde0c94c27024709309206d3a0b7"
       },
       "orket.orchestration.engine_kernel_async_service": {
         "path": "orket/orchestration/engine_kernel_async_service.py",
-        "sha256": "44ddd11cddd067e0df41733a2fcc54e50c618d1d227512d27af36784c3d15046"
+        "sha256": "a5ca4eb5771fb2ce184c9f9a93221f524634b4d02654a6bf21f8990da4d96763"
       },
       "orket.orchestration.engine_services": {
         "path": "orket/orchestration/engine_services.py",
@@ -12719,16 +12735,23 @@
       },
       {
         "source": "orket.application.services.kernel_credential_input_service",
-        "target": "orket.application.services.runtime_input_service",
+        "target": "orket.application.services.kernel_runtime_owner",
         "path": "orket/application/services/kernel_credential_input_service.py",
         "line": 8,
         "kind": "from"
       },
       {
         "source": "orket.application.services.kernel_credential_input_service",
-        "target": "orket.core.contracts.kernel_credentials",
+        "target": "orket.application.services.runtime_input_service",
         "path": "orket/application/services/kernel_credential_input_service.py",
         "line": 9,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.kernel_credential_input_service",
+        "target": "orket.core.contracts.kernel_credentials",
+        "path": "orket/application/services/kernel_credential_input_service.py",
+        "line": 10,
         "kind": "from"
       },
       {
@@ -12753,17 +12776,94 @@
         "kind": "from"
       },
       {
+        "source": "orket.application.services.kernel_runtime_lifetime",
+        "target": "orket.application.services.application_runtime_lifetime",
+        "path": "orket/application/services/kernel_runtime_lifetime.py",
+        "line": 10,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.kernel_runtime_lifetime",
+        "target": "orket.application.services.kernel_invocation_inputs",
+        "path": "orket/application/services/kernel_runtime_lifetime.py",
+        "line": 11,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.kernel_runtime_lifetime",
+        "target": "orket.application.services.kernel_invocation_service",
+        "path": "orket/application/services/kernel_runtime_lifetime.py",
+        "line": 12,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.kernel_runtime_lifetime",
+        "target": "orket.application.services.kernel_runtime_owner",
+        "path": "orket/application/services/kernel_runtime_lifetime.py",
+        "line": 13,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.kernel_runtime_lifetime",
+        "target": "orket.application.services.runtime_resource_cleanup",
+        "path": "orket/application/services/kernel_runtime_lifetime.py",
+        "line": 14,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.kernel_runtime_owner",
+        "target": "orket.adapters.execution.owned_io",
+        "path": "orket/application/services/kernel_runtime_owner.py",
+        "line": 13,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.kernel_runtime_owner",
+        "target": "orket.application.services.runtime_input_service",
+        "path": "orket/application/services/kernel_runtime_owner.py",
+        "line": 14,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.kernel_runtime_owner",
+        "target": "orket.core.contracts.kernel_observation",
+        "path": "orket/application/services/kernel_runtime_owner.py",
+        "line": 15,
+        "kind": "from"
+      },
+      {
         "source": "orket.application.services.kernel_v1_gateway",
-        "target": "orket.kernel.v1.__init__",
+        "target": "orket.adapters.execution.owned_io",
         "path": "orket/application/services/kernel_v1_gateway.py",
         "line": 5,
         "kind": "from"
       },
       {
         "source": "orket.application.services.kernel_v1_gateway",
+        "target": "orket.application.services.kernel_runtime_owner",
+        "path": "orket/application/services/kernel_v1_gateway.py",
+        "line": 6,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.kernel_v1_gateway",
+        "target": "orket.application.services.runtime_input_service",
+        "path": "orket/application/services/kernel_v1_gateway.py",
+        "line": 7,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.kernel_v1_gateway",
+        "target": "orket.kernel.v1.__init__",
+        "path": "orket/application/services/kernel_v1_gateway.py",
+        "line": 8,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.kernel_v1_gateway",
         "target": "orket.kernel.v1.api",
         "path": "orket/application/services/kernel_v1_gateway.py",
-        "line": 5,
+        "line": 8,
         "kind": "from"
       },
       {
@@ -23198,16 +23298,23 @@
       },
       {
         "source": "orket.kernel.v1.nervous_system_approvals",
-        "target": "orket.kernel.v1.canonical",
+        "target": "orket.application.services.kernel_runtime_owner",
         "path": "orket/kernel/v1/nervous_system_approvals.py",
         "line": 6,
         "kind": "from"
       },
       {
         "source": "orket.kernel.v1.nervous_system_approvals",
+        "target": "orket.kernel.v1.canonical",
+        "path": "orket/kernel/v1/nervous_system_approvals.py",
+        "line": 8,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.nervous_system_approvals",
         "target": "orket.kernel.v1.nervous_system_runtime_state",
         "path": "orket/kernel/v1/nervous_system_approvals.py",
-        "line": 7,
+        "line": 9,
         "kind": "from"
       },
       {
@@ -23233,44 +23340,58 @@
       },
       {
         "source": "orket.kernel.v1.nervous_system_commit",
-        "target": "orket.kernel.v1.canonical",
+        "target": "orket.application.services.kernel_runtime_owner",
+        "path": "orket/kernel/v1/nervous_system_commit.py",
+        "line": 11,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.nervous_system_commit",
+        "target": "orket.core.contracts.kernel_observation",
         "path": "orket/kernel/v1/nervous_system_commit.py",
         "line": 12,
         "kind": "from"
       },
       {
         "source": "orket.kernel.v1.nervous_system_commit",
-        "target": "orket.kernel.v1.nervous_system_authorization",
-        "path": "orket/kernel/v1/nervous_system_commit.py",
-        "line": 13,
-        "kind": "from"
-      },
-      {
-        "source": "orket.kernel.v1.nervous_system_commit",
-        "target": "orket.kernel.v1.nervous_system_contract",
+        "target": "orket.kernel.v1.canonical",
         "path": "orket/kernel/v1/nervous_system_commit.py",
         "line": 14,
         "kind": "from"
       },
       {
         "source": "orket.kernel.v1.nervous_system_commit",
-        "target": "orket.kernel.v1.nervous_system_leaks",
+        "target": "orket.kernel.v1.nervous_system_authorization",
         "path": "orket/kernel/v1/nervous_system_commit.py",
         "line": 15,
         "kind": "from"
       },
       {
         "source": "orket.kernel.v1.nervous_system_commit",
-        "target": "orket.kernel.v1.nervous_system_policy",
+        "target": "orket.kernel.v1.nervous_system_contract",
         "path": "orket/kernel/v1/nervous_system_commit.py",
         "line": 16,
         "kind": "from"
       },
       {
         "source": "orket.kernel.v1.nervous_system_commit",
-        "target": "orket.kernel.v1.nervous_system_runtime_state",
+        "target": "orket.kernel.v1.nervous_system_leaks",
         "path": "orket/kernel/v1/nervous_system_commit.py",
         "line": 17,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.nervous_system_commit",
+        "target": "orket.kernel.v1.nervous_system_policy",
+        "path": "orket/kernel/v1/nervous_system_commit.py",
+        "line": 18,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.nervous_system_commit",
+        "target": "orket.kernel.v1.nervous_system_runtime_state",
+        "path": "orket/kernel/v1/nervous_system_commit.py",
+        "line": 19,
         "kind": "from"
       },
       {
@@ -23324,72 +23445,79 @@
       },
       {
         "source": "orket.kernel.v1.nervous_system_runtime",
-        "target": "orket.application.services.runtime_input_service",
+        "target": "orket.application.services.kernel_runtime_owner",
         "path": "orket/kernel/v1/nervous_system_runtime.py",
         "line": 7,
         "kind": "from"
       },
       {
         "source": "orket.kernel.v1.nervous_system_runtime",
-        "target": "orket.kernel.v1.canonical",
+        "target": "orket.core.contracts.kernel_observation",
         "path": "orket/kernel/v1/nervous_system_runtime.py",
-        "line": 9,
+        "line": 8,
         "kind": "from"
       },
       {
         "source": "orket.kernel.v1.nervous_system_runtime",
-        "target": "orket.kernel.v1.nervous_system_admission",
+        "target": "orket.kernel.v1.canonical",
         "path": "orket/kernel/v1/nervous_system_runtime.py",
         "line": 10,
         "kind": "from"
       },
       {
         "source": "orket.kernel.v1.nervous_system_runtime",
-        "target": "orket.kernel.v1.nervous_system_approvals",
+        "target": "orket.kernel.v1.nervous_system_admission",
         "path": "orket/kernel/v1/nervous_system_runtime.py",
         "line": 11,
         "kind": "from"
       },
       {
         "source": "orket.kernel.v1.nervous_system_runtime",
-        "target": "orket.kernel.v1.nervous_system_commit",
+        "target": "orket.kernel.v1.nervous_system_approvals",
         "path": "orket/kernel/v1/nervous_system_runtime.py",
         "line": 12,
         "kind": "from"
       },
       {
         "source": "orket.kernel.v1.nervous_system_runtime",
-        "target": "orket.kernel.v1.nervous_system_contract",
+        "target": "orket.kernel.v1.nervous_system_commit",
         "path": "orket/kernel/v1/nervous_system_runtime.py",
         "line": 13,
         "kind": "from"
       },
       {
         "source": "orket.kernel.v1.nervous_system_runtime",
+        "target": "orket.kernel.v1.nervous_system_contract",
+        "path": "orket/kernel/v1/nervous_system_runtime.py",
+        "line": 14,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.nervous_system_runtime",
         "target": "orket.kernel.v1.nervous_system_policy",
         "path": "orket/kernel/v1/nervous_system_runtime.py",
-        "line": 18,
+        "line": 19,
         "kind": "from"
       },
       {
         "source": "orket.kernel.v1.nervous_system_runtime",
         "target": "orket.kernel.v1.nervous_system_runtime_state",
         "path": "orket/kernel/v1/nervous_system_runtime.py",
-        "line": 23,
+        "line": 24,
         "kind": "from"
       },
       {
         "source": "orket.kernel.v1.nervous_system_runtime",
         "target": "orket.kernel.v1.nervous_system_tokens",
         "path": "orket/kernel/v1/nervous_system_runtime.py",
-        "line": 33,
+        "line": 31,
         "kind": "from"
       },
       {
         "source": "orket.kernel.v1.nervous_system_runtime",
         "target": "orket.kernel.v1.outbound_policy_gate",
         "path": "orket/kernel/v1/nervous_system_runtime.py",
-        "line": 34,
+        "line": 32,
         "kind": "from"
       },
       {
@@ -23408,7 +23536,7 @@
       },
       {
         "source": "orket.kernel.v1.nervous_system_runtime_extensions",
-        "target": "orket.application.services.runtime_input_service",
+        "target": "orket.application.services.kernel_runtime_owner",
         "path": "orket/kernel/v1/nervous_system_runtime_extensions.py",
         "line": 10,
         "kind": "from"
@@ -23422,77 +23550,98 @@
       },
       {
         "source": "orket.kernel.v1.nervous_system_runtime_extensions",
-        "target": "orket.kernel.v1.nervous_system_approvals",
+        "target": "orket.core.contracts.kernel_execution_evidence",
+        "path": "orket/kernel/v1/nervous_system_runtime_extensions.py",
+        "line": 12,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.nervous_system_runtime_extensions",
+        "target": "orket.core.contracts.kernel_observation",
         "path": "orket/kernel/v1/nervous_system_runtime_extensions.py",
         "line": 13,
         "kind": "from"
       },
       {
         "source": "orket.kernel.v1.nervous_system_runtime_extensions",
-        "target": "orket.kernel.v1.nervous_system_authorization",
-        "path": "orket/kernel/v1/nervous_system_runtime_extensions.py",
-        "line": 14,
-        "kind": "from"
-      },
-      {
-        "source": "orket.kernel.v1.nervous_system_runtime_extensions",
-        "target": "orket.kernel.v1.nervous_system_policy",
+        "target": "orket.kernel.v1.nervous_system_approvals",
         "path": "orket/kernel/v1/nervous_system_runtime_extensions.py",
         "line": 15,
         "kind": "from"
       },
       {
         "source": "orket.kernel.v1.nervous_system_runtime_extensions",
-        "target": "orket.kernel.v1.nervous_system_runtime_state",
+        "target": "orket.kernel.v1.nervous_system_authorization",
         "path": "orket/kernel/v1/nervous_system_runtime_extensions.py",
         "line": 16,
         "kind": "from"
       },
       {
         "source": "orket.kernel.v1.nervous_system_runtime_extensions",
+        "target": "orket.kernel.v1.nervous_system_policy",
+        "path": "orket/kernel/v1/nervous_system_runtime_extensions.py",
+        "line": 17,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.nervous_system_runtime_extensions",
+        "target": "orket.kernel.v1.nervous_system_runtime_state",
+        "path": "orket/kernel/v1/nervous_system_runtime_extensions.py",
+        "line": 18,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.nervous_system_runtime_extensions",
         "target": "orket.kernel.v1.nervous_system_tokens",
         "path": "orket/kernel/v1/nervous_system_runtime_extensions.py",
-        "line": 23,
+        "line": 19,
         "kind": "from"
       },
       {
         "source": "orket.kernel.v1.nervous_system_runtime_state",
         "target": "orket.application.services.kernel_action_input_service",
         "path": "orket/kernel/v1/nervous_system_runtime_state.py",
-        "line": 8,
+        "line": 6,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.nervous_system_runtime_state",
+        "target": "orket.application.services.kernel_runtime_owner",
+        "path": "orket/kernel/v1/nervous_system_runtime_state.py",
+        "line": 7,
         "kind": "from"
       },
       {
         "source": "orket.kernel.v1.nervous_system_runtime_state",
         "target": "orket.kernel.v1.canonical",
         "path": "orket/kernel/v1/nervous_system_runtime_state.py",
-        "line": 10,
+        "line": 9,
         "kind": "from"
       },
       {
         "source": "orket.kernel.v1.nervous_system_runtime_state",
         "target": "orket.kernel.v1.nervous_system_contract",
         "path": "orket/kernel/v1/nervous_system_runtime_state.py",
-        "line": 11,
+        "line": 10,
         "kind": "from"
       },
       {
         "source": "orket.kernel.v1.nervous_system_tokens",
-        "target": "orket.core.contracts.kernel_credentials",
+        "target": "orket.application.services.kernel_runtime_owner",
         "path": "orket/kernel/v1/nervous_system_tokens.py",
         "line": 10,
         "kind": "from"
       },
       {
         "source": "orket.kernel.v1.nervous_system_tokens",
-        "target": "orket.kernel.v1.nervous_system_contract",
+        "target": "orket.core.contracts.kernel_credentials",
         "path": "orket/kernel/v1/nervous_system_tokens.py",
-        "line": 22,
+        "line": 11,
         "kind": "from"
       },
       {
         "source": "orket.kernel.v1.nervous_system_tokens",
-        "target": "orket.kernel.v1.nervous_system_runtime_state",
+        "target": "orket.kernel.v1.nervous_system_contract",
         "path": "orket/kernel/v1/nervous_system_tokens.py",
         "line": 23,
         "kind": "from"
@@ -23961,128 +24110,142 @@
       },
       {
         "source": "orket.orchestration.engine",
-        "target": "orket.application.services.kernel_v1_gateway",
+        "target": "orket.application.services.kernel_runtime_lifetime",
         "path": "orket/orchestration/engine.py",
         "line": 13,
         "kind": "from"
       },
       {
         "source": "orket.orchestration.engine",
-        "target": "orket.application.services.runtime_construction_inputs",
+        "target": "orket.application.services.kernel_v1_gateway",
         "path": "orket/orchestration/engine.py",
         "line": 14,
         "kind": "from"
       },
       {
         "source": "orket.orchestration.engine",
-        "target": "orket.application.services.runtime_input_service",
+        "target": "orket.application.services.runtime_construction_inputs",
         "path": "orket/orchestration/engine.py",
         "line": 15,
         "kind": "from"
       },
       {
         "source": "orket.orchestration.engine",
-        "target": "orket.application.services.runtime_resource_cleanup",
+        "target": "orket.application.services.runtime_input_service",
         "path": "orket/orchestration/engine.py",
         "line": 16,
         "kind": "from"
       },
       {
         "source": "orket.orchestration.engine",
-        "target": "orket.application.services.runtime_result_lifetime",
+        "target": "orket.application.services.runtime_resource_cleanup",
         "path": "orket/orchestration/engine.py",
         "line": 17,
         "kind": "from"
       },
       {
         "source": "orket.orchestration.engine",
-        "target": "orket.application.services.runtime_result_projection",
+        "target": "orket.application.services.runtime_result_lifetime",
         "path": "orket/orchestration/engine.py",
         "line": 18,
         "kind": "from"
       },
       {
         "source": "orket.orchestration.engine",
-        "target": "orket.core.domain.__init__",
+        "target": "orket.application.services.runtime_result_projection",
         "path": "orket/orchestration/engine.py",
         "line": 19,
         "kind": "from"
       },
       {
         "source": "orket.orchestration.engine",
-        "target": "orket.logging",
+        "target": "orket.core.domain.__init__",
         "path": "orket/orchestration/engine.py",
         "line": 20,
         "kind": "from"
       },
       {
         "source": "orket.orchestration.engine",
+        "target": "orket.logging",
+        "path": "orket/orchestration/engine.py",
+        "line": 21,
+        "kind": "from"
+      },
+      {
+        "source": "orket.orchestration.engine",
         "target": "orket.orchestration",
-        "path": "orket/orchestration/engine.py",
-        "line": 21,
-        "kind": "from"
-      },
-      {
-        "source": "orket.orchestration.engine",
-        "target": "orket.orchestration.engine_approvals",
-        "path": "orket/orchestration/engine.py",
-        "line": 21,
-        "kind": "from"
-      },
-      {
-        "source": "orket.orchestration.engine",
-        "target": "orket.orchestration.engine_kernel_async_service",
         "path": "orket/orchestration/engine.py",
         "line": 22,
         "kind": "from"
       },
       {
         "source": "orket.orchestration.engine",
-        "target": "orket.orchestration.engine_services",
+        "target": "orket.orchestration.engine_approvals",
+        "path": "orket/orchestration/engine.py",
+        "line": 22,
+        "kind": "from"
+      },
+      {
+        "source": "orket.orchestration.engine",
+        "target": "orket.orchestration.engine_kernel_approvals",
         "path": "orket/orchestration/engine.py",
         "line": 23,
         "kind": "from"
       },
       {
         "source": "orket.orchestration.engine",
+        "target": "orket.orchestration.engine_kernel_async_service",
+        "path": "orket/orchestration/engine.py",
+        "line": 24,
+        "kind": "from"
+      },
+      {
+        "source": "orket.orchestration.engine",
+        "target": "orket.orchestration.engine_services",
+        "path": "orket/orchestration/engine.py",
+        "line": 25,
+        "kind": "from"
+      },
+      {
+        "source": "orket.orchestration.engine",
         "target": "orket.runtime.config.runtime_bootstrap",
-        "path": "orket/orchestration/engine.py",
-        "line": 31,
-        "kind": "from"
-      },
-      {
-        "source": "orket.orchestration.engine",
-        "target": "orket.runtime.config_loader",
-        "path": "orket/orchestration/engine.py",
-        "line": 32,
-        "kind": "from"
-      },
-      {
-        "source": "orket.orchestration.engine",
-        "target": "orket.runtime.execution_pipeline",
         "path": "orket/orchestration/engine.py",
         "line": 33,
         "kind": "from"
       },
       {
         "source": "orket.orchestration.engine",
-        "target": "orket.runtime.run_ledger_factory",
+        "target": "orket.runtime.config_loader",
         "path": "orket/orchestration/engine.py",
         "line": 34,
         "kind": "from"
       },
       {
         "source": "orket.orchestration.engine",
-        "target": "orket.runtime.runtime_context",
+        "target": "orket.runtime.execution_pipeline",
         "path": "orket/orchestration/engine.py",
         "line": 35,
         "kind": "from"
       },
       {
         "source": "orket.orchestration.engine",
+        "target": "orket.runtime.run_ledger_factory",
+        "path": "orket/orchestration/engine.py",
+        "line": 36,
+        "kind": "from"
+      },
+      {
+        "source": "orket.orchestration.engine",
+        "target": "orket.runtime.runtime_context",
+        "path": "orket/orchestration/engine.py",
+        "line": 37,
+        "kind": "from"
+      },
+      {
+        "source": "orket.orchestration.engine",
         "target": "orket.board",
         "path": "orket/orchestration/engine.py",
-        "line": 255,
+        "line": 258,
         "kind": "from"
       },
       {
@@ -24192,9 +24355,16 @@
       },
       {
         "source": "orket.orchestration.engine_kernel_async_service",
-        "target": "orket.application.services.tool_approval_control_plane_reservation_service",
+        "target": "orket.application.services.kernel_runtime_lifetime",
         "path": "orket/orchestration/engine_kernel_async_service.py",
         "line": 12,
+        "kind": "from"
+      },
+      {
+        "source": "orket.orchestration.engine_kernel_async_service",
+        "target": "orket.application.services.tool_approval_control_plane_reservation_service",
+        "path": "orket/orchestration/engine_kernel_async_service.py",
+        "line": 13,
         "kind": "from"
       },
       {
@@ -30054,7 +30224,7 @@
         "forwarded_arguments": 2
       }
     ],
-    "files_scanned": 1125,
+    "files_scanned": 1129,
     "scan_roots": [
       "orket"
     ],
@@ -30381,6 +30551,8 @@
       "orket.application.services.kernel_credential_input_service": "application",
       "orket.application.services.kernel_invocation_inputs": "application",
       "orket.application.services.kernel_invocation_service": "application",
+      "orket.application.services.kernel_runtime_lifetime": "application",
+      "orket.application.services.kernel_runtime_owner": "application",
       "orket.application.services.kernel_v1_gateway": "application",
       "orket.application.services.local_model_factory": "application",
       "orket.application.services.local_project_vendor": "application",
@@ -30614,6 +30786,8 @@
       "orket.core.contracts.invocation_timing": "core",
       "orket.core.contracts.kernel_authorization": "core",
       "orket.core.contracts.kernel_credentials": "core",
+      "orket.core.contracts.kernel_execution_evidence": "core",
+      "orket.core.contracts.kernel_observation": "core",
       "orket.core.contracts.local_file_lock": "core",
       "orket.core.contracts.local_prompting": "core",
       "orket.core.contracts.memory_inputs": "core",
@@ -31201,17 +31375,17 @@
       {
         "source": "application",
         "target": "adapters",
-        "count": 421
+        "count": 423
       },
       {
         "source": "application",
         "target": "application",
-        "count": 1759
+        "count": 1774
       },
       {
         "source": "application",
         "target": "core",
-        "count": 765
+        "count": 770
       },
       {
         "source": "application",
@@ -31258,65 +31432,6 @@
     }
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-21T05:49:35.693626Z",
-      "changed": true,
-      "before_digest": "sha256:414c681041f5abc08f6ba89abc2ff7906a0bd99e55bb0bb1a84e2b3a94e0bca8",
-      "after_digest": "sha256:d58f40e8f5429bc3ecec2ba0fdbb163024150e0bda1e05c641e250446a491b46",
-      "diff": {
-        "added_paths": 2,
-        "removed_paths": 0,
-        "changed_paths": 8254,
-        "initial_write": false,
-        "paths_total_previous": 46949,
-        "paths_total_current": 46971,
-        "paths_total_reference": 46971,
-        "churn_paths": 8256,
-        "churn_ratio": 0.175768,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.edges[351].line",
-          "$.observed.edges[351].target",
-          "$.observed.edges[352].line",
-          "$.observed.edges[352].target",
-          "$.observed.edges[353].line",
-          "$.observed.edges[353].target",
-          "$.observed.edges[354].line",
-          "$.observed.edges[354].target",
-          "$.observed.edges[355].line",
-          "$.observed.edges[355].target",
-          "$.observed.edges[356].line",
-          "$.observed.edges[356].target",
-          "$.observed.edges[357].line",
-          "$.observed.edges[357].target",
-          "$.observed.edges[358].line",
-          "$.observed.edges[358].target",
-          "$.observed.edges[359].line",
-          "$.observed.edges[359].target",
-          "$.observed.edges[360].line"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-21T09:05:51.134957Z",
-      "changed": true,
-      "before_digest": "sha256:d58f40e8f5429bc3ecec2ba0fdbb163024150e0bda1e05c641e250446a491b46",
-      "after_digest": "sha256:1044fd77749b57de5181af17650ee8ea30a0a8c6a30bdd4985a7b476bad37c0e",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 46971,
-        "paths_total_current": 46971,
-        "paths_total_reference": 46971,
-        "churn_paths": 1,
-        "churn_ratio": 2.1e-05,
-        "sample_paths": [
-          "$.generated_at"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-21T09:53:36.992635Z",
       "changed": true,
@@ -32206,6 +32321,65 @@
           "$.observed.edges[1160].line",
           "$.observed.edges[1160].path",
           "$.observed.edges[1160].source"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T05:07:25.141288Z",
+      "changed": true,
+      "before_digest": "sha256:f598aa7844a91161076691a313476f8da1b5b27a3d40f8d310de4b395cfea58f",
+      "after_digest": "sha256:6864ea20847c04247127c0a8d676c7f186039f9a23085bb43bbf31b41fa40cd6",
+      "diff": {
+        "added_paths": 30,
+        "removed_paths": 0,
+        "changed_paths": 9301,
+        "initial_write": false,
+        "paths_total_previous": 48127,
+        "paths_total_current": 48397,
+        "paths_total_reference": 48397,
+        "churn_paths": 9331,
+        "churn_ratio": 0.192801,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.edges[1156].target",
+          "$.observed.edges[1157].target",
+          "$.observed.edges[1158].line",
+          "$.observed.edges[1158].path",
+          "$.observed.edges[1158].source",
+          "$.observed.edges[1158].target",
+          "$.observed.edges[1159].line",
+          "$.observed.edges[1159].target",
+          "$.observed.edges[1160].line",
+          "$.observed.edges[1160].target",
+          "$.observed.edges[1161].line",
+          "$.observed.edges[1161].path",
+          "$.observed.edges[1161].source",
+          "$.observed.edges[1161].target",
+          "$.observed.edges[1162].line",
+          "$.observed.edges[1162].path",
+          "$.observed.edges[1162].source",
+          "$.observed.edges[1162].target",
+          "$.observed.edges[1163].line"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T05:09:32.322640Z",
+      "changed": true,
+      "before_digest": "sha256:6864ea20847c04247127c0a8d676c7f186039f9a23085bb43bbf31b41fa40cd6",
+      "after_digest": "sha256:9df482da9534be07f710258750bfb8dc9c8995d7cc1ca6072f57aedbaa537c9b",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 48397,
+        "paths_total_current": 48397,
+        "paths_total_reference": 48397,
+        "churn_paths": 1,
+        "churn_ratio": 2.1e-05,
+        "sample_paths": [
+          "$.generated_at"
         ]
       }
     }

@@ -1,15 +1,16 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import pytest
 
 from orket.kernel.v1.nervous_system_runtime import admit_proposal_v1
-from orket.kernel.v1.nervous_system_runtime_state import reset_runtime_state_for_tests
+from tests.helpers.kernel_runtime import kernel_runtime as kernel_runtime
+
+pytestmark = pytest.mark.usefixtures("kernel_runtime")
 
 
 @pytest.fixture(autouse=True)
 def _enable_nervous_system(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("ORKET_ENABLE_NERVOUS_SYSTEM", "true")
-    reset_runtime_state_for_tests()
 
 
 def _admit(monkeypatch: pytest.MonkeyPatch, *, session_id: str, trace_id: str, payload: dict, allow_flags: bool, use_resolver: bool) -> dict:

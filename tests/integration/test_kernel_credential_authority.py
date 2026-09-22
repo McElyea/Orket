@@ -1,6 +1,7 @@
 """Layer: integration. Credential issue must retain the actual admitted authorization identity."""
 import pytest
 
+from orket.application.services.kernel_runtime_owner import current_kernel_runtime
 from orket.kernel.v1 import nervous_system_runtime_extensions as extensions
 from orket.kernel.v1 import nervous_system_runtime_state as state
 from tests.helpers.kernel_credential_probe import admitted_request
@@ -14,7 +15,7 @@ def test_rejected_admission_cannot_issue_credential():
     assert admitted["admission_decision"]["decision"] == "REJECT"
     with pytest.raises(ValueError):
         extensions.issue_credential_token_v1(request)
-    assert state._TOKENS_BY_HASH == {}
+    assert current_kernel_runtime().tokens_by_hash == {}
     assert not any(row["event_type"] == "credential.token_issued"
                    for row in state.list_events_for_session(request["session_id"]))
 
@@ -29,6 +30,6 @@ def test_foreign_approved_record_cannot_authorize_credential(foreign):
     request["approval_id"] = second["approval_id"]
     with pytest.raises(ValueError):
         extensions.issue_credential_token_v1(request)
-    assert state._TOKENS_BY_HASH == {}
+    assert current_kernel_runtime().tokens_by_hash == {}
     assert not any(row["event_type"] == "credential.token_issued"
                    for row in state.list_events_for_session(request["session_id"]))

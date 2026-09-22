@@ -1,6 +1,6 @@
 {
   "schema_version": "architectural_truth.baseline.v1",
-  "generated_at": "2026-09-22T04:24:43.029771Z",
+  "generated_at": "2026-09-22T05:24:22.187179Z",
   "collection_ok": true,
   "release_ready": false,
   "release_ready_reason": "Active architectural exceptions and red/noisy proof gates remain.",
@@ -313,7 +313,7 @@
           "forwarded_arguments": 2
         }
       ],
-      "files_scanned": 1125,
+      "files_scanned": 1129,
       "scan_roots": [
         "orket"
       ],
@@ -332,17 +332,17 @@
         {
           "source": "application",
           "target": "adapters",
-          "count": 421
+          "count": 423
         },
         {
           "source": "application",
           "target": "application",
-          "count": 1759
+          "count": 1774
         },
         {
           "source": "application",
           "target": "core",
-          "count": 765
+          "count": 770
         },
         {
           "source": "application",
@@ -400,7 +400,7 @@
         "id": "AT-EX-001",
         "area": "dependency-policy-model",
         "status": "active_unaccepted_ship_risk",
-        "reason": "The generated graph has zero forbidden static pairs and cross-layer cycles, but six unresolved import/reflection sites still fail its verdict. Repository conformance remains unaccepted; no broad transition label grants an exemption.",
+        "reason": "Scoped canonical C policy passes with six explicitly resolved dynamic routes, zero forbidden static pairs and no cross-layer cycles. Whole-repository conformance remains unaccepted; complete adapter/effect classification and later lane acceptance are still required.",
         "removal_condition": "One ratified manifest defines allowed layers and edges, and the checker fails every unexpected edge unless an exact governed exception exists.",
         "evidence": "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md#c-one-enforceable-dependency-model",
         "owner": "Orket Core"
@@ -445,7 +445,7 @@
         "id": "AT-EX-007",
         "area": "decision-node-explicit-inputs",
         "status": "active_transition",
-        "reason": "API authority and observed system inputs, registry selection settings and loop limits now use application capture. Tool bindings and model-client construction belong to application services. Model recommendations now use frozen values with application-owned settings/score preparation. Local prompt policy now captures settings and request values in application, binds one registry read and owns worker lifetime. Covered planning/routing strategies consume frozen inputs with application-owned record inspection and recommendation validation (the .48/.49 dispatch contract). Global settings authority, other legacy input boundaries and complete adapter-effect classification remain open.",
+        "reason": "API authority and observed system inputs, registry selection settings and loop limits now use application capture. Tool bindings and model-client construction belong to application services. Model recommendations now use frozen values with application-owned settings/score preparation. Local prompt policy now captures settings and request values in application, binds one registry read and owns worker lifetime. Covered planning/routing strategies consume frozen inputs with application-owned record inspection and recommendation validation (planner/router .46, evaluator .47 and loop-policy .48). Global settings authority, other legacy input boundaries and complete adapter-effect classification remain open.",
         "removal_condition": "All decision nodes receive immutable resolved configuration and have no environment or runtime-state reach-through.",
         "evidence": "docs/ARCHITECTURE.md#known-current-exceptions",
         "owner": "Orket Core"
@@ -454,7 +454,7 @@
         "id": "AT-EX-008",
         "area": "runtime-clock-inputs",
         "status": "active_transition",
-        "reason": "Some application and core transitions still read wall-clock time directly.",
+        "reason": "Covered Kernel action transitions now receive immutable observations through explicit runtime owners and selected clock/credential-identity ports. Other application/core clock, validator policy/cache/UUID and effect-input boundaries remain open.",
         "removal_condition": "Every deterministic transition receives clock values through explicit runtime inputs.",
         "evidence": "docs/ARCHITECTURE.md#known-current-exceptions",
         "owner": "Orket Core"
@@ -535,10 +535,10 @@
   },
   "test_taxonomy": {
     "schema_version": "test_taxonomy_report.v1",
-    "tests_total": 5616,
-    "missing_layer_total": 4029,
+    "tests_total": 5631,
+    "missing_layer_total": 4044,
     "by_layer": {
-      "unlabeled": 4029,
+      "unlabeled": 4044,
       "integration": 750,
       "unit": 163,
       "contract": 663,
@@ -1146,7 +1146,7 @@
         "layer": null
       }
     ],
-    "missing_layers_omitted": 3929
+    "missing_layers_omitted": 3944
   },
   "ruff": {
     "proof": "structural_lint",
@@ -1167,7 +1167,7 @@
   },
   "size_inventory": {
     "proof": "structural_ast",
-    "python_files_scanned": 1125,
+    "python_files_scanned": 1129,
     "files_over_400_total": 55,
     "functions_over_70_total": 201,
     "largest_files": [
@@ -1434,7 +1434,7 @@
       "C:\\Source\\Orket-architectural-truth\\orket\\runtime",
       "C:\\Source\\Orket-architectural-truth\\orket\\interfaces"
     ],
-    "scanned_files": 660,
+    "scanned_files": 662,
     "findings": [
       {
         "path": "C:\\Source\\Orket-architectural-truth\\orket\\runtime\\execution\\execution_pipeline_card_dispatch.py",
@@ -1545,86 +1545,6 @@
     "parse_errors": []
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-21T17:13:00.813070Z",
-      "changed": true,
-      "before_digest": "sha256:02f036039579a6615317d17885516b4c810605da7fa1d42a8cc905da19cbe420",
-      "after_digest": "sha256:7b1ea7df812830f27561d6851738f4fa662969d345d4bbf16a2312ebea95d964",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 13,
-        "initial_write": false,
-        "paths_total_previous": 2331,
-        "paths_total_current": 2331,
-        "paths_total_reference": 2331,
-        "churn_paths": 13,
-        "churn_ratio": 0.005577,
-        "sample_paths": [
-          "$.dependency_graph.observed.layer_edges[2].count",
-          "$.dependency_graph.observed.layer_edges[9].count",
-          "$.generated_at",
-          "$.size_inventory.largest_files[1].lines",
-          "$.size_inventory.largest_files[19].lines",
-          "$.size_inventory.largest_files[19].path",
-          "$.size_inventory.largest_files[20].lines",
-          "$.size_inventory.largest_files[20].path",
-          "$.size_inventory.largest_files[21].path",
-          "$.test_taxonomy.by_layer.unlabeled",
-          "$.test_taxonomy.missing_layer_total",
-          "$.test_taxonomy.missing_layers_omitted",
-          "$.test_taxonomy.tests_total"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-21T17:35:35.954974Z",
-      "changed": true,
-      "before_digest": "sha256:7b1ea7df812830f27561d6851738f4fa662969d345d4bbf16a2312ebea95d964",
-      "after_digest": "sha256:4924830f6d38605fcd267905bcf9bc450c229aa06a0c4e9ea28c2e3aad945281",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 2331,
-        "paths_total_current": 2331,
-        "paths_total_reference": 2331,
-        "churn_paths": 1,
-        "churn_ratio": 0.000429,
-        "sample_paths": [
-          "$.generated_at"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-21T17:55:10.197856Z",
-      "changed": true,
-      "before_digest": "sha256:4924830f6d38605fcd267905bcf9bc450c229aa06a0c4e9ea28c2e3aad945281",
-      "after_digest": "sha256:59e5cc332487b62d456bf9097312acbfe0eb395e11fc9581d2b8e6e10b9aa0fc",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 9,
-        "initial_write": false,
-        "paths_total_previous": 2331,
-        "paths_total_current": 2331,
-        "paths_total_reference": 2331,
-        "churn_paths": 9,
-        "churn_ratio": 0.003861,
-        "sample_paths": [
-          "$.dependency_graph.observed.layer_edges[2].count",
-          "$.dependency_graph.observed.layer_edges[3].count",
-          "$.generated_at",
-          "$.test_taxonomy.by_layer.contract",
-          "$.test_taxonomy.by_layer.unit",
-          "$.test_taxonomy.by_layer.unlabeled",
-          "$.test_taxonomy.missing_layer_total",
-          "$.test_taxonomy.missing_layers_omitted",
-          "$.test_taxonomy.tests_total"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-21T18:14:44.305484Z",
       "changed": true,
@@ -2266,6 +2186,79 @@
           "$.test_taxonomy.missing_layer_total",
           "$.test_taxonomy.missing_layers_omitted",
           "$.test_taxonomy.tests_total"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T05:07:51.600154Z",
+      "changed": true,
+      "before_digest": "sha256:c2634bbb674a4624e07abc2fa1adb1cec6809247bfc2febb5aa97334fc14c4a4",
+      "after_digest": "sha256:6ff65e26bdfbea11c0c4991c8d31ccc91401ca74d5e7865a0e4fa56c60bc389e",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 14,
+        "initial_write": false,
+        "paths_total_previous": 2329,
+        "paths_total_current": 2329,
+        "paths_total_reference": 2329,
+        "churn_paths": 14,
+        "churn_ratio": 0.006011,
+        "sample_paths": [
+          "$.architecture_exceptions.exceptions[0].reason",
+          "$.architecture_exceptions.exceptions[5].reason",
+          "$.architecture_exceptions.exceptions[6].reason",
+          "$.dependency_graph.observed.files_scanned",
+          "$.dependency_graph.observed.layer_edges[2].count",
+          "$.dependency_graph.observed.layer_edges[3].count",
+          "$.dependency_graph.observed.layer_edges[4].count",
+          "$.generated_at",
+          "$.noop_critical_paths.scanned_files",
+          "$.size_inventory.python_files_scanned",
+          "$.test_taxonomy.by_layer.unlabeled",
+          "$.test_taxonomy.missing_layer_total",
+          "$.test_taxonomy.missing_layers_omitted",
+          "$.test_taxonomy.tests_total"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T05:09:58.614952Z",
+      "changed": true,
+      "before_digest": "sha256:6ff65e26bdfbea11c0c4991c8d31ccc91401ca74d5e7865a0e4fa56c60bc389e",
+      "after_digest": "sha256:e9bc665d1d07fd1c5b148334e50ec204ee0824701a31516dfd2b4308f3bd2bce",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 2329,
+        "paths_total_current": 2329,
+        "paths_total_reference": 2329,
+        "churn_paths": 1,
+        "churn_ratio": 0.000429,
+        "sample_paths": [
+          "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T05:24:22.189730Z",
+      "changed": true,
+      "before_digest": "sha256:e9bc665d1d07fd1c5b148334e50ec204ee0824701a31516dfd2b4308f3bd2bce",
+      "after_digest": "sha256:53f3b038b2f9c8d878a89ba6168f314171f937ce75548579835b4708b2337fee",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 2329,
+        "paths_total_current": 2329,
+        "paths_total_reference": 2329,
+        "churn_paths": 1,
+        "churn_ratio": 0.000429,
+        "sample_paths": [
+          "$.generated_at"
         ]
       }
     }

@@ -8,12 +8,14 @@ import pytest
 
 from orket.adapters.execution.owned_io import run_owned_thread
 from orket.adapters.storage.sqlite_connection import connect_sqlite_wal
+from orket.application.services.kernel_runtime_owner import current_kernel_runtime
 from orket.kernel.v1 import nervous_system_runtime as runtime
 from orket.kernel.v1 import nervous_system_runtime_extensions as extensions
 from orket.kernel.v1 import nervous_system_runtime_state as state
 from orket.kernel.v1 import nervous_system_tokens as tokens
 from tests.helpers.kernel_credential_probe import admitted_request
 from tests.helpers.kernel_credential_probe import credential_runtime as credential_runtime
+from tests.helpers.kernel_runtime import ObservedKernelLock
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio, pytest.mark.usefixtures("credential_runtime")]
 
@@ -21,7 +23,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.asyncio, pytest.mark.usefixtu
 async def test_credential_publication_retains_admission_lock_through_actual_hashing(tmp_path, monkeypatch, record_property):
     admitted, request = admitted_request()
     entered, release, waiting = threading.Event(), threading.Event(), threading.Event()
-    original_lock = state._RUNTIME_LOCK
+    original_lock = current_kernel_runtime().lock
     # Observe the exact .74 or current hashing function without replacing its result.
     name = "credential_hash" if hasattr(tokens, "credential_hash") else "_token_hash"
     original_hash = getattr(tokens, name)
@@ -32,20 +34,13 @@ async def test_credential_publication_retains_admission_lock_through_actual_hash
         assert release.wait(10), "credential hashing fixture not released"
         return result
 
-    class ObservedLock:
-        def __enter__(self):
-            waiting.set()
-            return original_lock.__enter__()
-
-        def __exit__(self, *args):
-            return original_lock.__exit__(*args)
-
     monkeypatch.setattr(tokens, name, hash_and_hold)
-    monkeypatch.setattr(runtime, "_RUNTIME_LOCK", ObservedLock())
+    monkeypatch.setattr(current_kernel_runtime(), "lock", ObservedKernelLock(original_lock, waiting))
     first = asyncio.create_task(run_owned_thread(partial(extensions.issue_credential_token_v1, request), label="issue"))
     competing = None
     try:
         assert await asyncio.wait_for(asyncio.to_thread(entered.wait, 10), 11)
+        waiting.clear()  # The issuer is held inside hashing; observe only the later admission.
         monkeypatch.setenv("ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS", "false")
         proposal = dict(contract_version="kernel_api/v1", session_id=request["session_id"], trace_id="later-trace",
                         proposal={"proposal_type": "action.tool_call", "payload": {"target": "first"}})

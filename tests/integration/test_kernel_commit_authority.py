@@ -2,6 +2,7 @@
 
 import pytest
 
+from orket.application.services.kernel_runtime_owner import current_kernel_runtime
 from orket.kernel.v1 import nervous_system_runtime as runtime
 from orket.kernel.v1 import nervous_system_runtime_extensions as extensions
 from orket.kernel.v1 import nervous_system_runtime_state as state
@@ -21,7 +22,7 @@ def test_returned_rejection_cannot_be_edited_to_authorize_credential_or_commit()
     result = runtime.commit_proposal_v1({**request, "canonical_state_digest_after": "unauthorized-state"})
     assert result["status"] == "REJECTED_POLICY"
     assert state.get_current_canonical_state_digest(request["session_id"]) != "unauthorized-state"
-    assert state._TOKENS_BY_HASH == {}
+    assert current_kernel_runtime().tokens_by_hash == {}
 
 
 @pytest.mark.parametrize("foreign", ["session", "proposal", "decision"])
@@ -40,6 +41,7 @@ def test_foreign_approved_record_cannot_authorize_commit_or_canonical_state(fore
             proposal_digest=request["proposal_digest"],
             decision_digest="different-decision",
             reason_codes=["APPROVAL_REQUIRED"],
+            created_at="2030-01-01T00:00:00+00:00",
         )
     assert first["approval_id"] != second["approval_id"]
     extensions.decide_approval_v1(

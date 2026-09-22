@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from copy import deepcopy
 import json
+from copy import deepcopy
 
 import pytest
 
@@ -14,6 +14,9 @@ from orket.kernel.v1.outbound_policy_gate import (
     load_outbound_policy_config_file,
     merge_outbound_policy_config,
 )
+from tests.helpers.kernel_runtime import kernel_runtime as kernel_runtime
+
+pytestmark = pytest.mark.usefixtures("kernel_runtime")
 
 
 @pytest.fixture(autouse=True)

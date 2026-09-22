@@ -7,6 +7,8 @@ from types import SimpleNamespace
 import pytest
 
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
+from orket.application.services.kernel_runtime_lifetime import KernelRuntimeLifetime
+from orket.application.services.kernel_v1_gateway import KernelV1Gateway
 from orket.application.services.tool_approval_control_plane_operator_service import (
     ToolApprovalControlPlaneOperatorService,
 )
@@ -32,8 +34,6 @@ from orket.core.domain import (
     ResultClass,
     RunState,
 )
-from orket.kernel.v1.nervous_system_runtime import admit_proposal_v1
-from orket.kernel.v1.nervous_system_runtime_state import reset_runtime_state_for_tests
 from orket.orchestration.engine import OrchestrationEngine
 from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
 from tests.helpers.control_plane_execution_memory import InMemoryControlPlaneExecutionRepository
@@ -114,6 +114,8 @@ def _guard_review_row() -> dict[str, object]:
 def _make_engine(*, rows: list[dict[str, object]] | None = None) -> OrchestrationEngine:
     engine = object.__new__(OrchestrationEngine)
     engine._initialized = True  # This unit fixture supplies already-composed in-memory approval owners.
+    engine.kernel_gateway = KernelV1Gateway()
+    engine.kernel_runtime_lifetime = KernelRuntimeLifetime(engine.kernel_gateway.runtime)
     engine.pending_gates = _FakePendingGates(rows=rows)
     engine.control_plane_repository = InMemoryControlPlaneRecordRepository()
     engine.control_plane_execution_repository = InMemoryControlPlaneExecutionRepository()
@@ -808,39 +810,3 @@ async def test_engine_decide_approval_resolves_guard_review_hold_without_tool_op
     assert reservation.status is ReservationStatus.RELEASED
     assert len(actions) == 1
     assert actions[0].result == "approved"
-
-
-@pytest.mark.asyncio
-# Layer: unit
-async def test_engine_approvals_use_nervous_system_runtime_when_enabled(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("ORKET_ENABLE_NERVOUS_SYSTEM", "true")
-    monkeypatch.setenv("ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS", "true")
-    reset_runtime_state_for_tests()
-    admit_proposal_v1(
-        {
-            "contract_version": "kernel_api/v1",
-            "session_id": "sess-ns-engine-1",
-            "trace_id": "trace-ns-engine-1",
-            "proposal": {
-                "proposal_type": "action.tool_call",
-                "payload": {"approval_required_destructive": True},
-            },
-        }
-    )
-
-    engine = _make_engine()
-    items = await engine.list_approvals(status="PENDING", session_id="sess-ns-engine-1", limit=10)
-    assert len(items) == 1
-    approval_id = items[0]["approval_id"]
-
-    resolved = await engine.decide_approval(
-        approval_id=approval_id,
-        decision="approve",
-        operator_actor_ref="api_key_fingerprint:sha256:test",
-    )
-    assert resolved["approval"]["status"] == "APPROVED"
-    assert resolved["approval"]["control_plane_operator_action"]["result"] == "approved"
-    actions = await engine.control_plane_repository.list_operator_actions(
-        target_ref=f"approval-request:{approval_id}"
-    )
-    assert len(actions) == 1

@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from orket.application.services.kernel_invocation_inputs import capture_kernel_environment
+from orket.application.services.kernel_runtime_owner import KernelInputSources
 from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.core.contracts.kernel_credentials import CredentialIssueInputs, CredentialObservation
 
@@ -19,7 +20,7 @@ def capture_credential_key(*, environment: Mapping[str, str] | None = None) -> b
 def capture_credential_observation(
     *,
     environment: Mapping[str, str] | None = None,
-    runtime_inputs: RuntimeInputService | None = None,
+    runtime_inputs: RuntimeInputService | KernelInputSources | None = None,
 ) -> CredentialObservation:
     key = capture_credential_key(environment=environment)
     runtime_inputs = RuntimeInputService() if runtime_inputs is None else runtime_inputs
@@ -29,7 +30,7 @@ def capture_credential_observation(
 def capture_credential_issue_inputs(
     *,
     environment: Mapping[str, str] | None = None,
-    runtime_inputs: RuntimeInputService | None = None,
+    runtime_inputs: RuntimeInputService | KernelInputSources | None = None,
 ) -> CredentialIssueInputs:
     runtime_inputs = RuntimeInputService() if runtime_inputs is None else runtime_inputs
     observed = capture_credential_observation(environment=environment, runtime_inputs=runtime_inputs)

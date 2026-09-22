@@ -11,7 +11,6 @@ from orket.application.services.kernel_action_control_plane_view_service import 
 from orket.application.services.tool_approval_control_plane_operator_service import (
     ToolApprovalControlPlaneOperatorService,
 )
-from orket.kernel.v1.nervous_system_runtime_state import reset_runtime_state_for_tests
 from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
 from tests.helpers.control_plane_execution_memory import InMemoryControlPlaneExecutionRepository
 
@@ -26,7 +25,6 @@ def test_kernel_operator_surfaces_cover_one_action_lifecycle(monkeypatch) -> Non
     monkeypatch.setenv("ORKET_ENABLE_NERVOUS_SYSTEM", "true")
     monkeypatch.setenv("ORKET_USE_TOOL_PROFILE_RESOLVER", "true")
     monkeypatch.delenv("ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS", raising=False)
-    reset_runtime_state_for_tests()
     repository = InMemoryControlPlaneRecordRepository()
     execution_repository = InMemoryControlPlaneExecutionRepository()
     publication = ControlPlanePublicationService(repository=repository)

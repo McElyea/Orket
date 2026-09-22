@@ -4,7 +4,8 @@ from copy import deepcopy
 from typing import Any
 
 from orket.application.services.kernel_action_input_service import capture_kernel_request
-from orket.application.services.runtime_input_service import RuntimeInputService
+from orket.application.services.kernel_runtime_owner import capture_kernel_observation, current_kernel_runtime
+from orket.core.contracts.kernel_observation import KernelObservation
 
 from .canonical import digest_of
 from .nervous_system_admission import admission_from_proposal
@@ -21,22 +22,20 @@ from .nervous_system_policy import (
     require_nervous_system_enabled,
 )
 from .nervous_system_runtime_state import (
-    _ADMISSIONS_BY_PROPOSAL,
-    _RUNTIME_LOCK,
     CONTRACT_VERSION,
     append_event,
     get_current_canonical_state_digest,
     get_str,
     normalized_optional_str,
-    utc_iso_now,
 )
 from .nervous_system_tokens import invalidate_tokens_for_session
 from .outbound_policy_gate import apply_outbound_policy_gate
 
 
-def projection_pack_v1(request: dict[str, Any]) -> dict[str, Any]:
+def projection_pack_v1(request: dict[str, Any], *, observation: KernelObservation | None = None) -> dict[str, Any]:
     require_nervous_system_enabled()
     request = capture_kernel_request(request)
+    observed = capture_kernel_observation() if observation is None else observation
     if request.get("contract_version") != CONTRACT_VERSION:
         raise ValueError("contract_version must be kernel_api/v1")
 
@@ -81,7 +80,7 @@ def projection_pack_v1(request: dict[str, Any]) -> dict[str, Any]:
     policy_digest = digest_of(policy_context)
     projection_pack = {
         "pack_id": f"pp-{digest_of({'session_id': session_id, 'trace_id': trace_id, 'request_id': request_id})[:16]}",
-        "created_at": utc_iso_now(),
+        "created_at": observed.timestamp,
         "purpose": NERVOUS_SYSTEM_PURPOSE_ACTION_PATH,
         "canonical": {
             "canonical_state_digest": canonical_state_digest,
@@ -106,6 +105,7 @@ def projection_pack_v1(request: dict[str, Any]) -> dict[str, Any]:
         trace_id=trace_id,
         request_id=request_id,
         event_type="projection.issued",
+        created_at=observed.timestamp,
         body={
             "projection_pack_digest": projection_pack_digest,
             "policy_digest": policy_digest,
@@ -130,7 +130,9 @@ def _admit_proposal_internal(
     request_id: str | None,
     proposal: dict[str, Any],
     policy_inputs: NervousSystemPolicyInputs,
+    observation: KernelObservation,
 ) -> dict[str, Any]:
+    owner = current_kernel_runtime()
     proposal = capture_kernel_request(proposal)
     proposal_digest = digest_of(proposal)
     decision, reason_codes, leak_hits = admission_from_proposal(proposal, policy_inputs)
@@ -144,8 +146,8 @@ def _admit_proposal_internal(
     }
     decision_digest = digest_of(admission)
 
-    with _RUNTIME_LOCK:
-        _ADMISSIONS_BY_PROPOSAL[(session_id, proposal_digest)] = {
+    with owner.lock:
+        owner.admissions_by_proposal[(session_id, proposal_digest)] = {
             "session_id": session_id,
             "trace_id": trace_id,
             "request_id": request_id,
@@ -159,6 +161,7 @@ def _admit_proposal_internal(
         trace_id=trace_id,
         request_id=request_id,
         event_type="proposal.received",
+        created_at=observation.timestamp,
         body={"proposal_digest": proposal_digest},
     )
     admission_event = append_event(
@@ -166,6 +169,7 @@ def _admit_proposal_internal(
         trace_id=trace_id,
         request_id=request_id,
         event_type="admission.decided",
+        created_at=observation.timestamp,
         body={
             "proposal_digest": proposal_digest,
             "decision_digest": decision_digest,
@@ -180,6 +184,7 @@ def _admit_proposal_internal(
             trace_id=trace_id,
             request_id=request_id,
             event_type="incident.detected",
+            created_at=observation.timestamp,
             body={
                 "stage": "admission",
                 "proposal_digest": proposal_digest,
@@ -204,6 +209,7 @@ def _admit_proposal_internal(
             proposal_digest=proposal_digest,
             decision_digest=decision_digest,
             reason_codes=admission_reason_codes,
+            created_at=observation.timestamp,
         )
         response["approval_id"] = approval["approval_id"]
 
@@ -211,7 +217,10 @@ def _admit_proposal_internal(
 
 
 def admit_proposal_v1(
-    request: dict[str, Any], *, policy_inputs: NervousSystemPolicyInputs | None = None,
+    request: dict[str, Any],
+    *,
+    policy_inputs: NervousSystemPolicyInputs | None = None,
+    observation: KernelObservation | None = None,
 ) -> dict[str, Any]:
     selected = capture_nervous_system_policy_inputs() if policy_inputs is None else policy_inputs
     require_nervous_system_enabled(selected)
@@ -232,15 +241,14 @@ def admit_proposal_v1(
         request_id=request_id,
         proposal=proposal,
         policy_inputs=selected,
+        observation=capture_kernel_observation() if observation is None else observation,
     )
 
 
-
-
-def end_session_v1(request: dict[str, Any]) -> dict[str, Any]:
+def end_session_v1(request: dict[str, Any], *, observation: KernelObservation | None = None) -> dict[str, Any]:
     require_nervous_system_enabled()
     request = capture_kernel_request(request)
-    observed_at = RuntimeInputService().utc_now()
+    observed_at = (capture_kernel_observation() if observation is None else observation).observed_at
     if request.get("contract_version") != CONTRACT_VERSION:
         raise ValueError("contract_version must be kernel_api/v1")
     session_id = get_str(request, "session_id", required=True)

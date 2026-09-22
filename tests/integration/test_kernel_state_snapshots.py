@@ -17,7 +17,8 @@ pytestmark = [pytest.mark.integration, pytest.mark.usefixtures("credential_runti
 def test_event_body_and_observations_are_detached_from_retained_history(surface):
     body = {"nested": {"values": ["original"]}}
     event = state.append_event(
-        session_id="snapshot-session", trace_id="trace", event_type="fixture.observed", body=body
+        session_id="snapshot-session", trace_id="trace", event_type="fixture.observed", body=body,
+        created_at="2030-01-01T00:00:00+00:00",
     )
     expected = deepcopy(event)
     if surface == "input":

@@ -11,6 +11,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from orket.adapters.execution import OpenClawJsonlSubprocessAdapter  # noqa: E402
+from orket.application.services.kernel_runtime_owner import KernelRuntime, capture_kernel_observation  # noqa: E402
 from orket.kernel.v1 import api as kernel_api  # noqa: E402
 from orket.kernel.v1.nervous_system_contract import tool_profile_digest  # noqa: E402
 from orket.kernel.v1.nervous_system_resolver import KNOWN_TOOL_PROFILES  # noqa: E402
@@ -27,7 +28,6 @@ from orket.kernel.v1.nervous_system_runtime_extensions import (  # noqa: E402
     issue_credential_token_v1,
     list_approvals_v1,
 )
-from orket.kernel.v1.nervous_system_runtime_state import reset_runtime_state_for_tests, utc_iso_now  # noqa: E402
 from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger  # noqa: E402
 
 REQUIRED_EVENT_TYPES = [
@@ -342,7 +342,6 @@ async def _run_live() -> dict[str, Any]:
     os.environ["ORKET_ENABLE_NERVOUS_SYSTEM"] = "true"
     os.environ["ORKET_USE_TOOL_PROFILE_RESOLVER"] = "true"
     os.environ.pop("ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS", None)
-    reset_runtime_state_for_tests()
     adapter = OpenClawJsonlSubprocessAdapter(command=[sys.executable, "tools/fake_openclaw_adapter_strict.py"], io_timeout_seconds=15.0)
     requests = [
         {"type": "next_action", "scenario_kind": "blocked_destructive"},
@@ -365,7 +364,7 @@ async def _run_live() -> dict[str, Any]:
         _run_credential_scenario(responses[3], replay=True),
     ]
     return {
-        "generated_at": utc_iso_now(),
+        "generated_at": capture_kernel_observation().timestamp,
         "policy_flag_mode": "resolver_canonical",
         "adapter_run": {
             "mode": "subprocess_jsonl",
@@ -383,7 +382,8 @@ async def _run_live() -> dict[str, Any]:
 
 
 async def main() -> int:
-    artifact = await _run_live()
+    async with KernelRuntime.open():
+        artifact = await _run_live()
     await asyncio.to_thread(write_payload_with_diff_ledger, OUTPUT_PATH, artifact)
     print(str(OUTPUT_PATH))
     return 0

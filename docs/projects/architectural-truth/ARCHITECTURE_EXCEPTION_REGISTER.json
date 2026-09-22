@@ -1,13 +1,13 @@
 {
   "schema_version": "architectural_truth.exception_register.v1",
   "owner": "Orket Core",
-  "last_reviewed": "2026-09-20",
+  "last_reviewed": "2026-09-21",
   "exceptions": [
     {
       "id": "AT-EX-001",
       "area": "dependency-policy-model",
       "status": "active_unaccepted_ship_risk",
-      "reason": "The generated graph has zero forbidden static pairs and cross-layer cycles, but six unresolved import/reflection sites still fail its verdict. Repository conformance remains unaccepted; no broad transition label grants an exemption.",
+      "reason": "Scoped canonical C policy passes with six explicitly resolved dynamic routes, zero forbidden static pairs and no cross-layer cycles. Whole-repository conformance remains unaccepted; complete adapter/effect classification and later lane acceptance are still required.",
       "removal_condition": "One ratified manifest defines allowed layers and edges, and the checker fails every unexpected edge unless an exact governed exception exists.",
       "evidence": "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md#c-one-enforceable-dependency-model"
     },
@@ -47,7 +47,7 @@
       "id": "AT-EX-007",
       "area": "decision-node-explicit-inputs",
       "status": "active_transition",
-      "reason": "API authority and observed system inputs, registry selection settings and loop limits now use application capture. Tool bindings and model-client construction belong to application services. Model recommendations now use frozen values with application-owned settings/score preparation. Local prompt policy now captures settings and request values in application, binds one registry read and owns worker lifetime. Covered planning/routing strategies consume frozen inputs with application-owned record inspection and recommendation validation (the .48/.49 dispatch contract). Global settings authority, other legacy input boundaries and complete adapter-effect classification remain open.",
+      "reason": "API authority and observed system inputs, registry selection settings and loop limits now use application capture. Tool bindings and model-client construction belong to application services. Model recommendations now use frozen values with application-owned settings/score preparation. Local prompt policy now captures settings and request values in application, binds one registry read and owns worker lifetime. Covered planning/routing strategies consume frozen inputs with application-owned record inspection and recommendation validation (planner/router .46, evaluator .47 and loop-policy .48). Global settings authority, other legacy input boundaries and complete adapter-effect classification remain open.",
       "removal_condition": "All decision nodes receive immutable resolved configuration and have no environment or runtime-state reach-through.",
       "evidence": "docs/ARCHITECTURE.md#known-current-exceptions"
     },
@@ -55,7 +55,7 @@
       "id": "AT-EX-008",
       "area": "runtime-clock-inputs",
       "status": "active_transition",
-      "reason": "Some application and core transitions still read wall-clock time directly.",
+      "reason": "Covered Kernel action transitions now receive immutable observations through explicit runtime owners and selected clock/credential-identity ports. Other application/core clock, validator policy/cache/UUID and effect-input boundaries remain open.",
       "removal_condition": "Every deterministic transition receives clock values through explicit runtime inputs.",
       "evidence": "docs/ARCHITECTURE.md#known-current-exceptions"
     },

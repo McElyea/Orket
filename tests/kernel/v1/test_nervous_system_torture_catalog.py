@@ -6,6 +6,7 @@ from typing import Any
 
 import pytest
 
+from orket.application.services.kernel_runtime_owner import current_kernel_runtime
 from orket.kernel.v1.nervous_system_runtime import admit_proposal_v1, commit_proposal_v1
 from orket.kernel.v1.nervous_system_runtime_extensions import (
     consume_credential_token_v1,
@@ -14,14 +15,11 @@ from orket.kernel.v1.nervous_system_runtime_extensions import (
     issue_credential_token_v1,
     rebuild_pending_approvals_v1,
 )
-from orket.kernel.v1.nervous_system_runtime_state import (
-    _PENDING_APPROVALS_CACHE,
-    _RUNTIME_LOCK,
-    _TOKENS_BY_HASH,
-    reset_runtime_state_for_tests,
-)
+from tests.helpers.kernel_runtime import kernel_runtime as kernel_runtime
 
 CORPUS_PATH = Path("benchmarks/scenarios/nervous_system_attack_corpus.json")
+
+pytestmark = pytest.mark.usefixtures("kernel_runtime")
 
 
 def _load_corpus_cases() -> list[dict[str, Any]]:
@@ -64,7 +62,6 @@ def _enable_nervous_system(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("ORKET_ENABLE_NERVOUS_SYSTEM", "true")
     monkeypatch.setenv("ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS", "true")
     monkeypatch.setenv("ORKET_USE_TOOL_PROFILE_RESOLVER", "false")
-    reset_runtime_state_for_tests()
 
 
 @pytest.mark.parametrize("case", _admission_cases(), ids=lambda case: str(case.get("id") or "case"))
@@ -168,10 +165,10 @@ def test_token_scope_replay_and_expiry_fail_closed() -> None:
         session_id="sess-token-expired-catalog",
         trace_id="trace-token-expired-catalog",
     )
-    with _RUNTIME_LOCK:
-        record = dict(_TOKENS_BY_HASH[fresh["token_hash"]])
+    with current_kernel_runtime().lock:
+        record = dict(current_kernel_runtime().tokens_by_hash[fresh["token_hash"]])
         record["expires_at"] = "1970-01-01T00:00:00+00:00"
-        _TOKENS_BY_HASH[fresh["token_hash"]] = record
+        current_kernel_runtime().tokens_by_hash[fresh["token_hash"]] = record
     expired = consume_credential_token_v1(
         {
             **_base_request(
@@ -216,7 +213,7 @@ def test_approval_fatigue_rebuilds_pending_queue_without_drift() -> None:
         approval_ids.append(str(admitted["approval_id"]))
 
     assert len(set(approval_ids)) == 25
-    _PENDING_APPROVALS_CACHE[session_id] = []
+    current_kernel_runtime().pending_approvals_cache[session_id] = []
     rebuilt = rebuild_pending_approvals_v1(session_id)
     assert len(rebuilt) == 25
     rebuilt_ids = {str(item["approval_id"]) for item in rebuilt}

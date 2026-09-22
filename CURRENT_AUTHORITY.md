@@ -70,6 +70,19 @@ Partial effects can survive publication failure or cancellation; Kernel maps
 are still process-local, without durable transactions or restart recovery.
 Contract, scoped proof and migration: `docs/architecture/CONTRACT_DELTA_KERNEL_STATE_OWNERSHIP_D_2026-09-21.md`.
 
+Each standard engine now owns an explicit volatile Kernel runtime: its state,
+native lock and clock/credential-identity ports belong to that engine. Independent
+applications do not share Kernel authority even with equal session identifiers.
+The existing application lifetime supervisor retains admitted Kernel publication
+before engine resources close; new admission refuses during or after close.
+Direct embeddings explicitly bind and close `KernelRuntime`; unbound calls
+refuse. Immutable event-time observations replace low-level ambient clock reads.
+No default global maps, reset hook or proxy fallback selects a runtime. Selected
+credential consumption time is still sampled after native lock acquisition.
+Volatile state, partial failure and trusted-Python limits remain; this is not
+durable recovery, hostile-code isolation or per-user authorization.
+Migration and proof scope: `docs/architecture/CONTRACT_DELTA_KERNEL_RUNTIME_OWNER_D_2026-09-21.md`.
+
 The runtime CLI captures engine inputs after startup and owns engine construction
 through interruption. Board/replay reads, manifest output and native path
 resolution retain their workers; a completed untransferred engine is closed.
