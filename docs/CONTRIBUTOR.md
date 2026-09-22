@@ -115,6 +115,9 @@ Script command scopes retain engine and default provider cleanup before returnin
 Artifact replay reads use native owned observation without runtime construction.
 ProductFlow fixtures and witness history obey current acceptance/lease contracts.
 See `docs/specs/SCRIPT_RUNTIME_OWNERSHIP.md`.
+The three truthful-runtime governance recorders own their engines on their event loop;
+call their native entrypoints outside a running loop. Alias simulation is contract proof,
+not Ollama acceptance; preserve existing aliases and surface owned cleanup failures.
 
 Prompt commands use `python -m orket.interfaces.prompts_cli --root <project> ...`.
 Prompt reads share model-file ownership with writers and can create native lock

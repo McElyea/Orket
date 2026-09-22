@@ -6,32 +6,39 @@ import json
 import os
 import sys
 import tempfile
+from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Awaitable, Callable
+from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from orket.adapters.llm.local_model_provider import LocalModelProvider, ModelResponse
-from orket.adapters.storage.protocol_append_only_ledger import AppendOnlyRunLedger
-from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_MODEL
-from orket.orchestration.engine import OrchestrationEngine
+from orket.adapters.execution.owned_io import require_sync_context  # noqa: E402 - repository path bootstrap
+from orket.adapters.llm.local_model_provider import (  # noqa: E402 - repository path bootstrap
+    LocalModelProvider,
+    ModelResponse,
+)
+from orket.adapters.storage.protocol_append_only_ledger import (  # noqa: E402 - repository path bootstrap
+    AppendOnlyRunLedger,
+)
+from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_MODEL  # noqa: E402 - repository path bootstrap
+from orket.orchestration.engine import OrchestrationEngine  # noqa: E402 - repository path bootstrap
 from orket.runtime.config.defaults import configured_provider  # noqa: E402 - repository path bootstrap
-from orket.runtime.live_acceptance_assets import write_core_acceptance_assets
-from orket.runtime.run_summary import PACKET1_MISSING_TOKEN
-from scripts.common.run_summary_support import load_validated_run_summary
+from orket.runtime.live_acceptance_assets import write_core_acceptance_assets  # noqa: E402 - repository path bootstrap
+from orket.runtime.run_summary import PACKET1_MISSING_TOKEN  # noqa: E402 - repository path bootstrap
+from scripts.common.run_summary_support import load_validated_run_summary  # noqa: E402 - repository path bootstrap
 
 try:
     from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
-except ModuleNotFoundError:  # pragma: no cover - direct script execution fallback
+except ModuleNotFoundError as exc:  # pragma: no cover - direct script execution fallback
     import importlib.util
 
     helper_path = Path(__file__).resolve().parents[1] / "common" / "rerun_diff_ledger.py"
     spec = importlib.util.spec_from_file_location("rerun_diff_ledger", helper_path)
     if spec is None or spec.loader is None:  # pragma: no cover - defensive fallback
-        raise RuntimeError(f"E_DIFF_LEDGER_HELPER_LOAD_FAILED:{helper_path}")
+        raise RuntimeError(f"E_DIFF_LEDGER_HELPER_LOAD_FAILED:{helper_path}") from exc
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     write_payload_with_diff_ledger = module.write_payload_with_diff_ledger
@@ -123,7 +130,7 @@ def _filtered_corrective_events(*, workspace: Path, run_id: str) -> list[dict[st
         row
         for row in rows
         if str(row.get("event") or "").strip() == "turn_corrective_reprompt"
-        and str(((row.get("data") or {}).get("session_id") or "")).strip() == run_id
+        and str((row.get("data") or {}).get("session_id") or "").strip() == run_id
     ]
 
 
@@ -269,7 +276,8 @@ def _error_payload(*, model: str, provider: str, epic_id: str, error: Exception)
 
 async def _execute_live_proof(
     *,
-    engine: OrchestrationEngine,
+    config_root: Path,
+    db_path: str,
     workspace: Path,
     model: str,
     provider: str,
@@ -278,14 +286,17 @@ async def _execute_live_proof(
 ) -> dict[str, Any]:
     from orket.application.services.runtime_result_projection import require_runtime_success
 
-    require_runtime_success(await engine.run_card(epic_id))
-    return _build_success_payload(
-        model=model,
-        provider=provider,
-        epic_id=epic_id,
-        workspace=workspace,
-        repair_injection_applied=repair_injection_applied["value"],
-    )
+    async with OrchestrationEngine.open(
+        workspace, department="core", db_path=db_path, config_root=config_root
+    ) as engine:
+        require_runtime_success(await engine.run_card(epic_id))
+        return _build_success_payload(
+            model=model,
+            provider=provider,
+            epic_id=epic_id,
+            workspace=workspace,
+            repair_injection_applied=repair_injection_applied["value"],
+        )
 
 
 def record_truthful_runtime_packet2_repair_live_proof(
@@ -294,6 +305,7 @@ def record_truthful_runtime_packet2_repair_live_proof(
     provider: str,
     epic_id: str,
 ) -> dict[str, Any]:
+    require_sync_context(code="E_GOVERNANCE_PROOF_REQUIRES_NATIVE_CONTEXT")
     overrides = _apply_env_overrides(
         {
             "ORKET_RUN_LEDGER_MODE": "protocol",
@@ -313,10 +325,10 @@ def record_truthful_runtime_packet2_repair_live_proof(
             (workspace / "verification").mkdir()
             db_path = str(root / "packet2_repair_live.db")
             write_core_acceptance_assets(root, epic_id=epic_id, environment_model=model)
-            engine = OrchestrationEngine(workspace, department="core", db_path=db_path, config_root=root)
             return asyncio.run(
                 _execute_live_proof(
-                    engine=engine,
+                    config_root=root,
+                    db_path=db_path,
                     workspace=workspace,
                     model=model,
                     provider=provider,

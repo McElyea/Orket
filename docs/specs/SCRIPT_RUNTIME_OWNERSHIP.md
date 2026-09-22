@@ -1,7 +1,7 @@
 # Script runtime and replay observation ownership
 
 Last updated: 2026-09-22
-Status: Active implementation contract since 0.6.83; scoped proof belongs to the architectural-truth plan
+Status: Active implementation contract since 0.6.83, extended in 0.6.84; scoped proof belongs to the architectural-truth plan
 
 ProductFlow command scopes own engine construction, execution and cleanup on one
 event loop. Construction runs through the existing owned native worker. An acquired
@@ -40,3 +40,21 @@ remain unchanged. Required proof includes actual artifact and SQLite observation
 real engine cleanup, controlled HTTP transport lifetime, interruption and visible
 cleanup failures. Linux clocks, full async/effect inventories, remaining input owners,
 real-model acceptance, E/CAP and explicit user lane acceptance remain open.
+
+The packet-1, packet-2 repair and artifact-provenance governance recorders are native
+commands. They refuse an active event loop before environment, temporary-directory,
+provider-hook or alias effects with `E_GOVERNANCE_PROOF_REQUIRES_NATIVE_CONTEXT`.
+Each private async proof scope acquires its engine through `OrchestrationEngine.open`
+and retains construction, execution and cleanup on the command loop before returning.
+An operation refusal remains visible through interruption during cleanup; cleanup
+failure takes precedence and cannot produce a successful proof. Existing payload
+builders, runtime-success gates and summary validation remain unchanged.
+
+Packet 1 restores environment overrides even if alias cleanup fails. It removes an
+alias only after this invocation successfully created it; an alias already present
+at admission remains untouched. A nonzero removal result raises instead of silently
+succeeding. This process-local ownership does not fence other alias writers or resolve
+an ambiguous interrupted copy. Child-process interruption supervision remains open.
+Simulated alias command responses are contract proof only. Actual Ollama fallback
+acceptance still requires the real service, model and CLI; another provider cannot
+substitute for it.

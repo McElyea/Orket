@@ -1,6 +1,6 @@
 {
   "schema_version": "architectural_truth.baseline.v1",
-  "generated_at": "2026-09-22T10:05:46.690083Z",
+  "generated_at": "2026-09-22T10:38:33.173570Z",
   "collection_ok": true,
   "release_ready": false,
   "release_ready_reason": "Active architectural exceptions and red/noisy proof gates remain.",
@@ -535,10 +535,10 @@
   },
   "test_taxonomy": {
     "schema_version": "test_taxonomy_report.v1",
-    "tests_total": 5729,
-    "missing_layer_total": 4142,
+    "tests_total": 5733,
+    "missing_layer_total": 4146,
     "by_layer": {
-      "unlabeled": 4142,
+      "unlabeled": 4146,
       "integration": 752,
       "unit": 161,
       "contract": 663,
@@ -1146,7 +1146,7 @@
         "layer": null
       }
     ],
-    "missing_layers_omitted": 4042
+    "missing_layers_omitted": 4046
   },
   "ruff": {
     "proof": "structural_lint",
@@ -1545,46 +1545,6 @@
     "parse_errors": []
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-21T23:47:16.690425Z",
-      "changed": true,
-      "before_digest": "sha256:2670deb12c2b9dfe85f22feab976e6d9db6fc1881be654417b9b11c064f1c5e5",
-      "after_digest": "sha256:b32b93777f2ac6a9460be4a269d000db8b95060e7a8e77e6f6792fb1c5d50d74",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 2331,
-        "paths_total_current": 2331,
-        "paths_total_reference": 2331,
-        "churn_paths": 1,
-        "churn_ratio": 0.000429,
-        "sample_paths": [
-          "$.generated_at"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-22T00:32:05.485767Z",
-      "changed": true,
-      "before_digest": "sha256:b32b93777f2ac6a9460be4a269d000db8b95060e7a8e77e6f6792fb1c5d50d74",
-      "after_digest": "sha256:ceffb999b8776079aebce3912ae7b37d78934da0281b14de219650c18a773572",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 2331,
-        "paths_total_current": 2331,
-        "paths_total_reference": 2331,
-        "churn_paths": 1,
-        "churn_ratio": 0.000429,
-        "sample_paths": [
-          "$.generated_at"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-22T00:38:07.612831Z",
       "changed": true,
@@ -2290,6 +2250,50 @@
       "changed": true,
       "before_digest": "sha256:b85b908133cd67ed4b9c488e1505740c423d4e19a7d2985575d931121b32856d",
       "after_digest": "sha256:400545cb62436ec810274adfff773d086288eaa84ae90ae5ad06f98b89c57c04",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 2329,
+        "paths_total_current": 2329,
+        "paths_total_reference": 2329,
+        "churn_paths": 1,
+        "churn_ratio": 0.000429,
+        "sample_paths": [
+          "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T10:26:44.948432Z",
+      "changed": true,
+      "before_digest": "sha256:400545cb62436ec810274adfff773d086288eaa84ae90ae5ad06f98b89c57c04",
+      "after_digest": "sha256:b4634446b3d8ab795d3a73430cf85a4cff0c3ca31498d84624f96c67c71244be",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 5,
+        "initial_write": false,
+        "paths_total_previous": 2329,
+        "paths_total_current": 2329,
+        "paths_total_reference": 2329,
+        "churn_paths": 5,
+        "churn_ratio": 0.002147,
+        "sample_paths": [
+          "$.generated_at",
+          "$.test_taxonomy.by_layer.unlabeled",
+          "$.test_taxonomy.missing_layer_total",
+          "$.test_taxonomy.missing_layers_omitted",
+          "$.test_taxonomy.tests_total"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T10:38:33.175961Z",
+      "changed": true,
+      "before_digest": "sha256:b4634446b3d8ab795d3a73430cf85a4cff0c3ca31498d84624f96c67c71244be",
+      "after_digest": "sha256:8d1791d816a37cc069c762b7c6d702a0f0e73f3f973c7de0983700ac4968bba6",
       "diff": {
         "added_paths": 0,
         "removed_paths": 0,

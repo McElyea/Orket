@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-22T09:52:00.275260+00:00",
+  "generated_at": "2026-09-22T10:25:50.151126+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -32028,45 +32028,6 @@
   },
   "diff_ledger": [
     {
-      "run_at_utc": "2026-09-21T16:27:20.214403Z",
-      "changed": true,
-      "before_digest": "sha256:9ef1e93848923e7b4deb3f6d84805fa219ec122e8c3b24a0e0d7a95ff3243109",
-      "after_digest": "sha256:2d7d420ad80e9bcaf4c8a0a0fa787beac5e8d3d18a88e2ded1f7b34b0f5114b7",
-      "diff": {
-        "added_paths": 12,
-        "removed_paths": 0,
-        "changed_paths": 11105,
-        "initial_write": false,
-        "paths_total_previous": 47168,
-        "paths_total_current": 47255,
-        "paths_total_reference": 47255,
-        "churn_paths": 11117,
-        "churn_ratio": 0.235256,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.edges[33].line",
-          "$.observed.edges[33].path",
-          "$.observed.edges[33].source",
-          "$.observed.edges[34].line",
-          "$.observed.edges[34].path",
-          "$.observed.edges[34].source",
-          "$.observed.edges[34].target",
-          "$.observed.edges[35].line",
-          "$.observed.edges[35].target",
-          "$.observed.edges[36].line",
-          "$.observed.edges[36].target",
-          "$.observed.edges[37].line",
-          "$.observed.edges[37].target",
-          "$.observed.edges[38].line",
-          "$.observed.edges[38].target",
-          "$.observed.edges[39].line",
-          "$.observed.edges[39].target",
-          "$.observed.edges[40].line",
-          "$.observed.edges[40].target"
-        ]
-      }
-    },
-    {
       "run_at_utc": "2026-09-21T17:12:34.463792Z",
       "changed": true,
       "before_digest": "sha256:2d7d420ad80e9bcaf4c8a0a0fa787beac5e8d3d18a88e2ded1f7b34b0f5114b7",
@@ -32985,6 +32946,26 @@
           "$.observed.edges[2902].path",
           "$.observed.edges[2902].source",
           "$.observed.edges[2902].target"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T10:26:11.906635Z",
+      "changed": true,
+      "before_digest": "sha256:1ad853fe406662ee777947f829757a295e45a5d2d0727143632de369e99eccfc",
+      "after_digest": "sha256:7a468b42c96b83b3ee06007f410c2c8e4006842f774c83216a8fcf5ed4e1beff",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 49320,
+        "paths_total_current": 49320,
+        "paths_total_reference": 49320,
+        "churn_paths": 1,
+        "churn_ratio": 2e-05,
+        "sample_paths": [
+          "$.generated_at"
         ]
       }
     }

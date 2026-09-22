@@ -14,22 +14,25 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from orket.adapters.storage.protocol_append_only_ledger import AppendOnlyRunLedger
-from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_MODEL
-from orket.orchestration.engine import OrchestrationEngine
+from orket.adapters.execution.owned_io import require_sync_context  # noqa: E402 - repository path bootstrap
+from orket.adapters.storage.protocol_append_only_ledger import (  # noqa: E402 - repository path bootstrap
+    AppendOnlyRunLedger,
+)
+from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_MODEL  # noqa: E402 - repository path bootstrap
+from orket.orchestration.engine import OrchestrationEngine  # noqa: E402 - repository path bootstrap
 from orket.runtime.config.defaults import configured_provider  # noqa: E402 - repository path bootstrap
-from orket.runtime.live_acceptance_assets import write_core_acceptance_assets
-from scripts.common.run_summary_support import load_validated_run_summary
+from orket.runtime.live_acceptance_assets import write_core_acceptance_assets  # noqa: E402 - repository path bootstrap
+from scripts.common.run_summary_support import load_validated_run_summary  # noqa: E402 - repository path bootstrap
 
 try:
     from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
-except ModuleNotFoundError:  # pragma: no cover - direct script execution fallback
+except ModuleNotFoundError as exc:  # pragma: no cover - direct script execution fallback
     import importlib.util
 
     helper_path = Path(__file__).resolve().parents[1] / "common" / "rerun_diff_ledger.py"
     spec = importlib.util.spec_from_file_location("rerun_diff_ledger", helper_path)
     if spec is None or spec.loader is None:  # pragma: no cover - defensive fallback
-        raise RuntimeError(f"E_DIFF_LEDGER_HELPER_LOAD_FAILED:{helper_path}")
+        raise RuntimeError(f"E_DIFF_LEDGER_HELPER_LOAD_FAILED:{helper_path}") from exc
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     write_payload_with_diff_ledger = module.write_payload_with_diff_ledger
@@ -95,17 +98,20 @@ async def _run_command(*args: str) -> tuple[int, str, str]:
     return process.returncode, stdout.decode("utf-8", errors="replace"), stderr.decode("utf-8", errors="replace")
 
 
-async def _ensure_ollama_alias(source_model: str, alias_model: str) -> None:
+async def _ensure_ollama_alias(source_model: str, alias_model: str) -> bool:
     show_code, _, _ = await _run_command("ollama", "show", alias_model)
     if show_code == 0:
-        return
+        return False
     copy_code, _, copy_stderr = await _run_command("ollama", "cp", source_model, alias_model)
     if copy_code != 0:
         raise AssertionError(f"failed to create ollama alias {alias_model}: {copy_stderr.strip()}")
+    return True
 
 
 async def _remove_ollama_alias(alias_model: str) -> None:
-    await _run_command("ollama", "rm", alias_model)
+    code, _, stderr = await _run_command("ollama", "rm", alias_model)
+    if code != 0:
+        raise AssertionError(f"failed to remove ollama alias {alias_model}: {stderr.strip()}")
 
 
 def _proof_checks(
@@ -222,7 +228,8 @@ def _error_payload(*, model: str, provider: str, epic_id: str, error: Exception)
 
 async def _execute_live_proof(
     *,
-    engine: OrchestrationEngine,
+    config_root: Path,
+    db_path: str,
     workspace: Path,
     model: str,
     provider: str,
@@ -230,13 +237,16 @@ async def _execute_live_proof(
 ) -> dict[str, Any]:
     from orket.application.services.runtime_result_projection import require_runtime_success
 
-    require_runtime_success(await engine.run_card(epic_id))
-    return _build_success_payload(
-        model=model,
-        provider=provider,
-        epic_id=epic_id,
-        workspace=workspace,
-    )
+    async with OrchestrationEngine.open(
+        workspace, department="core", db_path=db_path, config_root=config_root
+    ) as engine:
+        require_runtime_success(await engine.run_card(epic_id))
+        return _build_success_payload(
+            model=model,
+            provider=provider,
+            epic_id=epic_id,
+            workspace=workspace,
+        )
 
 
 def record_truthful_runtime_packet1_live_proof(
@@ -245,6 +255,7 @@ def record_truthful_runtime_packet1_live_proof(
     provider: str,
     epic_id: str,
 ) -> dict[str, Any]:
+    require_sync_context(code="E_GOVERNANCE_PROOF_REQUIRES_NATIVE_CONTEXT")
     alias_model = "packet1-boundary-proof:7b"
     overrides = _apply_env_overrides(
         {
@@ -256,8 +267,9 @@ def record_truthful_runtime_packet1_live_proof(
             "ORKET_LOCAL_PROMPTING_FALLBACK_PROFILE_ID": "ollama.qwen.chatml.v1",
         }
     )
+    alias_created = False
     try:
-        asyncio.run(_ensure_ollama_alias(model, alias_model))
+        alias_created = asyncio.run(_ensure_ollama_alias(model, alias_model))
         with tempfile.TemporaryDirectory(prefix="orket-packet1-live-") as temp_dir:
             root = Path(temp_dir)
             workspace = root / "workspace"
@@ -266,10 +278,10 @@ def record_truthful_runtime_packet1_live_proof(
             (workspace / "verification").mkdir()
             db_path = str(root / "packet1_live.db")
             write_core_acceptance_assets(root, epic_id=epic_id, environment_model=alias_model)
-            engine = OrchestrationEngine(workspace, department="core", db_path=db_path, config_root=root)
             return asyncio.run(
                 _execute_live_proof(
-                    engine=engine,
+                    config_root=root,
+                    db_path=db_path,
                     workspace=workspace,
                     model=model,
                     provider=provider,
@@ -277,8 +289,11 @@ def record_truthful_runtime_packet1_live_proof(
                 )
             )
     finally:
-        asyncio.run(_remove_ollama_alias(alias_model))
-        _restore_env(overrides)
+        try:
+            if alias_created:
+                asyncio.run(_remove_ollama_alias(alias_model))
+        finally:
+            _restore_env(overrides)
 
 
 def main(argv: list[str] | None = None) -> int:

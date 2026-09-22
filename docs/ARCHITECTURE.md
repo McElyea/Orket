@@ -353,6 +353,14 @@ diagnostics on an event loop refuse before I/O. Contract and limits:
 `docs/specs/SCRIPT_RUNTIME_OWNERSHIP.md` and
 `docs/architecture/CONTRACT_DELTA_SCRIPT_RUNTIME_OWNERSHIP_D_2026-09-22.md`.
 
+The three truthful-runtime governance proof recorders now own acquired engines
+through async construction, execution and cleanup before native command return.
+They refuse active-loop entry before process effects. Packet 1 restores environment
+overrides even if alias cleanup fails, preserves pre-existing aliases and surfaces
+failed removal of its own alias. This does not establish Ollama live acceptance or
+cross-process alias fencing. See the script ownership contract and
+`docs/architecture/CONTRACT_DELTA_GOVERNANCE_RUNTIME_OWNERSHIP_D_2026-09-22.md`.
+
 Driver async creation captures root, environment and settings before owned
 construction; direct synchronous construction refuses an event-loop thread.
 API chat and interactive CLI use shared runtime owners. Console reads settle

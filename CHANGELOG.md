@@ -5,6 +5,18 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.84] - 2026-09-22
+
+### Fixed
+- Own governance proof engines from async construction through cleanup before command return.
+- Refuse event-loop entry before native command effects; always restore Packet 1 environment overrides.
+- Remove only an alias created by this invocation and surface unsuccessful alias removal.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Native governance recorders retain their API; private async scopes now acquire their engines.
+- Contract: `docs/architecture/CONTRACT_DELTA_GOVERNANCE_RUNTIME_OWNERSHIP_D_2026-09-22.md`.
+
 ## [0.6.83] - 2026-09-22
 
 ### Fixed

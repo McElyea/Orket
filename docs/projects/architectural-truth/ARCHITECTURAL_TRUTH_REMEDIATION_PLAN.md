@@ -12519,7 +12519,8 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.83 script runtime owners and checkpoint-bound witness observations, retaining
+0.6.84 governance proof runtime and local alias ownership, retaining
+0.6.83 script runtime owners and checkpoint-bound witness observations,
 0.6.82 native synchronous coroutine ownership,
 0.6.81 immutable outbound policy and owned file observations,
 0.6.80 captured local Kernel state/filesystem effects, 0.6.79 run identity/workspace
@@ -12534,7 +12535,7 @@ and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
 Preserve every failed and
 passing source/native observation and the historical clock diagnosis. Canonical
-Ruff has 89 findings at the .83 checkpoint. The prior stale benchmark expectation passes in the
+Ruff has 89 findings at the .84 checkpoint. The prior stale benchmark expectation passes in the
 new source/native selection. The unmodified published .39 complete rerun has
 7,260 passes, three failures and 89 skips; its coverage is 84.56120595327887%
 against the unchanged 89% gate. The two parent-Git-dependent fixture failures and
@@ -21717,3 +21718,92 @@ lane retirement. Baseline collection does not imply release readiness.
 
 Accepted source/installed manifest and retained evidence:
 `.tmp/d-script-runtime-ownership/`. Scoped checkpoint only; release readiness remains false.
+
+
+#### .84 Governance proof runtime and local alias ownership (2026-09-22)
+
+Responsible maintainer: Codex for Orket Core. Continuing D after published .83;
+no new capability admission, whole-plan completion or lane retirement.
+
+The packet-1, packet-2 repair and artifact-provenance recorders now refuse native
+entry from a running event loop before environment, temporary-directory, provider
+hook or alias effects. Each private async proof scope acquires its engine through
+the existing configured owner; construction, execution and retained cleanup finish
+before the command returns. Original operation refusal survives interruption during
+cleanup; cleanup failure stays visible. All three payload builders, proof checks,
+CLI publication functions and original async execution bodies remain AST-identical.
+Core runtime bytes and BT-1 through BT-5 gates are unchanged.
+
+Packet 1 always restores environment overrides, including failed alias cleanup.
+It preserves an alias present at admission, removes only one it successfully created,
+and refuses nonzero removal instead of silently returning success. This is local
+ownership, not cross-process fencing or recovery of an interrupted ambiguous copy.
+Alias child-process interruption and descendant supervision remain unfinished.
+
+Scoped live local proof and structural binding:
+
+| Cell | Tests / failures / errors / skips | Pytest seconds | Installed origins |
+|---|---|---|---|
+| Fresh source | 1031 / 0 / 0 / 0 | 111.468 | source |
+| Installed win-py311 | 1031 / 0 / 0 / 0 | 111.419 | 964 |
+| Installed win-py312 | 1031 / 0 / 0 / 0 | 125.292 | 964 |
+
+All1009 previous identities are retained across119 modules; this adds19 new cases
+and3 existing summary-validation cases. Final focused22/22 and exact prior installed
+controls9/9 failures have zero errors/skips. The old controls use byte-verified .83
+core and frozen .83 scripts, never current-script substitution. Complete parity
+covers1143 Python and the same20 data files (1163 total), with
+2321 frozen support inputs. Forty independent real SQLite
+observations per cell during held cleanup/observation all meet the unchanged.5s
+bound; maximum 0.019724700s. No deadline was weakened.
+
+Two real native recorders reach controlled local HTTP POST failure and close their
+actual engines/pipelines. All three async proof scopes acquire real engines, observe
+actual SQLite and retain cleanup through repeated cancellation, timeout and actual
+filesystem cleanup failure. These are scoped lifetime effects, not model inference.
+Five simulated alias-response contracts cover existing alias, owned creation, copy
+failure, removal failure and absent executable. They are structural contract proof,
+not real Ollama CLI/service/model acceptance. The native guard tests prove early
+refusal; existing validated-summary refusal tests remain selected.
+
+Retained attempts: initial opening5/5 failed before its intended transport boundary
+because of wrong exception expectations and mixed fixture/protocol clocks. Binding
+the clocks exposed unsupported-profile admission (clock-bound5/5, diagnostic2/2),
+then supported profile with mismatched advertised model (profile-bound5/5). Advertising
+the matching fixture model reaches HTTP; admitted opening5/5 decisively shows two
+leaked engines and three missing native guards. No runtime clock/admission rule was
+relaxed. First repair8/8 passes. Expanded16/22 exposed six incorrect fixture assertions:
+the existing owner preserves CardNotFound when cancellation arrives during cleanup,
+including an expired wait_for. Tests now assert that refusal while retaining the same
+held-resource, deadline and responsiveness checks. Final22/22 passes. Failed outputs
+and invoked helpers remain retained. Two selection helpers stopped on existing
+standalone-bootstrap lint findings and annotations moved by import formatting;
+explicit justified bootstrap annotations, chained fallback errors and minor import/
+parentheses cleanup pass the final scoped lint/size check. A premature frozen-review
+invocation refused because the canonical dependency gate had not finished; the same
+unchanged helper passes only after that gate reports success.
+
+Canonical C: 1143 files,
+3722 edges, six resolved routes, zero violations,
+analysis errors, unknown modules and authority cycles. Ruff89 existing/0 introduced;
+scoped lint, docs, release metadata, whitespace, sizes and source/installed case binding
+pass. Both Quality jobs select the new cases; hosted execution is still unavailable.
+Contract: script runtime ownership extension and its September22 governance delta.
+Authority, architecture, contributor and version/changelog reflect this scope.
+Baseline collection remains distinct from release readiness.
+
+Remaining blockers or drift: the retained .72 Linux clock preflight is still an
+environment blocker (240.006951941s observed, quiet18.843389227vs60, steps outside.01,
+cause unknown); no new measurement, setting or deadline change. Continue independent
+D complete adapter/effect enforcement, async-reachability inventory, remaining clock/
+environment/input owners, ambient identifiers and command descendants. ProductFlow's
+.83 workload-specific replay completeness gap remains blocked/not_evaluable. Actual
+Ollama fallback alias acceptance remains unverified; no different provider substitute.
+E1 marker/parameterization/type-aware no-op/Ruff/full coverage, E2 bounded authority/
+history, CAP1 actual-model workloads, CAP2 accepted containment and CAP3 capacity/
+recovery remain required. Fullsuite89%, hosted Gitea Quality, earlier Git timeout cause,
+physical-sleep timing and full legacy Kernel completion integrity remain unverified.
+Explicit user acceptance is required for retirement. No whole-plan completion.
+
+Accepted source/installed manifest and retained evidence:
+`.tmp/d-governance-runtime-ownership/`. Scoped checkpoint; release readiness remains false.
