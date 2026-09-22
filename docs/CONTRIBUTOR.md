@@ -95,6 +95,10 @@ create and bind an explicit `KernelRuntime` and close it after related calls;
 async direct embeddings use `KernelRuntime.open()` and retain any workers they
 start. Engine callers use the engine-owned gateway/runtime and async methods.
 Do not restore global-map or test-reset defaults to migrate a caller.
+Legacy capability policy reads and native execute-turn use owned workers. Typed
+policy inputs and the package-owned default follow
+`docs/specs/KERNEL_CAPABILITY_POLICY_INPUTS.md`; do not restore CWD lookup or
+silent empty-policy fallback.
 
 Prompt commands use `python -m orket.interfaces.prompts_cli --root <project> ...`.
 Prompt reads share model-file ownership with writers and can create native lock

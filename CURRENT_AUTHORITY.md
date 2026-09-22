@@ -2,6 +2,16 @@
 
 Last updated: 2026-09-21
 
+Legacy Kernel capability evaluation uses a package-owned default and one validated
+immutable policy observation. Application capture owns the read-only adapter;
+missing/malformed/native I/O errors refuse instead of becoming an empty policy.
+Requests detach before reads; typed inputs permit deterministic evaluation.
+Default logical source is `policy://orket/kernel/v1/default`; caller-declared
+context overrides remain advisory and do not establish broker authorization.
+Migration, async ownership and exact scope:
+`docs/specs/KERNEL_CAPABILITY_POLICY_INPUTS.md` and
+`docs/architecture/CONTRACT_DELTA_KERNEL_CAPABILITY_POLICY_D_2026-09-21.md`.
+
 This file is the current canonical authority snapshot for high-impact runtime and governance paths.
 
 Core package-data declarations include the existing permission example/schema

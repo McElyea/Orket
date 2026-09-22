@@ -5,6 +5,19 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.78] - 2026-09-21
+
+### Fixed
+- Ship the canonical Kernel capability policy and capture one immutable observation per evaluation.
+- Refuse missing/malformed policy inputs; detach requests before reads and retain owned workers through interruption.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Replace the removed model-tree policy path with the packaged asset authority; default source becomes `policy://orket/kernel/v1/default`.
+- Move implicit reads and execute-turn off running event loops; default-source evidence digests change.
+- Existing caller-declared capability overrides remain advisory; no new tool execution or broker authorization claim.
+- Contract: `docs/architecture/CONTRACT_DELTA_KERNEL_CAPABILITY_POLICY_D_2026-09-21.md`.
+
 ## [0.6.77] - 2026-09-21
 
 ### Fixed

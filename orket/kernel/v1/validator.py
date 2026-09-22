@@ -2,11 +2,14 @@ from __future__ import annotations
 
 import hashlib
 import json
-from functools import lru_cache
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
+from orket.adapters.execution.owned_io import require_sync_context
+from orket.application.services.kernel_action_input_service import capture_kernel_request
+from orket.application.services.kernel_capability_policy_service import selected_kernel_capability_policy
+from orket.core.contracts.kernel_capability_policy import KernelCapabilityPolicy
 from orket.kernel.v1.canonical import compute_turn_result_digest
 from orket.kernel.v1.state.lsi import LocalSovereignIndex
 from orket.kernel.v1.state.promotion import promote_turn
@@ -14,9 +17,6 @@ from orket.kernel.v1.state.promotion import promote_turn
 CONTRACT_VERSION = "kernel_api/v1"
 DEFAULT_VISIBILITY_MODE = "local_only"
 DEFAULT_WORKSPACE_ROOT = ".orket_kernel"
-DEFAULT_CAPABILITY_POLICY_SOURCE = "policy://orket/kernel/v1/default"
-DEFAULT_CAPABILITY_POLICY_VERSION = "v1"
-DEFAULT_CAPABILITY_POLICY_PATH = Path("model/core/contracts/kernel_capability_policy_v1.json")
 
 
 def _issue(
@@ -127,54 +127,6 @@ def _capability_decision_record(
     ).hexdigest()
     payload["decision_id"] = decision_id
     return payload
-
-
-def _capability_evidence(context: dict[str, Any]) -> dict[str, Any]:
-    policy = _load_capability_policy()
-    source = (
-        context.get("policy_source")
-        or policy.get("policy_source")
-        or context.get("policy_ref")
-        or DEFAULT_CAPABILITY_POLICY_SOURCE
-    )
-    version = context.get("policy_version") or policy.get("policy_version") or DEFAULT_CAPABILITY_POLICY_VERSION
-    return {
-        "policy_ref": str(context.get("policy_ref", source)),
-        "capability_source": str(source),
-        "capability_version": str(version),
-    }
-
-
-@lru_cache(maxsize=1)
-def _load_capability_policy() -> dict[str, Any]:
-    try:
-        payload = json.loads(DEFAULT_CAPABILITY_POLICY_PATH.read_text(encoding="utf-8"))
-    except (FileNotFoundError, json.JSONDecodeError):
-        return {}
-    if not isinstance(payload, dict):
-        return {}
-    return payload
-
-
-def _policy_permissions(role: str, task: str, context: dict[str, Any]) -> list[str]:
-    context_permissions = context.get("permissions")
-    if isinstance(context_permissions, list):
-        return sorted({str(item) for item in context_permissions if str(item)})
-
-    policy = _load_capability_policy()
-    role_task_permissions = policy.get("role_task_permissions")
-    if not isinstance(role_task_permissions, dict):
-        role_task_permissions = {}
-    role_permissions = role_task_permissions.get(role)
-    if not isinstance(role_permissions, dict):
-        role_permissions = {}
-    task_permissions = role_permissions.get(task)
-    if isinstance(task_permissions, list):
-        return sorted({str(item) for item in task_permissions if str(item)})
-    default_permissions = policy.get("default_permissions")
-    if isinstance(default_permissions, list):
-        return sorted({str(item) for item in default_permissions if str(item)})
-    return []
 
 
 def _normalize_turn_digests(value: Any) -> list[dict[str, str]]:
@@ -327,7 +279,11 @@ def start_run_v1(request: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def execute_turn_v1(request: dict[str, Any]) -> dict[str, Any]:
+def execute_turn_v1(
+    request: dict[str, Any], *, policy_inputs: KernelCapabilityPolicy | None = None,
+) -> dict[str, Any]:
+    require_sync_context(code="E_KERNEL_INVOCATION_REQUIRES_ASYNC_OWNER")
+    request = capture_kernel_request(request)
     if request.get("contract_version") != CONTRACT_VERSION:
         return _base_turn_result(
             run_id="unknown",
@@ -475,8 +431,9 @@ def execute_turn_v1(request: dict[str, Any]) -> dict[str, Any]:
             requested = tool_call.get("requested_permissions")
             declared = tool_call.get("declared_permissions")
             side_effects_declared = bool(tool_call.get("side_effects_declared", True))
-            evidence = _capability_evidence(context)
-            allowed_permissions = _policy_permissions(role=role, task=task, context=context)
+            policy = selected_kernel_capability_policy(policy_inputs)
+            evidence = policy.evidence(context)
+            allowed_permissions = policy.permissions(role=role, task=task, context=context)
 
             if not bool(context.get("capability_resolved", True)):
                 decision = _capability_decision(
@@ -706,7 +663,10 @@ def finish_run_v1(request: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def resolve_capability_v1(request: dict[str, Any]) -> dict[str, Any]:
+def resolve_capability_v1(
+    request: dict[str, Any], *, policy_inputs: KernelCapabilityPolicy | None = None,
+) -> dict[str, Any]:
+    request = capture_kernel_request(request)
     if request.get("contract_version") != CONTRACT_VERSION:
         raise ValueError("contract_version must be kernel_api/v1")
 
@@ -722,7 +682,8 @@ def resolve_capability_v1(request: dict[str, Any]) -> dict[str, Any]:
         context = {}
 
     enabled = bool(context.get("capability_enforcement", True))
-    evidence = _capability_evidence(context)
+    policy = selected_kernel_capability_policy(policy_inputs)
+    evidence = policy.evidence(context)
     if not enabled:
         return {
             "contract_version": CONTRACT_VERSION,
@@ -736,7 +697,7 @@ def resolve_capability_v1(request: dict[str, Any]) -> dict[str, Any]:
             },
             "events": [_event("INFO", "capability", "I_CAPABILITY_SKIPPED", "/context", "Capability module disabled.")],
         }
-    permissions = _policy_permissions(role=role, task=task, context=context)
+    permissions = policy.permissions(role=role, task=task, context=context)
     return {
         "contract_version": CONTRACT_VERSION,
         "capability_plan": {
@@ -751,7 +712,10 @@ def resolve_capability_v1(request: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def authorize_tool_call_v1(request: dict[str, Any]) -> dict[str, Any]:
+def authorize_tool_call_v1(
+    request: dict[str, Any], *, policy_inputs: KernelCapabilityPolicy | None = None,
+) -> dict[str, Any]:
+    request = capture_kernel_request(request)
     if request.get("contract_version") != CONTRACT_VERSION:
         raise ValueError("contract_version must be kernel_api/v1")
 
@@ -765,8 +729,9 @@ def authorize_tool_call_v1(request: dict[str, Any]) -> dict[str, Any]:
     subject = str(context.get("subject", "unknown"))
     action = str(tool_request.get("action", "tool.call"))
     resource = str(tool_request.get("resource", "unknown"))
-    evidence = _capability_evidence(context)
-    allowed_permissions = _policy_permissions(
+    policy = selected_kernel_capability_policy(policy_inputs)
+    evidence = policy.evidence(context)
+    allowed_permissions = policy.permissions(
         role=str(context.get("role", "")),
         task=str(context.get("task", "")),
         context=context,

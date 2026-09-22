@@ -1,6 +1,16 @@
 # Orket Architecture (Target State)
 
 Last updated: 2026-09-21
+
+Legacy Kernel capability evaluation uses a package-owned default and one validated
+immutable policy observation. Application capture owns the read-only adapter;
+missing/malformed/native I/O errors refuse instead of becoming an empty policy.
+Requests detach before reads; typed inputs permit deterministic evaluation.
+Default logical source is `policy://orket/kernel/v1/default`; caller-declared
+context overrides remain advisory and do not establish broker authorization.
+Migration, async ownership and exact scope:
+`docs/specs/KERNEL_CAPABILITY_POLICY_INPUTS.md` and
+`docs/architecture/CONTRACT_DELTA_KERNEL_CAPABILITY_POLICY_D_2026-09-21.md`.
 Status: Active target architecture (transitioning)
 
 Canonical architecture specification for the Orket runtime.
@@ -265,7 +275,7 @@ Pure credential decisions consume immutable
 observations; issuance binds an accepted admission and exact approval identity
 under the runtime lock. Duplicate token/identity hashes cannot reset replay.
 Low-level effects require typed inputs and explicit invalidation time. Event
-failure can leave a record transition; global Kernel state remains in memory.
+failure can leave a record transition; Kernel state remains in memory.
 Migration, synchronous ownership and partial-effect limits:
 `docs/architecture/CONTRACT_DELTA_KERNEL_CREDENTIAL_INPUTS_D_2026-09-21.md`.
 

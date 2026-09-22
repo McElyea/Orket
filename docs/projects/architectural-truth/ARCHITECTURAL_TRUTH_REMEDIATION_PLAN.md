@@ -1,7 +1,7 @@
 # Architectural Truth Remediation Plan
 
 Date: 2026-07-29
-Last updated: 2026-09-21
+Last updated: 2026-09-22
 Status: Active implementation plan; scoped BT-1 through BT-5 accepted; C/D is the next ordered gate
 Roadmap state: Priority Now
 Owner: Orket Core
@@ -12519,8 +12519,9 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.77 explicit Kernel runtime, selected inputs and shutdown, retaining 0.6.76
-state/publication, 0.6.75 credential expiry/authorization, 0.6.74 memory,
+0.6.78 immutable packaged Kernel capability policy, retaining 0.6.77 explicit
+runtime/inputs/shutdown, 0.6.76 state/publication, 0.6.75 credential
+expiry/authorization and 0.6.74 memory,
 0.6.73 sandbox commands, 0.6.72 approval submission, 0.6.71 authorization,
 0.6.65/0.6.66 API queries, 0.6.67 legacy action, 0.6.68 construction,
 0.6.69 cleanup and 0.6.70 files. Preserve the governed legacy-export cutover;
@@ -21135,3 +21136,95 @@ explicit user acceptance.
 
 Evidence: `.tmp/d-kernel-owner/`; the scoped checkpoint binds exact files and
 retained proof. No whole-plan completion or release-ready claim.
+
+
+#### .78 Immutable packaged Kernel capability policy (2026-09-22)
+
+The legacy resolve/authorize/execute-turn capability surface now consumes one
+validated immutable `KernelCapabilityPolicy` per evaluation. Application capture
+selects an absolute policy path and a read-only adapter reads its document once.
+The validator's process-wide mutable cache and relative-file lookup are removed.
+Requests detach before policy I/O; evidence and permissions share the same
+observation. Missing files, malformed JSON, invalid encoding, native I/O failure
+and invalid document shape propagate before current-turn staging effects.
+Explicit empty permissions remain a valid deny policy. Disabled/no-tool turns
+retain their prior no-policy-read behavior. Existing caller context permissions,
+enforcement/resolution flags, allow override and provenance overrides remain
+trusted/advisory metadata, not authenticated broker authority or tool execution.
+
+The single default moved from `model/core/contracts/kernel_capability_policy_v1.json`
+into `orket/runtime/config/assets/contracts/`; package location authority owns
+lookup. It ships in wheel and source archives, independently of working directory.
+Default logical source becomes `policy://orket/kernel/v1/default`, changing
+associated evidence/digests; policy version and permission contents are preserved.
+Historical archived OS references remain historical. No duplicate authored policy
+or fallback path remains. Migration and limits are durable in
+`docs/specs/KERNEL_CAPABILITY_POLICY_INPUTS.md` and its matching contract delta.
+
+Typed policy inputs allow pure resolve/authorize calls without filesystem access.
+Implicit reads refuse running event loops; native execute-turn refuses before
+filesystem effects. Existing worker/lifetime ownership retains reads and local
+staging through repeated cancellation, timeout and shutdown; native failure stays
+visible. This does not promise rollback: staging can precede a cancelled/timed-out
+caller. Policy rotation affects the next capture without changing prior snapshots.
+Direct trusted embeddings select custom files through application capture; request
+JSON cannot supply the typed argument. `invoke_kernel` remains JSON-only; typed
+inputs can be bound into a partial operation.
+
+Live local proof with controlled adapter scheduling and structural binding:
+
+| Cell | Tests / failures / errors / skips | Pytest seconds | Installed import origins |
+| --- | --- | --- | --- |
+| Fresh source | 659 / 0 / 0 / 0 | 69.775 | source checkout |
+| Installed win-py311 | 659 / 0 / 0 / 0 | 70.598 | 922 |
+| Installed win-py312 | 659 / 0 / 0 / 0 | 77.920 | 922 |
+
+The frozen 73-module selection preserves all 557 .77 case identities and adds
+policy, validator/schema, replay, LSI and promotion coverage. Inputs remain
+unchanged; all three cells have matching identities. Tests use real file reads,
+invalid file/encoding/native failures, immutable inputs, rotation, nested caller
+mutation during held reads, real staging and authenticated in-process ASGI lifecycle.
+Independent SQLite responds below 0.5s during all seven measured waits per cell;
+maximum 0.015801800s. Existing deadlines and fixture holds are unchanged.
+No deployed HTTP, provider inference, outward connector, durable Kernel restart,
+Linux or whole-suite acceptance is claimed. Hosted Quality selects the new cases;
+no hosted execution is available. No fresh JSONL script acceptance is claimed.
+
+All three final current counterexamples fail against the byte-verified installed
+.77 wheel, without collection errors or skips. Opening three failures are retained.
+The first repair run passed 55/57: its two subprocesses used the old installed
+artifact in the source environment. Child origin now explicitly matches the
+parent's verified package origin; repaired 62 passed before adding two preservation
+cases and strengthening nested input assertions for the final 659-case freeze.
+Retain the initial marker/import-order Ruff rejection and the wrong negative-
+control driver import failure (no tests collected), with corrected helpers and
+outputs. The first installed 3.11 run passed 642 and failed 17 because the support archive
+omitted archived contracts. Its complete output is retained; a separate corrected
+archive adds 11 historical contract JSON documents (including stage order), with
+unchanged tests, runtime artifacts, source proof and deadlines. Both corrected
+installed cells are required. No failed observation was rewritten as acceptance.
+
+Canonical C passes: 1132 Python files,
+3657 edges, six resolved dynamic routes, zero violations,
+analysis errors, unknown modules or authority cycles. Source/sdist/wheel byte
+parity covers 1132 Python plus 20 data files (1152 total), preserving every earlier
+resource and adding the single canonical policy; 2283 support files
+are frozen. Full Ruff remains 89 existing findings with none introduced. Scoped
+lint, size, docs and release metadata pass. The current architecture's stale
+"global Kernel state" wording now correctly says state remains in memory; sealed
+history is unchanged. Baseline collection remains distinct from readiness.
+
+Remaining blockers or drift: latest Linux preflight remains the retained .72
+environment blocker (240.006951941s observed; final quiet 18.843389227s versus 60s;
+clock steps outside 0.01s; cause unknown). No fresh measurement or deadline change.
+Continue D with run identity, other Kernel filesystem/effect inputs, complete
+adapter/effect and async-reachability inventories, shared SDK synchronous bridge
+lifetime and helper-runtime owners. Then E1 marker/no-op/Ruff/full-coverage work,
+E2 generated authority/history decomposition, and CAP1/2/3 implementation and
+acceptance remain. Full-suite 89%, hosted Gitea Quality, Ollama-specific alias
+flows, earlier Git timeout cause and physical-sleep timing remain unverified.
+Preserve BT-1 through BT-5; explicit user acceptance is required to retire the lane.
+
+Evidence: `.tmp/d-kernel-validator/`. Retained September20 and .77 hashes and
+original checkout preservation are separately verified. Scoped checkpoint only;
+no whole-plan completion, release-ready claim or lane retirement.

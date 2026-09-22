@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from orket.core.contracts.kernel_capability_policy import KernelCapabilityPolicy
+
 from .experiments.runner import run_experiment_v1
 from .nervous_system_policy import NervousSystemPolicyInputs
 from .nervous_system_runtime import (
@@ -32,20 +34,26 @@ def start_run(request: dict[str, Any]) -> dict[str, Any]:
     return start_run_v1(request)
 
 
-def execute_turn(request: dict[str, Any]) -> dict[str, Any]:
-    return execute_turn_v1(request)
+def execute_turn(
+    request: dict[str, Any], *, policy_inputs: KernelCapabilityPolicy | None = None,
+) -> dict[str, Any]:
+    return execute_turn_v1(request, policy_inputs=policy_inputs)
 
 
 def finish_run(request: dict[str, Any]) -> dict[str, Any]:
     return finish_run_v1(request)
 
 
-def resolve_capability(request: dict[str, Any]) -> dict[str, Any]:
-    return resolve_capability_v1(request)
+def resolve_capability(
+    request: dict[str, Any], *, policy_inputs: KernelCapabilityPolicy | None = None,
+) -> dict[str, Any]:
+    return resolve_capability_v1(request, policy_inputs=policy_inputs)
 
 
-def authorize_tool_call(request: dict[str, Any]) -> dict[str, Any]:
-    return authorize_tool_call_v1(request)
+def authorize_tool_call(
+    request: dict[str, Any], *, policy_inputs: KernelCapabilityPolicy | None = None,
+) -> dict[str, Any]:
+    return authorize_tool_call_v1(request, policy_inputs=policy_inputs)
 
 
 def replay_run(request: dict[str, Any]) -> dict[str, Any]:

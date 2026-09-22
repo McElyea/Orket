@@ -3,6 +3,8 @@ from __future__ import annotations
 import tempfile
 from pathlib import Path
 
+import pytest
+
 from orket.kernel.v1.validator import (
     authorize_tool_call_v1,
     compare_runs_v1,
@@ -12,6 +14,8 @@ from orket.kernel.v1.validator import (
     resolve_capability_v1,
     start_run_v1,
 )
+
+pytestmark = pytest.mark.integration
 
 
 def test_start_run_v1_returns_run_handle_shape() -> None:
@@ -154,7 +158,7 @@ def test_execute_turn_v1_capability_can_grant_from_policy_permissions() -> None:
     assert result["outcome"] == "PASS"
     assert result["stage"] == "capability"
     assert result["capabilities"]["granted_count"] == 1
-    assert result["capabilities"]["decisions"][0]["evidence"]["capability_source"] == "model/core/contracts/kernel_capability_policy_v1.json"
+    assert result["capabilities"]["decisions"][0]["evidence"]["capability_source"] == "policy://orket/kernel/v1/default"
     records = result["capabilities"]["decisions_v1_2_1"]
     assert len(records) == 1
     assert records[0]["outcome"] == "allowed"
@@ -246,7 +250,7 @@ def test_resolve_capability_v1_reads_permissions_from_policy_artifact() -> None:
     plan = response["capability_plan"]
     assert plan["mode"] == "enabled"
     assert plan["permissions"] == ["file.read", "file.write", "tool.call"]
-    assert plan["policy_source"] == "model/core/contracts/kernel_capability_policy_v1.json"
+    assert plan["policy_source"] == "policy://orket/kernel/v1/default"
     assert plan["policy_version"] == "2026-02-24"
 
 
@@ -261,7 +265,7 @@ def test_authorize_tool_call_v1_can_grant_from_policy_permissions() -> None:
     decision = response["decision"]
     assert decision["result"] == "GRANT"
     assert decision["reason_code"] == "I_GATEKEEPER_PASS"
-    assert decision["evidence"]["capability_source"] == "model/core/contracts/kernel_capability_policy_v1.json"
+    assert decision["evidence"]["capability_source"] == "policy://orket/kernel/v1/default"
 
 
 def test_replay_run_v1_missing_input_emits_missing_code() -> None:

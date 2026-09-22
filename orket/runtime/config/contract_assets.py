@@ -15,3 +15,4 @@ RUN_SUMMARY_SCHEMA_PATH = CONTRACT_ASSET_ROOT / "artifacts/run_summary_schema.js
 RUN_GRAPH_SCHEMA_PATH = CONTRACT_ASSET_ROOT / "artifacts/run_graph_schema.json"
 RUN_EVIDENCE_GRAPH_SCHEMA_PATH = CONTRACT_ASSET_ROOT / "artifacts/run_evidence_graph_schema.json"
 DEFAULT_RUNTIME_INVARIANTS_DOC_PATH = CONTRACT_ASSET_ROOT / "contracts/RUNTIME_INVARIANTS.md"
+DEFAULT_KERNEL_CAPABILITY_POLICY_PATH = CONTRACT_ASSET_ROOT / "contracts/kernel_capability_policy_v1.json"
