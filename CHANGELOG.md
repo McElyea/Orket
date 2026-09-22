@@ -5,6 +5,18 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.90] - 2026-09-22
+
+### Fixed
+- Capture provider environment and lexical cwd before owned work and retain them through CLI loading and relative GGUF discovery.
+- Freeze shared command arguments, environment, batch bytes and JSONL frames before scheduling transport; give its private supervisor the same context.
+- Preserve process lifetime, deadlines, parser/selection/quarantine policy and observed-load requirements.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Supply absolute or ordinary relative working directories; drive-relative paths are now refused. Native provider entry accepts explicit environment/cwd inputs; defaults are captured at invocation.
+- Fixture command and HTTP/file proof is not actual-model acceptance. Contract: `docs/architecture/CONTRACT_DELTA_PROVIDER_PROCESS_INPUTS_D_2026-09-22.md`.
+
 ## [0.6.89] - 2026-09-22
 
 ### Fixed

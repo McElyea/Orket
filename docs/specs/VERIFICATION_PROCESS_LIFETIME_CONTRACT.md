@@ -25,6 +25,15 @@ establish card completion.
 
 ## Admission and termination
 
+The application runner freezes arguments, environment, batch input bytes, JSONL
+frames and the absolute lexical working directory before scheduling its transport
+task. Defaults are observed when the public coroutine starts; later changes to
+borrowed collections or process globals cannot alter an admitted command. Explicit
+empty environments remain empty. Drive-relative directories are refused. The
+package-owned supervisor receives that directory and environment too, so it does
+not consult a later caller context for native executable lookup. This freezes
+invocation inputs, not executable bytes, filesystem contents or external effects.
+
 OpenClaw's sequential JSONL exchange also uses this supervisor, through the core
 `JsonlCommandRunner` port and `CommandProcessSupervisor.run_jsonl`. Its write,
 response, stdin-close and exit stages each retain a finite configured deadline;

@@ -4,11 +4,12 @@ import os
 import re
 from collections.abc import Mapping
 from functools import partial
-from types import MappingProxyType
+from pathlib import Path
 from typing import Any, cast
 from urllib.parse import urlparse
 
 from orket.adapters.execution.owned_io import run_owned_thread
+from orket.application.services.process_input_service import capture_process_context
 from orket.core.contracts.provider_runtime import (
     DEFAULT_LOCAL_PROVIDER,
     DEFAULT_OLLAMA_BASE_URL,
@@ -210,13 +211,14 @@ async def list_provider_models(
     timeout_s: float,
     api_key: str | None = None,
     environment: Mapping[str, str] | None = None,
+    cwd: Path | None = None,
 ) -> dict[str, object]:
-    environment = MappingProxyType(dict(os.environ if environment is None else environment))
+    cwd, environment = capture_process_context(cwd=cwd, environment=environment)
     requested = effective_provider(provider, default=DEFAULT_LOCAL_PROVIDER)
     canonical = normalize_provider(requested)
     resolved_base_url = _normalize_base_url(base_url, default=default_base_url(requested, environment=environment))
     if requested == "lmstudio":
-        models = await _owned_inventory(_list_installed_lmstudio_models_sync, timeout_s=timeout_s)
+        models = await _owned_inventory(_list_installed_lmstudio_models_sync, timeout_s=timeout_s, cwd=cwd, environment=environment)
         return {
             "requested_provider": requested,
             "canonical_provider": canonical,
@@ -235,7 +237,7 @@ async def list_provider_models(
         "models": models,
     }
     if requested == "llama_cpp":
-        inventory = await _owned_inventory(_inventory_gguf_models_sync, environment=environment)
+        inventory = await _owned_inventory(_inventory_gguf_models_sync, environment=environment, cwd=cwd)
         payload["gguf_model_root"] = inventory.model_root
         payload["gguf_inventory_status"] = inventory.status
         payload["gguf_models"] = [record.to_payload() for record in inventory.records]
@@ -295,8 +297,9 @@ async def resolve_provider_runtime_target(
     model_ttl_sec: int,
     api_key: str | None = None,
     environment: Mapping[str, str] | None = None,
+    cwd: Path | None = None,
 ) -> ProviderRuntimeTarget:
-    environment = MappingProxyType(dict(os.environ if environment is None else environment))
+    cwd, environment = capture_process_context(cwd=cwd, environment=environment)
     requested_provider = effective_provider(provider, default=DEFAULT_LOCAL_PROVIDER)
     try:
         requested_provider = validate_allowed_token(
@@ -345,7 +348,7 @@ async def resolve_provider_runtime_target(
             status="BLOCKED",
         )
     if canonical_provider == "ollama":
-        available_models = await _owned_inventory(_list_installed_ollama_models_sync, timeout_s=timeout_s)
+        available_models = await _owned_inventory(_list_installed_ollama_models_sync, timeout_s=timeout_s, cwd=cwd, environment=environment)
         resolved_model = requested_model_token if requested_model_token in available_models else ""
         resolution_mode = "requested" if resolved_model else "unresolved"
         if not resolved_model and (auto_select_model or not requested_model_token):
@@ -386,10 +389,11 @@ async def resolve_provider_runtime_target(
             timeout_s=timeout_s,
             api_key=api_key,
             environment=environment,
+            cwd=cwd,
         )
         available_models = [str(model) for model in _object_list(listing.get("models"))]
         gguf_inventory = (
-            await _owned_inventory(_inventory_gguf_models_sync, environment=environment)
+            await _owned_inventory(_inventory_gguf_models_sync, environment=environment, cwd=cwd)
             if requested_provider == "llama_cpp"
             else None
         )
@@ -461,8 +465,8 @@ async def resolve_provider_runtime_target(
             status="OK" if resolved_model else "BLOCKED",
         )
 
-    available_models = await _owned_inventory(_list_installed_lmstudio_models_sync, timeout_s=timeout_s)
-    loaded_models_before = await _owned_inventory(_list_loaded_lmstudio_model_ids_sync, timeout_s=timeout_s)
+    available_models = await _owned_inventory(_list_installed_lmstudio_models_sync, timeout_s=timeout_s, cwd=cwd, environment=environment)
+    loaded_models_before = await _owned_inventory(_list_loaded_lmstudio_model_ids_sync, timeout_s=timeout_s, cwd=cwd, environment=environment)
     if (
         requested_model_token
         and requested_model_token in loaded_models_before
@@ -564,8 +568,9 @@ async def resolve_provider_runtime_target(
         model_key=candidate,
         timeout_s=model_load_timeout_s,
         ttl_sec=model_ttl_sec,
+        cwd=cwd, environment=environment,
     )
-    loaded_models_after = await _owned_inventory(_list_loaded_lmstudio_model_ids_sync, timeout_s=timeout_s)
+    loaded_models_after = await _owned_inventory(_list_loaded_lmstudio_model_ids_sync, timeout_s=timeout_s, cwd=cwd, environment=environment)
     observed_loaded = candidate in loaded_models_after
     return _target_payload(
         requested_provider=requested_provider,
@@ -590,18 +595,24 @@ def list_provider_models_sync(
     base_url: str | None,
     timeout_s: float,
     api_key: str | None = None,
+    environment: Mapping[str, str] | None = None,
+    cwd: Path | None = None,
 ) -> dict[str, object]:
+    cwd, environment = capture_process_context(cwd=cwd, environment=environment)
     result = _run_coro_sync(
         list_provider_models(
             provider=provider,
             base_url=base_url,
             timeout_s=timeout_s,
             api_key=api_key,
+            environment=environment, cwd=cwd,
         )
     )
     return dict(cast(dict[str, object], result))
 
 
 def resolve_provider_runtime_target_sync(**kwargs: Any) -> dict[str, Any]:
+    kwargs["cwd"], kwargs["environment"] = capture_process_context(
+        cwd=kwargs.get("cwd"), environment=kwargs.get("environment"))
     result = cast(ProviderRuntimeTarget, _run_coro_sync(resolve_provider_runtime_target(**kwargs)))
     return result.to_payload()

@@ -19,10 +19,11 @@ async def test_model_load_success_requires_observed_loaded_inventory(tmp_path, m
     original = inventory._run_command_sync
     commands = []
 
-    def run(cmd, *, timeout_s):
+    def run(cmd, *, timeout_s, cwd, environment):
         assert cmd[0] == "lms"
         commands.append(tuple(cmd))
-        return original([sys.executable, str(script), str(state), mode, *cmd[1:]], timeout_s=timeout_s)
+        return original([sys.executable, str(script), str(state), mode, *cmd[1:]],
+                        timeout_s=timeout_s, cwd=cwd, environment=environment)
 
     monkeypatch.setattr(inventory, "_run_command_sync", run)
     result = await resolve_provider_runtime_target(

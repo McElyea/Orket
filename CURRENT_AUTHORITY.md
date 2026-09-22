@@ -2,6 +2,13 @@
 
 Last updated: 2026-09-22
 
+Provider listing and resolution capture environment and lexical cwd before awaiting
+work, and pass them through CLI loading and relative GGUF discovery. The shared
+command runner freezes borrowed inputs before transport scheduling; its private
+supervisor receives that context too. Drive-relative paths are refused. This does
+not freeze executable/filesystem contents or establish inference. Contract delta:
+`docs/architecture/CONTRACT_DELTA_PROVIDER_PROCESS_INPUTS_D_2026-09-22.md`.
+
 OpenClaw JSONL composition requires the application-owned `JsonlCommandRunner`.
 The existing OS supervisor owns sequential request/response exchange, finite write,
 response, close and exit deadlines, concurrent stream capture and descendant cleanup.

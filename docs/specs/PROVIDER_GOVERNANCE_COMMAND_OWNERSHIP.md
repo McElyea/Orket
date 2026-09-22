@@ -15,6 +15,17 @@ over waiter cancellation. Async governance commands propagate interruption to th
 command owner and retain cleanup through repeated cancellation.
 
 Capture command arguments, invocation directory and environment before dispatch.
+Public provider inventory and resolution capture one immutable environment and
+absolute lexical working directory when the coroutine starts, before its first
+await. The same inputs govern CLI listing, loaded-state observation, model loading
+and nested inventory calls. Explicit empty environments remain empty. Relative GGUF
+roots use that captured directory across HTTP waits and repeated inventory; file
+discovery and containment checks remain owned native work. Drive-relative paths are
+refused rather than consulting hidden per-drive directories. No tilde expansion or
+filesystem snapshot is implied. Direct native entry captures defaults at that entry.
+Synchronous public provider wrappers capture before crossing the coroutine bridge;
+they accept the same explicit environment and directory as their async counterparts.
+
 Preserve inventory parsing, command output decoding, explicit model-load observation
 and alias ownership. Output truncation, unavailable containment or uncertain cleanup
 must refuse rather than return a normal command result. Inventory caller budgets

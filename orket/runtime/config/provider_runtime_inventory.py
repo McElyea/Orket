@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-import os
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
@@ -9,6 +9,7 @@ import httpx
 
 from orket.adapters.execution.owned_io import require_sync_context
 from orket.application.services.command_process_supervisor import CommandProcessSupervisor
+from orket.application.services.process_input_service import capture_process_context
 from orket.capabilities.sync_bridge import run_coro_sync as _run_coro_sync
 from orket.core.contracts.owned_command import CommandExecutionUncertain
 
@@ -17,9 +18,11 @@ class ProviderRuntimeWarmupError(RuntimeError):
     """Raised when provider runtime preparation cannot resolve a runnable target."""
 
 
-def _run_command_sync(cmd: list[str], *, timeout_s: float) -> str:
+def _run_command_sync(cmd: list[str], *, timeout_s: float, cwd: Path | None = None,
+                      environment: Mapping[str, str] | None = None) -> str:
     require_sync_context(code="E_PROVIDER_INVENTORY_REQUIRES_ASYNC_OWNER")
-    command, root, environment = tuple(cmd), Path.cwd(), dict(os.environ)
+    command = tuple(cmd)
+    root, environment = capture_process_context(cwd=cwd, environment=environment)
     try:
         result = _run_coro_sync(CommandProcessSupervisor(root, cancellation_event="provider_inventory_command_interrupted").run(
             command, cwd=root, environment=environment, timeout_seconds=max(1.0, float(timeout_s))))
@@ -52,28 +55,32 @@ def _parse_ollama_list(stdout: str) -> list[str]:
     return sorted(set(models))
 
 
-def list_installed_ollama_models_sync(*, timeout_s: float) -> list[str]:
-    return _parse_ollama_list(_run_command_sync(["ollama", "list"], timeout_s=timeout_s))
+def list_installed_ollama_models_sync(*, timeout_s: float, cwd: Path | None = None,
+                                    environment: Mapping[str, str] | None = None) -> list[str]:
+    return _parse_ollama_list(_run_command_sync(["ollama", "list"], timeout_s=timeout_s, cwd=cwd, environment=environment))
 
 
-def _load_json_command_sync(cmd: list[str], *, timeout_s: float) -> Any:
-    stdout = _run_command_sync(cmd, timeout_s=timeout_s)
+def _load_json_command_sync(cmd: list[str], *, timeout_s: float, cwd: Path | None = None,
+                            environment: Mapping[str, str] | None = None) -> Any:
+    stdout = _run_command_sync(cmd, timeout_s=timeout_s, cwd=cwd, environment=environment)
     try:
         return json.loads(stdout or "[]")
     except json.JSONDecodeError as exc:
         raise ProviderRuntimeWarmupError(f"command returned invalid JSON: {' '.join(cmd)}") from exc
 
 
-def list_installed_lmstudio_models_sync(*, timeout_s: float) -> list[str]:
-    payload = _load_json_command_sync(["lms", "ls", "--json"], timeout_s=timeout_s)
+def list_installed_lmstudio_models_sync(*, timeout_s: float, cwd: Path | None = None,
+                                      environment: Mapping[str, str] | None = None) -> list[str]:
+    payload = _load_json_command_sync(["lms", "ls", "--json"], timeout_s=timeout_s, cwd=cwd, environment=environment)
     if not isinstance(payload, list):
         raise ProviderRuntimeWarmupError("lms ls --json returned invalid payload shape")
     models = [str(row.get("modelKey") or "").strip() for row in payload if isinstance(row, dict)]
     return sorted({model for model in models if model})
 
 
-def list_loaded_lmstudio_model_ids_sync(*, timeout_s: float) -> list[str]:
-    payload = _load_json_command_sync(["lms", "ps", "--json"], timeout_s=timeout_s)
+def list_loaded_lmstudio_model_ids_sync(*, timeout_s: float, cwd: Path | None = None,
+                                      environment: Mapping[str, str] | None = None) -> list[str]:
+    payload = _load_json_command_sync(["lms", "ps", "--json"], timeout_s=timeout_s, cwd=cwd, environment=environment)
     if not isinstance(payload, list):
         raise ProviderRuntimeWarmupError("lms ps --json returned invalid payload shape")
     models: list[str] = []
@@ -87,12 +94,13 @@ def list_loaded_lmstudio_model_ids_sync(*, timeout_s: float) -> list[str]:
     return sorted(set(models))
 
 
-def load_lmstudio_model_sync(*, model_key: str, timeout_s: float, ttl_sec: int) -> dict[str, Any]:
+def load_lmstudio_model_sync(*, model_key: str, timeout_s: float, ttl_sec: int, cwd: Path | None = None,
+                            environment: Mapping[str, str] | None = None) -> dict[str, Any]:
     token = str(model_key or "").strip()
     if not token:
         raise ProviderRuntimeWarmupError("lmstudio model_key is required")
     cmd = ["lms", "load", token, "-y", "--ttl", str(max(1, int(ttl_sec)))]
-    stdout = _run_command_sync(cmd, timeout_s=timeout_s)
+    stdout = _run_command_sync(cmd, timeout_s=timeout_s, cwd=cwd, environment=environment)
     return {"command": " ".join(cmd), "loaded_model": token, "stdout": stdout.strip()}
 
 

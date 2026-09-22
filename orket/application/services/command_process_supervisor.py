@@ -7,6 +7,7 @@ from pathlib import Path
 
 from orket.adapters.execution.owned_command_limits import jsonl_request_frames
 from orket.adapters.execution.owned_command_process import execute_owned_command
+from orket.application.services.process_input_service import capture_process_context
 from orket.core.contracts.owned_command import OwnedCommandResult
 from orket.logging import log_event
 
@@ -38,9 +39,11 @@ class CommandProcessSupervisor:
 
     async def run(self, argv, *, cwd, timeout_seconds, environment=None, input_data=None,
                   output_limit_bytes=None, jsonl_requests=None, io_timeout_seconds=None) -> OwnedCommandResult:
+        cwd, environment = capture_process_context(cwd=cwd, environment=environment)
+        argv, input_data = tuple(argv), None if input_data is None else bytes(input_data)
         stop = asyncio.Event()
         protocol = ({} if jsonl_requests is None else
-                    dict(jsonl_requests=jsonl_requests, io_timeout_seconds=io_timeout_seconds))
+                    dict(jsonl_requests=jsonl_request_frames(jsonl_requests), io_timeout_seconds=io_timeout_seconds))
         owner = asyncio.create_task(execute_owned_command(
             argv=argv, cwd=cwd, timeout_seconds=timeout_seconds, environment=environment, input_data=input_data,
             stop=stop, output_limit_bytes=output_limit_bytes, **protocol))

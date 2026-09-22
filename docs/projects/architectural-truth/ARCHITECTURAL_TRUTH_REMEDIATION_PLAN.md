@@ -12519,7 +12519,8 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.89 OpenClaw interactive process ownership, retaining
+0.6.90 Provider and shared command input capture, retaining
+0.6.89 OpenClaw interactive process ownership,
 0.6.88 Worker native entry and renewal ownership,
 0.6.87 provider inventory and governance command ownership,
 0.6.86 runtime architecture policy inputs and owned observations,
@@ -12540,7 +12541,7 @@ and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
 Preserve every failed and
 passing source/native observation and the historical clock diagnosis. Canonical
-Ruff has 89 findings at the .89 checkpoint. The prior stale benchmark expectation passes in the
+Ruff has 89 findings at the .90 checkpoint. The prior stale benchmark expectation passes in the
 new source/native selection. The unmodified published .39 complete rerun has
 7,260 passes, three failures and 89 skips; its coverage is 84.56120595327887%
 against the unchanged 89% gate. The two parent-Git-dependent fixture failures and
@@ -22283,3 +22284,87 @@ all prior evidence. No whole-plan completion, main merge, release readiness or l
 retirement; explicit user acceptance is still required.
 
 Retained proof: `.tmp/d-openclaw-process-ownership/`.
+
+
+#### .90 Provider and shared command input capture (2026-09-22)
+
+Responsible maintainer: Codex for Orket Core. Continuing canonical D2 after .89.
+Public provider async entry captures immutable environment and absolute lexical cwd
+before awaiting work. Synchronous wrappers capture before the coroutine bridge.
+CLI listing, loaded-state observations, model load and nested relative GGUF inventory
+receive the same context. Native entry retains invocation-time defaults. Explicit
+empty environments remain empty; drive-relative paths fail instead of consulting
+hidden per-drive directories. No tilde expansion or filesystem snapshot is introduced.
+
+The shared command runner copies borrowed arguments, environment, batch bytes and
+JSONL frames before scheduling transport. The private native supervisor receives
+that directory/environment too. One existing OS lifetime owner remains; native
+backends, worker/JSONL implementation, cancellation publication, result schema and
+core ports retain their bodies. Command budgets, output bounds, provider parsers,
+selection/quarantine, observed-loaded requirements and BT behavior remain authoritative.
+
+| Cell | Tests / failures / errors / skips | Pytest seconds | Installed origins |
+|---|---|---|---|
+| Fresh source | 1602 / 0 / 0 / 0 | 269.477 | source |
+| Installed a90-win-py311 | 1602 / 0 / 0 / 0 | 269.464 | 982 |
+| Installed a90-win-py312 | 1602 / 0 / 0 / 0 | 299.843 | 982 |
+
+All 1584 .89 identities remain across 159 modules. Added scope is fifteen real
+command/HTTP/file input controls and three synthetic context/path contracts. The
+exact fifteen final real controls fail the byte-verified installed .89 wheel,
+without errors/skips. They observe CLI model keys and actual model-state files,
+relative GGUF roots across held HTTP and repeated inventory, coroutine-bridge delay,
+mutated command/request bytes and actual child/private-supervisor context. The
+Windows launcher and supervisor identities both bind to the returned lifetime
+receipt. Declared fixture executables are not actual provider/model acceptance.
+
+Retained evidence: opening10fail and exact prior10fail; repaired54pass; private-owner
+probe10pass3fail because the fixture assumed a single Windows supervisor PID. The
+corrected independent observer binds both native identities, yielding13pass and
+exact prior13fail. Initial combined126pass precedes two additional sync-entry
+counterexamples; these2fail expose delayed defaults at the coroutine bridge.
+After propagation, affected31pass, final128pass and exact prior15fail. No deadline
+or behavior assertion was weakened; failed observations remain retained.
+
+Actual read-only LMStudio inventory also succeeds through the changed public async
+entry: 25 models, complete capture and confirmed Windows job cleanup.
+This is neither actual model loading/inference nor daemon-effect rollback. The
+retained .87 Ollama CLI absence/loopback timeout remains a prior observation, not
+a fresh measurement or substituted provider acceptance.
+
+One application process-input service owns capture; no mutable global, cache or
+compatibility shim is added. Strict test wrappers forward the new keywords while
+retaining existing assertions. The pre-existing provider-target module grows from
+607 to618 lines for required public signatures and nested/bridge propagation. This
+explicit correctness exception does not clear its E2 decomposition debt. Other
+modified/new files respect the size bounds; new functions remain at most70 lines.
+
+Complete core parity:1148 Python+20 unchanged data=1168 files;
+2359 frozen support inputs. Both Quality jobs include the
+input controls with sandbox creation disabled; hosted execution remains unverified.
+Canonical C scans 1148 files/3746
+edges with six resolved routes and zero violations, analysis errors, unknown modules
+or authority cycles. Ruff remains89existing/0introduced. Scoped lint, docs, release
+metadata, whitespace and exact Python index binding pass. Eighty actual SQLite
+observations per cell meet .5s unchanged; maximum 0.156236100s. Baseline collection
+does not establish release readiness. Durable contracts are updated in
+`docs/specs/PROVIDER_GOVERNANCE_COMMAND_OWNERSHIP.md` and
+`docs/specs/VERIFICATION_PROCESS_LIFETIME_CONTRACT.md`; migration:
+`docs/architecture/CONTRACT_DELTA_PROVIDER_PROCESS_INPUTS_D_2026-09-22.md`.
+
+Compliance: affected dependency direction, effect/input ownership, failure truth
+and authority alignment pass. Full D2/D3/D4 remains partial. Next bounded D2 review:
+HTTP catalog functions still construct `httpx.AsyncClient` with default `trust_env`,
+without the public provider environment. Inspect actual proxy/NO_PROXY/certificate
+behavior and inference-client composition before claiming input determinism;
+source discovery alone is not a runtime counterexample. Evidence:
+`.tmp/d-provider-input-capture/next-http-inputs.json`. Continue broader async inventory.
+
+Remaining blockers or drift: retain the .72 Linux clock failure without a fresh
+measurement or settings/deadline changes. Windows latency/physical-sleep and prior
+Git timeout causes remain unknown. ProductFlow replay, legacy Kernel completion,
+fresh full89%coverage and hostedGitea remain open. E1 taxonomy/no-op/Ruff, E2 bounded
+generated authority/decomposition, CAP1 actual-model workload families, CAP2 accepted
+containment and CAP3 capacity/recovery remain required. Preserve BT1-5 and all proof.
+No whole-plan completion, main merge, release readiness or lane retirement; explicit
+user acceptance remains required. Proof: `.tmp/d-provider-input-capture/`.

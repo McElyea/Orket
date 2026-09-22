@@ -50,7 +50,7 @@ async def test_resolve_provider_runtime_target_loads_lmstudio_model_when_none_lo
     def _fake_list_loaded(**_: object) -> list[str]:
         return list(loaded_models["value"])
 
-    def _fake_load(*, model_key: str, timeout_s: float, ttl_sec: int) -> dict[str, object]:
+    def _fake_load(*, model_key: str, timeout_s: float, ttl_sec: int, cwd, environment) -> dict[str, object]:
         load_calls.append({"model_key": model_key, "timeout_s": timeout_s, "ttl_sec": ttl_sec})
         loaded_models["value"] = [model_key]
         return {"loaded_model": model_key}

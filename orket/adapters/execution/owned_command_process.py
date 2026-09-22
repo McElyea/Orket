@@ -110,7 +110,7 @@ async def execute_owned_command(*, argv, cwd, environment, timeout_seconds, inpu
     # Windows venv launchers have a different PID from the actual interpreter.
     # Bind this private transport with a nonce, retaining both PIDs as observations.
     request_id = secrets.token_hex(16)
-    request = {"request_id": request_id, "argv": list(argv), "cwd": str(cwd), "env": environment, "timeout": timeout_seconds,
+    request = {"request_id": request_id, "argv": list(argv), "cwd": str(cwd), "env": dict(environment) if environment is not None else None, "timeout": timeout_seconds,
                "output_limit_bytes": validate_output_limit(output_limit_bytes),
                "stop_requested": False,
                "input": base64.b64encode(input_data).decode("ascii") if input_data is not None else None}
@@ -126,7 +126,7 @@ async def execute_owned_command(*, argv, cwd, environment, timeout_seconds, inpu
     options = {"creationflags": subprocess.CREATE_NO_WINDOW} if os.name == "nt" else {}
     process = await asyncio.create_subprocess_exec(
         sys.executable, "-I", "-S", str(WORKER), stdin=asyncio.subprocess.PIPE,
-        stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE, **options)
+        stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE, cwd=cwd, env=request["env"], **options)
     buffers = (bytearray(), bytearray())
     collected = asyncio.create_task(_collect(process, buffers))
     stopping = asyncio.create_task(stop.wait())

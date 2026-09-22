@@ -32,6 +32,14 @@ run time. The concrete refusal and partial-effect limits live in
 
 ## Implementation Status
 
+Application process-input capture supplies immutable environment and absolute lexical
+cwd before provider work or command transport is scheduled. Provider CLI and nested
+relative GGUF inventory receive the same captured context; shared native supervisors
+receive it before executable lookup. Existing model selection and lifetime ownership
+remain authoritative. Filesystem contents, HTTP proxy policy and daemon effects are
+separate concerns. Contract delta:
+`docs/architecture/CONTRACT_DELTA_PROVIDER_PROCESS_INPUTS_D_2026-09-22.md`.
+
 This document describes the target architecture of the Orket runtime.
 
 The current codebase partially implements these rules and still contains transitional structures that are not yet fully conformant.

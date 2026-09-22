@@ -90,6 +90,7 @@ jobs:
           python -m pytest -q tests/integration/test_provider_governance_command_lifetime.py tests/integration/test_provider_governance_command_outputs.py tests/contracts/test_provider_governance_command_refusals.py
           python -m pytest -q tests/contracts/test_worker_native_entry.py tests/integration/test_worker_renewal_lifetime.py tests/integration/test_coordinator_lifetime.py tests/platform/test_leases.py tests/platform/test_hedged.py
           python -m pytest -q tests/contracts/test_openclaw_command_refusals.py tests/integration/test_openclaw_process_lifetime.py tests/integration/test_openclaw_exchange_protocol.py tests/adapters/test_openclaw_jsonl_adapter.py tests/adapters/test_challenge_corpus_adapter.py tests/e2e/test_nervous_system_owned_commands.py
+          python -m pytest -q tests/integration/test_provider_process_input_capture.py tests/integration/test_owned_command_input_capture.py tests/integration/test_provider_inventory_inputs.py tests/integration/test_provider_inventory_load_observation.py tests/runtime/test_provider_runtime_target.py tests/runtime/test_gguf_model_inventory.py
 
       - name: Enforce governance proof engine and alias ownership
         run: |
@@ -490,6 +491,7 @@ jobs:
           python -m pytest -q tests/integration/test_provider_governance_command_lifetime.py tests/integration/test_provider_governance_command_outputs.py tests/contracts/test_provider_governance_command_refusals.py
           python -m pytest -q tests/contracts/test_worker_native_entry.py tests/integration/test_worker_renewal_lifetime.py tests/integration/test_coordinator_lifetime.py tests/platform/test_leases.py tests/platform/test_hedged.py
           python -m pytest -q tests/contracts/test_openclaw_command_refusals.py tests/integration/test_openclaw_process_lifetime.py tests/integration/test_openclaw_exchange_protocol.py tests/adapters/test_openclaw_jsonl_adapter.py tests/adapters/test_challenge_corpus_adapter.py tests/e2e/test_nervous_system_owned_commands.py
+          python -m pytest -q tests/integration/test_provider_process_input_capture.py tests/integration/test_owned_command_input_capture.py tests/integration/test_provider_inventory_inputs.py tests/integration/test_provider_inventory_load_observation.py tests/runtime/test_provider_runtime_target.py tests/runtime/test_gguf_model_inventory.py
 
       - name: Enforce governance proof engine and alias ownership
         run: |

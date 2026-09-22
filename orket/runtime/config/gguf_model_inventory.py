@@ -6,6 +6,8 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
+from orket.application.services.process_input_service import absolute_process_path, capture_process_context
+
 DEFAULT_LLAMA_CPP_GGUF_MODEL_ROOT = Path("D:/models/GGUF")
 DIGEST_STATUSES = {"missing", "pending", "computed", "failed", "skipped_by_policy"}
 
@@ -112,8 +114,10 @@ def inventory_gguf_models(
     digest_status_by_alias: Mapping[str, str] | None = None,
     sha256_by_alias: Mapping[str, str] | None = None,
     environment: Mapping[str, str] | None = None,
+    cwd: Path | None = None,
 ) -> GGUFModelInventoryResult:
-    root = resolve_gguf_model_root(model_root, environment=environment)
+    cwd, environment = capture_process_context(cwd=cwd, environment=environment)
+    root = absolute_process_path(resolve_gguf_model_root(model_root, environment=environment), cwd)
     try:
         root_path = root.resolve()
     except OSError as exc:
@@ -166,4 +170,3 @@ def inventory_gguf_models(
         records=tuple(records),
         error="" if has_present_model else "empty_inventory",
     )
-

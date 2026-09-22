@@ -66,6 +66,13 @@
 
 ## Canonical Commands
 
+Provider and shared command input changes require the process-input and relative
+GGUF controls alongside existing inventory, model-load and lifetime cases in both
+Quality jobs. Observe actual child/private-supervisor context and model-state files;
+fixture executables do not establish actual-provider acceptance. Preserve explicit
+empty environments, finite deadlines and drive-relative refusal. Contract delta:
+`docs/architecture/CONTRACT_DELTA_PROVIDER_PROCESS_INPUTS_D_2026-09-22.md`.
+
 OpenClaw JSONL callers supply the existing application command supervisor through
 `JsonlCommandRunner`; adapters do not create a second process-tree owner. Preserve
 sequential request admission, accepted partial responses, bounded writes/capture
