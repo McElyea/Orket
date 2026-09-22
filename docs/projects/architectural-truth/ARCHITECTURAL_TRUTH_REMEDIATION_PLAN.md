@@ -12519,7 +12519,8 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.90 Provider and shared command input capture, retaining
+0.6.91 Provider HTTP catalog inputs and native ownership, retaining
+0.6.90 Provider and shared command input capture,
 0.6.89 OpenClaw interactive process ownership,
 0.6.88 Worker native entry and renewal ownership,
 0.6.87 provider inventory and governance command ownership,
@@ -12541,7 +12542,7 @@ and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
 Preserve every failed and
 passing source/native observation and the historical clock diagnosis. Canonical
-Ruff has 89 findings at the .90 checkpoint. The prior stale benchmark expectation passes in the
+Ruff has 89 findings at the .91 checkpoint. The prior stale benchmark expectation passes in the
 new source/native selection. The unmodified published .39 complete rerun has
 7,260 passes, three failures and 89 skips; its coverage is 84.56120595327887%
 against the unchanged 89% gate. The two parent-Git-dependent fixture failures and
@@ -22368,3 +22369,105 @@ generated authority/decomposition, CAP1 actual-model workload families, CAP2 acc
 containment and CAP3 capacity/recovery remain required. Preserve BT1-5 and all proof.
 No whole-plan completion, main merge, release readiness or lane retirement; explicit
 user acceptance remains required. Proof: `.tmp/d-provider-input-capture/`.
+
+
+#### .91 Provider HTTP catalog inputs and native ownership (2026-09-22)
+
+Responsible maintainer: Codex for Orket Core. Continuing canonical D2/D3 after .90.
+OpenAI-compatible and Ollama catalog requests now receive captured environment and
+lexical cwd. Synchronous wrappers capture before the coroutine bridge. Explicit
+proxy mounts replace ambient HTTPX network policy; empty mappings remain empty.
+Lowercase precedence, CGI HTTP_PROXY protection and HTTPX host/domain/address/URL
+bypass patterns remain explicit. NO_PROXY CIDR is refused because HTTPX does not
+implement subnet matching. Registry-only proxies require environment configuration.
+
+Native TLS/client setup uses the existing owned worker. SSL_CERT_FILE precedes
+SSL_CERT_DIR; default trust remains certifi, now directly declared with the same
+unconstrained requirement already present through HTTPX. Verified TLS, captured
+optional key logging, relative-path binding, API-key headers, disabled redirects,
+model parsing and one-second minimum remain authoritative. Non-finite HTTP budgets
+fail before admission; HTTPX budgets remain per phase, not a total filesystem timer.
+No ambient mutation, private HTTPX API or disabled certificate verification is added.
+
+The application retains construction through cancellation/repeated cancellation and
+outer timeout. Every acquired client/transport is closed, including abandoned or
+partial construction. Individual transports are attempted even if client close
+fails midway; HTTPX transport close is idempotent. Cleanup remains owned and failures
+cannot become normal success or clean cancellation. Combined request/cleanup errors
+remain visible. Native adapter refuses event-loop entry before effects.
+
+| Cell | Tests / failures / errors / skips | Pytest seconds | Installed origins |
+|---|---|---|---|
+| Fresh source | 1666 / 0 / 0 / 0 | 272.157 | source |
+| Installed a91v-win-py311 | 1666 / 0 / 0 / 0 | 272.724 | 986 |
+| Installed a91v-win-py312 | 1666 / 0 / 0 / 0 | 309.065 | 986 |
+
+All1602 .90 identities remain across164 modules. Added scope is55 actual integration
+cases and9 synthetic proxy/input contracts. Controlled TCP observers distinguish
+origin, supplied proxy and ambient proxy. Actual TLS exercises file/directory trust,
+file precedence, wrong/missing/empty trust, HTTPS proxy credentials, captured cwd and
+key logging across native setup, concurrent distinct clients and redirect refusal.
+Lifetime proof covers held native trust reads, interruption, partial acquisition,
+actual HTTP errors/read timeout and clean/failed close, including concurrent failures.
+Synthetic policy/repr controls remain contract proof only; public test certificates
+and their deliberately public loopback key are not production trust material.
+
+Opening8cases/6fail and exact installed .90 opening8/6fail retain two healthy ambient
+controls. Initial repair39cases/6fail exposed HTTPX's prohibition on TLS contexts for
+plain HTTP proxies; scheme-specific construction fixes it. TLS-routing63pass and
+owned-lifetime21pass follow. Initial test lint naming/order issues were repaired;
+complete95pass and final95pass. Exact final routing/sync10cases fail8 on the verified
+installed .90 wheel, without errors/skips. No deadline or assertion was weakened.
+All failed observations remain retained.
+
+The first candidate also passed1663 fresh-source cases before review found omitted
+Python3.13 STRICT/PARTIAL_CHAIN defaults. Two controlled-policy real TLS cases fail
+that candidate. Preserving host-version flags yields45 affected passes and98 final
+focused passes; final1666 source/native acceptance uses the separate validated root.
+Positive public certificates now carry strict X.509 extensions; original certificate
+bytes remain as negative legacy-chain controls and in prior proof inputs. The host
+flag check compares actual construction with the interpreter defaults. Two controlled
+3.13-style policy cases exercise actual valid/rejected handshakes on Windows3.11/3.12;
+they do not claim installed Python3.13 acceptance.
+
+Actual local HTTP catalog observations: LMStudio's OpenAI-compatible endpoint
+returns25models; Ollama's loopback endpoint fails with ConnectTimeout under the
+unchanged2s budget. Both actual clients close. Observed path=primary, overall
+result=partial success; Ollama remains environment blocker. Neither controlled
+catalogs nor real inventory imply model load, actual inference or CAP acceptance.
+
+Complete core parity:1152Python+20unchangeddata=1172files;
+2376 frozen support inputs. Existing process/GGUF owners,
+provider selection/quarantine and inference-client bodies remain unchanged. The
+existing618-line provider-target module does not grow; broader decomposition remains
+E2. All new functions stay within70lines and new files within400lines. Both Quality
+jobs include all new controls and the three .90 process-context contracts previously
+absent from their focused commands; hosted execution remains unverified.
+
+Canonical C: 1152files/3754edges,
+six resolved routes, zero violations/errors/unknown modules/authority cycles. Ruff
+89existing/0introduced; scoped lint, docs, release metadata, whitespace and exact
+Python index binding pass. Eighty-six actual SQLite observations/cell meet .5s
+unchanged; maximum 0.144714900s. Baseline collection is not release readiness.
+Durable contract: `docs/specs/PROVIDER_HTTP_CATALOG_INPUTS.md`; migration:
+`docs/architecture/CONTRACT_DELTA_PROVIDER_HTTP_INPUTS_D_2026-09-22.md`.
+
+Compliance: affected dependency direction, input/effect ownership, failure truth
+and authority alignment pass. D2/D3/D4 remain partial. OpenSSL may lazily read a trust
+directory during handshake; this does not establish a full TLS-internals async audit.
+Next bounded review is inference-client inputs/construction/close: LocalModelProvider
+captures settings but still constructs HTTPX/Ollama clients without captured network
+policy. Bound discovery `.tmp/d-provider-http-inputs-validated/next-inference-clients.json` is
+not a runtime counterexample. Reuse canonical policy and ownership; preserve provider
+lineage, pinned targets, deadlines, parsing and actual response validation.
+
+Remaining blockers or drift: .72 Linux clock instability retained without fresh
+measurement, setting changes or weaker deadlines. Ollama HTTP timeout remains blocked.
+Windows latency/physical-sleep and Git timeout causes remain unknown. ProductFlow
+replay, legacy Kernel completion, fresh full89%coverage and hostedGitea remain open.
+E1 taxonomy/no-op/Ruff, E2 bounded authority/decomposition, CAP1 actual-model workload
+families, CAP2 accepted containment and CAP3 capacity/recovery remain required.
+Preserve BT1-5 and all proof. No whole-plan completion, main merge, release readiness
+or lane retirement; explicit user acceptance is required. Proof:
+`.tmp/d-provider-http-inputs-validated/` (accepted) and
+`.tmp/d-provider-http-inputs/` (retained earlier observations).

@@ -5,6 +5,18 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.91] - 2026-09-22
+
+### Fixed
+- Honor captured environment/cwd for provider HTTP catalog proxies, trust material and optional TLS key logging.
+- Own native client construction and all acquired transports through cancellation, request failure and retained cleanup.
+- Preserve verified TLS, API-key headers, disabled redirects, model parsing and the one-second HTTP timeout minimum.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Registry-only proxy configuration must become explicit environment input; empty mappings stay empty. Unsupported NO_PROXY CIDR and non-finite HTTP budgets now fail explicitly.
+- certifi is declared directly for its existing public CA bundle API. Inference clients and actual-model acceptance are separate. Contract: `docs/architecture/CONTRACT_DELTA_PROVIDER_HTTP_INPUTS_D_2026-09-22.md`.
+
 ## [0.6.90] - 2026-09-22
 
 ### Fixed

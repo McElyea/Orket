@@ -2,6 +2,15 @@
 
 Last updated: 2026-09-22
 
+Provider HTTP catalogs use captured proxy, certificate and optional TLS key-log
+inputs with verified TLS and disabled redirects. Native client construction and
+all acquired resources remain owned through interruption and cleanup failure.
+Explicit empty mappings have no ambient or OS proxy-registry fallback. Non-finite
+HTTP budgets and unsupported NO_PROXY CIDR fail explicitly. Inference-client
+composition and TLS-library internals remain separate obligations. Contract:
+`docs/specs/PROVIDER_HTTP_CATALOG_INPUTS.md`; migration:
+`docs/architecture/CONTRACT_DELTA_PROVIDER_HTTP_INPUTS_D_2026-09-22.md`.
+
 Provider listing and resolution capture environment and lexical cwd before awaiting
 work, and pass them through CLI loading and relative GGUF discovery. The shared
 command runner freezes borrowed inputs before transport scheduling; its private

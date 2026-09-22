@@ -1,0 +1,5 @@
+# Deliberately public loopback test material; never production trust or keys.
+!ca.pem
+!unrelated-ca.pem
+!server.pem
+!PUBLIC-TEST-ONLY-key.pem

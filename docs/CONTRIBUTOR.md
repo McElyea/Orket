@@ -66,6 +66,16 @@
 
 ## Canonical Commands
 
+Provider HTTP catalogs use captured proxy, certificate and optional TLS key-log
+inputs with verified TLS and disabled redirects. Native client construction and
+all acquired resources remain owned through interruption and cleanup failure.
+Explicit empty mappings have no ambient or OS proxy-registry fallback. Non-finite
+HTTP budgets and unsupported NO_PROXY CIDR fail explicitly. Inference-client
+composition and TLS-library internals remain separate obligations. Contract:
+`docs/specs/PROVIDER_HTTP_CATALOG_INPUTS.md`; migration:
+`docs/architecture/CONTRACT_DELTA_PROVIDER_HTTP_INPUTS_D_2026-09-22.md`.
+
+
 Provider and shared command input changes require the process-input and relative
 GGUF controls alongside existing inventory, model-load and lifetime cases in both
 Quality jobs. Observe actual child/private-supervisor context and model-state files;

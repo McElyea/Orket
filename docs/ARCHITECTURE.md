@@ -32,6 +32,15 @@ run time. The concrete refusal and partial-effect limits live in
 
 ## Implementation Status
 
+Provider HTTP catalogs use captured proxy, certificate and optional TLS key-log
+inputs with verified TLS and disabled redirects. Native client construction and
+all acquired resources remain owned through interruption and cleanup failure.
+Explicit empty mappings have no ambient or OS proxy-registry fallback. Non-finite
+HTTP budgets and unsupported NO_PROXY CIDR fail explicitly. Inference-client
+composition and TLS-library internals remain separate obligations. Contract:
+`docs/specs/PROVIDER_HTTP_CATALOG_INPUTS.md`; migration:
+`docs/architecture/CONTRACT_DELTA_PROVIDER_HTTP_INPUTS_D_2026-09-22.md`.
+
 Application process-input capture supplies immutable environment and absolute lexical
 cwd before provider work or command transport is scheduled. Provider CLI and nested
 relative GGUF inventory receive the same captured context; shared native supervisors

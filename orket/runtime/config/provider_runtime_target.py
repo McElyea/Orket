@@ -226,9 +226,9 @@ async def list_provider_models(
             "models": models,
         }
     models = (
-        await _list_openai_compat_models(base_url=resolved_base_url, api_key=api_key, timeout_s=timeout_s)
+        await _list_openai_compat_models(base_url=resolved_base_url, api_key=api_key, timeout_s=timeout_s, cwd=cwd, environment=environment)
         if canonical == "openai_compat"
-        else await _list_ollama_models(base_url=resolved_base_url, timeout_s=timeout_s)
+        else await _list_ollama_models(base_url=resolved_base_url, timeout_s=timeout_s, cwd=cwd, environment=environment)
     )
     payload: dict[str, object] = {
         "requested_provider": requested,

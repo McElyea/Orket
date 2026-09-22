@@ -5,11 +5,10 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
-import httpx
-
 from orket.adapters.execution.owned_io import require_sync_context
 from orket.application.services.command_process_supervisor import CommandProcessSupervisor
 from orket.application.services.process_input_service import capture_process_context
+from orket.application.services.provider_http_service import open_provider_catalog_client
 from orket.capabilities.sync_bridge import run_coro_sync as _run_coro_sync
 from orket.core.contracts.owned_command import CommandExecutionUncertain
 
@@ -104,12 +103,10 @@ def load_lmstudio_model_sync(*, model_key: str, timeout_s: float, ttl_sec: int, 
     return {"command": " ".join(cmd), "loaded_model": token, "stdout": stdout.strip()}
 
 
-async def list_openai_compat_models(*, base_url: str, api_key: str | None, timeout_s: float) -> list[str]:
-    headers: dict[str, str] = {}
-    if api_key:
-        headers["Authorization"] = f"Bearer {api_key}"
-    timeout = httpx.Timeout(timeout=max(1.0, float(timeout_s)))
-    async with httpx.AsyncClient(base_url=base_url, timeout=timeout, headers=headers) as client:
+async def list_openai_compat_models(*, base_url: str, api_key: str | None, timeout_s: float,
+                                  cwd: Path | None = None, environment: Mapping[str, str] | None = None) -> list[str]:
+    async with open_provider_catalog_client(base_url=base_url, timeout_s=timeout_s, api_key=api_key,
+                                           cwd=cwd, environment=environment) as client:
         response = await client.get("/models")
         response.raise_for_status()
         payload = response.json() if isinstance(response.json(), dict) else {}
@@ -125,9 +122,10 @@ async def list_openai_compat_models(*, base_url: str, api_key: str | None, timeo
     return sorted(set(model_ids))
 
 
-async def list_ollama_models(*, base_url: str, timeout_s: float) -> list[str]:
-    timeout = httpx.Timeout(timeout=max(1.0, float(timeout_s)))
-    async with httpx.AsyncClient(base_url=base_url, timeout=timeout) as client:
+async def list_ollama_models(*, base_url: str, timeout_s: float, cwd: Path | None = None,
+                             environment: Mapping[str, str] | None = None) -> list[str]:
+    async with open_provider_catalog_client(base_url=base_url, timeout_s=timeout_s,
+                                           cwd=cwd, environment=environment) as client:
         response = await client.get("/api/tags")
         response.raise_for_status()
         payload = response.json() if isinstance(response.json(), dict) else {}
@@ -144,17 +142,22 @@ async def list_ollama_models(*, base_url: str, timeout_s: float) -> list[str]:
     return sorted(set(model_ids))
 
 
-def list_openai_compat_models_sync(*, base_url: str, api_key: str | None, timeout_s: float) -> list[str]:
+def list_openai_compat_models_sync(*, base_url: str, api_key: str | None, timeout_s: float,
+                                 cwd: Path | None = None, environment: Mapping[str, str] | None = None) -> list[str]:
+    cwd, environment = capture_process_context(cwd=cwd, environment=environment)
     return list(
         _run_coro_sync(
             list_openai_compat_models(
                 base_url=base_url,
                 api_key=api_key,
-                timeout_s=timeout_s,
+                timeout_s=timeout_s, cwd=cwd, environment=environment,
             )
         )
     )
 
 
-def list_ollama_models_sync(*, base_url: str, timeout_s: float) -> list[str]:
-    return list(_run_coro_sync(list_ollama_models(base_url=base_url, timeout_s=timeout_s)))
+def list_ollama_models_sync(*, base_url: str, timeout_s: float, cwd: Path | None = None,
+                            environment: Mapping[str, str] | None = None) -> list[str]:
+    cwd, environment = capture_process_context(cwd=cwd, environment=environment)
+    return list(_run_coro_sync(list_ollama_models(
+        base_url=base_url, timeout_s=timeout_s, cwd=cwd, environment=environment)))
