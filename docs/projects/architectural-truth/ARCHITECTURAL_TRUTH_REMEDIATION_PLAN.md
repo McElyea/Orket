@@ -12519,8 +12519,9 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.70 owned async file operations, retaining the 0.6.65 run-query, 0.6.66
-sandbox-query, 0.6.67 legacy action, 0.6.68 construction and 0.6.69 cleanup checkpoints. Preserve the governed legacy-export cutover;
+0.6.71 owned authorization observation and captured binding inputs, retaining
+the 0.6.65/0.6.66 API queries, 0.6.67 legacy action, 0.6.68 construction,
+0.6.69 cleanup and 0.6.70 file-operation checkpoints. Preserve the governed legacy-export cutover;
 continue remaining clock/input owners, adapter enforcement and async reachability before E1/E2
 and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
@@ -20479,3 +20480,133 @@ raw-worker authorization-context collection, other async/core inputs and lifetim
 adapter enforcement, E1/E2, whole-suite 89%, hosted Quality, .43 Git timeout cause,
 provider gaps, CAP and explicit lane acceptance remain open. Accepted BT evidence
 and every retained failure remain preserved; the lane is not retired.
+
+
+#### .71 Owned authorization observation and captured binding inputs (2026-09-21)
+
+Outward authorization context now captures selected metadata/schema, argument
+values, standard workspace/reference roots and allowlist values before waiting.
+Policy validation, native root/target observation and context construction run in
+one owned worker. Repeated cancellation and admitted timeout retain native work
+until settlement; concurrent native failure remains visible. Shallow service and
+executor copies preserve additional capability identities, while standard input
+values are independent. File root binding now has one shared helper, retaining
+the .70 drive-relative refusal and ordinary-relative capture behavior.
+Contract: `docs/architecture/CONTRACT_DELTA_AUTHORIZATION_INPUTS_D_2026-09-21.md`.
+
+Binding captures run and argument values before observation. Nested mutation no
+longer replaces its argument digest, step, acceptance contract or run policy.
+Dispatch validates scope/arguments before and after observation and retains its
+existing post-observation policy/target checks. The registered name selects the
+target kind; lookup-accepted whitespace now produces the canonical file/HTTP
+target instead of an incorrect workspace target. Stable canonical context shapes,
+policy versions and digest recipes remain unchanged.
+
+The opening native/value cohort records eleven failures and one compatibility
+pass across twelve cases, without errors or skips. Nine held native cases show
+the caller returning while its admitted worker remains running. Two further cases
+show changed context/binding values. Existing in-flight policy-change refusal
+already passes. A separate counterexample demonstrates dispatch accepting an
+argument change made while native observation waits. The first repair passes 46
+cases. Two added HTTP-input cases pass; the expanded focused cohort passes 55.
+The final eighteen current test cases run against the exact local .70 wheel:
+sixteen fail and two compatibility controls pass, with no errors/skips. Those
+controls preserve policy-change refusal and command-name equivalence. Original
+test/fixture bytes and each observed failure remain retained.
+
+Native proof covers file, HTTP and command authorization contexts under repeated
+cancellation, 50ms timeout after admission, and real missing-file failure. These
+context observations do not execute a command or make an external HTTP request.
+Actual path operations and independent SQLite queries remain responsive; the
+native release stays at 0.8 seconds and joins at five seconds. Runtime files are
+147, 289 and 58 lines. Connector invocation, deadline/result mapping, direct policy
+and argument validation, file operation bodies, sync bridges, policy serialization
+and the original run-check implementation retain exact AST; only their declared
+capture/ownership/call-order boundaries change.
+
+| Cell | Cases / failures / errors / skips | JUnit seconds | Installed origins |
+|---|---|---|---|
+| Source Windows Python 3.11 | 1591 / 0 / 0 / 0 | 716.160 | Source run |
+| Installed win-py311 | 1591 / 0 / 0 / 0 | 718.214 | 1012 |
+| Installed win-py312 | 1591 / 0 / 0 / 0 | 909.560 | 1012 |
+
+The 224-module cohort retains all 1,408 .70 cases and all 1,589 initial .71 cases.
+It includes eighteen authorization cases and two new Gitea readiness refusals.
+It also exercises affected approval, storage, recovery, command, target-replacement
+and authority regressions. All 27 new response observations meet 0.5 seconds;
+maximum 0.002459800s. Actual localhost Gitea remains enabled in each cell with
+three ready-review receipts, two refusal receipts and twelve owned servers. All thirty-six accepted servers
+have same-path verified teardown, unchanged preexisting container inventories and
+the admitted image identity. This is controlled-executor integration, not inference.
+The earlier .70 upstream refusal and its unexplained state transition stay retained.
+
+The initial source cohort passed 1,589 cases. Its installed Python 3.11 cell
+recorded 1,588 passes and one fixture readiness failure after queue drain, before
+any review submission or runtime merge attempt. Individual response fields were
+not captured in that failed predicate. All ten servers were removed; nine cases
+reached completion markers. This is distinct from the earlier .70 HTTP 405.
+Six fresh diagnostic servers then reproduce two open/unmerged PR observations
+changing from non-mergeable to mergeable after approximately 0.4 seconds, with
+unchanged head/base commit IDs. All six diagnostic servers were removed. This
+establishes a delayed readiness observation in those trials, not the missing
+fields or internal transition cause of the failed installed case.
+
+The fixture now observes readiness within one combined 20-second queue/readiness
+budget and records state samples. Actual closed PRs refuse immediately and
+conflicting PRs remain unadmitted through the deadline. The focused six-case
+live cohort passed with six same-path removals; one subsequent nested-context
+lint correction is covered by the final matrix. Original structural lint failure
+and corrected checks remain retained. There is no review/merge retry or changed
+remote-success assertion, and the delivery deadline remains 30 seconds.
+Fixture authority: `docs/specs/WEBHOOK_RUNTIME_LIFECYCLE.md`.
+
+The intermediate source and installed Python 3.11 cells each passed all 1,591
+cases. Installed Python 3.12 passed 1,590 cases and failed the new conflicting-PR
+minimum-duration assertion at 19.985000
+seconds. All twelve owned servers were removed; eleven completion markers,
+three ready-review receipts and one refusal receipt remain retained. This failed
+matrix is not accepted as a successful matrix.
+
+A separate native Python 3.12 diagnostic observed early timeout callbacks in
+23 of 32 samples, with 15.625ms clock resolution. That corroborates early callback
+scheduling; the failed Gitea case itself has no callback trace. The fixture now
+checks the same absolute target before requesting cancellation and joins its
+timer on every exit. The unchanged conflicting-case assertion still requires
+20 <= elapsed < 25 seconds. No padding after timeout, clock setting, readiness
+budget or delivery deadline changed. The repaired native probe records zero
+early callbacks in 32 samples. A focused source Python 3.12 flow passes all six
+cases with same-path removal. Subsequent lint-only parameter naming and an
+explained clock-loop exemption preserve its normalized AST. Both structural
+failures and their corrected checks remain retained. These observations do not
+establish universal native timer behavior or repair the separate Linux blocker.
+
+Complete core source/wheel/sdist parity covers 1,113 Python files,
+all nineteen data resources, 1,132 core members and
+2,222 support inputs. Wheel SHA-256:
+`3091bf333d97eb50cd121507a60ae1aaf1a77ad29f14d514c4fc0fa806a3bb3e`; sdist SHA-256:
+`af1a344a59a5abedb18a5bbf54f627c87c2dc093c20c7df447d4d233f2391a34`. These exact runtime artifacts were
+reused after fixture-only changes; current support is separately captured. This
+does not claim that every non-core archive project file is current. Installed cells verify exact module
+origins, unchanged support, no unowned child and no root database. Scoped Windows
+sleep requests restore without persistent power changes.
+
+Actual dependency policy v2, changed-file Ruff, docs hygiene, release metadata and
+whitespace pass. The graph has 1,113 files,
+3,570 edges and 6 dynamic routes,
+with no violations, unknown modules, analysis errors or authority cycles.
+Canonical Ruff still has 94 findings. This is not whole Quality or 89% acceptance.
+The latest passive Linux clock and Ollama observations remain .68's retained
+blockers; no fresh Linux Orket cell or provider inference is claimed. The .59
+alias-dependent packet1 gap and broader Docker/sandbox acceptance remain open.
+
+Evidence: `.tmp/d-authorization-context/`, the incomplete intermediate
+`.tmp/d-authorization-context-ready/`, and the final
+`.tmp/d-authorization-context-deadline/`.
+Local commit and annotated tag only;
+no GitHub push. Earlier awaits in proposal construction, arbitrary runtime
+reconfiguration, custom copy/registry behavior and native `Path.cwd()` latency
+remain outside this scoped proof. Path-value capture is not an atomic filesystem
+or configuration snapshot, handle-bound confinement, or CAP-2 admission. Remaining
+core/async input owners, adapter enforcement, E1/E2, whole-suite coverage, hosted
+Quality, .43 Git timeout cause, CAP and explicit lane acceptance remain open.
+Accepted BT evidence and all prior failures are preserved; the lane is not retired.

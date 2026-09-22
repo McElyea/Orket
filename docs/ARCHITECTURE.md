@@ -227,6 +227,12 @@ connector dispatch keeps its bound-filesystem authority. Migration, native
 current-directory observation and containment limits:
 `docs/architecture/CONTRACT_DELTA_ASYNC_FILE_OPERATIONS_D_2026-09-21.md`.
 
+Outward authorization observation owns its native worker and captures standard
+metadata, arguments, roots and allowlist values before waiting. Binding retains
+its run/argument inputs; dispatch rechecks argument drift after observation.
+Canonical target naming, migration and bounded snapshot/ownership limits:
+`docs/architecture/CONTRACT_DELTA_AUTHORIZATION_INPUTS_D_2026-09-21.md`.
+
 Sandbox log requests capture invocation inputs before owned pipeline construction,
 retain native reads through interruption and close each ephemeral pipeline before
 return. Nonzero log-command exits are visible failures; the ten-second command

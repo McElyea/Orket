@@ -5,6 +5,21 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.71] - 2026-09-21
+
+### Fixed
+- Own native authorization-context observation through interruption and preserve native failure.
+- Capture standard metadata, arguments, roots, allowlists and binding run inputs before awaiting observation.
+- Select targets by the registered connector name and reject argument drift detected after observation.
+- Require observed Gitea fixture readiness within its combined 20-second setup budget; retain actual closed/conflicting PR refusal controls and unchanged review/merge assertions.
+- Retain the original readiness deadline when native timer callbacks arrive early, and join the fixture timer on exit.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Start a new invocation for changed inputs; custom embeddings must respect the selected metadata and captured standard fields.
+- Use absolute or ordinary relative roots; authorization context rejects drive-qualified relative roots through the shared file-root contract.
+- Contract and limits: `docs/architecture/CONTRACT_DELTA_AUTHORIZATION_INPUTS_D_2026-09-21.md`.
+
 ## [0.6.70] - 2026-09-21
 
 ### Fixed

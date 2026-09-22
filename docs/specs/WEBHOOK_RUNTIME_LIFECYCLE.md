@@ -88,3 +88,23 @@ Direct embeddings import `GiteaWebhookHandler` or the async
 Use the async builder on async paths; synchronous construction belongs off the
 event loop. The owner must be closed. Previous adapter handler/payload imports
 are retired without forwarding modules.
+
+## Live acceptance setup
+
+Disposable Gitea review acceptance requires an open, unmerged, mergeable PR
+before submitting its signed review. `ready_for_review` drains setup queues and
+observes that predicate within one 20-second budget, retaining the observed
+states and commit IDs. A completed queue flush alone does not establish that the
+first subsequent API observation is mergeable. Closed PRs refuse immediately;
+conflicting PRs remain unadmitted at the deadline.
+
+The readiness timer checks the same absolute clock target before requesting
+cancellation, because a native event-loop callback can arrive early. Its owner
+joins that timer on success, refusal and interruption. The deadline and the
+minimum-duration refusal assertion remain unchanged.
+
+This is fixture setup, not runtime review or merge retry. The 30-second delivery
+deadline and remote merge/state assertions remain unchanged. Every owned server
+is removed in the same execution path, including readiness refusal. These
+observations do not establish atomic remote readiness, universal merge
+availability, or the cause of a historical server transition.

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from copy import deepcopy
 from typing import Any
 
 from orket.application.services.outward_connector_service import OutwardConnectorService
@@ -21,6 +22,7 @@ async def bind_authorization(
     proposal: OutwardApprovalProposal, run: OutwardRunRecord,
     args: dict[str, Any], connectors: OutwardConnectorService,
 ) -> OutwardAuthorization:
+    run, args = deepcopy(run), deepcopy(args)
     context = await connectors.authorization_context(proposal.tool, args)
     policy = resolved_policy(run, context)
     return OutwardAuthorization(
@@ -49,6 +51,7 @@ async def validate_dispatch_authorization(
 ) -> None:
     validate_run_authorization(binding, run)
     context = await connectors.authorization_context(binding.tool, binding.arguments)
+    validate_run_authorization(binding, run)
     if resolved_policy(run, context) != binding.policy_json:
         raise RuntimeError("E_OUTWARD_AUTHORIZATION_POLICY_DRIFT")
     if context["workspace_root"] != binding.workspace_root or context["target_ref"] != binding.target_ref:

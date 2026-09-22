@@ -5,7 +5,7 @@ import asyncio
 import secrets
 import time
 import uuid
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from dataclasses import dataclass, field
 
 import httpx
@@ -68,15 +68,49 @@ async def get_visible(server: LocalGitea, path: str, *, params: dict[str, str] |
             await asyncio.sleep(0.1)
 
 
+async def _expire_readiness_at(deadline_state: asyncio.Timeout, when: float) -> None:
+    loop = asyncio.get_running_loop()
+    # Native event-loop callbacks may run one clock tick early. Keep the same
+    # absolute target and check it before requesting cancellation.
+    while (remaining := when - loop.time()) > 0:  # noqa: ASYNC110 -- Wait for a clock target, not an event.
+        await asyncio.sleep(remaining)
+    deadline_state.reschedule(when)
+
+
+@asynccontextmanager
+async def _readiness_deadline():
+    when = asyncio.get_running_loop().time() + 20
+    async with asyncio.timeout(None) as timeout:
+        timer = asyncio.create_task(_expire_readiness_at(timeout, when))
+        try:
+            yield
+        finally:
+            timer.cancel()
+            with suppress(asyncio.CancelledError):  # Join the timer explicitly cancelled by this owner.
+                await timer
+
+
 async def ready_for_review(server: LocalGitea, client: httpx.AsyncClient, path: str, number: int) -> dict:
-    """Drain fixture setup work before asserting a successful review/merge path."""
-    await docker("exec", "--user", "git", server.container_id, "gitea", "manager", "flush-queues", "--timeout", "20s")
-    response = await client.get(path + f"/pulls/{number}")
-    response.raise_for_status()
-    pull = response.json()
-    assert pull["state"] == "open" and pull["merged"] is False and pull["mergeable"] is True
-    return {"queue_flush": "completed", "state": pull["state"], "merged": pull["merged"],
-            "mergeable": pull["mergeable"], "head_sha": pull["head"]["sha"], "base_sha": pull["base"]["sha"]}
+    """Require observed readiness within the existing setup budget, including queue drain."""
+    started, observations = time.monotonic(), []
+    try:
+        async with _readiness_deadline():
+            await docker("exec", "--user", "git", server.container_id, "gitea", "manager", "flush-queues", "--timeout", "20s")
+            while True:
+                response = await client.get(path + f"/pulls/{number}")
+                response.raise_for_status()
+                pull = response.json()
+                observed = {"seconds": time.monotonic() - started, "state": pull["state"], "merged": pull["merged"],
+                            "mergeable": pull["mergeable"], "head_sha": pull["head"]["sha"], "base_sha": pull["base"]["sha"]}
+                observations.append(observed)
+                assert observed["state"] == "open" and observed["merged"] is False, observed
+                if observed["mergeable"] is True:
+                    return {"queue_flush": "completed", **observed, "observations": observations,
+                            "readiness_budget_seconds": 20}
+                await asyncio.sleep(.1)
+    except TimeoutError as exc:
+        last = observations[-1] if observations else None
+        raise TimeoutError(f"Gitea review not ready within 20 seconds; last observation: {last}") from exc
 
 
 @asynccontextmanager

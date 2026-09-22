@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections.abc import Callable
+from copy import copy, deepcopy
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any
@@ -12,6 +13,7 @@ from jsonschema import Draft202012Validator
 from jsonschema.exceptions import ValidationError as JsonSchemaValidationError
 
 from orket.adapters.execution.owned_io import run_owned_thread
+from orket.adapters.storage.async_file_tools import capture_file_roots
 from orket.adapters.storage.bound_filesystem import BOUND_FILESYSTEM_TOOLS
 from orket.adapters.tools.builtin_connectors import BuiltInConnectorExecutor
 from orket.adapters.tools.registry import (
@@ -114,24 +116,39 @@ class OutwardConnectorService:
             raise OutwardConnectorPolicyError(metadata.name, str(exc)) from exc
 
     async def authorization_context(self, connector_name: str, args: dict[str, Any]) -> dict[str, Any]:
-        metadata = self._require_metadata(connector_name)
-        await asyncio.to_thread(self.validate_policy, connector_name, args)
-        root = str(await asyncio.to_thread(self.executor.workspace_root.resolve))
-        if connector_name in {"read_file", "write_file", "create_directory", "delete_file"}:
-            target = str(await asyncio.to_thread(
-                self.executor.file_tools.async_fs._resolve_safe_path,
-                str(args["path"]), write=connector_name != "read_file",
-            ))
-        elif connector_name in {"http_get", "http_post"}:
-            url = urlparse(str(args["url"]))
-            target = f"http-target:{url.hostname}:{args_hash({'url': args['url']})}"
-        else:
-            target = f"workspace:{root}"
-        return {
-            "policy_version": "outward_connector_policy.v1", "workspace_root": root,
-            "target_ref": target, "connector": asdict(metadata),
-            "http_allowlist": sorted(self.executor.http_allowlist),
-        }
+        captured, metadata, arguments = self._capture_authorization_inputs(connector_name, args)
+
+        def collect():
+            captured.validate_policy(metadata.name, arguments)
+            root = str(captured.executor.workspace_root.resolve())
+            if metadata.name in BOUND_FILESYSTEM_TOOLS:
+                target = str(captured.executor.file_tools.async_fs._resolve_safe_path(
+                    str(arguments["path"]), write=metadata.name != "read_file",
+                ))
+            elif metadata.name in {"http_get", "http_post"}:
+                url = urlparse(str(arguments["url"]))
+                target = f"http-target:{url.hostname}:{args_hash({'url': arguments['url']})}"
+            else:
+                target = f"workspace:{root}"
+            return {
+                "policy_version": "outward_connector_policy.v1", "workspace_root": root,
+                "target_ref": target, "connector": asdict(metadata),
+                "http_allowlist": sorted(captured.executor.http_allowlist),
+            }
+
+        return await run_owned_thread(collect, label="connector-authorization-context")
+
+    def _capture_authorization_inputs(self, connector_name, args):
+        metadata, arguments = deepcopy(self._require_metadata(connector_name)), deepcopy(args)
+        captured = copy(self)
+        captured.connector_registry = BuiltInConnectorRegistry([metadata])
+        captured.executor = copy(self.executor)
+        captured.executor.workspace_root, = capture_file_roots([self.executor.workspace_root])
+        captured.executor.http_allowlist = tuple(self.executor.http_allowlist)
+        if metadata.name in BOUND_FILESYSTEM_TOOLS:
+            captured.executor.file_tools = copy(self.executor.file_tools)
+            captured.executor.file_tools.async_fs = self.executor.file_tools.async_fs.capture()
+        return captured, metadata, arguments
 
     async def invoke(self, connector_name: str, args: dict[str, Any]) -> dict[str, Any]:
         event_payload, _result = await self.invoke_with_result(connector_name, args)

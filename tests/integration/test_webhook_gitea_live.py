@@ -6,6 +6,7 @@ import hashlib
 import hmac
 import json
 import os
+import time
 
 import httpx
 import pytest
@@ -71,7 +72,7 @@ async def test_native_gitea_signature_delivery_and_teardown(tmp_path):
     await files.write_file("teardown.txt", "Owned webhook listener/client and disposable Gitea teardown verified")
 
 
-async def _reviewable_pull(client, server, path, branch):
+async def _reviewable_pull(client, server, path, branch, *, conflict=False):
     response = await client.post(path + "/branches", json={"new_branch_name": "review-proof"})
     response.raise_for_status()
     response = await client.post(
@@ -83,6 +84,12 @@ async def _reviewable_pull(client, server, path, branch):
         },
     )
     response.raise_for_status()
+    if conflict:
+        response = await client.post(path + "/contents/proof.txt", json={
+            "branch": branch, "message": "Conflicting fixture base",
+            "content": base64.b64encode(b"conflicting base\n").decode(),
+        })
+        response.raise_for_status()
     response = await client.post(
         path + "/pulls",
         json={
@@ -212,3 +219,39 @@ async def test_native_review_reaches_policy_once(tmp_path, event, expected):
                     json.dumps({"merged": remote.json()["merged"], "state": remote.json()["state"]}),
                 )
     await files.write_file("teardown.txt", "Owned webhook listener/client and disposable Gitea teardown verified")
+
+
+@pytest.mark.parametrize("state", ["closed", "conflicting"])
+async def test_review_readiness_refuses_unready_pull(tmp_path, state):
+    """Integration: actual closed/conflicting PRs cannot become success-fixture admission."""
+    files = AsyncFileTools(tmp_path)
+    async with (
+        local_gitea() as server,
+        httpx.AsyncClient(base_url=server.url, auth=(server.username, server.password)) as client,
+    ):
+        version = await client.get("/api/v1/version")
+        version.raise_for_status()
+        await files.write_file("server.txt", server.container_id + "\n" + version.json()["version"])
+        repo = await client.post("/api/v1/user/repos", json={"name": "review-proof", "auto_init": True})
+        repo.raise_for_status()
+        path = f"/api/v1/repos/{server.username}/review-proof"
+        number = await _reviewable_pull(client, server, path, repo.json()["default_branch"],
+                                       conflict=state == "conflicting")
+        if state == "closed":
+            response = await client.patch(path + f"/pulls/{number}", json={"state": "closed"})
+            response.raise_for_status()
+        started = time.monotonic()
+        error = AssertionError if state == "closed" else TimeoutError
+        async with asyncio.timeout(25):
+            with pytest.raises(error) as failure:
+                await ready_for_review(server, client, path, number)
+        elapsed = time.monotonic() - started
+        if state == "conflicting":
+            assert 20 <= elapsed < 25 and "not ready within 20 seconds" in str(failure.value)
+        remote = await client.get(path + f"/pulls/{number}")
+        remote.raise_for_status()
+        assert remote.json()["merged"] is False
+        assert remote.json()["state"] == ("closed" if state == "closed" else "open")
+        await files.write_file("readiness-refusal.txt", {"state": state, "seconds": elapsed,
+                               "error_type": type(failure.value).__name__, "message": str(failure.value)})
+    await files.write_file("teardown.txt", "Owned unready Gitea refusal and same-path teardown verified")

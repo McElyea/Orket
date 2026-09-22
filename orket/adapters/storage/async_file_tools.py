@@ -24,6 +24,15 @@ ResultT = TypeVar("ResultT")
 side_effecting = True
 
 
+def capture_file_roots(paths: list[Path]) -> list[Path]:
+    """Bind standard filesystem roots before an invocation first yields."""
+    roots = [Path(path) for path in paths]
+    if any(path.drive and not path.is_absolute() for path in roots):
+        raise ValueError("E_FILE_TOOL_DRIVE_RELATIVE_ROOT_UNSUPPORTED")
+    invocation_root = Path.cwd() if any(not path.is_absolute() for path in roots) else None
+    return [invocation_root / path if not path.is_absolute() else path for path in roots]
+
+
 class AsyncFileTools:
     """
     Service for non-blocking file operations.
@@ -38,11 +47,7 @@ class AsyncFileTools:
 
     def capture(self) -> AsyncFileTools:
         """Copy path permissions and bind relative roots before the first await."""
-        roots = [Path(self.workspace_root), *(Path(path) for path in self.references)]
-        if any(path.drive and not path.is_absolute() for path in roots):
-            raise ValueError("E_FILE_TOOL_DRIVE_RELATIVE_ROOT_UNSUPPORTED")
-        invocation_root = Path.cwd() if any(not path.is_absolute() for path in roots) else None
-        bound = [invocation_root / path if not path.is_absolute() else path for path in roots]
+        bound = capture_file_roots([self.workspace_root, *self.references])
         captured = copy(self)
         captured.workspace_root, captured.references = bound[0], bound[1:]
         return captured
