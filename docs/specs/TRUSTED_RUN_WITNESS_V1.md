@@ -84,6 +84,12 @@ A `trusted_run.witness_bundle.v1` bundle MUST contain:
 
 `session_id` and artifact-root paths are locators only. They MUST NOT substitute for the governed turn-tool `run_id`.
 
+Since 0.6.83, bundle construction reads resource history for the accepted
+checkpoint's dependent lease. Later turns can reuse the namespace; their current
+resource record cannot substitute for this run's retained observation. Missing
+matching history refuses construction. Verifier rules are unchanged. See
+`docs/specs/SCRIPT_RUNTIME_OWNERSHIP.md` for command cleanup and fixture migration.
+
 All file paths stored in the bundle MUST be workspace-relative or repo-relative unless a source contract explicitly requires a local absolute path. Each included artifact MUST be identified by path plus digest or by durable record id plus digest-equivalent integrity reference.
 
 ## Required Authority Matrix

@@ -343,6 +343,16 @@ Use owned workers from async callers and close resource owners. Contract and lim
 `docs/specs/SYNC_COROUTINE_OWNERSHIP.md` and
 `docs/architecture/CONTRACT_DELTA_SYNC_COROUTINE_OWNERSHIP_D_2026-09-22.md`.
 
+ProductFlow commands own engine construction/execution/cleanup; witness campaigns
+collect on one loop before publishing results. Their controlled fixtures use the
+current seat input and exact-output card acceptance. Witness resource history binds
+to the checkpoint's dependent lease, refusing absent history; verifiers stay intact.
+Replay audit observes artifacts without constructing a runtime, retains native
+workers through interruption and owns default provider cleanup. Direct artifact
+diagnostics on an event loop refuse before I/O. Contract and limits:
+`docs/specs/SCRIPT_RUNTIME_OWNERSHIP.md` and
+`docs/architecture/CONTRACT_DELTA_SCRIPT_RUNTIME_OWNERSHIP_D_2026-09-22.md`.
+
 Driver async creation captures root, environment and settings before owned
 construction; direct synchronous construction refuses an event-loop thread.
 API chat and interactive CLI use shared runtime owners. Console reads settle

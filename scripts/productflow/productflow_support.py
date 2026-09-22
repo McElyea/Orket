@@ -4,11 +4,15 @@ import contextlib
 import json
 import os
 import shutil
+from collections.abc import Iterator
 from dataclasses import dataclass
+from functools import partial
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any
 
 from orket.adapters.llm.local_model_provider import LocalModelProvider, ModelResponse
+from orket.application.services.runtime_result_lifetime import open_runtime_owner
+from orket.core.contracts.card_acceptance_inputs import ArtifactAcceptance
 from orket.orchestration.engine import OrchestrationEngine
 from scripts.common.run_summary_support import load_validated_run_summary
 
@@ -173,6 +177,14 @@ def _write_productflow_assets(config_root: Path) -> None:
                     "summary": "Write the governed ProductFlow output and move to review",
                     "seat": PRODUCTFLOW_BUILDER_SEAT,
                     "priority": "High",
+                    "params": {"completion_acceptance": ArtifactAcceptance(
+                        schema_version="card_artifact_acceptance.v1",
+                        acceptance_ref="productflow.approved-text.v1", policy_ref="literal-artifact-text.v1",
+                        workload_id=PRODUCTFLOW_EPIC_ID, artifact_paths=(PRODUCTFLOW_OUTPUT_PATH,),
+                        cases=({"kind": "text_equals", "criterion_id": "approved-content",
+                                "description": "Exact approved ProductFlow output", "path": PRODUCTFLOW_OUTPUT_PATH,
+                                "expected_text": PRODUCTFLOW_OUTPUT_CONTENT},),
+                    ).model_dump(mode="json")},
                 }
             ],
         },
@@ -189,14 +201,19 @@ def build_productflow_engine(paths: ProductFlowPaths) -> OrchestrationEngine:
     )
     loop_policy = engine._pipeline.orchestrator.loop_policy_node
 
-    def _approval_required_tools_for_seat(seat_name: str, issue: Any = None, turn_status: Any = None) -> list[str]:
-        del issue, turn_status
-        if str(seat_name or "").strip().lower() == PRODUCTFLOW_BUILDER_SEAT:
+    def _approval_required_tools_for_seat(inputs) -> list[str]:
+        if inputs.seat_name.strip().lower() == PRODUCTFLOW_BUILDER_SEAT:
             return ["write_file"]
         return []
 
-    setattr(loop_policy, "approval_required_tools_for_seat", _approval_required_tools_for_seat)
+    loop_policy.approval_required_tools_for_seat = _approval_required_tools_for_seat
     return engine
+
+
+async def run_productflow_operation(operation, *, paths: ProductFlowPaths, **options):
+    """Own one command's engine and finish cleanup before returning its payload."""
+    async with open_runtime_owner(partial(build_productflow_engine, paths), label="productflow-engine-construction") as engine:
+        return await operation(paths=paths, engine=engine, **options)
 
 
 def relative_to_workspace(path: Path, workspace_root: Path) -> str:
@@ -353,4 +370,5 @@ __all__ = [
     "reset_productflow_runtime_state",
     "resolve_productflow_paths",
     "resolve_productflow_run_with_engine",
+    "run_productflow_operation",
 ]

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# ruff: noqa: E402 -- direct script execution requires the repository import root.
 from __future__ import annotations
 
 import argparse
@@ -21,11 +22,11 @@ from scripts.productflow.productflow_support import (
     PRODUCTFLOW_ISSUE_ID,
     PRODUCTFLOW_OUTPUT_CONTENT,
     PRODUCTFLOW_OUTPUT_PATH,
-    build_productflow_engine,
     patched_productflow_provider,
     relative_to_workspace,
     reset_productflow_runtime_state,
     resolve_productflow_paths,
+    run_productflow_operation,
 )
 
 DEFAULT_OUTPUT = REPO_ROOT / "benchmarks" / "results" / "productflow" / "governed_write_file_live_run.json"
@@ -156,8 +157,7 @@ def main(argv: list[str] | None = None) -> int:
     paths = resolve_productflow_paths(workspace_override)
     reset_productflow_runtime_state(paths)
     with patched_productflow_provider():
-        engine = build_productflow_engine(paths)
-        payload = asyncio.run(_run(paths=paths, engine=engine))
+        payload = asyncio.run(run_productflow_operation(_run, paths=paths))
     persisted = write_payload_with_diff_ledger(Path(str(args.output)).resolve(), payload)
     if args.json:
         print(json.dumps(persisted, indent=2, ensure_ascii=True))

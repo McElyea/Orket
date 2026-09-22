@@ -12519,7 +12519,8 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.82 native synchronous coroutine ownership, retaining
+0.6.83 script runtime owners and checkpoint-bound witness observations, retaining
+0.6.82 native synchronous coroutine ownership,
 0.6.81 immutable outbound policy and owned file observations,
 0.6.80 captured local Kernel state/filesystem effects, 0.6.79 run identity/workspace
 inputs and 0.6.78 immutable packaged capability policy,
@@ -12533,7 +12534,7 @@ and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
 Preserve every failed and
 passing source/native observation and the historical clock diagnosis. Canonical
-Ruff has 89 findings at the .82 checkpoint. The prior stale benchmark expectation passes in the
+Ruff has 89 findings at the .83 checkpoint. The prior stale benchmark expectation passes in the
 new source/native selection. The unmodified published .39 complete rerun has
 7,260 passes, three failures and 89 skips; its coverage is 84.56120595327887%
 against the unchanged 89% gate. The two parent-Git-dependent fixture failures and
@@ -21603,3 +21604,116 @@ required to retire the lane.
 
 Accepted source/installed manifest and retained evidence:
 `.tmp/d-sync-coroutine-ownership/`. Scoped checkpoint only; release readiness remains false.
+
+
+#### .83 Script runtime owners and checkpoint-bound witness observations (2026-09-22)
+
+Responsible maintainer: Codex for Orket Core. Continuing D after published .82;
+no new capability admission, whole-plan completion or lane retirement.
+
+ProductFlow governed-run, replay-review and operator-review commands now use one
+shared operation scope built on the existing runtime owner. Construction runs in
+an owned worker; acquired engines close before return/final report publication.
+The witness campaign collects execution and bundle on one loop, closes that engine,
+then publishes its outputs. Borrowed-engine operations retain caller ownership.
+Cleanup failure remains visible through repeated cancellation and timeout.
+
+Replay audit now reads through `ReplayDiagnosticsService` without constructing an
+engine or creating runtime databases. Its original native observation body is
+unchanged after the new event-loop refusal guard. Workspace is made absolute before
+admission and resolved in the worker. Async audit owns that worker through read
+failure/interruption and owns default model-provider construction and cleanup.
+Injected replay callables own their resources. Diagnostics remain observability-only,
+not canonical replay-verdict authority. Existing deadlines and result schemas remain.
+
+Real command proof exposed three stale ProductFlow inputs. The seat approval callback
+now accepts the existing immutable seat-policy value. The fixture declares canonical
+exact-output artifact acceptance, so actual persisted evidence satisfies BT-3 instead
+of bypassing it. Witness resource collection now selects the latest retained record
+whose provenance matches the checkpoint's dependent lease. A later guard turn can
+reuse the namespace; its resource observation cannot replace the admitted run's
+history. Missing/unrelated history refuses construction. All four existing witness
+verifier/foundation modules are byte-identical; BT approval/completion gates unchanged.
+
+Live local proof and structural artifact binding:
+
+| Cell | Tests / failures / errors / skips | Pytest seconds | Installed import origins |
+| --- | --- | --- | --- |
+| Fresh source | 1009 / 0 / 0 / 0 | 107.623 | source checkout |
+| Installed win-py311 | 1009 / 0 / 0 / 0 | 104.620 | 961 |
+| Installed win-py312 | 1009 / 0 / 0 / 0 | 115.307 | 961 |
+
+The 114-module selection retains every925 .82 identity and adds84 cases:21 new and
+63 existing affected cases. All cells have identical identities and frozen inputs.
+Actual engines/SQLite/files prove cleanup before command return and final publication.
+A governed write-file flow and two-run witness campaign succeed with controlled
+responses and an injected ordered clock. The two-run input corrects the opening
+test's invalid one-run campaign-success assumption; existing repeat requirements
+and all success assertions remain. No workload/model/general-determinism admission.
+
+Held replay reads, real loopback HTTP client close and actual engine cleanup remain
+owned through repeated cancellation, existing .02s timeouts and native failure.
+All31 independent SQLite observations per cell finish below .5s, maximum
+0.021492000s. Ten-second fixture holds and all prior command/provider deadlines
+are unchanged. Missing artifact observations and cleanup failure cannot become success.
+
+Separate public-command flow uses the installed .83 core and current scripts:
+governed run succeeds, all three acquired engines/pipelines close, and operator
+review answers7/7 questions. Replay-review truthfully emits blocked/partial success,
+`not_evaluable`, because its completeness policy expects `agent_output/main.py`,
+`agent_output/verification/runtime_verification.json` and an authoritative contract
+verdict absent from the text-only fixture. Its exit0 reflects its existing truthful
+report contract, not replay acceptance. Raw command aggregation called exits successful;
+the retained separate audit records overall partial success and exact missing evidence.
+No completeness rule was weakened. Script flow and all its artifact hashes are bound
+by `script-live/audit.json`. Controlled HTTP/provider responses are not inference.
+
+Retained failures and repairs: opening9 failures plus2 teardown errors; limiting the
+test's deliberate close-failure injection to the active command gives isolated9/9
+counterexamples with0 errors. First repair29/31 exposed two old fake-engine tests;
+these now use real artifacts. Provider-ownership33/34 exposed the fake fixture's
+incorrect first-message assumption; exact persisted-message equality replaces it.
+Command-flow14/16 exposed stale seat/acceptance inputs. Migrated ProductFlow1/2
+then exposed unbound witness resource history and the one-run test assumption.
+Bound witness2/2 passes. Expanded first stopped at one wrong ResourceRecord import;
+the corrected import collected93, with3 failures because projected fixture records
+lacked required storage fields. Complete typed fixtures and final formatted proof
+pass93/93. Every attempt remains retained; no failing output was overwritten.
+
+All14 exact final old-API controls fail against byte-verified installed .82 plus
+frozen .82 scripts, with0 errors/skips. Fifteen changed/new Python files match final
+focused bytes. Native guard body, three ProductFlow operation bodies and campaign
+controller body remain AST-identical. Existing witness-support exports are retained
+explicitly; Ruff's first automatic pass removed unused imports that served as exports,
+so those were restored before proof. Two formatting helpers stopped on scoped
+findings; a separately named checked helper passes. Bootstrap E402 and lexical CLI
+capture annotations explain existing standalone boundaries, not runtime exemptions.
+One unused review variable was removed; no new file exceeds400/new function70 lines.
+
+Canonical C passes: 1143 Python files,
+3722 edges, six resolved routes, zero violations/errors/
+unknown modules/authority cycles. Complete source/wheel/sdist parity covers1143
+Python plus the same20 data files (1163 total), with2316
+frozen support inputs. Ruff remains89 existing/0 introduced. Scoped lint, docs,
+release metadata and size checks pass. Both Quality jobs select these cases;
+hosted execution remains unavailable. Source/both installed scopes and public-script
+flow are distinct from release readiness, full coverage and actual inference.
+Contracts: `docs/specs/SCRIPT_RUNTIME_OWNERSHIP.md`, its September22 delta and the
+clarified trusted-witness/substrate resource history requirements.
+
+Remaining blockers or drift: .72 Linux preflight remains an environment blocker
+(240.006951941s observed; quiet18.843389227vs60; steps outside.01; cause unknown).
+No new measurement/settings/deadline change. Continue D complete adapter/effect and
+async-reachability inventories, remaining clocks/env/input owners and three governance
+proof scripts still constructing engines before their loops without explicit close.
+ProductFlow's workload-specific replay completeness gap remains as observed above.
+Review ambient identifiers and provider-inventory command descendants still need
+review. E1 marker/no-op/Ruff/full coverage, E2 generated authority/history, CAP1
+actual-model workloads, CAP2 accepted containment and CAP3 measured capacity/recovery
+remain required. Fullsuite89%, hosted Gitea Quality, Ollama aliases, earlier Git
+timeout cause and physical-sleep timing remain unverified. Preserve BT-1 through
+BT-5 and all earlier scoped guarantees. Explicit user acceptance is required for
+lane retirement. Baseline collection does not imply release readiness.
+
+Accepted source/installed manifest and retained evidence:
+`.tmp/d-script-runtime-ownership/`. Scoped checkpoint only; release readiness remains false.

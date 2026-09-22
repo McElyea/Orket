@@ -17,23 +17,45 @@ from scripts.proof.trusted_run_witness_contract import (
     APPROVAL_REASON,
     BUNDLE_SCHEMA_VERSION,
     COMPARE_SCOPE,
-    CONTRACT_VERDICT_SCHEMA_VERSION,
-    DEFAULT_BUNDLE_NAME,
-    DEFAULT_VERIFICATION_OUTPUT,
     EXPECTED_ISSUE_STATUS,
     FALLBACK_CLAIM_TIER,
-    MUST_CATCH_OUTCOMES,
     OPERATOR_SURFACE,
-    PROOF_RESULTS_ROOT,
-    REPORT_SCHEMA_VERSION,
-    TARGET_CLAIM_TIER,
-    blocked_report,
-    build_campaign_verification_report,
     build_contract_verdict,
     now_utc_iso,
-    relative_to_repo,
     stable_json_digest,
-    verify_witness_bundle_payload,
+)
+from scripts.proof.trusted_run_witness_contract import (
+    CONTRACT_VERDICT_SCHEMA_VERSION as CONTRACT_VERDICT_SCHEMA_VERSION,
+)
+from scripts.proof.trusted_run_witness_contract import (
+    DEFAULT_BUNDLE_NAME as DEFAULT_BUNDLE_NAME,
+)
+from scripts.proof.trusted_run_witness_contract import (
+    DEFAULT_VERIFICATION_OUTPUT as DEFAULT_VERIFICATION_OUTPUT,
+)
+from scripts.proof.trusted_run_witness_contract import (
+    MUST_CATCH_OUTCOMES as MUST_CATCH_OUTCOMES,
+)
+from scripts.proof.trusted_run_witness_contract import (
+    PROOF_RESULTS_ROOT as PROOF_RESULTS_ROOT,
+)
+from scripts.proof.trusted_run_witness_contract import (
+    REPORT_SCHEMA_VERSION as REPORT_SCHEMA_VERSION,
+)
+from scripts.proof.trusted_run_witness_contract import (
+    TARGET_CLAIM_TIER as TARGET_CLAIM_TIER,
+)
+from scripts.proof.trusted_run_witness_contract import (
+    blocked_report as blocked_report,
+)
+from scripts.proof.trusted_run_witness_contract import (
+    build_campaign_verification_report as build_campaign_verification_report,
+)
+from scripts.proof.trusted_run_witness_contract import (
+    relative_to_repo as relative_to_repo,
+)
+from scripts.proof.trusted_run_witness_contract import (
+    verify_witness_bundle_payload as verify_witness_bundle_payload,
 )
 
 
@@ -52,6 +74,7 @@ async def build_witness_bundle_payload(*, paths: Any, engine: Any, run_id: str) 
     checkpoint = _as_dict(approval.get("control_plane_target_checkpoint"))
     policy_digest = str(checkpoint.get("policy_digest") or checkpoint.get("acceptance_evaluated_policy_digest") or "")
     authority_lineage = _authority_lineage(approval=approval, target_run=target_run)
+    authority_lineage["resource"] = await _checkpoint_resource(engine, checkpoint)
     artifact_refs = _artifact_refs(
         run_summary_path=resolved.run_summary_path,
         output_path=output_path,
@@ -114,6 +137,16 @@ async def _load_single_productflow_approval(*, engine: Any, session_id: str, run
     if len(matches) != 1:
         raise ValueError(f"trusted_run_productflow_approval_match_count:{len(matches)}")
     return dict(matches[0])
+
+
+async def _checkpoint_resource(engine: Any, checkpoint: dict[str, Any]) -> dict[str, Any]:
+    """Observe the resource history belonging to this accepted checkpoint's lease."""
+    lease_refs = set(checkpoint.get("acceptance_dependent_lease_refs") or [])
+    history = await engine.control_plane_repository.list_resource_records(resource_id=f"namespace:issue:{PRODUCTFLOW_ISSUE_ID}")
+    matches = [record for record in history if record.provenance_ref in lease_refs]
+    if not matches:
+        raise ValueError("trusted_run_checkpoint_resource_history_missing")
+    return matches[-1].model_dump(mode="json")
 
 
 def _authority_lineage(*, approval: dict[str, Any], target_run: dict[str, Any]) -> dict[str, Any]:

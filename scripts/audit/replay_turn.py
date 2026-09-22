@@ -6,6 +6,7 @@ import asyncio
 import json
 import sys
 from collections.abc import Awaitable, Callable
+from functools import partial
 from pathlib import Path
 from typing import Any
 
@@ -13,10 +14,12 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from orket.adapters.execution.owned_io import run_owned_thread  # noqa: E402 - project path bootstrap
 from orket.application.services.local_model_factory import (  # noqa: E402 - project path bootstrap
     create_local_model_provider,  # noqa: E402 - project path bootstrap
 )
-from orket.orchestration.engine import OrchestrationEngine  # noqa: E402 - project path bootstrap
+from orket.application.services.runtime_result_lifetime import open_runtime_owner  # noqa: E402 - project path bootstrap
+from orket.orchestration.engine_services import ReplayDiagnosticsService  # noqa: E402 - project path bootstrap
 from scripts.audit.audit_support import (  # noqa: E402 - project path bootstrap
     normalize_text,
     now_utc_iso,
@@ -37,8 +40,7 @@ def _load_replay_source(
     turn_index: int,
     role: str | None,
 ) -> dict[str, Any]:
-    engine = OrchestrationEngine(Path(workspace).resolve())
-    return engine.replay_turn(
+    return ReplayDiagnosticsService(Path(workspace).resolve()).replay_turn_diagnostics(
         session_id=str(session_id),
         issue_id=str(issue_id),
         turn_index=int(turn_index),
@@ -52,11 +54,9 @@ async def _default_replay_call(
     model: str,
     runtime_context: dict[str, Any],
 ) -> dict[str, Any]:
-    provider = create_local_model_provider(model=model, temperature=0.0, timeout=300)
-    try:
+    construct = partial(create_local_model_provider, model=model, temperature=0.0, timeout=300)
+    async with open_runtime_owner(construct, label="replay-provider-construction") as provider:
         response = await provider.complete(messages, runtime_context=runtime_context)
-    finally:
-        await provider.close()
     return {
         "content": str(response.content or ""),
         "raw": json_safe(dict(response.raw or {})),
@@ -73,13 +73,11 @@ async def replay_turn_report(
     model_override: str | None = None,
     replay_call: Callable[..., Awaitable[dict[str, Any]]] | None = None,
 ) -> dict[str, Any]:
-    replay_source = await asyncio.to_thread(
-        _load_replay_source,
-        workspace=Path(workspace).resolve(),  # noqa: ASYNC240 - standalone CLI tooling
-        session_id=str(session_id),
-        issue_id=str(issue_id),
-        turn_index=int(turn_index),
-        role=role,
+    workspace = Path(workspace).absolute()  # noqa: ASYNC240 - capture lexical CLI input before worker admission
+    replay_source = await run_owned_thread(
+        partial(_load_replay_source, workspace=workspace, session_id=str(session_id),
+                issue_id=str(issue_id), turn_index=int(turn_index), role=role),
+        label="replay-artifact-observation",
     )
     messages = replay_source.get("messages")
     checkpoint = replay_source.get("checkpoint")

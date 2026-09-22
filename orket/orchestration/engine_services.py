@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from orket.adapters.execution.owned_io import require_sync_context
 from orket.adapters.storage.async_control_plane_execution_repository import AsyncControlPlaneExecutionRepository
 from orket.adapters.storage.async_control_plane_record_repository import AsyncControlPlaneRecordRepository
 from orket.adapters.storage.async_pending_gate_repository import AsyncPendingGateRepository
@@ -273,6 +274,7 @@ class ReplayDiagnosticsService:
         turn_index: int,
         role: str | None = None,
     ) -> dict[str, Any]:
+        require_sync_context(code="E_REPLAY_OBSERVATION_REQUIRES_ASYNC_OWNER")
         workspace = self.workspace_root
         observability = self._contained(workspace / "observability", workspace)
         session_root = self._contained(observability / session_id, observability)

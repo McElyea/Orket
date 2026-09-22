@@ -111,6 +111,10 @@ policy inputs bypass ambient lookup. See `docs/specs/OUTBOUND_POLICY_INPUTS.md`.
 Synchronous SDK/bridge, Piper discovery, review and provider-inventory work
 requires native execution. Async embeddings use owned workers, retain close,
 and explicitly own any loop-bound resources. See `docs/specs/SYNC_COROUTINE_OWNERSHIP.md`.
+Script command scopes retain engine and default provider cleanup before returning.
+Artifact replay reads use native owned observation without runtime construction.
+ProductFlow fixtures and witness history obey current acceptance/lease contracts.
+See `docs/specs/SCRIPT_RUNTIME_OWNERSHIP.md`.
 
 Prompt commands use `python -m orket.interfaces.prompts_cli --root <project> ...`.
 Prompt reads share model-file ownership with writers and can create native lock

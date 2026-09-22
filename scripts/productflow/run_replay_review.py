@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# ruff: noqa: E402 -- direct script execution requires the repository import root.
 from __future__ import annotations
 
 import argparse
@@ -17,10 +18,10 @@ from scripts.audit.audit_support import evaluate_run_completeness
 from scripts.audit.replay_turn import replay_turn_report
 from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
 from scripts.productflow.productflow_support import (
-    build_productflow_engine,
     patched_productflow_provider,
     resolve_productflow_paths,
     resolve_productflow_run_with_engine,
+    run_productflow_operation,
 )
 
 DEFAULT_OUTPUT = REPO_ROOT / "benchmarks" / "results" / "productflow" / "replay_review.json"
@@ -113,8 +114,7 @@ def main(argv: list[str] | None = None) -> int:
     args = _parse_args(sys.argv[1:] if argv is None else argv)
     workspace_override = Path(str(args.workspace_root)).resolve() if str(args.workspace_root).strip() else None
     paths = resolve_productflow_paths(workspace_override)
-    engine = build_productflow_engine(paths)
-    payload = asyncio.run(_run(paths=paths, engine=engine, run_id=str(args.run_id)))
+    payload = asyncio.run(run_productflow_operation(_run, paths=paths, run_id=str(args.run_id)))
     persisted = write_payload_with_diff_ledger(Path(str(args.output)).resolve(), payload)
     if args.json:
         print(json.dumps(persisted, indent=2, ensure_ascii=True))

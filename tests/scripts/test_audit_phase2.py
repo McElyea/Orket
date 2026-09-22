@@ -476,39 +476,17 @@ def test_compare_two_runs_blocks_when_mar_evidence_missing(tmp_path: Path) -> No
     assert payload["evidence_missing"]["run_b"]
 
 
-def _fake_engine_factory(message: str) -> type:
-    class _FakeEngine:
-        def __init__(self, _workspace: Path) -> None:
-            self.workspace = _workspace
-
-        def replay_turn(self, *, session_id: str, issue_id: str, turn_index: int, role: str | None = None) -> dict[str, object]:
-            return {
-                "turn_dir": f"{session_id}/{issue_id}/{turn_index}",
-                "checkpoint": {
-                    "run_id": session_id,
-                    "issue_id": issue_id,
-                    "turn_index": turn_index,
-                    "role": role or "coder",
-                    "model": "qwen2.5-coder:7b",
-                },
-                "messages": [{"role": "user", "content": f"Issue {issue_id}: do the work."}],
-                "model_response": message,
-                "parsed_tool_calls": [{"tool": "write_file"}],
-            }
-
-    return _FakeEngine
-
-
-# Layer: unit
-@pytest.mark.unit
-def test_replay_turn_reports_structural_verdict(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+# Layer: integration (real artifacts; injected provider response is not inference).
+@pytest.mark.integration
+def test_replay_turn_reports_structural_verdict(tmp_path: Path) -> None:
     async def _replay_call(*, messages: list[dict[str, str]], model: str, runtime_context: dict[str, object]) -> dict[str, object]:
-        assert messages[0]["role"] == "user"
+        assert messages == expected_messages
         assert model == "qwen2.5-coder:7b"
         assert runtime_context["turn_index"] == 1
         return {"content": "same-response", "raw": {"provider": "fake"}}
 
-    monkeypatch.setattr("scripts.audit.replay_turn.OrchestrationEngine", _fake_engine_factory("same-response"))
+    _build_cards_run(tmp_path, session_id="run-a", issue_id="ISSUE-A", model_response="same-response")
+    expected_messages = json.loads((tmp_path / "observability/run-a/ISSUE-A/001_coder/messages.json").read_text())
 
     payload = asyncio.run(
         replay_turn_report(
@@ -525,13 +503,13 @@ def test_replay_turn_reports_structural_verdict(monkeypatch: pytest.MonkeyPatch,
     assert payload["structural_verdict"]["match"] is True
 
 
-# Layer: unit
-@pytest.mark.unit
-def test_replay_turn_reports_blocked_when_provider_fails(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+# Layer: integration (real artifacts; injected failure is not a live provider outage).
+@pytest.mark.integration
+def test_replay_turn_reports_blocked_when_provider_fails(tmp_path: Path) -> None:
     async def _replay_call(*, messages: list[dict[str, str]], model: str, runtime_context: dict[str, object]) -> dict[str, object]:
         raise RuntimeError("ollama connection refused")
 
-    monkeypatch.setattr("scripts.audit.replay_turn.OrchestrationEngine", _fake_engine_factory("original-response"))
+    _build_cards_run(tmp_path, session_id="run-a", issue_id="ISSUE-A", model_response="original-response")
 
     payload = asyncio.run(
         replay_turn_report(

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# ruff: noqa: E402 -- direct script execution requires the repository import root.
 from __future__ import annotations
 
 import argparse
@@ -15,10 +16,10 @@ if str(REPO_ROOT) not in sys.path:
 
 from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
 from scripts.productflow.productflow_support import (
-    build_productflow_engine,
     patched_productflow_provider,
     reset_productflow_runtime_state,
     resolve_productflow_paths,
+    run_productflow_operation,
 )
 from scripts.productflow.run_governed_write_file_flow import _run as run_productflow_live_flow
 from scripts.proof.trusted_run_witness_support import (
@@ -73,21 +74,25 @@ def _run_one_campaign_execution(base_workspace: Path, index: int) -> tuple[dict[
     paths = resolve_productflow_paths(workspace)
     reset_productflow_runtime_state(paths)
     with patched_productflow_provider():
-        engine = build_productflow_engine(paths)
-        live_payload = asyncio.run(run_productflow_live_flow(paths=paths, engine=engine))
-        live_path = PROOF_RESULTS_ROOT / f"trusted_run_productflow_live_run_{index:02d}.json"
-        live_persisted = write_payload_with_diff_ledger(live_path, live_payload)
-        live_ref = relative_to_repo(live_path)
-        if live_persisted.get("observed_result") != "success" or not live_persisted.get("run_id"):
-            return blocked_report(run_index=index, reason="productflow_live_run_failed", live_payload=live_persisted), "", live_ref
-        bundle = asyncio.run(
-            build_witness_bundle_payload(paths=paths, engine=engine, run_id=str(live_persisted["run_id"]))
-        )
+        live_payload, bundle = asyncio.run(run_productflow_operation(_collect_campaign_execution, paths=paths))
+    live_path = PROOF_RESULTS_ROOT / f"trusted_run_productflow_live_run_{index:02d}.json"
+    live_persisted = write_payload_with_diff_ledger(live_path, live_payload)
+    live_ref = relative_to_repo(live_path)
+    if bundle is None:
+        return blocked_report(run_index=index, reason="productflow_live_run_failed", live_payload=live_persisted), "", live_ref
     bundle_path = paths.workspace_root / "runs" / str(bundle["session_id"]) / DEFAULT_BUNDLE_NAME
     persisted_bundle = write_payload_with_diff_ledger(bundle_path, bundle)
     bundle_ref = relative_to_repo(bundle_path)
     report = verify_witness_bundle_payload(persisted_bundle, evidence_ref=bundle_ref)
     return report, bundle_ref, live_ref
+
+
+async def _collect_campaign_execution(*, paths: Any, engine: Any):
+    live = await run_productflow_live_flow(paths=paths, engine=engine)
+    bundle = None
+    if live.get("observed_result") == "success" and live.get("run_id"):
+        bundle = await build_witness_bundle_payload(paths=paths, engine=engine, run_id=str(live["run_id"]))
+    return live, bundle
 
 
 def main(argv: list[str] | None = None) -> int:

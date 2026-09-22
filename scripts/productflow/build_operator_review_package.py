@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# ruff: noqa: E402 -- direct script execution requires the repository import root.
 from __future__ import annotations
 
 import argparse
@@ -18,10 +19,10 @@ from scripts.audit.audit_support import evaluate_run_completeness, load_json_obj
 from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
 from scripts.observability.emit_run_evidence_graph import _run as emit_run_evidence_graph
 from scripts.productflow.productflow_support import (
-    build_productflow_engine,
     relative_to_workspace,
     resolve_productflow_paths,
     resolve_productflow_run_with_engine,
+    run_productflow_operation,
 )
 
 DEFAULT_PROOF_OUTPUT = REPO_ROOT / "benchmarks" / "results" / "productflow" / "operator_review_proof.json"
@@ -169,7 +170,6 @@ def _review_questions(
     replay_review_payload: dict[str, Any],
 ) -> list[dict[str, Any]]:
     packet1_refs = [f"{run_summary_path}#truthful_runtime_packet1"]
-    packet2_refs = [f"{run_summary_path}#truthful_runtime_packet2"]
     final_truth = approval.get("control_plane_target_final_truth")
     questions = [
         {
@@ -236,8 +236,7 @@ def main(argv: list[str] | None = None) -> int:
     args = _parse_args(sys.argv[1:] if argv is None else argv)
     workspace_override = Path(str(args.workspace_root)).resolve() if str(args.workspace_root).strip() else None
     paths = resolve_productflow_paths(workspace_override)
-    engine = build_productflow_engine(paths)
-    payload = asyncio.run(_run(paths=paths, engine=engine, run_id=str(args.run_id)))
+    payload = asyncio.run(run_productflow_operation(_run, paths=paths, run_id=str(args.run_id)))
     persisted = write_payload_with_diff_ledger(Path(str(args.output)).resolve(), payload)
     if args.json:
         print(json.dumps(persisted, indent=2, ensure_ascii=True))
