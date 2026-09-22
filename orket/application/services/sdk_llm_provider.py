@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from orket.adapters.execution.owned_io import require_sync_context
+from orket.adapters.execution.sync_coroutine_owner import SyncCoroutineOwner
 from orket.application.services.local_model_factory import create_local_model_provider
 from orket.capabilities.sync_bridge import run_coro_sync
 from orket_extension_sdk.llm import GenerateRequest, GenerateResponse, nonnegative_int_or_none
@@ -28,10 +30,12 @@ class LocalModelCapabilityProvider:
             provider=provider,
             environment=environment,
         )
+        self._coroutines = SyncCoroutineOwner()
         self._closed = False
 
     def generate(self, request: GenerateRequest) -> GenerateResponse:
-        if self._closed:
+        require_sync_context(code="E_SYNC_COROUTINE_REQUIRES_ASYNC_OWNER")
+        if not self.is_available():
             raise RuntimeError("E_SDK_MODEL_PROVIDER_CLOSED")
         messages: list[dict[str, str]] = []
         if str(request.system_prompt or "").strip():
@@ -45,7 +49,8 @@ class LocalModelCapabilityProvider:
                     "local_prompt_temperature": request.temperature,
                     "local_prompt_stop_sequences": list(request.stop_sequences),
                 },
-            )
+            ),
+            owner=self._coroutines,
         )
         raw = dict(response.raw or {})
         return GenerateResponse(
@@ -57,10 +62,12 @@ class LocalModelCapabilityProvider:
         )
 
     def is_available(self) -> bool:
-        return not self._closed
+        return not self._closed and self._coroutines.accepting
 
     def close(self) -> None:
-        """Close HTTP resources on the same bridge loop that executes generation."""
-        if not self._closed:
-            run_coro_sync(self._provider.close())
-            self._closed = True
+        """Drain generation, close HTTP resources on their loop, then close that loop."""
+        require_sync_context(code="E_SYNC_COROUTINE_REQUIRES_ASYNC_OWNER")
+        try:
+            self._coroutines.close(self._provider.close)
+        finally:
+            self._closed = self._coroutines.closed

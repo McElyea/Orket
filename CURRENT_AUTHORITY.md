@@ -124,6 +124,16 @@ rules remain; regex worst-case bounds and complete PII detection are not claimed
 See `docs/specs/OUTBOUND_POLICY_INPUTS.md` and
 `docs/architecture/CONTRACT_DELTA_OUTBOUND_POLICY_INPUTS_D_2026-09-22.md`.
 
+Synchronous coroutine entrypoints require native owned execution. Standalone calls
+close their loop and executor; persistent resources use explicit serialized owners
+with fresh caller context. SDK model generation and HTTP cleanup share one owner;
+close stops admission, drains work and preserves cleanup failures. The shared
+daemon loop is removed. SDK memory, Piper, review and provider inventory have native
+guards; inventory retains its existing export names with one canonical bridge.
+Use owned workers from async callers and close resource owners. Contract and limits:
+`docs/specs/SYNC_COROUTINE_OWNERSHIP.md` and
+`docs/architecture/CONTRACT_DELTA_SYNC_COROUTINE_OWNERSHIP_D_2026-09-22.md`.
+
 The runtime CLI captures engine inputs after startup and owns engine construction
 through interruption. Board/replay reads, manifest output and native path
 resolution retain their workers; a completed untransferred engine is closed.

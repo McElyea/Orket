@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, Literal
 from urllib import parse
 
+from orket.adapters.execution.owned_io import require_sync_context
 from orket.application.review.artifacts import write_review_run_bundle
 from orket.application.review.control_plane_projection import validate_review_control_plane_summary
 from orket.application.review.errors import ReviewError
@@ -122,12 +123,7 @@ def _run_git_command(repo_root: Path, args: list[str], *, check: bool) -> subpro
         raise ReviewError("Review git command failed: git executable was not found", command=command) from exc
 
 
-async def _run_git_command_async(
-    repo_root: Path,
-    args: list[str],
-    *,
-    check: bool,
-) -> subprocess.CompletedProcess[str]:
+async def _run_git_command_async(repo_root: Path, args: list[str], *, check: bool) -> subprocess.CompletedProcess[str]:
     return await asyncio.to_thread(_run_git_command, repo_root, args, check=check)
 
 
@@ -281,6 +277,7 @@ class ReviewRunService:
         token: str = "",
         model_provider: ModelProvider | None = None,
     ) -> ReviewRunResult:
+        require_sync_context(code="E_REVIEW_RUN_REQUIRES_ASYNC_OWNER")
         resolved_policy = resolve_review_policy(
             cli_overrides=cli_policy_overrides,
             repo_root=repo_root,
@@ -322,6 +319,7 @@ class ReviewRunService:
         fail_on_blocked: bool = False,
         model_provider: ModelProvider | None = None,
     ) -> ReviewRunResult:
+        require_sync_context(code="E_REVIEW_RUN_REQUIRES_ASYNC_OWNER")
         resolved_policy = resolve_review_policy(
             cli_overrides=cli_policy_overrides,
             repo_root=repo_root,
@@ -361,6 +359,7 @@ class ReviewRunService:
         fail_on_blocked: bool = False,
         model_provider: ModelProvider | None = None,
     ) -> ReviewRunResult:
+        require_sync_context(code="E_REVIEW_RUN_REQUIRES_ASYNC_OWNER")
         resolved_policy = resolve_review_policy(
             cli_overrides=cli_policy_overrides,
             repo_root=repo_root,

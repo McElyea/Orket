@@ -4,6 +4,7 @@ from __future__ import annotations
 from copy import deepcopy
 from pathlib import Path
 
+from orket.adapters.execution.owned_io import require_sync_context
 from orket.capabilities.sync_bridge import run_coro_sync
 from orket.services.extension_memory_namespace import (
     profile_key,
@@ -113,14 +114,17 @@ class SQLiteMemoryCapabilityProvider(MemoryProvider):
         return MemoryQueryResponse(ok=True, records=sdk_records)
 
     def write(self, request: MemoryWriteRequest) -> MemoryWriteResponse:
+        require_sync_context(code="E_SYNC_COROUTINE_REQUIRES_ASYNC_OWNER")
         # The frozen SDK request still contains borrowed mutable metadata.
         captured = deepcopy(request)
         return run_coro_sync(self._write_async(captured))
 
     def query(self, request: MemoryQueryRequest) -> MemoryQueryResponse:
+        require_sync_context(code="E_SYNC_COROUTINE_REQUIRES_ASYNC_OWNER")
         return run_coro_sync(self._query_async(request))
 
     def clear_session(self, session_id: str) -> int:
+        require_sync_context(code="E_SYNC_COROUTINE_REQUIRES_ASYNC_OWNER")
         return run_coro_sync(
             self._store.clear_session(session_id=self._scoped_session_id("session_memory", session_id))
         )

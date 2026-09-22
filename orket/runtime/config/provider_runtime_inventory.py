@@ -1,26 +1,21 @@
 from __future__ import annotations
 
-import asyncio
 import json
 import subprocess
 from typing import Any
 
 import httpx
 
+from orket.adapters.execution.owned_io import require_sync_context
+from orket.capabilities.sync_bridge import run_coro_sync as _run_coro_sync
+
 
 class ProviderRuntimeWarmupError(RuntimeError):
     """Raised when provider runtime preparation cannot resolve a runnable target."""
 
 
-def _run_coro_sync(coro: Any) -> Any:
-    try:
-        asyncio.get_running_loop()
-    except RuntimeError:
-        return asyncio.run(coro)
-    raise RuntimeError("Synchronous provider runtime helpers cannot be used while an event loop is running.")
-
-
 def _run_command_sync(cmd: list[str], *, timeout_s: float) -> str:
+    require_sync_context(code="E_PROVIDER_INVENTORY_REQUIRES_ASYNC_OWNER")
     try:
         result = subprocess.run(
             cmd,

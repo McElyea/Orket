@@ -2,8 +2,12 @@ from __future__ import annotations
 
 import asyncio
 
+import pytest
+
+from orket.adapters.execution.sync_coroutine_owner import SyncCoroutineOwner
 from orket.capabilities.sync_bridge import run_coro_sync
 
+pytestmark = pytest.mark.contract
 
 class _LoopBoundProbe:
     def __init__(self) -> None:
@@ -23,13 +27,18 @@ class _LoopBoundProbe:
 
 
 def test_run_coro_sync_reuses_persistent_loop() -> None:
+    """Layer: contract. An explicit resource owner preserves affinity until native close."""
     probe = _LoopBoundProbe()
-    for _ in range(6):
-        assert run_coro_sync(probe.call()) == "ok"
+    with SyncCoroutineOwner() as owner:
+        for _ in range(6):
+            assert run_coro_sync(probe.call(), owner=owner) == "ok"
+    assert probe._loop is not None and probe._loop.is_closed()
 
 
 def test_run_coro_sync_inside_running_loop() -> None:
-    async def _invoke() -> str:
-        return run_coro_sync(asyncio.sleep(0, result="ok"))
+    """Layer: contract. Direct event-loop use refuses before executing the coroutine."""
+    async def _invoke() -> None:
+        with pytest.raises(RuntimeError, match="E_SYNC_COROUTINE_REQUIRES_ASYNC_OWNER"):
+            run_coro_sync(asyncio.sleep(0, result="ok"))
 
-    assert asyncio.run(_invoke()) == "ok"
+    asyncio.run(_invoke())

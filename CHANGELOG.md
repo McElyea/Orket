@@ -5,6 +5,21 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.82] - 2026-09-22
+
+### Fixed
+- Replace the shared daemon coroutine loop with native per-operation and explicit per-resource owners.
+- Preserve SDK model loop affinity through HTTP cleanup; copy caller context per invocation and serialize one owner's work.
+- Refuse event-loop blocking at SDK, Piper, review and provider-inventory native entrypoints.
+- Drain loop resources and preserve operation/cleanup failures; consolidate the inventory coroutine helper.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Async callers use owned workers or native async APIs. Persistent resources need explicit owners and close.
+- A closed owner cannot restart; per-owner serialization does not establish capacity acceptance.
+- Native command/provider deadlines remain unchanged; 0.6.x exports remain available.
+- Contract: `docs/architecture/CONTRACT_DELTA_SYNC_COROUTINE_OWNERSHIP_D_2026-09-22.md`.
+
 ## [0.6.81] - 2026-09-22
 
 ### Fixed

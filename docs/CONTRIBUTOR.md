@@ -108,6 +108,9 @@ directories after failures. See `docs/specs/KERNEL_STATE_EFFECTS.md`.
 Outbound policy-file loading also requires owned native execution. API policy
 is captured during preparation; construct a new app to reconfigure it. Explicit
 policy inputs bypass ambient lookup. See `docs/specs/OUTBOUND_POLICY_INPUTS.md`.
+Synchronous SDK/bridge, Piper discovery, review and provider-inventory work
+requires native execution. Async embeddings use owned workers, retain close,
+and explicitly own any loop-bound resources. See `docs/specs/SYNC_COROUTINE_OWNERSHIP.md`.
 
 Prompt commands use `python -m orket.interfaces.prompts_cli --root <project> ...`.
 Prompt reads share model-file ownership with writers and can create native lock

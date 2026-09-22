@@ -12519,7 +12519,8 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.81 immutable outbound policy and owned file observations, retaining
+0.6.82 native synchronous coroutine ownership, retaining
+0.6.81 immutable outbound policy and owned file observations,
 0.6.80 captured local Kernel state/filesystem effects, 0.6.79 run identity/workspace
 inputs and 0.6.78 immutable packaged capability policy,
 0.6.77 explicit runtime/inputs/shutdown, 0.6.76 state/publication, 0.6.75
@@ -12532,7 +12533,7 @@ and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
 Preserve every failed and
 passing source/native observation and the historical clock diagnosis. Canonical
-Ruff has 89 findings at the .81 checkpoint. The prior stale benchmark expectation passes in the
+Ruff has 89 findings at the .82 checkpoint. The prior stale benchmark expectation passes in the
 new source/native selection. The unmodified published .39 complete rerun has
 7,260 passes, three failures and 89 skips; its coverage is 84.56120595327887%
 against the unchanged 89% gate. The two parent-Git-dependent fixture failures and
@@ -21502,3 +21503,103 @@ required to retire the lane.
 
 Accepted source/installed manifest and retained evidence:
 `.tmp/d-kernel-outbound-policy/`. Scoped checkpoint only; release readiness remains false.
+
+
+#### .82 Native synchronous coroutine ownership (2026-09-22)
+
+Responsible maintainer: Codex for Orket Core. Continuing D after published .81;
+no new capability admission, whole-plan completion or lane retirement.
+
+The canonical synchronous bridge now requires native execution and owns a fresh
+Runner/loop per operation, or uses an explicit serialized `SyncCoroutineOwner` for
+a resource needing loop affinity. Only unstarted native coroutine objects are
+admitted. Refusal closes an unstarted input; an already-started input remains its
+existing owner's responsibility. No global daemon loop or unmanaged thread-safe
+future remains. Each invocation copies its submitting context and the loop factory
+preserves the native caller's ambient loop binding.
+
+Close stops admission before waiting for active work, finalizes once on the same
+loop, then closes async generators and drains the executor. Finalizer failure cannot
+skip Runner cleanup. Observed loop/shutdown errors stay visible; operation and
+cleanup failures are retained together, and repeated close cannot turn a failed
+cleanup into success. A terminal failed close does not prove physical cleanup;
+arbitrary detached task results are not independently verified. Per-owner
+serialization and draining are ownership barriers, not capacity or rollback claims.
+
+SDK model generation and transport close share one explicit owner. Memory and native
+Piper/review coroutine calls use per-operation owners. Model/memory/Piper synchronous
+entrypoints and review PR/diff/files refuse an active event loop before effects;
+Piper voice discovery has its own native guard. Async callers retain the existing
+owned worker through interruption or await a native async API where available.
+Provider inventory imports the canonical bridge under its existing internal name;
+native commands refuse an event-loop thread. Governed 0.6.x exports remain intact.
+No inventory descendant-supervision or real Ollama/LM Studio claim is added.
+
+Live local proof and structural artifact binding:
+
+| Cell | Tests / failures / errors / skips | Pytest seconds | Installed import origins |
+| --- | --- | --- | --- |
+| Fresh source | 925 / 0 / 0 / 0 | 92.947 | source checkout |
+| Installed win-py311 | 925 / 0 / 0 / 0 | 95.179 | 948 |
+| Installed win-py312 | 925 / 0 / 0 / 0 | 106.348 | 948 |
+
+The 104-module selection retains every 781 .81 identity and adds 144 cases: 32 new
+cases plus 112 existing affected bridge, SDK, review, Piper and inventory cases.
+All three cells have identical identities and frozen inputs. Actual SQLite, Git,
+controlled loopback HTTP, authenticated local TCP API and Piper child/grandchild
+process fixtures exercise the scoped behavior. HTTP model responses are protocol
+fixtures, not inference. Two native threads share a resource loop with independent
+submitting contexts. Real generator/file cleanup and finalizer failures stay
+visible; actual HTTP clients and default executors close on their owning loops.
+
+Held SDK generation stays owned through repeated cancellation, the existing .02s
+timeout and transport failure; concurrent close stops new admissions and waits for
+the admitted operation. Synchronous Piper ownership closes after resistant process
+cleanup and temporary-config removal. All 22 independent SQLite observations per
+cell remain below .5s, maximum 0.017721800s. The 10s fixture holds and existing
+command/provider deadlines are unchanged. The old five-second daemon startup wait
+is obsolete because no daemon startup exists. No production deployment, inference,
+outward connector, durable restart, physical-sleep, Linux or whole-suite acceptance
+is inferred. Both Quality jobs select the added cases; hosted execution is unverified.
+
+Opening 6/6 counterexamples failed. First repair passed36/39: three existing tests
+still expected the old global loop/direct-loop behavior. Migrated contracts39,
+ownership124, caller-boundaries138, inventory35, final-focused144 and final-refined144
+all passed. All 16 exact final counterexamples fail on the byte-verified installed
+.81 wheel, with zero collection errors/skips. The refined inventory control checks
+coroutine disposal before error wording; it proves lifecycle refusal, not merely
+a changed message. Every failed attempt and input declaration remains retained.
+
+The first formatting/selection helper stopped on ASYNC110 polling; the test now
+waits on the actual admission-closing Event with the same 10s bound. A separately
+named final helper and subsequent refined helper pass. Import formatting briefly
+expanded the already oversized review module; compacting an unchanged async Git
+signature leaves it at510 lines versus511 before. Fifteen changed/new Python files
+match final focused bytes. AST comparison proves nine guarded caller bodies are
+otherwise unchanged, as are async Git/Piper bodies. No assertion/deadline weakening.
+
+Canonical C passes: 1143 Python files,
+3721 edges, six resolved dynamic routes and zero
+violations/errors/unknown modules/authority cycles. Complete source/wheel/sdist
+parity covers 1143 Python plus the same 20 data files (1163 total), with
+2308 frozen support inputs. Ruff remains89 existing
+findings, none introduced. Scoped lint, size, docs and release metadata pass.
+Baseline collection remains distinct from release readiness; original checkout
+and retained September20/.81 evidence are checked before sealing. Contract and
+migration: `docs/specs/SYNC_COROUTINE_OWNERSHIP.md` and its September22 delta.
+
+Remaining blockers or drift: .72 Linux clock preflight remains an environment
+blocker (240.006951941s observed; final quiet18.843389227s versus60s; steps outside
+.01s; cause unknown). No fresh measurement/settings/deadline change. Continue D's
+complete adapter/effect and async-reachability inventory, script-helper engine
+construction/close, replay-turn worker ownership and remaining clock/input owners.
+Inventory command descendants and review's ambient identifier inputs still require
+review. E1 marker/no-op/Ruff/full coverage, E2 generated authority/history, CAP1
+real-model workloads, CAP2 accepted containment and CAP3 measured capacity/recovery
+remain required. Full-suite89%, hosted Gitea Quality, Ollama-specific aliases,
+earlier Git timeout cause and physical-sleep timing remain unverified. Preserve
+BT-1 through BT-5 and .80/.81 state/policy guarantees. Explicit user acceptance is
+required to retire the lane.
+
+Accepted source/installed manifest and retained evidence:
+`.tmp/d-sync-coroutine-ownership/`. Scoped checkpoint only; release readiness remains false.

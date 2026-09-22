@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from orket.adapters.execution.owned_command_limits import MAX_OUTPUT_LIMIT
-from orket.adapters.execution.owned_io import run_owned_thread
+from orket.adapters.execution.owned_io import require_sync_context, run_owned_thread
 from orket.capabilities.piper_voice_assets import (
     PiperVoiceAsset,
     piper_config_snapshot,
@@ -72,6 +72,7 @@ class PiperTTSProvider:
         return self._config
 
     def list_voices(self) -> list[VoiceInfo]:
+        require_sync_context(code="E_PIPER_DISCOVERY_REQUIRES_ASYNC_OWNER")
         if not self._resolve_executable(self._config.executable):
             return []
         voices: list[VoiceInfo] = []
@@ -86,6 +87,7 @@ class PiperTTSProvider:
         emotion_hint: str = "neutral",
         speed: float = 1.0,
     ) -> AudioClip:
+        require_sync_context(code="E_SYNC_COROUTINE_REQUIRES_ASYNC_OWNER")
         return run_coro_sync(self.synthesize_async(text, voice_id, emotion_hint, speed)).clip
 
     async def synthesize_async(

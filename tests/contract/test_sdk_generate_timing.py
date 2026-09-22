@@ -20,9 +20,15 @@ def test_sdk_generation_preserves_unavailable_latency(monkeypatch, latency):
         async def complete(self, *, messages, runtime_context):
             return ModelResponse(content="answer",raw={"latency_ms":latency,"input_tokens":4,"output_tokens":2})
 
+        async def close(self):
+            return None
+
     monkeypatch.setattr("orket.application.services.sdk_llm_provider.create_local_model_provider",lambda **kwargs: ObservationProvider())
     provider = LocalModelCapabilityProvider(model="fixture",temperature=0,seed=0)
-    result = provider.generate(GenerateRequest(system_prompt="",user_message="question"))
+    try:
+        result = provider.generate(GenerateRequest(system_prompt="",user_message="question"))
+    finally:
+        provider.close()
     measured = type(latency) is int and latency >= 0
     assert result.latency_ms == (latency if measured else None)
     assert result.latency_posture == ("reported" if measured else "unavailable")
