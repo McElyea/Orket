@@ -1,5 +1,4 @@
-"""
-Sandbox orchestration for Docker sandbox lifecycle management."""
+"""Sandbox orchestration for Docker sandbox lifecycle management."""
 
 from __future__ import annotations
 
@@ -25,6 +24,7 @@ from orket.application.services.control_plane_workload_catalog import (
 )
 from orket.application.services.decision_node_registry import DecisionNodeRegistry, build_decision_node_registry
 from orket.application.services.runtime_input_service import RuntimeInputService
+from orket.application.services.sandbox_command_composition import create_sandbox_command_runner
 from orket.application.services.sandbox_control_plane_effect_service import SandboxControlPlaneEffectService
 from orket.application.services.sandbox_control_plane_execution_service import SandboxControlPlaneExecutionService
 from orket.application.services.sandbox_control_plane_operator_service import SandboxControlPlaneOperatorService
@@ -78,7 +78,7 @@ class SandboxOrchestrator:
         self.organization = organization
         self.decision_nodes = decision_nodes or build_decision_node_registry(environment=observed_environment)
         self.sandbox_policy_node = self.decision_nodes.resolve_sandbox_policy(self.organization)
-        self.command_runner = command_runner or CommandRunner()
+        self.command_runner = command_runner or create_sandbox_command_runner(workspace_root, environment=observed_environment)
         self.templates_dir = Path(__file__).parent.parent.parent / "infrastructure" / "sandbox_templates"
         self.fs = fs or AsyncFileTools(workspace_root)
         self.instance_id = f"{socket.gethostname()}:{os.getpid()}"

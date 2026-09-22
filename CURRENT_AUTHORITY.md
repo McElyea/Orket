@@ -35,6 +35,12 @@ orchestrator clock observations keep their existing second precision. Migration
 and remaining lifecycle input scope:
 `docs/architecture/CONTRACT_DELTA_SANDBOX_CREATION_INPUTS_D_2026-09-20.md`.
 
+Standard sandbox commands capture process inputs and share the existing OS
+command owner. Their finite default is 300 seconds; log reads retain ten seconds.
+Incomplete execution retains reconciliation rather than a completion receipt.
+Constructor/input migration, cancellation and daemon-effect limits:
+`docs/architecture/CONTRACT_DELTA_SANDBOX_COMMAND_OWNERSHIP_D_2026-09-21.md`.
+
 The runtime CLI captures engine inputs after startup and owns engine construction
 through interruption. Board/replay reads, manifest output and native path
 resolution retain their workers; a completed untransferred engine is closed.

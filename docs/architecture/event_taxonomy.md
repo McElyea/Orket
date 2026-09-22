@@ -310,6 +310,12 @@ receipts do not fill in an unobserved return or failure.
 
 ## Verification Process Lifecycle
 
+`sandbox_command_interrupted` uses the `owned_command.v1` fields listed below.
+The shared native owner emits it after cleanup observation and before sandbox
+caller cancellation. No argv, environment or command output is included. It is
+not proof of Docker daemon resource absence, completed cleanup or safe replay.
+Contract: `CONTRACT_DELTA_SANDBOX_COMMAND_OWNERSHIP_D_2026-09-21.md`.
+
 1. `verification_process_cancelled`
    - `schema_version` (`owned_command.v1`), `reason`, `cleanup_confirmed`,
      `capture_complete`, `backend`, `transport_pid`, nullable `supervisor_pid`, nullable `command_pid`,

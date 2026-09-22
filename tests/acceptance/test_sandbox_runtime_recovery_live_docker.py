@@ -9,7 +9,7 @@ import shutil
 
 import pytest
 
-from orket.adapters.storage.command_runner import CommandRunner
+from orket.application.services.sandbox_command_composition import create_sandbox_command_runner
 from orket.core.domain.sandbox import SandboxRegistry, TechStack
 from orket.core.domain.sandbox_lifecycle import CleanupState, LifecycleEvent, SandboxState, TerminalReason
 from orket.services.sandbox_orchestrator import SandboxOrchestrator
@@ -21,15 +21,16 @@ pytestmark = [pytest.mark.end_to_end, pytest.mark.skipif(
 )]
 
 
-class FailAfterCreateIntentRunner(CommandRunner):
-    def __init__(self) -> None:
+class FailAfterCreateIntentRunner:
+    def __init__(self, workspace_root) -> None:
         self._failed = False
+        self._runner = create_sandbox_command_runner(workspace_root)
 
     async def run_async(self, *cmd: str):
         if not self._failed and cmd[:2] == ("docker-compose", "-f") and "ps" in cmd and "-q" in cmd:
             self._failed = True
             raise OSError("induced ambiguous create outcome")
-        return await super().run_async(*cmd)
+        return await self._runner.run_async(*cmd)
 
 
 def _lightweight_compose(sandbox, _db_password: str, *, policy_node=None, admin_password=None) -> str:
@@ -98,7 +99,7 @@ async def test_live_unknown_outcome_reconciliation_recovers_to_active(tmp_path, 
     orchestrator = SandboxOrchestrator(
         workspace_root=tmp_path,
         registry=SandboxRegistry(),
-        command_runner=FailAfterCreateIntentRunner(),
+        command_runner=FailAfterCreateIntentRunner(tmp_path),
         lifecycle_db_path=str(tmp_path / "sandbox_lifecycle.db"),
     )
     monkeypatch.setattr(orchestrator, "_generate_compose_file", _lightweight_compose)

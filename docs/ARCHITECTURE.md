@@ -245,6 +245,11 @@ timeout is unchanged. Direct sync log reads refuse an event-loop thread. Contrac
 async embedding migration and remaining ownership limits:
 `docs/architecture/CONTRACT_DELTA_API_SANDBOX_LOGS_D_2026-09-21.md`.
 
+Sandbox commands use the existing native owner with captured process inputs and
+a finite application-selected budget. Incomplete receipts retain reconciliation;
+native CLI cleanup is not Docker resource absence. Migration and limits:
+`docs/architecture/CONTRACT_DELTA_SANDBOX_COMMAND_OWNERSHIP_D_2026-09-21.md`.
+
 Driver async creation captures root, environment and settings before owned
 construction; direct synchronous construction refuses an event-loop thread.
 API chat and interactive CLI use shared runtime owners. Console reads settle

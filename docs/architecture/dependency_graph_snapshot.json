@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-22T00:37:12.354469+00:00",
+  "generated_at": "2026-09-22T01:38:23.198702+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -345,7 +345,7 @@
       },
       "orket.adapters.storage.command_runner": {
         "path": "orket/adapters/storage/command_runner.py",
-        "sha256": "42ddc11ff5670d0eee1327054044983ecb28ae25f4b39ff06bc6266b2451bb3d"
+        "sha256": "203f0ed5942364522ddfd547ea62019eadbbc74c20d8ca8fc960363073518b12"
       },
       "orket.adapters.storage.control_plane_effect_journal_store": {
         "path": "orket/adapters/storage/control_plane_effect_journal_store.py",
@@ -1758,6 +1758,10 @@
       "orket.application.services.sandbox_cleanup_verification_service": {
         "path": "orket/application/services/sandbox_cleanup_verification_service.py",
         "sha256": "9dbd6e60d1f2c70229c3079694c1c9ec72fefb238728631ded2daf179c3fbf6c"
+      },
+      "orket.application.services.sandbox_command_composition": {
+        "path": "orket/application/services/sandbox_command_composition.py",
+        "sha256": "d426b2f90aa60daf25ff2f01f8e49bd3e959345e8643aa8e4579078814affd12"
       },
       "orket.application.services.sandbox_control_plane_checkpoint_service": {
         "path": "orket/application/services/sandbox_control_plane_checkpoint_service.py",
@@ -4485,7 +4489,7 @@
       },
       "orket.services.sandbox_orchestrator": {
         "path": "orket/services/sandbox_orchestrator.py",
-        "sha256": "e72809c41f2854d25a138f0ace26de3748429d27a6318cd4e084dd341dab90b7"
+        "sha256": "63c40eac5a9f314b5d41fb4f3f0e6d2f46e9eb78532b5f8f08fc229aea16a782"
       },
       "orket.services.scoped_memory_store": {
         "path": "orket/services/scoped_memory_store.py",
@@ -5394,6 +5398,34 @@
         "target": "orket.adapters.storage.card_record_codec",
         "path": "orket/adapters/storage/card_write_ops.py",
         "line": 23,
+        "kind": "from"
+      },
+      {
+        "source": "orket.adapters.storage.command_runner",
+        "target": "orket.adapters.execution.owned_io",
+        "path": "orket/adapters/storage/command_runner.py",
+        "line": 10,
+        "kind": "from"
+      },
+      {
+        "source": "orket.adapters.storage.command_runner",
+        "target": "orket.adapters.storage.async_executor_service",
+        "path": "orket/adapters/storage/command_runner.py",
+        "line": 11,
+        "kind": "from"
+      },
+      {
+        "source": "orket.adapters.storage.command_runner",
+        "target": "orket.core.contracts.owned_command",
+        "path": "orket/adapters/storage/command_runner.py",
+        "line": 12,
+        "kind": "from"
+      },
+      {
+        "source": "orket.adapters.storage.command_runner",
+        "target": "orket.core.contracts.owned_command",
+        "path": "orket/adapters/storage/command_runner.py",
+        "line": 13,
         "kind": "from"
       },
       {
@@ -15894,6 +15926,27 @@
         "target": "orket.core.domain.sandbox_lifecycle_records",
         "path": "orket/application/services/sandbox_cleanup_verification_service.py",
         "line": 6,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.sandbox_command_composition",
+        "target": "orket.adapters.storage.async_file_tools",
+        "path": "orket/application/services/sandbox_command_composition.py",
+        "line": 8,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.sandbox_command_composition",
+        "target": "orket.adapters.storage.command_runner",
+        "path": "orket/application/services/sandbox_command_composition.py",
+        "line": 9,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.sandbox_command_composition",
+        "target": "orket.application.services.command_process_supervisor",
+        "path": "orket/application/services/sandbox_command_composition.py",
+        "line": 10,
         "kind": "from"
       },
       {
@@ -29060,75 +29113,82 @@
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.adapters.execution.owned_io",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 15,
+        "line": 14,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.adapters.storage.async_control_plane_execution_repository",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 16,
+        "line": 15,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.adapters.storage.async_control_plane_record_repository",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 17,
+        "line": 16,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.adapters.storage.async_executor_service",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 18,
+        "line": 17,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.adapters.storage.async_file_tools",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 19,
+        "line": 18,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.adapters.storage.async_sandbox_lifecycle_repository",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 20,
+        "line": 19,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.adapters.storage.command_runner",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 21,
+        "line": 20,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.application.services.control_plane_publication_service",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 22,
+        "line": 21,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.application.services.control_plane_workload_catalog",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 23,
+        "line": 22,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.application.services.decision_node_registry",
         "path": "orket/services/sandbox_orchestrator.py",
-        "line": 26,
+        "line": 25,
         "kind": "from"
       },
       {
         "source": "orket.services.sandbox_orchestrator",
         "target": "orket.application.services.runtime_input_service",
+        "path": "orket/services/sandbox_orchestrator.py",
+        "line": 26,
+        "kind": "from"
+      },
+      {
+        "source": "orket.services.sandbox_orchestrator",
+        "target": "orket.application.services.sandbox_command_composition",
         "path": "orket/services/sandbox_orchestrator.py",
         "line": 27,
         "kind": "from"
@@ -29621,7 +29681,7 @@
         "forwarded_arguments": 2
       }
     ],
-    "files_scanned": 1113,
+    "files_scanned": 1114,
     "scan_roots": [
       "orket"
     ],
@@ -30036,6 +30096,7 @@
       "orket.application.services.sandbox_cleanup_decision_service": "application",
       "orket.application.services.sandbox_cleanup_scheduler_service": "application",
       "orket.application.services.sandbox_cleanup_verification_service": "application",
+      "orket.application.services.sandbox_command_composition": "application",
       "orket.application.services.sandbox_control_plane_checkpoint_service": "application",
       "orket.application.services.sandbox_control_plane_closure_service": "application",
       "orket.application.services.sandbox_control_plane_effect_service": "application",
@@ -30746,22 +30807,22 @@
       {
         "source": "adapters",
         "target": "adapters",
-        "count": 235
+        "count": 237
       },
       {
         "source": "adapters",
         "target": "core",
-        "count": 139
+        "count": 141
       },
       {
         "source": "application",
         "target": "adapters",
-        "count": 414
+        "count": 416
       },
       {
         "source": "application",
         "target": "application",
-        "count": 1728
+        "count": 1730
       },
       {
         "source": "application",
@@ -30813,26 +30874,6 @@
     }
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-21T02:16:10.428795Z",
-      "changed": true,
-      "before_digest": "sha256:d6627ca18b31e5ed1331e6f9d4c63a69ed2702d5999849621ab378d55c7835e1",
-      "after_digest": "sha256:348469f4532c30a6e7743ccd58a5479a97aea203b8bea4900270d104d1d9ab1d",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 46737,
-        "paths_total_current": 46737,
-        "paths_total_reference": 46737,
-        "churn_paths": 1,
-        "churn_ratio": 2.1e-05,
-        "sample_paths": [
-          "$.generated_at"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-21T03:03:39.491898Z",
       "changed": true,
@@ -31756,6 +31797,45 @@
           "$.observed.edges[1288].line",
           "$.observed.edges[1289].line",
           "$.observed.modules.orket.application.services.outward_approval_service.sha256"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T01:38:44.812563Z",
+      "changed": true,
+      "before_digest": "sha256:bfe73705120a521370c7373b063062d6d8705d6bb5aeff1cd4d595448d87f99b",
+      "after_digest": "sha256:da7492ddefd24c7efe34a13d643fd26ae42bf5d50f866eea61c3b02722f8c147",
+      "diff": {
+        "added_paths": 10,
+        "removed_paths": 0,
+        "changed_paths": 11589,
+        "initial_write": false,
+        "paths_total_previous": 47438,
+        "paths_total_current": 47533,
+        "paths_total_reference": 47533,
+        "churn_paths": 11599,
+        "churn_ratio": 0.24402,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.edges[117].line",
+          "$.observed.edges[117].path",
+          "$.observed.edges[117].source",
+          "$.observed.edges[117].target",
+          "$.observed.edges[118].line",
+          "$.observed.edges[118].path",
+          "$.observed.edges[118].source",
+          "$.observed.edges[118].target",
+          "$.observed.edges[119].line",
+          "$.observed.edges[119].path",
+          "$.observed.edges[119].source",
+          "$.observed.edges[119].target",
+          "$.observed.edges[120].line",
+          "$.observed.edges[120].path",
+          "$.observed.edges[120].source",
+          "$.observed.edges[120].target",
+          "$.observed.edges[121].path",
+          "$.observed.edges[121].source",
+          "$.observed.edges[121].target"
         ]
       }
     }

@@ -215,6 +215,12 @@ Direct synchronous log reads refuse an event-loop thread; the API uses
 are failures. Contract and migration:
 `docs/architecture/CONTRACT_DELTA_API_SANDBOX_LOGS_D_2026-09-21.md`.
 
+Direct sandbox command embeddings use `create_sandbox_command_runner(...)` or
+provide the core owner port, absolute cwd, full environment and finite budget.
+Standard orchestrator environments now bind complete child inputs. Migration,
+shared process ownership and unresolved Docker-effect limits:
+`docs/architecture/CONTRACT_DELTA_SANDBOX_COMMAND_OWNERSHIP_D_2026-09-21.md`.
+
 Async organization embeddings await `OrganizationLoop.create()` before
 `run_forever()`; the canonical `orket runtime --loop` uses that factory. Direct
 synchronous construction refuses an event-loop thread before configuration I/O.

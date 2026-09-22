@@ -5,6 +5,18 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.73] - 2026-09-21
+
+### Fixed
+- Own sandbox native command trees through cancellation and native deadlines; preserve unknown Docker outcomes for reconciliation.
+- Capture complete process environment and cwd in application composition; preserve synchronous log deadlines and text behavior.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Direct embeddings use `create_sandbox_command_runner(...)` or provide its explicit core owner and process inputs.
+- Standard commands now use a 300-second default; provided environments are complete child environments.
+- Contract: `docs/architecture/CONTRACT_DELTA_SANDBOX_COMMAND_OWNERSHIP_D_2026-09-21.md`.
+
 ## [0.6.72] - 2026-09-21
 
 ### Fixed

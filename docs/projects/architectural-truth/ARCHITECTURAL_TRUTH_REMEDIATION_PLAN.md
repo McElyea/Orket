@@ -12519,9 +12519,9 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.72 captured approval-submission arguments, retaining the 0.6.71 authorization
-observation, 0.6.65/0.6.66 API queries, 0.6.67 legacy action, 0.6.68 construction,
-0.6.69 cleanup and 0.6.70 file-operation checkpoints. Preserve the governed legacy-export cutover;
+0.6.73 sandbox command ownership and process inputs, retaining the 0.6.72 approval
+submission, 0.6.71 authorization, 0.6.65/0.6.66 API queries, 0.6.67 legacy action,
+0.6.68 construction, 0.6.69 cleanup and 0.6.70 file-operation checkpoints. Preserve the governed legacy-export cutover;
 continue remaining clock/input owners, adapter enforcement and async reachability before E1/E2
 and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
@@ -20682,3 +20682,75 @@ input/async owners and complete adapter enforcement remain outside this scope.
 E1/E2, whole-suite/89% acceptance, hosted Quality, the .43 Git timeout cause,
 CAP and explicit whole-lane acceptance remain open. Accepted BT behavior and
 retained proof are preserved. This checkpoint does not retire the lane.
+
+
+#### .73 Owned sandbox commands and captured process inputs (2026-09-21)
+
+Standard sandbox composition now injects the accepted native command owner
+through its core port. Commands capture the complete environment and cwd and use
+a 300-second finite default. The synchronous log override remains ten seconds.
+Only confirmed cleanup/capture and an actual integer completed exit can return
+a result. Nonzero exits retain existing caller handling; incomplete receipts and
+native timeouts retain the existing creation reconciliation path. Contract:
+`docs/architecture/CONTRACT_DELTA_SANDBOX_COMMAND_OWNERSHIP_D_2026-09-21.md`.
+
+Ten opening real-tree cases failed: cancellation left fixture processes alive,
+while returning leaders retained descendant pipe lifetimes. Test finally paths
+removed only recorded fixture identities. The exact final ten tests also fail
+against the byte-verified published .72 wheel, without errors or skips. The first
+32-case repaired run retained two external-timeout failures: Python 3.11 did not
+translate the supervisor's cancellation subclass into TimeoutError. The adapter
+now exposes standard cancellation after owner settlement, with the original
+exception retained as its cause. Shared supervisor/backend bytes and timeout
+assertions remain unchanged. The corrected 32 cases pass. Eight additional cases
+cover controlled receipts, actual SQLite reconciliation and isolated input maps;
+their synthetic receipts are not native process proof.
+
+| Cell | Cases / failures / errors / skips | Pytest seconds | Native origins |
+|---|---|---|---|
+| Source Windows 3.11 | 355 / 0 / 0 / 0 | 61.182 | source checkout |
+| Installed win-py311 | 355 / 0 / 0 / 0 | 61.213 | 907 |
+| Installed win-py312 | 355 / 0 / 0 / 0 | 69.049 | 907 |
+
+The explicit 58-module cohort retains sandbox, command and accepted verification
+process regressions. It does not claim to rerun every previous cohort or full
+Quality. Six competing SQLite operations finish within the unchanged 0.5-second
+bound; maximum observed 0.016000000 seconds. Native five-second command budgets,
+external 50-ms admitted timeout, repeated cancellation, detached descendants,
+returning/nonzero leaders, launch/output refusal, sync loop refusal and process
+input capture are exercised. Synchronous text decoding/newline behavior remains
+compatible. Custom runner results without native lifetime remain unproven.
+
+Separately, all three real Docker recovery cases pass in source and both
+installed Windows environments: unknown create reconciliation, due cleanup and
+crash between deletion and verification. Every exact-project container, network
+and volume is independently absent afterward; no fallback was used and existing
+containers were preserved. This is nine live Docker/SQLite cases, not provider
+inference or hostile-code containment. Native CLI cleanup alone never proves
+daemon effects absent. Existing direct inspection/cleanup policy is unchanged.
+
+All 1,114 core Python files and nineteen data resources match current source,
+wheel and source archive: 1,133 core members, 2,228 support inputs. The orchestrator
+stays at 564 lines; normalized AST allows only its composition import/default and
+module docstring formatting. The adapter is 76 lines, factory 26; new test modules
+remain within size limits. Both Quality selections include the new regressions.
+Canonical dependency enforcement passes with 1114
+files, 3578 edges and six bounded dynamic routes;
+changed Ruff, docs hygiene and release metadata pass. Canonical Ruff remains 94.
+
+Renewed user authorization permitted atomic publication of .65 through .72 on
+the requested branch with all eight annotated tags. Remote refs and 1,392 retained
+checkpoint hashes were checked; the original local-only receipts remain intact.
+Receipt: `.tmp/d-publication-v065-v072/publication.json`. The .73 checkpoint is
+authorized for branch/tag publication after its seal; no main merge is implied.
+
+The latest .72 passive Linux preflight remains the current retained blocker:
+240.006951941 seconds with only 18.843389227 seconds of synchronized quiet at the
+end, against sixty seconds, and steps beyond 0.01 seconds. No fresh Linux cell,
+clock change or deadline weakening occurred here. The Ollama alias-dependent
+packet1 gap, whole-suite/89%, hosted Quality, .43 Git timeout cause, remaining D,
+E1/E2 and CAP stay open. No provider substitution or whole-lane retirement.
+
+Evidence: `.tmp/d-sandbox-command/`. This is scoped process/input acceptance;
+arbitrary custom owners, mutable decision context, complete adapter enforcement,
+remaining ambient/async owners and explicit whole-lane acceptance remain open.
