@@ -12519,9 +12519,10 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.74 memory input, policy and publication ownership, retaining 0.6.73 sandbox
-commands, 0.6.72 approval submission, 0.6.71 authorization, 0.6.65/0.6.66 API
-queries, 0.6.67 legacy action, 0.6.68 construction, 0.6.69 cleanup and 0.6.70 files. Preserve the governed legacy-export cutover;
+0.6.75 Kernel credential input and authorization binding, retaining 0.6.74 memory,
+0.6.73 sandbox commands, 0.6.72 approval submission, 0.6.71 authorization,
+0.6.65/0.6.66 API queries, 0.6.67 legacy action, 0.6.68 construction,
+0.6.69 cleanup and 0.6.70 file-operation checkpoints. Preserve the governed legacy-export cutover;
 continue remaining clock/input owners, adapter enforcement and async reachability before E1/E2
 and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
@@ -20831,3 +20832,99 @@ capture is not handle containment or CAP-2. Continue remaining D in canonical
 order; explicit user acceptance is required before lane retirement.
 
 Evidence: `.tmp/d-memory-state/`. This is scoped memory boundary acceptance.
+
+
+#### .75 Explicit Kernel credentials and authorization binding (2026-09-21)
+
+Application credential boundaries capture trusted HMAC key, issue time,
+cryptographic identity and owned JSON before validation/lock waits. Default
+consumption observes its UTC time after acquiring the runtime lock, so waiting
+cannot extend token expiry; explicitly supplied time remains a trusted input. Pure core
+values decide binding, expiry and replay from explicit observations. Issuance
+requires ACCEPT_TO_UNIFY or NEEDS_APPROVAL with an APPROVED record for the exact
+session/proposal/admission decision, checked under the runtime lock through
+credential publication. REJECT and other decisions cannot issue credentials.
+Duplicate token or identity hashes are refused before mutation, retaining replay
+state. Low-level effects require typed inputs and explicit invalidation time.
+Contract/migration: `docs/architecture/CONTRACT_DELTA_KERNEL_CREDENTIAL_INPUTS_D_2026-09-21.md`.
+
+All eight opening cases failed: issue/consume key and nested scope drift,
+post-wait issue time, rejected admission, and foreign session/proposal approval.
+The exact nine final control cases, including concurrent admission replacement,
+also fail against the byte-verified published .74 wheel with no errors/skips.
+The repaired 50-case cohort passes, as do 31 pure/transition/failure cases and
+the real lock-serialization case. The first candidate then passed 195 cases
+and six isolated script cases in all three cells, but review found premature
+consume time capture. Two added validation/lock-wait expiry cases failed on that
+candidate while the same current tests passed on published .74. Time observation
+now occurs inside the acquired consume lock. The corrected 20-case targeted run
+passes; the matrix below is rebuilt from corrected bytes. All first-candidate
+artifacts and the two regression failures remain preserved. Original failures remain intact. A discovery
+helper initially failed importing scripts before root initialization; its bytes,
+failure receipt and corrected helper remain retained, without runtime claims.
+
+| Cell | Cases / failures / errors / skips | Pytest seconds | Native origins |
+|---|---|---|---|
+| Source Windows 3.11 | 197 / 0 / 0 / 0 | 16.835 | source checkout |
+| Installed win-py311 | 197 / 0 / 0 / 0 | 19.793 | 904 |
+| Installed win-py312 | 197 / 0 / 0 / 0 | 28.294 | 904 |
+
+The explicit 28-module cohort includes Kernel policy/publication, approval,
+lifecycle, API/control-plane callers and current authority. Controlled clocks
+prove one captured instant for issue/expiry/events and consume/use/invalidation;
+strict equality expires, malformed expiry refuses, binding precedes expiry,
+expiry precedes replay, and existing invalidation reasons retain precedence.
+Previously invalidated future-expiry records retain their timestamp. Twelve
+native consumers produce one success, eleven replay refusals and one use event.
+Identity reuse cannot overwrite a used record; between-call key rotation remains
+effective, and explicit empty environment retains the existing development key.
+HMAC-SHA256, entropy formats, canonical scope/profile digests and response shapes
+remain. Keys/raw identities are excluded from representations and ledger records;
+the raw credential remains confined to its issuance response.
+
+Actual hashing is observed under the existing runtime RLock while a competing
+real admission attempts that lock. Credential issuance precedes the replacement
+admission and its event. This synchronous Kernel flow is deliberately embedded
+in owned workers; it does not prove direct event-loop lock safety. The 0.8-second
+controlled hold and bounded ten-second fixture release/drain are unchanged.
+Independent actual SQLite work stays below 0.5 seconds in each cell, maximum
+0.010788500 seconds. General Kernel ownership remains open.
+
+Injected event callback failures propagate. The already-mutated credential can
+remain without its event; no transactional record/ledger claim is made. A failed
+consume remains used and rejects replay. No durable Kernel recovery or actual
+outward effect is implied by token issuance. Scope/profile derivation semantics
+and the development signing fallback are preserved, not upgraded into a new
+production authorization or key-provisioning boundary.
+
+Separately, six existing script tests pass in each of source and installed
+Windows 3.11/3.12: eighteen cases, no skips. They execute real in-memory Kernel
+admission/approval/token/ledger flows and controlled fake OpenClaw JSONL children.
+Rejected actions, approved commits, token single use and replay agree with
+recorded event digests. Outputs and rerun ledgers live in isolated copied support
+projects; no benchmark publication, live model, real outward connector, deployed
+HTTP or durable restart claim follows from these scripts' historical live label.
+
+All 1,119 core Python files and nineteen data resources match
+source, wheel and source archive (1,138 core members;
+2,246 support inputs). Token effects shrink 246 to 210
+lines; new pure contract/application capture files are 112/41 lines. The touched
+oversized runtime shrinks 429 to 428 lines. Both Quality selections include the
+new cases. Canonical C enforcement passes with 1119
+files, 3601 edges and six bounded dynamic routes.
+Canonical Ruff decreases 93 to 92 by replacing the deprecated Callable import;
+no new finding is introduced. Scoped docs/release/whitespace checks pass.
+
+The latest Linux measurement remains the retained .72 blocker: 240.006951941
+seconds, only 18.843389227 seconds ending synchronized quiet against sixty, with
+steps beyond 0.01 seconds. No new clock measurement or settings/deadline change.
+Whole-suite/89%, hosted Quality, Ollama packet1 alias proof and the .43 Git timeout
+cause remain unverified. Broader global Kernel maps/clocks/borrowed ledger views,
+synchronous lock ownership, mutable decision contexts, shared sync bridge,
+complete adapter/async inventory, E1/E2 and CAP remain open. This is authorized
+scoped branch/tag publication after sealing, not main merge, 0.7 cutover,
+release readiness, whole-plan completion or lane retirement. Continue D in
+canonical order; retirement requires explicit user acceptance.
+
+Evidence: `.tmp/d-kernel-credentials-corrected/`; original observations and
+regression failures: `.tmp/d-kernel-credentials/`. Scoped credential boundary acceptance only.

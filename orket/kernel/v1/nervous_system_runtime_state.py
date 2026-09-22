@@ -68,10 +68,11 @@ def append_event(
     event_type: str,
     body: dict[str, Any],
     request_id: str | None = None,
+    created_at: str | None = None,
 ) -> dict[str, Any]:
     global _NEXT_LEDGER_ID
 
-    created_at = utc_iso_now()
+    created_at = utc_iso_now() if created_at is None else created_at
     with _RUNTIME_LOCK:
         previous = _SESSION_EVENT_HEADS.get(session_id)
         event = {

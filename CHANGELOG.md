@@ -5,6 +5,19 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.75] - 2026-09-21
+
+### Fixed
+- Capture credential key, identity, issue time and nested requests; observe default consume expiry after lock acquisition.
+- Require accepted admission and exact approved session/proposal/decision identity under the issuance lock.
+- Refuse credential identity reuse; retain replay and expiry precedence with explicit pure observations.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Low-level credential effects require typed inputs and explicit invalidation time; public wrappers capture defaults.
+- Event-publication failure can leave a record transition; inspect state before retrying.
+- Contract: `docs/architecture/CONTRACT_DELTA_KERNEL_CREDENTIAL_INPUTS_D_2026-09-21.md`.
+
 ## [0.6.74] - 2026-09-21
 
 ### Fixed

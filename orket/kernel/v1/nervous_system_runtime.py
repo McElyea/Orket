@@ -2,12 +2,11 @@ from __future__ import annotations
 
 from typing import Any
 
+from orket.application.services.runtime_input_service import RuntimeInputService
+
 from .canonical import digest_of
 from .nervous_system_admission import admission_from_proposal
-from .nervous_system_approvals import (
-    create_approval_request,
-    get_approval,
-)
+from .nervous_system_approvals import create_approval_request, get_approval
 from .nervous_system_contract import (
     ADMISSION_DECISIONS_V1,
     COMMIT_STATUSES_V1,
@@ -33,9 +32,7 @@ from .nervous_system_runtime_state import (
     set_current_canonical_state_digest,
     utc_iso_now,
 )
-from .nervous_system_tokens import (
-    invalidate_tokens_for_session,
-)
+from .nervous_system_tokens import invalidate_tokens_for_session
 from .outbound_policy_gate import apply_outbound_policy_gate
 
 
@@ -396,6 +393,7 @@ def commit_proposal_v1(request: dict[str, Any]) -> dict[str, Any]:
 
 def end_session_v1(request: dict[str, Any]) -> dict[str, Any]:
     require_nervous_system_enabled()
+    observed_at = RuntimeInputService().utc_now()
     if request.get("contract_version") != CONTRACT_VERSION:
         raise ValueError("contract_version must be kernel_api/v1")
     session_id = get_str(request, "session_id", required=True)
@@ -403,12 +401,13 @@ def end_session_v1(request: dict[str, Any]) -> dict[str, Any]:
     request_id = get_str(request, "request_id", required=False)
     reason = normalized_optional_str(request.get("reason"))
 
-    invalidated = invalidate_tokens_for_session(session_id=session_id, reason="session_ended")
+    invalidated = invalidate_tokens_for_session(session_id=session_id, reason="session_ended", observed_at=observed_at)
     event = append_event(
         session_id=session_id,
         trace_id=trace_id,
         request_id=request_id,
         event_type="session.ended",
+        created_at=observed_at.isoformat(),
         body={"reason": reason or None, "invalidated_token_count": invalidated},
     )
     return {

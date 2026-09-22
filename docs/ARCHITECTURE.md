@@ -258,6 +258,17 @@ writes may commit before cancellation returns. Classifiers/renderers require
 timezone-aware `observed_at`. Migration, legacy parity and ownership limits:
 `docs/architecture/CONTRACT_DELTA_MEMORY_STATE_D_2026-09-21.md`.
 
+Kernel credential application boundaries capture key, UTC time, cryptographic
+identity and owned JSON inputs. Default consumption observes UTC time after
+lock acquisition so validation/contention waits cannot extend expiry.
+Pure credential decisions consume immutable
+observations; issuance binds an accepted admission and exact approval identity
+under the runtime lock. Duplicate token/identity hashes cannot reset replay.
+Low-level effects require typed inputs and explicit invalidation time. Event
+failure can leave a record transition; global Kernel state remains in memory.
+Migration, synchronous ownership and partial-effect limits:
+`docs/architecture/CONTRACT_DELTA_KERNEL_CREDENTIAL_INPUTS_D_2026-09-21.md`.
+
 Driver async creation captures root, environment and settings before owned
 construction; direct synchronous construction refuses an event-loop thread.
 API chat and interactive CLI use shared runtime owners. Console reads settle

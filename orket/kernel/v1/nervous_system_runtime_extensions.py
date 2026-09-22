@@ -2,14 +2,23 @@ from __future__ import annotations
 
 from typing import Any
 
-from .nervous_system_approvals import (
-    decide_approval,
-    get_approval,
-    list_approvals,
-    rebuild_pending_approvals,
+from orket.application.services.kernel_action_input_service import capture_kernel_request
+from orket.application.services.kernel_credential_input_service import (
+    capture_credential_issue_inputs,
+    capture_credential_key,
 )
+from orket.application.services.runtime_input_service import RuntimeInputService
+from orket.core.contracts.kernel_credentials import CredentialIssueInputs, CredentialObservation
+
+from .nervous_system_approvals import decide_approval, get_approval, list_approvals, rebuild_pending_approvals
 from .nervous_system_policy import require_nervous_system_enabled
-from .nervous_system_runtime_state import _ADMISSIONS_BY_PROPOSAL, append_event, get_str, list_events_for_session
+from .nervous_system_runtime_state import (
+    _ADMISSIONS_BY_PROPOSAL,
+    _RUNTIME_LOCK,
+    append_event,
+    get_str,
+    list_events_for_session,
+)
 from .nervous_system_tokens import (
     consume_credential_token,
     invalidate_tokens_for_proposal,
@@ -34,6 +43,7 @@ def decide_approval_v1(
     edited_proposal: dict[str, Any] | None,
     notes: str | None,
 ) -> dict[str, Any]:
+    observed_at = RuntimeInputService().utc_now()
     result = decide_approval(
         approval_id=approval_id,
         decision=decision,
@@ -47,6 +57,7 @@ def decide_approval_v1(
             session_id=str(approval.get("session_id") or ""),
             proposal_digest=str(approval.get("proposal_digest") or ""),
             reason=f"approval_{status.lower()}",
+            observed_at=observed_at,
         )
     return result
 
@@ -225,8 +236,17 @@ def audit_action_lifecycle_v1(*, session_id: str, trace_id: str) -> dict[str, An
     }
 
 
-def issue_credential_token_v1(request: dict[str, Any]) -> dict[str, Any]:
+def issue_credential_token_v1(
+    request: dict[str, Any], *, inputs: CredentialIssueInputs | None = None,
+) -> dict[str, Any]:
     require_nervous_system_enabled()
+    inputs = capture_credential_issue_inputs() if inputs is None else inputs
+    request = capture_kernel_request(request)
+    with _RUNTIME_LOCK:
+        return _issue_credential_token_locked(request, inputs)
+
+
+def _issue_credential_token_locked(request: dict[str, Any], inputs: CredentialIssueInputs) -> dict[str, Any]:
     session_id = get_str(request, "session_id", required=True)
     trace_id = get_str(request, "trace_id", required=True)
     request_id = get_str(request, "request_id", required=False)
@@ -238,10 +258,14 @@ def issue_credential_token_v1(request: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("invalid proposal_digest/admission_decision_digest binding")
 
     admission_decision = str((admission.get("admission_decision") or {}).get("decision") or "")
+    if admission_decision not in {"ACCEPT_TO_UNIFY", "NEEDS_APPROVAL"}:
+        raise ValueError("credential token requires an accepted admission")
     if admission_decision == "NEEDS_APPROVAL":
         approval_id = get_str(request, "approval_id", required=False)
         approval = get_approval(approval_id) if approval_id else None
-        if not approval or str(approval.get("status") or "") != "APPROVED":
+        if not approval or (approval.get("status"), approval.get("session_id"),
+            approval.get("proposal_digest"), approval.get("admission_decision_digest")) != (
+                "APPROVED", session_id, proposal_digest, decision_digest):
             raise ValueError("approved approval_id is required before issuing a credential token")
 
     scope_json = request.get("scope_json")
@@ -262,11 +286,16 @@ def issue_credential_token_v1(request: dict[str, Any]) -> dict[str, Any]:
         executor_instance_id=get_str(request, "executor_instance_id", required=False),
         expires_in_seconds=int(request.get("expires_in_seconds") or 900),
         append_event=append_event,
+        inputs=inputs,
     )
 
 
-def consume_credential_token_v1(request: dict[str, Any]) -> dict[str, Any]:
+def consume_credential_token_v1(
+    request: dict[str, Any], *, inputs: CredentialObservation | None = None,
+) -> dict[str, Any]:
     require_nervous_system_enabled()
+    key = capture_credential_key() if inputs is None else None
+    request = capture_kernel_request(request)
     session_id = get_str(request, "session_id", required=True)
     trace_id = get_str(request, "trace_id", required=True)
     request_id = get_str(request, "request_id", required=False)
@@ -276,18 +305,22 @@ def consume_credential_token_v1(request: dict[str, Any]) -> dict[str, Any]:
     scope_json = request.get("scope_json")
     if not isinstance(scope_json, dict):
         raise ValueError("scope_json must be an object")
-    return consume_credential_token(
-        session_id=session_id,
-        trace_id=trace_id,
-        request_id=request_id,
-        raw_token=raw_token,
-        proposal_digest=proposal_digest,
-        tool_name=tool_name,
-        scope_json=scope_json,
-        executor_instance_id=get_str(request, "executor_instance_id", required=False),
-        expected_tool_profile_digest=get_str(request, "tool_profile_digest", required=False),
-        append_event=append_event,
-    )
+    with _RUNTIME_LOCK:
+        if inputs is None:
+            inputs = CredentialObservation(observed_at=RuntimeInputService().utc_now(), hmac_key=key)
+        return consume_credential_token(
+            session_id=session_id,
+            trace_id=trace_id,
+            request_id=request_id,
+            raw_token=raw_token,
+            proposal_digest=proposal_digest,
+            tool_name=tool_name,
+            scope_json=scope_json,
+            executor_instance_id=get_str(request, "executor_instance_id", required=False),
+            expected_tool_profile_digest=get_str(request, "tool_profile_digest", required=False),
+            append_event=append_event,
+            inputs=inputs,
+        )
 
 
 def get_session_ledger_events_v1(session_id: str) -> list[dict[str, Any]]:

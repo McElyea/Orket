@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from secrets import token_urlsafe
+from secrets import token_hex, token_urlsafe
 from time import monotonic, perf_counter_ns
 from uuid import uuid4
 
@@ -30,6 +30,9 @@ class RuntimeInputService:
     def create_secret_token(self) -> str:
         """Capture a fresh secret at admission; callers must not publish it as evidence."""
         return token_urlsafe(32)
+
+    def create_credential_token_id(self) -> str:
+        return "tok-" + token_hex(12)
 
     def utc_now(self) -> datetime:
         return datetime.now(UTC)

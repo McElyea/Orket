@@ -49,6 +49,17 @@ writes may commit before cancellation returns. Classifiers/renderers require
 timezone-aware `observed_at`. Migration, legacy parity and ownership limits:
 `docs/architecture/CONTRACT_DELTA_MEMORY_STATE_D_2026-09-21.md`.
 
+Kernel credential application boundaries capture key, UTC time, cryptographic
+identity and owned JSON inputs. Default consumption observes UTC time after
+lock acquisition so validation/contention waits cannot extend expiry.
+Pure credential decisions consume immutable
+observations; issuance binds an accepted admission and exact approval identity
+under the runtime lock. Duplicate token/identity hashes cannot reset replay.
+Low-level effects require typed inputs and explicit invalidation time. Event
+failure can leave a record transition; global Kernel state remains in memory.
+Migration, synchronous ownership and partial-effect limits:
+`docs/architecture/CONTRACT_DELTA_KERNEL_CREDENTIAL_INPUTS_D_2026-09-21.md`.
+
 The runtime CLI captures engine inputs after startup and owns engine construction
 through interruption. Board/replay reads, manifest output and native path
 resolution retain their workers; a completed untransferred engine is closed.
