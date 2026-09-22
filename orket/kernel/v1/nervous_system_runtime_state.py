@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+from copy import deepcopy
 from datetime import UTC, datetime
 from threading import RLock
 from typing import Any, Literal, overload
+
+from orket.application.services.kernel_action_input_service import capture_kernel_request
 
 from .canonical import digest_of
 from .nervous_system_contract import GENESIS_STATE_DIGEST
@@ -54,11 +57,13 @@ def normalized_optional_str(value: Any) -> str:
 
 
 def get_current_canonical_state_digest(session_id: str) -> str:
-    return _SESSION_CANONICAL_STATE.get(session_id, GENESIS_STATE_DIGEST)
+    with _RUNTIME_LOCK:
+        return _SESSION_CANONICAL_STATE.get(session_id, GENESIS_STATE_DIGEST)
 
 
 def set_current_canonical_state_digest(session_id: str, canonical_state_digest: str) -> None:
-    _SESSION_CANONICAL_STATE[session_id] = canonical_state_digest
+    with _RUNTIME_LOCK:
+        _SESSION_CANONICAL_STATE[session_id] = canonical_state_digest
 
 
 def append_event(
@@ -72,6 +77,7 @@ def append_event(
 ) -> dict[str, Any]:
     global _NEXT_LEDGER_ID
 
+    body = capture_kernel_request(body)
     created_at = utc_iso_now() if created_at is None else created_at
     with _RUNTIME_LOCK:
         previous = _SESSION_EVENT_HEADS.get(session_id)
@@ -95,12 +101,12 @@ def append_event(
         _LEDGER_BY_SESSION.setdefault(session_id, []).append(event)
         _EVENTS_BY_DIGEST[event_digest] = event
         _SESSION_EVENT_HEADS[session_id] = event_digest
-        return event
+        return deepcopy(event)
 
 
 def list_events_for_session(session_id: str) -> list[dict[str, Any]]:
-    events = _LEDGER_BY_SESSION.get(session_id, [])
-    return [dict(event) for event in events]
+    with _RUNTIME_LOCK:
+        return deepcopy(_LEDGER_BY_SESSION.get(session_id, []))
 
 
 def has_admission_event(
@@ -124,7 +130,8 @@ def has_admission_event(
 
 
 def list_session_ids() -> list[str]:
-    return sorted(_LEDGER_BY_SESSION.keys())
+    with _RUNTIME_LOCK:
+        return sorted(_LEDGER_BY_SESSION.keys())
 
 
 def reset_runtime_state_for_tests() -> None:

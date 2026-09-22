@@ -1,6 +1,6 @@
 {
   "schema_version": "architectural_truth.baseline.v1",
-  "generated_at": "2026-09-22T03:36:37.870256Z",
+  "generated_at": "2026-09-22T04:24:43.029771Z",
   "collection_ok": true,
   "release_ready": false,
   "release_ready_reason": "Active architectural exceptions and red/noisy proof gates remain.",
@@ -313,7 +313,7 @@
           "forwarded_arguments": 2
         }
       ],
-      "files_scanned": 1119,
+      "files_scanned": 1125,
       "scan_roots": [
         "orket"
       ],
@@ -332,17 +332,17 @@
         {
           "source": "application",
           "target": "adapters",
-          "count": 420
+          "count": 421
         },
         {
           "source": "application",
           "target": "application",
-          "count": 1738
+          "count": 1759
         },
         {
           "source": "application",
           "target": "core",
-          "count": 764
+          "count": 765
         },
         {
           "source": "application",
@@ -367,7 +367,7 @@
         {
           "source": "interfaces",
           "target": "application",
-          "count": 98
+          "count": 99
         },
         {
           "source": "interfaces",
@@ -445,7 +445,7 @@
         "id": "AT-EX-007",
         "area": "decision-node-explicit-inputs",
         "status": "active_transition",
-        "reason": "API authority and observed system inputs, registry selection settings and loop limits now use application capture. Tool bindings and model-client construction belong to application services. Model recommendations now use frozen values with application-owned settings/score preparation. Local prompt policy now captures settings and request values in application, binds one registry read and owns worker lifetime. Mutable planning/routing context, global settings authority and other legacy input boundaries remain outside immutable snapshots.",
+        "reason": "API authority and observed system inputs, registry selection settings and loop limits now use application capture. Tool bindings and model-client construction belong to application services. Model recommendations now use frozen values with application-owned settings/score preparation. Local prompt policy now captures settings and request values in application, binds one registry read and owns worker lifetime. Covered planning/routing strategies consume frozen inputs with application-owned record inspection and recommendation validation (the .48/.49 dispatch contract). Global settings authority, other legacy input boundaries and complete adapter-effect classification remain open.",
         "removal_condition": "All decision nodes receive immutable resolved configuration and have no environment or runtime-state reach-through.",
         "evidence": "docs/ARCHITECTURE.md#known-current-exceptions",
         "owner": "Orket Core"
@@ -535,10 +535,10 @@
   },
   "test_taxonomy": {
     "schema_version": "test_taxonomy_report.v1",
-    "tests_total": 5597,
-    "missing_layer_total": 4010,
+    "tests_total": 5616,
+    "missing_layer_total": 4029,
     "by_layer": {
-      "unlabeled": 4010,
+      "unlabeled": 4029,
       "integration": 750,
       "unit": 163,
       "contract": 663,
@@ -1146,15 +1146,14 @@
         "layer": null
       }
     ],
-    "missing_layers_omitted": 3910
+    "missing_layers_omitted": 3929
   },
   "ruff": {
     "proof": "structural_lint",
     "executed": true,
     "exit_code": 1,
-    "issues_total": 77,
+    "issues_total": 75,
     "by_code": {
-      "B905": 2,
       "F401": 5,
       "I001": 7,
       "PTH108": 1,
@@ -1168,9 +1167,9 @@
   },
   "size_inventory": {
     "proof": "structural_ast",
-    "python_files_scanned": 1119,
-    "files_over_400_total": 56,
-    "functions_over_70_total": 202,
+    "python_files_scanned": 1125,
+    "files_over_400_total": 55,
+    "functions_over_70_total": 201,
     "largest_files": [
       {
         "path": "orket/application/workflows/orchestrator_ops.py",
@@ -1335,16 +1334,16 @@
         "lines": 299
       },
       {
-        "path": "orket/interfaces/routers/kernel.py",
-        "line": 79,
-        "name": "build_kernel_router",
-        "lines": 278
-      },
-      {
         "path": "orket/application/services/orchestrator_turn_context_builder.py",
         "line": 101,
         "name": "build",
         "lines": 273
+      },
+      {
+        "path": "orket/interfaces/routers/kernel.py",
+        "line": 81,
+        "name": "build_kernel_router",
+        "lines": 271
       },
       {
         "path": "orket/interfaces/orket_bundle_cli.py",
@@ -1435,7 +1434,7 @@
       "C:\\Source\\Orket-architectural-truth\\orket\\runtime",
       "C:\\Source\\Orket-architectural-truth\\orket\\interfaces"
     ],
-    "scanned_files": 658,
+    "scanned_files": 660,
     "findings": [
       {
         "path": "C:\\Source\\Orket-architectural-truth\\orket\\runtime\\execution\\execution_pipeline_card_dispatch.py",
@@ -1546,63 +1545,6 @@
     "parse_errors": []
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-21T16:27:45.721572Z",
-      "changed": true,
-      "before_digest": "sha256:960d6048e4169cb3f545c71ef785fc0b8db67d66ab902280eb67ab536d0ed9a1",
-      "after_digest": "sha256:7e1ae6315f5fb1e84826260a5bf4774c5425e0d42db572abafb69cc498ea5412",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 18,
-        "initial_write": false,
-        "paths_total_previous": 2331,
-        "paths_total_current": 2331,
-        "paths_total_reference": 2331,
-        "churn_paths": 18,
-        "churn_ratio": 0.007722,
-        "sample_paths": [
-          "$.dependency_graph.observed.files_scanned",
-          "$.dependency_graph.observed.layer_edges[0].count",
-          "$.dependency_graph.observed.layer_edges[2].count",
-          "$.dependency_graph.observed.layer_edges[3].count",
-          "$.dependency_graph.observed.layer_edges[4].count",
-          "$.dependency_graph.observed.layer_edges[9].count",
-          "$.generated_at",
-          "$.noop_critical_paths.scanned_files",
-          "$.size_inventory.functions_over_70_total",
-          "$.size_inventory.largest_files[0].lines",
-          "$.size_inventory.largest_files[0].path",
-          "$.size_inventory.largest_files[1].lines",
-          "$.size_inventory.largest_files[1].path",
-          "$.size_inventory.python_files_scanned",
-          "$.test_taxonomy.by_layer.unlabeled",
-          "$.test_taxonomy.missing_layer_total",
-          "$.test_taxonomy.missing_layers_omitted",
-          "$.test_taxonomy.tests_total"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-21T16:44:21.053690Z",
-      "changed": true,
-      "before_digest": "sha256:7e1ae6315f5fb1e84826260a5bf4774c5425e0d42db572abafb69cc498ea5412",
-      "after_digest": "sha256:02f036039579a6615317d17885516b4c810605da7fa1d42a8cc905da19cbe420",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 2331,
-        "paths_total_current": 2331,
-        "paths_total_reference": 2331,
-        "churn_paths": 1,
-        "churn_ratio": 0.000429,
-        "sample_paths": [
-          "$.generated_at"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-21T17:13:00.813070Z",
       "changed": true,
@@ -2260,6 +2202,70 @@
         "churn_ratio": 0.000429,
         "sample_paths": [
           "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T04:15:45.631939Z",
+      "changed": true,
+      "before_digest": "sha256:62f3d36f7df46d964385dd64ef30519cde5428c2b58b74d9df4882aa07c09e63",
+      "after_digest": "sha256:8c97b1abd3f243730f1e41cd192078ffc990f85c8180f20305f6c2156a995cf7",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 1,
+        "changed_paths": 23,
+        "initial_write": false,
+        "paths_total_previous": 2331,
+        "paths_total_current": 2329,
+        "paths_total_reference": 2331,
+        "churn_paths": 24,
+        "churn_ratio": 0.010296,
+        "sample_paths": [
+          "$.dependency_graph.observed.files_scanned",
+          "$.dependency_graph.observed.layer_edges[2].count",
+          "$.dependency_graph.observed.layer_edges[3].count",
+          "$.dependency_graph.observed.layer_edges[4].count",
+          "$.dependency_graph.observed.layer_edges[9].count",
+          "$.generated_at",
+          "$.noop_critical_paths.scanned_files",
+          "$.ruff.by_code.B905",
+          "$.ruff.issues_total",
+          "$.size_inventory.files_over_400_total",
+          "$.size_inventory.functions_over_70_total",
+          "$.size_inventory.largest_functions[10].line",
+          "$.size_inventory.largest_functions[10].lines",
+          "$.size_inventory.largest_functions[10].name",
+          "$.size_inventory.largest_functions[10].path",
+          "$.size_inventory.largest_functions[11].line",
+          "$.size_inventory.largest_functions[11].lines",
+          "$.size_inventory.largest_functions[11].name",
+          "$.size_inventory.largest_functions[11].path",
+          "$.size_inventory.python_files_scanned"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T04:24:43.033535Z",
+      "changed": true,
+      "before_digest": "sha256:8c97b1abd3f243730f1e41cd192078ffc990f85c8180f20305f6c2156a995cf7",
+      "after_digest": "sha256:c2634bbb674a4624e07abc2fa1adb1cec6809247bfc2febb5aa97334fc14c4a4",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 6,
+        "initial_write": false,
+        "paths_total_previous": 2329,
+        "paths_total_current": 2329,
+        "paths_total_reference": 2329,
+        "churn_paths": 6,
+        "churn_ratio": 0.002576,
+        "sample_paths": [
+          "$.architecture_exceptions.exceptions[5].reason",
+          "$.generated_at",
+          "$.test_taxonomy.by_layer.unlabeled",
+          "$.test_taxonomy.missing_layer_total",
+          "$.test_taxonomy.missing_layers_omitted",
+          "$.test_taxonomy.tests_total"
         ]
       }
     }

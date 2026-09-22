@@ -12519,10 +12519,10 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.75 Kernel credential input and authorization binding, retaining 0.6.74 memory,
-0.6.73 sandbox commands, 0.6.72 approval submission, 0.6.71 authorization,
-0.6.65/0.6.66 API queries, 0.6.67 legacy action, 0.6.68 construction,
-0.6.69 cleanup and 0.6.70 file-operation checkpoints. Preserve the governed legacy-export cutover;
+0.6.76 Kernel state and async publication ownership, retaining 0.6.75 credential
+expiry/authorization, 0.6.74 memory, 0.6.73 sandbox commands, 0.6.72 approval
+submission, 0.6.71 authorization, 0.6.65/0.6.66 API queries, 0.6.67 legacy
+action, 0.6.68 construction, 0.6.69 cleanup and 0.6.70 files. Preserve the governed legacy-export cutover;
 continue remaining clock/input owners, adapter enforcement and async reachability before E1/E2
 and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
@@ -20928,3 +20928,98 @@ canonical order; retirement requires explicit user acceptance.
 
 Evidence: `.tmp/d-kernel-credentials-corrected/`; original observations and
 regression failures: `.tmp/d-kernel-credentials/`. Scoped credential boundary acceptance only.
+
+
+#### .76 Kernel state and asynchronous publication ownership (2026-09-21)
+
+Kernel public JSON now separates invocation inputs, retained state and returned
+observations. Nested admission, approval and event edits cannot rewrite authority
+or retained history without its digest changing. Proposal and commit inputs are
+captured before relevant hash/validation/lock waits. One pure immutable identity
+rule serves credential issuance and commit: only accepted admission or an exact
+APPROVED session/proposal/admission decision can authorize. Commit observes
+authorization, same-key cache and canonical-state/event/result publication under
+one runtime RLock; successful same-key contenders reuse one retained response and
+commit event. Existing public exports point to one implementation. Response/status
+vocabulary, idempotency key and packet1 approve/deny semantics remain. Execution
+payloads are still caller observations, not independently verified connector proof.
+
+Application async admission/commit/end-session and Kernel approval resolution own
+native workers plus required SQLite publication through repeated cancellation and
+timeout. Authenticated in-process HTTP shutdown waits for admitted publication.
+Interface synchronous Kernel routes use the shared worker owner; legacy admission
+fallback retains its pending-hold publication. Each application invocation captures
+immutable operator environment before worker admission, reuses it across nested
+workers, isolates concurrent tasks and resets the context after settlement. Explicit
+empty environment remains authoritative; request JSON cannot choose that context.
+Credential expiry still observes default time after acquiring its consume lock.
+Contract: `docs/architecture/CONTRACT_DELTA_KERNEL_STATE_OWNERSHIP_D_2026-09-21.md`.
+
+The opening thirteen and expanded sixteen cases failed as intended. Repaired state
+51, affected async/API 68 and initial ownership nine cases passed. An extended
+21-case run had two test-fixture errors expressed as failures: expecting a list
+instead of the existing outbound tuple, and querying a nonexistent run table. Those
+receipts and input bytes remain; corrected 21 cases pass without product/deadline
+changes. The exact final 29 regression cases all fail against the byte-verified
+published .75 installed wheel, with no errors/skips, including cancellation,
+timeout, duplicate commit and early API shutdown. Two separate native commit
+failure cases pass and explicitly establish partial-state limits below.
+
+| Cell | Cases / failures / errors / skips | Pytest seconds | Native origins |
+|---|---|---|---|
+| Source Windows 3.11 | 320 / 0 / 0 / 0 | 29.338 | source checkout |
+| Installed win-py311 | 320 / 0 / 0 / 0 | 32.229 | 911 |
+| Installed win-py312 | 320 / 0 / 0 / 0 | 46.314 | 911 |
+
+The explicit 45-module cohort includes all .75 credential/expiry controls,
+in-memory Kernel state/approval/lifecycle, real SQLite publication, affected API
+and orchestration consumers, outbound policy and existing frozen dispatch-input
+controls. A held native admission and approval decision leave independent SQLite
+responsive, each below the predeclared 0.5-second bound; retained credential lock
+control also passes. Across the three cells the maximum is 0.028674400 seconds.
+The 0.8-second fixture watchdog and ten-second release/drain bounds are unchanged.
+Actual concurrent commits publish one event and identical responses. Cancellation
+and timeout settle all three engine mutation publications and approval-hold release.
+Publication failure after cancellation propagates the real SQLite error. The HTTP
+shutdown case verifies the retained SQLite run after owner closure and a 503 response.
+These are controlled local effects and authenticated in-process HTTP, not deployed
+service or Linux acceptance, and they do not prove physical-sleep timing behavior.
+
+Failure is not rollback: native commit publication failure leaves canonical state,
+and can leave a commit event without the successful response cache. A retry in that
+case can append another event. Tests observe both before-event and after-event
+failures, verify lock release from another worker, and expose the retry behavior.
+No crash/failure atomicity, durable Kernel transaction, restart recovery or universal
+exactly-once claim follows. Cancellation can also follow a completed effect. Inspect
+retained state before retrying. The scoped boundary does not contain direct writes
+to private global maps or turn the synchronous public API into an async interface.
+
+Six separate existing script cases pass in each cell (eighteen total) with actual
+in-memory Kernel admission/approval/token/ledger flows and controlled fake OpenClaw
+JSONL children. Their rerunnable output ledgers stay in isolated support projects.
+No inference, real outward connector, benchmark publication or sandbox was added.
+All 1,125 Python files plus nineteen data resources agree across
+source, wheel and source archive (1,144 core members;
+2,258 support inputs). The runtime shrinks 428 to 275
+lines; oversized engine approvals shrink 483 to 463. New files are below 400 lines
+and new functions at most seventy. Both Quality jobs include the new controls.
+Canonical C enforcement passes with 1125 files,
+3625 edges and six bounded dynamic routes. Ruff
+decreases 92 to 90 through explicit zip strictness preserving prior behavior;
+no new finding. Docs/release/whitespace checks pass. The stale mutable planner/router
+claim is corrected in architecture and exception authority using the already
+accepted .48/.49 frozen contracts; broader decision/adapter purity remains open.
+
+The latest Linux clock evidence remains the .72 environment blocker: 240.006951941
+seconds, ending synchronized quiet 18.843389227 against sixty, steps beyond 0.01
+seconds. Cause unknown, no new measurement or clock/settings/deadline change.
+Full suite/89%, hosted Quality, Ollama-specific packet1 aliases, the .43 Git timeout
+cause and physical-sleep timing remain unverified. General Kernel global ownership,
+clocks/lifetime/private maps, shared synchronous bridge, remaining helper-runtime
+owners, complete adapter/async inventory, E1/E2 and CAP stay open. Preserve BT-1
+through BT-5. This is scoped branch/tag publication, not main merge, 0.7 cutover,
+release readiness, whole-plan completion or retirement. Continue D in canonical
+order. Lane retirement still requires explicit user acceptance.
+
+Evidence: `.tmp/d-kernel-state/`; exact committed files and sealed local proof are
+bound by that checkpoint. Scoped Kernel state/publication acceptance only.

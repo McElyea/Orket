@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from copy import deepcopy
 from typing import Any
 
 from .canonical import digest_of
@@ -63,13 +64,14 @@ def create_approval_request(
     decision_digest: str,
     reason_codes: list[str],
 ) -> dict[str, Any]:
+    reason_codes = deepcopy(reason_codes)
     approval_id = _approval_id(session_id, proposal_digest, decision_digest)
     now = utc_iso_now()
 
     with _RUNTIME_LOCK:
         existing = _APPROVALS_BY_ID.get(approval_id)
         if existing is not None:
-            return dict(existing)
+            return deepcopy(existing)
 
         approval: dict[str, Any] = {
             "approval_id": approval_id,
@@ -88,20 +90,20 @@ def create_approval_request(
         }
         _APPROVALS_BY_ID[approval_id] = approval
 
-    append_event(
-        session_id=session_id,
-        trace_id=trace_id,
-        request_id=request_id,
-        event_type="approval.requested",
-        body={
-            "approval_id": approval_id,
-            "proposal_digest": proposal_digest,
-            "decision_digest": decision_digest,
-            "reason_codes": list(reason_codes),
-        },
-    )
-    rebuild_pending_approvals(session_id)
-    return dict(approval)
+        append_event(
+            session_id=session_id,
+            trace_id=trace_id,
+            request_id=request_id,
+            event_type="approval.requested",
+            body={
+                "approval_id": approval_id,
+                "proposal_digest": proposal_digest,
+                "decision_digest": decision_digest,
+                "reason_codes": list(reason_codes),
+            },
+        )
+        rebuild_pending_approvals(session_id)
+        return deepcopy(approval)
 
 
 def rebuild_pending_approvals(session_id: str) -> list[dict[str, Any]]:
@@ -138,7 +140,7 @@ def rebuild_pending_approvals(session_id: str) -> list[dict[str, Any]]:
                     base.update(
                         {
                             "status": str(existing.get("status") or "PENDING"),
-                            "resolution": dict(existing.get("resolution") or {}),
+                            "resolution": deepcopy(existing.get("resolution") or {}),
                             "updated_at": str(existing.get("updated_at") or base["updated_at"]),
                             "resolved_at": existing.get("resolved_at"),
                         }
@@ -149,11 +151,11 @@ def rebuild_pending_approvals(session_id: str) -> list[dict[str, Any]]:
                 approval_id = str(body.get("approval_id") or "").strip()
                 if not approval_id:
                     continue
-                current = rebuilt.get(approval_id) or dict(_APPROVALS_BY_ID.get(approval_id) or {})
+                current = rebuilt.get(approval_id) or deepcopy(_APPROVALS_BY_ID.get(approval_id) or {})
                 if not current:
                     continue
                 current["status"] = _normalize_status(str(body.get("status") or "PENDING"))
-                current["resolution"] = dict(body.get("resolution") or {})
+                current["resolution"] = deepcopy(body.get("resolution") or {})
                 current["updated_at"] = str(event.get("created_at") or current.get("updated_at") or "")
                 if current["status"] != "PENDING":
                     current["resolved_at"] = current["updated_at"]
@@ -162,14 +164,14 @@ def rebuild_pending_approvals(session_id: str) -> list[dict[str, Any]]:
         for approval_id, record in rebuilt.items():
             _APPROVALS_BY_ID[approval_id] = record
             if str(record.get("status") or "") == "PENDING":
-                pending.append(dict(record))
+                pending.append(deepcopy(record))
         _PENDING_APPROVALS_CACHE[session_id] = sorted(
             pending,
             key=lambda row: (str(row.get("created_at") or ""), str(row.get("approval_id") or "")),
             reverse=True,
         )
 
-    return [dict(row) for row in _PENDING_APPROVALS_CACHE.get(session_id, [])]
+        return deepcopy(_PENDING_APPROVALS_CACHE.get(session_id, []))
 
 
 def list_approvals(
@@ -189,7 +191,7 @@ def list_approvals(
             for sid in sorted(_LEDGER_BY_SESSION.keys()):
                 rebuild_pending_approvals(sid)
 
-        rows = [dict(item) for item in _APPROVALS_BY_ID.values()]
+        rows = [deepcopy(item) for item in _APPROVALS_BY_ID.values()]
 
     if session_id:
         rows = [row for row in rows if row.get("session_id") == session_id]
@@ -208,7 +210,7 @@ def get_approval(approval_id: str) -> dict[str, Any] | None:
         return None
     with _RUNTIME_LOCK:
         row = _APPROVALS_BY_ID.get(normalized)
-        return dict(row) if row is not None else None
+        return deepcopy(row) if row is not None else None
 
 
 def decide_approval(
@@ -226,7 +228,7 @@ def decide_approval(
     note_text = str(notes or "").strip()
     resolution: dict[str, Any] = {"decision": str(decision or "").strip().lower()}
     if edited_proposal is not None:
-        resolution["edited_proposal"] = dict(edited_proposal)
+        resolution["edited_proposal"] = deepcopy(edited_proposal)
     if note_text:
         resolution["notes"] = note_text
 
@@ -236,37 +238,37 @@ def decide_approval(
             raise ValueError("approval not found")
 
         current_status = _normalize_status(str(existing.get("status") or "PENDING"))
-        current_resolution = dict(existing.get("resolution") or {})
+        current_resolution = deepcopy(existing.get("resolution") or {})
 
         if current_status != "PENDING":
             if current_status == target_status and current_resolution == resolution:
-                return {"status": "idempotent", "approval": dict(existing)}
+                return {"status": "idempotent", "approval": deepcopy(existing)}
             raise RuntimeError("approval already resolved with a conflicting decision")
 
         now = utc_iso_now()
         existing["status"] = target_status
-        existing["resolution"] = dict(resolution)
+        existing["resolution"] = deepcopy(resolution)
         existing["updated_at"] = now
         if target_status != "PENDING":
             existing["resolved_at"] = now
         _APPROVALS_BY_ID[normalized_id] = existing
 
-    append_event(
-        session_id=str(existing.get("session_id") or ""),
-        trace_id=str(existing.get("trace_id") or ""),
-        request_id=existing.get("request_ref"),
-        event_type="approval.decided",
-        body={
-            "approval_id": normalized_id,
-            "proposal_digest": str(existing.get("proposal_digest") or ""),
-            "decision_digest": str(existing.get("admission_decision_digest") or ""),
-            "status": target_status,
-            "resolution": dict(resolution),
-        },
-    )
+        append_event(
+            session_id=str(existing.get("session_id") or ""),
+            trace_id=str(existing.get("trace_id") or ""),
+            request_id=existing.get("request_ref"),
+            event_type="approval.decided",
+            body={
+                "approval_id": normalized_id,
+                "proposal_digest": str(existing.get("proposal_digest") or ""),
+                "decision_digest": str(existing.get("admission_decision_digest") or ""),
+                "status": target_status,
+                "resolution": deepcopy(resolution),
+            },
+        )
 
-    rebuild_pending_approvals(str(existing.get("session_id") or ""))
-    return {"status": "resolved", "approval": dict(_APPROVALS_BY_ID[normalized_id])}
+        rebuild_pending_approvals(str(existing.get("session_id") or ""))
+        return {"status": "resolved", "approval": deepcopy(_APPROVALS_BY_ID[normalized_id])}
 
 
 __all__ = [

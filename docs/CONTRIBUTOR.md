@@ -85,6 +85,13 @@ fixed ZIP metadata. Both Quality jobs enforce source/archive agreement.
 - Interactive project setup: `python -m orket.interfaces.setup_cli`
 - Test command: `python -m pytest -q`
 
+Async Kernel embeddings use engine async mutation/approval methods; the API
+routes synchronous Kernel work through application-owned workers. Retain the
+caller until required publication settles, including cancellation or timeout.
+Cancellation can follow an effect; inspect retained state before retrying.
+Owned JSON/environment and partial-publication limits live in
+`docs/specs/KERNEL_PUBLICATION_INPUTS.md`.
+
 Prompt commands use `python -m orket.interfaces.prompts_cli --root <project> ...`.
 Prompt reads share model-file ownership with writers and can create native lock
 identities; tests should copy canonical assets into their own temporary roots.

@@ -5,6 +5,20 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.76] - 2026-09-21
+
+### Fixed
+- Detach Kernel requests, admission/approval observations and ledger bodies from retained state.
+- Serialize same-key commit publication and require exact accepted admission/approval identity.
+- Own asynchronous Kernel workers and required SQLite publication through cancellation, timeout and shutdown.
+- Capture immutable operator environment before worker admission; preserve credential expiry observation after its lock.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Returned JSON cannot edit retained authority; rejected or foreign authority cannot commit.
+- Cancellation can follow a completed effect; failed publication can leave partial state and requires inspection.
+- Contract: `docs/architecture/CONTRACT_DELTA_KERNEL_STATE_OWNERSHIP_D_2026-09-21.md`.
+
 ## [0.6.75] - 2026-09-21
 
 ### Fixed

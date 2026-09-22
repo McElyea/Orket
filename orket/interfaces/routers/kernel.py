@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from functools import partial
 from typing import Any, cast
 
 from fastapi import APIRouter, HTTPException, Request
@@ -9,6 +10,7 @@ from pydantic import BaseModel, Field
 from orket.application.services.kernel_action_pending_approval_reservation import (
     publish_pending_kernel_approval_hold_if_needed,
 )
+from orket.application.services.kernel_invocation_service import invoke_kernel, own_kernel_publication
 from orket.interfaces.routers.approvals import build_approvals_router
 
 
@@ -107,7 +109,7 @@ def build_kernel_router(
     @router.post("/kernel/lifecycle")
     async def kernel_lifecycle(req: KernelLifecycleRequest) -> Any:
         engine = engine_getter()
-        return engine.kernel_run_lifecycle(
+        return await invoke_kernel(engine.kernel_run_lifecycle,
             workflow_id=req.workflow_id,
             execute_turn_requests=req.execute_turn_requests,
             finish_outcome=req.finish_outcome,
@@ -117,7 +119,7 @@ def build_kernel_router(
     @router.post("/kernel/compare")
     async def kernel_compare(req: KernelCompareRequest) -> Any:
         engine = engine_getter()
-        return engine.kernel_compare_runs(
+        return await invoke_kernel(engine.kernel_compare_runs,
             {
                 "contract_version": "kernel_api/v1",
                 "run_a": req.run_a,
@@ -129,7 +131,7 @@ def build_kernel_router(
     @router.post("/kernel/replay")
     async def kernel_replay(req: KernelReplayRequest) -> Any:
         engine = engine_getter()
-        return engine.kernel_replay_run(
+        return await invoke_kernel(engine.kernel_replay_run,
             {
                 "contract_version": "kernel_api/v1",
                 "run_descriptor": req.run_descriptor,
@@ -140,7 +142,7 @@ def build_kernel_router(
     async def kernel_projection_pack(req: KernelProjectionPackRequest) -> Any:
         engine = engine_getter()
         try:
-            return engine.kernel_projection_pack(
+            return await invoke_kernel(engine.kernel_projection_pack,
                 {
                     "contract_version": "kernel_api/v1",
                     "session_id": req.session_id,
@@ -169,26 +171,19 @@ def build_kernel_router(
             }
             if callable(handler):
                 return await handler(payload)
-            response = engine.kernel_admit_proposal(
-                {
-                    **payload,
-                }
-            )
-            await publish_pending_kernel_approval_hold_if_needed(
-                engine=engine,
-                session_id=req.session_id,
-                trace_id=req.trace_id,
-                proposal=req.proposal,
-                response=response,
-            )
-            return await _augment_kernel_response_with_control_plane_refs(
-                engine=engine,
-                response=response,
-                session_id=req.session_id,
-                trace_id=req.trace_id,
-            )
+            return await own_kernel_publication(partial(_admit_sync_handler, engine, payload))
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    async def _admit_sync_handler(engine: Any, payload: dict[str, Any]) -> dict[str, Any]:
+        response = await invoke_kernel(engine.kernel_admit_proposal, payload)
+        await publish_pending_kernel_approval_hold_if_needed(
+            engine=engine, session_id=payload["session_id"], trace_id=payload["trace_id"],
+            proposal=payload["proposal"], response=response,
+        )
+        return await _augment_kernel_response_with_control_plane_refs(
+            engine=engine, response=response, session_id=payload["session_id"], trace_id=payload["trace_id"],
+        )
 
     @router.post("/kernel/commit-proposal")
     async def kernel_commit_proposal(req: KernelCommitProposalRequest) -> Any:
@@ -214,7 +209,7 @@ def build_kernel_router(
             }
             if callable(handler):
                 return await handler(payload)
-            response = engine.kernel_commit_proposal(
+            response = await invoke_kernel(engine.kernel_commit_proposal,
                 {
                     **payload,
                 }
@@ -245,7 +240,7 @@ def build_kernel_router(
             }
             if callable(handler):
                 return await handler(payload)
-            response = engine.kernel_end_session(
+            response = await invoke_kernel(engine.kernel_end_session,
                 {
                     **payload,
                 }
@@ -268,7 +263,7 @@ def build_kernel_router(
     ) -> Any:
         engine = engine_getter()
         try:
-            return engine.kernel_list_ledger_events(
+            return await invoke_kernel(engine.kernel_list_ledger_events,
                 {
                     "contract_version": "kernel_api/v1",
                     "session_id": session_id,
@@ -284,7 +279,7 @@ def build_kernel_router(
     async def kernel_rebuild_pending_approvals(req: KernelRebuildPendingApprovalsRequest) -> Any:
         engine = engine_getter()
         try:
-            return engine.kernel_rebuild_pending_approvals(
+            return await invoke_kernel(engine.kernel_rebuild_pending_approvals,
                 {
                     "contract_version": "kernel_api/v1",
                     "session_id": req.session_id,
@@ -304,7 +299,7 @@ def build_kernel_router(
             }
             response = cast(
                 dict[str, Any],
-                engine.kernel_replay_action_lifecycle(
+                await invoke_kernel(engine.kernel_replay_action_lifecycle,
                     {
                         **payload,
                     }
@@ -326,7 +321,7 @@ def build_kernel_router(
         try:
             response = cast(
                 dict[str, Any],
-                engine.kernel_audit_action_lifecycle(
+                await invoke_kernel(engine.kernel_audit_action_lifecycle,
                     {
                         "contract_version": "kernel_api/v1",
                         "session_id": session_id,

@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-import os
+from functools import partial
 from typing import Any
 
 from orket.application.services.governed_turn_tool_approval_continuation_service import (
     GovernedTurnToolApprovalContinuationService,
 )
+from orket.application.services.kernel_invocation_inputs import capture_kernel_environment
 from orket.application.services.pending_gate_control_plane_operator_service import (
     PendingGateControlPlaneOperatorService,
 )
@@ -16,11 +17,6 @@ from orket.application.services.tool_approval_control_plane_operator_service imp
 from orket.application.services.tool_approval_control_plane_reservation_service import (
     ToolApprovalControlPlaneReservationService,
 )
-from orket.kernel.v1.nervous_system_runtime_extensions import (
-    decide_approval_v1,
-    get_approval_v1,
-    list_approvals_v1,
-)
 from orket.orchestration.approval_control_plane_read_model import (
     final_truth_summary,
     operator_action_summary,
@@ -30,6 +26,11 @@ from orket.orchestration.approval_control_plane_read_model import (
     target_resource_summary,
     target_run_summary,
     target_step_summary,
+)
+from orket.orchestration.engine_kernel_approvals import (
+    decide_kernel_approval,
+    get_kernel_approval,
+    list_kernel_approvals,
 )
 
 
@@ -96,7 +97,7 @@ def _normalize_approval_row(row: dict[str, Any]) -> dict[str, Any]:
 
 
 def _nervous_system_enabled() -> bool:
-    raw = str(os.environ.get("ORKET_ENABLE_NERVOUS_SYSTEM") or "").strip().lower()
+    raw = str(capture_kernel_environment().values.get("ORKET_ENABLE_NERVOUS_SYSTEM") or "").strip().lower()
     return raw in {"1", "true", "yes", "on"}
 
 
@@ -182,13 +183,8 @@ async def list_approvals(
 ) -> list[dict[str, Any]]:
     normalized_status = _normalize_packet1_status_filter(status)
     if _nervous_system_enabled():
-        items = list_approvals_v1(
-            status=normalized_status,
-            session_id=session_id,
-            request_id=request_id,
-            limit=limit,
-        )
-        return [await _enrich_approval_row(engine, item) for item in items]
+        return await list_kernel_approvals(enrich=partial(_enrich_approval_row, engine),
+            status=normalized_status, session_id=session_id, request_id=request_id, limit=limit)
 
     repo_status = None
     if normalized_status:
@@ -207,10 +203,7 @@ async def list_approvals(
 
 async def get_approval(engine: Any, approval_id: str) -> dict[str, Any] | None:
     if _nervous_system_enabled():
-        approval = get_approval_v1(approval_id)
-        if approval is None:
-            return None
-        return await _enrich_approval_row(engine, approval)
+        return await get_kernel_approval(approval_id, enrich=partial(_enrich_approval_row, engine))
 
     normalized_id = str(approval_id or "").strip()
     if not normalized_id:
@@ -232,23 +225,10 @@ async def decide_approval(
     operator_actor_ref: str | None = None,
 ) -> dict[str, Any]:
     if _nervous_system_enabled():
-        existing = await get_approval(engine, approval_id)
-        result = decide_approval_v1(
-            approval_id=approval_id,
-            decision=decision,
-            edited_proposal=edited_proposal,
-            notes=notes,
-        )
-        await _publish_resolution_control_plane_side_effects(
-            engine=engine,
-            previous=existing,
-            result=result,
-            operator_actor_ref=operator_actor_ref,
-        )
-        approval = result.get("approval")
-        if isinstance(approval, dict):
-            result["approval"] = await _enrich_approval_row(engine, approval)
-        return result
+        return await decide_kernel_approval(approval_id=approval_id, decision=decision,
+            edited_proposal=edited_proposal, notes=notes, operator_actor_ref=operator_actor_ref,
+            enrich=partial(_enrich_approval_row, engine),
+            publish=partial(_publish_resolution_control_plane_side_effects, engine=engine))
 
     existing = await get_approval(engine, approval_id)
     if not existing:

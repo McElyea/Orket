@@ -1,19 +1,20 @@
 from __future__ import annotations
 
+from copy import deepcopy
 from typing import Any
 
+from orket.application.services.kernel_action_input_service import capture_kernel_request
 from orket.application.services.runtime_input_service import RuntimeInputService
 
 from .canonical import digest_of
 from .nervous_system_admission import admission_from_proposal
-from .nervous_system_approvals import create_approval_request, get_approval
+from .nervous_system_approvals import create_approval_request
+from .nervous_system_commit import commit_proposal_v1
 from .nervous_system_contract import (
     ADMISSION_DECISIONS_V1,
-    COMMIT_STATUSES_V1,
     NERVOUS_SYSTEM_PURPOSE_ACTION_PATH,
     ordered_reason_codes_v1,
 )
-from .nervous_system_leaks import find_leak_hits, sanitize_text
 from .nervous_system_policy import (
     NervousSystemPolicyInputs,
     capture_nervous_system_policy_inputs,
@@ -21,15 +22,12 @@ from .nervous_system_policy import (
 )
 from .nervous_system_runtime_state import (
     _ADMISSIONS_BY_PROPOSAL,
-    _COMMIT_RESULTS_BY_KEY,
     _RUNTIME_LOCK,
     CONTRACT_VERSION,
     append_event,
     get_current_canonical_state_digest,
     get_str,
-    has_admission_event,
     normalized_optional_str,
-    set_current_canonical_state_digest,
     utc_iso_now,
 )
 from .nervous_system_tokens import invalidate_tokens_for_session
@@ -38,6 +36,7 @@ from .outbound_policy_gate import apply_outbound_policy_gate
 
 def projection_pack_v1(request: dict[str, Any]) -> dict[str, Any]:
     require_nervous_system_enabled()
+    request = capture_kernel_request(request)
     if request.get("contract_version") != CONTRACT_VERSION:
         raise ValueError("contract_version must be kernel_api/v1")
 
@@ -132,6 +131,7 @@ def _admit_proposal_internal(
     proposal: dict[str, Any],
     policy_inputs: NervousSystemPolicyInputs,
 ) -> dict[str, Any]:
+    proposal = capture_kernel_request(proposal)
     proposal_digest = digest_of(proposal)
     decision, reason_codes, leak_hits = admission_from_proposal(proposal, policy_inputs)
     if decision not in ADMISSION_DECISIONS_V1:
@@ -207,7 +207,7 @@ def _admit_proposal_internal(
         )
         response["approval_id"] = approval["approval_id"]
 
-    return response
+    return deepcopy(response)
 
 
 def admit_proposal_v1(
@@ -215,6 +215,7 @@ def admit_proposal_v1(
 ) -> dict[str, Any]:
     selected = capture_nervous_system_policy_inputs() if policy_inputs is None else policy_inputs
     require_nervous_system_enabled(selected)
+    request = capture_kernel_request(request)
     if request.get("contract_version") != CONTRACT_VERSION:
         raise ValueError("contract_version must be kernel_api/v1")
 
@@ -234,165 +235,11 @@ def admit_proposal_v1(
     )
 
 
-def commit_proposal_v1(request: dict[str, Any]) -> dict[str, Any]:
-    require_nervous_system_enabled()
-    if request.get("contract_version") != CONTRACT_VERSION:
-        raise ValueError("contract_version must be kernel_api/v1")
-
-    session_id = get_str(request, "session_id", required=True)
-    trace_id = get_str(request, "trace_id", required=True)
-    request_id = get_str(request, "request_id", required=False)
-    proposal_digest = get_str(request, "proposal_digest", required=True)
-    admission_decision_digest = get_str(request, "admission_decision_digest", required=True)
-    approval_id = normalized_optional_str(request.get("approval_id"))
-    execution_result_digest = normalized_optional_str(request.get("execution_result_digest"))
-    commit_key = (session_id, trace_id, proposal_digest, admission_decision_digest, approval_id, execution_result_digest)
-
-    with _RUNTIME_LOCK:
-        existing = _COMMIT_RESULTS_BY_KEY.get(commit_key)
-        if existing is not None:
-            return dict(existing)
-
-    status = "COMMITTED"
-    result_reason_codes: list[str] = []
-    reported_sanitization_digest = normalized_optional_str(request.get("sanitization_digest"))
-    execution_result_payload = request.get("execution_result_payload")
-    execution_result_schema_valid = request.get("execution_result_schema_valid")
-    execution_error_reason_code = normalized_optional_str(request.get("execution_error_reason_code")).upper()
-    result_validation_performed = False
-    # Top-level entry point: return explicit ERROR only for internal failures.
-    try:
-        admission = _ADMISSIONS_BY_PROPOSAL.get((session_id, proposal_digest))
-        if (
-            not admission
-            or admission.get("decision_digest") != admission_decision_digest
-            or not has_admission_event(
-                session_id=session_id,
-                proposal_digest=proposal_digest,
-                admission_decision_digest=admission_decision_digest,
-            )
-        ):
-            status = "REJECTED_PRECONDITION"
-        else:
-            decision = str(admission["admission_decision"]["decision"])
-            if decision == "REJECT":
-                status = "REJECTED_POLICY"
-            elif decision == "NEEDS_APPROVAL":
-                approval = get_approval(approval_id) if approval_id else None
-                if not approval or str(approval.get("status") or "") != "APPROVED":
-                    status = "REJECTED_APPROVAL_MISSING"
-            if status == "COMMITTED" and bool(request.get("revalidate_policy_forbidden")):
-                status = "REJECTED_POLICY"
-
-            if execution_result_payload is not None:
-                result_validation_performed = True
-            if execution_result_schema_valid is not None:
-                result_validation_performed = True
-            if reported_sanitization_digest:
-                result_validation_performed = True
-
-            if status == "COMMITTED" and execution_result_payload is not None:
-                leak_hits = find_leak_hits(execution_result_payload)
-                if leak_hits:
-                    result_reason_codes.append("RESULT_LEAK_DETECTED")
-                    append_event(
-                        session_id=session_id,
-                        trace_id=trace_id,
-                        request_id=request_id,
-                        event_type="incident.detected",
-                        body={
-                            "stage": "action_result",
-                            "proposal_digest": proposal_digest,
-                            "reason_codes": ["RESULT_LEAK_DETECTED"],
-                            "detector_hits": leak_hits,
-                        },
-                    )
-                    if bool(request.get("block_result_leaks")):
-                        status = "REJECTED_POLICY"
-                    elif not reported_sanitization_digest and isinstance(execution_result_payload, str):
-                        reported_sanitization_digest = digest_of({"sanitized": sanitize_text(execution_result_payload)})
-                        result_validation_performed = True
-
-            if status == "COMMITTED" and execution_result_schema_valid is False:
-                result_reason_codes.append("RESULT_SCHEMA_INVALID")
-                status = "REJECTED_POLICY"
-
-            if status == "COMMITTED" and execution_error_reason_code in {
-                "TOKEN_INVALID",
-                "TOKEN_EXPIRED",
-                "TOKEN_REPLAY",
-            }:
-                result_reason_codes.append(execution_error_reason_code)
-                status = "REJECTED_POLICY"
-    except Exception:
-        status = "ERROR"
-
-    if status not in COMMIT_STATUSES_V1:
-        status = "ERROR"
-
-    if status != "ERROR" and execution_result_payload is not None:
-        append_event(
-            session_id=session_id,
-            trace_id=trace_id,
-            request_id=request_id,
-            event_type="action.executed",
-            body={
-                "proposal_digest": proposal_digest,
-                "execution_result_digest": execution_result_digest or None,
-                "status": "OBSERVED",
-            },
-        )
-
-    if result_validation_performed and status != "ERROR":
-        append_event(
-            session_id=session_id,
-            trace_id=trace_id,
-            request_id=request_id,
-            event_type="action.result_validated",
-            body={
-                "proposal_digest": proposal_digest,
-                "execution_result_digest": execution_result_digest or None,
-                "status": "PASS" if status == "COMMITTED" else "FAIL",
-                "reason_codes": ordered_reason_codes_v1(result_reason_codes),
-                "sanitization_digest": reported_sanitization_digest or None,
-            },
-        )
-
-    canonical_state_digest_after = get_str(request, "canonical_state_digest_after", required=False)
-    if canonical_state_digest_after and status == "COMMITTED":
-        set_current_canonical_state_digest(session_id, canonical_state_digest_after)
-
-    body = {
-        "proposal_digest": proposal_digest,
-        "admission_decision_digest": admission_decision_digest,
-        "approval_id": approval_id or None,
-        "execution_result_digest": execution_result_digest or None,
-        "sanitization_digest": reported_sanitization_digest or None,
-        "status": status,
-    }
-    commit_event = append_event(
-        session_id=session_id,
-        trace_id=trace_id,
-        request_id=request_id,
-        event_type="commit.recorded",
-        body=body,
-    )
-    response = {
-        "contract_version": CONTRACT_VERSION,
-        "status": status,
-        "commit_event_digest": commit_event["event_digest"],
-        "canonical_state_digest": get_current_canonical_state_digest(session_id),
-    }
-    if reported_sanitization_digest:
-        response["sanitization_digest"] = reported_sanitization_digest
-
-    with _RUNTIME_LOCK:
-        _COMMIT_RESULTS_BY_KEY[commit_key] = dict(response)
-    return response
 
 
 def end_session_v1(request: dict[str, Any]) -> dict[str, Any]:
     require_nervous_system_enabled()
+    request = capture_kernel_request(request)
     observed_at = RuntimeInputService().utc_now()
     if request.get("contract_version") != CONTRACT_VERSION:
         raise ValueError("contract_version must be kernel_api/v1")

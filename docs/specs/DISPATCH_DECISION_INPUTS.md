@@ -1,8 +1,8 @@
 # Dispatch decision input ownership
 
-Status: Active contract for the 0.6.48 candidate
+Status: Active contract since 0.6.48; scoped acceptance recorded in the architectural-truth plan
 Owner: Orket Core
-Last updated: 2026-09-20
+Last updated: 2026-09-21
 
 Application dispatch captures immutable values before invoking each covered strategy.
 `PlanningInput`, `PlanningCardInput`, `RoutingInput` and `RoutingSeatInput` are

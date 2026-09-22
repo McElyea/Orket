@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from functools import partial
 from typing import Any
 
 from orket.application.services.kernel_action_control_plane_resource_lifecycle import reservation_id_for_run
@@ -7,6 +8,7 @@ from orket.application.services.kernel_action_control_plane_support import (
     run_id_for as kernel_action_run_id_for,
 )
 from orket.application.services.kernel_action_input_service import capture_kernel_request
+from orket.application.services.kernel_invocation_service import invoke_kernel, own_kernel_publication
 from orket.application.services.tool_approval_control_plane_reservation_service import (
     ToolApprovalControlPlaneReservationService,
 )
@@ -49,6 +51,18 @@ class KernelAsyncControlPlaneService:
             publication=control_plane_publication
         )
 
+    async def admit_proposal_async(self, request: dict[str, Any]) -> dict[str, Any]:
+        captured = capture_kernel_request(request)
+        return await own_kernel_publication(partial(self._admit_proposal_owned, captured))
+
+    async def commit_proposal_async(self, request: dict[str, Any]) -> dict[str, Any]:
+        captured = capture_kernel_request(request)
+        return await own_kernel_publication(partial(self._commit_proposal_owned, captured))
+
+    async def end_session_async(self, request: dict[str, Any]) -> dict[str, Any]:
+        captured = capture_kernel_request(request)
+        return await own_kernel_publication(partial(self._end_session_owned, captured))
+
     async def _augment_kernel_response(
         self,
         *,
@@ -59,11 +73,13 @@ class KernelAsyncControlPlaneService:
         view_service = self.kernel_action_control_plane_view
         if view_service is None:
             return response
-        return dict(await view_service.augment_kernel_response(
-            response=response,
-            session_id=session_id,
-            trace_id=trace_id,
-        ))
+        return dict(
+            await view_service.augment_kernel_response(
+                response=response,
+                session_id=session_id,
+                trace_id=trace_id,
+            )
+        )
 
     async def _publish_pending_kernel_approval_hold_if_needed(
         self,
@@ -98,16 +114,17 @@ class KernelAsyncControlPlaneService:
             control_plane_target_ref=kernel_action_run_id_for(session_id=session_id, trace_id=trace_id),
         )
 
-    async def admit_proposal_async(self, request: dict[str, Any]) -> dict[str, Any]:
+    async def _admit_proposal_owned(self, request: dict[str, Any]) -> dict[str, Any]:
         request = capture_kernel_request(request)
-        response = self.gateway_facade.admit_proposal(request)
-        ledger = self.gateway_facade.list_ledger_events(
+        response = await invoke_kernel(self.gateway_facade.admit_proposal, request)
+        ledger = await invoke_kernel(
+            self.gateway_facade.list_ledger_events,
             {
                 "contract_version": "kernel_api/v1",
                 "session_id": request.get("session_id"),
                 "trace_id": request.get("trace_id"),
                 "limit": 200,
-            }
+            },
         )
         run, _attempt = await self.kernel_action_control_plane.record_admission(
             request=request,
@@ -137,16 +154,17 @@ class KernelAsyncControlPlaneService:
             }
         return response
 
-    async def commit_proposal_async(self, request: dict[str, Any]) -> dict[str, Any]:
+    async def _commit_proposal_owned(self, request: dict[str, Any]) -> dict[str, Any]:
         request = capture_kernel_request(request)
-        response = self.gateway_facade.commit_proposal(request)
-        ledger = self.gateway_facade.list_ledger_events(
+        response = await invoke_kernel(self.gateway_facade.commit_proposal, request)
+        ledger = await invoke_kernel(
+            self.gateway_facade.list_ledger_events,
             {
                 "contract_version": "kernel_api/v1",
                 "session_id": request.get("session_id"),
                 "trace_id": request.get("trace_id"),
                 "limit": 400,
-            }
+            },
         )
         await self.kernel_action_control_plane.record_commit(
             request=request,
@@ -159,30 +177,37 @@ class KernelAsyncControlPlaneService:
             trace_id=str(request.get("trace_id") or ""),
         )
 
-    async def end_session_async(self, request: dict[str, Any]) -> dict[str, Any]:
+    async def _end_session_owned(self, request: dict[str, Any]) -> dict[str, Any]:
         request = capture_kernel_request(request)
-        response = self.gateway_facade.end_session(request)
-        ledger = self.gateway_facade.list_ledger_events(
+        response = await invoke_kernel(self.gateway_facade.end_session, request)
+        ledger = await invoke_kernel(
+            self.gateway_facade.list_ledger_events,
             {
                 "contract_version": "kernel_api/v1",
                 "session_id": request.get("session_id"),
                 "trace_id": request.get("trace_id"),
                 "limit": 200,
-            }
+            },
         )
         closed = await self.kernel_action_control_plane.record_session_end(
             request=request,
             response=response,
             ledger_items=list(ledger.get("items") or []),
         )
+        await self._publish_session_end_operator(request, response, ledger, closed)
+        return await self._augment_kernel_response(
+            response=response,
+            session_id=str(request.get("session_id") or ""),
+            trace_id=str(request.get("trace_id") or ""),
+        )
+
+    async def _publish_session_end_operator(self, request, response, ledger, closed) -> None:
         operator_actor_ref = str(request.get("operator_actor_ref") or "").strip()
         attestation_scope = str(request.get("attestation_scope") or "").strip()
         attestation_payload_raw = request.get("attestation_payload")
         attestation_payload = dict(attestation_payload_raw) if isinstance(attestation_payload_raw, dict) else {}
         if attestation_scope and not operator_actor_ref:
-            raise ValueError(
-                "kernel end-session attestation requires authenticated operator actor reference"
-            )
+            raise ValueError("kernel end-session attestation requires authenticated operator actor reference")
         if closed is not None and operator_actor_ref:
             run, _attempt, _final_truth = closed
             session_end_timestamp = next(
@@ -213,8 +238,3 @@ class KernelAsyncControlPlaneService:
                     attestation_scope=attestation_scope,
                     attestation_payload=attestation_payload,
                 )
-        return await self._augment_kernel_response(
-            response=response,
-            session_id=str(request.get("session_id") or ""),
-            trace_id=str(request.get("trace_id") or ""),
-        )

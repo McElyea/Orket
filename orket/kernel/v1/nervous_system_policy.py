@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-import os
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
+
+from orket.application.services.kernel_invocation_inputs import capture_kernel_environment
 
 
 @dataclass(frozen=True)
@@ -30,7 +31,7 @@ def _flag(raw: str | None, *, default: bool = False) -> bool:
 def capture_nervous_system_policy_inputs(
     *, environment: Mapping[str, str] | None = None,
 ) -> NervousSystemPolicyInputs:
-    observed = dict(os.environ if environment is None else environment)
+    observed = capture_kernel_environment(environment).values
     return NervousSystemPolicyInputs(
         enabled=_flag(observed.get("ORKET_ENABLE_NERVOUS_SYSTEM")),
         allow_pre_resolved_flags=_flag(observed.get("ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS")),

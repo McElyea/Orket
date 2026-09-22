@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-import os
 from collections.abc import Mapping
 
+from orket.application.services.kernel_invocation_inputs import capture_kernel_environment
 from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.core.contracts.kernel_credentials import CredentialIssueInputs, CredentialObservation
 
 
 def capture_credential_key(*, environment: Mapping[str, str] | None = None) -> bytes:
-    observed = dict(os.environ if environment is None else environment)
+    observed = capture_kernel_environment(environment).values
     configured = str(observed.get("ORKET_NERVOUS_SYSTEM_TOKEN_HMAC_KEY") or "").strip()
     # Preserve the documented development behavior; this is not production key provisioning.
     return configured.encode("utf-8") if configured else b"orket-nervous-system-dev-hmac-key"

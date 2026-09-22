@@ -60,6 +60,16 @@ failure can leave a record transition; global Kernel state remains in memory.
 Migration, synchronous ownership and partial-effect limits:
 `docs/architecture/CONTRACT_DELTA_KERNEL_CREDENTIAL_INPUTS_D_2026-09-21.md`.
 
+Kernel public JSON owns request, state and observation values separately.
+Credential issuance and serialized commit share one pure exact-identity
+authorization rule; successful same-key commits reuse retained publication. Application
+async mutation and approval paths own native workers plus required SQLite
+publication through interruption. Each invocation captures immutable operator
+environment before worker admission and shares it with nested workers.
+Partial effects can survive publication failure or cancellation; Kernel maps
+are still process-local, without durable transactions or restart recovery.
+Contract, scoped proof and migration: `docs/architecture/CONTRACT_DELTA_KERNEL_STATE_OWNERSHIP_D_2026-09-21.md`.
+
 The runtime CLI captures engine inputs after startup and owns engine construction
 through interruption. Board/replay reads, manifest output and native path
 resolution retain their workers; a completed untransferred engine is closed.

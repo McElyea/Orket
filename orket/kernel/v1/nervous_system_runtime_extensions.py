@@ -11,6 +11,7 @@ from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.core.contracts.kernel_credentials import CredentialIssueInputs, CredentialObservation
 
 from .nervous_system_approvals import decide_approval, get_approval, list_approvals, rebuild_pending_approvals
+from .nervous_system_authorization import authorization_refusal_for_admission
 from .nervous_system_policy import require_nervous_system_enabled
 from .nervous_system_runtime_state import (
     _ADMISSIONS_BY_PROPOSAL,
@@ -258,15 +259,13 @@ def _issue_credential_token_locked(request: dict[str, Any], inputs: CredentialIs
         raise ValueError("invalid proposal_digest/admission_decision_digest binding")
 
     admission_decision = str((admission.get("admission_decision") or {}).get("decision") or "")
-    if admission_decision not in {"ACCEPT_TO_UNIFY", "NEEDS_APPROVAL"}:
+    approval_id = get_str(request, "approval_id", required=False) if admission_decision == "NEEDS_APPROVAL" else None
+    refusal = authorization_refusal_for_admission(admission=admission, session_id=session_id,
+        proposal_digest=proposal_digest, decision_digest=decision_digest, approval_id=approval_id)
+    if refusal == "REJECTED_POLICY":
         raise ValueError("credential token requires an accepted admission")
-    if admission_decision == "NEEDS_APPROVAL":
-        approval_id = get_str(request, "approval_id", required=False)
-        approval = get_approval(approval_id) if approval_id else None
-        if not approval or (approval.get("status"), approval.get("session_id"),
-            approval.get("proposal_digest"), approval.get("admission_decision_digest")) != (
-                "APPROVED", session_id, proposal_digest, decision_digest):
-            raise ValueError("approved approval_id is required before issuing a credential token")
+    if refusal:
+        raise ValueError("approved approval_id is required before issuing a credential token")
 
     scope_json = request.get("scope_json")
     if not isinstance(scope_json, dict):

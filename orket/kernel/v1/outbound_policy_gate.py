@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import json
-import os
 import re
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+
+from orket.application.services.kernel_invocation_inputs import capture_kernel_environment
 
 from .nervous_system_leaks import sanitize_text
 
@@ -105,7 +106,7 @@ def load_outbound_policy_config_file(path: Path | str) -> dict[str, Any]:
 
 
 def load_outbound_policy_config(config: Mapping[str, Any] | None = None) -> dict[str, Any]:
-    return merge_outbound_policy_config(_environment_policy_config(os.environ), dict(config or {}))
+    return merge_outbound_policy_config(_environment_policy_config(capture_kernel_environment().values), dict(config or {}))
 
 
 def merge_outbound_policy_config(*configs: Mapping[str, Any] | None) -> dict[str, Any]:
@@ -176,7 +177,7 @@ def _path_is_configured(path: tuple[str, ...], configured_paths: tuple[str, ...]
         configured_parts = tuple(part for part in configured.split(".") if part)
         if len(configured_parts) != len(path):
             continue
-        if all(configured_part == "*" or configured_part == actual for configured_part, actual in zip(configured_parts, path)):
+        if all(configured_part == "*" or configured_part == actual for configured_part, actual in zip(configured_parts, path, strict=True)):
             return True
     return False
 
@@ -227,7 +228,7 @@ def _preserve_ledger_export_truth(original: Any, scrubbed: Any) -> tuple[Any, di
     scrubbed_events = [event for event in scrubbed.get("events", []) if isinstance(event, Mapping)]
     redacted_positions = {
         int(original_event.get("position"))
-        for original_event, scrubbed_event in zip(original_events, scrubbed_events)
+        for original_event, scrubbed_event in zip(original_events, scrubbed_events, strict=False)
         if dict(original_event) != dict(scrubbed_event)
     }
     if not redacted_positions:

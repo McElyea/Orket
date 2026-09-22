@@ -1,12 +1,12 @@
 # Dependency Graph Snapshot
 
-Generated: `2026-09-22T03:27:49.275139+00:00`
+Generated: `2026-09-22T04:14:24.499039+00:00`
 
 Generated from the canonical dependency policy; do not edit this view by hand.
 This is conservative static import evidence, not a runtime call graph or a core-purity proof.
 
 Collection: `True`. Policy verdict: `True`.
-Files: 1119; import sites: 3601; forbidden pairs: 0; analysis errors: 0; authority cycles: 0.
+Files: 1125; import sites: 3625; forbidden pairs: 0; analysis errors: 0; authority cycles: 0.
 
 ## Module classification
 
@@ -89,14 +89,14 @@ Side-effect-free adapter targets: none declared
 |---|---|---:|
 | `adapters` | `adapters` | 241 |
 | `adapters` | `core` | 141 |
-| `application` | `adapters` | 420 |
-| `application` | `application` | 1738 |
-| `application` | `core` | 764 |
+| `application` | `adapters` | 421 |
+| `application` | `application` | 1759 |
+| `application` | `core` | 765 |
 | `application` | `decision_nodes` | 4 |
 | `core` | `core` | 142 |
 | `decision_nodes` | `core` | 6 |
 | `decision_nodes` | `decision_nodes` | 2 |
-| `interfaces` | `application` | 98 |
+| `interfaces` | `application` | 99 |
 | `interfaces` | `interfaces` | 45 |
 
 ## Bounded dynamic routes
