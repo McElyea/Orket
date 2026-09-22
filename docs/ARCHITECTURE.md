@@ -312,6 +312,16 @@ admission, uniqueness enforcement or rollback. Migration and proof scope:
 `docs/specs/KERNEL_RUN_INPUTS.md` and
 `docs/architecture/CONTRACT_DELTA_KERNEL_RUN_INPUTS_D_2026-09-22.md`.
 
+Local Kernel state captures roots and immutable triplet bytes before effects.
+A shared classified filesystem adapter executes native operations; direct calls
+on a running event loop refuse. Missing/empty staging preserves committed data
+and advances only the ledger. Deletion requires an explicit staged tombstone.
+Invalid observed index/ledger state and cleanup failures remain visible; unresolved
+candidate/backup directories require recovery. Directory publication is not a
+crash-atomic transaction and failures are not rollback. Migration and exact scope:
+`docs/specs/KERNEL_STATE_EFFECTS.md` and
+`docs/architecture/CONTRACT_DELTA_KERNEL_STATE_EFFECTS_D_2026-09-22.md`.
+
 Driver async creation captures root, environment and settings before owned
 construction; direct synchronous construction refuses an event-loop thread.
 API chat and interactive CLI use shared runtime owners. Console reads settle

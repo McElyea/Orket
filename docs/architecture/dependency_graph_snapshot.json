@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-22T06:40:06.507836+00:00",
+  "generated_at": "2026-09-22T07:29:48.884155+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -462,6 +462,10 @@
       "orket.adapters.storage.kernel_capability_policy_reader": {
         "path": "orket/adapters/storage/kernel_capability_policy_reader.py",
         "sha256": "fcc42bf153ab10ea8bb7c6d699be3e8d2003d1a54cb5ef0296d2e2ce5ff55132"
+      },
+      "orket.adapters.storage.kernel_state_store": {
+        "path": "orket/adapters/storage/kernel_state_store.py",
+        "sha256": "95ffc1a275bd8ad0545401d809a93250f78d7cd20337f99febece6fb38d295a5"
       },
       "orket.adapters.storage.local_file_lock": {
         "path": "orket/adapters/storage/local_file_lock.py",
@@ -1427,6 +1431,10 @@
         "path": "orket/application/services/kernel_runtime_owner.py",
         "sha256": "abdb7880c63d30ac0bde99686e471d15f536c3c3ebd736c7f3e4ff9b264b5fd2"
       },
+      "orket.application.services.kernel_triplet_input_service": {
+        "path": "orket/application/services/kernel_triplet_input_service.py",
+        "sha256": "fd62a3425c9c44666855f25cfc9e0f1a0dd2405380feb854fe05404a7139b3fe"
+      },
       "orket.application.services.kernel_v1_gateway": {
         "path": "orket/application/services/kernel_v1_gateway.py",
         "sha256": "c2e8ba987983dd75a821be1feb587a96f649bd760f0a0a746043431385856b3e"
@@ -2375,6 +2383,10 @@
         "path": "orket/core/contracts/kernel_run_inputs.py",
         "sha256": "b2af3d3503f147e193032bab9771be5459215233475593c9d925bf2669f203c2"
       },
+      "orket.core.contracts.kernel_triplet": {
+        "path": "orket/core/contracts/kernel_triplet.py",
+        "sha256": "12aeb1b6820e7d6510f16d52c363e4f80a85412659b703d7a3a12906387d6632"
+      },
       "orket.core.contracts.local_file_lock": {
         "path": "orket/core/contracts/local_file_lock.py",
         "sha256": "80939dfd3297b2e0c6b505747cc14ee47bd10128743f026d8bf12058efb450aa"
@@ -3195,13 +3207,21 @@
         "path": "orket/kernel/v1/state/__init__.py",
         "sha256": "32b86f86178a2d1f718c352ec8a227387040dc40ad07609a82176ece1eb5cbd9"
       },
+      "orket.kernel.v1.state.layout": {
+        "path": "orket/kernel/v1/state/layout.py",
+        "sha256": "8617c5d67105cfc641dc15d5b87b7b4c727edbae3f7bd05a18da9baff9525860"
+      },
       "orket.kernel.v1.state.lsi": {
         "path": "orket/kernel/v1/state/lsi.py",
-        "sha256": "045ac11e496fef3d55752f17ff3fb92218fae6bcfba9a9f269c537cd6abdea0b"
+        "sha256": "f7e91b7750eb61b7231d59b5aaec499cc75dba270b5db4170c404300ef3c5aee"
       },
       "orket.kernel.v1.state.promotion": {
         "path": "orket/kernel/v1/state/promotion.py",
-        "sha256": "26db68fe5b510d605674e542166ba689be544a64e108c2beac64d7e25c9b1efc"
+        "sha256": "5916d2a3f0f83fe42a2d93f083c423cc6f81435caad3dc817dde0f419ae4c4ba"
+      },
+      "orket.kernel.v1.state.promotion_effects": {
+        "path": "orket/kernel/v1/state/promotion_effects.py",
+        "sha256": "b365b9d72948f138e820ccc0d615392bbcd1bac4eecdaa0ee01e12536de9a00a"
       },
       "orket.kernel.v1.validator": {
         "path": "orket/kernel/v1/validator.py",
@@ -5975,6 +5995,13 @@
         "target": "orket.adapters.execution.owned_io",
         "path": "orket/adapters/storage/kernel_capability_policy_reader.py",
         "line": 7,
+        "kind": "from"
+      },
+      {
+        "source": "orket.adapters.storage.kernel_state_store",
+        "target": "orket.adapters.execution.owned_io",
+        "path": "orket/adapters/storage/kernel_state_store.py",
+        "line": 8,
         "kind": "from"
       },
       {
@@ -12933,6 +12960,27 @@
         "target": "orket.core.contracts.kernel_observation",
         "path": "orket/application/services/kernel_runtime_owner.py",
         "line": 20,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.kernel_triplet_input_service",
+        "target": "orket.application.services.kernel_action_input_service",
+        "path": "orket/application/services/kernel_triplet_input_service.py",
+        "line": 5,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.kernel_triplet_input_service",
+        "target": "orket.core.contracts.kernel_triplet",
+        "path": "orket/application/services/kernel_triplet_input_service.py",
+        "line": 6,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.kernel_triplet_input_service",
+        "target": "orket.kernel.v1.canonical",
+        "path": "orket/application/services/kernel_triplet_input_service.py",
+        "line": 7,
         "kind": "from"
       },
       {
@@ -23870,22 +23918,169 @@
         "kind": "from"
       },
       {
-        "source": "orket.kernel.v1.state.lsi",
+        "source": "orket.kernel.v1.state.layout",
+        "target": "orket.adapters.storage.__init__",
+        "path": "orket/kernel/v1/state/layout.py",
+        "line": 7,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.state.layout",
+        "target": "orket.adapters.storage.kernel_state_store",
+        "path": "orket/kernel/v1/state/layout.py",
+        "line": 7,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.state.layout",
         "target": "orket.kernel.v1.canonical",
+        "path": "orket/kernel/v1/state/layout.py",
+        "line": 8,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.state.lsi",
+        "target": "orket.adapters.execution.owned_io",
+        "path": "orket/kernel/v1/state/lsi.py",
+        "line": 8,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.state.lsi",
+        "target": "orket.adapters.storage.__init__",
+        "path": "orket/kernel/v1/state/lsi.py",
+        "line": 9,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.state.lsi",
+        "target": "orket.adapters.storage.kernel_state_store",
+        "path": "orket/kernel/v1/state/lsi.py",
+        "line": 9,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.state.lsi",
+        "target": "orket.application.services.kernel_invocation_inputs",
         "path": "orket/kernel/v1/state/lsi.py",
         "line": 10,
         "kind": "from"
       },
       {
         "source": "orket.kernel.v1.state.lsi",
-        "target": "orket.kernel.v1.contracts",
+        "target": "orket.application.services.kernel_triplet_input_service",
         "path": "orket/kernel/v1/state/lsi.py",
         "line": 11,
         "kind": "from"
       },
       {
+        "source": "orket.kernel.v1.state.lsi",
+        "target": "orket.core.contracts.kernel_triplet",
+        "path": "orket/kernel/v1/state/lsi.py",
+        "line": 12,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.state.lsi",
+        "target": "orket.core.contracts.kernel_triplet",
+        "path": "orket/kernel/v1/state/lsi.py",
+        "line": 13,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.state.lsi",
+        "target": "orket.kernel.v1.contracts",
+        "path": "orket/kernel/v1/state/lsi.py",
+        "line": 14,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.state.lsi",
+        "target": "orket.kernel.v1.state.layout",
+        "path": "orket/kernel/v1/state/lsi.py",
+        "line": 16,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.state.lsi",
+        "target": "orket.kernel.v1.state.layout",
+        "path": "orket/kernel/v1/state/lsi.py",
+        "line": 21,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.state.lsi",
+        "target": "orket.kernel.v1.state.layout",
+        "path": "orket/kernel/v1/state/lsi.py",
+        "line": 24,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.state.lsi",
+        "target": "orket.kernel.v1.state.layout",
+        "path": "orket/kernel/v1/state/lsi.py",
+        "line": 27,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.state.lsi",
+        "target": "orket.kernel.v1.state.layout",
+        "path": "orket/kernel/v1/state/lsi.py",
+        "line": 30,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.state.lsi",
+        "target": "orket.kernel.v1.state.layout",
+        "path": "orket/kernel/v1/state/lsi.py",
+        "line": 33,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.state.lsi",
+        "target": "orket.kernel.v1.state.layout",
+        "path": "orket/kernel/v1/state/lsi.py",
+        "line": 36,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.state.lsi",
+        "target": "orket.kernel.v1.state.layout",
+        "path": "orket/kernel/v1/state/lsi.py",
+        "line": 39,
+        "kind": "from"
+      },
+      {
         "source": "orket.kernel.v1.state.promotion",
-        "target": "orket.kernel.v1.canonical",
+        "target": "orket.adapters.execution.owned_io",
+        "path": "orket/kernel/v1/state/promotion.py",
+        "line": 10,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.state.promotion",
+        "target": "orket.adapters.storage.__init__",
+        "path": "orket/kernel/v1/state/promotion.py",
+        "line": 11,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.state.promotion",
+        "target": "orket.adapters.storage.kernel_state_store",
+        "path": "orket/kernel/v1/state/promotion.py",
+        "line": 11,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.state.promotion",
+        "target": "orket.application.services.kernel_invocation_inputs",
+        "path": "orket/kernel/v1/state/promotion.py",
+        "line": 12,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.state.promotion",
+        "target": "orket.core.contracts.kernel_triplet",
         "path": "orket/kernel/v1/state/promotion.py",
         "line": 13,
         "kind": "from"
@@ -23895,6 +24090,83 @@
         "target": "orket.kernel.v1.contracts",
         "path": "orket/kernel/v1/state/promotion.py",
         "line": 14,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.state.promotion",
+        "target": "orket.kernel.v1.state.__init__",
+        "path": "orket/kernel/v1/state/promotion.py",
+        "line": 16,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.state.promotion",
+        "target": "orket.kernel.v1.state.promotion_effects",
+        "path": "orket/kernel/v1/state/promotion.py",
+        "line": 16,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.state.promotion",
+        "target": "orket.kernel.v1.state.layout",
+        "path": "orket/kernel/v1/state/promotion.py",
+        "line": 17,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.state.promotion",
+        "target": "orket.kernel.v1.state.layout",
+        "path": "orket/kernel/v1/state/promotion.py",
+        "line": 23,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.state.promotion",
+        "target": "orket.kernel.v1.state.layout",
+        "path": "orket/kernel/v1/state/promotion.py",
+        "line": 26,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.state.promotion",
+        "target": "orket.kernel.v1.state.layout",
+        "path": "orket/kernel/v1/state/promotion.py",
+        "line": 29,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.state.promotion",
+        "target": "orket.kernel.v1.state.layout",
+        "path": "orket/kernel/v1/state/promotion.py",
+        "line": 32,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.state.promotion_effects",
+        "target": "orket.adapters.storage.__init__",
+        "path": "orket/kernel/v1/state/promotion_effects.py",
+        "line": 7,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.state.promotion_effects",
+        "target": "orket.adapters.storage.kernel_state_store",
+        "path": "orket/kernel/v1/state/promotion_effects.py",
+        "line": 7,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.state.promotion_effects",
+        "target": "orket.core.contracts.kernel_triplet",
+        "path": "orket/kernel/v1/state/promotion_effects.py",
+        "line": 8,
+        "kind": "from"
+      },
+      {
+        "source": "orket.kernel.v1.state.promotion_effects",
+        "target": "orket.kernel.v1.state.layout",
+        "path": "orket/kernel/v1/state/promotion_effects.py",
+        "line": 10,
         "kind": "from"
       },
       {
@@ -30398,7 +30670,7 @@
         "forwarded_arguments": 2
       }
     ],
-    "files_scanned": 1134,
+    "files_scanned": 1139,
     "scan_roots": [
       "orket"
     ],
@@ -30489,6 +30761,7 @@
       "orket.adapters.storage.governed_agent_wake_repository_support": "adapters",
       "orket.adapters.storage.interaction_artifact_store": "adapters",
       "orket.adapters.storage.kernel_capability_policy_reader": "adapters",
+      "orket.adapters.storage.kernel_state_store": "adapters",
       "orket.adapters.storage.local_file_lock": "adapters",
       "orket.adapters.storage.model_score_reader": "adapters",
       "orket.adapters.storage.operation_commit_registry": "adapters",
@@ -30730,6 +31003,7 @@
       "orket.application.services.kernel_run_input_service": "application",
       "orket.application.services.kernel_runtime_lifetime": "application",
       "orket.application.services.kernel_runtime_owner": "application",
+      "orket.application.services.kernel_triplet_input_service": "application",
       "orket.application.services.kernel_v1_gateway": "application",
       "orket.application.services.local_model_factory": "application",
       "orket.application.services.local_project_vendor": "application",
@@ -30967,6 +31241,7 @@
       "orket.core.contracts.kernel_execution_evidence": "core",
       "orket.core.contracts.kernel_observation": "core",
       "orket.core.contracts.kernel_run_inputs": "core",
+      "orket.core.contracts.kernel_triplet": "core",
       "orket.core.contracts.local_file_lock": "core",
       "orket.core.contracts.local_prompting": "core",
       "orket.core.contracts.memory_inputs": "core",
@@ -31172,8 +31447,10 @@
       "orket.kernel.v1.plugins.orphan_links": "application",
       "orket.kernel.v1.plugins.related_stems": "application",
       "orket.kernel.v1.state.__init__": "application",
+      "orket.kernel.v1.state.layout": "application",
       "orket.kernel.v1.state.lsi": "application",
       "orket.kernel.v1.state.promotion": "application",
+      "orket.kernel.v1.state.promotion_effects": "application",
       "orket.kernel.v1.validator": "application",
       "orket.logging": "adapters",
       "orket.marshaller.__init__": "application",
@@ -31544,7 +31821,7 @@
       {
         "source": "adapters",
         "target": "adapters",
-        "count": 242
+        "count": 243
       },
       {
         "source": "adapters",
@@ -31554,17 +31831,17 @@
       {
         "source": "application",
         "target": "adapters",
-        "count": 428
+        "count": 438
       },
       {
         "source": "application",
         "target": "application",
-        "count": 1783
+        "count": 1803
       },
       {
         "source": "application",
         "target": "core",
-        "count": 777
+        "count": 782
       },
       {
         "source": "application",
@@ -31611,45 +31888,6 @@
     }
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-21T14:39:45.216639Z",
-      "changed": true,
-      "before_digest": "sha256:5960f3e46570da79349678374f9c6b48fcb4b80696731259d0a22fa5ff6da831",
-      "after_digest": "sha256:1f24b3291211089669f8eff295ae5798aaef03544e64cbdbab6ceef03164806c",
-      "diff": {
-        "added_paths": 1,
-        "removed_paths": 0,
-        "changed_paths": 6956,
-        "initial_write": false,
-        "paths_total_previous": 47026,
-        "paths_total_current": 47037,
-        "paths_total_reference": 47037,
-        "churn_paths": 6957,
-        "churn_ratio": 0.147905,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.edges[652].line",
-          "$.observed.edges[653].line",
-          "$.observed.edges[654].line",
-          "$.observed.edges[655].line",
-          "$.observed.edges[656].line",
-          "$.observed.edges[657].line",
-          "$.observed.edges[657].path",
-          "$.observed.edges[657].source",
-          "$.observed.edges[657].target",
-          "$.observed.edges[658].line",
-          "$.observed.edges[658].path",
-          "$.observed.edges[658].source",
-          "$.observed.edges[658].target",
-          "$.observed.edges[659].line",
-          "$.observed.edges[659].target",
-          "$.observed.edges[660].path",
-          "$.observed.edges[660].source",
-          "$.observed.edges[660].target",
-          "$.observed.edges[661].line"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-21T15:08:33.382891Z",
       "changed": true,
@@ -32559,6 +32797,45 @@
         "churn_ratio": 2.1e-05,
         "sample_paths": [
           "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T07:30:10.712290Z",
+      "changed": true,
+      "before_digest": "sha256:8df389152fec7f49d0d1f6159c0fee2de94b0eee548e3bb9921d8800c3a84e78",
+      "after_digest": "sha256:97b8a3534db184a6aa27b1b400f5c3b308eebd1cb97fef5cf1514c26d2a0f0da",
+      "diff": {
+        "added_paths": 46,
+        "removed_paths": 0,
+        "changed_paths": 11044,
+        "initial_write": false,
+        "paths_total_previous": 48674,
+        "paths_total_current": 49105,
+        "paths_total_reference": 49105,
+        "churn_paths": 11090,
+        "churn_ratio": 0.225843,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.edges[188].line",
+          "$.observed.edges[188].path",
+          "$.observed.edges[188].source",
+          "$.observed.edges[188].target",
+          "$.observed.edges[189].line",
+          "$.observed.edges[189].path",
+          "$.observed.edges[189].source",
+          "$.observed.edges[189].target",
+          "$.observed.edges[190].line",
+          "$.observed.edges[190].path",
+          "$.observed.edges[190].source",
+          "$.observed.edges[190].target",
+          "$.observed.edges[191].line",
+          "$.observed.edges[191].target",
+          "$.observed.edges[192].line",
+          "$.observed.edges[192].target",
+          "$.observed.edges[193].line",
+          "$.observed.edges[193].target",
+          "$.observed.edges[194].line"
         ]
       }
     }

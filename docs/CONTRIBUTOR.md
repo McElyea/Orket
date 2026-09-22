@@ -101,7 +101,10 @@ policy inputs and the package-owned default follow
 silent empty-policy fallback. Implicit Kernel start also requires an active
 owner and native execution; typed run inputs permit pure start. Preserve bound
 project/invocation roots across worker waits and use the selected run-ID port:
-`docs/specs/KERNEL_RUN_INPUTS.md`.
+`docs/specs/KERNEL_RUN_INPUTS.md`. Direct LSI reads/staging/validation, promotion
+and ledger repair also require native owned execution. Missing staging is a
+no-op, not deletion intent; use explicit tombstones and inspect retained recovery
+directories after failures. See `docs/specs/KERNEL_STATE_EFFECTS.md`.
 
 Prompt commands use `python -m orket.interfaces.prompts_cli --root <project> ...`.
 Prompt reads share model-file ownership with writers and can create native lock

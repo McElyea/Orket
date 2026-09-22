@@ -1,6 +1,6 @@
 {
   "schema_version": "architectural_truth.baseline.v1",
-  "generated_at": "2026-09-22T06:53:08.423757Z",
+  "generated_at": "2026-09-22T07:46:22.656123Z",
   "collection_ok": true,
   "release_ready": false,
   "release_ready_reason": "Active architectural exceptions and red/noisy proof gates remain.",
@@ -313,7 +313,7 @@
           "forwarded_arguments": 2
         }
       ],
-      "files_scanned": 1134,
+      "files_scanned": 1139,
       "scan_roots": [
         "orket"
       ],
@@ -322,7 +322,7 @@
         {
           "source": "adapters",
           "target": "adapters",
-          "count": 242
+          "count": 243
         },
         {
           "source": "adapters",
@@ -332,17 +332,17 @@
         {
           "source": "application",
           "target": "adapters",
-          "count": 428
+          "count": 438
         },
         {
           "source": "application",
           "target": "application",
-          "count": 1783
+          "count": 1803
         },
         {
           "source": "application",
           "target": "core",
-          "count": 777
+          "count": 782
         },
         {
           "source": "application",
@@ -535,10 +535,10 @@
   },
   "test_taxonomy": {
     "schema_version": "test_taxonomy_report.v1",
-    "tests_total": 5660,
-    "missing_layer_total": 4073,
+    "tests_total": 5684,
+    "missing_layer_total": 4097,
     "by_layer": {
-      "unlabeled": 4073,
+      "unlabeled": 4097,
       "integration": 750,
       "unit": 163,
       "contract": 663,
@@ -1146,7 +1146,7 @@
         "layer": null
       }
     ],
-    "missing_layers_omitted": 3973
+    "missing_layers_omitted": 3997
   },
   "ruff": {
     "proof": "structural_lint",
@@ -1167,9 +1167,9 @@
   },
   "size_inventory": {
     "proof": "structural_ast",
-    "python_files_scanned": 1134,
-    "files_over_400_total": 55,
-    "functions_over_70_total": 201,
+    "python_files_scanned": 1139,
+    "files_over_400_total": 53,
+    "functions_over_70_total": 200,
     "largest_files": [
       {
         "path": "orket/application/workflows/orchestrator_ops.py",
@@ -1198,10 +1198,6 @@
       {
         "path": "orket/runtime/summary/run_summary.py",
         "lines": 731
-      },
-      {
-        "path": "orket/kernel/v1/state/promotion.py",
-        "lines": 699
       },
       {
         "path": "orket/adapters/storage/async_protocol_run_ledger.py",
@@ -1244,10 +1240,6 @@
         "lines": 577
       },
       {
-        "path": "orket/kernel/v1/state/lsi.py",
-        "lines": 569
-      },
-      {
         "path": "orket/application/review/models.py",
         "lines": 566
       },
@@ -1270,6 +1262,14 @@
       {
         "path": "orket/reforger/compiler.py",
         "lines": 538
+      },
+      {
+        "path": "orket/application/services/extension_workload_control_plane_service.py",
+        "lines": 524
+      },
+      {
+        "path": "orket/agents/agent.py",
+        "lines": 521
       }
     ],
     "largest_functions": [
@@ -1302,12 +1302,6 @@
         "line": 280,
         "name": "execute_turn_v1",
         "lines": 360
-      },
-      {
-        "path": "orket/kernel/v1/state/promotion.py",
-        "line": 375,
-        "name": "promote_turn",
-        "lines": 325
       },
       {
         "path": "orket/application/workflows/turn_executor_ops.py",
@@ -1422,6 +1416,12 @@
         "line": 878,
         "name": "execute_epic",
         "lines": 201
+      },
+      {
+        "path": "orket/adapters/llm/local_model_provider.py",
+        "line": 370,
+        "name": "_complete_openai_compat",
+        "lines": 194
       }
     ],
     "parse_errors": []
@@ -1434,7 +1434,7 @@
       "C:\\Source\\Orket-architectural-truth\\orket\\runtime",
       "C:\\Source\\Orket-architectural-truth\\orket\\interfaces"
     ],
-    "scanned_files": 664,
+    "scanned_files": 665,
     "findings": [
       {
         "path": "C:\\Source\\Orket-architectural-truth\\orket\\runtime\\execution\\execution_pipeline_card_dispatch.py",
@@ -1545,51 +1545,6 @@
     "parse_errors": []
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-21T20:19:07.778237Z",
-      "changed": true,
-      "before_digest": "sha256:a13ed922c554a434895a50647251463f297fd17f84f5e5c2f770a38c88a3c189",
-      "after_digest": "sha256:4f9d6b8eb86213b74d8826e73fd5f3e4607c1e914893605099fbcd801a347b33",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 2331,
-        "paths_total_current": 2331,
-        "paths_total_reference": 2331,
-        "churn_paths": 1,
-        "churn_ratio": 0.000429,
-        "sample_paths": [
-          "$.generated_at"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-21T20:41:22.927754Z",
-      "changed": true,
-      "before_digest": "sha256:4f9d6b8eb86213b74d8826e73fd5f3e4607c1e914893605099fbcd801a347b33",
-      "after_digest": "sha256:76d9271fe00e5fba4cd45ca3ba340454583c86c7c8f39ab364dc618a9b52dcc9",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 6,
-        "initial_write": false,
-        "paths_total_previous": 2331,
-        "paths_total_current": 2331,
-        "paths_total_reference": 2331,
-        "churn_paths": 6,
-        "churn_ratio": 0.002574,
-        "sample_paths": [
-          "$.dependency_graph.observed.layer_edges[0].count",
-          "$.generated_at",
-          "$.test_taxonomy.by_layer.unlabeled",
-          "$.test_taxonomy.missing_layer_total",
-          "$.test_taxonomy.missing_layers_omitted",
-          "$.test_taxonomy.tests_total"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-21T21:19:40.291839Z",
       "changed": true,
@@ -2258,6 +2213,65 @@
       "changed": true,
       "before_digest": "sha256:d05ec0ba8fe19eca1f476fba1cec8f025244bec35ef8347ccd1b5a1b8fd049b6",
       "after_digest": "sha256:953cb73bc19a0cf9b146fa3bc30308d679044bd082d99e83ee9f9b0071f675b4",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 2329,
+        "paths_total_current": 2329,
+        "paths_total_reference": 2329,
+        "churn_paths": 1,
+        "churn_ratio": 0.000429,
+        "sample_paths": [
+          "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T07:30:42.860280Z",
+      "changed": true,
+      "before_digest": "sha256:953cb73bc19a0cf9b146fa3bc30308d679044bd082d99e83ee9f9b0071f675b4",
+      "after_digest": "sha256:657f22c7a5faeaeeea025ace521030294a2632b9715a623aba9d8a685f5776ea",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 129,
+        "initial_write": false,
+        "paths_total_previous": 2329,
+        "paths_total_current": 2329,
+        "paths_total_reference": 2329,
+        "churn_paths": 129,
+        "churn_ratio": 0.055389,
+        "sample_paths": [
+          "$.dependency_graph.observed.files_scanned",
+          "$.dependency_graph.observed.layer_edges[0].count",
+          "$.dependency_graph.observed.layer_edges[2].count",
+          "$.dependency_graph.observed.layer_edges[3].count",
+          "$.dependency_graph.observed.layer_edges[4].count",
+          "$.generated_at",
+          "$.noop_critical_paths.scanned_files",
+          "$.size_inventory.files_over_400_total",
+          "$.size_inventory.functions_over_70_total",
+          "$.size_inventory.largest_files[7].lines",
+          "$.size_inventory.largest_files[7].path",
+          "$.size_inventory.largest_files[8].lines",
+          "$.size_inventory.largest_files[8].path",
+          "$.size_inventory.largest_files[9].lines",
+          "$.size_inventory.largest_files[9].path",
+          "$.size_inventory.largest_files[10].lines",
+          "$.size_inventory.largest_files[10].path",
+          "$.size_inventory.largest_files[11].lines",
+          "$.size_inventory.largest_files[11].path",
+          "$.size_inventory.largest_files[12].lines"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T07:46:22.658318Z",
+      "changed": true,
+      "before_digest": "sha256:657f22c7a5faeaeeea025ace521030294a2632b9715a623aba9d8a685f5776ea",
+      "after_digest": "sha256:a79ed2573ba694d40b1678fb99cd68d3509938f6317e453dafa6b7f7d114bdb4",
       "diff": {
         "added_paths": 0,
         "removed_paths": 0,

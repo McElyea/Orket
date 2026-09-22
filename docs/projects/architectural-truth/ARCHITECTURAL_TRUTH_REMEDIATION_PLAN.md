@@ -12519,10 +12519,10 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.79 selected Kernel run identity and captured workspace inputs, retaining
-0.6.78 immutable packaged capability policy, 0.6.77 explicit runtime/inputs/
-shutdown, 0.6.76 state/publication, 0.6.75 credential expiry/authorization
-and 0.6.74 memory,
+0.6.80 captured local Kernel state and owned filesystem effects, retaining
+0.6.79 run identity/workspace inputs, 0.6.78 immutable packaged capability policy,
+0.6.77 explicit runtime/inputs/shutdown, 0.6.76 state/publication, 0.6.75
+credential expiry/authorization and 0.6.74 memory,
 0.6.73 sandbox commands, 0.6.72 approval submission, 0.6.71 authorization,
 0.6.65/0.6.66 API queries, 0.6.67 legacy action, 0.6.68 construction,
 0.6.69 cleanup and 0.6.70 files. Preserve the governed legacy-export cutover;
@@ -12531,7 +12531,7 @@ and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
 Preserve every failed and
 passing source/native observation and the historical clock diagnosis. Canonical
-Ruff has 89 findings at the .79 checkpoint. The prior stale benchmark expectation passes in the
+Ruff has 89 findings at the .80 checkpoint. The prior stale benchmark expectation passes in the
 new source/native selection. The unmodified published .39 complete rerun has
 7,260 passes, three failures and 89 skips; its coverage is 84.56120595327887%
 against the unchanged 89% gate. The two parent-Git-dependent fixture failures and
@@ -21319,3 +21319,97 @@ Evidence: `.tmp/d-kernel-run-inputs/`; accepted fresh source, installed manifest
 harness and audit: `.tmp/d-kernel-run-inputs-corrected/`. Future artifact/support
 inheritance must use the corrected manifest. Scoped checkpoint only; no whole-plan
 completion, release-ready claim or lane retirement.
+
+
+#### .80 Captured local Kernel state and owned filesystem effects (2026-09-22)
+
+LSI captures an absolute lexical root at construction; its public root is read-only.
+Promotion and explicit ledger repair capture their root before native observation.
+Direct staging, reads, validation, promotion and repair refuse running event loops.
+The application retains existing Kernel invocation/publication ownership through
+cancellation, timeout and close. One explicitly side-effecting filesystem adapter
+executes native reads/writes/copies/renames/removal; shared layout, reference and
+event rules replace duplicate definitions. This is scoped classification, not
+completion of the repository-wide adapter or async-reachability inventories.
+
+Staging detaches and canonicalizes the entire triplet before any effect. Immutable
+core byte inputs determine every digest, DTO type, record and reference source;
+later caller mutation cannot mix observed object bytes with different metadata.
+Invalid lexical stems/identifier segments refuse before staging writes. The adapter
+requires absolute paths and immutable bytes. These are native lexical checks, not
+symlink/hostile-filesystem confinement or caller path authorization. Concurrent
+external writers, durable run recovery and exactly-once semantics remain unproved.
+
+The review found a real destructive mismatch: missing staging deleted all committed
+triplets, while the retained historical requirement said no-op. The old law test
+claimed tombstone coverage but supplied none. Missing or empty staging now advances
+only the ordered ledger, emits `I_NOOP_PROMOTION`, and preserves every other
+committed byte and file modification time. The law test now stages a real tombstone,
+verifies reference pruning and triplet removal, and uses the exact canonical layout
+instead of alternate-path fallbacks. Archived requirement files remain unchanged;
+the current correction is owned by `docs/specs/KERNEL_STATE_EFFECTS.md` and its
+matching contract delta. This does not adopt every historical Kernel requirement
+as implemented or assert complete historical integrity conformance.
+
+Observed malformed/unreadable index state no longer silently becomes an empty
+observation; invalid ledger shape cannot reset the cursor. Missing staged link
+objects refuse before candidate publication. Existing candidate/backup directories
+require recovery and are not erased/adopted by another attempt, including a no-op.
+Candidate cleanup failure adds an explicit failure issue. Tests retain actual
+partial publication: failure of the second directory rename leaves committed absent
+and the original backup intact; cleanup failure after publication leaves the new
+ledger plus old backup/staging evidence. A typed failure does not mean rollback.
+Directory publication is multi-step and is not crash-atomic or cross-process fenced.
+
+Live local proof with controlled native failure/scheduling and structural binding:
+
+| Cell | Tests / failures / errors / skips | Pytest seconds | Installed import origins |
+| --- | --- | --- | --- |
+| Fresh source | 740 / 0 / 0 / 0 | 72.344 | source checkout |
+| Installed win-py311 | 740 / 0 / 0 / 0 | 72.783 | 930 |
+| Installed win-py312 | 740 / 0 / 0 / 0 | 80.636 | 930 |
+
+The 81-module selection retains all 691 prior .79 case identities and adds 49.
+All three cells have identical cases and unchanged frozen inputs. Real files prove
+root/caller capture, valid and invalid staging, read-only failures, explicit deletion,
+no-op preservation, ordered promotion, retained recovery state and actual API effects.
+An authenticated in-process ASGI lifecycle promotes then no-ops without deleting
+the triplet. Held staging/promotion stays owned through repeated cancellation,
+timeout and close; native staging failure remains visible. Independent SQLite
+completes below 0.5s in all 15 observations per cell; maximum 0.015974400s.
+No test deadline or fixture hold changed. No deployed HTTP, inference, outward
+connector, durable Kernel restart, Linux, physical-sleep or whole-suite claim.
+Both Quality jobs select the changed cases; hosted execution remains unavailable.
+
+All 11 final current controls fail against the byte-verified installed .79 wheel,
+with no collection errors or skips. Opening 11 failures remain retained. The first
+repair passed 54/55: its only failure was the existing deletion-without-tombstone
+test. Supplying actual deletion evidence repairs that test instead of weakening
+the no-op requirement. Expanded 91 and final formatted 93 focused cases pass.
+Every failed observation remains retained; no failing result became acceptance.
+
+Canonical C passes: 1139 Python files,
+3705 edges, six resolved dynamic routes, zero violations,
+analysis errors, unknown modules or authority cycles. Complete source/sdist/wheel
+parity covers 1139 Python plus the same 20 data files (1159 total), with
+2295 frozen support inputs. Full Ruff remains 89 existing
+findings, none introduced. Scoped lint, size, docs and release metadata pass.
+Baseline collection remains separate from release readiness. Retained September20
+and .79 hashes and original-checkout preservation are independently checked before
+the checkpoint is sealed. No fresh JSONL script or complete legacy Kernel claim.
+
+Remaining blockers or drift: the retained .72 Linux clock preflight is still an
+environment blocker (240.006951941s observed; final quiet 18.843389227s versus 60s;
+clock steps outside 0.01s; cause unknown). No fresh clock measurement or settings/
+deadline change. Continue D with outbound policy inputs, complete adapter/effect
+classification and async-reachability inventories, shared SDK synchronous bridge
+lifetime and helper-runtime owners. Full legacy Kernel integrity semantics are not
+established by this scoped work; legacy finish remains host-supplied status rather
+than independent completion evidence. Then E1 marker/no-op/Ruff/full coverage,
+E2 generated authority/history decomposition, and CAP1/2/3 implementation and
+acceptance remain. Full-suite 89%, hosted Gitea Quality, Ollama-specific alias flows,
+earlier Git timeout cause and physical-sleep timing are unverified. Preserve BT-1
+through BT-5; explicit user acceptance is required to retire the lane.
+
+Evidence and accepted source/installed manifest: `.tmp/d-kernel-state-effects/`.
+Scoped checkpoint only; no whole-plan completion, release-ready claim or retirement.

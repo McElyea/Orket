@@ -5,6 +5,21 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.80] - 2026-09-22
+
+### Fixed
+- Capture immutable LSI triplets and absolute lexical roots before native state effects.
+- Share classified filesystem operations and layout/reference definitions; refuse event-loop state I/O.
+- Missing or empty staging advances only the ledger; deletion requires staged tombstones.
+- Expose invalid index/ledger observations and cleanup failures; preserve unresolved candidate/backup evidence.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Use owned native workers for direct state operations; construct a new LSI to select another root.
+- Replace deletion-by-absence with explicit tombstones and resolve retained recovery directories before retrying.
+- Invalid lexical names and immutable-byte violations refuse; failures do not imply rollback or crash atomicity.
+- Contract: `docs/architecture/CONTRACT_DELTA_KERNEL_STATE_EFFECTS_D_2026-09-22.md`.
+
 ## [0.6.79] - 2026-09-22
 
 ### Fixed

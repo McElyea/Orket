@@ -73,26 +73,11 @@ def _must_pass(callable_fn, *args, **kwargs) -> Any:
 
 
 def _find_committed_root(tmp_root: Path) -> Path:
-    candidates = [
-        tmp_root / "index" / "committed",
-        tmp_root / "committed",
-    ]
-    for c in candidates:
-        if c.exists():
-            return c
     return tmp_root / "index" / "committed"
 
 
 def _find_staging_root(tmp_root: Path, run_id: str, turn_id: str) -> Path:
-    candidates = [
-        tmp_root / "index" / "staging" / run_id / turn_id,
-        tmp_root / "staging" / run_id / turn_id,
-        tmp_root / "index" / "staging" / run_id.replace(":", "%3A") / turn_id.replace(":", "%3A"),
-    ]
-    for c in candidates:
-        if c.exists():
-            return c
-    return tmp_root / "index" / "staging" / run_id / turn_id
+    return tmp_root / "index" / "staging" / fs_token(run_id) / fs_token(turn_id)
 
 
 def _snapshot_tree(path: Path) -> dict[str, tuple[int, float]]:
@@ -280,11 +265,18 @@ def test_law_6_deletion_is_staged_tombstone_prunes_refs(lsi_adapter: LSIAdapter,
     gone_ref = committed / "refs" / "by_id" / "skill" / "skill%3Agone.json"
     assert gone_ref.exists()
 
+    tombstone = tmp_path / "index" / "staging" / run_id / "turn-0002" / "triplets/data/dto/d/delete_me.tombstone.json"
+    tombstone.parent.mkdir(parents=True, exist_ok=True)
+    tombstone.write_text(json.dumps({
+        "kind": "tombstone", "stem": "data/dto/d/delete_me", "dto_type": "invocation",
+        "id": "inv:del", "deleted_by_turn_id": "turn-0002",
+    }), encoding="utf-8")
     _must_pass(lsi_adapter.promote, run_id=run_id, turn_id="turn-0002")
 
     gone_after = _read_json(gone_ref)
     sources_after = gone_after.get("sources", [])
     assert not any(s.get("stem") == "data/dto/d/delete_me" for s in sources_after)
+    assert not (committed / "triplets/data/dto/d/delete_me.json").exists()
 
 
 def test_law_7_atomic_promotion_all_or_nothing(lsi_adapter: LSIAdapter, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
