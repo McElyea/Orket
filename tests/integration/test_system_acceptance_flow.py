@@ -208,8 +208,8 @@ def _build_assets(root, *, with_guard: bool, epic_id: str, expected_file="accept
 
 def _patch_provider(monkeypatch, provider):
     def mock_init(self, *args, **kwargs):
-        self.model = "dummy"
-        self.timeout = 300
+        self.model, self.timeout = "dummy", 300
+        self._http_client_owner, self.client = kwargs["http_client_owner"], None
 
     monkeypatch.setattr(LocalModelProvider, "__init__", mock_init)
     monkeypatch.setattr(LocalModelProvider, "complete", provider.complete)

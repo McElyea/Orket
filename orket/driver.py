@@ -51,6 +51,7 @@ class OrketDriver(DriverResourceMixin, DriverConversationMixin):
         json_parse_mode: str | None = None,
         project_root: Path | None = None,
         environment: Mapping[str, str] | None = None,
+        invocation_root: Path | None = None,
     ) -> None:
         require_sync_context(code="E_DRIVER_CONSTRUCTION_REQUIRES_WORKER")
         captured_environment = dict(os.environ if environment is None else environment)
@@ -93,7 +94,7 @@ class OrketDriver(DriverResourceMixin, DriverConversationMixin):
         )
         if self.provider is None:
             self.provider = create_local_model_provider(model=self._configured_model_name, temperature=0.1,
-                                               environment=captured_environment)
+                                               environment=captured_environment, cwd=invocation_root)
 
     @classmethod
     async def create(
@@ -110,7 +111,7 @@ class OrketDriver(DriverResourceMixin, DriverConversationMixin):
             inputs.bind_settings()
             return cls(model, provider=provider, fs=fs, reforger_tools=reforger_tools,
                        strict_config=strict_config, json_parse_mode=json_parse_mode,
-                       project_root=root, environment=inputs.environment)
+                       project_root=root, environment=inputs.environment, invocation_root=inputs.invocation_root)
 
         return await create_runtime_owner(construct, label="driver-construction")
 

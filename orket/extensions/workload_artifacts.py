@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -38,6 +39,7 @@ class WorkloadArtifacts:
         extension_id: str = "",
         admitted_capabilities: set[str] | None = None,
         extra_first_slice_capabilities: set[str] | None = None,
+        own_model_provider: Callable[[LocalModelCapabilityProvider], None] | None = None,
     ) -> CapabilityRegistry:
         registry = CapabilityRegistry()
         registry.register("workspace.root", str(workspace))
@@ -45,14 +47,8 @@ class WorkloadArtifacts:
         narrowed_first_slice = set(admitted_capabilities or ())
         child_extra_first_slice = set(extra_first_slice_capabilities or ())
         enabled_first_slice = narrowed_first_slice | child_extra_first_slice
-        configured = input_config.get("capabilities")
-        if isinstance(configured, dict):
-            items = sorted((str(key).strip(), value) for key, value in configured.items())
-            forbidden = sorted(capability_id for capability_id, _provider in items if capability_id in HOST_BOUND_CAPABILITIES)
-            if forbidden:
-                raise ValueError(
-                    "E_SDK_HOST_BOUND_CAPABILITY_CONFIG_FORBIDDEN: " + ", ".join(forbidden)
-                )
+        items = WorkloadArtifacts.configured_capability_items(input_config)
+        if items:
             for capability_id, provider in items:
                 if not WorkloadArtifacts._capability_enabled(
                     capability_id=capability_id,
@@ -100,14 +96,13 @@ class WorkloadArtifacts:
                 seed = int(raw_seed) if raw_seed is not None else None
             except (TypeError, ValueError):
                 seed = None
-            registry.register(
-                "model.generate",
-                LocalModelCapabilityProvider(
-                    model=requested_model or DEFAULT_LOCAL_MODEL,
-                    temperature=temperature,
-                    seed=seed,
-                ),
+            provider = LocalModelCapabilityProvider(
+                model=requested_model or DEFAULT_LOCAL_MODEL, temperature=temperature, seed=seed,
             )
+            # Default providers are acquired here; configured objects remain borrowed.
+            if own_model_provider is not None:
+                own_model_provider(provider)
+            registry.register("model.generate", provider)
         if any(
             WorkloadArtifacts._capability_enabled(
                 capability_id=capability_id,
@@ -204,6 +199,16 @@ class WorkloadArtifacts:
         ):
             registry.register("speech.play_clip", NullAudioPlayer())
         return registry
+
+    @staticmethod
+    def configured_capability_items(input_config: dict[str, Any]) -> list[tuple[str, Any]]:
+        """Validate configuration before dispatch; materialization belongs to its consumer."""
+        configured = input_config.get("capabilities")
+        items = sorted((str(key).strip(), value) for key, value in configured.items()) if isinstance(configured, dict) else []
+        forbidden = sorted(capability_id for capability_id, _provider in items if capability_id in HOST_BOUND_CAPABILITIES)
+        if forbidden:
+            raise ValueError("E_SDK_HOST_BOUND_CAPABILITY_CONFIG_FORBIDDEN: " + ", ".join(forbidden))
+        return items
 
     def validate_sdk_artifacts(self, result: Any, artifact_root: Path, *, policy: WorkloadPolicy) -> None:
         self._artifacts.validate_sdk_artifacts(result, artifact_root, policy=policy)

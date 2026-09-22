@@ -7,7 +7,9 @@ from contextlib import asynccontextmanager
 import pytest
 
 from orket.adapters.llm.local_model_provider_runtime_target import ensure_provider_runtime_target
-from orket.application.services.local_model_factory import create_local_model_provider
+from orket.application.services.local_model_factory import (
+    create_local_model_provider_async,
+)
 from orket.runtime.config import provider_runtime_target as targeting
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
@@ -166,7 +168,7 @@ async def test_inference_client_retains_supplied_preparation_settings(tmp_path, 
     supplied = {"ORKET_LLAMA_CPP_GGUF_MODEL_ROOT": str(first), "ORKET_LLM_PROVIDER": "llama_cpp"}
     async with _inventory_server() as (url, _, release):
         release.set()
-        provider = create_local_model_provider(model="fixture", base_url=url, environment=supplied)
+        provider = (await create_local_model_provider_async(model="fixture", base_url=url, environment=supplied))
         try:
             supplied["ORKET_LLAMA_CPP_GGUF_MODEL_ROOT"] = str(second)
             monkeypatch.setenv("ORKET_PROVIDER_QUARANTINE", "llama_cpp")

@@ -11,7 +11,10 @@ from orket.application.services import provider_preparation_service as preparati
 from orket.application.services.governed_agent_api_composition import _settings
 from orket.application.services.governed_agent_broker_service import GovernedAgentResolvedModelProfile
 from orket.application.services.governed_agent_model_provider import GovernedAgentLocalModelProvider
-from orket.application.services.local_model_factory import create_local_model_provider
+from orket.application.services.local_model_factory import (
+    create_local_model_provider,
+    create_local_model_provider_async,
+)
 from orket.core.contracts.provider_runtime import ProviderRuntimeTarget
 from orket.exceptions import ModelConnectionError
 from orket_extension_sdk import AgentModelCallRequest
@@ -49,8 +52,8 @@ async def test_openai_transport_preserves_governed_usage_and_truncation(provider
 @pytest.mark.asyncio
 async def test_blocked_target_is_not_cached_or_admitted(monkeypatch) -> None:
     """Layer: contract. A nonempty but quarantined target cannot proceed on a retry."""
-    provider = create_local_model_provider("qwen", provider="llama_cpp", base_url=_target().base_url,
-                                  timeout=30, environment={})
+    provider = (await create_local_model_provider_async("qwen", provider="llama_cpp", base_url=_target().base_url,
+                                  timeout=30, environment={}))
     async def resolve(**kwargs):
         return _target(status="BLOCKED")
     monkeypatch.setattr(preparation_owner, "resolve_provider_runtime_target", resolve)
@@ -70,8 +73,8 @@ async def test_pinned_target_prevents_environment_model_reselection(monkeypatch)
     async def forbidden(**kwargs):
         pytest.fail("Pinned governed model must not be resolved a second time")
     monkeypatch.setattr(preparation_owner, "resolve_provider_runtime_target", forbidden)
-    provider = create_local_model_provider("qwen", provider="llama_cpp", base_url=_target().base_url,
-                                  runtime_target=_target())
+    provider = (await create_local_model_provider_async("qwen", provider="llama_cpp", base_url=_target().base_url,
+                                  runtime_target=_target()))
     try:
         assert await targeting.ensure_provider_runtime_target(provider) == "qwen"
     finally:

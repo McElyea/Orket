@@ -16,6 +16,13 @@ side_effecting = True  # Loads trust material and constructs explicitly owned ne
 
 def build_provider_catalog_client(*, inputs: ProviderHttpInputs, base_url: str, timeout_s: float,
                                   api_key: str | None, own_resource: Callable) -> httpx.AsyncClient:
+    return build_provider_http_client(inputs=inputs, factory=httpx.AsyncClient, own_resource=own_resource,
+        options=dict(base_url=base_url, timeout=httpx.Timeout(timeout_s), follow_redirects=False,
+                     headers={"Authorization": "Bearer " + api_key} if api_key else {}))
+
+
+def build_provider_http_client(*, inputs: ProviderHttpInputs, factory: Callable, options: dict,
+                               own_resource: Callable):
     require_sync_context(code="E_PROVIDER_HTTP_REQUIRES_ASYNC_OWNER")
     # create_default_context consults ambient SSLKEYLOGFILE even with HTTPX
     # trust_env=False. Build the verified context directly from captured inputs.
@@ -46,8 +53,6 @@ def build_provider_catalog_client(*, inputs: ProviderHttpInputs, base_url: str, 
         mounts[pattern] = transport
     direct = httpx.AsyncHTTPTransport(verify=context, trust_env=False)
     own_resource(direct)
-    client = httpx.AsyncClient(base_url=base_url, timeout=httpx.Timeout(timeout_s), transport=direct,
-        headers={"Authorization": f"Bearer {api_key}"} if api_key else {},
-        mounts=mounts, trust_env=False, follow_redirects=False)
+    client = factory(**options, transport=direct, mounts=mounts, trust_env=False)
     own_resource(client)
     return client

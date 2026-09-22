@@ -24,7 +24,7 @@ async def test_outward_result_uses_shared_run_and_final_truth(tmp_path, boundary
         import orket.application.services.outward_model_tool_call_service as model_module
 
         model = SequenceModelClient([{"tool": "write_file", "args": {"path": "../refused.txt", "content": "refused"}}])
-        monkeypatch.setattr(model_module, "create_configured_model_client", lambda: model)
+        monkeypatch.setattr(model_module, "create_configured_model_client", lambda **_: model)
     async with outward_api(tmp_path, inputs) as (client, context):
         body = {"run_id": "bt0-run", "task": {"description": "Shared authority", "instruction": "One approved write",
                 "acceptance_contract": {"governed_tool_call": calls[0]}},

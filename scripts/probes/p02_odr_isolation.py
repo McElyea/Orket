@@ -12,7 +12,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from orket.application.services.local_model_factory import (  # noqa: E402 - project path bootstrap
-    create_local_model_provider,  # noqa: E402 - project path bootstrap
+    create_local_model_provider_async,  # noqa: E402 - project path bootstrap
 )
 from orket.core.contracts.provider_runtime import (  # noqa: E402 - project path bootstrap
     DEFAULT_LOCAL_MODEL,
@@ -47,18 +47,18 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
 
 
 async def _run_once(args: argparse.Namespace, run_index: int) -> dict[str, Any]:
-    architect_provider = create_local_model_provider(
+    architect_provider = (await create_local_model_provider_async(
         model=str(args.model),
         temperature=float(args.temperature),
         seed=int(args.seed),
         timeout=int(args.timeout),
-    )
-    auditor_provider = create_local_model_provider(
+    ))
+    auditor_provider = (await create_local_model_provider_async(
         model=str(args.model),
         temperature=float(args.temperature),
         seed=int(args.seed),
         timeout=int(args.timeout),
-    )
+    ))
     try:
         result = await run_live_refinement(
             task=str(args.task),

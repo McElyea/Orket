@@ -1,5 +1,8 @@
 """Layer: contract support. Explicit admission fixture for isolated transport tests."""
-from orket.application.services.local_model_factory import create_local_model_provider
+from orket.application.services.local_model_factory import (
+    create_local_model_provider,
+    create_local_model_provider_async,
+)
 from orket.core.contracts.provider_runtime import ProviderRuntimeTarget, normalize_provider
 
 
@@ -17,3 +20,8 @@ class ControlledPreparation:
 def create_test_model_provider(*args, **kwargs):
     """Keep real factory/prompt/transport behavior; explicitly supply controlled admission."""
     return create_local_model_provider(*args, runtime_preparation=ControlledPreparation(), **kwargs)
+
+
+async def create_test_model_provider_async(*args, **kwargs):
+    """Use owned construction with the same explicit controlled admission."""
+    return await create_local_model_provider_async(*args, runtime_preparation=ControlledPreparation(), **kwargs)

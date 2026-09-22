@@ -32,12 +32,28 @@ run time. The concrete refusal and partial-effect limits live in
 
 ## Implementation Status
 
+SDK workload parents validate configured capability identifiers before dispatch without
+constructing unused providers. The native child owns default model clients through
+construction, authorization, execution and cleanup; a cleanup failure cannot publish
+success. Configured borrowed providers retain caller ownership.
+
+Card preparation retains primary and ODR-auditor cleanup as owned operations so
+repeated cancellation cannot interrupt adoption of a completed provider close.
+
+Inference clients reuse captured catalog proxy, trust and key-log policy. The native
+provider factory refuses event-loop entry; async callers use owned construction and
+retain partial or unadopted clients through cleanup. Captured Ollama authentication
+overrides the SDK's ambient request header. Provider preparation shares the captured
+lexical directory. Backend redirects, deadlines, retries, admission and response
+lineage remain authoritative. Contract: `docs/specs/PROVIDER_INFERENCE_CLIENT_OWNERSHIP.md`;
+migration: `docs/architecture/CONTRACT_DELTA_PROVIDER_INFERENCE_INPUTS_D_2026-09-22.md`.
+
 Provider HTTP catalogs use captured proxy, certificate and optional TLS key-log
 inputs with verified TLS and disabled redirects. Native client construction and
 all acquired resources remain owned through interruption and cleanup failure.
 Explicit empty mappings have no ambient or OS proxy-registry fallback. Non-finite
-HTTP budgets and unsupported NO_PROXY CIDR fail explicitly. Inference-client
-composition and TLS-library internals remain separate obligations. Contract:
+HTTP budgets and unsupported NO_PROXY CIDR fail explicitly. TLS-library internals
+and wider async reachability remain separate obligations. Contract:
 `docs/specs/PROVIDER_HTTP_CATALOG_INPUTS.md`; migration:
 `docs/architecture/CONTRACT_DELTA_PROVIDER_HTTP_INPUTS_D_2026-09-22.md`.
 

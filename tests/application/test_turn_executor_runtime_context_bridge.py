@@ -14,7 +14,7 @@ from orket.application.workflows.turn_executor import TurnExecutor
 from orket.application.workflows.turn_executor_runtime import invoke_model_complete
 from orket.core.domain.state_machine import StateMachine
 from orket.schema import CardStatus, IssueConfig, RoleConfig
-from tests.helpers.provider_preparation import create_test_model_provider
+from tests.helpers.provider_preparation import create_test_model_provider_async
 
 
 class _FakeOpenAIClient:
@@ -133,7 +133,7 @@ async def test_turn_executor_bridges_runtime_context_through_wrapped_model_clien
     monkeypatch.delenv("ORKET_LOCAL_PROMPTING_MODE", raising=False)
     monkeypatch.setattr(local_model_provider_module.httpx, "AsyncClient", lambda *args, **kwargs: fake_client)
 
-    provider = create_test_model_provider(model="unknown-unmapped-model")
+    provider = (await create_test_model_provider_async(model="unknown-unmapped-model"))
     model_client = _WrappedClient(provider)
     executor = TurnExecutor(
         state_machine=StateMachine(),

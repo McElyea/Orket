@@ -92,8 +92,8 @@ async def test_empirical_verification_pass_is_support_only(tmp_path, monkeypatch
 
     p = MockProvider()
     def mock_init(self, *a, **k):
-        self.model = "dummy"
-        self.timeout = 300
+        self.model, self.timeout = "dummy", 300
+        self._http_client_owner, self.client = k["http_client_owner"], None
     monkeypatch.setenv("ORKET_DISABLE_RUNTIME_VERIFIER", "true")
     monkeypatch.setattr(LocalModelProvider, "__init__", mock_init)
     monkeypatch.setattr(LocalModelProvider, "complete", p.complete)

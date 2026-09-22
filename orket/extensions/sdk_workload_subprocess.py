@@ -6,8 +6,10 @@ import importlib
 import importlib.abc
 import inspect
 import json
+import logging
 import sys
 import threading
+from contextlib import ExitStack
 from pathlib import Path
 from typing import Any
 
@@ -106,6 +108,21 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def _run_request(request: dict[str, Any]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    try:
+        with ExitStack() as resources:
+            result = _run_owned_request(request, resources)
+        return result
+    except Exception as exc:  # Child supervisor: failed construction/cleanup cannot publish success.
+        logging.getLogger(__name__).exception("SDK capability construction or cleanup failed")
+        return {
+            "ok": False, "error_code": type(exc).__name__, "error_message": str(exc),
+            "capability_report": result.get("capability_report", {}),
+            "prior_workload_result": result,
+        }
+
+
+def _run_owned_request(request: dict[str, Any], resources: ExitStack) -> dict[str, Any]:
     extension = dict(request["extension"])
     workload = dict(request["workload"])
     context = dict(request["context"])
@@ -116,7 +133,7 @@ def _run_request(request: dict[str, Any]) -> dict[str, Any]:
         for item in extension.get("allowed_stdlib_modules", [])
         if str(item).strip()
     }
-    context_or_failure = _build_context(extension, workload, context, request)
+    context_or_failure = _build_context(extension, workload, context, request, resources)
     if "ok" in context_or_failure:
         return context_or_failure
     sdk_context, tracker = context_or_failure
@@ -182,6 +199,7 @@ def _build_context(
     workload: dict[str, Any],
     context: dict[str, Any],
     request: dict[str, Any],
+    resources: ExitStack,
 ) -> tuple[WorkloadContext, Any] | dict[str, Any]:
     workspace_root = Path(str(context["workspace_root"]))
     output_dir = Path(str(context["output_dir"]))
@@ -193,6 +211,7 @@ def _build_context(
         artifact_root=output_dir,
         input_config=input_config,
         extension_id=str(extension["extension_id"]),
+        own_model_provider=lambda provider: resources.callback(provider.close),
         admitted_capabilities=set(envelope.admitted_capabilities),
         extra_first_slice_capabilities={
             str(item).strip() for item in list(request.get("child_extra_capabilities", [])) if str(item).strip()

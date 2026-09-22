@@ -61,7 +61,7 @@ def boundary(tmp_path, monkeypatch):
         {"tool": "write_file", "args": {"path": "second.txt", "content": "second requires approval"}},
     ]
     model = SequenceModelClient(calls)
-    monkeypatch.setattr(model_module, "create_configured_model_client", lambda: model)
+    monkeypatch.setattr(model_module, "create_configured_model_client", lambda **_: model)
     return db_path, FixedInputs(), calls
 
 
@@ -179,7 +179,7 @@ def append_command(monkeypatch):
 
     calls = [{"tool": "run_command", "args": {"command": [sys.executable, "-c",
         "from pathlib import Path; f=Path('effects.txt').open('a'); f.write('effect\\n'); f.close()"]}}]
-    monkeypatch.setattr(model_module, "create_configured_model_client", lambda: SequenceModelClient(calls))
+    monkeypatch.setattr(model_module, "create_configured_model_client", lambda **_: SequenceModelClient(calls))
     return calls
 
 

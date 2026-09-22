@@ -3,10 +3,10 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-import os
 from collections.abc import Mapping
 from dataclasses import dataclass
-from types import MappingProxyType
+from functools import partial
+from pathlib import Path
 from typing import Any
 
 import httpx
@@ -19,6 +19,8 @@ from orket.application.services.governed_agent_broker_service import (
     UsagePosture,
 )
 from orket.application.services.local_model_factory import create_local_model_provider
+from orket.application.services.process_input_service import capture_process_context
+from orket.application.services.runtime_result_lifetime import create_runtime_owner
 from orket.core.contracts.provider_runtime import PROVIDER_CHOICES, ProviderRuntimeTarget
 from orket.exceptions import ModelTimeoutError
 from orket.runtime.config.provider_runtime_target import resolve_provider_runtime_target
@@ -97,7 +99,7 @@ async def prepare_governed_agent_local_runtime(
     environment: Mapping[str, str] | None = None,
 ) -> GovernedAgentLocalRuntime:
     models = dict(model_by_role)
-    observed = MappingProxyType(dict(os.environ if environment is None else environment))
+    cwd, observed = capture_process_context(environment=environment)
     if provider not in PROVIDER_CHOICES:
         raise ValueError("E_AGENT_PROVIDER_MODE_INVALID")
     requests_by_role = {item.role: item for item in request.model_profiles}
@@ -108,24 +110,11 @@ async def prepare_governed_agent_local_runtime(
         target = await _resolve_exact_target(
             provider=provider, model=requested_model, role=role,
             base_url=base_url, timeout_seconds=inventory_timeout_seconds,
-            environment=observed,
+            environment=observed, cwd=cwd,
         )
         targets[role] = target
     maximum_timeout = max(item.timeout_ms for item in requests_by_role.values()) / 1000
     unique_targets = {target.model_id: target for target in targets.values()}
-    clients = {
-        model_id: create_local_model_provider(
-            model_id,
-            temperature=0,
-            timeout=max(1, int(maximum_timeout)),
-            provider=provider,
-            base_url=target.base_url,
-            runtime_target=target,
-            environment=observed,
-            connect_timeout_seconds=min(30, max(1, maximum_timeout)),
-        )
-        for model_id, target in unique_targets.items()
-    }
     profiles = {
         str(requests_by_role[role].profile_ref): GovernedAgentResolvedModelProfile(
             requested_profile_ref=str(requests_by_role[role].profile_ref),
@@ -141,6 +130,8 @@ async def prepare_governed_agent_local_runtime(
         )
         for role, target in targets.items()
     }
+    clients = await _prepare_local_clients(unique_targets, provider=provider,
+        maximum_timeout=maximum_timeout, environment=observed, cwd=cwd)
     return GovernedAgentLocalRuntime(
         provider=GovernedAgentLocalModelProvider(clients),
         profiles=profiles,
@@ -148,9 +139,30 @@ async def prepare_governed_agent_local_runtime(
     )
 
 
+async def _prepare_local_clients(targets, *, provider, maximum_timeout, environment, cwd):
+    clients = {}
+    try:
+        for model_id, target in targets.items():
+            construct = partial(create_local_model_provider, model_id, temperature=0,
+                timeout=max(1, int(maximum_timeout)), provider=provider, base_url=target.base_url,
+                runtime_target=target, environment=environment, cwd=cwd,
+                connect_timeout_seconds=min(30, max(1, maximum_timeout)))
+            clients[model_id] = await create_runtime_owner(construct, label="governed-provider-construction")
+        return clients
+    except BaseException as failure:
+        # Construction supervisor: a later client failure must not abandon earlier clients.
+        logger.error("Governed provider construction failed (%s)", type(failure).__name__)
+        try:
+            await GovernedAgentLocalModelProvider(clients).close()
+        except BaseException as cleanup_failure:
+            raise BaseExceptionGroup("Governed provider construction and cleanup failed",
+                                     [failure, cleanup_failure]) from None
+        raise
+
+
 async def _resolve_exact_target(*, provider: str, model: str, role: str,
                                 base_url: str, timeout_seconds: float,
-                                environment: Mapping[str, str]) -> ProviderRuntimeTarget:
+                                environment: Mapping[str, str], cwd: Path) -> ProviderRuntimeTarget:
     if not model:
         raise ValueError(f"E_AGENT_LOCAL_MODEL_REQUIRED:{role}")
     try:
@@ -158,7 +170,7 @@ async def _resolve_exact_target(*, provider: str, model: str, role: str,
             provider=provider, requested_model=model, base_url=base_url or None,
             timeout_s=timeout_seconds, auto_select_model=False, auto_load_local_model=False,
             model_load_timeout_s=timeout_seconds, model_ttl_sec=0,
-            environment=environment,
+            environment=environment, cwd=cwd,
         )
     except httpx.HTTPError as exc:
         raise ValueError(f"E_AGENT_LOCAL_INVENTORY_UNAVAILABLE:{provider}:{type(exc).__name__}") from exc

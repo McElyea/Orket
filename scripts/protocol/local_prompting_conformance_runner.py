@@ -10,7 +10,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from orket.application.services.local_model_factory import (  # noqa: E402 - project path bootstrap
-    create_local_model_provider,  # noqa: E402 - project path bootstrap
+    create_local_model_provider_async,  # noqa: E402 - project path bootstrap
 )
 
 try:
@@ -41,7 +41,7 @@ async def run_cases(
     lmstudio_session_id: str,
     mock: bool,
 ) -> dict[str, Any]:
-    provider_client = None if mock else create_local_model_provider(model=model, temperature=0.0, timeout=90)
+    provider_client = None if mock else (await create_local_model_provider_async(model=model, temperature=0.0, timeout=90))
     failures: dict[str, int] = {}
     rows: list[dict[str, Any]] = []
     render_hashes: list[str] = []

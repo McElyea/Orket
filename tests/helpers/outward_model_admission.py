@@ -44,4 +44,4 @@ async def count_calls(root):
 def use_counted_model(monkeypatch, root, calls):
     import orket.application.services.outward_model_tool_call_service as model_module
 
-    monkeypatch.setattr(model_module, "create_configured_model_client", lambda: CountedModelClient(root, calls))
+    monkeypatch.setattr(model_module, "create_configured_model_client", lambda **_: CountedModelClient(root, calls))

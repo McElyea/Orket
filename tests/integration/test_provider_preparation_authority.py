@@ -4,7 +4,9 @@ from contextlib import asynccontextmanager
 import httpx
 import pytest
 
-from orket.application.services.local_model_factory import create_local_model_provider
+from orket.application.services.local_model_factory import (
+    create_local_model_provider_async,
+)
 from orket.exceptions import ModelConnectionError
 from tests.helpers.observed_http_server import observed_http_server
 
@@ -36,8 +38,8 @@ async def test_real_inference_client_type_cannot_bypass_preparation(client_kind,
     if quarantined:
         environment["ORKET_PROVIDER_QUARANTINE"] = "openai_compat"
     async with observed_http_provider() as (url, requests):
-        provider = create_local_model_provider("fixture", provider="openai_compat", base_url=url,
-                                               timeout=5, connect_timeout_seconds=1, environment=environment)
+        provider = (await create_local_model_provider_async("fixture", provider="openai_compat", base_url=url,
+                                               timeout=5, connect_timeout_seconds=1, environment=environment))
         transport = None
         try:
             if client_kind != "ordinary-client":

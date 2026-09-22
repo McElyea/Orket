@@ -6,7 +6,9 @@ import time
 from typing import Any
 
 from orket.adapters.llm.local_model_provider import ModelResponse
-from orket.application.services.local_model_factory import create_local_model_provider
+from orket.application.services.local_model_factory import (
+    create_local_model_provider_async,
+)
 from orket.runtime.provider_runtime_inventory import list_loaded_lmstudio_model_ids_sync
 from scripts.providers.lmstudio_model_cache import clear_loaded_models, default_lmstudio_base_url
 
@@ -165,14 +167,14 @@ async def complete_with_transient_provider(
     swap_timeout_s: float = DEFAULT_SWAP_TIMEOUT_SEC,
     swap_poll_interval_s: float = DEFAULT_SWAP_POLL_INTERVAL_SEC,
 ) -> tuple[ModelResponse, int, dict[str, Any]]:
-    provider = create_local_model_provider(
+    provider = (await create_local_model_provider_async(
         model=model,
         temperature=temperature,
         timeout=timeout,
         provider=provider_name,
         base_url=base_url,
         api_key=api_key,
-    )
+    ))
     started_at = time.perf_counter()
     response: ModelResponse | None = None
     release_payload: dict[str, Any] = {}

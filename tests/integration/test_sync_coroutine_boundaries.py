@@ -3,10 +3,12 @@
 import asyncio
 import inspect
 import threading
+from functools import partial
 
 import aiosqlite
 import pytest
 
+from orket.adapters.execution.owned_io import run_owned_thread
 from orket.application.services.sdk_llm_provider import LocalModelCapabilityProvider
 from orket.application.services.sdk_memory_provider import SQLiteMemoryCapabilityProvider
 from orket.capabilities.sync_bridge import run_coro_sync
@@ -99,7 +101,7 @@ def test_sdk_model_preserves_http_loop_affinity_and_closes_the_loop(monkeypatch)
 @pytest.mark.parametrize("boundary", ["generate", "close"])
 async def test_sdk_model_refuses_direct_event_loop_calls_before_transport(boundary):
     with provider_server() as (endpoint, calls):
-        provider = model_provider(endpoint)
+        provider = await run_owned_thread(partial(model_provider, endpoint), label="fixture-sdk-construction")
         try:
             with pytest.raises(RuntimeError, match="E_SYNC_COROUTINE_REQUIRES_ASYNC_OWNER"):
                 if boundary == "generate":

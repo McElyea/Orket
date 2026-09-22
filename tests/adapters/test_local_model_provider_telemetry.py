@@ -8,10 +8,10 @@ import httpx
 import pytest
 
 from orket.adapters.llm.local_model_provider import LocalModelProvider, ModelResponse
-from orket.application.services.local_model_factory import create_local_model_provider
+from orket.application.services import local_model_factory
 from orket.core.contracts.provider_runtime import ProviderRuntimeTarget
 from orket.exceptions import ModelProviderError
-from tests.helpers.provider_preparation import create_test_model_provider
+from tests.helpers.provider_preparation import create_test_model_provider_async
 
 
 class _FakeClient:
@@ -30,7 +30,7 @@ class _FakeClient:
 async def test_local_model_provider_emits_usage_and_timings_payload(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("ORKET_LLM_PROVIDER", "ollama")
     monkeypatch.delenv("ORKET_MODEL_PROVIDER", raising=False)
-    provider = create_test_model_provider(model="dummy")
+    provider = (await create_test_model_provider_async(model="dummy"))
     provider.client = _FakeClient()
 
     response = await provider.complete([{"role": "user", "content": "hello"}])
@@ -76,7 +76,7 @@ def test_local_model_provider_maps_provider_env_consistently(
     monkeypatch.setenv("ORKET_LLM_PROVIDER", raw_provider)
     monkeypatch.delenv("ORKET_MODEL_PROVIDER", raising=False)
 
-    provider = create_local_model_provider(model="dummy")
+    provider = local_model_factory.create_local_model_provider(model="dummy")
 
     assert provider.provider_backend == expected_backend
     assert provider.provider_name == expected_name
@@ -88,7 +88,7 @@ def test_local_model_provider_llama_cpp_defaults_to_local_llama_server(monkeypat
     monkeypatch.delenv("ORKET_LLM_OPENAI_BASE_URL", raising=False)
     monkeypatch.delenv("ORKET_MODEL_STREAM_OPENAI_BASE_URL", raising=False)
 
-    provider = create_local_model_provider(model="qwen3.6-27b-q4_k_m")
+    provider = local_model_factory.create_local_model_provider(model="qwen3.6-27b-q4_k_m")
 
     assert provider.provider_backend == "openai_compat"
     assert provider.provider_name == "llama_cpp"
@@ -100,7 +100,7 @@ def test_local_model_provider_explicit_provider_override_beats_env(monkeypatch: 
     monkeypatch.setenv("ORKET_LLM_PROVIDER", "ollama")
     monkeypatch.setenv("ORKET_LLM_OPENAI_BASE_URL", "http://127.0.0.1:9999/v1")
 
-    provider = create_local_model_provider(
+    provider = local_model_factory.create_local_model_provider(
         model="dummy",
         provider="lmstudio",
         base_url="http://127.0.0.1:1234/v1",
@@ -117,7 +117,7 @@ def test_local_model_provider_separates_connect_and_read_timeouts(monkeypatch: p
     """Layer: unit. Verifies openai-compatible clients fail fast on connect while preserving a longer stream read budget."""
     monkeypatch.setenv("ORKET_LLM_PROVIDER", "openai_compat")
 
-    provider = create_local_model_provider(
+    provider = local_model_factory.create_local_model_provider(
         model="dummy",
         timeout=300,
         connect_timeout_seconds=15.0,
@@ -135,7 +135,7 @@ def test_local_model_provider_separates_connect_and_read_timeouts(monkeypatch: p
 async def test_local_model_provider_lmstudio_openai_compat_payload(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("ORKET_LLM_PROVIDER", "lmstudio")
     monkeypatch.setenv("ORKET_LLM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")
-    provider = create_local_model_provider(model="dummy")
+    provider = (await local_model_factory.create_local_model_provider_async(model="dummy"))
 
     async def _fake_resolve(**kwargs: Any) -> ProviderRuntimeTarget:
         _ = kwargs
@@ -207,7 +207,7 @@ async def test_local_model_provider_lmstudio_openai_compat_payload(monkeypatch: 
 async def test_local_model_provider_llama_cpp_request_shape_telemetry(monkeypatch: pytest.MonkeyPatch) -> None:
     """Layer: contract. Verifies llama.cpp records provider lineage and message-payload audit telemetry."""
     monkeypatch.setenv("ORKET_LLM_PROVIDER", "llama_cpp")
-    provider = create_local_model_provider(model="qwen3.6-27b-q4_k_m")
+    provider = (await local_model_factory.create_local_model_provider_async(model="qwen3.6-27b-q4_k_m"))
 
     async def _fake_resolve(**kwargs: Any) -> ProviderRuntimeTarget:
         _ = kwargs
@@ -288,7 +288,7 @@ async def test_local_model_provider_collapses_adjacent_user_blocks_for_gemma_req
     """Layer: contract. Verifies Gemma LM Studio requests compact verbose governed packets before submission."""
     monkeypatch.setenv("ORKET_LLM_PROVIDER", "lmstudio")
     monkeypatch.setenv("ORKET_LLM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")
-    provider = create_local_model_provider(model="google/gemma-4-26b-a4b")
+    provider = (await local_model_factory.create_local_model_provider_async(model="google/gemma-4-26b-a4b"))
 
     async def _fake_resolve(**kwargs: Any) -> ProviderRuntimeTarget:
         _ = kwargs
@@ -362,7 +362,7 @@ async def test_local_model_provider_honors_bench_overrides(monkeypatch, response
     monkeypatch.setenv("ORKET_BENCH_TEMPERATURE", "0")
     monkeypatch.setenv("ORKET_BENCH_SEED", "1337")
     monkeypatch.setenv("ORKET_LLM_OPENAI_RESPONSE_FORMAT", response_format)
-    provider = create_local_model_provider(model="dummy", temperature=0.7, seed=None, base_url="http://127.0.0.1:1234/v1")
+    provider = (await local_model_factory.create_local_model_provider_async(model="dummy", temperature=0.7, seed=None, base_url="http://127.0.0.1:1234/v1"))
     async def _fake_resolve(**_kwargs: Any) -> ProviderRuntimeTarget:
         return ProviderRuntimeTarget(
             requested_provider=provider_name,
@@ -408,7 +408,7 @@ async def test_local_model_provider_honors_bench_overrides(monkeypatch, response
 async def test_local_model_provider_rejects_non_openai_roles(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("ORKET_LLM_PROVIDER", "lmstudio")
     monkeypatch.setenv("ORKET_LLM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")
-    provider = create_test_model_provider(model="dummy")
+    provider = (await create_test_model_provider_async(model="dummy"))
     called = False
 
     async def _handler(request: httpx.Request) -> httpx.Response:
@@ -445,7 +445,7 @@ async def test_local_model_provider_blocks_structurally_invalid_openai_response(
     """Layer: contract. Verifies broken provider response envelopes do not become empty assistant success."""
     monkeypatch.setenv("ORKET_LLM_PROVIDER", "lmstudio")
     monkeypatch.setenv("ORKET_LLM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")
-    provider = create_test_model_provider(model="dummy")
+    provider = (await create_test_model_provider_async(model="dummy"))
 
     async def _handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(200, json={"choices": [{"delta": {"content": "stream-only"}}]})
@@ -463,7 +463,7 @@ async def test_local_model_provider_blocks_structurally_invalid_openai_response(
 async def test_local_model_provider_uses_runtime_context_for_orket_session_id(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("ORKET_LLM_PROVIDER", "lmstudio")
     monkeypatch.setenv("ORKET_LLM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")
-    provider = create_test_model_provider(model="dummy")
+    provider = (await create_test_model_provider_async(model="dummy"))
 
     async def _handler(request: httpx.Request) -> httpx.Response:
         assert request.headers["x-orket-session-id"] == "run-42"
@@ -494,7 +494,7 @@ async def test_local_model_provider_uses_runtime_context_for_orket_session_id(mo
 async def test_local_model_provider_captures_openai_tool_calls(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("ORKET_LLM_PROVIDER", "lmstudio")
     monkeypatch.setenv("ORKET_LLM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")
-    provider = create_test_model_provider(model="dummy")
+    provider = (await create_test_model_provider_async(model="dummy"))
 
     async def _handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(
@@ -533,7 +533,7 @@ async def test_local_model_provider_captures_openai_tool_calls(monkeypatch: pyte
 async def test_local_model_provider_applies_local_prompt_profile_overrides(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("ORKET_LLM_PROVIDER", "lmstudio")
     monkeypatch.setenv("ORKET_LLM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")
-    provider = create_test_model_provider(model="qwen3.5-4b")
+    provider = (await create_test_model_provider_async(model="qwen3.5-4b"))
 
     async def _handler(request: httpx.Request) -> httpx.Response:
         payload = json.loads(request.content.decode("utf-8"))
@@ -571,7 +571,7 @@ async def test_local_model_provider_uses_native_write_tool_for_gemma_write_turns
 ) -> None:
     monkeypatch.setenv("ORKET_LLM_PROVIDER", "lmstudio")
     monkeypatch.setenv("ORKET_LLM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")
-    provider = create_test_model_provider(model="google/gemma-4-26b-a4b")
+    provider = (await create_test_model_provider_async(model="google/gemma-4-26b-a4b"))
 
     async def _handler(request: httpx.Request) -> httpx.Response:
         payload = json.loads(request.content.decode("utf-8"))
@@ -634,7 +634,7 @@ async def test_local_model_provider_uses_native_read_tool_for_gemma_guard_turns(
     """Layer: contract. Verifies Gemma guard turns expose only the bounded native read tool."""
     monkeypatch.setenv("ORKET_LLM_PROVIDER", "lmstudio")
     monkeypatch.setenv("ORKET_LLM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")
-    provider = create_test_model_provider(model="google/gemma-4-26b-a4b")
+    provider = (await create_test_model_provider_async(model="google/gemma-4-26b-a4b"))
 
     async def _handler(request: httpx.Request) -> httpx.Response:
         payload = json.loads(request.content.decode("utf-8"))
@@ -696,7 +696,7 @@ async def test_local_model_provider_uses_native_read_and_write_tools_for_gemma_m
     """Layer: contract. Verifies mixed Gemma turns expose only the admitted native read/write tools."""
     monkeypatch.setenv("ORKET_LLM_PROVIDER", "lmstudio")
     monkeypatch.setenv("ORKET_LLM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")
-    provider = create_test_model_provider(model="google/gemma-4-26b-a4b")
+    provider = (await create_test_model_provider_async(model="google/gemma-4-26b-a4b"))
 
     async def _handler(request: httpx.Request) -> httpx.Response:
         payload = json.loads(request.content.decode("utf-8"))
@@ -772,7 +772,7 @@ async def test_local_model_provider_uses_native_read_tool_for_gemma_guard_turns_
     """Layer: contract. Verifies Gemma guard turns recover bounded read paths from scope fallback surfaces."""
     monkeypatch.setenv("ORKET_LLM_PROVIDER", "lmstudio")
     monkeypatch.setenv("ORKET_LLM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")
-    provider = create_test_model_provider(model="google/gemma-4-26b-a4b")
+    provider = (await create_test_model_provider_async(model="google/gemma-4-26b-a4b"))
 
     async def _handler(request: httpx.Request) -> httpx.Response:
         payload = json.loads(request.content.decode("utf-8"))
@@ -839,7 +839,7 @@ async def test_local_model_provider_uses_explicit_native_tool_contract_for_opena
     """Layer: contract. Verifies explicit native tool contracts can drive FunctionGemma-style OpenAI-compatible turns."""
     monkeypatch.setenv("ORKET_LLM_PROVIDER", "lmstudio")
     monkeypatch.setenv("ORKET_LLM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")
-    provider = create_local_model_provider(model="functiongemma-270m-it")
+    provider = (await local_model_factory.create_local_model_provider_async(model="functiongemma-270m-it"))
 
     async def _fake_resolve(**kwargs: Any) -> ProviderRuntimeTarget:
         _ = kwargs
@@ -929,7 +929,7 @@ async def test_local_model_provider_ollama_strict_tasks_request_json_format(monk
     """Layer: contract. Verifies Ollama strict_json turns request provider JSON mode."""
     monkeypatch.setenv("ORKET_LLM_PROVIDER", "ollama")
     monkeypatch.delenv("ORKET_MODEL_PROVIDER", raising=False)
-    provider = create_test_model_provider(model="qwen2.5-coder:7b")
+    provider = (await create_test_model_provider_async(model="qwen2.5-coder:7b"))
     seen: dict[str, Any] = {}
 
     class _CaptureClient:
@@ -961,7 +961,7 @@ async def test_local_model_provider_ollama_tool_call_turns_request_json_format(
     """Layer: contract. Verifies tool_call turns request provider JSON mode for the single-envelope contract."""
     monkeypatch.setenv("ORKET_LLM_PROVIDER", "ollama")
     monkeypatch.delenv("ORKET_MODEL_PROVIDER", raising=False)
-    provider = create_test_model_provider(model="qwen2.5-coder:7b")
+    provider = (await create_test_model_provider_async(model="qwen2.5-coder:7b"))
     seen: dict[str, Any] = {}
 
     class _CaptureClient:
@@ -1000,7 +1000,7 @@ async def test_local_model_provider_ollama_uses_explicit_native_tools_without_fo
     """Layer: contract. Verifies explicit native tools bypass Ollama format=json and capture provider tool calls."""
     monkeypatch.setenv("ORKET_LLM_PROVIDER", "ollama")
     monkeypatch.delenv("ORKET_MODEL_PROVIDER", raising=False)
-    provider = create_test_model_provider(model="qwen2.5-coder:7b")
+    provider = (await create_test_model_provider_async(model="qwen2.5-coder:7b"))
     seen: dict[str, Any] = {}
 
     class _CaptureClient:
@@ -1065,7 +1065,7 @@ async def test_local_model_provider_ollama_uses_explicit_native_tools_without_fo
 async def test_local_model_provider_clear_context_rotates_openai_session_id(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("ORKET_LLM_PROVIDER", "lmstudio")
     monkeypatch.setenv("ORKET_LLM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")
-    provider = create_test_model_provider(model="dummy")
+    provider = (await create_test_model_provider_async(model="dummy"))
     seen_session_ids: list[str] = []
 
     async def _handler(request: httpx.Request) -> httpx.Response:
@@ -1143,7 +1143,7 @@ async def test_local_model_provider_uses_shared_runtime_target_before_request(
             transport=httpx.MockTransport(_handler),
         ),
     )
-    provider = create_local_model_provider(model="qwen3.5-coder")
+    provider = (await local_model_factory.create_local_model_provider_async(model="qwen3.5-coder"))
 
     response = await provider.complete([{"role": "user", "content": "hello"}])
     await provider.close()
@@ -1158,7 +1158,7 @@ async def test_local_model_provider_uses_shared_runtime_target_before_request(
 async def test_local_model_provider_ollama_strict_format_failure_is_blocking(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("ORKET_LLM_PROVIDER", "ollama")
     monkeypatch.delenv("ORKET_MODEL_PROVIDER", raising=False)
-    provider = create_test_model_provider(model="qwen2.5-coder:7b")
+    provider = (await create_test_model_provider_async(model="qwen2.5-coder:7b"))
 
     class _NoFormatClient:
         async def chat(self, model, messages, options):  # type: ignore[no-untyped-def]
@@ -1190,7 +1190,7 @@ async def test_local_model_provider_close_is_idempotent_for_openai_client(monkey
         lambda *args, **kwargs: fake_client,
     )
 
-    provider = create_local_model_provider(model="qwen3.5-4b")
+    provider = (await local_model_factory.create_local_model_provider_async(model="qwen3.5-4b"))
     await provider.close()
     await provider.close()
     assert fake_client.close_calls == 1
@@ -1214,7 +1214,7 @@ async def test_local_model_provider_supports_aclose_and_async_context_manager(mo
         lambda *args, **kwargs: fake_client,
     )
 
-    async with create_local_model_provider(model="qwen3.5-4b") as provider:
+    async with (await local_model_factory.create_local_model_provider_async(model="qwen3.5-4b")) as provider:
         assert provider is not None
 
     assert fake_client.close_calls == 1

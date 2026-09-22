@@ -12519,7 +12519,8 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.91 Provider HTTP catalog inputs and native ownership, retaining
+0.6.92 Provider inference inputs and native ownership, retaining
+0.6.91 Provider HTTP catalog inputs and native ownership,
 0.6.90 Provider and shared command input capture,
 0.6.89 OpenClaw interactive process ownership,
 0.6.88 Worker native entry and renewal ownership,
@@ -12542,7 +12543,7 @@ and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
 Preserve every failed and
 passing source/native observation and the historical clock diagnosis. Canonical
-Ruff has 89 findings at the .91 checkpoint. The prior stale benchmark expectation passes in the
+Ruff has 89 findings at the .92 checkpoint. The prior stale benchmark expectation passes in the
 new source/native selection. The unmodified published .39 complete rerun has
 7,260 passes, three failures and 89 skips; its coverage is 84.56120595327887%
 against the unchanged 89% gate. The two parent-Git-dependent fixture failures and
@@ -22471,3 +22472,110 @@ Preserve BT1-5 and all proof. No whole-plan completion, main merge, release read
 or lane retirement; explicit user acceptance is required. Proof:
 `.tmp/d-provider-http-inputs-validated/` (accepted) and
 `.tmp/d-provider-http-inputs/` (retained earlier observations).
+
+
+#### .92 Provider inference inputs and native ownership (2026-09-22)
+
+Responsible maintainer: Codex for Orket Core. Continuing canonical D2/D3 after .91.
+Inference clients reuse the catalog's captured proxy, certificate, TLS-default and
+key-log policy. One acquired-resource owner handles partial construction and cleanup.
+The adapter receives an explicit application HTTP ownership port; native construction
+refuses event-loop entry before effects. Async composition captures environment and
+lexical cwd before dispatch and retains completed-but-unadopted clients through cleanup.
+Non-finite budgets fail before acquisition. Ollama outbound authentication uses public
+HTTPX auth to replace the SDK's ambient credential seed; SDK internal environment
+reads remain outside this claim. Redirects, deadlines, retries, admission, prompts,
+parsing, lineage and session semantics are preserved.
+
+Card preparation owns clients through prompt/ODR handoff; governed multi-client
+preparation closes earlier clients after later failure or interruption; outward
+composition captures inputs before native construction. Driver, ModelClientFactory
+and preparation preserve invocation roots. Async CLI and fixture callers migrate to
+owned construction. Assertions in modified existing tests remain AST-identical.
+
+SDK parents validate configured capability identifiers through one shared validator
+and construct request metadata without live providers. The native child immediately
+owns each default model client through registry/context construction, authorization,
+execution and result publication. Cleanup failure retains the prior workload result
+and capability report while refusing success. Configured borrowed clients retain
+caller ownership. Forced child termination proves process-tree cleanup, not graceful
+HTTP teardown or termination of remote inference.
+
+| Cell | Tests / failures / errors / skips | Pytest seconds | Installed origins |
+|---|---|---|---|
+| Fresh source | 2007 / 0 / 0 / 0 | 390.152 | source |
+| Installed a92c-win-py311 | 2007 / 0 / 0 / 0 | 392.957 | 1028 |
+| Installed a92c-win-py312 | 2007 / 0 / 0 / 0 | 467.096 | 1028 |
+
+All 1666 published .91 identities remain across 196 modules. The selection adds 104
+integration cases and 237 previously existing preservation cases. New proof
+uses actual TCP/TLS, credentials, files, native/client lifetime, SQLite and application
+handoffs, including the default SDK subprocess flow. Protocol responses are declared
+fixtures and establish transport/ownership behavior, not actual-model correctness.
+Each cell records 110 actual SQLite observations below the unchanged 0.5s bound;
+maximum observed: 0.151823000s.
+
+Complete core source/wheel/sdist parity: 1155 Python + 20 unchanged data = 1175 files;
+2385 frozen support inputs. Canonical dependency policy:
+1155 files / 3777 edges /
+six resolved routes; zero violations, collection errors, unknown modules or authority
+cycles. Ruff has 89 existing findings and none introduced. Scoped lint, docs hygiene,
+release metadata, whitespace and exact Python index binding pass. New files stay at
+or below 400 lines and new functions at or below 70. LocalModelProvider shrinks from
+590 to 581 lines; the advisory-judge test adds one required AsyncMock import. Both
+Quality jobs include the new controls; hosted execution remains unverified.
+
+Retained counterexamples and rejected candidates:
+- Exact installed .91 routing/credential controls: 14 cases, eight failures, no errors
+  or skips. Opening, intermediate and corrected observations remain in the initial root.
+- Initial full source: 1928 cases, 44 failures caused by constructor fixtures missing
+  the HTTP owner and SDK fixture construction on-loop. Migration exposed missing test
+  imports and the controlled ProductFlow constructor; corrected preservation: 71 passes.
+- Intermediate source 1942 passes and installed Python 3.11 passes missed the real
+  default SDK model path. The new opening case reproduced its native guard failure.
+  Subsequent new-fixture defects involved prompt wrapping and conflicting module
+  origins. Corrected SDK selection: 23 passes, including eight new integration cases.
+- The first 426-case focused run passed its tests while the baseline writer changed
+  an input. Its authoritative report rejects acceptance; campaign success denotes
+  subprocess exit only. The separate prior frozen-focused run passed 426 cases
+  with unchanged inputs after that writer terminated. No assertion or deadline weakened.
+
+The SDK candidate subsequently passed 2005 source and installed Python 3.11 cases,
+but installed Python 3.12 failed one repeated-prompt cancellation case. Its verified
+artifact/case bindings and failed result remain in rejected-native-matrix.json.
+Two deterministic held-cleanup cases confirmed physical HTTP closure while the
+provider close result remained unadopted. Primary and ODR-auditor cleanup now use
+the existing owned-operation mechanism, so inner close completes before caller
+cancellation propagates. The affected repair selection passes 65 cases. This final
+matrix adds both regression cases and uses a new frozen candidate root. Its final
+focused selection passes 428 cases with unchanged inputs.
+
+Actual local-provider evidence is separate. LMStudio returned content from the already
+loaded dark-osmosis-24b-v1.0 and its client closed, but it failed the single-word OK
+instruction. The original helper's success field means nonempty transport response;
+actual-provider-verdict.json records transport success, instruction failure and partial
+success. An earlier probe omitted executable PATH needed by preparation. Ollama HTTP
+still fails with a 2s ConnectTimeout. No model load, provider substitution, selected
+llama.cpp or CAP acceptance is claimed; bound provider bytes remain unchanged.
+
+Durable authority: docs/specs/PROVIDER_INFERENCE_CLIENT_OWNERSHIP.md and
+its contract delta at docs/architecture/CONTRACT_DELTA_PROVIDER_INFERENCE_INPUTS_D_2026-09-22.md.
+Affected dependency direction, explicit inputs, resource ownership and failure truth
+pass within this scope. D2/D3/D4 remain partial. OpenSSL can lazily read capath during
+handshake; full TLS internals and installed Python 3.13 remain unverified. Configured
+live-role and whole CLI flows remain unverified beyond the selected controls.
+Next bounded D2/D3 review: Gitea state/webhook HTTP inputs and native ownership;
+next-gitea-http-inputs.json is discovery only. Preserve authorization, retries and BT proof.
+
+Remaining blockers or drift: retained .72 Linux clock instability, without fresh
+measurement, settings changes or weaker deadlines; Ollama timeout and live-model
+instruction failure; unknown Windows latency/physical-sleep and Git timeout causes;
+ProductFlow replay, legacy Kernel completion, fresh full-suite 89% coverage, hosted
+Gitea, E1 taxonomy/no-op/Ruff, E2 bounded authority/decomposition, and all CAP1/2/3
+criteria. No whole-plan completion, main merge, release readiness or lane retirement.
+Preserve BT1-5 and retained evidence; retirement requires explicit user acceptance.
+
+Proof roots: .tmp/d-provider-inference-close-validated/ (accepted);
+.tmp/d-provider-inference-sdk-validated/ (rejected installed cleanup candidate);
+.tmp/d-provider-inference-inputs-validated/ (incomplete intermediate candidate);
+.tmp/d-provider-inference-inputs/ (rejected initial candidate and retained observations).

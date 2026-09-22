@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import inspect
 import json
-import os
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from functools import partial
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -15,6 +15,8 @@ from orket.application.services.outward_model_observability import (
     write_model_evidence,
 )
 from orket.application.services.outward_run_execution_plan import current_step_index, previous_tool_results
+from orket.application.services.process_input_service import capture_process_context
+from orket.application.services.runtime_result_lifetime import create_runtime_owner
 from orket.core.domain.outward_runs import OutwardRunRecord
 from orket.exceptions import ModelProviderError
 
@@ -34,25 +36,27 @@ class OutwardModelToolCallResult:
     response: Any | None = None
 
 
-def create_configured_model_client() -> OutwardModelClient:
+def create_configured_model_client(*, environment: Mapping[str, str] | None = None,
+                                   cwd: Path | None = None) -> OutwardModelClient:
+    directory, captured = capture_process_context(cwd=cwd, environment=environment)
     model = str(
-        os.getenv("ORKET_MODEL_STREAM_REAL_MODEL_ID")
-        or os.getenv("ORKET_MODEL_ID")
-        or os.getenv("ORKET_LLM_MODEL")
-        or os.getenv("ORKET_MODEL")
+        captured.get("ORKET_MODEL_STREAM_REAL_MODEL_ID")
+        or captured.get("ORKET_MODEL_ID")
+        or captured.get("ORKET_LLM_MODEL")
+        or captured.get("ORKET_MODEL")
         or ""
     ).strip()
     provider = str(
-        os.getenv("ORKET_LLM_PROVIDER")
-        or os.getenv("ORKET_MODEL_PROVIDER")
-        or os.getenv("ORKET_MODEL_STREAM_REAL_PROVIDER")
+        captured.get("ORKET_LLM_PROVIDER")
+        or captured.get("ORKET_MODEL_PROVIDER")
+        or captured.get("ORKET_MODEL_STREAM_REAL_PROVIDER")
         or ""
     ).strip()
     return create_local_model_provider(
         model=model,
         temperature=0.0,
-        timeout=_positive_int_env("ORKET_MODEL_STREAM_REAL_TIMEOUT_S", default=300),
-        provider=provider,
+        timeout=_positive_int_value(captured.get("ORKET_MODEL_STREAM_REAL_TIMEOUT_S"), default=300),
+        provider=provider, environment=captured, cwd=directory,
     )
 
 
@@ -66,7 +70,7 @@ class OutwardModelToolCallService:
     ) -> None:
         self.connector_registry = connector_registry
         self.workspace_root = workspace_root
-        self.model_client_factory = model_client_factory or create_configured_model_client
+        self.model_client_factory = model_client_factory
 
     async def produce_governed_tool_call(
         self,
@@ -105,7 +109,10 @@ class OutwardModelToolCallService:
             "outward_namespace": run.namespace,
             "turn_number": int(run.current_turn or 1),
         }
-        client = self.model_client_factory()
+        directory, captured = capture_process_context()
+        factory = self.model_client_factory or partial(create_configured_model_client,
+                                                       environment=captured, cwd=directory)
+        client = await create_runtime_owner(factory, label="outward-provider-construction")
         response: Any | None = None
         result = "provider_error"
         error_type: str | None = None
@@ -295,8 +302,8 @@ def _raw_tool_calls(raw: Mapping[str, Any]) -> list[dict[str, Any]]:
     return [dict(item) for item in calls if isinstance(item, Mapping)] if isinstance(calls, list) else []
 
 
-def _positive_int_env(key: str, *, default: int) -> int:
-    raw = str(os.getenv(key, "")).strip()
+def _positive_int_value(value: object, *, default: int) -> int:
+    raw = str(value or "").strip()
     if not raw:
         return default
     try:

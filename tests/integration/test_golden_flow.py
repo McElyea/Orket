@@ -137,8 +137,8 @@ async def test_golden_flow(tmp_path, monkeypatch):
     # 3. Patch LocalModelProvider
     dummy_provider = GoldenFlowDummyProvider()
     def mock_init(self, *args, **kwargs):
-        self.model = "dummy"
-        self.timeout = 300
+        self.model, self.timeout = "dummy", 300
+        self._http_client_owner, self.client = kwargs["http_client_owner"], None
     monkeypatch.setenv("ORKET_DISABLE_RUNTIME_VERIFIER", "true")
     monkeypatch.setattr(LocalModelProvider, "__init__", mock_init)
     monkeypatch.setattr(LocalModelProvider, "complete", dummy_provider.complete)
@@ -219,8 +219,8 @@ async def test_session_resumption(tmp_path, monkeypatch):
 
     dummy_provider = GoldenFlowDummyProvider()
     def mock_init(self, *a, **k):
-        self.model = "dummy"
-        self.timeout = 300
+        self.model, self.timeout = "dummy", 300
+        self._http_client_owner, self.client = k["http_client_owner"], None
     monkeypatch.setenv("ORKET_DISABLE_RUNTIME_VERIFIER", "true")
     monkeypatch.setattr(LocalModelProvider, "__init__", mock_init)
     monkeypatch.setattr(LocalModelProvider, "complete", dummy_provider.complete)

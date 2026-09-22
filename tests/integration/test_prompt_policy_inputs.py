@@ -10,7 +10,9 @@ from dataclasses import FrozenInstanceError
 import pytest
 
 from orket.application.services import local_prompting_service as policy
-from orket.application.services.local_model_factory import create_local_model_provider
+from orket.application.services.local_model_factory import (
+    create_local_model_provider_async,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 
@@ -177,7 +179,7 @@ async def test_provider_captures_request_before_runtime_target_await(monkeypatch
         return provider.model
 
     monkeypatch.setattr(adapter, "ensure_provider_runtime_target", held)
-    provider = create_local_model_provider(model="qwen2.5:7b", provider="openai_compat", environment={})
+    provider = (await create_local_model_provider_async(model="qwen2.5:7b", provider="openai_compat", environment={}))
     observed = []
 
     async def transport(messages, selected_policy, **kwargs):
@@ -249,8 +251,8 @@ async def test_captured_policy_reaches_actual_http_transport(monkeypatch):
                 "ORKET_PROVIDER_RUNTIME_AUTO_SELECT_MODEL": "false",
                 "ORKET_PROVIDER_RUNTIME_AUTO_LOAD_LOCAL_MODEL": "false"}
     async with http_provider(observed) as url:
-        provider = create_local_model_provider(model="qwen2.5:7b", provider="openai_compat",
-                                               base_url=url, environment=settings)
+        provider = (await create_local_model_provider_async(model="qwen2.5:7b", provider="openai_compat",
+                                               base_url=url, environment=settings))
         settings["ORKET_LMSTUDIO_SESSION_ID"] = "MUTATED"
         monkeypatch.setenv("ORKET_LOCAL_PROMPT_PROFILE_ID", "missing-profile")
         monkeypatch.setenv("ORKET_LMSTUDIO_SESSION_ID", "MUTATED")

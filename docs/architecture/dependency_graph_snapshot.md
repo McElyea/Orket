@@ -1,12 +1,12 @@
 # Dependency Graph Snapshot
 
-Generated: `2026-09-22T17:31:13.317241+00:00`
+Generated: `2026-09-22T20:00:07.408446+00:00`
 
 Generated from the canonical dependency policy; do not edit this view by hand.
 This is conservative static import evidence, not a runtime call graph or a core-purity proof.
 
 Collection: `True`. Policy verdict: `True`.
-Files: 1152; import sites: 3754; forbidden pairs: 0; analysis errors: 0; authority cycles: 0.
+Files: 1155; import sites: 3777; forbidden pairs: 0; analysis errors: 0; authority cycles: 0.
 
 ## Module classification
 
@@ -87,11 +87,11 @@ Side-effect-free adapter targets: none declared
 
 | Source | Target | Import sites |
 |---|---|---:|
-| `adapters` | `adapters` | 251 |
-| `adapters` | `core` | 143 |
-| `application` | `adapters` | 452 |
-| `application` | `application` | 1818 |
-| `application` | `core` | 787 |
+| `adapters` | `adapters` | 253 |
+| `adapters` | `core` | 145 |
+| `application` | `adapters` | 456 |
+| `application` | `application` | 1832 |
+| `application` | `core` | 788 |
 | `application` | `decision_nodes` | 5 |
 | `core` | `core` | 142 |
 | `decision_nodes` | `core` | 6 |
@@ -109,8 +109,8 @@ These routes have an inspected syntactic proof; they are not analysis-error waiv
 | `orket/adapters/execution/extension_modules.py` | 110 | `external_module_import` | Plain absolute name outside `orket` via `orket.adapters.execution.extension_modules._external_module_name` |
 | `orket/extensions/agent_workload_subprocess.py` | 118 | `importer_interception` | `builtins.__import__` via `orket.extensions.sdk_workload_subprocess._guarded_import` |
 | `orket/extensions/agent_workload_subprocess.py` | 119 | `importer_interception` | `importlib.import_module` via `orket.extensions.sdk_workload_subprocess._guarded_import_module` |
-| `orket/extensions/sdk_workload_subprocess.py` | 131 | `importer_interception` | `builtins.__import__` via `orket.extensions.sdk_workload_subprocess._guarded_import` |
-| `orket/extensions/sdk_workload_subprocess.py` | 132 | `importer_interception` | `importlib.import_module` via `orket.extensions.sdk_workload_subprocess._guarded_import_module` |
+| `orket/extensions/sdk_workload_subprocess.py` | 148 | `importer_interception` | `builtins.__import__` via `orket.extensions.sdk_workload_subprocess._guarded_import` |
+| `orket/extensions/sdk_workload_subprocess.py` | 149 | `importer_interception` | `importlib.import_module` via `orket.extensions.sdk_workload_subprocess._guarded_import_module` |
 
 ## Exceptions
 

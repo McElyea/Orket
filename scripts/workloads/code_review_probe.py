@@ -15,7 +15,7 @@ if str(REPO_ROOT) not in sys.path:
 
 from orket.adapters.llm.local_model_provider import LocalModelProvider  # noqa: E402 - project path bootstrap
 from orket.application.services.local_model_factory import (  # noqa: E402 - project path bootstrap
-    create_local_model_provider,  # noqa: E402 - project path bootstrap
+    create_local_model_provider_async,
 )
 from orket.core.contracts.provider_runtime import (  # noqa: E402 - project path bootstrap
     DEFAULT_LOCAL_MODEL,
@@ -228,12 +228,12 @@ async def _run_probe(args: argparse.Namespace) -> dict[str, Any]:
         ollama_host=str(args.ollama_host or "").strip() or None,
         disable_sandbox=True,
     ):
-        provider = create_local_model_provider(
+        provider = (await create_local_model_provider_async(
             model=str(args.model),
             temperature=float(args.temperature),
             seed=int(args.seed),
             timeout=int(args.timeout),
-        )
+        ))
         try:
             initial_response = await _complete_review(
                 provider,

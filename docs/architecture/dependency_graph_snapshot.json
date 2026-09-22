@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-22T17:31:13.317241+00:00",
+  "generated_at": "2026-09-22T20:00:07.408446+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -205,7 +205,7 @@
       },
       "orket.adapters.llm.local_model_provider": {
         "path": "orket/adapters/llm/local_model_provider.py",
-        "sha256": "875494215536adda2ff6afa8ce400d077c56bd1c0f0cbcc340462d035d118e6d"
+        "sha256": "b395f6b1b409961f39a482cb8a9d60d34d92a90831d000d2c823efbcccd95817"
       },
       "orket.adapters.llm.local_model_provider_runtime_target": {
         "path": "orket/adapters/llm/local_model_provider_runtime_target.py",
@@ -225,11 +225,15 @@
       },
       "orket.adapters.llm.provider_catalog_client": {
         "path": "orket/adapters/llm/provider_catalog_client.py",
-        "sha256": "288d830499153db0c9017f213ef5d72dff15215de73cc97ddaf12cac40960420"
+        "sha256": "c5a1733109bce3a540d1f63fe2ab39af5594884006be4de610b44e3be4ee8d25"
       },
       "orket.adapters.llm.provider_extractors": {
         "path": "orket/adapters/llm/provider_extractors.py",
         "sha256": "6bd1d54a84ce8d1e9ac010ce7b75662f748e57fa86361f29430dde36dd1cc570"
+      },
+      "orket.adapters.llm.provider_inference_client": {
+        "path": "orket/adapters/llm/provider_inference_client.py",
+        "sha256": "095f70e2206b95a5180461dbbf5f33b2adb77c36298417990dd7afacccb86aa3"
       },
       "orket.adapters.storage.__init__": {
         "path": "orket/adapters/storage/__init__.py",
@@ -1293,7 +1297,7 @@
       },
       "orket.application.services.governed_agent_model_provider": {
         "path": "orket/application/services/governed_agent_model_provider.py",
-        "sha256": "879b2c5423440cbf0245b9d0474587ffb3268eef4f59754acd5cb9e696a81313"
+        "sha256": "0381dbb46d6b08284e97dc7e6cf0b1aaaa44e0a7774309cf89a55dc6e8598474"
       },
       "orket.application.services.governed_agent_operator_service": {
         "path": "orket/application/services/governed_agent_operator_service.py",
@@ -1461,7 +1465,7 @@
       },
       "orket.application.services.local_model_factory": {
         "path": "orket/application/services/local_model_factory.py",
-        "sha256": "c1670ea011e1284c96732ebd38a0dc8d87ce4eea6cda90e3f15877b86645b00f"
+        "sha256": "247c439cd73ac7ec94a3c4e688f8bb7c60aa259747a27870ee546a8223847238"
       },
       "orket.application.services.local_project_vendor": {
         "path": "orket/application/services/local_project_vendor.py",
@@ -1501,7 +1505,7 @@
       },
       "orket.application.services.model_client_factory": {
         "path": "orket/application/services/model_client_factory.py",
-        "sha256": "9e864887bd6e1a0a26e0dbdb9254f37cbde7ab15117a18c60798f597bef283ad"
+        "sha256": "2580c239a19375817215a3dbfa2a4a85c14736245e3ea52cd44c16775da5a84e"
       },
       "orket.application.services.model_selection_service": {
         "path": "orket/application/services/model_selection_service.py",
@@ -1565,7 +1569,7 @@
       },
       "orket.application.services.orchestrator_turn_preparation_service": {
         "path": "orket/application/services/orchestrator_turn_preparation_service.py",
-        "sha256": "88ae105a93be61b0b4f7ae65fff5967dcb4a9fa4682c3ca46c4f5e9d1133a420"
+        "sha256": "0b302879d1d73666eaf190b0be44d357ce67b36fe545270332e14e331491f741"
       },
       "orket.application.services.orchestrator_turn_success_handler": {
         "path": "orket/application/services/orchestrator_turn_success_handler.py",
@@ -1649,7 +1653,7 @@
       },
       "orket.application.services.outward_model_tool_call_service": {
         "path": "orket/application/services/outward_model_tool_call_service.py",
-        "sha256": "ec42a4aa36e1ea01dc70c0e0fa94617a756668280f82452488670fa771c435ca"
+        "sha256": "dc6b66936f3212268255054b5db9ddb88144d2218617d96f10e1d27568fe180c"
       },
       "orket.application.services.outward_run_execution_plan": {
         "path": "orket/application/services/outward_run_execution_plan.py",
@@ -1731,13 +1735,21 @@
         "path": "orket/application/services/protocol_replay_service.py",
         "sha256": "10b044b6ae0b994e9295ee7a7ba417a55ee47979acbeb514efd5b4f52a165160"
       },
+      "orket.application.services.provider_http_resources": {
+        "path": "orket/application/services/provider_http_resources.py",
+        "sha256": "8e03e834f5248b06551072b75f78bda021d8396e7d97f676255d54bdd908fcc3"
+      },
       "orket.application.services.provider_http_service": {
         "path": "orket/application/services/provider_http_service.py",
-        "sha256": "825a4a65f945bfb848c7dd9be6d2f924108c794ee29e8352de9f2d815be03a24"
+        "sha256": "691b5b8126383152b08578044ce61935d555c9375248ebcd8ec53fe5ff3a4a3b"
+      },
+      "orket.application.services.provider_inference_http_service": {
+        "path": "orket/application/services/provider_inference_http_service.py",
+        "sha256": "7e799899d9cd5383a34fbb54d51c25f017f242864eb080ae0d136a7b00a25e3b"
       },
       "orket.application.services.provider_preparation_service": {
         "path": "orket/application/services/provider_preparation_service.py",
-        "sha256": "4d06bdc1a53b07a16bc8ea9dbab55f5b97d829432ec4b79c73e387a3145cf165"
+        "sha256": "7283cfc82e6457cdbeea6eb72b6bf504921211b330d61345042f52b8ba6b0fde"
       },
       "orket.application.services.reforger_command": {
         "path": "orket/application/services/reforger_command.py",
@@ -2493,7 +2505,7 @@
       },
       "orket.core.contracts.provider_http": {
         "path": "orket/core/contracts/provider_http.py",
-        "sha256": "0a391c3584af074ba10d084fc31557086fbacb64cdc3c2b59976496d22d6017a"
+        "sha256": "5f755e95d77c6b787f85bad8d0a40b93b28209bab30d996a447ea9080128375e"
       },
       "orket.core.contracts.provider_preparation": {
         "path": "orket/core/contracts/provider_preparation.py",
@@ -2793,7 +2805,7 @@
       },
       "orket.driver": {
         "path": "orket/driver.py",
-        "sha256": "a75e0a82419e6ad3f78ae7311d48f5c7a781b6dae22df50c860fcce2361d87ae"
+        "sha256": "6d7ea44976fcb8d1ec0bb56fa43ccef4812c70f1004408d4bafa02e498b4f1e4"
       },
       "orket.driver_support_conversation": {
         "path": "orket/driver_support_conversation.py",
@@ -2913,7 +2925,7 @@
       },
       "orket.extensions.sdk_workload_subprocess": {
         "path": "orket/extensions/sdk_workload_subprocess.py",
-        "sha256": "33d9c63e7cf01f9abf79eae230f485419b0988cd8aaf199a7fc6c5ad6ffeac2f"
+        "sha256": "a0e8763e5599ab37fa15ff6b49441c639dd5efb49437ba5ad134fdbe6c70d957"
       },
       "orket.extensions.source_policy": {
         "path": "orket/extensions/source_policy.py",
@@ -2921,15 +2933,15 @@
       },
       "orket.extensions.workload_artifacts": {
         "path": "orket/extensions/workload_artifacts.py",
-        "sha256": "947c9dd79e1760c8d52e8ed644747665f6ef12c5c83638f4a2a6f6c5f3c7f621"
+        "sha256": "9837afb942634c5541732beb702fbba971f6f9b0a525497098dac0610abb2095"
       },
       "orket.extensions.workload_executor": {
         "path": "orket/extensions/workload_executor.py",
-        "sha256": "77b0eb37b4c52ff043567e54658a99fb06539b6bdda7c1ea9a4aea5795d293fa"
+        "sha256": "f53d48fd39d3bad6833cdf782e69cd51f368acf64a98c3d9c772f436f507c8c2"
       },
       "orket.extensions.workload_executor_support": {
         "path": "orket/extensions/workload_executor_support.py",
-        "sha256": "b2f597b09088653249632d479e915c7731afd8bf381a4eb6e0dead979c04b889"
+        "sha256": "453cf4881a4a16bf822d1109dc1751f25548294aa712f11116c8890a50c686d5"
       },
       "orket.extensions.workload_loader": {
         "path": "orket/extensions/workload_loader.py",
@@ -4979,17 +4991,17 @@
       "orket.adapters.llm.local_model_provider": {
         "module": [
           {
-            "line": 45,
+            "line": 47,
             "kind": "Assign",
             "direct": true,
             "literal": true
           }
         ],
         "classes": {
-          "ModelResponse@49": [],
-          "LocalModelProvider@54": [
+          "ModelResponse@51": [],
+          "LocalModelProvider@56": [
             {
-              "line": 56,
+              "line": 58,
               "kind": "Assign",
               "direct": true,
               "literal": true
@@ -5065,6 +5077,19 @@
           "ProviderExtractor@17": [],
           "OpenAIExtractor@27": [],
           "OllamaExtractor@41": []
+        }
+      },
+      "orket.adapters.llm.provider_inference_client": {
+        "module": [
+          {
+            "line": 10,
+            "kind": "Assign",
+            "direct": true,
+            "literal": true
+          }
+        ],
+        "classes": {
+          "CapturedOllamaAuth@13": []
         }
       },
       "orket.adapters.storage.__init__": {
@@ -7402,79 +7427,93 @@
       },
       {
         "source": "orket.adapters.llm.local_model_provider",
-        "target": "orket.adapters.llm.llama_cpp_render_verification",
+        "target": "orket.adapters.execution.owned_io",
         "path": "orket/adapters/llm/local_model_provider.py",
         "line": 17,
         "kind": "from"
       },
       {
         "source": "orket.adapters.llm.local_model_provider",
-        "target": "orket.adapters.llm.local_model_provider_runtime_target",
+        "target": "orket.adapters.llm.llama_cpp_render_verification",
         "path": "orket/adapters/llm/local_model_provider.py",
         "line": 18,
         "kind": "from"
       },
       {
         "source": "orket.adapters.llm.local_model_provider",
+        "target": "orket.adapters.llm.local_model_provider_runtime_target",
+        "path": "orket/adapters/llm/local_model_provider.py",
+        "line": 19,
+        "kind": "from"
+      },
+      {
+        "source": "orket.adapters.llm.local_model_provider",
         "target": "orket.adapters.llm.openai_compat_runtime",
         "path": "orket/adapters/llm/local_model_provider.py",
-        "line": 23,
+        "line": 24,
         "kind": "from"
       },
       {
         "source": "orket.adapters.llm.local_model_provider",
         "target": "orket.adapters.llm.openai_native_tools",
         "path": "orket/adapters/llm/local_model_provider.py",
-        "line": 31,
+        "line": 32,
         "kind": "from"
       },
       {
         "source": "orket.adapters.llm.local_model_provider",
         "target": "orket.adapters.llm.provider_extractors",
         "path": "orket/adapters/llm/local_model_provider.py",
-        "line": 32,
+        "line": 33,
         "kind": "from"
       },
       {
         "source": "orket.adapters.llm.local_model_provider",
         "target": "orket.core.contracts.local_prompting",
         "path": "orket/adapters/llm/local_model_provider.py",
-        "line": 33,
+        "line": 34,
         "kind": "from"
       },
       {
         "source": "orket.adapters.llm.local_model_provider",
         "target": "orket.core.contracts.model_timing",
         "path": "orket/adapters/llm/local_model_provider.py",
-        "line": 34,
-        "kind": "from"
-      },
-      {
-        "source": "orket.adapters.llm.local_model_provider",
-        "target": "orket.core.contracts.provider_preparation",
-        "path": "orket/adapters/llm/local_model_provider.py",
         "line": 35,
         "kind": "from"
       },
       {
         "source": "orket.adapters.llm.local_model_provider",
-        "target": "orket.core.contracts.provider_runtime",
+        "target": "orket.core.contracts.provider_http",
         "path": "orket/adapters/llm/local_model_provider.py",
         "line": 36,
         "kind": "from"
       },
       {
         "source": "orket.adapters.llm.local_model_provider",
+        "target": "orket.core.contracts.provider_preparation",
+        "path": "orket/adapters/llm/local_model_provider.py",
+        "line": 37,
+        "kind": "from"
+      },
+      {
+        "source": "orket.adapters.llm.local_model_provider",
+        "target": "orket.core.contracts.provider_runtime",
+        "path": "orket/adapters/llm/local_model_provider.py",
+        "line": 38,
+        "kind": "from"
+      },
+      {
+        "source": "orket.adapters.llm.local_model_provider",
         "target": "orket.exceptions",
         "path": "orket/adapters/llm/local_model_provider.py",
-        "line": 42,
+        "line": 44,
         "kind": "from"
       },
       {
         "source": "orket.adapters.llm.local_model_provider",
         "target": "orket.logging",
         "path": "orket/adapters/llm/local_model_provider.py",
-        "line": 43,
+        "line": 45,
         "kind": "from"
       },
       {
@@ -7531,6 +7570,20 @@
         "target": "orket.core.contracts.model_timing",
         "path": "orket/adapters/llm/provider_extractors.py",
         "line": 12,
+        "kind": "from"
+      },
+      {
+        "source": "orket.adapters.llm.provider_inference_client",
+        "target": "orket.adapters.llm.provider_catalog_client",
+        "path": "orket/adapters/llm/provider_inference_client.py",
+        "line": 7,
+        "kind": "from"
+      },
+      {
+        "source": "orket.adapters.llm.provider_inference_client",
+        "target": "orket.core.contracts.provider_http",
+        "path": "orket/adapters/llm/provider_inference_client.py",
+        "line": 8,
         "kind": "from"
       },
       {
@@ -14514,23 +14567,37 @@
       },
       {
         "source": "orket.application.services.governed_agent_model_provider",
-        "target": "orket.core.contracts.provider_runtime",
+        "target": "orket.application.services.process_input_service",
         "path": "orket/application/services/governed_agent_model_provider.py",
         "line": 22,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_model_provider",
-        "target": "orket.exceptions",
+        "target": "orket.application.services.runtime_result_lifetime",
         "path": "orket/application/services/governed_agent_model_provider.py",
         "line": 23,
         "kind": "from"
       },
       {
         "source": "orket.application.services.governed_agent_model_provider",
-        "target": "orket.runtime.config.provider_runtime_target",
+        "target": "orket.core.contracts.provider_runtime",
         "path": "orket/application/services/governed_agent_model_provider.py",
         "line": 24,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.governed_agent_model_provider",
+        "target": "orket.exceptions",
+        "path": "orket/application/services/governed_agent_model_provider.py",
+        "line": 25,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.governed_agent_model_provider",
+        "target": "orket.runtime.config.provider_runtime_target",
+        "path": "orket/application/services/governed_agent_model_provider.py",
+        "line": 26,
         "kind": "from"
       },
       {
@@ -15732,30 +15799,72 @@
       },
       {
         "source": "orket.application.services.local_model_factory",
-        "target": "orket.adapters.llm.local_model_provider",
-        "path": "orket/application/services/local_model_factory.py",
-        "line": 8,
-        "kind": "from"
-      },
-      {
-        "source": "orket.application.services.local_model_factory",
-        "target": "orket.application.services.local_prompting_service",
-        "path": "orket/application/services/local_model_factory.py",
-        "line": 9,
-        "kind": "from"
-      },
-      {
-        "source": "orket.application.services.local_model_factory",
-        "target": "orket.application.services.provider_preparation_service",
+        "target": "orket.adapters.execution.owned_io",
         "path": "orket/application/services/local_model_factory.py",
         "line": 10,
         "kind": "from"
       },
       {
         "source": "orket.application.services.local_model_factory",
-        "target": "orket.core.contracts.provider_preparation",
+        "target": "orket.adapters.llm.local_model_provider",
         "path": "orket/application/services/local_model_factory.py",
         "line": 11,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.local_model_factory",
+        "target": "orket.application.services.local_prompting_service",
+        "path": "orket/application/services/local_model_factory.py",
+        "line": 12,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.local_model_factory",
+        "target": "orket.application.services.process_input_service",
+        "path": "orket/application/services/local_model_factory.py",
+        "line": 13,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.local_model_factory",
+        "target": "orket.application.services.provider_inference_http_service",
+        "path": "orket/application/services/local_model_factory.py",
+        "line": 14,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.local_model_factory",
+        "target": "orket.application.services.provider_preparation_service",
+        "path": "orket/application/services/local_model_factory.py",
+        "line": 15,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.local_model_factory",
+        "target": "orket.application.services.runtime_result_lifetime",
+        "path": "orket/application/services/local_model_factory.py",
+        "line": 16,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.local_model_factory",
+        "target": "orket.capabilities.sync_bridge",
+        "path": "orket/application/services/local_model_factory.py",
+        "line": 17,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.local_model_factory",
+        "target": "orket.core.contracts.provider_http",
+        "path": "orket/application/services/local_model_factory.py",
+        "line": 18,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.local_model_factory",
+        "target": "orket.core.contracts.provider_preparation",
+        "path": "orket/application/services/local_model_factory.py",
+        "line": 19,
         "kind": "from"
       },
       {
@@ -15935,9 +16044,16 @@
       },
       {
         "source": "orket.application.services.model_client_factory",
-        "target": "orket.core.contracts.decision_inputs",
+        "target": "orket.application.services.process_input_service",
         "path": "orket/application/services/model_client_factory.py",
         "line": 12,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.model_client_factory",
+        "target": "orket.core.contracts.decision_inputs",
+        "path": "orket/application/services/model_client_factory.py",
+        "line": 13,
         "kind": "from"
       },
       {
@@ -16558,44 +16674,51 @@
       },
       {
         "source": "orket.application.services.orchestrator_turn_preparation_service",
-        "target": "orket.core.cards_runtime_contract",
+        "target": "orket.application.services.runtime_result_lifetime",
         "path": "orket/application/services/orchestrator_turn_preparation_service.py",
         "line": 17,
         "kind": "from"
       },
       {
         "source": "orket.application.services.orchestrator_turn_preparation_service",
-        "target": "orket.core.contracts.decision_inputs",
+        "target": "orket.core.cards_runtime_contract",
         "path": "orket/application/services/orchestrator_turn_preparation_service.py",
         "line": 18,
         "kind": "from"
       },
       {
         "source": "orket.application.services.orchestrator_turn_preparation_service",
-        "target": "orket.exceptions",
+        "target": "orket.core.contracts.decision_inputs",
         "path": "orket/application/services/orchestrator_turn_preparation_service.py",
         "line": 19,
         "kind": "from"
       },
       {
         "source": "orket.application.services.orchestrator_turn_preparation_service",
-        "target": "orket.logging",
+        "target": "orket.exceptions",
         "path": "orket/application/services/orchestrator_turn_preparation_service.py",
         "line": 20,
         "kind": "from"
       },
       {
         "source": "orket.application.services.orchestrator_turn_preparation_service",
-        "target": "orket.schema",
+        "target": "orket.logging",
         "path": "orket/application/services/orchestrator_turn_preparation_service.py",
         "line": 21,
         "kind": "from"
       },
       {
         "source": "orket.application.services.orchestrator_turn_preparation_service",
-        "target": "orket.utils",
+        "target": "orket.schema",
         "path": "orket/application/services/orchestrator_turn_preparation_service.py",
         "line": 22,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.orchestrator_turn_preparation_service",
+        "target": "orket.utils",
+        "path": "orket/application/services/orchestrator_turn_preparation_service.py",
+        "line": 23,
         "kind": "from"
       },
       {
@@ -17671,16 +17794,30 @@
       },
       {
         "source": "orket.application.services.outward_model_tool_call_service",
-        "target": "orket.core.domain.outward_runs",
+        "target": "orket.application.services.process_input_service",
         "path": "orket/application/services/outward_model_tool_call_service.py",
         "line": 18,
         "kind": "from"
       },
       {
         "source": "orket.application.services.outward_model_tool_call_service",
-        "target": "orket.exceptions",
+        "target": "orket.application.services.runtime_result_lifetime",
         "path": "orket/application/services/outward_model_tool_call_service.py",
         "line": 19,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.outward_model_tool_call_service",
+        "target": "orket.core.domain.outward_runs",
+        "path": "orket/application/services/outward_model_tool_call_service.py",
+        "line": 20,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.outward_model_tool_call_service",
+        "target": "orket.exceptions",
+        "path": "orket/application/services/outward_model_tool_call_service.py",
+        "line": 21,
         "kind": "from"
       },
       {
@@ -18419,22 +18556,43 @@
         "kind": "from"
       },
       {
+        "source": "orket.application.services.provider_http_resources",
+        "target": "orket.adapters.execution.owned_io",
+        "path": "orket/application/services/provider_http_resources.py",
+        "line": 5,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.provider_http_resources",
+        "target": "orket.application.services.application_runtime_lifetime",
+        "path": "orket/application/services/provider_http_resources.py",
+        "line": 6,
+        "kind": "from"
+      },
+      {
         "source": "orket.application.services.provider_http_service",
         "target": "orket.adapters.execution.owned_io",
         "path": "orket/application/services/provider_http_service.py",
-        "line": 11,
+        "line": 10,
         "kind": "from"
       },
       {
         "source": "orket.application.services.provider_http_service",
         "target": "orket.adapters.llm.provider_catalog_client",
         "path": "orket/application/services/provider_http_service.py",
-        "line": 12,
+        "line": 11,
         "kind": "from"
       },
       {
         "source": "orket.application.services.provider_http_service",
         "target": "orket.application.services.process_input_service",
+        "path": "orket/application/services/provider_http_service.py",
+        "line": 12,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.provider_http_service",
+        "target": "orket.application.services.provider_http_resources",
         "path": "orket/application/services/provider_http_service.py",
         "line": 13,
         "kind": "from"
@@ -18454,31 +18612,59 @@
         "kind": "from"
       },
       {
+        "source": "orket.application.services.provider_inference_http_service",
+        "target": "orket.adapters.llm.provider_inference_client",
+        "path": "orket/application/services/provider_inference_http_service.py",
+        "line": 6,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.provider_inference_http_service",
+        "target": "orket.application.services.provider_http_resources",
+        "path": "orket/application/services/provider_inference_http_service.py",
+        "line": 7,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.provider_inference_http_service",
+        "target": "orket.application.services.provider_http_service",
+        "path": "orket/application/services/provider_inference_http_service.py",
+        "line": 8,
+        "kind": "from"
+      },
+      {
         "source": "orket.application.services.provider_preparation_service",
-        "target": "orket.core.contracts.provider_preparation",
+        "target": "orket.application.services.process_input_service",
         "path": "orket/application/services/provider_preparation_service.py",
         "line": 9,
         "kind": "from"
       },
       {
         "source": "orket.application.services.provider_preparation_service",
-        "target": "orket.core.contracts.provider_runtime",
+        "target": "orket.core.contracts.provider_preparation",
         "path": "orket/application/services/provider_preparation_service.py",
         "line": 10,
         "kind": "from"
       },
       {
         "source": "orket.application.services.provider_preparation_service",
-        "target": "orket.exceptions",
+        "target": "orket.core.contracts.provider_runtime",
         "path": "orket/application/services/provider_preparation_service.py",
         "line": 11,
         "kind": "from"
       },
       {
         "source": "orket.application.services.provider_preparation_service",
-        "target": "orket.runtime.config.provider_runtime_target",
+        "target": "orket.exceptions",
         "path": "orket/application/services/provider_preparation_service.py",
         "line": 12,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.provider_preparation_service",
+        "target": "orket.runtime.config.provider_runtime_target",
+        "path": "orket/application/services/provider_preparation_service.py",
+        "line": 13,
         "kind": "from"
       },
       {
@@ -24274,7 +24460,7 @@
         "source": "orket.driver",
         "target": "orket.schema",
         "path": "orket/driver.py",
-        "line": 64,
+        "line": 65,
         "kind": "from"
       },
       {
@@ -24834,140 +25020,140 @@
         "source": "orket.extensions.sdk_workload_subprocess",
         "target": "orket.adapters.execution.extension_modules",
         "path": "orket/extensions/sdk_workload_subprocess.py",
-        "line": 14,
+        "line": 16,
         "kind": "from"
       },
       {
         "source": "orket.extensions.sdk_workload_subprocess",
         "target": "orket.extensions.import_guard",
         "path": "orket/extensions/sdk_workload_subprocess.py",
-        "line": 15,
+        "line": 17,
         "kind": "from"
       },
       {
         "source": "orket.extensions.sdk_workload_subprocess",
         "target": "orket.extensions.sdk_capability_authorization",
         "path": "orket/extensions/sdk_workload_subprocess.py",
-        "line": 16,
+        "line": 18,
         "kind": "from"
       },
       {
         "source": "orket.extensions.sdk_workload_subprocess",
         "target": "orket.extensions.sdk_capability_runtime",
         "path": "orket/extensions/sdk_workload_subprocess.py",
-        "line": 23,
+        "line": 25,
         "kind": "from"
       },
       {
         "source": "orket.extensions.sdk_workload_subprocess",
         "target": "orket.extensions.workload_artifacts",
         "path": "orket/extensions/sdk_workload_subprocess.py",
-        "line": 24,
+        "line": 26,
         "kind": "from"
       },
       {
         "source": "orket.extensions.sdk_workload_subprocess",
         "target": "orket.extensions.workload_loader",
         "path": "orket/extensions/sdk_workload_subprocess.py",
-        "line": 25,
+        "line": 27,
         "kind": "from"
       },
       {
         "source": "orket.extensions.workload_artifacts",
         "target": "orket.application.services.command_process_supervisor",
         "path": "orket/extensions/workload_artifacts.py",
-        "line": 6,
+        "line": 7,
         "kind": "from"
       },
       {
         "source": "orket.extensions.workload_artifacts",
         "target": "orket.application.services.sdk_llm_provider",
         "path": "orket/extensions/workload_artifacts.py",
-        "line": 7,
+        "line": 8,
         "kind": "from"
       },
       {
         "source": "orket.extensions.workload_artifacts",
         "target": "orket.application.services.sdk_memory_provider",
         "path": "orket/extensions/workload_artifacts.py",
-        "line": 8,
+        "line": 9,
         "kind": "from"
       },
       {
         "source": "orket.extensions.workload_artifacts",
         "target": "orket.capabilities.audio_player",
         "path": "orket/extensions/workload_artifacts.py",
-        "line": 9,
+        "line": 10,
         "kind": "from"
       },
       {
         "source": "orket.extensions.workload_artifacts",
         "target": "orket.capabilities.sdk_static_provider",
         "path": "orket/extensions/workload_artifacts.py",
-        "line": 10,
+        "line": 11,
         "kind": "from"
       },
       {
         "source": "orket.extensions.workload_artifacts",
         "target": "orket.capabilities.sdk_voice_provider",
         "path": "orket/extensions/workload_artifacts.py",
-        "line": 11,
+        "line": 12,
         "kind": "from"
       },
       {
         "source": "orket.extensions.workload_artifacts",
         "target": "orket.capabilities.tts_piper",
         "path": "orket/extensions/workload_artifacts.py",
-        "line": 12,
+        "line": 13,
         "kind": "from"
       },
       {
         "source": "orket.extensions.workload_artifacts",
         "target": "orket.core.contracts.provider_runtime",
         "path": "orket/extensions/workload_artifacts.py",
-        "line": 13,
+        "line": 14,
         "kind": "from"
       },
       {
         "source": "orket.extensions.workload_artifacts",
         "target": "orket.services.scoped_memory_store",
         "path": "orket/extensions/workload_artifacts.py",
-        "line": 14,
+        "line": 15,
         "kind": "from"
       },
       {
         "source": "orket.extensions.workload_artifacts",
         "target": "orket.extensions.artifact_provenance",
         "path": "orket/extensions/workload_artifacts.py",
-        "line": 18,
+        "line": 19,
         "kind": "from"
       },
       {
         "source": "orket.extensions.workload_artifacts",
         "target": "orket.extensions.contracts",
         "path": "orket/extensions/workload_artifacts.py",
-        "line": 19,
+        "line": 20,
         "kind": "from"
       },
       {
         "source": "orket.extensions.workload_artifacts",
         "target": "orket.extensions.reproducibility",
         "path": "orket/extensions/workload_artifacts.py",
-        "line": 20,
+        "line": 21,
         "kind": "from"
       },
       {
         "source": "orket.extensions.workload_artifacts",
         "target": "orket.extensions.sdk_capability_authorization",
         "path": "orket/extensions/workload_artifacts.py",
-        "line": 21,
+        "line": 22,
         "kind": "from"
       },
       {
         "source": "orket.extensions.workload_artifacts",
         "target": "orket.extensions.workload_policy",
         "path": "orket/extensions/workload_artifacts.py",
-        "line": 22,
+        "line": 23,
         "kind": "from"
       },
       {
@@ -33612,7 +33798,7 @@
       },
       {
         "path": "orket/extensions/sdk_workload_subprocess.py",
-        "line": 131,
+        "line": 148,
         "kind": "importer_interception",
         "target": "builtins.__import__",
         "factory": "orket.extensions.sdk_workload_subprocess._guarded_import",
@@ -33620,14 +33806,14 @@
       },
       {
         "path": "orket/extensions/sdk_workload_subprocess.py",
-        "line": 132,
+        "line": 149,
         "kind": "importer_interception",
         "target": "importlib.import_module",
         "factory": "orket.extensions.sdk_workload_subprocess._guarded_import_module",
         "forwarded_arguments": 2
       }
     ],
-    "files_scanned": 1152,
+    "files_scanned": 1155,
     "scan_roots": [
       "orket"
     ],
@@ -33660,6 +33846,7 @@
       "orket.adapters.llm.prompt_canonicalization": "adapters",
       "orket.adapters.llm.provider_catalog_client": "adapters",
       "orket.adapters.llm.provider_extractors": "adapters",
+      "orket.adapters.llm.provider_inference_client": "adapters",
       "orket.adapters.storage.__init__": "adapters",
       "orket.adapters.storage.api_run_log_reader": "adapters",
       "orket.adapters.storage.api_workspace_reader": "adapters",
@@ -34035,7 +34222,9 @@
       "orket.application.services.protocol_command_service": "application",
       "orket.application.services.protocol_query_scope": "application",
       "orket.application.services.protocol_replay_service": "application",
+      "orket.application.services.provider_http_resources": "application",
       "orket.application.services.provider_http_service": "application",
+      "orket.application.services.provider_inference_http_service": "application",
       "orket.application.services.provider_preparation_service": "application",
       "orket.application.services.reforger_command": "application",
       "orket.application.services.reforger_service": "application",
@@ -34791,27 +34980,27 @@
       {
         "source": "adapters",
         "target": "adapters",
-        "count": 251
+        "count": 253
       },
       {
         "source": "adapters",
         "target": "core",
-        "count": 143
+        "count": 145
       },
       {
         "source": "application",
         "target": "adapters",
-        "count": 452
+        "count": 456
       },
       {
         "source": "application",
         "target": "application",
-        "count": 1818
+        "count": 1832
       },
       {
         "source": "application",
         "target": "core",
-        "count": 787
+        "count": 788
       },
       {
         "source": "application",
@@ -35205,22 +35394,22 @@
       {
         "module": "orket.adapters.llm.local_model_provider",
         "path": "orket/adapters/llm/local_model_provider.py",
-        "sha256": "875494215536adda2ff6afa8ce400d077c56bd1c0f0cbcc340462d035d118e6d",
+        "sha256": "b395f6b1b409961f39a482cb8a9d60d34d92a90831d000d2c823efbcccd95817",
         "side_effecting": true,
         "declarations": {
           "module": [
             {
-              "line": 45,
+              "line": 47,
               "kind": "Assign",
               "direct": true,
               "literal": true
             }
           ],
           "classes": {
-            "ModelResponse@49": [],
-            "LocalModelProvider@54": [
+            "ModelResponse@51": [],
+            "LocalModelProvider@56": [
               {
-                "line": 56,
+                "line": 58,
                 "kind": "Assign",
                 "direct": true,
                 "literal": true
@@ -35300,7 +35489,7 @@
       {
         "module": "orket.adapters.llm.provider_catalog_client",
         "path": "orket/adapters/llm/provider_catalog_client.py",
-        "sha256": "288d830499153db0c9017f213ef5d72dff15215de73cc97ddaf12cac40960420",
+        "sha256": "c5a1733109bce3a540d1f63fe2ab39af5594884006be4de610b44e3be4ee8d25",
         "side_effecting": true,
         "declarations": {
           "module": [
@@ -35332,6 +35521,25 @@
             "ProviderExtractor@17": [],
             "OpenAIExtractor@27": [],
             "OllamaExtractor@41": []
+          }
+        }
+      },
+      {
+        "module": "orket.adapters.llm.provider_inference_client",
+        "path": "orket/adapters/llm/provider_inference_client.py",
+        "sha256": "095f70e2206b95a5180461dbbf5f33b2adb77c36298417990dd7afacccb86aa3",
+        "side_effecting": true,
+        "declarations": {
+          "module": [
+            {
+              "line": 10,
+              "kind": "Assign",
+              "direct": true,
+              "literal": true
+            }
+          ],
+          "classes": {
+            "CapturedOllamaAuth@13": []
           }
         }
       },
@@ -38436,148 +38644,6 @@
   },
   "diff_ledger": [
     {
-      "run_at_utc": "2026-09-22T01:38:44.812563Z",
-      "changed": true,
-      "before_digest": "sha256:bfe73705120a521370c7373b063062d6d8705d6bb5aeff1cd4d595448d87f99b",
-      "after_digest": "sha256:da7492ddefd24c7efe34a13d643fd26ae42bf5d50f866eea61c3b02722f8c147",
-      "diff": {
-        "added_paths": 10,
-        "removed_paths": 0,
-        "changed_paths": 11589,
-        "initial_write": false,
-        "paths_total_previous": 47438,
-        "paths_total_current": 47533,
-        "paths_total_reference": 47533,
-        "churn_paths": 11599,
-        "churn_ratio": 0.24402,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.edges[117].line",
-          "$.observed.edges[117].path",
-          "$.observed.edges[117].source",
-          "$.observed.edges[117].target",
-          "$.observed.edges[118].line",
-          "$.observed.edges[118].path",
-          "$.observed.edges[118].source",
-          "$.observed.edges[118].target",
-          "$.observed.edges[119].line",
-          "$.observed.edges[119].path",
-          "$.observed.edges[119].source",
-          "$.observed.edges[119].target",
-          "$.observed.edges[120].line",
-          "$.observed.edges[120].path",
-          "$.observed.edges[120].source",
-          "$.observed.edges[120].target",
-          "$.observed.edges[121].path",
-          "$.observed.edges[121].source",
-          "$.observed.edges[121].target"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-22T02:31:11.312100Z",
-      "changed": true,
-      "before_digest": "sha256:da7492ddefd24c7efe34a13d643fd26ae42bf5d50f866eea61c3b02722f8c147",
-      "after_digest": "sha256:3595c50aa61d668c466a8414d993e6c489ac9d6edc1fd6f3a92a8368e0443bb6",
-      "diff": {
-        "added_paths": 21,
-        "removed_paths": 0,
-        "changed_paths": 10723,
-        "initial_write": false,
-        "paths_total_previous": 47533,
-        "paths_total_current": 47719,
-        "paths_total_reference": 47719,
-        "churn_paths": 10744,
-        "churn_ratio": 0.225151,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.edges[263].line",
-          "$.observed.edges[263].path",
-          "$.observed.edges[263].source",
-          "$.observed.edges[263].target",
-          "$.observed.edges[264].line",
-          "$.observed.edges[264].path",
-          "$.observed.edges[264].source",
-          "$.observed.edges[264].target",
-          "$.observed.edges[265].line",
-          "$.observed.edges[265].target",
-          "$.observed.edges[266].line",
-          "$.observed.edges[266].path",
-          "$.observed.edges[266].source",
-          "$.observed.edges[266].target",
-          "$.observed.edges[267].line",
-          "$.observed.edges[267].path",
-          "$.observed.edges[267].source",
-          "$.observed.edges[267].target",
-          "$.observed.edges[268].line"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-22T03:15:14.121933Z",
-      "changed": true,
-      "before_digest": "sha256:3595c50aa61d668c466a8414d993e6c489ac9d6edc1fd6f3a92a8368e0443bb6",
-      "after_digest": "sha256:8bb1cc4b87bf5b40cea99335d1ce60f6847abe132c7c159667aea0343f76d2a0",
-      "diff": {
-        "added_paths": 12,
-        "removed_paths": 0,
-        "changed_paths": 7156,
-        "initial_write": false,
-        "paths_total_previous": 47719,
-        "paths_total_current": 47821,
-        "paths_total_reference": 47821,
-        "churn_paths": 7168,
-        "churn_ratio": 0.149892,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.edges[1155].line",
-          "$.observed.edges[1155].path",
-          "$.observed.edges[1155].source",
-          "$.observed.edges[1155].target",
-          "$.observed.edges[1156].line",
-          "$.observed.edges[1156].path",
-          "$.observed.edges[1156].source",
-          "$.observed.edges[1156].target",
-          "$.observed.edges[1157].line",
-          "$.observed.edges[1157].path",
-          "$.observed.edges[1157].source",
-          "$.observed.edges[1157].target",
-          "$.observed.edges[1158].line",
-          "$.observed.edges[1158].path",
-          "$.observed.edges[1158].source",
-          "$.observed.edges[1158].target",
-          "$.observed.edges[1159].line",
-          "$.observed.edges[1159].target",
-          "$.observed.edges[1160].line"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-22T03:28:23.043573Z",
-      "changed": true,
-      "before_digest": "sha256:8bb1cc4b87bf5b40cea99335d1ce60f6847abe132c7c159667aea0343f76d2a0",
-      "after_digest": "sha256:24ce41f1666e1ec3ecd888cdc7bdf62c7be5a47443b2dacaa6c04ccf3849f121",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 6,
-        "initial_write": false,
-        "paths_total_previous": 47821,
-        "paths_total_current": 47821,
-        "paths_total_reference": 47821,
-        "churn_paths": 6,
-        "churn_ratio": 0.000125,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.edges[2670].line",
-          "$.observed.edges[2671].line",
-          "$.observed.edges[2672].line",
-          "$.observed.modules.orket.application.services.kernel_credential_input_service.sha256",
-          "$.observed.modules.orket.kernel.v1.nervous_system_runtime_extensions.sha256"
-        ]
-      }
-    },
-    {
       "run_at_utc": "2026-09-22T04:14:58.394320Z",
       "changed": true,
       "before_digest": "sha256:24ce41f1666e1ec3ecd888cdc7bdf62c7be5a47443b2dacaa6c04ccf3849f121",
@@ -39417,6 +39483,125 @@
           "$.observed.edges[31].line",
           "$.observed.effect_declarations.orket.adapters.llm.provider_catalog_client.module[0].line",
           "$.observed.modules.orket.adapters.llm.provider_catalog_client.sha256"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T18:37:14.070946Z",
+      "changed": true,
+      "before_digest": "sha256:81a394fe53e0b7184519aa4816e9dbc9e822cfe2390b9a6ae075ef7c02d21a21",
+      "after_digest": "sha256:b9340bf5446b204d76877961f4f3aa677998911f86fc79da2ce04a089aa86f71",
+      "diff": {
+        "added_paths": 186,
+        "removed_paths": 155,
+        "changed_paths": 14528,
+        "initial_write": false,
+        "paths_total_previous": 56743,
+        "paths_total_current": 57052,
+        "paths_total_reference": 57052,
+        "churn_paths": 14869,
+        "churn_ratio": 0.260622,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.adapter_effects[19].declarations.classes.LocalModelProvider@54",
+          "$.observed.adapter_effects[19].declarations.classes.ModelResponse@49",
+          "$.observed.adapter_effects[19].declarations.classes.LocalModelProvider@56",
+          "$.observed.adapter_effects[19].declarations.classes.ModelResponse@51",
+          "$.observed.adapter_effects[19].declarations.module[0].line",
+          "$.observed.adapter_effects[19].sha256",
+          "$.observed.adapter_effects[24].sha256",
+          "$.observed.adapter_effects[26].declarations.classes.CapturedOllamaAuth@13",
+          "$.observed.adapter_effects[26].declarations.module[0].line",
+          "$.observed.adapter_effects[26].module",
+          "$.observed.adapter_effects[26].path",
+          "$.observed.adapter_effects[26].sha256",
+          "$.observed.adapter_effects[27].declarations.classes.ApiRunLogReader@14",
+          "$.observed.adapter_effects[27].declarations.module[0].line",
+          "$.observed.adapter_effects[27].module",
+          "$.observed.adapter_effects[27].path",
+          "$.observed.adapter_effects[27].sha256",
+          "$.observed.adapter_effects[28].declarations.classes.ApiWorkspaceReader@20",
+          "$.observed.adapter_effects[28].declarations.classes.DirectoryEntry@14"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T18:53:29.055428Z",
+      "changed": true,
+      "before_digest": "sha256:b9340bf5446b204d76877961f4f3aa677998911f86fc79da2ce04a089aa86f71",
+      "after_digest": "sha256:c55e82ebef3a607d75b969b2fd1a80a9221233fed3a83629673ed54329ab5a13",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 57052,
+        "paths_total_current": 57052,
+        "paths_total_reference": 57052,
+        "churn_paths": 1,
+        "churn_ratio": 1.8e-05,
+        "sample_paths": [
+          "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T19:23:54.788656Z",
+      "changed": true,
+      "before_digest": "sha256:c55e82ebef3a607d75b969b2fd1a80a9221233fed3a83629673ed54329ab5a13",
+      "after_digest": "sha256:36acb7452aa92ff52a9334be0ea5dc796d8a72cba8b1fb83209232dbe552e531",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 27,
+        "initial_write": false,
+        "paths_total_previous": 57052,
+        "paths_total_current": 57052,
+        "paths_total_reference": 57052,
+        "churn_paths": 27,
+        "churn_ratio": 0.000473,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.edges[2528].line",
+          "$.observed.edges[2529].line",
+          "$.observed.edges[2530].line",
+          "$.observed.edges[2531].line",
+          "$.observed.edges[2532].line",
+          "$.observed.edges[2533].line",
+          "$.observed.edges[2534].line",
+          "$.observed.edges[2535].line",
+          "$.observed.edges[2536].line",
+          "$.observed.edges[2537].line",
+          "$.observed.edges[2538].line",
+          "$.observed.edges[2539].line",
+          "$.observed.edges[2540].line",
+          "$.observed.edges[2541].line",
+          "$.observed.edges[2542].line",
+          "$.observed.edges[2543].line",
+          "$.observed.edges[2544].line",
+          "$.observed.edges[2545].line",
+          "$.observed.edges[2546].line"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T20:00:30.100270Z",
+      "changed": true,
+      "before_digest": "sha256:36acb7452aa92ff52a9334be0ea5dc796d8a72cba8b1fb83209232dbe552e531",
+      "after_digest": "sha256:31f84bebfa40a5b76d6a81e01b53a291bcfadbdb0d48ab40d872e8227ac9bc94",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 2,
+        "initial_write": false,
+        "paths_total_previous": 57052,
+        "paths_total_current": 57052,
+        "paths_total_reference": 57052,
+        "churn_paths": 2,
+        "churn_ratio": 3.5e-05,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.modules.orket.application.services.orchestrator_turn_preparation_service.sha256"
         ]
       }
     }

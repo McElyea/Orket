@@ -36,5 +36,5 @@ def patch_outward_model_client(monkeypatch, *, tool: str = "write_file", args: d
     import orket.application.services.outward_model_tool_call_service as model_service_module
 
     client = FakeOutwardModelClient(tool=tool, args=args)
-    monkeypatch.setattr(model_service_module, "create_configured_model_client", lambda: client)
+    monkeypatch.setattr(model_service_module, "create_configured_model_client", lambda **_: client)
     return client

@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import asyncio
-import inspect
 import json
+import math
 import os
 import time
 from collections.abc import Mapping
@@ -14,6 +14,7 @@ from typing import Any
 import httpx
 import ollama
 
+from orket.adapters.execution.owned_io import require_sync_context
 from orket.adapters.llm.llama_cpp_render_verification import verify_llama_cpp_render
 from orket.adapters.llm.local_model_provider_runtime_target import (
     ensure_provider_runtime_target,
@@ -32,6 +33,7 @@ from orket.adapters.llm.openai_native_tools import build_openai_native_tooling
 from orket.adapters.llm.provider_extractors import extractor_for_provider
 from orket.core.contracts.local_prompting import LocalPromptingPolicyResult, LocalPromptingPort
 from orket.core.contracts.model_timing import MODEL_TIMING_SCHEMA_VERSION, nanoseconds_to_ms
+from orket.core.contracts.provider_http import ProviderInferenceHttpPort
 from orket.core.contracts.provider_preparation import ProviderPreparationPort
 from orket.core.contracts.provider_runtime import (
     DEFAULT_OLLAMA_BASE_URL,
@@ -64,6 +66,7 @@ class LocalModelProvider:
         *,
         prompt_policy: LocalPromptingPort,
         runtime_preparation: ProviderPreparationPort,
+        http_client_owner: ProviderInferenceHttpPort,
         provider: str = "",
         base_url: str = "",
         api_key: str = "",
@@ -76,6 +79,8 @@ class LocalModelProvider:
         `timeout` is the total response generation timeout in seconds.
         `connect_timeout_seconds` is the TCP connection establishment timeout in seconds.
         """
+        require_sync_context(code="E_PROVIDER_CONSTRUCTION_REQUIRES_ASYNC_OWNER")
+        self._http_client_owner = http_client_owner
         self._provider_environment = MappingProxyType(dict(os.environ if environment is None else environment))
         self._prompt_policy = prompt_policy
         self._runtime_preparation = runtime_preparation
@@ -84,7 +89,10 @@ class LocalModelProvider:
         self.temperature = self._resolve_temperature_override(temperature)
         self.seed = self._resolve_seed_override(seed)
         resolved_timeout = float(timeout)
-        resolved_connect_timeout = max(1.0, float(connect_timeout_seconds))
+        raw_connect_timeout = float(connect_timeout_seconds)
+        if not all(math.isfinite(value) for value in (resolved_timeout, raw_connect_timeout)):
+            raise ValueError("E_PROVIDER_TIMEOUT_NOT_FINITE")
+        resolved_connect_timeout = max(1.0, raw_connect_timeout)
         if resolved_timeout < resolved_connect_timeout:
             raise ValueError("timeout must be greater than or equal to connect_timeout_seconds")
         self.timeout = timeout
@@ -99,19 +107,9 @@ class LocalModelProvider:
         self.openai_api_key = self._resolve_openai_api_key()
         self.ollama_host = self._resolve_ollama_host()
         validate_pinned_runtime_target(self, runtime_target)
-        self.client: Any
-        if self.provider_backend == "openai_compat":
-            self.client = httpx.AsyncClient(
-                base_url=self.openai_base_url,
-                timeout=httpx.Timeout(
-                    connect=self.connect_timeout_seconds,
-                    read=max(1.0, float(self.timeout)),
-                    write=30.0,
-                    pool=10.0,
-                ),
-            )
-        else:
-            self.client = ollama.AsyncClient(host=self.ollama_host)
+        self.client = http_client_owner.create_client(backend=self.provider_backend,
+            base_url=self.openai_base_url if self.provider_backend == "openai_compat" else self.ollama_host,
+            timeout_s=resolved_timeout, connect_timeout_s=self.connect_timeout_seconds)
         self._closed = False
         self._openai_session_epoch = 0
         self._seen_context_epochs: set[int] = set()
@@ -572,14 +570,7 @@ class LocalModelProvider:
     async def close(self) -> None:
         if bool(getattr(self, "_closed", False)):
             return
-        client = getattr(self, "client", None)
-        close_method = None
-        if client is not None:
-            close_method = getattr(client, "aclose", None) or getattr(client, "close", None)
-        if callable(close_method):
-            maybe_awaitable = close_method()
-            if inspect.isawaitable(maybe_awaitable):
-                await maybe_awaitable
+        await self._http_client_owner.close(self.client)
         self._closed = True
 
     async def aclose(self) -> None:

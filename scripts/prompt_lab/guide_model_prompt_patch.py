@@ -15,7 +15,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 try:
-    from orket.application.services.local_model_factory import create_local_model_provider
+    from orket.application.services.local_model_factory import create_local_model_provider_async
     from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
     from scripts.providers.provider_runtime_warmup import ProviderRuntimeWarmupError, warmup_provider_model
 except ModuleNotFoundError:  # pragma: no cover - direct script execution fallback
@@ -23,7 +23,7 @@ except ModuleNotFoundError:  # pragma: no cover - direct script execution fallba
     from common.rerun_diff_ledger import write_payload_with_diff_ledger
     from providers.provider_runtime_warmup import ProviderRuntimeWarmupError, warmup_provider_model
 
-    from orket.application.services.local_model_factory import create_local_model_provider
+    from orket.application.services.local_model_factory import create_local_model_provider_async
 
 
 _GUIDE_TOOL_NAME = "emit_prompt_patch"
@@ -265,14 +265,14 @@ async def _invoke_guide_model(
     timeout_sec: int,
     max_prompt_patch_chars: int,
 ) -> tuple[str, str, str, dict[str, Any], dict[str, Any] | None, str]:
-    provider = create_local_model_provider(
+    provider = (await create_local_model_provider_async(
         model=str(runtime_payload.get("requested_model") or guide_spec.model),
         temperature=0.0,
         seed=7,
         timeout=max(1, int(timeout_sec)),
         provider=guide_spec.provider,
         base_url=str(runtime_payload.get("base_url") or guide_spec.base_url or ""),
-    )
+    ))
     response_content = ""
     response_raw: dict[str, Any] = {}
     try:

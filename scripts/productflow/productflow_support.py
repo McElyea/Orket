@@ -281,9 +281,9 @@ def patched_productflow_provider() -> Iterator[None]:
     original_complete = LocalModelProvider.complete
 
     def _patched_init(self: LocalModelProvider, *args: Any, **kwargs: Any) -> None:
-        del args, kwargs
-        self.model = "dummy"
-        self.timeout = 300
+        del args
+        self.model, self.timeout = "dummy", 300
+        self._http_client_owner, self.client = kwargs["http_client_owner"], None
 
     async def _patched_complete(self: LocalModelProvider, messages: list[dict[str, Any]], **kwargs: Any) -> ModelResponse:
         del self, kwargs

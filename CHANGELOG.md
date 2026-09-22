@@ -5,6 +5,17 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.92] - 2026-09-22
+
+- Retain card-provider cleanup through repeated cancellation so completed close results are adopted.
+
+- Construct SDK default model capabilities only in their native subprocess; retain client cleanup and refuse success after cleanup failure.
+
+### Fixed
+- Bind inference clients to captured proxy, certificate, key-log and outbound credential inputs; preserve backend redirect, retry, admission and timeout behavior.
+- Own native provider construction, partial acquisition and cleanup through interruption; retain card, governed-agent and outward client handoffs. Migrate async application and CLI callers to owned construction and refuse non-finite model budgets before effects.
+- Share lexical directory capture with provider preparation and preserve all catalog input and lifetime contracts. Controlled HTTP/TLS responses prove transport behavior, not actual-model or CAP acceptance; full D/E/CAP, Linux clock, coverage and hosted Quality remain open.
+
 ## [0.6.91] - 2026-09-22
 
 ### Fixed
@@ -2476,7 +2487,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - **Schema Migration**: Fixed backward compatibility issues with legacy priority strings
 - **Verification Aliases**: Corrected field alias mappings for verification fixtures
-- **Line Ending Warnings**: Normalized line endings across core modules (LF Ã¢â€ â€™ CRLF on Windows)
+- **Line Ending Warnings**: Normalized line endings across core modules (LF ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ CRLF on Windows)
 
 ### Removed
 - **Obsolete Tests**: Removed deprecated test files (`test_examples_tictactoe.py`, `test_flow_loads.py`)
@@ -2544,7 +2555,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - iDesign enforcement framework
 - Prompt Engine updates
-- Book Ã¢â€ â€™ Card terminology migration
+- Book ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ Card terminology migration
 
 ### Changed
 - Major architectural alignment with iDesign principles

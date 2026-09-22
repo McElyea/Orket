@@ -177,8 +177,8 @@ async def test_idesign_structural_violation(tmp_path, monkeypatch):
 
     bad_provider = MockiDesignProvider(bad_path=True)
     def mock_init(self, *a, **k):
-        self.model = "dummy"
-        self.timeout = 300
+        self.model, self.timeout = "dummy", 300
+        self._http_client_owner, self.client = k["http_client_owner"], None
 
     monkeypatch.setattr(LocalModelProvider, "__init__", mock_init)
     monkeypatch.setattr(LocalModelProvider, "complete", bad_provider.complete)

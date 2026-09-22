@@ -115,7 +115,7 @@ async def test_real_sdk_http_generation_and_close_stay_owned(tmp_path, record_pr
         return 200, {"model": "odr-fixture-model", "choices": [{"message": {"content": "fixture reply"}}]}
 
     async with observed_http_server(response) as (endpoint, requests):
-        provider = model_provider(endpoint + "/v1")
+        provider = await run_owned_thread(partial(model_provider, endpoint + "/v1"), label="fixture-sdk-construction")
         active = asyncio.create_task(
             run_owned_thread(
                 partial(provider.generate, GenerateRequest(system_prompt="", user_message="owned fixture")),

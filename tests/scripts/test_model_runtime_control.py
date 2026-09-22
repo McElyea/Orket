@@ -2,6 +2,8 @@
 # LIFECYCLE: live
 from __future__ import annotations
 
+from unittest.mock import AsyncMock
+
 import pytest
 
 from scripts.odr import model_runtime_control as control
@@ -110,7 +112,7 @@ async def test_complete_with_transient_provider_threads_explicit_provider_overri
     async def _fake_release_model_residency(**kwargs):  # type: ignore[no-untyped-def]
         return {"status": "released", **kwargs}
 
-    monkeypatch.setattr(control, "create_local_model_provider", _FakeProvider)
+    monkeypatch.setattr(control, "create_local_model_provider_async", AsyncMock(side_effect=_FakeProvider))
     monkeypatch.setattr(control, "release_model_residency", _fake_release_model_residency)
 
     response, _latency_ms, release = await control.complete_with_transient_provider(

@@ -4,9 +4,11 @@ from __future__ import annotations
 import asyncio
 import os
 import threading
+from functools import partial
 
 import pytest
 
+from orket.adapters.execution.owned_io import run_owned_thread
 from orket.adapters.llm.local_model_provider import LocalModelProvider, ModelResponse
 from orket.application.services.extension_runtime_support import generate_response
 from orket.application.services.sdk_llm_provider import LocalModelCapabilityProvider
@@ -77,7 +79,7 @@ async def test_concurrent_overrides_preserve_environment_and_close_clients(monke
         return ModelResponse(content="ready", raw={"model": client.requested_model})
 
     monkeypatch.setattr(LocalModelProvider, "complete", complete)
-    default = LocalModelCapabilityProvider(model="default", temperature=0.2, seed=None)
+    default = await run_owned_thread(partial(LocalModelCapabilityProvider, model="default", temperature=0.2, seed=None), label="fixture-sdk-construction")
     tasks = []
     try:
         for name, provider in (("first", "lmstudio"), ("second", "llama_cpp")):
@@ -125,7 +127,7 @@ async def test_override_cleanup_settles_before_repeated_cancellation(monkeypatch
 
     monkeypatch.setattr(LocalModelProvider, "complete", complete)
     monkeypatch.setattr(LocalModelProvider, "close", close)
-    default = LocalModelCapabilityProvider(model="default", temperature=0.2, seed=None)
+    default = await run_owned_thread(partial(LocalModelCapabilityProvider, model="default", temperature=0.2, seed=None), label="fixture-sdk-construction")
     task = asyncio.create_task(generate_response(request=REQUEST, model_provider=default,
                                                provider_override="llama_cpp", model_override="override"))
     try:

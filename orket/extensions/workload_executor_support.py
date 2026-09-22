@@ -77,15 +77,15 @@ async def emit_default_model_events(interaction_context: Any, *, sdk: bool) -> N
     )
 
 
-def build_sdk_context(
+def build_sdk_request_context(
     extension: ExtensionRecord,
     workload: _ExtensionManifestEntry,
     input_config: dict[str, Any],
     workspace: Path,
     artifact_root: Path,
-    capability_registry: Any,
     run_id: str,
 ) -> Any:
+    from orket_extension_sdk.capabilities import CapabilityRegistry
     from orket_extension_sdk.workload import WorkloadContext as SDKWorkloadContext
 
     return SDKWorkloadContext(
@@ -95,7 +95,7 @@ def build_sdk_context(
         workspace_root=workspace,
         input_dir=workspace,
         output_dir=artifact_root,
-        capabilities=capability_registry,
+        capabilities=CapabilityRegistry(),  # Request metadata only; the child owns capability construction.
         seed=int(input_config.get("seed", 0) or 0),
         config=dict(input_config),
     )
@@ -257,7 +257,7 @@ def error_result_ref(run_id: str, exc: Exception) -> str:
 __all__ = [
     "begin_control_plane_execution",
     "build_governed_identity",
-    "build_sdk_context",
+    "build_sdk_request_context",
     "compile_workload",
     "control_plane_identity",
     "emit_default_model_events",

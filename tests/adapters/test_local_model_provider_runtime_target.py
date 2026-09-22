@@ -4,7 +4,9 @@ from dataclasses import FrozenInstanceError, replace
 import pytest
 
 from orket.adapters.llm.local_model_provider import LocalModelProvider
-from orket.application.services.local_model_factory import create_local_model_provider
+from orket.application.services.local_model_factory import (
+    create_local_model_provider_async,
+)
 from orket.core.contracts.provider_preparation import ProviderPreparationRequest, require_prepared_target
 from orket.core.contracts.provider_runtime import ProviderRuntimeTarget
 from orket.exceptions import ModelConnectionError
@@ -49,7 +51,7 @@ def test_preparation_rejects_unadmitted_or_mismatched_target(changes):
 @pytest.mark.asyncio
 async def test_ollama_client_default_endpoint_does_not_read_excluded_ambient_host(monkeypatch):
     monkeypatch.setenv("OLLAMA_HOST", "http://127.0.0.1:19991")
-    provider = create_local_model_provider("fixture", provider="ollama", environment={})
+    provider = (await create_local_model_provider_async("fixture", provider="ollama", environment={}))
     try:
         assert provider.ollama_host == "http://127.0.0.1:11434"
         assert str(provider.client._client.base_url).rstrip("/") == provider.ollama_host

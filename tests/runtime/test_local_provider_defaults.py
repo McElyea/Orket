@@ -6,7 +6,10 @@ import os
 import pytest
 
 from orket.application.services.governed_agent_api_composition import _configured_model
-from orket.application.services.local_model_factory import create_local_model_provider
+from orket.application.services.local_model_factory import (
+    create_local_model_provider,
+    create_local_model_provider_async,
+)
 from orket.application.services.model_selection_service import ModelSelectionService
 from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_MODEL, normalize_provider
 from orket.exceptions import ModelConnectionError
@@ -30,7 +33,7 @@ def clean_provider_settings(monkeypatch):
 @pytest.mark.asyncio
 async def test_omitted_provider_uses_llama_cpp_transport_and_endpoint(monkeypatch):
     monkeypatch.setattr("ollama.AsyncClient", lambda **kw: pytest.fail("Implicit Ollama client"))
-    provider = create_local_model_provider(model=DEFAULT_LOCAL_MODEL)
+    provider = (await create_local_model_provider_async(model=DEFAULT_LOCAL_MODEL))
     try:
         assert provider.provider_name == "llama_cpp"
         assert provider.provider_backend == "openai_compat"
@@ -45,7 +48,7 @@ async def test_omitted_provider_uses_llama_cpp_transport_and_endpoint(monkeypatc
 async def test_unavailable_default_endpoint_does_not_switch_provider(monkeypatch):
     """Layer: integration. Real refused HTTP connection remains a llama.cpp failure."""
     monkeypatch.setattr("ollama.AsyncClient", lambda **kw: pytest.fail("Unexpected Ollama fallback"))
-    provider = create_local_model_provider(model=DEFAULT_LOCAL_MODEL, base_url="http://127.0.0.1:1/v1")
+    provider = (await create_local_model_provider_async(model=DEFAULT_LOCAL_MODEL, base_url="http://127.0.0.1:1/v1"))
     try:
         with pytest.raises(ModelConnectionError, match="provider=llama_cpp"):
             await provider.complete([{"role": "user", "content": "OK"}])

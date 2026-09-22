@@ -3,6 +3,7 @@
 import asyncio
 import json
 from dataclasses import FrozenInstanceError
+from functools import partial
 from types import SimpleNamespace
 
 import pytest
@@ -10,6 +11,7 @@ import pytest
 from orket.application.services.decision_context_service import capture_loop_policy_inputs
 from orket.application.services.decision_node_registry import DecisionNodeRegistry, build_decision_node_registry
 from orket.application.services.model_client_factory import ModelClientFactory
+from orket.application.services.runtime_result_lifetime import create_runtime_owner
 from orket.application.services.toolbox import ToolBox
 from orket.core.contracts.decision_inputs import ModelClientOptions, ToolSelectionInput
 from orket.decision_nodes.builtins import DefaultLoaderStrategyNode, DefaultOrchestrationLoopPolicyNode
@@ -190,7 +192,8 @@ async def test_application_model_factory_uses_captured_http_target(monkeypatch):
     factory = ModelClientFactory(environment)
     environment["ORKET_LLM_OPENAI_BASE_URL"] = "http://127.0.0.1:1/v1"
     monkeypatch.setenv("ORKET_LLM_PROVIDER", "invalid-after-capture")
-    provider = factory.create_provider("fixture", ModelClientOptions(0.25, 30.0))
+    provider = await create_runtime_owner(partial(factory.create_provider, "fixture", ModelClientOptions(0.25, 30.0)),
+                                          label="test-provider-construction")
     client = factory.create_client(provider)
     try:
         response = await client.complete([{"role": "user", "content": "hello"}])

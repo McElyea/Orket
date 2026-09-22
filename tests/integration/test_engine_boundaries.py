@@ -106,8 +106,8 @@ async def test_illegal_state_transition_blocked(setup_env, monkeypatch, determin
 
     provider = BoundaryTestProvider(behavior="illegal_transition")
     def mock_init(self, *a, **k):
-        self.model = "dummy"
-        self.timeout = 300
+        self.model, self.timeout = "dummy", 300
+        self._http_client_owner, self.client = k["http_client_owner"], None
     monkeypatch.setattr(LocalModelProvider, "__init__", mock_init)
     monkeypatch.setattr(LocalModelProvider, "complete", provider.complete)
 
@@ -132,8 +132,8 @@ async def test_path_traversal_blocked(setup_env, monkeypatch):
 
     provider = BoundaryTestProvider(behavior="path_traversal")
     def mock_init(self, *a, **k):
-        self.model = "dummy"
-        self.timeout = 300
+        self.model, self.timeout = "dummy", 300
+        self._http_client_owner, self.client = k["http_client_owner"], None
     monkeypatch.setattr(LocalModelProvider, "__init__", mock_init)
     monkeypatch.setattr(LocalModelProvider, "complete", provider.complete)
 

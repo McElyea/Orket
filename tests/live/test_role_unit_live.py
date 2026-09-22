@@ -5,7 +5,9 @@ import os
 
 import pytest
 
-from orket.application.services.local_model_factory import create_local_model_provider
+from orket.application.services.local_model_factory import (
+    create_local_model_provider_async,
+)
 
 
 def _live_enabled() -> bool:
@@ -77,9 +79,9 @@ def _assert_role_output(role: str, text: str) -> None:
 
 
 async def _complete_for_role(system_prompt: str, task: str) -> str:
-    async with create_local_model_provider(
+    async with (await create_local_model_provider_async(
         model=_model_name(), temperature=0.0, seed=_seed_value(), timeout=300,
-    ) as provider:
+    )) as provider:
         response = await provider.complete([
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": task},

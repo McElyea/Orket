@@ -154,7 +154,7 @@ async def test_concurrent_approved_retries_execute_at_most_one_command(tmp_path,
     calls = [{"tool": "run_command", "args": {"command": [sys.executable, "-c", script]}}]
     import orket.application.services.outward_model_tool_call_service as model_module
 
-    monkeypatch.setattr(model_module, "create_configured_model_client", lambda: SequenceModelClient(calls))
+    monkeypatch.setattr(model_module, "create_configured_model_client", lambda **_: SequenceModelClient(calls))
     async with outward_api(tmp_path, inputs) as (client, context):
         proposal_id = await submit_sequence(client, calls)
         await context.outward_approval_service.approve(proposal_id, operator_ref="operator:fixture")

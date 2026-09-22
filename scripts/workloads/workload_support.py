@@ -12,7 +12,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from orket.application.services.local_model_factory import (  # noqa: E402 - project path bootstrap
-    create_local_model_provider,  # noqa: E402 - project path bootstrap
+    create_local_model_provider_async,  # noqa: E402 - project path bootstrap
 )
 from scripts.probes.probe_support import applied_probe_env, json_safe  # noqa: E402 - project path bootstrap
 
@@ -115,12 +115,12 @@ async def run_strict_json_model(
         ollama_host=str(ollama_host or "").strip() or None,
         disable_sandbox=True,
     ):
-        local_provider = create_local_model_provider(
+        local_provider = (await create_local_model_provider_async(
             model=str(model),
             temperature=float(temperature),
             seed=int(seed),
             timeout=int(timeout),
-        )
+        ))
         try:
             response = await local_provider.complete(
                 list(messages),

@@ -24,7 +24,7 @@ from .workload_artifacts import WorkloadArtifacts
 from .workload_executor_support import (
     begin_control_plane_execution,
     build_governed_identity,
-    build_sdk_context,
+    build_sdk_request_context,
     control_plane_identity,
     emit_default_model_events,
     execute_plan_actions,
@@ -233,13 +233,7 @@ class WorkloadExecutor:
             declared_capabilities=list(workload.required_capabilities),
             controls=host_controls,
         )
-        capability_registry = self.artifacts.build_sdk_capability_registry(
-            workspace=workspace,
-            artifact_root=artifact_root,
-            input_config=runtime_input_config,
-            extension_id=extension.extension_id,
-            admitted_capabilities=set(authorization_envelope.admitted_capabilities),
-        )
+        self.artifacts.configured_capability_items(runtime_input_config)
         module_name, _attr_name = WorkloadLoader.parse_sdk_entrypoint(workload.entrypoint)
         await run_owned_thread(partial(prepare_artifact_root, artifact_root), label="sdk-artifact-root")
         await run_owned_thread(
@@ -262,13 +256,12 @@ class WorkloadExecutor:
         )
         if interaction_context is not None:
             await emit_default_model_events(interaction_context, sdk=True)
-        sdk_ctx = build_sdk_context(
+        sdk_ctx = build_sdk_request_context(
             extension,
             workload,
             runtime_input_config,
             workspace,
             artifact_root,
-            capability_registry,
             run_id,
         )
 

@@ -7,13 +7,14 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any
 
-from orket.adapters.execution.owned_io import run_owned_thread
+from orket.adapters.execution.owned_io import run_owned_io, run_owned_thread
 from orket.application.services.cards_odr_stage import run_cards_odr_prebuild
 from orket.application.services.decision_context_service import recommend_routing_seat
 from orket.application.services.loop_decision_service import admit_policy_names
 from orket.application.services.orchestrator_prompt_preparation_service import (
     OrchestratorPromptPreparationService,
 )
+from orket.application.services.runtime_result_lifetime import create_runtime_owner
 from orket.core.cards_runtime_contract import resolve_cards_runtime
 from orket.core.contracts.decision_inputs import ModelClientOptions
 from orket.exceptions import CardNotFound
@@ -240,97 +241,105 @@ class OrchestratorTurnPreparationService:
              "decision": selection.to_payload()}, self.workspace_root,
         )
 
-        provider = self.model_clients.create_provider(selected_model, provider_options)
-        client = self.model_clients.create_client(provider)
-        if bool(cards_runtime.get("odr_active")) and not is_review_turn:
-            odr_auditor_model = (
-                str(cards_runtime.get("odr_auditor_model") or "").strip()
-                or str(self.environment.get("ORKET_ODR_AUDITOR_MODEL") or "").strip()
-                or selected_model
-            )
-            odr_auditor_provider = None
-            try:
-                odr_auditor_provider = self.model_clients.create_provider(odr_auditor_model, provider_options)
-                odr_auditor_client = self.model_clients.create_client(odr_auditor_provider)
-                odr_result = await run_cards_odr_prebuild(
-                    workspace=self.workspace_root,
-                    issue=data.issue,
-                    run_id=data.run_id,
-                    selected_model=selected_model,
-                    cards_runtime=cards_runtime,
-                    model_client=client,
-                    auditor_client=odr_auditor_client,
-                    async_cards=self.async_cards,
+        provider = await create_runtime_owner(partial(self.model_clients.create_provider, selected_model, provider_options),
+                                              label="turn-provider-construction")
+        transferred = False
+        try:
+            client = self.model_clients.create_client(provider)
+            if bool(cards_runtime.get("odr_active")) and not is_review_turn:
+                odr_auditor_model = (
+                    str(cards_runtime.get("odr_auditor_model") or "").strip()
+                    or str(self.environment.get("ORKET_ODR_AUDITOR_MODEL") or "").strip()
+                    or selected_model
                 )
-            except (RuntimeError, ValueError, TypeError, OSError, AttributeError):
-                await self.close_provider_transport(provider)
-                raise
-            finally:
-                if odr_auditor_provider is not None:
-                    await self.close_provider_transport(odr_auditor_provider)
-            cards_runtime = resolve_cards_runtime(
-                issue=data.issue,
-                builder_seat=runtime_builder_seat,
-                reviewer_seat=runtime_reviewer_seat,
-            )
-            await provider.clear_context()
-            if not bool(odr_result.get("odr_accepted")):
-                await self.request_issue_transition(
+                odr_auditor_provider = None
+                try:
+                    odr_auditor_provider = await create_runtime_owner(
+                        partial(self.model_clients.create_provider, odr_auditor_model, provider_options),
+                        label="odr-auditor-provider-construction")
+                    odr_auditor_client = self.model_clients.create_client(odr_auditor_provider)
+                    odr_result = await run_cards_odr_prebuild(
+                        workspace=self.workspace_root,
+                        issue=data.issue,
+                        run_id=data.run_id,
+                        selected_model=selected_model,
+                        cards_runtime=cards_runtime,
+                        model_client=client,
+                        auditor_client=odr_auditor_client,
+                        async_cards=self.async_cards,
+                    )
+                finally:
+                    if odr_auditor_provider is not None:
+                        await run_owned_io(partial(self.close_provider_transport, odr_auditor_provider),
+                                           label="odr-auditor-provider-close", preserve_failure=True)
+                cards_runtime = resolve_cards_runtime(
                     issue=data.issue,
-                    target_status=CardStatus.BLOCKED,
-                    reason="odr_prebuild_failed",
-                    metadata={
-                        "run_id": data.run_id,
-                        "odr_stop_reason": odr_result.get("odr_stop_reason"),
-                        "odr_termination_reason": odr_result.get("odr_termination_reason"),
-                        "odr_final_auditor_verdict": odr_result.get("odr_final_auditor_verdict"),
-                        "execution_profile": cards_runtime.get("execution_profile"),
-                    },
+                    builder_seat=runtime_builder_seat,
+                    reviewer_seat=runtime_reviewer_seat,
                 )
-                await self.close_provider_transport(provider)
-                return TurnPreparationResult(stop_execution=True)
+                await provider.clear_context()
+                if not bool(odr_result.get("odr_accepted")):
+                    await self.request_issue_transition(
+                        issue=data.issue,
+                        target_status=CardStatus.BLOCKED,
+                        reason="odr_prebuild_failed",
+                        metadata={
+                            "run_id": data.run_id,
+                            "odr_stop_reason": odr_result.get("odr_stop_reason"),
+                            "odr_termination_reason": odr_result.get("odr_termination_reason"),
+                            "odr_final_auditor_verdict": odr_result.get("odr_final_auditor_verdict"),
+                            "execution_profile": cards_runtime.get("execution_profile"),
+                        },
+                    )
+                    return TurnPreparationResult(stop_execution=True)
 
-        prompt_service = OrchestratorPromptPreparationService(
-            organization=self.organization,
-            memory=self.memory,
-            support_services=self.support_services,
-            build_turn_context=self.build_turn_context,
-            resolve_prompt_resolver_mode=self.resolve_prompt_resolver_mode,
-            resolve_prompt_selection_policy=self.resolve_prompt_selection_policy,
-            resolve_prompt_selection_strict=self.resolve_prompt_selection_strict,
-            resolve_prompt_version_exact=self.resolve_prompt_version_exact,
-            resolve_prompt_patch=self.resolve_prompt_patch,
-            resolve_prompt_patch_label=self.resolve_prompt_patch_label,
-            should_suppress_reference_context_for_cards_runtime=(
-                self.should_suppress_reference_context_for_cards_runtime
-            ),
-            load_asset=self._load_asset,
-        )
-        context, system_prompt = await prompt_service.build(
-            issue=data.issue,
-            epic=data.epic,
-            run_id=data.run_id,
-            seat_name=seat_name,
-            roles_to_load=roles_to_load,
-            turn_status=turn_status,
-            selected_model=selected_model,
-            dependency_context=data.dependency_context,
-            runtime_result=data.runtime_result,
-            resume_mode=data.resume_mode,
-            cards_runtime=cards_runtime,
-            role_config=role_config,
-            model_selection=data.model_selection,
-        )
-        return TurnPreparationResult(
-            stop_execution=False,
-            seat_name=seat_name,
-            roles_to_load=roles_to_load,
-            turn_status=turn_status,
-            turn_index=turn_index,
-            is_guard_turn=is_guard_turn,
-            role_config=role_config,
-            provider=provider,
-            client=client,
-            context=context,
-            system_prompt=system_prompt,
-        )
+            prompt_service = OrchestratorPromptPreparationService(
+                organization=self.organization,
+                memory=self.memory,
+                support_services=self.support_services,
+                build_turn_context=self.build_turn_context,
+                resolve_prompt_resolver_mode=self.resolve_prompt_resolver_mode,
+                resolve_prompt_selection_policy=self.resolve_prompt_selection_policy,
+                resolve_prompt_selection_strict=self.resolve_prompt_selection_strict,
+                resolve_prompt_version_exact=self.resolve_prompt_version_exact,
+                resolve_prompt_patch=self.resolve_prompt_patch,
+                resolve_prompt_patch_label=self.resolve_prompt_patch_label,
+                should_suppress_reference_context_for_cards_runtime=(
+                    self.should_suppress_reference_context_for_cards_runtime
+                ),
+                load_asset=self._load_asset,
+            )
+            context, system_prompt = await prompt_service.build(
+                issue=data.issue,
+                epic=data.epic,
+                run_id=data.run_id,
+                seat_name=seat_name,
+                roles_to_load=roles_to_load,
+                turn_status=turn_status,
+                selected_model=selected_model,
+                dependency_context=data.dependency_context,
+                runtime_result=data.runtime_result,
+                resume_mode=data.resume_mode,
+                cards_runtime=cards_runtime,
+                role_config=role_config,
+                model_selection=data.model_selection,
+            )
+            result = TurnPreparationResult(
+                stop_execution=False,
+                seat_name=seat_name,
+                roles_to_load=roles_to_load,
+                turn_status=turn_status,
+                turn_index=turn_index,
+                is_guard_turn=is_guard_turn,
+                role_config=role_config,
+                provider=provider,
+                client=client,
+                context=context,
+                system_prompt=system_prompt,
+            )
+            transferred = True
+            return result
+        finally:
+            if not transferred:
+                await run_owned_io(partial(self.close_provider_transport, provider),
+                                   label="turn-provider-close", preserve_failure=True)
