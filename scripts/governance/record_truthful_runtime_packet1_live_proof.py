@@ -18,6 +18,10 @@ from orket.adapters.execution.owned_io import require_sync_context  # noqa: E402
 from orket.adapters.storage.protocol_append_only_ledger import (  # noqa: E402 - repository path bootstrap
     AppendOnlyRunLedger,
 )
+from orket.application.services.command_process_supervisor import (  # noqa: E402 - repository path bootstrap
+    CommandProcessSupervisor,
+)
+from orket.core.contracts.owned_command import CommandExecutionUncertain  # noqa: E402 - repository path bootstrap
 from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_MODEL  # noqa: E402 - repository path bootstrap
 from orket.orchestration.engine import OrchestrationEngine  # noqa: E402 - repository path bootstrap
 from orket.runtime.config.defaults import configured_provider  # noqa: E402 - repository path bootstrap
@@ -88,14 +92,16 @@ def _protocol_events(run_root: Path) -> list[dict[str, Any]]:
     return AppendOnlyRunLedger(run_root / "events.log").replay_events()
 
 
-async def _run_command(*args: str) -> tuple[int, str, str]:
-    process = await asyncio.create_subprocess_exec(
-        *args,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
-    )
-    stdout, stderr = await process.communicate()
-    return process.returncode, stdout.decode("utf-8", errors="replace"), stderr.decode("utf-8", errors="replace")
+async def _run_command(*args: str, timeout_seconds: float = 300.0) -> tuple[int, str, str]:
+    root, environment = Path.cwd(), dict(os.environ)
+    result = await CommandProcessSupervisor(root, cancellation_event="packet1_command_interrupted").run(
+        tuple(args), cwd=root, environment=environment, timeout_seconds=timeout_seconds)
+    if (not result.cleanup_confirmed or result.reason == "cancelled"
+            or (not result.capture_complete and result.reason != "launch_failed")):
+        raise CommandExecutionUncertain(result)
+    if result.reason != "completed":
+        raise RuntimeError(f"E_PACKET1_COMMAND_INCOMPLETE:{result.reason}:{'; '.join(result.diagnostics)}")
+    return result.returncode, result.stdout.decode("utf-8", errors="replace"), result.stderr.decode("utf-8", errors="replace")
 
 
 async def _ensure_ollama_alias(source_model: str, alias_model: str) -> bool:

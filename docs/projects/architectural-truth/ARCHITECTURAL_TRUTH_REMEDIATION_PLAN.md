@@ -12519,7 +12519,8 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.86 runtime architecture policy inputs and owned observations, retaining
+0.6.87 provider inventory and governance command ownership, retaining
+0.6.86 runtime architecture policy inputs and owned observations,
 0.6.85 adapter module classification and decision-admission gate,
 0.6.84 governance proof runtime and local alias ownership,
 0.6.83 script runtime owners and checkpoint-bound witness observations,
@@ -12537,7 +12538,7 @@ and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
 Preserve every failed and
 passing source/native observation and the historical clock diagnosis. Canonical
-Ruff has 89 findings at the .86 checkpoint. The prior stale benchmark expectation passes in the
+Ruff has 89 findings at the .87 checkpoint. The prior stale benchmark expectation passes in the
 new source/native selection. The unmodified published .39 complete rerun has
 7,260 passes, three failures and 89 skips; its coverage is 84.56120595327887%
 against the unchanged 89% gate. The two parent-Git-dependent fixture failures and
@@ -22020,3 +22021,94 @@ and CAP3 capacity/recovery remain required. Preserve BT-1 through BT-5 and retai
 No release readiness, whole-plan completion, main merge or lane retirement is claimed.
 
 Retained source/installed evidence: `.tmp/d-runtime-policy-inputs/`.
+
+
+#### .87 Provider inventory and governance command ownership (2026-09-22)
+
+Responsible maintainer: Codex for Orket Core. Continuing D after published .86.
+The two observed native command paths now use the existing package-owned OS supervisor;
+no second process owner, direct-child fallback or policy exception is added.
+
+Provider CLI inventory retains its native event-loop refusal and application-owned
+worker. At native command entry it captures arguments, cwd and environment, then uses
+the existing owned coroutine bridge and native command owner. Its supplied finite
+budget and one-second minimum remain. Packet 1 async commands capture at entry, use the
+same command owner and default to 300 seconds. Both apply the existing 4 MiB output
+bound. Leader exit cannot release descendants. Cancellation, repeated cancellation,
+command deadlines and failed leaders retain actual termination. Native waiter interruption
+does not abort its worker: the admitted command runs to completion or its own budget;
+worker failure still takes precedence over waiter cancellation.
+
+No normal output is returned after uncertain cleanup or incomplete admitted capture.
+The shared typed uncertainty retains the exact lifetime. A launch refusal with confirmed
+cleanup remains an ordinary command error, since capture was never admitted. Other
+incomplete inventory commands raise the existing warmup error; Packet 1 returns an
+explicit incomplete-command error. Clean nonzero Packet 1 commands retain their return
+tuple for alias logic. Inventory retains universal-newline decoding, JSON parsing and
+observed model-load checks; Packet 1 keeps its existing text decoding and alias ownership.
+Eleven other inventory definitions and fifteen proof-recorder definitions retain exact
+ASTs. The shared supervisor, OS workers/backends, coroutine bridge and dependency policy
+bytes are unchanged. Process termination does not prove daemon-effect rollback, alias
+exclusivity or interrupted-copy reconciliation.
+
+| Cell | Tests / failures / errors / skips | Pytest seconds | Installed origins |
+|---|---|---|---|
+| Fresh source | 1509 / 0 / 0 / 0 | 227.211 | source |
+| Installed a87-win-py311 | 1509 / 0 / 0 / 0 | 228.962 | 976 |
+| Installed a87-win-py312 | 1509 / 0 / 0 / 0 | 257.877 | 976 |
+
+All 1461 .86 identities remain across 145 modules. Added scope is 38 new cases plus 10 existing
+provider-target controls. Opening 8/8 fails: leader exit exceeds the five-second completion
+bound, or Packet 1 cancellation leaves observed descendants running until fixture cleanup.
+All ordinary and detached/resistant fixture processes are cleaned by PID/create-time-bound
+observers in finally. Owned 29/29, deadline/output 45/45 and final focused 59/59 pass. Eight
+exact final descendant controls fail on verified installed .86 core and its frozen script
+harness, with no errors/skips. Final positive tests independently observe stopped processes
+and heartbeat writes, plus absent supervisor/transport PIDs. Real output-limit controls
+refuse partial bytes after confirmed cleanup. Twelve synthetic supervisor-result cases
+prove contract refusal only; they are not native process-lifetime proof.
+
+Separate live prerequisite observation: actual owned `lms ls --json` succeeds and returns
+25 installed model identities, with confirmed cleanup and complete capture. This is real
+inventory observation, not model inference. Ollama executable is absent from PATH;
+actual owned `ollama list` refuses with launch_failed/FileNotFoundError:2 and confirmed
+cleanup. A bounded HTTP GET to `http://127.0.0.1:11434/api/tags` raises ConnectTimeout.
+Actual Ollama alias/fallback acceptance remains an environment blocker; no substitution,
+alias creation/removal, model load or inference is claimed by this prerequisite run.
+
+Complete core parity: 1146 Python + 20 unchanged data = 1166 files; 2338
+frozen support inputs. Both Quality jobs include the new controls; hosted execution is
+unverified. Canonical C scans 1146 files /
+3737 edges with six resolved routes and zero violations,
+errors, unknown modules or authority cycles. Ruff remains 89 existing / 0 introduced; scoped lint,
+sizes, docs, release metadata, whitespace and exact Python index binding pass. Sixty
+retained actual SQLite observations per cell meet the unchanged 0.5s bound; maximum
+0.154275200s. No test deadline or success assertion was weakened. Baseline collection
+does not imply release readiness. Authority, architecture, contributor workflow and
+`docs/specs/PROVIDER_GOVERNANCE_COMMAND_OWNERSHIP.md` share the recorded boundary.
+
+Compliance: affected dependency direction, application-owned effects, adapter boundaries,
+resource failure truth and authority updates pass. No decision node/event schema change.
+Full async reachability and deterministic/replay inputs remain partial, tracked here.
+Provider process inputs are bound at native helper entry; this does not establish all
+upstream pre-worker admission capture. Alias/daemon effects still require reconciliation
+after interruption. No hostile-code containment or complete effect classification claim.
+
+Remaining blockers or drift: retain the .72 Linux clock blocker (240.006951941s, quiet
+18.843389227 vs 60, steps outside 0.01, cause unknown) without new measurement or settings/deadline
+change. Windows transient latency, physical-sleep and prior Git timeout causes stay open.
+Continue D3: Worker sync HTTP/sleep and daemon-renewal ownership, OpenClaw interactive
+JSONL child/pipe/descendant ownership and complete async inventory. D2 clock/env/identity inputs,
+actual classification truth and upstream process admission inputs. Source-bound next
+discovery: `.tmp/d-provider-governance-command-ownership/next-adapter-inventory.json`.
+Observed Worker callers are lease/hedging tests; OpenClaw callers include nervous-system
+evidence tooling. Those bounded observations do not prove complete reachability.
+The discovery helper's D1/D2 display label is not a canonical phase classification:
+native lifetime/async work is D3; upstream immutable-input work is D2 in this plan.
+ProductFlow .83 replay remains blocked/not_evaluable. Full legacy Kernel completion,
+89% full-suite coverage, hosted Gitea, E1 taxonomy/no-op/Ruff, E2 bounded generated authority,
+CAP1 actual-model workloads, CAP2 accepted containment and CAP3 capacity/recovery remain.
+Preserve BT-1 through BT-5 and all prior evidence. No whole-plan completion, main merge, release
+readiness or lane retirement; explicit user acceptance is still required.
+
+Retained proof: `.tmp/d-provider-governance-command-ownership/`.

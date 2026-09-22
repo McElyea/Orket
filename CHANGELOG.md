@@ -5,6 +5,19 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.87] - 2026-09-22
+
+### Fixed
+- Retain provider inventory and Packet 1 native command descendants through leader exit, deadline and interruption using the existing OS supervisor.
+- Refuse incomplete capture or uncertain cleanup; preserve inventory parsing, newline behavior, model-load observation and alias ownership.
+- Capture command arguments, directory and environment before dispatch; Packet 1 commands now have a finite 300-second default budget.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Callers must handle explicit incomplete-command or typed uncertainty errors. The existing supervisor's 4 MiB output limit now applies to these commands.
+- Native inventory requires owned worker execution; interruption retains its admitted command budget and worker failures remain visible.
+- Contract: `docs/architecture/CONTRACT_DELTA_PROVIDER_GOVERNANCE_COMMANDS_D_2026-09-22.md`.
+
 ## [0.6.86] - 2026-09-22
 
 ### Fixed

@@ -2,6 +2,16 @@
 
 Last updated: 2026-09-22
 
+Provider CLI inventory and Packet 1 governance commands use the existing OS command
+supervisor with captured arguments, directory and environment. Leader exit is not
+completion until descendants settle. Incomplete output or uncertain cleanup refuses;
+inventory parsing, observed model loads and alias ownership remain authoritative.
+Native workers retain their admitted deadlines through waiter interruption. Packet 1
+commands default to 300 seconds; the existing 4 MiB output bound applies to both paths.
+Process cleanup is not daemon-effect rollback or actual-model acceptance. Migration:
+`docs/specs/PROVIDER_GOVERNANCE_COMMAND_OWNERSHIP.md` and
+`docs/architecture/CONTRACT_DELTA_PROVIDER_GOVERNANCE_COMMANDS_D_2026-09-22.md`.
+
 Runtime architecture evaluators require immutable policy snapshots. Settings capture
 current environment/root and each needed readiness report once per request, preserving
 operator changes between requests. Owned workers retain async reads through interruption;

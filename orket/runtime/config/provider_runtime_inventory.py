@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 import json
-import subprocess
+import os
+from pathlib import Path
 from typing import Any
 
 import httpx
 
 from orket.adapters.execution.owned_io import require_sync_context
+from orket.application.services.command_process_supervisor import CommandProcessSupervisor
 from orket.capabilities.sync_bridge import run_coro_sync as _run_coro_sync
+from orket.core.contracts.owned_command import CommandExecutionUncertain
 
 
 class ProviderRuntimeWarmupError(RuntimeError):
@@ -16,22 +19,25 @@ class ProviderRuntimeWarmupError(RuntimeError):
 
 def _run_command_sync(cmd: list[str], *, timeout_s: float) -> str:
     require_sync_context(code="E_PROVIDER_INVENTORY_REQUIRES_ASYNC_OWNER")
+    command, root, environment = tuple(cmd), Path.cwd(), dict(os.environ)
     try:
-        result = subprocess.run(
-            cmd,
-            check=False,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            timeout=max(1.0, float(timeout_s)),
-        )
-    except (FileNotFoundError, OSError, subprocess.TimeoutExpired) as exc:
-        raise ProviderRuntimeWarmupError(f"command failed: {' '.join(cmd)} ({exc})") from exc
+        result = _run_coro_sync(CommandProcessSupervisor(root, cancellation_event="provider_inventory_command_interrupted").run(
+            command, cwd=root, environment=environment, timeout_seconds=max(1.0, float(timeout_s))))
+    except OSError as exc:
+        raise ProviderRuntimeWarmupError(f"command failed: {' '.join(command)} ({exc})") from exc
+    if (not result.cleanup_confirmed or result.reason == "cancelled"
+            or (not result.capture_complete and result.reason != "launch_failed")):
+        raise CommandExecutionUncertain(result)
+    if result.reason != "completed":
+        detail = "; ".join((result.reason, *result.diagnostics))
+        raise ProviderRuntimeWarmupError(f"command failed: {' '.join(command)} ({detail})")
+    # Retain subprocess text-mode universal-newline behavior for inventory parsers.
+    stdout, stderr = [value.decode("utf-8", errors="replace").replace("\r\n", "\n").replace("\r", "\n")
+                      for value in (result.stdout, result.stderr)]
     if int(result.returncode) != 0:
-        detail = str(result.stderr or "").strip() or str(result.stdout or "").strip() or f"exit={result.returncode}"
-        raise ProviderRuntimeWarmupError(f"command failed: {' '.join(cmd)} ({detail})")
-    return str(result.stdout or "")
+        detail = stderr.strip() or stdout.strip() or f"exit={result.returncode}"
+        raise ProviderRuntimeWarmupError(f"command failed: {' '.join(command)} ({detail})")
+    return stdout
 
 
 def _parse_ollama_list(stdout: str) -> list[str]:

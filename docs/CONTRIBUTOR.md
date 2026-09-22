@@ -66,6 +66,13 @@
 
 ## Canonical Commands
 
+Provider inventory native commands and Packet 1 alias commands use the package-owned
+OS supervisor. Preserve finite budgets, bounded capture, cleanup uncertainty and native
+event-loop refusal when editing these paths. Exercise real descendant trees and output
+controls in both Quality jobs. A successful CLI inventory is not model inference, and
+process cleanup cannot establish rollback of model or alias effects. Contract:
+`docs/specs/PROVIDER_GOVERNANCE_COMMAND_OWNERSHIP.md`.
+
 Architecture policy helpers and direct orchestrator construction require explicit
 immutable policy snapshots. Application observation receives a captured environment
 and absolute invocation root; async callers await the owned observation service.

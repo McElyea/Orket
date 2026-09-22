@@ -380,6 +380,16 @@ This does not make multiple reports an atomic filesystem transaction or complete
 See `docs/specs/RUNTIME_ARCHITECTURE_POLICY_INPUTS.md` and
 `docs/architecture/CONTRACT_DELTA_RUNTIME_ARCHITECTURE_POLICY_INPUTS_D_2026-09-22.md`.
 
+Provider inventory and Packet 1 governance commands share the existing native process
+owner. Captured arguments, directory and environment bind dispatch; leader exit, command
+deadline and cancellation retain descendant cleanup. Incomplete capture or uncertain
+cleanup cannot become normal output. Native inventory retains its worker and admitted
+budget; governance commands have a 300-second default. The existing 4 MiB capture bound
+applies. Inventory parsing, model-load observation and alias ownership remain unchanged.
+This does not establish daemon-effect rollback, alias exclusivity or provider inference.
+See `docs/specs/PROVIDER_GOVERNANCE_COMMAND_OWNERSHIP.md` and
+`docs/architecture/CONTRACT_DELTA_PROVIDER_GOVERNANCE_COMMANDS_D_2026-09-22.md`.
+
 Driver async creation captures root, environment and settings before owned
 construction; direct synchronous construction refuses an event-loop thread.
 API chat and interactive CLI use shared runtime owners. Console reads settle
