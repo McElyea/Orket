@@ -6,6 +6,7 @@ import pytest
 from orket.application.services.dependency_manager import DependencyValidationError
 from orket.application.services.deployment_planner import DeploymentValidationError
 from orket.application.services.guard_agent import GuardAgent
+from orket.application.services.runtime_policy_inputs import ArchitecturePolicySnapshot
 from orket.application.services.runtime_verifier import build_runtime_guard_contract
 from orket.application.services.scaffolder import ScaffoldValidationError
 from orket.application.services.skill_adapter import synthesize_role_tool_profile_bindings
@@ -96,6 +97,7 @@ def orchestrator(tmp_path, monkeypatch):
         loader=loader,
         sandbox_orchestrator=FakeSandbox(),
         control_plane_clock=ProtocolLedgerClock().utc_now_iso,
+        architecture_policy=ArchitecturePolicySnapshot(False),
     )
     return orch, cards, loader
 
@@ -243,7 +245,7 @@ async def test_execute_epic_support_services_can_override_scaffolder(orchestrato
 # Layer: unit
 async def test_execute_epic_passes_microservices_pattern_to_stabilizers(orchestrator, tmp_path, monkeypatch):
     orch, cards, _loader = orchestrator
-    monkeypatch.setenv("ORKET_ENABLE_MICROSERVICES", "true")
+    orch.architecture_policy = ArchitecturePolicySnapshot(True)
     orch.org = SimpleNamespace(
         process_rules={
             "architecture_mode": "force_microservices",
@@ -291,7 +293,7 @@ async def test_execute_epic_passes_microservices_pattern_to_stabilizers(orchestr
 # Layer: unit
 async def test_execute_epic_preserves_deferred_architecture_mode_for_stabilizers(orchestrator, tmp_path, monkeypatch):
     orch, cards, _loader = orchestrator
-    monkeypatch.setenv("ORKET_ENABLE_MICROSERVICES", "true")
+    orch.architecture_policy = ArchitecturePolicySnapshot(True)
     orch.org = SimpleNamespace(
         process_rules={
             "architecture_mode": "architect_decides",
@@ -2092,6 +2094,7 @@ async def test_execute_epic_uses_custom_tool_strategy_node(tmp_path, monkeypatch
         db_path=str(tmp_path / "test.db"),
         loader=loader,
         sandbox_orchestrator=FakeSandbox(),
+        architecture_policy=ArchitecturePolicySnapshot(False),
     )
 
     class CustomToolStrategy:
@@ -2285,8 +2288,9 @@ def test_build_turn_context_final_guard_includes_read_contract(orchestrator):
 
 
 def test_build_turn_context_includes_architecture_contract_for_architect(orchestrator, monkeypatch):
+    """Layer: unit. Architecture evaluation consumes the explicit unlock snapshot."""
     orch, _cards, _loader = orchestrator
-    monkeypatch.setenv("ORKET_ENABLE_MICROSERVICES", "true")
+    orch.architecture_policy = ArchitecturePolicySnapshot(True)
     orch.org = SimpleNamespace(
         process_rules={
             "architecture_mode": "force_microservices",
@@ -2754,8 +2758,9 @@ def test_build_turn_context_uses_active_run_policy_overrides(orchestrator):
 
 
 def test_resolve_runtime_modes_honor_user_settings_when_process_rules_unset(orchestrator, monkeypatch):
+    """Layer: unit. Architecture evaluation consumes the explicit unlock snapshot."""
     orch, _cards, _loader = orchestrator
-    monkeypatch.setenv("ORKET_ENABLE_MICROSERVICES", "true")
+    orch.architecture_policy = ArchitecturePolicySnapshot(True)
     orch.org = SimpleNamespace(process_rules={})
     monkeypatch.setattr(
         "orket.application.workflows.orchestrator.load_user_settings",
@@ -3253,18 +3258,14 @@ async def test_create_pending_gate_request_uses_policy_gate_mode(orchestrator):
     class _PendingRepo:
         def __init__(self):
             self.calls = []
-
         async def create_request(self, **kwargs):
             self.calls.append(kwargs)
             return "REQ-1234"
-
     class _LoopPolicy:
         def gate_mode_for_seat(self, inputs):
             return "review_required" if inputs.seat_name == "integrity_guard" else "auto"
-
     orch.pending_gates = _PendingRepo()
     orch.loop_policy_node = _LoopPolicy()
-
     request_id = await orch._create_pending_gate_request(
         run_id="run-1",
         issue_id="ISSUE-1",
@@ -3274,7 +3275,6 @@ async def test_create_pending_gate_request_uses_policy_gate_mode(orchestrator):
         issue=IssueConfig(id="ISSUE-1", seat="integrity_guard", summary="Guard Review"),
         turn_status=CardStatus.AWAITING_GUARD_REVIEW,
     )
-
     assert request_id == "REQ-1234"
     assert len(orch.pending_gates.calls) == 1
     call = orch.pending_gates.calls[0]

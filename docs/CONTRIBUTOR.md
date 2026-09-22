@@ -66,6 +66,14 @@
 
 ## Canonical Commands
 
+Architecture policy helpers and direct orchestrator construction require explicit
+immutable policy snapshots. Application observation receives a captured environment
+and absolute invocation root; async callers await the owned observation service.
+Settings capture at each request to retain operator changes between requests. Keep
+readiness criteria, response schemas and conditional settings-write conflicts intact.
+Run the runtime-policy input/request/lifetime controls in both Quality jobs when
+changing this boundary. Contract: `docs/specs/RUNTIME_ARCHITECTURE_POLICY_INPUTS.md`.
+
 Extension scaffold authoring sources live in `docs/templates/external_extension/`
 and `docs/templates/governed_agent_external/`. After changing them, run
 `python scripts/governance/sync_extension_templates.py --write` followed by

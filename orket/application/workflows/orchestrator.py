@@ -24,6 +24,7 @@ from orket.application.services.orchestrator_scheduler_control_plane_service imp
     OrchestratorSchedulerControlPlaneService,
 )
 from orket.application.services.orchestrator_support_services import OrchestratorSupportServices
+from orket.application.services.runtime_policy_inputs import ArchitecturePolicySnapshot
 from orket.application.services.tool_approval_control_plane_reservation_service import (
     ToolApprovalControlPlaneReservationService,
 )
@@ -78,7 +79,11 @@ class Orchestrator:
         failure_report_clock: Callable[[], str] = utc_now_iso,
         control_plane_clock: Callable[[], str] | None = None,
         environment: Mapping[str, str] | None = None,
+        *, architecture_policy: ArchitecturePolicySnapshot,
     ) -> None:
+        if not isinstance(architecture_policy, ArchitecturePolicySnapshot):
+            raise TypeError("E_ARCHITECTURE_POLICY_SNAPSHOT_REQUIRED")
+        self.architecture_policy = architecture_policy
         self.decision_environment = MappingProxyType(dict(os.environ if environment is None else environment))
         self.workspace = workspace.resolve()
         self.async_cards = async_cards

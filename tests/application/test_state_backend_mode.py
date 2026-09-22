@@ -12,18 +12,21 @@ from orket.application.services.runtime_policy import (
     resolve_state_backend_mode,
     runtime_policy_options,
 )
+from orket.application.services.runtime_policy_inputs import ArchitecturePolicySnapshot, RuntimePolicySnapshot
 from orket.orchestration.engine import OrchestrationEngine
 
 
 def test_state_backend_mode_policy_defaults_to_local():
-    options = runtime_policy_options()
+    """Layer: unit. Explicit locked policy retains the local default."""
+    options = runtime_policy_options(RuntimePolicySnapshot(ArchitecturePolicySnapshot(False), False, {}))
     assert options["state_backend_mode"]["default"] == "local"
     assert options["state_backend_mode"]["input_style"] == "radio"
     assert any(opt["value"] == "gitea" for opt in options["state_backend_mode"]["options"])
 
 
 def test_run_ledger_mode_policy_defaults_to_sqlite():
-    options = runtime_policy_options()
+    """Layer: unit. Explicit locked policy retains the SQLite default."""
+    options = runtime_policy_options(RuntimePolicySnapshot(ArchitecturePolicySnapshot(False), False, {}))
     assert options["run_ledger_mode"]["default"] == "sqlite"
     assert options["run_ledger_mode"]["input_style"] == "radio"
     assert any(opt["value"] == "protocol" for opt in options["run_ledger_mode"]["options"])

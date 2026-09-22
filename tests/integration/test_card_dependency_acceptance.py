@@ -10,6 +10,7 @@ import pytest
 from orket.adapters.storage.card_migrations import CARD_BOOTSTRAP_MIGRATIONS
 from orket.adapters.storage.sqlite_migrations import SQLiteMigrationRunner
 from orket.application.services.card_dependency_service import read_card_dispatch_snapshot
+from orket.application.services.runtime_policy_inputs import ArchitecturePolicySnapshot
 from orket.application.workflows import orchestrator_ops
 from orket.application.workflows.orchestrator import Orchestrator
 from orket.core.domain.records import IssueRecord
@@ -105,7 +106,9 @@ async def test_dependency_drift_after_selection_stops_before_turn_effects(tmp_pa
         error = "E_CARD_DISPATCH_STATE_STALE"
     orch = Orchestrator(workspace=service.workspace_root, async_cards=repo, snapshots=None,
                         org=SimpleNamespace(process_rules={}), config_root=tmp_path, db_path=repo.db_path,
-                        loader=None, sandbox_orchestrator=None, card_completion=service)
+                        loader=None, sandbox_orchestrator=None, card_completion=service,
+        architecture_policy=ArchitecturePolicySnapshot(False),
+    )
     with pytest.raises(ExecutionFailed, match=error):
         await orch._execute_issue_turn(selected, SimpleNamespace(params={}), None, None, "run", "build",
                                        None, None, None)

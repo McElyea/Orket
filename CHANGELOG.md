@@ -5,6 +5,18 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.86] - 2026-09-22
+
+### Fixed
+- Capture architecture readiness and policy environment once per settings request, retaining operator changes between requests.
+- Own asynchronous report reads through cancellation, timeout and shutdown; preserve existing readiness interpretation and write conflicts.
+- Supply explicit immutable architecture snapshots to policy helpers and orchestrator composition.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Direct policy-helper and orchestrator callers must supply the required policy snapshot; native observation refuses event-loop entry.
+- Contract: `docs/architecture/CONTRACT_DELTA_RUNTIME_ARCHITECTURE_POLICY_INPUTS_D_2026-09-22.md`.
+
 ## [0.6.85] - 2026-09-22
 
 ### Changed

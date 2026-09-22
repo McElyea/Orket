@@ -370,6 +370,16 @@ purity or permission to acquire missing decision context. Contract and limits:
 `docs/specs/ADAPTER_EFFECT_CLASSIFICATION.md` and
 `docs/architecture/CONTRACT_DELTA_ADAPTER_EFFECT_CLASSIFICATION_D_2026-09-22.md`.
 
+Runtime architecture policy separates immutable decision inputs from owned report
+observations. Each settings request captures current environment/root and reads each
+needed report once; validation, values and metadata share the result. Operator policy
+changes remain visible to the next request. Native observation refuses event-loop
+entry, while async observation retains workers through interruption. Orchestrator
+composition supplies the required architecture snapshot and captured mode environment.
+This does not make multiple reports an atomic filesystem transaction or complete D.
+See `docs/specs/RUNTIME_ARCHITECTURE_POLICY_INPUTS.md` and
+`docs/architecture/CONTRACT_DELTA_RUNTIME_ARCHITECTURE_POLICY_INPUTS_D_2026-09-22.md`.
+
 Driver async creation captures root, environment and settings before owned
 construction; direct synchronous construction refuses an event-loop thread.
 API chat and interactive CLI use shared runtime owners. Console reads settle

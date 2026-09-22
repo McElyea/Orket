@@ -13,6 +13,7 @@ from orket.application.services.orchestrator_turn_context_policy import (
     resolve_policy_token,
 )
 from orket.application.services.runtime_policy import allowed_architecture_patterns
+from orket.application.services.runtime_policy_inputs import ArchitecturePolicySnapshot
 from orket.core.cards_runtime_contract import DEFAULT_RUNTIME_VERIFICATION_PATH, resolve_cards_runtime
 from orket.core.domain.verification_scope import build_verification_scope
 from orket.runtime.config.contract_assets import DEFAULT_PROMPT_BUDGET_PATH
@@ -43,6 +44,7 @@ class OrchestratorTurnContextBuilder:
     def __init__(
         self,
         *,
+        architecture_policy: ArchitecturePolicySnapshot,
         workspace_root: Path,
         org: Any,
         loop_policy_node: Any,
@@ -66,6 +68,7 @@ class OrchestratorTurnContextBuilder:
         active_run_determinism_class: Any,
         active_compatibility_mappings: Any,
     ) -> None:
+        self.architecture_policy = architecture_policy
         self.workspace_root = workspace_root
         self.org = org
         self.loop_policy_node = loop_policy_node
@@ -328,7 +331,7 @@ class OrchestratorTurnContextBuilder:
             "workflow_profile": workflow_profile,
             "architecture_decision_required": str(data.seat_name).strip().lower() == "architect",
             "architecture_decision_path": "agent_output/design.txt",
-            "architecture_allowed_patterns": allowed_architecture_patterns(),
+            "architecture_allowed_patterns": allowed_architecture_patterns(self.architecture_policy),
             "architecture_forced_pattern": forced_pattern,
             "frontend_framework_allowed": ["vue", "react", "angular"],
             "frontend_framework_forced": forced_frontend_framework,

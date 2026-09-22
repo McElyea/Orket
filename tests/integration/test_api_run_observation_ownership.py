@@ -2,15 +2,14 @@
 import asyncio
 import json
 import threading
-import time
 from pathlib import Path
 from types import SimpleNamespace
 
-import aiosqlite
 import httpx
 import pytest
 
 from orket.interfaces.api import create_api_app
+from tests.helpers.api_observation_lifetime import exercise_owned_api_read
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 ROUTES = {
@@ -72,45 +71,4 @@ async def test_api_run_observations_are_responsive_and_owned(tmp_path, monkeypat
         log, checkpoint = await seed_observations(app, tmp_path)
         state = hold_native_read(monkeypatch, checkpoint if kind == "targeted-replay" else log, stop == "worker_failure")
 
-        async def invoke():
-            async with asyncio.timeout(5), asyncio.timeout(None) as deadline:
-                state.deadline = deadline
-                return await client.get(ROUTES[kind])
-
-        timer = threading.Timer(.8, state.release.set)
-        timer.start()
-        started = time.perf_counter()
-        request = asyncio.create_task(invoke())
-        try:
-            async with asyncio.timeout(5):
-                while not state.entered.is_set():
-                    if request.done():
-                        pytest.fail(f"Request ended before native read: {await request}")
-                    await asyncio.sleep(.001)
-            if stop == "timeout":
-                state.deadline.reschedule(asyncio.get_running_loop().time() + .05)
-            async with aiosqlite.connect(tmp_path / "responsive.sqlite3") as connection:
-                assert await (await connection.execute("SELECT 42")).fetchone() == (42,)
-            elapsed = time.perf_counter() - started
-            record_property("responsive_sqlite_seconds", elapsed)
-            assert elapsed < .5
-            assert (await client.get("/v1/system/heartbeat")).status_code == 200
-            if stop != "timeout":
-                request.cancel()
-                await asyncio.sleep(0)
-                request.cancel()
-            await asyncio.sleep(.08)
-            assert not request.done() and not state.finished.is_set() and not state.files[0].closed
-            assert app.state.api_runtime_context.active_request_count == 1
-            state.release.set()
-            expected = OSError if stop == "worker_failure" else TimeoutError if stop == "timeout" else asyncio.CancelledError
-            with pytest.raises(expected):
-                await asyncio.wait_for(request, 5)
-        finally:
-            state.release.set()
-            timer.cancel()
-            await asyncio.to_thread(timer.join, 5)
-            await asyncio.gather(request, return_exceptions=True)
-            assert await asyncio.to_thread(state.finished.wait, 5)
-        assert not timer.is_alive() and all(stream.closed for stream in state.files)
-        assert app.state.api_runtime_context.active_request_count == 0
+        await exercise_owned_api_read(app, client, ROUTES[kind], state, tmp_path, record_property, stop)

@@ -1,15 +1,9 @@
 from __future__ import annotations
 
-import json
-import os
 from collections.abc import Callable, Iterable
-from pathlib import Path
 from typing import Any
 
-from orket.application.services.microservices_acceptance_reports import (
-    normalize_microservices_pilot_stability_report,
-    normalize_microservices_unlock_report,
-)
+from orket.application.services.runtime_policy_inputs import ArchitecturePolicySnapshot, RuntimePolicySnapshot
 from orket.runtime.determinism_controls import (
     build_determinism_controls,
 )
@@ -117,59 +111,21 @@ def _pick_first_non_empty(values: Iterable[Any]) -> str:
     return ""
 
 
-def _read_json_object(path: Path) -> dict[str, Any]:
-    if not path.exists():
-        return {}
-    try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError:
-        return {}
-    return payload if isinstance(payload, dict) else {}
+def is_microservices_unlocked(policy: ArchitecturePolicySnapshot) -> bool:
+    return policy.microservices_unlocked
 
 
-def _read_unlock_report(path: Path) -> dict[str, Any]:
-    return normalize_microservices_unlock_report(_read_json_object(path))
+def is_microservices_pilot_stable(policy: RuntimePolicySnapshot) -> bool:
+    return policy.microservices_pilot_stable
 
 
-def _read_pilot_stability_report(path: Path) -> dict[str, Any]:
-    return normalize_microservices_pilot_stability_report(_read_json_object(path))
-
-
-def _env_bool(name: str) -> bool | None:
-    raw = (os.environ.get(name) or "").strip().lower()
-    if raw in {"1", "true", "yes", "on"}:
-        return True
-    if raw in {"0", "false", "no", "off"}:
-        return False
-    return None
-
-
-def is_microservices_unlocked() -> bool:
-    env_override = _env_bool("ORKET_ENABLE_MICROSERVICES")
-    if env_override is not None:
-        return bool(env_override)
-    report_path = Path(str(os.environ.get("ORKET_MICROSERVICES_UNLOCK_REPORT") or DEFAULT_MICROSERVICES_UNLOCK_REPORT))
-    report = _read_unlock_report(report_path)
-    return bool(report.get("unlocked"))
-
-
-def is_microservices_pilot_stable() -> bool:
-    report_path = Path(
-        str(
-            os.environ.get("ORKET_MICROSERVICES_PILOT_STABILITY_REPORT") or DEFAULT_MICROSERVICES_PILOT_STABILITY_REPORT
-        )
-    )
-    report = _read_pilot_stability_report(report_path)
-    return bool(report.get("stable"))
-
-
-def allowed_architecture_patterns() -> list[str]:
-    if is_microservices_unlocked():
+def allowed_architecture_patterns(policy: ArchitecturePolicySnapshot) -> list[str]:
+    if is_microservices_unlocked(policy):
         return ["monolith", "microservices"]
     return ["monolith"]
 
 
-def resolve_architecture_mode(*values: Any) -> str:
+def resolve_architecture_mode(*values: Any, policy: ArchitecturePolicySnapshot) -> str:
     raw = _pick_first_non_empty(values)
     aliases = {
         "force_monolith": "force_monolith",
@@ -181,7 +137,7 @@ def resolve_architecture_mode(*values: Any) -> str:
         "let_architect_decide": "architect_decides",
     }
     resolved = aliases.get(raw, DEFAULT_ARCHITECTURE_MODE)
-    if resolved == "force_microservices" and not is_microservices_unlocked():
+    if resolved == "force_microservices" and not is_microservices_unlocked(policy):
         return DEFAULT_ARCHITECTURE_MODE
     return resolved
 
@@ -201,9 +157,9 @@ def resolve_frontend_framework_mode(*values: Any) -> str:
     return aliases.get(raw, DEFAULT_FRONTEND_FRAMEWORK_MODE)
 
 
-def runtime_policy_options() -> dict[str, Any]:
-    microservices_unlocked = is_microservices_unlocked()
-    microservices_pilot_stable = is_microservices_pilot_stable()
+def runtime_policy_options(policy: RuntimePolicySnapshot) -> dict[str, Any]:
+    microservices_unlocked = is_microservices_unlocked(policy.architecture)
+    microservices_pilot_stable = is_microservices_pilot_stable(policy)
     if microservices_unlocked:
         architecture_mode_options = ARCHITECTURE_MODE_OPTIONS
     else:

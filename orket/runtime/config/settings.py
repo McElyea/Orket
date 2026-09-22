@@ -27,9 +27,11 @@ def resolve_str(
     user_key: str = "",
     user_settings: dict[str, Any] | None = None,
     default: str = "",
+    environment: Mapping[str, str] | None = None,
 ) -> str:
+    observed = os.environ if environment is None else environment
     for name in env_names:
-        value = str(os.getenv(name, "")).strip()
+        value = str(observed.get(name, "")).strip()
         if value:
             return value
     value = _process_rule_token(process_rules, process_key)

@@ -12,6 +12,7 @@ from orket.application.services.orchestrator_issue_control_plane_support import 
     reservation_id_for_run,
     run_id_for_dispatch,
 )
+from orket.application.services.runtime_policy_inputs import ArchitecturePolicySnapshot
 from orket.application.services.tool_gate_service import ToolGate
 from orket.application.services.turn_tool_control_plane_service import build_turn_tool_control_plane_service
 from orket.application.workflows.orchestrator import Orchestrator
@@ -134,6 +135,7 @@ async def test_orchestrator_issue_turn_publishes_issue_dispatch_and_non_protocol
         db_path=str(tmp_path / "runtime.sqlite3"),
         loader=loader,
         sandbox_orchestrator=SimpleNamespace(registry=SimpleNamespace(get=lambda _sid: None)),
+        architecture_policy=ArchitecturePolicySnapshot(False),
     )
     orch.router_node = SimpleNamespace(route=lambda _inputs: "developer")
     orch.loop_policy_node = SimpleNamespace(

@@ -5,6 +5,7 @@ from types import SimpleNamespace
 import pytest
 
 from orket.adapters.storage.async_card_repository import AsyncCardRepository
+from orket.application.services.runtime_policy_inputs import ArchitecturePolicySnapshot
 from orket.application.workflows.orchestrator import Orchestrator
 from orket.core.domain.sandbox import SandboxStatus
 from tests.helpers.observed_http_server import observed_http_server
@@ -25,7 +26,7 @@ async def prepare(root, url):
             {"id": "http", "description": "Falsy comparison", "input_data": {"endpoint": "/probe"}, "expected_output": 0}]}})
     sandbox = SimpleNamespace(id="sandbox-BUILD", status=SandboxStatus.RUNNING, api_url=url)
     owner = SimpleNamespace(registry={"sandbox-BUILD": sandbox})
-    return Orchestrator(root, cards, None, None, root, str(root / "cards.db"), None, owner), cards
+    return Orchestrator(root, cards, None, None, root, str(root / "cards.db"), None, owner, architecture_policy=ArchitecturePolicySnapshot(False)), cards
 
 
 @pytest.mark.parametrize("actual,counts", [(0, (2, 0)), ({"unexpected": True}, (1, 1))], ids=["matching", "mismatch"])

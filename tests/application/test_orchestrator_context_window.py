@@ -1,9 +1,11 @@
-﻿from types import SimpleNamespace
+from types import SimpleNamespace
 
+from orket.application.services.runtime_policy_inputs import ArchitecturePolicySnapshot
 from orket.application.workflows.orchestrator import Orchestrator
 
 
 def test_orchestrator_history_context_defaults_to_10(monkeypatch, tmp_path):
+    """Layer: unit. Explicit locked architecture does not change history defaults."""
     monkeypatch.delenv("ORKET_CONTEXT_WINDOW", raising=False)
     orchestrator = Orchestrator(
         workspace=tmp_path / "workspace",
@@ -14,6 +16,7 @@ def test_orchestrator_history_context_defaults_to_10(monkeypatch, tmp_path):
         db_path=str(tmp_path / "ctx.db"),
         loader=None,
         sandbox_orchestrator=None,
+        architecture_policy=ArchitecturePolicySnapshot(False),
     )
 
     orchestrator.transcript = [
@@ -27,6 +30,7 @@ def test_orchestrator_history_context_defaults_to_10(monkeypatch, tmp_path):
 
 
 def test_orchestrator_history_context_env_override(monkeypatch, tmp_path):
+    """Layer: unit. Explicit architecture preserves the history-window override."""
     monkeypatch.setenv("ORKET_CONTEXT_WINDOW", "3")
     orchestrator = Orchestrator(
         workspace=tmp_path / "workspace",
@@ -37,6 +41,7 @@ def test_orchestrator_history_context_env_override(monkeypatch, tmp_path):
         db_path=str(tmp_path / "ctx2.db"),
         loader=None,
         sandbox_orchestrator=None,
+        architecture_policy=ArchitecturePolicySnapshot(False),
     )
 
     orchestrator.transcript = [
@@ -46,4 +51,3 @@ def test_orchestrator_history_context_env_override(monkeypatch, tmp_path):
 
     assert len(history) == 1
     assert history[0] == {"role": "coder", "content": "c4"}
-

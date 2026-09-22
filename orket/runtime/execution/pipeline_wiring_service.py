@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+import os
 from collections.abc import Callable
 from datetime import datetime
 from functools import partial
+from pathlib import Path
 from typing import Any
 
 from orket.application.services.decision_node_registry import build_decision_node_registry
 from orket.application.services.runtime_construction_inputs import RuntimeConstructionInputs
+from orket.application.services.runtime_policy_input_service import RuntimePolicyInputService
 from orket.runtime_paths import (
     durable_root,
     resolve_control_plane_db_path,
@@ -78,7 +81,13 @@ class PipelineWiringService:
         from orket.application.workflows.orchestrator import Orchestrator
 
         inputs = self._selected_inputs(construction_inputs)
+        environment = inputs.environment if inputs is not None else dict(os.environ)
+        policy = RuntimePolicyInputService(
+            environment=environment,
+            invocation_root=inputs.invocation_root if inputs is not None else Path.cwd(),
+        ).observe_architecture()
         return Orchestrator(
+            architecture_policy=policy,
             workspace=workspace,
             async_cards=async_cards,
             snapshots=snapshots,
@@ -89,7 +98,7 @@ class PipelineWiringService:
             sandbox_orchestrator=sandbox_orchestrator,
             card_completion=card_completion,
             control_plane_clock=control_plane_clock,
-            environment=inputs.environment if inputs is not None else None,
+            environment=environment,
         )
 
     async def prepare_sub_pipeline(self, *, parent_pipeline: Any, epic_workspace: Any, department: str) -> Callable[[], Any]:

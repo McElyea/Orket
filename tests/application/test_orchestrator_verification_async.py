@@ -9,6 +9,7 @@ import pytest
 
 from orket.adapters.storage.async_card_repository import AsyncCardRepository
 from orket.application.services.command_process_supervisor import CommandProcessCancelled
+from orket.application.services.runtime_policy_inputs import ArchitecturePolicySnapshot
 from orket.application.workflows.orchestrator import Orchestrator
 from tests.integration.test_verification_process_lifetime import (
     assert_stopped,
@@ -40,7 +41,7 @@ async def prepare_orchestrator(root, flags=(), source=None):
             {"id": "one", "description": "real fixture", "input_data": {"root": str(root), "flags": list(flags)},
              "expected_output": 1}]}})
     sandbox = SimpleNamespace(registry={})
-    orchestrator = Orchestrator(root, cards, None, None, root, str(root / "cards.db"), None, sandbox)
+    orchestrator = Orchestrator(root, cards, None, None, root, str(root / "cards.db"), None, sandbox, architecture_policy=ArchitecturePolicySnapshot(False))
     return orchestrator, cards
 
 

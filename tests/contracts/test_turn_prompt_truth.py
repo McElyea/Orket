@@ -7,6 +7,7 @@ import pytest
 
 from orket.adapters.storage.async_card_repository import AsyncCardRepository
 from orket.adapters.storage.async_repositories import AsyncSnapshotRepository
+from orket.application.services.runtime_policy_inputs import ArchitecturePolicySnapshot
 from orket.application.workflows.orchestrator import Orchestrator
 from orket.application.workflows.turn_message_builder import MessageBuilder
 from orket.schema import CardStatus, IssueConfig, RoleConfig
@@ -20,6 +21,7 @@ def _orchestrator(tmp_path, rules):
         workspace=tmp_path, async_cards=AsyncCardRepository(db_path), snapshots=AsyncSnapshotRepository(db_path),
         org=SimpleNamespace(process_rules=rules), config_root=tmp_path, db_path=db_path,
         loader=None, sandbox_orchestrator=None,
+        architecture_policy=ArchitecturePolicySnapshot(False),
     )
 
 

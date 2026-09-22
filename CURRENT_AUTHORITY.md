@@ -2,6 +2,15 @@
 
 Last updated: 2026-09-22
 
+Runtime architecture evaluators require immutable policy snapshots. Settings capture
+current environment/root and each needed readiness report once per request, preserving
+operator changes between requests. Owned workers retain async reads through interruption;
+native observation refuses event-loop entry. Orchestrator composition supplies one
+architecture snapshot shared by mode resolution and allowed-pattern context. Existing
+readiness normalizers, aliases and settings-write conflicts remain authoritative.
+Migration and scoped limits: `docs/specs/RUNTIME_ARCHITECTURE_POLICY_INPUTS.md` and
+`docs/architecture/CONTRACT_DELTA_RUNTIME_ARCHITECTURE_POLICY_INPUTS_D_2026-09-22.md`.
+
 Legacy Kernel capability evaluation uses a package-owned default and one validated
 immutable policy observation. Application capture owns the read-only adapter;
 missing/malformed/native I/O errors refuse instead of becoming an empty policy.

@@ -84,6 +84,7 @@ jobs:
       - name: Enforce adapter classification and dependency admission
         run: |
           python -m pytest -q tests/platform/test_adapter_effect_classification.py tests/platform/test_dependency_policy_contract.py tests/platform/test_dependency_imports.py tests/platform/test_dependency_importer_interception.py tests/platform/test_dependency_external_names.py
+          python -m pytest -q tests/application/test_runtime_policy_inputs.py tests/integration/test_runtime_policy_request_inputs.py tests/integration/test_runtime_policy_request_lifetime.py
 
       - name: Enforce governance proof engine and alias ownership
         run: |
@@ -478,6 +479,7 @@ jobs:
       - name: Enforce adapter classification and dependency admission
         run: |
           python -m pytest -q tests/platform/test_adapter_effect_classification.py tests/platform/test_dependency_policy_contract.py tests/platform/test_dependency_imports.py tests/platform/test_dependency_importer_interception.py tests/platform/test_dependency_external_names.py
+          python -m pytest -q tests/application/test_runtime_policy_inputs.py tests/integration/test_runtime_policy_request_inputs.py tests/integration/test_runtime_policy_request_lifetime.py
 
       - name: Enforce governance proof engine and alias ownership
         run: |

@@ -5,6 +5,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from orket.application.services.runtime_policy_inputs import ArchitecturePolicySnapshot
 from orket.application.workflows.orchestrator import Orchestrator
 from orket.application.workflows.turn_executor import TurnResult
 from orket.core.domain.execution import ExecutionTurn
@@ -81,6 +82,7 @@ def orchestrator(tmp_path: Path, monkeypatch):
         db_path=str(tmp_path / "test.db"),
         loader=loader,
         sandbox_orchestrator=FakeSandbox(),
+        architecture_policy=ArchitecturePolicySnapshot(False),
     )
     return orch, cards, loader
 

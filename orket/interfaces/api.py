@@ -42,8 +42,6 @@ from orket.application.services.run_ledger_summary_projection import (
 from orket.application.services.runtime_construction_inputs import RuntimeConstructionInputs
 from orket.application.services.runtime_inspection_service import read_runtime_replay, read_runtime_sandbox_logs
 from orket.application.services.runtime_policy import (
-    allowed_architecture_patterns,
-    is_microservices_pilot_stable,
     is_microservices_unlocked,
     resolve_architecture_mode,
     resolve_frontend_framework_mode,
@@ -62,6 +60,8 @@ from orket.application.services.runtime_policy import (
     resolve_state_backend_mode,
     runtime_policy_options,
 )
+from orket.application.services.runtime_policy_input_service import RuntimePolicyInputService
+from orket.application.services.runtime_policy_inputs import ArchitecturePolicySnapshot, RuntimePolicySnapshot
 from orket.application.services.runtime_result_lifetime import open_runtime_owner
 from orket.interfaces.api_runtime_context import (
     ApiAppRuntimeContext,
@@ -629,19 +629,15 @@ v1_router.include_router(
     build_settings_router(
         settings_order=SETTINGS_ORDER,
         settings_schema=SETTINGS_SCHEMA,
-        runtime_policy_options=lambda: runtime_policy_options(),
+        observe_runtime_policy=lambda: _observe_runtime_policy(),
         load_user_settings=lambda: load_user_settings_async(),
         save_user_settings=lambda settings, **options: save_user_settings_async(settings, **options),
         runtime_policy_process_rules=lambda: _runtime_policy_process_rules(),
-        resolve_settings_snapshot=lambda user_settings, process_rules: _resolve_settings_snapshot(
-            user_settings, process_rules
+        resolve_settings_snapshot=lambda user_settings, process_rules, policy: _resolve_settings_snapshot(
+            user_settings, process_rules, policy
         ),
         parse_setting_value=lambda field, value: _parse_setting_value(field, value),
         settings_validation_error=lambda errors: _settings_validation_error(errors),
-        is_microservices_unlocked=lambda: is_microservices_unlocked(),
-        resolve_architecture_mode=lambda env_value, process_value, user_value: resolve_architecture_mode(
-            env_value, process_value, user_value
-        ),
         resolve_frontend_framework_mode=lambda env_value, process_value, user_value: resolve_frontend_framework_mode(
             env_value,
             process_value,
@@ -728,8 +724,6 @@ v1_router.include_router(
                 user_value,
             )
         ),
-        allowed_architecture_patterns=lambda: allowed_architecture_patterns(),
-        is_microservices_pilot_stable=lambda: is_microservices_pilot_stable(),
     )
 )
 v1_router.include_router(
@@ -789,6 +783,12 @@ def _parse_setting_value(field: str, value: Any) -> Any | None:
     return aliases.get(token)
 
 
+async def _observe_runtime_policy() -> RuntimePolicySnapshot:
+    # Policy is operator-changeable between requests; capture once before the first await.
+    owner = RuntimePolicyInputService(environment=dict(os.environ), invocation_root=Path.cwd())
+    return await owner.observe_runtime()
+
+
 def _runtime_policy_process_rules() -> dict[str, Any]:
     runtime_engine = _get_engine()
     if runtime_engine.org and isinstance(getattr(runtime_engine.org, "process_rules", None), dict):
@@ -796,9 +796,10 @@ def _runtime_policy_process_rules() -> dict[str, Any]:
     return {}
 
 
-def _resolve_runtime_setting_value(field: str, env_value: Any, process_value: Any, user_value: Any) -> Any:
+def _resolve_runtime_setting_value(field: str, env_value: Any, process_value: Any, user_value: Any,
+                                   *, policy: ArchitecturePolicySnapshot) -> Any:
     if field == "architecture_mode":
-        return resolve_architecture_mode(env_value, process_value, user_value)
+        return resolve_architecture_mode(env_value, process_value, user_value, policy=policy)
     if field == "frontend_framework_mode":
         return resolve_frontend_framework_mode(env_value, process_value, user_value)
     if field == "project_surface_profile":
@@ -830,16 +831,17 @@ def _resolve_runtime_setting_value(field: str, env_value: Any, process_value: An
     raise KeyError(f"Unsupported runtime setting '{field}'")
 
 
-def _resolve_settings_snapshot(user_settings: dict[str, Any], process_rules: dict[str, Any]) -> dict[str, Any]:
-    options = runtime_policy_options()
+def _resolve_settings_snapshot(user_settings: dict[str, Any], process_rules: dict[str, Any],
+                               policy: RuntimePolicySnapshot) -> dict[str, Any]:
+    options = runtime_policy_options(policy)
     snapshot: dict[str, Any] = {}
-    microservices_unlocked = is_microservices_unlocked()
+    microservices_unlocked = is_microservices_unlocked(policy.architecture)
     for field in SETTINGS_ORDER:
         schema = SETTINGS_SCHEMA[field]
-        env_value = os.environ.get(schema["env_var"], "")
+        env_value = policy.environment.get(schema["env_var"], "")
         process_value = process_rules.get(field)
         user_value = user_settings.get(field)
-        effective = _resolve_runtime_setting_value(field, env_value, process_value, user_value)
+        effective = _resolve_runtime_setting_value(field, env_value, process_value, user_value, policy=policy.architecture)
 
         source = "default"
         # Keep state backend settings stable across machines with ambient env vars.
@@ -1138,7 +1140,6 @@ async def get_session_status(session_id: str) -> dict[str, Any]:
     for issue in backlog:
         issue_status = str(issue.get("status") or "unknown")
         backlog_counts[issue_status] = backlog_counts.get(issue_status, 0) + 1
-
     return {
         "session_id": session_id,
         "active": is_active,
@@ -1297,7 +1298,6 @@ async def list_logs(
 ) -> dict[str, Any]:
     start_dt = _coerce_datetime(start_time)
     end_dt = _coerce_datetime(end_time)
-
     try:
         page = await _runtime_context().run_queries.logs(
             session_id=session_id, event=event, role=role, start_dt=start_dt, end_dt=end_dt,

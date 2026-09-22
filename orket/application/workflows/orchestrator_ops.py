@@ -210,8 +210,9 @@ def _resolve_architecture_mode(self: Any) -> str:
         process_key="architecture_mode",
         user_key="architecture_mode",
         user_settings=user_settings,
+        environment=self.decision_environment,
     )
-    return str(resolve_architecture_mode(raw, "", ""))
+    return str(resolve_architecture_mode(raw, "", "", policy=self.architecture_policy))
 
 
 def _resolve_frontend_framework_mode(self: Any) -> str:
@@ -1404,7 +1405,6 @@ async def _create_pending_gate_request(
 ) -> str:
     gate_mode = resolve_policy_token(loop_policy_node=self.loop_policy_node, attribute="gate_mode_for_seat",
         inputs=capture_seat_policy_input(seat_name, issue, turn_status), default="auto")
-
     request_created_at = datetime.now(UTC).isoformat()
     request_id = str(await self.pending_gates.create_request(
         session_id=run_id,
@@ -1442,7 +1442,6 @@ async def _create_pending_tool_approval_request(
     tool_args: dict[str, Any],
 ) -> str:
     from orket.application.services.turn_tool_control_plane_support import run_id_for as turn_tool_run_id_for
-
     request_created_at = datetime.now(UTC).isoformat()
     control_plane_target_ref = turn_tool_run_id_for(
         session_id=run_id,
@@ -1501,6 +1500,7 @@ def _build_turn_context(
 ) -> dict[str, Any]:
     turn_index = len(self.transcript) + 1
     builder = OrchestratorTurnContextBuilder(
+        architecture_policy=self.architecture_policy,
         workspace_root=self.workspace,
         org=self.org,
         loop_policy_node=self.loop_policy_node,

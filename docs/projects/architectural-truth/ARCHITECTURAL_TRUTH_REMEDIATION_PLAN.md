@@ -12519,7 +12519,8 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.85 adapter module classification and decision-admission gate, retaining
+0.6.86 runtime architecture policy inputs and owned observations, retaining
+0.6.85 adapter module classification and decision-admission gate,
 0.6.84 governance proof runtime and local alias ownership,
 0.6.83 script runtime owners and checkpoint-bound witness observations,
 0.6.82 native synchronous coroutine ownership,
@@ -12536,7 +12537,7 @@ and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
 Preserve every failed and
 passing source/native observation and the historical clock diagnosis. Canonical
-Ruff has 89 findings at the .85 checkpoint. The prior stale benchmark expectation passes in the
+Ruff has 89 findings at the .86 checkpoint. The prior stale benchmark expectation passes in the
 new source/native selection. The unmodified published .39 complete rerun has
 7,260 passes, three failures and 89 skips; its coverage is 84.56120595327887%
 against the unchanged 89% gate. The two parent-Git-dependent fixture failures and
@@ -21930,3 +21931,92 @@ imply release readiness or whole-plan acceptance.
 
 Accepted source/installed manifest: `.tmp/d-adapter-effect-enforcement/native-bindings/`.
 Retained evidence: `.tmp/d-adapter-effect-enforcement/`. Scoped checkpoint; release readiness remains false.
+
+
+#### .86 Runtime architecture policy inputs and owned observations (2026-09-22)
+
+Responsible maintainer: Codex for Orket Core. Continuing D2 after published .85.
+This closes the observed settings/orchestrator architecture-policy route only.
+Full D inputs, effects, async inventory, E/CAP and explicit user acceptance remain open.
+
+Policy evaluation now consumes explicit immutable application snapshots. Settings
+capture current environment and absolute invocation root before the first observation
+await; effective values, validation, options and metadata share that same observation.
+Needed reports are cached by selected lexical path within the operation. Later requests
+observe operator changes. This preserves the prior between-request settings behavior.
+Relative paths bind the captured root; physical aliases and multiple files do not form
+an atomic filesystem snapshot. Report normalizers and readiness criteria are unchanged.
+Missing, malformed JSON and non-object documents remain locked/unstable; other read
+failures propagate. Explicit unlock overrides avoid unused unlock reads. Orchestrator
+composition observes only architecture, without opening an unused pilot report.
+
+The read-only adapter performs native file reads; the application owns async workers
+through cancellation, timeout, worker failure and shutdown. Native observation refuses
+running-loop entry before file effects. Pure helpers and direct orchestrator construction
+require their snapshots. Orchestrator mode environment and policy share one capture,
+including native fallback composition. No hidden missing-context default or compatibility
+shim is added. Existing aliases, options, precedence and conditional-write conflict
+behavior remain. Twenty-one unaffected policy functions and the existing constants retain
+their ASTs; architecture alias/options bodies differ only in explicit observation arguments.
+
+| Cell | Tests / failures / errors / skips | Pytest seconds | Installed origins |
+|---|---|---|---|
+| Fresh source | 1461 / 0 / 0 / 0 | 185.756 | source |
+| Installed a86-win-py311 | 1461 / 0 / 0 / 0 | 187.630 | 975 |
+| Installed a86-win-py312 | 1461 / 0 / 0 / 0 | 215.423 | 975 |
+
+All 1173 .85 case identities remain across 141 modules. Nine exact new public-API
+controls fail against the byte-verified installed .85 wheel with zero errors/skips;
+the current source and installed cells pass them. Focused input/lifetime proof is
+43/43; affected caller/settings migration is 255/255. Actual local API, file handles,
+SQLite and existing retained resource flows establish live scoped proof, with controlled
+read holding/failure hooks. This is not provider inference or an OS permission model.
+Sixty independent SQLite observations per cell meet the unchanged 0.5s bound;
+maximum 0.144774200s. Shutdown returns the established HTTP 503 after draining work;
+cancelling the close waiter cannot release resources early. No deadline was weakened.
+
+Complete source/wheel/sdist parity covers 1146 Python files and the same 20 data files
+(1166 total), with 2333 exact support inputs. Both Quality jobs
+select the new controls; hosted execution remains unverified. Canonical C scans
+1146 files / 3735 edges,
+six resolved routes, and reports zero ordinary/effect violations, errors, unknown modules
+or authority cycles. Ruff remains 89 existing/0 introduced; scoped lint, size, docs,
+release metadata, whitespace and index checks pass. Baseline collection is not release
+readiness. Authority, architecture, contributor workflow and the durable contract agree:
+`docs/specs/RUNTIME_ARCHITECTURE_POLICY_INPUTS.md` and its September 22 delta.
+
+Retained failures and corrections:
+- Opening request fixture omitted required outbound.json and failed before the policy
+  request. Configured opening reaches HTTP 200 but mixes microservices mode with a false
+  unlock flag; this is the decisive initial behavior failure. Repaired request passes.
+- Initial lifetime run passes 19/21. Two new shutdown cases incorrectly expected client
+  cancellation; established ASGI ownership translates shutdown cancellation to HTTP 503.
+  Corrected assertions preserve all lifetime and latency bounds, and pass all 43 cases.
+- Initial canonical dependency verdict refuses two direct interface-to-core imports.
+  The application observation values now have one definition in application services;
+  no adapter/decision-node consumer requires core ownership. No re-export shim, exception
+  or dependency-policy change. The repeated canonical gate passes. Initial failure retained.
+- Prior fixture migrations supply explicit policy snapshots without changing expected
+  outcomes. Exact AST-preserving whitespace/line-ending changes keep oversized files
+  from growing and tested Python bytes equal to the committed index.
+
+Compliance review: affected dependency direction, explicit inputs, application-owned
+effects, adapter classification, failure truth and authority updates pass. No decision
+node or event schema change. Complete deterministic-input/replay coverage remains partial:
+untouched setting resolvers and other runtime policies still have ambient observations;
+these snapshots are not a new durable replay artifact. Continue D under this same plan.
+
+Remaining blockers or drift: .72 Linux clock preflight remains an environment blocker
+(240.006951941s observed; quiet 18.843389227 vs 60; steps outside 0.01; cause unknown).
+No fresh Linux measurement, setting or deadline change. Retained Windows latency/sleep
+and Git timeout causes remain unknown. Remaining D includes full actual classification,
+async reachability, clock/environment/identity inputs and native command descendants.
+Provider-inventory and governance alias subprocesses still need ownership; worker-client
+sync HTTP/renewal and openclaw child cleanup remain inventory items. ProductFlow .83 replay
+remains blocked/not_evaluable for its workload completeness gap. Actual Ollama fallback,
+full-suite 89% coverage and hosted Gitea remain unverified. E1 taxonomy/no-op/Ruff/coverage,
+E2 bounded generated authority, CAP1 actual-model workloads, CAP2 accepted containment
+and CAP3 capacity/recovery remain required. Preserve BT-1 through BT-5 and retained proof.
+No release readiness, whole-plan completion, main merge or lane retirement is claimed.
+
+Retained source/installed evidence: `.tmp/d-runtime-policy-inputs/`.

@@ -1,12 +1,19 @@
 from __future__ import annotations
 
-import os
 from collections.abc import Awaitable, Callable
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Body, HTTPException
 from pydantic import BaseModel
 
+from orket.application.services.runtime_policy import (
+    allowed_architecture_patterns,
+    is_microservices_pilot_stable,
+    is_microservices_unlocked,
+    resolve_architecture_mode,
+    runtime_policy_options,
+)
+from orket.application.services.runtime_policy_inputs import RuntimePolicySnapshot
 from orket.application.services.user_settings_service import SettingsUpdateConflict
 
 
@@ -41,15 +48,13 @@ def build_settings_router(
     *,
     settings_order: tuple[str, ...],
     settings_schema: dict[str, dict[str, Any]],
-    runtime_policy_options: Callable[[], dict[str, Any]],
+    observe_runtime_policy: Callable[[], Awaitable[RuntimePolicySnapshot]],
     load_user_settings: Callable[[], Awaitable[dict[str, Any]]],
     save_user_settings: Callable[..., Awaitable[None]],
     runtime_policy_process_rules: Callable[[], dict[str, Any]],
-    resolve_settings_snapshot: Callable[[dict[str, Any], dict[str, Any]], dict[str, Any]],
+    resolve_settings_snapshot: Callable[[dict[str, Any], dict[str, Any], RuntimePolicySnapshot], dict[str, Any]],
     parse_setting_value: Callable[[str, Any], Any | None],
     settings_validation_error: Callable[[list[dict[str, Any]]], HTTPException],
-    is_microservices_unlocked: Callable[[], bool],
-    resolve_architecture_mode: Callable[[Any, Any, Any], str],
     resolve_frontend_framework_mode: Callable[[Any, Any, Any], str],
     resolve_project_surface_profile: Callable[[Any, Any, Any], str],
     resolve_small_project_builder_variant: Callable[[Any, Any, Any], str],
@@ -64,20 +69,19 @@ def build_settings_router(
     resolve_local_prompting_allow_fallback: Callable[[Any, Any, Any], bool],
     resolve_local_prompting_fallback_profile_id: Callable[[Any, Any, Any], str],
     resolve_gitea_state_pilot_enabled: Callable[[Any, Any, Any], bool],
-    allowed_architecture_patterns: Callable[[], list[str]],
-    is_microservices_pilot_stable: Callable[[], bool],
 ) -> APIRouter:
     router = APIRouter()
 
     @router.get("/system/runtime-policy/options")
     async def get_runtime_policy_options() -> dict[str, Any]:
-        return runtime_policy_options()
+        return runtime_policy_options(await observe_runtime_policy())
 
     @router.get("/settings")
     async def get_settings() -> dict[str, Any]:
+        policy = await observe_runtime_policy()
         user_settings = await load_user_settings()
         process_rules = runtime_policy_process_rules()
-        return {"settings": resolve_settings_snapshot(user_settings, process_rules)}
+        return {"settings": resolve_settings_snapshot(user_settings, process_rules, policy)}
 
     @router.patch("/settings")
     async def update_settings(payload: Annotated[dict[str, Any], Body(...)]) -> dict[str, Any]:
@@ -95,7 +99,8 @@ def build_settings_router(
         if not editable and not errors:
             raise HTTPException(status_code=400, detail="No editable settings provided.")
 
-        options = runtime_policy_options()
+        policy = await observe_runtime_policy()
+        options = runtime_policy_options(policy)
         normalized: dict[str, Any] = {}
         for field, raw_value in editable.items():
             parsed = parse_setting_value(field, raw_value)
@@ -111,7 +116,7 @@ def build_settings_router(
                     }
                 )
                 continue
-            if field == "architecture_mode" and parsed == "force_microservices" and not is_microservices_unlocked():
+            if field == "architecture_mode" and parsed == "force_microservices" and not is_microservices_unlocked(policy.architecture):
                 errors.append(
                     {
                         "field": field,
@@ -127,7 +132,7 @@ def build_settings_router(
         process_rules = runtime_policy_process_rules()
         candidate = user_settings.copy()
         candidate.update(normalized)
-        snapshot = resolve_settings_snapshot(candidate, process_rules)
+        snapshot = resolve_settings_snapshot(candidate, process_rules, policy)
         if snapshot["state_backend_mode"]["value"] == "gitea" and not snapshot["gitea_state_pilot_enabled"]["value"]:
             errors.append(
                 {
@@ -145,86 +150,88 @@ def build_settings_router(
         return {
             "ok": True,
             "saved": normalized,
-            "settings": resolve_settings_snapshot(user_settings, process_rules),
+            "settings": resolve_settings_snapshot(user_settings, process_rules, policy),
         }
 
     @router.get("/system/runtime-policy")
     async def get_runtime_policy() -> dict[str, Any]:
+        policy = await observe_runtime_policy()
         user_settings = await load_user_settings()
         process_rules = runtime_policy_process_rules()
 
         architecture_mode = resolve_architecture_mode(
-            os.environ.get("ORKET_ARCHITECTURE_MODE", ""),
+            policy.environment.get("ORKET_ARCHITECTURE_MODE", ""),
             process_rules.get("architecture_mode"),
             user_settings.get("architecture_mode"),
+            policy=policy.architecture,
         )
         frontend_framework_mode = resolve_frontend_framework_mode(
-            os.environ.get("ORKET_FRONTEND_FRAMEWORK_MODE", ""),
+            policy.environment.get("ORKET_FRONTEND_FRAMEWORK_MODE", ""),
             process_rules.get("frontend_framework_mode"),
             user_settings.get("frontend_framework_mode"),
         )
         project_surface_profile = resolve_project_surface_profile(
-            os.environ.get("ORKET_PROJECT_SURFACE_PROFILE", ""),
+            policy.environment.get("ORKET_PROJECT_SURFACE_PROFILE", ""),
             process_rules.get("project_surface_profile"),
             user_settings.get("project_surface_profile"),
         )
         small_project_builder_variant = resolve_small_project_builder_variant(
-            os.environ.get("ORKET_SMALL_PROJECT_BUILDER_VARIANT", ""),
+            policy.environment.get("ORKET_SMALL_PROJECT_BUILDER_VARIANT", ""),
             process_rules.get("small_project_builder_variant"),
             user_settings.get("small_project_builder_variant"),
         )
         state_backend_mode = resolve_state_backend_mode(
-            os.environ.get("ORKET_STATE_BACKEND_MODE", ""),
+            policy.environment.get("ORKET_STATE_BACKEND_MODE", ""),
             process_rules.get("state_backend_mode"),
             user_settings.get("state_backend_mode"),
         )
         run_ledger_mode = resolve_run_ledger_mode(
-            os.environ.get("ORKET_RUN_LEDGER_MODE", ""),
+            policy.environment.get("ORKET_RUN_LEDGER_MODE", ""),
             process_rules.get("run_ledger_mode"),
             user_settings.get("run_ledger_mode"),
         )
         protocol_timezone = resolve_protocol_timezone_setting(
-            os.environ.get("ORKET_PROTOCOL_TIMEZONE", ""),
+            policy.environment.get("ORKET_PROTOCOL_TIMEZONE", ""),
             process_rules.get("protocol_timezone"),
             user_settings.get("protocol_timezone"),
         )
         protocol_locale = resolve_protocol_locale_setting(
-            os.environ.get("ORKET_PROTOCOL_LOCALE", ""),
+            policy.environment.get("ORKET_PROTOCOL_LOCALE", ""),
             process_rules.get("protocol_locale"),
             user_settings.get("protocol_locale"),
         )
         protocol_network_mode = resolve_protocol_network_mode_setting(
-            os.environ.get("ORKET_PROTOCOL_NETWORK_MODE", ""),
+            policy.environment.get("ORKET_PROTOCOL_NETWORK_MODE", ""),
             process_rules.get("protocol_network_mode"),
             user_settings.get("protocol_network_mode"),
         )
         protocol_network_allowlist = resolve_protocol_network_allowlist_setting(
-            os.environ.get("ORKET_PROTOCOL_NETWORK_ALLOWLIST", ""),
+            policy.environment.get("ORKET_PROTOCOL_NETWORK_ALLOWLIST", ""),
             process_rules.get("protocol_network_allowlist"),
             user_settings.get("protocol_network_allowlist"),
         )
         protocol_env_allowlist = resolve_protocol_env_allowlist_setting(
-            os.environ.get("ORKET_PROTOCOL_ENV_ALLOWLIST", ""),
+            policy.environment.get("ORKET_PROTOCOL_ENV_ALLOWLIST", ""),
             process_rules.get("protocol_env_allowlist"),
             user_settings.get("protocol_env_allowlist"),
         )
         local_prompting_mode = resolve_local_prompting_mode(
-            os.environ.get("ORKET_LOCAL_PROMPTING_MODE", ""),
+            policy.environment.get("ORKET_LOCAL_PROMPTING_MODE", ""),
             process_rules.get("local_prompting_mode"),
             user_settings.get("local_prompting_mode"),
         )
         local_prompting_allow_fallback = resolve_local_prompting_allow_fallback(
-            os.environ.get("ORKET_LOCAL_PROMPTING_ALLOW_FALLBACK", ""),
+            policy.environment.get("ORKET_LOCAL_PROMPTING_ALLOW_FALLBACK", ""),
             process_rules.get("local_prompting_allow_fallback"),
             user_settings.get("local_prompting_allow_fallback"),
         )
         local_prompting_fallback_profile_id = resolve_local_prompting_fallback_profile_id(
-            os.environ.get("ORKET_LOCAL_PROMPTING_FALLBACK_PROFILE_ID", ""),
+            policy.environment.get("ORKET_LOCAL_PROMPTING_FALLBACK_PROFILE_ID", ""),
             process_rules.get("local_prompting_fallback_profile_id"),
             user_settings.get("local_prompting_fallback_profile_id"),
         )
         gitea_state_pilot_enabled = resolve_gitea_state_pilot_enabled(
-            os.environ.get("ORKET_ENABLE_GITEA_STATE_PILOT", ""),
+            policy.environment.get("ORKET_ENABLE_GITEA_STATE_PILOT", ""),
             process_rules.get("gitea_state_pilot_enabled"),
             user_settings.get("gitea_state_pilot_enabled"),
         )
@@ -245,17 +252,18 @@ def build_settings_router(
             "local_prompting_fallback_profile_id": local_prompting_fallback_profile_id,
             "gitea_state_pilot_enabled": gitea_state_pilot_enabled,
             "default_architecture_mode": "force_monolith",
-            "allowed_architecture_patterns": allowed_architecture_patterns(),
-            "microservices_unlocked": is_microservices_unlocked(),
-            "microservices_pilot_stable": is_microservices_pilot_stable(),
+            "allowed_architecture_patterns": allowed_architecture_patterns(policy.architecture),
+            "microservices_unlocked": is_microservices_unlocked(policy.architecture),
+            "microservices_pilot_stable": is_microservices_pilot_stable(policy),
         }
 
     @router.post("/system/runtime-policy")
     async def update_runtime_policy(req: RuntimePolicyUpdateRequest) -> dict[str, Any]:
+        policy = await observe_runtime_policy()
         original_settings = await load_user_settings()
         current = original_settings.copy()
         if req.architecture_mode is not None:
-            current["architecture_mode"] = resolve_architecture_mode(req.architecture_mode, None, None)
+            current["architecture_mode"] = resolve_architecture_mode(req.architecture_mode, None, None, policy=policy.architecture)
         if req.frontend_framework_mode is not None:
             current["frontend_framework_mode"] = resolve_frontend_framework_mode(
                 req.frontend_framework_mode,

@@ -9,6 +9,7 @@ import pytest
 from orket.adapters.tools.families.cards import CardManagementTools
 from orket.application.services.card_completion_turn_service import prepare_card_completion_turn
 from orket.application.services.orchestrator_issue_control_plane_support import run_id_for_dispatch
+from orket.application.services.runtime_policy_inputs import ArchitecturePolicySnapshot
 from orket.application.workflows.orchestrator import Orchestrator
 from orket.core.contracts.card_completion_commit import CardCompletionRejected
 from orket.core.domain import CompletionClassification
@@ -36,7 +37,9 @@ async def failed_read_runtime(tmp_path, protocol, status, max_retries):
     issue = IssueConfig.model_validate(record.model_dump())
     orch = Orchestrator(workspace=tmp_path / "workspace", async_cards=repo, snapshots=None,
                         org=SimpleNamespace(process_rules={}), config_root=tmp_path, db_path=repo.db_path,
-                        loader=None, sandbox_orchestrator=None, card_completion=service)
+                        loader=None, sandbox_orchestrator=None, card_completion=service,
+        architecture_policy=ArchitecturePolicySnapshot(False),
+    )
     await orch._request_issue_transition(issue=issue, target_status=status, reason="turn_dispatch",
                                          assignee="integrity_guard", roles=["integrity_guard"],
                                          metadata={"run_id": "session", "turn_index": 1, "review_turn": True})

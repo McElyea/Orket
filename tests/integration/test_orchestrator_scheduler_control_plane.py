@@ -12,6 +12,7 @@ from orket.application.services.orchestrator_issue_control_plane_support import 
     lease_id_for_run,
     scheduler_run_id_for_transition,
 )
+from orket.application.services.runtime_policy_inputs import ArchitecturePolicySnapshot
 from orket.application.workflows.orchestrator import Orchestrator
 from orket.core.domain import AttemptState, LeaseStatus, ReservationKind, ReservationStatus, RunState
 from orket.schema import CardStatus, EnvironmentConfig, IssueConfig, SeatConfig, TeamConfig
@@ -59,6 +60,7 @@ def _build_orchestrator(tmp_path: Path, cards: AsyncCardRepository) -> Orchestra
         db_path=str(tmp_path / "runtime.sqlite3"),
         loader=_Loader(),
         sandbox_orchestrator=_Sandbox(),
+        architecture_policy=ArchitecturePolicySnapshot(False),
     )
     orch.loop_policy_node = _LoopPolicy()
     return orch

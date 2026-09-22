@@ -5,6 +5,7 @@ import pytest
 from pydantic import ValidationError
 
 from orket.application.services.card_dependency_service import read_card_dispatch_snapshot
+from orket.application.services.runtime_policy_inputs import ArchitecturePolicySnapshot
 from orket.application.workflows.orchestrator import Orchestrator
 from orket.core.domain.records import IssueRecord
 from orket.exceptions import ExecutionFailed
@@ -23,7 +24,9 @@ async def _dispatch_context(tmp_path, router):
     team = TeamConfig(name="test", seats={"developer": SeatConfig(name="Developer", roles=["coder"])})
     orch = Orchestrator(workspace=completion.workspace_root, async_cards=repo, snapshots=None,
         org=SimpleNamespace(process_rules={}), config_root=tmp_path, db_path=repo.db_path,
-        loader=None, sandbox_orchestrator=None, card_completion=completion)
+        loader=None, sandbox_orchestrator=None, card_completion=completion,
+        architecture_policy=ArchitecturePolicySnapshot(False),
+    )
     orch.router_node = router
     return repo, issue, team, orch
 
