@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+from copy import deepcopy
 from typing import Any, cast
 
 import httpx
@@ -106,6 +107,7 @@ class GiteaHTTPClient:
         payload: dict[str, Any] | None = None,
         extra_headers: dict[str, str] | None = None,
     ) -> httpx.Response:
+        params, payload, extra_headers = deepcopy((params, payload, extra_headers))
         attempts = 0
         while True:
             try:

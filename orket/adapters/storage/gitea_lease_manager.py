@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 from datetime import timedelta
 from typing import Any
 
@@ -15,21 +14,13 @@ side_effecting = True
 class GiteaLeaseManager:
     """Lease acquisition and renewal operations for Gitea-backed cards."""
 
-    def __init__(self, adapter: Any) -> None:
+    def __init__(self, adapter: Any, *, max_issue_body_bytes: int) -> None:
         self.adapter = adapter
+        self._max_issue_body_bytes = max_issue_body_bytes
 
-    @staticmethod
-    def _max_issue_body_bytes() -> int:
-        raw = str(os.getenv("ORKET_GITEA_ISSUE_BODY_MAX_BYTES", "65000")).strip()
-        try:
-            return max(1, int(raw))
-        except ValueError:
-            return 65000
-
-    @classmethod
-    def _encode_snapshot_body(cls, snapshot: CardSnapshot) -> str:
+    def _encode_snapshot_body(self, snapshot: CardSnapshot) -> str:
         body = encode_snapshot(snapshot)
-        if len(body.encode("utf-8")) > cls._max_issue_body_bytes():
+        if len(body.encode("utf-8")) > self._max_issue_body_bytes:
             raise ValueError("E_GITEA_SNAPSHOT_BODY_TOO_LARGE")
         return body
 

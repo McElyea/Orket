@@ -167,7 +167,8 @@ async def test_gitea_native_entry_refuses_before_keylog_and_durable_effects(tmp_
         if entry == 'state-factory':
             create_gitea_state_adapter(environment=environment, cwd=tmp_path, **options)
         elif entry == 'state-adapter':
-            GiteaStateAdapter(http_client_owner=CapturedHttpClientService(environment=environment, cwd=tmp_path), **options)
+            GiteaStateAdapter(http_client_owner=CapturedHttpClientService(environment=environment, cwd=tmp_path),
+                              issue_body_max_bytes=65000, **options)
         else:
             GiteaWebhookHandler(workspace=tmp_path, environment=environment)
     assert await asyncio.to_thread(lambda: list(tmp_path.iterdir())) == []

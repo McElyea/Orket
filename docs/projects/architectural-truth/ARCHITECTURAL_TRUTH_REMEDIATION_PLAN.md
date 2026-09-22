@@ -22692,3 +22692,88 @@ Proof roots: .tmp/d-gitea-http-inputs-eof/ (accepted final source/native candida
 .tmp/d-gitea-http-inputs-validated/ (earlier 607 focused / 12 live proof),
 .tmp/d-gitea-http-inputs-final/ (rejected source/311 pass,312 hang and diagnostics),
 .tmp/d-gitea-http-inputs/ (initial and corrected counterexamples/probes).
+
+
+#### .94 Gitea retry and lease policy inputs (2026-09-22)
+
+Responsible maintainer: Codex for Orket Core. Continuing canonical D2 after .93.
+Release-note classification: `compatibility_status`: `breaking`;
+`affected_audience`: `all`; `migration_requirement`: `required`.
+
+State retry operations snapshot borrowed nested body, query and extra-header values
+before the first request. Application construction compiles the existing lease
+body-limit rule from captured environment; the adapter/lease manager receive the
+explicit integer. Empty mappings use the 65,000-byte default, omitted mappings
+capture ambient values once, malformed values retain the same default, and parsed
+values retain the one-byte minimum. Raw native embeddings now supply
+`issue_body_max_bytes`; reconstruct an adapter to change policy.
+
+Lease acquire/renew transition bodies, conditional PATCH, encoding, per-attempt
+authentication, request/error classification, retry limits and backoff remain intact.
+The body-size test supplies its configured eight-byte limit explicitly; every old
+assertion remains AST-identical and the existing 800-line test does not grow.
+Shared HTTP/native ownership, the .93 server fixture and both public CLI scripts
+remain byte-identical. The spec clarifies the fixture's existing EOF/allowed-reset
+behavior; this is not a repair of CPython's retained shutdown callback failure.
+
+Identical source and byte-verified installed v0.6.93 controls: 24 cases, 18 failures
+and six healthy controls. Failures show nested retry values changing between actual
+requests and captured limits being replaced by ambient values during acquire/renew.
+The final module preserves both opening test function ASTs and adds four actual
+exact-byte/one-byte-over admission controls. Initial repair: 114 passes; final focused
+selection: 207 passes. All 28 new integration cases pass with unchanged inputs.
+
+| Cell | Tests / failures / errors / skips | JUnit seconds | Installed origins |
+|---|---|---|---|
+| Fresh source | 2214 / 0 / 0 / 0 | 398.819 | source |
+| Installed a94-win-py311 | 2214 / 0 / 0 / 0 | 401.537 | 1045 |
+| Installed a94-win-py312 | 2214 / 0 / 0 / 0 | 496.554 | 1045 |
+
+All 2186 published .93 case identities remain across 214 modules. Each cell records
+128 actual SQLite observations under the unchanged 0.5-second bound; maximum
+0.160122400s. Source/wheel/sdist parity covers 1159 Python and 20 unchanged data
+files (1179 total), with 2395 frozen support inputs.
+Canonical dependency policy: 1159 files, 3798 edges, six resolved dynamic routes,
+zero violations, unknown modules, authority cycles or collection errors. No adapter
+effect-classification violations. Ruff remains 89 existing findings / zero introduced.
+Both Quality jobs include the new integration module. Scoped lint, docs hygiene,
+release metadata, exact staged Python binding and whitespace pass; baseline
+collection is true and release readiness remains false.
+
+Separate live proof: 12 actual disposable Gitea state/pipeline/signed-webhook/review
+cases pass; all owned containers are removed and the pre-existing vibe-rail-gitea
+container is unchanged. This is source Gitea proof with controlled workload
+execution, not model correctness. No fresh inference or installed public CLI claim
+is made by this checkpoint; .93's separate provider and CLI observations remain retained.
+The original September 20 snapshot and all 331 .93 evidence hashes are verified;
+the original C:/Source/Orket checkout remains unchanged.
+
+Authority: docs/specs/GITEA_HTTP_CLIENT_OWNERSHIP.md and
+docs/architecture/CONTRACT_DELTA_GITEA_REQUEST_INPUTS_D_2026-09-22.md.
+Proof root: .tmp/d-gitea-request-inputs/. Scoped input/behavior preservation passes;
+wider D2/D3/D4, replay and E/CAP acceptance remain open.
+
+Next ordered scope: artifact-export and builtin connector HTTP inputs/construction/
+cleanup, then remaining exporter Git/filesystem context and ownership. Discovery is
+retained in next-artifact-http-inputs.json. An independent source GET probe at
+.tmp/d-gitea-export-http-discovery/observation.json confirms three exporter routing
+failures (empty, supplied proxy and bypass settings all use ambient proxy), with one
+passing ambient control and all listeners closed. Those are next-scope counterexamples,
+not repaired .94 behavior or installed acceptance. Preserve authorization, retained
+Git intent/recovery, allowlists, credentials and deadlines while reusing existing
+network, native cleanup and command owners.
+A separate source builtin-HTTP probe holds actual native trust loading for 0.75s.
+The load runs on the event-loop thread and delays concurrent actual SQLite work to
+0.834169200s, exceeding the unchanged 0.5s bound. HTTP/SQLite
+finish and the client/listener close. This instrumented scheduling counterexample
+is not ordinary TLS latency or repaired .94 behavior. The first diagnostic expected
+the wrong service response envelope and raised KeyError; that observation is retained
+alongside the corrected invoke_with_result probe under builtin-http-discovery-verified/.
+
+Remaining blockers or drift: retained .72 Linux clock instability, without fresh
+measurement or deadline/settings changes; lazy TLS directory I/O, actual-model
+instruction failure/Ollama availability, unknown Windows sleep/latency and Git timeout
+causes; ProductFlow replay, legacy Kernel completion, fresh full-suite 89% coverage,
+hosted Gitea Quality, E1 taxonomy/no-op/Ruff, E2 bounded authority/decomposition and
+all CAP-1/2/3 criteria. No whole-plan completion, main merge, release readiness or
+lane retirement. Explicit user acceptance remains required for retirement.

@@ -10,6 +10,7 @@ from orket.application.services.captured_http_client_service import CapturedHttp
 from orket.application.services.native_resource_construction import construct_with_owned_cleanup
 from orket.application.services.process_input_service import capture_process_context
 from orket.application.services.runtime_result_lifetime import create_runtime_owner
+from orket.decision_nodes.gitea_lease_policy import gitea_issue_body_limit
 
 
 def create_gitea_state_adapter(*, environment: Mapping[str, str] | None = None,
@@ -17,7 +18,8 @@ def create_gitea_state_adapter(*, environment: Mapping[str, str] | None = None,
     require_sync_context(code="E_GITEA_FACTORY_REQUIRES_ASYNC_OWNER")
     directory, captured = capture_process_context(cwd=cwd, environment=environment)
     owner = CapturedHttpClientService(environment=captured, cwd=directory)
-    return construct_with_owned_cleanup(partial(GiteaStateAdapter, http_client_owner=owner, **options),
+    return construct_with_owned_cleanup(partial(GiteaStateAdapter, http_client_owner=owner,
+                                        issue_body_max_bytes=gitea_issue_body_limit(captured), **options),
                                         owner=owner, label="Gitea state adapter construction")
 
 

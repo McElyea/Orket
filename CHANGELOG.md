@@ -5,6 +5,17 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.94] - 2026-09-22
+
+### Fixed
+- Snapshot nested Gitea request body, query and extra-header values before retries.
+- Compile lease body-size admission from captured environment at adapter construction; preserve defaults, conditional writes, lease/version behavior and retry deadlines.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Raw native state adapters additionally require `issue_body_max_bytes`. Application factories supply the captured policy. Migration: `docs/architecture/CONTRACT_DELTA_GITEA_REQUEST_INPUTS_D_2026-09-22.md`.
+- Scoped proof does not close Linux clock, wider D/E/CAP, full coverage or release-readiness requirements.
+
 ## [0.6.93] - 2026-09-22
 
 ### Fixed

@@ -1,6 +1,6 @@
 {
   "schema_version": "architectural_truth.baseline.v1",
-  "generated_at": "2026-09-22T22:21:18.354882Z",
+  "generated_at": "2026-09-22T22:59:46.746551Z",
   "collection_ok": true,
   "release_ready": false,
   "release_ready_reason": "Active architectural exceptions and red/noisy proof gates remain.",
@@ -1451,27 +1451,27 @@
         "orket.adapters.storage.gitea_http_client": {
           "module": [
             {
-              "line": 24,
+              "line": 25,
               "kind": "Assign",
               "direct": true,
               "literal": true
             }
           ],
           "classes": {
-            "GiteaHTTPClient@27": []
+            "GiteaHTTPClient@28": []
           }
         },
         "orket.adapters.storage.gitea_lease_manager": {
           "module": [
             {
-              "line": 12,
+              "line": 11,
               "kind": "Assign",
               "direct": true,
               "literal": true
             }
           ],
           "classes": {
-            "GiteaLeaseManager@15": []
+            "GiteaLeaseManager@14": []
           }
         },
         "orket.adapters.storage.gitea_state_adapter": {
@@ -2888,7 +2888,7 @@
           "forwarded_arguments": 2
         }
       ],
-      "files_scanned": 1158,
+      "files_scanned": 1159,
       "scan_roots": [
         "orket"
       ],
@@ -2922,7 +2922,7 @@
         {
           "source": "application",
           "target": "decision_nodes",
-          "count": 5
+          "count": 6
         },
         {
           "source": "core",
@@ -4591,45 +4591,45 @@
         {
           "module": "orket.adapters.storage.gitea_http_client",
           "path": "orket/adapters/storage/gitea_http_client.py",
-          "sha256": "74d9f56cc15d871fe33779a2b06da6b6e319c1bc3fa31508e8bd1a923ddcdf00",
+          "sha256": "cafeb4df9ce1d9b1c61e59eb7b510d0326149db238b9d800d88a72ca3e1008ec",
           "side_effecting": true,
           "declarations": {
             "module": [
               {
-                "line": 24,
+                "line": 25,
                 "kind": "Assign",
                 "direct": true,
                 "literal": true
               }
             ],
             "classes": {
-              "GiteaHTTPClient@27": []
+              "GiteaHTTPClient@28": []
             }
           }
         },
         {
           "module": "orket.adapters.storage.gitea_lease_manager",
           "path": "orket/adapters/storage/gitea_lease_manager.py",
-          "sha256": "3a0ab7ce6d61bd0b23d9b7ef4c3e90e52c78b2e234b7a5b047887a7c83eca40b",
+          "sha256": "5a21b1d03589b8b9caf983eb22026e3bf0c01cda78e1d1c7f3be5fa6b9c93439",
           "side_effecting": true,
           "declarations": {
             "module": [
               {
-                "line": 12,
+                "line": 11,
                 "kind": "Assign",
                 "direct": true,
                 "literal": true
               }
             ],
             "classes": {
-              "GiteaLeaseManager@15": []
+              "GiteaLeaseManager@14": []
             }
           }
         },
         {
           "module": "orket.adapters.storage.gitea_state_adapter",
           "path": "orket/adapters/storage/gitea_state_adapter.py",
-          "sha256": "c214246f0bd57b8d358296dc44b522d6ea9a15e67be99c5bfca628ad2225e7b4",
+          "sha256": "2ef18555dedf8e258e37c9c8d254f49f2b013c2ab68c0fd57e77002c321fd335",
           "side_effecting": true,
           "declarations": {
             "module": [
@@ -6706,10 +6706,10 @@
   },
   "test_taxonomy": {
     "schema_version": "test_taxonomy_report.v1",
-    "tests_total": 5829,
-    "missing_layer_total": 4242,
+    "tests_total": 5832,
+    "missing_layer_total": 4245,
     "by_layer": {
-      "unlabeled": 4242,
+      "unlabeled": 4245,
       "integration": 752,
       "unit": 161,
       "contract": 663,
@@ -7317,7 +7317,7 @@
         "layer": null
       }
     ],
-    "missing_layers_omitted": 4142
+    "missing_layers_omitted": 4145
   },
   "ruff": {
     "proof": "structural_lint",
@@ -7338,7 +7338,7 @@
   },
   "size_inventory": {
     "proof": "structural_ast",
-    "python_files_scanned": 1158,
+    "python_files_scanned": 1159,
     "files_over_400_total": 53,
     "functions_over_70_total": 199,
     "largest_files": [
@@ -7716,46 +7716,6 @@
     "parse_errors": []
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-22T12:07:54.176840Z",
-      "changed": true,
-      "before_digest": "sha256:c09b9420db7508123686c6c1bdd0863d38cd2ca4832dac23e6ab44bed6372592",
-      "after_digest": "sha256:108043cca079f92e8db66c1ac4c11b4747cbe3cc785835b60229346ab0344966",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 9236,
-        "paths_total_current": 9236,
-        "paths_total_reference": 9236,
-        "churn_paths": 1,
-        "churn_ratio": 0.000108,
-        "sample_paths": [
-          "$.generated_at"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-22T12:25:36.500870Z",
-      "changed": true,
-      "before_digest": "sha256:108043cca079f92e8db66c1ac4c11b4747cbe3cc785835b60229346ab0344966",
-      "after_digest": "sha256:261faca6af718cdcf1171db41c567c3bf7be3d524a5ab8d2620bd92a1551b442",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 9236,
-        "paths_total_current": 9236,
-        "paths_total_reference": 9236,
-        "churn_paths": 1,
-        "churn_ratio": 0.000108,
-        "sample_paths": [
-          "$.generated_at"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-22T12:37:20.608993Z",
       "changed": true,
@@ -8487,6 +8447,65 @@
       "changed": true,
       "before_digest": "sha256:e62ef7a196cfd8400e4f24f4b94f706305ce1beda380cd2151dbfcc5b219e66d",
       "after_digest": "sha256:4136f7c70e7ada19431847a5565323a6c4a963a6a4fe8efad3c8dcf7ee5bc057",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 9372,
+        "paths_total_current": 9372,
+        "paths_total_reference": 9372,
+        "churn_paths": 1,
+        "churn_ratio": 0.000107,
+        "sample_paths": [
+          "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T22:30:57.148965Z",
+      "changed": true,
+      "before_digest": "sha256:4136f7c70e7ada19431847a5565323a6c4a963a6a4fe8efad3c8dcf7ee5bc057",
+      "after_digest": "sha256:d55de30c068a451254d0cea31d1d6c032ec9e5a81da8d2951e4d3fd0d539168b",
+      "diff": {
+        "added_paths": 4,
+        "removed_paths": 4,
+        "changed_paths": 15,
+        "initial_write": false,
+        "paths_total_previous": 9372,
+        "paths_total_current": 9372,
+        "paths_total_reference": 9372,
+        "churn_paths": 23,
+        "churn_ratio": 0.002454,
+        "sample_paths": [
+          "$.dependency_graph.observed.adapter_effects[75].declarations.classes.GiteaHTTPClient@27",
+          "$.dependency_graph.observed.adapter_effects[75].declarations.classes.GiteaHTTPClient@28",
+          "$.dependency_graph.observed.adapter_effects[75].declarations.module[0].line",
+          "$.dependency_graph.observed.adapter_effects[75].sha256",
+          "$.dependency_graph.observed.adapter_effects[76].declarations.classes.GiteaLeaseManager@15",
+          "$.dependency_graph.observed.adapter_effects[76].declarations.classes.GiteaLeaseManager@14",
+          "$.dependency_graph.observed.adapter_effects[76].declarations.module[0].line",
+          "$.dependency_graph.observed.adapter_effects[76].sha256",
+          "$.dependency_graph.observed.adapter_effects[77].sha256",
+          "$.dependency_graph.observed.effect_declarations.orket.adapters.storage.gitea_http_client.classes.GiteaHTTPClient@27",
+          "$.dependency_graph.observed.effect_declarations.orket.adapters.storage.gitea_http_client.classes.GiteaHTTPClient@28",
+          "$.dependency_graph.observed.effect_declarations.orket.adapters.storage.gitea_http_client.module[0].line",
+          "$.dependency_graph.observed.effect_declarations.orket.adapters.storage.gitea_lease_manager.classes.GiteaLeaseManager@15",
+          "$.dependency_graph.observed.effect_declarations.orket.adapters.storage.gitea_lease_manager.classes.GiteaLeaseManager@14",
+          "$.dependency_graph.observed.effect_declarations.orket.adapters.storage.gitea_lease_manager.module[0].line",
+          "$.dependency_graph.observed.files_scanned",
+          "$.dependency_graph.observed.layer_edges[5].count",
+          "$.generated_at",
+          "$.size_inventory.python_files_scanned",
+          "$.test_taxonomy.by_layer.unlabeled"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T22:59:46.754639Z",
+      "changed": true,
+      "before_digest": "sha256:d55de30c068a451254d0cea31d1d6c032ec9e5a81da8d2951e4d3fd0d539168b",
+      "after_digest": "sha256:c1407e6a378c361317cc2cd4a63255372bfff4205d92bb25f5a61d1714a682bb",
       "diff": {
         "added_paths": 0,
         "removed_paths": 0,

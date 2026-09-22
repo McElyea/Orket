@@ -46,7 +46,7 @@ transport, input and lifetime behavior. Actual disposable Gitea proof is separat
 and must verify container/listener/client teardown. Neither proves model correctness,
 CAP acceptance, remote-effect rollback or a stuck-thread termination bound.
 Trust-directory contents remain live and OpenSSL can load them during handshake.
-HTTP artifact export, builtin connectors, mutable retry request values and wider
+HTTP artifact export, builtin connectors and wider
 D2/D3/D4 effect coverage remain separate work. Linux clock, full coverage, hosted
 Quality and E/CAP acceptance are not inferred from this contract.
 
@@ -55,9 +55,25 @@ first await, so storage roots and HTTP policy observe the same input even when
 the caller later mutates its original mapping. Retain the actual split-input
 counterexample and require fresh frozen acceptance after this correction.
 
-Request-interruption controls require actual peer EOF and completed server/client
-cleanup. They do not send a successful response after the client disconnects.
+Request-interruption controls require actual peer termination (EOF or an allowed
+connection reset) and completed server/client cleanup. They do not send a
+successful response after the client disconnects.
 The shared observation server bounds its own close at five seconds. Preserve the
 failed Python 3.12.2 candidate and callback diagnostic: Windows socket shutdown
 raised ConnectionResetError before asyncio detached the server connection.
 An earlier source or Python 3.11 pass does not establish that candidate's acceptance.
+
+Each state retry operation snapshots its borrowed payload, query values and extra
+headers before the first request. Nested JSON values and accepted query sequences
+remain the same across attempts. Per-attempt authorization, retry classes, attempt
+limits and backoff deadlines retain their existing behavior.
+
+Application construction compiles `ORKET_GITEA_ISSUE_BODY_MAX_BYTES` from the same
+captured environment used by the HTTP owner. Missing or malformed values retain
+the 65,000-byte default; parsed values retain the existing minimum of one byte.
+Lease acquisition and renewal consume that explicit integer for UTF-8 body
+admission before PATCH. An empty environment uses the default; omitted environment
+captures ambient values at construction. Later mapping or environment changes do
+not reconfigure an existing adapter. Raw native adapters require an explicit
+`issue_body_max_bytes` value. This does not extend the size rule to other writes.
+Migration and acceptance: `docs/architecture/CONTRACT_DELTA_GITEA_REQUEST_INPUTS_D_2026-09-22.md`.

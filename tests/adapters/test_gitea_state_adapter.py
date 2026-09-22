@@ -673,8 +673,8 @@ async def test_gitea_http_client_reuses_pooled_async_client_and_closes_once(monk
 @pytest.mark.asyncio
 async def test_acquire_lease_rejects_snapshot_body_that_exceeds_limit(monkeypatch, gitea_adapter_factory):
     """Layer: unit. Verifies snapshot writes fail closed before PATCH when the encoded issue body exceeds the configured cap."""
-    monkeypatch.setenv("ORKET_GITEA_ISSUE_BODY_MAX_BYTES", "8")
     adapter = await gitea_adapter_factory(
+        environment={"ORKET_GITEA_ISSUE_BODY_MAX_BYTES": "8"},
         base_url="https://gitea.local",
         owner="acme",
         repo="orket",

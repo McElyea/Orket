@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-22T21:50:07.953887+00:00",
+  "generated_at": "2026-09-22T22:30:00.458105+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -429,15 +429,15 @@
       },
       "orket.adapters.storage.gitea_http_client": {
         "path": "orket/adapters/storage/gitea_http_client.py",
-        "sha256": "74d9f56cc15d871fe33779a2b06da6b6e319c1bc3fa31508e8bd1a923ddcdf00"
+        "sha256": "cafeb4df9ce1d9b1c61e59eb7b510d0326149db238b9d800d88a72ca3e1008ec"
       },
       "orket.adapters.storage.gitea_lease_manager": {
         "path": "orket/adapters/storage/gitea_lease_manager.py",
-        "sha256": "3a0ab7ce6d61bd0b23d9b7ef4c3e90e52c78b2e234b7a5b047887a7c83eca40b"
+        "sha256": "5a21b1d03589b8b9caf983eb22026e3bf0c01cda78e1d1c7f3be5fa6b9c93439"
       },
       "orket.adapters.storage.gitea_state_adapter": {
         "path": "orket/adapters/storage/gitea_state_adapter.py",
-        "sha256": "c214246f0bd57b8d358296dc44b522d6ea9a15e67be99c5bfca628ad2225e7b4"
+        "sha256": "2ef18555dedf8e258e37c9c8d254f49f2b013c2ab68c0fd57e77002c321fd335"
       },
       "orket.adapters.storage.gitea_state_errors": {
         "path": "orket/adapters/storage/gitea_state_errors.py",
@@ -1185,7 +1185,7 @@
       },
       "orket.application.services.gitea_state_adapter_factory": {
         "path": "orket/application/services/gitea_state_adapter_factory.py",
-        "sha256": "3638c04168c7c5415daa9fd920d8f2583f37e204c30eca2b2adcc12f27ade9c5"
+        "sha256": "d4d023cb1bacfe866a3fd11792bfb7696bb32aea05d6a736f0ccadc7be6705cd"
       },
       "orket.application.services.gitea_state_control_plane_checkpoint_service": {
         "path": "orket/application/services/gitea_state_control_plane_checkpoint_service.py",
@@ -2798,6 +2798,10 @@
       "orket.decision_nodes.contracts": {
         "path": "orket/decision_nodes/contracts.py",
         "sha256": "9d7c0866c5e6a172493dc39aa221af86a4f76cb2d3a42e687f5134bfb2a5b8f1"
+      },
+      "orket.decision_nodes.gitea_lease_policy": {
+        "path": "orket/decision_nodes/gitea_lease_policy.py",
+        "sha256": "107608557266e077552cff2b68bcf4278a0228a4ec090ce047a4a38c6bf82b7a"
       },
       "orket.decision_nodes.provider_http_policy": {
         "path": "orket/decision_nodes/provider_http_policy.py",
@@ -5947,27 +5951,27 @@
       "orket.adapters.storage.gitea_http_client": {
         "module": [
           {
-            "line": 24,
+            "line": 25,
             "kind": "Assign",
             "direct": true,
             "literal": true
           }
         ],
         "classes": {
-          "GiteaHTTPClient@27": []
+          "GiteaHTTPClient@28": []
         }
       },
       "orket.adapters.storage.gitea_lease_manager": {
         "module": [
           {
-            "line": 12,
+            "line": 11,
             "kind": "Assign",
             "direct": true,
             "literal": true
           }
         ],
         "classes": {
-          "GiteaLeaseManager@15": []
+          "GiteaLeaseManager@14": []
         }
       },
       "orket.adapters.storage.gitea_state_adapter": {
@@ -8491,28 +8495,28 @@
         "source": "orket.adapters.storage.gitea_http_client",
         "target": "orket.core.contracts.provider_http",
         "path": "orket/adapters/storage/gitea_http_client.py",
-        "line": 10,
+        "line": 11,
         "kind": "from"
       },
       {
         "source": "orket.adapters.storage.gitea_http_client",
         "target": "orket.adapters.storage.gitea_state_errors",
         "path": "orket/adapters/storage/gitea_http_client.py",
-        "line": 12,
+        "line": 13,
         "kind": "from"
       },
       {
         "source": "orket.adapters.storage.gitea_lease_manager",
         "target": "orket.adapters.storage.gitea_state_errors",
         "path": "orket/adapters/storage/gitea_lease_manager.py",
-        "line": 9,
+        "line": 8,
         "kind": "from"
       },
       {
         "source": "orket.adapters.storage.gitea_lease_manager",
         "target": "orket.adapters.storage.gitea_state_models",
         "path": "orket/adapters/storage/gitea_lease_manager.py",
-        "line": 10,
+        "line": 9,
         "kind": "from"
       },
       {
@@ -13210,6 +13214,13 @@
         "target": "orket.application.services.runtime_result_lifetime",
         "path": "orket/application/services/gitea_state_adapter_factory.py",
         "line": 12,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.services.gitea_state_adapter_factory",
+        "target": "orket.decision_nodes.gitea_lease_policy",
+        "path": "orket/application/services/gitea_state_adapter_factory.py",
+        "line": 13,
         "kind": "from"
       },
       {
@@ -33965,7 +33976,7 @@
         "forwarded_arguments": 2
       }
     ],
-    "files_scanned": 1158,
+    "files_scanned": 1159,
     "scan_roots": [
       "orket"
     ],
@@ -34640,6 +34651,7 @@
       "orket.decision_nodes.api_runtime_strategy_node": "decision_nodes",
       "orket.decision_nodes.builtins": "decision_nodes",
       "orket.decision_nodes.contracts": "decision_nodes",
+      "orket.decision_nodes.gitea_lease_policy": "decision_nodes",
       "orket.decision_nodes.provider_http_policy": "decision_nodes",
       "orket.discovery": "application",
       "orket.domain.__init__": "core",
@@ -35160,7 +35172,7 @@
       {
         "source": "application",
         "target": "decision_nodes",
-        "count": 5
+        "count": 6
       },
       {
         "source": "core",
@@ -36829,45 +36841,45 @@
       {
         "module": "orket.adapters.storage.gitea_http_client",
         "path": "orket/adapters/storage/gitea_http_client.py",
-        "sha256": "74d9f56cc15d871fe33779a2b06da6b6e319c1bc3fa31508e8bd1a923ddcdf00",
+        "sha256": "cafeb4df9ce1d9b1c61e59eb7b510d0326149db238b9d800d88a72ca3e1008ec",
         "side_effecting": true,
         "declarations": {
           "module": [
             {
-              "line": 24,
+              "line": 25,
               "kind": "Assign",
               "direct": true,
               "literal": true
             }
           ],
           "classes": {
-            "GiteaHTTPClient@27": []
+            "GiteaHTTPClient@28": []
           }
         }
       },
       {
         "module": "orket.adapters.storage.gitea_lease_manager",
         "path": "orket/adapters/storage/gitea_lease_manager.py",
-        "sha256": "3a0ab7ce6d61bd0b23d9b7ef4c3e90e52c78b2e234b7a5b047887a7c83eca40b",
+        "sha256": "5a21b1d03589b8b9caf983eb22026e3bf0c01cda78e1d1c7f3be5fa6b9c93439",
         "side_effecting": true,
         "declarations": {
           "module": [
             {
-              "line": 12,
+              "line": 11,
               "kind": "Assign",
               "direct": true,
               "literal": true
             }
           ],
           "classes": {
-            "GiteaLeaseManager@15": []
+            "GiteaLeaseManager@14": []
           }
         }
       },
       {
         "module": "orket.adapters.storage.gitea_state_adapter",
         "path": "orket/adapters/storage/gitea_state_adapter.py",
-        "sha256": "c214246f0bd57b8d358296dc44b522d6ea9a15e67be99c5bfca628ad2225e7b4",
+        "sha256": "2ef18555dedf8e258e37c9c8d254f49f2b013c2ab68c0fd57e77002c321fd335",
         "side_effecting": true,
         "declarations": {
           "module": [
@@ -38799,26 +38811,6 @@
   },
   "diff_ledger": [
     {
-      "run_at_utc": "2026-09-22T05:48:47.539861Z",
-      "changed": true,
-      "before_digest": "sha256:c63fc2de0a9c07a792a4c81b714d79a3be4c202524f34e30e059433599ec5d96",
-      "after_digest": "sha256:a8b23338b69eed851370ad99cbcdfcb312dfb87a7fa5e757394e6145273ca3e5",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 48528,
-        "paths_total_current": 48528,
-        "paths_total_reference": 48528,
-        "churn_paths": 1,
-        "churn_ratio": 2.1e-05,
-        "sample_paths": [
-          "$.generated_at"
-        ]
-      }
-    },
-    {
       "run_at_utc": "2026-09-22T06:29:05.385356Z",
       "changed": true,
       "before_digest": "sha256:a8b23338b69eed851370ad99cbcdfcb312dfb87a7fa5e757394e6145273ca3e5",
@@ -39738,6 +39730,45 @@
         "churn_ratio": 1.7e-05,
         "sample_paths": [
           "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-22T22:30:23.231327Z",
+      "changed": true,
+      "before_digest": "sha256:bc806db82a057c22039d134bcc278d7eb54242f563547a3c00177964b1989cc8",
+      "after_digest": "sha256:3311f506d6b488930f062fedbe9876f71910b9fcd08180a60edcc4c1403a3d6a",
+      "diff": {
+        "added_paths": 7,
+        "removed_paths": 4,
+        "changed_paths": 7117,
+        "initial_write": false,
+        "paths_total_previous": 57293,
+        "paths_total_current": 57311,
+        "paths_total_reference": 57311,
+        "churn_paths": 7128,
+        "churn_ratio": 0.124374,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.adapter_effects[75].declarations.classes.GiteaHTTPClient@27",
+          "$.observed.adapter_effects[75].declarations.classes.GiteaHTTPClient@28",
+          "$.observed.adapter_effects[75].declarations.module[0].line",
+          "$.observed.adapter_effects[75].sha256",
+          "$.observed.adapter_effects[76].declarations.classes.GiteaLeaseManager@15",
+          "$.observed.adapter_effects[76].declarations.classes.GiteaLeaseManager@14",
+          "$.observed.adapter_effects[76].declarations.module[0].line",
+          "$.observed.adapter_effects[76].sha256",
+          "$.observed.adapter_effects[77].sha256",
+          "$.observed.edges[165].line",
+          "$.observed.edges[166].line",
+          "$.observed.edges[167].line",
+          "$.observed.edges[168].line",
+          "$.observed.edges[840].line",
+          "$.observed.edges[840].path",
+          "$.observed.edges[840].source",
+          "$.observed.edges[840].target",
+          "$.observed.edges[841].line",
+          "$.observed.edges[841].target"
         ]
       }
     }

@@ -11,7 +11,7 @@ from orket.application.services.runtime_result_lifetime import close_runtime_own
 async def gitea_adapter_factory():
     async with AsyncExitStack() as resources:
         async def create(**options):
-            adapter = await create_gitea_state_adapter_async(environment={}, **options)
+            adapter = await create_gitea_state_adapter_async(environment=options.pop('environment', {}), **options)
             resources.push_async_callback(close_runtime_owner, adapter)
             return adapter
 

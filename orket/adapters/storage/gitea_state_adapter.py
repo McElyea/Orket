@@ -54,6 +54,7 @@ class GiteaStateAdapter(StateBackendContract):
         repo: str,
         token: str,
         http_client_owner: CapturedHttpClientPort,
+        issue_body_max_bytes: int,
         ready_label: str = "status/ready",
         timeout_seconds: float = 20.0,
         max_retries: int = 2,
@@ -72,7 +73,7 @@ class GiteaStateAdapter(StateBackendContract):
         self._token = SecretToken(token)
 
         self.http = GiteaHTTPClient(self, http_client_owner=http_client_owner)
-        self.leases = GiteaLeaseManager(self)
+        self.leases = GiteaLeaseManager(self, max_issue_body_bytes=issue_body_max_bytes)
         self.transitions = GiteaStateTransitioner(self)
 
     async def close(self) -> None:
