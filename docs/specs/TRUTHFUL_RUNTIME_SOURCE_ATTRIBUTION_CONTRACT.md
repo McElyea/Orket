@@ -102,8 +102,12 @@ present, reads, decodes and closes the receipt. Repeated cancellation or caller
 timeout retains admitted native work through settlement. Missing receipts and
 invalid JSON retain their existing classifications; a metadata failure remains an
 error. This is an observation of a mutable file, not a transaction, a filesystem
-confinement guarantee or a hard filesystem deadline. Other packet-2 collection
-paths retain their existing contracts and remaining async obligations.
+confinement guarantee or a hard filesystem deadline. The enclosing packet-2
+collector captures its workspace, normalized policy and detached provenance before
+receipt discovery can yield. Later caller mutation or working-directory changes
+cannot select different source-attribution inputs for that collection. Receipt
+discovery and narration-audit lifetime are specified in
+`TRUTHFUL_RUNTIME_NARRATION_EFFECT_AUDIT_CONTRACT.md`.
 
 Stable `missing_requirements` values:
 1. `source_attribution_receipt_missing`

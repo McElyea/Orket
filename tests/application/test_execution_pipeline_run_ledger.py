@@ -8,7 +8,6 @@ import pytest
 
 import orket.runtime.execution_pipeline_run_summary as execution_pipeline_run_summary_module
 import orket.runtime.run_summary as run_summary_module
-from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
 from orket.application.services.turn_tool_control_plane_support import attempt_id_for, run_id_for
 from orket.core.contracts.protocol_hashing import hash_framed_fields
 from orket.core.contracts.tool_invocation_contracts import (
@@ -18,21 +17,14 @@ from orket.core.contracts.tool_invocation_contracts import (
 from orket.exceptions import ExecutionFailed
 from orket.logging import log_event
 from orket.naming import sanitize_name
-from orket.runtime.execution_pipeline import ExecutionPipeline
 from orket.runtime.run_summary import PACKET1_MISSING_TOKEN
 from orket.runtime.run_summary_artifact_provenance import normalize_artifact_provenance_facts
 from orket.schema import CardStatus
+from tests.helpers import ledger_pipeline_fixture
 from tests.helpers.card_completion import complete_existing_card
-from tests.helpers.protocol_ledger_clock import ProtocolLedgerClock
 
-
-def _pipeline(test_root, workspace, db_path, *, protocol=False):
-    # Provenance/lifecycle fixtures use explicit UTC inputs; host-clock behavior
-    # remains covered by separate refusal tests and retained native failures.
-    clock = ProtocolLedgerClock()
-    repository = AsyncProtocolRunLedgerRepository(workspace, timestamp_factory=clock.utc_now_iso) if protocol else None
-    return ExecutionPipeline(workspace=workspace, department="core", db_path=db_path,
-                             config_root=test_root, run_ledger_repo=repository, runtime_inputs=clock)
+pytestmark = pytest.mark.integration
+_pipeline = ledger_pipeline_fixture.ledger_pipeline
 
 
 def _write_json(path: Path, payload: dict) -> None:
@@ -281,10 +273,10 @@ def _log_successful_write_file(
 
 
 @pytest.mark.asyncio
-async def test_run_ledger_records_incomplete_run(test_root, workspace, db_path, monkeypatch):
+async def test_run_ledger_records_incomplete_run(_pipeline, test_root, workspace, db_path, monkeypatch):
     _write_epic_assets(test_root, "ledger_epic_incomplete")
 
-    pipeline = _pipeline(test_root, workspace, db_path, protocol=True)
+    pipeline = await _pipeline(test_root, workspace, db_path, protocol=True)
 
     async def _no_op_execute_epic(**_kwargs):
         return None
@@ -345,10 +337,10 @@ async def test_run_ledger_records_incomplete_run(test_root, workspace, db_path, 
 
 @pytest.mark.asyncio
 # Layer: integration
-async def test_run_ledger_records_failed_run(test_root, workspace, db_path, monkeypatch):
+async def test_run_ledger_records_failed_run(_pipeline, test_root, workspace, db_path, monkeypatch):
     _write_epic_assets(test_root, "ledger_epic_failed")
 
-    pipeline = _pipeline(test_root, workspace, db_path, protocol=True)
+    pipeline = await _pipeline(test_root, workspace, db_path, protocol=True)
 
     async def _raise_execute_epic(**_kwargs):
         raise ExecutionFailed("forced failure for ledger")
@@ -397,9 +389,9 @@ async def test_run_ledger_records_failed_run(test_root, workspace, db_path, monk
 
 @pytest.mark.asyncio
 # Layer: integration
-async def test_run_ledger_records_terminal_failure_run(test_root, workspace, db_path, monkeypatch):
+async def test_run_ledger_records_terminal_failure_run(_pipeline, test_root, workspace, db_path, monkeypatch):
     _write_epic_assets(test_root, "ledger_epic_terminal_failure")
-    pipeline = _pipeline(test_root, workspace, db_path, protocol=True)
+    pipeline = await _pipeline(test_root, workspace, db_path, protocol=True)
     async def _blocked_execute_epic(**_kwargs):
         await pipeline.async_cards.update_status("ISSUE-1", CardStatus.BLOCKED)
         return None
@@ -439,14 +431,14 @@ async def test_run_ledger_records_terminal_failure_run(test_root, workspace, db_
 # Layer: integration
 @pytest.mark.asyncio
 async def test_run_ledger_harvests_local_prompt_fallback_telemetry(
-    test_root,
+    _pipeline, test_root,
     workspace,
     db_path,
     monkeypatch,
 ):
     _write_epic_assets(test_root, "ledger_epic_prompt_fallback")
 
-    pipeline = _pipeline(test_root, workspace, db_path)
+    pipeline = await _pipeline(test_root, workspace, db_path)
 
     async def _execute_with_fallback_telemetry(**kwargs):
         run_id = str(kwargs["run_id"])
@@ -491,14 +483,14 @@ async def test_run_ledger_harvests_local_prompt_fallback_telemetry(
 # Layer: integration
 @pytest.mark.asyncio
 async def test_run_ledger_marks_corrective_reprompt_runs_as_repaired(
-    test_root,
+    _pipeline, test_root,
     workspace,
     db_path,
     monkeypatch,
 ):
     _write_epic_assets(test_root, "ledger_epic_repaired")
 
-    pipeline = _pipeline(test_root, workspace, db_path)
+    pipeline = await _pipeline(test_root, workspace, db_path)
 
     async def _execute_with_repair_event(**kwargs):
         run_id = str(kwargs["run_id"])
@@ -554,9 +546,9 @@ async def test_run_ledger_marks_corrective_reprompt_runs_as_repaired(
 
 # Layer: integration
 @pytest.mark.asyncio
-async def test_run_ledger_records_artifact_provenance_for_generated_files(test_root, workspace, db_path, monkeypatch):
+async def test_run_ledger_records_artifact_provenance_for_generated_files(_pipeline, test_root, workspace, db_path, monkeypatch):
     _write_epic_assets(test_root, "ledger_epic_artifact_provenance")
-    pipeline = _pipeline(test_root, workspace, db_path, protocol=True)
+    pipeline = await _pipeline(test_root, workspace, db_path, protocol=True)
     async def _execute_with_artifacts(**kwargs):
         run_id = str(kwargs["run_id"])
         _write_protocol_write_receipts(
@@ -616,14 +608,14 @@ async def test_run_ledger_records_artifact_provenance_for_generated_files(test_r
 # Layer: integration
 @pytest.mark.asyncio
 async def test_run_ledger_records_control_plane_refs_in_artifact_provenance_when_receipts_are_governed(
-    test_root,
+    _pipeline, test_root,
     workspace,
     db_path,
     monkeypatch,
 ):
     _write_epic_assets(test_root, "ledger_epic_artifact_provenance_governed")
 
-    pipeline = _pipeline(test_root, workspace, db_path, protocol=True)
+    pipeline = await _pipeline(test_root, workspace, db_path, protocol=True)
 
     async def _execute_with_governed_artifacts(**kwargs):
         run_id = str(kwargs["run_id"])
@@ -664,14 +656,14 @@ async def test_run_ledger_records_control_plane_refs_in_artifact_provenance_when
 # Layer: integration
 @pytest.mark.asyncio
 async def test_run_ledger_falls_back_to_tool_event_provenance_when_receipts_are_absent(
-    test_root,
+    _pipeline, test_root,
     workspace,
     db_path,
     monkeypatch,
 ):
     _write_epic_assets(test_root, "ledger_epic_artifact_provenance_log_fallback")
 
-    pipeline = _pipeline(test_root, workspace, db_path, protocol=True)
+    pipeline = await _pipeline(test_root, workspace, db_path, protocol=True)
 
     async def _execute_with_logged_artifacts(**kwargs):
         run_id = str(kwargs["run_id"])
@@ -719,7 +711,7 @@ async def test_run_ledger_falls_back_to_tool_event_provenance_when_receipts_are_
 @pytest.mark.asyncio
 # Layer: integration
 async def test_run_ledger_records_phase_c_packet2_surfaces_for_required_source_attribution(
-    test_root,
+    _pipeline, test_root,
     workspace,
     db_path,
     monkeypatch,
@@ -730,7 +722,7 @@ async def test_run_ledger_records_phase_c_packet2_surfaces_for_required_source_a
         truthful_runtime={"source_attribution_mode": "required"},
     )
 
-    pipeline = _pipeline(test_root, workspace, db_path, protocol=True)
+    pipeline = await _pipeline(test_root, workspace, db_path, protocol=True)
 
     async def _execute_phase_c_verified(**kwargs):
         run_id = str(kwargs["run_id"])
@@ -900,7 +892,7 @@ async def test_run_ledger_records_phase_c_packet2_surfaces_for_required_source_a
 @pytest.mark.asyncio
 # Layer: integration
 async def test_run_ledger_records_phase_c_packet2_surfaces_from_legacy_turn_artifacts(
-    test_root,
+    _pipeline, test_root,
     workspace,
     db_path,
     monkeypatch,
@@ -911,7 +903,7 @@ async def test_run_ledger_records_phase_c_packet2_surfaces_from_legacy_turn_arti
         truthful_runtime={"source_attribution_mode": "required"},
     )
 
-    pipeline = _pipeline(test_root, workspace, db_path, protocol=True)
+    pipeline = await _pipeline(test_root, workspace, db_path, protocol=True)
 
     async def _execute_phase_c_legacy_verified(**kwargs):
         run_id = str(kwargs["run_id"])
@@ -1007,7 +999,7 @@ async def test_run_ledger_records_phase_c_packet2_surfaces_from_legacy_turn_arti
 @pytest.mark.asyncio
 # Layer: integration
 async def test_run_ledger_narration_effect_audit_detects_missing_written_source_receipt(
-    test_root,
+    _pipeline, test_root,
     workspace,
     db_path,
     monkeypatch,
@@ -1018,7 +1010,7 @@ async def test_run_ledger_narration_effect_audit_detects_missing_written_source_
         truthful_runtime={"source_attribution_mode": "optional"},
     )
 
-    pipeline = _pipeline(test_root, workspace, db_path, protocol=True)
+    pipeline = await _pipeline(test_root, workspace, db_path, protocol=True)
 
     async def _execute_phase_c_missing_effect(**kwargs):
         run_id = str(kwargs["run_id"])
@@ -1080,14 +1072,14 @@ async def test_run_ledger_narration_effect_audit_detects_missing_written_source_
 # Layer: integration
 @pytest.mark.asyncio
 async def test_run_ledger_emits_degraded_run_summary_when_canonical_generation_fails(
-    test_root,
+    _pipeline, test_root,
     workspace,
     db_path,
     monkeypatch,
 ):
     _write_epic_assets(test_root, "ledger_epic_summary_fallback")
 
-    pipeline = _pipeline(test_root, workspace, db_path)
+    pipeline = await _pipeline(test_root, workspace, db_path)
 
     async def _no_op_execute_epic(**_kwargs):
         return None
@@ -1135,14 +1127,14 @@ async def test_run_ledger_emits_degraded_run_summary_when_canonical_generation_f
 # Layer: integration
 @pytest.mark.asyncio
 async def test_run_ledger_degrades_when_finalize_run_identity_validation_fails(
-    test_root,
+    _pipeline, test_root,
     workspace,
     db_path,
     monkeypatch,
 ):
     _write_epic_assets(test_root, "ledger_epic_invalid_run_identity_finalize")
 
-    pipeline = _pipeline(test_root, workspace, db_path)
+    pipeline = await _pipeline(test_root, workspace, db_path)
 
     async def _no_op_execute_epic(**_kwargs):
         return None
@@ -1190,14 +1182,14 @@ async def test_run_ledger_degrades_when_finalize_run_identity_validation_fails(
 # Layer: integration
 @pytest.mark.asyncio
 async def test_run_ledger_degrades_when_finalize_control_plane_projection_attempt_alignment_drifts(
-    test_root,
+    _pipeline, test_root,
     workspace,
     db_path,
     monkeypatch,
 ):
     _write_epic_assets(test_root, "ledger_epic_invalid_control_plane_finalize")
 
-    pipeline = _pipeline(test_root, workspace, db_path)
+    pipeline = await _pipeline(test_root, workspace, db_path)
 
     async def _no_op_execute_epic(**_kwargs):
         return None
@@ -1249,14 +1241,14 @@ async def test_run_ledger_degrades_when_finalize_control_plane_projection_attemp
 # Layer: integration
 @pytest.mark.asyncio
 async def test_run_ledger_degrades_when_finalize_control_plane_attempt_lineage_drifts(
-    test_root,
+    _pipeline, test_root,
     workspace,
     db_path,
     monkeypatch,
 ):
     _write_epic_assets(test_root, "ledger_epic_invalid_control_plane_attempt_lineage")
 
-    pipeline = _pipeline(test_root, workspace, db_path)
+    pipeline = await _pipeline(test_root, workspace, db_path)
 
     async def _no_op_execute_epic(**_kwargs):
         return None
@@ -1312,14 +1304,14 @@ async def test_run_ledger_degrades_when_finalize_control_plane_attempt_lineage_d
 # Layer: integration
 @pytest.mark.asyncio
 async def test_run_ledger_degrades_when_finalize_control_plane_step_lineage_drifts(
-    test_root,
+    _pipeline, test_root,
     workspace,
     db_path,
     monkeypatch,
 ):
     _write_epic_assets(test_root, "ledger_epic_invalid_control_plane_step_lineage")
 
-    pipeline = _pipeline(test_root, workspace, db_path)
+    pipeline = await _pipeline(test_root, workspace, db_path)
 
     async def _no_op_execute_epic(**_kwargs):
         return None
@@ -1375,14 +1367,14 @@ async def test_run_ledger_degrades_when_finalize_control_plane_step_lineage_drif
 # Layer: integration
 @pytest.mark.asyncio
 async def test_run_ledger_degrades_when_finalize_control_plane_run_projection_drops_workload_metadata(
-    test_root,
+    _pipeline, test_root,
     workspace,
     db_path,
     monkeypatch,
 ):
     _write_epic_assets(test_root, "ledger_epic_invalid_control_plane_run_projection")
 
-    pipeline = _pipeline(test_root, workspace, db_path)
+    pipeline = await _pipeline(test_root, workspace, db_path)
 
     async def _no_op_execute_epic(**_kwargs):
         return None
@@ -1440,7 +1432,7 @@ async def test_run_ledger_degrades_when_finalize_control_plane_run_projection_dr
     ],
 )
 async def test_run_ledger_degrades_when_finalize_control_plane_attempt_or_step_projection_drops_metadata(
-    test_root,
+    _pipeline, test_root,
     workspace,
     db_path,
     monkeypatch,
@@ -1449,7 +1441,7 @@ async def test_run_ledger_degrades_when_finalize_control_plane_attempt_or_step_p
 ):
     _write_epic_assets(test_root, "ledger_epic_invalid_control_plane_projection_metadata")
 
-    pipeline = _pipeline(test_root, workspace, db_path)
+    pipeline = await _pipeline(test_root, workspace, db_path)
 
     async def _no_op_execute_epic(**_kwargs):
         return None
@@ -1503,7 +1495,7 @@ async def test_run_ledger_degrades_when_finalize_control_plane_attempt_or_step_p
     ],
 )
 async def test_run_ledger_degrades_when_finalize_control_plane_identity_hierarchy_drops_parent_refs(
-    test_root,
+    _pipeline, test_root,
     workspace,
     db_path,
     monkeypatch,
@@ -1512,7 +1504,7 @@ async def test_run_ledger_degrades_when_finalize_control_plane_identity_hierarch
 ):
     _write_epic_assets(test_root, "ledger_epic_invalid_control_plane_projection_identity_hierarchy")
 
-    pipeline = _pipeline(test_root, workspace, db_path)
+    pipeline = await _pipeline(test_root, workspace, db_path)
 
     async def _no_op_execute_epic(**_kwargs):
         return None
@@ -1559,14 +1551,14 @@ async def test_run_ledger_degrades_when_finalize_control_plane_identity_hierarch
 
 @pytest.mark.asyncio
 async def test_run_ledger_degrades_when_finalize_control_plane_current_attempt_outlives_attempt_projection(
-    test_root,
+    _pipeline, test_root,
     workspace,
     db_path,
     monkeypatch,
 ):
     _write_epic_assets(test_root, "ledger_epic_invalid_control_plane_projection_identity_hierarchy")
 
-    pipeline = _pipeline(test_root, workspace, db_path)
+    pipeline = await _pipeline(test_root, workspace, db_path)
 
     async def _no_op_execute_epic(**_kwargs):
         return None
@@ -1627,7 +1619,7 @@ async def test_run_ledger_degrades_when_finalize_control_plane_current_attempt_o
     ],
 )
 async def test_run_ledger_degrades_when_finalize_control_plane_orphaned_projection_metadata_survives(
-    test_root,
+    _pipeline, test_root,
     workspace,
     db_path,
     monkeypatch,
@@ -1636,7 +1628,7 @@ async def test_run_ledger_degrades_when_finalize_control_plane_orphaned_projecti
 ):
     _write_epic_assets(test_root, "ledger_epic_invalid_control_plane_projection_identity_hierarchy")
 
-    pipeline = _pipeline(test_root, workspace, db_path)
+    pipeline = await _pipeline(test_root, workspace, db_path)
 
     async def _no_op_execute_epic(**_kwargs):
         return None
@@ -1695,11 +1687,11 @@ async def test_run_ledger_degrades_when_finalize_control_plane_orphaned_projecti
 
 # Layer: integration
 @pytest.mark.asyncio
-async def test_run_ledger_records_runtime_contract_bootstrap_artifacts(test_root, workspace, db_path, monkeypatch):
+async def test_run_ledger_records_runtime_contract_bootstrap_artifacts(_pipeline, test_root, workspace, db_path, monkeypatch):
     """Layer: contract. Verifies run-ledger bootstrap artifacts preserve current runtime contracts."""
     _write_epic_assets(test_root, "ledger_epic_contract_bootstrap")
 
-    pipeline = _pipeline(test_root, workspace, db_path)
+    pipeline = await _pipeline(test_root, workspace, db_path)
 
     async def _no_op_execute_epic(**_kwargs):
         return None
@@ -1812,13 +1804,13 @@ async def test_run_ledger_records_runtime_contract_bootstrap_artifacts(test_root
 # Layer: integration
 @pytest.mark.asyncio
 async def test_run_ledger_keeps_run_identity_immutable_across_same_session_reentry(
-    test_root,
+    _pipeline, test_root,
     workspace,
     db_path,
     monkeypatch,
 ):
     _write_epic_assets(test_root, "ledger_epic_identity_immutable")
-    pipeline = _pipeline(test_root, workspace, db_path)
+    pipeline = await _pipeline(test_root, workspace, db_path)
 
     async def _no_op_execute_epic(**_kwargs):
         return None

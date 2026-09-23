@@ -1,6 +1,6 @@
 # Truthful Runtime Narration-Effect Audit Contract
 
-Last updated: 2026-03-27
+Last updated: 2026-09-22
 Status: Active
 Owner: Orket Core
 Phase closeout authority: `docs/projects/archive/truthful-runtime/TRH03162026-PHASE-C-CLOSEOUT/CLOSEOUT.md`
@@ -105,6 +105,30 @@ For `update_issue_status`:
 
 Governed ref coupling:
 1. `control_plane_run_id`, `control_plane_attempt_id`, and `control_plane_step_id` are emitted only when the authoritative protocol receipt manifest for the narrated effect exposes those durable governed execution refs.
+
+## Observation Inputs and Lifetime
+
+Packet-2 collection captures its lexical absolute workspace, normalized policy and
+detached provenance before its first await. Receipt discovery, native file reads
+and closure, legacy fallback discovery and file-audit metadata each run in a worker
+retained by the existing native-operation owner. Repeated cancellation or caller timeout retains each admitted
+native operation until it settles; interruption then prevents later collection
+steps from being admitted. There is no hard filesystem deadline or forced thread
+termination guarantee.
+
+A discovered protocol receipt file takes precedence over legacy artifacts in its
+turn directory, including when the protocol file is empty, unreadable or contains
+no usable object rows. Blank lines, invalid JSON and non-object rows are ignored;
+existing tolerated file errors and missing-effect classifications are preserved.
+Receipt ordering, legacy operation identity, governed references and card-history
+authority are unchanged. Discovery errors outside tolerated receipt reads remain
+errors rather than empty successful evidence.
+
+This is observation of mutable filesystem and card-history state, not a single
+atomic snapshot or a handle-bound confinement guarantee. A verified file audit
+still means a successful receipt and a contained existing file. It does not verify
+file contents, grant authorization, establish rollback or extend CAP-2 admission.
+Migration: `docs/architecture/CONTRACT_DELTA_PACKET2_OWNERSHIP_D_2026-09-22.md`.
 
 ## Emission Rules
 

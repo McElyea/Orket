@@ -5,6 +5,18 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.99] - 2026-09-22
+
+### Fixed
+- Capture packet-2 workspace, policy and provenance before receipt discovery can yield.
+- Retain protocol/legacy discovery, receipt handles and contained-file audit through cancellation and timeout using the existing native owner.
+- Preserve protocol precedence, deterministic receipt identity and ordering, tolerant parsing and the existing file-existence claim ceiling.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Retain interrupted collection until admitted native work settles. Migration: `docs/architecture/CONTRACT_DELTA_PACKET2_OWNERSHIP_D_2026-09-22.md`.
+- Wider D/E/CAP, Linux clock, full coverage and whole-lane acceptance remain open.
+
 ## [0.6.98] - 2026-09-22
 
 ### Fixed

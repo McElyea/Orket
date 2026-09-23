@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-23T01:21:47.194813+00:00",
+  "generated_at": "2026-09-23T03:10:04.887455+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -3987,9 +3987,13 @@
         "path": "orket/runtime/execution/live_acceptance_contracts.py",
         "sha256": "c6c04f92a9087129a1231654d6d1fc7b5b03e67e5ea26f6a17ac5309cfe08e63"
       },
+      "orket.runtime.execution.packet2_receipt_observation": {
+        "path": "orket/runtime/execution/packet2_receipt_observation.py",
+        "sha256": "f58a57e955efe5126a8723c9460f5ef829a9086bd3ce3ec0ad860fc22886a792"
+      },
       "orket.runtime.execution.phase_c_runtime_truth": {
         "path": "orket/runtime/execution/phase_c_runtime_truth.py",
-        "sha256": "5a5c515c6d57e60a72c70b8edfaa2a658ddca7775bb8fa846701856c9e87da8c"
+        "sha256": "7773401baa5e58c398297212a0c294d60c49bac0b7283e380b736a0c94f1555f"
       },
       "orket.runtime.execution.pipeline_wiring_service": {
         "path": "orket/runtime/execution/pipeline_wiring_service.py",
@@ -31443,10 +31447,38 @@
         "kind": "from"
       },
       {
-        "source": "orket.runtime.execution.phase_c_runtime_truth",
+        "source": "orket.runtime.execution.packet2_receipt_observation",
+        "target": "orket.adapters.execution.owned_io",
+        "path": "orket/runtime/execution/packet2_receipt_observation.py",
+        "line": 10,
+        "kind": "from"
+      },
+      {
+        "source": "orket.runtime.execution.packet2_receipt_observation",
+        "target": "orket.adapters.storage.async_file_tools",
+        "path": "orket/runtime/execution/packet2_receipt_observation.py",
+        "line": 11,
+        "kind": "from"
+      },
+      {
+        "source": "orket.runtime.execution.packet2_receipt_observation",
         "target": "orket.naming",
-        "path": "orket/runtime/execution/phase_c_runtime_truth.py",
+        "path": "orket/runtime/execution/packet2_receipt_observation.py",
         "line": 12,
+        "kind": "from"
+      },
+      {
+        "source": "orket.runtime.execution.phase_c_runtime_truth",
+        "target": "orket.adapters.storage.async_file_tools",
+        "path": "orket/runtime/execution/phase_c_runtime_truth.py",
+        "line": 7,
+        "kind": "from"
+      },
+      {
+        "source": "orket.runtime.execution.phase_c_runtime_truth",
+        "target": "orket.runtime.execution.packet2_receipt_observation",
+        "path": "orket/runtime/execution/phase_c_runtime_truth.py",
+        "line": 8,
         "kind": "from"
       },
       {
@@ -34121,7 +34153,7 @@
         "forwarded_arguments": 2
       }
     ],
-    "files_scanned": 1162,
+    "files_scanned": 1163,
     "scan_roots": [
       "orket"
     ],
@@ -35094,6 +35126,7 @@
       "orket.runtime.execution.gitea_state_loop": "application",
       "orket.runtime.execution.live_acceptance_assets": "application",
       "orket.runtime.execution.live_acceptance_contracts": "application",
+      "orket.runtime.execution.packet2_receipt_observation": "application",
       "orket.runtime.execution.phase_c_runtime_truth": "application",
       "orket.runtime.execution.pipeline_wiring_service": "application",
       "orket.runtime.execution.source_attribution_receipt": "application",
@@ -35305,12 +35338,12 @@
       {
         "source": "application",
         "target": "adapters",
-        "count": 463
+        "count": 466
       },
       {
         "source": "application",
         "target": "application",
-        "count": 1853
+        "count": 1854
       },
       {
         "source": "application",
@@ -38959,45 +38992,6 @@
   },
   "diff_ledger": [
     {
-      "run_at_utc": "2026-09-22T09:02:55.008698Z",
-      "changed": true,
-      "before_digest": "sha256:ec35a1ef0532638c101b060aac68f4f56bfb6cf404c79691bbc7ce2e5ceff3e4",
-      "after_digest": "sha256:7eed255e031be643687b8a5b7af0bd0f7b4df2ac6cfeb6217a5e28f905582d7c",
-      "diff": {
-        "added_paths": 10,
-        "removed_paths": 0,
-        "changed_paths": 10986,
-        "initial_write": false,
-        "paths_total_previous": 49214,
-        "paths_total_current": 49309,
-        "paths_total_reference": 49309,
-        "churn_paths": 10996,
-        "churn_ratio": 0.223002,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.edges[8].line",
-          "$.observed.edges[8].path",
-          "$.observed.edges[8].source",
-          "$.observed.edges[8].target",
-          "$.observed.edges[9].line",
-          "$.observed.edges[9].target",
-          "$.observed.edges[10].line",
-          "$.observed.edges[10].path",
-          "$.observed.edges[10].source",
-          "$.observed.edges[10].target",
-          "$.observed.edges[11].line",
-          "$.observed.edges[11].target",
-          "$.observed.edges[12].line",
-          "$.observed.edges[12].target",
-          "$.observed.edges[13].line",
-          "$.observed.edges[13].target",
-          "$.observed.edges[14].line",
-          "$.observed.edges[14].target",
-          "$.observed.edges[15].line"
-        ]
-      }
-    },
-    {
       "run_at_utc": "2026-09-22T09:52:22.197429Z",
       "changed": true,
       "before_digest": "sha256:7eed255e031be643687b8a5b7af0bd0f7b4df2ac6cfeb6217a5e28f905582d7c",
@@ -39930,6 +39924,45 @@
           "$.observed.edges[3450].line",
           "$.observed.edges[3450].target",
           "$.observed.edges[3451].line"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-23T03:10:27.903185Z",
+      "changed": true,
+      "before_digest": "sha256:da8939f4efbd16e42cbc99ecbf7b016fc89332b36acfa0f80e67dc49c3320bea",
+      "after_digest": "sha256:22d644332a26efe8c783376f1937e36d10a86bbef06251a482f2986e3f5319e5",
+      "diff": {
+        "added_paths": 6,
+        "removed_paths": 0,
+        "changed_paths": 1101,
+        "initial_write": false,
+        "paths_total_previous": 57541,
+        "paths_total_current": 57592,
+        "paths_total_reference": 57592,
+        "churn_paths": 1107,
+        "churn_ratio": 0.019221,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.edges[3442].line",
+          "$.observed.edges[3442].path",
+          "$.observed.edges[3442].source",
+          "$.observed.edges[3442].target",
+          "$.observed.edges[3443].line",
+          "$.observed.edges[3443].path",
+          "$.observed.edges[3443].source",
+          "$.observed.edges[3443].target",
+          "$.observed.edges[3444].line",
+          "$.observed.edges[3444].path",
+          "$.observed.edges[3444].source",
+          "$.observed.edges[3444].target",
+          "$.observed.edges[3445].line",
+          "$.observed.edges[3445].target",
+          "$.observed.edges[3446].line",
+          "$.observed.edges[3446].path",
+          "$.observed.edges[3446].source",
+          "$.observed.edges[3446].target",
+          "$.observed.edges[3447].line"
         ]
       }
     }

@@ -1,15 +1,15 @@
 from __future__ import annotations
 
-import asyncio
-import hashlib
-import json
 from collections import Counter
 from pathlib import Path
 from typing import Any, Protocol
 
-import aiofiles
-
-from orket.naming import sanitize_name
+from orket.adapters.storage.async_file_tools import capture_file_roots
+from orket.runtime.execution.packet2_receipt_observation import (
+    _normalize_turn_index,
+    observe_packet2_file,
+    observe_packet2_receipts,
+)
 from orket.runtime.execution.source_attribution_receipt import observe_source_receipt
 from orket.runtime.idempotency_discipline_policy import idempotency_discipline_policy_snapshot
 from orket.runtime.run_summary_artifact_provenance import normalize_artifact_provenance_facts
@@ -50,17 +50,20 @@ async def collect_phase_c_packet2_facts(
     policy: dict[str, Any] | None = None,
     artifact_provenance_facts: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    receipts = await _load_protocol_receipts(workspace=workspace, run_id=run_id)
+    captured_workspace, = capture_file_roots([workspace])
+    captured_run_id = str(run_id)
     normalized_policy = normalize_truthful_runtime_policy(policy)
+    normalized_provenance = normalize_artifact_provenance_facts(artifact_provenance_facts)
+    receipts = await observe_packet2_receipts(workspace=captured_workspace, run_id=captured_run_id)
     narration_facts = await _collect_narration_effect_audit_facts(
-        workspace=workspace,
+        workspace=captured_workspace,
         receipts=receipts,
         cards_repo=cards_repo,
     )
     source_attribution_facts = await collect_source_attribution_facts(
-        workspace=workspace,
+        workspace=captured_workspace,
         policy=normalized_policy,
-        artifact_provenance_facts=artifact_provenance_facts,
+        artifact_provenance_facts=normalized_provenance,
     )
     idempotency_facts = _collect_idempotency_facts(receipts=receipts)
     packet2_facts: dict[str, Any] = {}
@@ -179,7 +182,7 @@ async def _collect_narration_effect_audit_facts(
         if not isinstance(execution_result, dict) or not bool(execution_result.get("ok")):
             continue
         if tool == "write_file":
-            entries.append(_write_file_audit_entry(workspace=workspace, receipt=receipt))
+            entries.append(await _write_file_audit_entry(workspace=workspace, receipt=receipt))
             continue
         entries.append(await _status_update_audit_entry(cards_repo=cards_repo, receipt=receipt))
     if not entries:
@@ -251,181 +254,7 @@ def _collect_idempotency_facts(*, receipts: list[dict[str, Any]]) -> dict[str, A
     }
 
 
-async def _load_protocol_receipts(*, workspace: Path, run_id: str) -> list[dict[str, Any]]:
-    receipts: list[dict[str, Any]] = []
-    observability_root = Path(workspace) / "observability" / sanitize_name(run_id)
-    if not observability_root.exists():
-        return receipts
-    protocol_turn_dirs: set[Path] = set()
-    for receipt_path in sorted(observability_root.rglob("protocol_receipts.log")):
-        protocol_turn_dirs.add(receipt_path.parent.resolve())
-        issue_id, role_name, turn_index = _receipt_context(
-            receipt_path=receipt_path, run_id=run_id, workspace=workspace
-        )
-        try:
-            async with aiofiles.open(receipt_path, encoding="utf-8") as handle:
-                async for line in handle:
-                    if not line.strip():
-                        continue
-                    try:
-                        payload = json.loads(line)
-                    except (ValueError, TypeError):
-                        continue
-                    if not isinstance(payload, dict):
-                        continue
-                    receipts.append(
-                        {
-                            **payload,
-                            "_issue_id": issue_id,
-                            "_role_name": role_name,
-                            "_turn_index": turn_index,
-                        }
-                    )
-        except OSError:
-            continue
-    legacy_turn_dirs = await _legacy_turn_dirs(
-        observability_root=observability_root,
-        protocol_turn_dirs=protocol_turn_dirs,
-    )
-    for turn_dir in legacy_turn_dirs:
-        receipts.extend(await _load_legacy_turn_receipts(turn_dir=turn_dir, run_id=run_id, workspace=workspace))
-    return sorted(
-        receipts,
-        key=lambda row: (
-            str(row.get("_issue_id") or ""),
-            _normalize_turn_index(row.get("_turn_index")),
-            int(row.get("receipt_seq") or row.get("tool_index") or 0),
-            str(row.get("operation_id") or ""),
-        ),
-    )
-
-
-async def _legacy_turn_dirs(*, observability_root: Path, protocol_turn_dirs: set[Path]) -> list[Path]:
-    def _collect() -> list[Path]:
-        turn_dirs: list[Path] = []
-        for issue_dir in sorted(observability_root.iterdir(), key=lambda path: path.name):
-            if not issue_dir.is_dir():
-                continue
-            for turn_dir in sorted(issue_dir.iterdir(), key=lambda path: path.name):
-                if not turn_dir.is_dir():
-                    continue
-                if (turn_dir.resolve() in protocol_turn_dirs) or ("_" not in turn_dir.name):
-                    continue
-                if (turn_dir / "parsed_tool_calls.json").exists():
-                    turn_dirs.append(turn_dir)
-        return turn_dirs
-
-    return await asyncio.to_thread(_collect)
-
-
-async def _load_legacy_turn_receipts(*, turn_dir: Path, run_id: str, workspace: Path) -> list[dict[str, Any]]:
-    issue_id, role_name, turn_index = _turn_context(turn_dir=turn_dir, run_id=run_id, workspace=workspace)
-    if not issue_id or turn_index <= 0:
-        return []
-    parsed_tool_calls = await _load_json_payload(turn_dir / "parsed_tool_calls.json")
-    if not isinstance(parsed_tool_calls, list):
-        return []
-    receipts: list[dict[str, Any]] = []
-    for tool_index, item in enumerate(parsed_tool_calls):
-        if not isinstance(item, dict):
-            continue
-        tool_name = str(item.get("tool") or "").strip()
-        if not tool_name:
-            continue
-        tool_args = dict(item.get("args") or {}) if isinstance(item.get("args"), dict) else {}
-        result_path = (
-            turn_dir / f"tool_result_{sanitize_name(tool_name)}_{_legacy_tool_replay_key(tool_name, tool_args)}.json"
-        )
-        execution_result = await _load_json_payload(result_path)
-        if not isinstance(execution_result, dict):
-            continue
-        receipts.append(
-            {
-                "run_id": str(run_id),
-                "step_id": f"{issue_id}:{turn_index}",
-                "receipt_seq": tool_index + 1,
-                "operation_id": _legacy_operation_id(
-                    issue_id=issue_id,
-                    role_name=role_name,
-                    turn_index=turn_index,
-                    tool_index=tool_index,
-                    tool_name=tool_name,
-                    tool_args=tool_args,
-                ),
-                "tool_index": tool_index,
-                "tool": tool_name,
-                "tool_args": tool_args,
-                "execution_result": execution_result,
-                "_issue_id": issue_id,
-                "_role_name": role_name,
-                "_turn_index": turn_index,
-            }
-        )
-    return receipts
-
-
-async def _load_json_payload(path: Path) -> Any:
-    try:
-        async with aiofiles.open(path, encoding="utf-8") as handle:
-            return json.loads(await handle.read())
-    except (OSError, TypeError, ValueError):
-        return None
-
-
-def _turn_context(*, turn_dir: Path, run_id: str, workspace: Path) -> tuple[str, str, int]:
-    return _receipt_context(receipt_path=turn_dir / "protocol_receipts.log", run_id=run_id, workspace=workspace)
-
-
-def _legacy_tool_replay_key(tool_name: str, tool_args: dict[str, Any]) -> str:
-    payload = {
-        "v": 1,
-        "kind": "tool_replay_key",
-        "fields": [str(tool_name or ""), dict(tool_args or {})],
-    }
-    canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
-    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()[:12]
-
-
-def _legacy_operation_id(
-    *,
-    issue_id: str,
-    role_name: str,
-    turn_index: int,
-    tool_index: int,
-    tool_name: str,
-    tool_args: dict[str, Any],
-) -> str:
-    return (
-        "legacy:"
-        f"{sanitize_name(issue_id)}:"
-        f"{sanitize_name(role_name)}:"
-        f"{turn_index:03d}:"
-        f"{tool_index:03d}:"
-        f"{sanitize_name(tool_name)}:"
-        f"{_legacy_tool_replay_key(tool_name, tool_args)}"
-    )
-
-
-def _receipt_context(*, receipt_path: Path, run_id: str, workspace: Path) -> tuple[str, str, int]:
-    session_root = Path(workspace) / "observability" / sanitize_name(run_id)
-    try:
-        relative_path = receipt_path.relative_to(session_root)
-    except ValueError:
-        return "", "", 0
-    parts = relative_path.parts
-    if len(parts) < 3:
-        return "", "", 0
-    issue_id = str(parts[0]).strip()
-    role_token = str(parts[1]).strip()
-    turn_index = 0
-    role_name = ""
-    if "_" in role_token:
-        raw_turn_index, role_name = role_token.split("_", 1)
-        turn_index = _normalize_turn_index(raw_turn_index)
-    return issue_id, role_name.strip(), turn_index
-
-
-def _write_file_audit_entry(*, workspace: Path, receipt: dict[str, Any]) -> dict[str, Any]:
+async def _write_file_audit_entry(*, workspace: Path, receipt: dict[str, Any]) -> dict[str, Any]:
     execution_result = dict(receipt.get("execution_result") or {})
     tool_args = dict(receipt.get("tool_args") or {}) if isinstance(receipt.get("tool_args"), dict) else {}
     raw_path = str(execution_result.get("path") or tool_args.get("path") or "").strip()
@@ -435,12 +264,12 @@ def _write_file_audit_entry(*, workspace: Path, receipt: dict[str, Any]) -> dict
         entry["audit_status"] = "missing"
         entry["failure_reason"] = "artifact_path_missing"
         return entry
-    resolved = _resolve_workspace_candidate(workspace=workspace, raw_path=raw_path)
-    if resolved is None:
+    observation = await observe_packet2_file(workspace=workspace, raw_path=raw_path)
+    if observation == "outside":
         entry["audit_status"] = "missing"
         entry["failure_reason"] = "artifact_path_outside_workspace"
         return entry
-    if not resolved.exists() or not resolved.is_file():
+    if observation == "missing":
         entry["audit_status"] = "missing"
         entry["failure_reason"] = "workspace_artifact_missing"
         return entry
@@ -591,17 +420,6 @@ def _idempotency_target_for_receipt(receipt: dict[str, Any]) -> str:
     return _normalized_workspace_path(str(tool_args.get("path") or execution_result.get("path") or "").strip())
 
 
-def _resolve_workspace_candidate(*, workspace: Path, raw_path: str) -> Path | None:
-    candidate = Path(raw_path)
-    workspace_root = Path(workspace).resolve()
-    if not candidate.is_absolute():
-        candidate = workspace_root / candidate
-    resolved = candidate.resolve(strict=False)
-    if not resolved.is_relative_to(workspace_root):
-        return None
-    return resolved
-
-
 def _normalized_workspace_path(raw_path: str) -> str:
     candidate = Path(str(raw_path or "").strip())
     if not str(candidate):
@@ -613,17 +431,3 @@ def _normalized_workspace_path(raw_path: str) -> str:
         start = parts.index("agent_output")
         return "/".join(parts[start:])
     return candidate.as_posix()
-
-
-def _normalize_turn_index(value: Any) -> int:
-    if isinstance(value, bool):
-        return 0
-    if isinstance(value, int):
-        return max(0, value)
-    raw = str(value or "").strip()
-    if not raw:
-        return 0
-    try:
-        return max(0, int(raw))
-    except ValueError:
-        return 0

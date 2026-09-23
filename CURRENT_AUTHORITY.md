@@ -39,6 +39,15 @@ Other log producers keep their current contracts. Migration and scope:
 `docs/specs/CONNECTOR_INVOCATION_TIMING.md` and
 `docs/architecture/CONTRACT_DELTA_CONNECTOR_LOGGING_D_2026-09-22.md`.
 
+Packet-2 collection captures its workspace, normalized policy and detached
+provenance before receipt discovery. The existing native owner retains protocol
+and legacy discovery/read/close and contained-file audit through interruption.
+Protocol-file precedence, sorting, operation identity and tolerant parsing remain;
+verified narration audit still means successful receipt plus contained existing
+file, not semantic content. Migration and limits:
+`docs/specs/TRUTHFUL_RUNTIME_NARRATION_EFFECT_AUDIT_CONTRACT.md` and
+`docs/architecture/CONTRACT_DELTA_PACKET2_OWNERSHIP_D_2026-09-22.md`.
+
 Terraform artifact publication captures its workspace and nested payloads; shared
 file capabilities own metadata and writes through interruption. Source-attribution
 observation captures its receipt path and derived policy/provenance, then owns
