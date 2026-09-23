@@ -1,6 +1,6 @@
 {
   "schema_version": "architectural_truth.baseline.v1",
-  "generated_at": "2026-09-23T05:23:40.606584Z",
+  "generated_at": "2026-09-23T20:01:12.137013Z",
   "collection_ok": true,
   "release_ready": false,
   "release_ready_reason": "Active architectural exceptions and red/noisy proof gates remain.",
@@ -2888,7 +2888,7 @@
           "forwarded_arguments": 2
         }
       ],
-      "files_scanned": 1165,
+      "files_scanned": 1166,
       "scan_roots": [
         "orket"
       ],
@@ -2907,17 +2907,17 @@
         {
           "source": "application",
           "target": "adapters",
-          "count": 469
+          "count": 470
         },
         {
           "source": "application",
           "target": "application",
-          "count": 1857
+          "count": 1863
         },
         {
           "source": "application",
           "target": "core",
-          "count": 791
+          "count": 794
         },
         {
           "source": "application",
@@ -6706,10 +6706,10 @@
   },
   "test_taxonomy": {
     "schema_version": "test_taxonomy_report.v1",
-    "tests_total": 5899,
-    "missing_layer_total": 4312,
+    "tests_total": 5935,
+    "missing_layer_total": 4348,
     "by_layer": {
-      "unlabeled": 4312,
+      "unlabeled": 4348,
       "integration": 752,
       "unit": 161,
       "contract": 663,
@@ -7317,7 +7317,7 @@
         "layer": null
       }
     ],
-    "missing_layers_omitted": 4212
+    "missing_layers_omitted": 4248
   },
   "ruff": {
     "proof": "structural_lint",
@@ -7338,7 +7338,7 @@
   },
   "size_inventory": {
     "proof": "structural_ast",
-    "python_files_scanned": 1165,
+    "python_files_scanned": 1166,
     "files_over_400_total": 53,
     "functions_over_70_total": 199,
     "largest_files": [
@@ -7388,7 +7388,7 @@
       },
       {
         "path": "orket/application/workflows/turn_tool_dispatcher.py",
-        "lines": 631
+        "lines": 629
       },
       {
         "path": "orket/runtime/config/provider_runtime_target.py",
@@ -7411,12 +7411,12 @@
         "lines": 566
       },
       {
-        "path": "orket/application/workflows/turn_contract_validator.py",
+        "path": "orket/services/sandbox_orchestrator.py",
         "lines": 564
       },
       {
-        "path": "orket/services/sandbox_orchestrator.py",
-        "lines": 564
+        "path": "orket/application/workflows/turn_contract_validator.py",
+        "lines": 561
       },
       {
         "path": "orket/adapters/storage/async_sandbox_lifecycle_repository.py",
@@ -7452,9 +7452,9 @@
       },
       {
         "path": "orket/application/workflows/turn_tool_dispatcher.py",
-        "line": 101,
-        "name": "execute_tools",
-        "lines": 531
+        "line": 107,
+        "name": "_execute_tools_captured",
+        "lines": 523
       },
       {
         "path": "orket/application/workflows/turn_message_builder.py",
@@ -7478,7 +7478,7 @@
         "path": "orket/application/workflows/turn_executor_ops.py",
         "line": 41,
         "name": "execute_turn",
-        "lines": 320
+        "lines": 326
       },
       {
         "path": "orket/interfaces/routers/settings.py",
@@ -7500,9 +7500,9 @@
       },
       {
         "path": "orket/application/services/orchestrator_turn_context_builder.py",
-        "line": 104,
+        "line": 106,
         "name": "build",
-        "lines": 273
+        "lines": 272
       },
       {
         "path": "orket/interfaces/routers/kernel.py",
@@ -7605,7 +7605,7 @@
       "C:\\Source\\Orket-architectural-truth\\orket\\runtime",
       "C:\\Source\\Orket-architectural-truth\\orket\\interfaces"
     ],
-    "scanned_files": 681,
+    "scanned_files": 682,
     "findings": [
       {
         "path": "C:\\Source\\Orket-architectural-truth\\orket\\runtime\\execution\\execution_pipeline_card_dispatch.py",
@@ -7716,237 +7716,6 @@
     "parse_errors": []
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-22T16:25:36.354584Z",
-      "changed": true,
-      "before_digest": "sha256:97123844e542b179f7e7ecbc2eba034e9cdac2f5c05ad2e041fc637b70c7cf2e",
-      "after_digest": "sha256:59acf3b9690546d2b83782b8c95565c7af0c34dd7fced96c435f5d43791d26a9",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 19,
-        "initial_write": false,
-        "paths_total_previous": 9304,
-        "paths_total_current": 9304,
-        "paths_total_reference": 9304,
-        "churn_paths": 19,
-        "churn_ratio": 0.002042,
-        "sample_paths": [
-          "$.dependency_graph.observed.adapter_effects[9].sha256",
-          "$.dependency_graph.observed.files_scanned",
-          "$.dependency_graph.observed.layer_edges[3].count",
-          "$.generated_at",
-          "$.noop_critical_paths.scanned_files",
-          "$.size_inventory.largest_files[14].lines",
-          "$.size_inventory.largest_functions[7].line",
-          "$.size_inventory.largest_functions[7].lines",
-          "$.size_inventory.largest_functions[7].name",
-          "$.size_inventory.largest_functions[7].path",
-          "$.size_inventory.largest_functions[8].line",
-          "$.size_inventory.largest_functions[8].lines",
-          "$.size_inventory.largest_functions[8].name",
-          "$.size_inventory.largest_functions[8].path",
-          "$.size_inventory.python_files_scanned",
-          "$.test_taxonomy.by_layer.unlabeled",
-          "$.test_taxonomy.missing_layer_total",
-          "$.test_taxonomy.missing_layers_omitted",
-          "$.test_taxonomy.tests_total"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-22T16:31:13.138703Z",
-      "changed": true,
-      "before_digest": "sha256:59acf3b9690546d2b83782b8c95565c7af0c34dd7fced96c435f5d43791d26a9",
-      "after_digest": "sha256:d093df2d0bb17af634cafc09fd04a8078f002312a5e93a2a0f5a83238bb35b3f",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 9,
-        "initial_write": false,
-        "paths_total_previous": 9304,
-        "paths_total_current": 9304,
-        "paths_total_reference": 9304,
-        "churn_paths": 9,
-        "churn_ratio": 0.000967,
-        "sample_paths": [
-          "$.generated_at",
-          "$.size_inventory.largest_files[13].lines",
-          "$.size_inventory.largest_files[13].path",
-          "$.size_inventory.largest_files[14].lines",
-          "$.size_inventory.largest_files[14].path",
-          "$.test_taxonomy.by_layer.unlabeled",
-          "$.test_taxonomy.missing_layer_total",
-          "$.test_taxonomy.missing_layers_omitted",
-          "$.test_taxonomy.tests_total"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-22T16:50:30.873116Z",
-      "changed": true,
-      "before_digest": "sha256:d093df2d0bb17af634cafc09fd04a8078f002312a5e93a2a0f5a83238bb35b3f",
-      "after_digest": "sha256:66418e5e056d0020435249f527515ed2b11f73bbd7d0e3d471a7874a16de66c5",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 9304,
-        "paths_total_current": 9304,
-        "paths_total_reference": 9304,
-        "churn_paths": 1,
-        "churn_ratio": 0.000107,
-        "sample_paths": [
-          "$.generated_at"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-22T17:19:27.422930Z",
-      "changed": true,
-      "before_digest": "sha256:66418e5e056d0020435249f527515ed2b11f73bbd7d0e3d471a7874a16de66c5",
-      "after_digest": "sha256:774b0f6370bb97f4017ab04c8c9495f26568ddcac018698c8ff8e150723e8196",
-      "diff": {
-        "added_paths": 155,
-        "removed_paths": 154,
-        "changed_paths": 666,
-        "initial_write": false,
-        "paths_total_previous": 9304,
-        "paths_total_current": 9337,
-        "paths_total_reference": 9337,
-        "churn_paths": 975,
-        "churn_ratio": 0.104423,
-        "sample_paths": [
-          "$.dependency_graph.observed.adapter_effects[24].declarations.classes.OllamaExtractor@41",
-          "$.dependency_graph.observed.adapter_effects[24].declarations.classes.OpenAIExtractor@27",
-          "$.dependency_graph.observed.adapter_effects[24].declarations.classes.ProviderExtractor@17",
-          "$.dependency_graph.observed.adapter_effects[24].declarations.module[0].line",
-          "$.dependency_graph.observed.adapter_effects[24].declarations.module[0].literal",
-          "$.dependency_graph.observed.adapter_effects[24].module",
-          "$.dependency_graph.observed.adapter_effects[24].path",
-          "$.dependency_graph.observed.adapter_effects[24].sha256",
-          "$.dependency_graph.observed.adapter_effects[24].side_effecting",
-          "$.dependency_graph.observed.adapter_effects[25].declarations.classes.OllamaExtractor@41",
-          "$.dependency_graph.observed.adapter_effects[25].declarations.classes.OpenAIExtractor@27",
-          "$.dependency_graph.observed.adapter_effects[25].declarations.classes.ProviderExtractor@17",
-          "$.dependency_graph.observed.adapter_effects[25].declarations.module[0].line",
-          "$.dependency_graph.observed.adapter_effects[25].declarations.module[0].literal",
-          "$.dependency_graph.observed.adapter_effects[25].module",
-          "$.dependency_graph.observed.adapter_effects[25].path",
-          "$.dependency_graph.observed.adapter_effects[25].sha256",
-          "$.dependency_graph.observed.adapter_effects[25].side_effecting",
-          "$.dependency_graph.observed.adapter_effects[26].declarations.classes.ApiRunLogReader@14",
-          "$.dependency_graph.observed.adapter_effects[26].declarations.module[0].line"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-22T17:32:10.252169Z",
-      "changed": true,
-      "before_digest": "sha256:774b0f6370bb97f4017ab04c8c9495f26568ddcac018698c8ff8e150723e8196",
-      "after_digest": "sha256:7018592b00ffec84abcfd8bcff7a503aba97900f37ff465308e6102a57730eee",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 8,
-        "initial_write": false,
-        "paths_total_previous": 9337,
-        "paths_total_current": 9337,
-        "paths_total_reference": 9337,
-        "churn_paths": 8,
-        "churn_ratio": 0.000857,
-        "sample_paths": [
-          "$.dependency_graph.observed.adapter_effects[24].declarations.module[0].line",
-          "$.dependency_graph.observed.adapter_effects[24].sha256",
-          "$.dependency_graph.observed.effect_declarations.orket.adapters.llm.provider_catalog_client.module[0].line",
-          "$.generated_at",
-          "$.test_taxonomy.by_layer.unlabeled",
-          "$.test_taxonomy.missing_layer_total",
-          "$.test_taxonomy.missing_layers_omitted",
-          "$.test_taxonomy.tests_total"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-22T17:53:07.962918Z",
-      "changed": true,
-      "before_digest": "sha256:7018592b00ffec84abcfd8bcff7a503aba97900f37ff465308e6102a57730eee",
-      "after_digest": "sha256:6705be4398481154ad75a20e371627cfef8fd4829d1b8cf74be94125d996b070",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 9337,
-        "paths_total_current": 9337,
-        "paths_total_reference": 9337,
-        "churn_paths": 1,
-        "churn_ratio": 0.000107,
-        "sample_paths": [
-          "$.generated_at"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-22T18:37:48.755721Z",
-      "changed": true,
-      "before_digest": "sha256:6705be4398481154ad75a20e371627cfef8fd4829d1b8cf74be94125d996b070",
-      "after_digest": "sha256:288124af24b6672e4a8992634e197a4926770e36b3ad0e330bddddb96078e8e1",
-      "diff": {
-        "added_paths": 157,
-        "removed_paths": 155,
-        "changed_paths": 663,
-        "initial_write": false,
-        "paths_total_previous": 9337,
-        "paths_total_current": 9372,
-        "paths_total_reference": 9372,
-        "churn_paths": 975,
-        "churn_ratio": 0.104033,
-        "sample_paths": [
-          "$.dependency_graph.observed.adapter_effects[19].declarations.classes.LocalModelProvider@54",
-          "$.dependency_graph.observed.adapter_effects[19].declarations.classes.ModelResponse@49",
-          "$.dependency_graph.observed.adapter_effects[19].declarations.classes.LocalModelProvider@56",
-          "$.dependency_graph.observed.adapter_effects[19].declarations.classes.ModelResponse@51",
-          "$.dependency_graph.observed.adapter_effects[19].declarations.module[0].line",
-          "$.dependency_graph.observed.adapter_effects[19].sha256",
-          "$.dependency_graph.observed.adapter_effects[24].sha256",
-          "$.dependency_graph.observed.adapter_effects[26].declarations.classes.CapturedOllamaAuth@13",
-          "$.dependency_graph.observed.adapter_effects[26].declarations.module[0].line",
-          "$.dependency_graph.observed.adapter_effects[26].module",
-          "$.dependency_graph.observed.adapter_effects[26].path",
-          "$.dependency_graph.observed.adapter_effects[26].sha256",
-          "$.dependency_graph.observed.adapter_effects[27].declarations.classes.ApiRunLogReader@14",
-          "$.dependency_graph.observed.adapter_effects[27].declarations.module[0].line",
-          "$.dependency_graph.observed.adapter_effects[27].module",
-          "$.dependency_graph.observed.adapter_effects[27].path",
-          "$.dependency_graph.observed.adapter_effects[27].sha256",
-          "$.dependency_graph.observed.adapter_effects[28].declarations.classes.ApiWorkspaceReader@20",
-          "$.dependency_graph.observed.adapter_effects[28].declarations.classes.DirectoryEntry@14",
-          "$.dependency_graph.observed.adapter_effects[28].declarations.classes.ApiRunLogReader@14"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-22T18:54:03.126703Z",
-      "changed": true,
-      "before_digest": "sha256:288124af24b6672e4a8992634e197a4926770e36b3ad0e330bddddb96078e8e1",
-      "after_digest": "sha256:e372964dfa5604fabc257f98b90f9fda3bbbd21467119a76183a3fb33c45332c",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 9372,
-        "paths_total_current": 9372,
-        "paths_total_reference": 9372,
-        "churn_paths": 1,
-        "churn_ratio": 0.000107,
-        "sample_paths": [
-          "$.generated_at"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-22T19:24:29.070568Z",
       "changed": true,
@@ -8510,6 +8279,189 @@
       "changed": true,
       "before_digest": "sha256:3840ebc97d2ab8edfb69664d94fbffbc74b5c54fc828763b1b338f20ead2315b",
       "after_digest": "sha256:1438f43ff37bad3dc3dbf4d8b16f010a75df24b938aad00393e89d6627ef0c4e",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 9372,
+        "paths_total_current": 9372,
+        "paths_total_reference": 9372,
+        "churn_paths": 1,
+        "churn_ratio": 0.000107,
+        "sample_paths": [
+          "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-23T16:06:35.931121Z",
+      "changed": true,
+      "before_digest": "sha256:1438f43ff37bad3dc3dbf4d8b16f010a75df24b938aad00393e89d6627ef0c4e",
+      "after_digest": "sha256:92a021ed5ea4a39f3998d295f537f42dd10e1092159afdde3f889d3e019a60dc",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 21,
+        "initial_write": false,
+        "paths_total_previous": 9372,
+        "paths_total_current": 9372,
+        "paths_total_reference": 9372,
+        "churn_paths": 21,
+        "churn_ratio": 0.002241,
+        "sample_paths": [
+          "$.dependency_graph.observed.files_scanned",
+          "$.dependency_graph.observed.layer_edges[2].count",
+          "$.dependency_graph.observed.layer_edges[3].count",
+          "$.dependency_graph.observed.layer_edges[4].count",
+          "$.generated_at",
+          "$.noop_critical_paths.scanned_files",
+          "$.size_inventory.largest_files[11].lines",
+          "$.size_inventory.largest_files[17].path",
+          "$.size_inventory.largest_files[18].lines",
+          "$.size_inventory.largest_files[18].path",
+          "$.size_inventory.largest_functions[1].line",
+          "$.size_inventory.largest_functions[1].lines",
+          "$.size_inventory.largest_functions[1].name",
+          "$.size_inventory.largest_functions[5].lines",
+          "$.size_inventory.largest_functions[9].line",
+          "$.size_inventory.largest_functions[9].lines",
+          "$.size_inventory.python_files_scanned",
+          "$.test_taxonomy.by_layer.unlabeled",
+          "$.test_taxonomy.missing_layer_total",
+          "$.test_taxonomy.missing_layers_omitted"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-23T16:12:19.526887Z",
+      "changed": true,
+      "before_digest": "sha256:92a021ed5ea4a39f3998d295f537f42dd10e1092159afdde3f889d3e019a60dc",
+      "after_digest": "sha256:ad45517a854fcddf501d5bb47b3cf044da8fb7dea5dfeefaa775e7b3ee987f17",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 9372,
+        "paths_total_current": 9372,
+        "paths_total_reference": 9372,
+        "churn_paths": 1,
+        "churn_ratio": 0.000107,
+        "sample_paths": [
+          "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-23T16:54:14.546347Z",
+      "changed": true,
+      "before_digest": "sha256:ad45517a854fcddf501d5bb47b3cf044da8fb7dea5dfeefaa775e7b3ee987f17",
+      "after_digest": "sha256:a5bc989edeb76c6b22cace12a0c6f390e031558de2c6a7967ba7433e15cde3d8",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 5,
+        "initial_write": false,
+        "paths_total_previous": 9372,
+        "paths_total_current": 9372,
+        "paths_total_reference": 9372,
+        "churn_paths": 5,
+        "churn_ratio": 0.000534,
+        "sample_paths": [
+          "$.generated_at",
+          "$.test_taxonomy.by_layer.unlabeled",
+          "$.test_taxonomy.missing_layer_total",
+          "$.test_taxonomy.missing_layers_omitted",
+          "$.test_taxonomy.tests_total"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-23T17:13:52.966823Z",
+      "changed": true,
+      "before_digest": "sha256:a5bc989edeb76c6b22cace12a0c6f390e031558de2c6a7967ba7433e15cde3d8",
+      "after_digest": "sha256:5a48ad2bf51c3b4b48e02fbee180f4891963d91e57880a302fcd155aa6fd4fc7",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 9372,
+        "paths_total_current": 9372,
+        "paths_total_reference": 9372,
+        "churn_paths": 1,
+        "churn_ratio": 0.000107,
+        "sample_paths": [
+          "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-23T18:19:05.515515Z",
+      "changed": true,
+      "before_digest": "sha256:5a48ad2bf51c3b4b48e02fbee180f4891963d91e57880a302fcd155aa6fd4fc7",
+      "after_digest": "sha256:57ac440d6ef7f000823596283537b4812990b6446a654232783f7de0ba7c5ddc",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 9372,
+        "paths_total_current": 9372,
+        "paths_total_reference": 9372,
+        "churn_paths": 1,
+        "churn_ratio": 0.000107,
+        "sample_paths": [
+          "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-23T18:35:39.488415Z",
+      "changed": true,
+      "before_digest": "sha256:57ac440d6ef7f000823596283537b4812990b6446a654232783f7de0ba7c5ddc",
+      "after_digest": "sha256:a0d94ebc6eda356feba0958c04380be280d5eca1625e6947017327f81ceedb64",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 9372,
+        "paths_total_current": 9372,
+        "paths_total_reference": 9372,
+        "churn_paths": 1,
+        "churn_ratio": 0.000107,
+        "sample_paths": [
+          "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-23T19:21:19.025093Z",
+      "changed": true,
+      "before_digest": "sha256:a0d94ebc6eda356feba0958c04380be280d5eca1625e6947017327f81ceedb64",
+      "after_digest": "sha256:578ffb376810ecc1a53a0c081ecdffd942a768c4453407311916e9172fc573dd",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 9372,
+        "paths_total_current": 9372,
+        "paths_total_reference": 9372,
+        "churn_paths": 1,
+        "churn_ratio": 0.000107,
+        "sample_paths": [
+          "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-23T20:01:12.145226Z",
+      "changed": true,
+      "before_digest": "sha256:578ffb376810ecc1a53a0c081ecdffd942a768c4453407311916e9172fc573dd",
+      "after_digest": "sha256:73b1d9c8c6fb3348cd0516cba0c269a2b6b0b3d1c85b3f33aa0b7a368b4c69e9",
       "diff": {
         "added_paths": 0,
         "removed_paths": 0,

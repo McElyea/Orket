@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
@@ -13,28 +14,17 @@ class PathResolver:
     _PATH_TOOL_NAMES = {"read_file", "write_file", "create_directory", "list_directory", "list_dir"}
 
     @staticmethod
-    def required_read_paths(context: dict[str, Any], workspace: Path) -> list[str]:
-        existing, _ = PathResolver.partition_required_read_paths(context, workspace)
-        return existing
-
-    @staticmethod
-    def missing_required_read_paths(context: dict[str, Any], workspace: Path) -> list[str]:
-        _, missing = PathResolver.partition_required_read_paths(context, workspace)
-        return missing
-
-    @staticmethod
-    def partition_required_read_paths(context: dict[str, Any], workspace: Path) -> tuple[list[str], list[str]]:
-        required_paths = PathResolver._normalized_required_read_paths(context)
-        if not required_paths:
-            return [], []
-
-        return PathResolver._partition_required_read_paths(required_paths, workspace)
+    def normalized_required_read_paths(context: dict[str, Any]) -> tuple[str, ...]:
+        return tuple(
+            str(path).strip()
+            for path in (context.get("required_read_paths") or [])
+            if str(path).strip()
+        )
 
     @staticmethod
     def partition_governed_required_read_paths(
-        context: dict[str, Any], workspace: Path,
-    ) -> tuple[list[str], list[str]]:
-        required_paths = PathResolver._normalized_required_read_paths(context)
+        required_paths: Sequence[str], workspace: Path,
+    ) -> tuple[tuple[str, ...], tuple[str, ...]]:
         for raw_path in required_paths:
             detail = PathResolver._path_violation(raw_path=raw_path, workspace=workspace, tool_name="read_file")
             if detail:
@@ -42,12 +32,25 @@ class PathResolver:
         return PathResolver._partition_required_read_paths(required_paths, workspace)
 
     @staticmethod
-    def _normalized_required_read_paths(context: dict[str, Any]) -> list[str]:
-        return [str(path).strip() for path in (context.get("required_read_paths") or []) if str(path).strip()]
+    def partition_required_read_paths(
+        required_paths: Sequence[str], workspace: Path,
+    ) -> tuple[tuple[str, ...], tuple[str, ...]]:
+        return PathResolver._partition_required_read_paths(required_paths, workspace)
 
     @staticmethod
-    def _partition_required_read_paths(required_paths: list[str], workspace: Path) -> tuple[list[str], list[str]]:
+    def available_required_read_paths(
+        required_paths: Sequence[str], workspace: Path,
+    ) -> tuple[str, ...]:
+        return tuple(
+            rel_path
+            for rel_path in required_paths
+            if (workspace / rel_path).resolve().exists()
+        )
 
+    @staticmethod
+    def _partition_required_read_paths(
+        required_paths: Sequence[str], workspace: Path,
+    ) -> tuple[tuple[str, ...], tuple[str, ...]]:
         existing: list[str] = []
         missing: list[str] = []
         for rel_path in required_paths:
@@ -56,7 +59,7 @@ class PathResolver:
                 existing.append(rel_path)
             else:
                 missing.append(rel_path)
-        return existing, missing
+        return tuple(existing), tuple(missing)
 
     @staticmethod
     def required_write_paths(context: dict[str, Any]) -> list[str]:
@@ -81,6 +84,10 @@ class PathResolver:
         if not raw_path:
             return f"{normalized_tool}:path_missing"
         return PathResolver._path_violation(raw_path=raw_path, workspace=workspace, tool_name=normalized_tool)
+
+    @staticmethod
+    def is_path_tool(tool_name: str) -> bool:
+        return str(tool_name or "").strip() in PathResolver._PATH_TOOL_NAMES
 
     @staticmethod
     def _path_violation(*, raw_path: str, workspace: Path, tool_name: str) -> str | None:

@@ -8,6 +8,7 @@ from orket.application.middleware import InterceptorKind, MiddlewareOutcome, Tur
 from orket.application.services.tool_gate_service import ToolGate
 from orket.application.services.turn_tool_control_plane_service import build_turn_tool_control_plane_service
 from orket.application.workflows.turn_executor import TurnExecutor
+from orket.application.workflows.turn_read_context import RequiredReadObservation
 from orket.core.domain import AttemptState, RunState
 from orket.core.domain.state_machine import StateMachine
 from orket.exceptions import ModelConnectionError
@@ -1538,6 +1539,7 @@ def test_build_corrective_instruction_includes_rule_specific_hints(tmp_path):
             "required_action_tools": ["update_issue_status"],
             "required_statuses": ["code_review"],
         },
+        RequiredReadObservation(existing=(), missing=()),
     )
     assert "Rule-specific fixes:" in instruction
     assert "SECURITY.PATH_TRAVERSAL" in instruction

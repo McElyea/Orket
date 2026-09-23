@@ -95,7 +95,7 @@ async def test_restart_recovers_after_outcome_inspection_failure(test_root, work
 @pytest.mark.asyncio
 @pytest.mark.parametrize("stage", ["workload_unknown", "outcome_failed"])
 # Layer: integration
-async def test_native_restart_preserves_unknown_or_failed_workload(test_root, workspace, db_path, stage):
+async def test_native_restart_preserves_unknown_or_failed_workload(test_root, workspace, db_path, stage, record_property):
     child = await launch(test_root, workspace, db_path, "kill", stage)
     resumed = []
     try:
@@ -105,10 +105,15 @@ async def test_native_restart_preserves_unknown_or_failed_workload(test_root, wo
         before = await retained_rows(db_path)
         resumed = [await launch(test_root, workspace, db_path, "resume", stage) for _ in range(2)]
         replies = await asyncio.wait_for(asyncio.gather(*(p.communicate() for p in resumed)), timeout=50)
+        record_property("native_resume_observations", json.dumps([
+            {"pid": process.pid, "exit": process.returncode,
+             "stdout": stdout.decode(errors="replace"), "stderr": stderr.decode(errors="replace")}
+            for process, (stdout, stderr) in zip(resumed, replies, strict=True)
+        ], sort_keys=True))
         expected = "E_EPIC_WORKLOAD_OUTCOME_UNCERTAIN" if stage == "workload_unknown" else "retained native workload failure"
         for process, (_stdout, stderr) in zip(resumed, replies, strict=True):
             assert process.returncode != 0
-            assert expected in stderr.decode(errors="replace")
+            assert expected in stderr.decode(errors="replace"), stderr.decode(errors="replace")
         after = await retained_rows(db_path)
         if stage == "workload_unknown":
             assert after == before

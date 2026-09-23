@@ -252,8 +252,8 @@ class Orchestrator:
     async def _create_pending_tool_approval_request(self, *args: Any, **kwargs: Any) -> Any:
         return await orchestrator_ops._create_pending_tool_approval_request(self, *args, **kwargs)
 
-    def _build_turn_context(self, *args: Any, **kwargs: Any) -> Any:
-        return orchestrator_ops._build_turn_context(self, *args, **kwargs)
+    async def _build_turn_context(self, *args: Any, **kwargs: Any) -> Any:
+        return await orchestrator_ops._build_turn_context(self, *args, **kwargs)
 
     async def _build_dependency_context(self, *args: Any, **kwargs: Any) -> Any:
         return await orchestrator_ops._build_dependency_context(self, *args, **kwargs)

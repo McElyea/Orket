@@ -38,7 +38,7 @@ async def test_verifier_prompt_uses_application_setting(tmp_path, monkeypatch, c
         monkeypatch.setenv("ORKET_DISABLE_RUNTIME_VERIFIER", "true" if disabled else "false")
     orchestrator = _orchestrator(tmp_path, rules)
     issue = IssueConfig(id="COD-1", summary="Sum", seat="coder")
-    context = orchestrator._build_turn_context(
+    context = await orchestrator._build_turn_context(
         run_id="prompt-contract", issue=issue, seat_name="coder", roles_to_load=["coder"],
         turn_status=CardStatus.IN_PROGRESS, selected_model="unused-model",
     )
@@ -70,17 +70,18 @@ async def test_explicit_verifier_command_does_not_advertise_inferred_no_argument
     assert "will execute exactly: python agent_output/main.py" not in rendered
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize("disabled", [False, True])
 @pytest.mark.parametrize("explicit", [False, True])
 # Layer: contract
-def test_verifier_setting_filters_only_inferred_support_reads(tmp_path, monkeypatch, disabled, explicit):
+async def test_verifier_setting_filters_only_inferred_support_reads(tmp_path, monkeypatch, disabled, explicit):
     monkeypatch.setenv("ORKET_DISABLE_RUNTIME_VERIFIER", str(disabled).lower())
     orchestrator = _orchestrator(tmp_path, {})
     support_path = "agent_output/verification/runtime_verification.json"
     params = {"turn_contract": {"required_read_paths": [support_path]}} if explicit else {}
     issue = IssueConfig(id="REV-1", summary="Review", seat="integrity_guard" if explicit else "code_reviewer",
                         params=params)
-    context = orchestrator._build_turn_context(
+    context = await orchestrator._build_turn_context(
         run_id="prompt-contract", issue=issue, seat_name="integrity_guard", roles_to_load=["integrity_guard"],
         turn_status=CardStatus.AWAITING_GUARD_REVIEW, selected_model="unused-model",
     )

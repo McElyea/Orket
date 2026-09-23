@@ -404,10 +404,6 @@ def _is_tool_only_truncated_payload(turn: ExecutionTurn, residue: str) -> bool:
     return bool(compact_residue) and compact_residue[0] in {"{", "["}
 
 
-def required_read_paths(context: dict[str, Any], workspace: Any) -> list[str]:
-    return PathResolver.required_read_paths(context, workspace)
-
-
 def required_write_paths(context: dict[str, Any]) -> list[str]:
     return PathResolver.required_write_paths(context)
 

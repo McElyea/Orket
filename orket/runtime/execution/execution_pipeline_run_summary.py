@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from orket.core.contracts.provider_runtime import provider_from_environment
 from orket.logging import log_event
-from orket.runtime.config import defaults
 from orket.runtime.run_start_artifacts import validate_run_identity_projection
 from orket.runtime.run_summary import (
     PACKET1_MISSING_TOKEN,
@@ -33,6 +32,7 @@ class ExecutionPipelineRunSummaryMixin:
     if TYPE_CHECKING:
         workspace: Path
         artifact_exporter: Any
+        runtime_context: Any
 
         async def _resolve_packet2_repair_entries(self, *, run_id: str) -> list[dict[str, Any]]: ...
 
@@ -87,9 +87,12 @@ class ExecutionPipelineRunSummaryMixin:
         intended_model: str | None,
         runtime_telemetry: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        provider = defaults.configured_provider()
-        configured_profile = self._normalize_packet1_token(os.environ.get("ORKET_LOCAL_PROMPTING_PROFILE_ID"))
-        fallback_profile = self._normalize_packet1_token(os.environ.get("ORKET_LOCAL_PROMPTING_FALLBACK_PROFILE_ID"))
+        environment = self.runtime_context.construction_inputs.environment
+        provider = provider_from_environment(environment)
+        configured_profile = self._normalize_packet1_token(environment.get("ORKET_LOCAL_PROMPTING_PROFILE_ID"))
+        fallback_profile = self._normalize_packet1_token(
+            environment.get("ORKET_LOCAL_PROMPTING_FALLBACK_PROFILE_ID")
+        )
         telemetry = dict(runtime_telemetry or {})
         intended_model_token = self._normalize_packet1_token(intended_model) or self._normalize_packet1_token(
             telemetry.get("requested_model")

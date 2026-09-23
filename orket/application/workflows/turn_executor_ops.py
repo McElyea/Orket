@@ -65,6 +65,10 @@ async def execute_turn(
     current_turn = None
     prompt_hash = ""
 
+    def adopt_dispatch_turn(captured_turn: Any) -> None:
+        nonlocal current_turn
+        current_turn = captured_turn
+
     async def emit_failure(error: str, failure_type: str, turn_override: Any = None) -> None:
         await emit_turn_failure_traces(
             executor=executor,
@@ -165,12 +169,14 @@ async def execute_turn(
         )
 
         if turn.tool_calls:
-            await executor.tool_dispatcher.execute_tools(
+            turn = await executor.tool_dispatcher.execute_tools(
                 turn=turn,
                 toolbox=toolbox,
                 context=context,
                 issue=issue,
+                on_turn_captured=adopt_dispatch_turn,
             )
+            current_turn = turn
         else:
             log_event(
                 "turn_no_tool_calls",

@@ -1,7 +1,7 @@
 # Architectural Truth Remediation Plan
 
 Date: 2026-07-29
-Last updated: 2026-09-22
+Last updated: 2026-09-23
 Status: Active implementation plan; scoped BT-1 through BT-5 accepted; C/D is the next ordered gate
 Roadmap state: Priority Now
 Owner: Orket Core
@@ -12521,9 +12521,9 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.100 MessageBuilder input/read/log ownership boundary. Next is the shared
-required-read metadata boundary across prompt-context construction, response validation,
-corrective prompts and protocol preflight, preserving their distinct admission semantics. Preserve 0.6.98 artifact
+0.6.101 shared required-input and Packet-1 construction-intent boundary. Next is
+turn artifact publication with coherent captured identity/input ownership across response,
+prompt, parser, checkpoint and memory routes; its prepared probe remains unexecuted. Preserve 0.6.98 artifact
 and source-attribution ownership, 0.6.97 interrupted connector logging,
 0.6.96 Gitea export ownership, 0.6.95 short HTTP ownership, 0.6.94 Gitea request
 inputs, 0.6.93 Gitea HTTP composition and all earlier accepted behavior, including
@@ -12551,7 +12551,7 @@ and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
 Preserve every failed and
 passing source/native observation and the historical clock diagnosis. Canonical
-Ruff has 88 existing findings and zero introduced findings at .100. The prior stale benchmark expectation passes in the
+Ruff has 88 existing findings and zero introduced findings at .101. The prior stale benchmark expectation passes in the
 new source/native selection. The unmodified published .39 complete rerun has
 7,260 passes, three failures and 89 skips; its coverage is 84.56120595327887%
 against the unchanged 89% gate. The two parent-Git-dependent fixture failures and
@@ -23418,3 +23418,315 @@ is claimed. Retirement still requires explicit user acceptance.
 
 Authority: docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md and the .100
 contract delta. Proof root: .tmp/d-message-read-ownership/.
+
+
+#### .101 required-input ownership opening (2026-09-22; repair active)
+
+Responsible maintainer: Codex for Orket Core. Published .100 is commit
+43ca104a4022c706727bebd21436c0f88810ac67; annotated tag, exact remote refs, clean
+worktree and checkpoint 8ca7bbe561766c6a118f5f61ae1178b1e98e1f93ea786afe936523042c42835f
+verified before this opening. No historical clean-HEAD assertions were rerun.
+
+Three exact prepared probe copies now execute under tests/integration so the
+existing ledger fixtures apply. Original ignored drafts remain unchanged; the
+unreviewed Packet-1 draft remains unexecuted. The .100 preparation receipt remains
+an accurate historical unexecuted observation, not retroactive acceptance.
+
+Matched source and byte-verified installed .100: 12 cases, five failures, seven
+passes, no errors/skips. Protocol required-read classification, submitted tool-path
+validation and response validation each block independent real SQLite work while
+the first relevant native resolve is held. Held timings range 0.813997600 to
+0.825244200 seconds against the unchanged 0.5-second bound. Healthy metadata,
+legacy classification and submitted traversal/absolute/real-symlink refusal controls
+pass. These are direct-route metadata counterexamples, not full executor or native
+cancellation-lifetime proof; single-declaration controls do not independently prove
+required-read cardinality.
+
+Packet-1 physical summaries match their SQLite projections. With environment A at
+construction, B before run and C during controlled execution, start intent records
+provider B and final/physical intent records provider/profile C. Controlled actual
+telemetry remains distinct. The initial nominal healthy control also fails because
+its draft incorrectly expects the fallback profile at start before any fallback
+telemetry exists. Existing precedence correctly uses default there. All start,
+final, physical and telemetry values were recorded before intent assertions, so the
+first failure does not hide later observations.
+
+Separate phase-aware fixture correction: source and installed each run two cases,
+one healthy pass and one drift failure, no errors/skips. Start expects default;
+final/physical expect A's fallback profile after controlled fallback telemetry.
+Provider capture, physical/ledger equality and telemetry assertions remain intact.
+No runtime change was needed for the healthy control; preserve both original
+failures and these corrected runs without inventing a corrected 12-case aggregate.
+
+Continue canonical D with one policy authority and existing native owners for
+shared required-read metadata, bounded captured inputs and per-attempt validation.
+Keep governed builder refusal, legacy regular-file classification, context
+exists-only availability and submitted-path admission distinct. Preserve each
+tool's policy/compatibility/workspace/gate/skill/approval order. Independent D2/D4
+Packet-1 repair must consume the existing runtime construction environment and
+preserve profile and actual-telemetry precedence. Requirements/spec deltas precede
+implementation; all acceptance remains pending at this opening.
+
+Proof root: .tmp/d-required-input-ownership/. Models are controlled fixtures, not
+provider inference. The .95 Linux clock blocker and every wider D/E/CAP, full 89%
+coverage, hosted Quality and release-readiness limit remain unchanged. No whole-lane
+completion or retirement is claimed.
+
+#### .101 full-source failure and bounded recovery (2026-09-23; acceptance pending)
+
+The first frozen candidate completed a fresh build and source environment, then
+failed its full selected source run: 2,865 cases, five failures, 2,860 passes, no
+errors/skips, unchanged candidate inputs; pytest-reported 544.17s (JUnit 543.836s) and process 547.015s.
+No installed .101 cell ran. The original campaign and all 26 frozen
+`.tmp/d_required_*.py` helpers remain immutable under
+`.tmp/d-required-input-ownership/`. The corrected candidate uses the separate
+`.tmp/d-required-input-recovery/` root and requires fresh build/source/installed
+acceptance. This entry is a failure disposition, not completion evidence.
+
+Two ODR continuation fixtures supplied SimpleNamespace dialects where the explicit
+capture contract now requires DialectConfig. They now use the real schema without
+changing their assertions or identities. CURRENT_AUTHORITY's nested last_updated
+still said September 22 while its heading said September 23; the nested value is
+corrected. Two concurrent native restart cases failed on
+`E_SETTINGS_UNCERTAIN:owner_busy` during automatic pipeline construction instead
+of reaching the retained workload outcome. Additional child stdout/stderr/exit
+properties preserve complete diagnostics without changing restart concurrency,
+outcome assertions or deadlines. That two-case diagnostic produced one failure
+and one pass, confirming intermittent preference-migration lock contention.
+
+The newly introduced native pipeline capture unnecessarily admitted preference
+migration even though this route consumes only root, environment and settings.
+The native lock correctly refused concurrent ownership. Recovery narrows that
+new capture through the same RuntimeConstructionInputs authority. Explicitly
+unobserved preferences use None and refuse access or binding; they are not an
+empty observed object. Default full capture, supplied full inputs, and published
+.100 async factory capture retain their behavior. In particular, the existing
+test_runtime_factory_input_capture preference assertion remains unchanged.
+Locks, retries, resource owners, restart concurrency and budgets are unchanged.
+
+A deterministic native admission draft first produced two setup errors outside
+the tests tree because its fixtures were unavailable. An exact maintained copy
+then produced two failures: the held-lock failure and a healthy fixture error
+that expected SELECT 42 alone to create a nonempty SQLite file. The maintained
+control now creates, commits and reads a real row while retaining that physical
+file assertion. Before runtime repair, it produced one healthy pass and one
+held-lock failure; settings/preferences bytes remained exact and the lock owner
+was drained. This post-initialization SQLite check establishes bounded database
+health, not independent responsiveness during construction. All three phases and
+the original draft bytes remain retained; none is installed repair acceptance.
+
+The earlier focused candidate observation remains 320 cases, 14 failures and 306
+passes. Thirteen dialect fixtures were mechanically migrated to DialectConfig;
+one new Packet-1 fixture was corrected to expect actual telemetry's profile under
+the already published precedence rule. Corrected and frozen focused observations
+each passed all 320 cases. Two initial validator syntax failures and the subsequent
+five import-order findings also remain retained. No failed observation is replaced
+by a corrected aggregate. The .95 Linux clock blocker and broader D/E/CAP limits
+remain unchanged; final recovery proof is still pending.
+
+#### .101 final-byte proof preparation (2026-09-23; acceptance pending)
+
+The corrected recovery candidate passed all 349 focused cases and its complete
+2,874-case source run (539.777s JUnit; 540.12s pytest-reported), with unchanged inputs and no failures,
+errors or skips. Canonical C and scoped lint/size/metadata/hygiene checks passed;
+Ruff remained 88 existing findings with none introduced. The case set retains
+all 2,865 prior identities and adds six preference-selection controls plus three
+existing runtime-factory cases newly included in this selection.
+
+Before installed admission, the root's index review found mixed CRLF/LF endings
+in the modified test_epic_outcome_recovery.py. The repository requires LF and the
+existing checkpoint requires tested Python bytes to match the index. Only the
+campaign scheduler was terminated; the source owner and tests drained unchanged.
+All source owners were verified terminal, and neither installed cell ran. Two
+initial stop guards refused before mutation because the private interpreter has
+an extra launcher process; exact PID, creation-time and ancestry identification
+then selected the scheduler. Receipts and all observations remain under
+.tmp/d-required-input-recovery/. That campaign is not installed acceptance.
+
+Only CRLF-to-LF normalization changed the test; its syntax tree is identical and
+all other candidate file bytes were checked unchanged at that boundary. Fresh
+final acceptance uses .tmp/d-required-input-final/ and a new source environment.
+Its configured wrappers retain the same proof owners, exact identities, package
+checks, SQLite bound and budgets, add an LF precondition, and bind both earlier
+proof roots without modifying them. Final source and both Windows installed
+cells are still required. No .101 publication or wider completion is claimed.
+
+
+#### .101 Shared required-input and Packet-1 acceptance checkpoint (2026-09-23)
+
+Responsible maintainer: Codex for Orket Core. Canonical D2/D3 after published .100.
+The explicit observations, captured validation/dispatch commands, original result
+sinks and construction-bound Packet-1 intent described in the opening and contract
+delta now pass scoped source and installed acceptance. Native automatic pipeline
+capture excludes only unused preferences through the existing construction owner;
+default full capture and published .100 async capture retain their behavior.
+No lock retry, restart serialization, empty observed preferences, path-policy
+relaxation or second resource owner is introduced. Per-tool admission order and
+actual-telemetry precedence remain authoritative. Unknown extension values and
+intentional output sinks retain their documented borrowed-identity ceilings.
+
+The LF final-byte campaign failed 2,874 total cases: 2,873 passed and one failed.
+The strict TLS fixture observed a zero-byte pre-header EOF at teardown after the
+provider logged a timeout retry; response/authentication assertions, client closure
+and server-owner drainage had passed. JUnit time was 540.482s (pytest reported
+540.82s). The unchanged 18-case TLS diagnostic passed; the affected case took
+0.046s versus 3.502s in the failed full run. Connection-to-retry correlation remains
+an inference and the exact latency cause is unproved. No timeout, disconnect
+assertion, product, test or candidate byte changed for the retry.
+
+The separate retry root uses the same frozen candidate and a fresh bound build.
+Archive-container byte identity with the earlier build is not claimed. The
+earlier 349-case focused pass and structural verdict are explicitly inherited,
+with original physical paths/hash bindings; they are not fresh retry executions.
+The first 2,865-case/five-failure campaign, stopped 2,874-pass recovery campaign,
+LF TLS failure, original controls, fixture corrections, syntax/lint observations
+and both refused scheduler-stop guards all remain separate retained observations.
+
+| Cell | Tests / failures / errors / skips | JUnit seconds | Installed origins |
+|---|---|---|---|
+| Fresh source | 2874 / 0 / 0 / 0 | 539.742 | source |
+| Installed a101-win-py311 | 2874 / 0 / 0 / 0 | 540.367 | 1058 |
+| Installed a101-win-py312 | 2874 / 0 / 0 / 0 | 642.441 | 1058 |
+
+All 2,668 published .100 identities remain, with 206 additional identities across
+282 selected modules. Each cell records all 303 SQLite observations below the
+unchanged 0.5s bound; maximum 0.161210700s. Budgets remain source/native/outer
+1500/1800/2100s. Source, sdist and wheel match for 1,166 core Python files and 20
+data files (1,186 total), with 29 SDK Python sources counted separately. Both
+installed cells read every core member back against the wheel. The harness binds
+2,453 support inputs. All candidate bytes stayed frozen throughout this matrix.
+
+Canonical C passes for 1,166 modules, 3,839 edges and six bounded dynamic routes,
+without a new exception. Ruff remains 88 existing findings, zero introduced.
+Scoped size/lint, authority, metadata and hygiene checks pass. AC-01 through AC-08
+and AC-10 pass within this scope; AC-09 remains partial. Full 89% coverage and
+release readiness remain unproved. The retained prerequisite verification checks
+23,146 published hashes, nine handoff bindings and 82,288 candidate evidence files.
+Original C:/Source/Orket is unchanged. Ignored proof stores remain local; Git
+publication does not transfer them. Final baseline/metadata and exact index/remote
+publication receipts are required before the version is considered published.
+
+Continue D with turn artifact publication and coherent captured identity/input
+ownership across response, prompt, parser, checkpoint and memory routes. The
+seven-case response draft remains unexecuted, not acceptance evidence. Read-only
+reviews identify response evidence/parser input drift, late identity re-reads and
+the required existing-clock plumbing; they do not establish runtime repair.
+Preserve separate document admission, existing writer/native owners, current
+parse-completion timing and control-plane order. Whole custom-context capture,
+atomic artifact bundles, hard native deadlines and hostile containment are unproved.
+
+Retain the .95 Linux blocker: 240.019511342s elapsed, 25.211878083s synchronized
+quiet against 60s, and -6.018610816/+6.026590404s clock steps against 0.01s. Receipt:
+.tmp/d-short-http-ownership/linux-clock-preflight.json, SHA 2002c0e34e9d889dec2d8ff5f409f03805d48511d7d7496b5fcb9ea110370d0e.
+No fresh Linux clock/application observation or settings change is claimed.
+Wider D2/D3/D4, transitive/lazy TLS/logging/native-worker limits, E1/E2, ProductFlow
+replay, legacy cutover, actual selected-provider proof and CAP-1/2/3 remain open.
+No hosted Quality acceptance, main merge, whole-plan completion or lane retirement.
+Explicit user acceptance remains required to retire the lane.
+
+Authority: PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md,
+TRUTHFUL_RUNTIME_PACKET1_CONTRACT.md, SETTINGS_INPUT_OWNERSHIP.md and the .101 delta.
+Final proof: .tmp/d-required-input-retry/. Historical roots:
+.tmp/d-required-input-ownership/, .tmp/d-required-input-recovery/ and
+.tmp/d-required-input-final/. Timing labels above distinguish JUnit from pytest's
+console durations; original measurement files and all candidate snapshots remain.
+
+
+#### .101 staged-index refusal and fresh publication proof (2026-09-23)
+
+The preceding complete matrix remains a passing historical observation. Its
+publication gate then refused an extra terminal blank line in the newly added
+test_protocol_path_ownership.py. The earlier unstaged whitespace check did not
+inspect that untracked test. Exact refused bytes, Git output and the one-byte
+correction are retained under .tmp/d-required-input-retry/; the syntax tree is
+unchanged. No commit or version tag was created at that boundary.
+
+Fresh proof now uses .tmp/d-required-input-publish/, a new source environment and
+a101-final Windows cells. All candidate files are staged and checked for exact
+working-tree/index byte identity and cached whitespace before proof. Known
+documentation line endings are normalized before that freeze. Fresh focused,
+source and both installed observations are required for the corrected bytes;
+the historical passing matrix cannot substitute for them. Original failures,
+all retained evidence, identities, budgets and claim ceilings remain unchanged.
+
+
+#### .101 final-byte PID fixture failure and correction (2026-09-23)
+
+The fresh publication-byte matrix at .tmp/d-required-input-publish/ passed
+2,874 cases in source and native Windows 3.11. Native Windows 3.12 observed
+2,873 passes and one failure: the repeated-cancellation Gitea command fixture
+read an empty active.pid after its existence barrier. The child had created
+the final name before write_text completed. This failure preceded the explicit
+repeated cancellation and SQLite observation; it is not lifetime acceptance.
+JUnit times were 538.083s, 539.664s and 643.324s respectively. The exact failed
+test, campaign, reports and 59,282 physical evidence hashes remain retained.
+The native owner was reaped, its harness reported no children, the later PID
+readback identifies an absent child, and late.txt is absent.
+
+The fixture now closes a sibling PID staging file before same-directory replace
+publishes active.pid. An added assertion checks that the staging name is gone.
+All existing IDs, cancellation sequences, five-second barriers/drains, timeout
+reschedule, cleanup assertions and the independent SQLite bound remain unchanged.
+This is fixture readiness publication, not durable storage or a new production
+process guarantee. Fresh focused and complete source/installed proof is pending
+at .tmp/d-required-input-pid/ using a101-pid native cells. No .101 commit, tag or
+publication is authorized by a failed or historical passing matrix.
+
+
+#### .101 Final publication-byte acceptance (2026-09-23)
+
+Responsible maintainer: Codex for Orket Core. Observed path: primary. Result:
+scoped acceptance success; the complete remediation goal remains partial.
+The corrected candidate passes a fresh 361-case focused run (64.067s
+JUnit) and the full source/installed matrix below. The complete 61-file staged
+candidate had exact LF working-tree/index bytes and passed cached whitespace
+before proof. All candidate bytes and proof helpers stayed frozen during proof.
+Fresh canonical C, size/lint, metadata and hygiene observations also pass.
+
+| Cell | Tests / failures / errors / skips | JUnit seconds | Installed origins |
+|---|---|---|---|
+| Fresh source | 2874 / 0 / 0 / 0 | 537.542 | source |
+| Installed a101-pid-win-py311 | 2874 / 0 / 0 / 0 | 541.450 | 1058 |
+| Installed a101-pid-win-py312 | 2874 / 0 / 0 / 0 | 641.709 | 1058 |
+
+All 2,668 published .100 identities remain across 282 selected modules. All 303
+independent SQLite observations per cell satisfy the unchanged 0.5s bound;
+maximum 0.165016600s. Budgets remain 1500/1800/2100s. Complete source/sdist/wheel
+parity covers 1,166 core Python files and 20 data files; 29 SDK Python files are
+separate. Both installed cells read back every one of the 1,186 core members.
+The support manifest binds 2,453 inputs. Fresh C reports 1,166 modules, 3,839
+edges and six bounded dynamic routes without violations; Ruff remains 88 existing
+findings with none introduced. AC-01 through AC-08 and AC-10 pass within this scope;
+AC-09 remains partial. Baseline collection does not establish release readiness.
+
+This matrix uses .tmp/d-required-input-pid/, required-input-pid-source,
+and fresh a101-pid Windows cells. The older passing retry matrix, staged-index
+refusal, exact refused bytes and one-byte AST-identical correction remain retained.
+The later Windows 3.12 empty-PID failure and its cleanup observations remain retained.
+Only the fixture now publishes a closed sibling PID file with same-directory replace;
+all old assertions and deadlines remain, with staging-name absence added.
+Three regenerated metadata files were normalized to LF before this fresh freeze. Original
+full-source failures, stopped recovery, strict TLS failure and unchanged diagnostic,
+fixture/syntax/lint observations and stop-guard refusals remain separate evidence.
+No old failure is replaced by this pass and the TLS timeout/EOF cause stays unproved.
+The retained check reverified 23,146 published hashes, nine handoff bindings and
+132,113 local candidate evidence files plus 39,320 native
+failed-matrix physical files; original C:/Source/Orket remains unchanged. Ignored evidence stores remain local; Git
+publication transfers the scoped repository change, not those stores.
+
+Only the plan and collected baseline may change after this matrix for closeout.
+Exact final index, annotated version tag, branch/remote refs and clean worktree are
+bound in this root's checkpoint, index-check and publication receipts. Those receipts
+govern publication status; this entry alone does not assert a remote push.
+
+Continue D with coherent turn artifact identity/input and publication ownership
+across response, prompt, parser, checkpoint and memory. The seven-case draft is
+still unexecuted and the read-only design reviews are structural only. Existing
+resource owners, per-document admission, parse-completion clock timing and
+control-plane order remain required. No atomic-bundle or hard-native-deadline claim.
+Linux remains blocked by the unchanged .95 receipt: 240.019511342s elapsed,
+25.211878083s quiet against 60s, and -6.018610816/+6.026590404s steps against 0.01s.
+No fresh Linux measurement or settings change occurred. Wider D, E1/E2, full 89%
+coverage, ProductFlow replay, legacy cutover, selected-provider and CAP-1/2/3 proof
+remain open. No hosted Quality acceptance, main merge, whole-goal completion or
+lane retirement is claimed. Lane retirement still requires explicit user acceptance.

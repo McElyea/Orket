@@ -16,6 +16,7 @@ sys.path.insert(0, str(ROOT))
 from orket.application.services.local_model_factory import create_local_model_provider_async
 from orket.application.workflows.turn_contract_validator import ContractValidator
 from orket.application.workflows.turn_corrective_prompt import CorrectivePromptBuilder
+from orket.application.workflows.turn_read_context import observe_legacy_required_read_paths
 from orket.application.workflows.turn_response_parser import ResponseParser
 from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_MODEL
 from orket.core.domain.execution import ExecutionTurn
@@ -31,8 +32,8 @@ async def prove() -> dict:
         "local_prompting_mode": "enforce",
     }
     parser = ResponseParser(ROOT, lambda *args, **kwargs: None)
-    validator = ContractValidator(ROOT, parser)
-    builder = CorrectivePromptBuilder(ROOT)
+    validator = ContractValidator(parser)
+    builder = CorrectivePromptBuilder()
     client = (await create_local_model_provider_async(model=DEFAULT_LOCAL_MODEL, provider="llama_cpp", timeout=90))
     rows = []
     try:
@@ -56,8 +57,9 @@ async def prove() -> dict:
                 "initial": initial.content,
             }
         failures = [{"reason": "local_prompt_contract_not_met", "violations": violations}]
-        corrective = builder.build_corrective_instruction(failures, context)
-        deterministic = corrective == builder.build_corrective_instruction(failures, context)
+        observation = await observe_legacy_required_read_paths(context=context, workspace=ROOT)
+        corrective = builder.build_corrective_instruction(failures, context, observation)
+        deterministic = corrective == builder.build_corrective_instruction(failures, context, observation)
         for attempt in range(1, 3):
             response = await client.complete([{"role": "user", "content": corrective}], runtime_context=context)
             observed = ExecutionTurn(timestamp=None, role="actor", issue_id="repair-proof", content=response.content, raw=response.raw)

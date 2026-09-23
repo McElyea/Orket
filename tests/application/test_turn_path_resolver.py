@@ -2,8 +2,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from orket.application.workflows.turn_path_resolver import PathResolver
 from orket.core.domain.execution import ExecutionTurn, ToolCall
+
+pytestmark = pytest.mark.unit
 
 
 def test_partition_required_read_paths_splits_existing_and_missing(tmp_path: Path) -> None:
@@ -14,10 +18,11 @@ def test_partition_required_read_paths_splits_existing_and_missing(tmp_path: Pat
         "required_read_paths": ["agent_output/main.py", "agent_output/missing.py", "  "],
     }
 
-    existing, missing = PathResolver.partition_required_read_paths(context, tmp_path)
+    required_paths = PathResolver.normalized_required_read_paths(context)
+    existing, missing = PathResolver.partition_required_read_paths(required_paths, tmp_path)
 
-    assert existing == ["agent_output/main.py"]
-    assert missing == ["agent_output/missing.py"]
+    assert existing == ("agent_output/main.py",)
+    assert missing == ("agent_output/missing.py",)
 
 
 def test_required_path_helpers_delegate_to_partition(tmp_path: Path) -> None:
@@ -26,8 +31,12 @@ def test_required_path_helpers_delegate_to_partition(tmp_path: Path) -> None:
     file_path.write_text("x\n", encoding="utf-8")
     context = {"required_read_paths": ["agent_output/requirements.txt", "agent_output/nope.txt"]}
 
-    assert PathResolver.required_read_paths(context, tmp_path) == ["agent_output/requirements.txt"]
-    assert PathResolver.missing_required_read_paths(context, tmp_path) == ["agent_output/nope.txt"]
+    required_paths = PathResolver.normalized_required_read_paths(context)
+    assert required_paths == ("agent_output/requirements.txt", "agent_output/nope.txt")
+    assert PathResolver.partition_required_read_paths(required_paths, tmp_path) == (
+        ("agent_output/requirements.txt",),
+        ("agent_output/nope.txt",),
+    )
 
 
 def test_required_write_and_observed_paths() -> None:

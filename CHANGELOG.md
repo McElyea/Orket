@@ -5,6 +5,20 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.101] - 2026-09-23
+
+### Fixed
+- Retain shared required-read and submitted-path metadata under the existing native owner through interruption.
+- Capture prompt-context inputs and bind each response attempt's validation and corrective rendering to one explicit observation.
+- Execute captured admitted commands while retaining original result publication and per-tool policy order.
+- Derive Packet-1 intended provider/profile from runtime construction inputs while preserving actual telemetry precedence.
+- Keep native automatic pipeline capture limited to consumed settings, root and environment; explicitly unobserved preferences refuse access while existing full capture remains unchanged.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Async callers await metadata observations; pure validators receive explicit observations. Supply run environment before construction. Migration: `docs/architecture/CONTRACT_DELTA_REQUIRED_INPUT_OWNERSHIP_D_2026-09-22.md`.
+- Wider D/E/CAP, Linux clock, full coverage and whole-lane acceptance remain open.
+
 ## [0.6.100] - 2026-09-22
 
 ### Fixed

@@ -9,7 +9,7 @@ from orket.application.services.runtime_policy_inputs import ArchitecturePolicyS
 from orket.application.workflows.orchestrator import Orchestrator
 from orket.application.workflows.turn_executor import TurnResult
 from orket.core.domain.execution import ExecutionTurn
-from orket.schema import CardStatus, IssueConfig
+from orket.schema import CardStatus, DialectConfig, IssueConfig
 from tests.helpers.card_dispatch import install_dispatch_snapshot_stub
 from tests.helpers.model_selection import prepared_model_selection
 
@@ -115,7 +115,7 @@ async def test_execute_issue_turn_continues_after_valid_max_rounds_odr_prebuild(
     loader.queue_assets(
         [
             SimpleNamespace(name="coder", description="Role", tools=["write_file", "update_issue_status"], prompt_metadata={}),
-            SimpleNamespace(
+            DialectConfig(
                 model_family="generic",
                 dsl_format="json",
                 constraints=[],
@@ -245,7 +245,7 @@ async def test_execute_issue_turn_uses_configured_odr_auditor_model(
     loader.queue_assets(
         [
             SimpleNamespace(name="coder", description="Role", tools=["write_file", "update_issue_status"], prompt_metadata={}),
-            SimpleNamespace(
+            DialectConfig(
                 model_family="generic",
                 dsl_format="json",
                 constraints=[],

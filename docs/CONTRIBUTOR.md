@@ -103,6 +103,20 @@ Other log producers keep their current contracts. Migration and scope:
 `docs/specs/CONNECTOR_INVOCATION_TIMING.md` and
 `docs/architecture/CONTRACT_DELTA_CONNECTOR_LOGGING_D_2026-09-22.md`.
 
+Shared required-read metadata uses explicit application observations and the
+existing PathResolver/native owners. Each response attempt shares one observation
+with corrective rendering; retries and per-tool preflight observe afresh. Governed
+preloads, legacy file classification and exists-only context availability retain
+their distinct semantics. Execution uses captured admitted commands and preserves
+the original result sinks. Packet-1 intended provider/profile comes from the existing
+runtime construction snapshot; actual telemetry keeps its precedence. Native
+automatic pipeline capture excludes unused preferences; supplied full inputs and
+existing async factories retain full capture. Omitted preference access refuses
+explicitly under `docs/specs/SETTINGS_INPUT_OWNERSHIP.md`. Contracts:
+`docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md` and
+`docs/specs/TRUTHFUL_RUNTIME_PACKET1_CONTRACT.md`; migration and proof limits:
+`docs/architecture/CONTRACT_DELTA_REQUIRED_INPUT_OWNERSHIP_D_2026-09-22.md`.
+
 Turn-message preparation captures its workspace and prompt-consumed values before
 awaiting native work; unrelated execution resources remain untouched. Existing
 native/file owners retain path admission, metadata, reads, closure and missing-input

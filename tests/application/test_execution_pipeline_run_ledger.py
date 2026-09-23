@@ -437,6 +437,8 @@ async def test_run_ledger_harvests_local_prompt_fallback_telemetry(
     monkeypatch,
 ):
     _write_epic_assets(test_root, "ledger_epic_prompt_fallback")
+    monkeypatch.setenv("ORKET_LOCAL_PROMPTING_ALLOW_FALLBACK", "true")
+    monkeypatch.setenv("ORKET_LOCAL_PROMPTING_FALLBACK_PROFILE_ID", "ollama.qwen.chatml.v1")
 
     pipeline = await _pipeline(test_root, workspace, db_path)
 
@@ -458,8 +460,6 @@ async def test_run_ledger_harvests_local_prompt_fallback_telemetry(
         )
         return None
 
-    monkeypatch.setenv("ORKET_LOCAL_PROMPTING_ALLOW_FALLBACK", "true")
-    monkeypatch.setenv("ORKET_LOCAL_PROMPTING_FALLBACK_PROFILE_ID", "ollama.qwen.chatml.v1")
     monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _execute_with_fallback_telemetry)
 
     await pipeline.run_epic(

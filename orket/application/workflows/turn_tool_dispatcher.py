@@ -27,6 +27,7 @@ from orket.schema import IssueConfig
 from ..services.governed_turn_tool_approval_continuation_service import (
     supports_governed_turn_tool_approval_continuation,
 )
+from .turn_contract_input_capture import execute_with_protocol_capture
 from .turn_tool_dispatcher_compatibility import resolve_compatibility_translation
 from .turn_tool_dispatcher_control_plane import (
     begin_control_plane_execution_if_needed,
@@ -34,10 +35,7 @@ from .turn_tool_dispatcher_control_plane import (
     prepare_dispatch_if_needed,
     publish_preflight_failure_if_needed,
 )
-from .turn_tool_dispatcher_protocol import (
-    collect_protocol_preflight_violations,
-    load_or_execute_tool,
-)
+from .turn_tool_dispatcher_protocol import collect_protocol_preflight_violations, load_or_execute_tool
 from .turn_tool_dispatcher_support import (
     as_positive_float,
     build_execution_capsule,
@@ -99,13 +97,16 @@ class ToolDispatcher:
         self.control_plane_service = control_plane_service
 
     async def execute_tools(
-        self,
-        *,
-        turn: ExecutionTurn,
-        toolbox: Any,
-        context: dict[str, Any],
+        self, *, turn: ExecutionTurn, toolbox: Any, context: dict[str, Any],
         issue: IssueConfig | None = None,
-    ) -> None:
+        on_turn_captured: Callable[[ExecutionTurn], None] | None = None) -> ExecutionTurn:
+        return await execute_with_protocol_capture(
+            execute=self._execute_tools_captured, turn=turn, toolbox=toolbox, context=context,
+            workspace=self.workspace, issue=issue, on_turn_captured=on_turn_captured)
+
+    async def _execute_tools_captured(
+        self, *, turn: ExecutionTurn, toolbox: Any, context: dict[str, Any], workspace: Path,
+        issue: IssueConfig | None = None) -> None:
         violations: list[str] = []
         roles = context.get("roles", [turn.role])
         session_id = str(context.get("session_id", "unknown-session"))
@@ -128,13 +129,11 @@ class ToolDispatcher:
                     ],
                 }
             )
-        validator_version = str(
-            raw_payload.get("validator_version") or context.get("validator_version") or VALIDATOR_VERSION
-        )
+        validator_version = str(raw_payload.get("validator_version") or
+                                context.get("validator_version") or VALIDATOR_VERSION)
         protocol_hash = str(raw_payload.get("protocol_hash") or context.get("protocol_hash") or default_protocol_hash())
-        tool_schema_hash = str(
-            raw_payload.get("tool_schema_hash") or context.get("tool_schema_hash") or default_tool_schema_hash()
-        )
+        tool_schema_hash = str(raw_payload.get("tool_schema_hash") or
+                               context.get("tool_schema_hash") or default_tool_schema_hash())
         protocol_enabled = bool(context.get("protocol_governed_enabled", False))
         protocol_replay_mode = bool(context.get("protocol_replay_mode"))
         control_plane_enabled = not protocol_replay_mode and self.control_plane_service is not None
@@ -145,9 +144,8 @@ class ToolDispatcher:
                     and not any(is_card_completion_call(call.tool, call.args) for call in turn.tool_calls)):
                 control_plane_enabled = False
         execution_capsule = build_execution_capsule(context)
-        approval_required_tools = {
-            str(tool).strip() for tool in (context.get("approval_required_tools") or []) if str(tool).strip()
-        }
+        approval_required_tools = {str(tool).strip() for tool in
+                                   (context.get("approval_required_tools") or []) if str(tool).strip()}
         request_writer = context.get("create_pending_gate_request")
         approval_resolver = context.get("resolve_granted_tool_approval")
         control_plane_run_id: str | None = None
@@ -162,7 +160,7 @@ class ToolDispatcher:
                 roles=roles,
                 approval_required_tools=approval_required_tools,
                 tool_gate=self.tool_gate,
-                workspace=self.workspace,
+                workspace=workspace,
                 resolve_skill_tool_binding=resolve_skill_tool_binding,
                 missing_required_permissions=missing_required_permissions,
                 runtime_limit_violations=runtime_limit_violations,
@@ -192,7 +190,7 @@ class ToolDispatcher:
                             "tool": first_tool_name,
                             "error": str(preflight_violations[0]),
                         },
-                        self.workspace,
+                        workspace,
                     )
                 raise self.tool_validation_error_factory(preflight_violations)
         control_plane_run_id, control_plane_attempt_id = await begin_control_plane_execution_if_needed(
@@ -287,7 +285,7 @@ class ToolDispatcher:
                                 "args": tool_call.args,
                                 "reason": policy_violation,
                             },
-                            self.workspace,
+                            workspace,
                         )
                     violations.append(policy_violation)
                     continue
@@ -306,7 +304,7 @@ class ToolDispatcher:
                                 "args": tool_call.args,
                                 "reason": gate_violation,
                             },
-                            self.workspace,
+                            workspace,
                         )
                     violations.append(f"Governance Violation: {gate_violation}")
                     continue
@@ -362,7 +360,7 @@ class ToolDispatcher:
                                     "request_id": str(granted_request_id),
                                     "stage_gate_mode": context.get("stage_gate_mode"),
                                 },
-                                self.workspace,
+                                workspace,
                             )
                     else:
                         request_id = None
@@ -385,7 +383,7 @@ class ToolDispatcher:
                                     "request_id": request_id,
                                     "stage_gate_mode": context.get("stage_gate_mode"),
                                 },
-                                self.workspace,
+                                workspace,
                             )
                         if admitted_continuation_slice:
                             raise self.tool_approval_pending_error_factory(message)
@@ -418,7 +416,7 @@ class ToolDispatcher:
                             "args": tool_call.args,
                             "operation_id": operation_id,
                         },
-                        self.workspace,
+                        workspace,
                     )
 
                 result, replayed = await load_or_execute_tool(
@@ -457,7 +455,7 @@ class ToolDispatcher:
                                 "operation_id": operation_id,
                                 "result_type": raw_type,
                             },
-                            self.workspace,
+                            workspace,
                         )
                     result = {
                         "ok": False,
@@ -486,7 +484,7 @@ class ToolDispatcher:
                                 "tool_contract_version": determinism_violation["tool_contract_version"],
                                 "side_effect_signal_keys": list(determinism_violation["side_effect_signal_keys"]),
                             },
-                            self.workspace,
+                            workspace,
                         )
                     result = {
                         "ok": False,
@@ -588,7 +586,7 @@ class ToolDispatcher:
                             "operation_id": operation_id,
                             "replayed": bool(replayed),
                         },
-                        self.workspace,
+                        workspace,
                     )
                 if not result.get("ok", False):
                     tool_call.error = str(result.get("error") or "tool execution failed")
@@ -609,7 +607,7 @@ class ToolDispatcher:
                             "error": str(exc),
                             "operation_id": operation_id,
                         },
-                        self.workspace,
+                        workspace,
                     )
                 violations.append(f"Tool {tool_name} error: {exc}")
 

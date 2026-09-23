@@ -60,7 +60,9 @@ async def test_export_git_cancel_owns_child_and_timeout(tmp_path, monkeypatch, r
     await git.initialize()
     command = await fixture_alias(tmp_path, 'cancel', """import os,sys,time
 from pathlib import Path
-root=Path(sys.argv[1]);(root/'active.pid').write_text(str(os.getpid()),encoding='utf-8')
+root=Path(sys.argv[1]);pending=root/'active.pid.pending'
+pending.write_text(str(os.getpid()),encoding='utf-8')
+os.replace(pending,root/'active.pid')
 time.sleep(10)
 (root/'late.txt').write_text('escaped',encoding='utf-8')
 """)
@@ -82,6 +84,7 @@ time.sleep(10)
             while not await asyncio.to_thread((tmp_path / 'active.pid').exists):  # noqa: ASYNC110 - cross-process file barrier
                 await asyncio.sleep(.005)
         child = psutil.Process(int(await asyncio.to_thread((tmp_path / 'active.pid').read_text, encoding='utf-8')))
+        assert not await asyncio.to_thread((tmp_path / 'active.pid.pending').exists)
         await responsive_sqlite(tmp_path / 'response.sqlite3', record_property)
         if mode == 'timeout':
             deadline.reschedule(asyncio.get_running_loop().time() + .01)

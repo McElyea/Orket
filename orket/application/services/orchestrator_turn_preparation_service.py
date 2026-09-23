@@ -72,7 +72,7 @@ class OrchestratorTurnPreparationService:
         support_services: Any,
         request_issue_transition: Callable[..., Awaitable[None]],
         resolve_small_project_team_policy: Callable[[Any, Any], dict[str, Any]],
-        build_turn_context: Callable[..., dict[str, Any]],
+        build_turn_context: Callable[..., Awaitable[dict[str, Any]]],
         resolve_prompt_resolver_mode: Callable[[], str],
         resolve_prompt_selection_policy: Callable[[], str],
         resolve_prompt_selection_strict: Callable[[], bool],

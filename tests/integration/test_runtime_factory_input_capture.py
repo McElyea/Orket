@@ -84,6 +84,7 @@ async def test_prepared_collection_factory_detaches_parent_fields(test_root, wor
         config_root=test_root, db_path=db_path, construction_inputs=inputs if explicit else None)
     child = None
     selected_clock, selected_nodes = parent.runtime_inputs, parent.decision_nodes
+    selected_inputs = parent.runtime_context.construction_inputs
     try:
         construct = await parent.pipeline_wiring_service.prepare_sub_pipeline(
             parent_pipeline=parent, epic_workspace=workspace / 'member', department='core')
@@ -98,6 +99,7 @@ async def test_prepared_collection_factory_detaches_parent_fields(test_root, wor
         assert child.db_path == db_path and child.config_root == test_root
         assert child.runtime_inputs is selected_clock and child.decision_nodes is selected_nodes
         assert child.runtime_context.construction_inputs is not None and child.run_ledger_mode == 'sqlite'
+        assert child.runtime_context.construction_inputs is selected_inputs
         assert child.orchestrator.decision_environment['ORKET_DURABLE_ROOT'] == 'selected-state'
         assert child.webhook_db.db_path.is_relative_to(test_root / 'selected-state')
         assert Path(child.sandbox_orchestrator.lifecycle_repository.db_path).is_relative_to(test_root / 'selected-state')

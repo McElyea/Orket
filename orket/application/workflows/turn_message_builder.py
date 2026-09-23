@@ -43,8 +43,8 @@ class MessageBuilder:
         workspace, issue, role = inputs.workspace, inputs.issue, inputs.role
         context, system_prompt = inputs.context, inputs.system_prompt
         read_observation = await observe_required_read_paths(context=context, workspace=workspace)
-        required_read_paths = read_observation.existing
-        missing_required_read_paths = read_observation.missing
+        required_read_paths = list(read_observation.existing)
+        missing_required_read_paths = list(read_observation.missing)
 
         messages: list[dict[str, str]] = []
         messages.append({"role": "system", "content": system_prompt or role.prompt or role.description})

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 from collections.abc import Awaitable, Callable
+from copy import deepcopy
 from typing import Any
 
 from orket.application.services.runtime_input_service import RuntimeInputService
@@ -20,7 +21,7 @@ class OrchestratorPromptPreparationService:
         organization: Any,
         memory: Any,
         support_services: Any,
-        build_turn_context: Callable[..., dict[str, Any]],
+        build_turn_context: Callable[..., Awaitable[dict[str, Any]]],
         resolve_prompt_resolver_mode: Callable[[], str],
         resolve_prompt_selection_policy: Callable[[], str],
         resolve_prompt_selection_strict: Callable[[], bool],
@@ -89,7 +90,23 @@ class OrchestratorPromptPreparationService:
         if not isinstance(getattr(issue, "params", None), dict):
             issue.params = {}
         issue.params["idesign_enabled"] = idesign_enabled
-        provisional_context = self.build_turn_context(
+        captured_skill = skill.model_copy(deep=True)
+        captured_dialect = dialect.model_copy(deep=True)
+        role_rule_ids = deepcopy(list((captured_skill.prompt_metadata or {}).get("owned_rule_ids", []) or []))
+        dialect_rule_ids = deepcopy(list((captured_dialect.prompt_metadata or {}).get("owned_rule_ids", []) or []))
+        runtime_guard_rule_ids: list[str] = resolve_runtime_guard_rule_ids(None)
+        guard_layers: list[str] = ["hallucination"]
+        if self.organization and isinstance(getattr(self.organization, "process_rules", None), dict):
+            process_rules = self.organization.process_rules
+            configured_rule_ids = process_rules.get("runtime_guard_rule_ids")
+            if isinstance(configured_rule_ids, list):
+                runtime_guard_rule_ids = resolve_runtime_guard_rule_ids(list(configured_rule_ids))
+            configured_layers = process_rules.get("prompt_guard_layers")
+            if isinstance(configured_layers, list) and configured_layers:
+                guard_layers = [str(item) for item in configured_layers if str(item).strip()]
+        suppress_reference_context = self.should_suppress_reference_context_for_cards_runtime(cards_runtime)
+        support_services = self.support_services
+        provisional_context = await self.build_turn_context(
             run_id=run_id,
             issue=issue,
             seat_name=seat_name,
@@ -115,26 +132,15 @@ class OrchestratorPromptPreparationService:
             "dialect_status": "legacy",
         }
         prompt_layers: dict[str, Any] = {
-            "role_base": {"name": str(skill.name or "").strip().lower(), "version": "legacy"},
-            "dialect_adapter": {"name": str(dialect.model_family or "").strip().lower(), "version": "legacy"},
+            "role_base": {"name": str(captured_skill.name or "").strip().lower(), "version": "legacy"},
+            "dialect_adapter": {"name": str(captured_dialect.model_family or "").strip().lower(), "version": "legacy"},
             "guards": [],
             "context_profile": "default",
         }
         if prompt_mode == "resolver":
-            role_rule_ids = list((getattr(role_config, "prompt_metadata", {}) or {}).get("owned_rule_ids", []) or [])
-            dialect_rule_ids = list((getattr(dialect, "prompt_metadata", {}) or {}).get("owned_rule_ids", []) or [])
-            runtime_guard_rule_ids: list[str] = resolve_runtime_guard_rule_ids(None)
-            guard_layers: list[str] = ["hallucination"]
-            if self.organization and isinstance(getattr(self.organization, "process_rules", None), dict):
-                configured_rule_ids = self.organization.process_rules.get("runtime_guard_rule_ids")
-                if isinstance(configured_rule_ids, list):
-                    runtime_guard_rule_ids = resolve_runtime_guard_rule_ids(configured_rule_ids)
-                configured_layers = self.organization.process_rules.get("prompt_guard_layers")
-                if isinstance(configured_layers, list) and configured_layers:
-                    guard_layers = [str(item) for item in configured_layers if str(item).strip()]
-            resolution = self.support_services.resolve_prompt(
-                skill=skill,
-                dialect=dialect,
+            resolution = support_services.resolve_prompt(
+                skill=captured_skill,
+                dialect=captured_dialect,
                 context={
                     "prompt_context_profile": "long_project" if memory_context else "default",
                     "prompt_resolver_policy": "resolver_v1",
@@ -158,13 +164,13 @@ class OrchestratorPromptPreparationService:
             prompt_metadata = dict(resolution.metadata)
             prompt_layers = dict(resolution.layers)
         else:
-            system_prompt = self.support_services.compile_prompt(
-                skill,
-                dialect,
+            system_prompt = support_services.compile_prompt(
+                captured_skill,
+                captured_dialect,
                 protocol_governed_enabled=bool(provisional_context.get("protocol_governed_enabled", False)),
                 patch=(prompt_patch or None),
             )
-        if memory_context and not self.should_suppress_reference_context_for_cards_runtime(cards_runtime):
+        if memory_context and not suppress_reference_context:
             system_prompt += f"\n\nPROJECT CONTEXT (PAST DECISIONS):\n{memory_context}"
 
         prompt_metadata["prompt_checksum"] = hashlib.sha256(system_prompt.encode("utf-8")).hexdigest()[:16]
@@ -179,20 +185,6 @@ class OrchestratorPromptPreparationService:
                 "checksum": prompt_patch_checksum,
             }
 
-        context = self.build_turn_context(
-            run_id=run_id,
-            issue=issue,
-            seat_name=seat_name,
-            roles_to_load=roles_to_load,
-            turn_status=turn_status,
-            selected_model=selected_model,
-            dependency_context=dependency_context,
-            runtime_verifier_ok=(None if runtime_result is None else bool(runtime_result.ok)),
-            prompt_metadata=prompt_metadata,
-            prompt_layers=prompt_layers,
-            idesign_enabled=idesign_enabled,
-            resume_mode=resume_mode,
-            skill_tool_bindings=skill_tool_bindings,
-            cards_runtime=cards_runtime,
-        )
-        return context, system_prompt
+        provisional_context["prompt_metadata"] = prompt_metadata
+        provisional_context["prompt_layers"] = prompt_layers
+        return provisional_context, system_prompt

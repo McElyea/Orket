@@ -1,6 +1,6 @@
 # Protocol-Governed Local Provider Compatibility Contract (v1.2)
 
-Last updated: 2026-09-22
+Last updated: 2026-09-23
 Status: Active (contract baseline)
 Owner: Orket Core
 
@@ -76,6 +76,69 @@ semantics, other producers, or establish durable logging delivery.
 No forced thread termination, hard filesystem deadline, rollback, atomic input/file
 snapshot or new provider/reference-root admission is implied. Migration and proof
 requirements: `docs/architecture/CONTRACT_DELTA_MESSAGE_READ_OWNERSHIP_D_2026-09-22.md`.
+
+## Shared required-read observations
+
+Shared metadata ownership covers upstream prompt-context availability, response
+validation, corrective prompts and protocol preflight. Implementation proof and
+remaining acceptance limits are recorded in the architectural-truth plan.
+
+One application observation boundary delegates path policy to `PathResolver` and
+native lifetime to the existing owned-I/O implementation. It captures the lexical
+absolute workspace and consumed path values before its first await. Admitted
+metadata work settles through repeated cancellation or caller timeout, preserving
+native failure visibility. Interruption prevents admission of subsequent stages.
+It does not promise an atomic filesystem snapshot or a hard native deadline.
+
+The four existing path semantics remain distinct:
+
+1. MessageBuilder validates governed required-read tokens before preload, as above.
+2. Validation and protocol cardinality classify normalized declared tokens as
+   existing regular files or missing/non-file. This legacy classification does
+   not itself grant read authority or add earlier governed-path refusal.
+3. Upstream verification-scope availability preserves its exists-only predicate,
+   including directories and outside-relative tokens that previously qualified.
+   Availability is descriptive and does not authorize submitted tool access.
+4. Submitted tool paths use the existing governed workspace validator and exact
+   error vocabulary at the current per-tool admission point.
+
+Validation consumes one explicit required-read observation per model-response
+attempt. Its corrective prompt uses the same observation; pure diagnostics and
+corrective rendering do not initiate another filesystem observation. A retry
+response and later protocol preflight obtain fresh observations. Do not cache
+metadata across attempts or replace dispatch-time path admission with earlier
+prompt availability. Callers must supply the explicit observation; there is no
+optional synchronous filesystem fallback.
+
+Successful validation hands the captured proposed turn to execution. Preflight
+and subsequent dispatch must use the same captured commands and policy inputs;
+they must not validate one copy and later execute a caller-mutated original.
+Retain the existing result publication authority when separating command inputs
+from their output sinks. Publish the captured turn to the calling execution owner
+before dispatch awaits, so failure handling refers to the same admitted commands
+even when dispatch raises. Capture does not authorize a replacement command.
+
+Capture only values consumed by the admitted operation: relevant context values,
+ordered tool calls/arguments, role tool lists and approval settings. Keep callbacks,
+resource owners and frozen approval/completion authorities with their existing
+identity and purpose. Do not deepcopy unrelated execution resources. Upstream
+context assembly resolves its consumed values before metadata yields and publishes
+its original prompt metadata/layer sinks intentionally.
+
+Dispatch captures the explicitly named production inputs. Unknown extension
+context values remain borrowed by identity, including extension-owned containers;
+this contract does not promise immutable inputs for arbitrary custom consumers.
+The outer dispatch context is a captured mapping. Custom middleware replacing or
+deleting its entries does not publish those changes to the caller's mapping;
+in-place updates of explicitly borrowed output containers retain their identity.
+
+Protocol order remains maximum/schema checks, required-tools classification,
+sequence checks, then each tool's binding, policy, compatibility, workspace,
+awaited gate, skill and approval checks. Do not batch later tools' workspace checks
+ahead of an earlier refusal or awaited gate. Empty declarations, partial-parse
+validation, non-path tools and lexical refusal keep their applicable no-I/O paths.
+The contract does not establish whole-executor input capture, hostile handle-bound
+confinement, provider quality or whole-D acceptance.
 
 ## 2. Scope
 

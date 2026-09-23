@@ -1,6 +1,6 @@
 # Truthful Runtime Packet-1 Contract
 
-Last updated: 2026-09-12
+Last updated: 2026-09-23
 Status: Active
 Owner: Orket Core
 Canonical requirements source: `docs/projects/archive/truthful-runtime/TRH03142026-PACKET1/TRH03142026-PHASE-C-REQUIREMENTS.md`
@@ -112,6 +112,36 @@ Out of scope:
 10. Optional packet-1 fields are omitted rather than set to `null`.
 
 ## Provenance Contract
+
+### Construction inputs for run-level intent
+
+The run-level Packet-1 producer reads intended provider and configured/fallback
+profile settings from the pipeline's existing `RuntimeConstructionInputs.environment`.
+Capture belongs to runtime construction, including an explicitly constructed native
+pipeline that has no supplied snapshot. Packet production must not reread ambient
+environment, recapture on finalization, or create a second environment authority.
+Caller environment changes after construction cannot rewrite intended provenance.
+
+The native pipeline's automatic capture observes root, environment and settings;
+it does not read unused preferences or acquire preference-migration ownership.
+Omitted preferences remain explicitly unobserved and refuse preference access or
+settings-context binding. Supplied full inputs and existing async factory capture
+retain full preferences. The one construction-input authority and migration
+refusals are governed by `docs/specs/SETTINGS_INPUT_OWNERSHIP.md`.
+
+Provider normalization and default selection retain the existing pure provider
+contract. Profile precedence remains configured profile, then configured fallback
+profile only when observed telemetry reports fallback, then actual profile. Before
+telemetry exists, the actual profile defaults to `default`; the fallback environment
+setting alone does not establish fallback. Telemetry retains precedence for actual
+provider, model, profile, retries and fallback classification. Missing-token,
+projection, merge and physical-summary schemas remain unchanged.
+
+The opening controls, implementation proof and remaining acceptance limits are
+recorded in the architectural-truth remediation plan;
+this section alone is not live verification or provider admission.
+
+### Envelope
 
 1. Packet 1 must emit one runtime-owned provenance envelope.
 2. Minimum provenance fields are:

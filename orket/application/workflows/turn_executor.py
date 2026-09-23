@@ -76,8 +76,8 @@ class TurnExecutor:
         self.artifact_writer = TurnArtifactWriter(workspace)
         self.response_parser = ResponseParser(workspace, self.artifact_writer.write_turn_artifact)
         self.message_builder = MessageBuilder(workspace)
-        self.corrective_prompt_builder = CorrectivePromptBuilder(workspace)
-        self.contract_validator = ContractValidator(workspace, self.response_parser)
+        self.corrective_prompt_builder = CorrectivePromptBuilder()
+        self.contract_validator = ContractValidator(self.response_parser)
         self.tool_dispatcher = ToolDispatcher(
             tool_gate=self.tool_gate,
             middleware=self.middleware,

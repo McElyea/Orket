@@ -7,26 +7,23 @@ from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING, Any
 
 from orket.application.services.turn_tool_control_plane_service import TurnToolControlPlaneError
+from orket.application.workflows import turn_executor_partial_parse as partial_parse
 from orket.application.workflows.prompt_budget_guard import maybe_record_prompt_budget
-from orket.application.workflows.turn_executor_model_artifacts import (
-    log_turn_start,
-    write_response_artifacts,
-)
-from orket.application.workflows.turn_executor_partial_parse import (
-    blocked_partial_parse_failure,
-    partial_parse_recovery_policy,
-)
+from orket.application.workflows.turn_executor_model_artifacts import log_turn_start, write_response_artifacts
 from orket.application.workflows.turn_executor_resume_replay import load_pre_effect_resume_turn_if_needed
-from orket.application.workflows.turn_executor_runtime import (
-    invoke_model_complete as _invoke_model_complete,
-)
-from orket.application.workflows.turn_executor_runtime import (
-    synthesize_required_status_tool_call,
-)
+from orket.application.workflows.turn_executor_runtime import invoke_model_complete as _invoke_model_complete
+from orket.application.workflows.turn_executor_runtime import synthesize_required_status_tool_call
 from orket.core.domain.execution import ExecutionTurn
 from orket.exceptions import ModelProviderError
 from orket.logging import log_event
 from orket.schema import IssueConfig, RoleConfig
+
+from .turn_contract_input_capture import (
+    ValidationAttemptInputs,
+    collect_validation_attempt,
+    contract_reasons,
+    required_read_observation_for_correction,
+)
 
 if TYPE_CHECKING:
     from .turn_executor import TurnExecutor, TurnResult
@@ -148,8 +145,8 @@ async def _generate_turn_via_model(
     if early_result is not None or turn is None:
         return None, "", early_result
 
-    if turn.partial_parse_failure and partial_parse_recovery_policy(context) != "retry":
-        return await blocked_partial_parse_failure(
+    if turn.partial_parse_failure and partial_parse.partial_parse_recovery_policy(context) != "retry":
+        return await partial_parse.blocked_partial_parse_failure(
             executor=executor,
             issue=issue,
             role=role,
@@ -162,9 +159,12 @@ async def _generate_turn_via_model(
             turn_result_failed=turn_result_failed,
         )
 
-    contract_violations = executor.contract_validator.collect_contract_violations(turn, role, context)
+    attempt, contract_violations = await collect_validation_attempt(
+        validator=executor.contract_validator, turn=turn, role=role,
+        context=context, workspace=executor.workspace,
+    )
     if not contract_violations:
-        return turn, prompt_hash, None
+        return attempt.turn, prompt_hash, None
 
     return await _retry_after_contract_violations(
         executor=executor,
@@ -176,8 +176,8 @@ async def _generate_turn_via_model(
         turn_index=turn_index,
         turn_trace_id=turn_trace_id,
         messages=messages,
-        initial_turn=turn,
         contract_violations=contract_violations,
+        validation_attempt=attempt,
         prompt_hash=prompt_hash,
         emit_failure=emit_failure,
         turn_result_failed=turn_result_failed,
@@ -332,18 +332,23 @@ async def _retry_after_contract_violations(
     turn_index: int,
     turn_trace_id: str,
     messages: list[dict[str, str]],
-    initial_turn: ExecutionTurn,
     contract_violations: list[dict[str, Any]],
+    validation_attempt: ValidationAttemptInputs,
     prompt_hash: str,
     emit_failure: FailureEmitter,
     turn_result_failed: FailedResultFactory,
 ) -> tuple[ExecutionTurn | None, str, TurnResult | None]:
-    corrective_prompt = executor.corrective_prompt_builder.build_corrective_instruction(contract_violations, context)
+    required_read_observation = await required_read_observation_for_correction(attempt=validation_attempt)
+    corrective_prompt = executor.corrective_prompt_builder.build_corrective_instruction(
+        contract_violations,
+        validation_attempt.context,
+        required_read_observation,
+    )
     rule_fix_hints = executor.corrective_prompt_builder.rule_specific_fix_hints(contract_violations)
     retry_messages = copy.deepcopy(messages)
     retry_messages.append({"role": "user", "content": corrective_prompt})
 
-    contract_reasons = _contract_reasons(contract_violations)
+    reasons = contract_reasons(contract_violations)
     log_event(
         "turn_corrective_reprompt",
         {
@@ -352,12 +357,12 @@ async def _retry_after_contract_violations(
             "session_id": session_id,
             "turn_index": turn_index,
             "turn_trace_id": turn_trace_id,
-            "reason": contract_reasons[0] if len(contract_reasons) == 1 else "multiple_contracts_not_met",
-            "contract_reasons": contract_reasons,
+            "reason": reasons[0] if len(reasons) == 1 else "multiple_contracts_not_met",
+            "contract_reasons": reasons,
             "contract_violations": contract_violations,
             "rule_fix_hints": rule_fix_hints,
         },
-        executor.workspace,
+        validation_attempt.workspace,
     )
 
     retry_turn, early_result = await _invoke_and_parse_turn(
@@ -375,12 +380,15 @@ async def _retry_after_contract_violations(
     if early_result is not None or retry_turn is None:
         return None, "", early_result
 
-    remaining_violations = executor.contract_validator.collect_contract_violations(retry_turn, role, context)
+    retry_attempt, remaining_violations = await collect_validation_attempt(
+        validator=executor.contract_validator, turn=retry_turn, role=role,
+        context=context, workspace=validation_attempt.workspace,
+    )
     if not remaining_violations:
-        return retry_turn, prompt_hash, None
+        return retry_attempt.turn, prompt_hash, None
 
-    contract_reasons = _contract_reasons(remaining_violations)
-    primary_reason = contract_reasons[0] if contract_reasons else "contract_not_met"
+    reasons = contract_reasons(remaining_violations)
+    primary_reason = reasons[0] if reasons else "contract_not_met"
     log_event(
         "turn_non_progress",
         {
@@ -390,24 +398,16 @@ async def _retry_after_contract_violations(
             "turn_index": turn_index,
             "turn_trace_id": turn_trace_id,
             "reason": f"{primary_reason}_after_reprompt",
-            "contract_reasons": contract_reasons,
+            "contract_reasons": reasons,
             "contract_violations": remaining_violations,
         },
-        executor.workspace,
+        validation_attempt.workspace,
     )
-    await emit_failure(primary_reason, "contract_violation", retry_turn)
+    await emit_failure(primary_reason, "contract_violation", retry_attempt.turn)
     return None, "", turn_result_failed(
         executor.corrective_prompt_builder.deterministic_failure_message(primary_reason),
         False,
     )
-
-
-def _contract_reasons(contract_violations: list[dict[str, Any]]) -> list[str]:
-    return [
-        str(item.get("reason", "")).strip()
-        for item in contract_violations
-        if str(item.get("reason", "")).strip()
-    ]
 
 
 async def _invoke_model_complete_with_retries(

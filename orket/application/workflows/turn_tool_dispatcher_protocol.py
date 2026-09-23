@@ -19,7 +19,11 @@ from orket.core.domain.execution import ExecutionTurn
 from ..services.governed_turn_tool_approval_continuation_service import (
     supports_governed_turn_tool_approval_continuation,
 )
-from .turn_path_resolver import PathResolver
+from .turn_contract_input_capture import capture_mapping, capture_protocol_context, capture_workspace
+from .turn_read_context import (
+    observe_legacy_required_read_paths,
+    observe_workspace_constraint_violation,
+)
 from .turn_tool_dispatcher_compatibility import resolve_compatibility_translation
 from .turn_tool_dispatcher_support import (
     required_sequence_violation,
@@ -50,6 +54,7 @@ async def collect_protocol_preflight_violations(
         return [format_protocol_error(E_MAX_TOOL_CALLS_PREFIX, f"{len(turn.tool_calls)}>{max_tool_calls}")]
 
     observed_tool_names: list[str] = []
+    captured_tool_calls: list[tuple[str, dict[str, Any]]] = []
     for index, tool_call in enumerate(turn.tool_calls):
         tool_name = str(tool_call.tool or "").strip()
         if not tool_name:
@@ -57,84 +62,91 @@ async def collect_protocol_preflight_violations(
         if not isinstance(tool_call.args, dict):
             return [format_protocol_error(E_SCHEMA_TOOL_CALL_PREFIX, f"{index}:args")]
         observed_tool_names.append(tool_name)
+        captured_tool_calls.append((tool_name, capture_mapping(tool_call.args)))
+
+    captured_context = capture_protocol_context(context)
+    captured_roles = list(roles)
+    captured_approval_required_tools = frozenset(approval_required_tools)
+    captured_workspace = capture_workspace(workspace)
+    captured_issue_id = str(turn.issue_id)
+    required_read_observation = await observe_legacy_required_read_paths(
+        context=captured_context,
+        workspace=captured_workspace,
+    )
 
     required_tools_error = required_tools_violation(
         observed_tool_names=observed_tool_names,
-        context=context,
-        required_read_path_count=len(PathResolver.required_read_paths(context, workspace)),
+        context=captured_context,
+        required_read_path_count=len(required_read_observation.existing),
     )
     if required_tools_error:
         return [required_tools_error]
 
-    sequence_error = required_sequence_violation(observed_tool_names=observed_tool_names, context=context)
+    sequence_error = required_sequence_violation(observed_tool_names=observed_tool_names, context=captured_context)
     if sequence_error:
         return [sequence_error]
 
-    for index, tool_call in enumerate(turn.tool_calls):
-        tool_name = str(tool_call.tool or "").strip()
-        binding = resolve_skill_tool_binding(context, tool_name)
+    for tool_name, tool_args in captured_tool_calls:
+        binding = resolve_skill_tool_binding(captured_context, tool_name)
 
         policy_violation = tool_policy_violation(
             tool_name=tool_name,
             binding=binding,
-            context=context,
-            issue_id=turn.issue_id,
+            context=captured_context,
+            issue_id=captured_issue_id,
         )
         if policy_violation:
             return [policy_violation]
         _compatibility_translation, compatibility_violation = resolve_compatibility_translation(
             tool_name=tool_name,
-            tool_args=dict(tool_call.args or {}),
+            tool_args=tool_args,
             binding=binding,
-            context=context,
+            context=captured_context,
         )
         if compatibility_violation:
             return [compatibility_violation]
 
-        workspace_violation = PathResolver.workspace_constraint_violation(
+        workspace_violation = await observe_workspace_constraint_violation(
             tool_name=tool_name,
-            args=dict(tool_call.args or {}),
-            workspace=workspace,
+            args=tool_args,
+            workspace=captured_workspace,
         )
         if workspace_violation:
             return [format_protocol_error(E_WORKSPACE_CONSTRAINT_PREFIX, workspace_violation)]
 
         gate_violation = await tool_gate.validate(
             tool_name=tool_name,
-            args=tool_call.args,
-            context=context,
-            roles=roles,
+            args=tool_args,
+            context=captured_context,
+            roles=captured_roles,
         )
         if gate_violation:
             return [f"Governance Violation: {gate_violation}"]
 
-        if bool(context.get("skill_contract_enforced")):
+        if bool(captured_context.get("skill_contract_enforced")):
             if binding is None:
                 return [f"Skill contract violation: undeclared entrypoint/tool '{tool_name}'."]
-            missing_permissions = missing_required_permissions(binding, context)
+            missing_permissions = missing_required_permissions(binding, captured_context)
             if missing_permissions:
                 return [
                     "Skill contract violation: missing required permissions for "
                     f"'{tool_name}' ({', '.join(missing_permissions)})."
                 ]
-            limit_violations = runtime_limit_violations(binding, context)
+            limit_violations = runtime_limit_violations(binding, captured_context)
             if limit_violations:
                 return [
                     "Skill contract violation: runtime limits exceeded for "
                     f"'{tool_name}' ({', '.join(limit_violations)})."
                 ]
 
-        if tool_name in approval_required_tools:
+        if tool_name in captured_approval_required_tools:
             if supports_governed_turn_tool_approval_continuation(
                 tool_name=tool_name,
-                context=context,
-                issue_id=turn.issue_id,
+                context=captured_context,
+                issue_id=captured_issue_id,
             ):
                 continue
             return [f"Approval required for tool '{tool_name}' before execution."]
-
-        if not isinstance(tool_call.args, dict):
-            return [format_protocol_error(E_SCHEMA_TOOL_CALL_PREFIX, f"{index}:args")]
     return []
 
 

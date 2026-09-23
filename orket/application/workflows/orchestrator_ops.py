@@ -1481,7 +1481,7 @@ async def _create_pending_tool_approval_request(
     return request_id
 
 
-def _build_turn_context(
+async def _build_turn_context(
     self: Any,
     run_id: str,
     issue: IssueConfig,
@@ -1524,7 +1524,7 @@ def _build_turn_context(
         active_run_determinism_class=getattr(self, "active_run_determinism_class", None),
         active_compatibility_mappings=getattr(self, "active_compatibility_mappings", None),
     )
-    return builder.build(
+    return await builder.build(
         TurnContextBuildInput(
             run_id=run_id,
             issue=issue,

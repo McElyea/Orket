@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import hashlib
 import re
-from pathlib import Path
 from typing import Any
 
 from orket.application.services.guard_review_payload import guard_review_for_turn
@@ -23,18 +22,17 @@ from .turn_contract_rules import (
     observed_read_paths,
     observed_write_paths,
     parse_architecture_decision_payload,
-    required_read_paths,
     required_write_paths,
     security_scope_diagnostics,
 )
+from .turn_read_context import RequiredReadObservation
 from .turn_response_parser import ResponseParser
 
 
 class ContractValidator:
     """Evaluate turn contract compliance and produce deterministic diagnostics."""
 
-    def __init__(self, workspace: Path, response_parser: ResponseParser) -> None:
-        self.workspace = workspace
+    def __init__(self, response_parser: ResponseParser) -> None:
         self.response_parser = response_parser
 
     def collect_contract_violations(
@@ -42,6 +40,7 @@ class ContractValidator:
         turn: ExecutionTurn,
         role: RoleConfig,
         context: dict[str, Any],
+        required_read_observation: RequiredReadObservation,
     ) -> list[dict[str, Any]]:
         violations: list[dict[str, Any]] = []
         if turn.partial_parse_failure:
@@ -50,8 +49,8 @@ class ContractValidator:
                 "error": turn.error,
                 "error_class": None if turn.error_class is None else turn.error_class.value,
             }]
-        self._append_progress_violations(violations, turn, role, context)
-        self._append_contract_violations(violations, turn, context)
+        self._append_progress_violations(violations, turn, role, context, required_read_observation)
+        self._append_contract_violations(violations, turn, context, required_read_observation)
         self._append_scope_violations(violations, turn, context)
         return violations
 
@@ -61,8 +60,9 @@ class ContractValidator:
         turn: ExecutionTurn,
         role: RoleConfig,
         context: dict[str, Any],
+        required_read_observation: RequiredReadObservation,
     ) -> None:
-        progress_diag = self.progress_contract_diagnostics(turn, role, context)
+        progress_diag = self.progress_contract_diagnostics(turn, role, context, required_read_observation)
         if progress_diag.get("ok", False):
             return
         violations.append(
@@ -81,12 +81,13 @@ class ContractValidator:
         violations: list[dict[str, Any]],
         turn: ExecutionTurn,
         context: dict[str, Any],
+        required_read_observation: RequiredReadObservation,
     ) -> None:
         if not self.meets_write_path_contract(turn, context):
             violations.append(
                 {
                     "reason": "write_path_contract_not_met",
-                    "required_write_paths": self.required_write_paths(context),
+                    "required_write_paths": required_write_paths(context),
                     "observed_write_paths": self.observed_write_paths(turn),
                 }
             )
@@ -106,11 +107,11 @@ class ContractValidator:
                     "violations": semantic_diag.get("violations", []),
                 }
             )
-        if not self.meets_read_path_contract(turn, context):
+        if not self.meets_read_path_contract(turn, context, required_read_observation):
             violations.append(
                 {
                     "reason": "read_path_contract_not_met",
-                    "required_read_paths": self.required_read_paths(context),
+                    "required_read_paths": list(required_read_observation.existing),
                     "observed_read_paths": self.observed_read_paths(turn),
                 }
             )
@@ -129,7 +130,7 @@ class ContractValidator:
                     "stage_gate_mode": context.get("stage_gate_mode"),
                 }
             )
-        comment_diag = self.comment_contract_diagnostics(turn, context)
+        comment_diag = self.comment_contract_diagnostics(turn, context, required_read_observation)
         if not comment_diag.get("ok", False):
             violations.append(
                 {
@@ -178,13 +179,14 @@ class ContractValidator:
         turn: ExecutionTurn,
         role: RoleConfig,
         context: dict[str, Any],
+        required_read_observation: RequiredReadObservation,
     ) -> dict[str, Any]:
         observed_tools = [call.tool for call in (turn.tool_calls or []) if call.tool]
         allowed_tools = {str(tool).strip() for tool in (role.tools or []) if str(tool).strip()}
         required_action_tools = [str(t) for t in (context.get("required_action_tools") or []) if t]
         if allowed_tools:
             required_action_tools = [tool for tool in required_action_tools if tool in allowed_tools]
-        if "read_file" in required_action_tools and not self.required_read_paths(context):
+        if "read_file" in required_action_tools and not required_read_observation.existing:
             required_action_tools = [tool for tool in required_action_tools if tool != "read_file"]
         required_statuses = [str(s).strip().lower() for s in (context.get("required_statuses") or []) if s]
         missing_required = [tool for tool in required_action_tools if tool not in observed_tools]
@@ -248,7 +250,7 @@ class ContractValidator:
         required_tools = {str(tool).strip() for tool in (context.get("required_action_tools") or []) if str(tool).strip()}
         if "write_file" not in required_tools:
             return True
-        required_paths = self.required_write_paths(context)
+        required_paths = required_write_paths(context)
         if not required_paths:
             return True
         observed_paths = self.observed_write_paths(turn)
@@ -285,11 +287,12 @@ class ContractValidator:
                     return False
         return bool(rationale and violations and actions)
 
-    def meets_read_path_contract(self, turn: ExecutionTurn, context: dict[str, Any]) -> bool:
+    def meets_read_path_contract(self, turn: ExecutionTurn, context: dict[str, Any],
+                                 required_read_observation: RequiredReadObservation) -> bool:
         required_tools = {str(tool).strip() for tool in (context.get("required_action_tools") or []) if str(tool).strip()}
         if "read_file" not in required_tools:
             return True
-        required_paths = self.required_read_paths(context)
+        required_paths = required_read_observation.existing
         if not required_paths:
             return True
         observed_paths = self.observed_read_paths(turn)
@@ -305,7 +308,7 @@ class ContractValidator:
         required_tools = {str(tool).strip() for tool in (context.get("required_action_tools") or []) if str(tool).strip()}
         if "write_file" not in required_tools:
             return []
-        required_paths = set(self.required_write_paths(context))
+        required_paths = set(required_write_paths(context))
         if not required_paths:
             return []
         empty_paths: list[str] = []
@@ -320,7 +323,8 @@ class ContractValidator:
                 empty_paths.append(path)
         return empty_paths
 
-    def comment_contract_diagnostics(self, turn: ExecutionTurn, context: dict[str, Any]) -> dict[str, Any]:
+    def comment_contract_diagnostics(self, turn: ExecutionTurn, context: dict[str, Any],
+                                     required_read_observation: RequiredReadObservation) -> dict[str, Any]:
         required_tools = {str(tool).strip() for tool in (context.get("required_action_tools") or []) if str(tool).strip()}
         required_comment_contains = [
             str(token).strip()
@@ -340,7 +344,7 @@ class ContractValidator:
             for call in (turn.tool_calls or [])
             if call.tool == "add_issue_comment"
         ]
-        required_comment_paths = self.required_read_paths(context)
+        required_comment_paths = list(required_read_observation.existing)
         observed_comment_lengths = [len(comment) for comment in comment_payloads]
         enforcement_required = (
             "add_issue_comment" in required_tools
@@ -412,13 +416,6 @@ class ContractValidator:
 
     def consistency_scope_diagnostics(self, turn: ExecutionTurn, context: dict[str, Any]) -> dict[str, Any]:
         return consistency_scope_diagnostics(turn, context, self.non_json_residue)
-
-    def required_read_paths(self, context: dict[str, Any]) -> list[str]:
-        return required_read_paths(context, self.workspace)
-
-    @staticmethod
-    def required_write_paths(context: dict[str, Any]) -> list[str]:
-        return required_write_paths(context)
 
     @staticmethod
     def observed_read_paths(turn: ExecutionTurn) -> list[str]:

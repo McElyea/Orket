@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from orket.application.workflows.turn_contract_validator import ContractValidator
+from orket.application.workflows.turn_read_context import RequiredReadObservation
 from orket.application.workflows.turn_response_parser import ResponseParser
 from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.runtime.error_codes import ERR_JSON_MD_FENCE, ERR_THINK_OVERFLOW, EXTRANEOUS_TEXT
@@ -11,7 +12,11 @@ from orket.schema import RoleConfig
 
 def _validator(tmp_path: Path) -> ContractValidator:
     parser = ResponseParser(tmp_path, lambda **_kwargs: None)
-    return ContractValidator(tmp_path, parser)
+    return ContractValidator(parser)
+
+
+def _observation(*existing: str) -> RequiredReadObservation:
+    return RequiredReadObservation(existing=existing, missing=())
 
 
 def _role() -> RoleConfig:
@@ -19,6 +24,7 @@ def _role() -> RoleConfig:
 
 
 def test_contract_validator_collect_contract_violations_happy_path(tmp_path: Path) -> None:
+    """Layer: unit. Pure validation consumes an explicit empty read observation."""
     validator = _validator(tmp_path)
     turn = ExecutionTurn(timestamp=None,
         role="developer",
@@ -33,7 +39,7 @@ def test_contract_validator_collect_contract_violations_happy_path(tmp_path: Pat
         "required_statuses": ["done"],
         "required_write_paths": ["agent_output/out.txt"],
     }
-    assert validator.collect_contract_violations(turn, _role(), context) == []
+    assert validator.collect_contract_violations(turn, _role(), context, _observation()) == []
 
 
 def test_contract_validator_reports_consistency_scope_violation(tmp_path: Path) -> None:
@@ -53,6 +59,7 @@ def test_contract_validator_reports_consistency_scope_violation(tmp_path: Path) 
 
 
 def test_contract_validator_rejects_blank_required_write_content(tmp_path: Path) -> None:
+    """Layer: unit. Pure validation retains blank-write classification."""
     validator = _validator(tmp_path)
     turn = ExecutionTurn(timestamp=None,
         role="developer",
@@ -68,12 +75,13 @@ def test_contract_validator_rejects_blank_required_write_content(tmp_path: Path)
         "required_write_paths": ["agent_output/main.py"],
     }
 
-    violations = validator.collect_contract_violations(turn, _role(), context)
+    violations = validator.collect_contract_violations(turn, _role(), context, _observation())
 
     assert any(item["reason"] == "write_content_contract_not_met" for item in violations)
 
 
 def test_contract_validator_rejects_artifact_semantic_contract_violations(tmp_path: Path) -> None:
+    """Layer: unit. Pure validation retains artifact-semantic diagnostics."""
     validator = _validator(tmp_path)
     turn = ExecutionTurn(timestamp=None,
         role="developer",
@@ -105,7 +113,7 @@ def test_contract_validator_rejects_artifact_semantic_contract_violations(tmp_pa
         },
     }
 
-    violations = validator.collect_contract_violations(turn, _role(), context)
+    violations = validator.collect_contract_violations(turn, _role(), context, _observation())
 
     semantic_violation = next(item for item in violations if item["reason"] == "artifact_semantic_contract_not_met")
     assert semantic_violation["violations"][0]["path"] == "agent_output/main.py"
@@ -115,6 +123,7 @@ def test_contract_validator_rejects_artifact_semantic_contract_violations(tmp_pa
 
 
 def test_contract_validator_reports_high_specificity_preserve_tokens_for_semantic_retry(tmp_path: Path) -> None:
+    """Layer: unit. Pure validation retains semantic retry evidence."""
     validator = _validator(tmp_path)
     turn = ExecutionTurn(timestamp=None,
         role="developer",
@@ -153,7 +162,7 @@ def test_contract_validator_reports_high_specificity_preserve_tokens_for_semanti
         },
     }
 
-    violations = validator.collect_contract_violations(turn, _role(), context)
+    violations = validator.collect_contract_violations(turn, _role(), context, _observation())
 
     semantic_violation = next(item for item in violations if item["reason"] == "artifact_semantic_contract_not_met")
     assert semantic_violation["violations"][0]["missing_tokens"] == ["plan_workflow(str("]
@@ -380,6 +389,7 @@ def test_contract_validator_local_prompt_rejects_tool_call_meta_prefix_from_prof
 
 
 def test_contract_validator_accepts_comment_contract_when_comment_is_structured(tmp_path: Path) -> None:
+    """Layer: unit. Comment diagnostics consume explicit classified reads."""
     validator = _validator(tmp_path)
     turn = ExecutionTurn(timestamp=None,
         role="reviewer",
@@ -407,6 +417,7 @@ def test_contract_validator_accepts_comment_contract_when_comment_is_structured(
             "required_comment_contains": ["Findings", "Severity", "Path"],
             "required_read_paths": ["agent_output/main.py"],
         },
+        required_read_observation=_observation(),
     )
 
     assert diagnostics["ok"] is True
@@ -414,6 +425,7 @@ def test_contract_validator_accepts_comment_contract_when_comment_is_structured(
 
 
 def test_contract_validator_rejects_comment_contract_when_terms_are_missing(tmp_path: Path) -> None:
+    """Layer: unit. Comment diagnostics retain term and read-path failures."""
     validator = _validator(tmp_path)
     agent_output = tmp_path / "agent_output"
     agent_output.mkdir(parents=True, exist_ok=True)
@@ -432,6 +444,7 @@ def test_contract_validator_rejects_comment_contract_when_terms_are_missing(tmp_
             "required_comment_contains": ["Findings", "Severity", "Path"],
             "required_read_paths": ["agent_output/main.py"],
         },
+        required_read_observation=_observation("agent_output/main.py"),
     )
 
     assert diagnostics["ok"] is False
@@ -440,6 +453,7 @@ def test_contract_validator_rejects_comment_contract_when_terms_are_missing(tmp_
 
 
 def test_contract_validator_rejects_comment_contract_when_required_paths_are_not_cited(tmp_path: Path) -> None:
+    """Layer: unit. Comment diagnostics require every explicitly observed path."""
     validator = _validator(tmp_path)
     ui_dir = tmp_path / "agent_output" / "soak_matrix" / "ui"
     ui_dir.mkdir(parents=True, exist_ok=True)
@@ -474,6 +488,10 @@ def test_contract_validator_rejects_comment_contract_when_required_paths_are_not
                 "agent_output/soak_matrix/ui/style_notes.md",
             ],
         },
+        required_read_observation=_observation(
+            "agent_output/soak_matrix/ui/operator_panel.md",
+            "agent_output/soak_matrix/ui/style_notes.md",
+        ),
     )
 
     assert diagnostics["ok"] is False

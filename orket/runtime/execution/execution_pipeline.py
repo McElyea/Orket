@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import os
 from functools import partial
 from pathlib import Path
 from typing import Any
@@ -79,8 +78,12 @@ class ExecutionPipeline(
         require_sync_context(code="E_RUNTIME_CONSTRUCTION_REQUIRES_ASYNC_OWNER")
         from orket.orchestration.notes import NoteStore
 
+        context_inputs = runtime_context.construction_inputs if runtime_context is not None else None
+        inputs = context_inputs or construction_inputs or RuntimeConstructionInputs.capture(capture_preferences=False)
+        if runtime_context is not None and runtime_context.construction_inputs is None:
+            runtime_context.construction_inputs = inputs
         runtime_nodes = decision_nodes or (runtime_context.decision_nodes if runtime_context is not None
-            else build_decision_node_registry(environment=construction_inputs.environment if construction_inputs else None))
+            else build_decision_node_registry(environment=inputs.environment))
         self.runtime_context = runtime_context or OrketRuntimeContext.from_env(
             workspace_root=workspace,
             department=department,
@@ -96,7 +99,7 @@ class ExecutionPipeline(
             config_loader_kwargs={"decision_nodes": runtime_nodes},
             run_ledger_factory=build_run_ledger_repository,
             telemetry_sink=self._emit_run_ledger_telemetry,
-            construction_inputs=construction_inputs,
+            construction_inputs=inputs,
         )
         self.workspace = self.runtime_context.workspace_root
         self.department = self.runtime_context.department
@@ -119,9 +122,8 @@ class ExecutionPipeline(
         self.snapshots = self.runtime_context.snapshots_repo
         self.success = self.runtime_context.success_repo
         self.run_ledger = self.runtime_context.run_ledger
-        inputs = self.runtime_context.construction_inputs
         self.artifact_exporter = create_gitea_artifact_exporter(self.workspace,
-            environment=inputs.environment if inputs else None, invocation_root=inputs.invocation_root if inputs else None)
+            environment=inputs.environment, invocation_root=inputs.invocation_root)
 
         self.notes = NoteStore()
         self.transcript: list[dict[str, Any]] = []
@@ -236,7 +238,7 @@ class ExecutionPipeline(
 
     def _build_epic_run_orchestrator(self) -> EpicRunOrchestrator:
         inputs = self.runtime_context.construction_inputs
-        environment = dict(inputs.environment if inputs else os.environ)
+        environment = dict(inputs.environment)
         return EpicRunOrchestrator(
             eos_calendar=EosSprintBaseline.from_environment(environment),
             calendar_timezone_name=(environment.get("ORKET_TIMEZONE") or "UTC").strip(),

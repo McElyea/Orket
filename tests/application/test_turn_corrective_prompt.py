@@ -5,29 +5,36 @@ from pathlib import Path
 import pytest
 
 from orket.application.workflows.turn_corrective_prompt import CorrectivePromptBuilder
+from orket.application.workflows.turn_read_context import RequiredReadObservation
+
+
+def _observation(*existing: str) -> RequiredReadObservation:
+    return RequiredReadObservation(existing=existing, missing=())
 
 
 @pytest.mark.contract
 def test_corrective_prompt_binds_stable_failure_context(tmp_path: Path) -> None:
-    builder = CorrectivePromptBuilder(tmp_path)
+    builder = CorrectivePromptBuilder()
     diagnostic = {"error_code": "ERR_JSON_MD_FENCE", "error_family": "EXTRANEOUS_TEXT",
                   "short_error_detail": "markdown fence detected", "prior_output_excerpt_hash": "a" * 64}
     failures = [{"reason": "local_prompt_contract_not_met", "violations": [diagnostic]}]
-    prompt = builder.build_corrective_instruction(failures, {})
-    assert prompt == builder.build_corrective_instruction(failures, {})
+    prompt = builder.build_corrective_instruction(failures, {}, _observation())
+    assert prompt == builder.build_corrective_instruction(failures, {}, _observation())
     assert all(value in prompt for value in diagnostic.values())
     diagnostic["prior_output_excerpt_hash"] = "b" * 64
-    assert builder.build_corrective_instruction(failures, {}) != prompt
+    assert builder.build_corrective_instruction(failures, {}, _observation()) != prompt
 
 
 def test_corrective_prompt_builder_includes_required_path_contracts(tmp_path: Path) -> None:
+    """Layer: unit. Corrective rendering consumes explicit read classification."""
     required = tmp_path / "docs" / "spec.md"
     required.parent.mkdir(parents=True, exist_ok=True)
     required.write_text("spec", encoding="utf-8")
-    builder = CorrectivePromptBuilder(tmp_path)
+    builder = CorrectivePromptBuilder()
     prompt = builder.build_corrective_instruction(
         [{"reason": "read_path_contract_not_met"}, {"reason": "write_path_contract_not_met"}],
         {"required_read_paths": ["docs/spec.md"], "required_write_paths": ["agent_output/out.txt"]},
+        _observation("docs/spec.md"),
     )
     assert "Required read_file paths" in prompt
     assert "docs/spec.md" in prompt
@@ -43,7 +50,8 @@ def test_corrective_prompt_builder_failure_message_mapping() -> None:
 
 
 def test_corrective_prompt_builder_protocol_governed_uses_single_envelope_template(tmp_path: Path) -> None:
-    builder = CorrectivePromptBuilder(tmp_path)
+    """Layer: unit. Protocol corrective rendering keeps one envelope."""
+    builder = CorrectivePromptBuilder()
     prompt = builder.build_corrective_instruction(
         [{"reason": "progress_contract_not_met"}],
         {
@@ -52,6 +60,7 @@ def test_corrective_prompt_builder_protocol_governed_uses_single_envelope_templa
             "required_statuses": ["code_review"],
             "required_write_paths": ["agent_output/requirements.txt"],
         },
+        _observation(),
     )
 
     assert '"content": "", "tool_calls":' in prompt
@@ -59,7 +68,8 @@ def test_corrective_prompt_builder_protocol_governed_uses_single_envelope_templa
 
 
 def test_corrective_prompt_builder_includes_artifact_semantic_deltas(tmp_path: Path) -> None:
-    builder = CorrectivePromptBuilder(tmp_path)
+    """Layer: unit. Corrective rendering preserves semantic deltas."""
+    builder = CorrectivePromptBuilder()
     prompt = builder.build_corrective_instruction(
         [
             {
@@ -79,6 +89,7 @@ def test_corrective_prompt_builder_includes_artifact_semantic_deltas(tmp_path: P
             "required_statuses": ["code_review"],
             "required_write_paths": ["agent_output/challenge_runtime/simulator.py"],
         },
+        _observation(),
     )
 
     assert "Artifact semantic contract violations must be fixed" in prompt
@@ -90,7 +101,8 @@ def test_corrective_prompt_builder_includes_artifact_semantic_deltas(tmp_path: P
 
 
 def test_corrective_prompt_builder_highlights_write_text_json_dumps_when_required(tmp_path: Path) -> None:
-    builder = CorrectivePromptBuilder(tmp_path)
+    """Layer: unit. Corrective rendering preserves exact-token guidance."""
+    builder = CorrectivePromptBuilder()
     prompt = builder.build_corrective_instruction(
         [
             {
@@ -110,6 +122,7 @@ def test_corrective_prompt_builder_highlights_write_text_json_dumps_when_require
             "required_statuses": ["code_review"],
             "required_write_paths": ["agent_output/tests/test_validator_and_planner.py"],
         },
+        _observation(),
     )
 
     assert "Add these exact required substrings: write_text(json.dumps(" in prompt
@@ -117,7 +130,8 @@ def test_corrective_prompt_builder_highlights_write_text_json_dumps_when_require
 
 
 def test_corrective_prompt_builder_includes_preserve_tokens_when_present(tmp_path: Path) -> None:
-    builder = CorrectivePromptBuilder(tmp_path)
+    """Layer: unit. Corrective rendering preserves already-correct tokens."""
+    builder = CorrectivePromptBuilder()
     prompt = builder.build_corrective_instruction(
         [
             {
@@ -138,6 +152,7 @@ def test_corrective_prompt_builder_includes_preserve_tokens_when_present(tmp_pat
             "required_statuses": ["code_review"],
             "required_write_paths": ["agent_output/tests/test_validator_and_planner.py"],
         },
+        _observation(),
     )
 
     assert "Keep these exact substrings that are already correct in the current file:" in prompt

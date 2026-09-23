@@ -29,7 +29,7 @@ async def test_seat_policy_refuses_issue_mutation_during_actual_context_build(tm
     repo, issue, _team, orch = await _dispatch_context(tmp_path, SimpleNamespace())
     orch.loop_policy_node = Mutation()
     with pytest.raises(ValidationError, match="frozen_instance"):
-        orch._build_turn_context(run_id="run", issue=issue, seat_name="developer", roles_to_load=["coder"],
+        await orch._build_turn_context(run_id="run", issue=issue, seat_name="developer", roles_to_load=["coder"],
             turn_status=CardStatus.IN_PROGRESS, selected_model="fixture", resume_mode=False)
     assert issue.summary == "Original objective" and await repo.get_by_id(issue.id) == issue
 

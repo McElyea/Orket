@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
+from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -14,6 +15,7 @@ from orket.application.services.orchestrator_turn_context_policy import (
 )
 from orket.application.services.runtime_policy import allowed_architecture_patterns
 from orket.application.services.runtime_policy_inputs import ArchitecturePolicySnapshot
+from orket.application.workflows.turn_read_context import observe_available_required_read_paths
 from orket.core.cards_runtime_contract import DEFAULT_RUNTIME_VERIFICATION_PATH, resolve_cards_runtime
 from orket.core.domain.verification_scope import build_verification_scope
 from orket.runtime.config.contract_assets import DEFAULT_PROMPT_BUDGET_PATH
@@ -101,7 +103,8 @@ class OrchestratorTurnContextBuilder:
         except (TypeError, ValueError):
             return None
 
-    def build(self, data: TurnContextBuildInput) -> dict[str, Any]:
+    async def build(self, data: TurnContextBuildInput) -> dict[str, Any]:
+        workspace_root = self.workspace_root
         cards_runtime = dict(data.cards_runtime or resolve_cards_runtime(issue=data.issue))
         policy_inputs = capture_seat_policy_input(data.seat_name, data.issue, data.turn_status)
         required_action_tools = resolve_policy_list(
@@ -161,14 +164,14 @@ class OrchestratorTurnContextBuilder:
             normalize_turn_contract_override_list(turn_contract.get("required_comment_contains")) or []
         )
         runtime_verifier_contract = (
-            dict(params.get("runtime_verifier") or {})
+            deepcopy(dict(params.get("runtime_verifier") or {}))
             if isinstance(params, dict)
             and isinstance(params.get("runtime_verifier"), dict)
             and normalized_issue_seat == normalized_seat_name
             and normalized_issue_seat
             else {}
         )
-        profile_traits = dict(cards_runtime.get("profile_traits") or {})
+        profile_traits = deepcopy(dict(cards_runtime.get("profile_traits") or {}))
         profile_intent = str(profile_traits.get("intent") or "").strip().lower()
         runtime_verifier_issue_override = bool(runtime_verifier_contract) and profile_intent in {"write_artifact", "build_app"}
         if not bool(profile_traits.get("runtime_verifier_allowed", True)) and not runtime_verifier_issue_override:
@@ -221,7 +224,7 @@ class OrchestratorTurnContextBuilder:
             run_determinism_class = "workspace"
         compatibility_mappings = (
             {
-                str(tool_name).strip(): dict(mapping or {})
+                str(tool_name).strip(): deepcopy(dict(mapping or {}))
                 for tool_name, mapping in self.active_compatibility_mappings.items()
                 if str(tool_name).strip() and isinstance(mapping, dict)
             }
@@ -229,11 +232,11 @@ class OrchestratorTurnContextBuilder:
             else {}
         )
         resolved_skill_tool_bindings = {
-            str(key).strip(): dict(value or {})
+            str(key).strip(): deepcopy(dict(value or {}))
             for key, value in (data.skill_tool_bindings or {}).items()
             if str(key).strip()
         }
-        verification_scope_limits = self.resolve_verification_scope_limits()
+        verification_scope_limits = dict(self.resolve_verification_scope_limits())
         protocol_governed_enabled = self.resolve_protocol_governed_enabled()
         max_tool_execution_time = self._resolve_optional_float(process_rules.get("skill_max_execution_time"))
         max_tool_memory = self._resolve_optional_float(process_rules.get("skill_max_memory"))
@@ -251,30 +254,17 @@ class OrchestratorTurnContextBuilder:
             }
         )
         tool_profile_version = profile_versions[0] if len(profile_versions) == 1 else "unknown-v1"
-        available_required_read_paths = [
-            path_token
-            for raw_path in required_read_paths
-            if (path_token := str(raw_path).strip()) and (self.workspace_root / path_token).resolve().exists()
-        ]
-        declared_interfaces = list(required_action_tools) + list(approval_required_tools)
-        if not required_action_tools:
-            for interface_name in list(resolved_skill_tool_bindings.keys()) or ["read_file", "write_file", "update_issue_status"]:
-                if interface_name not in declared_interfaces:
-                    declared_interfaces.append(interface_name)
-        for interface_name, enabled in (("read_file", available_required_read_paths), ("write_file", required_write_paths), ("update_issue_status", required_statuses)):
-            if enabled and interface_name not in declared_interfaces:
-                declared_interfaces.append(interface_name)
-        determinism_controls = self.resolve_protocol_determinism_context()
-        return {
+        determinism_controls = deepcopy(self.resolve_protocol_determinism_context())
+        context = {
             "session_id": data.run_id,
             "issue_id": data.issue.id,
             "workspace": str(self.workspace_root),
             "role": data.seat_name,
-            "roles": data.roles_to_load,
+            "roles": list(data.roles_to_load),
             "current_status": data.turn_status.value,
             "selected_model": data.selected_model,
             "turn_index": data.turn_index,
-            "dependency_context": data.dependency_context or {"depends_on": data.issue.depends_on, "dependency_count": len(data.issue.depends_on), "dependency_statuses": {}, "unresolved_dependencies": []},
+            "dependency_context": deepcopy(data.dependency_context) if data.dependency_context else {"depends_on": list(data.issue.depends_on), "dependency_count": len(data.issue.depends_on), "dependency_statuses": {}, "unresolved_dependencies": []},
             "required_action_tools": required_action_tools,
             "required_statuses": required_statuses,
             "required_read_paths": required_read_paths,
@@ -286,44 +276,29 @@ class OrchestratorTurnContextBuilder:
             "builder_seat_choice": str(cards_runtime.get("builder_seat_choice") or ""),
             "reviewer_seat_choice": str(cards_runtime.get("reviewer_seat_choice") or ""),
             "profile_traits": profile_traits,
-            "seat_coercion": dict(cards_runtime.get("seat_coercion") or {}),
-            "artifact_contract": dict(cards_runtime.get("artifact_contract") or {}),
-            "scenario_truth": dict(cards_runtime.get("scenario_truth") or {}),
+            "seat_coercion": deepcopy(dict(cards_runtime.get("seat_coercion") or {})),
+            "artifact_contract": deepcopy(dict(cards_runtime.get("artifact_contract") or {})),
+            "scenario_truth": deepcopy(dict(cards_runtime.get("scenario_truth") or {})),
             "odr_active": bool(cards_runtime.get("odr_active")),
             "audit_mode": str(cards_runtime.get("audit_mode") or ""),
-            "odr_valid": cards_runtime.get("odr_valid"),
-            "odr_pending_decisions": cards_runtime.get("odr_pending_decisions"),
-            "odr_stop_reason": cards_runtime.get("odr_stop_reason"),
-            "odr_termination_reason": cards_runtime.get("odr_termination_reason"),
-            "odr_final_auditor_verdict": cards_runtime.get("odr_final_auditor_verdict"),
+            "odr_valid": deepcopy(cards_runtime.get("odr_valid")),
+            "odr_pending_decisions": deepcopy(cards_runtime.get("odr_pending_decisions")),
+            "odr_stop_reason": deepcopy(cards_runtime.get("odr_stop_reason")),
+            "odr_termination_reason": deepcopy(cards_runtime.get("odr_termination_reason")),
+            "odr_final_auditor_verdict": deepcopy(cards_runtime.get("odr_final_auditor_verdict")),
             "odr_artifact_path": str(cards_runtime.get("odr_artifact_path") or ""),
             "odr_requirement": str(cards_runtime.get("odr_requirement") or ""),
             "last_valid_round_index": int(cards_runtime.get("last_valid_round_index") or 0),
             "last_emitted_round_index": int(cards_runtime.get("last_emitted_round_index") or 0),
-            "verification_scope": build_verification_scope(
-                workspace=list(available_required_read_paths) + list(required_write_paths),
-                active_context=list(available_required_read_paths),
-                passive_context=[],
-                archived_context=[],
-                declared_interfaces=declared_interfaces,
-                strict_grounding=True,
-                forbidden_phrases=[],
-                enforce_path_hardening=True,
-                consistency_tool_calls_only=True,
-                max_workspace_items=verification_scope_limits.get("max_workspace_items"),
-                max_active_context_items=verification_scope_limits.get("max_active_context_items"),
-                max_passive_context_items=verification_scope_limits.get("max_passive_context_items"),
-                max_archived_context_items=verification_scope_limits.get("max_archived_context_items"),
-                max_total_context_items=verification_scope_limits.get("max_total_context_items"),
-            ),
+            "verification_scope": {},
             "stage_gate_mode": gate_mode,
             "approval_required_tools": approval_required_tools,
             "runtime_verifier_ok": data.runtime_verifier_ok,
             "runtime_verifier_enabled": data.runtime_verifier_enabled,
             "runtime_verifier_contract": runtime_verifier_contract,
             "runtime_retry_note": str(params.get("runtime_retry_note") or "") if isinstance(params, dict) else "",
-            "prompt_metadata": data.prompt_metadata or {},
-            "prompt_layers": data.prompt_layers or {},
+            "prompt_metadata": data.prompt_metadata if data.prompt_metadata is not None else {},
+            "prompt_layers": data.prompt_layers if data.prompt_layers is not None else {},
             "architecture_mode": architecture_mode,
             "frontend_framework_mode": frontend_framework_mode,
             "project_surface_profile": project_surface_profile,
@@ -339,7 +314,7 @@ class OrchestratorTurnContextBuilder:
             "create_pending_gate_request": _pending_gate_request_writer,
             "resolve_granted_tool_approval": _approved_tool_request_lookup,
             "resume_mode": bool(data.resume_mode),
-            "history": self.history_context_getter(data.seat_name),
+            "history": deepcopy(self.history_context_getter(data.seat_name)),
             "skill_contract_enforced": bool(resolved_skill_tool_bindings),
             "skill_tool_bindings": resolved_skill_tool_bindings,
             "tool_profile_version": tool_profile_version,
@@ -374,3 +349,29 @@ class OrchestratorTurnContextBuilder:
             "prompt_budget_require_backend_tokenizer": str(process_rules.get("prompt_budget_require_backend_tokenizer") or "").strip().lower() in {"1", "true", "yes", "on", "enabled"} if isinstance(process_rules.get("prompt_budget_require_backend_tokenizer"), str) else bool(process_rules.get("prompt_budget_require_backend_tokenizer", False)),
             "prompt_budget_policy_path": str(process_rules.get("prompt_budget_policy_path") or "").strip() or str(DEFAULT_PROMPT_BUDGET_PATH),
         }
+        available_read_paths = list(await observe_available_required_read_paths(
+            required_paths=required_read_paths, workspace=workspace_root,
+        ))
+        declared_interfaces = list(required_action_tools) + list(approval_required_tools)
+        if not required_action_tools:
+            defaults = ["read_file", "write_file", "update_issue_status"]
+            for interface_name in list(resolved_skill_tool_bindings) or defaults:
+                if interface_name not in declared_interfaces:
+                    declared_interfaces.append(interface_name)
+        for interface_name, enabled in (("read_file", available_read_paths),
+                                        ("write_file", required_write_paths),
+                                        ("update_issue_status", required_statuses)):
+            if enabled and interface_name not in declared_interfaces:
+                declared_interfaces.append(interface_name)
+        context["verification_scope"] = build_verification_scope(
+            workspace=available_read_paths + list(required_write_paths),
+            active_context=available_read_paths, passive_context=[], archived_context=[],
+            declared_interfaces=declared_interfaces, strict_grounding=True, forbidden_phrases=[],
+            enforce_path_hardening=True, consistency_tool_calls_only=True,
+            max_workspace_items=verification_scope_limits.get("max_workspace_items"),
+            max_active_context_items=verification_scope_limits.get("max_active_context_items"),
+            max_passive_context_items=verification_scope_limits.get("max_passive_context_items"),
+            max_archived_context_items=verification_scope_limits.get("max_archived_context_items"),
+            max_total_context_items=verification_scope_limits.get("max_total_context_items"),
+        )
+        return context

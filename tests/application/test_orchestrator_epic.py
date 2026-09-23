@@ -16,7 +16,7 @@ from orket.core.domain import ReservationStatus
 from orket.core.domain.execution import ExecutionTurn
 from orket.exceptions import CatastrophicFailure, ExecutionFailed
 from orket.runtime.config.contract_assets import DEFAULT_PROMPT_BUDGET_PATH
-from orket.schema import CardStatus, IssueConfig, SeatConfig, TeamConfig
+from orket.schema import CardStatus, DialectConfig, IssueConfig, SeatConfig, TeamConfig
 from tests.helpers.card_dispatch import install_dispatch_snapshot_stub
 from tests.helpers.model_selection import prepared_model_selection
 from tests.helpers.protocol_ledger_clock import ProtocolLedgerClock
@@ -734,7 +734,7 @@ async def test_execute_issue_turn_uses_custom_model_clients(orchestrator, monkey
     loader.queue_assets(
         [
             SimpleNamespace(name="dev", description="role", tools=[]),
-            SimpleNamespace(model_family="generic", dsl_format="json", constraints=[], hallucination_guard="none"),
+            DialectConfig(model_family="generic", dsl_format="json", constraints=[], hallucination_guard="none"),
         ]
     )
 
@@ -829,7 +829,7 @@ async def test_execute_issue_turn_prefers_explicit_model_override_for_prompt_str
     loader.queue_assets(
         [
             SimpleNamespace(name="dev", description="role", tools=[]),
-            SimpleNamespace(model_family="generic", dsl_format="json", constraints=[], hallucination_guard="none"),
+            DialectConfig(model_family="generic", dsl_format="json", constraints=[], hallucination_guard="none"),
         ]
     )
 
@@ -927,7 +927,7 @@ async def test_execute_issue_turn_closes_provider_per_turn_across_repeated_cycle
     loader.queue_assets(
         [
             SimpleNamespace(name="dev", description="role", tools=[]),
-            SimpleNamespace(model_family="generic", dsl_format="json", constraints=[], hallucination_guard="none"),
+            DialectConfig(model_family="generic", dsl_format="json", constraints=[], hallucination_guard="none"),
         ]
         * 20
     )
@@ -1036,7 +1036,7 @@ async def test_execute_issue_turn_skips_sandbox_when_policy_disabled(orchestrato
     loader.queue_assets(
         [
             SimpleNamespace(name="dev", description="role", tools=[]),
-            SimpleNamespace(model_family="generic", dsl_format="json", constraints=[], hallucination_guard="none"),
+            DialectConfig(model_family="generic", dsl_format="json", constraints=[], hallucination_guard="none"),
         ]
     )
 
@@ -1459,7 +1459,7 @@ async def test_execute_issue_turn_uses_prompt_resolver_when_policy_enabled(orche
                 tools=[],
                 prompt_metadata={"id": "role.architect", "version": "2.1.0"},
             ),
-            SimpleNamespace(
+            DialectConfig(
                 model_family="generic",
                 dsl_format="json",
                 constraints=[],
@@ -1566,7 +1566,7 @@ async def test_execute_issue_turn_uses_prompt_compiler_when_resolver_disabled(or
     loader.queue_assets(
         [
             SimpleNamespace(name="architect", description="Role", tools=[], prompt_metadata={}),
-            SimpleNamespace(
+            DialectConfig(
                 model_family="generic",
                 dsl_format="json",
                 constraints=[],
@@ -1674,7 +1674,7 @@ async def test_execute_issue_turn_suppresses_reference_context_for_cards_runtime
     loader.queue_assets(
         [
             SimpleNamespace(name="coder", description="Role", tools=[], prompt_metadata={}),
-            SimpleNamespace(
+            DialectConfig(
                 model_family="generic",
                 dsl_format="json",
                 constraints=[],
@@ -1761,7 +1761,7 @@ async def test_execute_issue_turn_passes_default_prompt_selection_policy(orchest
     loader.queue_assets(
         [
             SimpleNamespace(name="architect", description="Role", tools=[], prompt_metadata={}),
-            SimpleNamespace(
+            DialectConfig(
                 model_family="generic",
                 dsl_format="json",
                 constraints=[],
@@ -1874,7 +1874,7 @@ async def test_execute_issue_turn_passes_runtime_prompt_patch_into_resolver(orch
     loader.queue_assets(
         [
             SimpleNamespace(name="architect", description="Role", tools=[], prompt_metadata={}),
-            SimpleNamespace(
+            DialectConfig(
                 model_family="generic",
                 dsl_format="json",
                 constraints=[],
@@ -1981,7 +1981,7 @@ async def test_execute_issue_turn_passes_runtime_prompt_patch_into_compiler(orch
     loader.queue_assets(
         [
             SimpleNamespace(name="architect", description="Role", tools=[], prompt_metadata={}),
-            SimpleNamespace(
+            DialectConfig(
                 model_family="generic",
                 dsl_format="json",
                 constraints=[],
@@ -2080,7 +2080,7 @@ async def test_execute_epic_uses_custom_tool_strategy_node(tmp_path, monkeypatch
     loader.queue_assets(
         [
             SimpleNamespace(name="lead_architect", description="Role", tools=["read_file"]),
-            SimpleNamespace(model_family="generic", dsl_format="json", constraints=[], hallucination_guard="none"),
+            DialectConfig(model_family="generic", dsl_format="json", constraints=[], hallucination_guard="none"),
         ]
     )
 
@@ -2160,10 +2160,12 @@ async def test_execute_epic_uses_custom_tool_strategy_node(tmp_path, monkeypatch
 
     assert tool_strategy_hit["used"] is True
 
-def test_build_turn_context_includes_stage_gate_mode(orchestrator):
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_build_turn_context_includes_stage_gate_mode(orchestrator):
     orch, _cards, _loader = orchestrator
     issue = IssueConfig(id="I1", seat="integrity_guard", summary="Guard Review")
-    context = orch._build_turn_context(
+    context = await orch._build_turn_context(
         run_id="run-1",
         issue=issue,
         seat_name="integrity_guard",
@@ -2179,7 +2181,8 @@ def test_build_turn_context_includes_stage_gate_mode(orchestrator):
 
 
 @pytest.mark.unit
-def test_build_turn_context_promotes_gate_mode_when_approval_tools_present(orchestrator):
+@pytest.mark.asyncio
+async def test_build_turn_context_promotes_gate_mode_when_approval_tools_present(orchestrator):
     orch, _cards, _loader = orchestrator
     issue = IssueConfig(id="I1", seat="coder", summary="Code Work")
 
@@ -2200,7 +2203,7 @@ def test_build_turn_context_promotes_gate_mode_when_approval_tools_present(orche
             return []
 
     orch.loop_policy_node = _LoopPolicy()
-    context = orch._build_turn_context(
+    context = await orch._build_turn_context(
         run_id="run-1",
         issue=issue,
         seat_name="coder",
@@ -2213,10 +2216,12 @@ def test_build_turn_context_promotes_gate_mode_when_approval_tools_present(orche
     assert context["approval_required_tools"] == ["write_file"]
     assert context["stage_gate_mode"] == "approval_required"
 
-def test_build_turn_context_includes_required_read_paths_for_reviewer(orchestrator):
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_build_turn_context_includes_required_read_paths_for_reviewer(orchestrator):
     orch, _cards, _loader = orchestrator
     issue = IssueConfig(id="REV-1", seat="code_reviewer", summary="Review")
-    context = orch._build_turn_context(
+    context = await orch._build_turn_context(
         run_id="run-1",
         issue=issue,
         seat_name="code_reviewer",
@@ -2232,10 +2237,12 @@ def test_build_turn_context_includes_required_read_paths_for_reviewer(orchestrat
     ]
     assert context["required_write_paths"] == []
 
-def test_build_turn_context_includes_required_write_paths_for_coder(orchestrator):
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_build_turn_context_includes_required_write_paths_for_coder(orchestrator):
     orch, _cards, _loader = orchestrator
     issue = IssueConfig(id="COD-1", seat="coder", summary="Implement")
-    context = orch._build_turn_context(
+    context = await orch._build_turn_context(
         run_id="run-1",
         issue=issue,
         seat_name="coder",
@@ -2246,10 +2253,12 @@ def test_build_turn_context_includes_required_write_paths_for_coder(orchestrator
     )
     assert context["required_write_paths"] == ["agent_output/main.py"]
 
-def test_build_turn_context_non_final_guard_requires_done_status(orchestrator):
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_build_turn_context_non_final_guard_requires_done_status(orchestrator):
     orch, _cards, _loader = orchestrator
     issue = IssueConfig(id="COD-1", seat="coder", summary="Guard handoff")
-    context = orch._build_turn_context(
+    context = await orch._build_turn_context(
         run_id="run-1",
         issue=issue,
         seat_name="integrity_guard",
@@ -2263,10 +2272,12 @@ def test_build_turn_context_non_final_guard_requires_done_status(orchestrator):
     assert context["required_read_paths"] == ["agent_output/main.py"]
 
 
-def test_build_turn_context_final_guard_includes_read_contract(orchestrator):
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_build_turn_context_final_guard_includes_read_contract(orchestrator):
     orch, _cards, _loader = orchestrator
     issue = IssueConfig(id="REV-1", seat="code_reviewer", summary="Final guard review")
-    context = orch._build_turn_context(
+    context = await orch._build_turn_context(
         run_id="run-1",
         issue=issue,
         seat_name="integrity_guard",
@@ -2287,7 +2298,9 @@ def test_build_turn_context_final_guard_includes_read_contract(orchestrator):
     assert context["runtime_verifier_ok"] is True
 
 
-def test_build_turn_context_includes_architecture_contract_for_architect(orchestrator, monkeypatch):
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_build_turn_context_includes_architecture_contract_for_architect(orchestrator, monkeypatch):
     """Layer: unit. Architecture evaluation consumes the explicit unlock snapshot."""
     orch, _cards, _loader = orchestrator
     orch.architecture_policy = ArchitecturePolicySnapshot(True)
@@ -2298,7 +2311,7 @@ def test_build_turn_context_includes_architecture_contract_for_architect(orchest
         }
     )
     issue = IssueConfig(id="ARC-1", seat="architect", summary="Design architecture")
-    context = orch._build_turn_context(
+    context = await orch._build_turn_context(
         run_id="run-1",
         issue=issue,
         seat_name="architect",
@@ -2318,10 +2331,12 @@ def test_build_turn_context_includes_architecture_contract_for_architect(orchest
     assert "microservices" in context["architecture_allowed_patterns"]
 
 
-def test_build_turn_context_declares_role_tools_when_required_actions_are_empty(orchestrator):
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_build_turn_context_declares_role_tools_when_required_actions_are_empty(orchestrator):
     orch, _cards, _loader = orchestrator
     issue = IssueConfig(id="I1", seat="product_owner", summary="Define acceptance packet")
-    context = orch._build_turn_context(
+    context = await orch._build_turn_context(
         run_id="run-1",
         issue=issue,
         seat_name="product_owner",
@@ -2346,7 +2361,9 @@ def test_build_turn_context_declares_role_tools_when_required_actions_are_empty(
     assert "update_issue_status" in declared
 
 
-def test_build_turn_context_applies_issue_turn_contract_overrides(orchestrator):
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_build_turn_context_applies_issue_turn_contract_overrides(orchestrator):
     orch, _cards, _loader = orchestrator
     issue = IssueConfig(
         id="I2",
@@ -2363,7 +2380,7 @@ def test_build_turn_context_applies_issue_turn_contract_overrides(orchestrator):
             }
         },
     )
-    context = orch._build_turn_context(
+    context = await orch._build_turn_context(
         run_id="run-2",
         issue=issue,
         seat_name="product_owner",
@@ -2393,7 +2410,9 @@ def test_build_turn_context_applies_issue_turn_contract_overrides(orchestrator):
     assert "update_issue_status" in declared
 
 
-def test_build_turn_context_does_not_apply_issue_turn_contract_overrides_to_guard(orchestrator):
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_build_turn_context_does_not_apply_issue_turn_contract_overrides_to_guard(orchestrator):
     orch, _cards, _loader = orchestrator
     issue = IssueConfig(
         id="I2",
@@ -2414,7 +2433,7 @@ def test_build_turn_context_does_not_apply_issue_turn_contract_overrides_to_guar
             }
         },
     )
-    context = orch._build_turn_context(
+    context = await orch._build_turn_context(
         run_id="run-guard",
         issue=issue,
         seat_name="integrity_guard",
@@ -2431,7 +2450,9 @@ def test_build_turn_context_does_not_apply_issue_turn_contract_overrides_to_guar
     assert context["required_write_paths"] == []
 
 
-def test_build_turn_context_includes_profile_traits_and_scenario_truth(orchestrator):
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_build_turn_context_includes_profile_traits_and_scenario_truth(orchestrator):
     orch, _cards, _loader = orchestrator
     issue = IssueConfig(
         id="RMS-22",
@@ -2461,7 +2482,7 @@ def test_build_turn_context_includes_profile_traits_and_scenario_truth(orchestra
             },
         },
     )
-    context = orch._build_turn_context(
+    context = await orch._build_turn_context(
         run_id="run-blocked",
         issue=issue,
         seat_name="market_researcher",
@@ -2477,7 +2498,9 @@ def test_build_turn_context_includes_profile_traits_and_scenario_truth(orchestra
     assert context["runtime_verifier_contract"] == {}
 
 
-def test_build_turn_context_keeps_issue_runtime_verifier_contract_for_write_artifact_profile(orchestrator):
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_build_turn_context_keeps_issue_runtime_verifier_contract_for_write_artifact_profile(orchestrator):
     orch, _cards, _loader = orchestrator
     issue = IssueConfig(
         id="WR-ART-1",
@@ -2497,7 +2520,7 @@ def test_build_turn_context_keeps_issue_runtime_verifier_contract_for_write_arti
             },
         },
     )
-    context = orch._build_turn_context(
+    context = await orch._build_turn_context(
         run_id="run-artifact-override",
         issue=issue,
         seat_name="coder",
@@ -2516,7 +2539,9 @@ def test_build_turn_context_keeps_issue_runtime_verifier_contract_for_write_arti
     }
 
 
-def test_build_turn_context_includes_runtime_retry_note(orchestrator):
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_build_turn_context_includes_runtime_retry_note(orchestrator):
     orch, _cards, _loader = orchestrator
     issue = IssueConfig(
         id="WR-ART-2",
@@ -2525,7 +2550,7 @@ def test_build_turn_context_includes_runtime_retry_note(orchestrator):
         note="Keep truthful simulator semantics.",
         params={"runtime_retry_note": "runtime_guard_retry_scheduled: timeout after 60s"},
     )
-    context = orch._build_turn_context(
+    context = await orch._build_turn_context(
         run_id="run-artifact-retry-note",
         issue=issue,
         seat_name="coder",
@@ -2538,7 +2563,9 @@ def test_build_turn_context_includes_runtime_retry_note(orchestrator):
     assert context["runtime_retry_note"] == "runtime_guard_retry_scheduled: timeout after 60s"
 
 
-def test_build_turn_context_uses_transcript_length_for_turn_index(orchestrator):
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_build_turn_context_uses_transcript_length_for_turn_index(orchestrator):
     """Layer: unit."""
     orch, _cards, _loader = orchestrator
     orch.transcript = [
@@ -2548,7 +2575,7 @@ def test_build_turn_context_uses_transcript_length_for_turn_index(orchestrator):
     orch._history_context = lambda seat_name=None: []
     issue = IssueConfig(id="WR-ART-2A", seat="coder", summary="Retry simulator artifact")
 
-    context = orch._build_turn_context(
+    context = await orch._build_turn_context(
         run_id="run-artifact-turn-index",
         issue=issue,
         seat_name="coder",
@@ -2561,7 +2588,9 @@ def test_build_turn_context_uses_transcript_length_for_turn_index(orchestrator):
     assert context["turn_index"] == 3
 
 
-def test_build_turn_context_invalid_tool_limits_fail_closed(orchestrator):
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_build_turn_context_invalid_tool_limits_fail_closed(orchestrator):
     """Layer: unit."""
     orch, _cards, _loader = orchestrator
     orch.org = SimpleNamespace(
@@ -2572,7 +2601,7 @@ def test_build_turn_context_invalid_tool_limits_fail_closed(orchestrator):
     )
     issue = IssueConfig(id="WR-ART-2B", seat="coder", summary="Retry simulator artifact")
 
-    context = orch._build_turn_context(
+    context = await orch._build_turn_context(
         run_id="run-artifact-tool-limits",
         issue=issue,
         seat_name="coder",
@@ -2586,11 +2615,13 @@ def test_build_turn_context_invalid_tool_limits_fail_closed(orchestrator):
     assert context["max_tool_memory"] is None
 
 
-def test_build_turn_context_defaults_to_monolith_and_vue(orchestrator):
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_build_turn_context_defaults_to_monolith_and_vue(orchestrator):
     orch, _cards, _loader = orchestrator
     orch.org = SimpleNamespace(process_rules={})
     issue = IssueConfig(id="ARC-2", seat="architect", summary="Design architecture")
-    context = orch._build_turn_context(
+    context = await orch._build_turn_context(
         run_id="run-2",
         issue=issue,
         seat_name="architect",
@@ -2615,11 +2646,13 @@ def test_resolve_architecture_pattern_preserves_architect_decides(orchestrator):
 
 
 # Layer: unit
-def test_build_turn_context_protocol_governed_defaults(orchestrator):
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_build_turn_context_protocol_governed_defaults(orchestrator):
     orch, _cards, _loader = orchestrator
     orch.org = SimpleNamespace(process_rules={})
     issue = IssueConfig(id="ARC-3", seat="architect", summary="Design architecture")
-    context = orch._build_turn_context(
+    context = await orch._build_turn_context(
         run_id="run-3", issue=issue,
         seat_name="architect", roles_to_load=["architect"],
         turn_status=CardStatus.IN_PROGRESS,
@@ -2657,7 +2690,9 @@ def test_build_turn_context_protocol_governed_defaults(orchestrator):
 
 
 # Layer: unit
-def test_build_turn_context_protocol_governed_env_overrides(orchestrator, monkeypatch):
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_build_turn_context_protocol_governed_env_overrides(orchestrator, monkeypatch):
     orch, _cards, _loader = orchestrator
     orch.org = SimpleNamespace(process_rules={})
     monkeypatch.setenv("ORKET_PROTOCOL_GOVERNED_ENABLED", "true")
@@ -2674,7 +2709,7 @@ def test_build_turn_context_protocol_governed_env_overrides(orchestrator, monkey
     monkeypatch.setenv("ORKET_LOCAL_PROMPTING_ALLOW_FALLBACK", "true")
     monkeypatch.setenv("ORKET_LOCAL_PROMPTING_FALLBACK_PROFILE_ID", "openai_compat.qwen.openai_messages.v1")
     issue = IssueConfig(id="ARC-4", seat="architect", summary="Design architecture")
-    context = orch._build_turn_context(
+    context = await orch._build_turn_context(
         run_id="run-4", issue=issue,
         seat_name="architect",
         roles_to_load=["architect"],
@@ -2704,14 +2739,16 @@ def test_build_turn_context_protocol_governed_env_overrides(orchestrator, monkey
     assert context["prompt_budget_policy_path"] == str(DEFAULT_PROMPT_BUDGET_PATH)
 
 
-def test_build_turn_context_protocol_determinism_invalid_network_mode_fails_fast(orchestrator, monkeypatch):
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_build_turn_context_protocol_determinism_invalid_network_mode_fails_fast(orchestrator, monkeypatch):
     orch, _cards, _loader = orchestrator
     orch.org = SimpleNamespace(process_rules={})
     monkeypatch.setenv("ORKET_PROTOCOL_NETWORK_MODE", "internet")
     issue = IssueConfig(id="ARC-4B", seat="architect", summary="Design architecture")
 
     with pytest.raises(ValueError, match="E_NETWORK_MODE_INVALID"):
-        orch._build_turn_context(
+        await orch._build_turn_context(
             run_id="run-4b",
             issue=issue,
             seat_name="architect",
@@ -2721,7 +2758,9 @@ def test_build_turn_context_protocol_determinism_invalid_network_mode_fails_fast
             resume_mode=False,
         )
 
-def test_build_turn_context_uses_active_run_policy_overrides(orchestrator):
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_build_turn_context_uses_active_run_policy_overrides(orchestrator):
     orch, _cards, _loader = orchestrator
     orch.org = SimpleNamespace(process_rules={"allowed_tool_rings": ["core", "compatibility"]})
     orch.active_capabilities_allowed = ["workspace", "external"]
@@ -2736,7 +2775,7 @@ def test_build_turn_context_uses_active_run_policy_overrides(orchestrator):
     }
     issue = IssueConfig(id="ARC-4C", seat="architect", summary="Design architecture")
 
-    context = orch._build_turn_context(
+    context = await orch._build_turn_context(
         run_id="run-4c",
         issue=issue,
         seat_name="architect",
@@ -2871,7 +2910,7 @@ async def test_execute_issue_turn_small_project_variant_overrides_builder_seat(o
     loader.queue_assets(
         [
             SimpleNamespace(name="architect", description="Role", tools=[]),
-            SimpleNamespace(model_family="generic", dsl_format="json", constraints=[], hallucination_guard="none"),
+            DialectConfig(model_family="generic", dsl_format="json", constraints=[], hallucination_guard="none"),
         ]
     )
 
@@ -2965,7 +3004,7 @@ async def test_execute_issue_turn_does_not_coerce_builder_seat_when_small_projec
     loader.queue_assets(
         [
             SimpleNamespace(name="product_owner", description="Role", tools=[]),
-            SimpleNamespace(model_family="generic", dsl_format="json", constraints=[], hallucination_guard="none"),
+            DialectConfig(model_family="generic", dsl_format="json", constraints=[], hallucination_guard="none"),
         ]
     )
 
@@ -3129,7 +3168,7 @@ async def test_build_turn_context_pending_gate_callback_creates_tool_approval_re
 
     orch.pending_gates = _PendingRepo()
     orch.loop_policy_node = _LoopPolicy()
-    context = orch._build_turn_context(
+    context = await orch._build_turn_context(
         run_id="run-1",
         issue=issue,
         seat_name="coder",
@@ -3195,7 +3234,7 @@ async def test_build_turn_context_pending_gate_callback_creates_create_issue_too
 
     orch.pending_gates = _PendingRepo()
     orch.loop_policy_node = _LoopPolicy()
-    context = orch._build_turn_context(
+    context = await orch._build_turn_context(
         run_id="run-1",
         issue=issue,
         seat_name="coder",

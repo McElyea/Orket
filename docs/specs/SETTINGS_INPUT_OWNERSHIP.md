@@ -1,7 +1,7 @@
 # Settings input ownership
 
 Owner: Orket Core
-Last updated: 2026-09-21
+Last updated: 2026-09-23
 Status: Active contract
 
 ## Inputs and selection
@@ -73,6 +73,19 @@ cancellation; interruption does not imply rollback. Existing malformed-data,
 ownership and migration refusals remain visible. This is not an atomic snapshot
 across independent file reads. `RuntimeConstructionInputs.capture_async` retains
 the invocation root and environment before that collection begins.
+
+Native `ExecutionPipeline` construction without supplied inputs captures only its
+consumed root, environment and settings through the existing
+`RuntimeConstructionInputs.capture(capture_preferences=False)` authority. It does
+not admit preference migration. The required `user_preferences_json` field is
+`None` for that explicit omission, never an invented empty object. Calling
+`user_preferences()` or `bind_settings()` on such inputs refuses with
+`E_RUNTIME_PREFERENCES_NOT_CAPTURED`; binding validates both values before any
+context publication. Explicitly supplied full inputs retain their identity and
+preferences. Synchronous capture defaults to full collection; existing async
+factories, engine, API and CLI capture retain their full preference behavior.
+Their migration ownership and busy-owner refusals are unchanged. This narrow
+native admission contract does not claim preference-free async construction.
 
 ## File effects and interruption
 

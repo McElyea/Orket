@@ -1,20 +1,20 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 from typing import Any
 
 from .turn_path_resolver import PathResolver
+from .turn_read_context import RequiredReadObservation
 
 
 class CorrectivePromptBuilder:
     """Build deterministic corrective prompts for contract violations."""
 
-    def __init__(self, workspace: Path):
-        self.workspace = workspace
-
     def build_corrective_instruction(
-        self, violations: list[dict[str, Any]], context: dict[str, Any]
+        self,
+        violations: list[dict[str, Any]],
+        context: dict[str, Any],
+        required_read_observation: RequiredReadObservation,
     ) -> str:
         protocol_governed_enabled = bool(context.get("protocol_governed_enabled", False))
         lines = [
@@ -55,7 +55,7 @@ class CorrectivePromptBuilder:
                     lines.append(f"  - {path}")
 
         if "read_path_contract_not_met" in reason_set:
-            required_read_paths = PathResolver.required_read_paths(context, self.workspace)
+            required_read_paths = required_read_observation.existing
             if required_read_paths:
                 lines.append("- Required read_file paths:")
                 for path in required_read_paths:
@@ -151,7 +151,7 @@ class CorrectivePromptBuilder:
             str(t).strip() for t in (context.get("required_action_tools") or []) if str(t).strip()
         }
         required_read_paths = (
-            PathResolver.required_read_paths(context, self.workspace)
+            required_read_observation.existing
             if "read_file" in required_action_tool_set
             else []
         )
