@@ -103,6 +103,14 @@ Other log producers keep their current contracts. Migration and scope:
 `docs/specs/CONNECTOR_INVOCATION_TIMING.md` and
 `docs/architecture/CONTRACT_DELTA_CONNECTOR_LOGGING_D_2026-09-22.md`.
 
+Turn-message preparation captures its workspace and prompt-consumed values before
+awaiting native work; unrelated execution resources remain untouched. Existing
+native/file owners retain path admission, metadata, reads, closure and missing-input
+log production through interruption. Required reads use the existing governed
+PathResolver policy. Compaction writes to the two originally captured output sinks.
+Contract and migration: `docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md`
+and `docs/architecture/CONTRACT_DELTA_MESSAGE_READ_OWNERSHIP_D_2026-09-22.md`.
+
 Packet-2 collection captures its workspace, normalized policy and detached
 provenance before receipt discovery. The existing native owner retains protocol
 and legacy discovery/read/close and contained-file audit through interruption.

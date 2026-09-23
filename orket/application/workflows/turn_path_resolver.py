@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from orket.core.contracts.protocol_error_codes import E_WORKSPACE_CONSTRAINT_PREFIX, format_protocol_error
 from orket.core.domain.execution import ExecutionTurn
 
 
@@ -23,9 +24,29 @@ class PathResolver:
 
     @staticmethod
     def partition_required_read_paths(context: dict[str, Any], workspace: Path) -> tuple[list[str], list[str]]:
-        required_paths = [str(path).strip() for path in (context.get("required_read_paths") or []) if str(path).strip()]
+        required_paths = PathResolver._normalized_required_read_paths(context)
         if not required_paths:
             return [], []
+
+        return PathResolver._partition_required_read_paths(required_paths, workspace)
+
+    @staticmethod
+    def partition_governed_required_read_paths(
+        context: dict[str, Any], workspace: Path,
+    ) -> tuple[list[str], list[str]]:
+        required_paths = PathResolver._normalized_required_read_paths(context)
+        for raw_path in required_paths:
+            detail = PathResolver._path_violation(raw_path=raw_path, workspace=workspace, tool_name="read_file")
+            if detail:
+                raise ValueError(format_protocol_error(E_WORKSPACE_CONSTRAINT_PREFIX, detail))
+        return PathResolver._partition_required_read_paths(required_paths, workspace)
+
+    @staticmethod
+    def _normalized_required_read_paths(context: dict[str, Any]) -> list[str]:
+        return [str(path).strip() for path in (context.get("required_read_paths") or []) if str(path).strip()]
+
+    @staticmethod
+    def _partition_required_read_paths(required_paths: list[str], workspace: Path) -> tuple[list[str], list[str]]:
 
         existing: list[str] = []
         missing: list[str] = []

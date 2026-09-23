@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-23T03:10:04.887455+00:00",
+  "generated_at": "2026-09-23T04:21:24.642054+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -2241,15 +2241,23 @@
       },
       "orket.application.workflows.turn_message_builder": {
         "path": "orket/application/workflows/turn_message_builder.py",
-        "sha256": "90b2339374dbd94626cd6e53804dba53252491807d02d6fcb03deb2de42337d6"
+        "sha256": "15cfb12513c2df4085b8fc53c5876da2ca60c5b78919b37858620c6ff4a72cb6"
+      },
+      "orket.application.workflows.turn_message_inputs": {
+        "path": "orket/application/workflows/turn_message_inputs.py",
+        "sha256": "c5f279e426f5ba74a727ef0ff0aa5da6093fa7cf6e3e4d6a1e93f79cc32d6094"
       },
       "orket.application.workflows.turn_path_resolver": {
         "path": "orket/application/workflows/turn_path_resolver.py",
-        "sha256": "583ad0967f13a82b7b4d55508011611b956e7f0a73284509120dee1e252ed0c5"
+        "sha256": "4d4cb15e98116cad51e26a96082ec443c5ff1562424e5fe7481782dacfb0f641"
       },
       "orket.application.workflows.turn_prompt_budget_artifacts": {
         "path": "orket/application/workflows/turn_prompt_budget_artifacts.py",
         "sha256": "6a5e34cb307ac44ffbe84ae361beb1d629485adb75bd43dd2eb4edb9a5d6843c"
+      },
+      "orket.application.workflows.turn_read_context": {
+        "path": "orket/application/workflows/turn_read_context.py",
+        "sha256": "ce5195f93d597d5abd7d98826cc3fb6482120e686d80af7364ce72b10a131758"
       },
       "orket.application.workflows.turn_response_parser": {
         "path": "orket/application/workflows/turn_response_parser.py",
@@ -23001,63 +23009,91 @@
         "source": "orket.application.workflows.turn_message_builder",
         "target": "orket.application.services.card_completion_prompt",
         "path": "orket/application/workflows/turn_message_builder.py",
-        "line": 10,
+        "line": 7,
         "kind": "from"
       },
       {
         "source": "orket.application.workflows.turn_message_builder",
         "target": "orket.core.domain.verification_scope",
         "path": "orket/application/workflows/turn_message_builder.py",
-        "line": 14,
-        "kind": "from"
-      },
-      {
-        "source": "orket.application.workflows.turn_message_builder",
-        "target": "orket.logging",
-        "path": "orket/application/workflows/turn_message_builder.py",
-        "line": 15,
+        "line": 11,
         "kind": "from"
       },
       {
         "source": "orket.application.workflows.turn_message_builder",
         "target": "orket.runtime.compact_turn_packet",
         "path": "orket/application/workflows/turn_message_builder.py",
-        "line": 16,
+        "line": 12,
         "kind": "from"
       },
       {
         "source": "orket.application.workflows.turn_message_builder",
         "target": "orket.runtime.config.turn_prompt_contracts",
         "path": "orket/application/workflows/turn_message_builder.py",
-        "line": 17,
+        "line": 13,
         "kind": "from"
       },
       {
         "source": "orket.application.workflows.turn_message_builder",
         "target": "orket.schema",
         "path": "orket/application/workflows/turn_message_builder.py",
-        "line": 18,
+        "line": 14,
         "kind": "from"
       },
       {
         "source": "orket.application.workflows.turn_message_builder",
         "target": "orket.application.workflows.turn_artifact_semantic_prompt_hints",
         "path": "orket/application/workflows/turn_message_builder.py",
-        "line": 20,
+        "line": 16,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.workflows.turn_message_builder",
+        "target": "orket.application.workflows.turn_message_inputs",
+        "path": "orket/application/workflows/turn_message_builder.py",
+        "line": 17,
         "kind": "from"
       },
       {
         "source": "orket.application.workflows.turn_message_builder",
         "target": "orket.application.workflows.turn_path_resolver",
         "path": "orket/application/workflows/turn_message_builder.py",
-        "line": 21,
+        "line": 18,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.workflows.turn_message_builder",
+        "target": "orket.application.workflows.turn_read_context",
+        "path": "orket/application/workflows/turn_message_builder.py",
+        "line": 19,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.workflows.turn_message_inputs",
+        "target": "orket.adapters.storage.async_file_tools",
+        "path": "orket/application/workflows/turn_message_inputs.py",
+        "line": 9,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.workflows.turn_message_inputs",
+        "target": "orket.schema",
+        "path": "orket/application/workflows/turn_message_inputs.py",
+        "line": 10,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.workflows.turn_path_resolver",
+        "target": "orket.core.contracts.protocol_error_codes",
+        "path": "orket/application/workflows/turn_path_resolver.py",
+        "line": 6,
         "kind": "from"
       },
       {
         "source": "orket.application.workflows.turn_path_resolver",
         "target": "orket.core.domain.execution",
         "path": "orket/application/workflows/turn_path_resolver.py",
-        "line": 6,
+        "line": 7,
         "kind": "from"
       },
       {
@@ -23065,6 +23101,34 @@
         "target": "orket.utils",
         "path": "orket/application/workflows/turn_prompt_budget_artifacts.py",
         "line": 7,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.workflows.turn_read_context",
+        "target": "orket.adapters.execution.owned_io",
+        "path": "orket/application/workflows/turn_read_context.py",
+        "line": 8,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.workflows.turn_read_context",
+        "target": "orket.adapters.storage.async_file_tools",
+        "path": "orket/application/workflows/turn_read_context.py",
+        "line": 9,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.workflows.turn_read_context",
+        "target": "orket.logging",
+        "path": "orket/application/workflows/turn_read_context.py",
+        "line": 10,
+        "kind": "from"
+      },
+      {
+        "source": "orket.application.workflows.turn_read_context",
+        "target": "orket.application.workflows.turn_path_resolver",
+        "path": "orket/application/workflows/turn_read_context.py",
+        "line": 12,
         "kind": "from"
       },
       {
@@ -34153,7 +34217,7 @@
         "forwarded_arguments": 2
       }
     ],
-    "files_scanned": 1163,
+    "files_scanned": 1165,
     "scan_roots": [
       "orket"
     ],
@@ -34689,8 +34753,10 @@
       "orket.application.workflows.turn_executor_runtime": "application",
       "orket.application.workflows.turn_failure_traces": "application",
       "orket.application.workflows.turn_message_builder": "application",
+      "orket.application.workflows.turn_message_inputs": "application",
       "orket.application.workflows.turn_path_resolver": "application",
       "orket.application.workflows.turn_prompt_budget_artifacts": "application",
+      "orket.application.workflows.turn_read_context": "application",
       "orket.application.workflows.turn_response_parser": "application",
       "orket.application.workflows.turn_tool_dispatcher": "application",
       "orket.application.workflows.turn_tool_dispatcher_compatibility": "application",
@@ -35338,17 +35404,17 @@
       {
         "source": "application",
         "target": "adapters",
-        "count": 466
+        "count": 469
       },
       {
         "source": "application",
         "target": "application",
-        "count": 1854
+        "count": 1857
       },
       {
         "source": "application",
         "target": "core",
-        "count": 789
+        "count": 791
       },
       {
         "source": "application",
@@ -38992,45 +39058,6 @@
   },
   "diff_ledger": [
     {
-      "run_at_utc": "2026-09-22T09:52:22.197429Z",
-      "changed": true,
-      "before_digest": "sha256:7eed255e031be643687b8a5b7af0bd0f7b4df2ac6cfeb6217a5e28f905582d7c",
-      "after_digest": "sha256:1ad853fe406662ee777947f829757a295e45a5d2d0727143632de369e99eccfc",
-      "diff": {
-        "added_paths": 1,
-        "removed_paths": 0,
-        "changed_paths": 2096,
-        "initial_write": false,
-        "paths_total_previous": 49309,
-        "paths_total_current": 49320,
-        "paths_total_reference": 49320,
-        "churn_paths": 2097,
-        "churn_ratio": 0.042518,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.edges[2890].target",
-          "$.observed.edges[2891].target",
-          "$.observed.edges[2892].target",
-          "$.observed.edges[2893].target",
-          "$.observed.edges[2894].target",
-          "$.observed.edges[2895].target",
-          "$.observed.edges[2896].line",
-          "$.observed.edges[2896].target",
-          "$.observed.edges[2897].target",
-          "$.observed.edges[2898].target",
-          "$.observed.edges[2899].line",
-          "$.observed.edges[2899].target",
-          "$.observed.edges[2900].target",
-          "$.observed.edges[2901].line",
-          "$.observed.edges[2901].target",
-          "$.observed.edges[2902].line",
-          "$.observed.edges[2902].path",
-          "$.observed.edges[2902].source",
-          "$.observed.edges[2902].target"
-        ]
-      }
-    },
-    {
       "run_at_utc": "2026-09-22T10:26:11.906635Z",
       "changed": true,
       "before_digest": "sha256:1ad853fe406662ee777947f829757a295e45a5d2d0727143632de369e99eccfc",
@@ -39963,6 +39990,45 @@
           "$.observed.edges[3446].source",
           "$.observed.edges[3446].target",
           "$.observed.edges[3447].line"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-23T04:22:02.907244Z",
+      "changed": true,
+      "before_digest": "sha256:22d644332a26efe8c783376f1937e36d10a86bbef06251a482f2986e3f5319e5",
+      "after_digest": "sha256:5bb04677384e0930e24f11c0fa1b8a62cef092d9939d9b9f75ebd06a7444a3e0",
+      "diff": {
+        "added_paths": 12,
+        "removed_paths": 0,
+        "changed_paths": 5386,
+        "initial_write": false,
+        "paths_total_previous": 57592,
+        "paths_total_current": 57694,
+        "paths_total_reference": 57694,
+        "churn_paths": 5398,
+        "churn_ratio": 0.093563,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.edges[2235].line",
+          "$.observed.edges[2236].line",
+          "$.observed.edges[2237].line",
+          "$.observed.edges[2237].target",
+          "$.observed.edges[2238].line",
+          "$.observed.edges[2238].target",
+          "$.observed.edges[2239].line",
+          "$.observed.edges[2239].target",
+          "$.observed.edges[2240].line",
+          "$.observed.edges[2240].target",
+          "$.observed.edges[2241].line",
+          "$.observed.edges[2241].target",
+          "$.observed.edges[2242].line",
+          "$.observed.edges[2243].line",
+          "$.observed.edges[2243].path",
+          "$.observed.edges[2243].source",
+          "$.observed.edges[2243].target",
+          "$.observed.edges[2244].line",
+          "$.observed.edges[2244].path"
         ]
       }
     }

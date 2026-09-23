@@ -1,26 +1,26 @@
 from __future__ import annotations
 
-import hashlib
 import json
 from pathlib import Path
 from typing import Any
-
-import aiofiles
 
 from orket.application.services.card_completion_prompt import (
     card_completion_prompt_payload,
     guard_review_contract_lines,
 )
 from orket.core.domain.verification_scope import parse_verification_scope
-from orket.logging import log_event
 from orket.runtime.compact_turn_packet import compact_turn_messages
 from orket.runtime.config.turn_prompt_contracts import runtime_verifier_prompt_enabled
 from orket.schema import IssueConfig, RoleConfig
 
 from .turn_artifact_semantic_prompt_hints import artifact_semantic_exact_shape_hints
+from .turn_message_inputs import capture_turn_message_inputs, publish_compaction_outputs
 from .turn_path_resolver import PathResolver
-
-_MAX_PRELOADED_READ_CONTEXT_CHARS = 4000
+from .turn_read_context import (
+    observe_required_read_paths,
+    preload_required_read_context,
+    publish_missing_read_event,
+)
 
 
 class MessageBuilder:
@@ -37,6 +37,15 @@ class MessageBuilder:
         context: dict[str, Any],
         system_prompt: str | None = None,
     ) -> list[dict[str, str]]:
+        inputs = capture_turn_message_inputs(
+            workspace=self.workspace, issue=issue, role=role, context=context, system_prompt=system_prompt,
+        )
+        workspace, issue, role = inputs.workspace, inputs.issue, inputs.role
+        context, system_prompt = inputs.context, inputs.system_prompt
+        read_observation = await observe_required_read_paths(context=context, workspace=workspace)
+        required_read_paths = read_observation.existing
+        missing_required_read_paths = read_observation.missing
+
         messages: list[dict[str, str]] = []
         messages.append({"role": "system", "content": system_prompt or role.prompt or role.description})
         messages.append(
@@ -71,8 +80,6 @@ class MessageBuilder:
             if issue_brief_lines:
                 issue_brief_message = {"role": "user", "content": "Issue Brief:\n" + "\n".join(issue_brief_lines)}
 
-        required_read_paths = PathResolver.required_read_paths(context, self.workspace)
-        missing_required_read_paths = PathResolver.missing_required_read_paths(context, self.workspace)
         required_write_paths = PathResolver.required_write_paths(context)
         execution_context = {
             "issue_id": context.get("issue_id", issue.id),
@@ -358,7 +365,9 @@ class MessageBuilder:
             ]
             messages.append({"role": "user", "content": "Read Path Contract:\n" + "\n".join(read_lines)})
         if should_preload_read_context:
-            preloaded_read_context = await self._load_required_read_context(required_read_paths)
+            preloaded_read_context = await preload_required_read_context(
+                required_read_paths=required_read_paths, workspace=workspace,
+            )
             if preloaded_read_context:
                 messages.append(
                     {
@@ -399,17 +408,13 @@ class MessageBuilder:
 
         should_emit_missing_read_notice = bool(missing_required_read_paths) and read_path_contract_required
         if should_emit_missing_read_notice:
-            log_event(
-                "preflight_missing_read_paths",
-                {
-                    "issue_id": issue.id,
-                    "role": role.name,
-                    "session_id": context.get("session_id", "unknown-session"),
-                    "turn_index": int(context.get("turn_index", 0)),
-                    "missing_required_read_paths_count": len(missing_required_read_paths),
-                    "missing_required_read_paths": missing_required_read_paths,
-                },
-                self.workspace,
+            await publish_missing_read_event(
+                issue_id=issue.id,
+                role_name=role.name,
+                session_id=context.get("session_id", "unknown-session"),
+                turn_index=context.get("turn_index", 0),
+                missing_required_read_paths=missing_required_read_paths,
+                workspace=workspace,
             )
             missing_lines = [
                 "- The following expected read paths are currently missing in workspace:",
@@ -505,39 +510,6 @@ class MessageBuilder:
             compaction = compact_turn_messages(messages, runtime_context={**context, "available_tools": role.tools})
             messages = compaction.messages
             if compaction.applied:
-                prompt_metadata = context.get("prompt_metadata")
-                if isinstance(prompt_metadata, dict):
-                    prompt_metadata["prompt_checksum"] = hashlib.sha256(
-                        str(messages[0].get("content") or "").encode("utf-8")
-                    ).hexdigest()[:16]
-                    prompt_metadata["prompt_packet_version"] = compaction.packet_version
-                    prompt_metadata["prompt_packet_compacted"] = True
-                prompt_layers = context.get("prompt_layers")
-                if isinstance(prompt_layers, dict):
-                    prompt_layers["packet_compaction"] = {
-                        "enabled": True,
-                        "version": compaction.packet_version,
-                        "source_message_count": compaction.source_message_count,
-                        "compacted_message_count": compaction.compacted_message_count,
-                    }
+                publish_compaction_outputs(inputs=inputs, messages=messages, compaction=compaction)
 
         return messages
-
-    async def _load_required_read_context(self, required_read_paths: list[str]) -> list[str]:
-        rendered: list[str] = []
-        for rel_path in required_read_paths:
-            candidate = (self.workspace / rel_path).resolve()
-            if not candidate.exists() or not candidate.is_file():
-                continue
-            async with aiofiles.open(candidate, encoding="utf-8") as handle:
-                content = await handle.read()
-            normalized = content.replace("\r\n", "\n")
-            truncated = False
-            if len(normalized) > _MAX_PRELOADED_READ_CONTEXT_CHARS:
-                normalized = normalized[:_MAX_PRELOADED_READ_CONTEXT_CHARS]
-                truncated = True
-            block = f"Path: {rel_path}\nContent:\n{normalized}"
-            if truncated:
-                block += "\n[truncated]"
-            rendered.append(block)
-        return rendered

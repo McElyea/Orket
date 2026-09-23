@@ -12521,9 +12521,9 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.99 packet-2 receipt/input/file-audit ownership boundary. Next is MessageBuilder
-read-context observation and its missing-path logging producer, starting with review
-of the unexecuted probe recorded in the .99 checkpoint below. Preserve 0.6.98 artifact
+0.6.100 MessageBuilder input/read/log ownership boundary. Next is the shared
+required-read metadata boundary across prompt-context construction, response validation,
+corrective prompts and protocol preflight, preserving their distinct admission semantics. Preserve 0.6.98 artifact
 and source-attribution ownership, 0.6.97 interrupted connector logging,
 0.6.96 Gitea export ownership, 0.6.95 short HTTP ownership, 0.6.94 Gitea request
 inputs, 0.6.93 Gitea HTTP composition and all earlier accepted behavior, including
@@ -12551,7 +12551,7 @@ and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
 Preserve every failed and
 passing source/native observation and the historical clock diagnosis. Canonical
-Ruff has 88 existing findings and zero introduced findings at .99. The prior stale benchmark expectation passes in the
+Ruff has 88 existing findings and zero introduced findings at .100. The prior stale benchmark expectation passes in the
 new source/native selection. The unmodified published .39 complete rerun has
 7,260 passes, three failures and 89 skips; its coverage is 84.56120595327887%
 against the unchanged 89% gate. The two parent-Git-dependent fixture failures and
@@ -23250,3 +23250,171 @@ retained; retirement still requires explicit user acceptance.
 Authority: docs/specs/TRUTHFUL_RUNTIME_NARRATION_EFFECT_AUDIT_CONTRACT.md,
 docs/specs/TRUTHFUL_RUNTIME_SOURCE_ATTRIBUTION_CONTRACT.md and the .99 delta.
 Proof root: .tmp/d-packet2-ownership/.
+
+
+#### .100 MessageBuilder opening controls and active repair (2026-09-22)
+
+Responsible maintainer: Codex for Orket Core. Canonical D3 after published .99,
+commit cabe376fe3dae6084896c886368de0beadeef2a4. The original unexecuted next-boundary
+draft remains preserved. Its reviewed copy now ran unchanged against .99 source
+and the byte-verified installed wheel: five cases, three failures, two passes in
+each cell. The held metadata case records 0.802579300s/0.802733200s independent
+SQLite against the unchanged 0.5s bound. Cancellation and timeout return while the
+held native open is still unsettled. Healthy metadata and exact 4000-character
+normalized preload controls pass; physical bytes and fixture cleanup are retained.
+
+A separate eight-case input probe also matches source and installed: three failures,
+five passes. Mid-read workspace replacement changes the second file, role/tools
+mutation changes available tools, and context mutation changes compacted identity.
+The issue mutation control already passes because those fields are read earlier.
+The context case fails at its first message assertion, so it does not independently
+establish the later output-sink assertions on .99. All observations remain retained
+under .tmp/d-message-read-ownership/; these are opening failures, not acceptance.
+
+The active candidate captures prompt-consumed inputs only, retains original output
+sinks, and reuses existing native/file owners for metadata/read/close and missing
+input log production. Governing admission is reconciled to the existing PathResolver
+read_file validator before required preload: invalid is not missing; no external
+reference-root prompting capability is added. The structural bypass does not prove
+a hostile public input route. Live refusal and full repair proof remain pending.
+
+Sol Extra High workers have disjoint runtime, native-lifetime test and admission/
+capture-test ownership. The orchestrator owns integration, authority, frozen source/
+installed acceptance, commits and publication. No candidate acceptance, v0.6.100
+publication, Linux application proof, whole-plan completion or retirement is claimed.
+Migration: docs/architecture/CONTRACT_DELTA_MESSAGE_READ_OWNERSHIP_D_2026-09-22.md.
+
+
+#### .100 MessageBuilder captured inputs and owned read/log work (2026-09-22)
+
+Responsible maintainer: Codex for Orket Core. Canonical D3 after published .99.
+`compatibility_status`: `breaking`; `affected_audience`: `all`;
+`migration_requirement`: `required`.
+
+MessageBuilder captures its lexical absolute workspace, prompt-consumed issue/role
+values and bounded context map before its first await. Used nested collections are
+detached; unrelated execution resources and unused model fields are not copied.
+Frozen card-completion records retain their authority. Original metadata/layer
+dictionaries remain intentional compaction output sinks even after caller slot
+replacement; reads use captured input values. Compact and legacy prompt controls
+preserve ordering, normalized content and the independent 4000-character limit.
+
+Required paths use the existing governed PathResolver read_file validator before
+content preload. Invalid absolute/traversal/resolved-escape inputs fail with the
+existing E_WORKSPACE_CONSTRAINT vocabulary, rather than becoming missing files.
+The live directory-symlink case runs on this Windows host without a skip. Explicit
+low-level reference-root reads remain separate; displayed issue references grant
+no filesystem authority. This is not proof of a hostile public-input exploit or
+handle-bound confinement against concurrent path replacement.
+
+Existing owners retain all builder metadata, read and close work through repeated
+cancellation and caller timeout. Interrupted admitted work settles before return;
+later read/log/output stages are not admitted. During an admitted read after positive
+metadata, actual file deletion, invalid UTF-8 or directory replacement propagates
+the reached native failure after settlement, including interruption. Directory replacement reports PermissionError
+on these observed cells; no other host-specific exception subtype is claimed.
+
+The admitted missing-input logging producer retains its directory/main-log append
+work under the same native owner. Physical log bytes and existing input bytes are
+read back. All-missing required inputs still prune read_file and produce no notice
+or event; logging tests deliberately include one existing plus one missing path.
+Subscriber callbacks, standard-library handler failures, durable queue delivery
+and other producers are outside this proof. There is no new native owner, forced
+thread kill, hard filesystem deadline, atomic snapshot or rollback.
+
+Original matched source/.99-wheel opening observations remain five cases/three
+failures and eight cases/three failures. Expanded .99 wheel: 133 cases/39 failures,
+including eight fixture defects (two missing-write artifact fixtures and six
+all-missing log fixtures). The other 31 observations are limited to the reached
+assertions; metadata timeout cases that failed before reschedule do not prove old
+timeout handling. The artifact correction then records two failures from missing
+ok envelopes; corrected real-file-I/O envelopes pass both cases on .99. Directory
+control first records a collection error from an absent fixture dependency, then
+eight cases/five failures (original five/three plus directory three/two). Corrected
+missing-log control records 11/nine failures (original five/three plus log six/six).
+These are separate runs, not a fabricated corrected 133-case aggregate.
+
+Initial scoped lint findings and mechanical corrections are retained; original
+assertions were unchanged by lint correction. The original ignored probes remain
+unchanged, but maintained copies differ mechanically. The original .99 draft stays
+unexecuted; the reviewed probe's execution is recorded in the opening section.
+All ten opening/control phases bind 794 physical fixture and copied-test hashes.
+No historical observation is replaced, no test/deadline/coverage gate is weakened.
+
+The first full campaign stops after its successful source run because the added
+parity wrapper incorrectly counts 29 separate SDK sources as core Python files
+(1,194 rather than 1,165). The existing complete-core equality check had passed.
+That helper and failed campaign remain unchanged. A new wrapper uses the same
+complete source/sdist/wheel equality and the correct core-only count; only the
+unrun installed cells then proceed, with candidate bytes still frozen.
+
+Initial and final focused source: 137 passes, zero failures/errors/skips, unchanged
+inputs. There are 53 new integration cases and one explicitly structural prompt-key
+inventory case. The latter checks literal get calls in enumerated modules, not an
+indirect or dynamic call graph. Composed TurnExecutor tests use actual AsyncFileTools
+reads/writes and artifact/checkpoint readbacks; model responses are controlled
+fixtures, not live provider acceptance. Independent Sol review is structural.
+
+| Cell | Tests / failures / errors / skips | JUnit seconds | Installed origins |
+|---|---|---|---|
+| Fresh source | 2668 / 0 / 0 / 0 | 846.756 | source |
+| Installed a100-win-py311 | 2668 / 0 / 0 / 0 | 862.672 | 1056 |
+| Installed a100-win-py312 | 2668 / 0 / 0 / 0 | 1088.067 | 1056 |
+
+All 2,545 .99 case identities remain across 259 modules; the wider selection also
+adds 69 pre-existing affected cases. Each cell records 261 actual SQLite
+observations below the unchanged 0.5s bound; maximum 0.405717100s. Source, sdist
+and wheel match exactly for 1,165 Python and 20 unchanged data files (1,185 total),
+with 2435 support inputs. Canonical C: 1,165 modules/3829
+edges/six routes passes without new exceptions. Ruff remains 88 existing findings,
+zero introduced. Scoped lint/size, local Quality selection, metadata and hygiene
+checks pass; hosted Quality and full-suite 89% coverage are not proved. Scoped
+AC-01 through AC-08 and AC-10 pass; AC-09 stays partial for wider ProductFlow replay.
+Baseline collection succeeds and release_ready remains false.
+
+The builder shrinks from 543 to 515 lines; new input/read modules have 84/72 lines.
+Existing native/file/logging owners, executor, upstream context builder and shared
+dependency policy remain unchanged. All 22,188 retained evidence hashes and nine
+handoff bindings verify; original C:/Source/Orket remains unchanged. Exact bindings,
+native error subtypes, failed controls and proof receipts live under
+.tmp/d-message-read-ownership/.
+
+Next coherent D3 boundary: required-read metadata shared by upstream prompt-context
+construction, response validation, corrective prompts and protocol preflight.
+Keep one policy authority and existing resource owners, capture only consumed
+values, preserve separate admission semantics, and prove consistency within each
+attempt plus fresh dispatch-time observation. This checkpoint does not fix those
+callers. Whole-turn workspace batching is unsafe: preserve each tool's policy,
+compatibility, workspace, awaited gate, skill and approval order. Context availability
+currently accepts directories, while legacy required-read classification requires
+files; neither gains MessageBuilder's earlier governed refusal without an explicit
+semantic change.
+
+Independent D2/D4 continuation: Packet-1 intended provider/profile still reads
+ambient environment during start/finalization instead of the existing construction
+snapshot. Reuse that snapshot and preserve actual telemetry precedence; this is a
+structurally identified gap, not an executed counterexample here.
+
+Three bounded Sol workers prepared four ignored, unexecuted drafts under
+.tmp/d-shared-read-path-preparation/ and .tmp/d-run-packet1-preparation/. Exact paths,
+hashes and limits are in next-boundary-preparation.json. Protocol and validator
+drafts cover opening metadata responsiveness only. The Packet-1 original is retained;
+its reviewed copy records physical summary, start/final intent and telemetry before
+the first intent assertion. No draft has been imported, collected or executed at
+this checkpoint. Single-declaration protocol controls do not independently establish
+cardinality preservation; expanded proof remains required. These preparations and
+the read-only inventory are structural, not next-boundary acceptance.
+
+Retain the exact .95 Linux clock blocker: elapsed 240.019511342s, synchronized quiet
+25.211878083s against 60s, steps -6.018610816/+6.026590404s against 0.01s. Receipt:
+.tmp/d-short-http-ownership/linux-clock-preflight.json, SHA 2002c0e34e9d889dec2d8ff5f409f03805d48511d7d7496b5fcb9ea110370d0e.
+No fresh Linux clock/application proof or settings change. Wider D2/D3/D4, lazy TLS,
+transitive logging/native-worker limits, E1/E2/full 89% coverage, ProductFlow replay,
+legacy Kernel cutover, selected llama.cpp and CAP-1/2/3 remain. Prior Git timeout,
+physical sleep, Windows latency and CPython 3.12 shutdown observations stay retained.
+The .96 disposable Gitea proof is retained, not rerun. No fresh model/cloud/public-CLI
+acceptance, release readiness, main merge, whole-plan completion or lane retirement
+is claimed. Retirement still requires explicit user acceptance.
+
+Authority: docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md and the .100
+contract delta. Proof root: .tmp/d-message-read-ownership/.

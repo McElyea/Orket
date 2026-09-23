@@ -1,6 +1,6 @@
 # Protocol-Governed Local Provider Compatibility Contract (v1.2)
 
-Last updated: 2026-09-12
+Last updated: 2026-09-22
 Status: Active (contract baseline)
 Owner: Orket Core
 
@@ -37,6 +37,45 @@ registry fails; an unresolved model still follows the existing shadow/compat/enf
 and strict-task rules. Registry digests describe the bytes actually parsed, not a
 claim that the file stayed unchanged afterward. Cancellation may wait for a slow
 filesystem read to settle; a worker failure remains visible during cancellation.
+
+## Turn-message input and read-context ownership
+
+`MessageBuilder.prepare_messages` captures its lexical absolute workspace and
+prompt-consumed issue, role and context values before its first await. Used nested
+prompt collections are detached; unrelated execution resources and unused arbitrary
+model fields are not traversed or copied. Frozen card-completion records retain
+their existing authority. This is invocation capture, not a filesystem snapshot.
+
+The original `prompt_metadata` and `prompt_layers` dictionaries are intentional
+output sinks. Prompt reads use captured values. Compaction publishes only its
+existing metadata keys and `packet_compaction` value to those original dictionaries,
+even if the caller replaces the context slots while preparation is suspended.
+
+Required-read tokens use the existing `PathResolver` governed `read_file`
+validation before preload admission: workspace-relative, without traversal or
+resolved escape. Invalid tokens raise `ValueError` with the shared
+`E_WORKSPACE_CONSTRAINT:<read_file detail>` vocabulary; they are not missing files.
+The current validator rejects every absolute token, including one inside the
+workspace. Explicit ToolBox reference roots remain a separate read capability;
+displayed issue references do not grant MessageBuilder filesystem authority.
+
+Existing native/file owners retain path validation, existence/type observation,
+UTF-8 read and handle closure through repeated cancellation and caller timeout.
+An interruption prevents later preparation stages after admitted work settles.
+Existing path order, valid missing-file notice, preload predicates, newline
+normalization and the 4000-character content limit remain. Native path containment
+is not handle-bound confinement against concurrent path replacement.
+
+When the existing read contract admits a missing-input notice, its logging producer
+uses the same native owner for its publication attempt, including directory and
+main-log append work. Failures at those two boundaries remain visible. An all-missing
+required-read list preserves the existing removal of `read_file` and emits no notice
+or missing-input event. The log is diagnostic and grants no completion, effect or
+recovery authority. This does not change subscriber/standard-library handler failure
+semantics, other producers, or establish durable logging delivery.
+No forced thread termination, hard filesystem deadline, rollback, atomic input/file
+snapshot or new provider/reference-root admission is implied. Migration and proof
+requirements: `docs/architecture/CONTRACT_DELTA_MESSAGE_READ_OWNERSHIP_D_2026-09-22.md`.
 
 ## 2. Scope
 
