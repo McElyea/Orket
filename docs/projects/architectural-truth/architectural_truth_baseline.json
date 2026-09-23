@@ -1,6 +1,6 @@
 {
   "schema_version": "architectural_truth.baseline.v1",
-  "generated_at": "2026-09-22T23:45:40.014113Z",
+  "generated_at": "2026-09-23T00:33:31.997072Z",
   "collection_ok": true,
   "release_ready": false,
   "release_ready_reason": "Active architectural exceptions and red/noisy proof gates remain.",
@@ -2481,16 +2481,16 @@
         "orket.adapters.vcs.gitea_artifact_exporter": {
           "module": [
             {
-              "line": 26,
+              "line": 27,
               "kind": "Assign",
               "direct": true,
               "literal": true
             }
           ],
           "classes": {
-            "GiteaArtifactExporter@38": [
+            "GiteaArtifactExporter@39": [
               {
-                "line": 41,
+                "line": 42,
                 "kind": "Assign",
                 "direct": true,
                 "literal": true
@@ -2897,12 +2897,12 @@
         {
           "source": "adapters",
           "target": "adapters",
-          "count": 255
+          "count": 256
         },
         {
           "source": "adapters",
           "target": "core",
-          "count": 150
+          "count": 152
         },
         {
           "source": "application",
@@ -2912,7 +2912,7 @@
         {
           "source": "application",
           "target": "application",
-          "count": 1851
+          "count": 1852
         },
         {
           "source": "application",
@@ -6035,21 +6035,21 @@
         {
           "module": "orket.adapters.vcs.gitea_artifact_exporter",
           "path": "orket/adapters/vcs/gitea_artifact_exporter.py",
-          "sha256": "79c2c7dc62052e2bb90d18c3f1acc8b5439fedbcca1c3907d80a3b741189cfdb",
+          "sha256": "f05a6f342578b0196dd74a25c10c38b0bd8bc7fbdb46dacf74700b1ac7016779",
           "side_effecting": true,
           "declarations": {
             "module": [
               {
-                "line": 26,
+                "line": 27,
                 "kind": "Assign",
                 "direct": true,
                 "literal": true
               }
             ],
             "classes": {
-              "GiteaArtifactExporter@38": [
+              "GiteaArtifactExporter@39": [
                 {
-                  "line": 41,
+                  "line": 42,
                   "kind": "Assign",
                   "direct": true,
                   "literal": true
@@ -6061,7 +6061,7 @@
         {
           "module": "orket.adapters.vcs.gitea_export_git",
           "path": "orket/adapters/vcs/gitea_export_git.py",
-          "sha256": "dfe287f2de1c5f9c91ba6883dfd85c0e72173021a58048c366ee1a8a5979a6fe",
+          "sha256": "a52284047f5d3c3b4cb23eed9274898d86c08f01432afb0733025ba1ec3b4a55",
           "side_effecting": true,
           "declarations": {
             "module": [
@@ -6706,10 +6706,10 @@
   },
   "test_taxonomy": {
     "schema_version": "test_taxonomy_report.v1",
-    "tests_total": 5846,
-    "missing_layer_total": 4259,
+    "tests_total": 5858,
+    "missing_layer_total": 4271,
     "by_layer": {
-      "unlabeled": 4259,
+      "unlabeled": 4271,
       "integration": 752,
       "unit": 161,
       "contract": 663,
@@ -7317,7 +7317,7 @@
         "layer": null
       }
     ],
-    "missing_layers_omitted": 4159
+    "missing_layers_omitted": 4171
   },
   "ruff": {
     "proof": "structural_lint",
@@ -7716,55 +7716,6 @@
     "parse_errors": []
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-22T13:24:00.351917Z",
-      "changed": true,
-      "before_digest": "sha256:2fefc14d451eba0cf9a0714943a8dbca649338f3b6fca12e93751a4f34e46441",
-      "after_digest": "sha256:d813ed2e8d1082686a152def70934f724929743e3425664017e302c0430c707d",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 3,
-        "changed_paths": 8,
-        "initial_write": false,
-        "paths_total_previous": 9302,
-        "paths_total_current": 9269,
-        "paths_total_reference": 9302,
-        "churn_paths": 11,
-        "churn_ratio": 0.001183,
-        "sample_paths": [
-          "$.dependency_graph.observed.layer_edges[3].count",
-          "$.dependency_graph.observed.layer_edges[4].count",
-          "$.dependency_graph.observed.layer_edges[9].count",
-          "$.dependency_graph.observed.layer_edges[10].count",
-          "$.dependency_graph.observed.layer_edges[10].target",
-          "$.dependency_graph.observed.layer_edges",
-          "$.dependency_graph.verdict.ok",
-          "$.dependency_graph.verdict.violations",
-          "$.generated_at",
-          "$.noop_critical_paths.scanned_files"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-22T13:39:39.289066Z",
-      "changed": true,
-      "before_digest": "sha256:d813ed2e8d1082686a152def70934f724929743e3425664017e302c0430c707d",
-      "after_digest": "sha256:095b435f5b532cc60d977a771e20f13ca6fa9d8765e2c3f4446e8d1d3c39e84f",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 9269,
-        "paths_total_current": 9269,
-        "paths_total_reference": 9269,
-        "churn_paths": 1,
-        "churn_ratio": 0.000108,
-        "sample_paths": [
-          "$.generated_at"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-22T13:59:01.511520Z",
       "changed": true,
@@ -8506,6 +8457,61 @@
       "changed": true,
       "before_digest": "sha256:b67320ab85c293120da2660f6711fe88c016ce3f5576e27f5f5f14a9aa568ea0",
       "after_digest": "sha256:5e12caa886781b5257ccbd99cc917d4b84dd47decf78c3ae06324d3312f5ff2f",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 9372,
+        "paths_total_current": 9372,
+        "paths_total_reference": 9372,
+        "churn_paths": 1,
+        "churn_ratio": 0.000107,
+        "sample_paths": [
+          "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-23T00:02:23.425812Z",
+      "changed": true,
+      "before_digest": "sha256:5e12caa886781b5257ccbd99cc917d4b84dd47decf78c3ae06324d3312f5ff2f",
+      "after_digest": "sha256:8d797ce169503c336a3b301e42fd8184dd05f669cffc672fe5ddd5e10d78c636",
+      "diff": {
+        "added_paths": 2,
+        "removed_paths": 2,
+        "changed_paths": 12,
+        "initial_write": false,
+        "paths_total_previous": 9372,
+        "paths_total_current": 9372,
+        "paths_total_reference": 9372,
+        "churn_paths": 16,
+        "churn_ratio": 0.001707,
+        "sample_paths": [
+          "$.dependency_graph.observed.adapter_effects[144].declarations.classes.GiteaArtifactExporter@38",
+          "$.dependency_graph.observed.adapter_effects[144].declarations.classes.GiteaArtifactExporter@39",
+          "$.dependency_graph.observed.adapter_effects[144].declarations.module[0].line",
+          "$.dependency_graph.observed.adapter_effects[144].sha256",
+          "$.dependency_graph.observed.adapter_effects[145].sha256",
+          "$.dependency_graph.observed.effect_declarations.orket.adapters.vcs.gitea_artifact_exporter.classes.GiteaArtifactExporter@38",
+          "$.dependency_graph.observed.effect_declarations.orket.adapters.vcs.gitea_artifact_exporter.classes.GiteaArtifactExporter@39",
+          "$.dependency_graph.observed.effect_declarations.orket.adapters.vcs.gitea_artifact_exporter.module[0].line",
+          "$.dependency_graph.observed.layer_edges[0].count",
+          "$.dependency_graph.observed.layer_edges[1].count",
+          "$.dependency_graph.observed.layer_edges[3].count",
+          "$.generated_at",
+          "$.test_taxonomy.by_layer.unlabeled",
+          "$.test_taxonomy.missing_layer_total",
+          "$.test_taxonomy.missing_layers_omitted",
+          "$.test_taxonomy.tests_total"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-23T00:33:32.005306Z",
+      "changed": true,
+      "before_digest": "sha256:8d797ce169503c336a3b301e42fd8184dd05f669cffc672fe5ddd5e10d78c636",
+      "after_digest": "sha256:faf2d0847db46e823834c6d8662cd4fab170facc36b6c7ced75300ed5dc90731",
       "diff": {
         "added_paths": 0,
         "removed_paths": 0,

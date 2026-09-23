@@ -2,12 +2,12 @@
 from __future__ import annotations
 
 import asyncio
-import os
 import shutil
-import subprocess
 from pathlib import Path
 
-from orket.adapters.execution.process_lifecycle import drain_diagnostic_tail, terminate_process_tree
+from orket.adapters.execution.owned_io import run_owned_thread
+from orket.adapters.execution.process_lifecycle import DIAGNOSTIC_TAIL_BYTES
+from orket.core.contracts.owned_command import CommandExecutionUncertain, CommandRunner
 
 side_effecting = True
 
@@ -15,11 +15,12 @@ side_effecting = True
 class GiteaExportGit:
     side_effecting = True
 
-    def __init__(self, repo_dir: Path, repo_url: str, environment: dict[str, str]):
-        self.repo_dir, self.repo_url, self.environment = repo_dir, repo_url, environment
+    def __init__(self, repo_dir: Path, repo_url: str, environment: dict[str, str], *, command_runner: CommandRunner):
+        self.repo_dir, self.repo_url, self.environment = repo_dir, repo_url, dict(environment)
+        self._command_runner = command_runner
 
     async def initialize(self) -> None:
-        await asyncio.to_thread(self.repo_dir.mkdir, parents=True, exist_ok=True)
+        await run_owned_thread(lambda: self.repo_dir.mkdir(parents=True, exist_ok=True), label="gitea-export-repo")
         await self.command("init", "--object-format=sha1")
         await self.command("config", "core.longpaths", "true")
         await self.command("config", "remote.origin.url", self.repo_url)
@@ -33,13 +34,17 @@ class GiteaExportGit:
         return (await self.command("rev-parse", "FETCH_HEAD"))[1]
 
     async def prepare(self, payload_dir: Path, run_path: str, base: str | None) -> tuple[str, str]:
-        target = (self.repo_dir / run_path).resolve()
-        if not target.is_relative_to(self.repo_dir.resolve()) or target == self.repo_dir.resolve():
-            raise ValueError("E_GITEA_EXPORT_PATH_ESCAPE")
-        if await asyncio.to_thread(target.exists):
-            await asyncio.to_thread(shutil.rmtree, target)
-        await asyncio.to_thread(target.parent.mkdir, parents=True, exist_ok=True)
-        await asyncio.to_thread(shutil.copytree, payload_dir, target)
+        def copy_payload():
+            root = self.repo_dir.resolve()
+            target = (root / run_path).resolve()
+            if not target.is_relative_to(root) or target == root:
+                raise ValueError("E_GITEA_EXPORT_PATH_ESCAPE")
+            if target.exists():
+                shutil.rmtree(target)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copytree(payload_dir, target)
+
+        await run_owned_thread(copy_payload, label="gitea-export-copy")
         await self.command("read-tree", base if base else "--empty")
         await self.command("add", "--", run_path)
         root_tree = (await self.command("write-tree"))[1]
@@ -67,32 +72,19 @@ class GiteaExportGit:
         return True
 
     async def command(self, *arguments: str, allowed: tuple[int, ...] = (0,)) -> tuple[int, str]:
-        options = {"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP} if os.name == "nt" else {"start_new_session": True}
-        process = await asyncio.create_subprocess_exec(
-            "git", "-c", "core.hooksPath=", "-c", "init.templateDir=", "-c", "credential.helper=",
-            *arguments, cwd=self.repo_dir, env=self.environment,
-            stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE, **options)
-        drains = [asyncio.create_task(drain_diagnostic_tail(stream)) for stream in (process.stdout, process.stderr)]
         try:
-            await asyncio.wait_for(process.wait(), timeout=60)
-        finally:
-            cleanup = asyncio.create_task(self._finish_process(process, drains))
-            cancelled = False
-            while not cleanup.done():
-                try:
-                    await asyncio.shield(cleanup)
-                except asyncio.CancelledError:
-                    cancelled = True
-                    continue  # Drain the owned process even if cancellation is repeated.
-            results = cleanup.result()
-            if cancelled:
-                raise asyncio.CancelledError
-        if process.returncode not in allowed or any(truncated for _, truncated in results):
+            result = await self._command_runner.run(
+                ("git", "-c", "core.hooksPath=", "-c", "init.templateDir=", "-c", "credential.helper=", *arguments),
+                cwd=self.repo_dir, environment=dict(self.environment), timeout_seconds=60,
+                output_limit_bytes=DIAGNOSTIC_TAIL_BYTES)
+        except asyncio.CancelledError as exc:
+            # Python 3.11 timeouts require the base type; retain the owner's observation.
+            raise asyncio.CancelledError("Gitea export command cancelled") from exc
+        if not result.cleanup_confirmed:
+            raise CommandExecutionUncertain(result)
+        if result.reason == "timeout":
+            raise TimeoutError("E_GITEA_GIT_COMMAND_TIMEOUT")
+        if result.reason != "completed" or not result.capture_complete or result.returncode not in allowed:
             # Git diagnostics may contain authentication details from caller configuration.
-            raise RuntimeError("E_GITEA_GIT_COMMAND_FAILED:" + arguments[0] + ":" + str(process.returncode))
-        return process.returncode, results[0][0].decode("utf-8", errors="strict").strip()
-
-    @staticmethod
-    async def _finish_process(process, drains):
-        await terminate_process_tree(process)
-        return await asyncio.gather(*drains)
+            raise RuntimeError("E_GITEA_GIT_COMMAND_FAILED:" + arguments[0] + ":" + str(result.returncode))
+        return result.returncode, result.stdout.decode("utf-8", errors="strict").strip()

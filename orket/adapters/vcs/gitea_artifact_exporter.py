@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 import base64
 import hashlib
 import json
@@ -9,6 +8,7 @@ import re
 import shutil
 import stat
 from collections.abc import Mapping
+from copy import deepcopy
 from datetime import date
 from pathlib import Path, PurePosixPath
 from typing import Any
@@ -16,9 +16,10 @@ from urllib import parse
 
 import httpx
 
-from orket.adapters.execution.owned_io import require_sync_context
+from orket.adapters.execution.owned_io import require_sync_context, run_owned_thread
 from orket.adapters.vcs.gitea_export_git import GiteaExportGit
 from orket.core.contracts.gitea_export import GiteaExportIntent
+from orket.core.contracts.owned_command import CommandRunner
 from orket.core.contracts.provider_http import HttpRequestPort
 from orket.core.domain.outward_authorization import canonical_json
 from orket.runtime_paths import resolve_gitea_artifact_cache_root
@@ -40,11 +41,13 @@ class GiteaArtifactExporter:
 
     side_effecting = True
 
-    def __init__(self, workspace: Path, *, http_requester: HttpRequestPort, environment: Mapping[str, str] | None = None,
+    def __init__(self, workspace: Path, *, http_requester: HttpRequestPort, command_runner: CommandRunner,
+                 environment: Mapping[str, str] | None = None,
                  invocation_root: Path | None = None):
         require_sync_context(code="E_GITEA_EXPORT_CONSTRUCTION_REQUIRES_ASYNC_OWNER")
         self._http_requester = http_requester
         observed, root = dict(os.environ if environment is None else environment), invocation_root or Path.cwd()
+        self._environment, self._command_runner = observed, command_runner
         self.workspace = (root / workspace).resolve()
         self._username = observed.get("GITEA_ADMIN_USER", "").strip()
         self._password = observed.get("GITEA_ADMIN_PASSWORD", "").strip()
@@ -71,15 +74,17 @@ class GiteaArtifactExporter:
         return dict(self._binding)
 
     async def prepare_export(self, **run: Any) -> GiteaExportIntent:
+        run = deepcopy(run)
         self._validate_settings()
         run_id = str(run["run_id"])
         run_day = date.fromisoformat(run["export_day"]).isoformat()
         suffix = hashlib.sha256(run_id.encode("utf-8")).hexdigest()
         run_path = self._binding["prefix"] + "/" + run_day + "/" + _safe_slug(run_id, "run") + "-" + suffix[:12]
         payload_dir = Path(self._binding["cache_root"]) / "payload" / suffix
-        await asyncio.to_thread(
-            self._build_payload, payload_dir, run_path, run_id, run["run_type"], run["run_name"], run["build_id"],
-            run["session_status"], run["summary"], run.get("failure_class"), run.get("failure_reason"), run["export_time"])
+        await run_owned_thread(lambda: self._build_payload(
+            payload_dir, run_path, run_id, run["run_type"], run["run_name"], run["build_id"],
+            run["session_status"], run["summary"], run.get("failure_class"), run.get("failure_reason"), run["export_time"]),
+            label="gitea-export-payload")
         git = self._transport(run_id, run["export_time"])
         await git.initialize()
         base = await git.fetch_head(self._binding["branch"]) if await self._repo_exists() else None
@@ -152,7 +157,7 @@ class GiteaArtifactExporter:
         key = hashlib.sha256(canonical_json({"binding": binding, "run_id": run_id}).encode("utf-8")).hexdigest()
         repo_dir = Path(binding["cache_root"]) / "repo_cache" / key
         allowed = ("SYSTEMROOT", "WINDIR", "COMSPEC", "PATH", "PATHEXT", "TEMP", "TMP")
-        environment = {key: os.environ[key] for key in allowed if key in os.environ}
+        environment = {key: self._environment[key] for key in allowed if key in self._environment}
         environment.update({"GIT_CONFIG_NOSYSTEM": "1", "GIT_CONFIG_GLOBAL": os.devnull,
                             "GIT_TERMINAL_PROMPT": "0", "GCM_INTERACTIVE": "never",
                             "GIT_AUTHOR_NAME": binding["author_name"], "GIT_COMMITTER_NAME": binding["author_name"],
@@ -160,7 +165,8 @@ class GiteaArtifactExporter:
         if captured_at:
             environment.update(GIT_AUTHOR_DATE=captured_at, GIT_COMMITTER_DATE=captured_at)
         return GiteaExportGit(repo_dir, self._build_repo_url(binding["gitea_url"], binding["owner"], binding["repo_name"]),
-                              self._git_auth_env(self._username, self._password, environment))
+                              self._git_auth_env(self._username, self._password, environment),
+                              command_runner=self._command_runner)
 
     async def _request(self, method: str, path: str, payload: dict[str, Any] | None = None) -> int:
         try:
@@ -257,7 +263,7 @@ class GiteaArtifactExporter:
 
     def _git_auth_env(self, username: str, password: str, environment: dict[str, str] | None = None) -> dict[str, str]:
         auth_value = base64.b64encode(f"{username}:{password}".encode()).decode("ascii")
-        env = dict(os.environ if environment is None else environment)
+        env = dict(self._environment if environment is None else environment)
         try:
             config_count = max(0, int(str(env.get("GIT_CONFIG_COUNT", "0"))))
         except ValueError:

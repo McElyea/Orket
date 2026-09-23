@@ -5,6 +5,18 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.96] - 2026-09-22
+
+### Fixed
+- Freeze artifact-export Git inputs and nested payload arguments before dispatch.
+- Own native payload/cache effects through interruption and execute Git through the existing application process supervisor, retaining descendant cleanup and uncertainty.
+- Preserve command deadlines, bounded capture, private errors and retained exact-commit recovery.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Raw exporter/Git embeddings supply `CommandRunner`; normal native application composition supplies it. Migration: `docs/architecture/CONTRACT_DELTA_GITEA_EXPORT_OWNERSHIP_D_2026-09-22.md`.
+- Linux clock, broader D/E/CAP, full coverage and release acceptance remain open.
+
 ## [0.6.95] - 2026-09-22
 
 ### Fixed

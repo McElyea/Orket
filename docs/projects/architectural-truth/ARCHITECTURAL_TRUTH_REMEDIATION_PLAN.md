@@ -22872,3 +22872,87 @@ replay, legacy Kernel cutover, actual selected llama.cpp and CAP-1/2/3 remain op
 Prior unknown Git timeout, physical-sleep/Windows latency and CPython3.12 shutdown
 observations remain retained. No whole-plan completion, main merge, release
 readiness or retirement. Explicit user acceptance remains required for retirement.
+
+
+#### .96 Captured Git and owned artifact export work (2026-09-22)
+
+Responsible maintainer: Codex for Orket Core. Canonical D2/D3 after .95.
+`compatibility_status`: `breaking`; `affected_audience`: `all`;
+`migration_requirement`: `required`.
+
+Native application composition supplies the existing command supervisor through
+the core port. Exporter Git inputs come from the construction snapshot; raw Git
+copies supplied environment. Nested payload arguments copy before the first await.
+Payload and Git cache resolve/mkdir/remove/copy effects retain their native worker
+through cancellation, repeated cancellation, timeout and worker failure. Git uses
+the existing OS process owner, including descendant teardown. Cleanup uncertainty
+cannot return success. Base cancellation retains the supervisor observation as its
+cause for Python 3.11 timeout compatibility. The 60s command deadline, 262,144-byte
+per-stream capture limit, strict output decoding, allowed nonzero codes, private
+errors, containment, safe Git configuration and retained intent/recovery remain.
+The private auth helper's default now also uses the construction snapshot.
+
+Identical opening module on source and exact installed .95: 13 cases, 10 failures, 3 passes.
+Two captured-TEMP cases, six abandoned-payload cases, one mutated committed summary
+and one surviving Git child fail. Healthy unchanged cases pass; probe cleanup owns
+old workers/children. The module remains byte-identical. Repaired opening: 13 passes;
+expanded: 46 passes; final: 55 focused passes including all 40 new integration and 6 contract
+cases. Additional actual Git/files/SQLite controls cover partial effects, native
+resolution responsiveness, timeout/cancellation, raw environment snapshot, output
+limits/UTF8/nonzero status and containment. Supplied-port uncertainty simulations
+are contract proof, not a real cleanup-failure experiment. The empty-environment
+child control supplies executable discovery only to reach the actual child.
+All old tests are unchanged; exporter dispatch/reconciliation and payload-building
+domain methods and underlying worker/process owners remain AST/byte-identical.
+
+| Cell | Tests / failures / errors / skips | JUnit seconds | Installed origins |
+|---|---|---|---|
+| Fresh source | 2336 / 0 / 0 / 0 | 420.438 | source |
+| Installed a96-win-py311 | 2336 / 0 / 0 / 0 | 419.712 | 1047 |
+| Installed a96-win-py312 | 2336 / 0 / 0 / 0 | 521.105 | 1047 |
+
+All 2,290 .95 identities remain across 224 modules. Each cell records 156 actual SQLite
+observations under the unchanged 0.5s bound; maximum 0.155026600s. Complete source/wheel/sdist
+parity: 1,161 Python plus 20 unchanged data files, 1,181 total; 2406 support inputs.
+Canonical C: 1,161 modules, 3,814 edges, six dynamic routes; no violations, unknowns,
+cycles, collection errors or adapter-effect violations. Ruff: 88 existing, zero introduced;
+scoped lint, size/no-growth, docs, metadata and whitespace pass. AC-01 through AC-08 and AC-10 pass;
+AC-09 remains partial for wider replay. Baseline collection is true; release_ready is false.
+Both Quality jobs select new controls; hosted Quality is not executed.
+
+Actual disposable Gitea: 19 passes cover state/pipeline/signed webhook plus export,
+lost reply, native owner fencing/recovery, exact retained commit and changed-history
+refusal. Owned containers are removed; pre-existing container unchanged. Workload
+executor is controlled; no fresh model correctness or installed public CLI claim.
+All 21,713 original snapshot and 177 .95 checkpoint hashes verified, with original
+C:/Source/Orket unchanged. Proof root: .tmp/d-gitea-export-ownership/.
+
+Retain .95 Linux passive clock environment blocker: 240.019511342s elapsed,
+25.211878083s quiet against required 60s; steps -6.018610816s to +6.026590404s exceed
+the unchanged 0.01s bound. Receipt: .tmp/d-short-http-ownership/linux-clock-preflight.json, SHA 2002c0e34e9d889dec2d8ff5f409f03805d48511d7d7496b5fcb9ea110370d0e.
+No new clock observation, setting change or Linux application acceptance claimed.
+
+Next canonical D3 scope remains logging setup on the event loop, reproduced in
+.95 next-logging-verified/observation.json. Its 750ms actual directory hold delayed
+SQLite to 0.774241100s; HTTP teardown and probe queue drain completed. New identical
+ignored controls on source and exact installed .96 each record 3 cases, 2 failures
+and 1 healthy pass. Directory preparation runs on the loop; an optional queued
+write outlives its caller. The latter matches the current lossy telemetry contract
+and is a proposed stronger ownership boundary, not a violated delivery promise.
+Both observations retain HTTP teardown, explicit queue drain and joined timers.
+Receipts: next-logging-source/ and next-logging-installed/. The earlier wrong-path
+non-reproduction remains retained. Logging's optional queue, native writes, subscribers and failure
+semantics need explicit ownership disposition; narrow export success is not a
+logging repair. Fresh next-logging-callers.json records 156 imported-name calls in
+47 files, 112 directly inside async functions. It omits indirect/native-wrapper
+reachability and is a review inventory, not 156 violations. The retained structural
+async inventory of 251 candidates in 81 modules is not
+a verdict; receiver types, transitive callees and existing ownership need review.
+Stuck workers, mutable filesystem/executable bytes, remote-effect rollback and
+hostile-code containment are outside this scoped repair. Wider D2/D3/D4, lazy TLS,
+E1/E2/full 89% coverage, ProductFlow replay, legacy Kernel cutover, actual selected
+llama.cpp and CAP-1/2/3 remain open. Retain unknown Git timeout, physical sleep,
+Windows latency and CPython 3.12 shutdown observations. No whole-plan completion,
+main merge, release readiness or lane retirement; explicit user acceptance required.
+
+Authority: docs/specs/GITEA_ARTIFACT_EXPORT_CONTRACT.md and its .96 contract delta.

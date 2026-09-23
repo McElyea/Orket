@@ -21,6 +21,15 @@ embeddings supply the request port; async exporter construction retains the nati
 factory. Contract: `docs/specs/SHORT_HTTP_REQUEST_OWNERSHIP.md`; migration:
 `docs/architecture/CONTRACT_DELTA_SHORT_HTTP_OWNERSHIP_D_2026-09-22.md`.
 
+Artifact export captures restricted Git inputs with its construction context,
+copies nested payload arguments before dispatch and retains native payload/cache
+work through interruption. Application composition supplies the shared command
+supervisor; Git keeps its 60s deadline, bounded capture and private failures.
+Descendant cleanup precedes command success; uncertainty cannot authorize export.
+Raw exporter/Git embeddings supply the command port. Contract and migration:
+`docs/specs/GITEA_ARTIFACT_EXPORT_CONTRACT.md` and
+`docs/architecture/CONTRACT_DELTA_GITEA_EXPORT_OWNERSHIP_D_2026-09-22.md`.
+
 SDK workload parents validate configured capability identifiers before dispatch without
 constructing unused providers. The native child owns default model clients through
 construction, authorization, execution and cleanup; a cleanup failure cannot publish

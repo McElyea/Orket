@@ -1,6 +1,6 @@
 # Gitea Artifact Export Contract
 
-Last updated: 2026-09-13
+Last updated: 2026-09-22
 Status: Active contract
 Owner: Orket Core
 
@@ -33,8 +33,22 @@ URLs, invalid target/ref components and escaping prefixes are rejected. Git uses
 a restricted environment, explicit author data and disabled hooks/global config.
 HTTP and Git execution are asynchronous. Git diagnostics are bounded, truncated
 output is failure, and cancellation drains owned processes through the shared
-process lifecycle adapter. Export owner fencing is defined below; broader process
-and remote-effect lifetime guarantees remain separate work.
+application command supervisor. Its OS backend confirms descendant teardown before
+success; missing cleanup evidence remains command-execution uncertainty. Git keeps
+its 60-second command budget and 262,144-byte limit for each output stream. Raw
+exporter and Git embeddings supply the command port; the native application factory
+binds it with the same captured process environment as HTTP. The restricted Git
+environment never consults later ambient values. Explicit empty mappings remain empty
+apart from required export/authentication overlays.
+
+Payload arguments are copied before the first await. Payload construction and Git
+cache preparation run as owned native work: cancellation, repeated cancellation and
+caller timeout wait for the admitted worker to settle. A worker failure takes
+precedence over cancellation. Partial local effects can remain; interruption does
+not authorize a push or establish remote rollback. Command cancellation preserves
+the supervisor's lifetime observation as its cause and remains compatible with
+caller timeouts. Export owner fencing is defined below; hostile-writer containment,
+stuck native workers and remote-effect rollback remain separate obligations.
 
 Standard epic preparation supplies the retained export date and timestamp. The
 manifest records that timestamp, original run/build/status/summary and workspace.

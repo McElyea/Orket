@@ -2,6 +2,11 @@
 
 This document defines canonical runtime events and minimum fields.
 
+`gitea_export_command_cancelled` records the shared `owned_command.v1` lifetime
+before propagating Git cancellation. Its fields are defined with native command
+lifetime below. It omits arguments, environment, credentials and captured output;
+local process cleanup does not certify remote rollback or export success.
+
 ## Common Fields
 - `timestamp` (ISO8601)
 - `role` (actor)
