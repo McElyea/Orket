@@ -3,8 +3,10 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable
 from copy import deepcopy
+from functools import partial
 from typing import Any
 
+from orket.adapters.execution.owned_io import run_owned_thread
 from orket.application.services.tool_gate_service import ToolGate
 from orket.core.contracts.card_completion_commit import is_card_completion_call
 from orket.core.contracts.protocol_error_codes import (
@@ -19,6 +21,7 @@ from orket.core.domain.execution import ExecutionTurn
 from ..services.governed_turn_tool_approval_continuation_service import (
     supports_governed_turn_tool_approval_continuation,
 )
+from .turn_artifact_destination import TurnArtifactDestination
 from .turn_contract_input_capture import capture_mapping, capture_protocol_context, capture_workspace
 from .turn_read_context import (
     observe_legacy_required_read_paths,
@@ -153,11 +156,10 @@ async def collect_protocol_preflight_violations(
 async def load_or_execute_tool(
     *,
     protocol_enabled: bool,
-    session_id: str,
+    destination: TurnArtifactDestination,
     turn: ExecutionTurn,
     tool_name: str,
     tool_args: dict[str, Any],
-    turn_index: int,
     operation_id: str,
     binding: dict[str, Any] | None,
     toolbox: Any,
@@ -174,14 +176,9 @@ async def load_or_execute_tool(
 ) -> tuple[dict[str, Any], bool]:
     tool_args, binding = deepcopy((tool_args, binding))
     if bool(context.get("protocol_replay_mode")):
-        operation_record = await asyncio.to_thread(
-            load_operation_result,
-            session_id=session_id,
-            issue_id=turn.issue_id,
-            role_name=turn.role,
-            turn_index=turn_index,
-            operation_id=operation_id,
-        )
+        operation_record = await run_owned_thread(partial(
+            load_operation_result, destination=destination, operation_id=operation_id,
+        ), label="turn-operation-cache-read")
         if isinstance(operation_record, dict):
             replay_result = operation_record.get("result")
             if isinstance(replay_result, dict):
@@ -189,28 +186,19 @@ async def load_or_execute_tool(
         raise ValueError("E_REPLAY_OPERATION_MISSING")
     completion_call = is_card_completion_call(tool_name, tool_args)
     if protocol_enabled and not completion_call:
-        operation_record = await asyncio.to_thread(
-            load_operation_result,
-            session_id=session_id,
-            issue_id=turn.issue_id,
-            role_name=turn.role,
-            turn_index=turn_index,
-            operation_id=operation_id,
-        )
+        operation_record = await run_owned_thread(partial(
+            load_operation_result, destination=destination, operation_id=operation_id,
+        ), label="turn-operation-cache-read")
         if isinstance(operation_record, dict):
             replay_result = operation_record.get("result")
             if isinstance(replay_result, dict):
                 return replay_result, True
-    replay_result = None if completion_call else await asyncio.to_thread(
-        load_replay_tool_result,
-        session_id=session_id,
-        issue_id=turn.issue_id,
-        role_name=turn.role,
-        turn_index=turn_index,
+    replay_result = None if completion_call else await run_owned_thread(partial(
+        load_replay_tool_result, destination=destination,
         tool_name=tool_name,
         tool_args=tool_args,
         resume_mode=bool(context.get("resume_mode")),
-    )
+    ), label="turn-tool-cache-read")
     if replay_result is not None:
         return replay_result, True
 

@@ -15,12 +15,34 @@ from orket.application.workflows.turn_executor_control_plane_evidence import (
 )
 from orket.core.domain import AttemptState, RunState
 
+from .turn_artifact_destination import TurnArtifactDestination
 
-async def validate_approval_checkpoints(pause, *, execution_repository, publication, artifact_writer):
+
+def capture_approval_destinations(pause, *, writer, workspace):
+    return {key: TurnArtifactDestination(writer=writer, workspace=workspace,
+        session_id=pause.session_id, issue_id=identity["issue_id"], role_name=identity["seat_name"], role_id=None,
+        turn_index=identity["payload_json"]["turn_index"]) for key, identity in pause.approvals.items()}
+
+
+def validate_approval_destinations(pause, destinations):
+    if set(pause.approvals) != set(destinations):
+        raise ValueError("E_EPIC_APPROVAL_IDENTITY_CONFLICT")
+    for key, identity in pause.approvals.items():
+        destination = destinations[key]
+        if (pause.session_id != destination.session_id or identity["session_id"] != destination.session_id
+                or identity["issue_id"] != destination.issue_id or identity["seat_name"] != destination.role_name
+                or identity["payload_json"]["turn_index"] != destination.turn_index
+                or identity["payload_json"]["control_plane_target_ref"] != destination.control_plane_run_id):
+            raise ValueError("E_EPIC_APPROVAL_IDENTITY_CONFLICT")
+
+
+async def validate_approval_checkpoints(pause, *, execution_repository, publication, destinations):
+    validate_approval_destinations(pause, destinations)
     if "denied" in pause.decisions.values():
         return  # This continuation only stops execution; it cannot dispatch an approved tool.
     seen = set()
-    for identity in pause.approvals.values():
+    for approval_id, identity in pause.approvals.items():
+        destination = destinations[approval_id]
         target = identity["payload_json"]["control_plane_target_ref"]
         if target in seen:
             continue
@@ -50,15 +72,11 @@ async def validate_approval_checkpoints(pause, *, execution_repository, publicat
                 publication=publication, attempt_id=attempt.attempt_id)
         resumability, _ = validate_checkpoint_recovery_inputs(
             run=run, current_attempt=attempt, checkpoint=checkpoint, acceptance=acceptance)
-        context = {"session_id": pause.session_id, "turn_index": identity["payload_json"]["turn_index"]}
-        directory = artifact_writer._turn_output_dir(
-            session_id=pause.session_id, issue_id=identity["issue_id"], role_name=identity["seat_name"],
-            turn_index=context["turn_index"])
-        snapshot = await load_checkpoint_snapshot_at(directory, checkpoint.state_snapshot_ref)
+        snapshot = await load_checkpoint_snapshot_at(destination, checkpoint.state_snapshot_ref)
         validate_resume_snapshot_semantics(snapshot_payload=snapshot, attempt_id=attempt.attempt_id,
                                           resumability_class=resumability)
-        validate_snapshot_identity(snapshot_payload=snapshot, issue_id=identity["issue_id"],
-                                   role_name=identity["seat_name"], context=context, error_prefix="approval recovery")
+        validate_snapshot_identity(snapshot_payload=snapshot, destination=destination,
+                                   namespace_scope="issue:" + destination.issue_id, error_prefix="approval recovery")
         planned_tool_call_objects(snapshot, error_prefix="approval recovery")
-        if await operation_artifact_ids_at(directory / "operations"):
+        if await operation_artifact_ids_at(destination):
             raise ValueError("E_EPIC_APPROVAL_RECOVERY_ORPHAN_OPERATIONS")

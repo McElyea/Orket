@@ -13,6 +13,7 @@ from orket.application.workflows.turn_tool_result_persistence import (
     persist_non_protocol_tool_result_if_needed,
     persist_protocol_operation,
 )
+from tests.helpers.turn_artifacts import artifact_destination
 
 
 class ResultCase:
@@ -22,6 +23,7 @@ class ResultCase:
         self.writer = TurnArtifactWriter(workspace)
         self.service = build_turn_tool_control_plane_service(workspace / "control-plane.sqlite3")
         self.identity = dict(session_id="result-run", issue_id="ISSUE-1", role_name="developer", turn_index=1)
+        self.destination = artifact_destination(self.writer, **self.identity)
         self.args = {"path": "agent_output/out.txt", "content": "captured", "nested": {"values": ["first"]}}
         self.result = {"ok": True, "touched_paths": [self.args["path"]], "nested": {"values": ["first"]}}
         self.binding = {"declared_namespace_scopes": ["issue:ISSUE-1"], "tool_contract_version": "1.0.0"}
@@ -42,7 +44,7 @@ class ResultCase:
             tool_args=self.args, binding=self.binding)
 
     async def persist(self):
-        common = dict(**self.identity, tool_name="write_file", tool_args=self.args, result=self.result,
+        common = dict(destination=self.destination, tool_name="write_file", tool_args=self.args, result=self.result,
             binding=self.binding, operation_id="operation-1", replayed=False,
             persist_operation_result=self.operation, control_plane_enabled=self.governed,
             control_plane_service=self.service if self.governed else None,
@@ -66,7 +68,7 @@ class ResultCase:
             if self.protocol:
                 rows = (self.directory / "protocol_receipts.log").read_text(encoding="utf-8").splitlines()
                 return operation, json.loads(rows[0])
-            path = self.writer.tool_result_path(**self.identity, tool_name="write_file", tool_args=self.expected[0])
+            path = self.writer.tool_result_path(destination=self.destination, tool_name="write_file", tool_args=self.expected[0])
             return operation, json.loads(path.read_text(encoding="utf-8"))
         return await asyncio.to_thread(read)
 

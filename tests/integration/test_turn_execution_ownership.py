@@ -13,6 +13,7 @@ from orket.application.services.turn_tool_control_plane_service import build_tur
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.core.domain import LeaseStatus, RunState
 from orket.core.domain.state_machine import StateMachine
+from tests.helpers.turn_artifacts import artifact_test_utc_now
 from tests.helpers.turn_control_plane_clock import deterministic_turn_clock as deterministic_turn_clock
 from tests.integration.test_turn_executor_control_plane import _context, _issue, _Model, _role, _Toolbox
 
@@ -36,7 +37,7 @@ class ObservedToolbox(_Toolbox):
 
 def executor(workspace, db):
     return TurnExecutor(StateMachine(), ToolGate(organization=None, workspace_root=workspace), workspace=workspace,
-                        control_plane_service=build_turn_tool_control_plane_service(db))
+                        control_plane_service=build_turn_tool_control_plane_service(db), utc_now=artifact_test_utc_now)
 
 
 @pytest.mark.parametrize("protocol", [False, True], ids=["ordinary", "protocol"])

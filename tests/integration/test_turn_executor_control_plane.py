@@ -16,7 +16,6 @@ from orket.application.services.turn_tool_control_plane_resource_lifecycle impor
 from orket.application.services.turn_tool_control_plane_service import build_turn_tool_control_plane_service
 from orket.application.services.turn_tool_recovery_transaction import recover_pre_effect_attempt_atomic
 from orket.application.workflows.turn_executor import TurnExecutor
-from orket.application.workflows.turn_executor_control_plane import write_turn_checkpoint_and_publish_if_needed
 from orket.core.contracts import StepRecord
 from orket.core.domain import (
     CapabilityClass,
@@ -35,6 +34,7 @@ from orket.core.domain import (
 from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.core.domain.state_machine import StateMachine
 from orket.schema import CardStatus, IssueConfig, RoleConfig
+from tests.helpers.turn_artifacts import artifact_destination, artifact_test_utc_now, write_checkpoint_fixture
 from tests.helpers.turn_control_plane_clock import deterministic_turn_clock as deterministic_turn_clock
 
 pytestmark = [pytest.mark.integration, pytest.mark.usefixtures("deterministic_turn_clock")]
@@ -101,7 +101,7 @@ async def test_turn_executor_publishes_control_plane_run_attempt_step_effect_and
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path), control_plane_service=control_plane,
-    )
+     utc_now=artifact_test_utc_now)
     toolbox = _Toolbox()
 
     result = await executor.execute_turn(_issue(), _role(), _Model(), toolbox, _context())
@@ -193,7 +193,7 @@ async def test_turn_executor_publishes_control_plane_for_non_protocol_tool_execu
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path), control_plane_service=control_plane,
-    )
+     utc_now=artifact_test_utc_now)
 
     await executor.execute_turn(_issue(), _role(), _Model(), _Toolbox(), _context(protocol_governed_enabled=False))
 
@@ -218,10 +218,8 @@ async def test_turn_executor_publishes_control_plane_for_non_protocol_tool_execu
         resource_id=namespace_resource_id_for_run(run=run)
     )
     operation_record = executor.artifact_writer.load_operation_result(
-        session_id="run-1",
-        issue_id="ISSUE-1",
-        role_name="developer",
-        turn_index=1,
+        destination=artifact_destination(executor.artifact_writer, session_id="run-1",
+            issue_id="ISSUE-1", role_name="developer", turn_index=1),
         operation_id=steps[0].step_id if steps else "missing",
     )
 
@@ -263,7 +261,7 @@ async def test_turn_executor_resume_mode_reuses_control_plane_checkpoint_and_eff
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path), control_plane_service=control_plane,
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model()
     toolbox = _Toolbox()
 
@@ -313,7 +311,7 @@ async def test_turn_executor_completed_governed_reentry_reuses_artifacts_before_
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path), control_plane_service=control_plane,
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model()
     toolbox = _Toolbox()
 
@@ -349,7 +347,7 @@ async def test_turn_executor_completed_governed_reentry_requires_snapshot_artifa
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path), control_plane_service=control_plane,
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model()
     toolbox = _Toolbox()
 
@@ -376,7 +374,7 @@ async def test_turn_executor_completed_governed_reentry_requires_checkpoint_plan
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path), control_plane_service=control_plane,
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model()
     toolbox = _Toolbox()
 
@@ -407,7 +405,7 @@ async def test_turn_executor_resume_mode_recovers_pre_effect_unfinished_attempt_
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path), control_plane_service=control_plane,
-    )
+     utc_now=artifact_test_utc_now)
     tool_args = {"path": "agent_output/out.txt", "content": "ok"}
     pre_effect_turn = ExecutionTurn(timestamp=None,
         role="developer",
@@ -416,7 +414,7 @@ async def test_turn_executor_resume_mode_recovers_pre_effect_unfinished_attempt_
         tool_calls=[ToolCall(tool="write_file", args=tool_args)],
     )
 
-    await write_turn_checkpoint_and_publish_if_needed(
+    await write_checkpoint_fixture(
         executor=executor,
         turn=pre_effect_turn,
         context=_context(),
@@ -480,7 +478,7 @@ async def test_turn_executor_resume_mode_rejects_post_effect_unfinished_attempt(
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path), control_plane_service=control_plane,
-    )
+     utc_now=artifact_test_utc_now)
     tool_args = {"path": "agent_output/out.txt", "content": "ok"}
     pre_effect_turn = ExecutionTurn(timestamp=None,
         role="developer",
@@ -489,7 +487,7 @@ async def test_turn_executor_resume_mode_rejects_post_effect_unfinished_attempt(
         tool_calls=[ToolCall(tool="write_file", args=tool_args)],
     )
 
-    await write_turn_checkpoint_and_publish_if_needed(
+    await write_checkpoint_fixture(
         executor=executor,
         turn=pre_effect_turn,
         context=_context(),
@@ -562,7 +560,7 @@ async def test_turn_executor_resume_mode_rejects_post_effect_truth_on_resumed_at
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path), control_plane_service=control_plane,
-    )
+     utc_now=artifact_test_utc_now)
     tool_args = {"path": "agent_output/out.txt", "content": "ok"}
     pre_effect_turn = ExecutionTurn(timestamp=None,
         role="developer",
@@ -571,7 +569,7 @@ async def test_turn_executor_resume_mode_rejects_post_effect_truth_on_resumed_at
         tool_calls=[ToolCall(tool="write_file", args=tool_args)],
     )
 
-    await write_turn_checkpoint_and_publish_if_needed(
+    await write_checkpoint_fixture(
         executor=executor,
         turn=pre_effect_turn,
         context=_context(),
@@ -635,7 +633,7 @@ async def test_turn_executor_resume_mode_rejects_step_only_truth_on_resumed_atte
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path), control_plane_service=control_plane,
-    )
+     utc_now=artifact_test_utc_now)
     tool_args = {"path": "agent_output/out.txt", "content": "ok"}
     pre_effect_turn = ExecutionTurn(timestamp=None,
         role="developer",
@@ -644,7 +642,7 @@ async def test_turn_executor_resume_mode_rejects_step_only_truth_on_resumed_atte
         tool_calls=[ToolCall(tool="write_file", args=tool_args)],
     )
 
-    await write_turn_checkpoint_and_publish_if_needed(
+    await write_checkpoint_fixture(
         executor=executor,
         turn=pre_effect_turn,
         context=_context(),

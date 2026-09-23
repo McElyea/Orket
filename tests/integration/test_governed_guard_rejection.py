@@ -13,6 +13,7 @@ from orket.core.domain.records import IssueRecord
 from orket.core.domain.state_machine import StateMachine
 from orket.schema import CardStatus, IssueConfig, RoleConfig
 from tests.helpers.card_completion import completion_components
+from tests.helpers.turn_artifacts import artifact_test_utc_now
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 REJECTION = {'rationale': 'Declared acceptance is missing.', 'violations': ['No acceptance plan'],
@@ -60,7 +61,7 @@ async def test_governed_guard_rejection_persists_blocked_with_no_completion_rece
     gate = ToolGate(organization=None, workspace_root=workspace)
     toolbox = ToolBox(None, str(workspace), [], db_path=repo.db_path, cards_repo=repo, tool_gate=gate)
     role = RoleConfig(id='guard', summary='integrity_guard', description='Review acceptance', tools=['update_issue_status'])
-    result = await TurnExecutor(StateMachine(), gate, workspace).execute_turn(
+    result = await TurnExecutor(StateMachine(), gate, workspace, utc_now=artifact_test_utc_now).execute_turn(
         IssueConfig.model_validate(record.model_dump()), role, GuardModel(case), toolbox, context, system_prompt=system_prompt)
     stored = await repo.get_by_id(record.id)
     if case == 'valid':

@@ -15,6 +15,7 @@ import pytest
 import orket.logging as logging_module
 from orket.application.workflows.turn_message_builder import MessageBuilder
 from tests.helpers.kernel_state_probe import responsive_sqlite
+from tests.helpers.turn_artifacts import prepare_message_fixture
 from tests.integration.test_async_file_native_lifetime import hold_native_open
 from tests.integration.test_direct_metadata_lifetime import held_metadata
 from tests.integration.test_message_read_ownership import _context, _issue, _role, _write_bytes
@@ -142,7 +143,7 @@ async def test_message_read_observes_all_metadata_off_loop(
     )
     started = time.perf_counter()
     task = asyncio.create_task(
-        MessageBuilder(tmp_path).prepare_messages(issue=_issue(), role=_role(), context=_context())
+        prepare_message_fixture(MessageBuilder(tmp_path), issue=_issue(), role=_role(), context=_context())
     )
     probe = asyncio.create_task(_sqlite_elapsed(tmp_path / "responsive.sqlite3", started))
     primary_error: BaseException | None = None
@@ -218,7 +219,7 @@ async def test_interrupted_metadata_stops_read_and_log_stages(
 
     async def operation():
         async with asyncio.timeout(5), deadline:
-            return await MessageBuilder(tmp_path).prepare_messages(
+            return await prepare_message_fixture(MessageBuilder(tmp_path),
                 issue=_issue(), role=_role(), context=context
             )
 
@@ -349,7 +350,7 @@ async def test_missing_input_log_is_owned_and_physically_observed(
 
     async def operation():
         async with asyncio.timeout(5), deadline:
-            return await MessageBuilder(workspace).prepare_messages(
+            return await prepare_message_fixture(MessageBuilder(workspace),
                 issue=_issue(), role=_role(), context=context
             )
 

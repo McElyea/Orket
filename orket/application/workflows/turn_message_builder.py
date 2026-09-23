@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import Any
 
 from orket.application.services.card_completion_prompt import (
-    card_completion_prompt_payload,
     guard_review_contract_lines,
 )
 from orket.core.domain.verification_scope import parse_verification_scope
@@ -13,7 +12,9 @@ from orket.runtime.compact_turn_packet import compact_turn_messages
 from orket.runtime.config.turn_prompt_contracts import runtime_verifier_prompt_enabled
 from orket.schema import IssueConfig, RoleConfig
 
+from .turn_artifact_destination import TurnArtifactDestination
 from .turn_artifact_semantic_prompt_hints import artifact_semantic_exact_shape_hints
+from .turn_message_execution_context import build_message_execution_context
 from .turn_message_inputs import capture_turn_message_inputs, publish_compaction_outputs
 from .turn_path_resolver import PathResolver
 from .turn_read_context import (
@@ -35,13 +36,16 @@ class MessageBuilder:
         issue: IssueConfig,
         role: RoleConfig,
         context: dict[str, Any],
+        destination: TurnArtifactDestination,
         system_prompt: str | None = None,
     ) -> list[dict[str, str]]:
         inputs = capture_turn_message_inputs(
-            workspace=self.workspace, issue=issue, role=role, context=context, system_prompt=system_prompt,
+            workspace=destination.workspace, issue=issue, role=role, context=context, system_prompt=system_prompt,
         )
         workspace, issue, role = inputs.workspace, inputs.issue, inputs.role
         context, system_prompt = inputs.context, inputs.system_prompt
+        context.update(session_id=destination.session_id, issue_id=destination.issue_id,
+                       role=destination.role_name, turn_index=destination.turn_index)
         read_observation = await observe_required_read_paths(context=context, workspace=workspace)
         required_read_paths = list(read_observation.existing)
         missing_required_read_paths = list(read_observation.missing)
@@ -51,11 +55,11 @@ class MessageBuilder:
         messages.append(
             {
                 "role": "user",
-                "content": f"Issue {issue.id}: {issue.name}\n\nType: {issue.type}\nPriority: {issue.priority}",
+                "content": f"Issue {destination.issue_id}: {issue.name}\n\nType: {issue.type}\nPriority: {issue.priority}",
             }
         )
 
-        role_name = str(context.get("role", role.name) or role.name).strip().lower()
+        role_name = destination.role_name.lower()
         current_status = str(context.get("current_status", "") or "").strip().lower()
         is_guard_review_turn = role_name == "integrity_guard" or current_status == "awaiting_guard_review"
         issue_brief_message: dict[str, str] | None = None
@@ -81,39 +85,10 @@ class MessageBuilder:
                 issue_brief_message = {"role": "user", "content": "Issue Brief:\n" + "\n".join(issue_brief_lines)}
 
         required_write_paths = PathResolver.required_write_paths(context)
-        execution_context = {
-            "issue_id": context.get("issue_id", issue.id),
-            "seat": context.get("role", role.name),
-            "status": context.get("current_status"),
-            "dependency_context": context.get("dependency_context", {}),
-            "execution_profile": context.get("execution_profile"),
-            "base_execution_profile": context.get("base_execution_profile"),
-            "builder_seat_choice": context.get("builder_seat_choice"),
-            "reviewer_seat_choice": context.get("reviewer_seat_choice"),
-            "profile_traits": context.get("profile_traits", {}),
-            "seat_coercion": context.get("seat_coercion", {}),
-            "artifact_contract": context.get("artifact_contract", {}),
-            "scenario_truth": context.get("scenario_truth", {}),
-            "odr_active": bool(context.get("odr_active", False)),
-            "required_action_tools": context.get("required_action_tools", []),
-            "required_statuses": context.get("required_statuses", []),
-            "required_read_paths": required_read_paths,
-            "missing_required_read_paths": missing_required_read_paths,
-            "required_write_paths": context.get("required_write_paths", []),
-            "required_comment_min_length": context.get("required_comment_min_length"),
-            "required_comment_contains": context.get("required_comment_contains", []),
-            "stage_gate_mode": context.get("stage_gate_mode"),
-            "runtime_verifier_ok": context.get("runtime_verifier_ok"),
-            "runtime_verifier_enabled": context.get("runtime_verifier_enabled", True),
-            "card_completion": card_completion_prompt_payload(context),
-            "architecture_mode": context.get("architecture_mode"),
-            "frontend_framework_mode": context.get("frontend_framework_mode"),
-            "architecture_decision_required": bool(context.get("architecture_decision_required")),
-            "architecture_decision_path": context.get("architecture_decision_path"),
-            "architecture_forced_pattern": context.get("architecture_forced_pattern"),
-            "frontend_framework_forced": context.get("frontend_framework_forced"),
-            "prompt_metadata": context.get("prompt_metadata", {}),
-        }
+        execution_context = build_message_execution_context(
+            destination=destination, context=context, required_read_paths=required_read_paths,
+            missing_required_read_paths=missing_required_read_paths,
+        )
         messages.append(
             {"role": "user", "content": f"Execution Context JSON:\n{json.dumps(execution_context, sort_keys=True)}"}
         )
@@ -215,7 +190,7 @@ class MessageBuilder:
             expected_truth_classification = str(scenario_truth.get("expected_truth_classification") or "").strip()
             if expected_truth_classification:
                 scenario_lines.append(f"- expected_truth_classification: {expected_truth_classification}")
-            if issue.id in allowed_issue_ids:
+            if destination.issue_id in allowed_issue_ids:
                 scenario_lines.append("- This issue is one of the admitted blocked_issue_policy.allowed_issue_ids.")
             messages.append({"role": "user", "content": "Scenario Truth Contract:\n" + "\n".join(scenario_lines)})
         runtime_verifier_contract = context.get("runtime_verifier_contract")
@@ -409,8 +384,8 @@ class MessageBuilder:
         should_emit_missing_read_notice = bool(missing_required_read_paths) and read_path_contract_required
         if should_emit_missing_read_notice:
             await publish_missing_read_event(
-                issue_id=issue.id,
-                role_name=role.name,
+                issue_id=destination.issue_id,
+                role_name=destination.role_name,
                 session_id=context.get("session_id", "unknown-session"),
                 turn_index=context.get("turn_index", 0),
                 missing_required_read_paths=missing_required_read_paths,

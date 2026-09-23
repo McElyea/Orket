@@ -9,11 +9,12 @@ from orket.application.workflows.turn_read_context import RequiredReadObservatio
 from orket.application.workflows.turn_response_parser import ResponseParser
 from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.schema import RoleConfig
+from tests.helpers.turn_artifacts import artifact_test_utc_now
 
 
 def test_progress_predicate_retains_all_missing_required_read_refusal(tmp_path: Path) -> None:
     """Empty classification prunes display only, not the published action predicate."""
-    validator = ContractValidator(ResponseParser(tmp_path, lambda **_kwargs: None))
+    validator = ContractValidator(ResponseParser(utc_now=artifact_test_utc_now))
     role = RoleConfig(
         id="REVIEW", summary="reviewer", description="Review", tools=["read_file"],
     )

@@ -76,6 +76,7 @@ class PipelineWiringService:
         sandbox_orchestrator: Any,
         card_completion: Any = None,
         control_plane_clock: Callable[[], str],
+        turn_clock: Callable[[], datetime],
         construction_inputs: RuntimeConstructionInputs | None = None,
     ) -> Any:
         from orket.application.workflows.orchestrator import Orchestrator
@@ -98,6 +99,7 @@ class PipelineWiringService:
             sandbox_orchestrator=sandbox_orchestrator,
             card_completion=card_completion,
             control_plane_clock=control_plane_clock,
+            turn_clock=turn_clock,
             environment=environment,
         )
 

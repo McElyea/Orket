@@ -11,6 +11,7 @@ from orket.adapters.storage.async_card_repository import AsyncCardRepository
 from orket.application.services.command_process_supervisor import CommandProcessCancelled
 from orket.application.services.runtime_policy_inputs import ArchitecturePolicySnapshot
 from orket.application.workflows.orchestrator import Orchestrator
+from tests.helpers.turn_artifacts import artifact_test_utc_now
 from tests.integration.test_verification_process_lifetime import (
     assert_stopped,
     await_tree,
@@ -41,7 +42,7 @@ async def prepare_orchestrator(root, flags=(), source=None):
             {"id": "one", "description": "real fixture", "input_data": {"root": str(root), "flags": list(flags)},
              "expected_output": 1}]}})
     sandbox = SimpleNamespace(registry={})
-    orchestrator = Orchestrator(root, cards, None, None, root, str(root / "cards.db"), None, sandbox, architecture_policy=ArchitecturePolicySnapshot(False))
+    orchestrator = Orchestrator(root, cards, None, None, root, str(root / "cards.db"), None, sandbox, architecture_policy=ArchitecturePolicySnapshot(False), turn_clock=artifact_test_utc_now)
     return orchestrator, cards
 
 

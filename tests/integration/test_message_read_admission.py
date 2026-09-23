@@ -11,6 +11,7 @@ import pytest
 from orket.application.workflows.turn_message_builder import MessageBuilder
 from orket.application.workflows.turn_path_resolver import PathResolver
 from orket.schema import IssueConfig, RoleConfig
+from tests.helpers.turn_artifacts import prepare_message_fixture
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 
@@ -72,7 +73,7 @@ async def test_relative_existing_and_missing_reads_preserve_classification_and_c
     await asyncio.to_thread(existing.write_bytes, expected_bytes)
     before_bytes = await asyncio.to_thread(existing.read_bytes)
 
-    messages = await MessageBuilder(workspace).prepare_messages(
+    messages = await prepare_message_fixture(MessageBuilder(workspace),
         issue=_issue(),
         role=_role(),
         context=_context(["inputs/accepted.txt", "inputs/missing.txt"], compact=compact),
@@ -130,7 +131,7 @@ async def test_invalid_required_read_token_fails_before_content_open(
     open_calls = _trap_content_open(monkeypatch)
 
     with pytest.raises(ValueError) as raised:
-        await MessageBuilder(workspace).prepare_messages(
+        await prepare_message_fixture(MessageBuilder(workspace),
             issue=_issue(), role=_role(), context=_context([token])
         )
 
@@ -168,7 +169,7 @@ async def test_escaping_symlink_fails_before_content_open(
     open_calls = _trap_content_open(monkeypatch)
 
     with pytest.raises(ValueError) as raised:
-        await MessageBuilder(workspace).prepare_messages(
+        await prepare_message_fixture(MessageBuilder(workspace),
             issue=_issue(), role=_role(), context=_context([token])
         )
 

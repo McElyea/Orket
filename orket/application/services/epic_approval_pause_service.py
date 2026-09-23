@@ -4,6 +4,7 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 from typing import Any
 
+from orket.adapters.storage.async_file_tools import capture_file_roots
 from orket.application.services.epic_approval_recovery_service import (
     inspect_approval_recovery,
     retain_approval_recovery,
@@ -15,7 +16,11 @@ from orket.application.services.governed_turn_tool_approval_continuation_service
     stop_approval_execution,
 )
 from orket.application.services.turn_tool_control_plane_support import run_id_for
-from orket.application.workflows.epic_approval_checkpoint import validate_approval_checkpoints
+from orket.application.workflows.epic_approval_checkpoint import (
+    capture_approval_destinations,
+    validate_approval_checkpoints,
+    validate_approval_destinations,
+)
 from orket.core.contracts.epic_approval_pause import EpicApprovalPause
 from orket.core.contracts.epic_approval_recovery import (
     EPIC_APPROVAL_RECOVERY_ARTIFACT,
@@ -91,6 +96,8 @@ class EpicApprovalPauseService:
 
     @asynccontextmanager
     async def continuation(self, session_id, request, export_binding, recovery=None):
+        writer = self.artifact_writer
+        workspace, = capture_file_roots([writer.workspace])
         async with self.repository.transaction(session_id) as tx:
             observed = await tx.approval_pauses.latest()
         if observed is None:
@@ -98,10 +105,13 @@ class EpicApprovalPauseService:
                 raise ValueError("E_EPIC_APPROVAL_RECOVERY_PAUSE_CONFLICT")
             yield None
             return
+        for identity in observed.approvals.values():
+            self._validate_identity(session_id, identity)
+        destinations = capture_approval_destinations(observed, writer=writer, workspace=workspace)
         marker = observed.artifacts.get(EPIC_CONTINUATION_LOCK_ARTIFACT)
         expected = EpicContinuationLockRef.model_validate(marker) if marker is not None else None
         async with self.locks.hold(session_id, expected=expected) as lock:
-            claimed = await self._claim(session_id, request, export_binding, lock, recovery)
+            claimed = await self._claim(session_id, request, export_binding, lock, recovery, destinations)
             yield claimed
 
     async def observe_recovery(self, session_id, request, export_binding, recovery):
@@ -115,16 +125,17 @@ class EpicApprovalPauseService:
             return {EPIC_APPROVAL_RECOVERY_ARTIFACT: [record.reference() for record in records]} if records else {}
 
     async def _claim(self, session_id: str, request: dict[str, Any],
-                     export_binding: dict[str, Any], lock, recovery) -> EpicApprovalPause | None:
+                     export_binding: dict[str, Any], lock, recovery, destinations) -> EpicApprovalPause | None:
         async with self.repository.transaction(session_id) as tx:
             record = await tx.approval_pauses.latest()
             if record is None:
                 raise ValueError("E_EPIC_APPROVAL_PAUSE_MISSING")
+            validate_approval_destinations(record, destinations)
             if record.request != request or record.export_binding != export_binding:
                 raise ValueError("E_EPIC_APPROVAL_REQUEST_CONFLICT")
             await self._validate_execution(tx, record)
             if recovery is not None:
-                return await self._recover_claim(tx, record, request, export_binding, lock, recovery)
+                return await self._recover_claim(tx, record, request, export_binding, lock, recovery, destinations)
             if record.phase != "waiting":
                 raise ValueError("E_EPIC_APPROVAL_CONTINUATION_UNCERTAIN")
             decisions = await self._resolved_decisions(record)
@@ -135,7 +146,7 @@ class EpicApprovalPauseService:
                 raise ValueError("E_EPIC_APPROVAL_CLAIM_UNCONFIRMED")
             return claimed
 
-    async def _recover_claim(self, tx, record, request, export_binding, lock, recovery):
+    async def _recover_claim(self, tx, record, request, export_binding, lock, recovery, destinations):
         pause, retained_lock, current, observed = await inspect_approval_recovery(tx, recovery, request, export_binding)
         if pause != record or lock != retained_lock:
             raise ValueError("E_EPIC_APPROVAL_RECOVERY_LOCK_CHANGED")
@@ -144,7 +155,7 @@ class EpicApprovalPauseService:
         if await self._resolved_decisions(record) != record.decisions:
             raise ValueError("E_EPIC_APPROVAL_DECISION_CONFLICT")
         await validate_approval_checkpoints(record, execution_repository=self.execution_repository,
-                                           publication=self.publication, artifact_writer=self.artifact_writer)
+                                           publication=self.publication, destinations=destinations)
         await retain_approval_recovery(tx, request=recovery, lock=lock, current=current, at=self.now())
         return record
 

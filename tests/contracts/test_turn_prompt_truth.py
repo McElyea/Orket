@@ -11,6 +11,7 @@ from orket.application.services.runtime_policy_inputs import ArchitecturePolicyS
 from orket.application.workflows.orchestrator import Orchestrator
 from orket.application.workflows.turn_message_builder import MessageBuilder
 from orket.schema import CardStatus, IssueConfig, RoleConfig
+from tests.helpers.turn_artifacts import artifact_test_utc_now, prepare_message_fixture
 
 pytestmark = pytest.mark.contract
 
@@ -22,7 +23,7 @@ def _orchestrator(tmp_path, rules):
         org=SimpleNamespace(process_rules=rules), config_root=tmp_path, db_path=db_path,
         loader=None, sandbox_orchestrator=None,
         architecture_policy=ArchitecturePolicySnapshot(False),
-    )
+     turn_clock=artifact_test_utc_now)
 
 
 @pytest.mark.asyncio
@@ -45,7 +46,7 @@ async def test_verifier_prompt_uses_application_setting(tmp_path, monkeypatch, c
     assert context["runtime_verifier_enabled"] is not disabled
     context["compact_turn_packet_enabled"] = compact
     role = RoleConfig(id="COD", summary="coder", description="Implement", tools=["write_file"])
-    messages = await MessageBuilder(tmp_path).prepare_messages(issue=issue, role=role, context=context)
+    messages = await prepare_message_fixture(MessageBuilder(tmp_path), issue=issue, role=role, context=context)
     rendered = "\n".join(message["content"] for message in messages)
     assert ("no positional arguments" in rendered) is not disabled
     if disabled:
@@ -63,7 +64,7 @@ async def test_explicit_verifier_command_does_not_advertise_inferred_no_argument
         "artifact_contract": {"kind": "app", "entrypoint_path": "agent_output/main.py"},
         "runtime_verifier_contract": {"commands": [["python", "agent_output/main.py", "2", "3"]]},
     }
-    messages = await MessageBuilder(tmp_path).prepare_messages(issue=issue, role=role, context=context)
+    messages = await prepare_message_fixture(MessageBuilder(tmp_path), issue=issue, role=role, context=context)
     rendered = "\n".join(message["content"] for message in messages)
     assert rendered.count("python agent_output/main.py 2 3") == 1
     assert "no positional arguments" not in rendered

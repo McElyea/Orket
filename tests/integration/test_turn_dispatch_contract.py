@@ -1,4 +1,5 @@
 """Unversioned history cannot establish that an interrupted turn is pre-effect."""
+
 import aiosqlite
 import pytest
 
@@ -12,9 +13,9 @@ from orket.application.services.turn_tool_control_plane_service import build_tur
 from orket.application.services.turn_tool_control_plane_support import digest
 from orket.application.services.turn_tool_recovery_transaction import recover_pre_effect_attempt_atomic
 from orket.application.workflows.turn_executor import TurnExecutor
-from orket.application.workflows.turn_executor_control_plane import write_turn_checkpoint_and_publish_if_needed
 from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.core.domain.state_machine import StateMachine
+from tests.helpers.turn_artifacts import artifact_test_utc_now, write_checkpoint_fixture
 from tests.helpers.turn_control_plane_clock import deterministic_turn_clock as deterministic_turn_clock
 from tests.integration.test_governed_agent_terminal_history import logical_state
 from tests.integration.test_turn_executor_control_plane import _context, _issue, _Model, _role, _Toolbox
@@ -102,7 +103,7 @@ async def test_turn_refuses_unbound_dispatch_contract_before_model_and_tool(tmp_
     await change_declaration(control, run_id, case)
     before = await logical_state(control.execution_repository.db_path)
     executor = TurnExecutor(StateMachine(), ToolGate(organization=None, workspace_root=tmp_path),
-                            workspace=tmp_path, control_plane_service=control)
+                            workspace=tmp_path, control_plane_service=control, utc_now=artifact_test_utc_now)
     model, tool = _Model(), _Toolbox()
     result = await executor.execute_turn(_issue(), _role(), model, tool, _context(resume_mode=resume_mode))
     assert not result.success and REFUSAL in result.error
@@ -115,10 +116,10 @@ async def test_turn_refuses_unbound_dispatch_contract_before_model_and_tool(tmp_
 async def test_fresh_turn_binds_dispatch_contract_and_retains_pre_effect_recovery(tmp_path):
     control = build_turn_tool_control_plane_service(tmp_path / 'control_plane.sqlite3')
     executor = TurnExecutor(StateMachine(), ToolGate(organization=None, workspace_root=tmp_path),
-                            workspace=tmp_path, control_plane_service=control)
+                            workspace=tmp_path, control_plane_service=control, utc_now=artifact_test_utc_now)
     turn = ExecutionTurn(timestamp=None, role='developer', issue_id='ISSUE-1', content='', tool_calls=[
         ToolCall(tool='write_file', args={'path': 'agent_output/out.txt', 'content': 'new'})])
-    await write_turn_checkpoint_and_publish_if_needed(executor=executor, turn=turn, context=_context(), prompt_hash='prompt')
+    await write_checkpoint_fixture(executor=executor, turn=turn, context=_context(), prompt_hash='prompt')
     run_id = 'turn-tool-run:run-1:ISSUE-1:developer:0001'
     run = await control.execution_repository.get_run_record(run_id=run_id)
     snapshot = await control.publication.repository.get_resolved_configuration_snapshot(
@@ -136,7 +137,7 @@ async def test_fresh_turn_binds_dispatch_contract_and_retains_pre_effect_recover
 async def test_completed_unversioned_turn_reads_without_repair_or_dispatch(tmp_path, corrupt_reference):
     control = build_turn_tool_control_plane_service(tmp_path / 'control_plane.sqlite3')
     executor = TurnExecutor(StateMachine(), ToolGate(organization=None, workspace_root=tmp_path),
-                            workspace=tmp_path, control_plane_service=control)
+                            workspace=tmp_path, control_plane_service=control, utc_now=artifact_test_utc_now)
 
     class PhysicalTool(_Toolbox):
         async def execute(self, tool_name, args, context=None):

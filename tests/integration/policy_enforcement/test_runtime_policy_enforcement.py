@@ -11,6 +11,7 @@ import orket.runtime.run_start_contract_artifacts as run_start_contract_artifact
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
 from orket.application.middleware import TurnLifecycleInterceptors
 from orket.application.services.tool_gate_service import ToolGate
+from orket.application.workflows.turn_artifact_writer import TurnArtifactWriter
 from orket.application.workflows.turn_tool_dispatcher import ToolDispatcher
 from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.runtime.execution_pipeline import ExecutionPipeline
@@ -26,6 +27,7 @@ from orket.runtime.workspace_hygiene_rules import (
     validate_workspace_hygiene_rules,
     workspace_hygiene_rules_snapshot,
 )
+from tests.helpers.turn_artifacts import execute_dispatch_fixture
 
 
 def _write_json(path: Path, payload: dict[str, Any]) -> None:
@@ -274,7 +276,7 @@ async def test_tool_gate_violation_blocks_before_tool_execution(tmp_path: Path) 
     )
 
     with pytest.raises(RuntimeError, match="outside workspace"):
-        await dispatcher.execute_tools(
+        await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
             turn=turn,
             toolbox=toolbox,
             context={"roles": ["coder"], "session_id": "sess-tool-gate", "turn_index": 1},

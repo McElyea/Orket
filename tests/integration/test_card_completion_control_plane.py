@@ -17,6 +17,7 @@ from orket.core.domain.records import IssueRecord
 from orket.core.domain.state_machine import StateMachine
 from orket.schema import CardStatus, IssueConfig, RoleConfig
 from tests.helpers.card_completion import completion_components, completion_definition, write_completion_source
+from tests.helpers.turn_artifacts import artifact_test_utc_now, prepare_message_fixture
 from tests.helpers.turn_control_plane_clock import deterministic_turn_clock as deterministic_turn_clock
 
 pytestmark = [pytest.mark.integration, pytest.mark.usefixtures("deterministic_turn_clock")]
@@ -60,7 +61,7 @@ async def _runtime(tmp_path, protocol):
     toolbox = ObservedToolBox(None, str(workspace), [], db_path=repo.db_path, cards_repo=repo,
                               tool_gate=gate, card_completion=service)
     control_plane = build_turn_tool_control_plane_service(tmp_path / "control_plane.db")
-    executor = TurnExecutor(StateMachine(), gate, workspace, control_plane_service=control_plane)
+    executor = TurnExecutor(StateMachine(), gate, workspace, control_plane_service=control_plane, utc_now=artifact_test_utc_now)
     role = RoleConfig(id="GUARD", summary="integrity_guard", description="Review", tools=["update_issue_status"])
     return repo, service, toolbox, control_plane, executor, IssueConfig.model_validate(record.model_dump()), role, context
 
@@ -135,7 +136,7 @@ async def test_declared_acceptance_survives_final_prompt_rendering(tmp_path, com
     section_text = {"project": "PROJECT CONTEXT (PAST DECISIONS):\nPast decision A\n\nPast decision B",
                     "patch": "PATCH:\nPatch instruction A\n\nPatch instruction B"}
     prompt = "Base instructions\n\n" + "\n\n".join(section_text[name] for name in sections) + prompt
-    messages = await MessageBuilder(service.workspace_root).prepare_messages(
+    messages = await prepare_message_fixture(MessageBuilder(service.workspace_root),
         issue=issue, role=role, context=context, system_prompt=prompt,
     )
     rendered = "\n".join(message["content"] for message in messages)

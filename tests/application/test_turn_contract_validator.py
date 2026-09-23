@@ -8,10 +8,11 @@ from orket.application.workflows.turn_response_parser import ResponseParser
 from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.runtime.error_codes import ERR_JSON_MD_FENCE, ERR_THINK_OVERFLOW, EXTRANEOUS_TEXT
 from orket.schema import RoleConfig
+from tests.helpers.turn_artifacts import artifact_test_utc_now
 
 
 def _validator(tmp_path: Path) -> ContractValidator:
-    parser = ResponseParser(tmp_path, lambda **_kwargs: None)
+    parser = ResponseParser(utc_now=artifact_test_utc_now)
     return ContractValidator(parser)
 
 

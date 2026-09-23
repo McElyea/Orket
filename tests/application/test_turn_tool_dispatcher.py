@@ -15,9 +15,11 @@ from orket.application.services.turn_tool_control_plane_service import (
     TurnToolControlPlaneService,
     build_turn_tool_control_plane_service,
 )
+from orket.application.workflows.turn_artifact_writer import TurnArtifactWriter
 from orket.application.workflows.turn_tool_dispatcher import ToolDispatcher
 from orket.core.domain import ReservationStatus
 from orket.core.domain.execution import ExecutionTurn, ToolCall
+from tests.helpers.turn_artifacts import execute_dispatch_fixture
 
 
 def _dispatcher(
@@ -42,20 +44,20 @@ def _dispatcher(
 
     def _load_operation_result(**kwargs) -> dict[str, Any] | None:
         key = (
-            str(kwargs.get("session_id")),
-            str(kwargs.get("issue_id")),
-            str(kwargs.get("role_name")),
-            int(kwargs.get("turn_index", 0)),
+            str(kwargs["destination"].session_id),
+            str(kwargs["destination"].issue_id),
+            str(kwargs["destination"].role_name),
+            int(kwargs["destination"].turn_index),
             str(kwargs.get("operation_id")),
         )
         return operation_store.get(key)
 
     def _persist_operation_result(**kwargs) -> None:
         key = (
-            str(kwargs.get("session_id")),
-            str(kwargs.get("issue_id")),
-            str(kwargs.get("role_name")),
-            int(kwargs.get("turn_index", 0)),
+            str(kwargs["destination"].session_id),
+            str(kwargs["destination"].issue_id),
+            str(kwargs["destination"].role_name),
+            int(kwargs["destination"].turn_index),
             str(kwargs.get("operation_id")),
         )
         operation_store[key] = {
@@ -133,7 +135,7 @@ async def test_tool_dispatcher_protocol_preflight_blocks_execution(tmp_path: Pat
 
     toolbox = _Toolbox()
     with pytest.raises(RuntimeError):
-        await dispatcher.execute_tools(
+        await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
             turn=turn,
             toolbox=toolbox,
             context={
@@ -171,7 +173,7 @@ async def test_tool_dispatcher_protocol_preflight_enforces_max_tool_calls(tmp_pa
 
     toolbox = _Toolbox()
     with pytest.raises(RuntimeError) as exc:
-        await dispatcher.execute_tools(
+        await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
             turn=turn,
             toolbox=toolbox,
             context={
@@ -202,7 +204,7 @@ async def test_tool_dispatcher_protocol_preflight_enforces_required_tool_presenc
             return {"ok": True}
 
     with pytest.raises(RuntimeError) as exc:
-        await dispatcher.execute_tools(
+        await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
             turn=turn,
             toolbox=_Toolbox(),
             context={
@@ -243,7 +245,7 @@ async def test_tool_dispatcher_protocol_preflight_allows_multi_read_for_required
             return {"ok": True, "tool": tool_name, "args": args}
 
     toolbox = _Toolbox()
-    await dispatcher.execute_tools(
+    await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
         turn=turn,
         toolbox=toolbox,
         context={
@@ -284,7 +286,7 @@ async def test_tool_dispatcher_protocol_preflight_rejects_insufficient_reads_for
             return {"ok": True}
 
     with pytest.raises(RuntimeError) as exc:
-        await dispatcher.execute_tools(
+        await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
             turn=turn,
             toolbox=_Toolbox(),
             context={
@@ -322,7 +324,7 @@ async def test_tool_dispatcher_protocol_preflight_rejects_duplicate_single_shot_
             return {"ok": True}
 
     with pytest.raises(RuntimeError) as exc:
-        await dispatcher.execute_tools(
+        await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
             turn=turn,
             toolbox=_Toolbox(),
             context={
@@ -355,7 +357,7 @@ async def test_tool_dispatcher_protocol_preflight_enforces_required_sequence(tmp
             return {"ok": True}
 
     with pytest.raises(RuntimeError) as exc:
-        await dispatcher.execute_tools(
+        await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
             turn=turn,
             toolbox=_Toolbox(),
             context={
@@ -385,7 +387,7 @@ async def test_tool_dispatcher_protocol_preflight_enforces_workspace_constraints
             return {"ok": True}
 
     with pytest.raises(RuntimeError) as exc:
-        await dispatcher.execute_tools(
+        await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
             turn=turn,
             toolbox=_Toolbox(),
             context={
@@ -417,7 +419,7 @@ async def test_tool_dispatcher_protocol_preflight_is_fail_fast(tmp_path: Path) -
             return {"ok": True}
 
     with pytest.raises(RuntimeError) as exc:
-        await dispatcher.execute_tools(
+        await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
             turn=turn,
             toolbox=_Toolbox(),
             context={
@@ -462,7 +464,7 @@ async def test_tool_dispatcher_protocol_operation_idempotency_reuses_cached_resu
         "protocol_governed_enabled": True,
     }
 
-    await dispatcher.execute_tools(turn=turn, toolbox=toolbox, context=context, issue=None)
+    await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace), turn=turn, toolbox=toolbox, context=context, issue=None)
     assert toolbox.calls == 1
     assert isinstance(turn.tool_calls[0].result, dict)
     assert turn.tool_calls[0].result.get("call_count") == 1
@@ -473,7 +475,7 @@ async def test_tool_dispatcher_protocol_operation_idempotency_reuses_cached_resu
         content="",
         tool_calls=[ToolCall(tool="write_file", args={"path": "a.txt", "content": "x"})],
     )
-    await dispatcher.execute_tools(turn=second_turn, toolbox=toolbox, context=context, issue=None)
+    await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace), turn=second_turn, toolbox=toolbox, context=context, issue=None)
     assert toolbox.calls == 1
     assert second_turn.tool_calls[0].result == {"ok": True, "call_count": 1}
     assert len(receipt_rows) == 2
@@ -502,7 +504,7 @@ async def test_tool_dispatcher_treats_non_dict_middleware_result_as_explicit_fai
             return {"ok": True}
 
     with pytest.raises(RuntimeError) as exc:
-        await dispatcher.execute_tools(
+        await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
             turn=turn,
             toolbox=_Toolbox(),
             context={
@@ -547,7 +549,7 @@ async def test_tool_dispatcher_replay_mode_uses_operation_record_and_skips_execu
         content="",
         tool_calls=[ToolCall(tool="write_file", args={"path": "a.txt", "content": "x"})],
     )
-    await dispatcher.execute_tools(turn=live_turn, toolbox=toolbox, context=context, issue=None)
+    await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace), turn=live_turn, toolbox=toolbox, context=context, issue=None)
     assert toolbox.calls == 1
 
     replay_turn = ExecutionTurn(timestamp=None,
@@ -556,7 +558,7 @@ async def test_tool_dispatcher_replay_mode_uses_operation_record_and_skips_execu
         content="",
         tool_calls=[ToolCall(tool="write_file", args={"path": "a.txt", "content": "x"})],
     )
-    await dispatcher.execute_tools(
+    await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
         turn=replay_turn,
         toolbox=toolbox,
         context={**context, "protocol_replay_mode": True},
@@ -590,7 +592,7 @@ async def test_tool_dispatcher_replay_mode_missing_operation_fails_closed(tmp_pa
         tool_calls=[ToolCall(tool="write_file", args={"path": "a.txt", "content": "x"})],
     )
     with pytest.raises(RuntimeError) as exc:
-        await dispatcher.execute_tools(
+        await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
             turn=turn,
             toolbox=toolbox,
             context={
@@ -627,7 +629,7 @@ async def test_tool_dispatcher_protocol_receipt_uses_turn_raw_metadata(tmp_path:
         async def execute(self, tool_name, args, context):
             return {"ok": True}
 
-    await dispatcher.execute_tools(
+    await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
         turn=turn,
         toolbox=_Toolbox(),
         context={
@@ -691,7 +693,7 @@ async def test_tool_dispatcher_executes_compatibility_mapping_and_records_transl
             return {"ok": False, "error": f"unexpected:{tool_name}"}
 
     toolbox = _Toolbox()
-    await dispatcher.execute_tools(
+    await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
         turn=turn,
         toolbox=toolbox,
         context={
@@ -762,7 +764,7 @@ async def test_tool_dispatcher_preflight_failure_publishes_control_plane_final_t
 
     toolbox = _Toolbox()
     with pytest.raises(RuntimeError):
-        await dispatcher.execute_tools(
+        await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
             turn=turn,
             toolbox=toolbox,
             context={

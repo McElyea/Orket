@@ -1,17 +1,17 @@
 from __future__ import annotations
 
-import asyncio
 import json
+from functools import partial
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any
 
+from orket.adapters.execution.owned_io import run_owned_thread
 from orket.application.services.turn_tool_control_plane_service import (
     TurnToolControlPlaneError,
     TurnToolControlPlaneService,
 )
 from orket.application.services.turn_tool_control_plane_support import (
     effect_id_for,
-    run_namespace_scope,
     tool_authorization_ref,
     tool_operation_ref,
     tool_result_ref,
@@ -20,28 +20,21 @@ from orket.core.contracts.protocol_hashing import build_step_id, derive_operatio
 from orket.core.domain.control_plane_effect_journal import validate_effect_journal_chain
 from orket.core.domain.execution import ToolCall, ToolCallErrorClass
 
-if TYPE_CHECKING:
-    from .turn_executor import TurnExecutor
+from .turn_artifact_destination import TurnArtifactDestination
 
 
 async def load_checkpoint_snapshot_payload(
-    *,
-    executor: TurnExecutor,
-    issue_id: str,
-    role_name: str,
-    context: dict[str, Any],
-    state_snapshot_ref: str,
+    *, destination: TurnArtifactDestination, state_snapshot_ref: str,
 ) -> dict[str, Any]:
-    return await load_checkpoint_snapshot_at(
-        turn_output_dir(executor=executor, issue_id=issue_id, role_name=role_name, context=context), state_snapshot_ref)
+    return await load_checkpoint_snapshot_at(destination, state_snapshot_ref)
 
 
-async def load_checkpoint_snapshot_at(output_dir: Path, state_snapshot_ref: str) -> dict[str, Any]:
+async def load_checkpoint_snapshot_at(destination: TurnArtifactDestination, state_snapshot_ref: str) -> dict[str, Any]:
     snapshot_token = str(state_snapshot_ref or "").strip().split(":")[-1]
     if not snapshot_token:
         raise TurnToolControlPlaneError("governed turn checkpoint replay is missing snapshot identity")
-    snapshot_path = output_dir / f"control_plane_checkpoint_snapshot_{snapshot_token}.json"
-    payload = await asyncio.to_thread(_read_json_file, snapshot_path)
+    snapshot_path = destination.file_path(f"control_plane_checkpoint_snapshot_{snapshot_token}.json")
+    payload = await run_owned_thread(partial(_read_json_file, snapshot_path), label="turn-checkpoint-read")
     if not isinstance(payload, dict):
         raise TurnToolControlPlaneError(
             f"governed turn checkpoint replay is missing immutable checkpoint snapshot artifact: {snapshot_path.name}"
@@ -54,16 +47,12 @@ async def load_checkpoint_snapshot_at(output_dir: Path, state_snapshot_ref: str)
 
 
 def validate_snapshot_identity(
-    *,
-    snapshot_payload: dict[str, Any],
-    issue_id: str,
-    role_name: str,
-    context: dict[str, Any],
-    error_prefix: str,
+    *, snapshot_payload: dict[str, Any], destination: TurnArtifactDestination,
+    namespace_scope: str, error_prefix: str,
 ) -> str:
-    expected_session_id = str(context.get("session_id", "unknown-session"))
-    expected_turn_index = int(context.get("turn_index", 0))
-    expected_namespace_scope = run_namespace_scope(issue_id=issue_id, context=context)
+    expected_session_id, expected_turn_index = destination.session_id, destination.turn_index
+    issue_id, role_name = destination.issue_id, destination.role_name
+    expected_namespace_scope = namespace_scope
     observed_role = str(snapshot_payload.get("role") or "").strip()
     observed_issue = str(snapshot_payload.get("issue_id") or "").strip()
     observed_run = str(snapshot_payload.get("run_id") or "").strip()
@@ -114,74 +103,38 @@ def planned_tool_call_objects(
     ]
 
 
-def expected_operation_ids(
-    *,
-    issue_id: str,
-    context: dict[str, Any],
-    tool_call_count: int,
-) -> list[str]:
-    step_id = build_step_id(issue_id=issue_id, turn_index=int(context.get("turn_index", 0)))
-    session_id = str(context.get("session_id", "unknown-session"))
-    return [
-        derive_operation_id(run_id=session_id, step_id=step_id, tool_index=index)
-        for index in range(tool_call_count)
-    ]
+def expected_operation_ids(*, destination: TurnArtifactDestination, tool_call_count: int) -> list[str]:
+    step_id = build_step_id(issue_id=destination.issue_id, turn_index=destination.turn_index)
+    return [derive_operation_id(run_id=destination.session_id, step_id=step_id, tool_index=index)
+            for index in range(tool_call_count)]
 
 
-async def list_operation_artifact_ids(
-    *,
-    executor: TurnExecutor,
-    issue_id: str,
-    role_name: str,
-    context: dict[str, Any],
-) -> list[str]:
-    operations_dir = (
-        turn_output_dir(
-            executor=executor,
-            issue_id=issue_id,
-            role_name=role_name,
-            context=context,
-        )
-        / "operations"
-    )
-    return await operation_artifact_ids_at(operations_dir)
+async def list_operation_artifact_ids(*, destination: TurnArtifactDestination) -> list[str]:
+    return await operation_artifact_ids_at(destination)
 
 
-async def operation_artifact_ids_at(operations_dir: Path) -> list[str]:
-    return await asyncio.to_thread(_list_operation_artifact_ids, operations_dir)
+async def operation_artifact_ids_at(destination: TurnArtifactDestination) -> list[str]:
+    return await run_owned_thread(partial(_list_operation_artifact_ids, destination.output_dir / "operations"),
+                                  label="turn-operation-discovery")
 
 
-async def list_operation_artifact_refs(
-    *,
-    executor: TurnExecutor,
-    issue_id: str,
-    role_name: str,
-    context: dict[str, Any],
-) -> list[str]:
-    return [tool_operation_ref(operation_id=operation_id) for operation_id in await list_operation_artifact_ids(
-        executor=executor,
-        issue_id=issue_id,
-        role_name=role_name,
-        context=context,
-    )]
+async def list_operation_artifact_refs(*, destination: TurnArtifactDestination) -> list[str]:
+    return [tool_operation_ref(operation_id=value)
+            for value in await list_operation_artifact_ids(destination=destination)]
 
 
 async def load_completed_replay_tool_calls(
     *,
-    executor: TurnExecutor,
+    destination: TurnArtifactDestination,
     control_plane_service: TurnToolControlPlaneService,
     run_id: str,
     attempt_id: str,
-    issue_id: str,
-    role_name: str,
-    context: dict[str, Any],
+    namespace_scope: str,
     snapshot_payload: dict[str, Any],
 ) -> list[ToolCall]:
     namespace_scope = validate_snapshot_identity(
         snapshot_payload=snapshot_payload,
-        issue_id=issue_id,
-        role_name=role_name,
-        context=context,
+        destination=destination, namespace_scope=namespace_scope,
         error_prefix="completed governed turn checkpoint",
     )
     planned_tool_calls = planned_tool_calls_from_snapshot(
@@ -189,16 +142,10 @@ async def load_completed_replay_tool_calls(
         error_prefix="completed governed turn checkpoint",
     )
     expected_ids = expected_operation_ids(
-        issue_id=issue_id,
-        context=context,
+        destination=destination,
         tool_call_count=len(planned_tool_calls),
     )
-    artifact_ids = await list_operation_artifact_ids(
-        executor=executor,
-        issue_id=issue_id,
-        role_name=role_name,
-        context=context,
-    )
+    artifact_ids = await list_operation_artifact_ids(destination=destination)
     if set(artifact_ids) != set(expected_ids):
         raise TurnToolControlPlaneError(
             "completed governed turn durable operation artifacts do not match checkpoint tool plan for replay"
@@ -222,20 +169,13 @@ async def load_completed_replay_tool_calls(
             "completed governed turn durable effect truth does not match checkpoint tool plan for replay"
         )
 
-    session_id = str(context.get("session_id", "unknown-session"))
-    turn_index = int(context.get("turn_index", 0))
     tool_calls: list[ToolCall] = []
     for planned_tool_call, operation_id in zip(planned_tool_calls, expected_ids, strict=True):
         step = steps_by_id[operation_id]
         effect = effects_by_id[effect_id_for(operation_id=operation_id)]
-        operation_record = await asyncio.to_thread(
-            executor.artifact_writer.load_operation_result,
-            session_id=session_id,
-            issue_id=issue_id,
-            role_name=role_name,
-            turn_index=turn_index,
-            operation_id=operation_id,
-        )
+        operation_record = await run_owned_thread(partial(
+            destination.writer.load_operation_result, destination=destination, operation_id=operation_id,
+        ), label="turn-operation-read")
         if not isinstance(operation_record, dict):
             raise TurnToolControlPlaneError(
                 f"completed governed turn step {operation_id} is missing durable operation truth for artifact replay"
@@ -271,25 +211,6 @@ async def load_completed_replay_tool_calls(
             )
         )
     return tool_calls
-
-
-def turn_output_dir(
-    *,
-    executor: TurnExecutor,
-    issue_id: str,
-    role_name: str,
-    context: dict[str, Any],
-) -> Path:
-    resolver = getattr(executor.artifact_writer, "_turn_output_dir", None)
-    if not callable(resolver):
-        raise TurnToolControlPlaneError("turn artifact writer does not expose turn output resolution")
-    resolved = resolver(
-        session_id=str(context.get("session_id", "unknown-session")),
-        issue_id=issue_id,
-        role_name=role_name,
-        turn_index=int(context.get("turn_index", 0)),
-    )
-    return cast(Path, resolved)
 
 
 def _validate_step_effect_alignment(
@@ -381,6 +302,5 @@ __all__ = [
     "load_completed_replay_tool_calls",
     "planned_tool_call_objects",
     "planned_tool_calls_from_snapshot",
-    "turn_output_dir",
     "validate_snapshot_identity",
 ]

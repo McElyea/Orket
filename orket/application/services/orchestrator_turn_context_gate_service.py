@@ -3,7 +3,8 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from typing import Any
 
-from orket.schema import IssueConfig
+from orket.application.workflows.turn_artifact_destination import TurnArtifactDestination
+from orket.application.workflows.turn_contract_input_capture import capture_mapping
 
 
 class OrchestratorTurnContextGateService:
@@ -19,10 +20,7 @@ class OrchestratorTurnContextGateService:
     async def find_existing_tool_approval_request(
         self,
         *,
-        run_id: str,
-        issue: IssueConfig,
-        seat_name: str,
-        turn_index: int,
+        destination: TurnArtifactDestination,
         tool_name: str,
         tool_args: dict[str, Any],
         allowed_statuses: set[str],
@@ -30,21 +28,15 @@ class OrchestratorTurnContextGateService:
         list_requests = getattr(self.pending_gates, "list_requests", None)
         if not callable(list_requests):
             return None
-        from orket.application.services.turn_tool_control_plane_support import run_id_for as turn_tool_run_id_for
-
-        expected_target_ref = turn_tool_run_id_for(
-            session_id=run_id,
-            issue_id=issue.id,
-            role_name=seat_name,
-            turn_index=int(turn_index),
-        )
-        rows = await list_requests(session_id=run_id, limit=1000)
+        expected_target_ref = destination.control_plane_run_id
+        tool_args = capture_mapping(tool_args)
+        rows = await list_requests(session_id=destination.session_id, limit=1000)
         for row in rows:
             if str(row.get("status") or "").strip().lower() not in allowed_statuses:
                 continue
-            if str(row.get("issue_id") or "").strip() != issue.id:
+            if str(row.get("issue_id") or "").strip() != destination.issue_id:
                 continue
-            if str(row.get("seat_name") or "").strip() != seat_name:
+            if str(row.get("seat_name") or "").strip() != destination.role_name:
                 continue
             if str(row.get("request_type") or "").strip() != "tool_approval":
                 continue
@@ -57,7 +49,7 @@ class OrchestratorTurnContextGateService:
                 continue
             if dict(payload.get("args") or {}) != dict(tool_args or {}):
                 continue
-            if payload.get("turn_index") != int(turn_index):
+            if payload.get("turn_index") != destination.turn_index:
                 continue
             target_ref = str(payload.get("control_plane_target_ref") or "").strip()
             if target_ref != expected_target_ref:
@@ -70,18 +62,13 @@ class OrchestratorTurnContextGateService:
     def build_callbacks(
         self,
         *,
-        run_id: str,
-        issue: IssueConfig,
-        seat_name: str,
         gate_mode: str,
-        turn_index: int,
+        issue_status: str,
     ) -> tuple[Callable[..., Awaitable[str]], Callable[..., Awaitable[str | None]]]:
-        async def _pending_gate_request_writer(*, tool_name: str, tool_args: dict[str, Any]) -> str:
+        async def _pending_gate_request_writer(*, destination: TurnArtifactDestination, tool_name: str, tool_args: dict[str, Any]) -> str:
+            tool_args = capture_mapping(tool_args)
             existing = await self.find_existing_tool_approval_request(
-                run_id=run_id,
-                issue=issue,
-                seat_name=seat_name,
-                turn_index=turn_index,
+                destination=destination,
                 tool_name=tool_name,
                 tool_args=tool_args,
                 allowed_statuses={"pending"},
@@ -90,22 +77,15 @@ class OrchestratorTurnContextGateService:
                 return str(existing.get("request_id") or "")
             return str(
                 await self.create_pending_tool_approval_request(
-                    run_id=run_id,
-                    issue=issue,
-                    seat_name=seat_name,
-                    gate_mode=gate_mode,
-                    turn_index=turn_index,
+                    destination=destination, issue_status=issue_status, gate_mode=gate_mode,
                     tool_name=tool_name,
                     tool_args=tool_args,
                 )
             )
 
-        async def _approved_tool_request_lookup(*, tool_name: str, tool_args: dict[str, Any]) -> str | None:
+        async def _approved_tool_request_lookup(*, destination: TurnArtifactDestination, tool_name: str, tool_args: dict[str, Any]) -> str | None:
             existing = await self.find_existing_tool_approval_request(
-                run_id=run_id,
-                issue=issue,
-                seat_name=seat_name,
-                turn_index=turn_index,
+                destination=destination,
                 tool_name=tool_name,
                 tool_args=tool_args,
                 allowed_statuses={"approved"},

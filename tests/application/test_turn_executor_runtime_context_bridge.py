@@ -15,6 +15,7 @@ from orket.application.workflows.turn_executor_runtime import invoke_model_compl
 from orket.core.domain.state_machine import StateMachine
 from orket.schema import CardStatus, IssueConfig, RoleConfig
 from tests.helpers.provider_preparation import create_test_model_provider_async
+from tests.helpers.turn_artifacts import artifact_test_utc_now
 
 
 class _FakeOpenAIClient:
@@ -139,7 +140,7 @@ async def test_turn_executor_bridges_runtime_context_through_wrapped_model_clien
         state_machine=StateMachine(),
         tool_gate=ToolGate(organization=None, workspace_root=tmp_path),
         workspace=tmp_path,
-    )
+     utc_now=artifact_test_utc_now)
     issue = IssueConfig(id="ISSUE-1", summary="Bridge runtime context", seat="developer", status=CardStatus.IN_PROGRESS)
     role = RoleConfig(id="DEV", summary="developer", description="Build", tools=["write_file"])
     context = {

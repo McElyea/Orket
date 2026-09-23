@@ -18,6 +18,7 @@ from orket.decision_nodes.builtins import DefaultPlannerNode
 from orket.exceptions import ExecutionFailed
 from orket.schema import CardStatus, IssueConfig
 from tests.helpers.card_completion import complete_existing_card, completion_components
+from tests.helpers.turn_artifacts import artifact_test_utc_now
 
 pytestmark = pytest.mark.integration
 
@@ -108,7 +109,7 @@ async def test_dependency_drift_after_selection_stops_before_turn_effects(tmp_pa
                         org=SimpleNamespace(process_rules={}), config_root=tmp_path, db_path=repo.db_path,
                         loader=None, sandbox_orchestrator=None, card_completion=service,
         architecture_policy=ArchitecturePolicySnapshot(False),
-    )
+     turn_clock=artifact_test_utc_now)
     with pytest.raises(ExecutionFailed, match=error):
         await orch._execute_issue_turn(selected, SimpleNamespace(params={}), None, None, "run", "build",
                                        None, None, None)

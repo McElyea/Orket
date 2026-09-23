@@ -7,9 +7,11 @@ import pytest
 
 from orket.application.middleware import TurnLifecycleInterceptors
 from orket.application.services.tool_gate_service import ToolGate
+from orket.application.workflows.turn_artifact_writer import TurnArtifactWriter
 from orket.application.workflows.turn_tool_dispatcher import ToolDispatcher
 from orket.core.contracts.protocol_hashing import build_step_id, derive_operation_id
 from orket.core.domain.execution import ExecutionTurn, ToolCall
+from tests.helpers.turn_artifacts import execute_dispatch_fixture
 
 
 def _make_dispatcher(
@@ -28,10 +30,10 @@ def _make_dispatcher(
 
     def _load_operation_result(**kwargs) -> dict[str, Any] | None:
         key = (
-            str(kwargs.get("session_id")),
-            str(kwargs.get("issue_id")),
-            str(kwargs.get("role_name")),
-            int(kwargs.get("turn_index", 0)),
+            str(kwargs["destination"].session_id),
+            str(kwargs["destination"].issue_id),
+            str(kwargs["destination"].role_name),
+            int(kwargs["destination"].turn_index),
             str(kwargs.get("operation_id")),
         )
         return operation_store.get(key)
@@ -103,7 +105,7 @@ async def test_replay_mode_with_protocol_enabled_skips_persistence_side_effects(
         tool_calls=[ToolCall(tool="write_file", args={"path": "a.txt", "content": "x"})],
     )
     toolbox = _NoOpToolbox()
-    await dispatcher.execute_tools(
+    await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
         turn=turn,
         toolbox=toolbox,
         context={
@@ -158,7 +160,7 @@ async def test_replay_mode_with_protocol_disabled_skips_legacy_tool_result_persi
         tool_calls=[ToolCall(tool="write_file", args={"path": "a.txt", "content": "x"})],
     )
     toolbox = _NoOpToolbox()
-    await dispatcher.execute_tools(
+    await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
         turn=turn,
         toolbox=toolbox,
         context={

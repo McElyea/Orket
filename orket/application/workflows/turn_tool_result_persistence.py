@@ -16,6 +16,7 @@ from orket.application.services.turn_tool_control_plane_service import TurnToolC
 from orket.core.contracts.protocol_receipt_timing import protocol_receipt_timing
 from orket.core.contracts.tool_invocation_contracts import build_tool_invocation_manifest, compute_tool_call_hash
 
+from .turn_artifact_destination import TurnArtifactDestination
 from .turn_tool_dispatcher_control_plane import publish_step_if_needed
 from .turn_tool_dispatcher_support import resolved_declared_namespace_scopes, resolved_tool_namespace_scope
 
@@ -62,7 +63,7 @@ def _receipt(*, session_id, step_id, receipt_seq, operation_id, proposal_hash, v
 
 
 async def persist_protocol_operation(
-    *, session_id: str, issue_id: str, role_name: str, turn_index: int, index: int,
+    *, destination: TurnArtifactDestination, index: int,
     step_id: str, receipt_seq: int, proposal_hash: str, validator_version: str,
     protocol_hash: str, tool_schema_hash: str, execution_capsule: dict[str, Any],
     context: dict[str, Any], tool_name: str, tool_args: dict[str, Any], result: dict[str, Any],
@@ -72,7 +73,8 @@ async def persist_protocol_operation(
     control_plane_run_id: str | None, control_plane_attempt_id: str | None, retry_count: int,
 ) -> str | None:
     tool_args, result, binding, execution_capsule = deepcopy((tool_args, result, binding, execution_capsule))
-    identity = dict(session_id=session_id, issue_id=issue_id, role_name=role_name, turn_index=turn_index)
+    identity = dict(destination=destination)
+    session_id, issue_id = destination.session_id, destination.issue_id
     manifest = _manifest(session_id=session_id, issue_id=issue_id, tool_name=tool_name, binding=binding,
         context=context, operation_id=operation_id, run_id=control_plane_run_id, attempt_id=control_plane_attempt_id)
     # Resolve only the context values this publication needs; context also contains live owners.
@@ -94,13 +96,13 @@ async def persist_protocol_operation(
 
 async def persist_non_protocol_tool_result_if_needed(
     *, persist_tool_result: Callable[..., None], persist_operation_result: Callable[..., None],
-    session_id: str, issue_id: str, role_name: str, turn_index: int, tool_name: str,
+    destination: TurnArtifactDestination, tool_name: str,
     tool_args: dict[str, Any], result: dict[str, Any], control_plane_enabled: bool,
     control_plane_service: TurnToolControlPlaneService | None, control_plane_run_id: str | None,
     control_plane_attempt_id: str | None, binding: dict[str, Any] | None, operation_id: str, replayed: bool,
 ) -> str | None:
     tool_args, result, binding = deepcopy((tool_args, result, binding))
-    payload = dict(session_id=session_id, issue_id=issue_id, role_name=role_name, turn_index=turn_index,
+    payload = dict(destination=destination,
                    tool_name=tool_name, tool_args=tool_args, result=result)
     if control_plane_enabled:
         await run_owned_thread(partial(persist_operation_result, **payload, operation_id=operation_id),

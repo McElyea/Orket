@@ -150,6 +150,7 @@ class ExecutionPipeline(
             loader=self.loader,
             sandbox_orchestrator=self.sandbox_orchestrator,
             card_completion=self.runtime_context.card_completion,
+            turn_clock=self.runtime_inputs.utc_now,
             control_plane_clock=self.runtime_inputs.utc_now_iso,
             construction_inputs=self.runtime_context.construction_inputs,
         )

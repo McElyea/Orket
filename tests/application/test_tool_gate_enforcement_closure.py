@@ -9,6 +9,7 @@ import pytest
 from orket.application.middleware import TurnLifecycleInterceptors
 from orket.application.services.runtime_result_projection import RuntimeExecutionResult, RuntimeOutcomeError
 from orket.application.services.tool_gate_service import ToolGate
+from orket.application.workflows.turn_artifact_writer import TurnArtifactWriter
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.application.workflows.turn_tool_dispatcher import ToolDispatcher
 from orket.core.domain.execution import ExecutionTurn, ToolCall
@@ -17,6 +18,7 @@ from orket.extensions.contracts import RunAction
 from orket.extensions.runtime import ExtensionEngineAdapter, RunContext
 from orket.runtime.execution.execution_pipeline_card_dispatch import ExecutionPipelineCardDispatchMixin
 from orket.schema import CardStatus, IssueConfig, RoleConfig
+from tests.helpers.turn_artifacts import artifact_test_utc_now, execute_dispatch_fixture
 
 
 class _DenyAllToolGate(ToolGate):
@@ -157,7 +159,7 @@ async def _execute_turn(
         tool_gate=tool_gate,
         workspace=workspace_root,
         middleware=TurnLifecycleInterceptors([]),
-    )
+     utc_now=artifact_test_utc_now)
     return await executor.execute_turn(
         _issue(issue_id),
         _role(),
@@ -205,7 +207,7 @@ def test_turn_executor_requires_tool_gate_at_construction(tmp_path: Path) -> Non
             state_machine=StateMachine(),
             tool_gate=None,  # type: ignore[arg-type]
             workspace=tmp_path,
-        )
+         utc_now=artifact_test_utc_now)
 
 
 def test_tool_dispatcher_requires_tool_gate_at_construction(tmp_path: Path) -> None:
@@ -305,7 +307,7 @@ async def test_direct_tool_dispatcher_internal_seam_blocks_under_same_deny_all_p
     )
 
     with pytest.raises(RuntimeError, match="deny_all:write_file:write_file"):
-        await dispatcher.execute_tools(
+        await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
             turn=turn,
             toolbox=toolbox,
             context=_context("ISSUE-1"),

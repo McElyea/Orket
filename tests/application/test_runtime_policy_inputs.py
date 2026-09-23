@@ -1,4 +1,5 @@
 """Layer: integration. Real report observations feed immutable policy decisions."""
+
 import asyncio
 import json
 from dataclasses import FrozenInstanceError
@@ -11,6 +12,7 @@ from orket.application.services.runtime_policy import resolve_architecture_mode,
 from orket.application.services.runtime_policy_input_service import RuntimePolicyInputService
 from orket.application.services.runtime_policy_inputs import ArchitecturePolicySnapshot, RuntimePolicySnapshot
 from orket.application.workflows.orchestrator import Orchestrator
+from tests.helpers.turn_artifacts import artifact_test_utc_now
 from tests.integration.test_runtime_policy_request_inputs import _unlock_payload
 
 pytestmark = pytest.mark.integration
@@ -125,6 +127,6 @@ def test_required_snapshot_and_root_inputs_refuse_implicit_defaults():
         RuntimePolicyInputService(environment={}, invocation_root=Path("relative"))
     # Invalid collaborators deliberately fail if construction reaches any resource.
     with pytest.raises(TypeError, match="E_ARCHITECTURE_POLICY_SNAPSHOT_REQUIRED"):
-        Orchestrator(None, None, None, None, None, None, None, None, architecture_policy=None)
+        Orchestrator(None, None, None, None, None, None, None, None, architecture_policy=None, turn_clock=artifact_test_utc_now)
     with pytest.raises(TypeError, match="architecture_policy"):
-        Orchestrator(None, None, None, None, None, None, None, None)
+        Orchestrator(None, None, None, None, None, None, None, None, turn_clock=artifact_test_utc_now)

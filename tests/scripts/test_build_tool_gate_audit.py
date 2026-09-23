@@ -26,6 +26,10 @@ def test_build_tool_gate_audit_writes_diff_ledger_payload(tmp_path: Path) -> Non
     assert any(path["dispatch_path"] == "run_card.turn_executor.tool_dispatcher" for path in payload["paths"])
     assert any(path["dispatch_path"] == "extension_engine_action_normalized_run_card" for path in payload["paths"])
     assert any(path["dispatch_path"] == "agent_run_direct_tool_execution" for path in payload["paths"])
+    by_dispatch = {row["dispatch_path"]: row for row in payload["paths"]}
+    for name in ("direct_turn_executor_execute_turn", "direct_tool_dispatcher_execute_tools"):
+        assert by_dispatch[name]["observed_result"] == "blocked"
+        assert by_dispatch[name]["side_effect_observed"] is False
     assert isinstance(payload.get("diff_ledger"), list)
 
 

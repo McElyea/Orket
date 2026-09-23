@@ -24,6 +24,7 @@ from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.core.domain.state_machine import StateMachine
 from orket.schema import IssueConfig, RoleConfig
 from tests.helpers.kernel_state_probe import interrupt_owned, responsive_sqlite
+from tests.helpers.turn_artifacts import artifact_test_utc_now
 
 _A = "agent_output/a.txt"
 _B = "agent_output/b.txt"
@@ -131,7 +132,7 @@ async def _settle_held_task(task, state, expected: tuple[tuple[Path, bytes], ...
 
 
 def _executor(root: Path) -> TurnExecutor:
-    return TurnExecutor(StateMachine(), ToolGate(organization=None, workspace_root=root), workspace=root)
+    return TurnExecutor(StateMachine(), ToolGate(organization=None, workspace_root=root), workspace=root, utc_now=artifact_test_utc_now)
 
 
 def test_validator_and_corrective_are_pure_after_explicit_observation(tmp_path, monkeypatch) -> None:
@@ -140,7 +141,7 @@ def test_validator_and_corrective_are_pure_after_explicit_observation(tmp_path, 
     observation = RequiredReadObservation(existing=(_A, _B), missing=())
     context = _context(_A)
     context["required_read_paths"] = [_A, _B]
-    validator = ContractValidator(ResponseParser(tmp_path, lambda **_kwargs: None))
+    validator = ContractValidator(ResponseParser(utc_now=artifact_test_utc_now))
 
     violations = validator.collect_contract_violations(_turn(_A), _role(), context, observation)
     prompt = CorrectivePromptBuilder().build_corrective_instruction(violations, context, observation)
@@ -159,7 +160,7 @@ async def test_partial_parse_keeps_validation_metadata_free(tmp_path, monkeypatc
         pytest.fail("partial validation admitted required-read metadata")
 
     monkeypatch.setattr(capture_owner, "observe_legacy_required_read_paths", unexpected_observation)
-    validator = ContractValidator(ResponseParser(tmp_path, lambda **_kwargs: None))
+    validator = ContractValidator(ResponseParser(utc_now=artifact_test_utc_now))
     attempt, violations = await capture_owner.collect_validation_attempt(
         validator=validator, turn=_turn(_A, partial=True), role=_role(),
         context=_context(_A), workspace=tmp_path,
@@ -182,8 +183,8 @@ async def test_composed_validation_executes_captured_turn(tmp_path, monkeypatch,
     parsed: list[ExecutionTurn] = []
     parse = executor.response_parser.parse_response
 
-    def record_parse(**kwargs):
-        value = parse(**kwargs)
+    async def record_parse(**kwargs):
+        value = await parse(**kwargs)
         parsed.append(value)
         return value
 

@@ -1,62 +1,34 @@
 from __future__ import annotations
 
-import asyncio
-import json
-from typing import TYPE_CHECKING, Any
+from functools import partial
+from typing import Any
 
+from orket.adapters.execution.owned_io import run_owned_thread
 from orket.logging import log_event
-from orket.schema import IssueConfig, RoleConfig
 
-if TYPE_CHECKING:
-    from .turn_executor import TurnExecutor
-
-
-def response_artifact_payload(response: Any) -> tuple[str, Any]:
-    response_content = (
-        getattr(response, "content", "") if not isinstance(response, dict) else response.get("content", "")
-    )
-    response_raw = getattr(response, "raw", {}) if not isinstance(response, dict) else response
-    return response_content or "", response_raw
+from .turn_artifact_destination import TurnArtifactDestination
+from .turn_response_capture import CapturedTurnResponse
 
 
 async def write_response_artifacts(
-    executor: TurnExecutor,
-    *,
-    session_id: str,
-    issue_id: str,
-    role_name: str,
-    turn_index: int,
-    response: Any,
+    *, destination: TurnArtifactDestination, response: CapturedTurnResponse,
 ) -> None:
-    response_content, response_raw = response_artifact_payload(response)
-    await asyncio.to_thread(
-        executor.artifact_writer.write_turn_artifact,
-        session_id=session_id,
-        issue_id=issue_id,
-        role_name=role_name,
-        turn_index=turn_index,
-        filename="model_response.txt",
-        content=response_content,
+    await run_owned_thread(
+        partial(destination.writer.write_turn_artifact, destination=destination,
+                filename="model_response.txt", content=response.text_artifact_content),
+        label="turn-response-text",
     )
-    await asyncio.to_thread(
-        executor.artifact_writer.write_turn_artifact,
-        session_id=session_id,
-        issue_id=issue_id,
-        role_name=role_name,
-        turn_index=turn_index,
-        filename="model_response_raw.json",
-        content=json.dumps(response_raw, indent=2, ensure_ascii=False, default=str),
+    await run_owned_thread(
+        partial(destination.writer.write_turn_artifact, destination=destination,
+                filename="model_response_raw.json", content=response.raw_artifact_content),
+        label="turn-response-raw",
     )
 
 
 def log_turn_start(
     *,
-    executor: TurnExecutor,
-    issue: IssueConfig,
-    role: RoleConfig,
+    destination: TurnArtifactDestination,
     context: dict[str, Any],
-    session_id: str,
-    turn_index: int,
     turn_trace_id: str,
     prompt_hash: str,
     messages: list[dict[str, str]],
@@ -65,10 +37,10 @@ def log_turn_start(
     log_event(
         "turn_start",
         {
-            "issue_id": issue.id,
-            "role": role.name,
-            "session_id": session_id,
-            "turn_index": turn_index,
+            "issue_id": destination.issue_id,
+            "role": destination.role_name,
+            "session_id": destination.session_id,
+            "turn_index": destination.turn_index,
             "turn_trace_id": turn_trace_id,
             "prompt_hash": prompt_hash,
             "message_count": len(messages),
@@ -97,12 +69,11 @@ def log_turn_start(
             "prompt_budget_stage": (prompt_budget_result or {}).get("stage"),
             "prompt_budget_tokenizer_id": (prompt_budget_result or {}).get("tokenizer_id"),
         },
-        executor.workspace,
+        destination.workspace,
     )
 
 
 __all__ = [
     "log_turn_start",
-    "response_artifact_payload",
     "write_response_artifacts",
 ]

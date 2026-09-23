@@ -3,13 +3,17 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from orket.adapters.storage.async_file_tools import capture_file_roots
 from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.schema import RoleConfig
 
+from .turn_artifact_destination import TurnArtifactDestination
 from .turn_read_context import RequiredReadObservation, observe_legacy_required_read_paths
+
+if TYPE_CHECKING:
+    from .turn_control_plane_binding import TurnControlPlaneBinding
 
 _VALIDATION_CONTEXT_KEYS = frozenset(
     {
@@ -203,9 +207,22 @@ def publish_protocol_tool_outcomes(inputs: ProtocolDispatchInputs) -> None:
 
 async def execute_with_protocol_capture(
     *, execute: Callable[..., Awaitable[None]], turn: ExecutionTurn, toolbox: Any,
-    context: dict[str, Any], workspace: Path, issue: Any,
+    context: dict[str, Any], issue: Any,
+    destination: TurnArtifactDestination,
+    control_plane: TurnControlPlaneBinding,
     on_turn_captured: Callable[[ExecutionTurn], None] | None = None,
 ) -> ExecutionTurn:
+    if turn.issue_id != destination.issue_id or turn.role != destination.role_name:
+        raise ValueError("E_TURN_ARTIFACT_IDENTITY_MISMATCH")
+    context = dict(context)
+    context.update(session_id=destination.session_id, issue_id=destination.issue_id,
+                   role=destination.role_name, turn_index=destination.turn_index,
+                   run_namespace_scope=control_plane.namespace_scope,
+                   resume_mode=control_plane.resume_mode, protocol_replay_mode=control_plane.protocol_replay_mode)
+    for key, value in (("card_id", destination.issue_id), ("current_role", destination.role_name)):
+        if key in context:
+            context[key] = value
+    workspace = destination.workspace
     if not bool(context.get("protocol_governed_enabled", False)):
         if on_turn_captured is not None:
             on_turn_captured(turn)

@@ -626,3 +626,14 @@ Before enabling or updating a profile:
 4. run live script sweep (excluding long-running quant sweeps when intentionally deferred),
 5. publish compliance artifacts and review failure ledger by error family.
 6. for non-`openai_messages` profiles, verify template integrity audit and whitelist status before promotion.
+
+## 12. Pending turn-artifact ownership migration
+
+Candidate 0.6.102 requires one original turn destination at MessageBuilder's named
+identity sites while retaining builder-entry semantic input capture and original
+prompt output sinks. Prompt-budget selection and the optional counter are captured
+before suspension; owned native publication preserves document order and existing
+refusal behavior. Response text/raw/parsing share one accepted response capture.
+The implementation contract is `TURN_ARTIFACT_PUBLICATION_CONTRACT.md`; acceptance
+is pending in the architectural-truth plan. Controlled optional-counter proof is
+not production tokenizer/provider conformance or profile promotion.

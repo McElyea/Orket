@@ -13,6 +13,7 @@ from orket.core.domain import AttemptState, RunState
 from orket.core.domain.state_machine import StateMachine
 from orket.exceptions import ModelConnectionError
 from orket.schema import CardStatus, IssueConfig, RoleConfig
+from tests.helpers.turn_artifacts import artifact_test_utc_now, prepare_executor_message_fixture
 from tests.helpers.turn_control_plane_clock import deterministic_turn_clock as deterministic_turn_clock
 
 pytestmark = pytest.mark.usefixtures("deterministic_turn_clock")
@@ -107,7 +108,7 @@ async def test_turn_executor_middleware_hook_order(tmp_path):
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
         middleware=TurnLifecycleInterceptors([_Hooks()]),
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model(['{"tool": "write_file", "args": {"path": "out.txt", "content": "ok"}}'])
     toolbox = _ToolBox()
 
@@ -139,7 +140,7 @@ async def test_turn_executor_isolates_broken_before_prompt_interceptor(tmp_path)
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
         middleware=TurnLifecycleInterceptors([_BrokenHooks(), _HealthyHooks()]),
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model(['{"tool": "write_file", "args": {"path": "out.txt", "content": "ok"}}'])
     toolbox = _ToolBox()
 
@@ -161,7 +162,7 @@ async def test_turn_executor_middleware_short_circuit_before_tool(tmp_path):
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
         middleware=TurnLifecycleInterceptors([_Hooks()]),
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model(['{"tool": "write_file", "args": {"path": "out.txt", "content": "ok"}}'])
     toolbox = _ToolBox()
 
@@ -185,7 +186,7 @@ async def test_turn_executor_mandatory_before_tool_crash_blocks_execution(tmp_pa
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
         middleware=middleware,
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model(['{"tool": "write_file", "args": {"path": "out.txt", "content": "ok"}}'])
     toolbox = _ToolBox()
 
@@ -203,7 +204,7 @@ async def test_turn_executor_partial_parse_failure_blocks_without_recovery_tool(
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model(
         [
             '```json\n'
@@ -242,7 +243,7 @@ async def test_turn_executor_calls_on_turn_failure_hook(tmp_path):
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
         middleware=TurnLifecycleInterceptors([_Hooks()]),
-    )
+     utc_now=artifact_test_utc_now)
     toolbox = _ToolBox()
 
     result = await executor.execute_turn(_issue(), _role(), _FailingModel(), toolbox, _context())
@@ -272,7 +273,7 @@ async def test_turn_executor_on_turn_failure_continues_after_broken_hook(tmp_pat
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
         middleware=TurnLifecycleInterceptors([_BrokenHooks(), _HealthyHooks()]),
-    )
+     utc_now=artifact_test_utc_now)
 
     result = await executor.execute_turn(_issue(), _role(), _FailingModel(), _ToolBox(), _context())
 
@@ -286,7 +287,7 @@ async def test_turn_executor_non_progress_fails_after_one_reprompt(tmp_path):
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model(["No-op", "Still no-op"])
     toolbox = _ToolBox()
 
@@ -302,7 +303,7 @@ async def test_turn_executor_non_progress_recovery_after_reprompt(tmp_path):
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model(
         [
             "No-op",
@@ -338,7 +339,7 @@ async def test_turn_executor_retries_transient_model_failure(tmp_path):
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     model = _FlakyModel()
     toolbox = _ToolBox()
     context = _context()
@@ -368,7 +369,7 @@ async def test_turn_executor_blocks_after_model_retry_exhaustion(tmp_path):
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     model = _FailingModel()
     context = _context()
     context["max_turn_retries"] = 1
@@ -388,7 +389,7 @@ async def test_turn_executor_context_only_tool_call_is_non_progress(tmp_path):
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model(
         [
             '{"tool": "get_issue_context", "args": {}}',
@@ -424,7 +425,7 @@ async def test_turn_executor_enforces_required_status_after_reprompt(tmp_path):
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model(
         [
             '{"tool": "write_file", "args": {"path": "out.txt", "content": "ok"}}\n{"tool": "update_issue_status", "args": {"status": "in_progress"}}',
@@ -463,7 +464,7 @@ async def test_turn_executor_blocked_requires_wait_reason(tmp_path):
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model(
         [
             '{"tool": "update_issue_status", "args": {"status": "blocked"}}',
@@ -502,13 +503,13 @@ async def test_turn_executor_blocks_approval_required_tool_and_persists_request(
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model(['{"tool": "write_file", "args": {"path": "out.txt", "content": "ok"}}'])
     toolbox = _ToolBox()
 
     request_calls = []
 
-    async def _request_writer(*, tool_name, tool_args):
+    async def _request_writer(*, destination, tool_name, tool_args):
         request_calls.append({"tool_name": tool_name, "tool_args": tool_args})
         return "REQ-TOOL-1"
 
@@ -535,7 +536,7 @@ async def test_turn_executor_write_file_approval_resume_continues_same_governed_
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
         control_plane_service=control_plane,
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model(['{"tool": "write_file", "args": {"path": "out.txt", "content": "ok"}}'])
     toolbox = _ToolBox()
 
@@ -579,7 +580,7 @@ async def test_turn_executor_write_file_approval_resume_continues_same_governed_
 
     repo = _PendingRepo()
 
-    async def _request_writer(*, tool_name, tool_args):
+    async def _request_writer(*, destination, tool_name, tool_args):
         return await repo.create_request(
             session_id="sess-1",
             issue_id="ISSUE-1",
@@ -596,7 +597,7 @@ async def test_turn_executor_write_file_approval_resume_continues_same_governed_
             },
         )
 
-    async def _approved_lookup(*, tool_name, tool_args):
+    async def _approved_lookup(*, destination, tool_name, tool_args):
         rows = await repo.list_requests(session_id="sess-1", status="approved", limit=100)
         for row in rows:
             payload = row.get("payload_json")
@@ -681,7 +682,7 @@ async def test_turn_executor_create_issue_approval_resume_continues_same_governe
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
         control_plane_service=control_plane,
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model(['{"tool": "create_issue", "args": {"seat": "reviewer", "summary": "Follow-up task"}}'])
     toolbox = _ToolBox()
     role = RoleConfig(
@@ -731,7 +732,7 @@ async def test_turn_executor_create_issue_approval_resume_continues_same_governe
 
     repo = _PendingRepo()
 
-    async def _request_writer(*, tool_name, tool_args):
+    async def _request_writer(*, destination, tool_name, tool_args):
         return await repo.create_request(
             session_id="sess-1",
             issue_id="ISSUE-1",
@@ -748,7 +749,7 @@ async def test_turn_executor_create_issue_approval_resume_continues_same_governe
             },
         )
 
-    async def _approved_lookup(*, tool_name, tool_args):
+    async def _approved_lookup(*, destination, tool_name, tool_args):
         rows = await repo.list_requests(session_id="sess-1", status="approved", limit=100)
         for row in rows:
             payload = row.get("payload_json")
@@ -831,7 +832,7 @@ async def test_turn_executor_guard_rejection_payload_contract_recovers_after_rep
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model(
         [
             '{"tool": "update_issue_status", "args": {"status": "blocked", "wait_reason": "dependency"}}',
@@ -872,7 +873,7 @@ async def test_turn_executor_guard_rejection_payload_contract_fails_after_reprom
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model(
         [
             '{"tool": "update_issue_status", "args": {"status": "blocked", "wait_reason": "dependency"}}',
@@ -912,7 +913,7 @@ async def test_turn_executor_guard_payload_reprompt_still_enforces_progress_cont
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model(
         [
             '{"tool": "update_issue_status", "args": {"status": "blocked", "wait_reason": "dependency"}}',
@@ -952,8 +953,8 @@ async def test_prepare_messages_includes_guard_rejection_contract(tmp_path):
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
-    messages = await executor._prepare_messages(
+     utc_now=artifact_test_utc_now)
+    messages = await prepare_executor_message_fixture(executor,
         _issue(),
         _role(),
         {
@@ -975,7 +976,7 @@ async def test_turn_executor_guard_dependency_block_rejected_when_dependencies_r
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model(
         [
             '{"tool": "update_issue_status", "args": {"status": "blocked", "wait_reason": "dependency"}}\n'
@@ -1023,10 +1024,10 @@ async def test_prepare_messages_includes_read_path_contract(tmp_path):
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     (Path(tmp_path) / "agent_output").mkdir(parents=True, exist_ok=True)
     (Path(tmp_path) / "agent_output" / "main.py").write_text("print('ok')\n", encoding="utf-8")
-    messages = await executor._prepare_messages(
+    messages = await prepare_executor_message_fixture(executor,
         _issue(),
         _role(),
         {
@@ -1049,8 +1050,8 @@ async def test_prepare_messages_includes_write_path_contract(tmp_path):
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
-    messages = await executor._prepare_messages(
+     utc_now=artifact_test_utc_now)
+    messages = await prepare_executor_message_fixture(executor,
         _issue(),
         _role(),
         {
@@ -1073,7 +1074,7 @@ async def test_turn_executor_write_path_contract_recovers_after_reprompt(tmp_pat
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model(
         [
             '{"tool": "write_file", "args": {"path": "agent_output/not_main.py", "content": "print(1)"}}'
@@ -1114,7 +1115,7 @@ async def test_turn_executor_read_path_contract_recovers_after_reprompt(tmp_path
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     (Path(tmp_path) / "agent_output").mkdir(parents=True, exist_ok=True)
     (Path(tmp_path) / "agent_output" / "main.py").write_text("print('ok')\n", encoding="utf-8")
     model = _Model(
@@ -1158,7 +1159,7 @@ async def test_turn_executor_missing_required_read_paths_are_preflighted(tmp_pat
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model(
         [
             '{"tool": "read_file", "args": {"path": "agent_output/requirements.txt"}}\n'
@@ -1199,7 +1200,7 @@ async def test_turn_executor_hallucination_scope_contract_recovers_after_repromp
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model(
         [
             '{"tool": "read_file", "args": {"path": "agent_output/not_allowed.py"}}\n'
@@ -1245,7 +1246,7 @@ async def test_turn_executor_hallucination_scope_contract_fails_after_reprompt(t
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model(
         [
             '{"tool": "read_file", "args": {"path": "agent_output/not_allowed.py"}}\n'
@@ -1285,7 +1286,7 @@ async def test_turn_executor_hallucination_strict_grounding_ignores_non_json_res
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model(
         [
             '{"tool": "update_issue_status", "args": {"status": "code_review"}}\nI assume this should work.',
@@ -1323,7 +1324,7 @@ async def test_turn_executor_hallucination_strict_grounding_ignores_json_payload
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model(
         [
             '{"tool": "write_file", "args": {"path": "agent_output/main.py", "content": "value = \\"maybe\\"\\n"}}\n'
@@ -1364,7 +1365,7 @@ async def test_turn_executor_hallucination_contradiction_detects_forbidden_phras
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model(
         [
             '{"tool": "update_issue_status", "args": {"status": "code_review"}}\nNo tests were run.',
@@ -1403,7 +1404,7 @@ async def test_turn_executor_hallucination_context_partition_enforces_active_con
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model(
         [
             '{"tool": "get_issue_context", "args": {"section": "legacy-architecture-notes"}}\n'
@@ -1445,7 +1446,7 @@ async def test_turn_executor_hallucination_context_budget_exceeded_fails_after_r
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model(
         [
             '{"tool": "update_issue_status", "args": {"status": "code_review"}}',
@@ -1486,7 +1487,7 @@ async def test_turn_executor_hallucination_context_budget_within_limit_succeeds(
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model(
         [
             '{"tool": "update_issue_status", "args": {"status": "code_review"}}',
@@ -1525,7 +1526,7 @@ def test_build_corrective_instruction_includes_rule_specific_hints(tmp_path):
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     instruction = executor.corrective_prompt_builder.build_corrective_instruction(
         [
             {
@@ -1552,7 +1553,7 @@ async def test_turn_executor_security_scope_rejects_path_traversal(tmp_path):
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model(
         [
             '{"tool": "read_file", "args": {"path": "../secrets.txt"}}\n'
@@ -1593,7 +1594,7 @@ async def test_turn_executor_security_scope_recovers_after_reprompt(tmp_path):
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model(
         [
             '{"tool": "read_file", "args": {"path": "C:/Windows/System32/config"}}\n'
@@ -1634,7 +1635,7 @@ async def test_turn_executor_consistency_scope_rejects_extra_prose(tmp_path):
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model(
         [
             'Here is the result.\n{"tool": "update_issue_status", "args": {"status": "code_review"}}',
@@ -1673,7 +1674,7 @@ async def test_turn_executor_consistency_scope_recovers_after_reprompt(tmp_path)
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model(
         [
             'Done.\n{"tool": "update_issue_status", "args": {"status": "code_review"}}',
@@ -1712,7 +1713,7 @@ async def test_turn_executor_consistency_scope_allows_markdown_json_fences(tmp_p
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model(
         [
             '```json\n{"tool": "update_issue_status", "args": {"status": "code_review"}}\n```',
@@ -1750,7 +1751,7 @@ async def test_turn_executor_consistency_scope_allows_json_array_envelope(tmp_pa
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model(
         [
             '[{"tool": "update_issue_status", "args": {"status": "code_review"}}]',
@@ -1788,7 +1789,7 @@ async def test_turn_executor_consistency_scope_allows_comma_separated_objects(tm
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model(
         [
             '{"tool": "write_file", "args": {"path": "agent_output/review.md", "content": "ok"}},'
@@ -1827,7 +1828,7 @@ async def test_turn_executor_architecture_contract_recovers_after_reprompt(tmp_p
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model(
         [
             '{"tool": "write_file", "args": {"path": "agent_output/design.txt", "content": "plain text design"}}\n'
@@ -1865,7 +1866,7 @@ async def test_turn_executor_architecture_contract_enforces_forced_pattern(tmp_p
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model(
         [
             '{"tool": "write_file", "args": {"path": "agent_output/design.txt", "content": "{\\"recommendation\\": \\"monolith\\", \\"confidence\\": 0.9, \\"evidence\\": {\\"estimated_domains\\": 1, \\"external_integrations\\": 1, \\"independent_scaling_needs\\": \\"low\\", \\"deployment_complexity\\": \\"low\\", \\"team_parallelism\\": \\"single\\", \\"operational_maturity\\": \\"low\\"}}"}}\n'
@@ -1904,7 +1905,7 @@ async def test_turn_executor_architecture_contract_enforces_forced_frontend_fram
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model(
         [
             '{"tool": "write_file", "args": {"path": "agent_output/design.txt", "content": "{\\"recommendation\\": \\"microservices\\", \\"frontend_framework\\": \\"react\\", \\"confidence\\": 0.9, \\"evidence\\": {\\"estimated_domains\\": 4, \\"external_integrations\\": 3, \\"independent_scaling_needs\\": \\"high\\", \\"deployment_complexity\\": \\"high\\", \\"team_parallelism\\": \\"multi-team\\", \\"operational_maturity\\": \\"med\\"}}"}}\n'
@@ -1944,7 +1945,7 @@ async def test_turn_executor_architecture_contract_allows_relaxed_json_like_cont
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model(
         [
             '{"tool": "write_file", "args": {"path": "agent_output/design.txt", "content": "{\\"recommendation\\": \\"monolith\\", \\"confidence\\": 0.9, \\"evidence\\": {\\"estimated_domains\\": 1, \\"external_integrations\\": 0, \\"independent_scaling_needs\\": false, \\"deployment_complexity\\": low, \\"team_parallelism\\": high, \\"operational_maturity\\": high}, \\"frontend_framework\\": \\"vue\\"}"}}\n'
@@ -1991,7 +1992,7 @@ async def test_turn_executor_autofills_required_status_tool_call(tmp_path):
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model(
         [
             '{"tool": "write_file", "args": {"path": "agent_output/design.txt", "content": "{\\"recommendation\\": \\"monolith\\", \\"confidence\\": 0.9, \\"evidence\\": {\\"estimated_domains\\": 1, \\"external_integrations\\": 0, \\"independent_scaling_needs\\": false, \\"deployment_complexity\\": \\"low\\", \\"team_parallelism\\": \\"low\\", \\"operational_maturity\\": \\"high\\"}, \\"frontend_framework\\": \\"vue\\"}"}}',
@@ -2033,7 +2034,7 @@ async def test_turn_executor_does_not_autofill_done_from_legacy_runtime_success(
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model(
         [
             '{"tool": "read_file", "args": {"path": "agent_output/requirements.txt"}}\n'

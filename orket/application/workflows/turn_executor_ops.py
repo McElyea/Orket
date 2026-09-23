@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-import asyncio
 import json
 import time
+from functools import partial
 from typing import TYPE_CHECKING, Any
 
+from orket.adapters.execution.owned_io import run_owned_thread
 from orket.application.services.card_completion_turn_service import verify_turn_completion_claims
 from orket.application.services.turn_tool_control_plane_recovery import TurnToolCheckpointRecoveryError
 from orket.application.services.turn_tool_control_plane_service import TurnToolControlPlaneError
@@ -13,6 +14,8 @@ from orket.core.domain.state_machine import StateMachineError
 from orket.logging import log_event
 from orket.schema import IssueConfig, RoleConfig
 
+from .turn_artifact_destination import TurnArtifactDestination
+from .turn_control_plane_binding import TurnControlPlaneBinding
 from .turn_executor_completed_replay import load_completed_turn_replay_if_needed
 from .turn_executor_control_plane import (
     ensure_turn_control_plane_reentry_allowed_if_needed,
@@ -28,7 +31,8 @@ from .turn_executor_runtime import (
 from .turn_executor_runtime import (
     synthesize_required_status_tool_call as _synthesize_required_status_tool_call,
 )
-from .turn_failure_traces import emit_turn_failure_traces
+from .turn_failure_traces import emit_turn_failure_traces, emit_turn_memory_traces
+from .turn_memory_trace_artifacts import MemoryTraceInputs, admit_memory_trace_event_sink
 
 if TYPE_CHECKING:
     from .turn_executor import TurnExecutor, TurnResult
@@ -46,6 +50,8 @@ async def execute_turn(
     toolbox: Any,
     context: dict[str, Any],
     system_prompt: str | None = None,
+    *, destination: TurnArtifactDestination, memory_inputs: MemoryTraceInputs,
+    control_plane: TurnControlPlaneBinding,
 ) -> TurnResult:
     from .turn_executor import (
         ModelConnectionError,
@@ -56,14 +62,13 @@ async def execute_turn(
         TurnResult,
     )
 
-    issue_id = issue.id
-    role_name = str(role.name or "").strip()
-    session_id = str(context.get("session_id", "unknown-session"))
-    turn_index = int(context.get("turn_index", 0))
+    issue_id, role_name = destination.issue_id, destination.role_name
+    session_id, turn_index = destination.session_id, destination.turn_index
     turn_trace_id = f"{session_id}:{issue_id}:{role_name}:{turn_index}"
     started_at = time.perf_counter()
     current_turn = None
     prompt_hash = ""
+    memory_events = admit_memory_trace_event_sink(inputs=memory_inputs, context=context)
 
     def adopt_dispatch_turn(captured_turn: Any) -> None:
         nonlocal current_turn
@@ -71,34 +76,22 @@ async def execute_turn(
 
     async def emit_failure(error: str, failure_type: str, turn_override: Any = None) -> None:
         await emit_turn_failure_traces(
-            executor=executor,
+            destination=destination, memory_inputs=memory_inputs, memory_events=memory_events,
             context=context,
-            role_name=role_name,
-            session_id=session_id,
-            issue_id=issue_id,
-            turn_index=turn_index,
-            issue=issue,
-            role=role,
             current_turn=current_turn if turn_override is None else turn_override,
             error=error,
             failure_type=failure_type,
         )
 
     try:
-        if executor.artifact_writer.memory_trace_enabled(context):
-            context["_memory_trace_events"] = []
         executor._validate_preconditions(issue, role, context)
         await ensure_turn_control_plane_reentry_allowed_if_needed(
-            executor=executor,
-            issue_id=issue_id,
-            role_name=role_name,
-            context=context,
+            control_plane=control_plane,
+            destination=destination,
         )
         completed_replay_turn = await load_completed_turn_replay_if_needed(
-            executor=executor,
-            issue_id=issue_id,
-            role_name=role_name,
-            context=context,
+            control_plane=control_plane,
+            destination=destination,
         )
         if completed_replay_turn is not None:
             await verify_turn_completion_claims(toolbox=toolbox, turn=completed_replay_turn, context=context)
@@ -116,29 +109,22 @@ async def execute_turn(
                     "replayed_from_control_plane": True,
                     "duration_ms": int((time.perf_counter() - started_at) * 1000),
                 },
-                executor.workspace,
+                destination.workspace,
             )
-            await asyncio.to_thread(
-                executor.artifact_writer.emit_memory_traces,
-                session_id=session_id,
-                issue_id=issue_id,
-                role_name=role_name,
-                turn_index=turn_index,
-                issue=issue,
-                role=role,
-                context=context,
-                turn=completed_replay_turn,
+            await emit_turn_memory_traces(
+                destination=destination, memory_inputs=memory_inputs, memory_events=memory_events,
+                context=context, current_turn=completed_replay_turn,
             )
             return TurnResult.succeeded(completed_replay_turn)
         turn, prompt_hash, early_result = await prepare_turn_for_execution(
             executor=executor,
+            control_plane=control_plane,
+            destination=destination, memory_events=memory_events,
             issue=issue,
             role=role,
             model_client=model_client,
             context=context,
             system_prompt=system_prompt,
-            session_id=session_id,
-            turn_index=turn_index,
             turn_trace_id=turn_trace_id,
             emit_failure=emit_failure,
             turn_result_failed=TurnResult.failed,
@@ -148,29 +134,29 @@ async def execute_turn(
         assert turn is not None
         current_turn = turn
 
-        await asyncio.to_thread(
-            executor.artifact_writer.write_turn_artifact,
-            session_id=session_id,
-            issue_id=issue_id,
-            role_name=role_name,
-            turn_index=turn_index,
+        await run_owned_thread(partial(
+            destination.writer.write_turn_artifact, destination=destination,
             filename="parsed_tool_calls.json",
             content=json.dumps(
                 [{"tool": tool_call.tool, "args": tool_call.args} for tool_call in turn.tool_calls],
                 indent=2,
                 ensure_ascii=False,
             ),
-        )
+        ), label="turn-parsed-calls")
         await write_turn_checkpoint_and_publish_if_needed(
             executor=executor,
+            control_plane=control_plane,
+            destination=destination,
             turn=turn,
             context=context,
             prompt_hash=prompt_hash,
         )
 
         if turn.tool_calls:
-            turn = await executor.tool_dispatcher.execute_tools(
+            turn = await control_plane.dispatcher.execute_tools(
                 turn=turn,
+                control_plane=control_plane,
+                destination=destination, memory_inputs=memory_inputs, memory_events=memory_events,
                 toolbox=toolbox,
                 context=context,
                 issue=issue,
@@ -188,7 +174,7 @@ async def execute_turn(
                     "turn_trace_id": turn_trace_id,
                     "response_preview": (turn.content or "")[:240],
                 },
-                executor.workspace,
+                destination.workspace,
             )
 
         await verify_turn_completion_claims(toolbox=toolbox, turn=turn, context=context)
@@ -223,18 +209,11 @@ async def execute_turn(
                 ),
                 "duration_ms": int((time.perf_counter() - started_at) * 1000),
             },
-            executor.workspace,
+            destination.workspace,
         )
-        await asyncio.to_thread(
-            executor.artifact_writer.emit_memory_traces,
-            session_id=session_id,
-            issue_id=issue_id,
-            role_name=role_name,
-            turn_index=turn_index,
-            issue=issue,
-            role=role,
-            context=context,
-            turn=turn,
+        await emit_turn_memory_traces(
+            destination=destination, memory_inputs=memory_inputs, memory_events=memory_events,
+            context=context, current_turn=turn,
         )
         return TurnResult.succeeded(turn)
 
@@ -254,7 +233,7 @@ async def execute_turn(
                 "turn_index": turn_index,
                 "turn_trace_id": turn_trace_id,
             },
-            executor.workspace,
+            destination.workspace,
         )
         await emit_failure(str(exc), "state_violation")
         return TurnResult.failed(f"State violation: {exc}", should_retry=False)
@@ -271,7 +250,7 @@ async def execute_turn(
                 "turn_index": turn_index,
                 "turn_trace_id": turn_trace_id,
             },
-            executor.workspace,
+            destination.workspace,
         )
         await emit_failure(str(exc), "tool_violation")
         return TurnResult.governance_violation(exc.violations)
@@ -288,7 +267,7 @@ async def execute_turn(
                 "turn_index": turn_index,
                 "turn_trace_id": turn_trace_id,
             },
-            executor.workspace,
+            destination.workspace,
         )
         await emit_failure(str(exc), "tool_approval_pending")
         return TurnResult.failed(str(exc), should_retry=True)
@@ -305,7 +284,7 @@ async def execute_turn(
                 "turn_index": turn_index,
                 "turn_trace_id": turn_trace_id,
             },
-            executor.workspace,
+            destination.workspace,
         )
         await emit_failure(str(exc), "control_plane_blocked")
         return TurnResult.failed(str(exc), should_retry=False)
@@ -323,7 +302,7 @@ async def execute_turn(
                 "turn_index": turn_index,
                 "turn_trace_id": turn_trace_id,
             },
-            executor.workspace,
+            destination.workspace,
         )
         await emit_failure(str(exc), "turn_retry_exhausted" if retry_exhausted else "timeout")
         return TurnResult.failed(str(exc), should_retry=not retry_exhausted)
@@ -340,7 +319,7 @@ async def execute_turn(
                 "turn_index": turn_index,
                 "turn_trace_id": turn_trace_id,
             },
-            executor.workspace,
+            destination.workspace,
         )
         await emit_failure(str(exc), "turn_retry_exhausted")
         return TurnResult.failed(str(exc), should_retry=False)
@@ -360,7 +339,7 @@ async def execute_turn(
                 "turn_index": turn_index,
                 "turn_trace_id": turn_trace_id,
             },
-            executor.workspace,
+            destination.workspace,
         )
         await emit_failure(str(exc), type(exc).__name__)
         return TurnResult.failed(f"Unexpected error: {exc}", should_retry=False)

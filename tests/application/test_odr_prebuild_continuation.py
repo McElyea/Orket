@@ -12,6 +12,7 @@ from orket.core.domain.execution import ExecutionTurn
 from orket.schema import CardStatus, DialectConfig, IssueConfig
 from tests.helpers.card_dispatch import install_dispatch_snapshot_stub
 from tests.helpers.model_selection import prepared_model_selection
+from tests.helpers.turn_artifacts import artifact_test_utc_now
 
 pytestmark = pytest.mark.unit
 
@@ -83,7 +84,7 @@ def orchestrator(tmp_path: Path, monkeypatch):
         loader=loader,
         sandbox_orchestrator=FakeSandbox(),
         architecture_policy=ArchitecturePolicySnapshot(False),
-    )
+     turn_clock=artifact_test_utc_now)
     return orch, cards, loader
 
 

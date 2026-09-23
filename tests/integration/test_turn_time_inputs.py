@@ -1,4 +1,5 @@
 """Layer: integration. Stored-turn reentry must not mint historical timestamps."""
+
 import asyncio
 from datetime import UTC, datetime
 from pathlib import Path
@@ -12,6 +13,7 @@ from orket.application.services.tool_gate_service import ToolGate
 from orket.application.services.turn_tool_control_plane_service import build_turn_tool_control_plane_service
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.core.domain.state_machine import StateMachine
+from tests.helpers.turn_artifacts import artifact_test_utc_now
 from tests.helpers.turn_control_plane_clock import deterministic_turn_clock as deterministic_turn_clock
 from tests.integration.test_turn_executor_control_plane import _context, _issue, _Model, _role
 
@@ -41,7 +43,7 @@ class FileToolbox:
 async def test_completed_reentry_does_not_invent_a_turn_timestamp(tmp_path: Path) -> None:
     await asyncio.to_thread((tmp_path / "agent_output").mkdir)
     service = build_turn_tool_control_plane_service(tmp_path / "control.sqlite3")
-    executor = TurnExecutor(StateMachine(), ToolGate(None, tmp_path), tmp_path, control_plane_service=service)
+    executor = TurnExecutor(StateMachine(), ToolGate(None, tmp_path), tmp_path, control_plane_service=service, utc_now=artifact_test_utc_now)
     model, toolbox = _Model(), FileToolbox(tmp_path)
     first = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
     assert first.success and first.turn.timestamp is not None

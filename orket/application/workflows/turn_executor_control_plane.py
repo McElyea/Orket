@@ -1,19 +1,17 @@
 from __future__ import annotations
 
-import asyncio
 import hashlib
 import json
+from functools import partial
 from typing import TYPE_CHECKING, Any
 
+from orket.adapters.execution.owned_io import run_owned_thread
 from orket.application.services.turn_tool_control_plane_resource_lifecycle import (
     lease_id_for_run,
     reservation_id_for_run,
 )
-from orket.application.services.turn_tool_control_plane_service import TurnToolControlPlaneService
 from orket.application.services.turn_tool_control_plane_support import (
     resource_refs,
-    run_namespace_scope,
-    utc_now,
 )
 from orket.core.contracts import CheckpointRecord
 from orket.core.contracts.card_completion_commit import is_card_completion_call
@@ -24,6 +22,9 @@ from orket.core.domain import (
 )
 from orket.core.domain.execution import ExecutionTurn
 
+from .turn_artifact_destination import TurnArtifactDestination
+from .turn_contract_input_capture import capture_mapping
+from .turn_control_plane_binding import TurnControlPlaneBinding
 from .turn_executor_runtime import state_delta_from_tool_calls
 
 if TYPE_CHECKING:
@@ -116,7 +117,6 @@ def _status_only_tool_calls(tool_calls: list[dict[str, Any]]) -> bool:
 
 def _checkpoint_turn_metadata(
     *,
-    executor: TurnExecutor,
     turn: ExecutionTurn,
     context: dict[str, Any],
 ) -> tuple[Any, dict[str, Any] | None, dict[str, Any]]:
@@ -138,50 +138,50 @@ async def write_turn_checkpoint_and_publish_if_needed(
     turn: ExecutionTurn,
     context: dict[str, Any],
     prompt_hash: str,
+    destination: TurnArtifactDestination,
+    control_plane: TurnControlPlaneBinding,
 ) -> None:
-    session_id = str(context.get("session_id", "unknown-session"))
-    issue_id = turn.issue_id
-    role_name = turn.role
-    turn_index = int(context.get("turn_index", 0))
+    if turn.issue_id != destination.issue_id or turn.role != destination.role_name:
+        raise ValueError("E_TURN_ARTIFACT_IDENTITY_MISMATCH")
+    session_id, issue_id = destination.session_id, destination.issue_id
+    role_name, turn_index = destination.role_name, destination.turn_index
     raw = turn.raw if isinstance(turn.raw, dict) else {}
     selected_model, prompt_metadata, state_delta = _checkpoint_turn_metadata(
-        executor=executor,
         turn=turn,
         context=context,
     )
-    tool_calls = _tool_calls_payload(turn)
-    captured_at = utc_now()
-    namespace_scope = run_namespace_scope(issue_id=issue_id, context=context)
-    control_plane_service = _control_plane_service(executor)
+    captured = capture_mapping(dict(tool_calls=_tool_calls_payload(turn), selected_model=selected_model,
+        prompt_metadata=prompt_metadata, state_delta=state_delta))
+    tool_calls, selected_model = captured["tool_calls"], captured["selected_model"]
+    prompt_metadata, state_delta = captured["prompt_metadata"], captured["state_delta"]
+    captured_at = executor.utc_now().isoformat()
+    proposal_hash = _proposal_hash(turn)
+    resume_mode, replay_mode = control_plane.resume_mode, control_plane.protocol_replay_mode
+    artifact_reused = bool((raw.get("control_plane_resume") or {}).get("artifact_reused"))
+    namespace_scope = control_plane.namespace_scope
+    control_plane_service = control_plane.service
     status_only_without_protocol = _status_only_tool_calls(tool_calls) and not bool(
         context.get("protocol_governed_enabled")
     )
     control_plane_publish_enabled = (
         control_plane_service is not None
         and bool(tool_calls)
-        and not bool(context.get("protocol_replay_mode"))
+        and not replay_mode
         and not status_only_without_protocol
     )
     if control_plane_publish_enabled:
-        await ensure_turn_control_plane_reentry_allowed_if_needed(
-            executor=executor,
-            issue_id=issue_id,
-            role_name=role_name,
-            context=context,
+        await control_plane_service.ensure_reentry_allowed(
+            session_id=session_id, issue_id=issue_id, role_name=role_name, turn_index=turn_index,
         )
 
-    await asyncio.to_thread(
-        executor.artifact_writer.write_turn_checkpoint,
-        session_id=session_id,
-        issue_id=issue_id,
-        role_name=role_name,
-        turn_index=turn_index,
+    await run_owned_thread(partial(
+        destination.writer.write_turn_checkpoint, destination=destination, captured_at=captured_at,
         prompt_hash=prompt_hash,
         selected_model=selected_model,
         tool_calls=tool_calls,
         state_delta=state_delta,
         prompt_metadata=prompt_metadata,
-    )
+    ), label="turn-checkpoint-write")
 
     if not control_plane_publish_enabled or control_plane_service is None:
         return
@@ -191,9 +191,7 @@ async def write_turn_checkpoint_and_publish_if_needed(
         issue_id=issue_id,
         role_name=role_name,
         turn_index=turn_index,
-        proposal_hash=_proposal_hash(turn),
-        resume_mode=bool(context.get("resume_mode"))
-        and not bool((raw.get("control_plane_resume") or {}).get("artifact_reused")),
+        proposal_hash=proposal_hash, resume_mode=resume_mode and not artifact_reused,
     )
     checkpoint_id = f"turn-tool-checkpoint:{attempt.attempt_id}"
     existing = await control_plane_service.publication.repository.get_checkpoint(checkpoint_id=checkpoint_id)
@@ -209,8 +207,8 @@ async def write_turn_checkpoint_and_publish_if_needed(
             state_delta=state_delta,
             prompt_metadata=prompt_metadata if isinstance(prompt_metadata, dict) else None,
             captured_at=captured_at,
-            resume_mode=bool(context.get("resume_mode")),
-            protocol_replay_mode=bool(context.get("protocol_replay_mode")),
+            resume_mode=resume_mode,
+            protocol_replay_mode=replay_mode,
             namespace_scope=namespace_scope,
         )
         snapshot_compact = json.dumps(
@@ -223,15 +221,11 @@ async def write_turn_checkpoint_and_publish_if_needed(
         snapshot_hash = hashlib.sha256(snapshot_compact.encode("ascii")).hexdigest()
         snapshot_ref = f"turn-tool-checkpoint-snapshot:{run.run_id}:{snapshot_hash[:16]}"
         integrity_ref = f"turn-tool-checkpoint-integrity:sha256:{snapshot_hash}"
-        await asyncio.to_thread(
-            executor.artifact_writer.write_turn_artifact,
-            session_id=session_id,
-            issue_id=issue_id,
-            role_name=role_name,
-            turn_index=turn_index,
+        await run_owned_thread(partial(
+            destination.writer.write_turn_artifact, destination=destination,
             filename=f"control_plane_checkpoint_snapshot_{snapshot_hash[:16]}.json",
             content=json.dumps(snapshot_payload, indent=2, ensure_ascii=False, default=str),
-        )
+        ), label="turn-control-plane-snapshot")
         checkpoint = await control_plane_service.publication.publish_checkpoint(
             checkpoint=CheckpointRecord(
                 checkpoint_id=checkpoint_id,
@@ -274,28 +268,17 @@ async def write_turn_checkpoint_and_publish_if_needed(
     )
 
 
-def _control_plane_service(executor: TurnExecutor) -> TurnToolControlPlaneService | None:
-    service = getattr(executor.tool_dispatcher, "control_plane_service", None)
-    if isinstance(service, TurnToolControlPlaneService):
-        return service
-    return None
-
-
 async def ensure_turn_control_plane_reentry_allowed_if_needed(
     *,
-    executor: TurnExecutor,
-    issue_id: str,
-    role_name: str,
-    context: dict[str, Any],
+    control_plane: TurnControlPlaneBinding,
+    destination: TurnArtifactDestination,
 ) -> None:
-    service = _control_plane_service(executor)
+    service = control_plane.service
     if service is None:
         return
     await service.ensure_reentry_allowed(
-        session_id=str(context.get("session_id", "unknown-session")),
-        issue_id=issue_id,
-        role_name=role_name,
-        turn_index=int(context.get("turn_index", 0)),
+        session_id=destination.session_id, issue_id=destination.issue_id,
+        role_name=destination.role_name, turn_index=destination.turn_index,
     )
 
 

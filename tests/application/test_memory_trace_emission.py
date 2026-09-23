@@ -11,6 +11,7 @@ from orket.application.services.tool_gate_service import ToolGate
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.core.domain.state_machine import StateMachine
 from orket.schema import CardStatus, IssueConfig, RoleConfig
+from tests.helpers.turn_artifacts import artifact_test_utc_now
 
 
 @pytest.mark.asyncio
@@ -20,7 +21,7 @@ async def test_turn_executor_emits_memory_trace_artifacts_when_visibility_mode_p
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     issue = IssueConfig(id="ISSUE-1", summary="Implement feature", status=CardStatus.IN_PROGRESS)
     role = RoleConfig(id="DEV", summary="developer", description="Builds code", tools=["write_file"])
 
@@ -109,7 +110,7 @@ async def test_turn_executor_emits_memory_trace_artifacts_for_before_prompt_shor
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
         middleware=TurnLifecycleInterceptors([_ShortCircuitHooks()]),
-    )
+     utc_now=artifact_test_utc_now)
     issue = IssueConfig(id="ISSUE-1", summary="Implement feature", status=CardStatus.IN_PROGRESS)
     role = RoleConfig(id="DEV", summary="developer", description="Builds code", tools=["write_file"])
 
@@ -167,7 +168,7 @@ async def test_turn_executor_emits_memory_trace_artifacts_for_runtime_exception(
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     issue = IssueConfig(id="ISSUE-1", summary="Implement feature", status=CardStatus.IN_PROGRESS)
     role = RoleConfig(id="DEV", summary="developer", description="Builds code", tools=["write_file"])
 

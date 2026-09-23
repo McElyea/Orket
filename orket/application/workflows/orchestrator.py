@@ -4,6 +4,7 @@ import asyncio
 import os
 from collections import defaultdict
 from collections.abc import Callable, Mapping
+from datetime import datetime
 from pathlib import Path
 from types import MappingProxyType
 from typing import Any, cast
@@ -35,6 +36,7 @@ from orket.schema import CardStatus, EnvironmentConfig, EpicConfig, IssueConfig,
 from orket.time_utils import utc_now_iso
 
 from . import orchestrator_ops
+from .turn_approval_publication import create_pending_tool_approval_request
 
 # Compatibility re-exports used by tests and monkeypatch hooks.
 Scaffolder = orchestrator_ops.Scaffolder
@@ -79,7 +81,7 @@ class Orchestrator:
         failure_report_clock: Callable[[], str] = utc_now_iso,
         control_plane_clock: Callable[[], str] | None = None,
         environment: Mapping[str, str] | None = None,
-        *, architecture_policy: ArchitecturePolicySnapshot,
+        *, architecture_policy: ArchitecturePolicySnapshot, turn_clock: Callable[[], datetime],
     ) -> None:
         if not isinstance(architecture_policy, ArchitecturePolicySnapshot):
             raise TypeError("E_ARCHITECTURE_POLICY_SNAPSHOT_REQUIRED")
@@ -89,6 +91,7 @@ class Orchestrator:
         self.async_cards = async_cards
         self.card_completion = card_completion
         self.failure_report_clock = failure_report_clock
+        self.turn_clock = turn_clock
         self.snapshots = snapshots
         self.org = org
         self.config_root = config_root
@@ -250,7 +253,7 @@ class Orchestrator:
         return await orchestrator_ops._create_pending_gate_request(self, *args, **kwargs)
 
     async def _create_pending_tool_approval_request(self, *args: Any, **kwargs: Any) -> Any:
-        return await orchestrator_ops._create_pending_tool_approval_request(self, *args, **kwargs)
+        return await create_pending_tool_approval_request(self, *args, **kwargs)
 
     async def _build_turn_context(self, *args: Any, **kwargs: Any) -> Any:
         return await orchestrator_ops._build_turn_context(self, *args, **kwargs)

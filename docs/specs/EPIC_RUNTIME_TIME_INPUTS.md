@@ -1,6 +1,6 @@
 # Epic bootstrap and summary time inputs
 
-Last updated: 2026-09-20
+Last updated: 2026-09-23
 Status: Active contract; scoped acceptance belongs to the architectural-truth plan.
 
 The standard `ExecutionPipeline` receives a `RuntimeInputService`. Epic bootstrap
@@ -41,3 +41,12 @@ explain historical clock reversal, make UTC a monotonic latency measurement,
 or close the remaining explicit-input and clock inventory under D. Default
 `RuntimeInputService` behavior remains the host UTC clock; controlled clocks
 are caller-provided inputs rather than hidden global overrides.
+
+The pending 0.6.102 turn-artifact migration explicitly forwards this same service's
+UTC callback through pipeline wiring and Orchestrator into TurnExecutor/parser.
+Parser completion samples after its artifact batch. New local/control-plane
+checkpoints share one entry-captured timestamp; retained records keep historical
+time. Tool-approval request and hold publication likewise reuse one explicit
+turn-clock sample. No new RuntimeConstructionInputs field or lower-level default
+clock is introduced. Requirements and pending acceptance are in
+`TURN_ARTIFACT_PUBLICATION_CONTRACT.md` and the architectural-truth plan.

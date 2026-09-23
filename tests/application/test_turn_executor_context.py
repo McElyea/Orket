@@ -1,4 +1,5 @@
-﻿import json
+
+import json
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -8,6 +9,7 @@ from orket.application.services.tool_gate_service import ToolGate
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.core.domain.state_machine import StateMachine
 from orket.schema import CardStatus, IssueConfig, RoleConfig
+from tests.helpers.turn_artifacts import artifact_test_utc_now, prepare_executor_message_fixture
 
 
 def _write_prompt_budget_policy(path: Path, *, max_tokens: int) -> None:
@@ -45,7 +47,7 @@ async def test_prepare_messages_includes_dependency_context_block(tmp_path):
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     issue = IssueConfig(id="ISSUE-1", summary="Implement feature", depends_on=["REQ-1", "ARC-1"])
     role = RoleConfig(id="DEV", summary="developer", description="Builds code", tools=["write_file"])
     context = {
@@ -58,7 +60,7 @@ async def test_prepare_messages_includes_dependency_context_block(tmp_path):
         "history": [],
     }
 
-    messages = await executor._prepare_messages(issue, role, context)
+    messages = await prepare_executor_message_fixture(executor, issue, role, context)
     assert [message["role"] for message in messages] == ["system", "user"]
     rendered = messages[1]["content"]
     assert "TURN PACKET:" in rendered
@@ -73,7 +75,7 @@ async def test_execute_turn_writes_prompt_provenance_artifacts(tmp_path):
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     issue = IssueConfig(id="ISSUE-1", summary="Implement feature", status=CardStatus.IN_PROGRESS)
     role = RoleConfig(
         id="DEV",
@@ -147,7 +149,7 @@ async def test_execute_turn_reprompt_overwrites_response_artifacts_with_accepted
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     issue = IssueConfig(id="ISSUE-1", summary="Implement feature", status=CardStatus.IN_PROGRESS)
     role = RoleConfig(
         id="DEV",
@@ -219,7 +221,7 @@ async def test_execute_turn_writes_prompt_budget_and_structure_artifacts(tmp_pat
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     issue = IssueConfig(id="ISSUE-1", summary="Implement feature", status=CardStatus.IN_PROGRESS)
     role = RoleConfig(id="DEV", summary="developer", description="Builds code", tools=["write_file"])
     policy_path = Path(tmp_path) / "core" / "policies" / "prompt_budget.yaml"
@@ -284,7 +286,7 @@ async def test_execute_turn_fails_closed_when_prompt_budget_exceeded(tmp_path):
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     issue = IssueConfig(id="ISSUE-1", summary="Implement feature", status=CardStatus.IN_PROGRESS)
     role = RoleConfig(id="DEV", summary="developer", description="Builds code", tools=["write_file"])
     policy_path = Path(tmp_path) / "core" / "policies" / "prompt_budget.yaml"
@@ -345,7 +347,7 @@ async def test_execute_turn_rejects_ready_turn_context(tmp_path):
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     issue = IssueConfig(id="ISSUE-1", summary="Implement feature", status=CardStatus.READY)
     role = RoleConfig(id="DEV", summary="developer", description="Builds code", tools=["write_file"])
 
@@ -396,7 +398,7 @@ async def test_execute_turn_rejects_status_context_mismatch(tmp_path):
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     issue = IssueConfig(id="ISSUE-1", summary="Implement feature", status=CardStatus.IN_PROGRESS)
     role = RoleConfig(id="DEV", summary="developer", description="Builds code", tools=["write_file"])
 

@@ -15,6 +15,7 @@ from orket.core.contracts.card_completion_commit import CardCompletionRejected
 from orket.core.domain import CompletionClassification
 from orket.exceptions import CatastrophicFailure, ExecutionFailed
 from orket.schema import CardStatus, IssueConfig
+from tests.helpers.turn_artifacts import artifact_test_utc_now
 from tests.integration.test_card_completion_control_plane import _runtime
 
 pytestmark = pytest.mark.integration
@@ -39,7 +40,7 @@ async def failed_read_runtime(tmp_path, protocol, status, max_retries):
                         org=SimpleNamespace(process_rules={}), config_root=tmp_path, db_path=repo.db_path,
                         loader=None, sandbox_orchestrator=None, card_completion=service,
         architecture_policy=ArchitecturePolicySnapshot(False),
-    )
+     turn_clock=artifact_test_utc_now)
     await orch._request_issue_transition(issue=issue, target_status=status, reason="turn_dispatch",
                                          assignee="integrity_guard", roles=["integrity_guard"],
                                          metadata={"run_id": "session", "turn_index": 1, "review_turn": True})

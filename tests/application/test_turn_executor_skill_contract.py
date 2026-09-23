@@ -8,6 +8,7 @@ from orket.application.services.tool_gate_service import ToolGate
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.core.domain.state_machine import StateMachine
 from orket.schema import CardStatus, IssueConfig, RoleConfig
+from tests.helpers.turn_artifacts import artifact_test_utc_now
 
 
 class _Model:
@@ -54,7 +55,7 @@ async def test_turn_executor_rejects_undeclared_skill_entrypoint_tool(tmp_path: 
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     context = _context()
     context["skill_contract_enforced"] = True
     context["skill_tool_bindings"] = {
@@ -77,7 +78,7 @@ async def test_turn_executor_rejects_tool_when_required_permission_missing(tmp_p
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     context = _context()
     context["skill_contract_enforced"] = True
     context["skill_tool_bindings"] = {
@@ -101,7 +102,7 @@ async def test_turn_executor_rejects_tool_when_runtime_limits_exceed_allowed_cap
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     context = _context()
     context["skill_contract_enforced"] = True
     context["max_tool_execution_time"] = 5
@@ -127,7 +128,7 @@ async def test_turn_executor_passes_skill_runtime_binding_context_to_toolbox(tmp
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     toolbox = _ToolBox()
     context = _context()
     context["skill_contract_enforced"] = True

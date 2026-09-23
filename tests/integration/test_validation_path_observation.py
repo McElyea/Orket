@@ -20,6 +20,7 @@ from orket.application.workflows.turn_read_context import observe_legacy_require
 from orket.application.workflows.turn_response_parser import ResponseParser
 from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.schema import RoleConfig
+from tests.helpers.turn_artifacts import artifact_test_utc_now
 
 pytestmark = pytest.mark.integration
 _ORDINARY_TOKEN = "agent_output/review.txt"
@@ -41,7 +42,7 @@ def _create_fixture(root: Path) -> tuple[Path, Path, Path, Path]:
 
 
 def _validator(workspace: Path) -> ContractValidator:
-    return ContractValidator(ResponseParser(workspace, lambda **_kwargs: None))
+    return ContractValidator(ResponseParser(utc_now=artifact_test_utc_now))
 
 
 def _role() -> RoleConfig:
@@ -118,9 +119,10 @@ async def _collect_current_route(
     turn: ExecutionTurn,
     role: RoleConfig,
     context: dict[str, object],
+    *, workspace: Path,
 ) -> list[dict[str, object]]:
     observation = await observe_legacy_required_read_paths(
-        context=context, workspace=validator.response_parser.workspace,
+        context=context, workspace=workspace,
     )
     return validator.collect_contract_violations(turn, role, context, observation)
 
@@ -231,7 +233,7 @@ async def test_validation_path_metadata_preserves_sqlite_response(
     state = _hold_target_resolve(monkeypatch, ordinary, enabled=held)
     admitted_at = time.perf_counter()
     task = asyncio.create_task(
-        _collect_current_route(_validator(workspace), _turn(), _role(), _context())
+        _collect_current_route(_validator(workspace), _turn(), _role(), _context(), workspace=workspace)
     )
     probe = asyncio.create_task(
         _sqlite_elapsed(tmp_path / "validation-responsive.sqlite3", admitted_at)

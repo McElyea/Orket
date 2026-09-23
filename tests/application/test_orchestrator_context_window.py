@@ -1,7 +1,9 @@
+
 from types import SimpleNamespace
 
 from orket.application.services.runtime_policy_inputs import ArchitecturePolicySnapshot
 from orket.application.workflows.orchestrator import Orchestrator
+from tests.helpers.turn_artifacts import artifact_test_utc_now
 
 
 def test_orchestrator_history_context_defaults_to_10(monkeypatch, tmp_path):
@@ -17,7 +19,7 @@ def test_orchestrator_history_context_defaults_to_10(monkeypatch, tmp_path):
         loader=None,
         sandbox_orchestrator=None,
         architecture_policy=ArchitecturePolicySnapshot(False),
-    )
+     turn_clock=artifact_test_utc_now)
 
     orchestrator.transcript = [
         SimpleNamespace(role=("coder" if i % 2 == 0 else "reviewer"), content=f"c{i}") for i in range(12)
@@ -42,7 +44,7 @@ def test_orchestrator_history_context_env_override(monkeypatch, tmp_path):
         loader=None,
         sandbox_orchestrator=None,
         architecture_policy=ArchitecturePolicySnapshot(False),
-    )
+     turn_clock=artifact_test_utc_now)
 
     orchestrator.transcript = [
         SimpleNamespace(role=("coder" if i % 2 == 0 else "reviewer"), content=f"c{i}") for i in range(6)

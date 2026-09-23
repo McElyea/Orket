@@ -1,4 +1,5 @@
 """Real SQLite/orchestrator boundaries with controlled advisory nodes; no inference."""
+
 from types import SimpleNamespace
 
 import pytest
@@ -11,6 +12,7 @@ from orket.core.domain.records import IssueRecord
 from orket.exceptions import ExecutionFailed
 from orket.schema import CardStatus, EnvironmentConfig, SeatConfig, TeamConfig
 from tests.helpers.card_completion import completion_components
+from tests.helpers.turn_artifacts import artifact_test_utc_now
 from tests.integration.test_card_dependency_acceptance import _prerequisite
 
 pytestmark = pytest.mark.integration
@@ -26,7 +28,7 @@ async def _dispatch_context(tmp_path, router):
         org=SimpleNamespace(process_rules={}), config_root=tmp_path, db_path=repo.db_path,
         loader=None, sandbox_orchestrator=None, card_completion=completion,
         architecture_policy=ArchitecturePolicySnapshot(False),
-    )
+     turn_clock=artifact_test_utc_now)
     orch.router_node = router
     return repo, issue, team, orch
 

@@ -18,6 +18,7 @@ from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.core.domain.state_machine import StateMachine
 from orket.naming import sanitize_name
 from orket.schema import IssueConfig, RoleConfig
+from tests.helpers.turn_artifacts import artifact_test_utc_now, execute_executor_dispatch_fixture
 
 _A = "agent_output/a.txt"
 _B = "agent_output/b.txt"
@@ -117,11 +118,12 @@ async def test_dispatch_failure_trace_uses_captured_turn(tmp_path, monkeypatch) 
     await asyncio.to_thread(a_path.parent.mkdir, parents=True)
     await asyncio.to_thread(a_path.write_bytes, b"a unchanged\n")
     await asyncio.to_thread(b_path.write_bytes, b"b unchanged\n")
-    executor = TurnExecutor(StateMachine(), ToolGate(organization=None, workspace_root=root), workspace=root)
+    executor = TurnExecutor(StateMachine(), ToolGate(organization=None, workspace_root=root), workspace=root, utc_now=artifact_test_utc_now)
     dispatched: list[ExecutionTurn] = []
     traced: list[ExecutionTurn] = []
     dispatch = executor.tool_dispatcher.execute_tools
-    emit_memory_traces = executor.artifact_writer.emit_memory_traces
+    from orket.application.workflows import turn_failure_traces
+    render_memory_traces = turn_failure_traces.render_memory_trace_publication
 
     async def record_dispatch(**kwargs):
         dispatched.append(kwargs["turn"])
@@ -129,10 +131,10 @@ async def test_dispatch_failure_trace_uses_captured_turn(tmp_path, monkeypatch) 
 
     def record_memory_trace(**kwargs):
         traced.append(kwargs["turn"])
-        return emit_memory_traces(**kwargs)
+        return render_memory_traces(**kwargs)
 
     monkeypatch.setattr(executor.tool_dispatcher, "execute_tools", record_dispatch)
-    monkeypatch.setattr(executor.artifact_writer, "emit_memory_traces", record_memory_trace)
+    monkeypatch.setattr(turn_failure_traces, "render_memory_trace_publication", record_memory_trace)
     state = _hold_submitted_path(monkeypatch, a_path)
     operation = asyncio.create_task(executor.execute_turn(
         IssueConfig(id="ISSUE-PROTOCOL-FAILURE", summary="Failure", seat="developer", status="in_progress"),
@@ -197,9 +199,9 @@ async def test_dispatch_cancellation_publishes_completed_original_sink(tmp_path)
         "roles": ["developer"], "session_id": "dispatch-cancel", "turn_index": 1,
         "protocol_governed_enabled": True,
     }
-    executor = TurnExecutor(StateMachine(), ToolGate(organization=None, workspace_root=root), workspace=root)
+    executor = TurnExecutor(StateMachine(), ToolGate(organization=None, workspace_root=root), workspace=root, utc_now=artifact_test_utc_now)
     task = asyncio.create_task(
-        executor.tool_dispatcher.execute_tools(
+        execute_executor_dispatch_fixture(executor,
             turn=turn, toolbox=toolbox, context=context,
             on_turn_captured=adopted.append,
         )

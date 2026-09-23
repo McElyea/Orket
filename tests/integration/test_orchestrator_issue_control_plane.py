@@ -30,6 +30,7 @@ from orket.schema import (
     TeamConfig,
 )
 from tests.helpers.model_selection import prepared_model_selection
+from tests.helpers.turn_artifacts import artifact_test_utc_now
 
 pytestmark = pytest.mark.integration
 
@@ -136,7 +137,7 @@ async def test_orchestrator_issue_turn_publishes_issue_dispatch_and_non_protocol
         loader=loader,
         sandbox_orchestrator=SimpleNamespace(registry=SimpleNamespace(get=lambda _sid: None)),
         architecture_policy=ArchitecturePolicySnapshot(False),
-    )
+     turn_clock=artifact_test_utc_now)
     orch.router_node = SimpleNamespace(route=lambda _inputs: "developer")
     orch.loop_policy_node = SimpleNamespace(
         is_review_turn=lambda _status: False,
@@ -169,7 +170,7 @@ async def test_orchestrator_issue_turn_publishes_issue_dispatch_and_non_protocol
         ToolGate(organization=None, workspace_root=tmp_path),
         workspace=tmp_path,
         control_plane_service=build_turn_tool_control_plane_service(control_plane_db_path),
-    )
+     utc_now=artifact_test_utc_now)
     toolbox = _Toolbox()
 
     epic = EpicConfig(id="EPIC-1", summary="Epic", team="core", environment="dev", issues=[])

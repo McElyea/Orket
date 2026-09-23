@@ -17,6 +17,7 @@ from orket.application.workflows.orchestrator import Orchestrator
 from orket.core.domain import AttemptState, LeaseStatus, ReservationKind, ReservationStatus, RunState
 from orket.schema import CardStatus, EnvironmentConfig, IssueConfig, SeatConfig, TeamConfig
 from tests.helpers.model_selection import prepared_model_selection
+from tests.helpers.turn_artifacts import artifact_test_utc_now
 
 pytestmark = pytest.mark.integration
 
@@ -61,7 +62,7 @@ def _build_orchestrator(tmp_path: Path, cards: AsyncCardRepository) -> Orchestra
         loader=_Loader(),
         sandbox_orchestrator=_Sandbox(),
         architecture_policy=ArchitecturePolicySnapshot(False),
-    )
+     turn_clock=artifact_test_utc_now)
     orch.loop_policy_node = _LoopPolicy()
     return orch
 

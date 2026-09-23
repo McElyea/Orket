@@ -12523,7 +12523,10 @@ Next action: complete D's remaining explicit core input/effect, immutable decisi
 context, adapter-classification and async-reachability obligations after the verified
 0.6.101 shared required-input and Packet-1 construction-intent boundary. Next is
 turn artifact publication with coherent captured identity/input ownership across response,
-prompt, parser, checkpoint and memory routes; its prepared probe remains unexecuted. Preserve 0.6.98 artifact
+prompt, parser, checkpoint and memory routes. The executable-equivalent maintained
+probe now records seven cases, five failures and two healthy controls in both .101
+source and its exact installed wheel; the sealed preparation itself remains unexecuted.
+Implement from those retained observations before claiming artifact acceptance. Preserve 0.6.98 artifact
 and source-attribution ownership, 0.6.97 interrupted connector logging,
 0.6.96 Gitea export ownership, 0.6.95 short HTTP ownership, 0.6.94 Gitea request
 inputs, 0.6.93 Gitea HTTP composition and all earlier accepted behavior, including
@@ -23730,3 +23733,271 @@ No fresh Linux measurement or settings change occurred. Wider D, E1/E2, full 89%
 coverage, ProductFlow replay, legacy cutover, selected-provider and CAP-1/2/3 proof
 remain open. No hosted Quality acceptance, main merge, whole-goal completion or
 lane retirement is claimed. Lane retirement still requires explicit user acceptance.
+
+
+#### D turn artifact publication opening on published .101 (2026-09-23)
+
+Responsible maintainer: Codex for Orket Core. v0.6.101 is published at
+086b40ed593cadef4e99241ffaec6cf18d1090ab with annotated tag object
+0e1244e1497e706c70537b2f3225d794a8e2fe8a. Its checkpoint SHA-256 is
+3c51dbcca44895766bb26133ced6fe3857655207306a692080a32f756ee1a666;
+branch/tag remote refs, exact committed bytes and clean worktree were verified
+before this opening. No main merge or lane retirement occurred.
+
+Observed path: primary. Result: failure for the demonstrated artifact boundary.
+The new proof root is .tmp/d-turn-artifact-ownership/. The sealed preparation
+remains immutable and unexecuted. Its maintained integration copy changes only
+the module docstring; all executable statements are identical. Product files
+remain byte-identical to published .101 through both opening observations.
+
+| Opening cell | Cases | Failures | Healthy controls | Errors / skips |
+|---|---:|---:|---:|---:|
+| Source .101 | 7 | 5 | 2 | 0 / 0 |
+| Exact installed .101 Windows 3.11 wheel | 7 | 5 | 2 | 0 / 0 |
+
+Four cases per cell show cancellation or timeout completing the caller while the
+admitted native response write is still held. They fail at the task-not-done
+assertion before release. Finally cleanup releases and observes the actual write
+or physical late-directory PermissionError finishing; the second raw document
+is absent. These failures do not establish late-error propagation through an
+interrupted caller. Both unstopped controls pass: normal text/raw publication
+and the actual native directory error. The seventh case retains original text
+but writes raw JSON containing a mutation made during the first write.
+
+All seven cases per cell reached independent SQLite observations below the
+unchanged 0.5s bound and retained final native-settlement observations. Source
+inputs remained unchanged and its parent was reaped. Installed imports and all
+core wheel members were checked against the published wheel before invocation.
+The binding retains 2,491 physical/input/report hashes. Opening proof is live
+for these controlled local paths, with structural byte equivalence. Whole-turn
+identity, prompt, parser, checkpoint, memory and other publication routes remain
+unproved; no provider, Linux, atomic bundle or hard native deadline claim follows.
+
+Continue with one captured turn artifact destination and the existing file/native
+owners, preserving ordered document admission, control-plane/recovery order,
+accepted dispatch/result sinks and all retained observations. Settle the durable
+contract and its negative controls before implementation. The read-only wider
+identity review is structural only. Existing Linux clock, wider D/E/CAP, full
+89% coverage, replay and release-readiness blockers remain open.
+
+
+#### D artifact path opening and candidate integration (2026-09-23)
+
+Observed path: primary. Result: failure on published .101. The separate
+`.tmp/d-turn-artifact-path-opening/` contains four executed maintained-copy cases
+against unchanged source and the exact installed Windows 3.11 wheel: two physical
+lexical workspace escapes and two healthy cases in each cell, zero errors/skips.
+Every write remained inside pytest's disposable tmp_path. Source inputs remained
+unchanged and its parent was reaped; installed package bytes matched the .101 wheel.
+`observations.json` binds 2,484 physical/input/report files. The original prepared
+path probe SHA-256 2b48d5824e59e6211a5e788ff96850f12deb8ba1124c0a1211554a5996d91441
+remains immutable and unexecuted; only the executable-equivalent maintained copy
+ran. This is lexical path evidence, not symlink/hostile-filesystem containment.
+
+Candidate implementation for .102 is in progress under
+`docs/specs/TURN_ARTIFACT_PUBLICATION_CONTRACT.md` and
+`docs/architecture/CONTRACT_DELTA_TURN_ARTIFACT_PUBLICATION_D_2026-09-23.md`.
+The candidate has no acceptance result yet. Three bounded Sol Extra High workers
+have authored disjoint writer/memory, response/parser and prompt-budget changes;
+the orchestrator owns destination authority, integration, clock forwarding,
+checkpoint/replay/approval recovery, fixtures, canonical records and final proof.
+Additional composed identity and failure-publication controls are being prepared.
+No proof runs concurrently with candidate edits.
+
+The explicit interruption ceiling preserves existing failure precedence: a clean
+cancel prevents later admission; a late native fault retained by the existing owner
+can enter the established failure handler. Normal/replay memory failure or an early
+failure helper can cause one failure overwrite, at most two total publications.
+Failure in an exception-handler publication escapes; no third attempt or retry of
+an earlier failed artifact is added. Counter error conversion remains confined to
+its existing invocation/one-coroutine-continuation catch; dictionary-only payload
+acceptance, normalization failure behavior and arbitrary-awaitable refusal remain.
+
+Structural authorship is not live acceptance. All previous passing/failed cells,
+BT-1 through BT-5 behavior, SQLite <0.5s, native/source/outer budgets, 89% coverage
+floor and C/D/E/CAP order remain required. Linux clock instability remains blocked
+by the unchanged retained preflight; no fresh Linux or actual provider observation
+is claimed. No new checkpoint has been committed or published and the lane is not
+retired.
+
+#### D artifact candidate diagnostics and integration review (2026-09-23)
+
+The frozen first affected diagnostic at
+`.tmp/d-turn-artifact-candidate/focused-1/` observed 703 cases: 696 passed,
+seven failed, zero errors/skips, pytest 125.09s and owned process 128.0715241s.
+Its inputs remained unchanged and its parent was terminal/reaped. Five failures
+exposed fixture integration mistakes: a synchronous wrapper retained the new
+parser coroutine, two validation probes still read the removed parser workspace,
+and two new destination cases expected full JSON context from a compact prompt.
+Corrections preserve the assertions' purpose: await the real parser, pass the
+explicit workspace, and cover full and compact prompt representations separately.
+
+The other two cases reached `E_AGENT_READY_FEATURE_MISMATCH` before governed-agent
+success. Their physical invocation-failure records are retained. Structural
+readback found the global Conda editable installation maps foreign children to
+the original checkout and its older SDK ready payload, which lacks the model
+receipt feature required by this branch. No child import-origin trace was taken
+in that failed run. `editable-environment-readback.json` records this inference
+and exact source/mapping hashes. A diagnostic using the retained published source
+environment is planned; final proof still requires a fresh exact .102 package
+matrix, not mixed current-parent/published-child diagnostic results.
+
+The first structural phase retained 130 import-order, trailing-space and callable
+inspection findings. The import repair applied its changes but its top-level-only
+AST comparison failed; its helper/log remain immutable. A separate readback
+excluding imports at every lexical scope proved unchanged executable AST apart
+from two declared fixes: callable classification and the broken Orchestrator
+approval delegate. The second structural phase passed changed-file lint and
+whitespace. These are structural observations, not whole-plan acceptance.
+
+Review also required retaining the existing dispatcher/control-plane owner and
+namespace across the public owner wait, and forwarding the captured initial
+message sequence to model and corrective calls. The candidate now has explicit
+bindings for both. Additional physical prompt/checkpoint/read, composed recovery,
+clock-forwarding and owner-mutation tests are being authored. Snapshot reads keep
+their existing unreadable/malformed refusal classification; converted read errors
+inside the owner do not override a pending cancellation. No candidate acceptance,
+new publication, Linux result, actual-provider result or lane retirement follows
+from these diagnostics.
+
+The separate frozen `focused-2` diagnostic used the retained .101 source
+environment without installation or mutation. It observed 745 cases: 743 passed,
+two failed, zero errors/skips, pytest 129.54s and owned process 132.25s. Candidate
+inputs remained unchanged and the parent was terminal/reaped. The two earlier
+governed-agent cases passed in this environment. This is a mixed-package diagnostic,
+not final .102 source or installed acceptance; the precise earlier child import
+origin remains an inference. Both new failures are retained fixture mistakes:
+the epic recovery helper passed a dictionary to an internal typed-request boundary,
+and the clock composition's controlled model missed the built context's required
+write path. Their assertions and deadlines remain required after correction.
+
+`format-preparation/report.json` retains exact pre/post bytes and recursive
+non-import AST equality for all 113 changed Python files. `structural-3` passed
+changed-file lint and whitespace with no new function over 70 lines. Existing
+oversized files still require narrow migration-size review before final proof.
+Composed flag-mutation and original memory-event-sink replacement controls are
+being added; direct capture tests are not presented as those composed observations.
+
+A read-only review records one pre-existing replay ambiguity for later D work:
+public protocol replay skips the execution-owner hold but still consults live
+control-plane reentry state before model proposal generation. It normally calls
+the model, then reuses recorded operation results without toolbox execution.
+This ordering is unchanged from .101. The new binding must preserve it; no live
+counterexample or decision to bypass that control-plane authority is claimed.
+Guard-rejection publication also retains its separate ambient clock; explicit
+tool-approval clock forwarding does not close that remaining time-input debt.
+
+The frozen `focused-3` diagnostic retained 747 cases: 744 passed, one failed and
+two had setup errors, with zero skips and unchanged candidate bytes. The corrected
+epic recovery case and held resume/replay flag mutations passed. The clock fixture
+reached a synthesized `update_issue_status` call, but its write-only controlled
+toolbox raised KeyError; physical checkpoint/log records retain that path and its
+unresolved-dispatch refusal. The two new sink tests did not execute because their
+module omitted the explicit deterministic-clock fixture import. Corrections add
+that import and model the synthesized status in the controlled toolbox, retaining
+the real contract validation, clock, artifact and control-plane assertions. This
+does not change production behavior or treat those failed observations as proof.
+
+The separate frozen `focused-4` mixed-package diagnostic passed all 747 cases,
+with no failures, errors or skips and unchanged candidate bytes. It includes the
+corrected clock composition and original memory-event-sink controls. This remains
+a diagnostic; final source and installed acceptance was subsequently attempted
+under `.tmp/d-turn-artifact-publication` with a fresh exact .102 environment.
+
+That first final campaign passed canonical C structural checks, exact LF index
+preflight, and complete source/sdist/wheel parity for 1,175 core Python members,
+20 resources and the separate 29-member SDK. The source cell passed all 3,223
+selected cases with no failures, errors or skips; all 394 recorded independent
+SQLite observations were below 0.5s (maximum 0.15347070002462715s). The Windows
+3.11 installed pytest cell also passed all 3,223 cases, but its mandatory tool-gate
+audit failed: `scripts/security/build_tool_gate_audit.py` had not supplied the
+new required `TurnExecutor` clock. Its separate dispatcher call also required
+migration and had not yet been reached. The native report passed its other eight
+checks, including exact cases, unchanged inputs, import origins, CLI flows and
+absence of remaining children. Windows 3.12 was not started. No .102 acceptance,
+commit or publication follows from this stopped campaign.
+
+`.tmp/d-turn-artifact-audit/failed-campaign-binding.json` retains exact hashes for
+all 23,744 local failed-campaign files and 28,762 installed-environment files,
+including physical fixtures and package bytes. The following `unstage.json`
+records removal of the exact 125 paths from the index without changing working
+bytes. The correction keeps one canonical standalone audit writer, supplies
+explicit runtime inputs, preserves strict deny/no-side-effect and cleanup
+requirements, and adds the audit's integration module to the affected selection.
+A read-only caller audit and fresh frozen source/Windows campaign remain required;
+the early audit CLI check will not replace either installed-cell audit.
+
+
+#### .102 Final turn-artifact publication acceptance (2026-09-23)
+
+Responsible maintainer: Codex for Orket Core. Observed path: primary. Result:
+scoped acceptance success; the complete remediation goal remains partial.
+The repaired audit caller and all candidate bytes pass the fresh exact package
+matrix below. The 127-file staged candidate had exact LF working/index bytes
+before proof; all 116 changed Python files and every proof helper remained frozen.
+The earlier 749-case `focused-5` run also passed with no failures/errors/skips and
+unchanged inputs, but remains a mixed-package diagnostic, not this final matrix.
+
+| Cell | Tests / failures / errors / skips | JUnit seconds | Installed origins |
+|---|---|---|---|
+| Fresh source | 3225 / 0 / 0 / 0 | 601.633 | source |
+| Installed a102-audit-win-py311 | 3225 / 0 / 0 / 0 | 602.744 | 1069 |
+| Installed a102-audit-win-py312 | 3225 / 0 / 0 / 0 | 707.795 | 1069 |
+
+All 2,874 published .101 identities remain across 323 selected modules. All 394
+independent SQLite observations per cell satisfy the unchanged 0.5s bound;
+maximum 0.163415900s. Budgets remain 1500/1800/2100s. Complete source/sdist/wheel
+parity covers 1,175 core Python files and 20 data files, with 29 SDK Python files
+separate. Both installed cells read back all 1,195 core members. The support
+manifest binds 2,476 inputs. Canonical C policy, changed-file lint, size
+review, hygiene and release metadata pass. Ruff remains 88 existing findings with
+none introduced. AC-01 through AC-08 and AC-10 pass for this scope; AC-09 remains
+partial. Baseline collection does not establish release readiness.
+
+The existing writer and control-plane service remain the authorities selected at
+turn entry. One required destination and one required control-plane binding reach
+message, response, parser, prompt-budget, memory, checkpoint, replay and tool
+approval routes. Captured model inputs and original output sinks remain distinct.
+Response writes retain separate admission; parser, budget and memory keep their
+existing batches and failure-prefix/recovery behavior. Explicit clock forwarding,
+lexical path refusal, serialization order and the exact capture ceilings are in
+the durable turn-artifact contract. No atomic bundle, rollback, hostile-filesystem
+confinement, hard native deadline or actual optional-tokenizer-provider claim.
+
+The standalone tool-gate audit uses the canonical clock and one owned artifact
+writer with explicit destination, control-plane and memory inputs. Its source CLI
+and both mandatory installed CLI audits pass; its two integration cases retain
+deny/no-toolbox-effect and cleanup-failure nonpublication checks. The independent
+caller review covered 3,177 current Python files and found no remaining required
+API migration miss. Its preliminary stale-hash refusal remains recorded separately
+from the successful final-byte review; it was not a runtime failure or acceptance.
+
+Evidence lives under .tmp/d-turn-artifact-audit/, with the fresh
+turn-artifact-audit-source environment and a102-audit Windows cells. Both matched
+.101 openings, every failed/passing diagnostic, import/format/caller migration
+record, and the first stopped .102 campaign remain immutable. That first source
+and Windows 3.11 pytest pass does not become acceptance retroactively; its required
+installed audit failed and Windows 3.12 did not start. The original preparation
+drafts themselves remain unexecuted; maintained copies supplied the matched
+opening evidence. Earlier TLS and PID observations retain their original limits.
+Retained readback verified 152,138 published hashes, nine handoff bindings,
+56,961 local candidate evidence files and
+125,633 retained external physical files.
+Original C:/Source/Orket remains unchanged. Ignored evidence stores remain local;
+Git publication transfers the scoped repository change, not those stores.
+
+Only the plan and collected baseline may change after this matrix for closeout.
+The exact final index, annotated tag, branch/remote refs and clean worktree are
+bound in this root's checkpoint, index-check and publication receipts. Those
+receipts govern publication status; this entry alone does not assert a remote push.
+
+Continue canonical D with guard-rejection pending-request clock and publisher
+capture, then remaining owned-I/O/transitive effects. Public protocol replay's
+existing reentry consultation remains a documented contract interpretation for
+matched controls; no bypass of terminal authority is accepted here. Linux retains
+the .95 clock blocker: 240.019511342s elapsed, 25.211878083s quiet against 60s,
+and -6.018610816/+6.026590404s steps against 0.01s. No fresh Linux measurement or
+settings change occurred. Wider D, E1/E2, full 89% coverage, ProductFlow replay,
+legacy cutover, selected-provider and CAP-1/2/3 proof remain open. No hosted Quality
+acceptance, main merge, whole-goal completion or lane retirement is claimed.
+Lane retirement still requires explicit user acceptance.

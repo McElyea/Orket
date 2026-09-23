@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import asyncio
 from pathlib import Path
 
 import pytest
 
+from orket.application.workflows import prompt_token_counter as token_counter
 from orket.application.workflows.prompt_budget_guard import (
     build_prompt_structure_payload,
     evaluate_prompt_budget,
@@ -52,7 +54,7 @@ class _ModelWithTokenizer:
 @pytest.mark.asyncio
 async def test_evaluate_prompt_budget_uses_backend_tokenizer_counter(tmp_path: Path) -> None:
     policy_path = tmp_path / "core" / "policies" / "prompt_budget.yaml"
-    _policy(policy_path, max_tokens=5000)
+    await asyncio.to_thread(_policy, policy_path, max_tokens=5000)
     messages = [
         {"role": "system", "content": "SYSTEM"},
         {"role": "user", "content": "Execution Context JSON:{}"},
@@ -78,7 +80,7 @@ async def test_evaluate_prompt_budget_uses_backend_tokenizer_counter(tmp_path: P
 @pytest.mark.asyncio
 async def test_evaluate_prompt_budget_fails_closed_when_budget_exceeded(tmp_path: Path) -> None:
     policy_path = tmp_path / "core" / "policies" / "prompt_budget.yaml"
-    _policy(policy_path, max_tokens=10)
+    await asyncio.to_thread(_policy, policy_path, max_tokens=10)
     messages = [
         {"role": "system", "content": "SYSTEM"},
         {"role": "user", "content": "Task " * 200},
@@ -102,7 +104,7 @@ async def test_evaluate_prompt_budget_fails_closed_when_budget_exceeded(tmp_path
 @pytest.mark.asyncio
 async def test_evaluate_prompt_budget_fails_when_backend_tokenizer_required_but_unavailable(tmp_path: Path) -> None:
     policy_path = tmp_path / "core" / "policies" / "prompt_budget.yaml"
-    _policy(policy_path, max_tokens=5000)
+    await asyncio.to_thread(_policy, policy_path, max_tokens=5000)
     messages = [{"role": "user", "content": "Implement feature"}]
 
     result = await evaluate_prompt_budget(
@@ -136,3 +138,84 @@ def test_build_prompt_structure_payload_captures_required_fields() -> None:
     assert payload["prompt_template_version"] == "2026.03.06"
     assert payload["prompt_stage"] == "executor"
     assert payload["tokenizer_id"] == "tokenizer-x"
+
+
+# Layer: unit
+def test_counter_resolution_prefers_the_direct_client_binding() -> None:
+    class Provider:
+        def count_tokens(self, _messages):  # type: ignore[no-untyped-def]
+            return 2
+
+    class Client:
+        provider = Provider()
+
+        def count_tokens(self, _messages):  # type: ignore[no-untyped-def]
+            return 1
+
+    client = Client()
+    selected = token_counter.resolve_token_counter(client)
+
+    assert selected.__self__ is client
+    assert selected([]) == 1
+
+
+# Layer: contract
+@pytest.mark.asyncio
+@pytest.mark.parametrize("error_type", [ValueError, TypeError, RuntimeError, OSError, AttributeError])
+async def test_recognized_callback_errors_keep_strict_and_nonstrict_results(error_type) -> None:
+    def fail(_messages):  # type: ignore[no-untyped-def]
+        raise error_type("controlled")
+
+    strict = await token_counter._count_tokens(
+        bucket="total", counter=fail, known_async_counter=False,
+        messages=[{"role": "user", "content": "abcd"}], require_backend_tokenizer=True,
+    )
+    nonstrict = await token_counter._count_tokens(
+        bucket="total", counter=fail, known_async_counter=False,
+        messages=[{"role": "user", "content": "abcd"}], require_backend_tokenizer=False,
+    )
+
+    assert strict["error"] == "E_TOKENIZER_ACCOUNTING:backend_counter_error:controlled"
+    assert nonstrict == {
+        "token_count": 1,
+        "tokenizer_id": "deterministic-fallback-v1",
+        "tokenizer_source": "deterministic_fallback",
+    }
+
+
+# Layer: contract
+@pytest.mark.asyncio
+async def test_counter_normalization_failure_is_not_converted() -> None:
+    class BrokenTokenizerId:
+        def __str__(self) -> str:
+            raise ValueError("normalization-failed")
+
+    def count(_messages):  # type: ignore[no-untyped-def]
+        return {"token_count": 1, "tokenizer_id": BrokenTokenizerId()}
+
+    with pytest.raises(ValueError, match="normalization-failed"):
+        await token_counter._count_tokens(
+            bucket="total", counter=count, known_async_counter=False,
+            messages=[{"role": "user", "content": "x"}], require_backend_tokenizer=False,
+        )
+
+
+# Layer: contract
+@pytest.mark.asyncio
+async def test_counter_does_not_await_noncoroutine_awaitable() -> None:
+    class AwaitableValue:
+        awaited = False
+
+        def __await__(self):  # type: ignore[no-untyped-def]
+            self.awaited = True
+            yield
+            return 4
+
+    value = AwaitableValue()
+    result = await token_counter._count_tokens(
+        bucket="total", counter=lambda _messages: value, known_async_counter=False,
+        messages=[{"role": "user", "content": "x"}], require_backend_tokenizer=True,
+    )
+
+    assert result["error"] == "E_TOKENIZER_ACCOUNTING:backend_counter_invalid_payload"
+    assert value.awaited is False

@@ -18,6 +18,7 @@ from orket.application.services.tool_gate_service import ToolGate
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.core.domain.state_machine import StateMachine
 from orket.schema import CardStatus, IssueConfig, RoleConfig
+from tests.helpers.turn_artifacts import artifact_test_utc_now
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 _READ_PATH = "agent_output/source.txt"
@@ -74,7 +75,7 @@ async def test_compaction_outputs_survive_turn_artifact_publication(tmp_path: Pa
     layers = {"fixture_layer": {"name": "retained"}}
     context = _context(compact, metadata, layers)
     model, toolbox = _ReadProposal(), _OwnedFileTools(tmp_path)
-    executor = TurnExecutor(StateMachine(), ToolGate(organization=None, workspace_root=tmp_path), workspace=tmp_path)
+    executor = TurnExecutor(StateMachine(), ToolGate(organization=None, workspace_root=tmp_path), workspace=tmp_path, utc_now=artifact_test_utc_now)
     issue = IssueConfig(id="ISSUE-ARTIFACT", summary="Read admitted source", status=CardStatus.IN_PROGRESS)
     role = RoleConfig(id="reviewer", name="reviewer", description="Review source", tools=["read_file", "write_file"])
 

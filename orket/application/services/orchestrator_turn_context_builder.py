@@ -194,11 +194,8 @@ class OrchestratorTurnContextBuilder:
             create_pending_tool_approval_request=self.create_pending_tool_approval_request,
         )
         _pending_gate_request_writer, _approved_tool_request_lookup = gate_service.build_callbacks(
-            run_id=data.run_id,
-            issue=data.issue,
-            seat_name=data.seat_name,
             gate_mode=gate_mode,
-            turn_index=data.turn_index,
+            issue_status=str(data.issue.status.value if hasattr(data.issue.status, "value") else data.issue.status),
         )
 
         architecture_mode = self.resolve_architecture_mode()

@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-from typing import Any
-
 from orket.application.services.turn_tool_control_plane_service import (
     TurnToolControlPlaneError,
     TurnToolControlPlaneService,
 )
-from orket.application.services.turn_tool_control_plane_support import attempt_id_for, run_id_for
+from orket.application.services.turn_tool_control_plane_support import attempt_id_for
 from orket.core.contracts import (
     AttemptRecord,
     CheckpointAcceptanceRecord,
@@ -23,6 +21,8 @@ from orket.core.domain import (
 )
 from orket.core.domain.execution import ExecutionTurn
 
+from .turn_artifact_destination import TurnArtifactDestination
+from .turn_control_plane_binding import TurnControlPlaneBinding
 from .turn_executor_control_plane_evidence import (
     load_checkpoint_snapshot_payload,
     load_completed_replay_tool_calls,
@@ -31,20 +31,15 @@ from .turn_executor_control_plane_evidence import (
 
 async def load_completed_turn_replay_if_needed(
     *,
-    executor: Any,
-    issue_id: str,
-    role_name: str,
-    context: dict[str, Any],
+    control_plane: TurnControlPlaneBinding,
+    destination: TurnArtifactDestination,
 ) -> ExecutionTurn | None:
-    control_plane_service = control_plane_service_for_executor(executor)
-    if control_plane_service is None or bool(context.get("protocol_replay_mode")):
+    control_plane_service = control_plane.service
+    if control_plane_service is None or control_plane.protocol_replay_mode:
         return None
-    run_id = run_id_for(
-        session_id=str(context.get("session_id", "unknown-session")),
-        issue_id=issue_id,
-        role_name=role_name,
-        turn_index=int(context.get("turn_index", 0)),
-    )
+    run_id = destination.control_plane_run_id
+    issue_id, role_name = destination.issue_id, destination.role_name
+    namespace_scope = control_plane.namespace_scope
     run = await control_plane_service.execution_repository.get_run_record(run_id=run_id)
     if run is None:
         return None
@@ -57,20 +52,13 @@ async def load_completed_turn_replay_if_needed(
         attempt_id=attempt.attempt_id,
     )
     snapshot_payload = await load_checkpoint_snapshot_payload(
-        executor=executor,
-        issue_id=issue_id,
-        role_name=role_name,
-        context=context,
-        state_snapshot_ref=checkpoint.state_snapshot_ref,
+        destination=destination, state_snapshot_ref=checkpoint.state_snapshot_ref,
     )
     tool_calls = await load_completed_replay_tool_calls(
-        executor=executor,
         control_plane_service=control_plane_service,
         run_id=run.run_id,
         attempt_id=attempt.attempt_id,
-        issue_id=issue_id,
-        role_name=role_name,
-        context=context,
+        destination=destination, namespace_scope=namespace_scope,
         snapshot_payload=snapshot_payload,
     )
     return ExecutionTurn(
@@ -99,14 +87,6 @@ async def load_completed_turn_replay_if_needed(
         },
         note="control_plane_completed_replay",
     )
-
-
-def control_plane_service_for_executor(executor: Any) -> TurnToolControlPlaneService | None:
-    dispatcher = getattr(executor, "tool_dispatcher", None)
-    service = getattr(dispatcher, "control_plane_service", None)
-    if isinstance(service, TurnToolControlPlaneService):
-        return service
-    return None
 
 
 async def _load_successful_completed_truth(
@@ -184,7 +164,6 @@ async def _load_completed_checkpoint_authority(
 
 
 __all__ = [
-    "control_plane_service_for_executor",
     "load_checkpoint_snapshot_payload",
     "load_completed_turn_replay_if_needed",
 ]

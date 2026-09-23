@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from orket.adapters.storage.async_file_tools import capture_file_roots
 from orket.application.middleware import TurnLifecycleInterceptors
 from orket.application.services.tool_gate_service import ToolGate
 from orket.application.services.turn_tool_control_plane_service import TurnToolControlPlaneService
-from orket.application.services.turn_tool_control_plane_support import run_id_for
 from orket.application.workflows.turn_artifact_writer import TurnArtifactWriter
 from orket.application.workflows.turn_contract_validator import ContractValidator
 from orket.application.workflows.turn_corrective_prompt import CorrectivePromptBuilder
@@ -24,6 +26,9 @@ from orket.exceptions import ModelConnectionError, ModelProviderError, ModelTime
 from orket.schema import CardStatus, IssueConfig, RoleConfig
 
 from . import turn_executor_ops
+from .turn_artifact_destination import TurnArtifactDestination
+from .turn_control_plane_binding import capture_turn_control_plane_binding
+from .turn_memory_trace_artifacts import append_memory_event, capture_memory_trace_inputs
 
 
 @dataclass
@@ -64,17 +69,19 @@ class TurnExecutor:
         workspace: Path,
         middleware: TurnLifecycleInterceptors | None = None,
         control_plane_service: TurnToolControlPlaneService | None = None,
+        *, utc_now: Callable[[], datetime],
     ) -> None:
         if tool_gate is None:
             raise TypeError("TurnExecutor requires tool_gate authority on the canonical turn-tool path")
         self.state = state_machine
+        self.utc_now = utc_now
         self.tool_gate = tool_gate
         self.workspace = workspace
         self.middleware = middleware or TurnLifecycleInterceptors([])
         self.middleware.bind_workspace(self.workspace)
 
         self.artifact_writer = TurnArtifactWriter(workspace)
-        self.response_parser = ResponseParser(workspace, self.artifact_writer.write_turn_artifact)
+        self.response_parser = ResponseParser(utc_now=utc_now)
         self.message_builder = MessageBuilder(workspace)
         self.corrective_prompt_builder = CorrectivePromptBuilder()
         self.contract_validator = ContractValidator(self.response_parser)
@@ -82,7 +89,7 @@ class TurnExecutor:
             tool_gate=self.tool_gate,
             middleware=self.middleware,
             workspace=self.workspace,
-            append_memory_event=self.artifact_writer.append_memory_event,
+            append_memory_event=append_memory_event,
             hash_payload=self.artifact_writer.hash_payload,
             load_replay_tool_result=self.artifact_writer.load_replay_tool_result,
             persist_tool_result=self.artifact_writer.persist_tool_result,
@@ -103,14 +110,22 @@ class TurnExecutor:
         context: dict[str, Any],
         system_prompt: str | None = None,
     ) -> TurnResult:
-        service = self.tool_dispatcher.control_plane_service
-        if service is None or bool(context.get("protocol_replay_mode")):
-            return await turn_executor_ops.execute_turn(self, issue, role, model_client, toolbox, context, system_prompt)
-        run_id = run_id_for(session_id=str(context.get("session_id", "unknown-session")),
-            issue_id=issue.id, role_name=str(role.name or "").strip(), turn_index=int(context.get("turn_index", 0)))
+        writer = self.artifact_writer
+        destination = TurnArtifactDestination(writer=writer, workspace=capture_file_roots([writer.workspace])[0],
+            session_id=str(context.get("session_id", "unknown-session")), issue_id=issue.id,
+            role_name=str(role.name or "").strip(), role_id=str(role.id), turn_index=int(context.get("turn_index", 0)))
+        memory_inputs = capture_memory_trace_inputs(context)
+        control_plane = capture_turn_control_plane_binding(
+            dispatcher=self.tool_dispatcher, issue_id=destination.issue_id, context=context)
+        service = control_plane.service
+        if service is None or control_plane.protocol_replay_mode:
+            return await turn_executor_ops.execute_turn(self, issue, role, model_client, toolbox, context, system_prompt,
+                destination=destination, memory_inputs=memory_inputs, control_plane=control_plane)
+        run_id = destination.control_plane_run_id
         try:
             async with service.execution_owners.hold(run_id):
-                return await turn_executor_ops.execute_turn(self, issue, role, model_client, toolbox, context, system_prompt)
+                return await turn_executor_ops.execute_turn(self, issue, role, model_client, toolbox, context, system_prompt,
+                    destination=destination, memory_inputs=memory_inputs, control_plane=control_plane)
         except LocalFileLockError as exc:
             return TurnResult.failed(f"Turn execution refused for {run_id}: {exc}", should_retry=False)
 
@@ -120,11 +135,13 @@ class TurnExecutor:
         role: RoleConfig,
         context: dict[str, Any],
         system_prompt: str | None = None,
-        ) -> list[dict[str, str]]:
+        *, destination: TurnArtifactDestination,
+    ) -> list[dict[str, str]]:
         return await self.message_builder.prepare_messages(
             issue=issue,
             role=role,
             context=context,
+            destination=destination,
             system_prompt=system_prompt,
         )
 

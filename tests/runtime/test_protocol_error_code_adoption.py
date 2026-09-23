@@ -12,11 +12,14 @@ from orket.adapters.storage.protocol_append_only_ledger import (
     encode_lpj_c32_record,
 )
 from orket.application.services.tool_gate_service import ToolGate
+from orket.application.workflows.turn_artifact_writer import TurnArtifactWriter
+from orket.application.workflows.turn_response_capture import capture_turn_response
 from orket.application.workflows.turn_response_parser import ResponseParser
 from orket.application.workflows.turn_tool_dispatcher_protocol import collect_protocol_preflight_violations
 from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.runtime import protocol_error_codes as codes
 from orket.runtime.determinism_controls import resolve_network_mode
+from tests.helpers.turn_artifacts import artifact_destination, artifact_test_utc_now
 
 
 def _code_prefix(value: str) -> str:
@@ -82,20 +85,21 @@ async def test_async_protocol_run_ledger_receipt_errors_use_registered_prefixes(
     assert codes.is_registered_protocol_error_code(emitted) is True
 
 
-def test_response_parser_protocol_errors_emit_registered_codes(tmp_path: Path) -> None:
-    parser = ResponseParser(tmp_path, lambda **_kwargs: None)  # type: ignore[no-untyped-def]
+@pytest.mark.asyncio
+async def test_response_parser_protocol_errors_emit_registered_codes(tmp_path: Path) -> None:
+    parser = ResponseParser(utc_now=artifact_test_utc_now)  # type: ignore[no-untyped-def]
     with pytest.raises(ValueError) as exc:
-        parser.parse_response(
-            response={
+        await parser.parse_response(
+            response=capture_turn_response({
                 "content": (
                     '{"content":"","tool_calls":['
                     '{"tool":"write_file","args":{}},'
                     '{"tool":"read_file","args":{}}]}'
                 ),
                 "raw": {},
-            },
-            issue_id="ISSUE-1",
-            role_name="coder",
+            }),
+            destination=artifact_destination(TurnArtifactWriter(tmp_path), session_id="s1",
+                issue_id="ISSUE-1", role_name="coder", turn_index=1),
             context={
                 "session_id": "s1",
                 "turn_index": 1,

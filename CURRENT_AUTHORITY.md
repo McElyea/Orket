@@ -2,6 +2,18 @@
 
 Last updated: 2026-09-23
 
+Turn artifacts require one captured destination and the existing writer. Response,
+parser, prompt-budget, checkpoint and memory publication retain admitted native
+work through interruption. Invocation bindings retain the selected dispatcher,
+control-plane service and namespace across owner admission; the pipeline-selected
+clock reaches parser, checkpoint and tool-approval publication. Internal callers
+must supply the explicit destination, binding and clock inputs specified in
+`docs/specs/TURN_ARTIFACT_PUBLICATION_CONTRACT.md` and
+`docs/architecture/CONTRACT_DELTA_TURN_ARTIFACT_PUBLICATION_D_2026-09-23.md`.
+The architectural-truth plan owns checkpoint acceptance/publication status,
+retained failed and passing observations, and claim ceilings. These implementation
+contracts do not establish whole-lane, actual-provider, Linux or full-coverage proof.
+
 Gitea state/webhook HTTP composition uses captured network policy and one native
 resource owner. Async callers use owned factories; native constructors refuse
 entry on the event loop. Both Gitea CLI paths retain adapters through cleanup,

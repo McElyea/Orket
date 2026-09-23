@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 from orket.application.services.local_model_factory import create_local_model_provider_async
+from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.application.workflows.turn_contract_validator import ContractValidator
 from orket.application.workflows.turn_corrective_prompt import CorrectivePromptBuilder
 from orket.application.workflows.turn_read_context import observe_legacy_required_read_paths
@@ -31,7 +32,7 @@ async def prove() -> dict:
         "local_prompt_task_class": "tool_call",
         "local_prompting_mode": "enforce",
     }
-    parser = ResponseParser(ROOT, lambda *args, **kwargs: None)
+    parser = ResponseParser(utc_now=RuntimeInputService().utc_now)
     validator = ContractValidator(parser)
     builder = CorrectivePromptBuilder()
     client = (await create_local_model_provider_async(model=DEFAULT_LOCAL_MODEL, provider="llama_cpp", timeout=90))

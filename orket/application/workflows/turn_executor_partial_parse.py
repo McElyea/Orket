@@ -4,10 +4,11 @@ from typing import TYPE_CHECKING, Any
 
 from orket.core.domain.execution import ExecutionTurn
 from orket.logging import log_event
-from orket.schema import IssueConfig, RoleConfig
+
+from .turn_artifact_destination import TurnArtifactDestination
 
 if TYPE_CHECKING:
-    from .turn_executor import TurnExecutor, TurnResult
+    from .turn_executor import TurnResult
     from .turn_executor_model_flow import FailedResultFactory, FailureEmitter
 
 
@@ -18,12 +19,8 @@ def partial_parse_recovery_policy(context: dict[str, Any]) -> str:
 
 async def blocked_partial_parse_failure(
     *,
-    executor: TurnExecutor,
-    issue: IssueConfig,
-    role: RoleConfig,
+    destination: TurnArtifactDestination,
     context: dict[str, Any],
-    session_id: str,
-    turn_index: int,
     turn_trace_id: str,
     turn: ExecutionTurn,
     emit_failure: FailureEmitter,
@@ -33,16 +30,16 @@ async def blocked_partial_parse_failure(
     log_event(
         "turn_failed",
         {
-            "issue_id": issue.id,
-            "role": role.name,
-            "session_id": session_id,
-            "turn_index": turn_index,
+            "issue_id": destination.issue_id,
+            "role": destination.role_name,
+            "session_id": destination.session_id,
+            "turn_index": destination.turn_index,
             "turn_trace_id": turn_trace_id,
             "type": "partial_parse_failure",
             "error": reason,
             "partial_parse_recovery_policy": partial_parse_recovery_policy(context),
         },
-        executor.workspace,
+        destination.workspace,
     )
     await emit_failure(reason, "partial_parse_failure", turn)
     result = turn_result_failed(reason, False)

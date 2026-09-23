@@ -13,6 +13,7 @@ import pytest
 
 from orket.application.workflows.turn_message_builder import MessageBuilder
 from orket.schema import IssueConfig, RoleConfig
+from tests.helpers.turn_artifacts import prepare_message_fixture
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 
@@ -236,7 +237,7 @@ async def test_used_prompt_values_are_captured_while_opaque_resources_remain_unt
     state = _hold_resolve(monkeypatch, original_file)
 
     messages = await _run_during_metadata_hold(
-        builder.prepare_messages(issue=issue, role=role, context=context),
+        prepare_message_fixture(builder, issue=issue, role=role, context=context),
         state,
         lambda: _mutate_used_inputs(builder, issue, role, context, changed),
     )
@@ -289,7 +290,7 @@ async def test_compaction_publishes_only_to_original_output_sinks(
         context["prompt_layers"] = replacement_layers
 
     messages = await _run_during_metadata_hold(
-        builder.prepare_messages(issue=issue, role=role, context=context), state, replace_output_slots,
+        prepare_message_fixture(builder, issue=issue, role=role, context=context), state, replace_output_slots,
     )
 
     assert len(messages) == 2

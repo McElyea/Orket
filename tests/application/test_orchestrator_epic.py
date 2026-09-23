@@ -1,3 +1,4 @@
+
 import json
 from types import SimpleNamespace
 
@@ -11,6 +12,7 @@ from orket.application.services.runtime_verifier import build_runtime_guard_cont
 from orket.application.services.scaffolder import ScaffoldValidationError
 from orket.application.services.skill_adapter import synthesize_role_tool_profile_bindings
 from orket.application.workflows.orchestrator import Orchestrator
+from orket.application.workflows.turn_artifact_writer import TurnArtifactWriter
 from orket.application.workflows.turn_executor import TurnResult
 from orket.core.domain import ReservationStatus
 from orket.core.domain.execution import ExecutionTurn
@@ -20,6 +22,7 @@ from orket.schema import CardStatus, DialectConfig, IssueConfig, SeatConfig, Tea
 from tests.helpers.card_dispatch import install_dispatch_snapshot_stub
 from tests.helpers.model_selection import prepared_model_selection
 from tests.helpers.protocol_ledger_clock import ProtocolLedgerClock
+from tests.helpers.turn_artifacts import artifact_destination, artifact_test_utc_now
 
 
 class AsyncSpy:
@@ -98,7 +101,7 @@ def orchestrator(tmp_path, monkeypatch):
         sandbox_orchestrator=FakeSandbox(),
         control_plane_clock=ProtocolLedgerClock().utc_now_iso,
         architecture_policy=ArchitecturePolicySnapshot(False),
-    )
+     turn_clock=artifact_test_utc_now)
     return orch, cards, loader
 
 
@@ -2095,7 +2098,7 @@ async def test_execute_epic_uses_custom_tool_strategy_node(tmp_path, monkeypatch
         loader=loader,
         sandbox_orchestrator=FakeSandbox(),
         architecture_policy=ArchitecturePolicySnapshot(False),
-    )
+     turn_clock=artifact_test_utc_now)
 
     class CustomToolStrategy:
         def select_tools(self, inputs):
@@ -3179,6 +3182,8 @@ async def test_build_turn_context_pending_gate_callback_creates_tool_approval_re
     )
 
     request_id = await context["create_pending_gate_request"](
+        destination=artifact_destination(TurnArtifactWriter(orch.workspace), session_id="run-1",
+            issue_id=issue.id, role_name="coder", turn_index=1),
         tool_name="write_file",
         tool_args={"path": "out.txt", "content": "ok"},
     )
@@ -3245,6 +3250,8 @@ async def test_build_turn_context_pending_gate_callback_creates_create_issue_too
     )
 
     request_id = await context["create_pending_gate_request"](
+        destination=artifact_destination(TurnArtifactWriter(orch.workspace), session_id="run-1",
+            issue_id=issue.id, role_name="coder", turn_index=1),
         tool_name="create_issue",
         tool_args={"seat": "reviewer", "summary": "Follow-up task"},
     )

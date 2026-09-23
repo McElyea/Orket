@@ -2,14 +2,12 @@ from __future__ import annotations
 
 import asyncio
 import copy
-import json
 from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING, Any
 
 from orket.application.services.turn_tool_control_plane_service import TurnToolControlPlaneError
 from orket.application.workflows import turn_executor_partial_parse as partial_parse
-from orket.application.workflows.prompt_budget_guard import maybe_record_prompt_budget
-from orket.application.workflows.turn_executor_model_artifacts import log_turn_start, write_response_artifacts
+from orket.application.workflows.turn_executor_model_artifacts import write_response_artifacts
 from orket.application.workflows.turn_executor_resume_replay import load_pre_effect_resume_turn_if_needed
 from orket.application.workflows.turn_executor_runtime import invoke_model_complete as _invoke_model_complete
 from orket.application.workflows.turn_executor_runtime import synthesize_required_status_tool_call
@@ -18,12 +16,17 @@ from orket.exceptions import ModelProviderError
 from orket.logging import log_event
 from orket.schema import IssueConfig, RoleConfig
 
+from .turn_artifact_destination import TurnArtifactDestination
 from .turn_contract_input_capture import (
     ValidationAttemptInputs,
     collect_validation_attempt,
     contract_reasons,
     required_read_observation_for_correction,
 )
+from .turn_control_plane_binding import TurnControlPlaneBinding
+from .turn_memory_trace_artifacts import append_memory_event
+from .turn_prompt_publication import prepare_prompt_and_write_artifacts
+from .turn_response_capture import capture_turn_response
 
 if TYPE_CHECKING:
     from .turn_executor import TurnExecutor, TurnResult
@@ -36,23 +39,20 @@ FailedResultFactory = Callable[[str, bool], "TurnResult"]
 async def prepare_turn_for_execution(
     *,
     executor: TurnExecutor,
+    control_plane: TurnControlPlaneBinding,
+    destination: TurnArtifactDestination,
+    memory_events: list[dict[str, Any]] | None,
     issue: IssueConfig,
     role: RoleConfig,
     model_client: Any,
     context: dict[str, Any],
     system_prompt: str | None,
-    session_id: str,
-    turn_index: int,
     turn_trace_id: str,
     emit_failure: FailureEmitter,
     turn_result_failed: FailedResultFactory,
 ) -> tuple[ExecutionTurn | None, str, TurnResult | None]:
-    role_name = str(role.name or "").strip()
     turn = await load_pre_effect_resume_turn_if_needed(
-        executor=executor,
-        issue_id=issue.id,
-        role_name=role_name,
-        context=context,
+        control_plane=control_plane, destination=destination,
     )
     if turn is not None:
         prompt_hash = str((turn.raw or {}).get("prompt_hash") or "").strip()
@@ -62,14 +62,12 @@ async def prepare_turn_for_execution(
             )
         return turn, prompt_hash, None
     return await _generate_turn_via_model(
-        executor=executor,
+        executor=executor, destination=destination, memory_events=memory_events,
         issue=issue,
         role=role,
         model_client=model_client,
         context=context,
         system_prompt=system_prompt,
-        session_id=session_id,
-        turn_index=turn_index,
         turn_trace_id=turn_trace_id,
         emit_failure=emit_failure,
         turn_result_failed=turn_result_failed,
@@ -79,19 +77,20 @@ async def prepare_turn_for_execution(
 async def _generate_turn_via_model(
     *,
     executor: TurnExecutor,
+    destination: TurnArtifactDestination,
+    memory_events: list[dict[str, Any]] | None,
     issue: IssueConfig,
     role: RoleConfig,
     model_client: Any,
     context: dict[str, Any],
     system_prompt: str | None,
-    session_id: str,
-    turn_index: int,
     turn_trace_id: str,
     emit_failure: FailureEmitter,
     turn_result_failed: FailedResultFactory,
 ) -> tuple[ExecutionTurn | None, str, TurnResult | None]:
-    role_name = str(role.name or "").strip()
+    role_name = destination.role_name
     messages = await executor.message_builder.prepare_messages(
+        destination=destination,
         issue=issue,
         role=role,
         context=context,
@@ -108,21 +107,17 @@ async def _generate_turn_via_model(
         await emit_failure(reason, "before_prompt_short_circuit", None)
         return None, "", turn_result_failed(reason, False)
 
-    executor.artifact_writer.append_memory_event(
-        context,
+    append_memory_event(
+        memory_events,
         role_name=role_name,
         interceptor="before_prompt",
         decision_type="prompt_ready",
     )
-    prompt_hash, early_result = await _prepare_prompt_and_write_artifacts(
-        executor=executor,
-        issue=issue,
-        role=role,
+    messages, prompt_hash, early_result = await prepare_prompt_and_write_artifacts(
+        destination=destination,
         model_client=model_client,
         context=context,
         messages=messages,
-        session_id=session_id,
-        turn_index=turn_index,
         turn_trace_id=turn_trace_id,
         emit_failure=emit_failure,
         turn_result_failed=turn_result_failed,
@@ -131,13 +126,11 @@ async def _generate_turn_via_model(
         return None, "", early_result
 
     turn, early_result = await _invoke_and_parse_turn(
-        executor=executor,
+        executor=executor, destination=destination, memory_events=memory_events,
         issue=issue,
         role=role,
         model_client=model_client,
         context=context,
-        session_id=session_id,
-        turn_index=turn_index,
         messages=messages,
         emit_failure=emit_failure,
         turn_result_failed=turn_result_failed,
@@ -147,12 +140,8 @@ async def _generate_turn_via_model(
 
     if turn.partial_parse_failure and partial_parse.partial_parse_recovery_policy(context) != "retry":
         return await partial_parse.blocked_partial_parse_failure(
-            executor=executor,
-            issue=issue,
-            role=role,
+            destination=destination,
             context=context,
-            session_id=session_id,
-            turn_index=turn_index,
             turn_trace_id=turn_trace_id,
             turn=turn,
             emit_failure=emit_failure,
@@ -161,19 +150,17 @@ async def _generate_turn_via_model(
 
     attempt, contract_violations = await collect_validation_attempt(
         validator=executor.contract_validator, turn=turn, role=role,
-        context=context, workspace=executor.workspace,
+        context=context, workspace=destination.workspace,
     )
     if not contract_violations:
         return attempt.turn, prompt_hash, None
 
     return await _retry_after_contract_violations(
-        executor=executor,
+        executor=executor, destination=destination, memory_events=memory_events,
         issue=issue,
         role=role,
         model_client=model_client,
         context=context,
-        session_id=session_id,
-        turn_index=turn_index,
         turn_trace_id=turn_trace_id,
         messages=messages,
         contract_violations=contract_violations,
@@ -184,107 +171,27 @@ async def _generate_turn_via_model(
     )
 
 
-async def _prepare_prompt_and_write_artifacts(
-    *,
-    executor: TurnExecutor,
-    issue: IssueConfig,
-    role: RoleConfig,
-    model_client: Any,
-    context: dict[str, Any],
-    messages: list[dict[str, str]],
-    session_id: str,
-    turn_index: int,
-    turn_trace_id: str,
-    emit_failure: FailureEmitter,
-    turn_result_failed: FailedResultFactory,
-) -> tuple[str, TurnResult | None]:
-    role_name = str(role.name or "").strip()
-    prompt_hash = executor.artifact_writer.message_hash(messages)
-    prompt_budget_result = await maybe_record_prompt_budget(
-        workspace=executor.workspace,
-        session_id=session_id,
-        issue_id=issue.id,
-        role_name=role_name,
-        turn_index=turn_index,
-        prompt_hash=prompt_hash,
-        messages=messages,
-        context=context,
-        model_client=model_client,
-    )
-    if isinstance(prompt_budget_result, dict) and not bool(prompt_budget_result.get("ok", False)):
-        budget_error = str(prompt_budget_result.get("error") or "E_PROMPT_BUDGET_EXCEEDED")
-        log_event(
-            "turn_failed",
-            {
-                "issue_id": issue.id,
-                "role": role.name,
-                "session_id": session_id,
-                "turn_index": turn_index,
-                "turn_trace_id": turn_trace_id,
-                "type": "prompt_budget_exceeded",
-                "error": budget_error,
-                "prompt_budget_usage": prompt_budget_result,
-            },
-            executor.workspace,
-        )
-        await emit_failure(budget_error, "prompt_budget_exceeded", None)
-        return "", turn_result_failed(budget_error, False)
-    log_turn_start(
-        executor=executor,
-        issue=issue,
-        role=role,
-        context=context,
-        session_id=session_id,
-        turn_index=turn_index,
-        turn_trace_id=turn_trace_id,
-        prompt_hash=prompt_hash,
-        messages=messages,
-        prompt_budget_result=prompt_budget_result,
-    )
-    await asyncio.to_thread(
-        executor.artifact_writer.write_turn_artifact,
-        session_id=session_id,
-        issue_id=issue.id,
-        role_name=role_name,
-        turn_index=turn_index,
-        filename="messages.json",
-        content=json.dumps(messages, indent=2, ensure_ascii=False),
-    )
-    await asyncio.to_thread(
-        executor.artifact_writer.write_turn_artifact,
-        session_id=session_id,
-        issue_id=issue.id,
-        role_name=role_name,
-        turn_index=turn_index,
-        filename="prompt_layers.json",
-        content=json.dumps(context.get("prompt_layers", {}), indent=2, ensure_ascii=False, default=str),
-    )
-    return prompt_hash, None
-
-
 async def _invoke_and_parse_turn(
     *,
     executor: TurnExecutor,
+    destination: TurnArtifactDestination,
+    memory_events: list[dict[str, Any]] | None,
     issue: IssueConfig,
     role: RoleConfig,
     model_client: Any,
     context: dict[str, Any],
-    session_id: str,
-    turn_index: int,
     messages: list[dict[str, str]],
     emit_failure: FailureEmitter,
     turn_result_failed: FailedResultFactory,
 ) -> tuple[ExecutionTurn | None, TurnResult | None]:
-    role_name = str(role.name or "").strip()
+    role_name = destination.role_name
     response = await _invoke_model_complete_with_retries(
-        executor=executor,
+        executor=executor, destination=destination, memory_events=memory_events,
         issue=issue,
         role=role,
         model_client=model_client,
         messages=messages,
         context=context,
-        session_id=session_id,
-        turn_index=turn_index,
     )
     response, middleware_outcome = executor.middleware.apply_after_model(
         response,
@@ -297,25 +204,16 @@ async def _invoke_and_parse_turn(
         await emit_failure(reason, "after_model_short_circuit", None)
         return None, turn_result_failed(reason, False)
 
-    executor.artifact_writer.append_memory_event(
-        context,
+    append_memory_event(
+        memory_events,
         role_name=role_name,
         interceptor="after_model",
         decision_type="model_response_processed",
     )
-    await write_response_artifacts(
-        executor,
-        session_id=session_id,
-        issue_id=issue.id,
-        role_name=role_name,
-        turn_index=turn_index,
-        response=response,
-    )
-    turn = executor.response_parser.parse_response(
-        response=response,
-        issue_id=issue.id,
-        role_name=role_name,
-        context=context,
+    captured_response = capture_turn_response(response)
+    await write_response_artifacts(destination=destination, response=captured_response)
+    turn = await executor.response_parser.parse_response(
+        response=captured_response, destination=destination, context=context,
     )
     synthesize_required_status_tool_call(turn, context)
     return turn, None
@@ -324,12 +222,12 @@ async def _invoke_and_parse_turn(
 async def _retry_after_contract_violations(
     *,
     executor: TurnExecutor,
+    destination: TurnArtifactDestination,
+    memory_events: list[dict[str, Any]] | None,
     issue: IssueConfig,
     role: RoleConfig,
     model_client: Any,
     context: dict[str, Any],
-    session_id: str,
-    turn_index: int,
     turn_trace_id: str,
     messages: list[dict[str, str]],
     contract_violations: list[dict[str, Any]],
@@ -352,10 +250,10 @@ async def _retry_after_contract_violations(
     log_event(
         "turn_corrective_reprompt",
         {
-            "issue_id": issue.id,
-            "role": role.name,
-            "session_id": session_id,
-            "turn_index": turn_index,
+            "issue_id": destination.issue_id,
+            "role": destination.role_name,
+            "session_id": destination.session_id,
+            "turn_index": destination.turn_index,
             "turn_trace_id": turn_trace_id,
             "reason": reasons[0] if len(reasons) == 1 else "multiple_contracts_not_met",
             "contract_reasons": reasons,
@@ -366,13 +264,11 @@ async def _retry_after_contract_violations(
     )
 
     retry_turn, early_result = await _invoke_and_parse_turn(
-        executor=executor,
+        executor=executor, destination=destination, memory_events=memory_events,
         issue=issue,
         role=role,
         model_client=model_client,
         context=context,
-        session_id=session_id,
-        turn_index=turn_index,
         messages=retry_messages,
         emit_failure=emit_failure,
         turn_result_failed=turn_result_failed,
@@ -392,10 +288,10 @@ async def _retry_after_contract_violations(
     log_event(
         "turn_non_progress",
         {
-            "issue_id": issue.id,
-            "role": role.name,
-            "session_id": session_id,
-            "turn_index": turn_index,
+            "issue_id": destination.issue_id,
+            "role": destination.role_name,
+            "session_id": destination.session_id,
+            "turn_index": destination.turn_index,
             "turn_trace_id": turn_trace_id,
             "reason": f"{primary_reason}_after_reprompt",
             "contract_reasons": reasons,
@@ -413,13 +309,13 @@ async def _retry_after_contract_violations(
 async def _invoke_model_complete_with_retries(
     *,
     executor: TurnExecutor,
+    destination: TurnArtifactDestination,
+    memory_events: list[dict[str, Any]] | None,
     issue: IssueConfig,
     role: RoleConfig,
     model_client: Any,
     messages: list[dict[str, str]],
     context: dict[str, Any],
-    session_id: str,
-    turn_index: int,
 ) -> Any:
     try:
         max_retries = max(0, int(context.get("max_turn_retries", context.get("max_retries", 2))))
@@ -439,34 +335,34 @@ async def _invoke_model_complete_with_retries(
                 log_event(
                     "turn_retry_exhausted",
                     {
-                        "issue_id": issue.id,
-                        "role": role.name,
-                        "session_id": session_id,
-                        "turn_index": turn_index,
+                        "issue_id": destination.issue_id,
+                        "role": destination.role_name,
+                        "session_id": destination.session_id,
+                        "turn_index": destination.turn_index,
                         "retry_count": attempt,
                         "max_retries": max_retries,
                         "error_type": type(exc).__name__,
                         "error": str(exc),
                         "result": "blocked",
                     },
-                    executor.workspace,
+                    destination.workspace,
                 )
                 raise
             delay = base_backoff * (2 ** attempt)
             log_event(
                 "turn_retry_scheduled",
                 {
-                    "issue_id": issue.id,
-                    "role": role.name,
-                    "session_id": session_id,
-                    "turn_index": turn_index,
+                    "issue_id": destination.issue_id,
+                    "role": destination.role_name,
+                    "session_id": destination.session_id,
+                    "turn_index": destination.turn_index,
                     "retry_count": attempt + 1,
                     "max_retries": max_retries,
                     "backoff_seconds": delay,
                     "error_type": type(exc).__name__,
                     "error": str(exc),
                 },
-                executor.workspace,
+                destination.workspace,
             )
             if delay > 0:
                 await asyncio.sleep(delay)

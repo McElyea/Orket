@@ -1,26 +1,43 @@
 from __future__ import annotations
 
-import asyncio
+import json
+from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
+from orket.adapters.execution.owned_io import run_owned_thread
+from orket.adapters.storage.async_file_tools import capture_file_roots
 from orket.core.contracts.protocol_error_codes import (
     E_PROMPT_BUDGET_EXCEEDED_PREFIX,
-    E_TOKENIZER_ACCOUNTING_PREFIX,
     format_protocol_error,
 )
 from orket.runtime.config import contract_assets
 from orket.runtime.prompt_budget_policy import load_prompt_budget_policy, resolve_prompt_stage
 
+from .prompt_token_counter import (
+    count_prompt_token_buckets,
+    is_known_async_counter,
+    resolve_token_counter,
+)
+from .turn_artifact_destination import TurnArtifactDestination
 from .turn_prompt_budget_artifacts import write_prompt_budget_artifacts
+
+
+@dataclass(frozen=True)
+class _PromptBudgetInputs:
+    messages: list[Any]
+    message_count: int
+    policy_path: str
+    stage: str
+    require_backend_tokenizer: bool
+    prompt_metadata: dict[str, Any]
+    counter: Any
+    known_async_counter: bool
 
 
 async def maybe_record_prompt_budget(
     *,
-    workspace: Any,
-    session_id: str,
-    issue_id: str,
-    role_name: str,
-    turn_index: int,
+    destination: TurnArtifactDestination,
     prompt_hash: str,
     messages: list[dict[str, str]],
     context: dict[str, Any],
@@ -30,26 +47,25 @@ async def maybe_record_prompt_budget(
     if not prompt_budget_enabled:
         return None
 
-    prompt_budget_result = await evaluate_prompt_budget(
-        messages=messages,
-        context=context,
-        model_client=model_client,
-    )
+    captured_prompt_hash = str(prompt_hash or "")
+    captured = _capture_prompt_budget_inputs(messages=messages, context=context, model_client=model_client)
+    prompt_budget_result = await _evaluate_prompt_budget(captured)
     prompt_structure = build_prompt_structure_payload(
-        context=context,
-        prompt_hash=prompt_hash,
-        message_count=len(messages),
+        context={"prompt_metadata": captured.prompt_metadata},
+        prompt_hash=captured_prompt_hash,
+        message_count=captured.message_count,
         budget_result=prompt_budget_result,
     )
-    await asyncio.to_thread(
-        write_prompt_budget_artifacts,
-        workspace=workspace,
-        session_id=session_id,
-        issue_id=issue_id,
-        role_name=role_name,
-        turn_index=turn_index,
-        prompt_budget_usage=prompt_budget_result,
-        prompt_structure=prompt_structure,
+    usage_json = json.dumps(prompt_budget_result, indent=2, ensure_ascii=False)
+    structure_json = json.dumps(prompt_structure, indent=2, ensure_ascii=False)
+    await run_owned_thread(
+        lambda: write_prompt_budget_artifacts(
+            destination=destination,
+            prompt_budget_usage_json=usage_json,
+            prompt_structure_json=structure_json,
+            prompt_structure=dict(prompt_structure),
+        ),
+        label="prompt-budget-artifact-batch",
     )
     return prompt_budget_result
 
@@ -60,26 +76,54 @@ async def evaluate_prompt_budget(
     context: dict[str, Any],
     model_client: Any,
 ) -> dict[str, Any]:
-    policy_path = str(context.get("prompt_budget_policy_path") or str(contract_assets.DEFAULT_PROMPT_BUDGET_PATH)).strip()
-    policy = await asyncio.to_thread(load_prompt_budget_policy, policy_path)
-    stage = resolve_prompt_stage(context)
-    stage_limits = dict(policy["stages"][stage])
-    require_backend_tokenizer = bool(context.get("prompt_budget_require_backend_tokenizer", False))
+    captured = _capture_prompt_budget_inputs(messages=messages, context=context, model_client=model_client)
+    return await _evaluate_prompt_budget(captured)
 
-    protocol_messages, tool_schema_messages, task_messages = _partition_prompt_messages(messages)
-    token_stats = await _count_prompt_token_buckets(
-        model_client=model_client,
-        messages=messages,
+
+def _capture_prompt_budget_inputs(
+    *, messages: list[dict[str, str]], context: dict[str, Any], model_client: Any,
+) -> _PromptBudgetInputs:
+    captured_messages = [dict(row) if isinstance(row, dict) else row for row in messages]
+    policy_path = str(
+        context.get("prompt_budget_policy_path") or str(contract_assets.DEFAULT_PROMPT_BUDGET_PATH)
+    ).strip()
+    prompt_metadata = context.get("prompt_metadata")
+    prompt_metadata = dict(prompt_metadata) if isinstance(prompt_metadata, dict) else {}
+    counter = resolve_token_counter(model_client)
+    return _PromptBudgetInputs(
+        messages=captured_messages,
+        message_count=len(captured_messages),
+        policy_path=str(capture_file_roots([Path(policy_path)])[0]),
+        stage=resolve_prompt_stage(context),
+        require_backend_tokenizer=bool(context.get("prompt_budget_require_backend_tokenizer", False)),
+        prompt_metadata=prompt_metadata,
+        counter=counter,
+        known_async_counter=is_known_async_counter(counter),
+    )
+
+
+async def _evaluate_prompt_budget(captured: _PromptBudgetInputs) -> dict[str, Any]:
+    policy = await run_owned_thread(
+        lambda: load_prompt_budget_policy(captured.policy_path),
+        label="prompt-budget-policy-load",
+    )
+    stage_limits = dict(policy["stages"][captured.stage])
+
+    protocol_messages, tool_schema_messages, task_messages = _partition_prompt_messages(captured.messages)
+    token_stats = await count_prompt_token_buckets(
+        counter=captured.counter,
+        known_async_counter=captured.known_async_counter,
+        messages=captured.messages,
         protocol_messages=protocol_messages,
         tool_schema_messages=tool_schema_messages,
         task_messages=task_messages,
-        require_backend_tokenizer=require_backend_tokenizer,
+        require_backend_tokenizer=captured.require_backend_tokenizer,
     )
     if token_stats.get("error"):
         return {
             "ok": False,
             "error": token_stats["error"],
-            "stage": stage,
+            "stage": captured.stage,
             "budget_policy_version": policy["budget_policy_version"],
             "budget_schema_version": policy["schema_version"],
             "tokenizer_id": str(token_stats.get("tokenizer_id") or ""),
@@ -100,9 +144,9 @@ async def evaluate_prompt_budget(
                 "ok": False,
                 "error": format_protocol_error(
                     E_PROMPT_BUDGET_EXCEEDED_PREFIX,
-                    f"{stage}:{key}:{usage[key]}>{stage_limits[key]}",
+                    f"{captured.stage}:{key}:{usage[key]}>{stage_limits[key]}",
                 ),
-                "stage": stage,
+                "stage": captured.stage,
                 "budget_policy_version": policy["budget_policy_version"],
                 "budget_schema_version": policy["schema_version"],
                 "tokenizer_id": str(token_stats.get("tokenizer_id") or ""),
@@ -114,7 +158,7 @@ async def evaluate_prompt_budget(
     return {
         "ok": True,
         "error": "",
-        "stage": stage,
+        "stage": captured.stage,
         "budget_policy_version": policy["budget_policy_version"],
         "budget_schema_version": policy["schema_version"],
         "tokenizer_id": str(token_stats.get("tokenizer_id") or ""),
@@ -146,7 +190,7 @@ def build_prompt_structure_payload(
 
 
 def _partition_prompt_messages(
-    messages: list[dict[str, str]],
+    messages: list[Any],
 ) -> tuple[list[dict[str, str]], list[dict[str, str]], list[dict[str, str]]]:
     protocol_markers = (
         "Turn Success Contract:",
@@ -177,146 +221,3 @@ def _partition_prompt_messages(
             continue
         task_messages.append(dict(message))
     return protocol_messages, tool_schema_messages, task_messages
-
-
-async def _count_prompt_token_buckets(
-    *,
-    model_client: Any,
-    messages: list[dict[str, str]],
-    protocol_messages: list[dict[str, str]],
-    tool_schema_messages: list[dict[str, str]],
-    task_messages: list[dict[str, str]],
-    require_backend_tokenizer: bool,
-) -> dict[str, Any]:
-    total = await _count_tokens(
-        model_client=model_client,
-        messages=messages,
-        require_backend_tokenizer=require_backend_tokenizer,
-    )
-    if total.get("error"):
-        return total
-    protocol = await _count_tokens(
-        model_client=model_client,
-        messages=protocol_messages,
-        require_backend_tokenizer=require_backend_tokenizer,
-        tokenizer_hint=total.get("tokenizer_id"),
-    )
-    if protocol.get("error"):
-        return protocol
-    tool_schema = await _count_tokens(
-        model_client=model_client,
-        messages=tool_schema_messages,
-        require_backend_tokenizer=require_backend_tokenizer,
-        tokenizer_hint=total.get("tokenizer_id"),
-    )
-    if tool_schema.get("error"):
-        return tool_schema
-    task = await _count_tokens(
-        model_client=model_client,
-        messages=task_messages,
-        require_backend_tokenizer=require_backend_tokenizer,
-        tokenizer_hint=total.get("tokenizer_id"),
-    )
-    if task.get("error"):
-        return task
-    return {
-        "total_tokens": int(total["token_count"]),
-        "protocol_tokens": int(protocol["token_count"]),
-        "tool_schema_tokens": int(tool_schema["token_count"]),
-        "task_tokens": int(task["token_count"]),
-        "tokenizer_id": str(total.get("tokenizer_id") or ""),
-        "tokenizer_source": str(total.get("tokenizer_source") or "unknown"),
-    }
-
-
-async def _count_tokens(
-    *,
-    model_client: Any,
-    messages: list[dict[str, str]],
-    require_backend_tokenizer: bool,
-    tokenizer_hint: str | None = None,
-) -> dict[str, Any]:
-    if not messages:
-        return {
-            "token_count": 0,
-            "tokenizer_id": str(tokenizer_hint or ""),
-            "tokenizer_source": "backend" if tokenizer_hint else "empty",
-        }
-
-    counter = _resolve_token_counter(model_client)
-    if callable(counter):
-        try:
-            counted = counter(messages)
-            if asyncio.iscoroutine(counted):
-                counted = await counted
-        except (ValueError, TypeError, RuntimeError, OSError, AttributeError) as exc:
-            if require_backend_tokenizer:
-                return {
-                    "error": format_protocol_error(E_TOKENIZER_ACCOUNTING_PREFIX, f"backend_counter_error:{exc}"),
-                    "tokenizer_id": "",
-                    "tokenizer_source": "backend",
-                }
-            counted = None
-        parsed = _parse_token_counter_payload(counted)
-        if parsed is not None:
-            token_count, tokenizer_id = parsed
-            return {
-                "token_count": int(token_count),
-                "tokenizer_id": str(tokenizer_id or tokenizer_hint or ""),
-                "tokenizer_source": "backend",
-            }
-        if require_backend_tokenizer:
-            return {
-                "error": format_protocol_error(E_TOKENIZER_ACCOUNTING_PREFIX, "backend_counter_invalid_payload"),
-                "tokenizer_id": "",
-                "tokenizer_source": "backend",
-            }
-
-    if require_backend_tokenizer:
-        return {
-            "error": format_protocol_error(E_TOKENIZER_ACCOUNTING_PREFIX, "backend_counter_unavailable"),
-            "tokenizer_id": "",
-            "tokenizer_source": "backend",
-        }
-
-    return {
-        "token_count": _deterministic_fallback_token_count(messages),
-        "tokenizer_id": str(tokenizer_hint or "deterministic-fallback-v1"),
-        "tokenizer_source": "deterministic_fallback",
-    }
-
-
-def _resolve_token_counter(model_client: Any) -> Any:
-    counter = getattr(model_client, "count_tokens", None)
-    if callable(counter):
-        return counter
-    provider = getattr(model_client, "provider", None)
-    provider_counter = getattr(provider, "count_tokens", None)
-    if callable(provider_counter):
-        return provider_counter
-    return None
-
-
-def _parse_token_counter_payload(value: Any) -> tuple[int, str] | None:
-    if isinstance(value, int) and value >= 0:
-        return value, ""
-    if not isinstance(value, dict):
-        return None
-    token_count = value.get("token_count")
-    if not isinstance(token_count, int) or token_count < 0:
-        token_count = value.get("prompt_tokens")
-    if not isinstance(token_count, int) or token_count < 0:
-        return None
-    tokenizer_id = str(value.get("tokenizer_id") or "")
-    return token_count, tokenizer_id
-
-
-def _deterministic_fallback_token_count(messages: list[dict[str, str]]) -> int:
-    total = 0
-    for row in messages:
-        if not isinstance(row, dict):
-            continue
-        content = str(row.get("content") or "")
-        # Stable fallback approximation when backend tokenizer is unavailable.
-        total += max(1, (len(content) + 3) // 4)
-    return int(total)

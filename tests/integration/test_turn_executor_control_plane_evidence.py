@@ -9,7 +9,6 @@ import pytest
 from orket.application.services.tool_gate_service import ToolGate
 from orket.application.services.turn_tool_control_plane_service import build_turn_tool_control_plane_service
 from orket.application.workflows.turn_executor import TurnExecutor
-from orket.application.workflows.turn_executor_control_plane import write_turn_checkpoint_and_publish_if_needed
 from orket.core.contracts import StepRecord
 from orket.core.contracts.protocol_hashing import build_step_id, derive_operation_id
 from orket.core.domain import (
@@ -25,6 +24,7 @@ from orket.core.domain.control_plane_effect_journal import create_effect_journal
 from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.core.domain.state_machine import StateMachine
 from orket.schema import CardStatus, IssueConfig, RoleConfig
+from tests.helpers.turn_artifacts import artifact_destination, artifact_test_utc_now, write_checkpoint_fixture
 from tests.helpers.turn_control_plane_clock import deterministic_turn_clock as deterministic_turn_clock
 
 pytestmark = [pytest.mark.integration, pytest.mark.usefixtures("deterministic_turn_clock")]
@@ -107,7 +107,7 @@ def _executor(tmp_path: Path) -> tuple[object, TurnExecutor]:
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path), control_plane_service=control_plane,
-    )
+     utc_now=artifact_test_utc_now)
     return control_plane, executor
 
 
@@ -120,7 +120,7 @@ async def _seed_checkpoint_only(tmp_path: Path):
         content="",
         tool_calls=[ToolCall(tool="write_file", args=tool_args)],
     )
-    await write_turn_checkpoint_and_publish_if_needed(
+    await write_checkpoint_fixture(
         executor=executor,
         turn=turn,
         context=_context(),
@@ -155,10 +155,8 @@ async def _seed_completed_run_without_effect(tmp_path: Path):
     operation_id = _operation_id()
     tool_call_digest = "manual-call-digest"
     executor.artifact_writer.persist_operation_result(
-        session_id="run-1",
-        issue_id="ISSUE-1",
-        role_name="developer",
-        turn_index=1,
+        destination=artifact_destination(executor.artifact_writer, session_id="run-1",
+            issue_id="ISSUE-1", role_name="developer", turn_index=1),
         operation_id=operation_id,
         tool_name="write_file",
         tool_args=tool_args,
@@ -237,10 +235,8 @@ async def test_completed_governed_reentry_rejects_unexpected_operation_artifacts
 
     first = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
     executor.artifact_writer.persist_operation_result(
-        session_id="run-1",
-        issue_id="ISSUE-1",
-        role_name="developer",
-        turn_index=1,
+        destination=artifact_destination(executor.artifact_writer, session_id="run-1",
+            issue_id="ISSUE-1", role_name="developer", turn_index=1),
         operation_id="unexpected-op",
         tool_name="write_file",
         tool_args={"path": "agent_output/extra.txt", "content": "extra"},
@@ -262,10 +258,8 @@ async def test_completed_governed_reentry_rejects_unexpected_operation_artifacts
 async def test_resume_mode_rejects_orphan_operation_artifacts_before_model(tmp_path: Path) -> None:
     control_plane, executor, _run, _attempt, _checkpoint, tool_args = await _seed_checkpoint_only(tmp_path)
     executor.artifact_writer.persist_operation_result(
-        session_id="run-1",
-        issue_id="ISSUE-1",
-        role_name="developer",
-        turn_index=1,
+        destination=artifact_destination(executor.artifact_writer, session_id="run-1",
+            issue_id="ISSUE-1", role_name="developer", turn_index=1),
         operation_id=_operation_id(),
         tool_name="write_file",
         tool_args=tool_args,

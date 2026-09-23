@@ -14,6 +14,7 @@ from orket.core.domain.records import IssueRecord
 from orket.core.domain.state_machine import StateMachine
 from orket.schema import CardStatus, IssueConfig, RoleConfig
 from tests.helpers.card_completion import completion_components, completion_definition, write_completion_source
+from tests.helpers.turn_artifacts import artifact_test_utc_now
 
 pytestmark = pytest.mark.integration
 
@@ -56,7 +57,7 @@ async def test_turn_completion_requires_declared_behavior_through_final_persiste
                "card_completion_request": evaluation.request, "card_completion_decision": evaluation.decision}
     gate = ToolGate(organization=None, workspace_root=workspace)
     toolbox = ToolBox(None, str(workspace), [], db_path=repo.db_path, cards_repo=repo, tool_gate=gate)
-    executor = TurnExecutor(StateMachine(), gate, workspace)
+    executor = TurnExecutor(StateMachine(), gate, workspace, utc_now=artifact_test_utc_now)
     role = RoleConfig(id="GUARD", summary="integrity_guard", description="Review declared acceptance", tools=["update_issue_status"])
     result = await executor.execute_turn(IssueConfig.model_validate(record.model_dump()), role,
                                          CompletionModel(explicit), toolbox, context)

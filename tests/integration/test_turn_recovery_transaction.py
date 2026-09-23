@@ -20,10 +20,10 @@ from orket.application.services.turn_tool_recovery_transaction import (
     recover_pre_effect_attempt_atomic,
 )
 from orket.application.workflows.turn_executor import TurnExecutor
-from orket.application.workflows.turn_executor_control_plane import write_turn_checkpoint_and_publish_if_needed
 from orket.core.domain import AttemptState, LeaseStatus, ResidualUncertaintyClassification, RunState
 from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.core.domain.state_machine import StateMachine
+from tests.helpers.turn_artifacts import artifact_test_utc_now, write_checkpoint_fixture
 from tests.helpers.turn_control_plane_clock import deterministic_turn_clock as deterministic_turn_clock
 from tests.integration.test_governed_agent_terminal_history import logical_state
 from tests.integration.test_turn_executor_control_plane import _context
@@ -38,11 +38,11 @@ WRITES = ["save_attempt_record", "save_run_record", "publish_reconciliation",
 async def unfinished_turn(tmp_path, *, observed=True):
     control = build_turn_tool_control_plane_service(tmp_path / "control_plane.sqlite3")
     executor = TurnExecutor(StateMachine(), ToolGate(organization=None, workspace_root=tmp_path),
-                            workspace=tmp_path, control_plane_service=control)
+                            workspace=tmp_path, control_plane_service=control, utc_now=artifact_test_utc_now)
     args = {"path": "agent_output/out.txt", "content": "observed"}
     turn = ExecutionTurn(timestamp=None, role="developer", issue_id="ISSUE-1", content="",
                          tool_calls=[ToolCall(tool="write_file", args=args)])
-    await write_turn_checkpoint_and_publish_if_needed(executor=executor, turn=turn, context=_context(), prompt_hash="prompt")
+    await write_checkpoint_fixture(executor=executor, turn=turn, context=_context(), prompt_hash="prompt")
     run_id = "turn-tool-run:run-1:ISSUE-1:developer:0001"
     await AsyncFileTools(tmp_path).write_file(args["path"], args["content"])
     if not observed:

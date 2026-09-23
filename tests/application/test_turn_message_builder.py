@@ -4,6 +4,7 @@ from pathlib import Path
 
 from orket.application.workflows.turn_message_builder import MessageBuilder
 from orket.schema import IssueConfig, RoleConfig
+from tests.helpers.turn_artifacts import prepare_message_fixture
 
 
 def _issue() -> IssueConfig:
@@ -26,7 +27,7 @@ async def test_message_builder_includes_execution_context(tmp_path: Path) -> Non
         "required_write_paths": ["agent_output/main.py"],
         "history": [{"role": "user", "content": "prior"}],
     }
-    messages = await builder.prepare_messages(issue=_issue(), role=_role(), context=context)
+    messages = await prepare_message_fixture(builder, issue=_issue(), role=_role(), context=context)
     assert [message["role"] for message in messages] == ["system", "user"]
     assert "MODE: compact governed tool turn" in messages[0]["content"]
     rendered = messages[1]["content"]
@@ -53,7 +54,7 @@ async def test_message_builder_serializes_history_as_user_block(tmp_path: Path) 
             {"role": "integrity_guard", "content": "blocked: missing tests"},
         ],
     }
-    messages = await builder.prepare_messages(issue=_issue(), role=_role(), context=context)
+    messages = await prepare_message_fixture(builder, issue=_issue(), role=_role(), context=context)
     rendered = messages[1]["content"]
     assert "Prior Transcript JSON:" in rendered
     assert '"actor": "coder"' in rendered
@@ -74,7 +75,7 @@ async def test_message_builder_adds_protocol_response_contract_when_governed(tmp
         "history": [],
     }
 
-    messages = await builder.prepare_messages(issue=_issue(), role=_role(), context=context)
+    messages = await prepare_message_fixture(builder, issue=_issue(), role=_role(), context=context)
     assert [message["role"] for message in messages] == ["system", "user"]
     assert 'Response envelope: {"content":"","tool_calls":[...]}' in messages[0]["content"]
     assert '- response shape: {"content":"","tool_calls":[...]}' in messages[1]["content"]
@@ -103,7 +104,7 @@ async def test_message_builder_includes_issue_brief_fields(tmp_path: Path) -> No
         "history": [],
     }
 
-    messages = await builder.prepare_messages(issue=issue, role=_role(), context=context)
+    messages = await prepare_message_fixture(builder, issue=issue, role=_role(), context=context)
     rendered = "\n".join(m["content"] for m in messages)
 
     assert "Issue Brief:" in rendered
@@ -134,7 +135,7 @@ async def test_message_builder_preserves_issue_note_when_runtime_retry_note_is_p
         "history": [],
     }
 
-    messages = await builder.prepare_messages(issue=issue, role=_role(), context=context)
+    messages = await prepare_message_fixture(builder, issue=issue, role=_role(), context=context)
     rendered = "\n".join(m["content"] for m in messages)
 
     assert "Task Note: Keep dependency gating and truthful terminal states." in rendered
@@ -168,7 +169,7 @@ async def test_message_builder_omits_issue_brief_for_guard_review_turn(tmp_path:
         "history": [],
     }
 
-    messages = await builder.prepare_messages(issue=issue, role=role, context=context)
+    messages = await prepare_message_fixture(builder, issue=issue, role=role, context=context)
     rendered = "\n".join(m["content"] for m in messages)
 
     assert "Issue Brief:" not in rendered
@@ -192,7 +193,7 @@ async def test_message_builder_includes_comment_contract_when_required(tmp_path:
         "history": [],
     }
 
-    messages = await builder.prepare_messages(issue=_issue(), role=_role(), context=context)
+    messages = await prepare_message_fixture(builder, issue=_issue(), role=_role(), context=context)
     rendered = "\n".join(m["content"] for m in messages)
 
     assert "Review Comment Rules:" in rendered
@@ -227,7 +228,7 @@ async def test_message_builder_includes_runtime_verifier_contract_for_app_entryp
         "history": [],
     }
 
-    messages = await builder.prepare_messages(issue=_issue(), role=_role(), context=context)
+    messages = await prepare_message_fixture(builder, issue=_issue(), role=_role(), context=context)
     rendered = "\n".join(m["content"] for m in messages)
 
     assert "Runtime Verification:" in rendered
@@ -263,7 +264,7 @@ async def test_message_builder_includes_explicit_runtime_verifier_commands(tmp_p
         "history": [],
     }
 
-    messages = await builder.prepare_messages(issue=_issue(), role=_role(), context=context)
+    messages = await prepare_message_fixture(builder, issue=_issue(), role=_role(), context=context)
     rendered = "\n".join(m["content"] for m in messages)
 
     assert "Runtime Verification:" in rendered
@@ -301,7 +302,7 @@ async def test_message_builder_includes_runtime_verifier_contract_for_write_arti
         "history": [],
     }
 
-    messages = await builder.prepare_messages(issue=_issue(), role=_role(), context=context)
+    messages = await prepare_message_fixture(builder, issue=_issue(), role=_role(), context=context)
     rendered = "\n".join(m["content"] for m in messages)
 
     assert "Runtime Verification:" in rendered
@@ -333,7 +334,7 @@ async def test_message_builder_includes_artifact_semantic_contract(tmp_path: Pat
         "history": [],
     }
 
-    messages = await builder.prepare_messages(issue=_issue(), role=_role(), context=context)
+    messages = await prepare_message_fixture(builder, issue=_issue(), role=_role(), context=context)
     rendered = "\n".join(m["content"] for m in messages)
 
     assert "Artifact Checks:" in rendered
@@ -375,7 +376,7 @@ async def test_message_builder_includes_artifact_exact_shape_hints_for_simulator
         "history": [],
     }
 
-    messages = await builder.prepare_messages(issue=_issue(), role=_role(), context=context)
+    messages = await prepare_message_fixture(builder, issue=_issue(), role=_role(), context=context)
     rendered = "\n".join(m["content"] for m in messages)
 
     assert "Exact Shape Hints:" in rendered
@@ -412,7 +413,7 @@ async def test_message_builder_includes_artifact_exact_shape_hints_for_validator
         "history": [],
     }
 
-    messages = await builder.prepare_messages(issue=_issue(), role=_role(), context=context)
+    messages = await prepare_message_fixture(builder, issue=_issue(), role=_role(), context=context)
     rendered = "\n".join(m["content"] for m in messages)
 
     assert "Exact Shape Hints:" in rendered
@@ -455,7 +456,7 @@ async def test_message_builder_includes_artifact_import_hints_for_loader_contrac
         "history": [],
     }
 
-    messages = await builder.prepare_messages(issue=_issue(), role=_role(), context=context)
+    messages = await prepare_message_fixture(builder, issue=_issue(), role=_role(), context=context)
     rendered = "\n".join(m["content"] for m in messages)
 
     assert "Exact Shape Hints:" in rendered
@@ -493,7 +494,7 @@ async def test_message_builder_includes_artifact_shape_hints_for_models_contract
         "history": [],
     }
 
-    messages = await builder.prepare_messages(issue=_issue(), role=_role(), context=context)
+    messages = await prepare_message_fixture(builder, issue=_issue(), role=_role(), context=context)
     rendered = "\n".join(m["content"] for m in messages)
 
     assert "Exact Shape Hints:" in rendered
@@ -529,7 +530,7 @@ async def test_message_builder_includes_artifact_export_hints_for_package_init_c
         "history": [],
     }
 
-    messages = await builder.prepare_messages(issue=_issue(), role=_role(), context=context)
+    messages = await prepare_message_fixture(builder, issue=_issue(), role=_role(), context=context)
     rendered = "\n".join(m["content"] for m in messages)
 
     assert "Exact Shape Hints:" in rendered
@@ -567,7 +568,7 @@ async def test_message_builder_includes_artifact_import_hints_for_validator_cont
         "history": [],
     }
 
-    messages = await builder.prepare_messages(issue=_issue(), role=_role(), context=context)
+    messages = await prepare_message_fixture(builder, issue=_issue(), role=_role(), context=context)
     rendered = "\n".join(m["content"] for m in messages)
 
     assert "Exact Shape Hints:" in rendered
@@ -606,7 +607,7 @@ async def test_message_builder_includes_artifact_order_hints_for_planner_contrac
         "history": [],
     }
 
-    messages = await builder.prepare_messages(issue=_issue(), role=_role(), context=context)
+    messages = await prepare_message_fixture(builder, issue=_issue(), role=_role(), context=context)
     rendered = "\n".join(m["content"] for m in messages)
 
     assert "Exact Shape Hints:" in rendered
@@ -654,7 +655,7 @@ async def test_message_builder_includes_artifact_shape_hints_for_simulator_resum
         "history": [],
     }
 
-    messages = await builder.prepare_messages(issue=_issue(), role=_role(), context=context)
+    messages = await prepare_message_fixture(builder, issue=_issue(), role=_role(), context=context)
     rendered = "\n".join(m["content"] for m in messages)
 
     assert "Exact Shape Hints:" in rendered
@@ -680,7 +681,7 @@ async def test_message_builder_includes_single_envelope_contract_for_legacy_mult
         "history": [],
     }
 
-    messages = await builder.prepare_messages(issue=_issue(), role=_role(), context=context)
+    messages = await prepare_message_fixture(builder, issue=_issue(), role=_role(), context=context)
     rendered = "\n".join(m["content"] for m in messages)
 
     assert "Return exactly one JSON object." in rendered
@@ -723,7 +724,7 @@ async def test_message_builder_suppresses_builder_contracts_for_review_comment_p
         "history": [],
     }
 
-    messages = await builder.prepare_messages(issue=_issue(), role=_role(), context=context)
+    messages = await prepare_message_fixture(builder, issue=_issue(), role=_role(), context=context)
     rendered = "\n".join(m["content"] for m in messages)
 
     assert "Artifact Contract JSON:" not in rendered
@@ -748,7 +749,7 @@ async def test_message_builder_preloads_required_read_context(tmp_path: Path) ->
         "history": [],
     }
 
-    messages = await builder.prepare_messages(issue=_issue(), role=_role(), context=context)
+    messages = await prepare_message_fixture(builder, issue=_issue(), role=_role(), context=context)
     rendered = "\n".join(m["content"] for m in messages)
 
     assert "Preloaded Read Context:" in rendered
@@ -773,7 +774,7 @@ async def test_message_builder_preloads_comment_grounding_without_read_tool_requ
         "history": [],
     }
 
-    messages = await builder.prepare_messages(issue=_issue(), role=_role(), context=context)
+    messages = await prepare_message_fixture(builder, issue=_issue(), role=_role(), context=context)
     rendered = "\n".join(m["content"] for m in messages)
 
     assert "Read Path Contract:" not in rendered
@@ -801,7 +802,7 @@ async def test_message_builder_preloads_builder_grounding_without_read_tool_requ
         "history": [],
     }
 
-    messages = await builder.prepare_messages(issue=_issue(), role=_role(), context=context)
+    messages = await prepare_message_fixture(builder, issue=_issue(), role=_role(), context=context)
     rendered = "\n".join(m["content"] for m in messages)
 
     assert "Read Path Contract:" not in rendered

@@ -9,6 +9,7 @@ from orket.application.services.tool_gate_service import ToolGate
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.core.domain.state_machine import StateMachine
 from orket.schema import CardStatus, IssueConfig, RoleConfig
+from tests.helpers.turn_artifacts import artifact_test_utc_now
 
 
 class _Model:
@@ -57,7 +58,7 @@ async def test_turn_executor_checkpoint_and_resume_tool_replay(tmp_path):
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
-    )
+     utc_now=artifact_test_utc_now)
     model = _Model()
     toolbox = _ToolBox()
 

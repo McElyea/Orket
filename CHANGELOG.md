@@ -5,6 +5,19 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.102] - 2026-09-23
+
+### Fixed
+- Capture turn artifact destinations, represented response inputs and prompt messages before owned publication.
+- Retain admitted native artifact, checkpoint, memory-trace and token-counter operations through interruption while preserving partial effects and existing failure recovery.
+- Bind checkpoint, replay and dispatch to the existing service and namespace selected before turn ownership admission.
+- Forward the pipeline-selected clock to turn parsing, checkpoints and tool approval publication; reject lexical artifact path escapes.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Supply explicit artifact destinations, control-plane bindings and clocks; await parser publication. Migration: `docs/architecture/CONTRACT_DELTA_TURN_ARTIFACT_PUBLICATION_D_2026-09-23.md`.
+- Wider D/E/CAP, Linux clock, full coverage and whole-lane acceptance remain open; the architectural-truth plan owns checkpoint acceptance and publication status.
+
 ## [0.6.101] - 2026-09-23
 
 ### Fixed

@@ -16,6 +16,7 @@ import pytest
 from orket.application.workflows.turn_message_builder import MessageBuilder
 from orket.schema import IssueConfig, RoleConfig
 from tests.helpers.kernel_state_probe import responsive_sqlite
+from tests.helpers.turn_artifacts import prepare_message_fixture
 from tests.integration.test_async_file_native_lifetime import hold_native_open
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
@@ -191,7 +192,7 @@ async def test_message_builder_preloads_and_truncates_real_file(tmp_path: Path) 
     primary_error: BaseException | None = None
 
     try:
-        messages = await MessageBuilder(tmp_path).prepare_messages(
+        messages = await prepare_message_fixture(MessageBuilder(tmp_path),
             issue=_issue(), role=_role(), context=_context()
         )
         rendered = _rendered(messages)
@@ -229,7 +230,7 @@ async def test_message_read_metadata_preserves_sqlite_response(
     state = _hold_resolve(monkeypatch, target, enabled=held)
     started = time.perf_counter()
     task = asyncio.create_task(
-        MessageBuilder(tmp_path).prepare_messages(issue=_issue(), role=_role(), context=_context())
+        prepare_message_fixture(MessageBuilder(tmp_path), issue=_issue(), role=_role(), context=_context())
     )
     probe = asyncio.create_task(_sqlite_elapsed(tmp_path / "responsive.sqlite3", started))
     primary_error: BaseException | None = None
@@ -270,7 +271,7 @@ async def test_message_read_handle_settles_before_interrupted_return(
 
     async def operation():
         async with asyncio.timeout(5), deadline:
-            return await MessageBuilder(tmp_path).prepare_messages(
+            return await prepare_message_fixture(MessageBuilder(tmp_path),
                 issue=_issue(), role=_role(), context=_context()
             )
 

@@ -1,4 +1,5 @@
 """Stale persisted observations cannot reverse real composed family closeout."""
+
 import asyncio
 
 import pytest
@@ -13,6 +14,7 @@ from orket.application.workflows.turn_executor import TurnExecutor
 from orket.core.domain.state_machine import StateMachine
 from tests.helpers.governed_agent_clock import elapsed_agent_clock as elapsed_agent_clock
 from tests.helpers.outward_authorization import boundary as boundary
+from tests.helpers.turn_artifacts import artifact_test_utc_now
 from tests.helpers.turn_control_plane_clock import deterministic_turn_clock as deterministic_turn_clock
 from tests.integration.test_family_terminal_authority import agent_flow, card_flow, outward_flow, retained_results
 from tests.integration.test_turn_executor_control_plane import _context, _issue, _Model, _role, _Toolbox
@@ -79,7 +81,7 @@ async def test_physical_turn_closeout_refuses_original_dispatch_state(tmp_path, 
     observer = AsyncControlPlaneExecutionRepository(path)
     toolbox, model = ObservingPhysicalToolbox(tmp_path, observer), _Model()
     executor = TurnExecutor(StateMachine(), ToolGate(organization=None, workspace_root=tmp_path),
-                            workspace=tmp_path, control_plane_service=control)
+                            workspace=tmp_path, control_plane_service=control, utc_now=artifact_test_utc_now)
     result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
     assert result.success and toolbox.calls == model.calls == 1
     assert await asyncio.to_thread((tmp_path / "agent_output/out.txt").read_text, encoding="utf-8") == "ok"

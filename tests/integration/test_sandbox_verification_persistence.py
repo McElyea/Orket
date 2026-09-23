@@ -1,4 +1,5 @@
 """Layer: integration. Public orchestration retains actual HTTP and fixture observations."""
+
 import asyncio
 from types import SimpleNamespace
 
@@ -9,6 +10,7 @@ from orket.application.services.runtime_policy_inputs import ArchitecturePolicyS
 from orket.application.workflows.orchestrator import Orchestrator
 from orket.core.domain.sandbox import SandboxStatus
 from tests.helpers.observed_http_server import observed_http_server
+from tests.helpers.turn_artifacts import artifact_test_utc_now
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 
@@ -26,7 +28,7 @@ async def prepare(root, url):
             {"id": "http", "description": "Falsy comparison", "input_data": {"endpoint": "/probe"}, "expected_output": 0}]}})
     sandbox = SimpleNamespace(id="sandbox-BUILD", status=SandboxStatus.RUNNING, api_url=url)
     owner = SimpleNamespace(registry={"sandbox-BUILD": sandbox})
-    return Orchestrator(root, cards, None, None, root, str(root / "cards.db"), None, owner, architecture_policy=ArchitecturePolicySnapshot(False)), cards
+    return Orchestrator(root, cards, None, None, root, str(root / "cards.db"), None, owner, architecture_policy=ArchitecturePolicySnapshot(False), turn_clock=artifact_test_utc_now), cards
 
 
 @pytest.mark.parametrize("actual,counts", [(0, (2, 0)), ({"unexpected": True}, (1, 1))], ids=["matching", "mismatch"])

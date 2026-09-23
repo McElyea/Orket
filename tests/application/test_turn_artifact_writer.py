@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+from orket.application.workflows.turn_artifact_destination import TurnArtifactDestination
 from orket.application.workflows.turn_artifact_writer import TurnArtifactWriter
 from orket.core.contracts.tool_invocation_contracts import (
     PROTOCOL_RECEIPT_SCHEMA_VERSION,
@@ -13,26 +14,34 @@ from orket.core.contracts.tool_invocation_contracts import (
 )
 
 
+def _destination(writer: TurnArtifactWriter, turn_index: int) -> TurnArtifactDestination:
+    return TurnArtifactDestination(
+        writer=writer,
+        workspace=writer.workspace.resolve(),
+        session_id="s1",
+        issue_id="ISSUE-1",
+        role_name="coder",
+        role_id="CODER",
+        turn_index=turn_index,
+    )
+
+
+# Layer: integration
 def test_turn_artifact_writer_replay_round_trip(tmp_path: Path) -> None:
     writer = TurnArtifactWriter(tmp_path)
+    destination = _destination(writer, 1)
     payload = {"ok": True, "value": 7}
     args = {"path": "agent_output/main.py"}
 
     writer.persist_tool_result(
-        session_id="s1",
-        issue_id="ISSUE-1",
-        role_name="coder",
-        turn_index=1,
+        destination=destination,
         tool_name="write_file",
         tool_args=args,
         result=payload,
     )
 
     loaded = writer.load_replay_tool_result(
-        session_id="s1",
-        issue_id="ISSUE-1",
-        role_name="coder",
-        turn_index=1,
+        destination=destination,
         tool_name="write_file",
         tool_args=args,
         resume_mode=True,
@@ -45,14 +54,12 @@ def test_turn_artifact_writer_replay_round_trip(tmp_path: Path) -> None:
 def test_turn_artifact_writer_checkpoint_writes_file(tmp_path: Path) -> None:
     writer = TurnArtifactWriter(tmp_path)
     writer.write_turn_checkpoint(
-        session_id="s1",
-        issue_id="ISSUE-1",
-        role_name="coder",
-        turn_index=2,
+        destination=_destination(writer, 2),
         prompt_hash="abc123",
         selected_model="test-model",
         tool_calls=[],
         state_delta={"from": "doing", "to": "done"},
+        captured_at="2026-09-23T12:34:56+00:00",
         prompt_metadata={"prompt_id": "p1"},
     )
 
@@ -61,15 +68,15 @@ def test_turn_artifact_writer_checkpoint_writes_file(tmp_path: Path) -> None:
     assert checkpoint.exists()
     data = json.loads(checkpoint.read_text(encoding="utf-8"))
     assert data["prompt_hash"] == "abc123"
+    assert data["captured_at"] == "2026-09-23T12:34:56+00:00"
 
 
+# Layer: integration
 def test_turn_artifact_writer_operation_result_round_trip(tmp_path: Path) -> None:
     writer = TurnArtifactWriter(tmp_path)
+    destination = _destination(writer, 3)
     writer.persist_operation_result(
-        session_id="s1",
-        issue_id="ISSUE-1",
-        role_name="coder",
-        turn_index=3,
+        destination=destination,
         operation_id="op-123",
         tool_name="write_file",
         tool_args={"path": "agent_output/main.py", "content": "ok"},
@@ -77,10 +84,7 @@ def test_turn_artifact_writer_operation_result_round_trip(tmp_path: Path) -> Non
     )
 
     loaded = writer.load_operation_result(
-        session_id="s1",
-        issue_id="ISSUE-1",
-        role_name="coder",
-        turn_index=3,
+        destination=destination,
         operation_id="op-123",
     )
     assert loaded is not None
@@ -109,10 +113,7 @@ def test_turn_artifact_writer_append_protocol_receipt_writes_digest(tmp_path: Pa
         capability_profile=str(manifest["capability_profile"]),
     )
     receipt = writer.append_protocol_receipt(
-        session_id="s1",
-        issue_id="ISSUE-1",
-        role_name="coder",
-        turn_index=4,
+        destination=_destination(writer, 4),
         receipt={
             "run_id": "s1",
             "step_id": "ISSUE-1:4",
@@ -170,10 +171,7 @@ def test_turn_artifact_writer_append_protocol_receipt_writes_compat_translation_
         capability_profile=str(manifest["capability_profile"]),
     )
     writer.append_protocol_receipt(
-        session_id="s1",
-        issue_id="ISSUE-1",
-        role_name="coder",
-        turn_index=4,
+        destination=_destination(writer, 4),
         receipt={
             "run_id": "s1",
             "step_id": "ISSUE-1:4",
@@ -213,9 +211,60 @@ def test_turn_artifact_writer_append_protocol_receipt_rejects_missing_manifest(t
     writer = TurnArtifactWriter(tmp_path)
     with pytest.raises(ValueError, match="E_TOOL_INVOCATION_MANIFEST_REQUIRED"):
         writer.append_protocol_receipt(
-            session_id="s1",
-            issue_id="ISSUE-1",
-            role_name="coder",
-            turn_index=4,
+            destination=_destination(writer, 4),
             receipt={"run_id": "s1", "step_id": "ISSUE-1:4", "receipt_seq": 1, "tool": "write_file"},
         )
+
+
+# Layer: contract
+def test_turn_artifact_writer_rejects_foreign_destination(tmp_path: Path) -> None:
+    writer = TurnArtifactWriter(tmp_path)
+    foreign = TurnArtifactWriter(tmp_path)
+    with pytest.raises(ValueError, match="E_TURN_ARTIFACT_WRITER_MISMATCH"):
+        writer.write_turn_artifact(
+            destination=_destination(foreign, 1), filename="result.json", content="{}",
+        )
+
+
+# Layer: contract
+def test_turn_artifact_writer_uses_captured_workspace_after_writer_mutation(tmp_path: Path) -> None:
+    writer = TurnArtifactWriter(tmp_path / "original")
+    destination = _destination(writer, 1)
+    writer.workspace = tmp_path / "changed"
+
+    writer.write_turn_artifact(
+        destination=destination, filename="result.json", content="{}",
+    )
+
+    assert destination.file_path("result.json").read_text(encoding="utf-8") == "{}"
+    assert not (tmp_path / "changed" / "observability").exists()
+
+
+@pytest.mark.parametrize(
+    ("method", "token", "field"),
+    [
+        ("artifact", "../result.json", "filename"),
+        ("tool", "../read", "tool_name"),
+        ("operation", "../op", "operation_id"),
+    ],
+)
+# Layer: contract
+def test_turn_artifact_writer_rejects_path_bearing_tokens(
+    tmp_path: Path, method: str, token: str, field: str,
+) -> None:
+    writer = TurnArtifactWriter(tmp_path)
+    destination = _destination(writer, 1)
+    with pytest.raises(ValueError, match=rf"E_TURN_ARTIFACT_PATH_COMPONENT:{field}"):
+        if method == "artifact":
+            writer.write_turn_artifact(
+                destination=destination, filename=token, content="{}",
+            )
+        elif method == "tool":
+            writer.tool_result_path(
+                destination=destination, tool_name=token, tool_args={},
+            )
+        else:
+            writer.operation_result_path(
+                destination=destination, operation_id=token,
+            )
+    assert not destination.output_dir.exists()

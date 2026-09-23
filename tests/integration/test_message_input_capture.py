@@ -15,6 +15,7 @@ import pytest
 from orket.application.workflows.turn_message_builder import MessageBuilder
 from orket.schema import IssueConfig, RoleConfig
 from tests.helpers.kernel_state_probe import responsive_sqlite
+from tests.helpers.turn_artifacts import prepare_message_fixture
 from tests.integration.test_async_file_native_lifetime import hold_native_open
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
@@ -253,7 +254,7 @@ async def test_message_builder_captures_each_input_before_first_native_read(
     timer = threading.Timer(0.8, state.release.set)
     timer.start()
     task = asyncio.create_task(
-        scenario.builder.prepare_messages(
+        prepare_message_fixture(scenario.builder,
             issue=scenario.issue,
             role=scenario.role,
             context=scenario.context,

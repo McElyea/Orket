@@ -27,7 +27,10 @@ from orket.schema import IssueConfig
 from ..services.governed_turn_tool_approval_continuation_service import (
     supports_governed_turn_tool_approval_continuation,
 )
+from .turn_artifact_destination import TurnArtifactDestination
 from .turn_contract_input_capture import execute_with_protocol_capture
+from .turn_control_plane_binding import TurnControlPlaneBinding
+from .turn_memory_trace_artifacts import MemoryTraceInputs
 from .turn_tool_dispatcher_compatibility import resolve_compatibility_translation
 from .turn_tool_dispatcher_control_plane import (
     begin_control_plane_execution_if_needed,
@@ -98,15 +101,26 @@ class ToolDispatcher:
 
     async def execute_tools(
         self, *, turn: ExecutionTurn, toolbox: Any, context: dict[str, Any],
+        destination: TurnArtifactDestination, memory_inputs: MemoryTraceInputs,
+        control_plane: TurnControlPlaneBinding,
+        memory_events: list[dict[str, Any]] | None,
         issue: IssueConfig | None = None,
         on_turn_captured: Callable[[ExecutionTurn], None] | None = None) -> ExecutionTurn:
+        if control_plane.dispatcher is not self:
+            raise ValueError("E_TURN_DISPATCH_OWNER_MISMATCH")
         return await execute_with_protocol_capture(
-            execute=self._execute_tools_captured, turn=turn, toolbox=toolbox, context=context,
-            workspace=self.workspace, issue=issue, on_turn_captured=on_turn_captured)
+            execute=partial(self._execute_tools_captured, destination=destination,
+                            memory_inputs=memory_inputs, memory_events=memory_events, control_plane=control_plane),
+            turn=turn, toolbox=toolbox, context=context, destination=destination, control_plane=control_plane,
+            issue=issue, on_turn_captured=on_turn_captured)
 
     async def _execute_tools_captured(
         self, *, turn: ExecutionTurn, toolbox: Any, context: dict[str, Any], workspace: Path,
+        destination: TurnArtifactDestination, memory_inputs: MemoryTraceInputs,
+        control_plane: TurnControlPlaneBinding,
+        memory_events: list[dict[str, Any]] | None,
         issue: IssueConfig | None = None) -> None:
+        control_plane_service = control_plane.service
         violations: list[str] = []
         roles = context.get("roles", [turn.role])
         session_id = str(context.get("session_id", "unknown-session"))
@@ -136,7 +150,7 @@ class ToolDispatcher:
                                context.get("tool_schema_hash") or default_tool_schema_hash())
         protocol_enabled = bool(context.get("protocol_governed_enabled", False))
         protocol_replay_mode = bool(context.get("protocol_replay_mode"))
-        control_plane_enabled = not protocol_replay_mode and self.control_plane_service is not None
+        control_plane_enabled = not protocol_replay_mode and control_plane_service is not None
         if control_plane_enabled and turn.tool_calls:
             tool_names = [str(call.tool or "").strip() for call in turn.tool_calls if str(call.tool or "").strip()]
             # Successful status writes carry completion evidence and require final publication.
@@ -168,7 +182,7 @@ class ToolDispatcher:
             if preflight_violations:
                 await publish_preflight_failure_if_needed(
                     control_plane_enabled=control_plane_enabled,
-                    control_plane_service=self.control_plane_service,
+                    control_plane_service=control_plane_service,
                     session_id=session_id,
                     issue_id=turn.issue_id,
                     role_name=turn.role,
@@ -195,7 +209,7 @@ class ToolDispatcher:
                 raise self.tool_validation_error_factory(preflight_violations)
         control_plane_run_id, control_plane_attempt_id = await begin_control_plane_execution_if_needed(
             control_plane_enabled=control_plane_enabled,
-            control_plane_service=self.control_plane_service,
+            control_plane_service=control_plane_service,
             has_tool_calls=bool(turn.tool_calls),
             session_id=session_id,
             issue_id=turn.issue_id,
@@ -239,7 +253,7 @@ class ToolDispatcher:
 
                 if not protocol_replay_mode:
                     self.append_memory_event(
-                        context,
+                        memory_events,
                         role_name=turn.role,
                         interceptor="before_tool",
                         decision_type="tool_call_ready",
@@ -249,9 +263,9 @@ class ToolDispatcher:
                                 "tool_profile_id": str(
                                     (binding or {}).get("tool_profile_id") or tool_name or "unknown"
                                 ),
-                                "tool_profile_version": str(context.get("tool_profile_version") or "unknown-v1"),
+                                "tool_profile_version": memory_inputs.event_tool_profile_version,
                                 "normalized_args": dict(tool_call.args or {}),
-                                "normalization_version": str(context.get("normalization_version") or "json-v1"),
+                                "normalization_version": memory_inputs.event_normalization_version,
                                 "tool_result_fingerprint": self.hash_payload({}),
                                 "side_effect_fingerprint": None,
                             }
@@ -342,7 +356,7 @@ class ToolDispatcher:
                     )
                     granted_request_id = None
                     if admitted_continuation_slice and callable(approval_resolver):
-                        maybe_request = approval_resolver(tool_name=tool_name, tool_args=dict(tool_call.args or {}))
+                        maybe_request = approval_resolver(destination=destination, tool_name=tool_name, tool_args=dict(tool_call.args or {}))
                         if asyncio.iscoroutine(maybe_request):
                             granted_request_id = await maybe_request
                         else:
@@ -365,7 +379,7 @@ class ToolDispatcher:
                     else:
                         request_id = None
                         if callable(request_writer):
-                            maybe_request = request_writer(tool_name=tool_name, tool_args=tool_call.args)
+                            maybe_request = request_writer(destination=destination, tool_name=tool_name, tool_args=tool_call.args)
                             if asyncio.iscoroutine(maybe_request):
                                 request_id = await maybe_request
                             else:
@@ -420,8 +434,8 @@ class ToolDispatcher:
                     )
 
                 result, replayed = await load_or_execute_tool(
-                    protocol_enabled=protocol_enabled, session_id=session_id, turn=turn,
-                    tool_name=tool_name, tool_args=dict(tool_call.args or {}), turn_index=turn_index,
+                    protocol_enabled=protocol_enabled, destination=destination, turn=turn,
+                    tool_name=tool_name, tool_args=dict(tool_call.args or {}),
                     operation_id=operation_id, binding=binding, toolbox=toolbox, context=context,
                     step_id=step_id, step_seed=step_seed, validator_version=validator_version,
                     protocol_hash=protocol_hash, tool_schema_hash=tool_schema_hash,
@@ -429,7 +443,7 @@ class ToolDispatcher:
                     load_operation_result=self.load_operation_result,
                     load_replay_tool_result=self.load_replay_tool_result,
                     prepare_dispatch=partial(prepare_dispatch_if_needed,
-                        control_plane_enabled=control_plane_enabled, control_plane_service=self.control_plane_service,
+                        control_plane_enabled=control_plane_enabled, control_plane_service=control_plane_service,
                         control_plane_run_id=control_plane_run_id, control_plane_attempt_id=control_plane_attempt_id),
                 )
 
@@ -498,7 +512,7 @@ class ToolDispatcher:
                 tool_call.result = result
                 if not protocol_replay_mode:
                     self.append_memory_event(
-                        context,
+                        memory_events,
                         role_name=turn.role,
                         interceptor="after_tool",
                         decision_type="tool_call_result",
@@ -508,9 +522,9 @@ class ToolDispatcher:
                                 "tool_profile_id": str(
                                     (binding or {}).get("tool_profile_id") or tool_name or "unknown"
                                 ),
-                                "tool_profile_version": str(context.get("tool_profile_version") or "unknown-v1"),
+                                "tool_profile_version": memory_inputs.event_tool_profile_version,
                                 "normalized_args": dict(tool_call.args or {}),
-                                "normalization_version": str(context.get("normalization_version") or "json-v1"),
+                                "normalization_version": memory_inputs.event_normalization_version,
                                 "tool_result_fingerprint": self.hash_payload(
                                     result if isinstance(result, dict) else {}
                                 ),
@@ -523,11 +537,7 @@ class ToolDispatcher:
                 if protocol_enabled:
                     if not protocol_replay_mode:
                         result_ref = await persist_protocol_operation(
-                            session_id=session_id,
-                            issue_id=turn.issue_id,
-                            role_name=turn.role,
-                            turn_index=turn_index,
-                            index=index,
+                            destination=destination, index=index,
                             step_id=step_id,
                             receipt_seq=receipt_seq,
                             proposal_hash=proposal_hash,
@@ -545,7 +555,7 @@ class ToolDispatcher:
                             persist_operation_result=self.persist_operation_result,
                             append_protocol_receipt=self.append_protocol_receipt,
                             control_plane_enabled=control_plane_enabled,
-                            control_plane_service=self.control_plane_service,
+                            control_plane_service=control_plane_service,
                             control_plane_run_id=control_plane_run_id,
                             control_plane_attempt_id=control_plane_attempt_id,
                             retry_count=int(context.get("retry_count", 0) or 0),
@@ -553,15 +563,11 @@ class ToolDispatcher:
                 elif not protocol_replay_mode:
                     result_ref = await persist_non_protocol_tool_result_if_needed(
                         persist_tool_result=self.persist_tool_result, persist_operation_result=self.persist_operation_result,
-                        session_id=session_id,
-                        issue_id=turn.issue_id,
-                        role_name=turn.role,
-                        turn_index=turn_index,
-                        tool_name=tool_name,
+                        destination=destination, tool_name=tool_name,
                         tool_args=dict(tool_call.args or {}),
                         result=result,
                         control_plane_enabled=control_plane_enabled,
-                        control_plane_service=self.control_plane_service,
+                        control_plane_service=control_plane_service,
                         control_plane_run_id=control_plane_run_id,
                         control_plane_attempt_id=control_plane_attempt_id,
                         binding=binding,
@@ -618,7 +624,7 @@ class ToolDispatcher:
                 violations.append(f"Card completion claim rejected: {exc}")
         await finalize_execution_if_needed(
             control_plane_enabled=control_plane_enabled,
-            control_plane_service=self.control_plane_service,
+            control_plane_service=control_plane_service,
             control_plane_run_id=control_plane_run_id,
             control_plane_attempt_id=control_plane_attempt_id,
             authoritative_result_ref=last_result_ref or f"turn-tool-{'violations' if violations else 'complete'}:{control_plane_run_id}",

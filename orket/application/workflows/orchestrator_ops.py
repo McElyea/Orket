@@ -964,6 +964,7 @@ async def execute_epic(
         StateMachine(),
         tool_gate,
         self.workspace,
+        utc_now=self.turn_clock,
         control_plane_service=build_turn_tool_control_plane_service(turn_tool_control_plane_db_path),
     )
 
@@ -1426,57 +1427,6 @@ async def _create_pending_gate_request(
             reason=reason,
             gate_mode=gate_mode,
             created_at=request_created_at,
-        )
-    return request_id
-
-
-async def _create_pending_tool_approval_request(
-    self: Any,
-    *,
-    run_id: str,
-    issue: IssueConfig,
-    seat_name: str,
-    gate_mode: str,
-    turn_index: int,
-    tool_name: str,
-    tool_args: dict[str, Any],
-) -> str:
-    from orket.application.services.turn_tool_control_plane_support import run_id_for as turn_tool_run_id_for
-    request_created_at = datetime.now(UTC).isoformat()
-    control_plane_target_ref = turn_tool_run_id_for(
-        session_id=run_id,
-        issue_id=issue.id,
-        role_name=seat_name,
-        turn_index=int(turn_index),
-    )
-    request_id = str(await self.pending_gates.create_request(
-        session_id=run_id,
-        issue_id=issue.id,
-        seat_name=seat_name,
-        gate_mode=gate_mode,
-        request_type="tool_approval",
-        reason=f"approval_required_tool:{tool_name}",
-        created_at=request_created_at,
-        payload={
-            "tool": tool_name,
-            "args": tool_args,
-            "role": seat_name,
-            "turn_index": int(turn_index),
-            "control_plane_target_ref": control_plane_target_ref,
-            "issue_status": str(issue.status.value if hasattr(issue.status, "value") else issue.status),
-        },
-    ))
-    publisher = getattr(self, "tool_approval_control_plane_reservation", None)
-    if publisher is not None:
-        await publisher.publish_pending_tool_approval_hold(
-            approval_id=request_id,
-            session_id=run_id,
-            issue_id=issue.id,
-            seat_name=seat_name,
-            tool_name=tool_name,
-            turn_index=int(turn_index),
-            created_at=request_created_at,
-            control_plane_target_ref=control_plane_target_ref,
         )
     return request_id
 

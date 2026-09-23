@@ -15,7 +15,6 @@ from orket.application.services.turn_tool_control_plane_service import (
     build_turn_tool_control_plane_service,
 )
 from orket.application.workflows.turn_executor import TurnExecutor
-from orket.application.workflows.turn_executor_control_plane import write_turn_checkpoint_and_publish_if_needed
 from orket.core.contracts import StepRecord
 from orket.core.domain import (
     CapabilityClass,
@@ -32,6 +31,7 @@ from orket.core.domain import (
 from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.core.domain.state_machine import StateMachine
 from orket.schema import CardStatus, IssueConfig, RoleConfig
+from tests.helpers.turn_artifacts import artifact_test_utc_now, write_checkpoint_fixture
 from tests.helpers.turn_control_plane_clock import deterministic_turn_clock as deterministic_turn_clock
 
 pytestmark = [pytest.mark.integration, pytest.mark.usefixtures("deterministic_turn_clock")]
@@ -104,7 +104,7 @@ def _executor(tmp_path: Path):
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
         control_plane_service=control_plane,
-    )
+     utc_now=artifact_test_utc_now)
     return control_plane, executor
 
 
@@ -198,7 +198,7 @@ async def test_turn_executor_resume_mode_interrupts_effect_boundary_uncertain_at
         content="",
         tool_calls=[ToolCall(tool="write_file", args={"path": "agent_output/out.txt", "content": "ok"})],
     )
-    await write_turn_checkpoint_and_publish_if_needed(
+    await write_checkpoint_fixture(
         executor=executor,
         turn=turn,
         context=_context(),
@@ -265,7 +265,7 @@ async def test_turn_control_plane_rejects_regular_begin_after_reconciliation_clo
         content="",
         tool_calls=[ToolCall(tool="write_file", args={"path": "agent_output/out.txt", "content": "ok"})],
     )
-    await write_turn_checkpoint_and_publish_if_needed(
+    await write_checkpoint_fixture(
         executor=executor,
         turn=turn,
         context=_context(),
@@ -318,7 +318,7 @@ async def test_turn_executor_resume_mode_fails_closed_after_reconciliation_close
         content="",
         tool_calls=[ToolCall(tool="write_file", args={"path": "agent_output/out.txt", "content": "ok"})],
     )
-    await write_turn_checkpoint_and_publish_if_needed(
+    await write_checkpoint_fixture(
         executor=executor,
         turn=turn,
         context=_context(),
@@ -372,7 +372,7 @@ async def test_turn_executor_recovery_pending_run_fails_before_model_and_checkpo
         content="",
         tool_calls=[ToolCall(tool="write_file", args={"path": "agent_output/out.txt", "content": "ok"})],
     )
-    await write_turn_checkpoint_and_publish_if_needed(
+    await write_checkpoint_fixture(
         executor=executor,
         turn=turn,
         context=_context(),
@@ -408,7 +408,7 @@ async def test_turn_control_plane_allows_same_attempt_writes_after_checkpoint_re
         content="",
         tool_calls=[ToolCall(tool="write_file", args={"path": "agent_output/out.txt", "content": "ok"})],
     )
-    await write_turn_checkpoint_and_publish_if_needed(
+    await write_checkpoint_fixture(
         executor=executor,
         turn=turn,
         context=_context(),

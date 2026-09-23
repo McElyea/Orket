@@ -11,6 +11,7 @@ import pytest
 
 from orket.application.workflows.turn_message_builder import MessageBuilder
 from tests.helpers.kernel_state_probe import responsive_sqlite
+from tests.helpers.turn_artifacts import prepare_message_fixture
 from tests.integration.test_message_read_ownership import _context, _issue, _role, _write_bytes
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
@@ -58,7 +59,7 @@ async def test_late_preload_failure_survives_native_settlement(tmp_path: Path, m
 
     async def operation():
         async with asyncio.timeout(5), deadline:
-            return await MessageBuilder(tmp_path).prepare_messages(issue=_issue(), role=_role(), context=_context())
+            return await prepare_message_fixture(MessageBuilder(tmp_path), issue=_issue(), role=_role(), context=_context())
 
     timer = threading.Timer(0.8, state.release.set)
     timer.start()

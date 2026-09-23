@@ -7,8 +7,10 @@ import pytest
 
 from orket.application.middleware import TurnLifecycleInterceptors
 from orket.application.services.tool_gate_service import ToolGate
+from orket.application.workflows.turn_artifact_writer import TurnArtifactWriter
 from orket.application.workflows.turn_tool_dispatcher import ToolDispatcher
 from orket.core.domain.execution import ExecutionTurn, ToolCall
+from tests.helpers.turn_artifacts import execute_dispatch_fixture
 
 
 def _dispatcher(tmp_path: Path) -> ToolDispatcher:
@@ -64,7 +66,7 @@ async def test_tool_dispatcher_preflight_rejects_ring_policy_violation(tmp_path:
     )
 
     with pytest.raises(RuntimeError) as exc:
-        await dispatcher.execute_tools(
+        await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
             turn=turn,
             toolbox=toolbox,
             context={
@@ -102,7 +104,7 @@ async def test_tool_dispatcher_preflight_rejects_capability_violation(tmp_path: 
     )
 
     with pytest.raises(RuntimeError) as exc:
-        await dispatcher.execute_tools(
+        await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
             turn=turn,
             toolbox=toolbox,
             context={
@@ -141,7 +143,7 @@ async def test_tool_dispatcher_preflight_rejects_namespace_scope_violation(tmp_p
     )
 
     with pytest.raises(RuntimeError) as exc:
-        await dispatcher.execute_tools(
+        await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
             turn=turn,
             toolbox=toolbox,
             context={
@@ -184,7 +186,7 @@ async def test_tool_dispatcher_preflight_rejects_ring_policy_violation_without_p
     )
 
     with pytest.raises(RuntimeError) as exc:
-        await dispatcher.execute_tools(
+        await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
             turn=turn,
             toolbox=toolbox,
             context={
@@ -223,7 +225,7 @@ async def test_tool_dispatcher_preflight_rejects_namespace_scope_violation_witho
     )
 
     with pytest.raises(RuntimeError) as exc:
-        await dispatcher.execute_tools(
+        await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
             turn=turn,
             toolbox=toolbox,
             context={
@@ -263,7 +265,7 @@ async def test_tool_dispatcher_preflight_rejects_missing_compatibility_mapping(t
     )
 
     with pytest.raises(RuntimeError) as exc:
-        await dispatcher.execute_tools(
+        await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
             turn=turn,
             toolbox=toolbox,
             context={
@@ -302,7 +304,7 @@ async def test_tool_dispatcher_emits_determinism_violation_for_declared_pure_sid
     )
 
     with pytest.raises(RuntimeError) as exc:
-        await dispatcher.execute_tools(
+        await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
             turn=turn,
             toolbox=toolbox,
             context={
@@ -340,7 +342,7 @@ async def test_tool_dispatcher_preflight_rejects_tool_invocation_boundary_violat
     )
 
     with pytest.raises(RuntimeError) as exc:
-        await dispatcher.execute_tools(
+        await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
             turn=turn,
             toolbox=toolbox,
             context={
@@ -388,7 +390,7 @@ async def test_tool_dispatcher_records_determinism_violation_event(tmp_path: Pat
     )
 
     with pytest.raises(RuntimeError) as exc:
-        await dispatcher.execute_tools(
+        await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
             turn=turn,
             toolbox=toolbox,
             context={
@@ -446,7 +448,7 @@ async def test_tool_dispatcher_records_preflight_boundary_rejection_as_runtime_e
     )
 
     with pytest.raises(RuntimeError) as exc:
-        await dispatcher.execute_tools(
+        await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
             turn=turn,
             toolbox=toolbox,
             context={

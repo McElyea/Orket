@@ -12,6 +12,7 @@ from orket.application.workflows.turn_message_builder import MessageBuilder
 from orket.core.domain.records import IssueRecord
 from orket.schema import CardStatus, IssueConfig, RoleConfig
 from tests.helpers.card_completion import completion_components, completion_definition, write_completion_source
+from tests.helpers.turn_artifacts import prepare_message_fixture
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 
@@ -43,7 +44,7 @@ async def test_guard_prompt_uses_retained_acceptance_instead_of_legacy_success(t
                                                   session_id='session', seat_name='integrity_guard', turn_index=1)
     role = RoleConfig(id='guard', summary='integrity_guard', description='Review declared acceptance',
                       tools=['update_issue_status'])
-    messages = await MessageBuilder(workspace).prepare_messages(
+    messages = await prepare_message_fixture(MessageBuilder(workspace),
         issue=IssueConfig.model_validate(record.model_dump()), role=role, context=context,
         system_prompt='Review the current acceptance evidence.' + declared)
     rendered = '\n\n'.join(message['content'] for message in messages)

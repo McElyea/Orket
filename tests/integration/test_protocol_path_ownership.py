@@ -17,6 +17,7 @@ from orket.application.workflows.turn_tool_dispatcher_protocol import collect_pr
 from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.core.domain.state_machine import StateMachine
 from tests.helpers.kernel_state_probe import interrupt_owned, responsive_sqlite
+from tests.helpers.turn_artifacts import artifact_test_utc_now, execute_executor_dispatch_fixture
 
 _A = "agent_output/a.txt"
 _B = "agent_output/b.txt"
@@ -255,7 +256,7 @@ class _Toolbox:
 
 
 def _executor(root: Path) -> TurnExecutor:
-    return TurnExecutor(StateMachine(), ToolGate(organization=None, workspace_root=root), workspace=root)
+    return TurnExecutor(StateMachine(), ToolGate(organization=None, workspace_root=root), workspace=root, utc_now=artifact_test_utc_now)
 
 
 def _dispatch_context(sentinel: object) -> dict[str, Any]:
@@ -289,7 +290,7 @@ async def test_dispatch_uses_captured_commands_and_publishes_original_sink(
     original_call = turn.tool_calls[0]
     adopted: list[ExecutionTurn] = []
     operation = asyncio.create_task(
-        _executor(root).tool_dispatcher.execute_tools(
+        execute_executor_dispatch_fixture(_executor(root),
             turn=turn, toolbox=toolbox, context=context, on_turn_captured=adopted.append,
         )
     )
@@ -341,7 +342,7 @@ async def test_dispatch_failure_publishes_each_original_tool_sink(tmp_path) -> N
         original_calls[1].args["path"] = _A
 
     with pytest.raises(ToolValidationError, match="second tool failed"):
-        await _executor(root).tool_dispatcher.execute_tools(
+        await execute_executor_dispatch_fixture(_executor(root),
             turn=turn, toolbox=toolbox, context=_dispatch_context(object()), on_turn_captured=adopt,
         )
 

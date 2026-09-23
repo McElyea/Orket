@@ -14,6 +14,7 @@ import pytest
 from orket.adapters.storage.epic_publication_repository import SQLiteEpicPublicationRepository
 from orket.application.workflows.turn_artifact_writer import TurnArtifactWriter
 from orket.core.contracts.epic_approval_recovery import EPIC_APPROVAL_RECOVERY_ARTIFACT
+from tests.helpers.turn_artifacts import artifact_destination
 from tests.integration.test_epic_approval_continuation import approval_engine
 from tests.integration.test_epic_closeout_process import read_barrier
 
@@ -100,9 +101,9 @@ async def test_recovery_refuses_missing_authority_without_grant(tmp_path, monkey
             request = recovery_request(pause)
             journal = engine._pipeline.epic_publication.repository
             identity = next(iter(pause.approvals.values()))
-            directory = TurnArtifactWriter(tmp_path / "workspace")._turn_output_dir(
+            directory = artifact_destination(TurnArtifactWriter(tmp_path / "workspace"),
                 session_id=pause.session_id, issue_id=identity["issue_id"], role_name=identity["seat_name"],
-                turn_index=identity["payload_json"]["turn_index"])
+                turn_index=identity["payload_json"]["turn_index"]).output_dir
             if damage == "snapshot":
                 snapshots = await asyncio.to_thread(lambda: list(directory.glob("control_plane_checkpoint_snapshot_*.json")))
                 assert len(snapshots) == 1

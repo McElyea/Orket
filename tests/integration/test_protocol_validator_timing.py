@@ -12,11 +12,13 @@ from orket.application.middleware import TurnLifecycleInterceptors
 from orket.application.services.tool_gate_service import ToolGate
 from orket.application.services.toolbox import ToolBox
 from orket.application.workflows.turn_artifact_writer import TurnArtifactWriter
+from orket.application.workflows.turn_memory_trace_artifacts import append_memory_event
 from orket.application.workflows.turn_tool_dispatcher import ToolDispatcher
 from orket.core.contracts.protocol_hashing import hash_canonical_json
 from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.runtime.evidence.protocol_receipt_materializer import materialize_protocol_receipts
 from tests.helpers.protocol_ledger_clock import ProtocolLedgerClock
+from tests.helpers.turn_artifacts import execute_dispatch_fixture
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 
@@ -26,7 +28,7 @@ def _runtime(workspace: Path):
     gate = ToolGate(organization=None, workspace_root=workspace)
     dispatcher = ToolDispatcher(
         tool_gate=gate, middleware=TurnLifecycleInterceptors([]), workspace=workspace,
-        append_memory_event=writer.append_memory_event, hash_payload=writer.hash_payload,
+        append_memory_event=append_memory_event, hash_payload=writer.hash_payload,
         load_replay_tool_result=writer.load_replay_tool_result,
         persist_tool_result=writer.persist_tool_result,
         load_operation_result=writer.load_operation_result,
@@ -42,7 +44,7 @@ async def _dispatch(dispatcher, toolbox, timing_context=None, *, replay=False):
     turn = ExecutionTurn(timestamp=None, role="coder", issue_id="TIMING-1", content="", tool_calls=[
         ToolCall(tool="read_file", args={"path": "input.txt"}),
     ])
-    await dispatcher.execute_tools(turn=turn, toolbox=toolbox, context={
+    await execute_dispatch_fixture(dispatcher, writer=dispatcher.persist_tool_result.__self__, turn=turn, toolbox=toolbox, context={
         "roles": ["coder"], "session_id": "timing", "turn_index": 1,
         "protocol_governed_enabled": True, "protocol_replay_mode": replay,
         **(timing_context or {}),

@@ -1,42 +1,40 @@
 from __future__ import annotations
 
-import asyncio
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
-if TYPE_CHECKING:
-    from .turn_executor import TurnExecutor
+from .turn_artifact_destination import TurnArtifactDestination
+from .turn_memory_trace_artifacts import (
+    MemoryTraceInputs,
+    append_memory_event,
+    publish_memory_trace,
+    render_memory_trace_publication,
+)
+
+
+async def emit_turn_memory_traces(
+    *, destination: TurnArtifactDestination, memory_inputs: MemoryTraceInputs,
+    memory_events: list[dict[str, Any]] | None, context: dict[str, Any], current_turn: Any,
+    failure_reason: str = "", failure_type: str = "",
+) -> None:
+    publication = render_memory_trace_publication(
+        destination=destination, inputs=memory_inputs, event_sink=memory_events, turn=current_turn,
+        guardrails_triggered=context.get("guardrails_triggered"),
+        retrieval_events=context.get("memory_retrieval_trace_events"),
+        failure_reason=failure_reason, failure_type=failure_type,
+    )
+    await publish_memory_trace(destination=destination, publication=publication)
 
 
 async def emit_turn_failure_traces(
-    *,
-    executor: TurnExecutor,
-    context: dict[str, Any],
-    role_name: str,
-    session_id: str,
-    issue_id: str,
-    turn_index: int,
-    issue: Any,
-    role: Any,
-    current_turn: Any,
-    error: str,
-    failure_type: str,
+    *, destination: TurnArtifactDestination, memory_inputs: MemoryTraceInputs,
+    memory_events: list[dict[str, Any]] | None, context: dict[str, Any], current_turn: Any,
+    error: str, failure_type: str,
 ) -> None:
-    executor.artifact_writer.append_memory_event(
-        context,
-        role_name=role_name,
-        interceptor="on_turn_failure",
-        decision_type=str(failure_type).strip() or "turn_failed",
-    )
-    await asyncio.to_thread(
-        executor.artifact_writer.emit_memory_traces,
-        session_id=session_id,
-        issue_id=issue_id,
-        role_name=role_name,
-        turn_index=turn_index,
-        issue=issue,
-        role=role,
-        context=context,
-        turn=current_turn,
+    append_memory_event(memory_events, role_name=destination.role_name, interceptor="on_turn_failure",
+                        decision_type=str(failure_type).strip() or "turn_failed")
+    await emit_turn_memory_traces(
+        destination=destination, memory_inputs=memory_inputs, memory_events=memory_events,
+        context=context, current_turn=current_turn,
         failure_reason=str(error or "").strip() or "turn_failed",
         failure_type=str(failure_type or "").strip() or "turn_failed",
     )

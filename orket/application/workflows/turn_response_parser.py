@@ -3,10 +3,11 @@ from __future__ import annotations
 import json
 import re
 from collections.abc import Callable
-from datetime import UTC, datetime
-from pathlib import Path
+from datetime import datetime
+from functools import partial
 from typing import Any
 
+from orket.adapters.execution.owned_io import run_owned_thread
 from orket.application.services.guard_review_payload import extract_legacy_guard_review
 from orket.application.services.tool_parser import ToolParser
 from orket.core.contracts.protocol_error_codes import (
@@ -22,145 +23,38 @@ from orket.core.contracts.protocol_error_codes import (
     E_TOOL_MODE_CONTENT_NON_EMPTY,
     format_protocol_error,
 )
-from orket.core.contracts.protocol_hashing import (
-    VALIDATOR_VERSION,
-    default_protocol_hash,
-    default_tool_schema_hash,
-    hash_canonical_json,
-)
-from orket.core.domain.execution import ExecutionTurn, ToolCall, ToolCallErrorClass
+from orket.core.domain.execution import ExecutionTurn, ToolCallErrorClass
 from orket.logging import log_event
+
+from .turn_artifact_destination import TurnArtifactDestination
+from .turn_response_capture import CapturedTurnResponse
+from .turn_response_parser_operation import capture_parser_policy, parse_and_publish_response
 
 
 class ResponseParser:
     """Model response parsing and JSON residue helpers for turn execution."""
 
-    def __init__(self, workspace: Path, write_turn_artifact: Callable[..., None]) -> None:
-        self.workspace = workspace
-        self.write_turn_artifact = write_turn_artifact
+    def __init__(self, *, utc_now: Callable[[], datetime]) -> None:
+        self.utc_now = utc_now
 
-    def parse_response(
+    async def parse_response(
         self,
         *,
-        response: Any,
-        issue_id: str,
-        role_name: str,
+        response: CapturedTurnResponse,
+        destination: TurnArtifactDestination,
         context: dict[str, Any],
     ) -> ExecutionTurn:
-        content = getattr(response, "content", "") if not isinstance(response, dict) else response.get("content", "")
-        raw_data = getattr(response, "raw", {}) if not isinstance(response, dict) else response
-        raw_payload = dict(raw_data) if isinstance(raw_data, dict) else {}
-        protocol_metadata: dict[str, Any] = {}
-
-        parser_diag: list[dict[str, Any]] = []
-        partial_parse_error: dict[str, Any] | None = None
-        extraction_strategy = "none"
-
-        def capture(stage: str, data: dict[str, Any]) -> None:
-            parser_diag.append({"stage": stage, "data": data})
-
-        if bool(context.get("protocol_governed_enabled", False)):
-            envelope = self._parse_strict_envelope(
-                content=content,
-                max_response_bytes=int(context.get("max_response_bytes", 8192)),
-                max_tool_calls=int(context.get("max_tool_calls", 8)),
-            )
-            proposal_hash = hash_canonical_json(envelope)
-            protocol_metadata = {
-                "proposal_hash": proposal_hash,
-                "validator_version": str(context.get("validator_version") or VALIDATOR_VERSION),
-                "protocol_hash": str(context.get("protocol_hash") or default_protocol_hash()),
-                "tool_schema_hash": str(context.get("tool_schema_hash") or default_tool_schema_hash()),
-            }
-            capture("strict_parse_success", {"tool_call_count": len(envelope["tool_calls"])})
-            parsed_calls = list(envelope["tool_calls"])
-            content = envelope["content"]
-            extraction_strategy = "strict_envelope"
-        else:
-            parsed_calls = ToolParser.parse(content, diagnostics=capture)
-            extraction_strategy = self._parser_extraction_strategy(parser_diag)
-            partial_parse_error = self._partial_recovery_error(
-                parsed_calls=parsed_calls,
-                parser_diag=parser_diag,
-                issue_id=issue_id,
-                role_name=role_name,
-                context=context,
-            )
-            if partial_parse_error is not None:
-                parsed_calls = []
-            if not parsed_calls and partial_parse_error is None:
-                parsed_calls = self._parse_native_tool_calls(
-                    raw_payload,
-                    diagnostics=capture,
-                    allowed_tool_names=self._allowed_native_tool_names(context, raw_payload),
-                )
-                extraction_strategy = "provider_native_tool_calls" if parsed_calls else "none"
-        raw_payload["extraction_strategy"] = extraction_strategy
-        if protocol_metadata:
-            raw_payload.update(protocol_metadata)
-        if partial_parse_error is not None:
-            raw_payload["partial_parse_failure"] = partial_parse_error
-        session_id = context.get("session_id", "unknown-session")
-        turn_index = int(context.get("turn_index", 0))
-        for diag in parser_diag:
-            log_event(
-                "tool_parser_diagnostic",
-                {
-                    "issue_id": issue_id,
-                    "role": role_name,
-                    "session_id": session_id,
-                    "turn_index": turn_index,
-                    "stage": diag["stage"],
-                    "details": diag["data"],
-                },
-                self.workspace,
-            )
-        self.write_turn_artifact(
-            session_id=session_id,
-            issue_id=issue_id,
-            role_name=role_name,
-            turn_index=turn_index,
-            filename="tool_parser_diagnostics.json",
-            content=json.dumps(parser_diag, indent=2, ensure_ascii=False),
-        )
-        self.write_turn_artifact(
-            session_id=session_id,
-            issue_id=issue_id,
-            role_name=role_name,
-            turn_index=turn_index,
-            filename="parsed_tool_calls.json",
-            content=json.dumps(parsed_calls, indent=2, ensure_ascii=False),
-        )
-        self.write_turn_artifact(
-            session_id=session_id,
-            issue_id=issue_id,
-            role_name=role_name,
-            turn_index=turn_index,
-            filename="tool_parser_summary.json",
-            content=json.dumps({"extraction_strategy": extraction_strategy}, indent=2, ensure_ascii=False),
-        )
-
-        tool_calls = [
-            ToolCall(
-                tool=parsed_call.get("tool"),
-                args=parsed_call.get("args", {}),
-                result=None,
-                error=None,
-            )
-            for parsed_call in parsed_calls
-        ]
-        return ExecutionTurn(
-            role=role_name,
-            issue_id=issue_id,
-            thought=None,
-            content=content,
-            tool_calls=tool_calls,
-            tokens_used=raw_payload.get("total_tokens", 0),
-            timestamp=datetime.now(UTC),
-            raw=raw_payload,
-            partial_parse_failure=partial_parse_error is not None,
-            error=None if partial_parse_error is None else str(partial_parse_error["error"]),
-            error_class=ToolCallErrorClass.PARSE_PARTIAL if partial_parse_error else None,
+        policy = capture_parser_policy(context=context)
+        return await run_owned_thread(
+            partial(
+                parse_and_publish_response,
+                parser=self,
+                response=response,
+                destination=destination,
+                policy=policy,
+                utc_now=self.utc_now,
+            ),
+            label="turn-response-parser",
         )
 
     def _parser_extraction_strategy(self, parser_diag: list[dict[str, Any]]) -> str:
@@ -174,35 +68,12 @@ class ResponseParser:
                     return strategy
         return "none"
 
-    def _allowed_native_tool_names(self, context: dict[str, Any], raw_payload: dict[str, Any]) -> set[str]:
-        declared_native_tool_names = raw_payload.get("openai_native_tool_names")
-        if isinstance(declared_native_tool_names, list):
-            return {
-                str(item).strip()
-                for item in declared_native_tool_names
-                if str(item).strip()
-            }
-        verification_scope = context.get("verification_scope")
-        declared_interfaces = (
-            verification_scope.get("declared_interfaces")
-            if isinstance(verification_scope, dict)
-            else None
-        )
-        allowed = {
-            str(item).strip()
-            for item in (declared_interfaces or context.get("required_action_tools") or [])
-            if str(item).strip()
-        }
-        return allowed
-
     def _partial_recovery_error(
         self,
         *,
         parsed_calls: list[dict[str, Any]],
         parser_diag: list[dict[str, Any]],
-        issue_id: str,
-        role_name: str,
-        context: dict[str, Any],
+        destination: TurnArtifactDestination,
     ) -> dict[str, Any] | None:
         partial_events = [
             dict(item.get("data") or {})
@@ -220,20 +91,18 @@ class ResponseParser:
                 for item in (event.get("skipped_tools") or [])
                 if isinstance(item, dict)
             )
-        session_id = str(context.get("session_id", "unknown-session"))
-        turn_index = int(context.get("turn_index", 0))
         log_event(
             "tool_recovery_partial",
             {
-                "issue_id": issue_id,
-                "role": role_name,
-                "session_id": session_id,
-                "turn_index": turn_index,
+                "issue_id": destination.issue_id,
+                "role": destination.role_name,
+                "session_id": destination.session_id,
+                "turn_index": destination.turn_index,
                 "recovered_count": len(parsed_calls),
                 "skipped_tools": skipped_tools,
                 "result": "blocked",
             },
-            self.workspace,
+            destination.workspace,
         )
         return {
             "error": "tool-call recovery was partial; Orket did not execute recovered or skipped tool calls",

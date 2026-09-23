@@ -1,3 +1,4 @@
+
 from pathlib import Path
 
 import pytest
@@ -5,6 +6,7 @@ import pytest
 from orket.application.services.tool_gate_service import ToolGate
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.core.domain.state_machine import StateMachine
+from tests.helpers.turn_artifacts import artifact_test_utc_now
 
 
 def _executor(tmp_path: Path) -> TurnExecutor:
@@ -12,7 +14,7 @@ def _executor(tmp_path: Path) -> TurnExecutor:
         state_machine=StateMachine(),
         tool_gate=ToolGate(organization=None, workspace_root=tmp_path),
         workspace=tmp_path,
-    )
+     utc_now=artifact_test_utc_now)
 
 
 def test_turn_executor_direct_helpers_are_not_redelegated(tmp_path):
@@ -46,4 +48,4 @@ def test_turn_executor_exposes_collaborators_explicitly(tmp_path):
     assert callable(executor.response_parser.non_json_residue)
     assert callable(executor.contract_validator.collect_contract_violations)
     assert callable(executor.corrective_prompt_builder.build_corrective_instruction)
-    assert callable(executor.artifact_writer.append_memory_event)
+    assert callable(executor.tool_dispatcher.append_memory_event)

@@ -7,8 +7,10 @@ import pytest
 
 from orket.application.middleware import TurnLifecycleInterceptors
 from orket.application.services.tool_gate_service import ToolGate
+from orket.application.workflows.turn_artifact_writer import TurnArtifactWriter
 from orket.application.workflows.turn_tool_dispatcher import ToolDispatcher
 from orket.core.domain.execution import ExecutionTurn, ToolCall
+from tests.helpers.turn_artifacts import execute_dispatch_fixture
 
 
 def _dispatcher(
@@ -26,20 +28,20 @@ def _dispatcher(
 
     def _load_operation_result(**kwargs) -> dict[str, Any] | None:
         key = (
-            str(kwargs.get("session_id")),
-            str(kwargs.get("issue_id")),
-            str(kwargs.get("role_name")),
-            int(kwargs.get("turn_index", 0)),
+            str(kwargs["destination"].session_id),
+            str(kwargs["destination"].issue_id),
+            str(kwargs["destination"].role_name),
+            int(kwargs["destination"].turn_index),
             str(kwargs.get("operation_id")),
         )
         return operation_store.get(key)
 
     def _persist_operation_result(**kwargs) -> None:
         key = (
-            str(kwargs.get("session_id")),
-            str(kwargs.get("issue_id")),
-            str(kwargs.get("role_name")),
-            int(kwargs.get("turn_index", 0)),
+            str(kwargs["destination"].session_id),
+            str(kwargs["destination"].issue_id),
+            str(kwargs["destination"].role_name),
+            int(kwargs["destination"].turn_index),
             str(kwargs.get("operation_id")),
         )
         operation_store[key] = {
@@ -139,7 +141,7 @@ async def test_compatibility_pilot_live_and_replay_parity(tmp_path: Path) -> Non
             content="",
             tool_calls=[ToolCall(tool=tool_name, args=tool_args)],
         )
-        await dispatcher.execute_tools(
+        await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
             turn=turn,
             toolbox=toolbox,
             context={**base_context, "turn_index": turn_index},
@@ -163,7 +165,7 @@ async def test_compatibility_pilot_live_and_replay_parity(tmp_path: Path) -> Non
             content="",
             tool_calls=[ToolCall(tool=tool_name, args=tool_args)],
         )
-        await dispatcher.execute_tools(
+        await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
             turn=turn,
             toolbox=toolbox,
             context={**base_context, "turn_index": turn_index, "protocol_replay_mode": True},

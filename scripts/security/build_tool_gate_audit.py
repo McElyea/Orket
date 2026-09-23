@@ -10,11 +10,17 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
+from orket.adapters.storage.async_file_tools import capture_file_roots
 from orket.agents import agent as agent_module
 from orket.agents.agent import Agent
 from orket.application.middleware import TurnLifecycleInterceptors
+from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.application.services.tool_gate_service import ToolGate
+from orket.application.workflows.turn_artifact_destination import TurnArtifactDestination
+from orket.application.workflows.turn_artifact_writer import TurnArtifactWriter
+from orket.application.workflows.turn_control_plane_binding import capture_turn_control_plane_binding
 from orket.application.workflows.turn_executor import TurnExecutor
+from orket.application.workflows.turn_memory_trace_artifacts import append_memory_event, capture_memory_trace_inputs
 from orket.application.workflows.turn_tool_dispatcher import ToolDispatcher
 from orket.core.domain.execution import ExecutionTurn, ToolCall, ToolCallErrorClass
 from orket.core.domain.state_machine import StateMachine
@@ -179,7 +185,7 @@ async def _execute_turn(
         state_machine=StateMachine(),
         tool_gate=tool_gate,
         workspace=workspace_root,
-        middleware=TurnLifecycleInterceptors([]),
+        middleware=TurnLifecycleInterceptors([]), utc_now=RuntimeInputService().utc_now,
     )
     return await executor.execute_turn(
         _issue(issue_id),
@@ -190,35 +196,21 @@ async def _execute_turn(
     )
 
 
-def _dispatcher(workspace_root: Path, tool_gate: ToolGate) -> ToolDispatcher:
-    def _load_replay_tool_result(**_kwargs: Any) -> dict[str, Any] | None:
-        return None
-
-    def _persist_tool_result(**_kwargs: Any) -> None:
-        return None
-
-    def _load_operation_result(**_kwargs: Any) -> dict[str, Any] | None:
-        return None
-
-    def _persist_operation_result(**_kwargs: Any) -> None:
-        return None
-
-    def _append_protocol_receipt(**kwargs: Any) -> dict[str, Any]:
-        return dict(kwargs.get("receipt") or {})
-
+def _dispatcher(workspace_root: Path, tool_gate: ToolGate) -> tuple[ToolDispatcher, TurnArtifactWriter]:
+    writer = TurnArtifactWriter(workspace_root)
     return ToolDispatcher(
         tool_gate=tool_gate,
         middleware=TurnLifecycleInterceptors([]),
         workspace=workspace_root,
-        append_memory_event=lambda *args, **kwargs: None,
-        hash_payload=lambda payload: "hash",
-        load_replay_tool_result=_load_replay_tool_result,
-        persist_tool_result=_persist_tool_result,
-        load_operation_result=_load_operation_result,
-        persist_operation_result=_persist_operation_result,
-        append_protocol_receipt=_append_protocol_receipt,
+        append_memory_event=append_memory_event,
+        hash_payload=writer.hash_payload,
+        load_replay_tool_result=writer.load_replay_tool_result,
+        persist_tool_result=writer.persist_tool_result,
+        load_operation_result=writer.load_operation_result,
+        persist_operation_result=writer.persist_operation_result,
+        append_protocol_receipt=writer.append_protocol_receipt,
         tool_validation_error_factory=lambda violations: RuntimeError(str(violations)),
-    )
+    ), writer
 
 
 def _row(
@@ -269,7 +261,11 @@ async def _collect_rows(project_root: Path) -> list[dict[str, Any]]:
     )
 
     direct_dispatch_toolbox = _WritingToolbox(workspace_root)
-    direct_dispatcher = _dispatcher(workspace_root, deny_gate)
+    direct_dispatcher, direct_dispatch_writer = _dispatcher(workspace_root, deny_gate)
+    direct_dispatch_context = _context("ISSUE-1")
+    direct_dispatch_destination = TurnArtifactDestination(
+        writer=direct_dispatch_writer, workspace=capture_file_roots([direct_dispatch_writer.workspace])[0],
+        session_id="sess-1", issue_id="ISSUE-1", role_name="developer", role_id="DEV", turn_index=1)
     direct_dispatch_result = "blocked"
     try:
         await direct_dispatcher.execute_tools(
@@ -279,9 +275,12 @@ async def _collect_rows(project_root: Path) -> list[dict[str, Any]]:
                 content="",
                 tool_calls=[ToolCall(tool="write_file", args=tool_args)],
             ),
-            toolbox=direct_dispatch_toolbox,
-            context=_context("ISSUE-1"),
-            issue=None,
+            toolbox=direct_dispatch_toolbox, context=direct_dispatch_context,
+            destination=direct_dispatch_destination,
+            memory_inputs=capture_memory_trace_inputs(direct_dispatch_context), memory_events=None,
+            control_plane=capture_turn_control_plane_binding(
+                dispatcher=direct_dispatcher, issue_id=direct_dispatch_destination.issue_id,
+                context=direct_dispatch_context), issue=None,
         )
         direct_dispatch_result = "allowed"
     except RuntimeError:
