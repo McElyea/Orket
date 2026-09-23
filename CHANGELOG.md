@@ -5,6 +5,18 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.98] - 2026-09-22
+
+### Fixed
+- Capture Terraform artifact inputs and roots; own metadata and writes through interruption while retaining explicit partial effects.
+- Own source-attribution receipt observation and native handle closure; preserve captured policy/provenance and existing missing/invalid classifications.
+- Reject non-object receipts as insufficient claim/source evidence instead of reporting verified synthesis.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Retain interrupted calls through native settlement; supply valid claim/source receipts. Migration: `docs/architecture/CONTRACT_DELTA_DIRECT_METADATA_D_2026-09-22.md`.
+- Wider packet-2/async, Linux clock, E/CAP and full release acceptance remain open.
+
 ## [0.6.97] - 2026-09-22
 
 ### Fixed

@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-23T00:43:49.764428+00:00",
+  "generated_at": "2026-09-23T01:21:47.194813+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -2121,7 +2121,7 @@
       },
       "orket.application.terraform_review.artifacts": {
         "path": "orket/application/terraform_review/artifacts.py",
-        "sha256": "10a918ffb1c94f207658b076946a60a5b5e66cc57e0bcf1d74e7aa49bc31c54a"
+        "sha256": "2a9b5348bccb69fd6526a00bfaaa16044363654115ce74093caeb36f7b402b70"
       },
       "orket.application.terraform_review.deterministic": {
         "path": "orket/application/terraform_review/deterministic.py",
@@ -3989,11 +3989,15 @@
       },
       "orket.runtime.execution.phase_c_runtime_truth": {
         "path": "orket/runtime/execution/phase_c_runtime_truth.py",
-        "sha256": "41a2826f9f87194f1ed68dd8732f735df119c2732b95a87480e7d8a34ef5b0dc"
+        "sha256": "5a5c515c6d57e60a72c70b8edfaa2a658ddca7775bb8fa846701856c9e87da8c"
       },
       "orket.runtime.execution.pipeline_wiring_service": {
         "path": "orket/runtime/execution/pipeline_wiring_service.py",
         "sha256": "2e468a2b3c2369197923e002783f59819c45c912c61f09bd9047695297fd0ae1"
+      },
+      "orket.runtime.execution.source_attribution_receipt": {
+        "path": "orket/runtime/execution/source_attribution_receipt.py",
+        "sha256": "2d940227950593035bf786dc5eafc6f79a8153a604065adf9c7d1ee24383ee68"
       },
       "orket.runtime.execution.workload_shell": {
         "path": "orket/runtime/execution/workload_shell.py",
@@ -21607,14 +21611,14 @@
         "source": "orket.application.terraform_review.artifacts",
         "target": "orket.adapters.storage.async_file_tools",
         "path": "orket/application/terraform_review/artifacts.py",
-        "line": 6,
+        "line": 7,
         "kind": "from"
       },
       {
         "source": "orket.application.terraform_review.artifacts",
         "target": "orket.application.terraform_review.models",
         "path": "orket/application/terraform_review/artifacts.py",
-        "line": 8,
+        "line": 9,
         "kind": "from"
       },
       {
@@ -31447,16 +31451,23 @@
       },
       {
         "source": "orket.runtime.execution.phase_c_runtime_truth",
-        "target": "orket.runtime.idempotency_discipline_policy",
+        "target": "orket.runtime.execution.source_attribution_receipt",
         "path": "orket/runtime/execution/phase_c_runtime_truth.py",
         "line": 13,
         "kind": "from"
       },
       {
         "source": "orket.runtime.execution.phase_c_runtime_truth",
-        "target": "orket.runtime.run_summary_artifact_provenance",
+        "target": "orket.runtime.idempotency_discipline_policy",
         "path": "orket/runtime/execution/phase_c_runtime_truth.py",
         "line": 14,
+        "kind": "from"
+      },
+      {
+        "source": "orket.runtime.execution.phase_c_runtime_truth",
+        "target": "orket.runtime.run_summary_artifact_provenance",
+        "path": "orket/runtime/execution/phase_c_runtime_truth.py",
+        "line": 15,
         "kind": "from"
       },
       {
@@ -31513,6 +31524,20 @@
         "target": "orket.application.workflows.orchestrator",
         "path": "orket/runtime/execution/pipeline_wiring_service.py",
         "line": 81,
+        "kind": "from"
+      },
+      {
+        "source": "orket.runtime.execution.source_attribution_receipt",
+        "target": "orket.adapters.execution.owned_io",
+        "path": "orket/runtime/execution/source_attribution_receipt.py",
+        "line": 8,
+        "kind": "from"
+      },
+      {
+        "source": "orket.runtime.execution.source_attribution_receipt",
+        "target": "orket.adapters.storage.async_file_tools",
+        "path": "orket/runtime/execution/source_attribution_receipt.py",
+        "line": 9,
         "kind": "from"
       },
       {
@@ -34096,7 +34121,7 @@
         "forwarded_arguments": 2
       }
     ],
-    "files_scanned": 1161,
+    "files_scanned": 1162,
     "scan_roots": [
       "orket"
     ],
@@ -35071,6 +35096,7 @@
       "orket.runtime.execution.live_acceptance_contracts": "application",
       "orket.runtime.execution.phase_c_runtime_truth": "application",
       "orket.runtime.execution.pipeline_wiring_service": "application",
+      "orket.runtime.execution.source_attribution_receipt": "application",
       "orket.runtime.execution.workload_shell": "application",
       "orket.runtime.execution_pipeline": "application",
       "orket.runtime.execution_pipeline_artifact_provenance": "application",
@@ -35279,12 +35305,12 @@
       {
         "source": "application",
         "target": "adapters",
-        "count": 461
+        "count": 463
       },
       {
         "source": "application",
         "target": "application",
-        "count": 1852
+        "count": 1853
       },
       {
         "source": "application",
@@ -38933,45 +38959,6 @@
   },
   "diff_ledger": [
     {
-      "run_at_utc": "2026-09-22T08:07:57.607281Z",
-      "changed": true,
-      "before_digest": "sha256:97b8a3534db184a6aa27b1b400f5c3b308eebd1cb97fef5cf1514c26d2a0f0da",
-      "after_digest": "sha256:ec35a1ef0532638c101b060aac68f4f56bfb6cf404c79691bbc7ce2e5ceff3e4",
-      "diff": {
-        "added_paths": 14,
-        "removed_paths": 0,
-        "changed_paths": 10945,
-        "initial_write": false,
-        "paths_total_previous": 49105,
-        "paths_total_current": 49214,
-        "paths_total_reference": 49214,
-        "churn_paths": 10959,
-        "churn_ratio": 0.222681,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.edges[196].line",
-          "$.observed.edges[196].path",
-          "$.observed.edges[196].source",
-          "$.observed.edges[196].target",
-          "$.observed.edges[197].line",
-          "$.observed.edges[197].path",
-          "$.observed.edges[197].source",
-          "$.observed.edges[197].target",
-          "$.observed.edges[198].line",
-          "$.observed.edges[198].target",
-          "$.observed.edges[199].line",
-          "$.observed.edges[199].target",
-          "$.observed.edges[200].line",
-          "$.observed.edges[200].target",
-          "$.observed.edges[201].line",
-          "$.observed.edges[201].path",
-          "$.observed.edges[201].source",
-          "$.observed.edges[201].target",
-          "$.observed.edges[202].line"
-        ]
-      }
-    },
-    {
       "run_at_utc": "2026-09-22T09:02:55.008698Z",
       "changed": true,
       "before_digest": "sha256:ec35a1ef0532638c101b060aac68f4f56bfb6cf404c79691bbc7ce2e5ceff3e4",
@@ -39904,6 +39891,45 @@
           "$.observed.edges[1429].line",
           "$.observed.edges[1430].line",
           "$.observed.modules.orket.application.services.outward_connector_service.sha256"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-23T01:22:10.057756Z",
+      "changed": true,
+      "before_digest": "sha256:4efdc8d58746f17ceea1537328c9ed8b2e8a2fffed42d23cb471303a1dc6f6dc",
+      "after_digest": "sha256:da8939f4efbd16e42cbc99ecbf7b016fc89332b36acfa0f80e67dc49c3320bea",
+      "diff": {
+        "added_paths": 5,
+        "removed_paths": 0,
+        "changed_paths": 1303,
+        "initial_write": false,
+        "paths_total_previous": 57501,
+        "paths_total_current": 57541,
+        "paths_total_reference": 57541,
+        "churn_paths": 1308,
+        "churn_ratio": 0.022732,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.edges[2037].line",
+          "$.observed.edges[2038].line",
+          "$.observed.edges[3443].target",
+          "$.observed.edges[3444].target",
+          "$.observed.edges[3445].line",
+          "$.observed.edges[3445].path",
+          "$.observed.edges[3445].source",
+          "$.observed.edges[3445].target",
+          "$.observed.edges[3446].line",
+          "$.observed.edges[3446].target",
+          "$.observed.edges[3447].line",
+          "$.observed.edges[3447].target",
+          "$.observed.edges[3448].line",
+          "$.observed.edges[3448].target",
+          "$.observed.edges[3449].line",
+          "$.observed.edges[3449].target",
+          "$.observed.edges[3450].line",
+          "$.observed.edges[3450].target",
+          "$.observed.edges[3451].line"
         ]
       }
     }

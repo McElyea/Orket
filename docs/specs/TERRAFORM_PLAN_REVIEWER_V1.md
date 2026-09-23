@@ -1,6 +1,6 @@
 # Terraform Plan Reviewer V1
 
-Last updated: 2026-04-24
+Last updated: 2026-09-22
 Status: Active
 Owner: Orket Core
 Source requirements: [docs/projects/archive/terraform-plan-review/TP03222026/requirements.md](docs/projects/archive/terraform-plan-review/TP03222026/requirements.md)
@@ -165,6 +165,16 @@ Each execution must preserve, directly or by stable reference:
 * policy bundle id
 
 ## 10. Verification Gate
+
+Artifact bundle publication captures its lexical workspace and nested payloads
+before the first await. Path resolution and filesystem operations use the shared
+owned file capability. Caller mutation or a later working-directory change cannot
+redirect admitted bundle inputs or change the payload committed by its hashes.
+Cancellation retains an admitted native operation until settlement, then stops
+further bundle admission. Already written files may remain; the bundle is not an
+atomic transaction. Returned paths describe resolved observations and do not
+provide handle-bound confinement against concurrent filesystem replacement.
+Migration: `docs/architecture/CONTRACT_DELTA_DIRECT_METADATA_D_2026-09-22.md`.
 
 This lane has two independent proof obligations:
 

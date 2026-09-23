@@ -39,6 +39,16 @@ Other log producers keep their current contracts. Migration and scope:
 `docs/specs/CONNECTOR_INVOCATION_TIMING.md` and
 `docs/architecture/CONTRACT_DELTA_CONNECTOR_LOGGING_D_2026-09-22.md`.
 
+Terraform artifact publication captures its workspace and nested payloads; shared
+file capabilities own metadata and writes through interruption. Source-attribution
+observation captures its receipt path and derived policy/provenance, then owns
+existence/read/decode/close as one native operation. Non-object JSON has no claim
+or source evidence and cannot verify synthesis. Existing missing/invalid receipt
+classifications and partial artifact effects remain explicit. Contracts and migration:
+`docs/specs/TERRAFORM_PLAN_REVIEWER_V1.md`,
+`docs/specs/TRUTHFUL_RUNTIME_SOURCE_ATTRIBUTION_CONTRACT.md` and
+`docs/architecture/CONTRACT_DELTA_DIRECT_METADATA_D_2026-09-22.md`.
+
 SDK workload parents validate configured capability identifiers before dispatch without
 constructing unused providers. The native child owns default model clients through
 construction, authorization, execution and cleanup; a cleanup failure cannot publish

@@ -12474,12 +12474,13 @@ Close the whole lane only after user acceptance of proof and explicit closure or
 retirement of remaining scope. Archive completed slice documents under
 `docs/projects/archive/architectural-truth/` while this umbrella remains active
 for later slices. Extract durable contracts before archiving project history.
-Follow contributor version/changelog/tag policy when committing. The latest user instruction requires local commits and annotated
-version tags only, with no GitHub pushes during this session. Earlier publication
-authorizations and published checkpoint notes remain historical records.
-Version 0.6.64 is the last remotely published checkpoint; 0.6.65 onward are local
-only. Do not infer renewed push authorization from elapsed time or work hours.
-Each checkpoint records its exact verification and publication disposition.
+Follow contributor version/changelog/tag policy when committing. The user renewed
+GitHub push authorization after the temporary local-only restriction. Scoped commits,
+matching annotated version tags and branch/tag publication are authorized; a main
+merge and whole-lane retirement are not. Earlier local-only checkpoint observations
+remain historical. Each checkpoint records its exact verification and publication
+disposition. The September 22 wrap-up request stops new implementation after .98
+and prepares the next session; the lane remains active.
 
 Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
@@ -12519,7 +12520,12 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
 
 Next action: complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
-0.6.92 Provider inference inputs and native ownership, retaining
+0.6.98 artifact/source-attribution boundary. Next is packet-2 protocol receipt
+discovery and file-audit ownership, using the retained source/installed counterexamples
+in the .98 checkpoint below. Preserve 0.6.97 interrupted connector logging,
+0.6.96 Gitea export ownership, 0.6.95 short HTTP ownership, 0.6.94 Gitea request
+inputs, 0.6.93 Gitea HTTP composition and all earlier accepted behavior, including
+0.6.92 provider inference inputs and native ownership, retaining
 0.6.91 Provider HTTP catalog inputs and native ownership,
 0.6.90 Provider and shared command input capture,
 0.6.89 OpenClaw interactive process ownership,
@@ -12543,7 +12549,7 @@ and CAP acceptance. The graph now has zero forbidden pairs, cross-layer cycles,
 unknown modules or analysis errors; six bounded routes are explicitly recognized.
 Preserve every failed and
 passing source/native observation and the historical clock diagnosis. Canonical
-Ruff has 89 findings at the .92 checkpoint. The prior stale benchmark expectation passes in the
+Ruff has 88 existing findings and zero introduced findings at .98. The prior stale benchmark expectation passes in the
 new source/native selection. The unmodified published .39 complete rerun has
 7,260 passes, three failures and 89 skips; its coverage is 84.56120595327887%
 against the unchanged 89% gate. The two parent-Git-dependent fixture failures and
@@ -23042,3 +23048,98 @@ explicit user acceptance is required for retirement.
 
 Authority: docs/specs/CONNECTOR_INVOCATION_TIMING.md and its .97 contract delta.
 Proof root: .tmp/d-connector-logging/.
+
+
+#### .98 Artifact and source-receipt filesystem ownership (2026-09-22)
+
+Responsible maintainer: Codex for Orket Core. Canonical D3 after .97.
+`compatibility_status`: `breaking`; `affected_audience`: `all`;
+`migration_requirement`: `required`.
+
+Terraform artifact publication captures lexical workspace and nested payloads
+before yielding. Existing file capabilities own path resolution and admitted
+writes. Cancellation drains the admitted operation and prevents later bundle
+admission; written files may remain, including a completed physical manifest when
+interrupted during its write. No atomic bundle or rollback guarantee is added.
+The source-attribution collector captures derived policy/provenance before one
+native existence/read/decode/close observation with a captured lexical path.
+Repeated cancellation or caller timeout cannot abandon its admitted native handle.
+Missing and invalid-JSON classifications remain. Valid non-object JSON emits the
+existing missing-claims/sources tokens, correcting the old bypass of the existing
+non-empty evidence requirement. Required mode blocks; optional mode is unverified.
+Existing receipt bytes and historical proof are not rewritten.
+
+Identical .97 source/exact installed opening: 20 cases, 16 failures, four healthy
+passes. Two held metadata controls and six metadata-lifetime controls fail at
+loop-thread observation; two input controls expose later cwd/caller mutation;
+two read-lifetime controls return before native handles settle; four non-object
+receipts incorrectly claim verified synthesis. Actual old bundle readback in both
+cells spans original/changed roots and includes later nested payload mutation.
+This is not a digest/content mismatch claim. Four old physical files are retained
+and bound separately. All four tracked opening modules are exact byte copies.
+Initial repair: 20 passes. Expanded/final focused: 89 passes, including 37 new
+integration cases and 52 existing controlled workload/summary/recovery cases.
+New parity controls cover partial files, read-only classification and captured
+provenance. Existing tests, native/file owners, Terraform decisions, digest owner,
+finalization and provenance normalization stay unchanged. The oversized phase-C
+module stays at 629 lines; its collector shrinks to 76 lines, with a 24-line native
+receipt capability extracted. Other phase-C functions remain AST-equivalent and
+still carry their existing broader async obligations.
+
+| Cell | Tests / failures / errors / skips | JUnit seconds | Installed origins |
+|---|---|---|---|
+| Fresh source | 2465 / 0 / 0 / 0 | 459.543 | source |
+| Installed a98-win-py311 | 2465 / 0 / 0 / 0 | 512.248 | 1053 |
+| Installed a98-win-py312 | 2465 / 0 / 0 / 0 | 588.630 | 1053 |
+
+All 2,376 .97 identities remain across 239 modules. Each cell records 188 actual
+SQLite observations below unchanged 0.5s; maximum 0.158956600s. Complete package
+parity: 1,162 Python plus 20 unchanged data files; 2417
+support inputs. Canonical C: 1,162 modules, 3,817 edges, six dynamic routes, zero
+violations/unknowns/cycles/analysis/adapter-effect errors. Ruff: 88 existing, zero
+introduced. Scoped lint, size/no-growth, documentation, metadata and whitespace
+pass. AC-01 through AC-08 and AC-10 pass; AC-09 remains partial for wider replay.
+Baseline collection true; release_ready false. Both Quality jobs include affected
+controls; hosted Quality is not run. Proof is actual local files/SQLite/native
+resources plus controlled workload/summary regressions. No fresh cloud, model,
+Gitea or installed public CLI acceptance is claimed. .96 Gitea proof is retained.
+All 21,713 original and 123 .97 sealed hashes verify; original checkout unchanged.
+
+Fresh structural async inventory: 235 candidates in 79 of 1,162 modules. Seven
+direct spellings leave the inventory at these repaired boundaries. Reviewed
+dispositions retain six non-filesystem methods, two non-file contexts, 12 sites
+owned on named routes, two conditional outer owners and 213 pending sites. This
+does not establish global reachability or count violations; transitive synchronous
+callees and raw embeddings require review. The .97 source-review qualifications
+remain; this checkpoint updates artifact string-replacement recognition by receiver
+instead of its old line number. The extracted native receipt body is excluded by
+the inventory's explicit nearest-async-function rule, not claimed absent I/O.
+
+Next packet-2 controls run identically on source and exact installed Python 3.11
+.98: six cases,
+three held-path failures and three healthy passes. Protocol-root existence,
+recursive receipt discovery and resulting artifact existence audit still run on
+the loop. Controlled 750ms holds delay independent SQLite beyond unchanged 0.5s;
+timers/admitted work are joined. Actual protocol receipt and output files remain
+unchanged. These unrepaired observations are retained at next-packet-source-py311/ and
+next-packet-installed/ under .tmp/d-direct-metadata/. Continue packet-2 discovery,
+file-audit and transitive input/lifetime ownership without replacing stored receipt
+or provenance authority. Initial tool Python 3.13 at next-packet-source/ reports
+six cases/two failures/four passes: its discovery hook observes an off-loop scan,
+so that pass is not protocol discovery responsiveness proof. This observation
+remains retained; fresh source 3.11 matches installed 3.11. Independent physical
+readback verifies all 36 receipt/output files across the three diagnostic cells. Wider runtime evidence/read-context/logging remains open.
+
+Retain .95 Linux clock blocker: elapsed240.019511342s, quiet25.211878083s vs60s,
+steps-6.018610816/+6.026590404s vs unchanged0.01s. Receipt:
+.tmp/d-short-http-ownership/linux-clock-preflight.json, SHA 2002c0e34e9d889dec2d8ff5f409f03805d48511d7d7496b5fcb9ea110370d0e.
+No fresh clock observation/settings change/Linux application proof. Wider D2/D3/D4,
+lazy TLS, E1/E2/full89%coverage, ProductFlow replay, legacy Kernel cutover, selected
+llama.cpp and CAP-1/2/3 remain. Prior unknown Git timeout, physical sleep, Windows
+latency and CPython3.12 shutdown observations remain retained. No whole-plan
+completion, main merge, release readiness or retirement; explicit user acceptance
+is still required for retirement.
+
+Authority: docs/specs/TERRAFORM_PLAN_REVIEWER_V1.md,
+docs/specs/TRUTHFUL_RUNTIME_SOURCE_ATTRIBUTION_CONTRACT.md and the .98 delta.
+Proof root: .tmp/d-direct-metadata/.

@@ -10,6 +10,7 @@ from typing import Any, Protocol
 import aiofiles
 
 from orket.naming import sanitize_name
+from orket.runtime.execution.source_attribution_receipt import observe_source_receipt
 from orket.runtime.idempotency_discipline_policy import idempotency_discipline_policy_snapshot
 from orket.runtime.run_summary_artifact_provenance import normalize_artifact_provenance_facts
 
@@ -81,21 +82,18 @@ async def collect_source_attribution_facts(
     normalized_policy = normalize_truthful_runtime_policy(policy)
     receipt_path = Path(workspace) / SOURCE_ATTRIBUTION_RECEIPT_PATH
     provenance_entry = _source_receipt_provenance_entry(artifact_provenance_facts)
-    should_emit = bool(normalized_policy.get("configured")) or receipt_path.exists() or provenance_entry is not None
+    exists, payload, invalid_json = await observe_source_receipt(receipt_path)
+    should_emit = bool(normalized_policy.get("configured")) or exists or provenance_entry is not None
     if not should_emit:
         return {}
 
     missing_requirements: list[str] = []
     claims: list[dict[str, Any]] = []
     sources: list[dict[str, Any]] = []
-    if not receipt_path.exists():
+    if not exists:
         missing_requirements.append("source_attribution_receipt_missing")
     else:
-        try:
-            async with aiofiles.open(receipt_path, encoding="utf-8") as handle:
-                payload = json.loads(await handle.read())
-        except (OSError, ValueError, TypeError):
-            payload = None
+        if invalid_json:
             missing_requirements.append("source_attribution_receipt_invalid_json")
         if isinstance(payload, dict):
             claims = _normalize_source_attribution_claims(payload.get("claims"))
@@ -112,6 +110,8 @@ async def collect_source_attribution_facts(
                 missing_requirements.append("source_attribution_claims_missing")
             if sources and any(set(row.keys()) != set(_SOURCE_ATTRIBUTION_REQUIRED_SOURCE_FIELDS) for row in sources):
                 missing_requirements.append("source_attribution_source_fields_missing")
+        elif not invalid_json:
+            missing_requirements.extend(["source_attribution_claims_missing", "source_attribution_sources_missing"])
 
     missing_requirements = sorted(set(missing_requirements))
     mode = str(normalized_policy.get("source_attribution_mode") or "optional")

@@ -1,6 +1,6 @@
 # Truthful Runtime Source Attribution Contract
 
-Last updated: 2026-03-27
+Last updated: 2026-09-22
 Status: Active
 Owner: Orket Core
 Phase closeout authority: `docs/projects/archive/truthful-runtime/TRH03162026-PHASE-C-CLOSEOUT/CLOSEOUT.md`
@@ -92,6 +92,18 @@ Receipt rules:
 2. `sources` must be a non-empty list for verified synthesis.
 3. every claim `source_ids` set must be a subset of declared source `source_id` values.
 4. additive metadata is allowed, but the required claim/source fields must remain present and non-empty.
+5. A valid JSON value that is not an object has no claim or source evidence. It
+   emits `source_attribution_claims_missing` and `source_attribution_sources_missing`;
+   it cannot produce `verified` synthesis. This corrects the earlier non-object bypass.
+
+Receipt observation captures its lexical path, normalized policy and provenance
+before the first await. One owned native operation checks existence and, when
+present, reads, decodes and closes the receipt. Repeated cancellation or caller
+timeout retains admitted native work through settlement. Missing receipts and
+invalid JSON retain their existing classifications; a metadata failure remains an
+error. This is an observation of a mutable file, not a transaction, a filesystem
+confinement guarantee or a hard filesystem deadline. Other packet-2 collection
+paths retain their existing contracts and remaining async obligations.
 
 Stable `missing_requirements` values:
 1. `source_attribution_receipt_missing`
@@ -113,6 +125,9 @@ Stable `missing_requirements` values:
 1. When `synthesis_status = blocked` and the finalized run would otherwise be `done`, the runtime must downgrade the run to `terminal_failure`.
 2. The terminal `failure_reason` must be the first stable missing-requirement token.
 3. High-stakes source attribution gating must be machine-readable and must not rely on prose-only warnings.
+
+Filesystem and receipt migration:
+`docs/architecture/CONTRACT_DELTA_DIRECT_METADATA_D_2026-09-22.md`.
 
 ## Live Evidence Authority
 
