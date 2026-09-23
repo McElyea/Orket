@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-23T00:01:26.001844+00:00",
+  "generated_at": "2026-09-23T00:43:49.764428+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -1613,7 +1613,7 @@
       },
       "orket.application.services.outward_connector_service": {
         "path": "orket/application/services/outward_connector_service.py",
-        "sha256": "4ca3da0002043f06742a99955ef736042de553eb4704ac8a019ce7bc0710cab4"
+        "sha256": "171a17da2591637985d77d2f49363de3c0bf8b14082ead578209063c12855f77"
       },
       "orket.application.services.outward_control_plane_service": {
         "path": "orket/application/services/outward_control_plane_service.py",
@@ -17281,84 +17281,84 @@
         "source": "orket.application.services.outward_connector_service",
         "target": "orket.adapters.execution.owned_io",
         "path": "orket/application/services/outward_connector_service.py",
-        "line": 15,
+        "line": 17,
         "kind": "from"
       },
       {
         "source": "orket.application.services.outward_connector_service",
         "target": "orket.adapters.storage.async_file_tools",
         "path": "orket/application/services/outward_connector_service.py",
-        "line": 16,
+        "line": 18,
         "kind": "from"
       },
       {
         "source": "orket.application.services.outward_connector_service",
         "target": "orket.adapters.storage.bound_filesystem",
         "path": "orket/application/services/outward_connector_service.py",
-        "line": 17,
+        "line": 19,
         "kind": "from"
       },
       {
         "source": "orket.application.services.outward_connector_service",
         "target": "orket.adapters.tools.builtin_connectors",
         "path": "orket/application/services/outward_connector_service.py",
-        "line": 18,
+        "line": 20,
         "kind": "from"
       },
       {
         "source": "orket.application.services.outward_connector_service",
         "target": "orket.adapters.tools.registry",
         "path": "orket/application/services/outward_connector_service.py",
-        "line": 19,
+        "line": 21,
         "kind": "from"
       },
       {
         "source": "orket.application.services.outward_connector_service",
         "target": "orket.application.services.command_process_supervisor",
         "path": "orket/application/services/outward_connector_service.py",
-        "line": 24,
+        "line": 26,
         "kind": "from"
       },
       {
         "source": "orket.application.services.outward_connector_service",
         "target": "orket.application.services.connector_invocation_timing",
         "path": "orket/application/services/outward_connector_service.py",
-        "line": 25,
+        "line": 27,
         "kind": "from"
       },
       {
         "source": "orket.application.services.outward_connector_service",
         "target": "orket.application.services.owned_http_request_service",
         "path": "orket/application/services/outward_connector_service.py",
-        "line": 26,
+        "line": 28,
         "kind": "from"
       },
       {
         "source": "orket.application.services.outward_connector_service",
         "target": "orket.application.services.runtime_input_service",
         "path": "orket/application/services/outward_connector_service.py",
-        "line": 27,
+        "line": 29,
         "kind": "from"
       },
       {
         "source": "orket.application.services.outward_connector_service",
         "target": "orket.core.contracts.owned_command",
         "path": "orket/application/services/outward_connector_service.py",
-        "line": 28,
+        "line": 30,
         "kind": "from"
       },
       {
         "source": "orket.application.services.outward_connector_service",
         "target": "orket.core.domain.outward_authorization",
         "path": "orket/application/services/outward_connector_service.py",
-        "line": 29,
+        "line": 31,
         "kind": "from"
       },
       {
         "source": "orket.application.services.outward_connector_service",
         "target": "orket.logging",
         "path": "orket/application/services/outward_connector_service.py",
-        "line": 30,
+        "line": 32,
         "kind": "from"
       },
       {
@@ -38933,45 +38933,6 @@
   },
   "diff_ledger": [
     {
-      "run_at_utc": "2026-09-22T07:30:10.712290Z",
-      "changed": true,
-      "before_digest": "sha256:8df389152fec7f49d0d1f6159c0fee2de94b0eee548e3bb9921d8800c3a84e78",
-      "after_digest": "sha256:97b8a3534db184a6aa27b1b400f5c3b308eebd1cb97fef5cf1514c26d2a0f0da",
-      "diff": {
-        "added_paths": 46,
-        "removed_paths": 0,
-        "changed_paths": 11044,
-        "initial_write": false,
-        "paths_total_previous": 48674,
-        "paths_total_current": 49105,
-        "paths_total_reference": 49105,
-        "churn_paths": 11090,
-        "churn_ratio": 0.225843,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.edges[188].line",
-          "$.observed.edges[188].path",
-          "$.observed.edges[188].source",
-          "$.observed.edges[188].target",
-          "$.observed.edges[189].line",
-          "$.observed.edges[189].path",
-          "$.observed.edges[189].source",
-          "$.observed.edges[189].target",
-          "$.observed.edges[190].line",
-          "$.observed.edges[190].path",
-          "$.observed.edges[190].source",
-          "$.observed.edges[190].target",
-          "$.observed.edges[191].line",
-          "$.observed.edges[191].target",
-          "$.observed.edges[192].line",
-          "$.observed.edges[192].target",
-          "$.observed.edges[193].line",
-          "$.observed.edges[193].target",
-          "$.observed.edges[194].line"
-        ]
-      }
-    },
-    {
       "run_at_utc": "2026-09-22T08:07:57.607281Z",
       "changed": true,
       "before_digest": "sha256:97b8a3534db184a6aa27b1b400f5c3b308eebd1cb97fef5cf1514c26d2a0f0da",
@@ -39910,6 +39871,39 @@
           "$.observed.edges[377].line",
           "$.observed.edges[377].path",
           "$.observed.edges[377].source"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-23T00:44:12.404009Z",
+      "changed": true,
+      "before_digest": "sha256:66e84da5f50675242ab32b6cb8d7ea4a468722b893bd293de9c0dc18abf6f365",
+      "after_digest": "sha256:4efdc8d58746f17ceea1537328c9ed8b2e8a2fffed42d23cb471303a1dc6f6dc",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 14,
+        "initial_write": false,
+        "paths_total_previous": 57501,
+        "paths_total_current": 57501,
+        "paths_total_reference": 57501,
+        "churn_paths": 14,
+        "churn_ratio": 0.000243,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.edges[1419].line",
+          "$.observed.edges[1420].line",
+          "$.observed.edges[1421].line",
+          "$.observed.edges[1422].line",
+          "$.observed.edges[1423].line",
+          "$.observed.edges[1424].line",
+          "$.observed.edges[1425].line",
+          "$.observed.edges[1426].line",
+          "$.observed.edges[1427].line",
+          "$.observed.edges[1428].line",
+          "$.observed.edges[1429].line",
+          "$.observed.edges[1430].line",
+          "$.observed.modules.orket.application.services.outward_connector_service.sha256"
         ]
       }
     }

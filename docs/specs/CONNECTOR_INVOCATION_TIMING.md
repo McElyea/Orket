@@ -1,7 +1,7 @@
 # Connector invocation timing
 
 Status: Active contract
-Last updated: 2026-09-13
+Last updated: 2026-09-22
 Owner: Orket Core
 
 ## Authority and measurement
@@ -60,10 +60,22 @@ include `process_lifetime` when observed. They do not
 fabricate a returned effect result, `tool_invoked` event or completed receipt.
 The durable effect owner retains unresolved dispatch intent.
 
-Supporting log delivery follows the existing bounded logging queue and may be
-dropped with queue diagnostics. The event has no session identity, so it is
-retained in the workspace log when delivered; it does not create a session
-runtime-event artifact by itself. It is not recovery authority.
+Interrupted connector telemetry uses an owned native publication attempt. The
+invocation captures its lexical logging root before the first await; event inputs
+are copied before native dispatch. Directory preparation, synchronous logging
+sinks, workspace writes and subscriber calls settle before the original connector
+exception leaves its caller, including repeated cancellation or caller timeout.
+Expected telemetry failures are diagnosed without replacing that original exception.
+If the diagnostic sink also fails, a non-secret note on the original exception
+identifies both failure types; the primary outcome and its identity remain intact.
+This path no longer uses the optional lossy queue. Other producers retain their
+existing delivery contracts. A blocked native sink keeps this finalizer pending.
+
+The event has no session identity, so it is retained in the workspace log when
+delivered; it does not create a session runtime-event artifact by itself. It is not
+recovery authority. Timing still measures the connector invocation and cleanup;
+the subsequent supporting publication is outside that measured interval. The
+publication does not authorize a retry, completed receipt or remote rollback.
 
 An observed receipt commits the timing it actually captured. Publication retry
 must reuse the complete retained receipt and digest without sampling a new

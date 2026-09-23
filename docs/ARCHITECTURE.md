@@ -60,6 +60,15 @@ Raw exporter/Git embeddings supply the command port. Contract and migration:
 `docs/specs/GITEA_ARTIFACT_EXPORT_CONTRACT.md` and
 `docs/architecture/CONTRACT_DELTA_GITEA_EXPORT_OWNERSHIP_D_2026-09-22.md`.
 
+Interrupted connector telemetry captures its invocation root and retains one
+native publication attempt through directory work, writes and logging sinks.
+Repeated cancellation and supporting-log failures preserve the original connector
+exception. A failed diagnostic sink adds a non-secret note to that exception.
+Timing retains its invocation scope; logs grant no effect or recovery authority.
+Other log producers keep their current contracts. Migration and scope:
+`docs/specs/CONNECTOR_INVOCATION_TIMING.md` and
+`docs/architecture/CONTRACT_DELTA_CONNECTOR_LOGGING_D_2026-09-22.md`.
+
 SDK workload parents validate configured capability identifiers before dispatch without
 constructing unused providers. The native child owns default model clients through
 construction, authorization, execution and cleanup; a cleanup failure cannot publish

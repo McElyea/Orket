@@ -1,6 +1,6 @@
 # Dependency Graph Snapshot
 
-Generated: `2026-09-23T00:01:26.001844+00:00`
+Generated: `2026-09-23T00:43:49.764428+00:00`
 
 Generated from the canonical dependency policy; do not edit this view by hand.
 This is conservative static import evidence, not a runtime call graph or a core-purity proof.

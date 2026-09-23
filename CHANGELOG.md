@@ -5,6 +5,18 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.97] - 2026-09-22
+
+### Fixed
+- Own interrupted-connector log preparation, writes and sinks in native work while preserving the original connector exception through repeated cancellation and telemetry failure.
+- Capture the invocation logging root; diagnose a failed logging diagnostic sink through a non-secret note on the original exception.
+- Preserve connector timing scope, effect uncertainty and recovery authority. Other telemetry producers retain their existing delivery contracts.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Retain interrupted invocation tasks until their native log attempt settles. Migration: `docs/architecture/CONTRACT_DELTA_CONNECTOR_LOGGING_D_2026-09-22.md`.
+- Wider async reachability, Linux clock, E/CAP and full release acceptance remain open.
+
 ## [0.6.96] - 2026-09-22
 
 ### Fixed

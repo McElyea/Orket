@@ -22956,3 +22956,89 @@ Windows latency and CPython 3.12 shutdown observations. No whole-plan completion
 main merge, release readiness or lane retirement; explicit user acceptance required.
 
 Authority: docs/specs/GITEA_ARTIFACT_EXPORT_CONTRACT.md and its .96 contract delta.
+
+
+#### .97 Owned interrupted-connector telemetry (2026-09-22)
+
+Responsible maintainer: Codex for Orket Core. Canonical D3 after .96.
+`compatibility_status`: `breaking`; `affected_audience`: `all`;
+`migration_requirement`: `required`.
+
+Interrupted connector calls capture their logging root before the first await and
+copy publication inputs. The existing native owner retains directory work, writes,
+standard logging sinks and subscribers before the original connector exception
+propagates. Repeated cancellation and caller timeout cannot abandon that admitted
+work. Expected publication failures remain supporting diagnostics; if the diagnostic
+sink also fails, the original exception keeps its identity and gains a non-secret
+note naming both failure types. Native logging no longer selects the optional queue
+for this producer. That is an explicit delivery-lifetime change, not a correction
+to an old durable-delivery promise. Other producers retain their contracts.
+Timing still excludes subsequent supporting publication; its fields, thresholds,
+unavailable states and effect/recovery authority remain unchanged.
+
+Same .96 source/exact installed opening: 3 cases, 2 failures, 1 healthy pass. The
+first holds actual directory work on the loop; the second demonstrates a queued
+write outliving its caller, against the proposed stronger ownership boundary. The
+tracked opening module is byte-identical to that retained diagnostic. Initial
+repair: 27 passes. Expanded actual trust-file/logging tests found one case where
+a broken diagnostic sink masked the original FileNotFoundError (10 cases, 1 failure).
+After repair, 39 pass; adding ordinary caller timeout gives 40 final focused passes.
+These include all 14 new integration cases and 26 retained timing/API-uncertainty
+cases. The native sink failure remains retained; a lint-only suppress spelling
+correction does not weaken cancellation handling. Existing tests and the logger,
+worker/process owners, deadline logic and timing schema remain unchanged.
+
+| Cell | Tests / failures / errors / skips | JUnit seconds | Installed origins |
+|---|---|---|---|
+| Fresh source | 2376 / 0 / 0 / 0 | 423.119 | source |
+| Installed a97-win-py311 | 2376 / 0 / 0 / 0 | 425.367 | 1047 |
+| Installed a97-win-py312 | 2376 / 0 / 0 / 0 | 529.353 | 1047 |
+
+All 2,336 .96 identities remain across 229 modules. Each cell records 169 actual
+SQLite observations below the unchanged 0.5s bound; maximum 0.164578300s.
+Complete source/wheel/sdist parity: 1,161 Python plus 20 unchanged data files;
+2410 support inputs. Canonical C: 1,161 modules, 3,814 edges,
+six dynamic routes, no violations/unknowns/cycles/collection/adapter-effect errors.
+Ruff: 88 existing, zero introduced. Scoped lint, size/no-growth, documentation,
+metadata and whitespace pass. AC-01 through AC-08 and AC-10 pass; AC-09 remains
+partial for broader replay. Baseline collection is true; release_ready is false.
+Both Quality jobs select the new and affected timing/uncertainty controls; hosted
+Quality is not run. Proof is actual local HTTP/files/logging/trust errors/SQLite
+and native process/API uncertainty. No fresh Gitea, model or installed public CLI
+acceptance is claimed; .96 Gitea proof is retained. All 21,713 original and 133 .96
+sealed hashes verify, and original C:/Source/Orket remains unchanged.
+
+The fresh structural async inventory records 242 candidates in 79 modules, down
+by the nine export sites removed in .96. Initial source review identifies six
+non-filesystem methods, two non-file contexts, 12 sites owned on reviewed routes,
+and two raw adapter sites with only conditional outer ownership. The remaining
+220 require review. These are not counts of violations or a whole-D3 pass. Retain
+receiver/caller/input/lifetime qualifications in async-review-dispositions.json.
+The initial review helper failed on a duplicate dictionary key before writing a
+report; a separate corrected helper retains the original candidate reason.
+
+Next direct-filesystem controls run unchanged on source and the exact installed
+.97 wheel: four cases, two held-path failures and two healthy passes. Actual
+Terraform artifact publication resolves its artifact path on the loop; actual
+source-attribution observation checks receipt existence on the loop. Controlled
+750ms holds delay independent SQLite beyond 0.5s. Timers and admitted work are
+joined. These are unrepaired next-scope observations, not Terraform cloud/model
+acceptance. Receipts: next-metadata-source/ and next-metadata-installed/ under
+.tmp/d-connector-logging/. Preserve actual publication contents/provenance and
+missing-receipt semantics while repairing metadata observation. Other direct
+runtime evidence/read-context filesystem checks and logging callers still need
+disposition; the .96 logging inventory has 156 direct imported calls in 47 files,
+not 156 established violations. Owned, conditional and pending routes remain distinct.
+
+Retain .95 Linux clock blocker: 240.019511342s elapsed, 25.211878083s quiet against
+required 60s, steps -6.018610816s to +6.026590404s against unchanged 0.01s.
+Receipt: .tmp/d-short-http-ownership/linux-clock-preflight.json, SHA 2002c0e34e9d889dec2d8ff5f409f03805d48511d7d7496b5fcb9ea110370d0e.
+No new clock observation, settings change or Linux application proof. Wider
+D2/D3/D4, lazy TLS, E1/E2/full 89% coverage, ProductFlow replay, legacy Kernel
+cutover, actual selected llama.cpp and CAP-1/2/3 remain open. Prior unknown Git
+timeout, physical sleep, Windows latency and CPython 3.12 shutdown observations
+remain. No whole-plan completion, main merge, release readiness or retirement;
+explicit user acceptance is required for retirement.
+
+Authority: docs/specs/CONNECTOR_INVOCATION_TIMING.md and its .97 contract delta.
+Proof root: .tmp/d-connector-logging/.

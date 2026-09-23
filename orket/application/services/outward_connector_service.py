@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import sys
 from collections.abc import Callable
+from contextlib import suppress
 from copy import copy, deepcopy
 from dataclasses import asdict
 from pathlib import Path
@@ -161,6 +163,7 @@ class OutwardConnectorService:
     ) -> tuple[dict[str, Any], dict[str, Any]]:
         metadata = self._require_metadata(connector_name)
         validated_args = deepcopy(self.validate_args(metadata.name, args))
+        logging_root, = capture_file_roots([self.workspace_root])
         bound = {"authorization": authorization} if authorization is not None and metadata.name in BOUND_FILESYSTEM_TOOLS else {}
         timer = ConnectorInvocationTimer(self._monotonic_ns, clock_ref=self._clock_ref)
         finished, interruption = False, "unresolved"
@@ -182,7 +185,8 @@ class OutwardConnectorService:
             if not finished:
                 if process_lifetime is not None:
                     timing["process_lifetime"] = process_lifetime
-                self._record_interruption(metadata.name, validated_args, interruption, timing)
+                await self._record_interruption(metadata.name, validated_args, interruption, timing, logging_root,
+                                                sys.exception())
         event_payload = {
             "connector_name": metadata.name,
             "args_hash": args_hash(validated_args),
@@ -223,14 +227,28 @@ class OutwardConnectorService:
             return result, "timeout"
         return result, "success" if bool(result.get("ok")) else "failed"
 
-    def _record_interruption(self, name, args, observation, timing) -> None:
-        try:
-            # Supporting telemetry only: the effect owner retains unresolved
-            # dispatch intent, with no fabricated receipt or terminal effect.
-            log_event("outward_connector_interrupted", {"connector_name": name, "args_hash": args_hash(args),
-                      "observation": observation, **timing}, self.workspace_root)
-        except (OSError, RuntimeError, ValueError, TypeError):
-            logger.exception("Unable to record interrupted connector timing for %s", name)
+    async def _record_interruption(self, name, args, observation, timing, workspace, primary) -> None:
+        name, args, observation, timing = deepcopy((name, args, observation, timing))
+        diagnostics = []
+
+        def publish():
+            try:
+                # Supporting telemetry: no receipt, terminal effect or retry authority.
+                log_event("outward_connector_interrupted", {"connector_name": name, "args_hash": args_hash(args),
+                          "observation": observation, **timing}, workspace)
+            except (OSError, RuntimeError, ValueError, TypeError) as event_error:
+                try:
+                    logger.exception("Unable to record interrupted connector timing for %s", name)
+                except (OSError, RuntimeError, ValueError, TypeError) as diagnostic_error:
+                    diagnostics.append(f"Interrupted connector telemetry for {name} failed "
+                        f"({type(event_error).__name__}); diagnostic sink failed ({type(diagnostic_error).__name__}).")
+
+        # Only entered from invoke's exceptional finally. The worker is joined;
+        # let that original connector exception propagate after this finalizer.
+        with suppress(asyncio.CancelledError):
+            await run_owned_thread(publish, label="connector-interruption-log")
+        for diagnostic in diagnostics:
+            primary.add_note(diagnostic)
 
     def _require_metadata(self, connector_name: str) -> BuiltInConnectorMetadata:
         metadata = self.connector_registry.get(connector_name)
