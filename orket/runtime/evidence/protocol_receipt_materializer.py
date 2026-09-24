@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-import asyncio
 import json
+from functools import partial
 from pathlib import Path
 from typing import Any, Protocol
 
-import aiofiles
-
+from orket.adapters.execution.owned_io import run_owned_thread
+from orket.adapters.storage.async_file_tools import capture_file_roots
 from orket.application.services.turn_tool_control_plane_support import effect_id_for
 from orket.core.contracts import tool_invocation_contracts
 from orket.naming import sanitize_name
@@ -50,10 +50,14 @@ def _protocol_receipt_files(*, workspace: Path, session_id: str) -> list[Path]:
 
 async def _load_turn_receipts(*, workspace: Path, session_id: str) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
-    receipt_files = await asyncio.to_thread(_protocol_receipt_files, workspace=workspace, session_id=session_id)
+    receipt_files = await run_owned_thread(
+        partial(_protocol_receipt_files, workspace=workspace, session_id=session_id),
+        label="protocol-receipt-discovery",
+    )
     for source_index, path in enumerate(receipt_files, start=1):
-        async with aiofiles.open(path, encoding="utf-8") as handle:
-            content = await handle.read()
+        content = await run_owned_thread(
+            partial(path.read_text, encoding="utf-8"), label="protocol-receipt-read",
+        )
         for line_index, line in enumerate(content.splitlines(), start=1):
             stripped = line.strip()
             if not stripped:
@@ -216,10 +220,13 @@ async def materialize_protocol_receipts(
     session_id: str,
     run_ledger: _ProtocolLedgerWriter,
 ) -> dict[str, Any]:
-    rows = await _load_turn_receipts(workspace=workspace, session_id=session_id)
+    captured_workspace, = capture_file_roots([workspace])
+    captured_session_id = str(session_id)
+    captured_ledger = run_ledger
+    rows = await _load_turn_receipts(workspace=captured_workspace, session_id=captured_session_id)
     if not rows:
         return {
-            "session_id": str(session_id),
+            "session_id": captured_session_id,
             "source_receipts": 0,
             "materialized_receipts": 0,
             "reused_receipts": 0,
@@ -228,7 +235,7 @@ async def materialize_protocol_receipts(
 
     materialized = 0
     reused = 0
-    existing_ranges = _operation_event_ranges(await run_ledger.list_events(str(session_id)))
+    existing_ranges = _operation_event_ranges(await captured_ledger.list_events(captured_session_id))
     for index, row in enumerate(rows, start=1):
         receipt_seq = int(index)
         operation_id = str(row.get("operation_id") or "").strip()
@@ -236,8 +243,8 @@ async def materialize_protocol_receipts(
             raise ValueError("E_OPERATION_ID_REQUIRED")
         existing_range = existing_ranges.get(operation_id)
         if existing_range is not None:
-            await run_ledger.append_receipt(
-                session_id=session_id,
+            await captured_ledger.append_receipt(
+                session_id=captured_session_id,
                 receipt=_clean_receipt_payload(row, receipt_seq=receipt_seq, event_seq_range=existing_range),
             )
             reused += 1
@@ -245,10 +252,10 @@ async def materialize_protocol_receipts(
 
         manifest, tool_call_hash, tool_args = _resolve_receipt_contract(
             receipt=row,
-            session_id=str(session_id),
+            session_id=captured_session_id,
         )
-        call_event = await run_ledger.append_event(
-            session_id=session_id,
+        call_event = await captured_ledger.append_event(
+            session_id=captured_session_id,
             kind="tool_call",
             payload=_tool_call_payload_for_receipt(
                 row,
@@ -264,8 +271,8 @@ async def materialize_protocol_receipts(
             winner_seq = int(call_event.get("winner_event_seq") or 0)
             winner_range = [winner_seq, winner_seq]
             existing_ranges[operation_id] = winner_range
-            await run_ledger.append_receipt(
-                session_id=session_id,
+            await captured_ledger.append_receipt(
+                session_id=captured_session_id,
                 receipt=_clean_receipt_payload(row, receipt_seq=receipt_seq, event_seq_range=winner_range),
             )
             reused += 1
@@ -276,8 +283,8 @@ async def materialize_protocol_receipts(
         if call_sequence_number <= 0:
             raise ValueError("E_TOOL_CALL_SEQUENCE_INVALID")
 
-        result_event = await run_ledger.append_event(
-            session_id=session_id,
+        result_event = await captured_ledger.append_event(
+            session_id=captured_session_id,
             kind="operation_result",
             payload=_tool_result_payload_for_receipt(
                 row,
@@ -294,14 +301,14 @@ async def materialize_protocol_receipts(
             raise ValueError("E_TOOL_RESULT_SEQUENCE_INVALID")
         event_seq_range = [call_sequence_number, result_sequence_number]
         existing_ranges[operation_id] = event_seq_range
-        await run_ledger.append_receipt(
-            session_id=session_id,
+        await captured_ledger.append_receipt(
+            session_id=captured_session_id,
             receipt=_clean_receipt_payload(row, receipt_seq=receipt_seq, event_seq_range=event_seq_range),
         )
         materialized += 1
 
     return {
-        "session_id": str(session_id),
+        "session_id": captured_session_id,
         "source_receipts": len(rows),
         "materialized_receipts": materialized,
         "reused_receipts": reused,

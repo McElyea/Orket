@@ -1,6 +1,6 @@
 # Card Completion Acceptance Contract
 
-Last updated: 2026-09-13
+Last updated: 2026-09-23
 Status: Active contract; builtin completion passes scoped BT-3 acceptance
 Owner: Orket Core
 
@@ -720,6 +720,11 @@ environment is supplied; this service supplies the sanitized environment.
 7. Publication events follow confirmed effects. Recovery may repeat an event when
    a process dies after event emission but before journal progress commits. Events
    are observations, not an exactly-once delivery mechanism or a second authority.
+8. Publication and recovery retain the snapshot repository object selected before
+   their first journal await. Snapshot publication and confirmation, including
+   final retained-effect readback, use that selected object. This does not freeze
+   mutable configuration inside the repository. Nullable and timestampless plans
+   retain their existing meanings; no outcome or timestamp is invented for them.
 
 ## Preparation and export uncertainty
 
@@ -730,6 +735,13 @@ environment is supplied; this service supplies the sanitized environment.
 2. Protocol receipt failures, summary artifact write failures and export callback
    failures propagate with diagnostic context. Existing explicitly degraded summary
    generation remains distinct from a successful summary artifact write.
+   The migrated native receipt, summary and provenance file operations retain
+   admitted work through cancellation or timeout, including file closure. A late native failure
+   retains its diagnostic mapping. Completing the operation does not force stage
+   progress to commit after cancellation, admit the next stage or authorize success.
+   A cancelled stage may leave local files without retained progress and may repeat
+   on matching reentry under the existing rules. Selected lexical roots and copied
+   payload values do not provide hostile-writer filesystem confinement.
 3. Enabled Gitea exports first prepare a local immutable Git commit. Its
    `gitea_export_intent.v1` and the export-started marker commit together before
    repository creation or push. Exact bindings, paths and payload semantics live
@@ -757,6 +769,11 @@ environment is supplied; this service supplies the sanitized environment.
    and custom writer bindings remain required work. A marker alone does not establish an
    effect. This protocol does not provide one transaction across stores or
    exactly-once external effects.
+
+The 0.6.104 migration and required proof are recorded in
+`docs/architecture/CONTRACT_DELTA_EPIC_CLOSEOUT_OWNERSHIP_D_2026-09-23.md`.
+The architectural-truth plan owns acceptance status; this contract is not a passing
+runtime observation or full-lane completion claim.
 
 ## Decision and enforcement
 

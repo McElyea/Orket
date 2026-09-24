@@ -73,3 +73,18 @@ public success handler with a controlled result and final failure sink. They do 
 establish provider inference, full epic dispatch, cancellation ownership or general
 replay behavior. The migration and validation obligations are in
 `../architecture/CONTRACT_DELTA_GUARD_REQUEST_INPUTS_D_2026-09-23.md`.
+
+Session checkpoints use the same selected `turn_clock` in the 0.6.104 migration. `_save_checkpoint` samples once for the configuration timestamp.
+`AsyncSnapshotRepository.record` captures its configured database path and renders
+nested configuration and transcript JSON before its first lock await. Serialization
+errors occur before lock acquisition. The independent `captured_at` column remains
+an observational host-UTC insertion time, not a deterministic execution input or
+completion authority. Capturing a configured relative path does not make it an
+absolute path or establish filesystem confinement.
+
+Epic publication and recovery retain the snapshot repository object selected before
+the first journal await for snapshot effects and all subsequent snapshot readback.
+This preserves nullable and timestampless historical snapshot contracts and does not
+freeze the selected object's own mutable state. The architectural-truth plan owns
+acceptance and publication status. Migration and proof obligations:
+`../architecture/CONTRACT_DELTA_EPIC_CLOSEOUT_OWNERSHIP_D_2026-09-23.md`.

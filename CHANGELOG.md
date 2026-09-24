@@ -5,6 +5,18 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.104] - 2026-09-23
+
+### Fixed
+- Use the selected clock for session checkpoints; capture nested snapshot inputs and configured storage path before lock admission.
+- Retain the snapshot repository selected when epic publication or recovery begins.
+- Retain admitted epic closeout native I/O through interruption and preserve captured summary inputs and existing recovery authority.
+- `compatibility_status`: `compatible`
+- `affected_audience`: `all`
+- `migration_requirement`: `none`
+- Contract and migration: `docs/architecture/CONTRACT_DELTA_EPIC_CLOSEOUT_OWNERSHIP_D_2026-09-23.md`.
+- The architectural-truth plan owns acceptance and publication status. Wider D/E/CAP, Linux clock, full coverage and lane acceptance remain open.
+
 ## [0.6.103] - 2026-09-23
 
 ### Fixed

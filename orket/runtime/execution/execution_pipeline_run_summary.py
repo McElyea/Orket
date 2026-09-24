@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+from copy import deepcopy
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from orket.adapters.storage.async_file_tools import capture_file_roots
 from orket.core.contracts.provider_runtime import provider_from_environment
 from orket.logging import log_event
 from orket.runtime.run_start_artifacts import validate_run_identity_projection
@@ -32,45 +34,41 @@ class ExecutionPipelineRunSummaryMixin:
     if TYPE_CHECKING:
         workspace: Path
         artifact_exporter: Any
+        async_cards: Any
+        run_ledger: Any
         runtime_context: Any
 
-        async def _resolve_packet2_repair_entries(self, *, run_id: str) -> list[dict[str, Any]]: ...
+        async def _resolve_packet2_repair_entries_at(
+            self, *, run_id: str, workspace: Path,
+        ) -> list[dict[str, Any]]: ...
 
-        async def _resolve_artifact_provenance_artifacts(self, *, run_id: str) -> dict[str, Any]: ...
+        async def _resolve_artifact_provenance_artifacts(
+            self, *, run_id: str, workspace: Path, ledger: Any,
+        ) -> dict[str, Any]: ...
 
-        async def _resolve_cards_runtime_artifacts(
-            self,
-            *,
-            artifacts: dict[str, Any],
-            run_id: str,
-            session_status: str,
-            failure_reason: str | None,
+        async def _resolve_cards_runtime_artifacts_at(
+            self, *, artifacts: dict[str, Any], run_id: str,
+            session_status: str, failure_reason: str | None, workspace: Path,
         ) -> dict[str, Any]: ...
 
         async def _resolve_packet1_artifacts(
-            self,
-            *,
-            run_id: str,
+            self, *, run_id: str,
             repair_entries: list[dict[str, Any]] | None = None,
             artifact_provenance_facts: dict[str, Any] | None = None,
+            workspace: Path,
         ) -> dict[str, Any]: ...
 
         async def _resolve_packet2_artifacts(
-            self,
-            *,
-            run_id: str,
+            self, *, run_id: str,
             repair_entries: list[dict[str, Any]] | None = None,
             artifact_provenance_facts: dict[str, Any] | None = None,
             phase_c_truth_policy: dict[str, Any] | None = None,
+            workspace: Path, cards_repo: Any, ledger: Any,
         ) -> dict[str, Any]: ...
 
-        async def _record_packet1_emission_failure(
-            self,
-            *,
-            run_id: str,
-            stage: str,
-            error_type: str,
-            error: str,
+        async def _record_packet1_emission_failure_at(
+            self, *, run_id: str, stage: str, error_type: str, error: str,
+            ledger: Any, workspace: Path,
         ) -> None: ...
 
     def _run_artifact_refs(self, run_id: str) -> dict[str, str]:
@@ -214,19 +212,22 @@ class ExecutionPipelineRunSummaryMixin:
         export_time: str | None = None,
         export_intent: Any = None,
     ) -> dict[str, Any] | None:
+        exporter = self.artifact_exporter
+        workspace, = capture_file_roots([self.workspace])
+        captured_summary = deepcopy(summary)
         try:
-            exported = await self.artifact_exporter.export_run(
+            exported = await exporter.export_run(
                 run_id=run_id,
                 run_type=run_type,
                 run_name=run_name,
                 build_id=build_id,
                 session_status=session_status,
-                summary=summary,
+                summary=captured_summary,
                 failure_class=failure_class,
                 failure_reason=failure_reason,
                 export_day=export_day, export_time=export_time, export_intent=export_intent,
             )
-            return self._record_artifact_export(run_id, exported)
+            return self._record_artifact_export_at(run_id, exported, workspace=workspace)
         except (RuntimeError, ValueError, TypeError, OSError) as exc:
             log_event(
                 "run_artifact_export_failed",
@@ -235,21 +236,27 @@ class ExecutionPipelineRunSummaryMixin:
                     "error": str(exc),
                     "error_type": type(exc).__name__,
                 },
-                workspace=self.workspace,
+                workspace=workspace,
             )
             raise
 
     async def _reconcile_run_artifacts(self, *, export_intent: Any) -> dict[str, Any] | None:
-        exported = await self.artifact_exporter.reconcile_export(export_intent)
-        return self._record_artifact_export(export_intent.run_id, exported)
+        exporter = self.artifact_exporter
+        workspace, = capture_file_roots([self.workspace])
+        captured_intent = export_intent
+        run_id = str(captured_intent.run_id)
+        exported = await exporter.reconcile_export(captured_intent)
+        return self._record_artifact_export_at(run_id, exported, workspace=workspace)
 
-    def _record_artifact_export(self, run_id: str, exported: Any) -> dict[str, Any] | None:
+    def _record_artifact_export_at(
+        self, run_id: str, exported: Any, *, workspace: Path,
+    ) -> dict[str, Any] | None:
         if not isinstance(exported, dict) or not exported:
             return None
         log_event("run_artifacts_exported",
                   {"run_id": run_id, "provider": exported.get("provider"),
                    "repo": f"{exported.get('owner')}/{exported.get('repo')}", "branch": exported.get("branch"),
-                   "path": exported.get("path"), "commit": exported.get("commit")}, workspace=self.workspace)
+                   "path": exported.get("path"), "commit": exported.get("commit")}, workspace=workspace)
         return dict(exported)
 
     async def _materialize_run_summary(
@@ -262,25 +269,40 @@ class ExecutionPipelineRunSummaryMixin:
         finalized_at: str,
         phase_c_truth_policy: dict[str, Any] | None = None,
     ) -> tuple[dict[str, Any], dict[str, Any]]:
-        resolved_artifacts = dict(artifacts)
-        repair_entries = await self._resolve_packet2_repair_entries(run_id=run_id)
-        artifact_provenance_artifacts = await self._resolve_artifact_provenance_artifacts(run_id=run_id)
-        cards_runtime_artifacts = await self._resolve_cards_runtime_artifacts(
+        workspace, = capture_file_roots([self.workspace])
+        ledger = self.run_ledger
+        cards_repo = self.async_cards
+        captured_run_id = str(run_id)
+        captured_status = str(session_status)
+        captured_failure = None if failure_reason is None else str(failure_reason)
+        captured_finalized_at = str(finalized_at)
+        captured_policy = deepcopy(phase_c_truth_policy)
+        resolved_artifacts = deepcopy(artifacts)
+        repair_entries = await self._resolve_packet2_repair_entries_at(
+            run_id=captured_run_id, workspace=workspace)
+        artifact_provenance_artifacts = await self._resolve_artifact_provenance_artifacts(
+            run_id=captured_run_id, workspace=workspace, ledger=ledger)
+        cards_runtime_artifacts = await self._resolve_cards_runtime_artifacts_at(
             artifacts=resolved_artifacts,
-            run_id=run_id,
-            session_status=session_status,
-            failure_reason=failure_reason,
+            run_id=captured_run_id,
+            session_status=captured_status,
+            failure_reason=captured_failure,
+            workspace=workspace,
         )
         packet1_artifacts = await self._resolve_packet1_artifacts(
-            run_id=run_id,
+            run_id=captured_run_id,
             repair_entries=repair_entries,
             artifact_provenance_facts=artifact_provenance_artifacts.get("artifact_provenance_facts"),
+            workspace=workspace,
         )
         packet2_artifacts = await self._resolve_packet2_artifacts(
-            run_id=run_id,
+            run_id=captured_run_id,
             repair_entries=repair_entries,
             artifact_provenance_facts=artifact_provenance_artifacts.get("artifact_provenance_facts"),
-            phase_c_truth_policy=phase_c_truth_policy,
+            phase_c_truth_policy=captured_policy,
+            workspace=workspace,
+            cards_repo=cards_repo,
+            ledger=ledger,
         )
         existing_packet1_facts = dict(resolved_artifacts.get("packet1_facts") or {})
         merged_packet1_facts = self._merge_packet1_facts(
@@ -316,12 +338,12 @@ class ExecutionPipelineRunSummaryMixin:
                     error_prefix="run_summary_run_identity",
                 )["start_time"]
             run_summary = await generate_run_summary_for_finalize(
-                workspace=self.workspace,
-                run_id=run_id,
-                status=session_status,
-                failure_reason=failure_reason,
+                workspace=workspace,
+                run_id=captured_run_id,
+                status=captured_status,
+                failure_reason=captured_failure,
                 started_at=started_at,
-                ended_at=finalized_at,
+                ended_at=captured_finalized_at,
                 artifacts=resolved_artifacts,
             )
         except (RuntimeError, ValueError, TypeError, OSError) as exc:
@@ -331,41 +353,45 @@ class ExecutionPipelineRunSummaryMixin:
                 "error_type": type(exc).__name__,
                 "error": str(exc),
             }
-            await self._record_packet1_emission_failure(
-                run_id=run_id,
+            await self._record_packet1_emission_failure_at(
+                run_id=captured_run_id,
                 stage="generation",
                 error_type=type(exc).__name__,
                 error=str(exc),
+                ledger=ledger,
+                workspace=workspace,
             )
             log_event(
                 "run_summary_generation_failed",
-                {"run_id": run_id, "error_type": type(exc).__name__, "error": str(exc)},
-                workspace=self.workspace,
+                {"run_id": captured_run_id, "error_type": type(exc).__name__, "error": str(exc)},
+                workspace=workspace,
             )
             run_summary = build_degraded_run_summary_payload(
-                run_id=run_id,
-                status=session_status,
-                failure_reason=failure_reason,
+                run_id=captured_run_id,
+                status=captured_status,
+                failure_reason=captured_failure,
                 artifacts=resolved_artifacts,
             )
         try:
             run_summary_path = await write_run_summary_artifact(
-                root=self.workspace,
-                session_id=run_id,
+                root=workspace,
+                session_id=captured_run_id,
                 payload=run_summary,
             )
             resolved_artifacts["run_summary_path"] = str(run_summary_path)
         except (RuntimeError, ValueError, TypeError, OSError) as exc:
-            await self._record_packet1_emission_failure(
-                run_id=run_id,
+            await self._record_packet1_emission_failure_at(
+                run_id=captured_run_id,
                 stage="write",
                 error_type=type(exc).__name__,
                 error=str(exc),
+                ledger=ledger,
+                workspace=workspace,
             )
             log_event(
                 "run_summary_artifact_write_failed",
-                {"run_id": run_id, "error_type": type(exc).__name__, "error": str(exc)},
-                workspace=self.workspace,
+                {"run_id": captured_run_id, "error_type": type(exc).__name__, "error": str(exc)},
+                workspace=workspace,
             )
             raise
         resolved_artifacts["run_summary"] = dict(run_summary)

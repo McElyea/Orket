@@ -24122,3 +24122,143 @@ settings change occurred. Wider D/E/CAP, ProductFlow replay, legacy cutover,
 selected-provider proof, hosted Quality and full coverage remain open.
 No main merge, whole-goal completion or lane retirement; retirement still requires
 the user's explicit acceptance.
+
+
+#### .104 Session-snapshot and epic-closeout opening (2026-09-23)
+
+Status: candidate implementation; acceptance and publication pending. Published
+.103 (`4ba1e2b62d0d79c35aa409ec82c4e4c70293ad45`) is the parent. Its annotated
+tag, remote refs, clean worktree and retained evidence were verified before probe
+authoring. The original checkout remains unchanged; no historical clean-HEAD
+assertion was rerun against this later checkpoint.
+
+The original opening under `.tmp/d-epic-closeout-ownership/` retains 22 identical
+case identities in source and exact installed .103: 16 failures and six passes per
+cell, with no errors or skips. Independent review classifies 15 reached defects,
+one fixture failure and six healthy controls. The composed epic fixture selected a
+SQLite ledger without `append_receipt`, so the capability guard returned before
+receipt discovery. That case supplies no cancellation or preparation-prefix proof.
+Its actual completed publication, original probes and physical files remain retained.
+The initial import-lint failure and narrow import-only repair are separate structural
+observations; neither was runtime acceptance.
+
+The corrected phase under `.tmp/d-epic-closeout-corrected-opening/` selects the real
+protocol ledger using one captured construction-input object shared by initial and
+recovery pipelines. Source and installed again report 22 identical cases, 16 failures
+and six passes, with no errors or skips. All 16 failures now reach the intended
+product defect; no fixture failure remains. All 18 independent SQLite observations
+per cell meet <0.5s, maxima 0.013839300s source and 0.011987800s installed.
+The final opening seal binds 5,853 retained files and both phases, SHA-256
+`e6c114528fb56c516187dbcee5bfab98e3d7d67fd05650ed0d67e23f68cb0348`.
+
+Snapshot controls reach selected-clock, nested JSON, configured database path and
+publication/recovery repository replacement defects while retaining healthy routes
+and real SQLite readback. Closeout controls reach unowned receipt discovery, summary
+render/publication, late native failure, provenance stat, telemetry discovery and
+loop-blocking log existence checks. Each held route retains its actual timing and
+cleanup properties; a control whose blocking existence check starves the loop is
+recorded as such, not as a passing responsiveness observation.
+
+The corrected composed public epic shows the exact lifetime defect: native receipt
+discovery is active, off-loop, unexpired and unfinished while the task and public
+waiter have already returned cancellation. Cleanup later confirms native completion.
+The durable prefix retains outcome and preparation phase 1 with a running protocol
+ledger, but no publication plan, receipts or summary. Reentry with the same captured
+inputs reaches preparation phase 5, done publication, one `composed-op` receipt and
+a physical summary without redispatch. This is a controlled local workload, not
+provider inference. It does not justify forcing stage progress after cancellation.
+
+A fresh unchanged Linux preflight remains blocked. The same owner ran for
+240.043336423s; only 5.311575227s quiet against required 60s, with steps
+-9.533150037s and +10.019925629s against 0.01s. Its 48 synchronization queries
+returned 40 yes and eight no. It exited 1 normally, without timeout; the child was
+confirmed terminal and input/Git maps unchanged. No settings were changed and no
+Linux application acceptance ran. Report `.tmp/d-next-linux-clock-preflight/`
+`linux-clock-preflight.json` SHA-256
+`7f223c20338fc61efe65cc8d860aed566aea08b60ab71054e998eaafa4c729f9`;
+invocation SHA-256 `8dd99938989b15b9514de5150060ac7e07f9456b6c53c42039c7001686d6d549`.
+The earlier .95 observation remains unchanged. Independent Windows work continues.
+
+The candidate contract is
+`docs/architecture/CONTRACT_DELTA_EPIC_CLOSEOUT_OWNERSHIP_D_2026-09-23.md`.
+Final source/installed proof, canonical C, required audits, scoped commit/tag and
+remote publication remain required. Wider D, E1/E2, full coverage, ProductFlow,
+legacy cutover, public protocol-replay controls and CAP-1/2/3 remain open. No whole
+completion, main merge or lane retirement; retirement requires explicit acceptance.
+
+
+#### .104 Final session-snapshot and epic-closeout acceptance (2026-09-23)
+
+Responsible maintainer: Codex for Orket Core. Observed path: primary. Result:
+scoped acceptance success; the complete remediation goal remains partial.
+The 28-file candidate had exact LF working/index bytes before proof.
+All 17 changed Python files, metadata and proof helpers remained frozen.
+The focused 234-case run used current source with retained .103 support;
+it remains a mixed-package diagnostic, separate from the final package matrix.
+
+| Cell | Tests / failures / errors / skips | JUnit seconds | Installed origins |
+|---|---|---|---|
+| Fresh source | 3328 / 0 / 0 / 0 | 725.623 | source |
+| Installed a104-closeout-win-py311 | 3328 / 0 / 0 / 0 | 990.374 | 1070 |
+| Installed a104-closeout-win-py312 | 3328 / 0 / 0 / 0 | 1198.549 | 1070 |
+
+All 3,234 published .103 identities remain, with 94 additional identities,
+across 337 selected modules. Every cell verifies the same
+38 closeout controls and all eight retained guard controls.
+All 424 independent SQLite observations per cell meet the unchanged
+0.5s bound, maximum 0.344863200s. Budgets remain 1500/1800/2100s.
+
+The closeout controls physically exercise one selected session checkpoint clock,
+pre-lock path/JSON capture, admitted snapshot-repository identity, unchanged
+nullable/timestampless publication, and owned native discovery, metadata, content
+reads and summary writes. Strict malformed receipt/summary failures, tolerant
+provenance rows, literal Unicode line separators, delayed I/O failures and
+detached summary payloads retain their specific behavior. Separate high-level
+controls hold actual file discovery and replace workspace, card/ledger slots,
+nested artifacts and policy; only captured resources receive the resulting
+summary/events. Both replacement and unchanged controls use real repositories.
+Composed cancellation keeps the native operation owned through settlement;
+retained durable phase evidence and recovery establish no redispatch. Cancellation
+does not force further preparation or authorize publication before phase commit.
+
+Complete source/sdist/wheel parity covers 1,176 core Python and
+20 data members, with 29 SDK Python members separate. Both installed cells read
+back all 1,196 core members; the support manifest binds
+2,486 inputs. Source strict audit and mandatory installed
+audits pass alongside exact case, origin, input, CLI and teardown checks.
+Canonical C policy, changed-file lint, size, hygiene and release metadata pass.
+Ruff remains 88 findings with none introduced. AC-01 through AC-08 and AC-10
+pass for this scope; AC-09 remains partial. Baseline collection does not establish
+release readiness or full 89% coverage.
+
+Evidence is under .tmp/d-epic-closeout-publication/, with fresh
+epic-closeout-publication-source and a104-closeout Windows environments. Both
+opening phases remain separate: the original phase has 15 reached defects,
+one unreached composed fixture failure and six healthy controls per cell; the
+corrected phase has 16 reached defects and six healthy controls. The old fixture
+failure is absent cancellation/preparation proof. Original and corrected helpers,
+probe bytes, physical observations, all candidate diagnostics and pre-execution
+fixture corrections remain retained. Final proof rechecks opening/package maps
+and focused inputs. Readback verified 262,762 prior published hashes, nine handoff
+bindings, 13,286 candidate local evidence files and
+251,035 external physical files.
+C:/Source/Orket remains unchanged. Ignored evidence stays local; Git publication
+transfers the scoped repository change, not those stores.
+
+Only this plan and the collected baseline may change after the matrix for closeout.
+Checkpoint, index-check and publication receipts bind exact committed bytes,
+annotated tag, branch/remote refs and clean worktree. Those receipts determine
+publication status; this paragraph alone does not assert a remote push.
+
+Fresh Linux preflight is an environment blocker: 240.043336423s elapsed,
+5.311575227s quiet against required 60s, and -9.533150037/+10.019925629s steps
+against 0.01s; 48 synchronization queries yielded 40 yes and eight no. Its child
+terminated normally, and inputs and Git state remained unchanged. No settings
+change or Linux application acceptance occurred. The prior blocker remains retained.
+Continue canonical D with broader context/global inputs, transitive I/O, logging
+drain and public protocol-replay semantics/composed controls. Captured resource
+identity does not snapshot resource internals; relative paths are not hostile
+filesystem confinement. Native ownership is not a forced thread deadline.
+Wider D/E/CAP, ProductFlow replay, legacy cutover, selected-provider proof,
+hosted Quality and full coverage remain open. No main merge, whole-goal completion
+or lane retirement; retirement requires the user's explicit acceptance.

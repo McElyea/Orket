@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from functools import partial
 from pathlib import Path
 from typing import Any
 
@@ -37,6 +38,7 @@ class EpicPublicationService:
         return dict(self.scope)
 
     async def recover(self, session_id: str, request: dict[str, Any]) -> RuntimeExecutionResult | None:
+        snapshots = self.snapshots
         async with self.repository.transaction(session_id) as transaction:
             record = await transaction.get()
         if record is None:
@@ -44,9 +46,10 @@ class EpicPublicationService:
             return None
         if record.plan.request != request:
             raise ValueError("E_EPIC_PUBLICATION_REQUEST_CONFLICT")
-        return await self._finish(record.plan)
+        return await self._finish(record.plan, snapshots)
 
     async def publish(self, plan: EpicPublicationPlan) -> RuntimeExecutionResult:
+        snapshots = self.snapshots
         # Freeze nested JSON inputs before any repository or caller can mutate them.
         plan = EpicPublicationPlan.model_validate_json(plan.model_dump_json())
         async with self.repository.transaction(plan.session_id) as transaction:
@@ -55,7 +58,7 @@ class EpicPublicationService:
                 await transaction.save(EpicPublicationRecord(plan=plan))
             elif existing.plan != plan:
                 raise ValueError("E_EPIC_PUBLICATION_CONFLICT")
-        return await self._finish(plan)
+        return await self._finish(plan, snapshots)
 
     async def _require_no_unrecoverable_closeout(self, session_id: str) -> None:
         async with self.repository.transaction(session_id) as transaction:
@@ -76,7 +79,7 @@ class EpicPublicationService:
             if outcome is None and await transaction.approval_pauses.latest() is None:
                 raise ValueError("E_EPIC_WORKLOAD_OUTCOME_UNCERTAIN")
 
-    async def _finish(self, plan: EpicPublicationPlan) -> RuntimeExecutionResult:
+    async def _finish(self, plan: EpicPublicationPlan, snapshots: Any) -> RuntimeExecutionResult:
         while True:
             async with self.repository.transaction(plan.session_id) as transaction:
                 record = await transaction.get()
@@ -84,11 +87,13 @@ class EpicPublicationService:
                     raise ValueError("E_EPIC_PUBLICATION_CONFLICT")
                 await self.validate_acceptance(plan, transaction=transaction)
                 if record.phase == 4:
-                    await self._verify_published(plan)
+                    await self._verify_published(plan, snapshots)
                     result = await published_execution_result(self, plan, record)
                     await EpicAdmissionService.release_verified(transaction, plan)
                     return result
-                operations = (self._publish_ledger, self._publish_session, self._publish_snapshot, self._publish_success)
+                operations = (self._publish_ledger, self._publish_session,
+                              partial(self._publish_snapshot, snapshots=snapshots),
+                              partial(self._publish_success, snapshots=snapshots))
                 await operations[record.phase](plan)
                 await transaction.save(record.model_copy(update={"phase": record.phase + 1}))
 
@@ -135,15 +140,15 @@ class EpicPublicationService:
         payload.update({key: plan.ledger[key] for key in ("failure_reason", "failure_class") if plan.ledger.get(key) is not None})
         await asyncio.to_thread(log_event, "session_end", payload, workspace=Path(self.scope["workspace"]))
 
-    async def _publish_snapshot(self, plan: EpicPublicationPlan) -> None:
+    async def _publish_snapshot(self, plan: EpicPublicationPlan, snapshots: Any) -> None:
         if plan.snapshot is None:
             return
-        if not self._snapshot_matches(plan, await self.snapshots.get(plan.session_id)):
-            await self.snapshots.record(plan.session_id, plan.snapshot, plan.transcript)
-        if not self._snapshot_matches(plan, await self.snapshots.get(plan.session_id)):
+        if not self._snapshot_matches(plan, await snapshots.get(plan.session_id)):
+            await snapshots.record(plan.session_id, plan.snapshot, plan.transcript)
+        if not self._snapshot_matches(plan, await snapshots.get(plan.session_id)):
             raise ValueError("E_EPIC_PUBLICATION_SNAPSHOT_UNCONFIRMED")
 
-    async def _publish_success(self, plan: EpicPublicationPlan) -> None:
+    async def _publish_success(self, plan: EpicPublicationPlan, snapshots: Any) -> None:
         if plan.ledger["status"] != "done":
             return
         expected = self._success_payload(plan)
@@ -157,16 +162,16 @@ class EpicPublicationService:
             raise ValueError("E_EPIC_PUBLICATION_SUCCESS_UNCONFIRMED")
         await asyncio.to_thread(log_event, "success_recorded", {"run_id": plan.session_id, "type": "EPIC_COMPLETED"},
                                 workspace=Path(self.scope["workspace"]))
-        await self._verify_published(plan)
+        await self._verify_published(plan, snapshots)
         await asyncio.to_thread(log_event, "orchestrator_epic_complete",
                                 {"run_id": plan.session_id, "epic": plan.snapshot["epic"]["name"]},
                                 workspace=Path(self.scope["workspace"]))
 
-    async def _verify_published(self, plan: EpicPublicationPlan) -> None:
+    async def _verify_published(self, plan: EpicPublicationPlan, snapshots: Any) -> None:
         checks = [self._ledger_matches(plan, await self.ledger.get_run(plan.session_id)),
                   self._session_matches(plan, await self.sessions.get_session(plan.session_id))]
         if plan.snapshot is not None:
-            checks.append(self._snapshot_matches(plan, await self.snapshots.get(plan.session_id)))
+            checks.append(self._snapshot_matches(plan, await snapshots.get(plan.session_id)))
         if plan.ledger["status"] == "done":
             success = await self.success.get(plan.session_id)
             checks.append(success is not None and all(success.get(k) == v for k, v in self._success_payload(plan).items()))

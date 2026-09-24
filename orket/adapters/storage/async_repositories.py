@@ -153,10 +153,9 @@ class AsyncSnapshotRepository(SnapshotRepository):
         await conn.commit()
         self._initialized = True
 
-    async def record(
-        self, session_id: str, config: dict[str, Any], logs: list[dict[str, Any]]
-    ) -> None:
-        async with self._lock, connect_sqlite_wal(self.db_path) as conn:
+    async def record(self, session_id: str, config: dict[str, Any], logs: list[dict[str, Any]]) -> None:
+        db_path, config_json, log_history = self.db_path, json.dumps(config), json.dumps(logs)
+        async with self._lock, connect_sqlite_wal(db_path) as conn:
             await self._ensure_initialized(conn)
             await conn.execute(
                 """
@@ -164,7 +163,7 @@ class AsyncSnapshotRepository(SnapshotRepository):
                     (session_id, config_json, log_history, captured_at)
                     VALUES (?, ?, ?, ?)
                     """,
-                (session_id, json.dumps(config), json.dumps(logs), datetime.now(UTC).isoformat()),
+                (session_id, config_json, log_history, datetime.now(UTC).isoformat()),
             )
             await conn.commit()
 

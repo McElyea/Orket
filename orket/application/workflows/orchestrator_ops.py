@@ -1,6 +1,5 @@
 import asyncio
 import inspect
-from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import Any
 
@@ -1540,7 +1539,7 @@ async def _save_checkpoint(
         "team": team.model_dump(),
         "env": env.model_dump(),
         "build_id": active_build,
-        "timestamp": datetime.now(UTC).isoformat(),
+        "timestamp": self.turn_clock().isoformat(),
     }
     legacy_transcript = [{"role": t.role, "issue": t.issue_id, "content": t.content} for t in self.transcript]
     await self.snapshots.record(run_id, snapshot_data, legacy_transcript)

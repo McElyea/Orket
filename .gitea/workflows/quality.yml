@@ -106,6 +106,12 @@ jobs:
         run: |
           python -m pytest -q tests/integration/test_guard_rejection_clock_ownership.py tests/integration/test_governed_guard_rejection.py tests/integration/test_governed_guard_epic_rejection.py
 
+      - name: Enforce session snapshot and epic closeout ownership
+        env:
+          ORKET_DISABLE_SANDBOX: "1"
+        run: |
+          python -m pytest -q tests/integration/test_session_snapshot_ownership.py tests/integration/test_epic_closeout_io_ownership.py tests/integration/test_epic_closeout_content_io_ownership.py tests/integration/test_epic_closeout_input_capture.py tests/integration/test_epic_completion_publication.py tests/integration/test_epic_preparation_recovery.py tests/integration/test_epic_publication_recovery.py tests/integration/test_epic_publication_recovery_process.py tests/integration/test_epic_outcome_recovery.py tests/runtime/test_protocol_receipt_materializer.py tests/runtime/test_run_summary.py
+
       - name: Enforce governance proof engine and alias ownership
         run: |
           python -m pytest -q tests/scripts/test_governance_proof_engine_lifetime.py tests/scripts/test_governance_proof_cleanup_ownership.py tests/contracts/test_governance_proof_native_entry.py tests/contracts/test_governance_alias_ownership.py tests/scripts/test_truthful_runtime_live_proof_summary_validation.py
@@ -520,6 +526,12 @@ jobs:
           ORKET_DISABLE_SANDBOX: "1"
         run: |
           python -m pytest -q tests/integration/test_guard_rejection_clock_ownership.py tests/integration/test_governed_guard_rejection.py tests/integration/test_governed_guard_epic_rejection.py
+
+      - name: Enforce session snapshot and epic closeout ownership
+        env:
+          ORKET_DISABLE_SANDBOX: "1"
+        run: |
+          python -m pytest -q tests/integration/test_session_snapshot_ownership.py tests/integration/test_epic_closeout_io_ownership.py tests/integration/test_epic_closeout_content_io_ownership.py tests/integration/test_epic_closeout_input_capture.py tests/integration/test_epic_completion_publication.py tests/integration/test_epic_preparation_recovery.py tests/integration/test_epic_publication_recovery.py tests/integration/test_epic_publication_recovery_process.py tests/integration/test_epic_outcome_recovery.py tests/runtime/test_protocol_receipt_materializer.py tests/runtime/test_run_summary.py
 
       - name: Enforce governance proof engine and alias ownership
         run: |

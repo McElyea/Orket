@@ -1,14 +1,12 @@
 from __future__ import annotations
 
-import asyncio
 import json
+from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-import aiofiles
-
-from orket.naming import sanitize_name
+from orket.adapters.storage.async_file_tools import capture_file_roots
 from orket.runtime.run_start_artifacts import validate_run_identity_projection
 from orket.runtime.run_summary_artifact_provenance import (
     ARTIFACT_PROVENANCE_KEY,
@@ -21,6 +19,7 @@ from orket.runtime.run_summary_packet2 import (
     build_packet2_extension,
     normalize_packet2_facts,
 )
+from orket.runtime.summary.run_summary_io import _publish_run_summary_content, _read_run_summary_tool_names
 
 _EXCLUDED_ARTIFACT_IDS = {"gitea_export", "run_summary", "run_summary_path"}
 _PACKET1_SCHEMA_VERSION = "1.0"
@@ -210,23 +209,21 @@ def build_degraded_run_summary_payload(
 
 async def generate_run_summary_for_finalize(
     *,
-    workspace: Path,
-    run_id: str,
-    status: str,
-    failure_reason: str | None,
-    started_at: str | None,
-    ended_at: str | None,
+    workspace: Path, run_id: str, status: str,
+    failure_reason: str | None, started_at: str | None, ended_at: str | None,
     artifacts: dict[str, Any],
 ) -> dict[str, Any]:
-    tool_names = await _tool_names_from_receipts(workspace=workspace, run_id=run_id)
+    captured_workspace, = capture_file_roots([workspace])
+    captured_run_id, captured_status = str(run_id), str(status)
+    captured_failure_reason = None if failure_reason is None else str(failure_reason)
+    captured_started_at = None if started_at is None else str(started_at)
+    captured_ended_at = None if ended_at is None else str(ended_at)
+    captured_artifacts = deepcopy(artifacts)
+    tool_names = await _read_run_summary_tool_names(workspace=captured_workspace, run_id=captured_run_id)
     return build_run_summary_payload(
-        run_id=run_id,
-        status=status,
-        failure_reason=failure_reason,
-        started_at=started_at,
-        ended_at=ended_at,
-        tool_names=tool_names,
-        artifacts=artifacts,
+        run_id=captured_run_id, status=captured_status,
+        failure_reason=captured_failure_reason, started_at=captured_started_at, ended_at=captured_ended_at,
+        tool_names=tool_names, artifacts=captured_artifacts,
     )
 
 
@@ -324,53 +321,14 @@ def reconstruct_run_summary(
 
 
 async def write_run_summary_artifact(
-    *,
-    root: Path,
-    session_id: str,
-    payload: dict[str, Any],
+    *, root: Path, session_id: str, payload: dict[str, Any],
 ) -> Path:
     validate_run_summary_payload(payload)
-    run_summary_path = Path(root) / "runs" / str(session_id).strip() / "run_summary.json"
-    await asyncio.to_thread(run_summary_path.parent.mkdir, parents=True, exist_ok=True)
+    captured_root, = capture_file_roots([Path(root)])
+    run_summary_path = captured_root / "runs" / str(session_id).strip() / "run_summary.json"
     content = json.dumps(payload, ensure_ascii=True, indent=2, sort_keys=True) + "\n"
-    async with aiofiles.open(run_summary_path, mode="w", encoding="utf-8") as handle:
-        await handle.write(content)
+    await _publish_run_summary_content(path=run_summary_path, content=content)
     return run_summary_path
-
-
-async def _tool_names_from_receipts(*, workspace: Path, run_id: str) -> list[str]:
-    receipt_paths = await asyncio.to_thread(_receipt_paths, Path(workspace), str(run_id))
-    tool_names: list[str] = []
-    for path in receipt_paths:
-        async with aiofiles.open(path, encoding="utf-8") as handle:
-            async for line in handle:
-                stripped = line.strip()
-                if not stripped:
-                    continue
-                payload = json.loads(stripped)
-                if not isinstance(payload, dict):
-                    continue
-                tool_name = str(payload.get("tool") or payload.get("tool_name") or "").strip()
-                if tool_name:
-                    tool_names.append(tool_name)
-    return _normalize_token_list(tool_names)
-
-
-def _receipt_paths(workspace: Path, run_id: str) -> list[Path]:
-    session_root = workspace / "observability" / sanitize_name(run_id)
-    if not session_root.exists():
-        return []
-    paths: list[Path] = []
-    for issue_dir in sorted(session_root.iterdir(), key=lambda path: path.name):
-        if not issue_dir.is_dir():
-            continue
-        for turn_dir in sorted(issue_dir.iterdir(), key=lambda path: path.name):
-            if not turn_dir.is_dir():
-                continue
-            candidate = turn_dir / "protocol_receipts.log"
-            if candidate.exists():
-                paths.append(candidate)
-    return paths
 
 
 def _artifact_ids(artifacts: dict[str, Any]) -> list[str]:

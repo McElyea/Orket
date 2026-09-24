@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 from pathlib import Path
 
@@ -34,7 +35,8 @@ async def test_resolve_cards_runtime_artifacts_reports_log_missing_for_cards_wor
     """Layer: integration. Verifies cards-runtime extraction reports `log_missing` instead of disappearing."""
     harness = _Harness(tmp_path)
 
-    payload = await harness._resolve_cards_runtime_artifacts(
+    payload = await harness._resolve_cards_runtime_artifacts_at(
+        workspace=tmp_path,
         artifacts=_cards_artifacts(),
         run_id="sess-cards-runtime-artifacts",
         session_status="failed",
@@ -52,9 +54,10 @@ async def test_resolve_cards_runtime_artifacts_reports_log_missing_for_cards_wor
 async def test_resolve_cards_runtime_artifacts_reports_no_events_found_for_cards_workload(tmp_path: Path) -> None:
     """Layer: integration. Verifies an empty cards-runtime log reports `no_events_found` explicitly."""
     harness = _Harness(tmp_path)
-    (tmp_path / "orket.log").write_text("", encoding="utf-8")
+    await asyncio.to_thread((tmp_path / "orket.log").write_text, "", encoding="utf-8")
 
-    payload = await harness._resolve_cards_runtime_artifacts(
+    payload = await harness._resolve_cards_runtime_artifacts_at(
+        workspace=tmp_path,
         artifacts=_cards_artifacts(),
         run_id="sess-cards-runtime-artifacts",
         session_status="failed",
@@ -75,14 +78,15 @@ async def test_resolve_cards_runtime_artifacts_reports_resolution_failed_on_read
 ) -> None:
     """Layer: integration. Verifies log read failures remain machine-readable as `resolution_failed`."""
     harness = _Harness(tmp_path)
-    (tmp_path / "orket.log").write_text("{}", encoding="utf-8")
+    await asyncio.to_thread((tmp_path / "orket.log").write_text, "{}", encoding="utf-8")
 
     def _boom(*_args, **_kwargs):
         raise OSError("denied")
 
     monkeypatch.setattr("orket.runtime.execution.execution_pipeline_runtime_artifacts.aiofiles.open", _boom)
 
-    payload = await harness._resolve_cards_runtime_artifacts(
+    payload = await harness._resolve_cards_runtime_artifacts_at(
+        workspace=tmp_path,
         artifacts=_cards_artifacts(),
         run_id="sess-cards-runtime-artifacts",
         session_status="failed",
@@ -100,7 +104,8 @@ async def test_resolve_cards_runtime_artifacts_reports_resolution_failed_on_read
 async def test_resolve_cards_runtime_artifacts_marks_resolved_when_runtime_events_exist(tmp_path: Path) -> None:
     """Layer: integration. Verifies cards-runtime extraction stays truthful when ODR events are present."""
     harness = _Harness(tmp_path)
-    (tmp_path / "orket.log").write_text(
+    await asyncio.to_thread(
+        (tmp_path / "orket.log").write_text,
         "\n".join(
             [
                 json.dumps(
@@ -127,7 +132,8 @@ async def test_resolve_cards_runtime_artifacts_marks_resolved_when_runtime_event
         encoding="utf-8",
     )
 
-    payload = await harness._resolve_cards_runtime_artifacts(
+    payload = await harness._resolve_cards_runtime_artifacts_at(
+        workspace=tmp_path,
         artifacts=_cards_artifacts(),
         run_id="sess-cards-runtime-artifacts",
         session_status="done",

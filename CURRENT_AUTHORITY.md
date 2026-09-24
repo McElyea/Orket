@@ -2,6 +2,15 @@
 
 Last updated: 2026-09-23
 
+Session checkpoints use the selected clock, capture snapshot path and nested JSON
+before lock admission, and retain the snapshot repository selected at publication
+or recovery entry. Selected epic closeout observations and summary publication use
+the existing native I/O owner through interruption. The migration and proof limits
+are in `docs/architecture/CONTRACT_DELTA_EPIC_CLOSEOUT_OWNERSHIP_D_2026-09-23.md`.
+The architectural-truth plan and checkpoint receipts own acceptance/publication
+status, both matched opening phases and the fresh Linux clock blocker. This
+implementation contract does not establish wider D/E/CAP or full-coverage proof.
+
 Guard-rejection pending requests sample the pipeline-selected clock once after
 gate-policy resolution and retain the publisher object selected before the row
 await. Row and hold share the timestamp. A selected absent publisher remains absent;
