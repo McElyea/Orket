@@ -1,6 +1,6 @@
 {
   "schema_version": "dependency_report.v2",
-  "generated_at": "2026-09-23T22:32:43.879722+00:00",
+  "generated_at": "2026-09-23T23:59:00.673304+00:00",
   "collection_ok": true,
   "root": "C:\\Source\\Orket-architectural-truth",
   "policy": {
@@ -2149,7 +2149,7 @@
       },
       "orket.application.workflows.orchestrator_ops": {
         "path": "orket/application/workflows/orchestrator_ops.py",
-        "sha256": "0c3bdc4a6f17c69a123f5f2b95122ce153677996f8b91b92cf6392ceaf4f1fe8"
+        "sha256": "32ab6458067f18a0867be04098bfc34d01739468e2e4eb9a7333ee5cf8211581"
       },
       "orket.application.workflows.prompt_budget_guard": {
         "path": "orket/application/workflows/prompt_budget_guard.py",
@@ -39675,45 +39675,6 @@
   },
   "diff_ledger": [
     {
-      "run_at_utc": "2026-09-22T15:25:49.782785Z",
-      "changed": true,
-      "before_digest": "sha256:90d5c7a72041ccb020e562a35b16c7faa00413f3a45f76b4ef146bedc5eaf68e",
-      "after_digest": "sha256:40db2e66278f63bdf0154216a5a70d973cb88d30e224822907335013ff36d583",
-      "diff": {
-        "added_paths": 181,
-        "removed_paths": 173,
-        "changed_paths": 12288,
-        "initial_write": false,
-        "paths_total_previous": 56457,
-        "paths_total_current": 56543,
-        "paths_total_reference": 56543,
-        "churn_paths": 12642,
-        "churn_ratio": 0.223582,
-        "sample_paths": [
-          "$.generated_at",
-          "$.observed.adapter_effects[5].declarations.classes.OpenClawJsonlSubprocessAdapter@36",
-          "$.observed.adapter_effects[5].declarations.classes.OpenClawSubprocessError@13",
-          "$.observed.adapter_effects[5].declarations.classes.PartialAdapterResult@22",
-          "$.observed.adapter_effects[5].declarations.classes.OpenClawJsonlSubprocessAdapter@40",
-          "$.observed.adapter_effects[5].declarations.classes.OpenClawSubprocessError@17",
-          "$.observed.adapter_effects[5].declarations.classes.PartialAdapterResult@26",
-          "$.observed.adapter_effects[5].declarations.module[0].line",
-          "$.observed.adapter_effects[5].sha256",
-          "$.observed.adapter_effects[6].declarations.classes.JsonlExchange@13",
-          "$.observed.adapter_effects[6].declarations.module[0].line",
-          "$.observed.adapter_effects[6].declarations.module[0].literal",
-          "$.observed.adapter_effects[6].module",
-          "$.observed.adapter_effects[6].path",
-          "$.observed.adapter_effects[6].sha256",
-          "$.observed.adapter_effects[6].side_effecting",
-          "$.observed.adapter_effects[7].declarations.classes.LinuxChildren@12",
-          "$.observed.adapter_effects[7].declarations.module[0].literal",
-          "$.observed.adapter_effects[7].module",
-          "$.observed.adapter_effects[7].path"
-        ]
-      }
-    },
-    {
       "run_at_utc": "2026-09-22T15:29:51.116591Z",
       "changed": true,
       "before_digest": "sha256:40db2e66278f63bdf0154216a5a70d973cb88d30e224822907335013ff36d583",
@@ -40591,6 +40552,27 @@
         "churn_ratio": 1.7e-05,
         "sample_paths": [
           "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-23T23:59:23.683821Z",
+      "changed": true,
+      "before_digest": "sha256:08f2e5d24dc3c90fb020e31662a0b8e38c398c3d68ba9231dc8bcaf03afcbcc2",
+      "after_digest": "sha256:b538cf39e9f89c5a5ad50fd8485dbee792f67778be35a7e37938c31eae3f01b8",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 2,
+        "initial_write": false,
+        "paths_total_previous": 58655,
+        "paths_total_current": 58655,
+        "paths_total_reference": 58655,
+        "churn_paths": 2,
+        "churn_ratio": 3.4e-05,
+        "sample_paths": [
+          "$.generated_at",
+          "$.observed.modules.orket.application.workflows.orchestrator_ops.sha256"
         ]
       }
     }

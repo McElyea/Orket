@@ -5,6 +5,17 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.103] - 2026-09-23
+
+### Fixed
+- Use the pipeline-selected clock for guard-rejection pending requests and their control-plane holds.
+- Retain the publisher selected before the pending-row await, including a selected absent publisher; preserve durable row prefixes when later publication fails.
+- `compatibility_status`: `compatible`
+- `affected_audience`: `all`
+- `migration_requirement`: `none`
+- Contract: `docs/specs/EPIC_RUNTIME_TIME_INPUTS.md`; delta: `docs/architecture/CONTRACT_DELTA_GUARD_REQUEST_INPUTS_D_2026-09-23.md`.
+- The architectural-truth plan owns acceptance and publication status. Wider D/E/CAP, Linux clock, full coverage and lane acceptance remain open.
+
 ## [0.6.102] - 2026-09-23
 
 ### Fixed

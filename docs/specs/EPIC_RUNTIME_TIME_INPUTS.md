@@ -42,11 +42,34 @@ or close the remaining explicit-input and clock inventory under D. Default
 `RuntimeInputService` behavior remains the host UTC clock; controlled clocks
 are caller-provided inputs rather than hidden global overrides.
 
-The pending 0.6.102 turn-artifact migration explicitly forwards this same service's
+The 0.6.102 turn-artifact migration explicitly forwards this same service's
 UTC callback through pipeline wiring and Orchestrator into TurnExecutor/parser.
 Parser completion samples after its artifact batch. New local/control-plane
 checkpoints share one entry-captured timestamp; retained records keep historical
 time. Tool-approval request and hold publication likewise reuse one explicit
 turn-clock sample. No new RuntimeConstructionInputs field or lower-level default
-clock is introduced. Requirements and pending acceptance are in
-`TURN_ARTIFACT_PUBLICATION_CONTRACT.md` and the architectural-truth plan.
+clock is introduced. The implementation contract is
+`TURN_ARTIFACT_PUBLICATION_CONTRACT.md`; the architectural-truth plan and its
+checkpoint receipts own acceptance and publication status.
+
+Guard-rejection pending requests extend explicit time selection in 0.6.103.
+After synchronous gate-policy resolution, the orchestrator samples its existing
+`turn_clock` once and captures the existing reservation publisher object before
+awaiting pending-row creation. The pending repository still owns request identity.
+The row's `created_at` and `updated_at` and any hold's `creation_timestamp` share
+that sample. Replacing the orchestrator's clock, pending repository or publisher
+slot during the admitted row operation does not redirect that request.
+
+A missing publisher slot or selected `None` keeps row-only behavior. A present
+publisher must provide the required method: lookup and invocation occur on the
+captured object after the pending row returns. A missing or noncallable method
+propagates its error, as does later publication failure; the durable row remains.
+There is no retry, rollback, atomic row-plus-hold transaction, new clock or resource
+owner. Capturing the publisher object does not freeze its internal mutable state.
+Accepted gate policy, request/hold schemas and guard-handler failure ordering remain.
+
+The matched local controls compose a real pipeline, SQLite repositories and the
+public success handler with a controlled result and final failure sink. They do not
+establish provider inference, full epic dispatch, cancellation ownership or general
+replay behavior. The migration and validation obligations are in
+`../architecture/CONTRACT_DELTA_GUARD_REQUEST_INPUTS_D_2026-09-23.md`.

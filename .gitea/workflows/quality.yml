@@ -100,6 +100,12 @@ jobs:
           python -m pytest -q tests/integration/test_provider_inference_http_inputs.py tests/integration/test_provider_inference_tls_inputs.py tests/integration/test_provider_inference_ownership.py tests/integration/test_provider_inference_callers.py tests/integration/test_outward_provider_construction.py tests/integration/test_sdk_provider_construction.py
           python -m pytest -q tests/integration/test_provider_process_input_capture.py tests/integration/test_owned_command_input_capture.py tests/integration/test_provider_inventory_inputs.py tests/integration/test_provider_inventory_load_observation.py tests/runtime/test_provider_runtime_target.py tests/runtime/test_gguf_model_inventory.py
 
+      - name: Enforce guard-request time and publisher ownership
+        env:
+          ORKET_DISABLE_SANDBOX: "1"
+        run: |
+          python -m pytest -q tests/integration/test_guard_rejection_clock_ownership.py tests/integration/test_governed_guard_rejection.py tests/integration/test_governed_guard_epic_rejection.py
+
       - name: Enforce governance proof engine and alias ownership
         run: |
           python -m pytest -q tests/scripts/test_governance_proof_engine_lifetime.py tests/scripts/test_governance_proof_cleanup_ownership.py tests/contracts/test_governance_proof_native_entry.py tests/contracts/test_governance_alias_ownership.py tests/scripts/test_truthful_runtime_live_proof_summary_validation.py
@@ -508,6 +514,12 @@ jobs:
           python -m pytest -q tests/application/test_execution_pipeline_run_ledger.py tests/application/test_orchestrator_epic.py tests/application/test_turn_contract_validator.py tests/application/test_turn_corrective_prompt.py tests/application/test_turn_executor_context.py tests/application/test_turn_executor_middleware.py tests/application/test_turn_path_resolver.py tests/application/test_turn_tool_dispatcher.py tests/application/test_turn_tool_dispatcher_compatibility.py tests/application/test_turn_tool_dispatcher_policy_enforcement.py tests/application/test_turn_tool_dispatcher_support.py tests/contracts/test_repair_readiness_observation.py tests/contracts/test_turn_prompt_truth.py tests/integration/test_loop_input_admission.py tests/integration/test_protocol_path_observation.py tests/integration/test_protocol_path_ownership.py tests/integration/test_protocol_path_ownership_failure_trace.py tests/integration/test_required_read_observer_ownership.py tests/integration/test_required_read_validation_contract.py tests/integration/test_required_read_validation_ownership.py tests/integration/test_run_packet1_input_matrix.py tests/integration/test_run_packet1_inputs.py tests/integration/test_turn_context_observation_ownership.py tests/integration/test_validation_path_observation.py tests/runtime/test_protocol_error_code_adoption.py
           python -m pytest -q tests/integration/test_provider_inference_http_inputs.py tests/integration/test_provider_inference_tls_inputs.py tests/integration/test_provider_inference_ownership.py tests/integration/test_provider_inference_callers.py tests/integration/test_outward_provider_construction.py tests/integration/test_sdk_provider_construction.py
           python -m pytest -q tests/integration/test_provider_process_input_capture.py tests/integration/test_owned_command_input_capture.py tests/integration/test_provider_inventory_inputs.py tests/integration/test_provider_inventory_load_observation.py tests/runtime/test_provider_runtime_target.py tests/runtime/test_gguf_model_inventory.py
+
+      - name: Enforce guard-request time and publisher ownership
+        env:
+          ORKET_DISABLE_SANDBOX: "1"
+        run: |
+          python -m pytest -q tests/integration/test_guard_rejection_clock_ownership.py tests/integration/test_governed_guard_rejection.py tests/integration/test_governed_guard_epic_rejection.py
 
       - name: Enforce governance proof engine and alias ownership
         run: |

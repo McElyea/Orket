@@ -24001,3 +24001,124 @@ settings change occurred. Wider D, E1/E2, full 89% coverage, ProductFlow replay,
 legacy cutover, selected-provider and CAP-1/2/3 proof remain open. No hosted Quality
 acceptance, main merge, whole-goal completion or lane retirement is claimed.
 Lane retirement still requires explicit user acceptance.
+
+#### .103 Guard-request opening and bounded repair (2026-09-23)
+
+Status: candidate implementation; final acceptance and publication remain pending.
+Published .102 (`b00d53c30283222016d5ff704e753776feeb81a1`) is the parent.
+Its annotated tag, remote refs, clean worktree, committed bytes and unchanged
+original checkout were verified before authoring. Historical clean-HEAD assertions
+were not rerun against this later checkpoint. The first opening helper had a parse
+error before executing any operation; its immutable bytes and correction receipt
+remain under `.tmp/d-guard-rejection-authoring/` and the linked helper records.
+
+The first frozen six-case source and exact installed .102 opening each reported
+four failures and two passes under `.tmp/d-guard-rejection-ownership/`. Three
+failures reached the intended clock/owner checks. The public-handler fixture
+accessed nonexistent `IssueConfig.summary` before reaching the route; that fourth
+failure is absent route proof. The seal binds 2,624 physical evidence files.
+The corrected fixture uses its validated `name` field and also records the exact
+reservation-save attempt count. A fresh matched phase under
+`.tmp/d-guard-rejection-corrected-opening/` reached all four intended failures and
+both healthy controls per cell; its seal binds 2,630 physical evidence files.
+Both source and installed cells retained identical six-case identities and exact
+input/package bindings. No observed failure has been replaced or relabeled as a pass.
+
+The held controls complete a real pending SQLite insert, then replace the
+orchestrator's clock, pending repository and publisher slots while the caller is
+suspended. Published .102 uses neither selected clock and writes the hold through
+replacement publisher B, including when the admitted publisher was None. The
+first clock assertion prevents subsequent owner assertions from running, but
+complete JUnit observations and physical SQLite bytes independently retain the
+redirected hold. The corrected public success-handler composition reaches the
+invalid-guard branch, real pending row and hold, then its controlled failure sink;
+the selected-clock assertion fails. A controlled reservation persistence error
+leaves a real durable pending row and exactly one recorded save attempt. These are
+controlled local flows, not provider inference, full epic dispatch, native SQL
+fault injection, cancellation ownership or atomic row-plus-hold proof.
+
+The bounded repair changes two lines and moves the existing publisher selection
+within the same helper, with no module growth. Synchronous gate-policy resolution
+still precedes one selected `turn_clock()` sample. The publisher object is captured
+before the pending-row await; its required method lookup and invocation remain
+after that row. Selected None stays absent. A malformed present publisher fails
+after the durable row instead of becoming a silent absent case. No new owner,
+fallback clock, transaction, retry or rollback is introduced. Two additional
+malformed-publisher cases preserve the original six test identities and assertions.
+The existing time-input contract's stale pending-.102 wording is corrected without
+claiming that .102 already fixed this separate guard path.
+
+Canonical C, frozen final source/installed package acceptance, exact commit/tag
+and publication proof are still required. The Linux .95 clock blocker and wider
+D/E/CAP, full coverage, ProductFlow replay and public protocol-replay interpretation
+remain open as recorded above. No merge, whole-goal completion or lane retirement.
+
+
+#### .103 Final guard-request acceptance (2026-09-23)
+
+Responsible maintainer: Codex for Orket Core. Observed path: primary. Result:
+scoped acceptance success; the complete remediation goal remains partial.
+The 12-file candidate had exact LF working/index bytes before proof. Both changed
+Python files, all metadata and proof helpers remained frozen. The earlier focused
+run passed 85 cases with unchanged inputs; it remains a mixed-package diagnostic.
+
+| Cell | Tests / failures / errors / skips | JUnit seconds | Installed origins |
+|---|---|---|---|
+| Fresh source | 3234 / 0 / 0 / 0 | 604.247 | source |
+| Installed a103-guard-win-py311 | 3234 / 0 / 0 / 0 | 610.622 | 1069 |
+| Installed a103-guard-win-py312 | 3234 / 0 / 0 / 0 | 731.691 | 1069 |
+
+All 3,225 published .102 identities remain across 325 selected modules. Nine
+additional identities comprise eight guard-request controls and the existing
+governed-guard epic regression. The initial 324-module selection was retained,
+then reconciled with the focused cohort before freezing; no failed full run was
+replaced. All 396 independent SQLite observations per cell meet the unchanged
+0.5s bound, maximum 0.202914900s. Budgets remain 1500/1800/2100s.
+
+Every cell physically verifies the eight guard cases: one selected clock sample,
+matching row/hold timestamps, admitted publisher under slot replacement, healthy
+publisher/None behavior, missing/noncallable method errors after the durable row,
+and exactly one controlled failing reservation-save attempt. The public case
+composes the real success handler and repositories with a controlled turn and
+final failure sink. No provider inference, full epic dispatch, native SQL fault,
+cancellation ownership, nested publisher snapshot or atomic row-plus-hold claim.
+
+Complete source/sdist/wheel parity covers 1,175 core Python members and 20 data
+members, with 29 SDK Python members separate. Both installed cells read back all
+1,195 core members; the support manifest binds 2,478 inputs.
+The source strict audit and both mandatory installed audits pass alongside exact
+case, origin, input, CLI and teardown checks. Canonical C policy, changed-file lint,
+size, hygiene and release metadata pass. Ruff remains 88 findings with none new.
+AC-01 through AC-08 and AC-10 pass for this scope; AC-09 remains partial.
+Baseline collection does not establish release readiness or full 89% coverage.
+
+Evidence is under .tmp/d-guard-request-publication/, with a fresh
+guard-request-publication-source environment and a103-guard Windows cells.
+Both original matched openings remain unchanged: the first public-route fixture
+failure is absent route proof, while the corrected phase reaches all four intended
+counterexamples with two healthy controls. The helper parse failure, corrected
+helper, original and corrected probe bytes, focused diagnostic and physical files
+remain separate observations. Final proof repeatedly rechecks both opening
+physical maps and frozen focused inputs. Retained readback verified 232,899 prior
+published hashes, nine handoff bindings, 5,911
+local candidate evidence files and 184,858
+external physical files. C:/Source/Orket remains unchanged. Ignored stores stay
+local; Git publication transfers the scoped repository change, not those stores.
+
+Only this plan and the collected baseline may change after the matrix for closeout.
+The checkpoint, index-check and publication receipts bind exact committed bytes,
+annotated tag, branch/remote refs and clean worktree. Those receipts determine
+publication status; this paragraph alone does not assert a remote push.
+
+Continue canonical D with remaining session-snapshot clock inputs and owned-I/O
+effects. Read-only contract review supports retaining public protocol-replay
+terminal-authority consultation; a lock exemption is not a reentry exemption.
+The public flag's model-proposal/recorded-operation behavior still needs explicit
+contract wording and matched composed controls, separate from CLI no-model replay.
+No terminal-authority bypass is accepted. Linux retains the .95 blocker:
+240.019511342s elapsed, 25.211878083s quiet against 60s, and
+-6.018610816/+6.026590404s steps against 0.01s. No fresh Linux measurement or
+settings change occurred. Wider D/E/CAP, ProductFlow replay, legacy cutover,
+selected-provider proof, hosted Quality and full coverage remain open.
+No main merge, whole-goal completion or lane retirement; retirement still requires
+the user's explicit acceptance.

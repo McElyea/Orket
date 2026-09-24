@@ -1,6 +1,6 @@
 {
   "schema_version": "architectural_truth.baseline.v1",
-  "generated_at": "2026-09-23T23:18:49.173278Z",
+  "generated_at": "2026-09-24T00:48:19.032397Z",
   "collection_ok": true,
   "release_ready": false,
   "release_ready_reason": "Active architectural exceptions and red/noisy proof gates remain.",
@@ -6706,10 +6706,10 @@
   },
   "test_taxonomy": {
     "schema_version": "test_taxonomy_report.v1",
-    "tests_total": 5996,
-    "missing_layer_total": 4400,
+    "tests_total": 6001,
+    "missing_layer_total": 4405,
     "by_layer": {
-      "unlabeled": 4400,
+      "unlabeled": 4405,
       "integration": 754,
       "unit": 162,
       "contract": 669,
@@ -7317,7 +7317,7 @@
         "layer": null
       }
     ],
-    "missing_layers_omitted": 4300
+    "missing_layers_omitted": 4305
   },
   "ruff": {
     "proof": "structural_lint",
@@ -7716,69 +7716,6 @@
     "parse_errors": []
   },
   "diff_ledger": [
-    {
-      "run_at_utc": "2026-09-22T21:02:33.431445Z",
-      "changed": true,
-      "before_digest": "sha256:6ea03d6e5b23aa7e711062d98871b493f9e5dfab2c7e134a7910950ccbc29b34",
-      "after_digest": "sha256:9cca4ac32bd47f43b58f0813b19c7f4f5e99cad58d0706255208c38fc17a9a7f",
-      "diff": {
-        "added_paths": 6,
-        "removed_paths": 6,
-        "changed_paths": 56,
-        "initial_write": false,
-        "paths_total_previous": 9372,
-        "paths_total_current": 9372,
-        "paths_total_reference": 9372,
-        "churn_paths": 68,
-        "churn_ratio": 0.007256,
-        "sample_paths": [
-          "$.dependency_graph.observed.adapter_effects[75].declarations.classes.GiteaHTTPClient@25",
-          "$.dependency_graph.observed.adapter_effects[75].declarations.classes.GiteaHTTPClient@27",
-          "$.dependency_graph.observed.adapter_effects[75].declarations.module[0].line",
-          "$.dependency_graph.observed.adapter_effects[75].sha256",
-          "$.dependency_graph.observed.adapter_effects[77].declarations.classes.GiteaStateAdapter@44",
-          "$.dependency_graph.observed.adapter_effects[77].declarations.classes.SecretToken@30",
-          "$.dependency_graph.observed.adapter_effects[77].declarations.classes.GiteaStateAdapter@46",
-          "$.dependency_graph.observed.adapter_effects[77].declarations.classes.SecretToken@32",
-          "$.dependency_graph.observed.adapter_effects[77].declarations.module[0].line",
-          "$.dependency_graph.observed.adapter_effects[77].sha256",
-          "$.dependency_graph.observed.adapter_effects[146].declarations.module[0].line",
-          "$.dependency_graph.observed.adapter_effects[146].sha256",
-          "$.dependency_graph.observed.effect_declarations.orket.adapters.storage.gitea_http_client.classes.GiteaHTTPClient@25",
-          "$.dependency_graph.observed.effect_declarations.orket.adapters.storage.gitea_http_client.classes.GiteaHTTPClient@27",
-          "$.dependency_graph.observed.effect_declarations.orket.adapters.storage.gitea_http_client.module[0].line",
-          "$.dependency_graph.observed.effect_declarations.orket.adapters.storage.gitea_state_adapter.classes.GiteaStateAdapter@44",
-          "$.dependency_graph.observed.effect_declarations.orket.adapters.storage.gitea_state_adapter.classes.SecretToken@30",
-          "$.dependency_graph.observed.effect_declarations.orket.adapters.storage.gitea_state_adapter.classes.GiteaStateAdapter@46",
-          "$.dependency_graph.observed.effect_declarations.orket.adapters.storage.gitea_state_adapter.classes.SecretToken@32",
-          "$.dependency_graph.observed.effect_declarations.orket.adapters.storage.gitea_state_adapter.module[0].line"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-09-22T21:08:52.695959Z",
-      "changed": true,
-      "before_digest": "sha256:9cca4ac32bd47f43b58f0813b19c7f4f5e99cad58d0706255208c38fc17a9a7f",
-      "after_digest": "sha256:e919cc215dc55d5675658301f60e466333d9d2cc0c603b65161fc5a734a0eb98",
-      "diff": {
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 5,
-        "initial_write": false,
-        "paths_total_previous": 9372,
-        "paths_total_current": 9372,
-        "paths_total_reference": 9372,
-        "churn_paths": 5,
-        "churn_ratio": 0.000534,
-        "sample_paths": [
-          "$.generated_at",
-          "$.test_taxonomy.by_layer.unlabeled",
-          "$.test_taxonomy.missing_layer_total",
-          "$.test_taxonomy.missing_layers_omitted",
-          "$.test_taxonomy.tests_total"
-        ]
-      }
-    },
     {
       "run_at_utc": "2026-09-22T21:13:52.331546Z",
       "changed": true,
@@ -8470,6 +8407,50 @@
       "changed": true,
       "before_digest": "sha256:752742c73c0e5b898ff1a78e45252654f44f6440e2ef9db350d9f656ed941eb3",
       "after_digest": "sha256:90a84ae681a3cdf974c3d5f264f4efe8632fcc1ff60b36dfd0a82a2dd83fab2c",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 9372,
+        "paths_total_current": 9372,
+        "paths_total_reference": 9372,
+        "churn_paths": 1,
+        "churn_ratio": 0.000107,
+        "sample_paths": [
+          "$.generated_at"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-23T23:59:58.639477Z",
+      "changed": true,
+      "before_digest": "sha256:90a84ae681a3cdf974c3d5f264f4efe8632fcc1ff60b36dfd0a82a2dd83fab2c",
+      "after_digest": "sha256:4b5c85e79fda15a7a5f5fa39b500a5dbade9215c59eef2ce261f55b31e1e3285",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 5,
+        "initial_write": false,
+        "paths_total_previous": 9372,
+        "paths_total_current": 9372,
+        "paths_total_reference": 9372,
+        "churn_paths": 5,
+        "churn_ratio": 0.000534,
+        "sample_paths": [
+          "$.generated_at",
+          "$.test_taxonomy.by_layer.unlabeled",
+          "$.test_taxonomy.missing_layer_total",
+          "$.test_taxonomy.missing_layers_omitted",
+          "$.test_taxonomy.tests_total"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-09-24T00:48:19.039948Z",
+      "changed": true,
+      "before_digest": "sha256:4b5c85e79fda15a7a5f5fa39b500a5dbade9215c59eef2ce261f55b31e1e3285",
+      "after_digest": "sha256:0991e127295bd62f3686c81ab0a7918e8a4ff2065836f034b17f4251bf225312",
       "diff": {
         "added_paths": 0,
         "removed_paths": 0,

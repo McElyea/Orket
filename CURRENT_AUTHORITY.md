@@ -2,6 +2,13 @@
 
 Last updated: 2026-09-23
 
+Guard-rejection pending requests sample the pipeline-selected clock once after
+gate-policy resolution and retain the publisher object selected before the row
+await. Row and hold share the timestamp. A selected absent publisher remains absent;
+a malformed present publisher or later failure propagates after the durable row.
+Contract: `docs/specs/EPIC_RUNTIME_TIME_INPUTS.md`; migration and proof limits:
+`docs/architecture/CONTRACT_DELTA_GUARD_REQUEST_INPUTS_D_2026-09-23.md`.
+
 Turn artifacts require one captured destination and the existing writer. Response,
 parser, prompt-budget, checkpoint and memory publication retain admitted native
 work through interruption. Invocation bindings retain the selected dispatcher,

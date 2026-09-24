@@ -1406,7 +1406,8 @@ async def _create_pending_gate_request(
 ) -> str:
     gate_mode = resolve_policy_token(loop_policy_node=self.loop_policy_node, attribute="gate_mode_for_seat",
         inputs=capture_seat_policy_input(seat_name, issue, turn_status), default="auto")
-    request_created_at = datetime.now(UTC).isoformat()
+    request_created_at = self.turn_clock().isoformat()
+    publisher = getattr(self, "tool_approval_control_plane_reservation", None)
     request_id = str(await self.pending_gates.create_request(
         session_id=run_id,
         issue_id=issue_id,
@@ -1417,7 +1418,6 @@ async def _create_pending_gate_request(
         created_at=request_created_at,
         payload=payload,
     ))
-    publisher = getattr(self, "tool_approval_control_plane_reservation", None)
     if publisher is not None:
         await publisher.publish_pending_guard_review_hold(
             request_id=request_id,
