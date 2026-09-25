@@ -10,6 +10,7 @@ pytestmark = [pytest.mark.contract, pytest.mark.asyncio]
 
 
 @pytest.mark.parametrize('kind', ['success', 'uncertain', 'timeout', 'incomplete', 'refused', 'exit'])
+# Layer: contract
 async def test_export_command_requires_confirmed_outcome(tmp_path, kind):
     result = OwnedCommandResult(0, b'captured\n', b'private-diagnostic', 'completed', True, True,
                                 'fixture-port', 1, 2, 3, ())
@@ -34,6 +35,7 @@ async def test_export_command_requires_confirmed_outcome(tmp_path, kind):
         if kind == 'uncertain':
             assert outcome.value.lifetime is result
     assert len(calls) == 1
-    assert calls[0][0] == ('git', '-c', 'core.hooksPath=', '-c', 'init.templateDir=', '-c', 'credential.helper=', 'status')
+    assert calls[0][0] == ('git', '-c', 'core.longpaths=true', '-c', 'core.hooksPath=',
+                           '-c', 'init.templateDir=', '-c', 'credential.helper=', 'status')
     assert calls[0][1] == dict(cwd=tmp_path, environment={'PRIVATE': 'private-input'},
                               timeout_seconds=60, output_limit_bytes=262144)

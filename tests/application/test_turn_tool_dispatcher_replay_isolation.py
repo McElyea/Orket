@@ -7,7 +7,10 @@ import pytest
 
 from orket.application.middleware import TurnLifecycleInterceptors
 from orket.application.services.tool_gate_service import ToolGate
-from orket.application.workflows.turn_artifact_writer import TurnArtifactWriter
+from orket.application.workflows.turn_artifact_writer import (
+    TurnArtifactWriter,
+    build_operation_record,
+)
 from orket.application.workflows.turn_tool_dispatcher import ToolDispatcher
 from orket.core.contracts.protocol_hashing import build_step_id, derive_operation_id
 from orket.core.domain.execution import ExecutionTurn, ToolCall
@@ -91,12 +94,12 @@ async def test_replay_mode_with_protocol_enabled_skips_persistence_side_effects(
     turn_index = 1
     step_id = build_step_id(issue_id=issue_id, turn_index=turn_index)
     operation_id = derive_operation_id(run_id=session_id, step_id=step_id, tool_index=0)
-    operation_store[(session_id, issue_id, role_name, turn_index, operation_id)] = {
-        "operation_id": operation_id,
-        "result": {"ok": True, "source": "recorded"},
-        "tool": "write_file",
-        "args": {"path": "a.txt", "content": "x"},
-    }
+    operation_store[(session_id, issue_id, role_name, turn_index, operation_id)] = build_operation_record(
+        operation_id=operation_id,
+        tool_name="write_file",
+        tool_args={"path": "a.txt", "content": "x"},
+        result={"ok": True, "source": "recorded"},
+    )
 
     turn = ExecutionTurn(timestamp=None,
         role=role_name,
@@ -146,12 +149,12 @@ async def test_replay_mode_with_protocol_disabled_skips_legacy_tool_result_persi
     turn_index = 1
     step_id = build_step_id(issue_id=issue_id, turn_index=turn_index)
     operation_id = derive_operation_id(run_id=session_id, step_id=step_id, tool_index=0)
-    operation_store[(session_id, issue_id, role_name, turn_index, operation_id)] = {
-        "operation_id": operation_id,
-        "result": {"ok": True, "source": "recorded"},
-        "tool": "write_file",
-        "args": {"path": "a.txt", "content": "x"},
-    }
+    operation_store[(session_id, issue_id, role_name, turn_index, operation_id)] = build_operation_record(
+        operation_id=operation_id,
+        tool_name="write_file",
+        tool_args={"path": "a.txt", "content": "x"},
+        result={"ok": True, "source": "recorded"},
+    )
 
     turn = ExecutionTurn(timestamp=None,
         role=role_name,

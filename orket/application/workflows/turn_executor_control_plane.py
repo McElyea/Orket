@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 import json
 from functools import partial
 from typing import TYPE_CHECKING, Any
@@ -23,6 +22,7 @@ from orket.core.domain import (
 from orket.core.domain.execution import ExecutionTurn
 
 from .turn_artifact_destination import TurnArtifactDestination
+from .turn_checkpoint_snapshot import checkpoint_snapshot_integrity_ref
 from .turn_contract_input_capture import capture_mapping
 from .turn_control_plane_binding import TurnControlPlaneBinding
 from .turn_executor_runtime import state_delta_from_tool_calls
@@ -211,16 +211,9 @@ async def write_turn_checkpoint_and_publish_if_needed(
             protocol_replay_mode=replay_mode,
             namespace_scope=namespace_scope,
         )
-        snapshot_compact = json.dumps(
-            snapshot_payload,
-            sort_keys=True,
-            separators=(",", ":"),
-            ensure_ascii=True,
-            default=str,
-        )
-        snapshot_hash = hashlib.sha256(snapshot_compact.encode("ascii")).hexdigest()
+        integrity_ref = checkpoint_snapshot_integrity_ref(snapshot_payload)
+        snapshot_hash = integrity_ref.rsplit(":", maxsplit=1)[-1]
         snapshot_ref = f"turn-tool-checkpoint-snapshot:{run.run_id}:{snapshot_hash[:16]}"
-        integrity_ref = f"turn-tool-checkpoint-integrity:sha256:{snapshot_hash}"
         await run_owned_thread(partial(
             destination.writer.write_turn_artifact, destination=destination,
             filename=f"control_plane_checkpoint_snapshot_{snapshot_hash[:16]}.json",

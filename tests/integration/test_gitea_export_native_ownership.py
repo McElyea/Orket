@@ -1,8 +1,10 @@
 """Layer: integration. Actual Git, payload files and native export ownership."""
 import asyncio
+import hashlib
 import json
 import os
 import shlex
+import shutil
 import sys
 import threading
 from pathlib import Path
@@ -54,6 +56,73 @@ async def fixture_alias(root, name, content):
     path = root / (name + '.py')
     await asyncio.to_thread(path.write_text, content, encoding='utf-8', newline='\n')
     return '!' + ' '.join(shlex.quote(value) for value in (Path(sys.executable).as_posix(), path.as_posix(), root.as_posix()))
+
+
+def physical_sha256(path):
+    with path.open('rb') as stream:
+        return hashlib.file_digest(stream, 'sha256').hexdigest()
+
+
+def git_repository_state(git):
+    directory = git.repo_dir / '.git'
+    config = (directory / 'config').read_text(encoding='utf-8')
+    head = (directory / 'HEAD').read_text(encoding='utf-8').strip()
+    durable = any(line.strip().lower() == 'longpaths = true' for line in config.splitlines())
+    return dict(objects=(directory / 'objects').is_dir(), head=head, durable_longpaths=durable)
+
+
+# Layer: integration. Real Git process and physical short/long repository state.
+async def test_export_git_initializes_at_long_path_boundary(tmp_path_factory, monkeypatch, record_property):
+    clean_network(monkeypatch)
+    short_root = await asyncio.to_thread(tmp_path_factory.mktemp, 'gs')
+    long_base = await asyncio.to_thread(tmp_path_factory.mktemp, 'gl')
+    repo_suffix = Path('cache/repo_cache') / ('0' * 64)
+    padding = 236 - len(str(long_base / repo_suffix)) - 1
+    if not 0 < padding <= 200:
+        raise AssertionError(dict(reason='fixture cannot reach exact boundary', base=str(long_base), padding=padding))
+    long_root = long_base / ('p' * padding)
+    await asyncio.to_thread(long_root.mkdir)
+
+    short_owner = await exporter(short_root)
+    long_owner = await exporter(long_root)
+    short_git = short_owner._transport('short-boundary')
+    long_git = long_owner._transport('long-boundary')
+    repo_lengths = [len(str(git.repo_dir)) for git in (short_git, long_git)]
+    object_length = len(str(long_git.repo_dir / '.git/objects'))
+
+    executables = []
+    for git in (short_git, long_git):
+        selected = await asyncio.to_thread(shutil.which, 'git', path=git.environment['PATH'])
+        if selected is None:
+            raise AssertionError('captured PATH does not resolve Git')
+        executables.append(await asyncio.to_thread(Path(selected).resolve))
+    executable_sha256 = await asyncio.to_thread(physical_sha256, executables[0])
+
+    await asyncio.wait_for(short_git.initialize(), 10)
+    code, short_version = await asyncio.wait_for(short_git.command('--version'), 10)
+    short_state = await asyncio.to_thread(git_repository_state, short_git)
+    opening = dict(executable=str(executables[0]), executable_sha256=executable_sha256,
+        version=short_version, short_repo_length=repo_lengths[0], long_repo_length=repo_lengths[1],
+        objects_length=object_length, short_state=short_state)
+    record_property('gitea_long_path_opening', json.dumps(opening, sort_keys=True))
+
+    assert all(git.environment['GIT_CONFIG_NOSYSTEM'] == '1' for git in (short_git, long_git))
+    assert all(git.environment['GIT_CONFIG_GLOBAL'] == os.devnull for git in (short_git, long_git))
+    assert executables[0] == executables[1] and await asyncio.to_thread(executables[0].is_file)
+    assert repo_lengths[0] < 236 and repo_lengths[1] == 236 and object_length == 249
+    assert code == 0 and short_version.startswith('git version ')
+    assert short_state['objects'] and short_state['head'].startswith('ref: refs/heads/')
+    assert short_state['durable_longpaths']
+
+    await asyncio.wait_for(long_git.initialize(), 10)
+    code, long_version = await asyncio.wait_for(long_git.command('--version'), 10)
+    long_state = await asyncio.to_thread(git_repository_state, long_git)
+    closing_sha256 = await asyncio.to_thread(physical_sha256, executables[1])
+    closing = dict(version=long_version, executable_sha256=closing_sha256, long_state=long_state)
+    record_property('gitea_long_path_closing', json.dumps(closing, sort_keys=True))
+    assert code == 0 and long_version == short_version and closing_sha256 == executable_sha256
+    assert long_state['objects'] and long_state['head'].startswith('ref: refs/heads/')
+    assert long_state['durable_longpaths']
 
 
 @pytest.mark.parametrize('mode', ['supplied', 'ambient', 'unchanged'])

@@ -6,7 +6,10 @@ from orket.application.services.turn_tool_checkpoint_authority import (
     validate_checkpoint_recovery_inputs,
 )
 from orket.application.services.turn_tool_control_plane_recovery import load_checkpoint_resume_lineage
-from orket.application.workflows.turn_checkpoint_snapshot import validate_resume_snapshot_semantics
+from orket.application.workflows.turn_checkpoint_snapshot import (
+    validate_checkpoint_snapshot_integrity,
+    validate_resume_snapshot_semantics,
+)
 from orket.application.workflows.turn_executor_control_plane_evidence import (
     load_checkpoint_snapshot_at,
     operation_artifact_ids_at,
@@ -73,6 +76,10 @@ async def validate_approval_checkpoints(pause, *, execution_repository, publicat
         resumability, _ = validate_checkpoint_recovery_inputs(
             run=run, current_attempt=attempt, checkpoint=checkpoint, acceptance=acceptance)
         snapshot = await load_checkpoint_snapshot_at(destination, checkpoint.state_snapshot_ref)
+        validate_checkpoint_snapshot_integrity(
+            snapshot_payload=snapshot,
+            integrity_verification_ref=checkpoint.integrity_verification_ref,
+        )
         validate_resume_snapshot_semantics(snapshot_payload=snapshot, attempt_id=attempt.attempt_id,
                                           resumability_class=resumability)
         validate_snapshot_identity(snapshot_payload=snapshot, destination=destination,

@@ -45,7 +45,7 @@ class ResultCase:
 
     async def persist(self):
         common = dict(destination=self.destination, tool_name="write_file", tool_args=self.args, result=self.result,
-            binding=self.binding, operation_id="operation-1", replayed=False,
+            binding=self.binding, operation_id="operation-1", replayed=False, operation_record_present=False,
             persist_operation_result=self.operation, control_plane_enabled=self.governed,
             control_plane_service=self.service if self.governed else None,
             control_plane_run_id=self.run.run_id if self.governed else None,

@@ -1,10 +1,34 @@
 """Shared read-only checkpoint snapshot semantics."""
 from __future__ import annotations
 
+import hashlib
+import json
 from typing import Any
 
 from orket.application.services.turn_tool_control_plane_service import TurnToolControlPlaneError
 from orket.core.domain import CheckpointResumabilityClass
+
+
+def checkpoint_snapshot_integrity_ref(snapshot_payload: dict[str, Any]) -> str:
+    compact = json.dumps(
+        snapshot_payload,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=True,
+        default=str,
+    )
+    digest = hashlib.sha256(compact.encode("ascii")).hexdigest()
+    return f"turn-tool-checkpoint-integrity:sha256:{digest}"
+
+
+def validate_checkpoint_snapshot_integrity(
+    *, snapshot_payload: dict[str, Any], integrity_verification_ref: str,
+) -> None:
+    if checkpoint_snapshot_integrity_ref(snapshot_payload) != integrity_verification_ref:
+        raise TurnToolControlPlaneError(
+            "E_CHECKPOINT_SNAPSHOT_INTEGRITY_MISMATCH: "
+            "governed turn checkpoint snapshot does not match durable integrity authority"
+        )
 
 
 def validate_resume_snapshot_semantics(

@@ -1,7 +1,7 @@
 # Architectural Truth Remediation Plan
 
 Date: 2026-07-29
-Last updated: 2026-09-23
+Last updated: 2026-09-25
 Status: Active implementation plan; scoped BT-1 through BT-5 accepted; C/D is the next ordered gate
 Roadmap state: Priority Now
 Owner: Orket Core
@@ -24262,3 +24262,898 @@ filesystem confinement. Native ownership is not a forced thread deadline.
 Wider D/E/CAP, ProductFlow replay, legacy cutover, selected-provider proof,
 hosted Quality and full coverage remain open. No main merge, whole-goal completion
 or lane retirement; retirement requires the user's explicit acceptance.
+
+#### .105 Turn input and replay candidate, retained openings (2026-09-24)
+
+Responsible maintainer: Codex for Orket Core. Published parent is v0.6.104,
+commit `49a14236f3dd27fdbc2a69de260ec1da5d87d9e9`. This subsection records an
+unpublished candidate and bounded observations, not final package acceptance.
+The accepted BT-1 through BT-5 and C behavior remains required; wider D/E/CAP
+and lane acceptance remain open.
+
+The candidate binds the construction-input object selected for an epic owner to
+initial and final Packet-1 facts. A later context-slot replacement cannot change
+that owner's intended provider/profile authority. Operation records now share one
+strict ID/tool/canonical-argument/result-digest validator; only absence at the
+admitted content read is a cache miss. Governed cache hits reuse the captured
+service, existing execution gate and current-attempt step/effect/call predicates.
+Full checkpoint integrity is checked before completed replay, pre-effect resume
+and approval continuation consume its tool plan. Existing native workers and
+resource owners remain authoritative. Contract and internal caller migration:
+`docs/architecture/CONTRACT_DELTA_TURN_INPUT_REPLAY_AUTHORITY_D_2026-09-24.md`.
+
+Four separately sealed matched openings retain unchanged published .104 source
+and the same verified installed .104 environment. Source/installed runs were
+serialized; every phase has 44 identical case identities and no errors or skips.
+
+| Opening root under `.tmp/` | Passing / failing per cell | Interpretation |
+|---|---|---|
+| `d-input-replay-ownership` | 4 / 40 | 26 unreached fixture failures, 14 reached failed assertions |
+| `d-input-replay-corrected-opening` | 7 / 37 | Tool-mode and attempt fixtures repaired; one response-metadata fixture assertion remained |
+| `d-input-replay-metadata-opening` | 8 / 36 | 29 reached behavior defects, six existing-refusal diagnostic differences, one earlier progress-contract refusal |
+| `d-input-replay-admitted-opening` | 8 / 36 | 30 reached behavior defects, six existing-refusal diagnostic differences |
+
+The final opening admits `create_directory` through the real role and progress
+contracts. The existing code returns the prior `write_file` result without invoking
+the new tool, establishing the intended changed-call cache defect. The earlier
+read-only proposal had stopped before cache validation and remains absent proof
+of that predicate. The final opening's seal is
+`8894059e1fa49da7796495ce15245591fd64b797cbe5a13f52b528557515938a`.
+All earlier seal maps, helper/proposal bytes, inputs and physical fixtures remain
+retained. No failed Git patch application or structural check is relabeled passing.
+
+Candidate diagnostics are under `.tmp/d-input-replay-integration/`. Structural-1
+failed three lint findings and observed three-line growth in an oversized test;
+both were corrected with retained original inputs. Structural-2 and structural-3
+pass changed-file lint and size checks for all 34 changed Python files, without
+oversized growth or new functions over 70 lines.
+
+Focused-1 executed 129 cases: 117 passed, 12 failed, no errors/skips. Nine failures
+incorrectly expected a violation reference instead of the canonical same-attempt
+effect-journal recovery rationale; final truth still correctly cites the violation.
+Two healthy cross-process approval controls combined a host-clock child with a
+fixed-January parent clock and correctly refused backward lease time after the
+recovery grant and physical effect. One namespace-corruption fixture published a
+2099 active lease before ordinary deterministic-clock closeout. These are retained
+fixture failures, not passing acceptance or new product defects. Corrections use
+the existing clock authorities and exact canonical rationale, preserving IDs,
+refusal/nonpublication/physical assertions and deadlines.
+
+Focused-2 passes all 129 cases with no failures/errors/skips in 38.48s. All 19
+independent SQLite observations remain below 0.5s, maximum 0.016337400s. Its report
+SHA-256 is `b91db7704b0852ab6489dec7f3fc1be598e68109c4f1da31aa829d7dd033b8b2`;
+JUnit SHA-256 is `73282b69daee453812192c0bbd395a5563912caf88a0b13de5735ef90b115513`.
+Source, helper, installed support and original-checkout maps were unchanged around
+the run. This is live controlled source composition with retained .104 installed
+support, not the final fresh source/installed-package matrix.
+
+Subsequent independent structural review found two uncovered blockers. A refusal
+after a retained same-attempt effect can still finalize as a pre-effect failure
+because the caller supplies only its current invocation's step count. Focused-2
+retains that incorrect boundary assertion; its 129 passes are insufficient proof
+of attempt-level terminal truth. Also, after-tool middleware can replace a cached
+result before persistence rewrites its operation record and digest while reusing
+the earlier effect journal. Neither behavior is accepted. Fresh controls and
+corrections are required before final acceptance; all earlier observations remain.
+
+Focused-2's inner declaration also retains the inaccurate inherited scope text
+`Owned extension installation/catalog/preflight; trusted sources only.` Its actual
+command, identities, outer candidate binding and results remain intact. A fresh
+runner changes only that scope label for subsequent observations. The initial
+successor-preparation helper failed parsing before execution; its bytes and failure
+are retained with the corrected preparation receipt. This is a proof-helper
+authoring failure, not an application observation.
+
+The fresh `review-boundary-opening-1` source observation reproduces the retained
+same-attempt defect: one reached failure and two passing controls, with no errors
+or skips. The empty attempt remains pre-effect; an unresolved dispatch still
+refuses closure. All candidate, helper, package and earlier observation bytes
+were unchanged. The report hash is
+`21d248faf891d453e1a796e7b175c1904da107205ae53bec505da1d79298b4d9`.
+The candidate now reads same-attempt journal evidence inside the existing closeout
+transaction when a caller supplies zero. Nine cache-refusal assertions now require
+post-effect truth for their retained effects; empty and other-attempt controls
+retain pre-effect expectations. Passing proof for this correction is still pending.
+Separate step-only authority remains a D obligation: the existing `None` count
+fallback and historical fixtures can count a resolved step without its journal.
+Recovery treats that split as uncertain; the new journal floor does not reconcile
+it or claim a general split-authority closeout guarantee.
+
+`review-middleware-opening-1` subsequently ran 27 source cases: 20 passed and seven
+failed, with no errors/skips and unchanged candidate/helper/package/retained maps.
+All 19 boundary and governed-cache controls pass with the closeout correction.
+One live after-tool transformation control also passes. Five middleware/cache
+defects are reached: replacement, nested result mutation, nested argument mutation,
+rewriting equivalent operation JSON bytes, and embedded replay result replacement.
+Two intended healthy legacy-cache cases instead stop at the required checkpoint
+gate before reading the cache. They are absent proof of legacy materialization.
+Adding a checkpoint alone would not authorize ordinary resume over retained
+effects; the existing reconciliation guard remains required. Corrected lower-level
+composition must state its limited scope without presenting it as public resume.
+
+`review-middleware-corrected-opening-1` preserves the same 27 identities and adds
+two nonprotocol controls: 29 cases, 21 pass/eight reached failures, no errors/skips.
+The legacy protocol composition passes; nonprotocol legacy reuse reaches a byte
+rewrite, the present-invalid nonprotocol slot incorrectly falls through, and valid
+strict nonprotocol reuse refuses as redispatch. The other five reached defects
+remain. Report SHA-256:
+`6e596c1409231e475ae4f19f1dc689fb8b5f5a91dfc28f5fb2881b94b3292ed7`.
+The two legacy-materialization controls and the load-only invalid-slot control
+compose real lower-level owners; they do not prove public resume admission.
+
+The candidate now enforces cached middleware value authority and preserves strict
+operation and legacy cache bytes, with explicit provenance through required
+internal parameters. The reviewed proposal first failed a malformed unified-diff
+header, then a header-only repair failed incomplete trailing context. Both failures
+and proposal bytes remain. A fresh patch rendered from unique exact original
+blocks passes application checks and is integrated; no fuzzy code substitution
+or runtime result is claimed by patch preparation. Independent review also found
+a downstream determinism adapter that can replace a cached result before receipt
+publication; its targeted refusal/control remain required before acceptance.
+
+`review-middleware-closing-1` passes all 29 cases with no failures/errors/skips.
+The same candidate, helper, package and prior-observation maps remain unchanged
+around that run. This closes the targeted middleware and same-attempt boundary
+controls in source, including the three explicitly lower-level legacy/load cases.
+It does not close the downstream determinism finding, the full affected-case
+union, installed-package acceptance or wider D/E/CAP.
+
+`review-determinism-opening-1` reaches two failures with no errors/skips: ordinary
+governed cached reuse and a direct-dispatcher embedded replay fixture both replace
+the retained result with the determinism error result. The live prefix preserves
+the established live-result adaptation. Report SHA-256:
+`e617ca5b642f77275ec8813e3abaaafa79e139e16476f6e1a1da72580700c867`.
+The candidate now raises that existing diagnostic before cached result substitution
+or publication; the dispatcher remains 635 lines. The ordinary control also checks
+failed/post-effect final truth and unchanged retained effect/operation/receipt
+bytes. The embedded fixture compares complete terminal truth and physical bytes;
+it bypasses public `TurnExecutor` reentry and is not proof of public admission over
+a terminal failed run. Corrected source and installed acceptance remain pending.
+
+`review-full-closing-1` passes all 144 cases across every changed test module,
+with no failures/errors/skips and unchanged bound inputs. It exercises all 105 new
+controls, including both determinism refusals. `review-structural-2` passes for
+42 changed Python files without oversized growth or new long functions. A later
+structural review found one new optional replay-admission parameter; it is now
+required and the live path explicitly supplies false. This migration has no
+observed bypass in the prior 144-case run and requires proof of the final bytes.
+These source diagnostics do not replace fresh installed-package acceptance.
+
+Embedded turn replay retains fresh model/proposal construction and exact stored
+operation reuse; it does not claim the recorded-run CLI's no-model behavior.
+Result/digest validation proves local self-consistency, not independent result
+authenticity. Governed authority reads are separate; the final run reload detects
+run movement through the gate but does not freeze attempt, reservation, lease,
+resource, step or journal rows. Legacy call-keyed content-digest debt remains.
+Pre-effect snapshot refusal can retain a committed recovery prefix; per-call
+refusal and later finalization do not imply whole-turn rollback.
+
+Required next proof is the frozen source/Windows 3.11/3.12 installed union retaining
+all 3,328 published .104 identities, exact package/source parity, canonical C,
+mandatory audits and scoped commit/annotated-tag/remote readback. Budgets remain
+1500/1800/2100s, SQLite below 0.5s and full coverage threshold 89%. Quality declares
+the new controls in both existing jobs; no hosted result is claimed.
+The exact retained Linux clock blocker remains unchanged: 240.043336423s elapsed,
+5.311575227s quiet against 60s, -9.533150037/+10.019925629s steps against 0.01s,
+48 queries with 40 yes/eight no; child terminal, no Linux application acceptance.
+Independent D work continues. Wider logging/transitive I/O, E, CAP, ProductFlow,
+legacy cutover, selected-provider and full-coverage obligations remain open.
+No main merge, whole-goal completion or lane retirement is authorized by this record.
+
+#### .105 First final-source failure and retained recovery (2026-09-24)
+
+Before the full campaign, `review-full-closing-2` passed all 144 focused cases
+with the final required replay-admission parameter and unchanged bound inputs.
+That changed-module diagnostic did not exercise the two unchanged identity tests
+or the authority date contract that subsequently failed in the wider selection.
+
+The first frozen publication campaign is retained unchanged at
+`.tmp/d-input-replay-publication/`. Its fresh source run completed 3,433 cases:
+3,430 passed, three failed, no errors or skips. The pytest summary reports
+700.58s, the JUnit suite 700.190s and the source runner 703.610s; these measure
+different boundaries. The source child returned exit 1 and was reaped; inputs
+remained unchanged. The outer campaign's exit 1 and reap are root-observer
+attestation, not a separately persisted machine invocation receipt. Build,
+environment setup and the early real ToolGate command passed. No installed
+Windows acceptance cell launched, and no .105 commit or tag was published.
+
+Two existing identity-alignment tests changed a checkpoint namespace without
+changing its durable integrity commitment. The strengthened integrity check
+correctly refused that content before the older namespace-specific diagnostic;
+both tests still expected the later diagnostic. Their exact failing observations
+remain. Recovery must preserve identity-alignment coverage as well as the earlier
+integrity refusal, without changing production validation order or accepting
+multiple interchangeable errors. The third failure found the Markdown authority
+date at September 24 while its embedded JSON still said September 23. The JSON
+date is corrected; its contract test remains unchanged.
+
+`.tmp/d-input-replay-source-recovery/failure-retention.json` binds all 28,707
+files in the failed proof root, 2,481 files in its source environment and 57
+copies of the candidate and directly relevant tests before recovery edits.
+The prior failed and passing openings, diagnostics, exact staged bytes, frozen
+helpers and full-source failure remain distinct. The failed source environment
+and proof root will not be reused for a successful campaign.
+
+Readback of those retained results at
+`.tmp/d-input-replay-source-recovery/source-failure-analysis.json` verifies all
+105 named input/replay controls, the eight guard controls, retained closeout
+controls and both Packet-1 controls. All 441 exact prior-plus-candidate SQLite
+observations satisfy the 0.5s bound, maximum 0.162395300s. This is readback of
+the failed source run, not a new execution or acceptance of the corrected bytes.
+The three source failures still refuse the complete matrix.
+
+The corrected identity fixtures now use the existing invocation namespace input
+and canonical snapshot writer to create an intact `issue:OTHER` checkpoint, then
+reenter through the normal `issue:ISSUE-1` request. The historical test identities
+and namespace-specific assertions remain. Two additional integration cases keep
+the original direct snapshot mutation and require the earlier integrity error,
+unchanged retained checkpoint/file bytes and no additional model or tool call.
+Snapshot fixture I/O uses the existing owned native helper. Both Quality jobs
+include the added module. No production validator or diagnostic order changed;
+the corrected tests remain unexecuted at this authoring point.
+
+Subsequent source diagnostics retain the initial import-order failure in
+`source-failure-structural-opening-1`. After that formatting correction,
+`source-failure-structural-closing-1` passes for all 44 changed Python files,
+without oversized growth or new functions over 70 lines.
+`source-failure-closing-1` passes all 15 cases across the complete affected
+identity module, both new integrity-precedence cases and the unchanged current
+authority contract module. It reports no failures, errors or skips; all bound
+candidate, helper, package and prior-observation bytes remain unchanged around
+the run, and the parent is reaped. This is current-source proof with retained
+.104 support, not the required fresh source/installed recovery matrix.
+
+The current result is partial success, with fresh corrected source and installed
+acceptance still required. Source/native/wrapper budgets remain 1500/1800/2100s,
+SQLite remains below 0.5s, and the 89% coverage threshold remains unchanged.
+Linux's retained clock blocker, broader D/E/CAP obligations and active-lane
+posture are unchanged. No completion or retirement is claimed.
+
+Independent recovery review found that both Quality commands omitted the modified
+six-case identity module and that the new integration layer comment fell outside
+the canonical taxonomy scanner's context. Both declarations are corrected;
+canonical baseline refresh and fresh proof of those bytes remain required.
+Independent failure-retention review verifies the exact failed identities,
+retained candidate copies and 105/441 observer subsets. Its outer-handle finding
+is resolved by explicitly classifying that observation as root attestation in
+`.tmp/d-input-replay-source-recovery/outer-campaign-observer-attestation.json`.
+That receipt also corrects the old local progress note's inaccurate JUnit timing
+label without rewriting the note or upgrading the failed result.
+
+
+#### .105 Second final-source failure: audit cleanup ownership (2026-09-24)
+
+Responsible maintainer: Codex for Orket Core. Observed path: primary. Result:
+failure; the recovery source cell and unpublished .105 checkpoint remain
+unaccepted. No installed Windows acceptance cell launched.
+
+The exact staged 57-file candidate remained frozen throughout the fresh
+`.tmp/d-input-replay-recovery-publication/` campaign. Its source cell executed
+3,435 identities: 3,434 passed, one failed, no errors or skips. The source runner
+reported unchanged inputs, terminal/reaped child, no timeout and no killed
+owned processes. The execution-state owner released its temporary request and
+restored its prior state. Measured boundaries remain separate: pytest summary
+1,098.61s; JUnit suite 1,097.436s; source runner 1,104.375s; execution-state owner
+1,154.823307900002s. The outer campaign's exit 1 and reap are explicitly a root
+observer attestation of unified exec session 30476, terminal chunk c1a207; no
+independent raw outer tool receipt is claimed.
+
+The sole failed identity was
+`tests.scripts.test_build_tool_gate_audit::test_tool_gate_audit_cannot_publish_after_required_engine_close_fails`.
+It still required the original controlled engine-close OSError. Windows
+temporary-workspace cleanup instead raised WinError 145, directory not empty,
+masking that error. No audit output was published. Structural diagnosis identifies
+the existing logging daemon as the relevant unjoined temporary-workspace writer;
+the precise late append and filesystem interleaving remain inferred until a
+controlled real-write opening proves them. A new same-owner append frontier and
+audit cleanup ordering are proposed, not implemented or accepted in this record.
+
+Retention under `.tmp/d-input-replay-cleanup-recovery/` binds 28,746 failed-root
+files, 2,481 source-environment files and 60 exact candidate/context copies. All
+303,478 prior published evidence hashes and the first .105 failure maps were
+rechecked unchanged. The original retention helper ran before its independent
+review identified missing explicit configuration/frozen-set anchors and a
+reduced execution-owner summary. Its bytes and receipt remain immutable. A fresh
+supplement bound all eight exact primary machine artifacts, the exact 57-path
+candidate (44 Python plus 13 metadata), all 60 copies, and full execution-owner
+state with explicit provenance limits. No candidate drift was observed.
+
+The final retention readback reverified frozen helpers and opening lineage and
+decoded all 105 named input/replay observers, prior guard/closeout/Packet-1
+controls and all 441 independent physical SQLite observations. Their maximum
+was 0.33224379999956s against the unchanged 0.5s bound. These successful subset
+observations do not accept the failed full source cell. Source/native/outer
+budgets remain 1500/1800/2100s, and no test assertion or coverage ceiling changed.
+
+Exact receipts:
+- retention: `1953af735eea5c700936716c1dac3b9a912a543a25e5f0335699420d7804e4a3`;
+- supplemental binding: `cf85f377783cf3bc441e21a176c60eee87304557faf4f5c41fef7aa4da80b67d`;
+- failed-source readback/retention closeout:
+  `1749e035355828983c5ff55014ba4af46839c16253583eb28d8d475d0aaf58bb`.
+
+Only after those receipts completed was the candidate index reopened for a
+bounded cleanup repair. Both failed campaign roots and source environments,
+every original helper and all prior evidence remain frozen in place. A repaired
+candidate requires new exact-byte review, proof root and environments. The
+proposed broader logging capture/lifecycle controls remain unexecuted. Linux
+clock instability, complete D/E/CAP, full 89% coverage and explicit user lane
+acceptance remain open. No checkpoint publication or lane retirement is claimed.
+
+#### .105 Audit cleanup opening and bounded source closing (2026-09-24)
+
+Responsible maintainer: Codex for Orket Core. Observed path: primary. Result:
+partial success; focused current-source proof is live, full source and installed
+acceptance of the repaired candidate remain absent. Published authority remains
+v0.6.104 at `49a14236f3dd27fdbc2a69de260ec1da5d87d9e9`.
+
+The test-only opening retains both existing audit test identities and assertions.
+It holds an actual runtime-event append on the existing daemon for at least 0.75s,
+observes entry into the temporary owner exit, then performs test-owned queue drain
+and reclamation before real cleanup. With unchanged production bytes, the selected
+required-close case reaches the ordering assertion: `append_settled_at_owner_exit`
+is false. Its controlled engine-close error is observed, no output is published,
+the held append succeeds and the temporary workspace is reclaimed. This proves
+early owner release safely; it does not recreate the precise WinError interleaving
+retained in the preceding full-source failure. Opening: one case, one failure,
+no errors/skips; runner 5.906s. Receipt:
+`.tmp/d-input-replay-cleanup-recovery/audit-opening-readback.json`, SHA-256
+`1f83e2baa6244e0c005ac807eabb2c6f57ac06faae8629b7881e8dfd5aa3b57e`.
+
+The bounded implementation adds a native marker/acknowledgement to the existing
+queue and daemon. Audit `finally` settles it before temporary owner exit. The
+cutoff is marker admission, including capacity wait; later appends are excluded.
+Running-loop callers refuse before admission. Unexpected daemon death wakes and
+refuses waiters with its retained cause, without replacement. Optional `OSError`
+and ordinary enqueue/drop semantics remain. A marker occupies one bounded slot;
+no durability, fairness or forced live-writer deadline is promised. Runtime-event
+value construction moves unchanged into core. Exact contracts and migration:
+`docs/specs/LOG_WRITE_SETTLEMENT.md` and
+`docs/architecture/CONTRACT_DELTA_LOG_WRITE_SETTLEMENT_D_2026-09-24.md`.
+
+The closing runs both original audit identities plus the later-append exclusion
+case: three passed, no failures/errors/skips, frozen inputs unchanged. The audit
+holds were 0.7540372999974352s and 0.7508035999999265s; both append attempts settled
+before owner exit and both temporary workspaces were reclaimed. The success case
+published its ledgered audit; required-close failure preserved its expected error
+and published none. The third case physically writes both records and observes
+frontier return while the later append is still held. Runner 6.641s, JUnit 1.946s;
+the child is terminal/reaped, with no timeout/kills, and execution-state restoration
+is confirmed. Receipt: `.tmp/d-input-replay-cleanup-recovery/audit-closing-readback.json`,
+SHA-256 `74d634ba91e809b3cfeb892c80853403ebe138991f50dc33a0ec00a802468690`.
+Unified exec session 34989 exit 0, chunk `366af3`, is explicitly a root observer
+attestation; it is not an independent raw outer-process machine receipt.
+
+Original patch/render failures remain retained and were resolved in successors
+before tracked integration. Independent runtime review required preserving
+optional post-death behavior, the schema export and process interrupts; the
+integrated successor addresses all three. The six-case lifetime proposal is
+unexecuted at this record. Its independent review requires correct Windows
+launcher/interpreter identity, ledgered physical child evidence and observed
+source/installed import origin before integration. No prepared probe is acceptance.
+
+Both failed final campaigns, their environments and all previous observations
+remain immutable. The repaired candidate requires fresh exact-byte review,
+evidence roots, environments and full source/native acceptance before publishing
+0.6.105. Linux clock instability and the full D/E/CAP obligations remain open;
+the focused result does not raise the wider claim ceiling or retire the lane.
+
+#### .105 Focused frontier lifetime and combined-failure finding (2026-09-24)
+
+Observed path: primary. Result: partial success. After exact successor review,
+six isolated current-source integration cases pass in 9.266s runner / 5.049s JUnit,
+with no failures, errors, skips, timeout or killed processes. Inputs stayed frozen;
+the runner child was reaped and the execution-state request was restored. This is
+live focused proof, not installed or full-campaign acceptance.
+
+The controls reach one unprepared daemon and reuse; running-loop refusal before
+writer/queue effects; optional append `OSError` without delivery; full-capacity
+marker admission and later-write exclusion; and fatal daemon termination both
+before and after marker admission. The healthy capacity case observes zero drops
+through marker admission, then exactly one ordinary drop while the marker and an
+accepted later record occupy both slots. Fatal cases retain the original writer
+handle, exact termination code and `ValueError` cause, and subsequent optional
+enqueue/drop behavior without escalation or restart.
+
+All six ledgered physical child reports equal captured stdout and the JUnit
+observation. Child `orket.logging` origins identify current source bytes. Every
+Windows transport, supervisor, launcher and actual interpreter is absent after
+owner return; actual interpreter creation times are retained separately. These
+identities are intentionally not equated. Real JSONL readback agrees with the
+accepted records, and refusal/failure cases have no invented delivery.
+
+Evidence: `.tmp/d-input-replay-integration/frontier-lifetime-closing-1/`.
+Readback: `.tmp/d-input-replay-cleanup-recovery/frontier-lifetime-readback.json`,
+SHA-256 `0e8d71d75e768460feb5a8ca09b364dc9f76fc5f4a683a4137b859de28279e9b`.
+The readback also explicitly retains a failed read-only display invocation whose
+shell quoting caused `SyntaxError`; no test or mutation executed in that invocation.
+Outer session 27688 exit 0, chunk `0f95ad`, remains a root observer attestation.
+
+A separate bounded source review found a combined failure gap: required engine
+close can raise its expected `OSError`, then fatal daemon settlement in `finally`
+can replace it with `E_LOG_WRITER_TERMINATED`. Neither the healthy audit closing
+nor the six isolated daemon controls proves this composition. Review:
+`.tmp/a105_audit_settlement_candidate_review.md`, SHA-256
+`315e16748decc5f7baff5c79d9b57537a7c2fcca867214f7e4d2828698486039`.
+The next bounded correction must preserve the primary collection/close exception
+while retaining the settlement failure and daemon cause, without skipping cleanup
+or authorizing publication. A reached isolated opening and closing are required.
+Existing runtime-event projection tests must also run in final source and installed
+acceptance. No v0.6.105 publication or broader claim-ceiling change is authorized
+by these focused passes alone.
+
+#### .105 Combined audit-failure opening and correction (2026-09-24)
+
+Observed path: primary. Result: failure. The isolated two-case opening retains
+two earlier harness failures before its reached runtime counterexample:
+
+- `audit-double-failure-opening-1`: both cases failed while constructing the
+  parent receipt because owned-command stdout is bytes and was encoded again.
+  Physical child reports exist, but no parent JUnit properties were emitted.
+  Retention: `double-failure-harness-failure.json`, SHA-256
+  `2d71a046cd8c70edbf4c1551372bb6bb901cb3042a663dbf26d48ca1b8b6d6d7`.
+- `audit-double-failure-opening-2`: one pass and one premature assertion failure.
+  Python's real collection unwind replaces the injected `LookupError` context
+  with the audit `RuntimeOutcomeError` before settlement begins. The expectation
+  now distinguishes the construction graph from the graph entering settlement.
+  Retention: `double-failure-context-readback.json`, SHA-256
+  `c14e62df1f291ac5bc75ad50e4cac8f7413a5f8b0074d6ea44791c6efcd37767`.
+- `audit-double-failure-opening-3`: one pass and one reached expected failure in
+  6.281s runner time. All prior lifetime, graph and ordering assertions passed;
+  `outward_is_close_exception` is false because writer termination masks the
+  required close. The unrelated handled-caller control passes. Retention:
+  `double-failure-opening-readback.json`, SHA-256
+  `b4f21d17c35aa5714a028c4c5cd5c1eda0fd09828153da7129fdf1801bf6063e`.
+
+All three phase roots are under `.tmp/d-input-replay-integration/`; the readbacks
+are under `.tmp/d-input-replay-cleanup-recovery/`. Each runner terminated and was
+reaped without timeout or killed processes, preserved its frozen inputs and
+restored execution state. The latter two retain parent lifetime/readback receipts
+and matching physical child reports. Earlier observations remain unchanged.
+These controlled current-source failures are not repaired or installed acceptance.
+
+The reviewed runtime v3 is now integrated: capture only the invocation's own
+primary; compose only the exact built-in `RuntimeError` with the shared full
+writer-termination argument; append a code/type-only note; let the original
+unwind continue. Existing cause/context/notes/traceback at settlement entry remain
+required. Unknown errors and interrupts retain normal precedence. The existing
+logging owner separately retains the daemon failure. The audit adds five necessary
+lines to its published oversized file (499 total); no new owner is introduced.
+Seven separate contract cases cover exact classification and primary interrupts;
+they do not constitute daemon proof. Fresh closing, full source and both installed
+native cells remain required before the candidate can be published.
+
+The repaired `audit-double-failure-closing-1` passes all 44 selected cases in
+12.312s runner time with frozen inputs, no failures/errors/skips, no timeout or
+killed processes, normal reaping and restored execution state. The selection is
+two double-failure integrations, seven classification contracts, six frontier
+lifetime cases, two audit cleanup cases, nine runtime-event cases and eighteen
+connector timing cases. The combined path preserves the identical `OSError`,
+its original traceback, cause, context at settlement entry and prior note, adding
+only the expected secondary note. The ambient-caller case raises settlement.
+Physical child reports match observations and actual interpreter identities are
+absent after owner return. Seven classification contracts substitute collection
+and settlement; they are contract proof, not live daemon proof.
+
+Readback: `.tmp/d-input-replay-cleanup-recovery/double-failure-closing-readback.json`,
+SHA-256 `be41407070aa8279a9d3fc4e66ad50442430c0e7adfae914a14fe1bcbf7b1e2b`.
+Runtime integration: `double-failure-runtime-integration.json`, SHA-256
+`5f46103c5a3b665331ce58dcd7f2af473aa6ba70e86b0325a43318caf02b72bd`.
+The canonical pre-final C verdict has no unknown modules, dependency violations,
+authority cycles, analysis errors or adapter-effect violations. Documentation,
+release metadata, whitespace and changed tracked-Python lint pass; the repository
+retains 88 Ruff findings with none introduced. Its structural binding is
+`structural-prefinal-binding.json`, SHA-256
+`da044e36662243cd66aac5dce34fa0dccbba2ed25b8e93aa1637b2ab589b420b`.
+Those structural collectors regenerated the graph and baseline after the focused
+closing. Fresh final candidate review and source/installed acceptance therefore
+remain necessary; none of these observations publishes or accepts v0.6.105.
+
+#### .105 Test-layer inventory correction (2026-09-24)
+
+Observed path: primary. Result: success after a retained failed correction.
+Independent candidate review found three new definitions whose docstring labels
+were invisible to the canonical scanner. The first comment placement corrected
+the integration definition but left two contract comments outside the scanner's
+three-line lookback. Its collector exited successfully, but the expected-inventory
+check failed: 6,083 definitions, 826 integration, 669 contract and 4,415 unlabeled.
+The failed report and pre-correction bytes remain in
+`.tmp/d-input-replay-cleanup-recovery/test-layer-repair/`; report SHA-256
+`e9585bbf0213d4d5e10b54a43c377968fbbc2f70cb9193c00afefbb834d250b9`.
+
+The successor retains those bytes and moves only the two contract comments
+immediately before their definitions. Executable ASTs remain identical. Fresh
+canonical baseline collection succeeds with 6,083 definitions, 826 integration,
+671 contract and 4,413 unlabeled, preserving the prior unlabeled-debt ceiling.
+This is structural taxonomy proof; `release_ready` remains false. Receipt:
+`.tmp/d-input-replay-cleanup-recovery/test-layer-repair-v2/report.json`, SHA-256
+`99c2a73e8461a43bde40697e9ceba9d3a731d916d867121589d14eb65a0c9924`.
+The earlier 44-case closing predates the corrected comment and baseline bytes.
+Fresh exact-candidate source and installed acceptance remain required.
+
+The subsequent `settlement-observer-closing-1` diagnostic passes all 44 cases
+against the corrected test bytes in 11.438s runner / 9.166s JUnit time. The exact
+independently reviewed observer v3 successfully validates eleven logging
+observations and 23 physical artifact paths against that run's frozen source
+inputs and evidence map. Inputs remain unchanged; the runner terminates and is
+reaped without timeout or killed processes, and execution state is restored.
+Its sibling `settlement-observer-closing-1-observer-readback.json` under
+`.tmp/d-input-replay-integration/` has SHA-256
+`a57dc21c4881181a2fe1af63005e90f434d26241333fc5faf0400d9b8d234629`.
+This is live source preflight for the checker, with seven separate substituted
+classification contracts. It does not replace final normalized-candidate source
+or installed acceptance.
+
+#### .105 Final-proof preparation readback (2026-09-25)
+
+Observed path: primary. Result: partial success. The reviewed v4 integration
+binder and wrapper generator executed successfully, retaining the five named
+diagnostics, eleven logging identities and seven classification identities.
+The binding `.tmp/a105_settlement_wrapper_integration_bindings_v4.json` has
+SHA-256 `e7735511ac46a2cd9c9374ce543ee40b024dd56f88701bad84ca1383d9c95262`.
+The 21 generated wrappers are bound by
+`.tmp/d-input-replay-settlement-publication/helper-preparation.json`, SHA-256
+`46f9a8e2dc3a1e662b51f5f9cd96caabec62dd56bddb9559d2a1063b7e9b5d9b`.
+
+Independent rendered review found one reporting defect: the unexecuted final
+plan helper hardcodes September 24 as its acceptance date, although the final
+matrix has not run and the local date is September 25. Review:
+`.tmp/a105_settlement_rendered_wrapper_review.md`, SHA-256
+`eedeb4de5aba482e895296cd5ca1925bb5bf6e5263577f5bc56eae18273e2c12`.
+All generated bytes and that observation remain retained; a bounded successor
+must correct the date before proof. No generated helper, fresh environment or
+final acceptance cell has executed. This is structural preparation only, not
+v0.6.105 acceptance or publication. The prior failed campaigns remain failures.
+
+Before final freeze, CURRENT_AUTHORITY and the logging migration now delegate
+acceptance/publication status to this plan without retaining a pending/unpublished
+claim that would become stale at closeout. The authority's Markdown and JSON
+dates both read September 25; the contract's September 24 date is preserved.
+Exact previous bytes remain under
+`.tmp/d-input-replay-cleanup-recovery/acceptance-status-metadata/`, with the
+before/after hashes in `.tmp/a105_acceptance_status_metadata.md`. Runtime and test
+bytes did not change. Fresh candidate review and the existing authority-contract
+tests remain required in final proof.
+
+The dated successor closes the reporting defect with an actual local date
+captured only after terminal proof checks. Its 21 helpers preserve the prior
+render and 35 history entries; preparation receipt
+`.tmp/d-input-replay-settlement-dated-publication/helper-preparation.json` has
+SHA-256 `d758e66295d965aa74664c1d06285b9df9813b6b871f6e3a2a958ec64edcdc5c`.
+Independent rendered review found no remaining bounded defect:
+`.tmp/a105_settlement_dated_rendered_wrapper_review.md`, SHA-256
+`41d64a84b07982ba4fe81b94a4eaad87d7f3c6f82b909ddc9e98a40de165b73d`.
+Initialization then reverified all 303,478 retained published hashes, current
+v0.6.104 HEAD/tag, both failed campaigns, retained Linux ancestry and equality of
+the original checkout. `opening.json` and `before.json` in that fresh root bind
+this structural readback. No historical clean-HEAD assertion was rerun against
+the candidate. Canonical collection, normalized-candidate proof and the final
+source/installed cells remain required; initialization is not acceptance.
+
+#### .105 Retained native Git initialization failure and source correction (2026-09-25)
+
+Observed path: primary. Result: failure for the third final campaign. The dated
+source cell passed all 3,459 cases, including 441 independent SQLite observations
+below 0.5s (maximum 0.1720545s), 105 named replay observations and eleven logging
+observations. Package parity passed. Installed Windows 3.11 then ran the same
+3,459 identities with 3,440 passes and nineteen failures, zero errors/skips. Every
+failure was `E_GITEA_GIT_COMMAND_FAILED:init:1`: twelve command-lifetime and seven
+native-ownership cases. The process terminated and was reaped, no children
+remained, and execution state was restored. Windows 3.12 was never launched.
+This campaign did not reach acceptance, checkpoint, tag or publication.
+
+The failed dated root, source environment, installed environment and exact
+candidate/context copies are immutable. Initial retention review rejected resolved
+file keys because one file symlink collapsed onto its target and directory links
+were omitted. The unexecuted rejected helper and review remain retained. The
+reviewed successor executed successfully and records lexical file keys plus exact
+reparse-link path/target/tag maps, with no link-target containment claim. It binds
+28,803 local files, 36,281 external files, 76 candidate/context copies, and 1,472
+links in each local/external map, after rechecking 303,478 prior published hashes.
+Receipt: `.tmp/d-input-replay-native-init-recovery/failure-retention.json`, SHA-256
+`bb7748dccfced8f2ec5127f8b7f74770e66fff06cc81e59d35e3af8b0a9fcec4`.
+The original two failed campaigns remain distinct negative evidence.
+
+A fresh credential-free diagnostic used the existing command supervisor and one
+bound Git 2.52.0.windows.1 executable. A 200-character repository initialized;
+a 236-character repository failed with `Filename too long` at `.git/refs/heads`;
+another 236-character repository initialized when `core.longpaths=true` preceded
+the subcommand. Physical HEAD/objects and durable local configuration were
+verified. This isolates the observed local bootstrap boundary; it is not repaired
+product or installed acceptance. Diagnostic receipt under the recovery root:
+`git-init-boundary-v1/report.json`, SHA-256
+`a5e9b874e37ae0db91ada3faf8e9f55f163a4ce7714568303ed34565e2c6ce90`.
+
+The real exporter regression then reached the same failure on the original
+adapter after its short control passed. `product-opening-1` retains one failed
+case in 3.375s. The product correction adds the fixed long-path option before
+every Git subcommand and keeps the existing local setting. Its process owner,
+captured inputs, 60s budget, 262,144-byte output bounds and private error handling
+remain unchanged. No cache root was relocated.
+
+`product-closing-1` retains 41 passes and six contract failures in 18.719s: the
+real integration paths, including the new long-path case, passed, while six
+substituted-port cases still expected the old exact argument tuple. Their
+expectation now includes the required option; every identity and other assertion
+remains. The modified definition also has an immediate contract-layer label.
+The fresh `product-closing-2` passes the same 47 identities in 19.015s with zero
+failures/errors/skips, unchanged inputs, terminal/reaped process and restored
+execution state. This includes 41 controlled local integrations and six
+substituted-port contracts. Both failed source observations remain immutable.
+
+The independently reviewed standalone third-failure verifier subsequently
+rechecked its complete lexical file/link maps without comparing the changed
+candidate to the old bytes. Its result and all three source diagnostics are bound
+in `.tmp/d-input-replay-native-init-recovery/git-bootstrap-diagnostic-readback.json`,
+SHA-256 `efe9058db2b9516069f00e3dc6cb989a1bd7ca210f03368cc4ed51666f9d7157`.
+The final source report has SHA-256
+`385e4f4b995d273edb6ae34f168c283710a7edbd909b9551af93d3da112962eb`;
+its JUnit has SHA-256
+`665c96299189f41faf41e9d8c97d1e7f88dab3f13e67db5f8fbc6c8f61d49ae5`.
+
+These are live focused source diagnostics and structural evidence bindings, all
+with `acceptance=false`. Fresh canonical collection, exact-candidate freeze, full
+source and both installed Windows cells remain required before v0.6.105 can be
+published. The fresh native targets must be at least as long as the failed dated
+target. The retained Linux clock blocker, wider D/E/CAP work and full-coverage
+requirements remain open. The lane is not retired.
+
+The subsequent canonical structural collection succeeds: dependency verdict `ok`
+with no unknown modules, violations, authority cycles, analysis errors, exception
+drift or adapter-effect violations. Documentation hygiene, release metadata and
+changed-Python lint pass. Ruff retains 88 findings with none introduced; taxonomy
+records 6,084 definitions with 4,412 unlabeled. `collection_ok=true` and
+`release_ready=false`. The recovery root's
+`structural-prefinal-1/verified-report.json` has SHA-256
+`f10df0f5c7ad2fc199333ab34567418f89d092fbafeabec67e5b18512dc040ef`.
+This is structural proof only; normalization, final freeze and the fresh matrix
+remain outstanding.
+
+#### .105 Passive Linux clock refresh (2026-09-25)
+
+Observed path: primary. Result: success for the passive preflight only. The
+unchanged owner reached 60.002172107s of synchronized quiet after 211.843803959s,
+within the unchanged 240s observation limit. All 43 synchronization queries
+returned yes. Earlier observed steps ranged from -0.137748477s to +0.006542231s;
+the owner reset the quiet interval at the unchanged 0.01s step threshold. The
+child returned normally with exit zero. No clock setting changed and no Linux
+application acceptance cell ran. This is one successful passive observation,
+not continuous host-clock stability or Linux runtime acceptance. The prior
+.95/.103 failures remain retained negative evidence.
+
+New root: `.tmp/d-git-bootstrap-linux-clock-preflight/`. Report SHA-256
+`0b764225c2030fb2ae56217ad39c673f9b68fa847723dc774e0e46c42f15471d`;
+invocation SHA-256
+`60fb31af0a31bf223c11657f7c33f9321deca004bdcd45c76d2a0505e067d372`.
+Independent structural review identified missing fixed-authority and terminal
+schema assertions in the wrapper. A separate executed readback checked the
+actual retained input hashes, fixed owner, terminal schema, report/driver/log
+bindings and recomputed sample-step extrema without repeating the observation.
+`terminal-readback.json` has SHA-256
+`3fcafcf25cd21ee00c81df99684b1d39e9696d93a55c9d186ae5759bc1a1b623`.
+The live wrapper asserted exact candidate before/after equality, but did not
+persist its prelaunch inventory. An independent retained before/after candidate
+inventory is therefore not claimed. The original checkout matches the fixed
+retention snapshot. Both review records, the original wrapper and all observation
+bytes remain unchanged. The latest preflight succeeds; application proof is
+still absent and the broader D/E/CAP and full-coverage obligations remain open.
+
+#### .105 Fourth campaign: installed extension clone refusal (2026-09-25)
+
+Observed path: primary. Result: failure. The fourth campaign at
+`.tmp/d-input-replay-git-bootstrap-publication/` passed 3,460 source cases with
+zero failures/errors/skips in 781.208s, including all 441 SQLite observations
+below 0.5s (maximum 0.15948930000013206s). Its Windows Python 3.11 installed
+cell ran the same 3,460 identities in 779.114s: 3,451 passed and nine failed at
+`E_EXT_CLONE_FAILED: completed; exit=128`. Eight capability-authorization cases
+and one SDK provider-construction case failed before workload execution. Inputs,
+installed origins, real CLI, audit and no-child checks passed. Windows Python
+3.12 was not launched. No .105 acceptance or publication exists.
+
+The terminal/reaped campaign and released execution state are retained. The
+independently reviewed retainer binds 28,811 local and 35,999 external files,
+83 candidate/context copies and 1,475 lexical reparse observations in each map;
+it also rechecked .104 and all three earlier failures. Receipt:
+`.tmp/d-input-replay-extension-clone-recovery/failure-retention.json`, SHA-256
+`73bbf8b1f9ae3ce6fe47a81ffeea525144e97bc5f9fc2ee5ca60f5daafdb30d5`.
+These are retained live failures and structural bindings, not installed success.
+Ended campaign environments are never reused for diagnostic execution.
+
+A fresh actual-manager diagnostic first stopped after its short install because
+raw LF fixture bytes became CRLF on checkout; no long attempt occurred. That
+failed fixture observation and all 46 files remain retained under the recovery
+root. `clone-boundary-opening-v1-failure.json` has SHA-256
+`f8f83aef2958afb3f94501c0efb1799d4814438ebaa5ce7da87c535591c2d8b5`.
+The successor used a tracked fixture `* -text` policy and controlled only its
+private process environment, respecting installation's per-operation capture.
+Its short 234-character object path passed; the projected 261-character path
+failed clone with exit 128, complete capture, confirmed cleanup, an empty retained
+checkout and no published catalog. The safe stderr classifier was `Filename too
+long`; raw output was not published. `clone-boundary-opening-v2/report.json`
+has SHA-256 `b3c447347340b2bbe2fb5a26d2e70c4018ea1994534a6e6d7d8b3bc573be4455`.
+This live diagnostic supports the fresh local cause; the historical nine failures
+still have no retained stderr and require closing installed proof.
+
+The new real SDK integration retains its source, short/long checkout files and
+structured JUnit observations under pytest-owned fixture roots. The first two
+openings stopped on an overly strict new install-record/list-record equality
+expectation before reaching the long path. Both remain immutable failures.
+Structural readback identified the exact existing generic SDK differences:
+`register_callable` changes from empty to `register`; unset input/output contracts
+appear as literal `None` strings in the parser and empty strings after listing.
+`catalog-roundtrip-readback-v1.json` has SHA-256
+`421640cab3725b5b3d0b0f542bb3dc7ad51cb2fa9a7564a8d1ad3bd90c884d72`.
+The corrected fixture explicitly asserts those three existing transformations
+and compares every other field and the complete durable row. No existing test,
+catalog implementation or SDK behavior was weakened or changed. The representation
+drift remains wider D work, requiring its own contract and real roundtrip proof.
+
+The third opening reaches the intended failure: short actual object path 201
+passes; projected long path 261 fails at clone with the same safe classifier,
+confirmed cleanup/capture and observed owner PIDs absent. One case failed in
+1.269s with unchanged inputs, no skips/errors, terminal/reaped parent and restored
+execution state. `product-opening-3/report.json` has SHA-256
+`a4e9b4002b0e200d3e84e9f30af02448aee95236bca4126c9f5d34b41ce3219f`;
+its JUnit SHA-256 is
+`b9dcc37911476a28ee077045cf6de818fc4247476615bea716a03222368be0a2`.
+
+The candidate now adds invocation-scoped long-path configuration to the existing
+extension Git owner. `product-closing-1` passes all 29 cases across the six affected
+modules in 32.473s, with zero failures/errors/skips, unchanged inputs, no timeout
+or killed processes, terminal/reaped parent and restored execution state. All nine
+previously failed identities are present. Actual short/long commit-object paths
+are 201/261 characters; both installations pass content, complete durable-row,
+explicit listing-default and native-settlement assertions. Source report SHA-256:
+`1f6e696c1b3c94c244b43667e44d4f32ceccf08e823aa9f32ff26874caa130d1`;
+JUnit SHA-256:
+`1778e4a227d8a9cea19ff1c7e9f5bd38cdfa7f9dfde261914abe9c2f0a49f362`.
+This is live focused source proof, not fresh installed acceptance. Both canonical
+quality jobs now include the new regression. The next full campaign must retain
+all previous 3,460 identities and include this new case plus the twelve existing
+installation-ownership, Git-lifetime and cancellation cases exercised here that
+were outside that prior matrix. Exact collection must establish the resulting
+selection; no count assumption substitutes for collection. Fresh full source and
+both installed Windows cells remain required. Contract delta:
+`docs/architecture/CONTRACT_DELTA_EXTENSION_GIT_LONGPATH_D_2026-09-25.md`.
+After the repair, the standalone fourth-failure verifier rechecked the complete
+retained file/link maps and earlier three failures without comparing repaired
+current bytes to the failed candidate. `retained-fourth-readback.json` has SHA-256
+`c198ea2b760c2d7705f38f91a243d0bc8a0136b902942754f9a58e991522f606`.
+The independently reviewed diagnostic readback then bound all four product phases,
+their fixed execution owners, 1,935 retained files and fifteen physically rehashed
+closing observation files. It includes every original nine failed identity and
+the exact fixture-default corrections. `extension-clone-diagnostic-readback.json`
+has SHA-256 `bf8378a8c173f7bddeea308482b63bdcd6a6470bc3195126086091d6de01c86f`.
+Both outputs live under `.tmp/d-input-replay-extension-clone-recovery/` and have
+`acceptance=false`. Successful structural readback does not turn a retained failed
+campaign into a passing one or replace the required installed proof.
+The subsequent canonical structural prefinal passed over all 81 staged candidate
+paths and 60 changed Python files. Actual dependency policy, changed-file lint,
+documentation hygiene, release metadata and HEAD whitespace passed; Ruff retained
+88 findings with none introduced. The index and runtime/test bytes stayed fixed;
+only the three canonical generated metadata files changed. Its binding SHA-256 is
+`d10fa5bcb07d466c2fd07a34b543fc43b7cb256ccc397ea5c052c18a2d3ba9c7`, and
+the verified report SHA-256 is
+`4a3fa2f9f6adc1555397babffca09eecd7d0a3d9c4b0a2dda5123df37f48294f`.
+This remains structural proof with `acceptance=false` and `release_ready=false`.
+That collection exposed the new integration label as invisible to the existing
+taxonomy scanner because it reads preceding comments rather than docstrings.
+A comment immediately before the test now labels it integration; canonical
+single-file readback recognizes the label. No test behavior or assertion changed.
+The prior 29-case run and structural result retain their exact earlier test bytes;
+fresh final collection and focused/full execution must bind the comment-corrected
+candidate. The canonical taxonomy/full-coverage obligations remain open.
+Fresh initialization in `.tmp/d-input-replay-extension-clone-publication/`
+then reverified all 303,478 published checkpoint evidence entries and all four
+retained failed campaigns. The revised 21-helper family has independent proposal
+and rendered-byte reviews, one authority for the three restored ownership modules,
+and the same source/native/process/publication owners and deadlines.
+Canonical final structural collection passes the actual dependency verdict,
+changed-file lint, hygiene, release metadata and whitespace. Its outer byte guard
+observed exactly the three permitted metadata changes and an unchanged original
+checkout. Ruff remains 88 with no introduced findings; taxonomy now records
+6,085 definitions and 4,412 unlabeled. The verified report SHA-256 is
+`91a8bc5c1734dbbfe19a2d8dded33f788f4ae685ea2aaaf08664840fda11a3b7`;
+the byte binding SHA-256 is
+`4a6c5bccf052ea5be969b57c5bf11d91662070f43dacff0b1e8a99bb4318628c`.
+The existing normalizer retained and converted only those three generated files
+to LF, with receipt SHA-256
+`b03214cb1775a574e928d7c8f19d31609d1ab10b20f6a7dd57231d7518874645`.
+These are structural preparation results: `release_ready=false`, with fresh
+focused and full source/installed acceptance still required for this candidate.
+The latest passive Linux clock preflight passed, but Linux application proof is
+absent. Wider D/E/CAP, full coverage and explicit lane acceptance remain open.
+
+
+#### .105 Settlement turn-input and retained-replay acceptance (2026-09-25)
+
+Responsible maintainer: Codex for Orket Core. Observed path: primary. Result:
+scoped acceptance success; the complete remediation goal remains partial and
+the canonical baseline remains `release_ready=false`.
+The 81-file candidate had exact LF working/index
+bytes before proof. All 60 changed Python files, metadata and
+proof helpers remained frozen. The focused 211-case run used
+current source with retained .104 support; it remains a mixed-package diagnostic,
+separate from the final package matrix.
+
+| Cell | Tests / failures / errors / skips | JUnit seconds | Installed origins |
+|---|---|---|---|
+| Fresh source | 3473 / 0 / 0 / 0 | 720.925 | source |
+| Installed a105-settlement-extension-clone-win-py311 | 3473 / 0 / 0 / 0 | 727.452 | 1072 |
+| Installed a105-settlement-extension-clone-win-py312 | 3473 / 0 / 0 / 0 | 834.250 | 1072 |
+
+All 3,328 published .104 identities remain, with 145 additional
+selected identities, across 357 selected modules. Every cell verifies the
+same 38 retained closeout controls, all eight retained
+guard controls, both Packet-1 controls and 105 named A105 observer controls: 20 pure contract
+and 85 controlled local integration cases. The full union adds
+40 selected identities outside that named-observer set. Three legacy/load cases are real
+lower-level leaf composition, not public-resume admission. The embedded
+determinism case directly invokes the dispatcher fixture and is not public
+`TurnExecutor` reentry proof.
+
+Each cell also replays 11 separately reviewed logging observations covering
+real fixed-frontier queue and daemon lifetime, physical JSONL/JUnit receipts,
+combined fatal-settlement refusal, and source/installed origin and process
+facts. Seven classification contracts cover same-text subclasses, unknown
+runtime errors, settlement interrupts and primary KeyboardInterrupt/SystemExit
+precedence. Those seven are contract-only classification evidence, not real
+daemon, whole-stream durability or broader queue-drain proof.
+
+All 424 prior independent SQLite identities plus 17 A105
+identities are present in every cell; all meet the unchanged 0.5s bound, maximum
+0.171906300s. Source/native/wrapper budgets remain 1500/1800/2100s.
+
+Packet-1 start and closeout use the construction-input object selected when the
+epic owner is built. Strict operation records bind operation ID, tool, canonical
+arguments and local result digest; present-invalid content cannot authorize
+legacy fallback. Governed cache reuse checks current run/attempt, namespace,
+resource gate and matching same-attempt step/effect/call evidence. Those reads
+remain separate observations rather than one atomic snapshot. Real local Git initialization at the observed 236/249 boundary remains bound per cell. Each cell also binds one real short/long extension clone and six owned command receipts; these local observations are not remote Gitea or selected-provider proof.
+
+Completed replay, pre-effect resume and approval continuation validate the full
+checkpoint snapshot digest before consuming its tool plan. Cached after-tool
+middleware receives detached values and cannot change the canonical cached call
+or result. Valid strict reuse preserves operation bytes; legacy reuse materializes
+the missing strict slot without rewriting legacy bytes. A cached determinism
+violation refuses before result substitution or publication. Live adaptation is
+retained. Same-attempt journal evidence prevents an invocation-local zero from
+misclassifying failure as pre-effect; true-empty and unresolved-dispatch controls
+retain their existing classifications.
+
+Complete source/sdist/wheel parity covers 1,178 core Python
+and 20 data members, with 29 SDK Python members separate. Both installed cells
+read back all 1,198 core members; the support manifest binds
+2,515 inputs. Source strict audit and mandatory
+installed audits pass with exact case, origin, input, CLI and teardown checks.
+Canonical C policy, changed-file lint, size, hygiene and release metadata pass.
+AC-01 through AC-08 and AC-10 pass for this scope; AC-09 remains partial.
+This does not establish full 89% coverage or repository release readiness.
+
+Evidence is under `.tmp/d-input-replay-extension-clone-publication/`, with fresh source and
+`a105-settlement-extension-clone-` Windows environments. Original, corrected, metadata and
+admitted openings; focused-1/focused-2; boundary, middleware and determinism
+openings/closings; failed/superseded authoring attempts; physical observations;
+and prior package evidence remain separate and unchanged. Final proof rechecks
+their exact bindings. Readback verified 303,478 prior published hashes, nine
+handoff bindings, 181,440 local candidate
+evidence files and 399,192 external
+physical files. `C:/Source/Orket` remains unchanged. Ignored evidence stays local.
+
+This final acceptance section was appended only after the terminal campaign and
+checks succeeded; it was not a matrix input. Only this plan and the collected
+baseline may change afterward, through the existing closeout and checkpoint
+exact-byte guards. Those later receipts determine commit/tag/remote publication;
+this section alone does not claim publication.
+
+Retained .103-ancestor Linux preflight remains an environment blocker:
+240.043336423s elapsed,
+5.311575227s quiet against 60s, -9.533150037/+10.019925629s steps against 0.01s,
+and 48 synchronization queries with 40 yes/eight no. Its child terminated
+normally; no Linux application cell launched. A later unchanged-owner passive preflight reached
+60.002172107s synchronized quiet within 211.843803959s; its separately retained
+terminal-readback SHA is 3fcafcf25cd21ee00c81df99684b1d39e9696d93a55c9d186ae5759bc1a1b623.
+This establishes one passive observation, not Linux application acceptance. Wider D/E/CAP, ProductFlow replay,
+legacy cutover, selected-provider proof, hosted Quality and full coverage remain
+open. Separate-read atomicity, legacy call-keyed digest debt, the retained
+pre-effect recovery prefix and step-without-journal reconciliation remain explicit.
+No main merge, whole-goal completion or lane retirement is claimed.

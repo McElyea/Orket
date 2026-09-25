@@ -1,6 +1,43 @@
 # CURRENT_AUTHORITY.md
 
-Last updated: 2026-09-23
+Last updated: 2026-09-25
+
+Packet-1 start and closeout callbacks share the construction-input object selected
+when the epic owner is built. Operation-record consumers share strict identity,
+canonical argument and local result-digest validation; present-invalid files refuse
+instead of authorizing redispatch. Governed cache hits use the captured service and
+existing execution gate plus current-attempt step/effect/call authority. Those
+repository observations remain separate reads, not one atomic snapshot.
+Cached middleware must preserve the selected canonical arguments/result and valid
+reuse leaves operation bytes intact. Governed nonprotocol calls also consult the
+strict operation slot before legacy fallback. A cached determinism violation
+refuses before result substitution or publication; live result adaptation remains.
+Terminal failure uses retained
+same-attempt journal evidence even when the current invocation executed no steps;
+unresolved dispatch and public checkpoint/reconciliation gates remain required.
+Completed replay, pre-effect resume and approval continuation check full checkpoint
+integrity before consuming its tool plan. Embedded turn replay retains fresh model
+proposal construction; the separate recorded-run CLI replay retains its no-model
+contract. Migration and exact limits:
+`docs/architecture/CONTRACT_DELTA_TURN_INPUT_REPLAY_AUTHORITY_D_2026-09-24.md`.
+The architectural-truth plan owns retained failed/passing observations and
+source/package acceptance and publication status. Local result/digest consistency
+does not prove independent content authenticity; existing recovery prefixes,
+per-call effects and finalization remain. Wider D/E/CAP acceptance stays open.
+
+The native tool-gate audit settles prior accepted optional append attempts before
+temporary workspace release, including the required engine-close failure path.
+The boundary uses the existing queue and daemon, refuses running-loop callers and
+surfaces retained writer death without restart. A pending marker consumes one
+bounded slot; settlement proves completed attempts, not durable log delivery.
+If this audit's primary failure and the exact writer-termination error coincide,
+the primary remains outward with its existing graph and a non-secret diagnostic
+note. Unknown settlement errors retain normal precedence; fatal refusal does not
+prove completion of stranded appends.
+Contract: `docs/specs/LOG_WRITE_SETTLEMENT.md`; migration:
+`docs/architecture/CONTRACT_DELTA_LOG_WRITE_SETTLEMENT_D_2026-09-24.md`.
+The plan owns retained opening/closing evidence and full source/installed
+acceptance status. Broader logging capture, preparation and API lifecycle remain open.
 
 Session checkpoints use the selected clock, capture snapshot path and nested JSON
 before lock admission, and retain the snapshot repository selected at publication
@@ -8,7 +45,7 @@ or recovery entry. Selected epic closeout observations and summary publication u
 the existing native I/O owner through interruption. The migration and proof limits
 are in `docs/architecture/CONTRACT_DELTA_EPIC_CLOSEOUT_OWNERSHIP_D_2026-09-23.md`.
 The architectural-truth plan and checkpoint receipts own acceptance/publication
-status, both matched opening phases and the fresh Linux clock blocker. This
+status, both matched opening phases and retained/latest Linux clock observations. This
 implementation contract does not establish wider D/E/CAP or full-coverage proof.
 
 Guard-rejection pending requests sample the pipeline-selected clock once after
@@ -57,6 +94,13 @@ Descendant cleanup precedes command success; uncertainty cannot authorize export
 Raw exporter/Git embeddings supply the command port. Contract and migration:
 `docs/specs/GITEA_ARTIFACT_EXPORT_CONTRACT.md` and
 `docs/architecture/CONTRACT_DELTA_GITEA_EXPORT_OWNERSHIP_D_2026-09-22.md`.
+
+Artifact-export Git commands enable long paths before the subcommand, including
+initialization, then retain the repository-local setting. The same command owner,
+captured inputs, deadlines, output limits and private failures remain authoritative.
+The architectural-truth plan owns the failed native campaign, reached source
+regression and fresh matrix/publication status. Migration and limits:
+`docs/architecture/CONTRACT_DELTA_GITEA_GIT_BOOTSTRAP_D_2026-09-25.md`.
 
 Interrupted connector telemetry captures its invocation root and retains one
 native publication attempt through directory work, writes and logging sinks.
@@ -208,6 +252,11 @@ policy are captured before preflight, and controller SDK admission uses that sam
 catalog observation. Async installation migration, native ownership paths and
 remaining construction/publication limits:
 `docs/architecture/CONTRACT_DELTA_EXTENSION_INSTALL_D_2026-09-19.md`.
+The v0.6.105 candidate enables invocation-scoped Git long paths before each
+extension subcommand, including clone. Checkout placement, captured operation
+environment, 120s/30s deadlines, native ownership and private failures are unchanged.
+Contract delta and proof limits:
+`docs/architecture/CONTRACT_DELTA_EXTENSION_GIT_LONGPATH_D_2026-09-25.md`.
 
 Owned ACTIVE sandbox health retries publish any missing deployment effect before
 returning success, after lease/resource publication with one captured timestamp.
@@ -844,11 +893,12 @@ through a process-shared event and joins that worker before replacement. Native
 Windows source reload and failure paths passed with Uvicorn 0.52.4 and 0.27.0.
 Fresh source passes 1,001 selected cases. Installed Windows Python 3.11/3.12
 pass all 1,001; Linux 3.11 passes 1,000 with one native Windows junction skip.
-Linux 3.12 remains blocked by observed 20-second WSL clock jumps: both
-attempts retain 999 passes, one failure and one platform skip. Package
+That checkpoint's Linux 3.12 attempts retain observed 20-second WSL clock jumps:
+both have 999 passes, one failure and one platform skip. Package
 origins, CLI flows and live reload/cleanup pass; four-cell acceptance remains
-open. The clock preflight also failed. Earlier failures
-remain retained. StatReload is exercised; optional watcher backends and every
+open. Its clock preflight also failed. The plan records a later successful passive
+clock observation; fresh Linux application acceptance remains required. Earlier
+failures remain retained. StatReload is exercised; optional watcher backends and every
 intermediate Uvicorn version are not established. This is scoped checkpoint
 proof; the full-suite, coverage and hosted Quality limits remain in the plan.
 
@@ -1588,7 +1638,7 @@ Trust Kernel and Portable Conformance completed lane authority is archived under
 ```json
 {
   "version": 1,
-  "last_updated": "2026-09-23",
+  "last_updated": "2026-09-25",
   "authority": {
     "dependency_authority": {
       "primary": "pyproject.toml",
@@ -2590,6 +2640,13 @@ Truncated tool-call recovery consults `orket/adapters/tools/registry.py::DEFAULT
 Tool execution through `ToolRuntimeExecutor` has a default per-tool timeout of 60 seconds, with runtime context overrides flowing through `tool_timeout_seconds`, skill `tool_runtime_limits.max_execution_time`, or organization-derived `max_tool_execution_time`.
 
 Async-reachable structured log writes use a bounded queue sized by `ORKET_LOG_QUEUE_MAX` with default `10000`; when the queue is full, Orket drops the log record, increments `dropped_log_entry_count()`, and emits sparse stdlib-only `log_write_queue_full` warnings instead of blocking the event loop or recursing through `log_event`.
+
+Native cleanup uses `settle_log_write_frontier()` under
+`docs/specs/LOG_WRITE_SETTLEMENT.md`. It covers append attempts before marker
+admission on that same optional queue, keeps later writes outside the cutoff and
+refuses a dead writer without replacement. The audit CLI settles before temporary
+owner exit and preserves its own primary failure for the exact known secondary
+under that contract. No durable-delivery or global-shutdown guarantee is added.
 
 Runtime log-level resolution in `orket/utils.py` is call-time via `get_current_level()` with `reset_current_level_cache()` for test isolation; there is no import-time `CURRENT_LEVEL` authority.
 

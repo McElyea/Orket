@@ -73,8 +73,10 @@ class GiteaExportGit:
 
     async def command(self, *arguments: str, allowed: tuple[int, ...] = (0,)) -> tuple[int, str]:
         try:
+            # Initialization needs long paths before repository-local configuration exists.
             result = await self._command_runner.run(
-                ("git", "-c", "core.hooksPath=", "-c", "init.templateDir=", "-c", "credential.helper=", *arguments),
+                ("git", "-c", "core.longpaths=true", "-c", "core.hooksPath=",
+                 "-c", "init.templateDir=", "-c", "credential.helper=", *arguments),
                 cwd=self.repo_dir, environment=dict(self.environment), timeout_seconds=60,
                 output_limit_bytes=DIAGNOSTIC_TAIL_BYTES)
         except asyncio.CancelledError as exc:

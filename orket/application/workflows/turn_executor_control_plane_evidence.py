@@ -21,6 +21,7 @@ from orket.core.domain.control_plane_effect_journal import validate_effect_journ
 from orket.core.domain.execution import ToolCall, ToolCallErrorClass
 
 from .turn_artifact_destination import TurnArtifactDestination
+from .turn_artifact_writer import OperationRecordValidationError, validate_operation_record
 
 
 async def load_checkpoint_snapshot_payload(
@@ -123,6 +124,20 @@ async def list_operation_artifact_refs(*, destination: TurnArtifactDestination) 
             for value in await list_operation_artifact_ids(destination=destination)]
 
 
+def _completed_operation_error(
+    *, operation_id: str, error: OperationRecordValidationError,
+) -> TurnToolControlPlaneError:
+    if error.reason == "args_mismatch":
+        detail = "arguments do not match checkpoint tool plan for replay"
+    elif error.reason == "tool_mismatch":
+        detail = "does not match checkpoint tool plan for replay"
+    else:
+        detail = "has malformed operation truth for artifact replay"
+    return TurnToolControlPlaneError(
+        f"completed governed turn step {operation_id} {detail}: {error}"
+    )
+
+
 async def load_completed_replay_tool_calls(
     *,
     destination: TurnArtifactDestination,
@@ -173,27 +188,22 @@ async def load_completed_replay_tool_calls(
     for planned_tool_call, operation_id in zip(planned_tool_calls, expected_ids, strict=True):
         step = steps_by_id[operation_id]
         effect = effects_by_id[effect_id_for(operation_id=operation_id)]
-        operation_record = await run_owned_thread(partial(
-            destination.writer.load_operation_result, destination=destination, operation_id=operation_id,
-        ), label="turn-operation-read")
+        try:
+            operation_record = await run_owned_thread(partial(
+                destination.writer.load_operation_result, destination=destination, operation_id=operation_id,
+            ), label="turn-operation-read")
+        except OperationRecordValidationError as exc:
+            raise _completed_operation_error(operation_id=operation_id, error=exc) from exc
         if not isinstance(operation_record, dict):
             raise TurnToolControlPlaneError(
                 f"completed governed turn step {operation_id} is missing durable operation truth for artifact replay"
             )
-        result = operation_record.get("result")
-        if not isinstance(result, dict):
-            raise TurnToolControlPlaneError(
-                f"completed governed turn step {operation_id} has malformed operation truth for artifact replay"
-            )
-        if str(operation_record.get("tool") or "").strip() != planned_tool_call["tool"]:
-            raise TurnToolControlPlaneError(
-                f"completed governed turn step {operation_id} does not match checkpoint tool plan for replay"
-            )
-        if operation_record.get("args") != planned_tool_call["args"]:
-            raise TurnToolControlPlaneError(
-                f"completed governed turn step {operation_id} arguments do not match checkpoint tool plan for replay"
-            )
-        _validate_step_effect_alignment(
+        try:
+            result = validate_operation_record(operation_record, operation_id=operation_id,
+                tool_name=planned_tool_call["tool"], tool_args=planned_tool_call["args"])
+        except OperationRecordValidationError as exc:
+            raise _completed_operation_error(operation_id=operation_id, error=exc) from exc
+        validate_step_effect_alignment(
             step=step,
             effect=effect,
             operation_id=operation_id,
@@ -213,7 +223,7 @@ async def load_completed_replay_tool_calls(
     return tool_calls
 
 
-def _validate_step_effect_alignment(
+def validate_step_effect_alignment(
     *,
     step: Any,
     effect: Any,
@@ -302,5 +312,6 @@ __all__ = [
     "load_completed_replay_tool_calls",
     "planned_tool_call_objects",
     "planned_tool_calls_from_snapshot",
+    "validate_step_effect_alignment",
     "validate_snapshot_identity",
 ]

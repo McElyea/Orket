@@ -2,12 +2,15 @@
 from __future__ import annotations
 
 import json
+from functools import partial
 from pathlib import Path
 
 import pytest
 
+from orket.adapters.execution.owned_io import run_owned_thread
 from orket.application.services.tool_gate_service import ToolGate
 from orket.application.services.turn_tool_control_plane_service import build_turn_tool_control_plane_service
+from orket.application.workflows.turn_checkpoint_snapshot import checkpoint_snapshot_integrity_ref
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.core.contracts import StepRecord
 from orket.core.contracts.protocol_hashing import build_step_id, derive_operation_id
@@ -66,8 +69,8 @@ def _role() -> RoleConfig:
     return RoleConfig(id="DEV", summary="developer", description="Build code", tools=["write_file"])
 
 
-def _context(*, resume_mode: bool = False) -> dict[str, object]:
-    return {
+def _context(*, resume_mode: bool = False, namespace_scope: str | None = None) -> dict[str, object]:
+    context: dict[str, object] = {
         "session_id": "run-1",
         "issue_id": "ISSUE-1",
         "role": "developer",
@@ -79,6 +82,9 @@ def _context(*, resume_mode: bool = False) -> dict[str, object]:
         "resume_mode": resume_mode,
         "protocol_governed_enabled": True,
     }
+    if namespace_scope is not None:
+        context["run_namespace_scope"] = namespace_scope
+    return context
 
 
 def _run_id() -> str:
@@ -101,6 +107,30 @@ def _snapshot_path(tmp_path: Path) -> Path:
     return sorted(_turn_dir(tmp_path).glob("control_plane_checkpoint_snapshot_*.json"))[0]
 
 
+def _snapshot_namespace_observation(
+    tmp_path: Path,
+    namespace_scope: str | None = None,
+) -> dict[str, object]:
+    snapshot_path = _snapshot_path(tmp_path)
+    before = snapshot_path.read_bytes()
+    payload = json.loads(before)
+    if namespace_scope is not None:
+        payload["namespace_scope"] = namespace_scope
+        snapshot_path.write_text(
+            json.dumps(payload, indent=2, ensure_ascii=False),
+            encoding="utf-8",
+        )
+    after = snapshot_path.read_bytes()
+    return {"path": snapshot_path, "before": before, "after": after, "payload": json.loads(after)}
+
+
+async def _observe_snapshot_namespace(tmp_path: Path, namespace_scope: str | None = None) -> dict[str, object]:
+    return await run_owned_thread(
+        partial(_snapshot_namespace_observation, tmp_path, namespace_scope),
+        label="turn-checkpoint-snapshot-fixture",
+    )
+
+
 def _executor(tmp_path: Path) -> tuple[object, TurnExecutor]:
     control_plane = build_turn_tool_control_plane_service(tmp_path / "control_plane.sqlite3")
     executor = TurnExecutor(
@@ -111,7 +141,10 @@ def _executor(tmp_path: Path) -> tuple[object, TurnExecutor]:
     return control_plane, executor
 
 
-async def _seed_checkpoint_only(tmp_path: Path):
+async def _seed_checkpoint_only(
+    tmp_path: Path,
+    *, context: dict[str, object] | None = None,
+):
     control_plane, executor = _executor(tmp_path)
     tool_args = {"path": "agent_output/out.txt", "content": "ok"}
     turn = ExecutionTurn(timestamp=None,
@@ -123,7 +156,7 @@ async def _seed_checkpoint_only(tmp_path: Path):
     await write_checkpoint_fixture(
         executor=executor,
         turn=turn,
-        context=_context(),
+        context=_context() if context is None else dict(context),
         prompt_hash="prompt-hash-seeded",
     )
     run = await control_plane.execution_repository.get_run_record(run_id=_run_id())
@@ -293,35 +326,52 @@ async def test_completed_governed_reentry_requires_snapshot_identity_alignment(t
     model = _Model()
     toolbox = _Toolbox()
 
-    first = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
-    snapshot_path = _snapshot_path(tmp_path)
-    snapshot_payload = json.loads(snapshot_path.read_text(encoding="utf-8"))
-    snapshot_payload["namespace_scope"] = "issue:OTHER"
-    snapshot_path.write_text(json.dumps(snapshot_payload, indent=2, ensure_ascii=False), encoding="utf-8")
-
+    first = await executor.execute_turn(
+        _issue(), _role(), model, toolbox, _context(namespace_scope="issue:OTHER")
+    )
+    checkpoint = await control_plane.publication.repository.get_checkpoint(
+        checkpoint_id=f"turn-tool-checkpoint:{_attempt_id()}"
+    )
+    snapshot = await _observe_snapshot_namespace(tmp_path)
     second = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
+    checkpoint_after = await control_plane.publication.repository.get_checkpoint(
+        checkpoint_id=f"turn-tool-checkpoint:{_attempt_id()}"
+    )
+    retained = await _observe_snapshot_namespace(tmp_path)
 
     assert first.success is True
+    assert checkpoint is not None
+    assert checkpoint_after == checkpoint
+    assert snapshot["after"] == retained["after"]
+    assert snapshot["payload"]["namespace_scope"] == "issue:OTHER"
+    assert checkpoint.integrity_verification_ref == checkpoint_snapshot_integrity_ref(snapshot["payload"])
     assert second.success is False
     assert second.error is not None
     assert "snapshot namespace scope does not match current request" in second.error
     assert model.calls == 1
     assert toolbox.calls == 1
-    assert control_plane is not None
 
 
 @pytest.mark.asyncio
 async def test_resume_mode_requires_snapshot_identity_alignment(tmp_path: Path) -> None:
-    _control_plane, executor, _run, _attempt, _checkpoint, _tool_args = await _seed_checkpoint_only(tmp_path)
-    snapshot_path = _snapshot_path(tmp_path)
-    snapshot_payload = json.loads(snapshot_path.read_text(encoding="utf-8"))
-    snapshot_payload["namespace_scope"] = "issue:OTHER"
-    snapshot_path.write_text(json.dumps(snapshot_payload, indent=2, ensure_ascii=False), encoding="utf-8")
+    control_plane, executor, _run, _attempt, checkpoint, _tool_args = await _seed_checkpoint_only(
+        tmp_path,
+        context=_context(namespace_scope="issue:OTHER"),
+    )
+    snapshot = await _observe_snapshot_namespace(tmp_path)
     model = _Model()
     toolbox = _Toolbox()
 
     result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context(resume_mode=True))
+    checkpoint_after = await control_plane.publication.repository.get_checkpoint(
+        checkpoint_id=checkpoint.checkpoint_id
+    )
+    retained = await _observe_snapshot_namespace(tmp_path)
 
+    assert checkpoint_after == checkpoint
+    assert snapshot["after"] == retained["after"]
+    assert snapshot["payload"]["namespace_scope"] == "issue:OTHER"
+    assert checkpoint.integrity_verification_ref == checkpoint_snapshot_integrity_ref(snapshot["payload"])
     assert result.success is False
     assert result.error is not None
     assert "snapshot namespace scope does not match current request" in result.error

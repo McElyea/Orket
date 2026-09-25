@@ -53,6 +53,11 @@ async def finalize_turn_execution_atomic(
         if executed_step_count is None:
             steps = await transaction.execution.list_step_records(attempt_id=attempt_id)
             executed_step_count = sum(step.step_kind == "governed_tool_operation" for step in steps)
+        if executed_step_count == 0:
+            effects = await transaction.records.list_effect_journal_entries(run_id=run_id)
+            # Invocation-local counts can reset during retained-cache validation.
+            if any(effect.attempt_id == attempt.attempt_id for effect in effects):
+                executed_step_count = 1
         return await finalize_turn_execution(
             execution_repository=transaction.execution,
             publication=ControlPlanePublicationService(repository=transaction.records, authority=authority),

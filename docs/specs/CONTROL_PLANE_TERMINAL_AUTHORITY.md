@@ -1,6 +1,6 @@
 # Control-plane terminal authority
 
-Last updated: 2026-09-20
+Last updated: 2026-09-24
 Status: Active contract; historical-consistency implementation acceptance remains scoped in the architectural-truth plan.
 
 ## Common record contract
@@ -266,6 +266,55 @@ An existing file without coherent dispatch resolution cannot authorize redispatc
 or successful completion. Ordinary ungoverned result caching shares file-worker
 ownership, but gains no native turn lock. Migration and remaining limits:
 `docs/architecture/CONTRACT_DELTA_TOOL_RESULT_WORKERS_D_2026-09-17.md`.
+
+### Governed retained-operation reuse
+
+A governed cache hit is read-only reuse of an already observed operation, not new
+dispatch admission. Operation-record and legacy call-keyed hits use the captured
+turn service, namespace, run and attempt. They require the existing run execution
+gate, current executing attempt, matching durable namespace, same-attempt step,
+effect-journal entry and canonical call reference. Missing or conflicting anchors
+refuse before toolbox execution, after-tool middleware or new result, receipt,
+step or effect publication for that rejected operation.
+
+Record failures use `E_OPERATION_ARTIFACT_INVALID` with the finite record reasons
+defined by the protocol contract. Missing step/effect authority uses
+`control_plane_anchor_missing`; conflicting dispatch configuration, unresolved
+dispatches, reservation/lease/resource authority, run/attempt/namespace or
+step/effect/call authority uses `control_plane_anchor_mismatch`. Canonical terminal
+join errors at this boundary are translated into the same named anchor-mismatch
+family rather than a route-dependent raw final-truth error.
+
+The governed validator reuses the already captured service and native run owner.
+Its step, journal, run, gate, attempt and final run observations are separate
+repository reads. Reloading the run last refuses run movement through the gate;
+it does not create an atomic snapshot or prove that attempt, reservation, lease,
+resource, step or journal state cannot move after its own read. The existing
+transaction remains authoritative for new dispatch and step/effect publication.
+No result file/control-plane transaction is introduced.
+
+The operation result digest proves local file self-consistency only. Step and
+effect records do not commit that digest, so coordinated result-plus-digest
+replacement is outside this guarantee. Legacy `tool_result_*` reuse remains
+call-keyed without a content digest; governed use gains anchor authorization, not
+operation-record content integrity. Ungoverned reuse gains no durable control-plane
+gate. Cached middleware receives detached values and must preserve canonical
+arguments and result; valid reuse does not rewrite the retained operation file.
+These rules do not authorize public resume over an already observed effect:
+checkpoint admission and retained-effect reconciliation still apply.
+
+Dispatcher refusal remains per call. Independent earlier or later calls can retain
+their existing effects and publications, and the dispatcher retains its violation
+aggregation and finalization behavior. This is not whole-turn rollback,
+stop-on-first-refusal or atomic multi-call execution.
+
+For terminal failure, an invocation-local zero step count cannot override a durable
+effect journal for the same attempt. The existing closeout transaction reads that
+journal before classifying failure: retained same-attempt effects require
+`post_effect_observed`, `tool_execution_failed` and final result `failed`. A truly
+empty attempt remains `pre_effect_failure` and `blocked`. Unresolved dispatch
+markers still refuse terminal closure; this rule adds no reconciliation of split
+step/journal authority and does not infer effects from result files.
 
 An unresolved marker refuses ordinary reentry, resume, preflight abandonment and
 terminal closure without releasing execution authority. Error or cancellation

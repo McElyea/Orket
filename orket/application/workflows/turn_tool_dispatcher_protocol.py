@@ -22,6 +22,7 @@ from ..services.governed_turn_tool_approval_continuation_service import (
     supports_governed_turn_tool_approval_continuation,
 )
 from .turn_artifact_destination import TurnArtifactDestination
+from .turn_artifact_writer import validate_operation_record
 from .turn_contract_input_capture import capture_mapping, capture_protocol_context, capture_workspace
 from .turn_read_context import (
     observe_legacy_required_read_paths,
@@ -156,6 +157,7 @@ async def collect_protocol_preflight_violations(
 async def load_or_execute_tool(
     *,
     protocol_enabled: bool,
+    control_plane_enabled: bool,
     destination: TurnArtifactDestination,
     turn: ExecutionTurn,
     tool_name: str,
@@ -173,26 +175,29 @@ async def load_or_execute_tool(
     load_operation_result: Callable[..., dict[str, Any] | None],
     load_replay_tool_result: Callable[..., dict[str, Any] | None],
     prepare_dispatch: Callable[..., Awaitable[None]],
-) -> tuple[dict[str, Any], bool]:
+) -> tuple[dict[str, Any], bool, bool]:
     tool_args, binding = deepcopy((tool_args, binding))
     if bool(context.get("protocol_replay_mode")):
         operation_record = await run_owned_thread(partial(
             load_operation_result, destination=destination, operation_id=operation_id,
         ), label="turn-operation-cache-read")
-        if isinstance(operation_record, dict):
-            replay_result = operation_record.get("result")
-            if isinstance(replay_result, dict):
-                return replay_result, True
-        raise ValueError("E_REPLAY_OPERATION_MISSING")
+        if operation_record is None:
+            raise ValueError("E_REPLAY_OPERATION_MISSING")
+        return validate_operation_record(operation_record, operation_id=operation_id,
+            tool_name=tool_name, tool_args=tool_args), True, True
     completion_call = is_card_completion_call(tool_name, tool_args)
-    if protocol_enabled and not completion_call:
+    if (protocol_enabled or control_plane_enabled) and not completion_call:
         operation_record = await run_owned_thread(partial(
             load_operation_result, destination=destination, operation_id=operation_id,
         ), label="turn-operation-cache-read")
-        if isinstance(operation_record, dict):
-            replay_result = operation_record.get("result")
-            if isinstance(replay_result, dict):
-                return replay_result, True
+        if operation_record is not None:
+            replay_result = validate_operation_record(operation_record, operation_id=operation_id,
+                tool_name=tool_name, tool_args=tool_args)
+            await prepare_dispatch(
+                tool_name=tool_name, tool_args=tool_args, binding=binding, operation_id=operation_id,
+                replay_operation=True,
+            )
+            return replay_result, True, True
     replay_result = None if completion_call else await run_owned_thread(partial(
         load_replay_tool_result, destination=destination,
         tool_name=tool_name,
@@ -200,7 +205,11 @@ async def load_or_execute_tool(
         resume_mode=bool(context.get("resume_mode")),
     ), label="turn-tool-cache-read")
     if replay_result is not None:
-        return replay_result, True
+        await prepare_dispatch(
+            tool_name=tool_name, tool_args=tool_args, binding=binding, operation_id=operation_id,
+            replay_operation=True,
+        )
+        return replay_result, True, False
 
     execution_context = dict(context)
     if isinstance(binding, dict):
@@ -223,7 +232,8 @@ async def load_or_execute_tool(
     execution_context["validator_version"] = validator_version
     execution_context["protocol_hash"] = protocol_hash
     execution_context["tool_schema_hash"] = tool_schema_hash
-    await prepare_dispatch(tool_name=tool_name, tool_args=tool_args, binding=binding, operation_id=operation_id)
+    await prepare_dispatch(tool_name=tool_name, tool_args=tool_args, binding=binding,
+                           operation_id=operation_id, replay_operation=False)
     if isinstance(compatibility_translation, dict):
         result = await _execute_compatibility_translation(
             toolbox=toolbox,
@@ -232,7 +242,7 @@ async def load_or_execute_tool(
         )
     else:
         result = await toolbox.execute(tool_name, tool_args, execution_context)
-    return result if isinstance(result, dict) else {"ok": False, "error": "non_dict_result"}, False
+    return result if isinstance(result, dict) else {"ok": False, "error": "non_dict_result"}, False, False
 
 
 async def _execute_compatibility_translation(

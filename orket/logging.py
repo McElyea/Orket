@@ -9,7 +9,13 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any, TypedDict
 
-from orket.core.contracts.invocation_timing import optional_duration_ms
+from orket.core.runtime_event import (
+    RUNTIME_EVENT_ARTIFACT_EVENTS,
+    _build_runtime_event,
+)
+from orket.core.runtime_event import (
+    RUNTIME_EVENT_SCHEMA_VERSION as RUNTIME_EVENT_SCHEMA_VERSION,
+)
 from orket.naming import sanitize_name
 from orket.time_utils import now_local
 
@@ -29,6 +35,7 @@ _prepared_log_dirs: set[Path] = set()
 _prepared_log_dirs_lock = threading.Lock()
 LOG_QUEUE_MAX_ENV = "ORKET_LOG_QUEUE_MAX"
 DEFAULT_LOG_QUEUE_MAX = 10_000
+LOG_WRITER_TERMINATED_ERROR = "E_LOG_WRITER_TERMINATED: log writer stopped before the requested frontier"
 
 
 side_effecting = True
@@ -42,9 +49,17 @@ def _resolve_log_queue_max() -> int:
     return configured if configured > 0 else DEFAULT_LOG_QUEUE_MAX
 
 
-_log_write_queue: queue.Queue[tuple[Path, str]] = queue.Queue(maxsize=_resolve_log_queue_max())
+class _LogWriteFrontier:
+    def __init__(self) -> None:
+        self.settled = False
+
+
+_LogWriteItem = tuple[Path, str] | _LogWriteFrontier
+_log_write_queue: queue.Queue[_LogWriteItem] = queue.Queue(maxsize=_resolve_log_queue_max())
 _log_writer_lock = threading.Lock()
-_log_writer_started = False
+_log_writer_state = threading.Condition()
+_log_writer_thread: threading.Thread | None = None
+_log_writer_failure: BaseException | None = None
 _dropped_log_entries = 0
 _dropped_log_entries_lock = threading.Lock()
 
@@ -56,27 +71,78 @@ class _MemberMetrics(TypedDict):
     detail: str
 
 
-def _start_log_writer() -> None:
-    global _log_writer_started
-    if _log_writer_started:
+def _record_log_writer_failure(failure: BaseException) -> None:
+    global _log_writer_failure
+    with _log_writer_state:
+        if _log_writer_failure is None:
+            _log_writer_failure = failure
+        _log_writer_state.notify_all()
+
+
+def _require_log_writer_alive() -> None:
+    writer = _log_writer_thread
+    if _log_writer_failure is None and writer is not None and writer.is_alive():
         return
+    raise RuntimeError(LOG_WRITER_TERMINATED_ERROR) from _log_writer_failure
+
+
+def _start_log_writer() -> None:
+    global _log_writer_thread
     with _log_writer_lock:
-        if _log_writer_started:
+        if _log_writer_thread is not None:
             return
         thread = threading.Thread(target=_log_writer_loop, name="orket-log-writer", daemon=True)
-        thread.start()
-        _log_writer_started = True
+        with _log_writer_state:
+            _log_writer_thread = thread
+        try:
+            thread.start()
+        except RuntimeError as exc:  # preserve process interrupts while recording thread-start failure
+            _record_log_writer_failure(exc)
+            _require_log_writer_alive()
 
 
 def _log_writer_loop() -> None:
-    while True:
-        path, line = _log_write_queue.get()
-        try:
-            _append_line_sync(path, line)
-        except OSError:
-            continue
-        finally:
-            _log_write_queue.task_done()
+    try:
+        while True:
+            item = _log_write_queue.get()
+            with _log_writer_state:
+                _log_writer_state.notify_all()  # a full queue now has one available slot
+            frontier = item if isinstance(item, _LogWriteFrontier) else None
+            try:
+                if frontier is None:
+                    path, line = item
+                    _append_line_sync(path, line)
+            except OSError:
+                pass
+            finally:
+                _log_write_queue.task_done()
+                if frontier is not None:
+                    with _log_writer_state:
+                        frontier.settled = True
+                        _log_writer_state.notify_all()
+    except BaseException as exc:  # daemon supervisor boundary must not strand a frontier waiter
+        _record_log_writer_failure(exc)
+        raise
+
+
+def settle_log_write_frontier() -> None:
+    """Block natively until prior accepted optional appends have settled."""
+    if _running_on_event_loop():
+        raise RuntimeError("E_LOG_WRITE_FRONTIER_REQUIRES_NATIVE_CONTEXT: settlement blocks the calling thread")
+    _start_log_writer()
+    frontier = _LogWriteFrontier()
+    with _log_writer_state:
+        while True:
+            _require_log_writer_alive()
+            try:
+                _log_write_queue.put_nowait(frontier)
+            except queue.Full:
+                _log_writer_state.wait()
+            else:
+                break
+        while not frontier.settled:
+            _require_log_writer_alive()
+            _log_writer_state.wait()
 
 
 def dropped_log_entry_count() -> int:
@@ -217,72 +283,6 @@ def _log_path(workspace: Path, role: str | None = None) -> Path:
         return agent_dir / f"{safe_name}.log"
     workspace.mkdir(parents=True, exist_ok=True)
     return workspace / "orket.log"
-
-
-RUNTIME_EVENT_SCHEMA_VERSION = "v2"
-RUNTIME_EVENT_ARTIFACT_EVENTS = {
-    "determinism_violation", "packet1_emission_failure", "session_start", "session_end", "turn_start",
-    "turn_complete", "turn_failed", "runtime_verifier_completed", "guard_retry_scheduled", "guard_terminal_failure",
-    "sdk_capability_call_start", "sdk_capability_call_blocked", "sdk_capability_call_result", "sdk_capability_call_exception",
-}
-
-
-def _build_runtime_event(event: str, data: dict[str, Any], role: str) -> dict[str, Any]:
-    payload = dict(data or {})
-    return {
-        "schema_version": RUNTIME_EVENT_SCHEMA_VERSION,
-        "event": str(event or "").strip(),
-        "role": str(role or payload.get("role") or "system"),
-        "session_id": str(payload.get("session_id") or ""),
-        "run_id": str(payload.get("run_id") or ""),
-        "issue_id": str(payload.get("issue_id") or ""),
-        "turn_index": int(payload.get("turn_index") or 0),
-        "turn_trace_id": str(payload.get("turn_trace_id") or ""),
-        "extension_id": str(payload.get("extension_id") or ""),
-        "workload_id": str(payload.get("workload_id") or ""),
-        "capability_id": str(payload.get("capability_id") or ""),
-        "capability_family": str(payload.get("capability_family") or ""),
-        "authorization_basis": str(payload.get("authorization_basis") or ""),
-        "declared": payload.get("declared"),
-        "admitted": payload.get("admitted"),
-        "side_effect_observed": payload.get("side_effect_observed"),
-        "denial_class": str(payload.get("denial_class") or ""),
-        "selected_model": str(payload.get("selected_model") or ""),
-        "prompt_id": str(payload.get("prompt_id") or ""),
-        "prompt_version": str(payload.get("prompt_version") or ""),
-        "prompt_checksum": str(payload.get("prompt_checksum") or ""),
-        "resolver_policy": str(payload.get("resolver_policy") or ""),
-        "selection_policy": str(payload.get("selection_policy") or ""),
-        "execution_profile": str(payload.get("execution_profile") or ""),
-        "builder_seat_choice": str(payload.get("builder_seat_choice") or ""),
-        "reviewer_seat_choice": str(payload.get("reviewer_seat_choice") or ""),
-        "seat_coercion": payload.get("seat_coercion"),
-        "artifact_contract": payload.get("artifact_contract"),
-        "odr_active": bool(payload.get("odr_active", False)),
-        "odr_stop_reason": str(payload.get("odr_stop_reason") or ""),
-        "odr_valid": payload.get("odr_valid"),
-        "odr_pending_decisions": payload.get("odr_pending_decisions"),
-        "stop_reason": str(payload.get("stop_reason") or ""),
-        "guard_contract": payload.get("guard_contract"),
-        "guard_decision": payload.get("guard_decision"),
-        "terminal_reason": (
-            (payload.get("guard_decision") or {}).get("terminal_reason")
-            if isinstance(payload.get("guard_decision"), dict)
-            else None
-        ),
-        "stage": str(payload.get("stage") or ""),
-        "tool": str(payload.get("tool") or ""),
-        "error_type": str(payload.get("error_type") or ""),
-        "error": str(payload.get("error") or ""), "error_code": str(payload.get("error_code") or ""),
-        "determinism_class": str(payload.get("determinism_class") or ""),
-        "capability_profile": str(payload.get("capability_profile") or ""),
-        "tool_contract_version": str(payload.get("tool_contract_version") or ""),
-        "side_effect_signal_keys": list(payload.get("side_effect_signal_keys") or []),
-        "packet1_conformance": payload.get("packet1_conformance"),
-        "duration_ms": optional_duration_ms(payload.get("duration_ms")),
-        **({"timing": payload["timing"]} if "timing" in payload else {}),
-        "tokens": payload.get("tokens"),
-    }
 
 
 def _append_runtime_event_artifact(workspace: Path, runtime_event: dict[str, Any]) -> None:

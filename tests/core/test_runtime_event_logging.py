@@ -1,12 +1,17 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import queue
+import threading
 from pathlib import Path
+from typing import Any
 
 import orket.logging as logging_module
 from orket.logging import get_member_metrics, log_event
+
+FRONTIER_WAIT_SECONDS = 5
 
 
 def _load_last_log_record(path: Path) -> dict:
@@ -148,6 +153,89 @@ def test_log_write_queue_drops_when_full_without_blocking_event_loop(tmp_path: P
     assert logging_module._log_write_queue.qsize() == 1
     assert logging_module.dropped_log_entry_count() == 1
     assert not log_path.exists()
+
+
+def _assert_frontier_observation(first: Path, later: Path, excluded_later: bool, record_property) -> None:
+    first_payload = json.loads(first.read_text(encoding="utf-8"))
+    later_payload = json.loads(later.read_text(encoding="utf-8"))
+    assert first_payload == {"event": "before-frontier"}
+    assert later_payload == {"event": "after-frontier"}
+    record_property("log_frontier_observation", json.dumps({
+        "first_event": first_payload["event"],
+        "later_event": later_payload["event"],
+        "frontier_finished_before_later_append": excluded_later,
+    }, sort_keys=True))
+    assert excluded_later
+
+
+# Layer: integration
+def test_log_write_frontier_excludes_later_unrelated_append(tmp_path: Path, monkeypatch, record_property) -> None:
+    """Layer: integration. A captured FIFO frontier settles prior appends without waiting for later work."""
+    settle = getattr(logging_module, "settle_log_write_frontier", None)
+    assert callable(settle), "The native logging owner must expose settle_log_write_frontier"
+    logging_module._log_write_queue.join()
+    first = tmp_path / "first.log"
+    later = tmp_path / "later.log"
+    first_entered, release_first, first_finished = threading.Event(), threading.Event(), threading.Event()
+    later_entered, release_later, later_finished = threading.Event(), threading.Event(), threading.Event()
+    frontier_admitted, frontier_finished = threading.Event(), threading.Event()
+    original_append = logging_module._append_line_sync
+    original_put = logging_module._log_write_queue.put
+    settler_threads: list[int] = []
+    errors: list[BaseException] = []
+    excluded_later = False
+
+    def held_append(path: Path, line: str) -> None:
+        entered, release, finished = (
+            (first_entered, release_first, first_finished)
+            if path == first
+            else (later_entered, release_later, later_finished)
+        )
+        entered.set()
+        try:
+            assert release.wait(FRONTIER_WAIT_SECONDS), f"Release missed for {path.name}"
+            original_append(path, line)
+        finally:
+            finished.set()
+
+    def observed_put(item: Any, *args: Any, **options: Any) -> None:
+        original_put(item, *args, **options)
+        if threading.get_ident() in settler_threads:
+            frontier_admitted.set()
+
+    def settle_frontier() -> None:
+        settler_threads.append(threading.get_ident())
+        try:
+            settle()
+        except BaseException as exc:
+            errors.append(exc)
+        finally:
+            frontier_finished.set()
+
+    async def admit(path: Path, event: str) -> None:
+        logging_module._append_json_record(path, {"event": event})
+
+    monkeypatch.setattr(logging_module, "_append_line_sync", held_append)
+    monkeypatch.setattr(logging_module._log_write_queue, "put", observed_put)
+    asyncio.run(admit(first, "before-frontier"))
+    assert first_entered.wait(FRONTIER_WAIT_SECONDS)
+    owner = threading.Thread(target=settle_frontier, name="fixture-log-frontier-owner")
+    owner.start()
+    try:
+        assert frontier_admitted.wait(FRONTIER_WAIT_SECONDS)
+        asyncio.run(admit(later, "after-frontier"))
+        release_first.set()
+        assert frontier_finished.wait(FRONTIER_WAIT_SECONDS)
+        assert later_entered.wait(FRONTIER_WAIT_SECONDS)
+        excluded_later = not later_finished.is_set()
+    finally:
+        release_first.set()
+        release_later.set()
+        owner.join(FRONTIER_WAIT_SECONDS)
+        logging_module._log_write_queue.join()
+
+    assert not owner.is_alive() and not errors
+    _assert_frontier_observation(first, later, excluded_later, record_property)
 
 
 def test_get_member_metrics_returns_aggregated_roles(tmp_path: Path) -> None:

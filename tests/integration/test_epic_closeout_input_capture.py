@@ -158,6 +158,7 @@ async def _run_materializer_case(case: dict[str, Any], *, mutate: bool, monkeypa
     target = case["workspace_a"] / "orket.log"
     hold = hold_sync(monkeypatch, Path, "exists", predicate=lambda path: Path(path) == target)
     task = asyncio.create_task(pipeline._materialize_run_summary(
+        construction_inputs=pipeline.runtime_context.construction_inputs,
         run_id=session_id,
         session_status="done",
         failure_reason=None,

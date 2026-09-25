@@ -17,6 +17,9 @@ from orket.runtime.run_summary import (
 from orket.runtime.run_summary_artifact_provenance import normalize_artifact_provenance_facts
 from orket.utils import sanitize_name
 
+if TYPE_CHECKING:
+    from orket.application.services.runtime_construction_inputs import RuntimeConstructionInputs
+
 _RUN_SUMMARY_RUN_IDENTITY_ERROR_PREFIX = "run_summary_run_identity_"
 _TRANSIENT_RUN_IDENTITY_ARTIFACT_KEYS = ("run_identity", "run_identity_path")
 
@@ -38,12 +41,9 @@ class ExecutionPipelineRunSummaryMixin:
         run_ledger: Any
         runtime_context: Any
 
-        async def _resolve_packet2_repair_entries_at(
-            self, *, run_id: str, workspace: Path,
-        ) -> list[dict[str, Any]]: ...
+        async def _resolve_packet2_repair_entries_at(self, *, run_id: str, workspace: Path) -> list[dict[str, Any]]: ...
 
-        async def _resolve_artifact_provenance_artifacts(
-            self, *, run_id: str, workspace: Path, ledger: Any,
+        async def _resolve_artifact_provenance_artifacts(self, *, run_id: str, workspace: Path, ledger: Any,
         ) -> dict[str, Any]: ...
 
         async def _resolve_cards_runtime_artifacts_at(
@@ -55,7 +55,7 @@ class ExecutionPipelineRunSummaryMixin:
             self, *, run_id: str,
             repair_entries: list[dict[str, Any]] | None = None,
             artifact_provenance_facts: dict[str, Any] | None = None,
-            workspace: Path,
+            workspace: Path, construction_inputs: RuntimeConstructionInputs,
         ) -> dict[str, Any]: ...
 
         async def _resolve_packet2_artifacts(
@@ -81,11 +81,11 @@ class ExecutionPipelineRunSummaryMixin:
 
     def _build_packet1_facts(
         self,
-        *,
+        *, construction_inputs: RuntimeConstructionInputs,
         intended_model: str | None,
         runtime_telemetry: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        environment = self.runtime_context.construction_inputs.environment
+        environment = construction_inputs.environment
         provider = provider_from_environment(environment)
         configured_profile = self._normalize_packet1_token(environment.get("ORKET_LOCAL_PROMPTING_PROFILE_ID"))
         fallback_profile = self._normalize_packet1_token(
@@ -262,6 +262,7 @@ class ExecutionPipelineRunSummaryMixin:
     async def _materialize_run_summary(
         self,
         *,
+        construction_inputs: RuntimeConstructionInputs,
         run_id: str,
         session_status: str,
         failure_reason: str | None,
@@ -290,6 +291,7 @@ class ExecutionPipelineRunSummaryMixin:
             workspace=workspace,
         )
         packet1_artifacts = await self._resolve_packet1_artifacts(
+            construction_inputs=construction_inputs,
             run_id=captured_run_id,
             repair_entries=repair_entries,
             artifact_provenance_facts=artifact_provenance_artifacts.get("artifact_provenance_facts"),

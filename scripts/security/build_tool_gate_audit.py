@@ -26,6 +26,7 @@ from orket.core.domain.execution import ExecutionTurn, ToolCall, ToolCallErrorCl
 from orket.core.domain.state_machine import StateMachine
 from orket.extensions.contracts import RunAction
 from orket.extensions.runtime import ExtensionEngineAdapter, RunContext
+from orket.logging import LOG_WRITER_TERMINATED_ERROR, settle_log_write_frontier
 from orket.runtime.execution.execution_pipeline_card_dispatch import ExecutionPipelineCardDispatchMixin
 from orket.schema import CardStatus, IssueConfig, RoleConfig
 from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
@@ -464,28 +465,32 @@ async def _collect_rows(project_root: Path) -> list[dict[str, Any]]:
 
 def main(argv: list[str] | None = None) -> int:
     args = _build_parser().parse_args(argv)
+    primary: BaseException | None = None
     with tempfile.TemporaryDirectory(prefix="orket-tool-gate-audit-") as temp_dir:
-        rows = asyncio.run(_collect_rows(Path(temp_dir).resolve()))
-    payload = {
-        "schema_version": "tool_gate_audit.v1",
-        "gate_surface": "governed_turn_tool_gate_v1",
-        "paths": rows,
-    }
+        try:
+            rows = asyncio.run(_collect_rows(Path(temp_dir).resolve()))
+        except BaseException as exc:
+            primary = exc
+            raise
+        finally:
+            try:
+                settle_log_write_frontier()
+            except RuntimeError as settlement:
+                if primary is None or type(settlement) is not RuntimeError or (
+                        settlement.args != (LOG_WRITER_TERMINATED_ERROR,)):
+                    raise
+                code = LOG_WRITER_TERMINATED_ERROR.partition(":")[0]
+                primary.add_note(f"Audit log settlement failed: code={code}; secondary_type=RuntimeError; "
+                                 f"daemon_cause_type={type(settlement.__cause__).__name__}")
+    payload = {"schema_version": "tool_gate_audit.v1", "gate_surface": "governed_turn_tool_gate_v1", "paths": rows}
     persisted = write_payload_with_diff_ledger(Path(str(args.out)).resolve(), payload)
-    if bool(args.strict):
-        required_rows = {
-            "run_card.turn_executor.tool_dispatcher",
-            "agent_run_direct_tool_execution",
-            "extension_engine_action_normalized_run_card",
-        }
-        observed_rows = {row["dispatch_path"] for row in rows}
-        if required_rows - observed_rows:
+    if args.strict:
+        required_rows = {"run_card.turn_executor.tool_dispatcher", "agent_run_direct_tool_execution",
+                         "extension_engine_action_normalized_run_card"}
+        if required_rows - {row["dispatch_path"] for row in rows} or any(
+                row["dispatch_path"] in required_rows and
+                (row["observed_result"] != "blocked" or bool(row["side_effect_observed"])) for row in rows):
             return 1
-        for row in rows:
-            if row["dispatch_path"] in required_rows and (
-                row["observed_result"] != "blocked" or bool(row["side_effect_observed"])
-            ):
-                return 1
     print(json.dumps(persisted, indent=2))
     return 0
 

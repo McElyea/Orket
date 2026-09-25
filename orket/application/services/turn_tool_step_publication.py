@@ -12,8 +12,8 @@ from orket.application.services.turn_tool_control_plane_state_gate import (
 )
 from orket.application.services.turn_tool_control_plane_support import (
     capability_for,
-    digest,
     effect_id_for,
+    governed_tool_call_digest,
     resource_refs,
     step_result_classification,
     tool_authorization_ref,
@@ -28,8 +28,8 @@ from orket.core.domain import ResidualUncertaintyClassification
 
 
 def _step(*, run, attempt_id, step_id, tool_name, tool_args, binding, operation_id, result=None, replayed=False):
-    call_digest = digest({"tool_name": tool_name, "tool_args": tool_args,
-                          "binding": dict(binding or {}), "operation_id": operation_id})
+    call_digest = governed_tool_call_digest(
+        tool_name=tool_name, tool_args=tool_args, binding=binding, operation_id=operation_id)
     observed = result is not None
     return StepRecord(
         step_id=step_id, attempt_id=attempt_id, step_kind="governed_tool_operation",

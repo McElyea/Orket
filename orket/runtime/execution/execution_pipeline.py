@@ -240,6 +240,10 @@ class ExecutionPipeline(
     def _build_epic_run_orchestrator(self) -> EpicRunOrchestrator:
         inputs = self.runtime_context.construction_inputs
         environment = dict(inputs.environment)
+        build_packet1_facts = partial(self._build_packet1_facts, construction_inputs=inputs)
+        materialize_run_summary = partial(
+            self._materialize_run_summary, construction_inputs=inputs,
+        )
         return EpicRunOrchestrator(
             eos_calendar=EosSprintBaseline.from_environment(environment),
             calendar_timezone_name=(environment.get("ORKET_TIMEZONE") or "UTC").strip(),
@@ -253,7 +257,7 @@ class ExecutionPipeline(
             preparation=EpicPreparationService(
                 prepare_export=self.artifact_exporter.prepare_export, reconcile_export=self._reconcile_run_artifacts,
                 publication=self.epic_publication, materialize_receipts=self._materialize_protocol_receipts,
-                materialize_summary=self._materialize_run_summary, export_artifacts=self._export_run_artifacts,
+                materialize_summary=materialize_run_summary, export_artifacts=self._export_run_artifacts,
                 export_binding=self.artifact_exporter.binding(), now=self.runtime_inputs.utc_now_iso,
                 owner_id=self.runtime_inputs.create_effect_owner_id,
             ),
@@ -278,9 +282,9 @@ class ExecutionPipeline(
                 resume_stalled_issues=self._resume_stalled_issues,
                 resume_target_issue_if_existing=self._resume_target_issue_if_existing,
                 run_artifact_refs=self._run_artifact_refs,
-                build_packet1_facts=self._build_packet1_facts,
+                build_packet1_facts=build_packet1_facts,
                 materialize_protocol_receipts=self._materialize_protocol_receipts,
-                materialize_run_summary=self._materialize_run_summary,
+                materialize_run_summary=materialize_run_summary,
                 export_run_artifacts=self._export_run_artifacts,
                 set_transcript=lambda transcript: setattr(self, "transcript", transcript),
             ),

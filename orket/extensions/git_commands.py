@@ -25,8 +25,8 @@ async def run_git(arguments: list[str], *, cwd: Path, environment: Mapping[str, 
     selected["GIT_TERMINAL_PROMPT"] = "0"
     owner = CommandProcessSupervisor(cwd, cancellation_event="extension_git_command_cancelled")
     try:
-        observed = await owner.run(["git", *arguments], cwd=cwd, environment=selected,
-                                   timeout_seconds=timeout_seconds)
+        observed = await owner.run(["git", "-c", "core.longpaths=true", *arguments],
+                                   cwd=cwd, environment=selected, timeout_seconds=timeout_seconds)
     except CommandProcessCancelled as exc:
         if not exc.lifetime.cleanup_confirmed or not exc.lifetime.capture_complete:
             raise ExtensionGitError("E_EXT_GIT_INTERRUPTION_UNCERTAIN", exc.lifetime) from exc

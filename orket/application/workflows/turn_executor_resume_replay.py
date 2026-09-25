@@ -10,7 +10,10 @@ from orket.core.domain import AttemptState, RunState
 from orket.core.domain.execution import ExecutionTurn
 
 from .turn_artifact_destination import TurnArtifactDestination
-from .turn_checkpoint_snapshot import validate_resume_snapshot_semantics
+from .turn_checkpoint_snapshot import (
+    validate_checkpoint_snapshot_integrity,
+    validate_resume_snapshot_semantics,
+)
 from .turn_control_plane_binding import TurnControlPlaneBinding
 from .turn_executor_control_plane_evidence import (
     list_operation_artifact_refs,
@@ -55,6 +58,10 @@ async def load_pre_effect_resume_turn_if_needed(
     )
     snapshot_payload = await load_checkpoint_snapshot_payload(
         destination=destination, state_snapshot_ref=checkpoint.state_snapshot_ref,
+    )
+    validate_checkpoint_snapshot_integrity(
+        snapshot_payload=snapshot_payload,
+        integrity_verification_ref=checkpoint.integrity_verification_ref,
     )
     validate_resume_snapshot_semantics(
         snapshot_payload=snapshot_payload,

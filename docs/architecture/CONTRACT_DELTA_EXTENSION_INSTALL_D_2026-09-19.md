@@ -24,6 +24,12 @@ execution deadline; checkout and commit observation have 30 seconds. Success
 requires zero exit status, complete capture and confirmed cleanup. Interruption
 retains native descendants through cleanup.
 
+The v0.6.105 candidate supplies `git -c core.longpaths=true` before every
+subcommand, including clone before repository-local configuration exists.
+This invocation-scoped option changes neither machine Git settings nor checkout
+placement. Follow-up delta and scoped acceptance limits:
+`docs/architecture/CONTRACT_DELTA_EXTENSION_GIT_LONGPATH_D_2026-09-25.md`.
+
 Interruption with confirmed cleanup and complete capture raises the exact base
 `asyncio.CancelledError`, retaining the native observation as its cause; Python
 3.12 caller timeout scopes can therefore convert it to `TimeoutError`. Incomplete

@@ -3,17 +3,34 @@ from __future__ import annotations
 from typing import Any
 
 from orket.application.services.turn_tool_control_plane_service import TurnToolControlPlaneService
+from orket.application.services.turn_tool_control_plane_support import (
+    governed_tool_call_digest,
+    tool_call_ref,
+)
+
+from .turn_governed_operation_reuse import validate_governed_operation_reuse
 
 
 async def prepare_dispatch_if_needed(
     *, control_plane_enabled: bool, control_plane_service: TurnToolControlPlaneService | None,
     control_plane_run_id: str | None, control_plane_attempt_id: str | None,
-    tool_name: str, tool_args: dict[str, Any], binding: dict[str, Any] | None, operation_id: str,
+    namespace_scope: str, tool_name: str, tool_args: dict[str, Any],
+    binding: dict[str, Any] | None, operation_id: str, replay_operation: bool,
 ) -> None:
     if not control_plane_enabled:
         return
     if control_plane_service is None or control_plane_run_id is None or control_plane_attempt_id is None:
         raise ValueError("governed tool dispatch requires admitted control-plane authority")
+    if replay_operation:
+        expected_input_ref = tool_call_ref(tool_call_digest=governed_tool_call_digest(
+            tool_name=tool_name, tool_args=tool_args, binding=binding, operation_id=operation_id))
+        await validate_governed_operation_reuse(
+            control_plane_service=control_plane_service, run_id=control_plane_run_id,
+            attempt_id=control_plane_attempt_id, namespace_scope=namespace_scope,
+            operation_id=operation_id, expected_input_ref=expected_input_ref,
+            fallback_tool_name=tool_name,
+        )
+        return
     await control_plane_service.prepare_dispatch(
         run_id=control_plane_run_id, attempt_id=control_plane_attempt_id, step_id=operation_id,
         tool_name=tool_name, tool_args=tool_args, binding=binding, operation_id=operation_id,

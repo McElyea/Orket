@@ -1,5 +1,8 @@
 """Explicit artifact/clock inputs for migrated standalone workflow fixtures."""
+import asyncio
+import json
 from datetime import UTC, datetime
+from pathlib import Path
 
 from orket.adapters.storage.async_file_tools import capture_file_roots
 from orket.application.workflows.turn_artifact_destination import TurnArtifactDestination
@@ -22,6 +25,34 @@ def executor_destination(executor, issue, role, context):
     return artifact_destination(executor.artifact_writer,
         session_id=str(context.get("session_id", "unknown-session")), issue_id=issue.id,
         role_name=str(role.name or "").strip(), role_id=str(role.id), turn_index=int(context.get("turn_index", 0)))
+
+
+def _rewrite_checkpoint_plan_operation(executor, issue, role, context, tool_args):
+    destination = executor_destination(executor, issue, role, context)
+    snapshot_path = sorted(destination.output_dir.glob("control_plane_checkpoint_snapshot_*.json"))[0]
+    snapshot_before = snapshot_path.read_bytes()
+    operation_path = sorted((destination.output_dir / "operations").glob("*.json"))[0]
+    operation_record = json.loads(operation_path.read_text(encoding="utf-8"))
+    executor.artifact_writer.persist_operation_result(
+        destination=destination,
+        operation_id=str(operation_record["operation_id"]),
+        tool_name=str(operation_record["tool"]),
+        tool_args=tool_args,
+        result=dict(operation_record["result"]),
+    )
+    return snapshot_path, snapshot_before
+
+
+async def rewrite_checkpoint_plan_operation_fixture(executor, issue, role, context, tool_args):
+    captured_args = dict(tool_args)
+    return await asyncio.to_thread(
+        _rewrite_checkpoint_plan_operation,
+        executor, issue, role, context, captured_args,
+    )
+
+
+async def read_artifact_bytes(path: Path) -> bytes:
+    return await asyncio.to_thread(path.read_bytes)
 
 
 def message_destination(builder, issue, role, context):

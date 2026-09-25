@@ -26,6 +26,13 @@ def preflight_result_ref(*, run_id: str, violation_reasons: list[str]) -> str:
     return f"turn-tool-preflight:{run_id}:{reason_token}"
 
 
+def governed_tool_call_digest(
+    *, tool_name: str, tool_args: dict[str, Any], binding: dict[str, Any] | None, operation_id: str,
+) -> str:
+    return digest({"tool_name": tool_name, "tool_args": tool_args,
+                   "binding": dict(binding or {}), "operation_id": operation_id})
+
+
 def tool_call_ref(*, tool_call_digest: str) -> str:
     return f"turn-tool-call:{tool_call_digest}"
 
@@ -125,6 +132,7 @@ __all__ = [
     "capability_for",
     "digest",
     "effect_id_for",
+    "governed_tool_call_digest",
     "preflight_result_ref",
     "resource_refs",
     "run_id_for",

@@ -15,7 +15,7 @@ from orket.application.services.turn_tool_control_plane_service import (
     TurnToolControlPlaneService,
     build_turn_tool_control_plane_service,
 )
-from orket.application.workflows.turn_artifact_writer import TurnArtifactWriter
+from orket.application.workflows.turn_artifact_writer import TurnArtifactWriter, build_operation_record
 from orket.application.workflows.turn_tool_dispatcher import ToolDispatcher
 from orket.core.domain import ReservationStatus
 from orket.core.domain.execution import ExecutionTurn, ToolCall
@@ -60,12 +60,12 @@ def _dispatcher(
             int(kwargs["destination"].turn_index),
             str(kwargs.get("operation_id")),
         )
-        operation_store[key] = {
-            "operation_id": str(kwargs.get("operation_id")),
-            "result": dict(kwargs.get("result") or {}),
-            "tool": str(kwargs.get("tool_name") or ""),
-            "args": dict(kwargs.get("tool_args") or {}),
-        }
+        operation_store[key] = build_operation_record(
+            operation_id=str(kwargs.get("operation_id")),
+            tool_name=str(kwargs.get("tool_name") or ""),
+            tool_args=dict(kwargs.get("tool_args") or {}),
+            result=dict(kwargs.get("result") or {}),
+        )
 
     def _append_protocol_receipt(**kwargs) -> dict[str, Any]:
         row = dict(kwargs.get("receipt") or {})

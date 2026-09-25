@@ -67,7 +67,7 @@ async def persist_protocol_operation(
     step_id: str, receipt_seq: int, proposal_hash: str, validator_version: str,
     protocol_hash: str, tool_schema_hash: str, execution_capsule: dict[str, Any],
     context: dict[str, Any], tool_name: str, tool_args: dict[str, Any], result: dict[str, Any],
-    binding: dict[str, Any] | None, operation_id: str, replayed: bool,
+    binding: dict[str, Any] | None, operation_id: str, replayed: bool, operation_record_present: bool,
     persist_operation_result: Callable[..., None], append_protocol_receipt: Callable[..., dict[str, Any]],
     control_plane_enabled: bool, control_plane_service: TurnToolControlPlaneService | None,
     control_plane_run_id: str | None, control_plane_attempt_id: str | None, retry_count: int,
@@ -83,8 +83,9 @@ async def persist_protocol_operation(
         tool_schema_hash=tool_schema_hash, index=index, tool_name=tool_name, tool_args=tool_args, result=result,
         manifest=manifest, retry_count=retry_count, validator_duration_ms=context.get("validator_duration_ms"),
         execution_capsule=execution_capsule, replayed=replayed)
-    await run_owned_thread(partial(persist_operation_result, **identity, operation_id=operation_id,
-        tool_name=tool_name, tool_args=tool_args, result=result), label="turn-operation-result")
+    if not operation_record_present:
+        await run_owned_thread(partial(persist_operation_result, **identity, operation_id=operation_id,
+            tool_name=tool_name, tool_args=tool_args, result=result), label="turn-operation-result")
     await run_owned_thread(partial(append_protocol_receipt, **identity, receipt=receipt), label="turn-protocol-receipt")
     return await publish_step_if_needed(
         control_plane_enabled=control_plane_enabled, control_plane_service=control_plane_service,
@@ -100,14 +101,16 @@ async def persist_non_protocol_tool_result_if_needed(
     tool_args: dict[str, Any], result: dict[str, Any], control_plane_enabled: bool,
     control_plane_service: TurnToolControlPlaneService | None, control_plane_run_id: str | None,
     control_plane_attempt_id: str | None, binding: dict[str, Any] | None, operation_id: str, replayed: bool,
+    operation_record_present: bool,
 ) -> str | None:
     tool_args, result, binding = deepcopy((tool_args, result, binding))
     payload = dict(destination=destination,
                    tool_name=tool_name, tool_args=tool_args, result=result)
-    if control_plane_enabled:
+    if control_plane_enabled and not operation_record_present:
         await run_owned_thread(partial(persist_operation_result, **payload, operation_id=operation_id),
                                label="turn-operation-result")
-    await run_owned_thread(partial(persist_tool_result, **payload), label="turn-tool-result")
+    if not replayed:
+        await run_owned_thread(partial(persist_tool_result, **payload), label="turn-tool-result")
     return await publish_step_if_needed(
         control_plane_enabled=control_plane_enabled, control_plane_service=control_plane_service,
         control_plane_run_id=control_plane_run_id, control_plane_attempt_id=control_plane_attempt_id,

@@ -1,7 +1,7 @@
 # Turn artifact input and publication ownership
 
-Last updated: 2026-09-23
-Status: Implementation contract for 0.6.102; checkpoint acceptance and publication tracked in the architectural-truth plan
+Last updated: 2026-09-24
+Status: Implementation contract; acceptance and publication tracked in the architectural-truth plan
 Owner: Orket Core
 
 This contract covers turn observability and replay artifacts produced by the
@@ -95,6 +95,37 @@ response/tool limits, hashes/versions, declared interfaces and required-action t
 Parser identity and workspace come from the destination. It must not retain a
 second mutable workspace or invoke a writer bound to a different destination.
 
+## Operation-result and replay inputs
+
+A persisted operation slot is missing only when its admitted content read observes
+`FileNotFoundError`. Path construction or directory admission failure, unreadable
+content, malformed JSON, a non-object value or an invalid record is present-invalid
+and refuses under `E_OPERATION_ARTIFACT_INVALID`; it must not become a cache miss
+that admits the toolbox. Path admission, content read, parsing and recognized error
+conversion remain inside the existing owned native operation.
+
+Every present operation record uses the shared strict validator. It requires exact
+operation ID and tool name, equality of canonical JSON argument hashes, a dictionary
+result and an exact 64-character lowercase hexadecimal digest equal to the canonical
+result hash. Canonical comparison preserves JSON semantics: dictionary order is
+irrelevant, persisted arrays match tuple inputs, and booleans do not equal numbers.
+The accepted result is detached before a later await.
+
+Policy, compatibility, workspace, gate, skill and approval checks retain their
+existing order before cache selection. Ordinary governed operation-record and
+legacy call-keyed hits additionally require their current durable control-plane
+anchors. A miss in both caches proceeds through ordinary dispatch admission.
+
+Embedded `TurnExecutor` protocol replay still performs model inference and parsing
+to obtain a fresh proposal, then requires exact stored operation records and skips
+toolbox execution. It is distinct from `orket protocol replay`, whose recorded-run
+contract bypasses model inference and prompt construction. Neither route may use
+the other route's name to claim a broader no-model or execution guarantee.
+
+Compatibility-translated calls retain the existing parent-operation admission and
+canonical hashing authority. This change adds no child-operation identity, second
+serializer, cache filename migration or compatibility fallback.
+
 ## Admitted native work and document order
 
 Use the existing owned-I/O/native-thread implementation. Repeated cancellation
@@ -183,6 +214,13 @@ Completed replay and pre-effect recovery use the captured destination for lookup
 and validate retained snapshot identity before use. Approval callbacks publish
 request rows, operator/control-plane targets and artifacts for that same identity.
 The existing approval/checkpoint schemas and supported pre-effect ceiling remain.
+
+Completed replay, pre-effect resume and approval continuation validate the full
+persisted snapshot payload against the checkpoint's existing integrity reference
+before consuming its tool plan. Formatting or dictionary order alone does not
+change that canonical digest. In pre-effect resume, the existing recovery admission
+and lineage lookup precede the snapshot read; an integrity refusal can therefore
+retain the committed recovery prefix. It adds no rollback, repair or fresh attempt.
 
 Tool-approval callbacks receive this required destination from dispatch. Request
 rows and control-plane holds reuse its identity and one sample of the explicitly

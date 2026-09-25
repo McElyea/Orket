@@ -34,6 +34,7 @@ from orket.core.domain import (
 from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.core.domain.state_machine import StateMachine
 from orket.schema import CardStatus, IssueConfig, RoleConfig
+from tests.helpers import turn_artifacts
 from tests.helpers.turn_artifacts import artifact_destination, artifact_test_utc_now, write_checkpoint_fixture
 from tests.helpers.turn_control_plane_clock import deterministic_turn_clock as deterministic_turn_clock
 
@@ -379,11 +380,9 @@ async def test_turn_executor_completed_governed_reentry_requires_checkpoint_plan
     toolbox = _Toolbox()
 
     first = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
-    turn_dir = Path(tmp_path) / "observability" / "run-1" / "issue-1" / "001_developer"
-    snapshot_path = sorted(turn_dir.glob("control_plane_checkpoint_snapshot_*.json"))[0]
-    snapshot_payload = json.loads(snapshot_path.read_text(encoding="utf-8"))
-    snapshot_payload["tool_calls"][0]["args"] = {"path": "agent_output/other.txt", "content": "wrong"}
-    snapshot_path.write_text(json.dumps(snapshot_payload, indent=2, ensure_ascii=False), encoding="utf-8")
+    snapshot_path, snapshot_before = await turn_artifacts.rewrite_checkpoint_plan_operation_fixture(
+        executor, _issue(), _role(), _context(), {"path": "agent_output/other.txt", "content": "wrong"},
+    )
 
     second = await executor.execute_turn(_issue(), _role(), model, toolbox, _context(resume_mode=False))
 
@@ -393,6 +392,7 @@ async def test_turn_executor_completed_governed_reentry_requires_checkpoint_plan
     assert "arguments do not match checkpoint tool plan" in second.error
     assert model.calls == 1
     assert toolbox.calls == 1
+    assert await turn_artifacts.read_artifact_bytes(snapshot_path) == snapshot_before
 
 
 @pytest.mark.asyncio

@@ -7,7 +7,10 @@ import pytest
 
 from orket.application.middleware import TurnLifecycleInterceptors
 from orket.application.services.tool_gate_service import ToolGate
-from orket.application.workflows.turn_artifact_writer import TurnArtifactWriter
+from orket.application.workflows.turn_artifact_writer import (
+    TurnArtifactWriter,
+    build_operation_record,
+)
 from orket.application.workflows.turn_tool_dispatcher import ToolDispatcher
 from orket.core.domain.execution import ExecutionTurn, ToolCall
 from tests.helpers.turn_artifacts import execute_dispatch_fixture
@@ -44,10 +47,12 @@ def _dispatcher(
             int(kwargs["destination"].turn_index),
             str(kwargs.get("operation_id")),
         )
-        operation_store[key] = {
-            "operation_id": str(kwargs.get("operation_id") or ""),
-            "result": dict(kwargs.get("result") or {}),
-        }
+        operation_store[key] = build_operation_record(
+            operation_id=str(kwargs.get("operation_id") or ""),
+            tool_name=str(kwargs.get("tool_name") or ""),
+            tool_args=dict(kwargs.get("tool_args") or {}),
+            result=dict(kwargs.get("result") or {}),
+        )
 
     def _append_protocol_receipt(**kwargs) -> dict[str, Any]:
         return dict(kwargs.get("receipt") or {})

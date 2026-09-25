@@ -1,6 +1,6 @@
 # Gitea Artifact Export Contract
 
-Last updated: 2026-09-22
+Last updated: 2026-09-25
 Status: Active contract
 Owner: Orket Core
 
@@ -40,6 +40,14 @@ exporter and Git embeddings supply the command port; the native application fact
 binds it with the same captured process environment as HTTP. The restricted Git
 environment never consults later ambient values. Explicit empty mappings remain empty
 apart from required export/authentication overlays.
+
+Every adapter-owned Git command supplies `core.longpaths=true` before its
+subcommand, including the initial `git init`. Initialization also retains the
+repository-local setting for later use. Bootstrap cannot depend on configuration
+inside a repository that does not yet exist. Cache placement, captured inputs,
+command ownership, deadlines, output bounds and private error classifications
+retain their existing contracts. Migration and proof limits:
+`docs/architecture/CONTRACT_DELTA_GITEA_GIT_BOOTSTRAP_D_2026-09-25.md`.
 
 Payload arguments are copied before the first await. Payload construction and Git
 cache preparation run as owned native work: cancellation, repeated cancellation and

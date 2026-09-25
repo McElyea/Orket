@@ -5,6 +5,29 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.105] - 2026-09-25
+
+### Fixed
+- Bind Packet-1 start and closeout intent to the same selected construction inputs.
+- Validate stored operation identity, canonical arguments and result digest before reuse; present-invalid records refuse instead of admitting redispatch.
+- Require existing governed execution and step/effect authority for cache hits, and full checkpoint integrity before completed replay, pre-effect resume or approval continuation consumes a tool plan.
+- Preserve cached operation bytes and result authority through middleware; consult strict operation records before governed nonprotocol legacy reuse, and retain post-effect terminal truth after same-attempt effects.
+- Refuse cached determinism violations before result substitution or publication while preserving live result adaptation.
+- Settle prior accepted optional log-write attempts on the existing daemon before tool-gate audit workspace cleanup; retain best-effort delivery and refuse dead-writer settlement without restart.
+- Preserve the audit's primary collection/close failure when known writer termination also occurs, with a non-secret secondary diagnostic note and unchanged primary exception graph.
+- Enable artifact-export Git long paths before repository initialization, preserving cache placement and existing command ownership, limits and private failures.
+- Enable extension Git long paths before clone and subsequent subcommands, preserving checkout placement, captured inputs, command ownership, deadlines and private failures.
+- `compatibility_status`: `preserved`
+- `affected_audience`: `core embedders and replay artifact producers`
+- `migration_requirement`: `required`
+- Direct internal Packet-1 callers must supply the selected construction inputs; operation fixtures must use canonical records. Valid persisted canonical record formats remain unchanged.
+- Internal middleware callers supply replay provenance; cache loading and persistence carry explicit governed and existing-record provenance without fallback defaults.
+- Contract and migration: `docs/architecture/CONTRACT_DELTA_TURN_INPUT_REPLAY_AUTHORITY_D_2026-09-24.md`.
+- Audit cleanup contract and limits: `docs/architecture/CONTRACT_DELTA_LOG_WRITE_SETTLEMENT_D_2026-09-24.md`.
+- Git bootstrap contract and limits: `docs/architecture/CONTRACT_DELTA_GITEA_GIT_BOOTSTRAP_D_2026-09-25.md`.
+- Extension Git contract and limits: `docs/architecture/CONTRACT_DELTA_EXTENSION_GIT_LONGPATH_D_2026-09-25.md`.
+- The architectural-truth plan owns acceptance and publication status. Wider D/E/CAP, Linux clock, full coverage and lane acceptance remain open.
+
 ## [0.6.104] - 2026-09-23
 
 ### Fixed

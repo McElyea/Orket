@@ -150,6 +150,16 @@ Canonical operator path:
 Stable output path:
 1. `benchmarks/results/security/tool_gate_audit.json`
 
+The native CLI owner settles prior optional log-write attempts after async
+collection and before releasing its temporary workspace, including when required
+engine close raises. Publication follows successful collection, settlement and
+workspace cleanup. A failure in any of those stages cannot publish a new audit
+result. This uses the existing writer and the fixed marker boundary in
+`docs/specs/LOG_WRITE_SETTLEMENT.md`; it does not claim durable log delivery or
+global application shutdown. The contract also defines exact combined-failure
+precedence: a locally owned primary survives known writer termination with a
+non-secret note; unknown settlement failures retain normal precedence.
+
 Minimum schema:
 
 ```json

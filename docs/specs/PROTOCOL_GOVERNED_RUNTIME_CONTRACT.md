@@ -514,6 +514,49 @@ Purpose:
 
 Duplicate operations reuse stored results.
 
+16.1.1 Stored result authority
+
+A stored operation record binds its exact operation ID, tool name, canonical JSON
+arguments, dictionary result and canonical result digest. The digest is exactly 64
+lowercase hexadecimal characters. Consumers use one shared validator for embedded
+protocol replay, ordinary operation-cache reuse and completed governed replay, and
+return a detached result only after every field validates.
+
+Governed nonprotocol dispatch also checks the strict operation slot before a
+legacy call-keyed cache. A present invalid operation never falls through to legacy
+content. Reuse preserves the existing operation file bytes, including equivalent
+JSON formatting. Admitted legacy reuse can materialize an absent operation slot
+through the existing writer while retaining the legacy file bytes.
+
+After-tool interceptors receive detached arguments and result on cached calls.
+Their final arguments and returned dictionary must remain canonically equivalent
+to the selected values; the caller receives the retained result. Changed arguments
+or result refuse before result/receipt/step publication with
+`E_CACHED_RESULT_MIDDLEWARE_AUTHORITY:args_changed` or `result_changed`.
+Live calls retain their existing interceptor transformation behavior. This rule
+does not contain arbitrary interceptor effects outside the supplied copies.
+
+If the subsequent determinism check diagnoses a cached result, the existing
+`E_DETERMINISM_VIOLATION` refuses that operation before result substitution or
+publication. Live results retain their existing diagnostic-result adaptation.
+Ordinary governed refusal uses existing attempt finalization; embedded replay
+does not change retained control-plane truth.
+
+A present invalid operation record is a refusal, not a cache miss. Stable reason
+classes include `malformed`, `operation_id_mismatch`, `tool_mismatch`,
+`args_mismatch` and `result_digest_mismatch`; governed durable-anchor failures add
+`control_plane_anchor_missing` and `control_plane_anchor_mismatch`.
+
+Embedded turn replay still invokes the model and parser for a fresh proposal. It
+replays only exact operation results and performs no toolbox or governed
+control-plane execution. The separate `orket protocol replay` recorded-run
+interface retains its no-model, no-prompt contract in
+`CORE_RUNTIME_STABILITY_REQUIREMENTS.md`.
+
+Compatibility-translated execution retains the parent operation's identity and the
+same canonical tool/argument hashing authority. It does not create a second child
+cache authority or weaken exact operation validation.
+
 16.2 Execution order invariant
 
 Tools execute exactly in `tool_calls` order.
@@ -542,6 +585,19 @@ Minimum required controls:
 - If network is enabled, allowed destinations MUST be explicitly declared.
 - First-run request/response payloads used for tool decisions MUST be captured as artifacts.
 - Deterministic replay mode MUST not perform outbound network calls; it MUST replay from captured artifacts.
+
+16.6 Governed checkpoint reuse
+
+A governed checkpoint snapshot is accepted only when the canonical digest of its
+full persisted payload matches the existing `integrity_verification_ref`. The
+shared validator runs before completed replay, pre-effect resume or approval
+continuation consumes the stored tool plan. Snapshot filename identity and payload
+shape checks remain necessary but are not substitutes for full integrity.
+
+Pre-effect resume retains its established ordering: recovery admission and lineage
+selection can commit before the snapshot artifact is read. A later integrity
+refusal preserves that durable recovery prefix and admits no orphan reconciliation
+or returned replay turn.
 
 17. Decision Governance
 

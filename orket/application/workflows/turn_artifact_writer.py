@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from copy import deepcopy
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -20,6 +21,89 @@ from .turn_compatibility_artifacts import append_compatibility_artifacts
 
 if TYPE_CHECKING:
     from .turn_memory_trace_artifacts import MemoryTracePublication
+
+
+class OperationRecordValidationError(ValueError):
+    """The operation slot exists but cannot authorize replay."""
+
+    def __init__(self, reason: str, detail: str) -> None:
+        self.reason = reason
+        self.detail = detail
+        super().__init__(f"E_OPERATION_ARTIFACT_INVALID:{reason}: {detail}")
+
+
+def build_operation_record(
+    *, operation_id: str, tool_name: str, tool_args: dict[str, Any], result: dict[str, Any],
+) -> dict[str, Any]:
+    captured_args, captured_result = deepcopy((dict(tool_args or {}), dict(result or {})))
+    # Operation arguments and results must be verifiable from their persisted JSON values.
+    hash_canonical_json(captured_args)
+    return {
+        "operation_id": operation_id,
+        "tool": tool_name,
+        "args": captured_args,
+        "result": captured_result,
+        "result_digest": hash_canonical_json(captured_result),
+    }
+
+
+def validate_operation_record(
+    record: Any,
+    *,
+    operation_id: str,
+    tool_name: str,
+    tool_args: dict[str, Any],
+) -> dict[str, Any]:
+    if not isinstance(record, dict):
+        raise OperationRecordValidationError("malformed", "operation record is malformed")
+    if record.get("operation_id") != operation_id:
+        raise OperationRecordValidationError(
+            "operation_id_mismatch", "operation id does not match requested operation",
+        )
+    observed_tool = record.get("tool")
+    if not isinstance(observed_tool, str):
+        raise OperationRecordValidationError(
+            "tool_mismatch", "operation tool does not match submitted tool: persisted tool is malformed",
+        )
+    if observed_tool != tool_name:
+        raise OperationRecordValidationError(
+            "tool_mismatch", "operation tool does not match submitted tool",
+        )
+    observed_args = record.get("args")
+    if not isinstance(observed_args, dict):
+        raise OperationRecordValidationError(
+            "args_mismatch", "operation arguments do not match submitted arguments: persisted arguments are malformed",
+        )
+    try:
+        observed_args_digest = hash_canonical_json(observed_args)
+        expected_args_digest = hash_canonical_json(tool_args)
+    except ProtocolCanonicalizationError as exc:
+        raise OperationRecordValidationError(
+            "args_mismatch", "operation arguments do not match submitted arguments: noncanonical JSON",
+        ) from exc
+    if observed_args_digest != expected_args_digest:
+        raise OperationRecordValidationError(
+            "args_mismatch", "operation arguments do not match submitted arguments",
+        )
+    result = record.get("result")
+    if not isinstance(result, dict):
+        raise OperationRecordValidationError("malformed", "operation result is malformed")
+    result_digest = record.get("result_digest")
+    if (
+        not isinstance(result_digest, str)
+        or len(result_digest) != 64
+        or any(character not in "0123456789abcdef" for character in result_digest)
+    ):
+        raise OperationRecordValidationError("malformed", "operation result digest is malformed")
+    try:
+        expected_result_digest = hash_canonical_json(result)
+    except ProtocolCanonicalizationError as exc:
+        raise OperationRecordValidationError("malformed", "operation result is not canonical JSON") from exc
+    if result_digest != expected_result_digest:
+        raise OperationRecordValidationError(
+            "result_digest_mismatch", "operation result digest does not match result",
+        )
+    return deepcopy(result)
 
 
 class TurnArtifactWriter:
@@ -160,13 +244,27 @@ class TurnArtifactWriter:
     def load_operation_result(
         self, *, destination: TurnArtifactDestination, operation_id: str,
     ) -> dict[str, Any] | None:
+        """Return an operation record, preserving missing versus present-invalid."""
         destination.require_writer(self)
-        path = self.operation_result_path(
-            destination=destination, operation_id=operation_id,
-        )
-        if not path.exists():
+        try:
+            path = self.operation_result_path(
+                destination=destination, operation_id=operation_id,
+            )
+        except OSError as exc:
+            raise OperationRecordValidationError(
+                "malformed", "operation record path is unreadable",
+            ) from exc
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except FileNotFoundError:
             return None
-        return self._load_json_dict(path)
+        except (json.JSONDecodeError, OSError, TypeError, ValueError) as exc:
+            raise OperationRecordValidationError(
+                "malformed", "operation record is present but unreadable",
+            ) from exc
+        if not isinstance(payload, dict):
+            raise OperationRecordValidationError("malformed", "operation record is malformed")
+        return payload
 
     def persist_operation_result(
         self,
@@ -181,13 +279,9 @@ class TurnArtifactWriter:
         path = self.operation_result_path(
             destination=destination, operation_id=operation_id,
         )
-        payload = {
-            "operation_id": operation_id,
-            "tool": tool_name,
-            "args": dict(tool_args or {}),
-            "result": dict(result or {}),
-            "result_digest": self.hash_payload(result if isinstance(result, dict) else {}),
-        }
+        payload = build_operation_record(
+            operation_id=operation_id, tool_name=tool_name, tool_args=tool_args, result=result,
+        )
         path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
 
     def append_protocol_receipt(

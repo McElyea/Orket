@@ -433,8 +433,9 @@ class ToolDispatcher:
                         workspace,
                     )
 
-                result, replayed = await load_or_execute_tool(
-                    protocol_enabled=protocol_enabled, destination=destination, turn=turn,
+                result, replayed, operation_record_present = await load_or_execute_tool(
+                    protocol_enabled=protocol_enabled, control_plane_enabled=control_plane_enabled,
+                    destination=destination, turn=turn,
                     tool_name=tool_name, tool_args=dict(tool_call.args or {}),
                     operation_id=operation_id, binding=binding, toolbox=toolbox, context=context,
                     step_id=step_id, step_seed=step_seed, validator_version=validator_version,
@@ -442,15 +443,13 @@ class ToolDispatcher:
                     compatibility_translation=compatibility_translation,
                     load_operation_result=self.load_operation_result,
                     load_replay_tool_result=self.load_replay_tool_result,
-                    prepare_dispatch=partial(prepare_dispatch_if_needed,
+                    prepare_dispatch=partial(prepare_dispatch_if_needed, namespace_scope=control_plane.namespace_scope,
                         control_plane_enabled=control_plane_enabled, control_plane_service=control_plane_service,
                         control_plane_run_id=control_plane_run_id, control_plane_attempt_id=control_plane_attempt_id),
                 )
 
                 result = self.middleware.apply_after_tool(
-                    tool_name,
-                    tool_call.args,
-                    result,
+                    tool_name, tool_call.args, result, replayed=replayed,
                     issue=issue,
                     role_name=turn.role,
                     context=context,
@@ -500,6 +499,8 @@ class ToolDispatcher:
                             },
                             workspace,
                         )
+                    if replayed:
+                        raise ValueError(determinism_violation["error"])
                     result = {
                         "ok": False,
                         "error": determinism_violation["error"],
@@ -550,8 +551,8 @@ class ToolDispatcher:
                             tool_args=dict(tool_call.args or {}),
                             result=result,
                             binding=binding,
-                            operation_id=operation_id,
-                            replayed=bool(replayed),
+                            operation_id=operation_id, replayed=bool(replayed),
+                            operation_record_present=operation_record_present,
                             persist_operation_result=self.persist_operation_result,
                             append_protocol_receipt=self.append_protocol_receipt,
                             control_plane_enabled=control_plane_enabled,
@@ -570,9 +571,8 @@ class ToolDispatcher:
                         control_plane_service=control_plane_service,
                         control_plane_run_id=control_plane_run_id,
                         control_plane_attempt_id=control_plane_attempt_id,
-                        binding=binding,
-                        operation_id=operation_id,
-                        replayed=bool(replayed),
+                        binding=binding, operation_id=operation_id,
+                        replayed=bool(replayed), operation_record_present=operation_record_present,
                     )
                 if result_ref is not None:
                     executed_step_count += 1

@@ -233,6 +233,14 @@ not effect receipts or durable recovery journals.
 1. `log_write_queue_full`
    - `dropped_log_entries`, `queue_max`, `path`
 
+Native cleanup owners can settle prior accepted optional append attempts through
+`settle_log_write_frontier()`, under `docs/specs/LOG_WRITE_SETTLEMENT.md`. Its marker
+uses one existing bounded queue slot and can therefore increase ordinary-record
+capacity pressure; the marker itself is never a dropped record or emitted event.
+Settlement does not turn these best-effort events into durable effect authority.
+Runtime-event value construction and schema constants have one definition in
+`orket/core/runtime_event.py`; emitted event fields are unchanged.
+
 ## Transition/Failure Lifecycle
 1. `retry_triggered`
    - `run_id`, `issue_id`, `retry_count`, `max_retries`, `error`

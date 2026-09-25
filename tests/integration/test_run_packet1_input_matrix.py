@@ -106,8 +106,13 @@ async def test_packet1_provider_and_profile_precedence_use_captured_environment(
     pipeline = await _pipeline(test_root, workspace, db_path)
     set_packet1_environment(monkeypatch, ENVIRONMENT_C)
 
-    started = pipeline._build_packet1_facts(intended_model="fixed-model")
+    construction_inputs = pipeline.runtime_context.construction_inputs
+    assert construction_inputs is not None
+    started = pipeline._build_packet1_facts(
+        construction_inputs=construction_inputs, intended_model="fixed-model",
+    )
     finalized = pipeline._build_packet1_facts(
+        construction_inputs=construction_inputs,
         intended_model=None,
         runtime_telemetry=CONTROLLED_TELEMETRY,
     )
@@ -249,7 +254,9 @@ async def test_native_pipeline_captures_or_reuses_one_construction_owner(
         assert captured.environment["ORKET_LLM_PROVIDER"] == "llama_cpp"
         assert native.pipeline_wiring_service.construction_inputs is captured
         set_packet1_environment(monkeypatch, ENVIRONMENT_C)
-        assert native._build_packet1_facts(intended_model="fixed")["intended_provider"] == "llama_cpp"
+        assert native._build_packet1_facts(
+            construction_inputs=captured, intended_model="fixed",
+        )["intended_provider"] == "llama_cpp"
 
     set_packet1_environment(monkeypatch, ENVIRONMENT_B)
     explicit = await RuntimeConstructionInputs.capture_async()
@@ -265,7 +272,9 @@ async def test_native_pipeline_captures_or_reuses_one_construction_owner(
     async with open_runtime_owner(explicit_construct, label="packet1-explicit-capture") as configured:
         assert configured.runtime_context.construction_inputs is explicit
         assert configured.pipeline_wiring_service.construction_inputs is explicit
-        assert configured._build_packet1_facts(intended_model="fixed")["intended_provider"] == "lmstudio"
+        assert configured._build_packet1_facts(
+            construction_inputs=explicit, intended_model="fixed",
+        )["intended_provider"] == "lmstudio"
 
     async with OrchestrationEngine.open(
         test_root / "workspace-context-capture",

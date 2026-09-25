@@ -14,12 +14,16 @@ from orket.core.cards_runtime_contract import normalize_scenario_truth_alignment
 from orket.runtime.phase_c_runtime_truth import collect_phase_c_packet2_facts
 from orket.utils import sanitize_name
 
+if TYPE_CHECKING:
+    from orket.application.services.runtime_construction_inputs import RuntimeConstructionInputs
+
 
 class ExecutionPipelineRuntimeArtifactsMixin:
     if TYPE_CHECKING:
         def _build_packet1_facts(
             self,
             *,
+            construction_inputs: RuntimeConstructionInputs,
             intended_model: str | None,
             runtime_telemetry: dict[str, Any] | None = None,
         ) -> dict[str, Any]: ...
@@ -53,6 +57,7 @@ class ExecutionPipelineRuntimeArtifactsMixin:
     async def _resolve_packet1_artifacts(
         self,
         *,
+        construction_inputs: RuntimeConstructionInputs,
         run_id: str,
         repair_entries: list[dict[str, Any]] | None = None,
         artifact_provenance_facts: dict[str, Any] | None = None,
@@ -65,7 +70,9 @@ class ExecutionPipelineRuntimeArtifactsMixin:
             run_id=run_id, workspace=captured_workspace)
         repair_facts = self._build_packet1_repair_facts(captured_repairs)
         packet1_facts = {
-            **self._build_packet1_facts(intended_model=None, runtime_telemetry=runtime_telemetry),
+            **self._build_packet1_facts(
+                construction_inputs=construction_inputs, intended_model=None, runtime_telemetry=runtime_telemetry,
+            ),
             **repair_facts,
         }
         primary_work_artifact = self._select_primary_work_artifact_output(

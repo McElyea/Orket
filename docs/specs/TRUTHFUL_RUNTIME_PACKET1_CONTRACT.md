@@ -1,6 +1,6 @@
 # Truthful Runtime Packet-1 Contract
 
-Last updated: 2026-09-23
+Last updated: 2026-09-24
 Status: Active
 Owner: Orket Core
 Canonical requirements source: `docs/projects/archive/truthful-runtime/TRH03142026-PACKET1/TRH03142026-PHASE-C-REQUIREMENTS.md`
@@ -121,6 +121,19 @@ Capture belongs to runtime construction, including an explicitly constructed nat
 pipeline that has no supplied snapshot. Packet production must not reread ambient
 environment, recapture on finalization, or create a second environment authority.
 Caller environment changes after construction cannot rewrite intended provenance.
+
+When an epic run owner is constructed, the pipeline selects its existing
+`RuntimeConstructionInputs` object once. That required object is bound into both
+the initial Packet-1 facts callback and every closeout/run-summary callback that
+builds final Packet-1 facts. The builder receives it explicitly; it does not reread
+a later `runtime_context.construction_inputs` slot after telemetry or artifact
+awaits. Replacing that context slot cannot split start and final intent authority
+for the admitted epic.
+
+This guarantee is per constructed owner. A separately constructed restart selects
+its own admitted construction inputs; no cross-process or cross-restart Python
+object identity is claimed. There is no optional callback fallback, ambient
+recapture, duplicate environment field or compatibility shim.
 
 The native pipeline's automatic capture observes root, environment and settings;
 it does not read unused preferences or acquire preference-migration ownership.

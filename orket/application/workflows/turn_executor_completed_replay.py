@@ -22,6 +22,7 @@ from orket.core.domain import (
 from orket.core.domain.execution import ExecutionTurn
 
 from .turn_artifact_destination import TurnArtifactDestination
+from .turn_checkpoint_snapshot import validate_checkpoint_snapshot_integrity
 from .turn_control_plane_binding import TurnControlPlaneBinding
 from .turn_executor_control_plane_evidence import (
     load_checkpoint_snapshot_payload,
@@ -53,6 +54,10 @@ async def load_completed_turn_replay_if_needed(
     )
     snapshot_payload = await load_checkpoint_snapshot_payload(
         destination=destination, state_snapshot_ref=checkpoint.state_snapshot_ref,
+    )
+    validate_checkpoint_snapshot_integrity(
+        snapshot_payload=snapshot_payload,
+        integrity_verification_ref=checkpoint.integrity_verification_ref,
     )
     tool_calls = await load_completed_replay_tool_calls(
         control_plane_service=control_plane_service,
