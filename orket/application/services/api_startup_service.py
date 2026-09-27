@@ -5,32 +5,39 @@ import asyncio
 import logging
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
+from functools import partial
 from pathlib import Path
 from typing import Any
 
 from orket.adapters.execution.owned_io import run_owned_thread
+from orket.adapters.observability.log_publication import (
+    begin_event_subscription_drain,
+    settle_event_subscription,
+    subscribe_to_event_handoffs,
+)
 from orket.application.services.api_runtime_container import ApiRuntimeContainer
-from orket.logging import subscribe_to_events, unsubscribe_from_events
 
 LOGGER = logging.getLogger(__name__)
 
 
 class _EventSubscription:
-    def __init__(self, owner: ApiRuntimeContainer, state: Any) -> None:
+    def __init__(self, state: Any) -> None:
         loop = asyncio.get_running_loop()
 
-        def enqueue(record: dict[str, Any]) -> None:
-            if owner.accepting_work:
+        def enqueue(record: dict[str, Any], acknowledge: Callable[[], None]) -> None:
+            try:
                 state.event_queue.put_nowait(record)
+            finally:
+                acknowledge()
 
-        def on_record(record: dict[str, Any]) -> None:
-            if owner.accepting_work:
-                loop.call_soon_threadsafe(enqueue, record)
+        def on_record(record: dict[str, Any], acknowledge: Callable[[], None]) -> None:
+            loop.call_soon_threadsafe(enqueue, record, acknowledge)
 
-        self.callback = on_record
+        self.registration = subscribe_to_event_handoffs(on_record)
 
-    def close(self) -> None:
-        unsubscribe_from_events(self.callback)
+    async def aclose(self) -> None:
+        begin_event_subscription_drain(self.registration)
+        await run_owned_thread(partial(settle_event_subscription, self.registration), label="api-event-subscription-drain")
 
 
 def _validate_root(configured_root: Path, owned_root: Path) -> None:
@@ -52,9 +59,8 @@ async def api_runtime_lifespan(
         initialize_engine = getattr(engine, "initialize", None)
         if callable(initialize_engine):
             await initialize_engine()
-        subscription = _EventSubscription(owner, state)
+        subscription = _EventSubscription(state)
         owner.register_owned_resource(subscription)
-        subscribe_to_events(subscription.callback)
         owner.start_background(broadcaster)
         if governed_runtime is not None:
             await governed_runtime.start(owner)

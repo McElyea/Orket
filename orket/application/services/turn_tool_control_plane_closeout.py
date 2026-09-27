@@ -174,7 +174,7 @@ async def finalize_turn_execution(
     executed_step_count: int,
     error_type: type[Exception],
 ) -> tuple[RunRecord, AttemptRecord, FinalTruthRecord]:
-    await require_resolved_tool_dispatches(execution_repository, run, error_type)
+    await require_resolved_tool_dispatches(execution_repository, publication.repository, run, error_type)
     existing_truth = await publication.repository.get_final_truth(run_id=run.run_id)
     if validate_terminal_record_consistency(run, attempt, existing_truth):
         return run, attempt, existing_truth

@@ -1,7 +1,7 @@
 # Architectural Truth Remediation Plan
 
 Date: 2026-07-29
-Last updated: 2026-09-25
+Last updated: 2026-09-27
 Status: Active implementation plan; scoped BT-1 through BT-5 accepted; C/D is the next ordered gate
 Roadmap state: Priority Now
 Owner: Orket Core
@@ -25157,3 +25157,1460 @@ legacy cutover, selected-provider proof, hosted Quality and full coverage remain
 open. Separate-read atomicity, legacy call-keyed digest debt, the retained
 pre-effect recovery prefix and step-without-journal reconciliation remain explicit.
 No main merge, whole-goal completion or lane retirement is claimed.
+
+
+### Published replay/settlement checkpoint: 2026-09-25 (v0.6.105)
+
+The scoped 81-file checkpoint is committed as
+`799e69ac99c6cbf56ad282be22ee1042a41c5af2`, with annotated tag object
+`605e5b08199aae8c13c193fdc2da2c176810ef7a` for `v0.6.105`. Branch and tag were
+pushed atomically. The post-publication check independently confirmed the remote
+branch, tag object and peeled commit, exact committed/index/worktree bytes,
+parent `.104`, clean worktree, original checkout and retained physical evidence.
+The checkpoint binds 484,980 evidence files. Its publication receipt is
+`.tmp/d-input-replay-extension-clone-publication/publication.json`, SHA-256
+`493a7e23afcdefb446919f47929d88c8bff1916cf76e08e91595f3c804325345`;
+checkpoint SHA-256 is
+`382782b8e756e68a2150f31f69b9cb6689a7c18641cbe132ccab0beee8993458`.
+This is live Git publication plus the scoped source/Windows proof already recorded
+above. It is not Linux acceptance, a release-readiness claim, whole D/E/CAP closure
+or lane retirement. The final baseline still reports `release_ready=false`.
+
+### Complete runtime-input capture opening: 2026-09-25 (0.6.106 development candidate)
+
+The next D correction addresses complete asynchronous runtime capture. Published
+`.105` executes root selection, environment mapping hooks, serialization and
+immutable construction on the event loop around its owned settings-file read.
+A controlled 750 ms mapping hold exposed those operations on the caller thread.
+The independent real SQLite create/write/commit/query/close took
+0.7659999999959837 seconds against the unchanged strict 0.5-second bound. Capture
+had already finished before cancellation could be requested; one and three
+cancellation requests therefore observed a returned object, not pending native
+work. The native ValueError retained its exact identity already; its opening
+failure concerns off-loop ownership and pending settlement, not lost exception
+identity.
+
+The first source opening retained **6 passing / 4 failing / 0 errors / 0 skips**
+across ten cases. It used the existing six settings controls unchanged. A second,
+matched opening used the reviewed settings-read synchronization migration and
+again observed **6 passing / 4 failing / 0 errors / 0 skips** before production
+changed. The new capture tests are byte-identical in both observations; the
+matched opening's entire two-module selection is frozen for the closing run.
+All existing bound/unbound combinations and malformed-file assertions remain.
+No timeout, forced process kill or candidate-byte mutation occurred in either
+run. Both parent processes terminated and were reaped; their temporary Windows
+awake requests were restored. Both failures remain failures.
+
+Evidence under `.tmp/d-a106-input-ownership/`:
+
+| Observation | Report SHA-256 | JUnit SHA-256 |
+|---|---|---|
+| `capture-opening` | `2735cc686cbb7dc42c74a9d60e0f7c3be0fb0ef83544f68dde6c045d6687cb75` | `628d78476071f69d637a102bdcd2527be149208311f8db8d2ccccdf78e0973b7` |
+| `capture-opening-matched` | `86940d25951a48ac48804b8a60b8c9106d9adf16245ff04876c71c4ce5f6ec08` | `760a9b36063321e7d5e2a36574ae127e3b17bc13c86b9d6dbfc216495a805a2c` |
+
+These are live controlled local source observations, path `primary`, result
+`failure`. The fresh Python 3.11 source environment uses the exact published
+`.105` package dependency set; checkout imports supply the source under test.
+This does not establish installed candidate behavior, actual model inference or
+Linux acceptance. The raw logs, JUnit properties, physical fixtures, input copies,
+process receipts and all earlier evidence are retained.
+
+The development candidate now moves complete capture into one existing
+`run_owned_thread` operation and reuses one native settings collector. Its
+worker-start selection timing, independent bound values, explicit empty objects,
+context propagation, migration and non-atomic limits are specified in
+`docs/specs/SETTINGS_INPUT_OWNERSHIP.md` and
+`docs/architecture/CONTRACT_DELTA_RUNTIME_CAPTURE_OWNER_D_2026-09-25.md`.
+The caller's settings context is not implicitly rotated. Synchronous capture and
+persisted load/save/migration selectors keep their separate contracts. Closing
+source proof and installed acceptance are still pending at this opening record.
+CLI/API/driver/child/legacy propagation, logging lifecycle, step/journal consistency,
+remaining async/explicit inputs, E and CAP obligations remain open.
+
+
+### Complete runtime-input capture source closing: 2026-09-25
+
+The exact matched ten-case selection now passes: **10 passed, 0 failures/errors/
+skips**, path `primary`, result `success`. The same physical SQLite operation
+completed in 0.01600000000325963 seconds under the unchanged strict 0.5-second bound.
+Root/location selection, mapping hooks, serialization and immutable construction
+were observed on one native thread distinct from the event-loop thread. Capture
+remained pending during the hold. One and three cancellation requests remained
+pending until native settlement, then raised cancellation. The native ValueError
+kept precedence and exact object identity. The six bound/unbound/malformed-file
+controls remain green. Both test modules have exactly the matched opening bytes.
+
+The pytest parent terminated and was reaped without timeout or forced kill; the
+Windows awake request was restored. Candidate bytes were unchanged during proof.
+Targeted Ruff for the two product modules and two test modules passed. All three
+opening/closing evidence trees were physically rehashed after the terminal run.
+
+Closing report `.tmp/d-a106-input-ownership/capture-closing/report.json`:
+`075c0d9fa3977ae64c5608465c77cfffb4e7fe9c6e3f771d6bb05f7728b9eb0d`.
+JUnit: `4a5192ee3c82ed432bdd234888e3b56f2811e05342bf2cbd0857819d269ee17d`.
+Readback: `.tmp/d-a106-input-ownership/capture-closing-checks.json`,
+`58e56116250a7722bb62aa78efdb707437b69c3592e79f70501b27d01b8aaeb1`.
+This is live controlled local source proof with structural input/evidence binding,
+not installed candidate acceptance. Canonical CLI/API/driver/child/legacy input
+propagation and their lifetime controls remain required. No new version checkpoint
+or tag is published for this development candidate. Existing Linux, logging,
+step/journal, wider async, E and CAP obligations remain unchanged.
+
+
+### Step/journal correspondence opening and fixture blocker: 2026-09-25
+
+The real local source opening executed 17 cases before the step/journal guard
+changed: **4 passed, 13 failed, 0 errors/skips**. Eleven failures reached permissive
+boundaries: six direct terminal outcomes with absent current journals, three
+mismatched journal execution identities, one multi-step orphan and one terminal
+reuse. An additional recovery case already refused for a missing accepted
+checkpoint; it demonstrates absent earlier journal diagnosis, not unsafe recovery
+success. The approval-denial case failed in fixture setup: the paused attempt had
+zero steps where the fixture assumed one unresolved step. It never reached the
+intended corruption/denial observation and supplies no approval counterexample.
+That precise fixture defect must be corrected and observed before guard closing.
+
+Four controls passed: journal-only same-attempt evidence retained its post-effect
+floor; another attempt's effect did not upgrade the current attempt; distinct
+healthy step/operation identities remained valid; unresolved-dispatch precedence
+held. Existing owner lifetimes, transactions, deadlines and assertions were not
+relaxed. The source candidate includes the independently closed capture change;
+step/journal production remains the published `.105` implementation.
+
+All candidate bytes stayed fixed, the pytest parent terminated and was reaped,
+no timeout or forced kill occurred, and the Windows awake request was restored.
+Raw observations, logical/physical fixtures and all 13 failures remain retained.
+Report `.tmp/d-a106-input-ownership/step-journal-opening/report.json`:
+`0428d77e4312bfa9547c116d177bcb0084b605c71d61129154ded3a4be870ee8`; JUnit `ab77c446b0711230d792ae61f7204085fd2db4ac969529fcf36387c32c0a4dcb`.
+Classification receipt `.tmp/d-a106-input-ownership/step-journal-opening-classification.json`:
+`6a035fd4b1e34b0cc7428c6f904bfd2665eb43a9ac27e876ab46215aa0bb66e3`.
+This is scoped live local opening evidence, path `primary`, observed run result
+`failure`; interpretation is `partial success` because one intended fixture never
+reached its boundary. Guard correction, matched approval opening, closing and
+installed proof remain absent. No step/journal closure is claimed.
+
+
+### llama.cpp template-read lifetime opening: 2026-09-25
+
+The current matching-version template read reproduced three intended lifetime
+failures before correction: **8 passed / 3 failed / 0 errors/skips**, path `primary`,
+result `failure`. In single/repeated cancellation, the verifier task completed
+while its physical read was still held. Repeated cancellation returned
+`[true, false, false]`. Removing the admitted template produced a real native
+`FileNotFoundError`, but the caller observed `CancelledError` instead. All three
+observations reached their final target assertion after fixture cleanup: exactly
+one read, physical completion, joined task, closed HTTP client, and zero HTTP
+requests. Both successful-read cases passed the unchanged strict independent
+SQLite control. The nonmatching-version no-read control and seven existing
+render/identity/budget/input contracts passed.
+
+Report `.tmp/d-a106-input-ownership/llama-template-opening/report.json`:
+`ac798cc719cdd8e5302d63a13912f777b3120e93361d059f07efa2fa7742b85a`; JUnit `3fd566c02632bdce7ff2d5b83ec874019dc7f9012f88ff93fcc715ac42e790a1`.
+The raw fixtures, inputs, log and three negative observations are retained;
+readback `.tmp/d-a106-input-ownership/llama-template-opening-checks.json`:
+`e474acf3c73fdbd989c2cc38a3fac36f136168679b43846ea8d38de81c05dc1f`.
+No timeout, forced kill or candidate-byte mutation occurred. The correction now
+uses the existing native I/O owner for that same bound template read. LP-15 and
+`docs/architecture/CONTRACT_DELTA_LLAMA_TEMPLATE_READ_OWNERSHIP_D_2026-09-25.md`
+record the cancellation/failure semantics without changing render identity,
+provider selection, HTTP ordering or token accounting. Closing and installed
+proof remain pending at this opening record. Local file controls and mocked or
+forbidden HTTP do not establish live llama.cpp server/render/inference acceptance.
+
+### llama.cpp template-read source closing: 2026-09-25
+
+The existing native owner closes the three reproduced template-read lifetime
+failures. Both closing executions passed **11 / 0 failures / 0 errors / 0 skips**.
+Single and repeated cancellation remained pending while the physical read was
+held; each cancellation request returned true. After release, successful reads
+propagated cancellation and the removed-file read propagated its exact native
+`FileNotFoundError` object. All three tasks and native reads settled, HTTP clients
+closed, and interrupted paths made zero HTTP requests. The final two independent
+SQLite controls passed the unchanged strict 0.5s bound; maximum
+`0.0017111000051954761s`.
+
+The first closing used the exact opening test bytes. Targeted Ruff then found
+UP035 for the new `Callable` import, and an intermediate import move produced
+I001. Both failed logs remain retained in
+`.tmp/d-a106-input-ownership/llama-template-ruff.json`; the final scoped Ruff passed.
+Only import authority/order changed. Non-import ASTs, assertions, test identities
+and bounds are identical, and the final test bytes received a separate passing
+closing execution. All three opening/closing evidence trees were physically
+rehashed; every run retained frozen candidate bytes, reaped its pytest parent,
+released its awake request and had no timeout or forced kill.
+
+Final report `.tmp/d-a106-input-ownership/llama-template-closing-import/report.json`:
+`0aa619ec65f85d435f0dc030c10b03e4db0af84a4aca77118e9c3e2649d0276f`;
+JUnit `9412a32480376d31bea1430d050f7264c40b269059569076cdf958fd231245a9`.
+Final readback `.tmp/d-a106-input-ownership/llama-template-final-closing-checks.json`:
+`2c7282f1889fff044edccb74c00259c441d1199c2fd4594dad4d64c6a79d46ec`.
+Observed path/result: `primary / success` for controlled local source ownership.
+Seven existing mocked HTTP render/input contracts are retained. Installed,
+Linux and actual llama.cpp provider/render/inference acceptance remain absent
+for this development candidate; this does not close whole-D or CAP obligations.
+
+### Corrected step/journal approval opening and guard integration: 2026-09-25
+
+The first fixture correction added a legitimate prior physical `read_file`, but
+the read was absent from the card's declared inputs. The intermediate matched
+opening retained **4 passes / 13 failures**; approval still failed before its
+target, now at an actual hallucination-scope refusal instead of a zero-step
+assumption. That run is retained at
+`.tmp/d-a106-input-ownership/step-journal-opening-matched/`. Correction receipt
+`approval-fixture-declaration-correction.json` under the same proof root:
+`515ce604cdd9bd8d7f61ada45332cfdd7d4777c22009f3b1bdc9531c78a2f90a`.
+
+Declaring the exact read path through `artifact_contract.required_read_paths`
+then reached the intended approval boundary. The real dispatcher performed one
+successful read and published its matching step/journal before pausing for the
+unchanged required write approval. The fixture removed only that exact journal.
+Denial returned HTTP 200, published terminal child run/attempt/final truth and
+changed logical/physical state despite the retained orphan step. The approved
+output remained absent. No governance rule, assertion or deadline was bypassed.
+
+The declared opening again had **4 passes / 13 failures / 0 errors/skips**, now
+with twelve permissive target failures and one earlier recovery-diagnosis failure;
+there were no fixture-setup failures. Report
+`.tmp/d-a106-input-ownership/step-journal-opening-declared/report.json`:
+`20f79fd85ffa1b334923702815c943b7cf121f77f086c5b1620311f29a726476`;
+JUnit `dc040f4818a8970235bf5259c0204283f0f90ec5ff40b0114c01356ac945e929`.
+Readback `step-journal-declared-opening-checks.json`:
+`0bb18021a4b72952d6a774d13583e11ce05c2bb82594840b64f33b84226896fc`.
+All retained evidence was physically rehashed; inputs stayed frozen, pytest was
+reaped, awake state was released, and no timeout or forced kill occurred.
+
+The production correction now extends the existing state gate and its five
+callers, retaining their repository/transaction and error authorities. It requires
+run/attempt/step correspondence after unresolved-dispatch refusal, without
+inventing journals, reverse correspondence, an atomic snapshot or a repair path.
+The terminal-authority spec and dated contract delta define the stricter refusal.
+Integration receipt `step-journal-integration.json`:
+`eab96b82fc02be616988bf8184e4cfe92ed9bba542789413a656d1538bf32917`.
+Closing, broader regression and installed proof remain pending at this record.
+
+### Step/journal focused closing and broader cancellation finding: 2026-09-25
+
+The first closing executed 17 cases: sixteen passed, and approval reached HTTP
+409 with matching run/step diagnosis, unchanged logical/physical state and absent
+truth/output. Its sole failure was the test's incorrect attempt token `executing`;
+the canonical `AttemptState.EXECUTING.value` is `attempt_executing`. The exact
+failed run is retained at `step-journal-closing/`; no product change was needed.
+The corrected assertion imports that existing enum and retains every other
+assertion. Targeted Ruff over the ten affected guard/test files passed.
+Correction receipt `.tmp/d-a106-input-ownership/step-journal-enum-correction.json`:
+`802e59606493c0cfec150e4f352dd155b15016fc65885b5cee35a85279d0be8d`.
+
+The final-byte focused closing passed **17 / 0 failures / 0 errors / 0 skips**.
+All opening identities remain. The real approval refusal preserves the settled
+workspace map and complete terminal-boundary logical snapshot, retains executing
+child run/attempt state, and publishes neither final truth nor the approved file.
+Report `.tmp/d-a106-input-ownership/step-journal-closing-enum/report.json`:
+`ef06f1873b3dd8cfcbccad7263bb4f442b7a27277d907abad9662c37c7fd58ec`;
+JUnit `674ccfa0330d238171ba0a75cd86a11bf20bdfaef2a8c6e3c5ddb7820872c465`.
+Readback `step-journal-final-closing-checks.json`:
+`789f82549d6b667856d773678e6afa16d7d70d2c2b274beeeb88f99a2337a646`.
+
+Broader source regression is **not green**: 48 cases produced **38 passes and
+10 failures**, with no errors/skips. All ten are existing approval-transaction
+cancellation controls: six terminal-write rollback cases expected the named
+`approval-terminal-write-interrupted` cancellation, and four terminal-reentry
+fixtures expected `retained-child-closeout`; each instead observed an empty
+`CancelledError` message. Those identities were absent from the published .105
+source selection, so this is a newly observed broader obligation, not evidence
+that the .105 scoped receipt was green for them. Assertions remain unchanged.
+The existing approval lifetime owner requires investigation and correction;
+the passing focused guard set does not satisfy this broader regression gate.
+
+Report `.tmp/d-a106-input-ownership/step-journal-regression/report.json`:
+`f92a5fbc5091ff16e3cdae64c537bbabb969d86b953d89298299cdff39f25609`;
+JUnit `14cb0c8105eae30b5414315c88aa5dd3d66c09520504bc00831595252dc0a3c5`.
+Classification `step-journal-regression-classification.json`:
+`2c0b958ad201de2ed600c22089e46088bede7e1b632be75da4c55b82de5bba05`.
+All runs froze candidate inputs, reaped pytest, released awake state and avoided
+timeout/forced kill. Their physical evidence is retained and rehashed. These
+are local source flows with controlled providers; installed, Linux and broader
+acceptance remain outstanding. No .106 checkpoint has been published.
+
+### Complete input-route opening and integration: 2026-09-25
+
+The first route opening stopped at collection: two new non-package test modules
+shared the basename `test_runtime_input_propagation.py`. That exit-4 observation
+is retained at `.tmp/d-a106-input-ownership/driver-input-opening/` and supplies no
+runtime counterexample. Renaming only the new contract module to
+`tests/contracts/test_runtime_input_routing_contract.py` preserves its exact
+bytes and the existing pytest import policy. Correction receipt
+`driver-test-collection-correction.json`:
+`b0434cf0a329e23c47489791683dd86080ac1773d1eff90e3536c62eb5c04897`.
+
+The corrected source opening reached all four selected controls: **one passed,
+three failed, no errors/skips**. Parent input precedence passed. Child selection
+with a wiring default and with no selected authority both attempted forbidden
+ambient recapture. The real API lifespan reached its driver factory but forwarded
+environment fields instead of the complete app-owned object. The driver there
+is a probe, so this is routing/lifespan evidence, not actual chat inference.
+Two new-signature controls were deliberately deferred until product integration.
+Readback `.tmp/d-a106-input-ownership/driver-opening-checks.json`:
+`1f927e43e226ad67012558c9b6a59eccb731d28991980d8f87ec31c87b7236bc`.
+
+The reviewed CLI, driver/API-host/child, legacy-extension and API-extension
+composition changes are now integrated. Central capture was reused, not replayed.
+One complete object crosses the selected routes; CLI startup captures after
+onboarding with preference migration before the final settings read and binds
+the result in its caller. Child preparation uses parent, then wiring default,
+then explicit refusal. Existing runtime factories and close owners remain.
+The route delta records intentional default-observation timing and selector
+exclusivity; settings and runtime-result specs plus CURRENT_AUTHORITY agree.
+
+Integration `.tmp/d-a106-input-ownership/route-input-integration.json`:
+`8993bfaf67d13832d4d72cbe973af6fbed455980ae2cef8bae10deee20816f61`.
+The CLI V3 proposal note's two stale physical source hashes are corrected by its
+retained independent review; the actual patch bases and projected product hashes
+were verified at integration. Targeted Ruff found one new test import-order
+issue, retained at `route-input-ruff-first.json`; the import ordering is corrected
+without test-body changes. Composed closing and source/installed acceptance remain
+required. Separate workload-policy capture, catalog normalization, approval
+cancellation, logging, Linux, wider D, E and CAP obligations remain open.
+
+### Composed input-route closing and focused cancellation opening: 2026-09-25
+
+The first composed route closing executed 19 modules and **120 cases: 112 passed,
+eight failed, no errors/skips**. Retained failures are one legacy test expecting
+an inline `final_truth` field, two default-catalog cases whose fixture introduces
+an explicit catalog during rotation, one API case expecting a dictionary where
+the current outbound policy is typed, and four CLI startup cases whose manager
+stub lacks the migrated complete-input argument. These assertions require
+contract-aware fixture migration; this run is not accepted as green.
+Report `.tmp/d-a106-input-ownership/route-input-closing/report.json`:
+`359a38d1a4cd79371e13e57eb80293f8fbdf5ae62ffdc4b36f28a584ccb11fa4`;
+JUnit `0b4db66e37f848f873d87c9479020a17e0be44467453d9b6066f7e472c7e9987`.
+Final pre-run scoped Ruff passed; receipt `route-input-ruff-final.json`:
+`ec26473907ba610c74305d1ec6d9c717c5ef820825555718cab144ebf29fdf47`.
+
+Three focused shared-I/O-owner controls were added without changing the owner.
+The real Kernel publication's named internal-cancellation assertion and the
+repeated external-cancellation message assertion failed. The internal exact-object
+assertion follows its regex assertion and was not reached. The real native-worker
+failure-precedence control passed. This **one pass / two failures / no errors or
+skips** opening narrows the broader approval finding; it does not itself prove
+the precise cancellation payload beyond the retained failed assertions.
+Report `.tmp/d-a106-input-ownership/cancellation-owner-opening/report.json`:
+`c91a3a2a030b95a9d38191b5fb95ececcc60803604618a131ecf57a3bd48a7d5`;
+JUnit `c0e3dfbc5dd1b9851715a4917b15332d57604ab27c226379fdb94202677c558b`.
+The correction proposal remains unapplied while its shared-owner admission,
+factory timing and cancellation/error precedence are reviewed.
+
+Combined diagnostic readback `route-and-cancellation-diagnostic-findings.json`:
+`f871214597ba327035cf8f793a5b75c091603103635f94650bcaa177e34027fd`.
+The initial readback incorrectly assumed pytest's unanchored-regex diagnostic
+format; it failed before writing a receipt. The successful readback checks the
+actual anchored-regex messages without changing test evidence. Both execution
+trees are physically rehashed, candidate bytes were frozen, pytest parents were
+reaped, awake state was released, and no timeout/forced kill occurred. Source
+closing, installed/Windows matrix, Linux and full-lane acceptance remain open.
+
+### Composed input-route fixture closing: 2026-09-25
+
+The four fixture migrations preserve the original 120 identities and every
+ownership/deadline assertion. Legacy extension success now checks the real
+manager-owned run and final-truth repositories and matches both durable IDs to
+the projection. The default-catalog fixture keeps that environment selector
+empty; explicit precedence still faces a hostile ambient catalog. API policy
+assertions use the actual immutable input type with captured file/environment
+patterns, and CLI startup stubs accept the complete construction object.
+Migration receipt `route-fixture-integration.json` under
+`.tmp/d-a106-input-ownership/` records the exact integration.
+
+The final selected source execution passed **120 cases / 0 failures / 0 errors /
+0 skips**. Its 33 recorded SQLite observations all satisfy the unchanged strict
+`0 < elapsed < 0.5s` bound; maximum observed was `0.04577460000291467s`.
+Both the earlier eight-failure tree and this passing tree were physically
+rehashed. The closing retained frozen candidate inputs, reaped its parent,
+released its awake request and had no timeout or forced kill. At readback,
+all 46 captured product/test inputs still matched the candidate bytes.
+
+Report `.tmp/d-a106-input-ownership/route-input-closing-fixtures/report.json`:
+`d31b5f055c4434ddde7ec061e816fc6a4cb5121a4bbc102ebf211ea00da45b43`;
+JUnit `472094edad2cda5a3b46cb76ab70e066b8a63fd1d3aba0f1a09e4eb3fb2b764d`.
+Readback `route-input-final-closing-checks.json`:
+`ae7170808a3eb2082d99e630a69ca81d10dbc89cd9129847bcceac663edcfc6c`.
+Observed path/result: `primary / success` for this selected source cohort.
+Real local ownership/routing observations and structural fixture contracts have
+their existing distinct limits; this is not installed parity, actual provider
+inference, Linux, whole-D or full-lane acceptance.
+
+The first shared-cancellation correction proposal was rejected before product
+application: its observer coroutine would change operation-factory timing and
+admit additional awaitable types. Its retained V1 patch/review remain evidence.
+The V2 successor preserves `create_task(operation())` and its gather, retrieves
+the settled cancelled task's result once, and retains the first caller
+cancellation. Strengthened opening, production integration and supported-runtime
+closing are still required; no proposal is acceptance evidence.
+
+### Strengthened shared-cancellation opening: 2026-09-25
+
+Applying only V2's test hunk retained the three prior identities and added two
+controls. The unchanged published owner produced **two passes / three failures /
+zero errors or skips**. Kernel-origin cancellation, first caller cancellation,
+and the `cancel_on_interrupt=True` path each reached its named-cancellation
+assertion and failed. The exact internal-object/subtype/cause/context checks
+follow that assertion and were not reached. Native `OSError` identity/precedence
+and synchronous factory timing/coroutine-only refusal passed. Held work and
+cleanup settled within the existing test bounds.
+
+Report `.tmp/d-a106-input-ownership/cancellation-owner-opening-v2/report.json`:
+`80c4d06ccba356e9c8a466801f03d755710a129da370d332b66886a3a5178471`;
+JUnit `ae91d920255acd7d07ea1854ad4d85181f443bd019c64d56a5eb94c47b985988`.
+Readback `cancellation-v2-opening-checks-v2.json`:
+`f7e50ff1393e2a0add4d58ae40dadf97b1a062844b87df6f3ccb54eed64c7827`.
+The predecessor readback/receipt remain retained; the successor explicitly binds
+the unchanged owner to the run declaration's full repository hash inventory and
+the published baseline, without a missing-key fallback. All evidence was
+physically rehashed, candidate inputs stayed frozen, the pytest parent was
+reaped, awake state was released and there was no timeout or forced kill.
+Observed path/result: `primary / partial success` for reached counterexamples
+and healthy controls. Product integration, closing, approval regression and
+installed CPython 3.11/3.12 acceptance remain required.
+
+### Shared-cancellation source closing and approval regression: 2026-09-25
+
+Independent V2 review found no concrete structural blocker. The production hunk
+was integrated in the existing shared I/O owner with only a two-line explanatory
+comment added by root; the proposed AST and admission/settlement expressions
+remain. Product SHA-256:
+`81819bd33febb72d6362317805ed0460d9217e87de5981d0f9e88253a683a913`.
+The new shared cancellation spec owns the exact exception precedence; API and
+CURRENT_AUTHORITY reference it without introducing another resource owner.
+
+The unchanged five V2 test identities now pass, including exact operation
+cancellation identity, subtype, message, retained cause/context through the real
+Kernel/application owners, first caller message after repeated cancellation,
+one optional child cancellation, native failure precedence and unchanged factory
+timing/coroutine admission. Focused report
+`.tmp/d-a106-input-ownership/cancellation-owner-closing-v2/report.json`:
+`11f49de32959ae3e9f91eec03d9c2a1bc5aa0726098c859f350d615fc87f5add`;
+JUnit `34f4181c1dcfc2023df1ad21c5a5f719f4239d767c304f5b840cd1b833c23227`.
+
+The broader 13-module source run passed **85 cases / 0 failures / 0 errors /
+0 skips**. It contains every identity from the earlier 48-case step/journal
+regression, including all ten previously failing approval cases. The complete
+approval transaction module remains byte-identical to the published baseline:
+`cedad90a49c3f4bbe00b9a37ab23fc02ad00d3ce151c5b343efd4069882a7804`.
+Prompt-counter, Kernel lifetime, local sandbox HTTP cleanup, governed-agent
+invocation and child-stdio/subprocess lifetime controls also pass. The one
+recorded independent SQLite observation is `0.011144800002512056s`, within the
+unchanged strict half-second bound. Report
+`cancellation-owner-regression-v2/report.json` under the same root:
+`2e36bef3e59f6ec54b2aa46ac7fd657c2eb7bc1fd8884f26aa9c53ce97600c5d`;
+JUnit `c7d35540291f74bd78c6b20ab4a4e43604f353203f2682c27254fd0ae178b791`.
+
+Readback `cancellation-v2-closing-checks.json`:
+`00ac7f2910e84bfffa3ec8ab095668a6defa11e625d30f2087a66483b496e04d`.
+Both negative trees and both passing trees were physically rehashed, their
+candidate bytes remained frozen, pytest parents were reaped, awake requests
+released and no timeout/forced kill occurred. Observed path/result:
+`primary / success` for these scoped CPython 3.11.14 source controls. This does
+not establish installed CPython 3.11/3.12 parity, Linux, real model inference,
+full source acceptance or remaining D/E/CAP completion. Published 0.6.105 remains
+the baseline; the development candidate is not yet committed or tagged.
+
+### Real SDK catalog round-trip opening: 2026-09-25
+
+The retained V5 probe applies to the current input routes without a compatibility
+shim. It intentionally uses supported explicit legacy construction selectors;
+this catalog observation does not substitute for full-object propagation proof.
+The first scoped Ruff found two constant-attribute `setattr` calls in the new
+child observer. Direct assignments preserve the same transparent wrapper and
+`finally` restoration; the corrected four-file Ruff passed. Both logs and
+integration receipts are retained under `.tmp/d-a106-input-ownership/`.
+
+The four-module opening executed **36 cases: 35 passed, one failed, no errors or
+skips**. All 27 process-reader classifier contracts and eight existing logging
+lifetime controls passed. The real catalog case reached
+`complete_before_final_record_equality` before failing
+`E_EXT_CATALOG_INSTALL_LIST_ROUNDTRIP_DRIFT`. Independent readback confirmed
+exactly these differences, with no additional or missing leaf difference:
+
+| Field | Install return | Same-manager list and restart |
+|---|---|---|
+| `register_callable` | empty string | `register` |
+| first workload `input_contract` | literal string `None` | empty string |
+| first workload `output_contract` | literal string `None` | empty string |
+
+Installation and restart ran in two serial owned child processes. Installation
+retains exactly three real Git command receipts; restart loads the catalog and
+runs the installed SDK checkout without another installation. Both child owners
+and all three Git receipts report completed capture/cleanup. Independent process
+readbacks accept only absence or known identity reuse for the outer children;
+the Git PIDs with unknown creation identity were absent. The process reader is
+an observer, not another reaping authority.
+
+The SDK workload produced `seed=41;label=restart`; catalog, three source files,
+three checkout files, output, artifact manifest and provenance were physically
+rehashed (ten files). Recorded child stdout binds its complete observation; both
+stderr streams are empty. The core import origin is this source checkout, so
+real installation of the SDK fixture does not establish installed-core parity.
+All run evidence was physically rehashed, candidate inputs were frozen, pytest
+was reaped, awake state released and no timeout or forced kill occurred.
+
+Report `.tmp/d-a106-input-ownership/catalog-roundtrip-opening/report.json`:
+`4f020e282bba12940c5e20f2b021c223956d852476ff0b5fcc06c439e4730085`;
+JUnit `5fb5d7fbc93a5cf2d754b4ca9524e6ffb0af8eb6a27f8401402a0ae8a583be5e`.
+Readback `catalog-opening-checks.json`:
+`f4edd772c8953cc584140681078e8cc56b287348540f954f7c1c1e1c59a3e469`.
+Observed path/result: `primary / partial success`; this is a reached real
+round-trip defect with healthy surrounding controls. Production normalization,
+closing and installed core acceptance remain required. Entrypoint-only discovery,
+Linux, model inference, broader D/E/CAP and whole-lane acceptance remain open.
+
+The pre-normalization dependency-direction diagnostic also passed structurally:
+1,178 files, 3,947 edges, six resolved dynamic routes, zero violations, adapter
+effect violations, unknown modules, analysis errors or authority cycles. Receipt
+`.tmp/d-a106-input-ownership/dependency-direction-diagnostic-v1.json`:
+`93fc37a5b3f7de4fb9526244679475d6f667397054fcb566e5943bd72cef7848`.
+This is the actual fail-closed checker verdict, not a graph-export success claim.
+Final candidate graph/baseline and all canonical structural gates remain required.
+
+### Catalog null/default source closing and explicit-reference gap: 2026-09-25
+
+The reviewed three-file correction shares one null-only SDK reference normalizer
+and suppresses the legacy register fallback only for exact SDK records. Explicit
+nonempty callables, legacy/unknown styles and non-null conversion remain. The
+existing long-path test now requires full record equality with canonical empty
+values instead of adapting the historical three differences. Its old observations
+remain intact. The existing oversized component test does not grow; root removed
+only its contradictory contract docstring prefix, retaining its integration label.
+Six-file Ruff passed. Integration receipt
+`.tmp/d-a106-input-ownership/catalog-normalization-integration.json`:
+`6ace4a245194fa0f5c42f16d079753d40810cf45729c7ce3044dddad74c6b537`.
+
+The same four-module source cohort now passes **36 cases / 0 failures / 0 errors /
+0 skips**, preserving every opening identity. The complete install, same-manager
+list and restarted record are equal; register and both absent SDK references are
+empty, with zero differences. Ten physical files, three installation Git receipts
+and both serial child owners retain their full checks. Both evidence trees were
+physically rehashed; candidate bytes stayed frozen, pytest was reaped, awake state
+released and no timeout or forced kill occurred.
+
+Report `.tmp/d-a106-input-ownership/catalog-roundtrip-closing/report.json`:
+`5fd67fb826a57331756ec8acfc67dbfa1487fd402a4bb070388c7a63eb600f2c`;
+JUnit `8cc02516225a67e991eb83ffeb5dc37bd232edee36eabd7fbbacf69c90633d55`.
+Readback `catalog-null-default-closing-checks.json`:
+`adcc39e5694e07c497dcd1807812fede5011780c2ca73a6da2b2075a1f48d202`.
+Observed path/result: `primary / success` for the absent-reference source case.
+
+This is not complete representation acceptance. Structural review found that
+`WorkloadManifest` admits generic nonempty custom input/output references, while
+`ExtensionCatalog._row_from_manifest_entry` writes those fields only for agent-like
+rows. A valid explicit generic reference can therefore be omitted by the writer.
+The new durable representation requirement remains an implementation target until
+this separate path has a reached counterexample, correction and closing. It is
+not evidence against the narrower null/default observation. Read-side scalar and
+per-entry-style controls, broader legacy/SDK/agent/long-path regression, final
+source, installed CPython 3.11/3.12 and remaining lane gates are still required.
+
+### Explicit generic reference opening and writer correction: 2026-09-25
+
+The read-side style/scalar contracts passed all 14 cases. Report
+`.tmp/d-a106-input-ownership/catalog-read-contracts/report.json`:
+`8c37c9331d26e5a52f98beadcf60a56dcddf1308bec7f3c64ea7b33cf43f4ac5`;
+JUnit `afce664b407db3ae18c64d9597135f7a3cfdb65302e9631de3dba62936f60fc5`;
+physical readback `139f2b47bedf16a9a256c77d0a3e6d1fb84b05bc17fb413360d94310634f71e3`.
+These contracts do not establish that the writer preserves explicit references.
+
+The separate public SDK parser -> verified physical catalog -> public reader
+opening ran **14 cases: 13 passed, one failed, zero errors/skips**. Parsing retained
+`contracts/generic-request.v1.json` and `contracts/generic-result.v1.json`.
+Both physical reference keys were absent; the reader returned empty strings.
+The manifest digest remained equal across parser, physical catalog and reader.
+The failure reached physical-reference equality. Strict agent admission controls
+and the real null-only Git install/restart case passed; the latter retained zero
+record differences, ten physical files and all command/child ownership checks.
+
+Report `.tmp/d-a106-input-ownership/catalog-explicit-reference-opening/report.json`:
+`2fe27c8e31d2c7480549f5bfa2ff138b7a9e35f8e5ae05cdb92d04570fe2bc4b`;
+JUnit `e85fd48edc4bb43f8b481e21a62ecb44bbb11994cf9198fbd96b38e0dddb8c32`;
+readback `catalog-explicit-reference-opening-checks.json`:
+`24d05d48c3d18a40c0d78b2f4b85c882a2e8f5f3f358b5d737b57c39db85c75a`.
+All evidence and the explicit fixture manifest/catalog were physically rehashed.
+Candidate bytes were frozen, pytest reaped and awake state released, with no
+timeout or forced kill. Observed path/result: `primary / partial success`.
+
+The reviewed writer correction preserves each nonempty generic SDK reference
+independently, after the unchanged strict agent branch. Empty rows remain compact;
+legacy/unknown styles, source admission and ASCII digest ownership are unchanged.
+New controls exercise input-only, output-only, null/empty/whitespace, literal
+`None`, trimmed references and non-SDK serializer boundaries. The first scoped
+Ruff found `B905` on the fixed two-field fixture zip; its exact failed test bytes
+are retained. Adding explicit `strict=True` corrected that diagnostic; scoped
+Ruff passed. Integration receipt `catalog-explicit-writer-integration.json`:
+`5817041d0aac5ecf9ea6533e41cbea1dbc62806c1e1d6b686f8930a114a4e41b`.
+This is implementation plus structural validation, not yet closing acceptance.
+Focused source, explicit-reference real Git restart, broader legacy/SDK/agent/
+long-path regression and final source/installed acceptance remain required.
+
+The unexecuted acceptance preparation V2 also failed independent structural
+review: missing source `before.json`, an unbound consumed selection copy and
+omitted direct helper pins. It is retained and must not be invoked. Successor
+preparation remains under review; no configuration or test acceptance follows
+from an unexecuted proposal. C/D/E/CAP obligations and claim ceilings are unchanged.
+
+The explicit-reference correction then passed **37 cases / 0 failures / 0 errors /
+0 skips**, preserving every identity from the 14-case opening. Both references
+are physically present, the public parser and reader entries are equal, and the
+independent manifest/catalog hashes match retained bytes. The null-only real Git
+restart remains equal with all ten physical files, three Git receipts and two
+serial child owners checked. One-sided, compact null/empty/whitespace, literal
+`None`, trimmed reference and non-SDK style controls pass.
+
+Report `.tmp/d-a106-input-ownership/catalog-explicit-reference-closing/report.json`:
+`8da0889d4889ead8da03b226d40fee2513266669d6dcaa7ff7799c74e8936a2b`;
+JUnit `0131a2f7f65afc898ae2eb2fccc4630c45d3f88fee44e926ab6e044125322f4b`;
+readback `catalog-explicit-reference-closing-checks.json`:
+`3b07e67a680f5254d25b8b2e54cd4a5034eb1278d91602a9cb25b0bf3b84fa43`.
+Both trees were physically rehashed; all candidate bytes stayed frozen, pytest
+was reaped and awake state released, with no timeout or forced kill. Observed
+path/result: `primary / success` for the scoped source routes and contracts.
+Explicit-reference Git restart, broader regression and final source/installed
+acceptance remain required; none follows from this focused passing result.
+
+The real explicit-reference Git restart proposal was revised before application:
+V1 duplicated the null-case orchestration, so V2 shares one observed child phase
+and one install/restart orchestration while retaining both separately named tests.
+The source fixture has a distinct module, extension and workload identity, and
+the child reparses the installed manifest through the existing parser. The null
+case still requires its compact physical row. Both cases retain every command,
+raw stream, physical file, ASCII digest, policy/provenance and teardown assertion.
+Five-file AST/size and Ruff checks passed on integration; no live result follows
+from that structural preparation. Integration receipt
+`.tmp/d-a106-input-ownership/catalog-profiles-integration.json`:
+`16fdb6dc9fb2ebbd6f7d649723c98db50acd4016f5356b39669b8bfb8076efd5`.
+
+The .106 version/changelog candidate and both canonical Quality jobs now include
+the affected construction/cancellation/catalog controls. The declared future
+acceptance selection retains all 357 published .105 modules and adds complete
+affected modules, including broader SDK/legacy manager controls. It predicts no
+final case count and grants no acceptance; current source and both installed
+cells must establish exact identity and SQLite-observation equality.
+
+Preparation V3 was also rejected before execution because it used the .104 file
+baseline. V4 derives the 5,371-file published .105 checkpoint map with explicit
+publication head/status metadata, fixes canonical path aliases and changes only
+the source owner's historical scope literal. V5 adds the independent review's
+required per-action physical checkpoint rehash. Every predecessor remains
+retained. These proposals are still unexecuted; candidate freeze, configuration,
+full source/native proof and publication remain required.
+
+### Both catalog profiles: scoped real source closing, 2026-09-25
+
+The expanded cohort passed **73 cases / 0 failures / 0 errors / 0 skips**, retaining
+every identity from the preceding 37-case writer closing. Both the original null
+profile and the separately named explicit-reference profile completed real Git
+installation, same-manager listing, process restart and SDK workload execution.
+For each, reparsing the installed checkout, install return, same-manager public
+list and restarted public list yield the same complete record. The null physical
+entry stays compact; the explicit physical entry contains both exact references.
+
+Independent readback physically rehashed twenty distinct files across the two
+isolated fixture roots. All six real installer Git receipts and four serial
+child receipts retained completed capture/cleanup and the required process
+readbacks. Child raw stdout binds its complete observation and stderr is empty.
+The fixture output is `seed=41;label=restart`; the SDK input/plan digest is
+independently recomputed with unchanged ASCII serialization. Core imports come
+from source; the installed SDK checkouts are real, not installed-core parity.
+
+Report `.tmp/d-a106-input-ownership/catalog-profiles-closing/report.json`:
+`a79e975a482eda9ef797a09a7c5b73e7e4e177ac82635acceb1865419947e68a`;
+JUnit `ee086acf3203b51a7b0e88373321c2ef9f34e4395001a7b9c14edb9ccdd9d3cf`;
+readback `catalog-profiles-closing-checks.json`:
+`3db6668eda99ebcb70208e1781044788c8e6dfdba49769a5241a42a84cccebea`.
+All evidence was physically rebound. Candidate bytes stayed frozen, pytest was
+reaped and awake state released; no timeout or forced kill occurred. Observed
+path/result: `primary / success` for these scoped source routes and contracts.
+
+The declared broader candidate selection is **394 modules**, the exact 357-module
+published lower bound plus 37 additions. Both Quality jobs contain its 41-module
+affected group. Selection/CI receipt `acceptance-module-groups-v1.json`:
+`82e799d71da2fddd2125321c45451a2a654b64f4260c2adde56e59aa1898530a`.
+This declaration is structural only. Final source/installed CPython 3.11/3.12,
+exact case and SQLite unions, package parity, full retention and publication
+remain required. Entrypoint discovery, Linux, real provider, broader D/E/CAP and
+whole-lane acceptance remain open.
+
+### Full .106 source failure and reconciliation correction: 2026-09-25
+
+The complete affected 41-module diagnostic cohort subsequently passed **307
+cases**, with 35 strict SQLite observations (maximum 0.04418480000458658s).
+Its report is `.tmp/d-a106-input-ownership/affected-candidate-source/report.json`,
+SHA-256 `600fa8cd72f9c414c990ce2d2bffe3300e46c7db37a51a7b8f029f1b00a191eb`;
+readback `affected-source-readback-v1.json` is
+`9e36a15ff4e88a01810fe9225dcffdad479f1e75d54faae13ae7cacfd37fc7b2`.
+This was scoped live source proof, not the full acceptance cohort.
+
+Fresh frozen 394-module source acceptance then executed **3,749 cases: 3,745
+passes, four failures, zero errors and zero skips**. No timeout or forced kill
+occurred, all candidate inputs were unchanged, the pytest owner was reaped and
+the Windows awake request was released. Observed path/result: `primary / failure`.
+Report `.tmp/d-input-ownership-a106-publication/source-final/report.json`:
+`de3e1a19fcc4d6ebe4df2e63b48b9532a26f0aca2b6fad59e7fb1c0f447ca911`.
+No source acceptance or installed cell followed this failure.
+
+Two failures expose the candidate guard suppressing accepted checkpoint-backed
+blocked reconciliation for resolved step-only evidence. Their existing public
+resume tests and terminal/reconciliation expectations remain unchanged. Two
+other tests failed during fixture setup because ordinary finalization now refuses
+to create completed history without a journal. Those fixtures now finalize
+coherent records, remove the exact journal as explicit historical damage, and
+exercise public reentry refusal with complete database-state preservation. The
+missing-journal diagnostic occurs earlier; the misaligned-output test retains its
+existing assertion and neither invokes the model or toolbox.
+
+The correction separates ordinary correspondence refusal from explicit recovery
+admission. Both share the same step/journal join and unresolved-first check.
+Recovery admits an orphan only with the existing accepted resumable checkpoint
+for an executing run/attempt. The existing transaction then commits blocked
+reconciliation before reporting refusal; no continuation, synthetic journal,
+second owner or relaxed terminal success rule is introduced. New integration
+controls cover ordinary refusal, missing checkpoint acceptance, unresolved-first
+resume, atomic blocked closure, and exception/cancellation rollback at every
+existing reconciliation write. Closing execution remains required.
+
+Physical failure retention `.tmp/d-a106-source-failure-v1/retained-failure.json`:
+`ec65c5bc7a10981439afc1961d6bfe20601973e0462456719d11f2db3451369e`.
+It binds all 5,398 frozen working files as independent retained copies, all 75
+candidate index blobs, 33,863 publication files, the unchanged diagnostic tree
+and 2,483 files in the ended source environment. That environment must not be
+executed, imported, reinstalled or mutated. Its freeze is historical and must not
+be used as a current-state assertion after correction. The earlier three CRLF/LF
+metadata projections, index refusal, retention refusals and successful successor
+retention remain explicit and preserved.
+
+All authorized worker models reached their usage limit before the final wrapper
+reviews completed. Their exact interrupted drafts are retained; root reviewed
+and completed bounded successor helpers without substituting a model. This is
+not completed independent worker review. Catalog observer readback and refusal
+controls are structural/physical checks over the retained 307-case observation,
+not a new full source or installed runtime pass. Published .105 remains the
+baseline. A fresh frozen successor source campaign and serial installed Windows
+cells, package parity and full retained-evidence proof remain required. Current
+Linux/application, provider, wider D/E/CAP and whole-lane acceptance remain open.
+
+The first correction cohort executed **143 cases: 140 passes and three failures**,
+with zero errors/skips and unchanged candidate bytes. All four failures from the
+full source run passed. The three new unresolved-first controls failed during
+setup: ordinary dispatch admission correctly rejected the already orphaned
+step, so the controls never reached resume. The fixture now admits the unresolved
+dispatch while journal truth is coherent, then removes the exact journal. Runtime
+code and all assertions are unchanged by this fixture-order correction.
+
+Report `.tmp/d-a106-reconciliation-correction/source-closing/report.json`:
+`9052a16ca3a1c29ca5bdecbfb699f1a6c859f349bbdbb3640477c2e6023b11db`;
+physical failure readback `failure-readback.json`:
+`39d2f8729a8eab3fd9915743f61713de02a372cb41e66c9e800a74c2f04e4a2f`.
+Pytest was reaped, awake state released and no timeout occurred. Observed
+path/result: `primary / failure`. Its complete inputs, fixtures and logs remain
+retained. A fresh diagnostic root and unchanged owner/budget are required for
+the successor; this failed run grants no acceptance.
+
+The corrected cohort then passed **143 cases / 0 failures / 0 errors / 0 skips**.
+It retains all 122 identities selected from the earlier full source run and adds
+21 controls. All four original failures pass. All candidate bytes stayed frozen;
+pytest was reaped, awake state released and every report evidence hash was rebound.
+Report `.tmp/d-a106-reconciliation-correction-v2/source-closing/report.json`:
+`1565e7227f142eee9203fd1deca19623f497e9592b9174171c834c5ed0ed08ce`;
+readback `source-closing-readback.json`:
+`00736d2027a4f8444df458663bb34a29151c80d0b865817a8b4195d5c373c730`.
+Observed path/result: `primary / success` for the scoped source cohort only.
+
+Read-only caller review also found the embedded-replay observer's exact expected
+keyword map. It now includes the explicitly supplied `resume_mode=False`; its
+zero-owner-acquisition and before-model replay assertions remain unchanged. That
+module is added to the next diagnostic cohort. No broader source, installed or
+whole-lane acceptance follows from the 143-case pass.
+
+The expanded correction and embedded-replay cohort passed **156 cases / 0
+failures / 0 errors / 0 skips**, preserving all 135 selected identities from the
+full source run and adding the same 21 controls. Report
+`.tmp/d-a106-reconciliation-correction-v3/source-closing/report.json`:
+`27e5667b427f750e050206f64edd67ab54709befcbf900f815f1dc0ef04d26ee`;
+readback `source-closing-readback.json`:
+`5ab4bed30bdd41c473a3dc243f839d1af775fa349a130207caf7671b111a9d82`.
+All report evidence hashes and unchanged candidate inputs were verified; the
+owner was reaped, awake state released and no timeout occurred. Observed
+path/result: `primary / success`, scoped live source integration and contract
+proof. The next full selection adds the new module to all 394 prior modules;
+all 3,749 old identities and the 21 new identities remain required. Installed
+equality, the strict 476-key SQLite lower bound, package parity and complete
+retention remain acceptance obligations, not results of this diagnostic pass.
+
+### Successor .106 source pass and first installed failure: 2026-09-25
+
+The fresh 395-module source campaign in
+`.tmp/d-input-ownership-a106-reconciliation-publication` passed **3,770 cases / 0
+failures / 0 errors / 0 skips**. Every required identity was retained, including
+all 3,749 earlier identities and the 21 reconciliation controls. The owner elapsed
+790.75s within the unchanged 1,500s source budget. All 476 required independent
+SQLite observations satisfy `0 < elapsed < 0.5s`; the maximum was
+0.17182869999669492s. Inputs were unchanged, the owner was reaped, awake state was
+released and no timeout or forced kill occurred. Observed path/result:
+`primary / success`, scoped live local source and contract proof.
+
+Source report `source-final/report.json`:
+`ddf487eee3fda6a72d0585702e90ec45e626eed16247fb6ece09b6c416ec9f9e`;
+source readback `source-acceptance-checks.json`:
+`1f2494f5429ba3f01d2216a4ffb0c900f057c79c97904268890f2607afd25384`.
+Structural complete source/sdist/wheel parity matched all 1,198 core package
+members and retained the separate SDK and resource observations. Parity receipt:
+`9daffeb119b6d58c5f14112d8852b6b6b544fd1c69f180290d2a6158b76e5969`.
+
+The first installed Windows Python 3.11 cell then executed the exact same 3,770
+identities: **3,715 passes, 55 failures, zero errors/skips**. There are 36
+`E_EXT_REF_RESOLVE_FAILED: completed; exit=128` failures and 19
+`E_GITEA_GIT_COMMAND_FAILED:init:128` failures. Package origins, unchanged harness
+inputs, both CLI flows, the strict tool-gate audit, no residual children and no
+harness-root database all passed. Driver and wrapper owners returned and were
+reaped; awake state was released, with no timeout or forced kill. Observed
+path/result: `primary / failure`. These results do not grant installed acceptance.
+Python 3.12 was not launched, and no final matrix acceptance or publication ran.
+
+Installed report SHA-256:
+`b70e02d0ecf845024f6878e4786c2534f1598bcf3f7d575f607f4523579f636b`;
+JUnit: `17d5f037f19ae4219b52774a75a74aaf7e7b4b31dc6e5ec98c03d3fe72d62785`.
+Their physical owner is the retained cache root
+`d-core-boundaries-a106-construction-catalog-reconciliation-win-py311`.
+Exact causes require fresh diagnostics; command exit 128 alone is not a diagnosis.
+
+Retention `.tmp/d-a106-reconciliation-native-failure-v1/retained-failure.json`:
+`ed131be0b85c9462b0a8f3200358f451a46c80ab6dd6feaa2de82dfd16f65bd1`.
+It binds 5,399 copied working files, all 80 staged blobs, the 33,949-file publication
+root, unchanged focused diagnostics, 2,483 source-environment files and 38,515
+installed-cell files, plus lexical links/directories and exact failure traces.
+Both `input-ownership-a106-reconciliation-source` and the installed cell are ended:
+do not execute, import, reinstall or mutate them. The frozen candidate assertion
+is historical after this report closeout and must not be applied to successor bytes.
+
+Read-only wrapper review also found a stale campaign prefix in the frozen native
+receipt reader. Its original bytes remain unchanged. A one-line successor reader
+and separate binding/final-readback drafts were prepared, but not executed after
+the installed failure. Their first derivation had a retained syntax error; the
+successful derivation is structural only. These drafts grant no acceptance and
+must not be invoked against this failed campaign. The next campaign must bind
+the correct receipt prefix before freezing its helpers.
+
+Published v0.6.105 remains the baseline; v0.6.106 remains uncommitted. Deadlines,
+SQLite limits, coverage requirements and claim ceilings remain unchanged. Fresh
+diagnosis, correction and complete source/installed acceptance remain required.
+Linux application, real provider, wider D/E/CAP and whole-lane acceptance remain
+open; no lane retirement is authorized.
+
+### Native Git-directory diagnosis and extension correction: 2026-09-25
+
+Fresh diagnostics use `.tmp/d-a106-git-location-opening` and the independent
+`a106-git-location-opening-source` environment. Neither ended acceptance
+environment is executed. Existing Git 2.52.0.windows.1 reproduces both failures
+through the existing command owner: Gitea initialization at a 255-character
+repository reports `Filename too long` for its 260-character `.git` path;
+extension reference resolution at a 217-character checkout reports
+`'$GIT_DIR' too big` for its 222-character absolute Git-directory argument.
+Shorter controls pass. `command-observation-v1/report.json`:
+`413db473856e40caab0a1f5adb5c4855d81aad9713b065fc9b818584874c5d18`.
+These are local native diagnostic observations, not installed acceptance.
+
+Relative repository arguments complete native initialization, add, commit,
+reference readback and checkout at 170- and 217-character roots in
+`relative-observation-v2/report.json`:
+`9c1d700ad9b35d8332e4ac9c36b467f042e3e5184b21bbd267551358f6884d28`.
+That diagnostic remains a failure overall: 255-character initialization still
+fails, and a separate 270-character working-directory probe raises native
+`NotADirectoryError / WinError 267` before a command result. Its first helper
+aborted without a terminal report at that boundary; its files and exact failure
+remain in `relative-v1-failure-retention.json`, SHA-256
+`a4cfa0d884096d08050fe5168e7c2d92568b4b4913c614a9d99dffc197f76aa6`.
+Unreported earlier in-memory commands from that first attempt are absent proof.
+
+Additional bootstrap probes preserve all negative observations: explicit device
+paths, parent-directory init, configuration environment, bare init, configured
+builtin aliases, parent aliases and existing Windows short names did not close
+the Gitea 255-character route. Their retained report hashes are:
+
+- `bootstrap-syntax-v1/report.json`:
+  `6287087c00ffb595f0c58e0e8af8c9b98791bdcfe8036da7155219585f073570`.
+- `configured-init-v1/report.json`:
+  `2bd6fa8fc99279879a350996639f98f13d94afcaec86a36054e819fc2c274fae`.
+- `parent-alias-v1/report.json`:
+  `2e970116fe6836b3f613b57ecb57d0daf56c8cff7fa3bb951c298ee1a290ec27`.
+- `native-name-v1/report.json`:
+  `a0e384eaf19c81294d2d408e7f6c63671b1ebc75a2dc09333f5cd3a820184362`.
+- `native-arguments-v1/report.json`:
+  `8140fb99df43bfb5ab57f4ff22f14f6419badf43f937a77f1277635a3af6f1e6`.
+
+Some diagnostic envelopes say `result=success` for completed observation
+collection; their route/command outcomes above remain failures. None changes
+runtime code, canonical cache placement, OS settings or accepted limits. The
+upstream version's [long-path configuration guard](https://github.com/git-for-windows/git/blob/v2.52.0.windows.1/compat/mingw.c#L272)
+defaults off until repository configuration is initialized. Its
+[path resolver](https://github.com/git-for-windows/git/blob/v2.52.0.windows.1/abspath.c#L121)
+reports the observed path error. This supports the bootstrap diagnosis; it does
+not establish a portable correction. The original retained-commit cache remains
+authoritative; no new cache namespace, alias resource or fallback is introduced.
+
+The bounded extension correction reuses one explicit checkout-argument constant
+for reference resolution and detached checkout. `.git` and `.` resolve inside
+the same captured checkout cwd; absolute catalog paths, clone, selectors,
+environment filtering, ownership and deadlines remain. Contract:
+`docs/architecture/CONTRACT_DELTA_EXTENSION_GIT_CHECKOUT_CONTEXT_D_2026-09-25.md`.
+
+New public SDK installation controls at 200 and 217 characters first observed
+**one pass and one failure**, with the failure at 217 during reference resolution.
+Opening `.tmp/d-a106-git-repository-regression/opening/report.json`:
+`2f5f407488ad8dec08be76348571d65c765f61a48faea9a6e2c93016b4de9ef3`.
+After correction, **both source cases passed**, including exact checkout bytes,
+detached HEAD, catalog publication, reconstructed-manager readback, all three
+owned Git receipts and observed PID absence. Closing report:
+`6cc7de32554d4030b17cce425dc8c23cdecab4c170af7129afd3d4878ac1138a`.
+Both runs retained unchanged inputs and reaped owners. Both Quality jobs now
+include the new regression without removing prior modules or assertions.
+
+The broader affected source cohort and successor installed matrix remain
+required. Gitea initialization at the retained 255-character root is still an
+unresolved blocker, separate from this passing extension correction. No final
+acceptance, version publication, whole-plan completion or retirement is claimed.
+
+### Scoped extension correction proof and remaining Gitea blocker: 2026-09-25
+
+The affected source regression passed **60 cases / 0 failures / 0 errors / 0
+skips**, including all 36 extension identities that failed in the earlier full
+installed cell. Report `.tmp/d-a106-git-repository-regression/affected/report.json`:
+`7121ccc5b79454efd72defca44e254d6fd7a07379918f22b63c61d30d6ea2695`.
+
+A separate frozen campaign, `.tmp/d-a106-checkout-context-native`, then passed
+the exact same **60 identities in fresh source and both installed Windows Python
+3.11/3.12 cells**. All cells have zero failures/errors/skips. The installed root
+is 117 characters, versus 116 in the earlier failed campaign; the test location
+was not shortened. Each installed cell verified 771 package origins, both CLI
+flows, the strict tool-gate audit, unchanged inputs, no residual children and no
+harness-root database. Source/sdist/wheel parity matched 1,178 Python sources and
+1,198 wheel members. All owners returned and were reaped, all awake requests
+were released, and no timeout, forced kill or deadline change occurred.
+
+Observed path/result: `primary / success`, **scoped live local extension proof**.
+This is not full .106 acceptance. The prior full source and installed failure
+remain historical observations with their original identities and limits.
+
+- Fresh source report SHA-256:
+  `150c1977d74128e25eda257030565969a2a9089cba1e7d571b5e35a5edfdfb13`.
+- Windows 3.11 report:
+  `637f133ba6528bd4a19f66d4210c8f97a0649d043a074db197b8b53c6c8b1900`.
+- Windows 3.12 report:
+  `a913dccd621ee61bdf913977788458fab057f017d4520905108a60e2f5ba46db`.
+- Native audit:
+  `cbc8b98834e36a39a24f71d6889452c9507aab6f20924af2be06ab4ac3d9ee85`.
+
+Physical readback `.tmp/d-a106-checkout-context-readback-v1/readback.json`:
+`fcdb9bd83e8e61a8a5056e3602139a38321b78b6dee1c6ad2a457374e9cae63e`.
+It rehashes the source/native evidence, verifies actual detached HEAD and catalog
+bytes at both 200- and 217-character checkouts, binds the three owned command
+receipts per boundary and the observed PID absence, and copies all 5,401 frozen
+working files plus all 85 changed-path index blobs. It retains 3,228 publication
+files and the source/3.11/3.12 environment inventories (2,483 / 8,219 / 8,219 files).
+These three environments are ended: no execution, import, reinstall or mutation.
+The campaign freeze is historical after this documentation closeout, not a future
+current-state assertion. Complete source/installed successor acceptance remains
+required before v0.6.106 publication.
+
+One fresh Gitea diagnostic tested an ancestor command cwd with explicit existing
+Windows native names, positional builtin initialization and explicit builtin
+initialization aliases. All three still failed at the same **255-character
+physical repository**, with Git 2.52.0.windows.1 reporting `Filename too long`
+for `.git` or `.git/config`. Every command returned exit 128 with confirmed
+capture/cleanup and absent observed PIDs. No runtime code, cache placement,
+filesystem alias, test root or OS configuration changed. Report
+`.tmp/d-a106-git-location-opening/parent-context-v1/report.json`:
+`b66b4985da551ddfba9bf5ed4c3dcd646593b2050cba83ccde68eb4de6e31818`.
+Its successful collection envelope does not turn these three route failures
+into passing proof. This mechanism hypothesis is closed negatively; the exact
+Gitea bootstrap blocker and 19 earlier installed failures remain unresolved.
+
+Continue independent D logging ownership work while preserving this blocker.
+The prepared logging opening is still unexecuted at this closeout. Linux,
+provider, broader D/E/CAP, full coverage, release readiness and lane retirement
+remain open; v0.6.105 is still the published checkpoint.
+
+### D logging opening executed against the current candidate: 2026-09-25
+
+The previously unexecuted six-case logging opening is now live source evidence.
+The retained V3 proposal was applied with layer docstrings and strengthened
+strict-positive elapsed lower bounds; its original patch remains unchanged.
+No production logging behavior or hidden preparation was added for this run.
+The candidate and index remained frozen through opening and guard execution.
+
+Opening `.tmp/d-a106-logging-opening/opening/report.json` observed **six cases:
+five reached failures and one native pass**, with zero errors/skips. Report:
+`f06769241a1e527c77e4c98c70c1adfaf184b4599cf5945987241d4b191bd511`.
+Real first `Path.resolve`, first `Path.mkdir`, standard handler and subscriber
+holds delayed independent SQLite completion to 0.7651263, 0.7628156, 0.7618681
+and 0.7663612 seconds, respectively, exceeding the unchanged 0.5-second bound.
+The real nested-input mutator changed both physical log and subscriber data to
+`["captured", "late"]` instead of the required captured value. The native control
+held its worker for 0.7513299 seconds while SQLite completed in 0.0106581 seconds.
+Observed path/result: `primary / failure`; these are defects, not acceptance.
+
+The seven existing logging/audit guard modules separately passed **37 cases / 0
+failures / 0 errors / 0 skips**. This is the observed count; the prepared brief's
+33-case estimate was structural only. Report `guards/report.json`:
+`50f91d3098fe100bc61af7f107a949b9daf402eab11036fe4cc7959f902c648a`.
+This preserves append/drop behavior, the native frontier and fatal/no-restart
+controls, audit failure precedence, API required workers and subscriber counts.
+It does not prove API in-flight handoff drain or the proposed coordinator.
+
+Readback `.tmp/d-a106-logging-opening-readback-v1/readback.json`:
+`cff69344f7f9f513a2fc71d196b5f0326b095ad71aec0bdb2014dc02b5408845`.
+All six holds were reached exactly once and settled without expiry, timeout,
+live watchdog or live mutator. Actual SQLite rows and JSONL records were read
+back; report evidence hashes, owner identity/reaping and awake release matched.
+The receipt copies 5,403 working files and all 87 changed-path index blobs,
+and retains 257 observation files plus 2,483 source-environment files.
+`a106-logging-opening-source` is ended: byte-read only, no execution, import,
+reinstall or mutation. Its freeze is historical after this closeout.
+
+Logging correction and source/installed closing proof remain required. The
+implementation may proceed in bounded pieces while retaining one capture
+authority and the existing native/queue owners. API loop-side `deepcopy` is an
+independent required-publication input gap; repairing it does not close these
+five optional-publication failures or the later registration drain obligation.
+The Gitea bootstrap blocker, full .106 acceptance, broader D/E/CAP and retirement
+remain open.
+
+### Required API event capture candidate: 2026-09-25
+
+The independent API capture opening in `.tmp/d-a106-api-log-capture/opening`
+executed **14 cases: 13 failures and one passing ordinary-data control**, with
+zero errors/skips and unchanged candidate inputs. Report SHA-256:
+`bbea0a059649401d714694bf299b26727af2636d4fb642f38f2803bafe9e6831`.
+Physical readback `.tmp/d-a106-api-log-capture-readback-v1/opening/readback.json`:
+`07af39264da01d51472f3f7b6dd284d9937b9da1fb624518dcd975bbd22e6b59`.
+It preserves hook observations, actual handler/subscriber/file effects, native
+ordinary-data publication, the reaped owner, awake release and copies of all
+5,404 working files plus all 88 changed-path index blobs. This is live negative
+source proof, not acceptance. No optional-logging assertion was weakened.
+
+`ApiEventService.emit` now calls the shared pure `capture_log_event_inputs`
+contract before its first await, replacing caller-loop `deepcopy`. Exact
+built-in strings, string-keyed dictionaries, lists, tuples and finite JSON
+scalars are copied without user hooks; custom types, cycles, non-string keys,
+non-finite numbers and excessive recursion refuse before logging effects.
+The existing native worker, application root, timestamp timing, failure and
+cancellation ownership remain. The closing sentinel additionally traps custom
+metaclass hashing/equality; the original opening bytes remain retained.
+Both Quality jobs require the API input regression. Contract and migration:
+`docs/architecture/CONTRACT_DELTA_API_EVENT_INPUT_CAPTURE_D_2026-09-25.md`.
+Focused closing, affected guards and installed proof are still required. The
+five optional-logging failures, other required producers and API handoff drain
+remain open, as do the Gitea blocker and full successor acceptance.
+
+The corrected API input cohort passed **14 cases / 0 failures / 0 errors / 0
+skips**. The 13 rejected-value cases observed no recorded copy/conversion or
+metaclass hooks, handlers, subscribers or file effects; the real ordinary-data
+control retained one native publication and exact detached JSONL values.
+Closing report: `d5da38a5f50c7315be317873bdda9245bf91651acb20d09eef479ff5fcafea3b`;
+closing readback: `bdd4c36b07836e4e0064c5d86ee45f32ffd81d69779873ca0664e983f3be109d`.
+The combined new and existing API/logging/audit source cohort then passed **51
+cases / 0 failures / 0 errors / 0 skips**. Affected report:
+`3bbe2176a3705c9353cc973857dd1c7fcdd4268fe73a6ad6a1fb0cd768a318ab`;
+affected readback: `5fee5766fb386603ecdef8a8a3c7ed6fa34ef3b5863d62ec249a86ef19184dd7`.
+Readbacks live under `.tmp/d-a106-api-log-capture-readback-v1/{closing,affected}`.
+They bind unchanged inputs, actual file bytes, reaped owners, awake release,
+5,406 copied working files and 91 changed-path index blobs. The affected readback
+ends `a106-api-log-capture-source`; it is now byte-read only. No ended interpreter
+may be used for subsequent proof. Observed path/result: `primary / success`,
+scoped live local API source proof. Fresh installed equality, broader logging
+correction and full successor acceptance remain required.
+
+### Required API input installed proof and fresh Linux clock blocker: 2026-09-25
+
+The fresh `.tmp/d-a106-api-log-capture-native` campaign passed the exact **51
+cases / 0 failures / 0 errors / 0 skips** in source and installed Windows Python
+3.11/3.12. Every one of the 13 original API input failures remains in the
+selection. Both native cells verified 965 installed origins, both CLI flows,
+the strict tool-gate audit, unchanged inputs and no residual children or
+harness-root database. Source/sdist/wheel parity matched 1,179 Python files and
+1,199 wheel members. Native roots are 124 characters, versus 116 in the failed
+full .106 campaign. No root, deadline or assertion was shortened or weakened.
+
+- Source report: `3ad1fc0b4015ec8770d671efa10b534bcdcb1805fae8bb08d7de92fb727758b7`.
+- Windows 3.11 report: `d0140e193fa6e5dd87cee939ac6e339f3478fcc0f1c920fd995eca7eb4269434`.
+- Windows 3.12 report: `0c23efdee8d91b10102f79e2a2e1db0f75c96a4bd18a3500d6d3c4dc6adbc6af`.
+- Native audit: `cb6ba76ce40f2a2f89c09f8d4fdf63177d3bcaf66dcba8440f2084d7821ec924`.
+
+Physical readback `.tmp/d-a106-api-log-capture-native-readback-v1/readback.json`:
+`9af3b17852f189d325b08c04118c783a3f3de9b7a5b892e55b7efc2c903c3f0a`.
+It binds actual ordinary-data JSONL, all rejected-value observations, terminal
+owners and released awake requests, with no timeout or forced kill. It copies
+5,406 working files and all 91 changed-path index blobs, and retains 174 campaign
+files plus source/3.11/3.12 environment inventories of 2,485 / 5,150 / 5,150 files.
+Those three environments are ended: byte-read only. Their frozen candidate is
+historical after this closeout. Observed path/result: `primary / success`,
+**scoped live local API input proof**. This does not close optional logging,
+other required producers, API handoff draining, Gitea or complete .106 acceptance.
+
+A fresh passive Linux observation then used the unchanged clock owner, 60-second
+synchronized quiet requirement, 0.01-second step limit, 240-second observation
+window and 280-second outer limit. It returned an **environment blocker** after
+240.0108560610097 seconds, with only 2.456364006997319 quiet seconds. Observed
+clock steps ranged from **-1.446559962 to +2.062123636 seconds**. Raw samples and
+synchronization queries independently reproduce the quiet interval and extrema.
+The wrapper returned exit 1 without outer timeout; awake state was released and
+the full prelaunch candidate inventory remained unchanged. No clock settings
+changed and no Linux application cell launched.
+
+Clock report `.tmp/d-a106-linux-clock-readiness-v1/linux-clock-preflight.json`:
+`f515ad78ec69f76dbaa6498d8453637feccf09cbc1e96981d4c8b78ec9e19323`;
+invocation/readback `linux-clock-invocation.json`:
+`5754682f79e341be48e82514dd8f562d828946be046165b68e9c5d01c74ad0f7`.
+This fresh `blocked / environment blocker` observation replaces neither older
+failed nor older passing observations. Continue independent D work; current
+Linux application acceptance remains absent.
+
+### Gitea common-directory mechanism observed: 2026-09-25
+
+The fresh `.tmp/d-a106-git-location-opening/common-directory-v1` probe preserves
+the same 255-character physical repository and canonical `.git/objects` store.
+It creates the empty canonical `.git` directory, then supplies existing Windows
+native names for explicit Git/worktree arguments and `GIT_COMMON_DIR`. The normal
+repository-cwd route and an ancestor-cwd diagnostic each completed **12 native
+commands**, including initialization, commit, reinitialization and tree readback.
+The relative-argument control still failed during initialization with exit 128
+and `Filename too long`. All command capture/cleanup observations were confirmed;
+observed PIDs were absent. No candidate implementation, cache namespace, object
+relocation, filesystem alias, OS setting or test-root change occurred.
+
+Probe report: `e1d657d36a71d870d40f51c399417272bdf0cf6cafbc3bbcc667fcdf2c9925da`.
+Physical readback `.tmp/d-a106-gitea-common-directory-readback-v2.json`:
+`bef8072a2f7f1821f90470a7f9b887508be99a7f668eccc6e876458d3efdd5bb`.
+Actual compressed commit/tree objects were read from the canonical `.git/objects`
+directories and their expanded Git object IDs recomputed. Git stored canonical
+long `core.worktree` paths. Native names therefore did not relocate retained
+objects. The first readback helper failed before producing a report because it
+anchored imported helper basenames at ROOT instead of ROOT/.tmp. That helper and
+failure are retained; V2 changes only that anchor and its fresh output path, as
+bound by `.tmp/a106_gitea_common_directory_readback_derivation_v2.json`.
+
+This is live mechanism evidence plus physical readback, **not a product fix or
+installed Gitea acceptance**. The existing 19 installed Gitea failures remain
+unresolved until product-path correction and exact closing controls pass. Native
+name availability is not guaranteed by Windows; see the primary
+[GetShortPathNameW contract](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-getshortpathnamew).
+Any implementation must preserve ordinary supported paths, fail explicitly when
+the required representation is unavailable, keep the canonical cache binding and
+existing resource owners, and retain the failed relative control.
+
+### Gitea product boundary opening and candidate correction: 2026-09-25
+
+The maintained four-case product-path opening at repository lengths 235, 247,
+248 and 255 retained **one pass / three failures / no errors or skips**. At 247,
+initialization returned but configuration failed with exit 128; 248 and 255
+failed initialization. Source report under `.tmp/d-a106-gitea-path-boundary/opening`:
+`5774a2e3e63e42f7d23a02aec83e538906ba9c631563a1bb4ce0445455342c09`.
+Opening readback `.tmp/d-a106-gitea-path-readback-v1/opening/readback.json`:
+`85e5525a2d482c8ae280130f8a46c2434d5a5351a4207b283368df77f38fff5b`.
+It retains 5,407 working files, 92 changed index entries, failures and physical
+objects from the passing control before product edits. The original probe and
+all earlier failed controls remain unchanged.
+
+The initial native-name correction passed all four source cases, with 13 real
+Git commands each, repeated initialization, tree/blob readback and independent
+SHA-1 reconstruction of compressed objects in the original `.git/objects`.
+Closing report: `58055142590684d95d166bbc8a14244398ded53ccfa03ba26e3bfb4c8bf96a55`;
+closing readback: `9191732eb113776a679e5b55202da584a7c0e999d2e1ac43a84b2c62651623f7`.
+The latter retains 5,408 working files and 94 changed index entries. Both phases
+kept candidate/index bytes unchanged and settled their pytest/awake owners. The
+still-active diagnostic source environment supplies root source; neither phase
+is installed proof. Their input freezes became historical before later edits.
+
+The candidate now places empty `.git` creation inside the admitted initialization
+name-observation worker, after the separate repository-directory operation. This
+preserves interruption before later initialization admission. Added lifetime and
+unusable-name controls await execution. Both Quality jobs select the new cases.
+Contract and scope:
+`docs/architecture/CONTRACT_DELTA_GITEA_NATIVE_PATH_CONTEXT_D_2026-09-25.md`.
+The 19 earlier installed Gitea failures remain unresolved until exact closing
+proof; optional logging failures and full .106 acceptance are also still open.
+
+The final affected source selection passed **71 cases / no failures, errors or
+skips**, including all 19 earlier installed Gitea failure identities. It covers
+the four physical boundaries, four retained native-name observations, seven
+unusable-name/event-loop refusal controls and existing export/command guards.
+Real Windows name lookup remained off-loop through repeated cancellation,
+timeout and a post-observation native failure; captured command root, runner and
+environment survived later mutation. Independent SQLite observations retained
+the unchanged 0.5-second bound. POSIX lifetime controls explicitly use a supplied
+native spelling; they are not Windows API proof.
+
+Affected source report: `51a4ae37f3d2d2b56f3afe72262f3bb1c65b2b74cb0ec80c978ba6415751d64c`;
+readback `.tmp/d-a106-gitea-path-readback-v1/affected/readback.json`:
+`b098acab567097ca35dff364ec1ecdac727f34ce4ec28952b416b36334d651ba`.
+Readback binds physical boundary objects and all observation bytes, reaped
+pytest/awake ownership, 5,411 working files and 98 changed index entries. Scoped
+Ruff passes on the five Python files. This source freeze becomes historical with
+this documentation update. The diagnostic environment remains active; no ended
+environment was executed. Exact installed and full successor proof remain open.
+
+### Gitea canonical native path scoped installed proof: 2026-09-25
+
+Fresh campaign `.tmp/d-a106-gitea-path-native` passed the exact **71 cases / no
+failures, errors or skips** in source and both installed Windows Python 3.11/3.12
+cells. All 19 earlier installed Gitea failures remain selected and now pass.
+Each cell retained 20 actual SQLite measurements, strictly positive and below
+0.5 seconds; maxima were source **0.013896800s**, 3.11 **0.011959500s** and 3.12
+**0.018036200s**. Real canonical-path Git initialization, commit, tree/blob
+readback and retained original compressed objects passed at 235/247/248/255
+characters. Native lookup cancellation/timeout/failure and captured-input controls
+passed without bypassing the existing resource owners.
+
+- Source report: `61d24500a9dda4d4973bc97d30c96bb20990561935e3aaf4eddb66686b533dac`.
+- Windows 3.11 report: `5c8b4039897d1448fcdf6a0fb0441039d251e89cc19ebc3d7b2fc3991ea7ac0a`.
+- Windows 3.12 report: `503c5e515f2e9166f4a5764bdc066bdf73e6c8e1f57536ea4bf6d7359bc5fed1`.
+- Native audit: `c7e2be935e39f09df6917d80053b279795f6bf81c952d0d150fac32f9f6d3620`.
+- Physical readback `.tmp/d-a106-gitea-path-native-readback-v2/readback.json`:
+  `a9471c24f95b69b67fd6cc6dd8395b4c053a4e918d4857942962896dc4c9850a`.
+
+Both installed cells verified 856 package origins, CLI primary/degraded flows,
+strict tool-gate audit, unchanged inputs and no residual children or harness-root
+database. Parity matched 1,180 Python files and 1,200 wheel members. Native roots
+were 118 characters versus 116 in the failed full campaign; no test-root or
+deadline reduction. Structural dependency checking separately reports 1,180
+files, 3,951 edges, six recognized dynamic routes and zero violations, analysis
+errors, unknowns, cycles or adapter-effect violations. Docs hygiene and whitespace
+checks passed. These structural checks do not establish live runtime behavior.
+
+The prepared V1 reader expected 17 SQLite properties, omitting three existing
+command-cancellation cases. It was not invoked. V2 changes only that expectation
+to 20, its corresponding import and fresh output path; all strict bounds and
+physical checks remain. Frozen V1 bytes are retained. Derivation receipt
+`.tmp/a106_gitea_reader_count_derivation_v2.json`:
+`093c97f3fd4d5e8d144ba7da9e2b0031df2d457d7e9a6b09eabd5c6b384e6dc7`.
+
+The readback retains 5,411 working files, 98 changed index entries, 326 campaign
+files and complete bounded environment inventories. Environments
+`a106-gitea-path-native-source` and
+`d-core-boundaries-a106-gitea-native-path-boundary-correction-win-py311` / `win-py312`
+are ended, byte-read only; their inventories contain 2,487 / 5,310 / 5,310 files.
+No timeout or forced kill occurred. Their candidate freeze becomes historical
+after this closeout. The older diagnostic `a106-git-location-opening-source`
+remains active separately. Observed path/result: **primary / success**, scoped
+live local Git proof. Remote Gitea, Linux application acceptance, the five open
+optional-logging failures and full .106 acceptance remain outside this result.
+No commit, tag, publication, whole-plan completion or lane retirement occurred.
+
+### Logging owner extraction before async correction: 2026-09-25
+
+The candidate moves existing queue, daemon, retained failure, drop counter,
+prepared-directory and subscriber state together into
+`orket/adapters/observability/log_publication.py`. The public facade keeps its
+exports and routes native stages to that owner. No copied globals, forwarding
+state proxy, second queue, daemon or executor is added. Existing owner
+function/class bodies have equal ASTs before and after extraction; native
+append/frontier/drop/subscriber behavior is intentionally unchanged. The facade
+shrinks from 453 lines to below 300; the owner is below 300. Private test
+observations move to the owner without changing assertions or limits.
+
+Structural migration receipt:
+`.tmp/d-a106-logging-owner-extraction/migration.json`; authoring helper
+`.tmp/a106_extract_logging_owner_v1.py` remains retained after invocation.
+Scoped import cleanup follows that receipt and changes no behavior. Guard
+execution is still required. The six-case opening remains retained with five
+failures and one native pass; extraction is not an async fix or acceptance.
+
+The extraction opening again reached the same **five failures / one native
+pass**, with real held stages, SQLite, JSONL and joined fixture work. Report:
+`a319a542c4464728a2675a9d9a1ea79621c5661e80192ef5eccbf39aedcd81cf`.
+The first expanded guard campaign retained **80 passes / four failures / no
+errors or skips**. All four failures were before their held API writes because
+two fixtures still referenced the facade's moved private `_append_line_sync`.
+This is a fixture migration failure, not an executed API lifetime failure.
+Guard report: `fb59c46131c7f5bf84445e8dc91c3faf5096d2300b00dac9c76070d66afb09c5`;
+failure readback `.tmp/d-a106-logging-owner-failure-v1/readback.json`:
+`d0594b9a5739b0c4bf49a5905698834b1bd5dd0d84245f6020db6eb7679ece4f`.
+It preserves 5,413 working files, 109 changed index entries and both observations.
+
+Only the two API fixture bindings changed for the corrected campaign. The exact
+**84 guard identities then passed**, with no failures, errors or skips. Product
+bytes remained identical between the failed and corrected guard campaigns, and
+the original 37 guard identities remain included. No assertion or deadline was
+changed. Corrected report:
+`9b4d7691fee7ce388070a9d29d7c7e78c46905ff5a73a5a53084c08cebbbb1cd`;
+readback `.tmp/d-a106-logging-owner-readback-v2/readback.json`:
+`e2e0c0a38d315932b0061dbdbc70b1b3d92e29fa807e2fccee36ee6a9efac28f`.
+Readback binds 5,413 working files and 110 changed index entries, reaped process
+owners and released awake requests. Its freeze becomes historical after this
+closeout. The V1 success reader was prepared but never invoked against the failed
+campaign; it remains unexecuted. The diagnostic source environment remains active.
+
+Observed extraction guards: **primary / success**, scoped live source. The
+optional-logging opening remains **primary / failure**. Nineteen moved
+function/class bodies are structurally identical; that is structural proof of
+the move, not proof of async safety. No repaired logging, installed extraction,
+full .106 acceptance, commit or publication is claimed.
+
+After extraction, the canonical dependency snapshot was regenerated: **1,182
+modules / 3,962 edges / six recognized dynamic routes**, with zero dependency,
+adapter-effect, unknown-module, analysis or authority-cycle findings. Docs
+hygiene and whitespace pass. This is current structural evidence only; the
+logging async and broader C/D/E/CAP obligations remain open.
+
+
+### API log handoff drain candidate: 2026-09-25
+
+Four new source controls reached the preexisting race: API close completed while
+one captured loop callback was held, removed its subscriber count, and made no
+event-queue attempt after release. Modes cover ordinary close, repeated caller
+cancellation, caller timeout and a separately live peer. All four failed at the
+premature-close assertion, with physical JSONL and actual SQLite observations
+below the unchanged strict 0.5s bound. No fixture error or skip occurred.
+Report: `ea8fbe4d9e2e6e8a7e898814c3ba79a83f76eb5aa60299c9ff8a9d3df92880cd`.
+Readback `.tmp/d-a106-api-handoff-opening-readback-v1/readback.json`:
+`883bbd32322e0ccccae0113c0a70671f8bc7786f56b43eb819a6fc1bfbe0c38a`.
+It retains 5,414 working files and 111 index entries before correction. The
+opening freeze is historical; the diagnostic source interpreter remains active.
+
+The correction keeps registration state under the existing publication owner's
+condition. Open registration snapshots issue tokens before native stages; API
+close cuts off later snapshots and retains its count until issued handoffs or
+failed uninvoked attempts settle. The same application/native owners drain it.
+Legacy unsubscribe remains non-draining, and the native append frontier remains
+append settlement only. No additional queue, daemon or application writer stop
+is added. Contract delta: `docs/architecture/CONTRACT_DELTA_API_LOG_HANDOFF_D_2026-09-25.md`.
+Both Quality jobs select the lifetime and failure controls. Correction execution
+and installed acceptance remain pending. This does not repair the five optional
+logging opening failures or close preparation, required-producer, broader D/E/CAP,
+Linux, full .106 acceptance or lane retirement obligations.
+
+
+The correction source cohort passes **96 cases / zero failures, errors or skips**:
+all 84 extraction guard identities, the four reached opening identities, five
+existing startup cases and three explicit failed-stage controls. Required native
+main-write failure, callback scheduling failure and loop queue failure all settle
+their registration without hiding the original error or retrying. The peer remains
+open and receives its post-cutoff event; the closing app receives only its earlier
+captured event. Actual SQLite work remains strictly below 0.5s in all four holds.
+Report: `170f7b73a5af290563197bfe8f74cbf116be8ea64a14fbf0b7e2efa2d85473c8`.
+Readback `.tmp/d-a106-api-handoff-closing-readback-v1/readback.json`:
+`3e930102ed30b6184d323743d653d194ab9790ff9cd9753f7bda18f6be546595`.
+It binds physical JSONL/SQLite, reaped owners, released awake request, 5,416 working
+files and 114 changed index entries. The earlier shared reader's 92-case closing
+branch was prepared but never invoked; the dedicated reader uses the actual
+96-case declared selection. Candidate freeze is historical after this wording.
+The active diagnostic environment is not ended. Observed path/result:
+**primary / success**, scoped live source. Installed and full successor proof
+remain pending; the five optional caller-loop failures remain retained and open.
+
+
+#### Retained harness failures and exact installed correction
+
+The first native campaign's source launch used the tooling interpreter instead
+of its newly prepared source interpreter. The existing identity assertion refused
+before pytest. No source/installed result came from that launch. Readback
+`.tmp/d-a106-api-handoff-native-launch-failure-v1/readback.json`:
+`a2a4af101ca7acee1d71f69958e6fa5ae9a950f827da6995e8e55f9819e9dd60`.
+Its prepared source environment has 2,491 retained files and is ended, byte-read
+only. Failed invocation, awake release, input bytes and helpers remain intact.
+
+The V2 campaign passed all 96 source cases, but Windows Python 3.11 stopped with
+**two collection errors** because the inherited harness support manifest omitted
+`tests/helpers/logging_async_opening.py`. No installed handoff test ran. Other
+native origin, CLI, audit, input and cleanup checks passed. Python 3.12 was not
+started for V2. Readback
+`.tmp/d-a106-api-handoff-native-collection-failure-v1/readback.json`:
+`d7465f0c0afbd49f50d02ab2738bfbb7b12a4f3978f354730f0efc1beb7e9ffb`.
+The V2 source/native environments retain 2,491 / 5,132 files and are ended,
+byte-read only. All candidate and selected helper bytes remained unchanged.
+
+V3 explicitly adds that single support input through a derived gate with the
+same runner, source/native owners, limits and verification. Derivation receipt:
+`.tmp/d-a106-api-handoff-campaign-v3-derivation/derivation.json`.
+New campaign `.tmp/d-a106-api-handoff-native-v3` uses fresh source and installed
+roots; native roots are 128 characters versus the earlier failed .106 root's
+116, with no path shortening. Product and test bytes did not change between
+these native campaigns. The exact **96-case selection passes with zero failures,
+errors or skips in source, Windows Python 3.11 and Windows Python 3.12**.
+
+- Source report: `359810ff9cd0992ac2c1b0e2e234a0a2506a107cbf9892171abdb7806145f1f1`.
+- Python 3.11 report: `c0b51089833063e7a5b2ea99255b9b7b162f4328d8fa99d658d17f796372b6c6`.
+- Python 3.12 report: `c33f6846798db11b9cf2fa3f93fc26475546b48fe57bc1c4f27af6a2c2f684b0`.
+- Native audit: `26998cccd58019b7b2d6a01da4eeafc70748adf8c52d720d7e7d58368915a87c`.
+- Readback `.tmp/d-a106-api-handoff-native-readback-v3/readback.json`:
+  `68434ad7c7dbfb3aaef65abe9f8045b06703252c7bd3252beadbcfec2f81fee4`.
+
+Each cell retains four actual SQLite handoff-hold observations, strictly
+`0 < elapsed < 0.5s`; maxima are source `0.016346s`, 3.11 `0.013301400s`, 3.12
+`0.015812s`. Physical log records, failed-stage outcomes, registration counts,
+peer exclusion/continuation and settled process owners are rechecked. Each
+installed cell verifies 977 module origins, primary/degraded CLI paths, strict
+tool audit, frozen inputs, no leftover child and no harness-root database.
+Package parity covers 1,182 Python / 1,202 wheel files with no mismatch. All
+source/native/outer budgets remain 1,500 / 1,800 / 2,100 seconds. No timeout or
+forced kill occurred, and awake requests were released.
+
+Readback retains 5,416 working files, 114 index entries and 288 campaign files.
+`a106-api-handoff-native-v3-source` and
+`d-core-boundaries-a106-api-registration-handoff-lifetime-correction-v3-win-py311`
+/ `win-py312` retain 2,491 / 5,273 / 5,273 files and are ended, byte-read only.
+All earlier failed roots/helpers/readers remain intact; V1/V2 positive readers
+were prepared but unexecuted. The V3 candidate freeze becomes historical after
+this closeout. The older diagnostic source interpreter remains active.
+
+Observed path/result: **primary / success**, scoped live API handoff proof.
+Structural dependency checks remain 1,182 modules / 3,962 edges / six recognized
+routes with zero violations, unknowns, cycles, analysis or adapter-effect errors.
+Scoped Ruff, size and docs hygiene pass. Native append-frontier/audit guards
+remain included. Optional logging offload/capture/preparation, the other required
+producers, wider C/D/E/CAP, Linux application proof and full .106 acceptance remain
+open. The existing Sep25 Linux blocker is unchanged; no new preflight was run.
+HEAD and exact remote branch/tag refs remain published .105, commit
+`799e69ac99c6cbf56ad282be22ee1042a41c5af2`; annotated tag object
+`605e5b08199aae8c13c193fdc2da2c176810ef7a`. No .106 commit/tag/push, main merge,
+whole-plan completion or lane retirement occurred.
+
+### User-requested versioned branch checkpoint: 2026-09-27
+
+The user explicitly requested commit and GitHub push while the complete-plan goal
+remains active. Version 0.6.106 checkpoints the existing 114-file candidate on
+`codex/architectural-truth-bt0`; it does not close C/D/E/CAP or grant full candidate
+acceptance. Previous frozen evidence and ended environments remain unchanged.
+Subagents paused source edits during this publication boundary.
+
+A fresh workspace-local Python 3.11.14 environment installed the canonical editable
+SDK testing and core dev dependencies. With sandbox creation disabled, the exact
+14-module API handoff selection passes **96 cases**, including physical JSONL,
+SQLite, interruption, failure and existing audit-frontier controls. JUnit/log:
+`.tmp/goal-20260927-publication/handoff.xml` and `handoff.log`. This is scoped live
+local source proof: **primary / success**, not fresh installed/provider proof.
+
+The separate six-case optional logging opening again reports **five failures and
+one native pass**; its JUnit/log are `logging-opening.xml` and
+`logging-opening.log` in the same root. Observed path/result: **primary / failure**.
+The five failures remain explicit work; no assertion, strict SQLite limit or
+production behavior was changed. Four Ruff issues in those test/support files
+were corrected through import cleanup and renaming the polling budget parameter;
+all callers use its unchanged default.
+
+Structural checks pass: 1,182 modules / 3,962 edges / six recognized dynamic routes,
+zero dependency/effect/analysis/unknown/cycle findings, docs hygiene, version
+alignment and changed-file Ruff. Canonical `orket tests` Ruff retains **88**
+findings; the existing taxonomy/no-op semantics still require E1 correction.
+Full successor source/installed matrix, fresh Linux application acceptance,
+provider acceptance, full coverage and remaining D/E/CAP work were not rerun or
+accepted by this checkpoint. The retained September 25 Linux clock blocker is
+unchanged. No main merge or lane retirement is included.
+
+Next ordered runtime work: repair the five optional logging caller-loop defects
+while preserving independent bounded main/artifact admission, native inline
+behavior, append settlement and API subscriber drain. Preparation ownership and
+required-producer migration remain separate open obligations. Read-only current
+source review also identifies verification-artifact path/read/write ownership and
+review-preflight time inputs as subsequent D work; discovery is not runtime proof.
+
+Exact checkpoint files are the versioned commit's Git diff against v0.6.105.
+This session additionally touched only CHANGELOG.md, CURRENT_AUTHORITY.md, this
+plan, tests/helpers/logging_async_opening.py and
+ tests/integration/test_logging_async_opening.py. Git's branch and annotated tag
+refs record the publication result; the active plan remains incomplete.

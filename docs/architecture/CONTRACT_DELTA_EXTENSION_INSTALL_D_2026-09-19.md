@@ -102,3 +102,8 @@ Drain workers and native commands before rollback. Keep catalog, native ownershi
 files and every referenced checkout; never replace an admitted directory in place.
 Restore service/caller contracts together under a new version and equivalent
 failure/lifetime proof. The checkpoint is not release or whole-lane acceptance.
+
+The v0.6.106 candidate's checkout-directory argument correction is specified in
+`CONTRACT_DELTA_EXTENSION_GIT_CHECKOUT_CONTEXT_D_2026-09-25.md`. It preserves
+the selected directory and existing owner while replacing absolute Git-directory
+arguments with explicit names relative to that captured directory.

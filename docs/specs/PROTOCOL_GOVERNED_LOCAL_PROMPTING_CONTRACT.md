@@ -1,6 +1,6 @@
 # Protocol-Governed Local Provider Compatibility Contract (v1.2)
 
-Last updated: 2026-09-23
+Last updated: 2026-09-25
 Status: Active (contract baseline)
 Owner: Orket Core
 
@@ -494,6 +494,16 @@ The adapter MUST provide at least one render verification path:
 
 Conformance tests MUST compare expected vs observed render hash where verification is available.
 Compared hash MUST be the post-canonicalization rendered prompt hash defined by LP-02 rules.
+
+For `orket_qwen38_text_chatml_2026_09`, the llama.cpp verifier retains its declared
+template-file read through the existing native I/O owner. Cancellation, including
+repeated requests, waits for physical read settlement. A successful read after
+interruption propagates cancellation before provider HTTP admission; an admitted
+native read failure keeps precedence and identity. Nonmatching template versions
+retain the no-read/no-HTTP return. Template identity, independent render comparison,
+token accounting and context-budget checks remain unchanged. This adds no forced
+thread stop, read deadline or provider fallback. Migration and proof ceiling:
+`docs/architecture/CONTRACT_DELTA_LLAMA_TEMPLATE_READ_OWNERSHIP_D_2026-09-25.md`.
 
 ### LP-16: Template Integrity and Audit (MUST)
 

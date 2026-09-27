@@ -3,14 +3,17 @@ from __future__ import annotations
 
 import asyncio
 import json
+import threading
 
 import pytest
 
 import orket.settings as settings
 from orket.application.services.runtime_construction_inputs import RuntimeConstructionInputs
+from orket.application.services.user_settings_service import UserSettingsService
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 
+# Layer: integration
 
 @pytest.mark.parametrize('settings_bound,preferences_bound', [(False, False), (False, True), (True, False), (True, True)])
 async def test_runtime_settings_capture_keeps_selected_sources(tmp_path, monkeypatch, settings_bound, preferences_bound):
@@ -25,22 +28,29 @@ async def test_runtime_settings_capture_keeps_selected_sources(tmp_path, monkeyp
         user_preferences={'theme': 'bound'} if preferences_bound else None)
     monkeypatch.chdir(tmp_path)
     environment = {'SETTING_CAPTURE': 'original'}
-    entered, release = asyncio.Event(), asyncio.Event()
-    worker = settings.run_owned_thread
+    entered, release = threading.Event(), threading.Event()
+    settings_read = UserSettingsService.read_settings
+    preferences_read = UserSettingsService.read_preferences
 
-    async def held_worker(operation, *, label):
-        entered.set()
-        await release.wait()
-        return await worker(operation, label=label)
+    def held_read(operation):
+        def read(service):
+            entered.set()
+            if not release.wait(5):
+                raise TimeoutError('fixture settings read was not released')
+            return operation(service)
+        return read
 
-    monkeypatch.setattr(settings, 'run_owned_thread', held_worker)
+    monkeypatch.setattr(UserSettingsService, 'read_settings', held_read(settings_read))
+    monkeypatch.setattr(UserSettingsService, 'read_preferences', held_read(preferences_read))
     task = asyncio.create_task(RuntimeConstructionInputs.capture_async(environment=environment))
     try:
         if settings_bound and preferences_bound:
             captured = await asyncio.wait_for(task, 5)
             assert not entered.is_set()
         else:
-            await asyncio.wait_for(entered.wait(), 5)
+            assert await settings.run_owned_thread(
+                lambda: entered.wait(5), label='fixture-runtime-settings-read-admission',
+            )
         supplied['selection']['value'] = 'caller mutation'
         environment['SETTING_CAPTURE'] = 'rotated'
         monkeypatch.chdir(rotated)

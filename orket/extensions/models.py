@@ -17,6 +17,10 @@ CONTRACT_STYLE_LEGACY = "legacy_v1"
 CONTRACT_STYLE_SDK_V0 = "sdk_v0"
 
 
+def normalize_sdk_optional_contract(value: Any) -> str:
+    return "" if value is None else str(value).strip()
+
+
 def default_extensions_catalog_path(*, invocation_root: Path | None = None,
                                     environment: Mapping[str, str] | None = None) -> Path:
     observed = os.environ if environment is None else environment

@@ -4,6 +4,11 @@ from orket.application.services.control_plane_publication_service import Control
 from orket.application.services.control_plane_resource_authority_checks import (
     require_resource_snapshot_matches_lease,
 )
+from orket.application.services.turn_tool_checkpoint_authority import (
+    TurnToolCheckpointRecoveryError,
+    resolve_checkpoint_recovery_authority,
+    validate_checkpoint_recovery_inputs,
+)
 from orket.application.services.turn_tool_control_plane_resource_lifecycle import (
     lease_id_for_run,
     namespace_resource_id_for_run,
@@ -34,10 +39,14 @@ async def ensure_existing_run_allows_execution(
     publication: ControlPlanePublicationService,
     run: RunRecord,
     error_type: type[Exception],
+    resume_mode: bool = False,
 ) -> FinalTruthRecord | None:
     if not is_terminal_run_state(run.lifecycle_state):
         await require_turn_dispatch_contract(publication.repository, run, error_type)
-    await require_resolved_tool_dispatches(execution_repository, run, error_type)
+    if resume_mode and not is_terminal_run_state(run.lifecycle_state):
+        await require_checkpoint_recovery_dispatches(execution_repository, publication, run, error_type)
+    else:
+        await require_resolved_tool_dispatches(execution_repository, publication.repository, run, error_type)
     await require_turn_tool_resource_authority(
         publication=publication,
         run=run,
@@ -75,12 +84,61 @@ async def ensure_existing_run_allows_execution(
     return None
 
 
-async def require_resolved_tool_dispatches(execution_repository, run, error_type):
+async def _first_step_without_journal(execution_repository, record_repository, run, error_type):
     if run.current_attempt_id is None:
         return
     steps = await execution_repository.list_step_records(attempt_id=run.current_attempt_id)
     if any(is_unresolved_tool_dispatch(step) for step in steps):
         raise error_type(f"governed turn run {run.run_id}: tool dispatch outcome unknown; explicit observation required before recovery")
+    resolved = [
+        step for step in steps
+        if step.step_kind == "governed_tool_operation" and not is_unresolved_tool_dispatch(step)
+    ]
+    if not resolved:
+        return
+    effects = await record_repository.list_effect_journal_entries(run_id=run.run_id)
+    for step in resolved:
+        matched = step.attempt_id == run.current_attempt_id and any(
+            effect.run_id == run.run_id
+            and effect.attempt_id == step.attempt_id
+            and effect.step_id == step.step_id
+            for effect in effects
+        )
+        if not matched:
+            return step
+    return None
+
+
+def _missing_journal_error(run, step, error_type):
+    return error_type(
+        f"governed turn run {run.run_id}: resolved governed tool step {step.step_id} "
+        "is missing matching effect journal"
+    )
+
+
+async def require_resolved_tool_dispatches(execution_repository, record_repository, run, error_type):
+    step = await _first_step_without_journal(execution_repository, record_repository, run, error_type)
+    if step is not None:
+        raise _missing_journal_error(run, step, error_type)
+
+
+async def require_checkpoint_recovery_dispatches(execution_repository, publication, run, error_type):
+    """Admit orphan evidence only to existing checkpoint-backed blocked reconciliation."""
+    step = await _first_step_without_journal(execution_repository, publication.repository, run, error_type)
+    if step is None:
+        return
+    attempt = await execution_repository.get_attempt_record(attempt_id=run.current_attempt_id)
+    if attempt is None or attempt.run_id != run.run_id or attempt.attempt_id != run.current_attempt_id:
+        raise _missing_journal_error(run, step, error_type)
+    try:
+        checkpoint, acceptance = await resolve_checkpoint_recovery_authority(
+            publication=publication, attempt_id=attempt.attempt_id,
+        )
+        validate_checkpoint_recovery_inputs(
+            run=run, current_attempt=attempt, checkpoint=checkpoint, acceptance=acceptance,
+        )
+    except TurnToolCheckpointRecoveryError as exc:
+        raise _missing_journal_error(run, step, error_type) from exc
 
 
 async def require_turn_tool_resource_authority(

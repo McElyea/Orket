@@ -91,6 +91,7 @@ def test_print_extensions_list_shows_installed_extensions(tmp_path, capsys):
     assert "workload: mystery_v1 (1.0.0)" in out
 
 
+# Layer: integration
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_run_extension_workload_requires_registered_workload(tmp_path):
@@ -98,9 +99,10 @@ async def test_run_extension_workload_requires_registered_workload(tmp_path):
     args = SimpleNamespace(subcommand="missing_workload", seed=123, workspace=str(tmp_path / "workspace"), department="core")
 
     with pytest.raises(ValueError):
-        await _run_extension_workload(args, manager)
+        await _run_extension_workload(args, manager, invocation_root=tmp_path)
 
 
+# Layer: integration
 @pytest.mark.asyncio
 async def test_run_extension_workload_executes_installed_workload(tmp_path, capsys):
     """Layer: integration. Verifies CLI install output and workload execution use manifest-entry-backed records."""
@@ -118,7 +120,7 @@ async def test_run_extension_workload_executes_installed_workload(tmp_path, caps
         workspace=str(tmp_path / "workspace" / "default"),
         department="core",
     )
-    await _run_extension_workload(args, manager)
+    await _run_extension_workload(args, manager, invocation_root=tmp_path)
     out = capsys.readouterr().out
     assert "Registered workloads:" in out
     assert "- mystery_v1 (1.0.0)" in out

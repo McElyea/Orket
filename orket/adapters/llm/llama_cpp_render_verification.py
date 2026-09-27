@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-import asyncio
 import hashlib
 from pathlib import Path
 from typing import Any
 
 import httpx
 
+from orket.adapters.execution.owned_io import run_owned_thread
 from orket.adapters.llm.prompt_canonicalization import canonicalize_prompt_text
 from orket.exceptions import ModelProviderError
 
@@ -41,7 +41,8 @@ async def verify_llama_cpp_render(
 ) -> dict[str, Any]:
     if template_version != QWEN38_TEXT_TEMPLATE_VERSION:
         return {}
-    expected_template = await asyncio.to_thread(QWEN38_TEXT_TEMPLATE_PATH.read_bytes)
+    expected_template = await run_owned_thread(
+        QWEN38_TEXT_TEMPLATE_PATH.read_bytes, label="llama-render-template-read")
     origin = str(client.base_url).rstrip("/").removesuffix("/v1")
     props_response = await client.get(f"{origin}/props", headers=headers)
     props_response.raise_for_status()

@@ -1,7 +1,7 @@
 # Settings input ownership
 
 Owner: Orket Core
-Last updated: 2026-09-23
+Last updated: 2026-09-25
 Status: Active contract
 
 ## Inputs and selection
@@ -10,9 +10,11 @@ Status: Active contract
 read/publication and migration policy; the settings file adapter performs its
 authorized effects and declares `side_effecting = True`.
 
-Each async operation captures invocation directory, `ORKET_DURABLE_ROOT`, explicit
-settings/preferences path selections, and supplied JSON values before its first
-await. Path resolution and all filesystem effects execute in the owned worker.
+Persisted load/save/migration operations capture invocation directory, `ORKET_DURABLE_ROOT`,
+explicit settings/preferences path selections, and supplied JSON values before
+their first await. Path resolution and filesystem effects execute in the owned
+worker. Complete asynchronous runtime capture has the separate worker-start
+selection point specified below.
 Defaults remain `.orket/durable/config/user_settings.json` and `preferences.json`
 under the captured invocation directory. Explicit setters select absolute paths
 without reading files and invalidate the corresponding runtime snapshot in the
@@ -58,21 +60,44 @@ unconditional full-object saves retain explicit replacement semantics.
 first successful load. Neither persistence nor dotenv loading has pytest-specific
 behavior. Tests explicitly select temporary paths and bootstrap state.
 
-CLI startup awaits persisted preferences and settings after onboarding, then
-explicitly binds both snapshots in its calling task before constructing runtime
-components. Cold synchronous application construction from an async embedding
+CLI startup and complete post-onboarding capture share one retained native
+worker. This startup refresh ignores stale bound snapshots and reads persisted
+preferences before settings so migration precedes the final settings read.
+The caller receives the status and complete input object, then explicitly binds
+its snapshots before constructing runtime components. That exact object reaches
+CLI runtime constructors; no later ambient capture substitutes for it. Route
+selection, private signature migration and default timing are specified in
+`docs/architecture/CONTRACT_DELTA_ROUTE_INPUT_PROPAGATION_D_2026-09-25.md`.
+Cold synchronous application construction from an async embedding
 must run in an owned worker or receive explicitly bound settings first.
 
-`capture_runtime_settings_async` collects inputs for asynchronous runtime
-construction. Settings and preferences independently retain their bound JSON
-snapshot when present; unbound values use the settings service at a location
-captured before the first await. An empty bound object is authoritative. The
-collector returns detached values without rotating the caller's context. It
-retains the admitted worker, including selected preference migration, through
-cancellation; interruption does not imply rollback. Existing malformed-data,
-ownership and migration refusals remain visible. This is not an atomic snapshot
-across independent file reads. `RuntimeConstructionInputs.capture_async` retains
-the invocation root and environment before that collection begins.
+`capture_runtime_settings_async` uses one retained native collector. In that
+worker, settings and preferences independently retain their inherited bound JSON
+when present; unbound values use one selected settings-service location. An empty
+bound object is authoritative. The collector returns detached values without
+rotating the caller's context. Selected preference migration, file ownership,
+malformed-data and migration refusals remain authoritative.
+
+`RuntimeConstructionInputs.capture_async` performs complete capture in one
+existing owned worker: invocation-root selection, environment detachment including
+custom mapping hooks, settings-pair collection, serialization and immutable-object
+construction. Default cwd/environment/unbound-location selection occurs as that
+worker executes, rather than in the coroutine before its first suspension. The
+bound context follows the existing worker context propagation. Root, environment
+and the settings location are selected before a held settings read; collected
+values are fixed before downstream runtime construction. A caller needing an
+earlier instant supplies an already captured object. Even fully bound asynchronous
+settings-pair collection uses this retained worker and can suspend.
+
+The worker settles before cancellation escapes, including repeated requests;
+a native capture failure retains precedence. Capture does not rotate the caller's
+settings context. Callers that bind returned inputs do so explicitly in their own
+task. Interruption does not imply rollback of settings migration or other admitted
+native effects. This is not an atomic snapshot across process-global observations
+or independent files. A supplied environment mapping does not silently replace
+the settings owner's location-selection inputs. Synchronous capture and other
+persisted settings read/save/migration selectors retain their distinct contracts. Migration:
+`docs/architecture/CONTRACT_DELTA_RUNTIME_CAPTURE_OWNER_D_2026-09-25.md`.
 
 Native `ExecutionPipeline` construction without supplied inputs captures only its
 consumed root, environment and settings through the existing

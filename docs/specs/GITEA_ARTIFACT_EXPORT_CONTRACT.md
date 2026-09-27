@@ -49,6 +49,17 @@ command ownership, deadlines, output bounds and private error classifications
 retain their existing contracts. Migration and proof limits:
 `docs/architecture/CONTRACT_DELTA_GITEA_GIT_BOOTSTRAP_D_2026-09-25.md`.
 
+Windows paths whose lexical `.git/config.lock` reaches 260 UTF-16 code units
+require usable existing native names for that same repository and `.git` directory.
+An owned native observation validates directory identity before command admission;
+explicit Git/worktree arguments and `GIT_COMMON_DIR` retain the original object
+store and canonical cwd. Missing or unusable native names refuse explicitly.
+Only initialization can create the empty canonical `.git` directory. No alias,
+cache relocation or OS setting change is performed. Command inputs are captured
+before lookup, and interruption retains the worker before preventing dispatch.
+Migration, platform limits and proof scope:
+`docs/architecture/CONTRACT_DELTA_GITEA_NATIVE_PATH_CONTEXT_D_2026-09-25.md`.
+
 Payload arguments are copied before the first await. Payload construction and Git
 cache preparation run as owned native work: cancellation, repeated cancellation and
 caller timeout wait for the admitted worker to settle. A worker failure takes

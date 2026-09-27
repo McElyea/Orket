@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import sys
 import threading
 from pathlib import Path
@@ -257,19 +258,90 @@ async def test_absent_legacy_settings_does_not_create_legacy_lock_directory(monk
     assert not (tmp_path / "user_settings.json.settings-locks").exists()
 
 
+# Layer: integration
 @pytest.mark.asyncio
-async def test_startup_binds_persisted_inputs_in_the_calling_task(tmp_path):
+async def test_startup_returns_persisted_inputs_for_explicit_caller_binding(tmp_path):
     from orket.discovery import run_startup_checks
 
     first, second = _paths(tmp_path)
     first.write_text('{"preferred_coder": "migrated", "keep": 17}', encoding="utf-8")
-    settings.clear_runtime_settings_context()
-    status = await run_startup_checks(lambda: {"reconciliation": "success", "onboarding": "no_op"})
+    settings.set_runtime_settings_context(
+        user_settings={"stale": True}, user_preferences={"models": {"coder": "stale"}})
+    status, inputs = await run_startup_checks(
+        lambda: {"reconciliation": "success", "onboarding": "no_op"})
     assert status == {"reconciliation": "success", "onboarding": "no_op"}
+    assert inputs.user_settings() == {"keep": 17}
+    assert inputs.user_preferences()["models"] == {"coder": "migrated"}
+    assert settings.load_user_settings() == {"stale": True}
+    inputs.bind_settings()
     assert settings.load_user_settings() == {"keep": 17}
     assert settings.load_user_preferences()["models"] == {"coder": "migrated"}
     assert json.loads(first.read_text(encoding="utf-8")) == {"keep": 17}
     assert json.loads(second.read_text(encoding="utf-8"))["_meta"]["migration_markers"][MARKER] is True
+
+
+# Layer: integration
+@pytest.mark.asyncio
+async def test_startup_and_post_onboarding_capture_share_one_worker(tmp_path, monkeypatch):
+    from orket.application.services.runtime_construction_inputs import RuntimeConstructionInputs
+    from orket.application.services.user_settings_service import UserSettingsService
+    from orket.discovery import run_startup_checks
+
+    initial, selected = tmp_path / "initial", tmp_path / "selected"
+    selected_settings = selected / "settings.json"
+    selected_preferences = selected / "preferences.json"
+
+    def seed() -> None:
+        initial.mkdir()
+        selected.mkdir()
+        selected_settings.write_text('{"preferred_coder": "worker", "keep": 23}', encoding="utf-8")
+        selected_preferences.write_text("{}", encoding="utf-8")
+
+    await settings.run_owned_thread(seed, label="fixture-cli-startup-inputs")
+    monkeypatch.chdir(initial)
+    monkeypatch.setenv("CLI_CAPTURE_STAGE", "before")
+    observed = {"threads": [], "reads": []}
+    native = RuntimeConstructionInputs._capture_native.__func__
+    read_preferences = UserSettingsService.read_preferences
+    read_settings = UserSettingsService.read_settings
+
+    def capture(cls, environment, *, persisted_after_preferences=False):
+        observed["threads"].append(("capture", threading.get_ident(), persisted_after_preferences))
+        return native(cls, environment, persisted_after_preferences=persisted_after_preferences)
+
+    def preferences(source):
+        observed["reads"].append(("preferences", threading.get_ident()))
+        return read_preferences(source)
+
+    def persisted_settings(source):
+        observed["reads"].append(("settings", threading.get_ident()))
+        return read_settings(source)
+
+    def startup():
+        observed["threads"].append(("startup", threading.get_ident(), True))
+        settings.set_settings_file(selected_settings)
+        settings.set_preferences_file(selected_preferences)
+        os.chdir(selected)
+        os.environ["CLI_CAPTURE_STAGE"] = "after"
+        return {"reconciliation": "success", "onboarding": "no_op"}
+
+    monkeypatch.setattr(RuntimeConstructionInputs, "_capture_native", classmethod(capture))
+    monkeypatch.setattr(UserSettingsService, "read_preferences", preferences)
+    monkeypatch.setattr(UserSettingsService, "read_settings", persisted_settings)
+    try:
+        status, inputs = await run_startup_checks(startup)
+    finally:
+        await settings.run_owned_thread(
+            lambda: os.chdir(initial), label="fixture-cli-startup-cwd-restore")
+    assert status["reconciliation"] == "success"
+    assert inputs.invocation_root == selected
+    assert inputs.environment["CLI_CAPTURE_STAGE"] == "after"
+    assert inputs.user_settings() == {"keep": 23}
+    assert inputs.user_preferences()["models"] == {"coder": "worker"}
+    assert [name for name, _thread in observed["reads"]] == ["preferences", "settings"]
+    assert len({entry[1] for entry in observed["threads"]} | {
+        entry[1] for entry in observed["reads"]}) == 1
+    assert observed["threads"][1] == ("capture", observed["threads"][0][1], True)
 
 
 @pytest.mark.asyncio

@@ -1,23 +1,17 @@
-import os
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
 from orket.adapters.execution.owned_io import run_owned_thread
 from orket.adapters.storage.async_file_tools import AsyncFileTools
+from orket.application.services.runtime_construction_inputs import RuntimeConstructionInputs
 from orket.logging import log_event
 from orket.project_paths import default_model_root, default_project_root, default_workspace_root
 from orket.runtime import ConfigLoader
 from orket.runtime.config.defaults import configured_provider
 from orket.runtime.config.provider_discovery import installed_models
 from orket.schema import EngineRegistry, EpicConfig, RockConfig, TeamConfig
-from orket.settings import (
-    load_user_preferences_async,
-    load_user_settings,
-    load_user_settings_async,
-    save_user_settings,
-    set_runtime_settings_context,
-)
+from orket.settings import load_user_settings, save_user_settings
 
 
 def _default_project_root() -> Path:
@@ -188,14 +182,17 @@ def perform_startup_checks() -> dict[str, str]:
     return {"reconciliation": reconciliation_result, "onboarding": onboarding_result}
 
 
-async def run_startup_checks(startup: Callable[[], dict[str, str]]) -> dict[str, str]:
-    """Retain the admitted startup worker, including structural writes, through cancellation."""
-    environment = dict(os.environ)
-    result = await run_owned_thread(startup, label="runtime-startup-checks")
-    preferences = await load_user_preferences_async()
-    settings = await load_user_settings_async()
-    set_runtime_settings_context(user_settings=settings, user_preferences=preferences, environment=environment)
-    return result
+async def run_startup_checks(
+    startup: Callable[[], dict[str, str]],
+) -> tuple[dict[str, str], RuntimeConstructionInputs]:
+    """Retain startup and its complete post-onboarding input capture in one worker."""
+    def startup_and_capture() -> tuple[dict[str, str], RuntimeConstructionInputs]:
+        status = startup()
+        inputs = RuntimeConstructionInputs._capture_native(
+            None, persisted_after_preferences=True)
+        return status, inputs
+
+    return await run_owned_thread(startup_and_capture, label="runtime-startup-checks")
 
 
 def perform_first_run_setup() -> dict[str, str]:

@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-import orket.logging as logging_module
+from orket.adapters.observability import log_publication as logging_owner
 from orket.application.services.outward_connector_service import OutwardConnectorService
 from tests.helpers.kernel_state_probe import responsive_sqlite
 from tests.helpers.observed_http_server import observed_http_server
@@ -33,7 +33,7 @@ def observe_trust_failure(monkeypatch, missing):
 
 
 def hold_write(monkeypatch, workspace, fail):
-    original = logging_module._append_line_sync
+    original = logging_owner._append_line_sync
     entered, release, finished = threading.Event(), threading.Event(), threading.Event()
     threads = []
 
@@ -50,7 +50,7 @@ def hold_write(monkeypatch, workspace, fail):
         finally:
             finished.set()
 
-    monkeypatch.setattr(logging_module, '_append_line_sync', write)
+    monkeypatch.setattr(logging_owner, '_append_line_sync', write)
     return entered, release, finished, threads
 
 

@@ -6,7 +6,6 @@ import hashlib
 import json
 import os
 import subprocess
-from dataclasses import replace
 from pathlib import Path
 
 import psutil
@@ -161,15 +160,11 @@ async def _install(
     payload = json.loads(await asyncio.to_thread(manager.catalog_path.read_text, encoding="utf-8"))
     assert payload == {"extensions": [manager.catalog.row_from_record(record)]}
     readback = await list_installed_extensions(manager)
-    # Preserve the existing generic SDK listing defaults; compare every remaining field.
+    # Generic SDK optional values retain their exact canonical empty representation.
     assert record.register_callable == ""
     entry, = record.manifest_entries
-    assert (entry.input_contract, entry.output_contract) == ("None", "None")
-    assert [item for item in readback if item.extension_id == record.extension_id] == [
-        replace(record, register_callable="register", manifest_entries=(
-            replace(entry, input_contract="", output_contract=""),
-        ))
-    ]
+    assert (entry.input_contract, entry.output_contract) == ("", "")
+    assert [item for item in readback if item.extension_id == record.extension_id] == [record]
     observed = receipts[start:]
     stopped = await _assert_settled(observed)
     object_hash = await asyncio.to_thread(_sha256_file, commit_object)
@@ -190,8 +185,8 @@ async def _install(
             for item in observed
         ],
         receipt_count=len(observed),
-        catalog_readback_register_default={"installed": "", "listed": "register"},
-        catalog_readback_contract_defaults={"installed": ["None", "None"], "listed": ["", ""]},
+        catalog_readback_register_default={"installed": "", "listed": ""},
+        catalog_readback_contract_defaults={"installed": ["", ""], "listed": ["", ""]},
         observed_pids_absent_after_return=stopped,
     )
     return len(str(commit_object))

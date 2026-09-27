@@ -166,7 +166,7 @@ def test_manifest_parser_load_manifest_legacy(tmp_path: Path) -> None:
 
 # Layer: integration
 def test_sdk_agent_manifest_metadata_survives_catalog_round_trip(tmp_path: Path) -> None:
-    """Layer: contract. Host catalog storage preserves the typed agent negotiation fields."""
+    """Host catalog storage preserves the typed agent negotiation fields."""
     parser = ManifestParser()
     record = parser.sdk_record_from_manifest(
         {
@@ -197,12 +197,12 @@ def test_sdk_agent_manifest_metadata_survives_catalog_round_trip(tmp_path: Path)
 
     catalog_path = tmp_path / "catalog.json"
     catalog_path.write_text(json.dumps({"extensions": [ExtensionCatalog.row_from_record(record)]}), encoding="utf-8")
-    loaded = ExtensionCatalog(catalog_path).list_extensions()[0].manifest_entries[0]
+    loaded = ExtensionCatalog(catalog_path).list_extensions()[0]
+    entry, = loaded.manifest_entries
 
-    assert loaded.workload_kind == "agent"
-    assert loaded.input_contract == "agent_iteration_request.v1"
-    assert loaded.output_contract == "agent_iteration_result.v1"
-    assert loaded.agent_declaration["contract_version"] == "governed_agent_loop.v1"
+    assert (loaded.register_callable, entry.workload_kind) == ("", "agent")
+    assert (entry.input_contract, entry.output_contract) == ("agent_iteration_request.v1", "agent_iteration_result.v1")
+    assert entry.agent_declaration["contract_version"] == "governed_agent_loop.v1"
 
 @pytest.mark.asyncio
 # Layer: integration

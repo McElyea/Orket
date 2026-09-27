@@ -23,6 +23,7 @@ from orket.application.workflows.turn_executor import TurnExecutor
 from orket.core.domain import AttemptState, LeaseStatus, ResidualUncertaintyClassification, RunState
 from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.core.domain.state_machine import StateMachine
+from tests.helpers.step_journal_opening import remove_journal
 from tests.helpers.turn_artifacts import artifact_test_utc_now, write_checkpoint_fixture
 from tests.helpers.turn_control_plane_clock import deterministic_turn_clock as deterministic_turn_clock
 from tests.integration.test_governed_agent_terminal_history import logical_state
@@ -35,7 +36,7 @@ WRITES = ["save_attempt_record", "save_run_record", "publish_reconciliation",
           "publish_recovery_decision", "publish_final_truth", "publish_lease"]
 
 
-async def unfinished_turn(tmp_path, *, observed=True):
+async def unfinished_turn(tmp_path, *, observed=True, orphan_step=False):
     control = build_turn_tool_control_plane_service(tmp_path / "control_plane.sqlite3")
     executor = TurnExecutor(StateMachine(), ToolGate(organization=None, workspace_root=tmp_path),
                             workspace=tmp_path, control_plane_service=control, utc_now=artifact_test_utc_now)
@@ -50,11 +51,14 @@ async def unfinished_turn(tmp_path, *, observed=True):
     await control.publish_step_result(run_id=run_id, attempt_id=f"{run_id}:attempt:0001", step_id="operation-1",
         tool_name="write_file", tool_args=args, result={"ok": True, "touched_paths": [args["path"]]},
         binding=None, operation_id="operation-1", replayed=False)
+    if orphan_step:
+        await remove_journal(tmp_path / "control_plane.sqlite3", journal_id="turn-tool-journal:operation-1",
+            run_id=run_id, attempt_id=f"{run_id}:attempt:0001", step_id="operation-1")
     return control, run_id
 
 
 async def resume(control, run_id, evidence):
-    if evidence == "effect":
+    if evidence in {"effect", "step"}:
         return await control.begin_execution(**INPUTS, resume_mode=True)
     run = await control.execution_repository.get_run_record(run_id=run_id)
     attempt = await control.execution_repository.get_attempt_record(attempt_id=run.current_attempt_id)
@@ -81,10 +85,10 @@ def interrupt_write(monkeypatch, method, cancellation):
 
 @pytest.mark.parametrize("method", WRITES)
 @pytest.mark.parametrize("cancellation", [False, True], ids=["exception", "cancel"])
-@pytest.mark.parametrize("evidence", ["effect", "orphan"])
+@pytest.mark.parametrize("evidence", ["effect", "orphan", "step"])
 # Layer: integration
 async def test_interrupted_resume_reconciliation_preserves_complete_prior_authority(tmp_path, monkeypatch, method, cancellation, evidence):
-    control, run_id = await unfinished_turn(tmp_path, observed=evidence == "effect")
+    control, run_id = await unfinished_turn(tmp_path, observed=evidence != "orphan", orphan_step=evidence == "step")
     before = await logical_state(control.execution_repository.db_path)
     interrupt_write(monkeypatch, method, cancellation)
     task = asyncio.create_task(resume(control, run_id, evidence))
@@ -96,10 +100,10 @@ async def test_interrupted_resume_reconciliation_preserves_complete_prior_author
     assert len(await control.publication.repository.list_effect_journal_entries(run_id=run_id)) == int(evidence == "effect")
 
 
-@pytest.mark.parametrize("evidence", ["effect", "orphan"])
+@pytest.mark.parametrize("evidence", ["effect", "orphan", "step"])
 # Layer: integration
 async def test_reconciled_resume_commits_blocked_truth_before_reporting_refusal(tmp_path, evidence):
-    control, run_id = await unfinished_turn(tmp_path, observed=evidence == "effect")
+    control, run_id = await unfinished_turn(tmp_path, observed=evidence != "orphan", orphan_step=evidence == "step")
     with pytest.raises(TurnToolCheckpointRecoveryError, match="run was closed from reconciliation evidence"):
         await resume(control, run_id, evidence)
     run = await control.execution_repository.get_run_record(run_id=run_id)

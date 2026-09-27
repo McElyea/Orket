@@ -44,7 +44,10 @@ class ApiRuntimeHostService:
     async def create_chat_driver(self) -> Any:
         from orket.driver import OrketDriver
 
-        return await OrketDriver.create(project_root=self.project_root, environment=self.environment)
+        if self.construction_inputs is None:
+            return await OrketDriver.create(project_root=self.project_root, environment=self.environment)
+        return await OrketDriver.create(
+            project_root=self.project_root, construction_inputs=self.construction_inputs)
 
     async def close_chat_driver(self, driver: Any) -> None:
         await run_owned_io(driver.close, label="api-chat-driver-close", preserve_failure=True)

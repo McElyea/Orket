@@ -3,10 +3,15 @@ from __future__ import annotations
 
 import asyncio
 import shutil
+from functools import partial
 from pathlib import Path
 
 from orket.adapters.execution.owned_io import run_owned_thread
 from orket.adapters.execution.process_lifecycle import DIAGNOSTIC_TAIL_BYTES
+from orket.adapters.vcs.gitea_git_paths import (
+    native_repository_arguments,
+    needs_native_repository_paths,
+)
 from orket.core.contracts.owned_command import CommandExecutionUncertain, CommandRunner
 
 side_effecting = True
@@ -20,7 +25,7 @@ class GiteaExportGit:
         self._command_runner = command_runner
 
     async def initialize(self) -> None:
-        await run_owned_thread(lambda: self.repo_dir.mkdir(parents=True, exist_ok=True), label="gitea-export-repo")
+        await run_owned_thread(partial(self.repo_dir.mkdir, parents=True, exist_ok=True), label="gitea-export-repo")
         await self.command("init", "--object-format=sha1")
         await self.command("config", "core.longpaths", "true")
         await self.command("config", "remote.origin.url", self.repo_url)
@@ -72,12 +77,19 @@ class GiteaExportGit:
         return True
 
     async def command(self, *arguments: str, allowed: tuple[int, ...] = (0,)) -> tuple[int, str]:
+        repo_dir, environment, runner = self.repo_dir, dict(self.environment), self._command_runner
         try:
+            repository_arguments = ()
+            if needs_native_repository_paths(repo_dir):
+                repository_arguments, common = await run_owned_thread(
+                    partial(native_repository_arguments, repo_dir, initialize=arguments[0] == "init"),
+                    label="gitea-export-git-paths")
+                environment["GIT_COMMON_DIR"] = common
             # Initialization needs long paths before repository-local configuration exists.
-            result = await self._command_runner.run(
-                ("git", "-c", "core.longpaths=true", "-c", "core.hooksPath=",
+            result = await runner.run(
+                ("git", *repository_arguments, "-c", "core.longpaths=true", "-c", "core.hooksPath=",
                  "-c", "init.templateDir=", "-c", "credential.helper=", *arguments),
-                cwd=self.repo_dir, environment=dict(self.environment), timeout_seconds=60,
+                cwd=repo_dir, environment=environment, timeout_seconds=60,
                 output_limit_bytes=DIAGNOSTIC_TAIL_BYTES)
         except asyncio.CancelledError as exc:
             # Python 3.11 timeouts require the base type; retain the owner's observation.

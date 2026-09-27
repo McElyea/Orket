@@ -149,7 +149,8 @@ async def read_approval_execution(*, transactions, publication, target):
                    if run.current_attempt_id is not None else None)
         truth = await transaction.records.get_final_truth(run_id=target)
         if validate_terminal_record_consistency(run, attempt, truth):
-            await require_resolved_tool_dispatches(transaction.execution, run, RuntimeError)
+            await require_resolved_tool_dispatches(
+                transaction.execution, transaction.records, run, RuntimeError)
             await require_turn_tool_resource_authority(
                 publication=ControlPlanePublicationService(repository=transaction.records, authority=publication.authority),
                 run=run, error_type=RuntimeError)

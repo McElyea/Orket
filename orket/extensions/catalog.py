@@ -12,7 +12,13 @@ from orket_extension_sdk.manifest import (
     validate_workload_manifest_payload,
 )
 
-from .models import CONTRACT_STYLE_LEGACY, ExtensionRecord, _ExtensionManifestEntry
+from .models import (
+    CONTRACT_STYLE_LEGACY,
+    CONTRACT_STYLE_SDK_V0,
+    ExtensionRecord,
+    _ExtensionManifestEntry,
+    normalize_sdk_optional_contract,
+)
 
 
 class ExtensionCatalog:
@@ -36,8 +42,11 @@ class ExtensionCatalog:
             extension_api_version = str(row.get("extension_api_version", "")).strip() or "1.0.0"
             path = str(row.get("path", "")).strip()
             module = str(row.get("module", "")).strip()
-            register_callable = str(row.get("register_callable", "")).strip() or "register"
             contract_style = str(row.get("contract_style", "")).strip() or CONTRACT_STYLE_LEGACY
+            register_callable = str(row.get("register_callable", "")).strip()
+            if not register_callable and contract_style != CONTRACT_STYLE_SDK_V0:
+                # Legacy and unknown styles retain their established callable fallback.
+                register_callable = "register"
             manifest_path = str(row.get("manifest_path", "")).strip()
             resolved_commit_sha = str(row.get("resolved_commit_sha", "")).strip()
             manifest_digest_sha256 = str(row.get("manifest_digest_sha256", "")).strip()
@@ -75,16 +84,25 @@ class ExtensionCatalog:
                 )
                 raw_agent_declaration = item.get("agent")
                 agent_declaration = dict(raw_agent_declaration) if isinstance(raw_agent_declaration, dict) else {}
+                entry_contract_style = str(item.get("contract_style", "")).strip() or contract_style
                 manifest_entries.append(
                     _ExtensionManifestEntry(
                         workload_id=workload_id,
                         workload_version=str(item.get("workload_version", "")).strip() or "0.0.0",
                         entrypoint=str(item.get("entrypoint", "")).strip(),
                         required_capabilities=required_capabilities,
-                        contract_style=str(item.get("contract_style", "")).strip() or contract_style,
+                        contract_style=entry_contract_style,
                         workload_kind=str(item.get("workload_kind", "generic")).strip() or "generic",
-                        input_contract=str(item.get("input_contract", "")).strip(),
-                        output_contract=str(item.get("output_contract", "")).strip(),
+                        input_contract=(
+                            normalize_sdk_optional_contract(item.get("input_contract"))
+                            if entry_contract_style == CONTRACT_STYLE_SDK_V0
+                            else str(item.get("input_contract", "")).strip()
+                        ),
+                        output_contract=(
+                            normalize_sdk_optional_contract(item.get("output_contract"))
+                            if entry_contract_style == CONTRACT_STYLE_SDK_V0
+                            else str(item.get("output_contract", "")).strip()
+                        ),
                         agent_declaration=agent_declaration,
                     )
                 )
@@ -212,6 +230,11 @@ class ExtensionCatalog:
                     "agent": validated["agent"],
                 }
             )
+        elif workload.contract_style == CONTRACT_STYLE_SDK_V0:
+            if workload.input_contract:
+                row["input_contract"] = workload.input_contract
+            if workload.output_contract:
+                row["output_contract"] = workload.output_contract
         return row
 
     @staticmethod

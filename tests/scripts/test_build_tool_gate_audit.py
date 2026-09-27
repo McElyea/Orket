@@ -10,7 +10,7 @@ from typing import Any
 
 import pytest
 
-import orket.logging as logging_module
+from orket.adapters.observability import log_publication as logging_owner
 from orket.extensions.runtime import ExtensionEngineAdapter
 from scripts.security import build_tool_gate_audit as audit_module
 
@@ -53,7 +53,7 @@ class _ObservedTemporaryDirectory:
             assert self._probe.write_finished.wait(WAIT_SECONDS), "Held runtime-event append did not finish"
         # Test-owned reclamation follows the recorded production boundary so
         # the opening failure cannot strand the real daemon or temporary root.
-        logging_module._log_write_queue.join()
+        logging_owner._log_write_queue.join()
         try:
             return self._owner.__exit__(exc_type, exc, traceback)
         finally:
@@ -62,7 +62,7 @@ class _ObservedTemporaryDirectory:
 
 def _install_settlement_probe(monkeypatch, tmp_path: Path) -> _AuditSettlementProbe:
     probe = _AuditSettlementProbe(caller_thread=threading.get_ident())
-    original_append = logging_module._append_line_sync
+    original_append = logging_owner._append_line_sync
     original_tempdir = audit_module.tempfile.TemporaryDirectory
 
     def held_append(path: Path, line: str) -> None:
@@ -94,7 +94,7 @@ def _install_settlement_probe(monkeypatch, tmp_path: Path) -> _AuditSettlementPr
         owner = original_tempdir(*args, dir=tmp_path, **options)
         return _ObservedTemporaryDirectory(owner, probe)
 
-    monkeypatch.setattr(logging_module, "_append_line_sync", held_append)
+    monkeypatch.setattr(logging_owner, "_append_line_sync", held_append)
     monkeypatch.setattr(audit_module.tempfile, "TemporaryDirectory", observed_tempdir)
     return probe
 
@@ -105,7 +105,7 @@ def _finish_probe(probe: _AuditSettlementProbe) -> None:
         timer.cancel()
         timer.join(WAIT_SECONDS)
         assert not timer.is_alive()
-    logging_module._log_write_queue.join()
+    logging_owner._log_write_queue.join()
 
 
 def _assert_probe_reclaimed(probe: _AuditSettlementProbe) -> None:

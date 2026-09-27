@@ -5,6 +5,29 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.106] - 2026-09-27
+
+### Fixed
+- Checkpoint the implemented ownership and catalog corrections with retained proof limits: five optional logging controls still fail, and complete candidate, quality and capability acceptance remain open.
+- Capture complete runtime construction inputs in one retained native operation and propagate the same object through CLI, API, driver, child and legacy extension routes.
+- Keep llama.cpp template reads owned through cancellation and native failure before admitting HTTP work.
+- Require resolved current-attempt tool steps to have matching effect-journal evidence before ordinary terminal authority advances, preserving checkpoint-backed blocked reconciliation for uncertain history.
+- Preserve original operation cancellation and first caller cancellation through shared I/O settlement without changing failure precedence or child interruption policy.
+- Preserve complete SDK extension metadata across catalog writes and reads, including absent and explicit generic contract references, while retaining strict agent admission and legacy defaults.
+- Resolve extension Git repository arguments inside the already captured checkout directory, preserving its location and avoiding the observed absolute Git-directory admission limit.
+- Capture required API event inputs without custom copy/conversion hooks before dispatch to the existing retained publication worker; reject unsupported programmatic values before logging effects.
+- Retain Gitea Git objects at their canonical cache path while observing usable existing Windows native names through the current native owner; refuse unavailable names before command dispatch.
+- Move existing logging queue, writer, failure, drop, directory and subscriber state together into one internal owner while preserving the public facade and existing native stage behavior.
+- Retain API log subscriptions until their captured event-queue handoffs settle, preserving peer application ownership and the existing append frontier; contract: `docs/architecture/CONTRACT_DELTA_API_LOG_HANDOFF_D_2026-09-25.md`.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `runtime embedders and extension consumers`
+- `migration_requirement`: `required`
+- Internal composition callers propagate the selected complete construction-input object; direct legacy selectors remain mutually exclusive with that object. Existing persisted catalog rows need no rewrite.
+- Extension checkout context and limits: `docs/architecture/CONTRACT_DELTA_EXTENSION_GIT_CHECKOUT_CONTEXT_D_2026-09-25.md`.
+- Gitea native path context and limits: `docs/architecture/CONTRACT_DELTA_GITEA_NATIVE_PATH_CONTEXT_D_2026-09-25.md`.
+- Required API event capture preserves plain JSON callers; programmatic custom values and non-finite numbers must be normalized by their caller. Contract: `docs/architecture/CONTRACT_DELTA_API_EVENT_INPUT_CAPTURE_D_2026-09-25.md`.
+- Contracts and migration: `docs/architecture/CONTRACT_DELTA_RUNTIME_CAPTURE_OWNER_D_2026-09-25.md`, `docs/architecture/CONTRACT_DELTA_ROUTE_INPUT_PROPAGATION_D_2026-09-25.md`, `docs/architecture/CONTRACT_DELTA_LLAMA_TEMPLATE_READ_OWNERSHIP_D_2026-09-25.md`, `docs/architecture/CONTRACT_DELTA_STEP_JOURNAL_CORRESPONDENCE_D_2026-09-25.md`, `docs/architecture/CONTRACT_DELTA_SHARED_CANCELLATION_D_2026-09-25.md`, and `docs/architecture/CONTRACT_DELTA_EXTENSION_CATALOG_REPRESENTATION_D_2026-09-25.md`.
+
 ## [0.6.105] - 2026-09-25
 
 ### Fixed

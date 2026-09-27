@@ -9,8 +9,9 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any
 
+from orket.adapters.execution.owned_io import run_owned_thread
 from orket.settings import (
-    capture_runtime_settings_async,
+    _collect_runtime_settings,
     load_user_preferences,
     load_user_settings,
     set_runtime_settings_context,
@@ -45,11 +46,21 @@ class RuntimeConstructionInputs:
         return json.loads(self.user_settings_json)
 
     @classmethod
-    async def capture_async(cls, *, environment: Mapping[str, str] | None = None) -> RuntimeConstructionInputs:
+    def _capture_native(
+        cls, environment: Mapping[str, str] | None, *, persisted_after_preferences: bool = False,
+    ) -> RuntimeConstructionInputs:
         root = Path.cwd()
         observed = dict(os.environ if environment is None else environment)
-        settings, preferences = await capture_runtime_settings_async()
+        settings, preferences = _collect_runtime_settings(
+            persisted_after_preferences=persisted_after_preferences)
         return cls(root, observed, json.dumps(settings, allow_nan=False), json.dumps(preferences, allow_nan=False))
+
+    @classmethod
+    async def capture_async(cls, *, environment: Mapping[str, str] | None = None) -> RuntimeConstructionInputs:
+        return await run_owned_thread(
+            lambda: cls._capture_native(environment),
+            label="runtime-construction-input-capture",
+        )
 
     def user_preferences(self) -> dict[str, Any]:
         if self.user_preferences_json is None:

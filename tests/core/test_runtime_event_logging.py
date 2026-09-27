@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 import orket.logging as logging_module
+from orket.adapters.observability import log_publication as logging_owner
 from orket.logging import get_member_metrics, log_event
 
 FRONTIER_WAIT_SECONDS = 5
@@ -141,16 +142,16 @@ def test_log_event_routes_legacy_level_through_stdlib_logger(tmp_path: Path, mon
 
 def test_log_write_queue_drops_when_full_without_blocking_event_loop(tmp_path: Path, monkeypatch) -> None:
     """Layer: unit. Verifies async-reachable log writes use bounded lossy backpressure."""
-    monkeypatch.setattr(logging_module, "_log_write_queue", queue.Queue(maxsize=1))
-    monkeypatch.setattr(logging_module, "_dropped_log_entries", 0)
-    monkeypatch.setattr(logging_module, "_start_log_writer", lambda: None)
-    monkeypatch.setattr(logging_module, "_running_on_event_loop", lambda: True)
+    monkeypatch.setattr(logging_owner, "_log_write_queue", queue.Queue(maxsize=1))
+    monkeypatch.setattr(logging_owner, "_dropped_log_entries", 0)
+    monkeypatch.setattr(logging_owner, "_start_log_writer", lambda: None)
+    monkeypatch.setattr(logging_owner, "_running_on_event_loop", lambda: True)
 
     log_path = tmp_path / "orket.log"
-    logging_module._append_json_record(log_path, {"event": "queued"})
-    logging_module._append_json_record(log_path, {"event": "dropped"})
+    logging_owner._append_json_record(log_path, {"event": "queued"})
+    logging_owner._append_json_record(log_path, {"event": "dropped"})
 
-    assert logging_module._log_write_queue.qsize() == 1
+    assert logging_owner._log_write_queue.qsize() == 1
     assert logging_module.dropped_log_entry_count() == 1
     assert not log_path.exists()
 
@@ -173,14 +174,14 @@ def test_log_write_frontier_excludes_later_unrelated_append(tmp_path: Path, monk
     """Layer: integration. A captured FIFO frontier settles prior appends without waiting for later work."""
     settle = getattr(logging_module, "settle_log_write_frontier", None)
     assert callable(settle), "The native logging owner must expose settle_log_write_frontier"
-    logging_module._log_write_queue.join()
+    logging_owner._log_write_queue.join()
     first = tmp_path / "first.log"
     later = tmp_path / "later.log"
     first_entered, release_first, first_finished = threading.Event(), threading.Event(), threading.Event()
     later_entered, release_later, later_finished = threading.Event(), threading.Event(), threading.Event()
     frontier_admitted, frontier_finished = threading.Event(), threading.Event()
-    original_append = logging_module._append_line_sync
-    original_put = logging_module._log_write_queue.put
+    original_append = logging_owner._append_line_sync
+    original_put = logging_owner._log_write_queue.put
     settler_threads: list[int] = []
     errors: list[BaseException] = []
     excluded_later = False
@@ -213,10 +214,10 @@ def test_log_write_frontier_excludes_later_unrelated_append(tmp_path: Path, monk
             frontier_finished.set()
 
     async def admit(path: Path, event: str) -> None:
-        logging_module._append_json_record(path, {"event": event})
+        logging_owner._append_json_record(path, {"event": event})
 
-    monkeypatch.setattr(logging_module, "_append_line_sync", held_append)
-    monkeypatch.setattr(logging_module._log_write_queue, "put", observed_put)
+    monkeypatch.setattr(logging_owner, "_append_line_sync", held_append)
+    monkeypatch.setattr(logging_owner._log_write_queue, "put", observed_put)
     asyncio.run(admit(first, "before-frontier"))
     assert first_entered.wait(FRONTIER_WAIT_SECONDS)
     owner = threading.Thread(target=settle_frontier, name="fixture-log-frontier-owner")
@@ -232,7 +233,7 @@ def test_log_write_frontier_excludes_later_unrelated_append(tmp_path: Path, monk
         release_first.set()
         release_later.set()
         owner.join(FRONTIER_WAIT_SECONDS)
-        logging_module._log_write_queue.join()
+        logging_owner._log_write_queue.join()
 
     assert not owner.is_alive() and not errors
     _assert_frontier_observation(first, later, excluded_later, record_property)

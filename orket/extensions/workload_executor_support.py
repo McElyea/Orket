@@ -11,6 +11,7 @@ from orket.application.services.extension_workload_control_plane_service import 
     ExtensionWorkloadControlPlaneService,
     ExtensionWorkloadControlPlaneStart,
 )
+from orket.application.services.runtime_construction_inputs import RuntimeConstructionInputs
 from orket.core.contracts.interaction_stream import StreamEventType
 from orket.core.domain import AuthoritySourceClass, ResultClass
 
@@ -47,11 +48,13 @@ async def execute_plan_actions(
     workspace: Path,
     department: str,
     interaction_context: Any | None,
+    construction_inputs: RuntimeConstructionInputs | None = None,
 ) -> dict[str, Any]:
     run_plan = deepcopy(run_plan)
     action_results: list[dict[str, Any]] = []
     context = RunContext(workspace=workspace, department=department)
-    owner = ExtensionEngineAdapter.open(context) if run_plan.actions else nullcontext(None)
+    owner = (ExtensionEngineAdapter.open(context, construction_inputs=construction_inputs)
+             if run_plan.actions else nullcontext(None))
     async with owner as adapter:
         if interaction_context is not None:
             await emit_default_model_events(interaction_context, sdk=False)

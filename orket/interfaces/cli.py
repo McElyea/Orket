@@ -23,7 +23,7 @@ from orket.application.services.runtime_inspection_service import (
 from orket.application.services.runtime_result_lifetime import (
     close_runtime_owner,
     create_runtime_owner,
-    open_runtime_owner,
+    open_async_runtime_owner,
 )
 from orket.application.services.runtime_result_projection import runtime_result_exit_code, runtime_result_lines
 from orket.discovery import perform_first_run_setup, print_orket_manifest, run_startup_checks
@@ -67,11 +67,13 @@ async def _install_extension(args: argparse.Namespace, manager: ExtensionManager
             print(f"- {workload.workload_id} ({workload.workload_version})")
 
 
-async def _run_extension_workload(args: argparse.Namespace, manager: ExtensionManager) -> None:
+async def _run_extension_workload(
+    args: argparse.Namespace, manager: ExtensionManager, *, invocation_root: Path,
+) -> None:
     workload_id = (args.subcommand or "").strip()
     if not workload_id:
         raise ValueError("run command requires a workload id (e.g. 'orket runtime run mystery_v1 --seed 123').")
-    workspace = await _resolve_path(args.workspace)
+    workspace = await _resolve_path(args.workspace, invocation_root=invocation_root)
     result = await manager.run_workload(
         workload_id=workload_id,
         input_config={"seed": args.seed},
@@ -109,6 +111,35 @@ def _emit_startup_status(startup_status: dict[str, str] | None) -> None:
         print("[STARTUP WARNING] Structural reconciliation failed; continuing in degraded mode.", file=sys.stderr)
 
 
+async def _prepare_cli_runtime(
+    argv: list[str] | None, prog: str | None,
+) -> tuple[argparse.Namespace, ExtensionManager, RuntimeConstructionInputs]:
+    status, inputs = await run_startup_checks(perform_first_run_setup)
+    inputs.bind_settings()
+    _emit_startup_status(status)
+    args = parse_args() if argv is None and prog is None else parse_args(argv, prog=prog)
+    manager = await prepare_extension_manager(construction_inputs=inputs)
+    return args, manager, inputs
+
+
+def _protocol_request(
+    args: argparse.Namespace, workspace: Path, inputs: RuntimeConstructionInputs,
+) -> ProtocolCommand:
+    return ProtocolCommand(
+        action=str(args.subcommand or ""), workspace=workspace,
+        invocation_root=inputs.invocation_root, run_a=str(args.target or "").strip(),
+        run_b=str(args.protocol_run_b or "").strip(), events_a=args.protocol_events_a,
+        events_b=args.protocol_events_b, artifacts_a=args.protocol_artifacts_a,
+        artifacts_b=args.protocol_artifacts_b, runs_root=args.protocol_runs_root,
+        campaign_run_ids=tuple(args.protocol_campaign_run_id or ()),
+        baseline_run_id=args.protocol_baseline_run_id,
+        parity_session_ids=tuple(args.protocol_parity_session_id or ()),
+        discover_limit=int(args.protocol_parity_discover_limit),
+        sqlite_db=args.protocol_sqlite_db, strict=bool(args.protocol_strict),
+        max_parity_mismatches=int(args.protocol_max_parity_mismatches),
+    )
+
+
 async def run_cli(argv: list[str] | None = None, *, prog: str | None = None) -> int:
     if sys.platform == "win32":
         sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
@@ -116,10 +147,7 @@ async def run_cli(argv: list[str] | None = None, *, prog: str | None = None) -> 
 
     engine = None
     try:
-        startup_status = await run_startup_checks(perform_first_run_setup)
-        _emit_startup_status(startup_status)
-        args = parse_args() if argv is None and prog is None else parse_args(argv, prog=prog)
-        extension_manager = await prepare_extension_manager()
+        args, extension_manager, construction_inputs = await _prepare_cli_runtime(argv, prog)
 
         if args.command == "extensions":
             if args.subcommand == "list":
@@ -134,7 +162,8 @@ async def run_cli(argv: list[str] | None = None, *, prog: str | None = None) -> 
             )
 
         if args.command == "run":
-            await _run_extension_workload(args, extension_manager)
+            await _run_extension_workload(
+                args, extension_manager, invocation_root=construction_inputs.invocation_root)
             return 0
 
         if args.command == "marshaller":
@@ -145,7 +174,8 @@ async def run_cli(argv: list[str] | None = None, *, prog: str | None = None) -> 
                 list_marshaller_runs,
             )
 
-            workspace_root = await _resolve_path()
+            workspace_root = await _resolve_path(
+                invocation_root=construction_inputs.invocation_root)
             if args.subcommand == "list":
                 result = await list_marshaller_runs(workspace_root, limit=max(1, int(args.marshaller_list_limit)))
                 print(json.dumps(result, indent=2, ensure_ascii=False))
@@ -170,10 +200,14 @@ async def run_cli(argv: list[str] | None = None, *, prog: str | None = None) -> 
                 raise ValueError("marshaller command requires --marshaller-request <path>.")
             if not args.marshaller_proposal:
                 raise ValueError("marshaller command requires at least one --marshaller-proposal <path>.")
-            proposal_paths = [await _resolve_path(str(item)) for item in args.marshaller_proposal]
+            proposal_paths = [
+                await _resolve_path(str(item), invocation_root=construction_inputs.invocation_root)
+                for item in args.marshaller_proposal
+            ]
             execution_result = await execute_marshaller_from_files(
                 workspace_root=workspace_root,
-                run_request_path=await _resolve_path(request_raw),
+                run_request_path=await _resolve_path(
+                    request_raw, invocation_root=construction_inputs.invocation_root),
                 proposal_paths=proposal_paths,
                 run_id=str(args.marshaller_run_id or default_run_id()).strip(),
                 allowed_paths=list(args.marshaller_allow_path or []),
@@ -186,31 +220,15 @@ async def run_cli(argv: list[str] | None = None, *, prog: str | None = None) -> 
             return 0
 
         if args.command == "protocol":
-            result = await execute_protocol_command(ProtocolCommand(
-                action=str(args.subcommand or ""),
-                workspace=Path(args.workspace),
-                invocation_root=Path.cwd(),
-                run_a=str(args.target or "").strip(),
-                run_b=str(args.protocol_run_b or "").strip(),
-                events_a=args.protocol_events_a,
-                events_b=args.protocol_events_b,
-                artifacts_a=args.protocol_artifacts_a,
-                artifacts_b=args.protocol_artifacts_b,
-                runs_root=args.protocol_runs_root,
-                campaign_run_ids=tuple(args.protocol_campaign_run_id or ()),
-                baseline_run_id=args.protocol_baseline_run_id,
-                parity_session_ids=tuple(args.protocol_parity_session_id or ()),
-                discover_limit=int(args.protocol_parity_discover_limit),
-                sqlite_db=args.protocol_sqlite_db,
-                strict=bool(args.protocol_strict),
-                max_parity_mismatches=int(args.protocol_max_parity_mismatches),
-            ))
+            protocol_workspace = await _resolve_path(
+                args.workspace, invocation_root=construction_inputs.invocation_root)
+            result = await execute_protocol_command(
+                _protocol_request(args, protocol_workspace, construction_inputs))
             print(json.dumps(result.payload, indent=2, ensure_ascii=False))
             if result.strict_failure:
                 raise ValueError(result.strict_failure)
             return 0
 
-        construction_inputs = await RuntimeConstructionInputs.capture_async()
         workspace = await _resolve_path(args.workspace, invocation_root=construction_inputs.invocation_root)
         engine = await create_runtime_owner(
             partial(OrchestrationEngine, workspace, args.department, construction_inputs=construction_inputs),
@@ -223,7 +241,8 @@ async def run_cli(argv: list[str] | None = None, *, prog: str | None = None) -> 
         if args.loop:
             from orket.organization_loop import OrganizationLoop
 
-            await (await OrganizationLoop.create()).run_forever()
+            await (await OrganizationLoop.create(
+                construction_inputs=construction_inputs)).run_forever()
             return 0
 
         if args.archive_card or args.archive_build or args.archive_related:
@@ -284,9 +303,11 @@ async def run_cli(argv: list[str] | None = None, *, prog: str | None = None) -> 
             from orket.driver import OrketDriver
 
             print(f"\n{'=' * 60}\n ORKET DRIVER (Interactive)\n{'=' * 60}")
-            construct = partial(OrketDriver, model=args.model, project_root=construction_inputs.invocation_root,
-                                environment=construction_inputs.environment)
-            async with open_runtime_owner(construct, label="interactive-driver-construction") as driver:
+            construct = partial(
+                OrketDriver.create, model=args.model,
+                project_root=construction_inputs.invocation_root,
+                construction_inputs=construction_inputs)
+            async with open_async_runtime_owner(construct) as driver:
                 while True:
                     user_input = await read_console_line("Driver> ")
                     if user_input is None or user_input.lower() in ["exit", "quit", "q"]:

@@ -19,6 +19,7 @@ import psutil
 import orket.core.runtime_event as runtime_event_module
 import orket.extensions.runtime as extension_runtime_module
 import orket.logging as logging_module
+from orket.adapters.observability import log_publication as logging_owner
 from orket.extensions.runtime import ExtensionEngineAdapter
 from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
 from scripts.security import build_tool_gate_audit as audit_module
@@ -134,7 +135,7 @@ def _install_temp_owner(probe: _Probe, root: Path) -> None:
 
 
 def _install_fatal_append(probe: _Probe) -> None:
-    original = logging_module._append_line_sync
+    original = logging_owner._append_line_sync
 
     def fatal_append(path: Path, line: str) -> None:
         target = None
@@ -151,7 +152,7 @@ def _install_fatal_append(probe: _Probe) -> None:
                 raise failure
         original(path, line)
 
-    logging_module._append_line_sync = fatal_append
+    logging_owner._append_line_sync = fatal_append
 
 
 def _raise_close_failure(probe: _Probe) -> None:
@@ -202,7 +203,7 @@ def _install_settlement_observer(probe: _Probe) -> None:
             original()
         except BaseException as exc:
             probe.settlement_error = _error_data(exc)
-            probe.settlement_cause_is_writer_failure = exc.__cause__ is logging_module._log_writer_failure
+            probe.settlement_cause_is_writer_failure = exc.__cause__ is logging_owner._log_writer_failure
             probe.sequence.append("settlement-error")
             raise
         finally:
@@ -263,7 +264,7 @@ def _build_report(
     second_settlement: dict[str, Any],
     writer_after_second: threading.Thread | None,
 ) -> dict[str, Any]:
-    writer_failure = logging_module._log_writer_failure
+    writer_failure = logging_owner._log_writer_failure
     report_path = root / "probe-report.json"
     return {
         "schema_version": "audit_double_failure_probe.v1",
@@ -331,14 +332,14 @@ def _run(root: Path, scenario: str) -> dict[str, Any]:
     original_hook = _install_thread_observer(probe)
     try:
         audit_exit_code, outward, audit_stdout = _invoke_audit(output, scenario, probe)
-        writer = logging_module._log_writer_thread
+        writer = logging_owner._log_writer_thread
         if writer is not None:
             writer.join(WAIT_SECONDS)
     finally:
         threading.excepthook = original_hook
-    writer_after_audit = logging_module._log_writer_thread
+    writer_after_audit = logging_owner._log_writer_thread
     second_settlement = _capture_settlement()
-    writer_after_second = logging_module._log_writer_thread
+    writer_after_second = logging_owner._log_writer_thread
     execution = {
         "audit_exit_code": audit_exit_code,
         "outward": outward,

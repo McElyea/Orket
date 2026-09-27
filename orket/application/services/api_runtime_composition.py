@@ -62,8 +62,8 @@ def build_api_runtime_container(
         connector_registry=DEFAULT_BUILTIN_CONNECTOR_REGISTRY,
         utc_now=runtime_host.utc_now_iso,
     )
-    extension_manager = ExtensionManager(project_root=root, environment=environment,
-        invocation_root=construction_inputs.invocation_root)
+    extension_manager = ExtensionManager(project_root=root,
+        construction_inputs=construction_inputs)
     engine = _own(runtime_host.create_engine(runtime_node.resolve_api_workspace(root)), own_resource)
     interactions = _own(_build_interaction_manager(root, stream_bus, runtime_state, runtime_host, environment), own_resource)
     extensions = _own(ExtensionRuntimeService(project_root=root, environment=environment), own_resource)

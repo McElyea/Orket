@@ -11,7 +11,7 @@ from orket.application.services.governed_agent_admission import validate_governe
 from orket_extension_sdk.manifest import ExtensionManifest
 
 from .catalog import ExtensionCatalog
-from .git_commands import resolve_commit, run_git
+from .git_commands import CHECKOUT_ARGUMENTS, resolve_commit, run_git
 from .manifest_parser import ManifestParser
 from .models import CONTRACT_STYLE_SDK_V0, ExtensionRecord
 from .source_policy import SourcePolicyDecision, evaluate_source_policy
@@ -28,8 +28,8 @@ async def install_extension(*, repo: str, ref: str, install_root: Path, project_
     await run_git(["clone", "--", repo, str(destination)], cwd=project_root,
                   environment=environment, timeout_seconds=120, code="E_EXT_CLONE_FAILED")
     commit = await resolve_commit(destination, ref, environment=environment)
-    await run_git([f"--git-dir={destination / '.git'}", f"--work-tree={destination}",
-                   "checkout", "--detach", commit], cwd=destination, environment=environment)
+    await run_git([*CHECKOUT_ARGUMENTS, "checkout", "--detach", commit],
+                  cwd=destination, environment=environment)
     record = await run_owned_thread(partial(
         _admit_checkout, parser=parser, destination=destination, repo=repo, ref=ref,
         commit=commit, policy=policy, installed_at_utc=installed_at_utc), label="extension-manifest-admission")

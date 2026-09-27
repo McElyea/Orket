@@ -46,11 +46,11 @@ class WorkloadExecutor:
     def __init__(
         self,
         *,
-        project_root: Path,
+        project_root: Path, construction_inputs: Any | None = None,
         reproducibility: ReproducibilityEnforcer,
         registry_factory: Callable[[], ExtensionRegistry], utc_now: Callable[[], str] = utc_now_iso,
     ) -> None:
-        self.loader, self._utc_now = WorkloadLoader(registry_factory), utc_now
+        self.loader, self._utc_now, self._construction_inputs = WorkloadLoader(registry_factory), utc_now, construction_inputs
         self.artifacts = WorkloadArtifacts(project_root, reproducibility)
         self.control_plane = build_extension_workload_control_plane_service(project_root=project_root, utc_now=utc_now)
 
@@ -102,7 +102,7 @@ class WorkloadExecutor:
                 run_plan=run_plan,
                 workspace=workspace,
                 department=department,
-                interaction_context=interaction_context,
+                interaction_context=interaction_context, construction_inputs=self._construction_inputs,
             )
             validation_errors = await run_owned_thread(
                 partial(self.artifacts.run_validators, loaded_workload, run_result, artifact_root),

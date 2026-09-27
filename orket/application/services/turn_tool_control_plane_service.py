@@ -102,7 +102,8 @@ class TurnToolControlPlaneService:
         proposal_hash: str, violation_reasons: list[str],
     ) -> tuple[RunRecord, FinalTruthRecord]:
         run = await self._ensure_admission_pending_run(session_id=session_id, issue_id=issue_id, role_name=role_name, turn_index=turn_index, proposal_hash=proposal_hash)
-        await require_resolved_tool_dispatches(self.execution_repository, run, TurnToolControlPlaneError)
+        await require_resolved_tool_dispatches(
+            self.execution_repository, self.publication.repository, run, TurnToolControlPlaneError)
         existing_truth = await self.publication.repository.get_final_truth(run_id=run.run_id)
         current_attempt = await self._current_attempt_for_run(run=run)
         if validate_terminal_record_consistency(run, current_attempt, existing_truth):
@@ -182,6 +183,7 @@ class TurnToolControlPlaneService:
             publication=self.publication,
             run=run,
             error_type=TurnToolControlPlaneError,
+            resume_mode=resume_mode,
         )
         if existing_truth is not None:
             attempt = await self._current_attempt_for_run(run=run)
@@ -328,6 +330,7 @@ class TurnToolControlPlaneService:
         issue_id: str,
         role_name: str,
         turn_index: int,
+        resume_mode: bool = False,
     ) -> None:
         run_id = run_id_for(session_id=session_id, issue_id=issue_id, role_name=role_name, turn_index=turn_index)
         run = await self.execution_repository.get_run_record(run_id=run_id)
@@ -338,6 +341,7 @@ class TurnToolControlPlaneService:
             publication=self.publication,
             run=run,
             error_type=TurnToolControlPlaneError,
+            resume_mode=resume_mode,
         )
 
     async def _ensure_attempt(self, *, run: RunRecord) -> AttemptRecord:

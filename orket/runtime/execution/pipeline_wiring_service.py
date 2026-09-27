@@ -104,11 +104,12 @@ class PipelineWiringService:
         )
 
     async def prepare_sub_pipeline(self, *, parent_pipeline: Any, epic_workspace: Any, department: str) -> Callable[[], Any]:
+        inputs = self._selected_inputs(parent_pipeline.runtime_context.construction_inputs)
+        if inputs is None:
+            raise RuntimeError("E_CHILD_PIPELINE_CONSTRUCTION_INPUTS_REQUIRED")
         pipeline_type = parent_pipeline.__class__
         arguments = dict(db_path=parent_pipeline.db_path, config_root=parent_pipeline.config_root,
                          decision_nodes=parent_pipeline.decision_nodes, runtime_inputs=parent_pipeline.runtime_inputs)
-        inputs = parent_pipeline.runtime_context.construction_inputs
-        inputs = inputs if inputs is not None else await RuntimeConstructionInputs.capture_async()
         return partial(
             pipeline_type,
             epic_workspace,

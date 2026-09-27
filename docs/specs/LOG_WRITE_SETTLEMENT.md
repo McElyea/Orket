@@ -1,6 +1,16 @@
 # Optional log-write settlement
 
-Owner: Orket Core. Implementation: `orket/logging.py`.
+Owner: Orket Core. Public facade: `orket/logging.py`. The single process-global
+queue, writer, failure, drop, directory and subscriber state lives in
+`orket/adapters/observability/log_publication.py`.
+
+The v0.6.106 internal extraction preserves existing public functions and native
+stage bodies. Private observation seams belong to that owner; there are no
+forwarding state aliases in the facade. This extraction does not itself repair
+optional caller-loop work, capture inputs, prepare logging or drain API handoffs.
+The subsequent API registration drain shares this owner and its condition but
+has a separate cutoff and acknowledgement protocol; it does not expand the
+append frontier. See `docs/architecture/CONTRACT_DELTA_API_LOG_HANDOFF_D_2026-09-25.md`.
 
 ## Authority and admission
 

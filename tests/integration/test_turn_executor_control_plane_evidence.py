@@ -27,8 +27,10 @@ from orket.core.domain.control_plane_effect_journal import create_effect_journal
 from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.core.domain.state_machine import StateMachine
 from orket.schema import CardStatus, IssueConfig, RoleConfig
+from tests.helpers.step_journal_opening import remove_journal
 from tests.helpers.turn_artifacts import artifact_destination, artifact_test_utc_now, write_checkpoint_fixture
 from tests.helpers.turn_control_plane_clock import deterministic_turn_clock as deterministic_turn_clock
+from tests.integration.test_governed_agent_terminal_history import logical_state
 
 pytestmark = [pytest.mark.integration, pytest.mark.usefixtures("deterministic_turn_clock")]
 
@@ -209,21 +211,36 @@ async def _seed_completed_run_without_effect(tmp_path: Path):
         closure_classification="step_completed",
     )
     await control_plane.execution_repository.save_step_record(record=step)
+    effect = create_effect_journal_entry(
+        journal_entry_id=f"turn-tool-journal:{operation_id}", effect_id=f"turn-tool-effect:{operation_id}",
+        run_id=run.run_id, attempt_id=attempt.attempt_id, step_id=step.step_id,
+        authorization_basis_ref=f"turn-tool-authorization:{tool_call_digest}",
+        publication_timestamp="2026-03-24T00:00:00+00:00", intended_target_ref="tool:write_file",
+        observed_result_ref=step.output_ref,
+        uncertainty_classification=ResidualUncertaintyClassification.NONE,
+        integrity_verification_ref=f"turn-tool-operation:{operation_id}",
+    )
+    await control_plane.publication.repository.append_effect_journal_entry(run_id=run.run_id, entry=effect)
     await _mark_completed_success(control_plane, run, attempt, authoritative_result_ref=step.output_ref or operation_id)
+    # Damage retained history after valid finalization; normal closeout must never manufacture this state.
+    await remove_journal(tmp_path / "control_plane.sqlite3", journal_id=effect.journal_entry_id,
+                         run_id=run.run_id, attempt_id=attempt.attempt_id, step_id=step.step_id)
     return control_plane, executor, step, tool_args
 
 
 @pytest.mark.asyncio
 async def test_completed_governed_reentry_requires_effect_journal_truth(tmp_path: Path) -> None:
-    _control_plane, executor, _step, _tool_args = await _seed_completed_run_without_effect(tmp_path)
+    control_plane, executor, _step, _tool_args = await _seed_completed_run_without_effect(tmp_path)
     model = _Model()
     toolbox = _Toolbox()
 
+    before = await logical_state(control_plane.execution_repository.db_path)
     result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
+    assert await logical_state(control_plane.execution_repository.db_path) == before
 
     assert result.success is False
     assert result.error is not None
-    assert "durable effect truth does not match checkpoint tool plan" in result.error
+    assert "is missing matching effect journal" in result.error
     assert model.calls == 0
     assert toolbox.calls == 0
 
@@ -249,7 +266,9 @@ async def test_completed_governed_reentry_requires_effect_alignment_with_step_tr
     model = _Model()
     toolbox = _Toolbox()
 
+    before = await logical_state(control_plane.execution_repository.db_path)
     result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
+    assert await logical_state(control_plane.execution_repository.db_path) == before
 
     assert step.output_ref == f"turn-tool-result:{operation_id}"
     assert result.success is False

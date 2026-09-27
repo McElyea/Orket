@@ -1,6 +1,119 @@
 # CURRENT_AUTHORITY.md
 
-Last updated: 2026-09-25
+Last updated: 2026-09-27
+
+The user-requested 0.6.106 branch checkpoint preserves the implemented corrections
+and their open acceptance obligations. Fresh Windows Python 3.11 source proof on
+September 27 passes the 96 API handoff/logging guards; the separate optional logging
+opening still has five failures and one native pass. Changed-file Ruff, dependency
+policy, docs hygiene and version alignment pass; full `orket tests` Ruff retains
+88 findings. Full successor source/installed, Linux application and broader D/E/CAP
+acceptance remain open. A commit or version tag is not completion of those gates.
+
+The logging candidate now holds its existing queue, daemon, failure, drop,
+directory and subscriber state together in
+`orket/adapters/observability/log_publication.py`; `orket/logging.py` remains the
+public facade. The extraction's 84 source guards pass, with four initial fixture
+failures retained. A subsequent candidate change captures subscriber registrations
+before native stages and drains each API registration through its already-issued
+handoff tokens. Four source opening cases reached premature close and lost queue
+attempts; the corrected 96-case selection passes in fresh source and installed
+Windows Python 3.11/3.12, including failed-stage token settlement and all 84
+extraction guards. Physical readback, 977 origins per installed cell, exact package
+parity and owner settlement pass. Both intervening harness failures are retained.
+The five optional logging defects,
+preparation and required-producer migration remain open. Installed and full
+successor proof remain required for the full candidate. Contracts: `docs/specs/LOG_WRITE_SETTLEMENT.md`
+and `docs/architecture/CONTRACT_DELTA_API_LOG_HANDOFF_D_2026-09-25.md`.
+
+Complete asynchronous runtime-input capture uses one retained native operation
+for root/environment selection, independent settings/preference collection,
+serialization and immutable construction. Default selection occurs when that
+worker executes; explicit objects retain their earlier selection. Bound values,
+including empty objects, remain authoritative. Existing settings migration and
+native failure/cancellation ownership remain with their current owners.
+Contracts: `docs/specs/SETTINGS_INPUT_OWNERSHIP.md` and
+`docs/architecture/CONTRACT_DELTA_RUNTIME_CAPTURE_OWNER_D_2026-09-25.md`.
+This is the 0.6.106 branch checkpoint; the plan records retained opening and
+closing observations. Canonical CLI/API/driver/child/legacy propagation now uses
+the same selected object; its selected 120-case source closing passed. The fresh
+395-module source campaign passed all 3,770 cases. Installed acceptance remains
+open after 55 Git-backed failures in the full Windows Python 3.11 cohort; the
+full Python 3.12 cohort was not run. The separate extension correction below
+has narrower source and installed proof.
+Published 0.6.105 is the retained baseline. Startup refresh, child precedence,
+exclusive selectors, default timing and existing close/error ownership are in
+`docs/architecture/CONTRACT_DELTA_ROUTE_INPUT_PROPAGATION_D_2026-09-25.md`.
+
+Extension Git reference resolution and detached checkout now select `.git` and
+`.` relative to the same captured checkout working directory. The 200- and
+217-character source installation controls pass after retaining the original
+longer-path failure. No checkout or catalog location changes. The 60-case affected
+cohort passes fresh source and both installed Windows Python 3.11/3.12 cells,
+including all 36 earlier extension failures. The canonical plan binds physical
+readback and preserves the separate 19 Gitea failures. Full successor acceptance
+remains required; the Gitea correction has the separate scoped proof below.
+Contract:
+`docs/architecture/CONTRACT_DELTA_EXTENSION_GIT_CHECKOUT_CONTEXT_D_2026-09-25.md`.
+
+The Gitea candidate retains its canonical repository and objects while supplying
+existing Windows native names when bootstrap/configuration paths require them.
+Name observation runs through the existing native owner; unusable names refuse
+before Git admission. Command inputs are captured before that await, and the
+original cwd, supervisor and budgets remain. All 71 affected cases pass in fresh
+source and installed Windows Python 3.11/3.12, including the four boundaries,
+native lifetime/admission controls and all 19 earlier installed failure identities.
+The canonical plan binds physical objects, SQLite, package and owner observations.
+Remote Gitea, Linux and complete .106 acceptance are not established by this cohort.
+Contract: `docs/architecture/CONTRACT_DELTA_GITEA_NATIVE_PATH_CONTEXT_D_2026-09-25.md`.
+
+The selected llama.cpp text-template read uses the existing native I/O owner
+through repeated cancellation and native failure. Interrupted reads settle before
+HTTP admission; render identity, token accounting and provider selection remain.
+Contract: `docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md`; migration:
+`docs/architecture/CONTRACT_DELTA_LLAMA_TEMPLATE_READ_OWNERSHIP_D_2026-09-25.md`.
+The plan separates local file-lifetime proof from actual provider acceptance.
+
+The existing governed-turn state gate requires every resolved current-attempt
+tool step to have an effect journal matching run, attempt and step before ordinary
+execution, terminal publication or success reuse. Explicit accepted-checkpoint
+resume retains blocked reconciliation for orphan-step uncertainty; it cannot
+continue execution or synthesize journals. Unresolved
+dispatch still refuses first; explicit or inferred counts cannot bypass the
+correspondence check. Existing repositories, transactions and resource owners
+remain authoritative. Journal-only same-attempt evidence retains its post-effect
+floor, and distinct step/operation identifiers remain valid. Contract:
+`docs/specs/CONTROL_PLANE_TERMINAL_AUTHORITY.md`; migration:
+`docs/architecture/CONTRACT_DELTA_STEP_JOURNAL_CORRESPONDENCE_D_2026-09-25.md`.
+The first full .106 source run retained 3,745 passes and four failures. Corrected
+reconciliation admission and historical fixtures passed 156 focused source cases,
+including embedded replay. The successor full source campaign passed all 3,770
+cases; its first installed Windows cell retained 3,715 passes and 55 failures.
+Those failures concern Git initialization/reference resolution, not an accepted
+installed result. The plan retains all earlier observations and ended environments.
+
+The shared I/O owner retains the original operation cancellation after settlement
+and the first caller cancellation through repeated interruption. Factory timing,
+coroutine admission, optional one-time child interruption and existing failure
+precedence remain. Contract: `docs/specs/SHARED_IO_CANCELLATION.md`; migration:
+`docs/architecture/CONTRACT_DELTA_SHARED_CANCELLATION_D_2026-09-25.md`.
+The five focused and 85 consumer source cases and the successor full source
+campaign passed; installed CPython 3.11/3.12 candidate acceptance remains required.
+
+SDK manifest/catalog conversion shares one null-only optional-contract normalizer;
+SDK listing no longer invents a legacy register default. Non-null values, explicit
+callables, legacy styles, agent validation and digest formats retain their
+authorities. Contract: `docs/specs/EXTENSION_CATALOG_REPRESENTATION.md`; migration:
+`docs/architecture/CONTRACT_DELTA_EXTENSION_CATALOG_REPRESENTATION_D_2026-09-25.md`.
+The three-field opening and 36-case source closing are retained. A separate
+14-case opening reached loss of valid explicit generic references. The writer
+now preserves each nonempty SDK reference after strict agent discrimination.
+The 37-case focused source closing and 73-case cohort with both null and explicit
+real Git install/restart profiles passed. Full source and installed acceptance
+remain open.
+Both canonical Quality jobs include the affected construction, cancellation and
+catalog modules in `Enforce construction, cancellation and catalog ownership`.
+This selection is CI configuration, not an observed CI or installed pass.
 
 Packet-1 start and closeout callbacks share the construction-input object selected
 when the epic owner is built. Operation-record consumers share strict identity,
@@ -606,7 +719,18 @@ Migration and recovery limits:
 
 API hardware observations and event publication run in application-owned workers
 retained through request interruption and shutdown. Events capture the selected
-root and nested payload before dispatch. Extension model catalogs capture provider
+root and nested payload before dispatch. API event capture now admits exact
+built-in names and finite JSON-compatible payloads through the pure shared
+`log_event_inputs` contract, without caller-loop `deepcopy` or custom hooks.
+Unsupported values refuse before worker/handler/file/subscriber effects;
+optional logging remains a separate obligation; subscriber drain now follows
+`docs/architecture/CONTRACT_DELTA_API_LOG_HANDOFF_D_2026-09-25.md`. Capture migration:
+`docs/architecture/CONTRACT_DELTA_API_EVENT_INPUT_CAPTURE_D_2026-09-25.md`.
+The 51-case affected selection passes fresh source and installed Windows
+Python 3.11/3.12 with physical readback; broader logging and full .106 acceptance
+remain open. A fresh 240-second Linux clock observation failed to obtain 60
+synchronized quiet seconds; the plan retains its exact samples and blocker.
+Extension model catalogs capture provider
 settings per application and use the admitted identity in failure responses.
 Migration and remaining observation limits:
 `docs/architecture/CONTRACT_DELTA_API_OBSERVATIONS_CD_2026-09-19.md`.

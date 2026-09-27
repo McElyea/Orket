@@ -13,6 +13,7 @@ from orket.adapters.storage.extension_install_store import sha256_file
 from orket.application.services.control_plane_workload_catalog import (
     _resolve_extension_control_plane_workload,
 )
+from orket.application.services.runtime_construction_inputs import RuntimeConstructionInputs
 from orket.runtime_paths import durable_root
 from orket_extension_sdk.capabilities import CapabilityRegistry
 
@@ -65,10 +66,19 @@ class ExtensionManager:
 
     def __init__(self, catalog_path: Path | None = None, project_root: Path | None = None,
                  *, utc_now: Callable[[], str] = utc_now_iso, invocation_root: Path | None = None,
-                 environment: Mapping[str, str] | None = None):
+                 environment: Mapping[str, str] | None = None,
+                 construction_inputs: RuntimeConstructionInputs | None = None):
         require_sync_context(code="E_EXT_MANAGER_CONSTRUCTION_REQUIRES_WORKER")
-        root = invocation_root or Path.cwd()
-        observed = dict(os.environ if environment is None else environment)
+        if construction_inputs is not None and not isinstance(construction_inputs, RuntimeConstructionInputs):
+            raise TypeError("construction_inputs must be RuntimeConstructionInputs")
+        if construction_inputs is not None and (invocation_root is not None or environment is not None):
+            raise ValueError("E_EXT_CONSTRUCTION_INPUTS_AMBIGUOUS")
+        if construction_inputs is None:
+            root = invocation_root or Path.cwd()
+            observed = dict(os.environ if environment is None else environment)
+        else:
+            root = construction_inputs.invocation_root
+            observed = dict(construction_inputs.environment)
         if not root.is_absolute():
             raise ValueError("E_EXT_INVOCATION_ROOT_ABSOLUTE_REQUIRED")
         catalog = catalog_path or default_extensions_catalog_path(invocation_root=root, environment=observed)
@@ -76,6 +86,7 @@ class ExtensionManager:
         self.project_root = (root / (project_root or root)).resolve()
         self.install_root = durable_root(invocation_root=root, environment=observed) / "extensions"
         self._utc_now = utc_now
+        self._construction_inputs = construction_inputs
         self._config_sections: set[str] = set()
         self._config_sections_lock = Lock()
 
@@ -86,7 +97,7 @@ class ExtensionManager:
             project_root=self.project_root,
             reproducibility=self.reproducibility,
             registry_factory=_WorkloadRegistry,
-            utc_now=utc_now,
+            utc_now=utc_now, construction_inputs=construction_inputs,
         )
 
     def _load_catalog_payload(self) -> dict[str, Any]:
@@ -204,8 +215,12 @@ class ExtensionManager:
             manifest_digest_sha256=extension.manifest_digest_sha256,
         ).model_dump(mode="json")
 
+    def _operation_environment(self) -> dict[str, str]:
+        source = os.environ if self._construction_inputs is None else self._construction_inputs.environment
+        return dict(source)
+
     async def install_from_repo(self, repo: str, ref: str | None = None) -> ExtensionRecord:
-        environment, installed_at_utc = dict(os.environ), self._utc_now()
+        environment, installed_at_utc = self._operation_environment(), self._utc_now()
         record = await install_extension(
             repo=repo, ref=ref or "", install_root=self.install_root, project_root=self.project_root,
             catalog=self.catalog, parser=self.manifest_parser, environment=environment,
@@ -229,7 +244,7 @@ class ExtensionManager:
         require_sdk: bool = False,
     ) -> ExtensionRunResult:
         policy, captured = capture_workload_policy(), deepcopy(input_config)
-        environment = dict(os.environ)
+        environment = self._operation_environment()
         extension, workload_record, control_plane_workload_record = await run_owned_thread(
             partial(self._prepare_workload, workload_id, environment, require_sdk=require_sdk),
             label="extension-workload-preflight")

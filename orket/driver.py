@@ -102,9 +102,13 @@ class OrketDriver(DriverResourceMixin, DriverConversationMixin):
         fs: AsyncFileTools | None = None, reforger_tools: ReforgerService | None = None,
         strict_config: bool | None = None, json_parse_mode: str | None = None,
         project_root: Path | None = None, environment: Mapping[str, str] | None = None,
+        construction_inputs: RuntimeConstructionInputs | None = None,
     ) -> OrketDriver:
+        if construction_inputs is not None and environment is not None:
+            raise ValueError("E_DRIVER_CONSTRUCTION_INPUTS_ENVIRONMENT_AMBIGUOUS")
         relative_root = Path() if project_root is None else Path(project_root)
-        inputs = await RuntimeConstructionInputs.capture_async(environment=environment)
+        inputs = (construction_inputs if construction_inputs is not None
+                  else await RuntimeConstructionInputs.capture_async(environment=environment))
         root = inputs.invocation_root / relative_root
 
         def construct():

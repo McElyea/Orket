@@ -12,6 +12,7 @@ from typing import Any
 import psutil
 
 import orket.logging as logging_module
+from orket.adapters.observability import log_publication as logging_owner
 from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
 
 __test__ = False
@@ -67,7 +68,7 @@ def _finish_thread(thread: threading.Thread, done: threading.Event, label: str) 
 def _admit(path: Path, *events: str) -> None:
     async def publish() -> None:
         for event in events:
-            logging_module._append_json_record(path, {"event": event})
+            logging_owner._append_json_record(path, {"event": event})
 
     asyncio.run(publish())
 
@@ -79,7 +80,7 @@ def _events(path: Path) -> list[str]:
 
 
 def _writer_data() -> dict[str, Any] | None:
-    writer = logging_module._log_writer_thread
+    writer = logging_owner._log_writer_thread
     if writer is None:
         return None
     return {
@@ -98,12 +99,12 @@ class _MarkerObserver:
         self._lock = threading.Lock()
         self.attempts = 0
         self.admissions = 0
-        queue_owner = logging_module._log_write_queue
+        queue_owner = logging_owner._log_write_queue
         self._put = queue_owner.put_nowait
         queue_owner.put_nowait = self._observe
 
     def _observe(self, item: Any) -> None:
-        marker = isinstance(item, logging_module._LogWriteFrontier)
+        marker = isinstance(item, logging_owner._LogWriteFrontier)
         if marker:
             with self._lock:
                 self.attempts += 1
@@ -128,8 +129,8 @@ class _AppendRig:
         self.failures = failures
         self._calls: list[str] = []
         self._lock = threading.Lock()
-        self._append = logging_module._append_line_sync
-        logging_module._append_line_sync = self._observed_append
+        self._append = logging_owner._append_line_sync
+        logging_owner._append_line_sync = self._observed_append
 
     def _observed_append(self, path: Path, line: str) -> None:
         event = str(json.loads(line)["event"])
@@ -165,7 +166,7 @@ def _base(scenario: str, path: Path) -> dict[str, Any]:
         "logging_origin": str(Path(logging_module.__file__).resolve()),
         "path": str(path),
         "report_path": str(path.parent / "probe-report.json"),
-        "queue_max": logging_module._log_write_queue.maxsize,
+        "queue_max": logging_owner._log_write_queue.maxsize,
     }
 
 
@@ -175,7 +176,7 @@ def _unprepared_reuse(root: Path) -> dict[str, Any]:
     before = _writer_data()
     drops_before = logging_module.dropped_log_entry_count()
     first_settlement = _call_frontier()
-    first_writer = logging_module._log_writer_thread
+    first_writer = logging_owner._log_writer_thread
     _admit(path, "queued-after-first-settlement")
     second_settlement = _call_frontier()
     observation = _base("unprepared-reuse", path)
@@ -183,7 +184,7 @@ def _unprepared_reuse(root: Path) -> dict[str, Any]:
         before=before,
         first_settlement=first_settlement,
         second_settlement=second_settlement,
-        same_writer=first_writer is logging_module._log_writer_thread,
+        same_writer=first_writer is logging_owner._log_writer_thread,
         writer=_writer_data(),
         writer_name_count=sum(t.name == "orket-log-writer" for t in threading.enumerate()),
         marker=marker._data(),
@@ -197,14 +198,14 @@ def _unprepared_reuse(root: Path) -> dict[str, Any]:
 def _loop_refusal(root: Path) -> dict[str, Any]:
     path = root / "events.jsonl"
     marker = _MarkerObserver()
-    before = {"writer": _writer_data(), "queue_size": logging_module._log_write_queue.qsize(),
+    before = {"writer": _writer_data(), "queue_size": logging_owner._log_write_queue.qsize(),
               "drops": logging_module.dropped_log_entry_count()}
 
     async def refuse() -> dict[str, Any]:
         return _call_frontier()
 
     refusal = asyncio.run(refuse())
-    after = {"writer": _writer_data(), "queue_size": logging_module._log_write_queue.qsize(),
+    after = {"writer": _writer_data(), "queue_size": logging_owner._log_write_queue.qsize(),
              "drops": logging_module.dropped_log_entry_count()}
     observation = _base("loop-refusal", path)
     observation.update(before=before, after=after, refusal=refusal, marker=marker._data())
@@ -242,7 +243,7 @@ def _full_queue_cutoff(root: Path) -> dict[str, Any]:
         _admit(path, "held-first")
         _wait(rig.entered["held-first"], "held-first-entered")
         _admit(path, "prior-one", "prior-two")
-        queue_full = logging_module._log_write_queue.full()
+        queue_full = logging_owner._log_write_queue.full()
         frontier = _start_frontier()
         _wait(marker.attempted, "full-marker-attempted")
         blocked_while_full = not frontier[1].is_set() and not marker.admitted.is_set()
@@ -298,10 +299,10 @@ def _fatal_writer(root: Path, phase: str) -> dict[str, Any]:
     try:
         _admit(path, "fatal-first")
         _wait(rig.entered["fatal-first"], "fatal-first-entered")
-        writer = logging_module._log_writer_thread
+        writer = logging_owner._log_writer_thread
         if phase == "before-admission":
             _admit(path, "queued-one", "queued-two")
-        queue_full = logging_module._log_write_queue.full()
+        queue_full = logging_owner._log_write_queue.full()
         frontier = _start_frontier()
         _wait(marker.attempted, "fatal-marker-attempted")
         if phase == "after-admission":
@@ -328,8 +329,8 @@ def _fatal_writer(root: Path, phase: str) -> dict[str, Any]:
             optional_after_dead=optional_after_dead,
             drops_before_optional=drops_before_optional,
             drops_after_optional=logging_module.dropped_log_entry_count(),
-            queue_size_after_optional=logging_module._log_write_queue.qsize(),
-            same_writer=writer is logging_module._log_writer_thread,
+            queue_size_after_optional=logging_owner._log_write_queue.qsize(),
+            same_writer=writer is logging_owner._log_writer_thread,
             writer=_writer_data(), fatal_thread=dict(_fatal_thread),
             calls=rig._call_data(), marker=marker._data(), physical_events=_events(path),
         )

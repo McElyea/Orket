@@ -8,6 +8,7 @@ from pathlib import Path
 import httpx
 import pytest
 
+from orket.core.contracts.outbound_policy import OutboundPolicyInputs
 from orket.interfaces.api import create_api_app
 from orket.settings import set_runtime_settings_context
 from tests.helpers.outward_authorization import TEST_API_KEY
@@ -18,6 +19,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 def captured_environment():
     return dict(os.environ, ORKET_API_KEY=TEST_API_KEY, ORKET_DURABLE_ROOT="state",
         ORKET_EXTENSIONS_CATALOG="catalog.json", ORKET_OUTBOUND_POLICY_CONFIG_PATH="outbound.json",
+        ORKET_OUTBOUND_POLICY_FORBIDDEN_PATTERNS="captured-environment-pattern",
         ORKET_STATE_BACKEND_MODE="local", ORKET_RUN_LEDGER_MODE="sqlite",
         ORKET_GOVERNED_AGENT_CAPACITY_LIMIT="3", ORKET_GOVERNED_AGENT_SUPERVISOR_ENABLED="0",
         ORKET_GOVERNED_AGENT_PROVIDER_MODE="llama_cpp", ORKET_LLM_PROVIDER="llama_cpp",
@@ -29,6 +31,11 @@ def captured_environment():
 async def assert_captured_runtime(app, root):
     owner = app.state.api_runtime_context
     engine, manager = owner.engine, owner.extension_manager
+    selected = app.state.api_preparation.inputs
+    assert manager._construction_inputs is selected
+    assert manager.workload_executor._construction_inputs is selected
+    selected_environment = manager._operation_environment() == dict(selected.environment)
+    assert selected_environment
     assert engine.state_backend_mode == "local" and engine.run_ledger_mode == "sqlite"
     assert engine.runtime_context.user_settings["selected"] == {"value": "captured"}
     assert owner.project_root == root / "project"
@@ -42,7 +49,10 @@ async def assert_captured_runtime(app, root):
     assert owner.extension_runtime_service._model_provider._provider.provider_name == "llama_cpp"
     assert owner.extension_runtime_service._model_provider._provider.openai_base_url == "http://127.0.0.1:18765/v1"
     assert type(owner.extension_runtime_service._tts_provider).__name__ == "NullTTSProvider"
-    assert app.state.outbound_policy_config == {"policy_version": "captured"}
+    policy = app.state.outbound_policy_config
+    assert isinstance(policy, OutboundPolicyInputs)
+    assert policy.placeholder == "[CAPTURED]"
+    assert policy.forbidden_patterns == ("captured-environment-pattern", "captured-file-pattern")
     assert await engine.cards.get_by_id("captured-probe") is None
     assert await owner.governed_agent_runtime.list_wakes() == ()
     assert await asyncio.to_thread(Path(engine.db_path).is_file)
@@ -55,12 +65,14 @@ async def assert_captured_runtime(app, root):
         assert response.headers["access-control-allow-origin"] == "http://captured.example"
 
 
+# Layer: integration. Actual app ownership preserves selected inputs after hostile ambient rotation.
 async def test_factory_captures_inputs_before_cwd_environment_and_settings_rotation(tmp_path, monkeypatch):
     original, rotated = tmp_path / "original", tmp_path / "rotated"
     (original / "project").mkdir(parents=True)
     rotated.mkdir()
     await asyncio.to_thread((original / "project/outbound.json").write_text,
-                            '{"policy_version":"captured"}', encoding="utf-8")
+                            '{"forbidden_patterns":["captured-file-pattern"],"placeholder":"[CAPTURED]"}',
+                            encoding="utf-8")
     monkeypatch.chdir(original)
     environment = captured_environment()
     settings = {"selected": {"value": "captured"}}
@@ -68,7 +80,8 @@ async def test_factory_captures_inputs_before_cwd_environment_and_settings_rotat
     app = create_api_app(project_root=Path("project"), environment=environment)
     settings["selected"]["value"] = "caller-mutation"
     environment.update(ORKET_API_KEY="rotated", ORKET_TTS_BACKEND="unsupported",
-                       ORKET_GOVERNED_AGENT_CAPACITY_LIMIT="99")
+                       ORKET_GOVERNED_AGENT_CAPACITY_LIMIT="99",
+                       ORKET_OUTBOUND_POLICY_FORBIDDEN_PATTERNS="rotated-pattern")
     monkeypatch.chdir(rotated)
     for name, value in environment.items():
         monkeypatch.setenv(name, value)

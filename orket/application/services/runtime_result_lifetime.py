@@ -78,8 +78,9 @@ async def create_runtime_owner(construct, *, label):
 
 
 @asynccontextmanager
-async def open_runtime_owner(construct, *, label):
-    owner = await create_runtime_owner(construct, label=label)
+async def open_async_runtime_owner(create):
+    """Adopt one async-created runtime before exposing it to the caller."""
+    owner = await create()
     body_returned = False
     try:
         yield owner
@@ -88,6 +89,13 @@ async def open_runtime_owner(construct, *, label):
         interrupted = await close_runtime_owner(owner)
         if interrupted and body_returned:
             raise asyncio.CancelledError("Runtime cleanup completed after caller cancellation")
+
+
+@asynccontextmanager
+async def open_runtime_owner(construct, *, label):
+    create = partial(create_runtime_owner, construct, label=label)
+    async with open_async_runtime_owner(create) as owner:
+        yield owner
 
 
 @asynccontextmanager

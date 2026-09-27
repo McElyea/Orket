@@ -5,13 +5,15 @@ from types import SimpleNamespace
 import pytest
 
 from orket.application.services import extension_catalog_commands
+from orket.application.services.runtime_construction_inputs import RuntimeConstructionInputs
 from orket.extensions.controller_dispatcher import ControllerDispatcher
 from orket.interfaces import cli
 
 pytestmark = [pytest.mark.contract, pytest.mark.asyncio]
 
 
-async def test_cli_extension_command_uses_both_owned_workers(monkeypatch):
+# Layer: contract
+async def test_cli_extension_command_uses_both_owned_workers(tmp_path, monkeypatch):
     observed = []
 
     def record(stage):
@@ -21,16 +23,22 @@ async def test_cli_extension_command_uses_both_owned_workers(monkeypatch):
 
     class Manager:
         def __init__(self, **kwargs):
-            assert kwargs["invocation_root"].is_absolute()
-            assert isinstance(kwargs["environment"], dict)
+            assert set(kwargs) == {
+                "catalog_path", "project_root", "construction_inputs", "utc_now",
+            }
+            assert kwargs["construction_inputs"] is selected
+            assert kwargs["catalog_path"] is None and kwargs["project_root"] is None
+            assert callable(kwargs["utc_now"])
             record("construct")
 
         def list_extensions(self):
             record("list")
             return []
 
+    selected = RuntimeConstructionInputs(tmp_path.resolve(), {"SELECTED": "cli"}, "{}", "{}")
+
     async def startup(_setup):
-        return {}
+        return {}, selected
 
     monkeypatch.setattr(extension_catalog_commands, "ExtensionManager", Manager)
     monkeypatch.setattr(cli, "run_startup_checks", startup)

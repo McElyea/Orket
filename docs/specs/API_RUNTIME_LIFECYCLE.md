@@ -191,6 +191,29 @@ containment, forced worker termination or shutdown deadline. Migration:
    their registrations during cancellation. Normal `/v1/` responses and shutdown
    503 responses retain `X-Orket-Version`.
 
+## Required event input capture
+
+`ApiEventService.emit` detaches an exact built-in string name and dictionary
+payload before its first await through the shared pure
+`orket/core/contracts/log_event_inputs.py` contract. Nested string-keyed
+dictionaries, lists, tuples and finite JSON scalars are admitted. Custom types,
+non-string keys, cycles, non-finite numbers and excessive recursion refuse with
+`TypeError("E_LOG_EVENT_INPUT_UNSUPPORTED")` before worker or logging effects.
+Capture invokes no user-defined copy, conversion, mapping or serializer hooks.
+The existing native publication worker still owns one attempt through interruption
+and shutdown; application root, timestamp timing and failure precedence remain.
+Migration and limits:
+`docs/architecture/CONTRACT_DELTA_API_EVENT_INPUT_CAPTURE_D_2026-09-25.md`.
+The candidate additionally gives each API log subscription a registration drain.
+The process logging owner snapshots open registrations before handler/file work;
+application close excludes new snapshots and waits for the registration's issued
+tokens before removing it. Scheduled callbacks acknowledge after the event-queue
+insertion attempt, including failure. Earlier publication failures release
+uninvoked tokens. The count includes draining registrations. Peer applications
+and the process writer remain independently owned. This proves handoff settlement,
+not broadcaster or WebSocket delivery. Contract, migration and proof limits:
+`docs/architecture/CONTRACT_DELTA_API_LOG_HANDOFF_D_2026-09-25.md`.
+
 ## Extension model generation
 
 The generic extension generation route retains its synchronous SDK worker until
@@ -202,6 +225,9 @@ precedence and remains observable to request and shutdown owners. The shared
 `run_owned_thread` delegates to the shared
 `run_owned_io(..., preserve_failure=True)` seam for that ordering; existing
 connector callers retain their established default error/cancellation behavior.
+Shared operation/caller cancellation identity and precedence are specified in
+`docs/specs/SHARED_IO_CANCELLATION.md`; request and shutdown owners keep their
+existing policies above that boundary.
 
 Provider/model overrides construct a separate builtin client with an explicit
 provider argument. They never temporarily mutate `ORKET_LLM_PROVIDER` or

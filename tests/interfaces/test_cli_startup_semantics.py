@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+from collections.abc import Mapping
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -14,9 +15,9 @@ from tests.helpers.runtime_result import published_result
 
 
 class _DummyExtensionManager:
-    def __init__(self, catalog_path=None, project_root=None, *, invocation_root, environment, utc_now):
-        assert invocation_root.is_absolute()
-        assert isinstance(environment, dict)
+    def __init__(self, catalog_path=None, project_root=None, *, construction_inputs, utc_now):
+        assert construction_inputs.invocation_root.is_absolute()
+        assert isinstance(construction_inputs.environment, Mapping)
         assert callable(utc_now)
 
     def list_extensions(self):

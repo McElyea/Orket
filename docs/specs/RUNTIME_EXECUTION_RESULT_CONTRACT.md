@@ -1,7 +1,7 @@
 # Runtime execution results
 
 Status: Active contract; scoped BT-4 combined acceptance recorded in the canonical plan
-Last updated: 2026-09-21
+Last updated: 2026-09-25
 Owner: Orket Core
 
 ## Authority and scope
@@ -86,6 +86,15 @@ observation is available cannot invent run identity or references.
 
 ## Public helper and collection runtime ownership
 
+Canonical CLI, API host, child-pipeline and legacy-extension routes propagate
+their selected complete construction-input object through the existing runtime
+factories. Child construction uses parent inputs, then the wiring default, and
+refuses when both are absent. Complete objects and legacy environment/root
+selectors are exclusive where specified. Async-created runtimes enter the
+existing close policy before their context body runs; required close failure
+retains precedence over body failure. Exact migration, timing and ownership:
+`docs/architecture/CONTRACT_DELTA_ROUTE_INPUT_PROPAGATION_D_2026-09-25.md`.
+
 The `orchestrate_card` helper and collection-member supervisor admit synchronous
 runtime construction through an owned worker. They retain construction through
 cancellation and timeout. If construction returns an owner after interruption,
@@ -93,14 +102,16 @@ that owner is closed before interruption is reported and is never dispatched.
 Construction failures remain visible; this does not recover resources that a
 constructor acquires internally and then fails to return.
 
-`orchestrate_card` selects explicit `RuntimeConstructionInputs`, or captures its
-environment/root and asynchronously collects runtime settings before worker
-admission. Bound settings and preferences remain authoritative independently;
-unbound values use their selected persistence locations through an owned worker.
-Locations and bound JSON values are retained before collection waits. Existing
-preference migration remains owned by the settings service; this is not an atomic
-transaction across independent settings reads. An unbound synchronous settings
-read on an event loop remains an error. The helper does not load a second `.env`.
+`orchestrate_card` selects explicit `RuntimeConstructionInputs`, or completes
+`RuntimeConstructionInputs.capture_async` before admitting the separate runtime
+construction worker. Complete default capture uses one retained native operation;
+its worker selects cwd, environment and unbound settings location before held
+settings reads. Supplied objects retain their identity without recapture. Bound
+settings/preferences remain independently authoritative, including empty values.
+The worker-start selection point and its context, migration, interruption and
+non-atomic-snapshot limits are defined by `SETTINGS_INPUT_OWNERSHIP.md`; the capture
+worker is not a second runtime owner. An unbound synchronous settings read on an
+event loop remains an error. The helper does not load a second `.env`.
 Collection wiring prepares a constructor from selected parent fields before
 admitting its worker; it does not defer reading the mutable parent until later.
 Runtime ports remain selected object identities, not serialized implementations.

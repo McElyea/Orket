@@ -10,6 +10,7 @@ import pytest
 
 from orket import hardware
 from orket import logging as event_adapter
+from orket.adapters.observability import log_publication as logging_owner
 from orket.application.services.api_event_service import ApiEventService
 from orket.interfaces.api import create_api_app
 
@@ -84,7 +85,7 @@ async def test_metrics_request_retains_real_worker_until_settled(tmp_path, monke
 @pytest.mark.parametrize("stop", ["cancel", "timeout", "shutdown"])
 async def test_rejected_auth_retains_its_event_write(tmp_path, monkeypatch, stop):
     entered, release = threading.Event(), threading.Event()
-    original = event_adapter._append_line_sync
+    original = logging_owner._append_line_sync
 
     def held_write(path, line):
         entered.set()
@@ -93,7 +94,7 @@ async def test_rejected_auth_retains_its_event_write(tmp_path, monkeypatch, stop
 
     app = create_api_app(project_root=tmp_path, environment={**os.environ, "ORKET_API_KEY": "expected"})
     async with app.router.lifespan_context(app):
-        monkeypatch.setattr(event_adapter, "_append_line_sync", held_write)
+        monkeypatch.setattr(logging_owner, "_append_line_sync", held_write)
         owner = app.state.api_runtime_context
 
         async def invoke():

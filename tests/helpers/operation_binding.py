@@ -370,7 +370,7 @@ def observe_reentry_and_forbid_owner(case, monkeypatch):  # type: ignore[no-unty
 
 
 def expected_reentry() -> dict[str, object]:
-    return {"session_id": SESSION, "issue_id": ISSUE, "role_name": ROLE, "turn_index": TURN}
+    return {"session_id": SESSION, "issue_id": ISSUE, "role_name": ROLE, "turn_index": TURN, "resume_mode": False}
 
 
 async def before_after(case, operation):  # type: ignore[no-untyped-def]

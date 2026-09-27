@@ -17,26 +17,34 @@ async def run_owned_io(
 ) -> IOResult:
     task = asyncio.create_task(operation())
     joined = asyncio.gather(task, return_exceptions=True)
-    cancelled = False
+    cancelled: asyncio.CancelledError | None = None
     while True:
         try:
             result, = await asyncio.shield(joined)
             break
-        except asyncio.CancelledError:
+        except asyncio.CancelledError as exc:
             # Cancelling an executor await cannot stop its already running thread.
             # Async resource owners can opt into one cancellation, then retain
             # their cleanup through subsequent caller cancellation requests.
-            if cancel_on_interrupt and not cancelled:
+            if cancel_on_interrupt and cancelled is None:
                 task.cancel()
-            cancelled = True
-    if cancelled:
+            if cancelled is None:
+                cancelled = exc
+    # gather synthesizes cancellation; retrieve the original from the settled
+    # task once, before its retained exception slot is consumed.
+    if task.cancelled():
+        try:
+            task.result()
+        except asyncio.CancelledError as exc:
+            result = exc
+    if cancelled is not None:
         if isinstance(result, BaseException) and not (cancel_on_interrupt and isinstance(result, asyncio.CancelledError)):
             logger.warning("Owned I/O failed while draining cancellation (%s)", label,
                            exc_info=(type(result), result, result.__traceback__))
             if preserve_failure:
                 # Resource owners must not turn failed cleanup into clean cancellation.
                 raise result
-        raise asyncio.CancelledError
+        raise cancelled
     if isinstance(result, BaseException):
         raise result
     return result

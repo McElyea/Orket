@@ -29,10 +29,16 @@ class ExtensionEngineAdapter:
 
     @classmethod
     @asynccontextmanager
-    async def open(cls, context: RunContext):
-        """Capture bootstrap inputs and retain construction, actions and required close."""
+    async def open(
+        cls, context: RunContext, *, construction_inputs: RuntimeConstructionInputs | None = None,
+    ):
+        """Capture inputs once when absent and retain construction, actions and required close."""
         workspace, department = Path(context.workspace), context.department
-        inputs = await RuntimeConstructionInputs.capture_async()
+        inputs = construction_inputs
+        if inputs is None:
+            inputs = await RuntimeConstructionInputs.capture_async()
+        elif not isinstance(inputs, RuntimeConstructionInputs):
+            raise TypeError("construction_inputs must be RuntimeConstructionInputs")
         workspace = workspace if workspace.is_absolute() else inputs.invocation_root / workspace
         construct = partial(cls, RunContext(workspace, department), construction_inputs=inputs)
         async with open_runtime_owner(construct, label="legacy-action-engine-construction") as owner:

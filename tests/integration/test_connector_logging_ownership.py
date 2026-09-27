@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-import orket.logging as logging_module
+from orket.adapters.observability import log_publication as logging_owner
 from orket.adapters.storage.async_card_repository import AsyncCardRepository
 from orket.application.services.outward_connector_service import OutwardConnectorService
 from orket.core.domain.records import IssueRecord
@@ -19,7 +19,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 def held_logging(monkeypatch, workspace, boundary):
     entered, release = threading.Event(), threading.Event()
     threads, timers = [], []
-    target, method = (Path, 'mkdir') if boundary == 'directory' else (logging_module, '_append_line_sync')
+    target, method = (Path, 'mkdir') if boundary == 'directory' else (logging_owner, '_append_line_sync')
     original = getattr(target, method)
 
     def held(path, *args, **options):
@@ -80,5 +80,5 @@ async def test_interrupted_connector_owns_native_log(tmp_path, monkeypatch, reco
             await asyncio.wait_for(asyncio.gather(task, probe, return_exceptions=True), 5)
             for timer in timers:
                 await asyncio.to_thread(timer.join, 5)
-            await asyncio.wait_for(asyncio.to_thread(logging_module._log_write_queue.join), 5)
+            await asyncio.wait_for(asyncio.to_thread(logging_owner._log_write_queue.join), 5)
         assert len(server[1]) == 1 and await asyncio.to_thread((workspace / 'orket.log').exists)

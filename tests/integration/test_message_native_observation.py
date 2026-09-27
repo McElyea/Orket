@@ -13,6 +13,7 @@ import aiosqlite
 import pytest
 
 import orket.logging as logging_module
+from orket.adapters.observability import log_publication as logging_owner
 from orket.application.workflows.turn_message_builder import MessageBuilder
 from tests.helpers.kernel_state_probe import responsive_sqlite
 from tests.helpers.turn_artifacts import prepare_message_fixture
@@ -170,7 +171,7 @@ async def test_message_read_observes_all_metadata_off_loop(
 def _observe_later_stages(monkeypatch, target: Path):
     state = SimpleNamespace(reads=[], logs=[], active=True)
     original_open = io.open
-    original_append = logging_module._append_line_sync
+    original_append = logging_owner._append_line_sync
     original_setup = logging_module.setup_logging
 
     def observed_open(file, *args, **options):
@@ -191,7 +192,7 @@ def _observe_later_stages(monkeypatch, target: Path):
 
     monkeypatch.setattr(io, "open", observed_open)
     monkeypatch.setattr(aiofiles.threadpool, "sync_open", observed_open)
-    monkeypatch.setattr(logging_module, "_append_line_sync", observed_append)
+    monkeypatch.setattr(logging_owner, "_append_line_sync", observed_append)
     monkeypatch.setattr(logging_module, "setup_logging", observed_setup)
     return state
 
@@ -273,7 +274,7 @@ async def _settle_log(task, state, timer, target: Path, expected: bytes) -> None
     except BaseException as error:
         errors.append(error)
     try:
-        await asyncio.wait_for(asyncio.to_thread(logging_module._log_write_queue.join), 5)
+        await asyncio.wait_for(asyncio.to_thread(logging_owner._log_write_queue.join), 5)
     except BaseException as error:
         errors.append(error)
     if state.entered.is_set():
@@ -382,7 +383,7 @@ async def test_missing_input_log_is_owned_and_physically_observed(
         else:
             assert state.streams and all(stream.closed for stream in state.streams)
         assert "prompt_packet_compacted" not in context["prompt_metadata"]
-        await asyncio.wait_for(asyncio.to_thread(logging_module._log_write_queue.join), 5)
+        await asyncio.wait_for(asyncio.to_thread(logging_owner._log_write_queue.join), 5)
         await _assert_missing_log(log_path, outcome)
         assert await asyncio.to_thread(target.read_bytes) == expected
     except BaseException as error:

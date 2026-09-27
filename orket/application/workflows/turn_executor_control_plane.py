@@ -172,6 +172,7 @@ async def write_turn_checkpoint_and_publish_if_needed(
     if control_plane_publish_enabled:
         await control_plane_service.ensure_reentry_allowed(
             session_id=session_id, issue_id=issue_id, role_name=role_name, turn_index=turn_index,
+            resume_mode=resume_mode,
         )
 
     await run_owned_thread(partial(
@@ -272,6 +273,7 @@ async def ensure_turn_control_plane_reentry_allowed_if_needed(
     await service.ensure_reentry_allowed(
         session_id=destination.session_id, issue_id=destination.issue_id,
         role_name=destination.role_name, turn_index=destination.turn_index,
+        resume_mode=control_plane.resume_mode and not control_plane.protocol_replay_mode,
     )
 
 

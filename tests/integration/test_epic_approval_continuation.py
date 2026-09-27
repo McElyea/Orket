@@ -48,13 +48,21 @@ async def test_approval_http_response_distinguishes_decision_from_runtime_outcom
 
 
 @asynccontextmanager
-async def approval_engine(root, monkeypatch, *, setup=False, custom_db=False):
+async def approval_engine(
+    root, monkeypatch, *, setup=False, custom_db=False, provider=None, prepare_assets=None,
+):
     workspace = root / "workspace"
+    assert prepare_assets is None or setup
     if setup:
+        def build_assets():
+            _build_assets(root, with_guard=False, epic_id="approval_required",
+                          expected_file="approved.txt", expected_text="approved")
+            if prepare_assets is not None:
+                prepare_assets(root, workspace)
+
         await asyncio.to_thread(workspace.mkdir)
-        await asyncio.to_thread(_build_assets, root, with_guard=False, epic_id="approval_required",
-                                expected_file="approved.txt", expected_text="approved")
-    _patch_provider(monkeypatch, ToolApprovalContinuationProvider())
+        await asyncio.to_thread(build_assets)
+    _patch_provider(monkeypatch, provider or ToolApprovalContinuationProvider())
     monkeypatch.setenv("ORKET_DISABLE_RUNTIME_VERIFIER", "true")
     monkeypatch.setenv("ORKET_DISABLE_SANDBOX", "1")
     monkeypatch.setenv("ORKET_DURABLE_ROOT", str(root / ".orket" / "durable"))

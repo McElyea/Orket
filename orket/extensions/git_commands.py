@@ -8,6 +8,10 @@ from pathlib import Path
 from orket.application.services.command_process_supervisor import CommandProcessCancelled, CommandProcessSupervisor
 from orket.core.contracts.owned_command import OwnedCommandResult
 
+# Git for Windows bounds absolute GIT_DIR before reading core.longpaths.
+# These names resolve inside the same captured checkout cwd supplied to the owner.
+CHECKOUT_ARGUMENTS = ("--git-dir=.git", "--work-tree=.")
+
 
 class ExtensionGitError(RuntimeError):
     def __init__(self, code: str, observation: OwnedCommandResult):
@@ -43,7 +47,7 @@ async def run_git(arguments: list[str], *, cwd: Path, environment: Mapping[str, 
 
 async def resolve_commit(repo_path: Path, ref: str, *, environment: Mapping[str, str]) -> str:
     target = str(ref or "").strip() or "HEAD"
-    raw = await run_git([f"--git-dir={repo_path / '.git'}", f"--work-tree={repo_path}",
+    raw = await run_git([*CHECKOUT_ARGUMENTS,
                          "rev-parse", "--verify", "--end-of-options", f"{target}^{{commit}}"],
                         cwd=repo_path, environment=environment, code="E_EXT_REF_RESOLVE_FAILED")
     result = raw.decode("ascii").strip()

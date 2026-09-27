@@ -14,7 +14,7 @@ from orket.application.services.turn_tool_control_plane_recovery import (
     recover_pre_effect_attempt_for_resume_mode,
 )
 from orket.application.services.turn_tool_control_plane_state_gate import (
-    require_resolved_tool_dispatches,
+    require_checkpoint_recovery_dispatches,
     require_turn_dispatch_contract,
 )
 from orket.core.contracts import AttemptRecord, CheckpointAcceptanceRecord, CheckpointRecord, RunRecord
@@ -46,8 +46,9 @@ async def _recovery_transaction(*, transactions, publication, run, current_attem
         await require_turn_dispatch_contract(transaction.records, retained_run, TurnToolCheckpointRecoveryError)
         ensure_current_execution_target(run=retained_run, attempt=retained_attempt,
             operation_name="turn recovery", error_type=TurnToolCheckpointRecoveryError)
-        await require_resolved_tool_dispatches(transaction.execution, retained_run, TurnToolCheckpointRecoveryError)
         scoped = ControlPlanePublicationService(repository=transaction.records, authority=publication.authority)
+        await require_checkpoint_recovery_dispatches(
+            transaction.execution, scoped, retained_run, TurnToolCheckpointRecoveryError)
         yield transaction.execution, scoped, retained_run, retained_attempt
 
 

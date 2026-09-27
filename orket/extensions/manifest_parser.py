@@ -15,6 +15,7 @@ from .models import (
     ExtensionRecord,
     LoadedManifest,
     _ExtensionManifestEntry,
+    normalize_sdk_optional_contract,
 )
 
 
@@ -215,8 +216,8 @@ class ManifestParser:
                     required_capabilities=required_capabilities,
                     contract_style=CONTRACT_STYLE_SDK_V0,
                     workload_kind=str(item.get("workload_kind", "generic")).strip() or "generic",
-                    input_contract=str(item.get("input_contract", "")).strip(),
-                    output_contract=str(item.get("output_contract", "")).strip(),
+                    input_contract=normalize_sdk_optional_contract(item.get("input_contract")),
+                    output_contract=normalize_sdk_optional_contract(item.get("output_contract")),
                     agent_declaration=agent_declaration,
                 )
             )

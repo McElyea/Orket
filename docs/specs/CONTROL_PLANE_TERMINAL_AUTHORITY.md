@@ -1,6 +1,6 @@
 # Control-plane terminal authority
 
-Last updated: 2026-09-24
+Last updated: 2026-09-25
 Status: Active contract; historical-consistency implementation acceptance remains scoped in the architectural-truth plan.
 
 ## Common record contract
@@ -307,6 +307,36 @@ Dispatcher refusal remains per call. Independent earlier or later calls can reta
 their existing effects and publications, and the dispatcher retains its violation
 aggregation and finalization behavior. This is not whole-turn rollback,
 stop-on-first-refusal or atomic multi-call execution.
+
+Before ordinary execution/reentry, preflight abandonment, terminal
+publication or reuse can authorize continuation, every resolved
+`governed_tool_operation` in the selected current attempt must have an effect
+journal whose run, attempt and step identifiers match that run/current attempt/
+step. The existing state gate enforces this correspondence through the caller's
+existing record repository or transaction. Step identity is not inferred from an
+operation identifier. Missing correspondence raises the existing caller-specific
+error type, names the run and step and contains `effect journal`; it cannot
+authorize ordinary terminal/resource writes or reuse. Caller-supplied step counts
+do not bypass this check. The existing unresolved-dispatch diagnostic has priority
+when unresolved and resolved-orphan steps coexist.
+
+Explicit resume preserves the existing checkpoint-backed reconciliation path.
+For an unfinished executing run/attempt with accepted resumable checkpoint
+authority, resolved orphan steps can enter that path as uncertainty evidence.
+The existing recovery transaction rechecks admission and closes the run as
+`blocked` through `reconciliation_closed` before reporting refusal; it cannot
+return an executable continuation over those steps. Missing checkpoint acceptance,
+ordinary execution, completed-success reuse and unresolved dispatch do not gain
+this admission. No journal is synthesized. The read-only resume precheck and the
+writer transaction share the same correspondence and checkpoint validators.
+
+This is a one-way refusal rule, not repair or reconstruction. A journal without a
+retained step still supplies same-attempt post-effect evidence below. Another
+attempt's journal cannot cover a current step or upgrade an empty current attempt.
+The rule changes no journal schema, hash, uniqueness authority or writer, and adds
+no atomic snapshot to routes that already use separate reads. Existing publication
+transactions remain the owners of new step/effect and terminal writes. Migration:
+`docs/architecture/CONTRACT_DELTA_STEP_JOURNAL_CORRESPONDENCE_D_2026-09-25.md`.
 
 For terminal failure, an invocation-local zero step count cannot override a durable
 effect journal for the same attempt. The existing closeout transaction reads that
