@@ -18,6 +18,8 @@ from scripts.proof.outward_run_witness_contract import (
 )
 from scripts.proof.outward_run_witness_package import load_witness_package
 
+pytestmark = pytest.mark.contract
+
 _ARGS_DIGEST = "args-digest"
 _MODEL_DIGESTS = {
     "model_invocation_digest": "model-invocation-digest",
@@ -435,7 +437,6 @@ def test_valid_approved_package_passes_all_single_turn_invariants(tmp_path: Path
     """Layer: contract. Verifies a full approved package satisfies the mechanized single-turn model."""
     root = _valid_package(tmp_path / "outward_run_witness_package.v1")
     _sync_ledger_evidence(root)
-
     model = _load_model(root)
 
     assert model["result"] == "pass"
@@ -444,9 +445,8 @@ def test_valid_approved_package_passes_all_single_turn_invariants(tmp_path: Path
 
 
 def test_valid_denial_package_passes_denial_invariants(tmp_path: Path) -> None:
-    """Layer: unit. Verifies a denial package proves no effect or commitment after denial."""
+    """Layer: contract. Verifies a denial package proves no effect or commitment after denial."""
     root = _valid_denial_package(tmp_path / "outward_run_witness_package.v1")
-
     model = _load_model(root, scope=COMPARE_SCOPE_DENIED)
 
     assert model["result"] == "pass"
@@ -455,7 +455,7 @@ def test_valid_denial_package_passes_denial_invariants(tmp_path: Path) -> None:
 
 
 def test_valid_policy_rejected_package_passes_policy_invariants(tmp_path: Path) -> None:
-    """Layer: unit. Verifies a policy-rejected package proves no approval, effect, or commitment."""
+    """Layer: contract. Verifies a policy-rejected package proves no approval, effect, or commitment."""
     root = _valid_policy_rejected_package(tmp_path / "outward_run_witness_package.v1")
 
     model = _load_model(root, scope=COMPARE_SCOPE_POLICY_REJECTED)
@@ -466,7 +466,7 @@ def test_valid_policy_rejected_package_passes_policy_invariants(tmp_path: Path) 
 
 
 def test_denial_package_missing_denial_event_rejects(tmp_path: Path) -> None:
-    """Layer: unit. Verifies denial scope requires a proposal_denied event before terminal truth."""
+    """Layer: contract. Verifies denial scope requires a proposal_denied event before terminal truth."""
     root = _valid_denial_package(tmp_path / "outward_run_witness_package.v1")
     _mutate_events(root, lambda events: events.pop(5))
 
@@ -477,7 +477,7 @@ def test_denial_package_missing_denial_event_rejects(tmp_path: Path) -> None:
 
 
 def test_denial_package_missing_approval_authority_rejects(tmp_path: Path) -> None:
-    """Layer: unit. Verifies denial scope requires approval authority, not only ledger events."""
+    """Layer: contract. Verifies denial scope requires approval authority, not only ledger events."""
     root = _valid_denial_package(tmp_path / "outward_run_witness_package.v1")
     _mutate_bundle(root, lambda bundle: bundle.update({"approval_authority": []}))
 
@@ -488,7 +488,7 @@ def test_denial_package_missing_approval_authority_rejects(tmp_path: Path) -> No
 
 
 def test_policy_rejected_package_missing_policy_event_rejects(tmp_path: Path) -> None:
-    """Layer: unit. Verifies policy-rejection scope requires proposal_policy_rejected before terminal truth."""
+    """Layer: contract. Verifies policy-rejection scope requires proposal_policy_rejected before terminal truth."""
     root = _valid_policy_rejected_package(tmp_path / "outward_run_witness_package.v1")
     _mutate_events(root, lambda events: events.pop(4))
 
@@ -499,7 +499,7 @@ def test_policy_rejected_package_missing_policy_event_rejects(tmp_path: Path) ->
 
 
 def test_denial_package_tool_invocation_after_denial_rejects(tmp_path: Path) -> None:
-    """Layer: unit. Verifies a denied proposal cannot be followed by a tool invocation."""
+    """Layer: contract. Verifies a denied proposal cannot be followed by a tool invocation."""
     root = _valid_denial_package(tmp_path / "outward_run_witness_package.v1")
     run_id = "run-denied"
     _mutate_events(
@@ -514,7 +514,7 @@ def test_denial_package_tool_invocation_after_denial_rejects(tmp_path: Path) -> 
 
 
 def test_policy_rejected_package_tool_invocation_after_rejection_rejects(tmp_path: Path) -> None:
-    """Layer: unit. Verifies a policy-rejected proposal cannot be followed by tool invocation."""
+    """Layer: contract. Verifies a policy-rejected proposal cannot be followed by tool invocation."""
     root = _valid_policy_rejected_package(tmp_path / "outward_run_witness_package.v1")
     run_id = "run-policy-rejected"
     _mutate_events(
@@ -532,7 +532,7 @@ def test_policy_rejected_package_tool_invocation_after_rejection_rejects(tmp_pat
 
 
 def test_policy_rejected_package_commitment_after_rejection_rejects(tmp_path: Path) -> None:
-    """Layer: unit. Verifies a policy-rejected proposal cannot be followed by a commitment."""
+    """Layer: contract. Verifies a policy-rejected proposal cannot be followed by a commitment."""
     root = _valid_policy_rejected_package(tmp_path / "outward_run_witness_package.v1")
     run_id = "run-policy-rejected"
     _mutate_events(

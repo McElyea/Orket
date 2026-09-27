@@ -1,21 +1,28 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, TypeVar
+from typing import Any, TypeVar
 
 from orket.logging import log_event
-from orket_extension_sdk.capabilities import CapabilityRegistry
 from orket_extension_sdk.audio import AudioClip, AudioPlayer, NullAudioPlayer, TTSProvider, VoiceInfo
+from orket_extension_sdk.capabilities import CapabilityRegistry
 from orket_extension_sdk.llm import GenerateRequest, GenerateResponse, LLMProvider
-from orket_extension_sdk.memory import MemoryProvider, MemoryQueryRequest, MemoryQueryResponse, MemoryWriteRequest, MemoryWriteResponse
+from orket_extension_sdk.memory import (
+    MemoryProvider,
+    MemoryQueryRequest,
+    MemoryQueryResponse,
+    MemoryWriteRequest,
+    MemoryWriteResponse,
+)
 from orket_extension_sdk.voice import (
     STTProvider,
     TranscribeRequest,
     TranscribeResponse,
+    VoiceTurnController,
     VoiceTurnControlRequest,
     VoiceTurnControlResponse,
-    VoiceTurnController,
     VoiceTurnState,
 )
 
@@ -317,19 +324,11 @@ class GovernedAudioPlayer:
 
     def play(self, clip: AudioClip, blocking: bool = False) -> None:
         operation = (lambda: self._invoke_play(clip=clip, blocking=blocking)) if self._delegate is not None else None
-        self._tracker.invoke(
-            self._capability_id,
-            operation,
-            side_effect_observed=self._side_effect_observed,
-        )
+        self._tracker.invoke(self._capability_id, operation, side_effect_observed=self._side_effect_observed)
 
     def stop(self) -> None:
         operation = self._invoke_stop if self._delegate is not None else None
-        self._tracker.invoke(
-            self._capability_id,
-            operation,
-            side_effect_observed=self._side_effect_observed,
-        )
+        self._tracker.invoke(self._capability_id, operation, side_effect_observed=self._side_effect_observed)
 
     def _invoke_play(self, *, clip: AudioClip, blocking: bool) -> AudioPlayer:
         if self._delegate is None:

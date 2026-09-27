@@ -191,7 +191,7 @@ def _eval_truth_only(blob: dict[str, Any], scenario_pack: dict[str, Any]) -> dic
 def _eval_meta_balance(blob: dict[str, Any], scenario_pack: dict[str, Any]) -> dict[str, Any]:
     archetypes = _dict_payload(blob.get("archetypes"))
     balance = _dict_payload(blob.get("balance"))
-    arche_ids = sorted(str(key) for key in archetypes.keys())
+    arche_ids = sorted(str(key) for key in archetypes)
     dominant_threshold = float(balance.get("dominant_threshold", 0.55))
     first_player_advantage = float(balance.get("first_player_advantage", 0.0))
     aggregate: dict[str, float] = {}

@@ -6,8 +6,12 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
+import pytest
+
 from scripts.prompt_lab import guide_model_prompt_patch as guide_script
 from scripts.prompt_lab import run_prompt_reforger_guide_model_comparison as script
+
+pytestmark = pytest.mark.integration
 
 
 def _write_json(path: Path, payload: object) -> None:
@@ -16,7 +20,7 @@ def _write_json(path: Path, payload: object) -> None:
 
 
 def test_generate_guide_candidate_emits_bounded_prompt_patch(monkeypatch, tmp_path: Path) -> None:
-    """Layer: contract. Verifies the guide-model generator captures one bounded prompt-patch candidate through the native-tool path."""
+    """Layer: integration. Verifies the guide-model generator captures one bounded prompt-patch candidate through the native-tool path."""
 
     class _FakeProvider:
         def __init__(self, *args, **kwargs) -> None:
@@ -99,7 +103,7 @@ def test_generate_guide_candidate_emits_bounded_prompt_patch(monkeypatch, tmp_pa
 
 
 def test_main_ranks_guides_by_candidate_generation_quality(monkeypatch, tmp_path: Path) -> None:
-    """Layer: contract. Verifies guide comparison ranks models by score deltas over baseline rather than outer challenge status."""
+    """Layer: integration. Verifies guide comparison ranks models by score deltas over baseline rather than outer challenge status."""
     corpus_path = tmp_path / "corpus.json"
     out_path = tmp_path / "comparison.json"
     _write_json(corpus_path, {"corpus_id": "challenge_workflow_runtime_bootstrap_v1"})

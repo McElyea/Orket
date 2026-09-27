@@ -52,10 +52,11 @@ async def api_runtime_lifespan(
     # Capture selected owners before startup can await or another caller can close.
     root, engine, authentication = owner.project_root, owner.engine, owner.authentication
     state, governed_runtime, events = owner.runtime_state, owner.governed_agent_runtime, owner.events
+    validate_authentication = partial(authentication.validate_startup, LOGGER)
 
     async def initialize() -> None:
         await run_owned_thread(lambda: _validate_root(configured_root, root), label="api-startup-root")
-        authentication.validate_startup(LOGGER)
+        await run_owned_thread(validate_authentication, label="api-startup-authentication")
         initialize_engine = getattr(engine, "initialize", None)
         if callable(initialize_engine):
             await initialize_engine()

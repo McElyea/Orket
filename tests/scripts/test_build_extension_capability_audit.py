@@ -4,7 +4,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.extensions.build_extension_capability_audit import main
+
+pytestmark = pytest.mark.integration
 
 
 def test_build_extension_capability_audit_writes_diff_ledger_payload(tmp_path: Path) -> None:

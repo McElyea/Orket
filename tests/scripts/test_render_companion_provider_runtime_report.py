@@ -62,6 +62,7 @@ def _sample_payload() -> dict[str, object]:
     }
 
 
+@pytest.mark.contract
 def test_render_markdown_report_includes_summary_recommendation_and_blockers() -> None:
     """Layer: contract. Verifies markdown rendering includes required sections and key matrix fields."""
     report = render_markdown_report(_sample_payload())
@@ -73,6 +74,7 @@ def test_render_markdown_report_includes_summary_recommendation_and_blockers() -
     assert "## Case Scores" in report
 
 
+@pytest.mark.integration
 def test_render_companion_provider_runtime_report_main_writes_markdown_file(tmp_path: Path) -> None:
     """Layer: integration. Verifies CLI main writes markdown report from matrix JSON input."""
     input_path = tmp_path / "matrix.json"
@@ -87,8 +89,9 @@ def test_render_companion_provider_runtime_report_main_writes_markdown_file(tmp_
     assert "qwen2.5-coder:7b" in content
 
 
+@pytest.mark.contract
 def test_render_companion_provider_runtime_report_main_fails_when_input_missing(tmp_path: Path) -> None:
-    """Layer: integration. Verifies CLI fails fast with explicit code when the input artifact path does not exist."""
+    """Layer: contract. Verifies CLI fails fast with explicit code when the input artifact path does not exist."""
     missing = tmp_path / "missing.json"
     with pytest.raises(SystemExit, match="E_COMPANION_MATRIX_REPORT_INPUT_MISSING"):
         main(["--input", str(missing), "--output", str(tmp_path / "README.md")])

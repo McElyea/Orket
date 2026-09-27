@@ -3,14 +3,19 @@ from __future__ import annotations
 
 import json
 import subprocess
+import sys
 from pathlib import Path
+
+import pytest
+
+pytestmark = pytest.mark.integration
 
 SCRIPT_PATH = Path("scripts/streaming/check_live_1000_consistency.py")
 
 
 def _run(*args: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
-        ["python", str(SCRIPT_PATH), *args],
+        [sys.executable, str(SCRIPT_PATH), *args],
         capture_output=True,
         text=True,
         check=False,

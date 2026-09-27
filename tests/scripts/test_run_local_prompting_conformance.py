@@ -4,8 +4,12 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 import scripts.protocol.run_local_prompting_conformance as conformance_script
 from scripts.protocol.run_local_prompting_conformance import main
+
+pytestmark = pytest.mark.integration
 
 
 def test_run_local_prompting_conformance_writes_required_artifacts(tmp_path: Path) -> None:

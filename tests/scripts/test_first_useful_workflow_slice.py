@@ -27,8 +27,9 @@ from scripts.proof.trusted_repo_change_workflow import execute_trusted_repo_chan
 from scripts.proof.verify_offline_trusted_run_claim import main as offline_verifier_main
 
 
+@pytest.mark.contract
 def test_validator_accepts_expected_config(tmp_path: Path) -> None:
-    """Layer: unit. Verifies the deterministic validator accepts only the expected config contract."""
+    """Layer: contract. Verifies the deterministic validator accepts only the expected config contract."""
     config_path = tmp_path / CONFIG_ARTIFACT_PATH
     config_path.parent.mkdir(parents=True)
     config_path.write_text(json.dumps(expected_config_payload()), encoding="utf-8")
@@ -41,6 +42,7 @@ def test_validator_accepts_expected_config(tmp_path: Path) -> None:
     assert report["validator_signature_digest"].startswith("sha256:")
 
 
+@pytest.mark.contract
 @pytest.mark.parametrize(
     ("mutate", "expected"),
     [
@@ -50,7 +52,7 @@ def test_validator_accepts_expected_config(tmp_path: Path) -> None:
     ],
 )
 def test_validator_rejects_wrong_schema_content_and_extra_properties(tmp_path: Path, mutate: object, expected: str) -> None:
-    """Layer: unit. Verifies config validation fails closed with machine-readable reasons."""
+    """Layer: contract. Verifies config validation fails closed with machine-readable reasons."""
     payload = expected_config_payload()
     mutate(payload)
     config_path = tmp_path / CONFIG_ARTIFACT_PATH
@@ -63,6 +65,7 @@ def test_validator_rejects_wrong_schema_content_and_extra_properties(tmp_path: P
     assert expected in report["missing_evidence"]
 
 
+@pytest.mark.integration
 def test_approved_workflow_emits_valid_witness_bundle(tmp_path: Path) -> None:
     """Layer: integration. Verifies the approved fixture change writes, validates, and witnesses successfully."""
     live = execute_trusted_repo_change(workspace_root=tmp_path / "workspace", scenario="approved")
@@ -75,6 +78,7 @@ def test_approved_workflow_emits_valid_witness_bundle(tmp_path: Path) -> None:
     assert verify_trusted_repo_change_bundle_payload(bundle)["observed_result"] == "success"
 
 
+@pytest.mark.integration
 def test_denial_terminal_stops_without_mutation(tmp_path: Path) -> None:
     """Layer: integration. Verifies denial is a terminal non-success workflow result without file mutation."""
     live = execute_trusted_repo_change(workspace_root=tmp_path / "workspace", scenario="denied")
@@ -86,6 +90,7 @@ def test_denial_terminal_stops_without_mutation(tmp_path: Path) -> None:
     assert live["witness_bundle_ref"] == ""
 
 
+@pytest.mark.integration
 def test_validator_failure_blocks_successful_final_truth(tmp_path: Path) -> None:
     """Layer: integration. Verifies invalid config cannot reach successful final truth."""
     live = execute_trusted_repo_change(workspace_root=tmp_path / "workspace", scenario="validator_failure")
@@ -97,8 +102,9 @@ def test_validator_failure_blocks_successful_final_truth(tmp_path: Path) -> None
     assert "validator_failed" in live["witness_report"]["missing_evidence"]
 
 
+@pytest.mark.integration
 def test_campaign_and_offline_verifier_allow_verdict_deterministic(tmp_path: Path) -> None:
-    """Layer: contract. Verifies repeat evidence promotes only the bounded verdict claim."""
+    """Layer: integration. Verifies repeat evidence promotes only the bounded verdict claim."""
     first = execute_trusted_repo_change(workspace_root=tmp_path / "workspace", scenario="approved", run_index=1)
     second = execute_trusted_repo_change(workspace_root=tmp_path / "workspace", scenario="approved", run_index=2)
     campaign = build_trusted_repo_change_campaign_report([first["witness_report"], second["witness_report"]])
@@ -111,6 +117,7 @@ def test_campaign_and_offline_verifier_allow_verdict_deterministic(tmp_path: Pat
     assert report["claim_tier"] == TARGET_CLAIM_TIER
 
 
+@pytest.mark.contract
 @pytest.mark.parametrize(
     ("corruption_id", "mutate", "expected"),
     [
@@ -139,6 +146,7 @@ def test_corruption_matrix_fails_closed(tmp_path: Path, corruption_id: str, muta
     assert expected in report["missing_evidence"], corruption_id
 
 
+@pytest.mark.contract
 def test_replay_and_text_overclaims_downgrade(tmp_path: Path) -> None:
     """Layer: contract. Verifies unsupported higher claims remain forbidden."""
     first = execute_trusted_repo_change(workspace_root=tmp_path / "workspace", scenario="approved", run_index=1)
@@ -155,6 +163,7 @@ def test_replay_and_text_overclaims_downgrade(tmp_path: Path) -> None:
     assert _forbidden_reasons(text, "text_deterministic") == ["text_identity_evidence_missing"]
 
 
+@pytest.mark.integration
 def test_cli_commands_write_diff_ledger_outputs(tmp_path: Path) -> None:
     """Layer: integration. Verifies the new CLIs write stable diff-ledger JSON reports."""
     live_output = tmp_path / "live.json"

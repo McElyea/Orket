@@ -70,7 +70,7 @@ def _seed_run_ledger(db_path: Path) -> None:
         conn.commit()
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_build_runtime_truth_dashboard_seed_computes_expected_signal_counts(tmp_path: Path) -> None:
     db_path = tmp_path / "runtime.db"
     _seed_run_ledger(db_path)
@@ -82,13 +82,13 @@ def test_build_runtime_truth_dashboard_seed_computes_expected_signal_counts(tmp_
     assert payload["counts"]["silent_degrade_signals"] == 1
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_build_runtime_truth_dashboard_seed_main_fails_when_db_missing(tmp_path: Path) -> None:
     exit_code = main(["--db-path", str(tmp_path / "missing.db")])
     assert exit_code == 1
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_build_runtime_truth_dashboard_seed_main_uses_sys_argv_when_not_provided(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -100,7 +100,7 @@ def test_build_runtime_truth_dashboard_seed_main_uses_sys_argv_when_not_provided
     assert exit_code == 0
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_build_runtime_truth_dashboard_seed_treats_invalid_summary_json_as_invalid_signal(tmp_path: Path) -> None:
     db_path = tmp_path / "runtime.db"
     _seed_run_ledger(db_path)
@@ -129,7 +129,7 @@ def test_build_runtime_truth_dashboard_seed_treats_invalid_summary_json_as_inval
     assert payload["counts"]["silent_degrade_signals"] == 1
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_build_runtime_truth_dashboard_seed_treats_invalid_artifact_json_as_invalid_signal(tmp_path: Path) -> None:
     db_path = tmp_path / "runtime.db"
     _seed_run_ledger(db_path)

@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.proof.finite_trust_kernel_model import (
     FINITE_TRUST_KERNEL_MODEL_SCHEMA_VERSION,
     MODEL_SIGNATURE_ROLE,
@@ -13,6 +15,8 @@ from scripts.proof.trusted_repo_change_contract import DEFAULT_BUNDLE_NAME, FALL
 from scripts.proof.trusted_repo_change_verifier import build_trusted_repo_change_campaign_report
 from scripts.proof.trusted_repo_change_workflow import execute_trusted_repo_change
 from scripts.proof.trusted_run_non_interference import evaluate_offline_verifier_non_interference
+
+pytestmark = pytest.mark.contract
 
 
 def test_finite_model_accepts_repo_change_campaign(tmp_path: Path) -> None:

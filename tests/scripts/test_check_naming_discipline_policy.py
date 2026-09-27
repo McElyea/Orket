@@ -4,6 +4,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.governance.check_naming_discipline_policy import (
     check_naming_discipline_policy,
     evaluate_naming_discipline_policy,
@@ -11,14 +13,14 @@ from scripts.governance.check_naming_discipline_policy import (
 )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_evaluate_naming_discipline_policy_passes_for_current_repo() -> None:
     payload = evaluate_naming_discipline_policy()
     assert payload["ok"] is True
     assert payload["convention_count"] >= 1
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_check_naming_discipline_policy_writes_diff_ledger_payload(tmp_path: Path) -> None:
     out_path = tmp_path / "naming_discipline_policy_check.json"
     exit_code, payload = check_naming_discipline_policy(out_path=out_path)
@@ -29,7 +31,7 @@ def test_check_naming_discipline_policy_writes_diff_ledger_payload(tmp_path: Pat
     assert "diff_ledger" in written
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_main_returns_success(tmp_path: Path) -> None:
     out_path = tmp_path / "naming_discipline_policy_check.json"
     exit_code = main(["--out", str(out_path)])

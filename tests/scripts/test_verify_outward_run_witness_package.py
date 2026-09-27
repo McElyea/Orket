@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.proof.outward_run_witness_contract import (
     COMPARE_SCOPE_DENIED,
     COMPARE_SCOPE_POLICY_REJECTED,
@@ -23,8 +25,9 @@ def _without_diff_ledger(payload: dict[str, object]) -> dict[str, object]:
     return clean
 
 
+@pytest.mark.integration
 def test_verifier_rejects_missing_package_with_stable_output(tmp_path: Path) -> None:
-    """Layer: contract. Verifies proof execution without --package writes a stable rejected report."""
+    """Layer: integration. Verifies proof execution without --package writes a stable rejected report."""
     output = tmp_path / "report.json"
 
     exit_code = main(["--output", str(output)])
@@ -36,8 +39,9 @@ def test_verifier_rejects_missing_package_with_stable_output(tmp_path: Path) -> 
     assert report["missing_evidence"] == ["package_required_for_proof"]
 
 
+@pytest.mark.integration
 def test_verifier_writes_outward_run_witness_report_v1(tmp_path: Path) -> None:
-    """Layer: contract. Verifies the verifier command persists the report schema through the diff-ledger writer."""
+    """Layer: integration. Verifies the verifier command persists the report schema through the diff-ledger writer."""
     package_root = _minimal_package(tmp_path / "outward_run_witness_package.v1")
     output = tmp_path / "report.json"
 
@@ -51,8 +55,9 @@ def test_verifier_writes_outward_run_witness_report_v1(tmp_path: Path) -> None:
     assert isinstance(report["diff_ledger"], list)
 
 
+@pytest.mark.contract
 def test_verifier_payload_is_deterministic_for_identical_package_bytes(tmp_path: Path) -> None:
-    """Layer: unit. Verifies identical package bytes produce identical proof payloads before diff-ledger metadata."""
+    """Layer: contract. Verifies identical package bytes produce identical proof payloads before diff-ledger metadata."""
     package_root = _minimal_package(tmp_path / "outward_run_witness_package.v1")
 
     first = verify_package(package_root)
@@ -61,6 +66,7 @@ def test_verifier_payload_is_deterministic_for_identical_package_bytes(tmp_path:
     assert _without_diff_ledger(first) == _without_diff_ledger(second)
 
 
+@pytest.mark.contract
 def test_verifier_accepts_valid_single_turn_package(tmp_path: Path) -> None:
     """Layer: contract. Verifies the package verifier accepts a complete approved-path package."""
     package_root = _valid_package(tmp_path / "outward_run_witness_package.v1")
@@ -73,8 +79,9 @@ def test_verifier_accepts_valid_single_turn_package(tmp_path: Path) -> None:
     assert report["missing_evidence"] == []
 
 
+@pytest.mark.contract
 def test_verifier_accepts_valid_denial_package(tmp_path: Path) -> None:
-    """Layer: unit. Verifies the package verifier accepts a complete denial-path package."""
+    """Layer: contract. Verifies the package verifier accepts a complete denial-path package."""
     package_root = _valid_denial_package(tmp_path / "outward_run_witness_package.v1")
 
     report = verify_package(package_root, scope=COMPARE_SCOPE_DENIED)
@@ -85,8 +92,9 @@ def test_verifier_accepts_valid_denial_package(tmp_path: Path) -> None:
     assert report["missing_evidence"] == []
 
 
+@pytest.mark.contract
 def test_verifier_accepts_valid_policy_rejected_package(tmp_path: Path) -> None:
-    """Layer: unit. Verifies the package verifier accepts a complete policy-rejection package."""
+    """Layer: contract. Verifies the package verifier accepts a complete policy-rejection package."""
     package_root = _valid_policy_rejected_package(tmp_path / "outward_run_witness_package.v1")
 
     report = verify_package(package_root, scope=COMPARE_SCOPE_POLICY_REJECTED)

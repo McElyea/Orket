@@ -4,6 +4,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.governance.build_cross_lane_dependency_map import (
     build_cross_lane_dependency_map,
     build_cross_lane_dependency_mermaid,
@@ -16,7 +18,7 @@ def _write(path: Path, content: str) -> None:
     path.write_text(content, encoding="utf-8")
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_build_cross_lane_dependency_map_extracts_plan_dependencies(tmp_path: Path) -> None:
     _write(
         tmp_path / "docs" / "ROADMAP.md",
@@ -50,7 +52,7 @@ def test_build_cross_lane_dependency_map_extracts_plan_dependencies(tmp_path: Pa
     assert dependencies == ["docs/specs/ONE.md", "docs/specs/TWO.md"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_build_cross_lane_dependency_mermaid_contains_lane_and_edges(tmp_path: Path) -> None:
     _write(
         tmp_path / "docs" / "ROADMAP.md",
@@ -74,7 +76,7 @@ def test_build_cross_lane_dependency_mermaid_contains_lane_and_edges(tmp_path: P
     assert 'dep_0_0["docs/specs/THREE.md"]' in mermaid
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_export_cross_lane_dependency_map_writes_json_and_mermaid(tmp_path: Path) -> None:
     _write(
         tmp_path / "docs" / "ROADMAP.md",

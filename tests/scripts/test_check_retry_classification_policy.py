@@ -16,21 +16,21 @@ from scripts.governance.check_retry_classification_policy import (
 )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_evaluate_retry_classification_policy_passes_for_current_contract() -> None:
     payload = evaluate_retry_classification_policy()
     assert payload["ok"] is True
     assert payload["signal_count"] >= 1
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_validate_retry_classification_policy_report_accepts_current_payload() -> None:
     payload = validate_retry_classification_policy_report(evaluate_retry_classification_policy())
     assert payload["ok"] is True
     assert payload["signal_count"] >= 1
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_validate_retry_classification_policy_report_rejects_missing_signal_list() -> None:
     with pytest.raises(ValueError, match="E_RETRY_POLICY_REPORT_SIGNALS_INVALID"):
         _ = validate_retry_classification_policy_report(
@@ -43,7 +43,7 @@ def test_validate_retry_classification_policy_report_rejects_missing_signal_list
         )
 
 
-# Layer: integration
+@pytest.mark.contract
 def test_validate_retry_classification_policy_report_rejects_invalid_failure_snapshot() -> None:
     with pytest.raises(ValueError, match="E_RETRY_POLICY_REPORT_SNAPSHOT_INVALID:E_RETRY_POLICY_SCHEMA_VERSION_INVALID"):
         _ = validate_retry_classification_policy_report(
@@ -56,7 +56,7 @@ def test_validate_retry_classification_policy_report_rejects_invalid_failure_sna
         )
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_check_retry_classification_policy_writes_diff_ledger_payload(tmp_path: Path) -> None:
     out_path = tmp_path / "retry_policy_check.json"
     exit_code, payload = check_retry_classification_policy(out_path=out_path)
@@ -67,7 +67,7 @@ def test_check_retry_classification_policy_writes_diff_ledger_payload(tmp_path: 
     assert "diff_ledger" in written
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_check_retry_classification_policy_normalizes_malformed_report_before_writing(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -97,7 +97,7 @@ def test_check_retry_classification_policy_normalizes_malformed_report_before_wr
     assert "diff_ledger" in written
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_check_retry_classification_policy_normalizes_invalid_snapshot_before_writing(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -127,7 +127,7 @@ def test_check_retry_classification_policy_normalizes_invalid_snapshot_before_wr
     assert "diff_ledger" in written
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_main_returns_success(tmp_path: Path) -> None:
     out_path = tmp_path / "retry_policy_check.json"
     exit_code = main(["--out", str(out_path)])

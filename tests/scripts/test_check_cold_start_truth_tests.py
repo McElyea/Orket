@@ -4,6 +4,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.governance.check_cold_start_truth_tests import (
     check_cold_start_truth_tests,
     evaluate_cold_start_truth_tests,
@@ -11,14 +13,14 @@ from scripts.governance.check_cold_start_truth_tests import (
 )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_evaluate_cold_start_truth_tests_passes_for_stub_provider() -> None:
     payload = evaluate_cold_start_truth_tests()
     assert payload["ok"] is True
     assert payload["check_count"] >= 1
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_check_cold_start_truth_tests_writes_diff_ledger_payload(tmp_path: Path) -> None:
     out_path = tmp_path / "cold_start_truth_tests_check.json"
     exit_code, payload = check_cold_start_truth_tests(out_path=out_path)
@@ -29,7 +31,7 @@ def test_check_cold_start_truth_tests_writes_diff_ledger_payload(tmp_path: Path)
     assert "diff_ledger" in written
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_main_returns_success(tmp_path: Path) -> None:
     out_path = tmp_path / "cold_start_truth_tests_check.json"
     exit_code = main(["--out", str(out_path)])

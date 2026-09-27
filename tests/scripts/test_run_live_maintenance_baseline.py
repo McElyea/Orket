@@ -5,6 +5,8 @@ import asyncio
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.techdebt.run_live_maintenance_baseline import CommandOutcome, CommandSpec, main, run_baseline
 
 
@@ -50,7 +52,7 @@ def _runner_factory(*, docker_fail: bool = False, pytest_summary: str = "1 passe
     return _runner
 
 
-# Layer: contract
+@pytest.mark.integration
 def test_run_live_maintenance_baseline_writes_green_evidence(tmp_path: Path) -> None:
     exit_code = asyncio.run(
         run_baseline(
@@ -81,7 +83,7 @@ def test_run_live_maintenance_baseline_writes_green_evidence(tmp_path: Path) -> 
     assert "diff_ledger" in environment_payload
 
 
-# Layer: contract
+@pytest.mark.integration
 def test_run_live_maintenance_baseline_marks_environment_blocker_when_docker_preflight_fails(tmp_path: Path) -> None:
     exit_code = asyncio.run(
         run_baseline(
@@ -104,7 +106,7 @@ def test_run_live_maintenance_baseline_marks_environment_blocker_when_docker_pre
     assert result_payload["evidence"]["results"]["baseline_pytest"].startswith("NOT_RUN")
 
 
-# Layer: contract
+@pytest.mark.integration
 def test_run_live_maintenance_baseline_marks_skip_as_environment_blocker(tmp_path: Path) -> None:
     exit_code = asyncio.run(
         run_baseline(
@@ -126,7 +128,7 @@ def test_run_live_maintenance_baseline_marks_skip_as_environment_blocker(tmp_pat
     assert result_payload["result"] == "environment blocker"
 
 
-# Layer: unit
+@pytest.mark.unit
 def test_run_live_maintenance_baseline_rejects_invalid_baseline_id() -> None:
     exit_code = main(["--baseline-id", "bad/name"])
     assert exit_code == 2

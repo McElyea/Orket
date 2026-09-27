@@ -4,6 +4,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.governance.check_runtime_truth_foundation_contracts import (
     check_runtime_truth_foundation_contracts,
     evaluate_runtime_truth_foundation_contracts,
@@ -11,7 +13,7 @@ from scripts.governance.check_runtime_truth_foundation_contracts import (
 )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_evaluate_runtime_truth_foundation_contracts_passes_for_current_contracts() -> None:
     payload = evaluate_runtime_truth_foundation_contracts()
     assert payload["ok"] is True
@@ -21,7 +23,7 @@ def test_evaluate_runtime_truth_foundation_contracts_passes_for_current_contract
     assert "fail_behavior_registry_contract_valid" in checks
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_check_runtime_truth_foundation_contracts_writes_diff_ledger_payload(tmp_path: Path) -> None:
     out_path = tmp_path / "runtime_truth_foundation_contracts_check.json"
     exit_code, payload = check_runtime_truth_foundation_contracts(out_path=out_path)
@@ -32,7 +34,7 @@ def test_check_runtime_truth_foundation_contracts_writes_diff_ledger_payload(tmp
     assert "diff_ledger" in written
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_main_returns_success(tmp_path: Path) -> None:
     out_path = tmp_path / "runtime_truth_foundation_contracts_check.json"
     exit_code = main(["--out", str(out_path)])

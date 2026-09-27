@@ -4,6 +4,10 @@ from __future__ import annotations
 import importlib.util
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
 MODULE_PATH = Path("scripts/providers/provider_model_resolver.py")
 SPEC = importlib.util.spec_from_file_location("provider_model_resolver", MODULE_PATH)
 assert SPEC and SPEC.loader

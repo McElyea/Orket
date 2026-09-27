@@ -4,11 +4,17 @@ import hashlib
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.proof.run_trust_conformance_pack import (
     CONFORMANCE_SUMMARY_SCHEMA_VERSION,
+)
+from scripts.proof.run_trust_conformance_pack import (
     main as conformance_main,
 )
 from scripts.proof.trusted_repo_change_contract import TARGET_CLAIM_TIER, TRUSTED_REPO_COMPARE_SCOPE
+
+pytestmark = pytest.mark.integration
 
 
 def test_conformance_pack_command_generates_positive_and_negative_cases(tmp_path: Path) -> None:

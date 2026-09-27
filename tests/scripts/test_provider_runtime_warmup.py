@@ -1,9 +1,13 @@
 # LIFECYCLE: live
 from __future__ import annotations
 
+import pytest
+
 import scripts.providers.provider_runtime_warmup as warmup
 
-# Layer: contract
+pytestmark = pytest.mark.unit
+
+# Layer: unit
 
 
 def test_warmup_provider_model_delegates_to_shared_runtime_target(monkeypatch) -> None:

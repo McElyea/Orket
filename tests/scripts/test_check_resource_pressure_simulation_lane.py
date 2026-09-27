@@ -4,6 +4,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.governance.check_resource_pressure_simulation_lane import (
     check_resource_pressure_simulation_lane,
     evaluate_resource_pressure_simulation_lane,
@@ -11,14 +13,14 @@ from scripts.governance.check_resource_pressure_simulation_lane import (
 )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_evaluate_resource_pressure_simulation_lane_passes() -> None:
     payload = evaluate_resource_pressure_simulation_lane()
     assert payload["ok"] is True
     assert payload["check_count"] == 3
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_check_resource_pressure_simulation_lane_writes_diff_ledger_payload(tmp_path: Path) -> None:
     out_path = tmp_path / "resource_pressure_simulation_lane_check.json"
     exit_code, payload = check_resource_pressure_simulation_lane(out_path=out_path)
@@ -29,7 +31,7 @@ def test_check_resource_pressure_simulation_lane_writes_diff_ledger_payload(tmp_
     assert "diff_ledger" in written
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_main_returns_success(tmp_path: Path) -> None:
     out_path = tmp_path / "resource_pressure_simulation_lane_check.json"
     exit_code = main(["--out", str(out_path)])

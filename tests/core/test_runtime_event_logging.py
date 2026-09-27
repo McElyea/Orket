@@ -8,6 +8,8 @@ import threading
 from pathlib import Path
 from typing import Any
 
+import pytest
+
 import orket.logging as logging_module
 from orket.adapters.observability import log_publication as logging_owner
 from orket.logging import get_member_metrics, log_event
@@ -22,6 +24,7 @@ def _load_last_log_record(path: Path) -> dict:
 
 
 # Layer: integration
+@pytest.mark.integration
 def test_log_event_adds_runtime_event_envelope_and_artifact(tmp_path: Path) -> None:
     log_event(
         "turn_complete",
@@ -60,12 +63,14 @@ def test_log_event_adds_runtime_event_envelope_and_artifact(tmp_path: Path) -> N
     assert artifact_event["session_id"] == "run-1"
 
 
+@pytest.mark.integration
 def test_log_event_runtime_artifact_skips_when_session_missing(tmp_path: Path) -> None:
     log_event("generic_event", {"role": "system"}, workspace=tmp_path)
     runtime_events_path = tmp_path / "agent_output" / "observability" / "runtime_events.jsonl"
     assert not runtime_events_path.exists()
 
 
+@pytest.mark.integration
 def test_log_event_persists_structured_determinism_violation_fields(tmp_path: Path) -> None:
     log_event(
         "determinism_violation",
@@ -97,6 +102,7 @@ def test_log_event_persists_structured_determinism_violation_fields(tmp_path: Pa
     assert artifact_event["side_effect_signal_keys"] == ["tool_name_side_effect", "changed_files"]
 
 
+@pytest.mark.integration
 def test_log_event_isolated_per_workspace(tmp_path: Path) -> None:
     workspace_a = tmp_path / "workspace-a"
     workspace_b = tmp_path / "workspace-b"
@@ -114,8 +120,9 @@ def test_log_event_isolated_per_workspace(tmp_path: Path) -> None:
     assert not any('"event": "event_a"' in line for line in lines_b)
 
 
+@pytest.mark.integration
 def test_log_event_routes_legacy_level_through_stdlib_logger(tmp_path: Path, monkeypatch) -> None:
-    """Layer: contract. Verifies legacy level routing drives stdlib logging and a first-class log level field."""
+    """Layer: integration. Verifies legacy level routing drives stdlib logging and a first-class log level field."""
     monkeypatch.chdir(tmp_path)
     logger = logging.getLogger("orket")
     captured: list[logging.LogRecord] = []
@@ -140,6 +147,7 @@ def test_log_event_routes_legacy_level_through_stdlib_logger(tmp_path: Path, mon
     assert record["event"] == "legacy_event"
 
 
+@pytest.mark.unit
 def test_log_write_queue_drops_when_full_without_blocking_event_loop(tmp_path: Path, monkeypatch) -> None:
     """Layer: unit. Verifies async-reachable log writes use bounded lossy backpressure."""
     monkeypatch.setattr(logging_owner, "_log_write_queue", queue.Queue(maxsize=1))
@@ -170,6 +178,7 @@ def _assert_frontier_observation(first: Path, later: Path, excluded_later: bool,
 
 
 # Layer: integration
+@pytest.mark.integration
 def test_log_write_frontier_excludes_later_unrelated_append(tmp_path: Path, monkeypatch, record_property) -> None:
     """Layer: integration. A captured FIFO frontier settles prior appends without waiting for later work."""
     settle = getattr(logging_module, "settle_log_write_frontier", None)
@@ -239,6 +248,7 @@ def test_log_write_frontier_excludes_later_unrelated_append(tmp_path: Path, monk
     _assert_frontier_observation(first, later, excluded_later, record_property)
 
 
+@pytest.mark.integration
 def test_get_member_metrics_returns_aggregated_roles(tmp_path: Path) -> None:
     log_path = tmp_path / "orket.log"
     log_path.write_text(
@@ -272,6 +282,7 @@ def test_get_member_metrics_returns_aggregated_roles(tmp_path: Path) -> None:
     assert metrics["coder"]["lines_written"] == 2
 
 
+@pytest.mark.integration
 def test_log_event_persists_sdk_capability_authorization_fields(tmp_path: Path) -> None:
     log_event(
         "sdk_capability_call_blocked",

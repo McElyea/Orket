@@ -4,7 +4,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.governance.check_install_surface_convergence import main
+
+pytestmark = pytest.mark.integration
 
 
 def _write(path: Path, content: str) -> None:

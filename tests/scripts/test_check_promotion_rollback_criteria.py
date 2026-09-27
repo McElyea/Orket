@@ -4,6 +4,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.governance.check_promotion_rollback_criteria import (
     check_promotion_rollback_criteria,
     evaluate_promotion_rollback_criteria,
@@ -11,14 +13,14 @@ from scripts.governance.check_promotion_rollback_criteria import (
 )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_evaluate_promotion_rollback_criteria_passes_for_current_contract() -> None:
     payload = evaluate_promotion_rollback_criteria()
     assert payload["ok"] is True
     assert payload["trigger_count"] >= 1
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_check_promotion_rollback_criteria_writes_diff_ledger_payload(tmp_path: Path) -> None:
     out_path = tmp_path / "promotion_rollback_criteria_check.json"
     exit_code, payload = check_promotion_rollback_criteria(out_path=out_path)
@@ -29,7 +31,7 @@ def test_check_promotion_rollback_criteria_writes_diff_ledger_payload(tmp_path: 
     assert "diff_ledger" in written
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_main_returns_success(tmp_path: Path) -> None:
     out_path = tmp_path / "promotion_rollback_criteria_check.json"
     exit_code = main(["--out", str(out_path)])

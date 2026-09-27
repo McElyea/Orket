@@ -3,13 +3,15 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.proof.run_outward_run_witness_campaign import build_campaign_report, main
 from scripts.proof.verify_outward_run_witness_package import verify_package
-
 
 BASE = Path("tests/proof_fixtures/outward_run/base_approved_package")
 
 
+@pytest.mark.contract
 def test_one_accepted_package_report_cannot_claim_verifier_stable() -> None:
     """Layer: contract. Verifies one accepted report cannot produce campaign stability."""
     report = verify_package(BASE)
@@ -20,6 +22,7 @@ def test_one_accepted_package_report_cannot_claim_verifier_stable() -> None:
     assert campaign["missing_evidence_union"] == ["claim_tier_not_supported"]
 
 
+@pytest.mark.contract
 def test_matching_accepted_reports_produce_stable_campaign_report() -> None:
     """Layer: contract. Verifies matching accepted reports can claim outward_verifier_stable."""
     report = verify_package(BASE)
@@ -32,8 +35,9 @@ def test_matching_accepted_reports_produce_stable_campaign_report() -> None:
     assert campaign["invariant_signature_stable"] is True
 
 
+@pytest.mark.integration
 def test_campaign_cli_writes_diff_ledger_report(tmp_path: Path) -> None:
-    """Layer: contract. Verifies the campaign command writes rerunnable JSON."""
+    """Layer: integration. Verifies the campaign command writes rerunnable JSON."""
     report = verify_package(BASE)
     report_path = tmp_path / "report.json"
     report_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")

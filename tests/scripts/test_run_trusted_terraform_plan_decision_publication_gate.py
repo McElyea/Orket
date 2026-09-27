@@ -4,9 +4,13 @@ import json
 import subprocess
 from pathlib import Path
 
+import pytest
+
 import scripts.proof.run_trusted_terraform_plan_decision_publication_gate as gate
 from scripts.proof.check_trusted_terraform_publication_readiness import main as readiness_main
 from scripts.proof.trusted_terraform_plan_decision_contract import TRUSTED_TERRAFORM_COMPARE_SCOPE
+
+pytestmark = pytest.mark.integration
 
 
 def _write_json(path: Path, payload: dict) -> None:
@@ -63,7 +67,7 @@ def _fake_run(*, runtime_observed_result: str):
 
 
 def test_publication_gate_records_environment_blocker(tmp_path: Path, monkeypatch) -> None:
-    """Layer: contract. Verifies the aggregate gate fails fast when live inputs are absent."""
+    """Layer: integration. Verifies the aggregate gate fails fast when live inputs are absent."""
     monkeypatch.delenv("ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_S3_URI", raising=False)
     monkeypatch.delenv("ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_MODEL_ID", raising=False)
     monkeypatch.delenv("AWS_REGION", raising=False)
@@ -111,7 +115,7 @@ def test_publication_gate_records_environment_blocker(tmp_path: Path, monkeypatc
 
 
 def test_publication_gate_can_force_local_evidence_when_preflight_is_blocked(tmp_path: Path, monkeypatch) -> None:
-    """Layer: contract. Verifies operators can refresh local evidence while preserving blocked publication truth."""
+    """Layer: integration. Verifies operators can refresh local evidence while preserving blocked publication truth."""
     monkeypatch.delenv("ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_S3_URI", raising=False)
     monkeypatch.delenv("ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_MODEL_ID", raising=False)
     monkeypatch.delenv("AWS_REGION", raising=False)
@@ -135,7 +139,7 @@ def test_publication_gate_can_force_local_evidence_when_preflight_is_blocked(tmp
 
 
 def test_publication_gate_allows_only_complete_ready_sequence(tmp_path: Path, monkeypatch) -> None:
-    """Layer: contract. Verifies the aggregate gate allows readiness only when every sequenced proof passes."""
+    """Layer: integration. Verifies the aggregate gate allows readiness only when every sequenced proof passes."""
     monkeypatch.setenv("ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_S3_URI", "s3://terraform-review-fixtures/plan.json")
     monkeypatch.setenv("ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_MODEL_ID", "anthropic.fake")
     monkeypatch.setenv("AWS_REGION", "us-east-1")

@@ -4,11 +4,15 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.prompt_lab import run_prompt_reforger_gemma_tool_use_inventory as script
+
+pytestmark = pytest.mark.integration
 
 
 def test_main_writes_diff_ledger_and_marks_degraded_when_12b_is_blocked(monkeypatch, tmp_path: Path) -> None:
-    """Layer: contract. Verifies the Gemma lane inventory writes the canonical artifact and degrades truthfully."""
+    """Layer: integration. Verifies the Gemma lane inventory writes the canonical artifact and degrades truthfully."""
     out_path = tmp_path / "benchmarks" / "staging" / "General" / "prompt_reforger_gemma_tool_use_inventory.json"
     responses = {
         ("lmstudio", "google/gemma-3-12b-it-qat"): {
@@ -165,7 +169,7 @@ def test_main_writes_diff_ledger_and_marks_degraded_when_12b_is_blocked(monkeypa
 
 
 def test_main_uses_fallback_when_primary_judge_is_blocked(monkeypatch, tmp_path: Path) -> None:
-    """Layer: contract. Verifies the lane records fallback when the primary judge is blocked but the LM Studio judge is present."""
+    """Layer: integration. Verifies the lane records fallback when the primary judge is blocked but the LM Studio judge is present."""
     out_path = tmp_path / "prompt_reforger_gemma_tool_use_inventory.json"
     responses = {
         ("lmstudio", "google/gemma-3-12b-it-qat"): {

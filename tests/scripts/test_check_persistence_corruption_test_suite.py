@@ -4,14 +4,18 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.governance.check_persistence_corruption_test_suite import (
     check_persistence_corruption_test_suite,
     evaluate_persistence_corruption_test_suite,
     main,
 )
 
+pytestmark = pytest.mark.integration
 
-# Layer: contract
+
+# Layer: integration
 def test_evaluate_persistence_corruption_test_suite_passes() -> None:
     payload = evaluate_persistence_corruption_test_suite()
     assert payload["ok"] is True

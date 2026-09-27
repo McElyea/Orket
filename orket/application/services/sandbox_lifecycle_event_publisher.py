@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from orket.application.services.sandbox_lifecycle_event_service import SandboxLifecycleEventService
+from orket.core.contracts.log_event_inputs import capture_log_event_inputs
 from orket.core.domain.sandbox_lifecycle_records import SandboxLifecycleEventRecord
 
 
@@ -32,19 +33,21 @@ class SandboxLifecycleEventPublisher:
         payload: dict[str, object],
         event_kind: str = "lifecycle",
     ) -> str:
+        event_type, values = capture_log_event_inputs(event_type, {
+            "sandbox_id": sandbox_id, "created_at": created_at, "event_kind": event_kind, "payload": payload})
         return await self.event_service.emit(
             SandboxLifecycleEventRecord(
                 event_id=self._event_id(
-                    sandbox_id=sandbox_id,
-                    created_at=created_at,
+                    sandbox_id=values["sandbox_id"],
+                    created_at=values["created_at"],
                     event_type=event_type,
-                    payload=payload,
+                    payload=values["payload"],
                 ),
-                sandbox_id=sandbox_id,
-                event_kind=event_kind,
+                sandbox_id=values["sandbox_id"],
+                event_kind=values["event_kind"],
                 event_type=event_type,
-                created_at=created_at,
-                payload=payload,
+                created_at=values["created_at"],
+                payload=values["payload"],
             )
         )
 

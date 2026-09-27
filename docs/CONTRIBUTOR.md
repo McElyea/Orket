@@ -73,12 +73,24 @@ collection failures; strict acceptance requires zero of each. Both taxonomy and
 critical no-op checks use the shared Git-visible inventory, including nonignored
 untracked files. Run their regression tests and preserve the canonical Ruff and
 coverage gates. Contract: `docs/specs/QUALITY_CHECKER_CONTRACT.md`.
+Turn-tool ownership controls recognize explicit service and captured-binding
+imports; both Quality selections retain the exact caller map and adverse scan
+controls. These are bounded structural observations, not general alias analysis.
 
 Optional loop logging captures supported built-in inputs and admits independent
 main/artifact stages to the existing bounded writer. Return is admission only.
 Both Quality selections retain capture, overflow, fatal-writer and API handoff
 controls. Explicit preparation and required-producer migration remain separate
 under `docs/specs/LOG_WRITE_SETTLEMENT.md`.
+
+Sandbox event publication captures supported built-in values before event identity
+and persistence. Append and replay share native ownership; preserve busy refusal,
+legacy-sentinel migration and partial effects. Both Quality jobs retain file,
+SQLite, process and input controls under `docs/specs/SANDBOX_EVENT_PUBLICATION_OWNERSHIP.md`.
+API startup validation uses the existing owned native worker before engine startup;
+keep handler/cancellation/security controls under `docs/specs/API_RUNTIME_LIFECYCLE.md`.
+Public enum representation controls run in both Quality selections; declaration-local
+exceptions preserve the bounded scope in `docs/specs/PUBLIC_ENUM_REPRESENTATION_CONTRACT.md`.
 
 Direct sandbox cleanup decision builders supply `compose_path_available`; the
 application observes it once through the retained native owner. Both Quality

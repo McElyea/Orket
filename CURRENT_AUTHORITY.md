@@ -2,6 +2,29 @@
 
 Last updated: 2026-09-27
 
+The 0.6.108 checkpoint captures sandbox event values before identity generation
+and publication. Existing I/O owners retain primary/fallback and replay work;
+append and replay share nonblocking native ownership. Busy fallback refuses,
+legacy sentinels require explicit maintenance, and partial effects remain visible.
+Contract: `docs/specs/SANDBOX_EVENT_PUBLICATION_OWNERSHIP.md`.
+
+API startup captures and owns the complete authentication validation call before
+engine initialization. Required handlers execute in the native worker, retaining
+failure precedence and production/staging refusal. Other logging preparation and
+required producers remain open. Contract: `docs/specs/API_RUNTIME_LIFECYCLE.md`.
+
+E1 adds canonical markers to 841 reviewed existing cases and repairs governance,
+driver and pipeline fixtures. The ownership scanner recognizes captured bindings
+without changing its exact caller map. Fifty-two enum declarations retain existing
+diagnostic and JSON behavior under declaration-local Ruff exceptions, with explicit
+member, reexport and serialization controls. The same 686 selected cases pass in
+source and installed Windows Python 3.11/3.12; package parity, real CLI paths and
+strict tool-audit payload readback pass. Ruff, dependency and critical no-op checks
+pass. Taxonomy still fails with 2,809 missing layers among 10,606 collected cases;
+full coverage, hosted Quality, Linux application proof and whole-lane acceptance
+remain open. The architectural-truth plan records the frozen scope and proof limits.
+Contract: `docs/specs/PUBLIC_ENUM_REPRESENTATION_CONTRACT.md`.
+
 The 0.6.107 checkpoint corrects the five retained optional logging openings. Its
 combined 385-case cohort passes in source and installed Windows Python 3.11/3.12,
 including diagnostic-append, overflow and layer controls. Event-loop callers detach supported built-in values

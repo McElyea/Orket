@@ -8,7 +8,9 @@ import pytest
 
 from scripts.proof.offline_trusted_run_verifier import TARGET_CLAIM_TIER
 from scripts.proof.run_trusted_terraform_plan_decision import main as run_trusted_terraform_plan_decision_main
-from scripts.proof.run_trusted_terraform_plan_decision_campaign import main as run_trusted_terraform_plan_decision_campaign_main
+from scripts.proof.run_trusted_terraform_plan_decision_campaign import (
+    main as run_trusted_terraform_plan_decision_campaign_main,
+)
 from scripts.proof.trusted_terraform_plan_decision_contract import (
     DEFAULT_BUNDLE_NAME,
     build_contract_verdict,
@@ -22,6 +24,7 @@ from scripts.proof.trusted_terraform_plan_decision_workflow import execute_trust
 from scripts.proof.verify_offline_trusted_run_claim import main as offline_verifier_main
 
 
+@pytest.mark.integration
 def test_risky_publish_workflow_emits_valid_witness_bundle(tmp_path: Path) -> None:
     """Layer: integration. Verifies the Terraform trusted-scope wrapper emits a valid success-shaped witness bundle."""
     live = execute_trusted_terraform_plan_decision(workspace_root=tmp_path / "workspace", scenario="risky_publish")
@@ -34,6 +37,7 @@ def test_risky_publish_workflow_emits_valid_witness_bundle(tmp_path: Path) -> No
     assert verify_trusted_terraform_plan_decision_bundle_payload(bundle)["observed_result"] == "success"
 
 
+@pytest.mark.integration
 def test_degraded_publish_preserves_trusted_decision_truth(tmp_path: Path) -> None:
     """Layer: integration. Verifies summarizer failure degrades publication without breaking trusted decision proof."""
     live = execute_trusted_terraform_plan_decision(workspace_root=tmp_path / "workspace", scenario="degraded_publish")
@@ -47,6 +51,7 @@ def test_degraded_publish_preserves_trusted_decision_truth(tmp_path: Path) -> No
     assert verify_trusted_terraform_plan_decision_bundle_payload(bundle)["observed_result"] == "success"
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize(
     ("scenario", "expected_status"),
     [("no_publish_invalid_json", "failure"), ("blocked_capability", "blocked_by_policy")],
@@ -61,8 +66,9 @@ def test_negative_workflow_scenarios_fail_truthfully(tmp_path: Path, scenario: s
     assert live["witness_report"]["observed_result"] == "failure"
 
 
+@pytest.mark.integration
 def test_campaign_and_offline_verifier_allow_verdict_deterministic(tmp_path: Path) -> None:
-    """Layer: contract. Verifies repeat Terraform decision evidence reaches only the bounded verdict claim tier."""
+    """Layer: integration. Verifies repeat Terraform decision evidence reaches only the bounded verdict claim tier."""
     first = execute_trusted_terraform_plan_decision(workspace_root=tmp_path / "workspace", scenario="risky_publish", run_index=1)
     second = execute_trusted_terraform_plan_decision(workspace_root=tmp_path / "workspace", scenario="risky_publish", run_index=2)
     campaign = build_trusted_terraform_plan_decision_campaign_report([first["witness_report"], second["witness_report"]])
@@ -75,6 +81,7 @@ def test_campaign_and_offline_verifier_allow_verdict_deterministic(tmp_path: Pat
     assert report["claim_tier"] == TARGET_CLAIM_TIER
 
 
+@pytest.mark.contract
 @pytest.mark.parametrize(
     ("corruption_id", "mutate", "expected"),
     [
@@ -102,6 +109,7 @@ def test_corruption_matrix_fails_closed(tmp_path: Path, corruption_id: str, muta
     assert expected in report["missing_evidence"], corruption_id
 
 
+@pytest.mark.contract
 def test_replay_and_text_overclaims_downgrade(tmp_path: Path) -> None:
     """Layer: contract. Verifies unsupported Terraform higher claims remain forbidden."""
     first = execute_trusted_terraform_plan_decision(workspace_root=tmp_path / "workspace", scenario="risky_publish", run_index=1)
@@ -119,6 +127,7 @@ def test_replay_and_text_overclaims_downgrade(tmp_path: Path) -> None:
     assert _forbidden_reasons(text, "text_deterministic") == ["text_identity_evidence_missing"]
 
 
+@pytest.mark.integration
 def test_cli_commands_write_diff_ledger_outputs(tmp_path: Path) -> None:
     """Layer: integration. Verifies the Terraform proof CLIs write stable diff-ledger JSON outputs."""
     live_output = tmp_path / "live.json"

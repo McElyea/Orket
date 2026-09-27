@@ -8,7 +8,7 @@ from packaging.version import InvalidVersion, Version
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
-class GuardName(str, enum.Enum):
+class GuardName(str, enum.Enum):  # noqa: UP042 - public enum representation contract
     HALLUCINATION = "hallucination"
     STRUCTURE = "structure"
     SAFETY = "safety"

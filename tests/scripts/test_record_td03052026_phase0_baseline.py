@@ -4,6 +4,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.techdebt.record_td03052026_phase0_baseline import main
 
 
@@ -20,6 +22,7 @@ def _default_commands() -> list[str]:
     ]
 
 
+@pytest.mark.integration
 def test_record_phase0_baseline_writes_artifacts_and_sets_g1_green(tmp_path: Path) -> None:
     out_root = tmp_path / "td03052026"
     args = [
@@ -68,6 +71,7 @@ def test_record_phase0_baseline_writes_artifacts_and_sets_g1_green(tmp_path: Pat
     assert "diff_ledger" in dashboard_payload
 
 
+@pytest.mark.integration
 def test_record_phase0_baseline_strict_fails_when_required_smoke_fails(tmp_path: Path) -> None:
     out_root = tmp_path / "td03052026"
     args = [
@@ -97,6 +101,7 @@ def test_record_phase0_baseline_strict_fails_when_required_smoke_fails(tmp_path:
     assert dashboard_payload["gates"]["G1"]["state"] == "red"
 
 
+@pytest.mark.contract
 def test_record_phase0_baseline_rejects_waived_for_p0_gate(tmp_path: Path) -> None:
     out_root = tmp_path / "td03052026"
     args = [
@@ -122,6 +127,7 @@ def test_record_phase0_baseline_rejects_waived_for_p0_gate(tmp_path: Path) -> No
     assert exit_code == 2
 
 
+@pytest.mark.integration
 def test_record_phase0_baseline_forces_g7_red_when_prerequisites_are_not_green(tmp_path: Path) -> None:
     out_root = tmp_path / "td03052026"
     args = [

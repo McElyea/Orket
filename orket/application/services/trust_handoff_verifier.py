@@ -4,10 +4,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from orket.core.domain.outward_ledger import verify_ledger_export
-
 from orket.application.services.trust_handoff_contract import (
     ADMITTED_SOURCE_WITNESS_SCOPES,
+    BUNDLE_PATH,
     BUNDLE_SCHEMA_VERSION,
     COMMITTED_OUTPUT_PATH,
     COMPARE_SCOPE,
@@ -18,7 +17,6 @@ from orket.application.services.trust_handoff_contract import (
     REPORT_SCHEMA_VERSION,
     SCOPE_SCHEMA_VERSION,
     SOURCE_WITNESS_BUNDLE_PATH,
-    BUNDLE_PATH,
     canonical_json_digest,
     envelope_digest,
     failure_class,
@@ -28,6 +26,7 @@ from orket.application.services.trust_handoff_contract import (
     sha256_bytes,
     stable_invariant_signature,
 )
+from orket.core.domain.outward_ledger import verify_ledger_export
 
 _REQUIRED_MANIFEST_FIELDS = {
     "schema_version",
@@ -123,7 +122,7 @@ def _load_package(package_path: Path, state: _State) -> _LoadedPackage:
     except (OSError, UnicodeDecodeError, ValueError):
         state.check("MATH-CHECK-001", False, "package_manifest_schema_invalid", "parse")
     state.manifest = manifest
-    schema_ok = manifest.get("schema_version") == PACKAGE_SCHEMA_VERSION and _REQUIRED_MANIFEST_FIELDS <= set(manifest)
+    schema_ok = manifest.get("schema_version") == PACKAGE_SCHEMA_VERSION and set(manifest) >= _REQUIRED_MANIFEST_FIELDS
     artifact_paths = manifest.get("artifact_paths")
     schema_ok = schema_ok and isinstance(artifact_paths, dict) and bool(artifact_paths.get("committed_output"))
     state.check("MATH-CHECK-001", bool(schema_ok), "package_manifest_schema_invalid")
@@ -159,7 +158,7 @@ def _verify_loaded_package(
     manifest = loaded.manifest
     bundle = _json_file(loaded, str(manifest["bundle_path"]), "bundle_schema_invalid")
     state.bundle = bundle
-    schema_ok = bundle.get("schema_version") == BUNDLE_SCHEMA_VERSION and _REQUIRED_BUNDLE_FIELDS <= set(bundle)
+    schema_ok = bundle.get("schema_version") == BUNDLE_SCHEMA_VERSION and set(bundle) >= _REQUIRED_BUNDLE_FIELDS
     schema_ok = schema_ok and isinstance(bundle.get("source_policy_identity"), dict)
     state.check("MATH-CHECK-005", bool(schema_ok), "bundle_schema_invalid")
     state.check("MATH-CHECK-006", bundle.get("compare_scope") == COMPARE_SCOPE, "bundle_schema_invalid", "compare_scope")

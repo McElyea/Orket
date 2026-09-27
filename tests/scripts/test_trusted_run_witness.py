@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import copy
+
 import pytest
 
+from scripts.proof.trusted_run_invariant_model import evaluate_trusted_run_invariants
 from scripts.proof.trusted_run_witness_support import (
     FALLBACK_CLAIM_TIER,
     REPORT_SCHEMA_VERSION,
@@ -10,8 +12,9 @@ from scripts.proof.trusted_run_witness_support import (
     build_campaign_verification_report,
     verify_witness_bundle_payload,
 )
-from scripts.proof.trusted_run_invariant_model import evaluate_trusted_run_invariants
 from tests.helpers.trusted_run_witness_fixtures import valid_bundle as _valid_bundle
+
+pytestmark = pytest.mark.contract
 
 def test_valid_single_bundle_verifies_as_lab_only() -> None:
     """Layer: contract. Verifies a complete bundle passes but remains single-run lab tier."""

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from scripts.proof.control_plane_witness_substrate import evaluate_control_plane_witness_substrate
 from scripts.proof.trusted_run_witness_support import (
     FALLBACK_CLAIM_TIER,
@@ -8,6 +10,8 @@ from scripts.proof.trusted_run_witness_support import (
     verify_witness_bundle_payload,
 )
 from tests.scripts.test_trusted_run_witness import _valid_bundle
+
+pytestmark = pytest.mark.contract
 
 
 def test_valid_bundle_includes_passing_substrate_model() -> None:

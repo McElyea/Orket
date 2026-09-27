@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from orket.core.domain.workitem_transition import (
     TransitionErrorCode,
     WorkItemTransitionService,
@@ -9,6 +11,7 @@ from orket.core.domain.workitem_transition import (
 from orket.schema import CardStatus
 
 
+@pytest.mark.contract
 def test_workitem_transition_requires_action_api() -> None:
     service = WorkItemTransitionService()
     result = service.request_transition(action="", current_status=CardStatus.READY)
@@ -24,12 +27,14 @@ def test_workitem_transition_requires_action_api() -> None:
     assert success.new_status == "in_progress"
 
 
+@pytest.mark.contract
 def test_executor_cannot_set_status_directly() -> None:
     source = Path("orket/application/workflows/turn_executor.py").read_text(encoding="utf-8")
     assert ".update_status(" not in source
     assert "issue.status =" not in source
 
 
+@pytest.mark.contract
 def test_legacy_cards_profile_parity() -> None:
     service = WorkItemTransitionService(workflow_profile="legacy_cards_v1")
     to_review = service.request_transition(
@@ -42,6 +47,7 @@ def test_legacy_cards_profile_parity() -> None:
     assert to_review.new_status == "code_review"
 
 
+@pytest.mark.contract
 def test_legacy_cards_profile_allows_review_retry_to_ready() -> None:
     """Layer: contract. Verifies review-stage retries can return an issue to the build queue."""
     service = WorkItemTransitionService(workflow_profile="legacy_cards_v1")
@@ -55,6 +61,7 @@ def test_legacy_cards_profile_allows_review_retry_to_ready() -> None:
     assert retry.new_status == "ready"
 
 
+@pytest.mark.contract
 def test_project_task_profile_core_flow() -> None:
     service = WorkItemTransitionService(workflow_profile="project_task_v1")
     start = service.request_transition(
@@ -74,6 +81,7 @@ def test_project_task_profile_core_flow() -> None:
     assert finish.new_status == "done"
 
 
+@pytest.mark.contract
 def test_gate_runs_pre_and_post_transition() -> None:
     calls: list[str] = []
 
@@ -99,6 +107,7 @@ def test_gate_runs_pre_and_post_transition() -> None:
     assert calls == ["pre", "post"]
 
 
+@pytest.mark.contract
 def test_system_set_status_requires_reason_and_records_override_metadata() -> None:
     """Layer: contract. Verifies override requests still require an audit reason and preserve audit metadata."""
     service = WorkItemTransitionService(workflow_profile="legacy_cards_v1")
@@ -122,6 +131,7 @@ def test_system_set_status_requires_reason_and_records_override_metadata() -> No
     assert overridden.metadata.get("override_reason") == "dependency_blocked"
 
 
+@pytest.mark.contract
 def test_system_set_status_enforces_transition_rules() -> None:
     """Layer: contract. Verifies override requests cannot bypass the workflow/state-machine transition rules."""
     service = WorkItemTransitionService(workflow_profile="legacy_cards_v1")
@@ -136,6 +146,7 @@ def test_system_set_status_enforces_transition_rules() -> None:
     assert "invalid transition" in str(rejected.error).lower()
 
 
+@pytest.mark.contract
 def test_system_set_status_runs_gate_boundaries_for_allowed_transitions() -> None:
     """Layer: contract. Verifies override requests still pass through the transition boundary hooks."""
     calls: list[str] = []
@@ -164,6 +175,7 @@ def test_system_set_status_runs_gate_boundaries_for_allowed_transitions() -> Non
     assert calls == ["pre", "post"]
 
 
+@pytest.mark.contract
 def test_system_set_status_allows_retry_requeue_from_in_progress_to_ready() -> None:
     """Layer: contract. Verifies system retry scheduling can requeue an in-progress issue to READY."""
     service = WorkItemTransitionService(workflow_profile="legacy_cards_v1")

@@ -5,9 +5,13 @@ import asyncio
 import json
 from pathlib import Path
 
+import pytest
+
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
 from orket.adapters.storage.async_repositories import AsyncRunLedgerRepository
 from scripts.protocol.compare_run_ledger_backends import main
+
+pytestmark = pytest.mark.integration
 
 
 async def _seed_ledgers(

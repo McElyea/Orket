@@ -1,7 +1,11 @@
 # LIFECYCLE: live
 from __future__ import annotations
 
+import pytest
+
 import scripts.providers.check_model_provider_preflight as preflight
+
+pytestmark = pytest.mark.unit
 
 
 def test_lmstudio_preflight_sanitizes_model_cache_pre_and_post(monkeypatch) -> None:

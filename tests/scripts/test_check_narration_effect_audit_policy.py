@@ -1,7 +1,11 @@
 # LIFECYCLE: live
 from __future__ import annotations
 
+import pytest
+
 from scripts.governance.check_narration_effect_audit_policy import evaluate_narration_effect_audit_policy
+
+pytestmark = pytest.mark.contract
 
 
 # Layer: contract

@@ -4,7 +4,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.extensions.compare_controller_replay_parity import main
+
+pytestmark = pytest.mark.integration
 
 
 def _payload(*, status: str, error_code: str | None) -> dict:

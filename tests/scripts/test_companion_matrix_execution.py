@@ -4,8 +4,11 @@ from __future__ import annotations
 import json
 
 import httpx
+import pytest
 
 from scripts.companion.companion_matrix_execution import coverage_blockers, evaluate_case
+
+pytestmark = pytest.mark.contract
 
 
 def _execution_transport(
@@ -79,7 +82,7 @@ def _execution_transport(
 
 
 def test_evaluate_case_success_returns_primary_path_with_measured_scores() -> None:
-    """Layer: integration. Verifies evaluate_case returns primary success with measured score dimensions when all steps pass."""
+    """Layer: contract. Verifies evaluate_case returns primary success with measured score dimensions when all steps pass."""
     with httpx.Client(base_url="http://test", transport=_execution_transport()) as client:
         case, blockers = evaluate_case(
             client=client,
@@ -96,7 +99,7 @@ def test_evaluate_case_success_returns_primary_path_with_measured_scores() -> No
 
 
 def test_evaluate_case_voice_failures_degrade_path_and_emit_blocker() -> None:
-    """Layer: integration. Verifies voice-control probe failures degrade an otherwise successful case and emit blocker evidence."""
+    """Layer: contract. Verifies voice-control probe failures degrade an otherwise successful case and emit blocker evidence."""
     with httpx.Client(base_url="http://test", transport=_execution_transport(voice_fails=True)) as client:
         case, blockers = evaluate_case(
             client=client,
@@ -112,7 +115,7 @@ def test_evaluate_case_voice_failures_degrade_path_and_emit_blocker() -> None:
 
 
 def test_evaluate_case_status_failure_blocks_case() -> None:
-    """Layer: integration. Verifies status endpoint failures stop evaluation and return a blocked failure case."""
+    """Layer: contract. Verifies status endpoint failures stop evaluation and return a blocked failure case."""
     with httpx.Client(base_url="http://test", transport=_execution_transport(status_fails=True)) as client:
         case, blockers = evaluate_case(
             client=client,
@@ -127,7 +130,7 @@ def test_evaluate_case_status_failure_blocks_case() -> None:
 
 
 def test_evaluate_case_mode_config_failure_blocks_case() -> None:
-    """Layer: integration. Verifies mode-probe config failure is surfaced with explicit failing step context."""
+    """Layer: contract. Verifies mode-probe config failure is surfaced with explicit failing step context."""
     with httpx.Client(base_url="http://test", transport=_execution_transport(mode_config_fails=True)) as client:
         case, blockers = evaluate_case(
             client=client,

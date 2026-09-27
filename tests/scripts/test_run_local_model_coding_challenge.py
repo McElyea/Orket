@@ -1,11 +1,13 @@
 # LIFECYCLE: live
-# Layer: contract
+# Layers are declared per test for the exercised boundary.
 
 from __future__ import annotations
 
 import argparse
 import json
 from pathlib import Path
+
+import pytest
 
 from scripts.benchmarks import run_local_model_coding_challenge as script
 
@@ -15,6 +17,7 @@ def _write_json(path: Path, payload: object) -> None:
     path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 
 
+@pytest.mark.contract
 def test_summarize_run_extracts_first_code_turn_and_blocker_note(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     _write_json(
@@ -114,7 +117,7 @@ def test_summarize_run_extracts_first_code_turn_and_blocker_note(tmp_path: Path)
     assert "expected='valid_workflow' actual='wf_v'" in run["final_blocker_note"]
 
 
-# Layer: contract
+@pytest.mark.integration
 def test_main_writes_diff_ledger_report(monkeypatch, tmp_path: Path) -> None:
     out_path = tmp_path / "benchmarks" / "staging" / "General" / "local_model_coding_challenge_report.json"
 
@@ -197,6 +200,7 @@ def test_main_writes_diff_ledger_report(monkeypatch, tmp_path: Path) -> None:
     assert "diff_ledger" in payload
 
 
+@pytest.mark.contract
 def test_run_local_model_coding_challenge_records_prompt_patch_metadata(monkeypatch, tmp_path: Path) -> None:
     """Layer: contract. Verifies bounded challenge runs record the prompt patch label/checksum when a patch file is used."""
     patch_path = tmp_path / "prompt_patch.txt"
@@ -238,6 +242,7 @@ def test_run_local_model_coding_challenge_records_prompt_patch_metadata(monkeypa
     assert payload["prompt_patch"]["source_ref"] == "prompt_patch.txt"
 
 
+@pytest.mark.contract
 def test_summarize_run_flags_degraded_summary_as_non_primary(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     _write_json(

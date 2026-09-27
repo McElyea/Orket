@@ -5,6 +5,22 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.108] - 2026-09-27
+
+### Fixed
+- Capture sandbox event inputs before identity generation and persistence; retain publication and replay through cancellation, native file cleanup and shared nonblocking spool ownership.
+- Own API startup authentication validation and required diagnostics before engine initialization, preserving security refusal and native failure precedence.
+- Add reviewed canonical markers for 841 existing test cases; repair governance fixture roots, Python child interpreter selection, provider inputs and pipeline lifetime fixtures.
+- Keep captured turn-control-plane bindings visible to the ownership scanner while retaining its exact caller restrictions.
+- Correct safe Ruff findings while preserving 52 public enum diagnostic and wire representations with explicit contracts and declaration-local exceptions.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- Affected embeddings include sandbox event publishers and API logging handlers.
+- `migration_requirement`: `required`
+- Normalize sandbox event values to supported built-ins. Stop old spool callers and inspect legacy lock sentinels before migration; busy fallback now refuses publication. API startup handlers run in the owned native worker.
+- Contracts: `docs/specs/SANDBOX_EVENT_PUBLICATION_OWNERSHIP.md`, `docs/specs/API_RUNTIME_LIFECYCLE.md`, and `docs/specs/PUBLIC_ENUM_REPRESENTATION_CONTRACT.md`.
+- The same 686 selected cases pass in source and installed Windows Python 3.11/3.12, with package parity, real CLI paths and strict tool-audit readback. Ruff, dependency and critical no-op checks pass; 2,809 unmarked tests, full coverage, Linux application proof and broader D/E/CAP acceptance remain open in the architectural-truth plan.
+
 ## [0.6.107] - 2026-09-27
 
 ### Fixed

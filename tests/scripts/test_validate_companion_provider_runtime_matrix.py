@@ -10,6 +10,8 @@ import pytest
 from scripts.companion.run_companion_provider_runtime_matrix import run_companion_provider_runtime_matrix
 from scripts.companion.validate_companion_provider_runtime_matrix import main
 
+pytestmark = pytest.mark.contract
+
 
 def _validator_transport() -> httpx.MockTransport:
     memory_tokens: dict[str, str] = {}
@@ -80,7 +82,7 @@ def test_validate_companion_provider_runtime_matrix_rejects_invalid_payload(tmp_
 
 
 def test_validate_companion_provider_runtime_matrix_reports_missing_input(tmp_path: Path) -> None:
-    """Layer: integration. Verifies validator fails fast when the matrix input file path is missing."""
+    """Layer: contract. Verifies validator fails fast when the matrix input file path is missing."""
     schema = Path("docs/specs/companion-provider-runtime-matrix.schema.json").resolve()
     with pytest.raises(SystemExit, match="E_COMPANION_MATRIX_VALIDATE_INPUT_MISSING"):
         main(["--input", str(tmp_path / "missing.json"), "--schema", str(schema)])

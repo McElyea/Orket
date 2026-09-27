@@ -1,5 +1,6 @@
 """Real, isolated repository inputs for runtime-truth governance contract tests."""
 import json
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -18,16 +19,20 @@ def runtime_truth_repository_inputs(tmp_path, monkeypatch):
     """Copy actual inputs without putting copied core sources on the import path."""
     repository = Path(__file__).resolve().parents[2]
     package = Path(orket.__file__).resolve().parent
-    workspace = tmp_path / "governance-repository-inputs"
+    workspace = tmp_path
     boundaries = runtime_boundary_audit_checklist_snapshot()["boundaries"]
     documents = decision_record_operating_principles_contract_snapshot()["checks"]
     names = {row["path"] for row in boundaries} | {row["relative_path"] for row in documents}
+    # Boundary inputs cover application/interfaces; retain real runtime scan input too.
+    names.add("orket/runtime/policy/runtime_boundary_audit_checklist.py")
     for name in sorted(names):
         relative = Path(name)
         source = package.joinpath(*relative.parts[1:]) if relative.parts[0] == "orket" else repository / relative
         destination = workspace / relative
         destination.parent.mkdir(parents=True, exist_ok=True)
         destination.write_bytes(source.read_bytes())
+    # Git-visible discovery must inspect this fixture, not its enclosing worktree.
+    subprocess.run(["git", "init", "-q", str(workspace)], check=True, capture_output=True)
     monkeypatch.setattr(gate, "REPO_ROOT", workspace)
 
 

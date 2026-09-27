@@ -4,7 +4,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.protocol.check_protocol_enforce_cutover_readiness import main
+
+pytestmark = pytest.mark.integration
 
 SELF_SIGNED_APPROVER = "Orket Core (local quality workspace)"
 
@@ -121,7 +125,7 @@ def test_check_protocol_enforce_cutover_readiness_preserves_invalid_projection_c
 
 
 def test_check_protocol_enforce_cutover_readiness_flags_self_attested_only(tmp_path: Path) -> None:
-    """Layer: contract. Verifies readiness output preserves self-signed approver risk as structured truth."""
+    """Layer: integration. Verifies readiness output preserves self-signed approver risk as structured truth."""
     a = tmp_path / "a.json"
     b = tmp_path / "b.json"
     out = tmp_path / "readiness.json"

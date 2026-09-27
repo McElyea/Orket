@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import pytest
+
 from scripts.proof.outward_run_claim_tiers import assign_claim_tier
+
+pytestmark = pytest.mark.contract
 
 
 def test_single_accepted_report_can_claim_lab_only() -> None:
-    """Layer: unit. Verifies one accepted package supports only the lab-only posture."""
+    """Layer: contract. Verifies one accepted package supports only the lab-only posture."""
     result = assign_claim_tier("outward_lab_only", {"accepted_report_count": 1})
 
     assert result["result"] == "accepted"
@@ -12,7 +16,7 @@ def test_single_accepted_report_can_claim_lab_only() -> None:
 
 
 def test_single_accepted_report_cannot_claim_verifier_stable() -> None:
-    """Layer: unit. Verifies one package cannot claim campaign stability."""
+    """Layer: contract. Verifies one package cannot claim campaign stability."""
     result = assign_claim_tier("outward_verifier_stable", {"accepted_report_count": 1})
 
     assert result["result"] == "rejected"
@@ -20,7 +24,7 @@ def test_single_accepted_report_cannot_claim_verifier_stable() -> None:
 
 
 def test_matching_campaign_can_claim_verifier_stable() -> None:
-    """Layer: unit. Verifies a stable campaign supports outward_verifier_stable."""
+    """Layer: contract. Verifies a stable campaign supports outward_verifier_stable."""
     result = assign_claim_tier(
         "outward_verifier_stable",
         {"accepted_report_count": 2, "invariant_signature_stable": True, "campaign_report_present": True},
@@ -31,7 +35,7 @@ def test_matching_campaign_can_claim_verifier_stable() -> None:
 
 
 def test_unlinked_clean_environment_cannot_claim_externally_checkable() -> None:
-    """Layer: unit. Verifies externally checkable posture requires all external evidence."""
+    """Layer: contract. Verifies externally checkable posture requires all external evidence."""
     result = assign_claim_tier(
         "outward_externally_checkable",
         {"accepted_report_count": 2, "invariant_signature_stable": True, "campaign_report_present": True},
@@ -41,7 +45,7 @@ def test_unlinked_clean_environment_cannot_claim_externally_checkable() -> None:
 
 
 def test_clean_environment_with_corruption_and_assurance_can_claim_externally_checkable() -> None:
-    """Layer: unit. Verifies externally checkable posture can be assigned only with its evidence."""
+    """Layer: contract. Verifies externally checkable posture can be assigned only with its evidence."""
     result = assign_claim_tier(
         "outward_externally_checkable",
         {
@@ -58,7 +62,7 @@ def test_clean_environment_with_corruption_and_assurance_can_claim_externally_ch
 
 
 def test_public_trust_requires_trust_contract_update_evidence() -> None:
-    """Layer: unit. Verifies public trust is rejected without same-change trust contract evidence."""
+    """Layer: contract. Verifies public trust is rejected without same-change trust contract evidence."""
     evidence = {
         "accepted_report_count": 2,
         "invariant_signature_stable": True,

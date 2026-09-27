@@ -23,6 +23,7 @@ def _strict_violation() -> GuardViolation:
     )
 
 
+@pytest.mark.contract
 def test_guard_contract_allows_pass_baseline():
     contract = GuardContract(
         result="pass",
@@ -36,6 +37,7 @@ def test_guard_contract_allows_pass_baseline():
     assert contract.severity == "soft"
 
 
+@pytest.mark.contract
 def test_guard_contract_rejects_pass_with_fix_hint():
     with pytest.raises(ValidationError):
         GuardContract(
@@ -48,6 +50,7 @@ def test_guard_contract_rejects_pass_with_fix_hint():
         )
 
 
+@pytest.mark.contract
 def test_guard_contract_rejects_terminal_failure_without_reason():
     with pytest.raises(ValidationError):
         GuardContract(
@@ -60,6 +63,7 @@ def test_guard_contract_rejects_terminal_failure_without_reason():
         )
 
 
+@pytest.mark.contract
 def test_guard_contract_rejects_terminal_reason_without_terminal_failure():
     with pytest.raises(ValidationError):
         GuardContract(
@@ -71,6 +75,7 @@ def test_guard_contract_rejects_terminal_reason_without_terminal_failure():
         )
 
 
+@pytest.mark.contract
 def test_guard_contract_aggregates_severity_from_violations():
     contract = GuardContract(
         result="fail",
@@ -93,6 +98,7 @@ def test_guard_contract_aggregates_severity_from_violations():
     assert contract.severity == "strict"
 
 
+@pytest.mark.contract
 def test_loop_control_contract_model():
     control = LoopControl(
         max_retries=2,
@@ -106,6 +112,7 @@ def test_loop_control_contract_model():
     assert control.escalation.terminal_reason.code == "HALLUCINATION_PERSISTENT"
 
 
+@pytest.mark.contract
 def test_guard_contract_rejects_duplicate_violation_rule_ids():
     with pytest.raises(ValidationError, match="duplicate violation rule_id"):
         GuardContract(

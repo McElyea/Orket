@@ -5,6 +5,8 @@ import json
 import subprocess
 from pathlib import Path
 
+import pytest
+
 from scripts.techdebt.run_recurring_maintenance_cycle import main, run_cycle
 
 
@@ -38,7 +40,7 @@ def _runner_factory(*, fail_key: str | None = None):
     return _runner
 
 
-# Layer: contract
+@pytest.mark.integration
 def test_run_recurring_maintenance_cycle_writes_cycle_artifacts_and_report(tmp_path: Path) -> None:
     cycle_root = tmp_path / "cycle-root"
     report_root = tmp_path / "reports"
@@ -87,7 +89,7 @@ def test_run_recurring_maintenance_cycle_writes_cycle_artifacts_and_report(tmp_p
     assert "diff_ledger" in environment_payload
 
 
-# Layer: contract
+@pytest.mark.integration
 def test_run_recurring_maintenance_cycle_strict_fails_when_required_check_is_red(tmp_path: Path) -> None:
     cycle_root = tmp_path / "cycle-root"
     report_root = tmp_path / "reports"
@@ -115,7 +117,7 @@ def test_run_recurring_maintenance_cycle_strict_fails_when_required_check_is_red
     assert payload["evidence"]["results"]["docs_project_hygiene"].startswith("FAIL")
 
 
-# Layer: unit
+@pytest.mark.unit
 def test_run_recurring_maintenance_cycle_rejects_invalid_cycle_id() -> None:
     exit_code = main(["--cycle-id", "bad/name"])
     assert exit_code == 2

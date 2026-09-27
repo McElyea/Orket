@@ -6,6 +6,10 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 
 async def _run_script(script_path: str) -> tuple[int, str, str]:
     process = await asyncio.create_subprocess_exec(

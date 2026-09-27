@@ -10,8 +10,9 @@ import pytest
 from scripts.ci import memory_fixture_smoke, migration_smoke_validator, sandbox_leak_gate
 
 
+@pytest.mark.integration
 def test_memory_fixture_smoke_writes_profile_fixtures(tmp_path: Path) -> None:
-    """Layer: unit. Verifies CI memory fixture extraction writes the expected deterministic fixture set."""
+    """Layer: integration. Verifies CI memory fixture extraction writes the expected deterministic fixture set."""
     memory_fixture_smoke.write_fixtures(out_dir=tmp_path, profile="nightly")
 
     filenames = {path.name for path in tmp_path.iterdir()}
@@ -26,6 +27,7 @@ def test_memory_fixture_smoke_writes_profile_fixtures(tmp_path: Path) -> None:
     assert trace["metadata"] == {"truncated": False}
 
 
+@pytest.mark.unit
 def test_sandbox_leak_gate_evaluate_leaks_respects_allowlist(monkeypatch: pytest.MonkeyPatch) -> None:
     """Layer: unit. Verifies sandbox leak extraction filters explicit allowlisted resources."""
 
@@ -58,6 +60,7 @@ def test_sandbox_leak_gate_evaluate_leaks_respects_allowlist(monkeypatch: pytest
     }
 
 
+@pytest.mark.unit
 def test_sandbox_leak_gate_fails_closed_when_docker_command_fails(monkeypatch: pytest.MonkeyPatch) -> None:
     """Layer: unit. Verifies missing Docker/Compose cannot produce a false-green leak report."""
 
@@ -82,8 +85,9 @@ def _write_migration_db(path: Path, count: int) -> None:
         connection.close()
 
 
+@pytest.mark.integration
 def test_migration_smoke_validator_accepts_migration_rows(tmp_path: Path) -> None:
-    """Layer: unit. Verifies migration smoke validation requires recorded migration rows in both DBs."""
+    """Layer: integration. Verifies migration smoke validation requires recorded migration rows in both DBs."""
     runtime_db = tmp_path / "runtime.db"
     webhook_db = tmp_path / "webhook.db"
     _write_migration_db(runtime_db, 1)
@@ -92,8 +96,9 @@ def test_migration_smoke_validator_accepts_migration_rows(tmp_path: Path) -> Non
     migration_smoke_validator._validate(runtime_db, webhook_db)
 
 
+@pytest.mark.integration
 def test_migration_smoke_validator_rejects_empty_migration_table(tmp_path: Path) -> None:
-    """Layer: unit. Verifies empty migration ledgers are not reported as successful smoke validation."""
+    """Layer: integration. Verifies empty migration ledgers are not reported as successful smoke validation."""
     runtime_db = tmp_path / "runtime.db"
     webhook_db = tmp_path / "webhook.db"
     _write_migration_db(runtime_db, 1)

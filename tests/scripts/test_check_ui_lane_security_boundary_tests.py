@@ -4,14 +4,18 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.governance.check_ui_lane_security_boundary_tests import (
     check_ui_lane_security_boundary_tests,
     evaluate_ui_lane_security_boundary_tests,
     main,
 )
 
+pytestmark = pytest.mark.integration
 
-# Layer: contract
+
+# Layer: integration
 def test_evaluate_ui_lane_security_boundary_tests_passes() -> None:
     payload = evaluate_ui_lane_security_boundary_tests()
     assert payload["ok"] is True

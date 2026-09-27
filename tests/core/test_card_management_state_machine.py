@@ -22,6 +22,7 @@ class SpyToolGate:
         return self.violation
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_update_issue_status_enforces_transition_rules(tmp_path):
     workspace = tmp_path / "workspace"
@@ -50,6 +51,7 @@ async def test_update_issue_status_enforces_transition_rules(tmp_path):
     assert "invalid transition" in result["error"].lower()
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_update_issue_status_requires_wait_reason_for_blocked(tmp_path):
     workspace = tmp_path / "workspace"
@@ -78,6 +80,7 @@ async def test_update_issue_status_requires_wait_reason_for_blocked(tmp_path):
     assert "wait_reason" in result["error"].lower()
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_update_issue_status_valid_transition_succeeds(tmp_path):
     workspace = tmp_path / "workspace"
@@ -106,9 +109,10 @@ async def test_update_issue_status_valid_transition_succeeds(tmp_path):
     assert result["status"] == "in_progress"
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_update_issue_status_delegates_to_tool_gate(tmp_path):
-    """Layer: contract. Verifies card tools forward current status and resolved card type into the gate context."""
+    """Layer: integration. Verifies card tools forward current status and resolved card type into the gate context."""
     workspace = tmp_path / "workspace"
     workspace.mkdir()
     db_path = tmp_path / "state_machine_gate.db"
@@ -140,6 +144,7 @@ async def test_update_issue_status_delegates_to_tool_gate(tmp_path):
     assert gate.calls[0]["context"]["card_type"] == "issue"
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_update_issue_status_blocks_when_tool_gate_rejects(tmp_path):
     workspace = tmp_path / "workspace"
@@ -173,6 +178,7 @@ async def test_update_issue_status_blocks_when_tool_gate_rejects(tmp_path):
     assert issue.status == CardStatus.READY
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 # Layer: integration
 async def test_update_issue_status_uses_stored_card_type_for_transition_rules(tmp_path):

@@ -33,7 +33,7 @@ def _load_fixture(name: str) -> dict[str, Any]:
 
 
 def _permutation_stream_seed(seed: int, perm_index: int) -> int:
-    digest = hashlib.sha256(f"{int(seed)}:{int(perm_index)}".encode("utf-8")).digest()
+    digest = hashlib.sha256(f"{int(seed)}:{int(perm_index)}".encode()).digest()
     return int.from_bytes(digest[:8], "big")
 
 

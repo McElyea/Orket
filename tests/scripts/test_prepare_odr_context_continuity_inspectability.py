@@ -2,7 +2,11 @@
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.odr.prepare_odr_context_continuity_inspectability import prepare_lane_inspectability
+
+pytestmark = pytest.mark.integration
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 LANE_CONFIG_PATH = (

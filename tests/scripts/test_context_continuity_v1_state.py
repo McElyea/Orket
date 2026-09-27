@@ -1,6 +1,8 @@
 # LIFECYCLE: live
 from pathlib import Path
 
+import pytest
+
 from scripts.odr.context_continuity_v1_state import (
     build_v1_role_view,
     build_v1_shared_state,
@@ -20,12 +22,14 @@ V1_CONTRACT_PATH = (
 )
 
 
+@pytest.mark.unit
 def test_normalize_identity_text_stays_exact_and_non_fuzzy() -> None:
     """Layer: unit. Verifies V1 item identity uses exact normalized text rather than semantic equivalence."""
     assert normalize_identity_text("- Preserve user edits.") == "preserve user edits"
     assert normalize_identity_text("Store notes locally only.") != normalize_identity_text("Persist notes on-device only.")
 
 
+@pytest.mark.contract
 def test_build_v1_shared_state_preserves_accepted_items_and_records_reopen_events() -> None:
     """Layer: contract. Verifies V1 keeps prior accepted items authoritative while recording unauthorized reopen/regression events."""
     round0 = build_v1_shared_state(
@@ -66,6 +70,7 @@ def test_build_v1_shared_state_preserves_accepted_items_and_records_reopen_event
     assert len(payload["transition_events"]["contradictions"]) == 1
 
 
+@pytest.mark.contract
 def test_build_v1_role_view_projects_shared_state_verbatim_with_role_focus() -> None:
     """Layer: contract. Verifies V1 role views derive prompt-ready context directly from the shared-state snapshot."""
     shared_state = build_v1_shared_state(
@@ -100,6 +105,7 @@ def test_build_v1_role_view_projects_shared_state_verbatim_with_role_focus() -> 
     assert role_view["delivery_mode"] == "compiled_state_projection_verbatim_plus_role_focus"
 
 
+@pytest.mark.unit
 def test_compute_v1_continuity_run_metrics_uses_state_history() -> None:
     """Layer: unit. Verifies V1 metrics are computed from compiled-state events and preserved accepted-item ids."""
     round0 = build_v1_shared_state(
@@ -146,6 +152,7 @@ def test_compute_v1_continuity_run_metrics_uses_state_history() -> None:
     }
 
 
+@pytest.mark.contract
 def test_build_v1_shared_state_keeps_explicit_unresolved_and_constraint_categories() -> None:
     """Layer: contract. Verifies V1 preserves explicit unresolved summaries and maps fenced constraint categories into accepted, rejected, and invariant state without JSON-fragment drift."""
     requirement = """# Requirement Spec

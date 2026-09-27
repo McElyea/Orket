@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.proof.outward_run_witness_contract import (
     COMPARE_SCOPE_DENIED,
     COMPARE_SCOPE_POLICY_REJECTED,
@@ -10,6 +12,8 @@ from scripts.proof.outward_run_witness_contract import (
     file_sha256,
 )
 from scripts.proof.outward_run_witness_package import bundle_only_introspection, load_witness_package
+
+pytestmark = pytest.mark.contract
 
 
 def _write_json(path: Path, payload: dict[str, object]) -> None:
@@ -152,7 +156,7 @@ def _minimal_policy_rejected_package(root: Path) -> Path:
 
 
 def test_package_loader_accepts_minimal_valid_package(tmp_path: Path) -> None:
-    """Layer: unit. Verifies the package loader accepts package-local manifest, bundle, ledger, and artifact bytes."""
+    """Layer: contract. Verifies the package loader accepts package-local manifest, bundle, ledger, and artifact bytes."""
     package_root = _minimal_package(tmp_path / "outward_run_witness_package.v1")
 
     loaded = load_witness_package(package_root)
@@ -165,7 +169,7 @@ def test_package_loader_accepts_minimal_valid_package(tmp_path: Path) -> None:
 
 
 def test_package_loader_accepts_minimal_denial_package_without_artifact_refs(tmp_path: Path) -> None:
-    """Layer: unit. Verifies denial packages can omit committed artifact bytes."""
+    """Layer: contract. Verifies denial packages can omit committed artifact bytes."""
     package_root = _minimal_denial_package(tmp_path / "outward_run_witness_package.v1")
 
     loaded = load_witness_package(package_root)
@@ -177,7 +181,7 @@ def test_package_loader_accepts_minimal_denial_package_without_artifact_refs(tmp
 
 
 def test_package_loader_accepts_minimal_policy_rejected_package_without_artifact_refs(tmp_path: Path) -> None:
-    """Layer: unit. Verifies policy-rejection packages can omit committed artifact bytes."""
+    """Layer: contract. Verifies policy-rejection packages can omit committed artifact bytes."""
     package_root = _minimal_policy_rejected_package(tmp_path / "outward_run_witness_package.v1")
 
     loaded = load_witness_package(package_root)
@@ -189,7 +193,7 @@ def test_package_loader_accepts_minimal_policy_rejected_package_without_artifact
 
 
 def test_package_loader_fails_closed_for_missing_manifest(tmp_path: Path) -> None:
-    """Layer: unit. Verifies missing manifest fails with a stable package code."""
+    """Layer: contract. Verifies missing manifest fails with a stable package code."""
     package_root = tmp_path / "outward_run_witness_package.v1"
     package_root.mkdir()
 
@@ -200,7 +204,7 @@ def test_package_loader_fails_closed_for_missing_manifest(tmp_path: Path) -> Non
 
 
 def test_package_loader_fails_closed_for_missing_bundle(tmp_path: Path) -> None:
-    """Layer: unit. Verifies missing bundle fails before any proof-shaped result is possible."""
+    """Layer: contract. Verifies missing bundle fails before any proof-shaped result is possible."""
     package_root = _minimal_package(tmp_path / "outward_run_witness_package.v1")
     (package_root / "outward_witness_bundle.json").unlink()
 
@@ -211,7 +215,7 @@ def test_package_loader_fails_closed_for_missing_bundle(tmp_path: Path) -> None:
 
 
 def test_package_loader_fails_closed_for_digest_drift(tmp_path: Path) -> None:
-    """Layer: unit. Verifies package bytes are rehashed and compared with manifest digest material."""
+    """Layer: contract. Verifies package bytes are rehashed and compared with manifest digest material."""
     package_root = _minimal_package(tmp_path / "outward_run_witness_package.v1")
     (package_root / "artifacts" / "committed_output").write_text("changed\n", encoding="utf-8")
 
@@ -222,7 +226,7 @@ def test_package_loader_fails_closed_for_digest_drift(tmp_path: Path) -> None:
 
 
 def test_package_loader_rejects_package_ref_escape(tmp_path: Path) -> None:
-    """Layer: unit. Verifies package refs resolving outside the package root are rejected."""
+    """Layer: contract. Verifies package refs resolving outside the package root are rejected."""
     package_root = _minimal_package(tmp_path / "outward_run_witness_package.v1")
     manifest = json.loads((package_root / "manifest.json").read_text(encoding="utf-8"))
     manifest["artifact_paths"]["committed_output"] = "../escape.txt"
@@ -236,7 +240,7 @@ def test_package_loader_rejects_package_ref_escape(tmp_path: Path) -> None:
 
 
 def test_bundle_only_introspection_cannot_accept_proof_claim() -> None:
-    """Layer: unit. Verifies bundle-only loading remains schema/introspection-only."""
+    """Layer: contract. Verifies bundle-only loading remains schema/introspection-only."""
     report = bundle_only_introspection({"schema_version": "outward_run.witness_bundle.v1"})
 
     assert report["accepted"] is False

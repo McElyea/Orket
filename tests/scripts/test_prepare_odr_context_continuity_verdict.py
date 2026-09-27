@@ -2,8 +2,12 @@
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.odr.prepare_odr_context_continuity_compare import prepare_context_continuity_compare
 from scripts.odr.prepare_odr_context_continuity_verdict import prepare_context_continuity_verdict
+
+pytestmark = pytest.mark.integration
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 LANE_CONFIG_PATH = (

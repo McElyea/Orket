@@ -2,18 +2,19 @@ from __future__ import annotations
 
 import asyncio
 import json
+from collections.abc import Awaitable, Callable
 from pathlib import Path
-from typing import Awaitable, Callable, TypeVar
+from typing import TypeVar
 
 import aiosqlite
 from pydantic import ValidationError
 
-from orket.adapters.storage.sqlite_connection import connect_sqlite_wal
 from orket.adapters.storage.sandbox_lifecycle_row_serialization import (
     deserialize_event_row,
     deserialize_operation_row,
     deserialize_record_row,
 )
+from orket.adapters.storage.sqlite_connection import connect_sqlite_wal
 from orket.core.domain.sandbox_lifecycle import SandboxLifecycleError
 from orket.core.domain.sandbox_lifecycle_records import (
     SandboxApprovalRecord,
@@ -24,7 +25,6 @@ from orket.core.domain.sandbox_lifecycle_records import (
 )
 
 ResultT = TypeVar("ResultT")
-
 
 side_effecting = True
 

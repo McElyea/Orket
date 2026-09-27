@@ -1,14 +1,17 @@
 # LIFECYCLE: live
-# Layer: contract
+# Layers are declared per test for the exercised boundary.
 
 from __future__ import annotations
 
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.gitea.run_local_runner_lifecycle_proof import _build_parser, main
 
 
+@pytest.mark.unit
 def test_parser_defaults_target_existing_local_workflow() -> None:
     args = _build_parser().parse_args([])
 
@@ -17,6 +20,7 @@ def test_parser_defaults_target_existing_local_workflow() -> None:
     assert args.out == "benchmarks/results/gitea/local_runner_lifecycle_proof.json"
 
 
+@pytest.mark.integration
 def test_main_writes_diff_ledger_report(tmp_path: Path, monkeypatch) -> None:
     async def fake_run_proof(_args):
         return (

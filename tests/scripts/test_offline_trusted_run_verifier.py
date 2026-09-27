@@ -23,6 +23,7 @@ from scripts.proof.verify_offline_trusted_run_claim import main as offline_verif
 from tests.helpers.trusted_run_witness_fixtures import valid_bundle
 
 
+@pytest.mark.contract
 def test_bundle_input_proves_only_lab_claim() -> None:
     """Layer: contract. Verifies raw bundles remain lab-only without repeat evidence."""
     report = evaluate_offline_trusted_run_claim(valid_bundle(), evidence_ref="runs/sess-a/trusted_run_witness_bundle.json")
@@ -36,6 +37,7 @@ def test_bundle_input_proves_only_lab_claim() -> None:
     assert _forbidden_reasons(report, TARGET_CLAIM_TIER) == ["repeat_evidence_missing"]
 
 
+@pytest.mark.contract
 def test_single_report_input_proves_only_lab_claim() -> None:
     """Layer: contract. Verifies single verifier reports do not become deterministic claims."""
     source = _single_report()
@@ -47,6 +49,7 @@ def test_single_report_input_proves_only_lab_claim() -> None:
     assert report["allowed_claims"] == [FALLBACK_CLAIM_TIER]
 
 
+@pytest.mark.contract
 def test_campaign_report_reaches_verdict_deterministic() -> None:
     """Layer: contract. Verifies stable campaign reports allow the verdict deterministic claim."""
     report = evaluate_offline_trusted_run_claim(_campaign_report(), requested_claims=[TARGET_CLAIM_TIER])
@@ -59,6 +62,7 @@ def test_campaign_report_reaches_verdict_deterministic() -> None:
     assert _forbidden_reasons(report, "replay_deterministic") == ["replay_evidence_missing"]
 
 
+@pytest.mark.contract
 def test_requested_replay_claim_downgrades_to_verdict_claim() -> None:
     """Layer: contract. Verifies missing replay evidence forbids replay without hiding verdict proof."""
     report = evaluate_offline_trusted_run_claim(
@@ -72,6 +76,7 @@ def test_requested_replay_claim_downgrades_to_verdict_claim() -> None:
     assert _forbidden_reasons(report, "replay_deterministic") == ["replay_evidence_missing"]
 
 
+@pytest.mark.integration
 def test_cli_writes_diff_ledger_report(tmp_path: Path) -> None:
     """Layer: integration. Verifies the CLI writes a stable diff-ledger JSON report."""
     input_path = tmp_path / "campaign.json"
@@ -87,6 +92,7 @@ def test_cli_writes_diff_ledger_report(tmp_path: Path) -> None:
     assert isinstance(persisted.get("diff_ledger"), list)
 
 
+@pytest.mark.integration
 def test_cli_fails_when_requested_claim_is_downgraded(tmp_path: Path) -> None:
     """Layer: integration. Verifies forbidden requested claims are not false-green CLI exits."""
     input_path = tmp_path / "campaign.json"
@@ -102,6 +108,7 @@ def test_cli_fails_when_requested_claim_is_downgraded(tmp_path: Path) -> None:
     assert persisted["claim_status"] == "downgraded"
 
 
+@pytest.mark.contract
 @pytest.mark.parametrize(
     ("corruption_id", "payload_factory", "input_mode", "expected"),
     [

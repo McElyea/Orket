@@ -4,6 +4,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.governance.check_unknown_input_policy import (
     check_unknown_input_policy,
     evaluate_unknown_input_policy,
@@ -11,7 +13,7 @@ from scripts.governance.check_unknown_input_policy import (
 )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_evaluate_unknown_input_policy_passes_for_current_contract() -> None:
     payload = evaluate_unknown_input_policy()
     assert payload["ok"] is True
@@ -19,7 +21,7 @@ def test_evaluate_unknown_input_policy_passes_for_current_contract() -> None:
     assert "provider_runtime_target.requested_provider" in payload["surfaces"]
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_check_unknown_input_policy_writes_diff_ledger_payload(tmp_path: Path) -> None:
     out_path = tmp_path / "unknown_input_policy_check.json"
     exit_code, payload = check_unknown_input_policy(out_path=out_path)
@@ -30,7 +32,7 @@ def test_check_unknown_input_policy_writes_diff_ledger_payload(tmp_path: Path) -
     assert "diff_ledger" in written
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_main_returns_success(tmp_path: Path) -> None:
     out_path = tmp_path / "unknown_input_policy_check.json"
     exit_code = main(["--out", str(out_path)])

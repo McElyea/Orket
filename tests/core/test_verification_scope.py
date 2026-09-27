@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import pytest
+
 from orket.core.domain.verification_scope import (
     build_verification_scope,
     parse_verification_scope,
 )
 
 
+@pytest.mark.contract
 def test_build_verification_scope_normalizes_and_deduplicates_values():
     scope = build_verification_scope(
         workspace=[" b.py ", "a.py", "a.py", ""],
@@ -40,11 +43,13 @@ def test_build_verification_scope_normalizes_and_deduplicates_values():
     assert scope["max_total_context_items"] == 12
 
 
+@pytest.mark.contract
 def test_parse_verification_scope_returns_none_for_non_dict():
     assert parse_verification_scope(None) is None
     assert parse_verification_scope([]) is None
 
 
+@pytest.mark.contract
 def test_parse_verification_scope_applies_defaults_and_normalization():
     scope = parse_verification_scope({"workspace": ["x.py", " x.py "]})
     assert scope == {
@@ -66,12 +71,14 @@ def test_parse_verification_scope_applies_defaults_and_normalization():
     }
 
 
+@pytest.mark.contract
 def test_parse_verification_scope_backfills_active_from_provided_context():
     scope = parse_verification_scope({"provided_context": ["ctx-a", "ctx-b"]})
     assert scope["active_context"] == ["ctx-a", "ctx-b"]
     assert scope["provided_context"] == ["ctx-a", "ctx-b"]
 
 
+@pytest.mark.contract
 def test_parse_verification_scope_normalizes_invalid_limits_to_none():
     scope = parse_verification_scope(
         {

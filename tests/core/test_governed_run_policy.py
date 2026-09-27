@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import pytest
+
 from orket.core.domain.governed_run_policy import GovernedRunPolicy, classify_action, decide_action
 
 
+@pytest.mark.unit
 def test_governed_run_policy_classifies_and_decides_default_actions() -> None:
     """Layer: unit. Proves the governed-run demo policy defaults match the advertised risk model."""
     policy = GovernedRunPolicy()
@@ -22,6 +25,7 @@ def test_governed_run_policy_classifies_and_decides_default_actions() -> None:
     assert unknown_decision.decision == "deny"
 
 
+@pytest.mark.unit
 def test_governed_run_policy_allows_exact_allowlisted_shell_command() -> None:
     """Layer: unit. Proves shell allowlisting is exact and deny-by-default."""
     policy = GovernedRunPolicy(shell_allowlist=("echo governed",))

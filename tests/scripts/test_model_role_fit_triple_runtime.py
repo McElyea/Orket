@@ -1,9 +1,13 @@
 # LIFECYCLE: live
 from pathlib import Path
 
+import pytest
+
 from scripts.odr.model_role_fit_lane import load_lane_config, load_matrix_registry
 from scripts.odr.model_role_fit_triple_runtime import run_live_triple_scenario
 from scripts.odr.run_odr_single_vs_coordinated import _load_scenario_inputs, _load_scenarios
+
+pytestmark = pytest.mark.contract
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 LANE_CONFIG_PATH = (
@@ -12,7 +16,7 @@ LANE_CONFIG_PATH = (
 
 
 async def test_run_live_triple_scenario_accepts_reused_v1_state_contract_key(monkeypatch) -> None:
-    """Layer: integration. Verifies the triple runtime accepts the archived role-fit config shape that carries reused_v1_state_contract_path instead of v1_state_contract_path."""
+    """Layer: contract. Verifies the triple runtime accepts the archived role-fit config shape that carries reused_v1_state_contract_path instead of v1_state_contract_path."""
     config = load_lane_config(LANE_CONFIG_PATH)
     registry = load_matrix_registry(config)
     triple_variant = registry["preferred_triples"][0].ordered_variants()[0]

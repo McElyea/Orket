@@ -35,7 +35,7 @@ async def run_process(
             stdout, stderr = await asyncio.wait_for(process.communicate(), timeout_seconds)
         else:
             stdout, stderr = await process.communicate()
-    except asyncio.TimeoutError:
+    except TimeoutError:
         process.kill()
         await process.communicate()
         return ProcessResult(

@@ -4,6 +4,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.governance.check_interface_freeze_windows import (
     check_interface_freeze_windows,
     evaluate_interface_freeze_windows,
@@ -11,14 +13,14 @@ from scripts.governance.check_interface_freeze_windows import (
 )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_evaluate_interface_freeze_windows_passes_for_current_contract() -> None:
     payload = evaluate_interface_freeze_windows()
     assert payload["ok"] is True
     assert payload["window_count"] >= 1
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_check_interface_freeze_windows_writes_diff_ledger_payload(tmp_path: Path) -> None:
     out_path = tmp_path / "interface_freeze_windows_check.json"
     exit_code, payload = check_interface_freeze_windows(out_path=out_path)
@@ -29,7 +31,7 @@ def test_check_interface_freeze_windows_writes_diff_ledger_payload(tmp_path: Pat
     assert "diff_ledger" in written
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_main_returns_success(tmp_path: Path) -> None:
     out_path = tmp_path / "interface_freeze_windows_check.json"
     exit_code = main(["--out", str(out_path)])

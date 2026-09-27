@@ -266,17 +266,15 @@ def _turn_tool_control_plane_method_callers() -> dict[str, set[str]]:
     for path in _iter_python_files():
         relative_path = _relative_path(path)
         tree = ast.parse(path.read_text(encoding="utf-8-sig"), filename=str(path))
-        imports_turn_tool_service = False
-        for node in ast.walk(tree):
-            if not isinstance(node, ast.ImportFrom):
-                continue
-            module = str(node.module or "")
-            if not module.endswith("turn_tool_control_plane_service"):
-                continue
-            if any(alias.name == "TurnToolControlPlaneService" for alias in node.names):
-                imports_turn_tool_service = True
-                break
-        if not imports_turn_tool_service:
+        imported_types = {
+            ((node.module or "").rsplit(".", 1)[-1], alias.name)
+            for node in ast.walk(tree) if isinstance(node, ast.ImportFrom)
+            for alias in node.names
+        }
+        if not imported_types.intersection({
+            ("turn_tool_control_plane_service", "TurnToolControlPlaneService"),
+            ("turn_control_plane_binding", "TurnControlPlaneBinding"),
+        }):
             continue
         for node in ast.walk(tree):
             if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute):
@@ -461,6 +459,7 @@ def test_only_matrix_covered_modules_consume_catalog_workload_authority() -> Non
     assert _catalog_authority_consumer_paths() == expected_paths
 
 # Layer: contract
+@pytest.mark.contract
 def test_governed_turn_tool_runtime_entrypoints_stay_owned_by_exact_adapter_only_helpers() -> None:
     assert _turn_tool_control_plane_method_callers() == TURN_TOOL_RUNTIME_ENTRYPOINT_METHOD_OWNERS
 

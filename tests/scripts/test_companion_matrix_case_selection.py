@@ -5,6 +5,8 @@ import pytest
 
 from scripts.companion.companion_matrix_case_selection import expand_case_pairs, parse_provider_model_map
 
+pytestmark = pytest.mark.unit
+
 
 def test_parse_provider_model_map_expands_multi_model_segments() -> None:
     """Layer: unit. Verifies provider-model map parsing expands provider=model1|model2 segments into ordered case pairs."""

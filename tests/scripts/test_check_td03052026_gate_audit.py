@@ -4,7 +4,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.governance.check_td03052026_gate_audit import GATE_IDS, REQUIRED_CI_SNIPPETS, main
+
+pytestmark = pytest.mark.integration
 
 
 def _write(path: Path, content: str) -> None:

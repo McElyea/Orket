@@ -3,21 +3,24 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.proof.run_trusted_terraform_plan_decision_runtime_smoke import (
     LiveTerraformReviewConfig,
     execute_trusted_terraform_plan_decision_runtime_smoke,
     main,
 )
-from scripts.proof.terraform_plan_review_live_support import LiveBedrockSummarizer, is_environment_blocker
 from scripts.proof.terraform_plan_review_fixture_support import run_fixture_case
+from scripts.proof.terraform_plan_review_live_support import LiveBedrockSummarizer, is_environment_blocker
 
 
 def _load_json(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+@pytest.mark.integration
 def test_runtime_smoke_cli_marks_missing_env_as_environment_blocker(tmp_path: Path, monkeypatch) -> None:
-    """Layer: contract. Verifies the provider-backed governed proof command fails closed when live inputs are missing."""
+    """Layer: integration. Verifies the provider-backed governed proof command fails closed when live inputs are missing."""
     out = tmp_path / "trusted_terraform_plan_decision_live_runtime.json"
     monkeypatch.delenv("ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_S3_URI", raising=False)
     monkeypatch.delenv("ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_MODEL_ID", raising=False)
@@ -34,6 +37,7 @@ def test_runtime_smoke_cli_marks_missing_env_as_environment_blocker(tmp_path: Pa
     assert isinstance(payload.get("diff_ledger"), list)
 
 
+@pytest.mark.contract
 def test_runtime_smoke_failure_summary_records_failed_s3_attempt(tmp_path: Path, monkeypatch) -> None:
     """Layer: contract. Verifies failed provider calls remain visible in blocked live proof output."""
 
@@ -63,8 +67,9 @@ def test_runtime_smoke_failure_summary_records_failed_s3_attempt(tmp_path: Path,
     assert payload["provider_interaction_summary"][1]["status"] == "not_attempted"
 
 
+@pytest.mark.integration
 def test_runtime_smoke_wrapper_can_package_live_like_result(tmp_path: Path, monkeypatch) -> None:
-    """Layer: contract. Verifies the runtime-backed wrapper can package a real-service-shaped result into a witness bundle."""
+    """Layer: integration. Verifies the runtime-backed wrapper can package a real-service-shaped result into a witness bundle."""
 
     async def _fake_run_live_review(*, workspace: Path, config: LiveTerraformReviewConfig):
         del config
@@ -94,6 +99,7 @@ def test_runtime_smoke_wrapper_can_package_live_like_result(tmp_path: Path, monk
     assert payload["witness_report"]["observed_result"] == "success"
 
 
+@pytest.mark.contract
 def test_live_bedrock_summarizer_uses_converse_for_nova_inference_profiles() -> None:
     """Layer: contract. Verifies the advisory Bedrock summary path uses Converse for Amazon Nova inference profiles."""
 
@@ -127,6 +133,7 @@ def test_live_bedrock_summarizer_uses_converse_for_nova_inference_profiles() -> 
     assert payload["raw_completion_ref"] == "nova-request-123"
 
 
+@pytest.mark.contract
 def test_live_bedrock_summarizer_uses_converse_for_palmyra_x4() -> None:
     """Layer: contract. Verifies the advisory Bedrock summary path uses Converse for Palmyra X4."""
 
@@ -160,6 +167,7 @@ def test_live_bedrock_summarizer_uses_converse_for_palmyra_x4() -> None:
     assert payload["raw_completion_ref"] == "palmyra-request-123"
 
 
+@pytest.mark.contract
 def test_live_bedrock_summarizer_uses_converse_for_palmyra_x5() -> None:
     """Layer: contract. Verifies the advisory Bedrock summary path uses Converse for Palmyra X5."""
 
@@ -193,14 +201,16 @@ def test_live_bedrock_summarizer_uses_converse_for_palmyra_x5() -> None:
     assert payload["raw_completion_ref"] == "palmyra-x5-request-123"
 
 
+@pytest.mark.unit
 def test_bedrock_daily_token_throttle_is_treated_as_environment_blocker() -> None:
-    """Layer: contract. Verifies Bedrock daily token exhaustion is reported as an environment blocker."""
+    """Layer: unit. Verifies Bedrock daily token exhaustion is reported as an environment blocker."""
 
     ThrottlingException = type("ThrottlingException", (Exception,), {})
 
     assert is_environment_blocker(ThrottlingException("Too many tokens per day, please wait before trying again."))
 
 
+@pytest.mark.contract
 def test_runtime_smoke_bedrock_failure_summary_records_prior_s3_attempt(tmp_path: Path, monkeypatch) -> None:
     """Layer: contract. Verifies Bedrock failures do not erase the preceding S3 read attempt."""
 

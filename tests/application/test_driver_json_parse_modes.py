@@ -9,6 +9,15 @@ from orket.driver import OrketDriver
 from tests.helpers.model_selection import prepared_model_selection
 
 
+class _FakeProvider:
+    def __init__(self, model, temperature=0.1, *, environment=None, cwd=None):
+        self.model, self.cwd, self.environment = model, cwd, dict(environment)
+        self.closed = False
+
+    async def close(self):
+        self.closed = True
+
+
 @pytest.mark.contract
 def test_parse_model_plan_compatibility_mode_accepts_wrapped_json(monkeypatch):
     """Layer: contract. Verifies compatibility mode supports envelope extraction and emits mode telemetry."""
@@ -27,13 +36,10 @@ def test_parse_model_plan_compatibility_mode_accepts_wrapped_json(monkeypatch):
     assert ("driver_json_parse_mode_compatibility", {"mode": "compatibility"}) in events
 
 
-def test_driver_defaults_to_strict_json_for_governed_prompting(monkeypatch):
+@pytest.mark.contract
+def test_driver_defaults_to_strict_json_for_governed_prompting(monkeypatch, tmp_path):
     """Layer: contract. Verifies governed driver construction defaults to strict JSON parsing."""
 
-    class _FakeProvider:
-        def __init__(self, model, temperature=0.1, environment=None):  # type: ignore[no-untyped-def]
-            self.model = model
-
     def _fake_load_engine_configs(self) -> None:
         self.skill = object()
         self.dialect = object()
@@ -46,18 +52,19 @@ def test_driver_defaults_to_strict_json_for_governed_prompting(monkeypatch):
     monkeypatch.setattr("orket.driver.prepare_bootstrap_model_selection", lambda **kwargs: prepared_model_selection())
     monkeypatch.setattr(OrketDriver, "_load_engine_configs", _fake_load_engine_configs)
 
-    driver = OrketDriver(model="qwen3.5-coder")
+    driver = OrketDriver(model="qwen3.5-coder", project_root=tmp_path, environment={}, invocation_root=tmp_path)
+    try:
+        assert driver.json_parse_mode == "strict"
+        assert driver.provider.cwd == tmp_path and driver.provider.environment == {}
+    finally:
+        asyncio.run(driver.close())
+    assert driver.provider.closed
 
-    assert driver.json_parse_mode == "strict"
 
-
-def test_driver_explicit_compatibility_override_survives_governed_prompting(monkeypatch):
+@pytest.mark.unit
+def test_driver_explicit_compatibility_override_survives_governed_prompting(monkeypatch, tmp_path):
     """Layer: unit. Verifies explicit compatibility mode stays opt-in even on governed paths."""
 
-    class _FakeProvider:
-        def __init__(self, model, temperature=0.1, environment=None):  # type: ignore[no-untyped-def]
-            self.model = model
-
     def _fake_load_engine_configs(self) -> None:
         self.skill = object()
         self.dialect = object()
@@ -70,9 +77,14 @@ def test_driver_explicit_compatibility_override_survives_governed_prompting(monk
     monkeypatch.setattr("orket.driver.prepare_bootstrap_model_selection", lambda **kwargs: prepared_model_selection())
     monkeypatch.setattr(OrketDriver, "_load_engine_configs", _fake_load_engine_configs)
 
-    driver = OrketDriver(model="qwen3.5-coder", json_parse_mode="compatibility")
-
-    assert driver.json_parse_mode == "compatibility"
+    driver = OrketDriver(model="qwen3.5-coder", json_parse_mode="compatibility", project_root=tmp_path,
+                         environment={}, invocation_root=tmp_path)
+    try:
+        assert driver.json_parse_mode == "compatibility"
+        assert driver.provider.cwd == tmp_path and driver.provider.environment == {}
+    finally:
+        asyncio.run(driver.close())
+    assert driver.provider.closed
 
 
 @pytest.mark.unit

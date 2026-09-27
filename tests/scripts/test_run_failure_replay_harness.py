@@ -4,6 +4,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.governance.run_failure_replay_harness import (
     evaluate_failure_replay_harness,
     main,
@@ -11,7 +13,7 @@ from scripts.governance.run_failure_replay_harness import (
 )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_evaluate_failure_replay_harness_reports_clean_parity(tmp_path: Path) -> None:
     baseline = tmp_path / "baseline.json"
     candidate = tmp_path / "candidate.json"
@@ -33,7 +35,7 @@ def test_evaluate_failure_replay_harness_reports_clean_parity(tmp_path: Path) ->
     assert report["path"] == "primary"
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_run_failure_replay_harness_writes_diff_ledger_payload(tmp_path: Path) -> None:
     baseline = tmp_path / "baseline.json"
     candidate = tmp_path / "candidate.json"
@@ -59,7 +61,7 @@ def test_run_failure_replay_harness_writes_diff_ledger_payload(tmp_path: Path) -
     assert "diff_ledger" in written
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_main_returns_success_on_matching_artifacts(tmp_path: Path) -> None:
     baseline = tmp_path / "baseline.json"
     candidate = tmp_path / "candidate.json"

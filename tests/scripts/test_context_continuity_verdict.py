@@ -8,6 +8,8 @@ from scripts.common.rerun_diff_ledger import _payload_digest
 from scripts.odr.context_continuity_compare import build_context_continuity_compare_payload
 from scripts.odr.context_continuity_verdict import build_context_continuity_verdict_payload
 
+pytestmark = pytest.mark.contract
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 LANE_CONFIG_PATH = (
     REPO_ROOT

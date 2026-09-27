@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -64,6 +65,7 @@ def test_load_engine_configs_strict_mode_fails_closed(monkeypatch, tmp_path):
         driver._load_engine_configs()
 
 
+@pytest.mark.contract
 def test_driver_init_anchors_default_paths_to_project_root(monkeypatch, tmp_path):
     """Layer: contract. Verifies default driver roots are resolved from project root, not caller CWD."""
     captures = {}
@@ -78,8 +80,14 @@ def test_driver_init_anchors_default_paths_to_project_root(monkeypatch, tmp_path
             captures["allowed_roots"] = [Path(item) for item in allowed_roots]
 
     class _FakeProvider:
-        def __init__(self, model, temperature=0.1, environment=None):  # type: ignore[no-untyped-def]
+        def __init__(self, model, temperature=0.1, *, environment=None, cwd=None):  # type: ignore[no-untyped-def]
             self.model = model
+            self.closed = False
+            captures["provider_cwd"] = cwd
+            captures["provider_environment"] = dict(environment)
+
+        async def close(self):
+            self.closed = True
 
     def _fake_load_engine_configs(self) -> None:
         self.skill = None
@@ -100,10 +108,16 @@ def test_driver_init_anchors_default_paths_to_project_root(monkeypatch, tmp_path
     monkeypatch.setattr(OrketDriver, "_load_engine_configs", _fake_load_engine_configs)
 
     driver = OrketDriver(model="qwen3.5-coder")
-
-    assert driver.project_root == tmp_path
-    assert driver.model_root == tmp_path / "model"
-    assert driver.workspace_root == tmp_path / "workspace" / "default"
-    assert captures["fs_root"] == tmp_path
-    assert captures["workspace_root"] == tmp_path / "workspace" / "default"
-    assert captures["allowed_roots"] == [tmp_path]
+    try:
+        assert driver.project_root == tmp_path
+        assert driver.model_root == tmp_path / "model"
+        assert driver.workspace_root == tmp_path / "workspace" / "default"
+        assert captures["fs_root"] == tmp_path
+        assert captures["workspace_root"] == tmp_path / "workspace" / "default"
+        assert captures["allowed_roots"] == [tmp_path]
+        # Direct native construction lets the provider factory capture its CWD.
+        assert captures["provider_cwd"] is None
+        assert captures["provider_environment"] == dict(driver._environment)
+    finally:
+        asyncio.run(driver.close())
+    assert driver.provider.closed

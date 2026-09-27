@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.proof.prepare_trusted_terraform_live_setup_packet import (
     SETUP_PACKET_SCHEMA_VERSION,
     main,
@@ -14,8 +16,9 @@ def _load(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+@pytest.mark.integration
 def test_setup_packet_cli_writes_no_spend_template_packet(tmp_path: Path) -> None:
-    """Layer: contract. Verifies setup-packet generation writes local files without provider calls."""
+    """Layer: integration. Verifies setup-packet generation writes local files without provider calls."""
     packet_root = tmp_path / "packet"
     output = tmp_path / "setup-packet.json"
 
@@ -45,6 +48,7 @@ def test_setup_packet_cli_writes_no_spend_template_packet(tmp_path: Path) -> Non
     assert _load(packet_root / "terraform-plan-safe-smoke.plan.json")["resource_changes"]
 
 
+@pytest.mark.contract
 def test_setup_packet_with_real_resource_names_is_live_ready_but_not_proof(tmp_path: Path) -> None:
     """Layer: contract. Verifies concrete resource names produce a ready setup packet with a truthful Nova profile policy."""
     packet_root = tmp_path / "packet"
@@ -79,6 +83,7 @@ def test_setup_packet_with_real_resource_names_is_live_ready_but_not_proof(tmp_p
     assert policy["Statement"][2]["Action"] == ["dynamodb:PutItem"]
 
 
+@pytest.mark.contract
 def test_setup_packet_with_palmyra_x4_geo_inference_id_is_live_ready(tmp_path: Path) -> None:
     """Layer: contract. Verifies concrete resource names produce a ready setup packet for Palmyra X4."""
     packet_root = tmp_path / "packet"
@@ -105,6 +110,7 @@ def test_setup_packet_with_palmyra_x4_geo_inference_id_is_live_ready(tmp_path: P
     ]
 
 
+@pytest.mark.contract
 def test_setup_packet_with_palmyra_x5_geo_inference_id_is_live_ready(tmp_path: Path) -> None:
     """Layer: contract. Verifies concrete resource names produce a ready setup packet for Palmyra X5."""
     packet_root = tmp_path / "packet"
@@ -131,6 +137,7 @@ def test_setup_packet_with_palmyra_x5_geo_inference_id_is_live_ready(tmp_path: P
     ]
 
 
+@pytest.mark.contract
 def test_setup_packet_flags_unsupported_model_before_live_execution(tmp_path: Path) -> None:
     """Layer: contract. Verifies unsupported model ids stay visible as live-execution blockers."""
     payload = prepare_setup_packet(

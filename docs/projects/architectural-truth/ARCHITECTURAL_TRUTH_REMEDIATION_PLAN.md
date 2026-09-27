@@ -12520,15 +12520,14 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
   Scoped installed-build/host acceptance now passes; this does not close the
   full plan or imply generic exactly-once effects or historical authenticity.
 
-Next action (2026-09-27): preserve the scoped 0.6.107 source/Windows installed
-acceptance below while repairing the remaining D owners, starting with retained
-sandbox event publication/replay counterexamples. Logging preparation and required
-producers remain open. Migrate the reviewed E1 script/core test classifications,
-repair the retained governance fixture drift, clear Ruff without silently changing
-public enum representations, and obtain named full-suite failures and the unchanged
-coverage gate. Complete E2 authority/decomposition and the ordered accepted capability
-gates afterward. The fresh Linux clock observation remains an environment blocker;
-Linux application proof, capability admission and whole-lane acceptance remain open.
+Next action (2026-09-27): continue after scoped 0.6.108 source/installed acceptance.
+Close remaining D cleanup diagnostics, required producers and explicit logging
+preparation; capture empirical-verification inputs and the selected turn clock.
+Continue reviewed marker migration and named full-suite diagnosis through the
+unchanged coverage gate. Complete E2 authority/decomposition and the ordered
+accepted capability gates afterward. The fresh Linux clock observation remains
+an environment blocker; Linux application proof, capability admission and
+whole-lane acceptance remain open.
 
 Historical .101 next-action snapshot (superseded, retained as evidence): complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
@@ -26776,3 +26775,159 @@ remain unchanged. The versioned commit diff records exact checkpoint files and
 the branch/annotated tag refs record publication. Full source coverage, hosted
 Quality, Linux application/provider acceptance, remaining D/E/CAP and whole-lane
 acceptance remain open. No main merge or lane retirement is included.
+
+### Scoped 0.6.108 checkpoint: sandbox publication, startup diagnostics and E1
+
+Responsible maintainer: Codex for Orket Core, with independent spool, startup and
+quality subagents. Work remains in `C:/Source/Orket-architectural-truth` on
+`codex/architectural-truth-bt0`, based on published `15a742205f03dd8866b32825be06f532a6e1dcab`.
+This entry records the scoped source/installed acceptance below, preserving the
+accepted .107 controls. It does not close the full plan or admit new capabilities.
+
+Sandbox publication captures supported built-in inputs before event identity or
+persistence and retains one existing I/O owner through emit/replay settlement.
+Fallback append and replay share the existing nonblocking native lock mechanism;
+busy fallback refuses, legacy sentinels remain explicit migration blockers and
+partial primary/dead-letter/spool effects remain inspectable. Custom Python hooks
+refuse before effects using the existing log-input value authority. Contract and
+migration: `docs/specs/SANDBOX_EVENT_PUBLICATION_OWNERSHIP.md` and
+`docs/architecture/CONTRACT_DELTA_SANDBOX_EVENT_PUBLICATION_D_2026-09-27.md`.
+
+The retained earlier spool opening exposes cancelled acquisition, borrowed payload
+mutation and acknowledged append/replay loss. Independent review also exposed
+blocking/alias-preserving `__deepcopy__` hooks and a test that incorrectly required
+the package to live under its harness. The successor's four hook openings fail;
+73 corrected copied-source cases pass, followed by two passing final child-origin
+controls after moving test path resolution into native workers. Child interpreter,
+package and service origins bind independently of the test harness. Those are
+Windows Python 3.11 local file/SQLite/process observations, not installed, Linux or
+Docker acceptance. Exact applied twelve-file binding and retained evidence:
+`.tmp/d-sandbox-spool-draft-v2/{review_manifest.json,applied.json}`. The application
+receipt SHA-256 is `951510260fabb31e98f81be300f7ca83751e4893e43383e252329d6458f208f6`.
+
+API startup captures the authentication validator and logger before root validation
+waits, then owns the complete synchronous validation through the existing native
+worker before initializing the engine. The opening has 13 failures and 18 existing
+passes; the corrected identical 31-case selection passes. Twelve independent SQLite
+responses fall from 2.0055–2.0173 seconds to 0.001109–0.001781 seconds. Exact failure,
+repeated cancellation, context, captured inputs and production/staging refusal remain
+covered; all owners settle. Peer review found no blocking defect in that bounded
+change. Contract: `docs/specs/API_RUNTIME_LIFECYCLE.md`; delta:
+`docs/architecture/CONTRACT_DELTA_API_STARTUP_AUTH_DIAGNOSTIC_D_2026-09-27.md`.
+Evidence: `.tmp/d-api-auth-validation-draft/`; review-manifest SHA-256
+`432c6b1197cbcff82eb8ed80d1279e95d2690b34303a5d837056e4c6a639bfad`.
+
+E1 applies reviewed markers to 699 script cases, 128 core/application cases and
+four frozen package-fixture cases. Function bodies and assertions remain unchanged
+except separately reviewed fixture corrections. Scripts collection reports 868
+items with zero missing/conflicting layers or collection failures; all 699 new
+classifications exactly match the reviewed decisions. The 128 core/application
+cases pass, and the three repaired governance/interpreter fixture modules pass 59
+cases. Receipts: `.tmp/goal-20260927-quality/v108/` and `.tmp/goal-e1-v108-core/`.
+These observations do not execute all scripts tests or close repository taxonomy.
+
+Canonical Ruff now passes `orket tests`. Of the original 88 findings, 36 are fixed
+and 52 are declaration-local `UP042` exceptions preserving public enum diagnostic
+and wire behavior. The enum contract has 63 passing source cases; replacing each
+of the 52 declarations with `StrEnum` fails the diagnostic-text assertion. Runtime
+ASTs and source line counts remain unchanged for the exception edits. Contract:
+`docs/specs/PUBLIC_ENUM_REPRESENTATION_CONTRACT.md`. The two oversized import-only
+files do not grow: sandbox lifecycle repository remains 548 lines and SDK capability
+runtime shrinks from 445 to 444; non-import ASTs are identical. The remaining safe
+lint selection passes 95 existing cases. Evidence: `.tmp/goal-e1-v108-focused/`,
+`.tmp/goal-e1-v108-scanner/`, and `.tmp/goal-20260927-quality/v108/enum-proposal/`.
+
+The bounded full-suite diagnosis stops at five failures after 669 passes and 11
+explicit live-sandbox skips. Its named failures are the turn-tool ownership scan,
+three driver constructor cases and the first protocol-ledger pipeline case. The
+scan now recognizes the existing captured-binding import while retaining the exact
+original caller map; six adverse scan controls preserve unexpected-owner detection.
+Driver fixtures accept and assert selected provider inputs, and pipeline fixtures
+use async construction/cleanup through their existing ledger assertions. Their
+closing selections pass 54 governance/SDK/storage cases, nine driver cases and six
+pipeline cases. Ten more existing cases receive reviewed canonical markers, making
+841 in this candidate. This diagnosis is not a full-suite or coverage pass.
+Opening: `.tmp/goal-e1-v108-diagnostic/report.json`; driver and pipeline receipts:
+`.tmp/driver-fixture-v108-proof/report.json` and
+`.tmp/goal-20260927-protocol-ledger-fixture/repair.json`.
+
+Both Quality jobs retain the new sandbox, startup, enum and ownership-scan controls.
+Their hosted execution is unverified. The accepted source/sdist/wheel and Windows
+Python 3.11/3.12 campaign lives under `.tmp/goal-20260927-installed-v108-v2/`, with
+retained build/setup inputs under `.tmp/goal-20260927-installed-v108/`. The v2 harness
+uses only the two fresh, still-active, unused .108 installations; no .107 or ended
+environment is reused. The active source environment's editable
+metadata is 0.6.108; its dependencies are unchanged. Linux remains blocked by the
+retained September 27 clock receipt above. No Docker/provider acceptance is claimed.
+
+Remaining D work is concrete: cancellation/cleanup diagnostics can themselves fail
+before later owners close (`owned_io.py`, `api_runtime_preparation.py`, and
+`application_runtime_lifetime.py`); required epic/fixture log publication and optional
+relative-root/lazy-writer preparation remain; empirical verification still needs
+captured scenario/environment inputs and the selected turn clock. These are separate
+from E2 authority generation/decomposition. Full taxonomy/coverage, hosted Quality,
+capability admission and explicit whole-lane acceptance remain open.
+
+
+Accepted .108 campaign readback: **686 passed, zero failures/errors/skips or
+deselections in each of source, installed Windows Python 3.11 and installed
+Windows Python 3.12**. The exact case and collected-node sets match; each cell
+records 1,032 matching package origins. All three process owners are reaped with
+no timeout, forced kill or observed residual, and their awake holds are released.
+Each cell retains one Starlette TestClient/httpx deprecation warning; dependency
+migration is separate from this passing cohort and no warning is suppressed.
+The retained controls are mixed contract/integration proof. Real local file,
+SQLite, process and API paths are live; actual provider inference is not.
+Independent SQLite responses stay below the unchanged 0.5-second bound:
+source: 83 observations, 0.000872-0.025935 seconds; win-py311: 83 observations, 0.000871-0.025802 seconds; win-py312: 83 observations, 0.000761-0.027561 seconds.
+
+Both installed cells also pass the real CLI primary and degraded paths with
+physical generated-record readback, and the strict tool audit with its required
+three blocked paths and no effects. The audit's canonical payload and process
+owner receipt have separate paths and both are physically read back. The initial
+.108 harness was superseded before product execution after discovering an inherited
+output-name collision: its owner receipt would overwrite the audit JSON. Historical
+.107 strict exit and stdout payload remain evidence, but that canonical file alone
+cannot establish independent payload readback. Original harness/setup evidence is
+preserved; this correction does not change runtime sources or reinstall packages.
+
+Core archive/wheel parity covers 1,204 included namespace files and all 1,184 Python
+sources; SDK parity covers 31 files and all 29 Python sources. Core wheel SHA-256:
+`17f0b944aac026df20940ff30f46cb30ccb47318b6ded06c5156dd319ec49d74`;
+SDK wheel SHA-256:
+`33534d2f48c8dc8e2196cde6a6ec695fa10ce6d68cd0adb3096c62d752379554`.
+Independent readback covers 15,177 evidence files and 5,453 retained source
+inputs. `.tmp/goal-20260927-installed-v108-v2/acceptance-readback.json` has SHA-256
+`1464245f8bde596b03fd8476a22006653d478e6c751154f788d3929865cf4760`; freeze SHA-256:
+`99b98b1dbb10ebdf5987cc763b25923ef7f36e1e2795b446f2b231171f11ad80`. This proves included package bytes and Python completeness,
+not inclusion of every non-Python source artifact or every subprocess import.
+The same campaign's `physical-supplement.json` independently checks actual JUnit
+cases, outer/CLI/audit stdout hashes, eight startup properties per cell, and both
+installed namespace byte sets and setup/direct-url provenance; SHA-256:
+`8e2341a716a1e376170506b361f7b398931700bfbda80dbbf81becbb18749a91`.
+
+Canonical structural checks: Ruff passes; dependency analysis reports 1,184 modules,
+3,980 edges, six recognized dynamic routes and zero violations; critical no-op
+analysis passes 694 files. Strict taxonomy deliberately fails: 10,606 collected
+cases, 2,809 missing layers, zero conflicts and zero collection errors. The decrease
+from 3,650 is exactly the 841 reviewed existing cases. Correct canonical dependency,
+no-op and version JSON files live in `.tmp/goal-e1-v108-structural-reports/`, separate
+from process receipts; earlier overwritten-report attempts remain retained. This
+is not a complete suite, coverage or hosted Quality pass. All gate thresholds stay
+unchanged; next runtime/application marker drafts remain unapplied scratch.
+
+Scoped compliance: AC-01 through AC-04 and AC-06 through AC-09 pass within the
+changed boundaries and declared evidence limits. AC-05 remains partial for the
+named remaining diagnostic/publication/preparation sites above, owned by D.
+AC-10 remains partial for the unbounded authority snapshot and plan history, owned
+by E2; affected current contracts and migration instructions are updated together.
+
+Only CHANGELOG.md, CURRENT_AUTHORITY.md and this plan change after acceptance.
+The publication receipt at `.tmp/goal-20260927-publication-v108/receipt.json` binds
+the complete candidate file list, reviewed closeout hashes, index/commit blobs and
+remote branch/annotated tag. Its normalization companion records any exact CRLF-to-LF
+Git clean-filter bridge across all frozen inputs; tested raw package/test bytes
+stay unchanged, while byte-identical commit-to-wheel claims exclude normalized
+paths. Full source coverage, Linux application/provider proof, hosted Quality,
+remaining D/E/CAP and explicit whole-lane acceptance remain open. This checkpoint
+does not merge main or retire the active lane.

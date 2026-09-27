@@ -1,8 +1,12 @@
 # LIFECYCLE: live
 from pathlib import Path
 
+import pytest
+
 from scripts.odr.model_role_fit_compare import build_pair_compare_payload, build_pair_verdict_payload
 from scripts.odr.model_role_fit_lane import load_lane_config, load_matrix_registry
+
+pytestmark = pytest.mark.contract
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 LANE_CONFIG_PATH = (

@@ -4,7 +4,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.protocol.compare_local_prompting_profile_drift import main
+
+pytestmark = pytest.mark.integration
 
 
 def _snapshot(profile_id: str) -> dict[str, object]:

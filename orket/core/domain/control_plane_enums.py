@@ -3,7 +3,7 @@ from __future__ import annotations
 from enum import Enum
 
 
-class RunState(str, Enum):
+class RunState(str, Enum):  # noqa: UP042 - public enum representation contract
     CREATED = "created"
     ADMISSION_PENDING = "admission_pending"
     ADMITTED = "admitted"
@@ -20,7 +20,7 @@ class RunState(str, Enum):
     CANCELLED = "cancelled"
 
 
-class AttemptState(str, Enum):
+class AttemptState(str, Enum):  # noqa: UP042 - public enum representation contract
     CREATED = "attempt_created"
     EXECUTING = "attempt_executing"
     WAITING = "attempt_waiting"
@@ -30,7 +30,7 @@ class AttemptState(str, Enum):
     ABANDONED = "attempt_abandoned"
 
 
-class FailurePlane(str, Enum):
+class FailurePlane(str, Enum):  # noqa: UP042 - public enum representation contract
     EXECUTION = "execution_failure"
     PROTOCOL = "protocol_failure"
     TRUTH = "truth_failure"
@@ -38,7 +38,7 @@ class FailurePlane(str, Enum):
     CONTROL_PLANE = "control_plane_failure"
 
 
-class ExecutionFailureClass(str, Enum):
+class ExecutionFailureClass(str, Enum):  # noqa: UP042 - public enum representation contract
     ADAPTER_EXECUTION_FAILURE = "adapter_execution_failure"
     TOOL_TIMEOUT = "tool_timeout"
     TRANSPORT_FAILURE = "transport_failure"
@@ -47,7 +47,7 @@ class ExecutionFailureClass(str, Enum):
     RESUME_FAILURE = "resume_failure"
 
 
-class ProtocolFailureClass(str, Enum):
+class ProtocolFailureClass(str, Enum):  # noqa: UP042 - public enum representation contract
     INVALID_ENVELOPE = "invalid_envelope"
     INVALID_SCHEMA = "invalid_schema"
     TOOL_CARDINALITY_VIOLATION = "tool_cardinality_violation"
@@ -56,7 +56,7 @@ class ProtocolFailureClass(str, Enum):
     UNDECLARED_CAPABILITY_REQUEST = "undeclared_capability_request"
 
 
-class TruthFailureClass(str, Enum):
+class TruthFailureClass(str, Enum):  # noqa: UP042 - public enum representation contract
     UNSUPPORTED_CLAIM = "unsupported_claim"
     MISSING_REQUIRED_EVIDENCE = "missing_required_evidence"
     TOOL_RESULT_CONTRADICTION = "tool_result_contradiction"
@@ -65,7 +65,7 @@ class TruthFailureClass(str, Enum):
     FALSE_COMPLETION_CLAIM = "false_completion_claim"
 
 
-class ResourceFailureClass(str, Enum):
+class ResourceFailureClass(str, Enum):  # noqa: UP042 - public enum representation contract
     LEASE_CONFLICT = "lease_conflict"
     RESOURCE_UNAVAILABLE = "resource_unavailable"
     RESOURCE_STATE_UNCERTAIN = "resource_state_uncertain"
@@ -75,7 +75,7 @@ class ResourceFailureClass(str, Enum):
     RESERVATION_EXPIRED_BEFORE_EXECUTION = "reservation_expired_before_execution"
 
 
-class ControlPlaneFailureClass(str, Enum):
+class ControlPlaneFailureClass(str, Enum):  # noqa: UP042 - public enum representation contract
     ILLEGAL_STATE_TRANSITION = "illegal_state_transition"
     JOURNAL_INTEGRITY_FAILURE = "journal_integrity_failure"
     MISSING_REQUIRED_RECEIPT = "missing_required_receipt"
@@ -84,13 +84,13 @@ class ControlPlaneFailureClass(str, Enum):
     FINAL_TRUTH_PUBLICATION_FAILURE = "final_truth_publication_failure"
 
 
-class SideEffectBoundaryClass(str, Enum):
+class SideEffectBoundaryClass(str, Enum):  # noqa: UP042 - public enum representation contract
     PRE_EFFECT_FAILURE = "pre_effect_failure"
     EFFECT_BOUNDARY_UNCERTAIN = "effect_boundary_uncertain"
     POST_EFFECT_OBSERVED = "post_effect_observed"
 
 
-class RecoveryActionClass(str, Enum):
+class RecoveryActionClass(str, Enum):  # noqa: UP042 - public enum representation contract
     RETRY_SAME_ATTEMPT_SCOPE = "retry_same_attempt_scope"
     START_NEW_ATTEMPT = "start_new_attempt"
     RESUME_FROM_CHECKPOINT = "resume_from_checkpoint"
@@ -103,7 +103,7 @@ class RecoveryActionClass(str, Enum):
     TERMINATE_RUN = "terminate_run"
 
 
-class CapabilityClass(str, Enum):
+class CapabilityClass(str, Enum):  # noqa: UP042 - public enum representation contract
     OBSERVE = "observe"
     DETERMINISTIC_COMPUTE = "deterministic_compute"
     BOUNDED_LOCAL_MUTATION = "bounded_local_mutation"
@@ -112,7 +112,7 @@ class CapabilityClass(str, Enum):
     OPERATOR_AUTHORIZED_ACTION = "operator_authorized_action"
 
 
-class EffectClass(str, Enum):
+class EffectClass(str, Enum):  # noqa: UP042 - public enum representation contract
     NO_EFFECT = "no_effect"
     LOCAL_STATE_EFFECT = "local_state_effect"
     ARTIFACT_EFFECT = "artifact_effect"
@@ -121,14 +121,14 @@ class EffectClass(str, Enum):
     DESTRUCTIVE_EFFECT = "destructive_effect"
 
 
-class IdempotencyClass(str, Enum):
+class IdempotencyClass(str, Enum):  # noqa: UP042 - public enum representation contract
     IDEMPOTENT = "idempotent"
     IDEMPOTENT_WITH_TOKEN = "idempotent_with_token"
     NON_IDEMPOTENT = "non_idempotent"
     UNKNOWN_IDEMPOTENCY = "unknown_idempotency"
 
 
-class CompensationClass(str, Enum):
+class CompensationClass(str, Enum):  # noqa: UP042 - public enum representation contract
     NO_COMPENSATION_NEEDED = "no_compensation_needed"
     RUNTIME_COMPENSABLE = "runtime_compensable"
     ADAPTER_COMPENSABLE = "adapter_compensable"
@@ -137,7 +137,7 @@ class CompensationClass(str, Enum):
     UNKNOWN_COMPENSATION = "unknown_compensation"
 
 
-class EvidenceContractClass(str, Enum):
+class EvidenceContractClass(str, Enum):  # noqa: UP042 - public enum representation contract
     RECEIPT_ONLY = "receipt_only"
     RECEIPT_PLUS_OBSERVATION = "receipt_plus_observation"
     OBSERVATION_ONLY = "observation_only"
@@ -146,21 +146,21 @@ class EvidenceContractClass(str, Enum):
     ATTESTATION_PERMITTED_BY_POLICY = "attestation_permitted_by_policy"
 
 
-class ObservabilityClass(str, Enum):
+class ObservabilityClass(str, Enum):  # noqa: UP042 - public enum representation contract
     FULLY_OBSERVABLE = "fully_observable"
     EVENTUALLY_OBSERVABLE = "eventually_observable"
     PARTIALLY_OBSERVABLE = "partially_observable"
     OPAQUE_WITHOUT_EXTERNAL_CHECK = "opaque_without_external_check"
 
 
-class ReservationKind(str, Enum):
+class ReservationKind(str, Enum):  # noqa: UP042 - public enum representation contract
     RESOURCE = "resource_reservation"
     CONCURRENCY = "concurrency_reservation"
     NAMESPACE = "namespace_reservation"
     OPERATOR_HOLD = "operator_hold_reservation"
 
 
-class ReservationStatus(str, Enum):
+class ReservationStatus(str, Enum):  # noqa: UP042 - public enum representation contract
     PENDING = "reservation_pending"
     ACTIVE = "reservation_active"
     PROMOTED_TO_LEASE = "reservation_promoted_to_lease"
@@ -171,7 +171,7 @@ class ReservationStatus(str, Enum):
     UNCERTAIN = "reservation_uncertain"
 
 
-class LeaseStatus(str, Enum):
+class LeaseStatus(str, Enum):  # noqa: UP042 - public enum representation contract
     PENDING = "lease_pending"
     ACTIVE = "lease_active"
     EXPIRED = "lease_expired"
@@ -180,7 +180,7 @@ class LeaseStatus(str, Enum):
     UNCERTAIN = "lease_uncertain"
 
 
-class CleanupAuthorityClass(str, Enum):
+class CleanupAuthorityClass(str, Enum):  # noqa: UP042 - public enum representation contract
     RUNTIME_CLEANUP_ALLOWED = "runtime_cleanup_allowed"
     RUNTIME_CLEANUP_AFTER_RECONCILIATION = "runtime_cleanup_after_reconciliation"
     OPERATOR_CLEANUP_REQUIRED = "operator_cleanup_required"
@@ -188,7 +188,7 @@ class CleanupAuthorityClass(str, Enum):
     CLEANUP_FORBIDDEN_WITHOUT_EXTERNAL_CONFIRMATION = "cleanup_forbidden_without_external_confirmation"
 
 
-class OwnershipClass(str, Enum):
+class OwnershipClass(str, Enum):  # noqa: UP042 - public enum representation contract
     RUN_OWNED = "run_owned"
     ATTEMPT_OWNED = "attempt_owned"
     SHARED_GOVERNED = "shared_governed"
@@ -196,14 +196,14 @@ class OwnershipClass(str, Enum):
     EXTERNAL_UNOWNED_REFERENCE = "external_unowned_reference"
 
 
-class OrphanClassification(str, Enum):
+class OrphanClassification(str, Enum):  # noqa: UP042 - public enum representation contract
     NOT_ORPHANED = "not_orphaned"
     VERIFIED_ORPHAN = "verified_orphan"
     SUSPECTED_ORPHAN = "suspected_orphan"
     OWNERSHIP_CONFLICT = "ownership_conflict"
 
 
-class DivergenceClass(str, Enum):
+class DivergenceClass(str, Enum):  # noqa: UP042 - public enum representation contract
     NO_DIVERGENCE = "no_divergence"
     EXPECTED_EFFECT_OBSERVED = "expected_effect_observed"
     EFFECT_MISSING = "effect_missing"
@@ -213,7 +213,7 @@ class DivergenceClass(str, Enum):
     INSUFFICIENT_OBSERVATION = "insufficient_observation"
 
 
-class SafeContinuationClass(str, Enum):
+class SafeContinuationClass(str, Enum):  # noqa: UP042 - public enum representation contract
     SAFE_TO_CONTINUE = "safe_to_continue"
     SAFE_TO_CONTINUE_IN_DEGRADED_MODE = "safe_to_continue_in_degraded_mode"
     OPERATOR_REQUIRED = "operator_required"
@@ -222,13 +222,13 @@ class SafeContinuationClass(str, Enum):
     CLEANUP_BEFORE_CONTINUE = "cleanup_before_continue"
 
 
-class OperatorInputClass(str, Enum):
+class OperatorInputClass(str, Enum):  # noqa: UP042 - public enum representation contract
     COMMAND = "operator_command"
     RISK_ACCEPTANCE = "operator_risk_acceptance"
     ATTESTATION = "operator_attestation"
 
 
-class OperatorCommandClass(str, Enum):
+class OperatorCommandClass(str, Enum):  # noqa: UP042 - public enum representation contract
     APPROVE_CONTINUE = "approve_continue"
     APPROVE_DEGRADED_CONTINUE = "approve_degraded_continue"
     PAUSE_RUN = "pause_run"
@@ -240,25 +240,25 @@ class OperatorCommandClass(str, Enum):
     MARK_TERMINAL = "mark_terminal"
 
 
-class CheckpointAcceptanceOutcome(str, Enum):
+class CheckpointAcceptanceOutcome(str, Enum):  # noqa: UP042 - public enum representation contract
     ACCEPTED = "checkpoint_accepted"
     REJECTED = "checkpoint_rejected"
 
 
-class CheckpointReobservationClass(str, Enum):
+class CheckpointReobservationClass(str, Enum):  # noqa: UP042 - public enum representation contract
     NONE = "no_reobservation_required"
     TARGET_ONLY = "target_reobservation_required"
     DEPENDENCY_SCOPE = "dependency_reobservation_required"
     FULL = "full_reobservation_required"
 
 
-class CheckpointResumabilityClass(str, Enum):
+class CheckpointResumabilityClass(str, Enum):  # noqa: UP042 - public enum representation contract
     RESUME_SAME_ATTEMPT = "resume_same_attempt"
     RESUME_NEW_ATTEMPT_FROM_CHECKPOINT = "resume_new_attempt_from_checkpoint"
     RESUME_FORBIDDEN = "resume_forbidden"
 
 
-class ResultClass(str, Enum):
+class ResultClass(str, Enum):  # noqa: UP042 - public enum representation contract
     SUCCESS = "success"
     FAILED = "failed"
     BLOCKED = "blocked"
@@ -266,31 +266,31 @@ class ResultClass(str, Enum):
     ADVISORY = "advisory"
 
 
-class CompletionClassification(str, Enum):
+class CompletionClassification(str, Enum):  # noqa: UP042 - public enum representation contract
     SATISFIED = "completion_satisfied"
     PARTIAL = "completion_partial"
     UNSATISFIED = "completion_unsatisfied"
 
 
-class EvidenceSufficiencyClassification(str, Enum):
+class EvidenceSufficiencyClassification(str, Enum):  # noqa: UP042 - public enum representation contract
     SUFFICIENT = "evidence_sufficient"
     ATTESTED = "evidence_attested"
     INSUFFICIENT = "evidence_insufficient"
 
 
-class ResidualUncertaintyClassification(str, Enum):
+class ResidualUncertaintyClassification(str, Enum):  # noqa: UP042 - public enum representation contract
     NONE = "no_residual_uncertainty"
     BOUNDED = "bounded_residual_uncertainty"
     UNRESOLVED = "unresolved_residual_uncertainty"
 
 
-class DegradationClassification(str, Enum):
+class DegradationClassification(str, Enum):  # noqa: UP042 - public enum representation contract
     NONE = "no_degradation"
     DECLARED = "declared_degradation"
     OPERATOR_APPROVED = "operator_approved_degradation"
 
 
-class ClosureBasisClassification(str, Enum):
+class ClosureBasisClassification(str, Enum):  # noqa: UP042 - public enum representation contract
     NORMAL_EXECUTION = "normal_execution"
     RECONCILIATION_CLOSED = "reconciliation_closed"
     POLICY_TERMINAL_STOP = "policy_terminal_stop"
@@ -298,14 +298,14 @@ class ClosureBasisClassification(str, Enum):
     CANCELLED_BY_AUTHORITY = "cancelled_by_authority"
 
 
-class TerminalityBasisClassification(str, Enum):
+class TerminalityBasisClassification(str, Enum):  # noqa: UP042 - public enum representation contract
     COMPLETED_TERMINAL = "completed_terminal"
     POLICY_TERMINAL = "policy_terminal"
     OPERATOR_TERMINAL = "operator_terminal"
     CANCELLED_TERMINAL = "cancelled_terminal"
 
 
-class AuthoritySourceClass(str, Enum):
+class AuthoritySourceClass(str, Enum):  # noqa: UP042 - public enum representation contract
     RECEIPT_EVIDENCE = "receipt_evidence"
     ADAPTER_OBSERVATION = "adapter_observation"
     RECONCILIATION_RECORD = "reconciliation_record"

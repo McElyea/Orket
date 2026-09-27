@@ -18,7 +18,7 @@ CONFIG_PATH = (
 )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_round_cap_probe_config_freezes_probe_budget_and_registry() -> None:
     """Layer: contract. Checks the archived selection, without claiming retained benchmark evidence exists."""
     config = load_probe_config(CONFIG_PATH)
@@ -63,6 +63,7 @@ def test_probe_registry_requires_source_files(tmp_path: Path, missing: str | Non
             assert spec.source_compare_artifact_path == tmp_path / f"{index}-source_compare_artifact.json"
 
 
+@pytest.mark.unit
 def test_movement_analysis_flags_flatline_before_round_cap() -> None:
     """Layer: unit. Verifies the probe can distinguish a true round-cap bind from a run that stopped changing earlier."""
     inspect_row = {
@@ -106,6 +107,7 @@ def test_movement_analysis_flags_flatline_before_round_cap() -> None:
     assert result["round_cap_assessment"] == "flatlined_before_cap"
 
 
+@pytest.mark.unit
 def test_movement_analysis_flags_round_cap_bind_only_when_movement_survives_to_cap() -> None:
     """Layer: unit. Verifies the 20-round probe recommends a higher round cap only when the run still changes through the probe budget."""
     inspect_row = {

@@ -4,8 +4,12 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from orket.adapters.storage.protocol_append_only_ledger import AppendOnlyRunLedger
 from scripts.protocol.run_protocol_replay_compare import main
+
+pytestmark = pytest.mark.integration
 
 
 def _write_events(path: Path, *, status: str, ok: bool) -> None:

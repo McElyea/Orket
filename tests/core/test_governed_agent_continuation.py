@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from dataclasses import replace
 
+import pytest
+
 from orket.core.domain.governed_agent_continuation import (
     GovernedAgentContinuationInputs,
     decide_governed_agent_continuation,
@@ -37,6 +39,7 @@ def _inputs() -> GovernedAgentContinuationInputs:
     )
 
 
+@pytest.mark.unit
 def test_continuation_requires_recorded_safe_inputs() -> None:
     decision = decide_governed_agent_continuation(_inputs())
 
@@ -45,6 +48,7 @@ def test_continuation_requires_recorded_safe_inputs() -> None:
     assert decision.safe_to_continue is True
 
 
+@pytest.mark.unit
 def test_stop_priority_places_uncertainty_and_cancel_before_verified_completion() -> None:
     satisfied = replace(
         _inputs(),
@@ -61,6 +65,7 @@ def test_stop_priority_places_uncertainty_and_cancel_before_verified_completion(
     ).disposition == "recover"
 
 
+@pytest.mark.unit
 def test_unverified_completion_recommendation_cannot_publish_success() -> None:
     decision = decide_governed_agent_continuation(
         replace(_inputs(), extension_recommendation="complete")

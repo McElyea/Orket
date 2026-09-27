@@ -8,7 +8,7 @@ class SandboxLifecycleError(ValueError):
     """Raised when sandbox lifecycle rules are violated."""
 
 
-class SandboxState(str, Enum):
+class SandboxState(str, Enum):  # noqa: UP042 - public enum representation contract
     CREATING = "creating"
     STARTING = "starting"
     ACTIVE = "active"
@@ -18,7 +18,7 @@ class SandboxState(str, Enum):
     CLEANED = "cleaned"
 
 
-class CleanupState(str, Enum):
+class CleanupState(str, Enum):  # noqa: UP042 - public enum representation contract
     NONE = "none"
     SCHEDULED = "scheduled"
     IN_PROGRESS = "in_progress"
@@ -26,7 +26,7 @@ class CleanupState(str, Enum):
     FAILED = "failed"
 
 
-class TerminalReason(str, Enum):
+class TerminalReason(str, Enum):  # noqa: UP042 - public enum representation contract
     SUCCESS = "success"
     FAILED = "failed"
     BLOCKED = "blocked"
@@ -42,7 +42,7 @@ class TerminalReason(str, Enum):
     CLEANED_EXTERNALLY = "cleaned_externally"
 
 
-class LifecycleEvent(str, Enum):
+class LifecycleEvent(str, Enum):  # noqa: UP042 - public enum representation contract
     CREATE_ACCEPTED = "create accepted"
     CREATE_FAILURE = "create failure"
     HEALTH_VERIFIED = "health verified"
@@ -59,12 +59,12 @@ class LifecycleEvent(str, Enum):
     EXTERNAL_ABSENCE_VERIFIED = "external absence verified"
 
 
-class OwnershipConfidence(str, Enum):
+class OwnershipConfidence(str, Enum):  # noqa: UP042 - public enum representation contract
     VERIFIED = "verified"
     UNVERIFIED = "unverified"
 
 
-class ReconciliationClassification(str, Enum):
+class ReconciliationClassification(str, Enum):  # noqa: UP042 - public enum representation contract
     ACTIVE = "active"
     RECLAIMABLE = "reclaimable"
     TERMINAL_LOST_RUNTIME = "terminal_lost_runtime"

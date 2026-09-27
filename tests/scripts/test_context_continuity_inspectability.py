@@ -7,6 +7,8 @@ import pytest
 from scripts.odr.context_continuity_inspectability import build_inspectability_payload
 from scripts.odr.context_continuity_lane import load_lane_config
 
+pytestmark = pytest.mark.contract
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 LANE_CONFIG_PATH = (
     REPO_ROOT

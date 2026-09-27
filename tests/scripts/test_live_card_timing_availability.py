@@ -7,6 +7,8 @@ import pytest
 
 from scripts.benchmarks.live_card_benchmark_runner import _extract_token_metrics_from_log
 
+pytestmark = pytest.mark.integration
+
 
 def _turn(prompt, predicted, *, legacy=False, tokens=2):
     values = {"prompt_tokens":tokens,"output_tokens":1,"total_tokens":3,

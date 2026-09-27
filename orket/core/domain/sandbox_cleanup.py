@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 
 
-class DockerResourceType(str, Enum):
+class DockerResourceType(str, Enum):  # noqa: UP042 - public enum representation contract
     CONTAINER = "container"
     NETWORK = "network"
     MANAGED_VOLUME = "managed_volume"

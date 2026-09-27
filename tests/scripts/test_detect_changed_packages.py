@@ -2,7 +2,12 @@ from __future__ import annotations
 
 import json
 import subprocess
+import sys
 from pathlib import Path
+
+import pytest
+
+pytestmark = pytest.mark.integration
 
 
 def test_detect_changed_packages_treats_missing_base_ref_as_all_changed(tmp_path: Path) -> None:
@@ -22,7 +27,7 @@ def test_detect_changed_packages_treats_missing_base_ref_as_all_changed(tmp_path
 
     result = subprocess.run(
         [
-            "python",
+            sys.executable,
             str(Path("scripts/ci/detect_changed_packages.py").resolve()),
             "--config",
             ".ci/packages.json",

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 _EVIDENCE_CLASSES = (
     "syntax_only",
     "command_execution",

@@ -21,6 +21,7 @@ def _load_fixture_payload(name: str) -> dict:
     return json.loads(_fixture_path(name).read_text(encoding="utf-8"))
 
 
+@pytest.mark.contract
 def test_valid_manifest_fixture_passes() -> None:
     """Layer: contract. The valid bundle fixture admits the released core minor."""
     manifest = OrketManifest.model_validate(_load_fixture_payload("valid_minimal.json"))
@@ -32,6 +33,7 @@ def test_valid_manifest_fixture_passes() -> None:
     assert manifest.guards[0].value == "hallucination"
 
 
+@pytest.mark.contract
 def test_missing_required_section_permissions_fails() -> None:
     payload = _load_fixture_payload("invalid_missing_permissions.json")
     with pytest.raises(ValidationError) as exc:
@@ -41,6 +43,7 @@ def test_missing_required_section_permissions_fails() -> None:
     assert first["type"] == "missing"
 
 
+@pytest.mark.contract
 def test_invalid_guard_enum_value_fails() -> None:
     payload = _load_fixture_payload("invalid_guard_enum.json")
     with pytest.raises(ValidationError) as exc:
@@ -50,6 +53,7 @@ def test_invalid_guard_enum_value_fails() -> None:
     assert any(err["type"] == "enum" for err in errors)
 
 
+@pytest.mark.contract
 def test_invalid_engine_version_specifier_fails() -> None:
     payload = _load_fixture_payload("invalid_engine_version.json")
     with pytest.raises(ValidationError) as exc:
@@ -59,6 +63,7 @@ def test_invalid_engine_version_specifier_fails() -> None:
     assert any("parseable as a version specifier" in err["msg"] for err in errors)
 
 
+@pytest.mark.contract
 def test_engine_compatibility_check() -> None:
     """Layer: contract. Explicit manifest values determine version compatibility."""
     manifest = OrketManifest.model_validate(_load_fixture_payload("valid_minimal.json"))
@@ -66,6 +71,7 @@ def test_engine_compatibility_check() -> None:
     assert is_engine_compatible(manifest, "0.9.0") is False
 
 
+@pytest.mark.contract
 def test_model_selection_prefers_manifest_candidates() -> None:
     """Layer: contract. Explicit model availability determines candidate selection."""
     manifest = OrketManifest.model_validate(_load_fixture_payload("valid_minimal.json"))
@@ -78,6 +84,7 @@ def test_model_selection_prefers_manifest_candidates() -> None:
     assert result["selected_model"] == "qwen2.5-coder:3b"
 
 
+@pytest.mark.contract
 def test_model_selection_rejects_disallowed_override() -> None:
     manifest_payload = _load_fixture_payload("valid_minimal.json")
     manifest_payload["model"]["allowOverride"] = False

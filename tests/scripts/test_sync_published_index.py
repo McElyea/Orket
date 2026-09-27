@@ -5,6 +5,10 @@ import importlib.util
 import json
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.contract
+
 
 def _load_module(path: Path):
     spec = importlib.util.spec_from_file_location("sync_published_index_test", str(path))

@@ -2,8 +2,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from scripts.proof.verify_outward_run_witness_package import verify_package
 
+pytestmark = pytest.mark.contract
 
 FIXTURE_ROOT = Path("tests/proof_fixtures/outward_run/base_approved_package")
 

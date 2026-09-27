@@ -4,6 +4,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.governance.export_state_transition_mermaid import (
     build_state_transition_mermaid,
     export_state_transition_mermaid,
@@ -11,7 +13,7 @@ from scripts.governance.export_state_transition_mermaid import (
 )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_build_state_transition_mermaid_contains_domain_subgraphs() -> None:
     mermaid = build_state_transition_mermaid()
     assert mermaid.startswith("flowchart LR\n")
@@ -19,7 +21,7 @@ def test_build_state_transition_mermaid_contains_domain_subgraphs() -> None:
     assert "session__running --> session__done" in mermaid
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_export_state_transition_mermaid_writes_mermaid_and_json(tmp_path: Path) -> None:
     out_mermaid = tmp_path / "state.mmd"
     out_json = tmp_path / "state.json"
@@ -31,7 +33,7 @@ def test_export_state_transition_mermaid_writes_mermaid_and_json(tmp_path: Path)
     assert "diff_ledger" in written
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_main_returns_success_and_writes_outputs(tmp_path: Path) -> None:
     out_mermaid = tmp_path / "out" / "state.mmd"
     out_json = tmp_path / "out" / "state.json"

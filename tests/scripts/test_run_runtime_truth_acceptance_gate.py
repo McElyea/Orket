@@ -21,14 +21,14 @@ from tests.helpers.runtime_truth_gate import (
 
 pytestmark = pytest.mark.usefixtures("runtime_truth_repository_inputs")
 
-# Layer: integration
+@pytest.mark.integration
 def test_runtime_truth_acceptance_gate_passes_with_drift_and_contract_files(tmp_path: Path) -> None:
     _write_contract_set(tmp_path, "run-ok")
     exit_code = main(["--workspace", str(tmp_path), "--run-id", "run-ok"])
     assert exit_code == 0
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_required_contract_file_missing(tmp_path: Path) -> None:
     contracts_dir = _write_contract_set(tmp_path, "run-missing")
     (contracts_dir / REQUIRED_RUNTIME_CONTRACT_FILES[0]).unlink()
@@ -42,7 +42,7 @@ def test_runtime_truth_acceptance_gate_fails_when_required_contract_file_missing
     assert "runtime_contract_files_missing" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_retry_policy_artifact_is_invalid(
     tmp_path: Path,
 ) -> None:
@@ -74,7 +74,7 @@ def test_runtime_truth_acceptance_gate_fails_when_retry_policy_artifact_is_inval
     assert "retry_classification_policy_artifact_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_retry_policy_artifact_drifts_from_current_snapshot(
     tmp_path: Path,
 ) -> None:
@@ -100,7 +100,7 @@ def test_runtime_truth_acceptance_gate_fails_when_retry_policy_artifact_drifts_f
     assert "retry_classification_policy_artifact_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.integration
 def test_runtime_truth_acceptance_gate_can_run_drift_check_without_run_id(tmp_path: Path) -> None:
     payload = evaluate_runtime_truth_acceptance_gate(
         workspace=tmp_path.resolve(),
@@ -159,7 +159,7 @@ def test_runtime_truth_acceptance_gate_can_run_drift_check_without_run_id(tmp_pa
     assert payload["details"]["promotion_rollback_criteria_check"]["ok"] is True
 
 
-# Layer: contract
+@pytest.mark.integration
 def test_runtime_truth_acceptance_gate_passes_with_valid_retry_policy_artifact(tmp_path: Path) -> None:
     _write_contract_set(tmp_path, "run-valid-retry-artifact")
 
@@ -174,7 +174,7 @@ def test_runtime_truth_acceptance_gate_passes_with_valid_retry_policy_artifact(t
     assert payload["details"]["retry_classification_policy_artifact_check"]["matches_current_snapshot"] is True
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_unreachable_branch_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -200,7 +200,7 @@ def test_runtime_truth_acceptance_gate_fails_when_unreachable_branch_check_fails
     assert "unreachable_branch_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_noop_critical_path_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -226,7 +226,7 @@ def test_runtime_truth_acceptance_gate_fails_when_noop_critical_path_check_fails
     assert "noop_critical_path_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_environment_parity_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -251,7 +251,7 @@ def test_runtime_truth_acceptance_gate_fails_when_environment_parity_check_fails
     assert "environment_parity_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_runtime_invariant_registry_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -276,7 +276,7 @@ def test_runtime_truth_acceptance_gate_fails_when_runtime_invariant_registry_che
     assert "runtime_invariant_registry_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_runtime_config_ownership_map_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -301,7 +301,7 @@ def test_runtime_truth_acceptance_gate_fails_when_runtime_config_ownership_map_c
     assert "runtime_config_ownership_map_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_unknown_input_policy_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -326,7 +326,7 @@ def test_runtime_truth_acceptance_gate_fails_when_unknown_input_policy_check_fai
     assert "unknown_input_policy_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_clock_time_authority_policy_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -351,7 +351,7 @@ def test_runtime_truth_acceptance_gate_fails_when_clock_time_authority_policy_ch
     assert "clock_time_authority_policy_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_capability_fallback_hierarchy_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -376,7 +376,7 @@ def test_runtime_truth_acceptance_gate_fails_when_capability_fallback_hierarchy_
     assert "capability_fallback_hierarchy_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_runtime_truth_foundation_contracts_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -401,7 +401,7 @@ def test_runtime_truth_acceptance_gate_fails_when_runtime_truth_foundation_contr
     assert "runtime_truth_foundation_contracts_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_warning_policy_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -426,7 +426,7 @@ def test_runtime_truth_acceptance_gate_fails_when_warning_policy_check_fails(
     assert "structured_warning_policy_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_retry_policy_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -451,7 +451,7 @@ def test_runtime_truth_acceptance_gate_fails_when_retry_policy_check_fails(
     assert "retry_classification_policy_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_retry_policy_report_is_malformed(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -479,7 +479,7 @@ def test_runtime_truth_acceptance_gate_fails_when_retry_policy_report_is_malform
     assert "retry_classification_policy_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_retry_policy_report_snapshot_is_invalid(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -510,7 +510,7 @@ def test_runtime_truth_acceptance_gate_fails_when_retry_policy_report_snapshot_i
     assert "retry_classification_policy_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_preserves_valid_retry_policy_failure_detail(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -539,7 +539,7 @@ def test_runtime_truth_acceptance_gate_preserves_valid_retry_policy_failure_deta
     assert "retry_classification_policy_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_provider_quarantine_policy_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -565,7 +565,7 @@ def test_runtime_truth_acceptance_gate_fails_when_provider_quarantine_policy_che
     assert "provider_quarantine_policy_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_safe_default_catalog_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -590,7 +590,7 @@ def test_runtime_truth_acceptance_gate_fails_when_safe_default_catalog_check_fai
     assert "safe_default_catalog_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_boundary_audit_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -615,7 +615,7 @@ def test_runtime_truth_acceptance_gate_fails_when_boundary_audit_check_fails(
     assert "runtime_boundary_audit_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_model_profile_bios_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -640,7 +640,7 @@ def test_runtime_truth_acceptance_gate_fails_when_model_profile_bios_check_fails
     assert "model_profile_bios_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_interrupt_policy_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -665,7 +665,7 @@ def test_runtime_truth_acceptance_gate_fails_when_interrupt_policy_check_fails(
     assert "interrupt_semantics_policy_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_idempotency_policy_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -690,7 +690,7 @@ def test_runtime_truth_acceptance_gate_fails_when_idempotency_policy_check_fails
     assert "idempotency_discipline_policy_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_result_error_invariant_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -716,7 +716,7 @@ def test_runtime_truth_acceptance_gate_fails_when_result_error_invariant_check_f
     assert "result_error_invariant_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_artifact_provenance_policy_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -741,7 +741,7 @@ def test_runtime_truth_acceptance_gate_fails_when_artifact_provenance_policy_che
     assert "artifact_provenance_block_policy_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_operator_override_policy_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -766,7 +766,7 @@ def test_runtime_truth_acceptance_gate_fails_when_operator_override_policy_check
     assert "operator_override_logging_policy_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_demo_production_policy_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -791,7 +791,7 @@ def test_runtime_truth_acceptance_gate_fails_when_demo_production_policy_check_f
     assert "demo_production_labeling_policy_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_human_correction_policy_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -816,7 +816,7 @@ def test_runtime_truth_acceptance_gate_fails_when_human_correction_policy_check_
     assert "human_correction_capture_policy_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_sampling_discipline_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -841,7 +841,7 @@ def test_runtime_truth_acceptance_gate_fails_when_sampling_discipline_check_fail
     assert "sampling_discipline_guide_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_execution_readiness_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -866,7 +866,7 @@ def test_runtime_truth_acceptance_gate_fails_when_execution_readiness_check_fail
     assert "execution_readiness_rubric_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_release_confidence_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -891,7 +891,7 @@ def test_runtime_truth_acceptance_gate_fails_when_release_confidence_check_fails
     assert "release_confidence_scorecard_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_feature_flag_expiration_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -916,7 +916,7 @@ def test_runtime_truth_acceptance_gate_fails_when_feature_flag_expiration_check_
     assert "feature_flag_expiration_policy_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_workspace_hygiene_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -941,7 +941,7 @@ def test_runtime_truth_acceptance_gate_fails_when_workspace_hygiene_check_fails(
     assert "workspace_hygiene_rules_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_canonical_examples_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -966,7 +966,7 @@ def test_runtime_truth_acceptance_gate_fails_when_canonical_examples_check_fails
     assert "canonical_examples_library_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_non_fatal_error_budget_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -991,7 +991,7 @@ def test_runtime_truth_acceptance_gate_fails_when_non_fatal_error_budget_check_f
     assert "non_fatal_error_budget_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_interface_freeze_windows_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -1016,7 +1016,7 @@ def test_runtime_truth_acceptance_gate_fails_when_interface_freeze_windows_check
     assert "interface_freeze_windows_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_evidence_package_generator_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -1041,7 +1041,7 @@ def test_runtime_truth_acceptance_gate_fails_when_evidence_package_generator_che
     assert "evidence_package_generator_contract_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_conformance_governance_contract_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -1066,7 +1066,7 @@ def test_runtime_truth_acceptance_gate_fails_when_conformance_governance_contrac
     assert "conformance_governance_contract_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_observability_redaction_tests_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -1091,7 +1091,7 @@ def test_runtime_truth_acceptance_gate_fails_when_observability_redaction_tests_
     assert "observability_redaction_tests_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_trust_language_review_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -1116,7 +1116,7 @@ def test_runtime_truth_acceptance_gate_fails_when_trust_language_review_check_fa
     assert "trust_language_review_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_local_remote_route_policy_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -1141,7 +1141,7 @@ def test_runtime_truth_acceptance_gate_fails_when_local_remote_route_policy_chec
     assert "local_remote_route_policy_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_tool_invocation_policy_contract_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -1166,7 +1166,7 @@ def test_runtime_truth_acceptance_gate_fails_when_tool_invocation_policy_contrac
     assert "tool_invocation_policy_contract_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_failure_replay_harness_contract_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -1191,7 +1191,7 @@ def test_runtime_truth_acceptance_gate_fails_when_failure_replay_harness_contrac
     assert "failure_replay_harness_contract_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_cold_start_truth_tests_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -1216,7 +1216,7 @@ def test_runtime_truth_acceptance_gate_fails_when_cold_start_truth_tests_check_f
     assert "cold_start_truth_tests_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_persistence_corruption_tests_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -1241,7 +1241,7 @@ def test_runtime_truth_acceptance_gate_fails_when_persistence_corruption_tests_c
     assert "persistence_corruption_tests_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_long_session_soak_tests_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -1267,7 +1267,7 @@ def test_runtime_truth_acceptance_gate_fails_when_long_session_soak_tests_check_
     assert "long_session_soak_tests_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_resource_pressure_simulation_lane_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -1292,7 +1292,7 @@ def test_runtime_truth_acceptance_gate_fails_when_resource_pressure_simulation_l
     assert "resource_pressure_simulation_lane_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_ui_lane_security_boundary_tests_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -1317,7 +1317,7 @@ def test_runtime_truth_acceptance_gate_fails_when_ui_lane_security_boundary_test
     assert "ui_lane_security_boundary_tests_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_degradation_first_ui_standard_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -1342,7 +1342,7 @@ def test_runtime_truth_acceptance_gate_fails_when_degradation_first_ui_standard_
     assert "degradation_first_ui_standard_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_decision_record_operating_principles_contract_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -1367,7 +1367,7 @@ def test_runtime_truth_acceptance_gate_fails_when_decision_record_operating_prin
     assert "decision_record_operating_principles_contract_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_naming_discipline_policy_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -1392,7 +1392,7 @@ def test_runtime_truth_acceptance_gate_fails_when_naming_discipline_policy_check
     assert "naming_discipline_policy_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_fails_when_promotion_rollback_check_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -1417,7 +1417,7 @@ def test_runtime_truth_acceptance_gate_fails_when_promotion_rollback_check_fails
     assert "promotion_rollback_criteria_check_failed" in payload["failures"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_runtime_truth_acceptance_gate_required_file_list_tracks_new_contract_artifacts() -> None:
     assert "runtime_invariant_registry.json" in REQUIRED_RUNTIME_CONTRACT_FILES
     assert "runtime_config_ownership_map.json" in REQUIRED_RUNTIME_CONTRACT_FILES

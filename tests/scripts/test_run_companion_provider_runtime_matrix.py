@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 import httpx
+import pytest
 
 from scripts.companion.run_companion_provider_runtime_matrix import run_companion_provider_runtime_matrix
 
@@ -101,6 +102,7 @@ def _run_matrix(
     )
 
 
+@pytest.mark.integration
 def test_run_companion_provider_runtime_matrix_complete_writes_recommendations_and_diff_ledger(tmp_path: Path) -> None:
     """Layer: integration. Verifies full success path writes matrix recommendations and diff_ledger."""
     output = tmp_path / "matrix.json"
@@ -124,8 +126,9 @@ def test_run_companion_provider_runtime_matrix_complete_writes_recommendations_a
     assert len(persisted["diff_ledger"]) == 1
 
 
+@pytest.mark.contract
 def test_run_companion_provider_runtime_matrix_partial_when_voice_probe_fails(tmp_path: Path) -> None:
-    """Layer: integration. Verifies voice probe failures produce degraded path and partial matrix status."""
+    """Layer: contract. Verifies voice probe failures produce degraded path and partial matrix status."""
     output = tmp_path / "matrix.json"
     payload = _run_matrix(
         output=output,
@@ -141,8 +144,9 @@ def test_run_companion_provider_runtime_matrix_partial_when_voice_probe_fails(tm
     assert "voice_probe" in steps
 
 
+@pytest.mark.contract
 def test_run_companion_provider_runtime_matrix_partial_when_coverage_dimension_not_measured(tmp_path: Path) -> None:
-    """Layer: integration. Verifies unknown model-size paths produce explicit coverage blockers."""
+    """Layer: contract. Verifies unknown model-size paths produce explicit coverage blockers."""
     output = tmp_path / "matrix.json"
     payload = _run_matrix(
         output=output,
@@ -158,8 +162,9 @@ def test_run_companion_provider_runtime_matrix_partial_when_coverage_dimension_n
     assert "footprint" in coverage_rows[0]["error"]
 
 
+@pytest.mark.contract
 def test_run_companion_provider_runtime_matrix_failure_when_required_chat_step_blocks(tmp_path: Path) -> None:
-    """Layer: integration. Verifies required-step chat failures are reported as blocked failures with exact step."""
+    """Layer: contract. Verifies required-step chat failures are reported as blocked failures with exact step."""
     output = tmp_path / "matrix.json"
     payload = _run_matrix(
         output=output,
@@ -174,8 +179,9 @@ def test_run_companion_provider_runtime_matrix_failure_when_required_chat_step_b
     assert payload["cases"][0]["failed_step"] == "chat_reasoning"
 
 
+@pytest.mark.contract
 def test_run_companion_provider_runtime_matrix_forwards_provider_and_model_in_chat_payload(tmp_path: Path) -> None:
-    """Layer: integration. Verifies matrix runner forwards provider/model selectors through chat API payload."""
+    """Layer: contract. Verifies matrix runner forwards provider/model selectors through chat API payload."""
     captured: list[dict[str, object]] = []
     output = tmp_path / "matrix.json"
     _run_matrix(
@@ -189,8 +195,9 @@ def test_run_companion_provider_runtime_matrix_forwards_provider_and_model_in_ch
     assert all(row["model"] == "qwen2.5-coder:14b" for row in captured)
 
 
+@pytest.mark.contract
 def test_run_companion_provider_runtime_matrix_recommendation_matrix_reflects_rig_fit(tmp_path: Path) -> None:
-    """Layer: integration. Verifies recommendation matrix selects smaller models for Class A and larger for Class D."""
+    """Layer: contract. Verifies recommendation matrix selects smaller models for Class A and larger for Class D."""
     output = tmp_path / "matrix.json"
     payload = _run_matrix(
         output=output,
@@ -206,8 +213,9 @@ def test_run_companion_provider_runtime_matrix_recommendation_matrix_reflects_ri
     assert class_d["model"] == "qwen2.5-coder:40b"
 
 
+@pytest.mark.contract
 def test_run_companion_provider_runtime_matrix_expands_single_provider_multi_model_inputs(tmp_path: Path) -> None:
-    """Layer: integration. Verifies single-provider multi-model input expands into one case per model."""
+    """Layer: contract. Verifies single-provider multi-model input expands into one case per model."""
     output = tmp_path / "matrix.json"
     payload = _run_matrix(
         output=output,

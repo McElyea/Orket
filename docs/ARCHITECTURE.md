@@ -32,6 +32,14 @@ run time. The concrete refusal and partial-effect limits live in
 
 ## Implementation Status
 
+Sandbox event publication and replay capture invocation values and retain the
+existing I/O owner through persistence and file cleanup. Native nonblocking locks
+coordinate cooperating append/replay callers; busy fallback refuses publication.
+API startup authentication and its required diagnostic handlers use an owned
+worker before engine initialization. Contracts and migration limits:
+`docs/specs/SANDBOX_EVENT_PUBLICATION_OWNERSHIP.md` and
+`docs/specs/API_RUNTIME_LIFECYCLE.md`.
+
 Optional event publication captures supported built-in inputs before admission
 to the existing bounded writer. Native stages retain independent main/artifact
 capacity and API token ownership; fatal failures refuse append settlement. This

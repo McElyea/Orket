@@ -13,14 +13,14 @@ from scripts.governance.check_runtime_boundary_audit_checklist import (
 )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_evaluate_runtime_boundary_audit_checklist_passes_in_repo_workspace() -> None:
     payload = evaluate_runtime_boundary_audit_checklist(workspace=Path().resolve())
     assert payload["ok"] is True
     assert payload["boundary_count"] >= 1
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_evaluate_runtime_boundary_audit_checklist_fails_for_missing_workspace(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -40,7 +40,7 @@ def test_evaluate_runtime_boundary_audit_checklist_fails_for_missing_workspace(
     assert "E_RUNTIME_BOUNDARY_PATH_MISSING" in str(payload["error"])
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_check_runtime_boundary_audit_checklist_writes_diff_ledger_payload(tmp_path: Path) -> None:
     out_path = tmp_path / "boundary_check.json"
     exit_code, payload = check_runtime_boundary_audit_checklist(
@@ -54,7 +54,7 @@ def test_check_runtime_boundary_audit_checklist_writes_diff_ledger_payload(tmp_p
     assert "diff_ledger" in written
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_main_returns_success(tmp_path: Path) -> None:
     out_path = tmp_path / "boundary_check.json"
     exit_code = main(["--workspace", str(Path().resolve()), "--out", str(out_path)])

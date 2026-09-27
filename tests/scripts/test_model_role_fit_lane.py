@@ -2,11 +2,15 @@
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.odr.model_role_fit_lane import (
     build_lane_bootstrap_payload,
     load_lane_config,
     load_matrix_registry,
 )
+
+pytestmark = pytest.mark.contract
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 LANE_CONFIG_PATH = (

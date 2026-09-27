@@ -5,6 +5,8 @@ import pytest
 
 from scripts.odr.context_continuity_compare import build_context_continuity_compare_payload
 
+pytestmark = pytest.mark.contract
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 LANE_CONFIG_PATH = (
     REPO_ROOT

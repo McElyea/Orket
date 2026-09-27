@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import importlib.abc
-from importlib.machinery import ModuleSpec
 import sys
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
+from importlib.machinery import ModuleSpec
 from types import ModuleType, TracebackType
 
 DEFAULT_BLOCKED_PREFIXES: tuple[str, ...] = ("orket",)

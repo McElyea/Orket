@@ -5,8 +5,11 @@ import json
 from pathlib import Path
 
 import httpx
+import pytest
 
 from scripts.companion.run_companion_provider_runtime_matrix_pipeline import run_matrix_pipeline
+
+pytestmark = pytest.mark.integration
 
 
 def _pipeline_transport(*, fail_status: bool = False) -> httpx.MockTransport:

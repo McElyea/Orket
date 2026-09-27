@@ -4,11 +4,15 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.common.rerun_diff_ledger import (
     append_payload_history,
     write_json_with_diff_ledger,
     write_payload_with_diff_ledger,
 )
+
+pytestmark = pytest.mark.integration
 
 
 def _load(path: Path) -> dict:

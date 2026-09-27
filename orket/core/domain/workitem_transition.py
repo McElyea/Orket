@@ -10,7 +10,7 @@ from orket.core.domain.workflow_profiles import resolve_workflow_profile
 from orket.schema import CardStatus, CardType
 
 
-class TransitionErrorCode(str, Enum):
+class TransitionErrorCode(str, Enum):  # noqa: UP042 - public enum representation contract
     INVALID_ACTION = "INVALID_ACTION"
     DEPENDENCY_UNRESOLVED = "DEPENDENCY_UNRESOLVED"
     APPROVAL_REQUIRED = "APPROVAL_REQUIRED"

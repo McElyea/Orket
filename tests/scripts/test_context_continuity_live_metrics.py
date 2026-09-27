@@ -1,4 +1,6 @@
 # LIFECYCLE: live
+import pytest
+
 from scripts.odr.context_continuity_live_metrics import (
     accepted_decision_summaries,
     build_replay_source_history,
@@ -6,6 +8,8 @@ from scripts.odr.context_continuity_live_metrics import (
     invariant_summaries,
     rejected_path_summaries,
 )
+
+pytestmark = pytest.mark.unit
 
 
 def test_build_replay_source_history_emits_bounded_authoritative_items() -> None:

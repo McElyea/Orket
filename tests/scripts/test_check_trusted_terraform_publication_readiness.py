@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.proof.check_trusted_terraform_publication_readiness import (
     build_publication_readiness_report,
     main,
@@ -67,6 +69,7 @@ def _runtime(path: Path, *, observed_result: str = "success", reason: str = "") 
     )
 
 
+@pytest.mark.contract
 def test_publication_readiness_blocks_on_provider_backed_environment_blocker(tmp_path: Path) -> None:
     """Layer: contract. Verifies Terraform publication readiness fails closed on environment-blocked provider proof."""
     report = build_publication_readiness_report(
@@ -82,6 +85,7 @@ def test_publication_readiness_blocks_on_provider_backed_environment_blocker(tmp
     assert "runtime_environment_blocker:missing_required_env:AWS_REGION" in report["blocking_reasons"]
 
 
+@pytest.mark.contract
 def test_publication_readiness_allows_only_complete_success_evidence(tmp_path: Path) -> None:
     """Layer: contract. Verifies the gate permits boundary-update readiness only when all evidence checks pass."""
     report = build_publication_readiness_report(
@@ -97,6 +101,7 @@ def test_publication_readiness_allows_only_complete_success_evidence(tmp_path: P
     assert report["failed_checks"] == []
 
 
+@pytest.mark.integration
 def test_publication_readiness_cli_writes_diff_ledger(tmp_path: Path) -> None:
     """Layer: integration. Verifies the readiness CLI writes a stable diff-ledger JSON report."""
     output = tmp_path / "readiness.json"

@@ -1,6 +1,10 @@
 ﻿
+import pytest
+
 from orket.adapters.tools.registry import ToolArgumentSchema, ToolRegistry
 from orket.application.services.tool_parser import ToolParser
+
+pytestmark = pytest.mark.unit
 
 
 def test_parse_clean_json():

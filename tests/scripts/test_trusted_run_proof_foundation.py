@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.proof.trusted_run_proof_foundation import (
     PROOF_FOUNDATION_SCHEMA_VERSION,
     build_trusted_run_proof_foundation_report,
@@ -11,6 +13,7 @@ from scripts.proof.trusted_run_proof_foundation import (
 from scripts.proof.verify_trusted_run_proof_foundation import main as verify_trusted_run_proof_foundation_main
 
 
+@pytest.mark.contract
 def test_proof_foundation_report_covers_all_workstream_one_targets() -> None:
     """Layer: contract. Verifies the canonical proof-foundation artifact covers the six fixed targets."""
     report = build_trusted_run_proof_foundation_report()
@@ -26,6 +29,7 @@ def test_proof_foundation_report_covers_all_workstream_one_targets() -> None:
     assert report["report_signature_digest"].startswith("sha256:")
 
 
+@pytest.mark.contract
 def test_non_interference_check_fails_closed_on_unsafe_module(tmp_path: Path) -> None:
     """Layer: contract. Verifies unsafe imports and file writes fail the structural non-interference proof."""
     unsafe_module = tmp_path / "unsafe_verifier.py"
@@ -43,6 +47,7 @@ def test_non_interference_check_fails_closed_on_unsafe_module(tmp_path: Path) ->
     assert any(hit["call"].endswith("write_text") for hit in report["forbidden_call_hits"])
 
 
+@pytest.mark.integration
 def test_cli_writes_diff_ledger_output(tmp_path: Path) -> None:
     """Layer: integration. Verifies the proof-foundation CLI writes a stable diff-ledger JSON report."""
     output_path = tmp_path / "trusted_run_proof_foundation.json"

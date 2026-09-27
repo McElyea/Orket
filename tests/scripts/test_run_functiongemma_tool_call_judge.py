@@ -6,7 +6,11 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
+import pytest
+
 from scripts.prompt_lab import run_functiongemma_tool_call_judge as script
+
+pytestmark = pytest.mark.integration
 
 
 def _write_json(path: Path, payload: object) -> None:
@@ -15,13 +19,12 @@ def _write_json(path: Path, payload: object) -> None:
 
 
 def test_main_blocks_when_no_judge_path_is_available(tmp_path: Path) -> None:
-    """Layer: contract. Verifies the advisory judge reports an environment blocker when inventory has no admitted judge path."""
+    """Layer: integration. Verifies the advisory judge reports an environment blocker when inventory has no admitted judge path."""
     score_report_path = tmp_path / "score.json"
     inventory_path = tmp_path / "inventory.json"
     out_path = tmp_path / "judge.json"
     _write_json(score_report_path, {"slice_results": []})
     _write_json(inventory_path, {"summary": {"judge_path": "blocked"}, "inventory_targets": []})
-
     exit_code = script.main(
         [
             "--repo-root",
@@ -44,7 +47,7 @@ def test_main_blocks_when_no_judge_path_is_available(tmp_path: Path) -> None:
 
 
 def test_main_records_fallback_judge_verdicts(monkeypatch, tmp_path: Path) -> None:
-    """Layer: contract. Verifies the advisory judge records fallback FunctionGemma verdicts without overriding parser truth."""
+    """Layer: integration. Verifies the advisory judge records fallback FunctionGemma verdicts without overriding parser truth."""
     score_report_path = tmp_path / "score.json"
     inventory_path = tmp_path / "inventory.json"
     out_path = tmp_path / "judge.json"
@@ -109,7 +112,6 @@ def test_main_records_fallback_judge_verdicts(monkeypatch, tmp_path: Path) -> No
             ],
         },
     )
-
     class _FakeProvider:
         def __init__(self, **kwargs):
             self.kwargs = kwargs
@@ -161,7 +163,7 @@ def test_main_records_fallback_judge_verdicts(monkeypatch, tmp_path: Path) -> No
 
 
 def test_main_prefers_native_tool_call_payload_and_normalizes_flat_dimensions(monkeypatch, tmp_path: Path) -> None:
-    """Layer: contract. Verifies the judge prefers native tool-call arguments over prose and normalizes the flat tool schema."""
+    """Layer: integration. Verifies the judge prefers native tool-call arguments over prose and normalizes the flat tool schema."""
     score_report_path = tmp_path / "score.json"
     inventory_path = tmp_path / "inventory.json"
     out_path = tmp_path / "judge.json"
@@ -226,7 +228,6 @@ def test_main_prefers_native_tool_call_payload_and_normalizes_flat_dimensions(mo
             ],
         },
     )
-
     class _FakeProvider:
         def __init__(self, **kwargs):
             self.kwargs = kwargs
@@ -287,7 +288,7 @@ def test_main_prefers_native_tool_call_payload_and_normalizes_flat_dimensions(mo
 
 
 def test_main_falls_back_when_primary_judge_path_is_all_inconclusive(monkeypatch, tmp_path: Path) -> None:
-    """Layer: contract. Verifies the judge can step down from an all-inconclusive primary path to the admitted fallback path."""
+    """Layer: integration. Verifies the judge can step down from an all-inconclusive primary path to the admitted fallback path."""
     score_report_path = tmp_path / "score.json"
     inventory_path = tmp_path / "inventory.json"
     out_path = tmp_path / "judge.json"
@@ -365,7 +366,6 @@ def test_main_falls_back_when_primary_judge_path_is_all_inconclusive(monkeypatch
             ],
         },
     )
-
     class _FakeProvider:
         def __init__(self, **kwargs):
             self.provider = kwargs["provider"]

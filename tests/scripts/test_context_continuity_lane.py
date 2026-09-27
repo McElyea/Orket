@@ -41,6 +41,7 @@ V1_STATE_CONTRACT_PATH = (
 )
 
 
+@pytest.mark.unit
 def test_build_pair_budget_aggregate_uses_scenario_run_units() -> None:
     """Layer: unit. Verifies pair-budget aggregation is computed directly from scenario-run rows."""
     aggregate = build_pair_budget_aggregate(
@@ -82,6 +83,7 @@ def test_build_pair_budget_aggregate_uses_scenario_run_units() -> None:
     assert aggregate["median_round_active_context_size_tokens"] == pytest.approx(500.0)
 
 
+@pytest.mark.unit
 def test_build_primary_budget_aggregate_equally_weights_pairs() -> None:
     """Layer: unit. Verifies primary aggregation equally weights pair-budget rows rather than scenario counts."""
     aggregate = build_primary_budget_aggregate(
@@ -123,6 +125,7 @@ def test_build_primary_budget_aggregate_equally_weights_pairs() -> None:
     assert aggregate["median_round_active_context_size_tokens"] == pytest.approx(500.0)
 
 
+@pytest.mark.contract
 def test_load_lane_config_keeps_control_mode_isolated() -> None:
     """Layer: contract. Verifies the committed lane config keeps control_current_replay free of V0/V1 state inputs."""
     config = load_lane_config(LANE_CONFIG_PATH)
@@ -134,6 +137,7 @@ def test_load_lane_config_keeps_control_mode_isolated() -> None:
     assert registry["v1_compiled_shared_state"]["state_inputs_required"] == ["shared_state_snapshot", "role_view"]
 
 
+@pytest.mark.contract
 def test_load_lane_config_rejects_control_state_dependency(tmp_path: Path) -> None:
     """Layer: contract. Verifies the control mode fails closed if config drift tries to bind it to V0/V1 state."""
     config = json.loads(LANE_CONFIG_PATH.read_text(encoding="utf-8"))
@@ -165,6 +169,7 @@ def test_load_lane_config_rejects_control_state_dependency(tmp_path: Path) -> No
         load_lane_config(config_path)
 
 
+@pytest.mark.contract
 def test_load_lane_config_rejects_missing_inspectability_output_path(tmp_path: Path) -> None:
     """Layer: contract. Verifies CC-IMP-01 fails closed if the canonical inspectability artifact path is not locked."""
     config = json.loads(LANE_CONFIG_PATH.read_text(encoding="utf-8"))
@@ -196,6 +201,7 @@ def test_load_lane_config_rejects_missing_inspectability_output_path(tmp_path: P
         load_lane_config(config_path)
 
 
+@pytest.mark.contract
 def test_load_lane_config_rejects_missing_v0_replay_contract(tmp_path: Path) -> None:
     """Layer: contract. Verifies CC-IMP-02 fails closed if the deterministic V0 replay contract is not locked."""
     config = json.loads(LANE_CONFIG_PATH.read_text(encoding="utf-8"))
@@ -226,6 +232,7 @@ def test_load_lane_config_rejects_missing_v0_replay_contract(tmp_path: Path) -> 
         load_lane_config(config_path)
 
 
+@pytest.mark.contract
 def test_load_lane_config_rejects_missing_v1_state_contract(tmp_path: Path) -> None:
     """Layer: contract. Verifies CC-IMP-03 fails closed if the deterministic V1 state contract is not locked."""
     config = json.loads(LANE_CONFIG_PATH.read_text(encoding="utf-8"))

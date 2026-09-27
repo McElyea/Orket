@@ -6,6 +6,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 SCRIPT_PATH = Path("scripts/nervous_system/update_nervous_system_policy_digest_snapshot.py")
 
 

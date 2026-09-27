@@ -4,7 +4,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.protocol.analyze_lmstudio_log_capture import main
+
+pytestmark = pytest.mark.integration
 
 
 def _capture_payload() -> str:

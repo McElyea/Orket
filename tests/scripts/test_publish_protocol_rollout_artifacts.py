@@ -6,6 +6,8 @@ import json
 import sqlite3
 from pathlib import Path
 
+import pytest
+
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
 from orket.adapters.storage.async_repositories import AsyncRunLedgerRepository
 from orket.core.contracts.tool_invocation_contracts import (
@@ -13,6 +15,8 @@ from orket.core.contracts.tool_invocation_contracts import (
     compute_tool_call_hash,
 )
 from scripts.protocol.publish_protocol_rollout_artifacts import main
+
+pytestmark = pytest.mark.integration
 
 
 async def _seed_run(

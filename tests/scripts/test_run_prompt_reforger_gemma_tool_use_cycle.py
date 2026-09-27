@@ -4,6 +4,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.prompt_lab import run_prompt_reforger_gemma_tool_use_cycle as script
 
 
@@ -12,8 +14,9 @@ def _write_json(path: Path, payload: object) -> None:
     path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 
 
+@pytest.mark.integration
 def test_main_selects_best_candidate_and_pauses_on_partial_portability(monkeypatch, tmp_path: Path) -> None:
-    """Layer: contract. Verifies the cycle ranks bounded candidates by measured slice outcomes and records a pause decision."""
+    """Layer: integration. Verifies the cycle ranks bounded candidates by measured slice outcomes and records a pause decision."""
     out_path = tmp_path / "cycle.json"
     corpus_path = tmp_path / "corpus.json"
     _write_json(corpus_path, {"corpus_id": "challenge_workflow_runtime_bootstrap_v1"})
@@ -92,6 +95,7 @@ def test_main_selects_best_candidate_and_pauses_on_partial_portability(monkeypat
     assert "diff_ledger" in payload
 
 
+@pytest.mark.contract
 def test_run_cycle_keeps_all_gemma_primary_when_portability_and_quality_clear(monkeypatch, tmp_path: Path) -> None:
     """Layer: contract. Verifies the cycle records keep_all_gemma_primary only when the frozen portability corpus clears."""
     corpus_path = tmp_path / "corpus.json"

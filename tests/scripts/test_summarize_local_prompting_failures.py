@@ -4,7 +4,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.protocol.summarize_local_prompting_failures import main
+
+pytestmark = pytest.mark.integration
 
 
 def test_summarize_local_prompting_failures_aggregates_families(tmp_path: Path) -> None:

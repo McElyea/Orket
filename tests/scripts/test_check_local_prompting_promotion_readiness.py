@@ -6,7 +6,11 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 from scripts.protocol.check_local_prompting_promotion_readiness import main
+
+pytestmark = pytest.mark.integration
 
 
 def _write_json(path: Path, payload: dict[str, object]) -> None:
@@ -174,7 +178,7 @@ def test_check_local_prompting_promotion_readiness_passes_on_green_artifacts(tmp
 
 
 def test_in_progress_rerun_cannot_reuse_previous_green_artifacts(tmp_path: Path) -> None:
-    """Layer: contract. A new incomplete attempt blocks retained green reports."""
+    """Layer: integration. A new incomplete attempt blocks retained green reports."""
     root = _build_profile_root(tmp_path, provider="openai_compat", profile_id="profile", template_family="openai_messages")
     _write_json(root / "failure_summary.json", {"execution_status": "in_progress", "total_failures": 0})
     drift = tmp_path / "drift.json"

@@ -5,8 +5,11 @@ import json
 from pathlib import Path
 
 import httpx
+import pytest
 
 from scripts.companion.run_companion_provider_runtime_matrix import run_companion_provider_runtime_matrix
+
+pytestmark = pytest.mark.contract
 
 
 def _contract_transport(*, fail_status: bool = False) -> httpx.MockTransport:

@@ -5,6 +5,8 @@ import json
 from datetime import UTC, datetime
 from pathlib import Path
 
+import pytest
+
 from scripts.governance import generate_runtime_truth_evidence_package as generator
 
 
@@ -23,7 +25,7 @@ def _mock_gate_payload() -> dict[str, object]:
     }
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_build_runtime_truth_evidence_package_contains_required_sections(
     tmp_path: Path,
     monkeypatch,
@@ -47,7 +49,7 @@ def test_build_runtime_truth_evidence_package_contains_required_sections(
     assert "artifact_inventory" in payload
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_generate_runtime_truth_evidence_package_writes_diff_ledger_payload(
     tmp_path: Path,
     monkeypatch,
@@ -72,7 +74,7 @@ def test_generate_runtime_truth_evidence_package_writes_diff_ledger_payload(
     assert "diff_ledger" in written
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_main_returns_success(
     tmp_path: Path,
     monkeypatch,

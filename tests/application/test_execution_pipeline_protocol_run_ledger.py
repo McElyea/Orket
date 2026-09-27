@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import re
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 import pytest
@@ -17,16 +18,19 @@ from orket.runtime.execution_pipeline import ExecutionPipeline
 from orket.schema import CardStatus
 from tests.helpers.protocol_ledger_clock import ProtocolLedgerClock
 
+pytestmark = pytest.mark.integration
 
-def _protocol_runtime(test_root, workspace, db_path):
+
+@asynccontextmanager
+async def _protocol_runtime(test_root, workspace, db_path):
     """Supply ordered time to both the composed pipeline and protocol ledger."""
     clock = ProtocolLedgerClock()
     repository = AsyncProtocolRunLedgerRepository(workspace, timestamp_factory=clock.utc_now_iso)
-    pipeline = ExecutionPipeline(
+    async with ExecutionPipeline.open(
         workspace=workspace, department="core", db_path=db_path, config_root=test_root,
         run_ledger_repo=repository, runtime_inputs=clock,
-    )
-    return repository, pipeline
+    ) as pipeline:
+        yield repository, pipeline
 
 
 def _write_json(path: Path, payload: dict) -> None:
@@ -119,47 +123,47 @@ def _write_protocol_turn_receipts(workspace: Path, *, session_id: str) -> None:
 async def test_execution_pipeline_supports_protocol_run_ledger_incomplete_path(test_root, workspace, db_path, monkeypatch):
     """Layer: integration. Ordered clock inputs admit the expected incomplete publication."""
     await asyncio.to_thread(_write_epic_assets, test_root, "protocol_ledger_epic_incomplete")
-    protocol_repo, pipeline = _protocol_runtime(test_root, workspace, db_path)
+    async with _protocol_runtime(test_root, workspace, db_path) as (protocol_repo, pipeline):
 
-    async def _no_op_execute_epic(**_kwargs):
-        return None
+        async def _no_op_execute_epic(**_kwargs):
+            return None
 
-    async def _fake_export_run(**_kwargs):
-        return {
-            "provider": "gitea",
-            "owner": "local",
-            "repo": "artifacts",
-            "branch": "main",
-            "path": "runs/2026-03-05/sess-protocol-incomplete",
-            "commit": "abc123",
-            "url": "http://localhost:3000/local/artifacts",
-        }
+        async def _fake_export_run(**_kwargs):
+            return {
+                "provider": "gitea",
+                "owner": "local",
+                "repo": "artifacts",
+                "branch": "main",
+                "path": "runs/2026-03-05/sess-protocol-incomplete",
+                "commit": "abc123",
+                "url": "http://localhost:3000/local/artifacts",
+            }
 
-    monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _no_op_execute_epic)
-    monkeypatch.setattr(pipeline.artifact_exporter, "export_run", _fake_export_run)
+        monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _no_op_execute_epic)
+        monkeypatch.setattr(pipeline.artifact_exporter, "export_run", _fake_export_run)
 
-    observed = await pipeline.run_epic(
-        "protocol_ledger_epic_incomplete",
-        build_id="build-protocol-ledger-epic-incomplete",
-        session_id="sess-protocol-incomplete",
-    )
-    assert observed.observation == "published" and not observed.succeeded
-    run = await protocol_repo.get_run("sess-protocol-incomplete")
-    assert run is not None
-    assert run["status"] == "incomplete"
-    assert run["summary_json"]["run_id"] == "sess-protocol-incomplete"
-    assert run["summary_json"]["status"] == "incomplete"
-    assert run["summary_json"]["failure_reason"] is None
-    assert run["summary_json"]["duration_ms"] >= 0
-    assert "gitea_export" not in run["summary_json"]["artifact_ids"]
-    assert run["artifact_json"]["workspace"] == str(workspace)
-    assert run["artifact_json"]["run_summary"] == run["summary_json"]
-    assert await asyncio.to_thread(_read_json, Path(run["artifact_json"]["run_summary_path"])) == run["summary_json"]
-    assert run["artifact_json"]["gitea_export"]["provider"] == "gitea"
-    events = await protocol_repo.list_events("sess-protocol-incomplete")
-    assert [event["kind"] for event in events] == ["run_started", "packet2_fact", "run_finalized"]
-    assert run["started_event_seq"] == 1
-    assert run["ended_event_seq"] == 3
+        observed = await pipeline.run_epic(
+            "protocol_ledger_epic_incomplete",
+            build_id="build-protocol-ledger-epic-incomplete",
+            session_id="sess-protocol-incomplete",
+        )
+        assert observed.observation == "published" and not observed.succeeded
+        run = await protocol_repo.get_run("sess-protocol-incomplete")
+        assert run is not None
+        assert run["status"] == "incomplete"
+        assert run["summary_json"]["run_id"] == "sess-protocol-incomplete"
+        assert run["summary_json"]["status"] == "incomplete"
+        assert run["summary_json"]["failure_reason"] is None
+        assert run["summary_json"]["duration_ms"] >= 0
+        assert "gitea_export" not in run["summary_json"]["artifact_ids"]
+        assert run["artifact_json"]["workspace"] == str(workspace)
+        assert run["artifact_json"]["run_summary"] == run["summary_json"]
+        assert await asyncio.to_thread(_read_json, Path(run["artifact_json"]["run_summary_path"])) == run["summary_json"]
+        assert run["artifact_json"]["gitea_export"]["provider"] == "gitea"
+        events = await protocol_repo.list_events("sess-protocol-incomplete")
+        assert [event["kind"] for event in events] == ["run_started", "packet2_fact", "run_finalized"]
+        assert run["started_event_seq"] == 1
+        assert run["ended_event_seq"] == 3
 
 
 @pytest.mark.asyncio
@@ -170,41 +174,41 @@ async def test_execution_pipeline_supports_protocol_run_ledger_failure_path(
     db_path,
     monkeypatch,
 ):
-    _write_epic_assets(test_root, "protocol_ledger_epic_failed")
-    protocol_repo, pipeline = _protocol_runtime(test_root, workspace, db_path)
+    await asyncio.to_thread(_write_epic_assets, test_root, "protocol_ledger_epic_failed")
+    async with _protocol_runtime(test_root, workspace, db_path) as (protocol_repo, pipeline):
 
-    async def _raise_execute_epic(**_kwargs):
-        raise ExecutionFailed("forced protocol failure")
+        async def _raise_execute_epic(**_kwargs):
+            raise ExecutionFailed("forced protocol failure")
 
-    async def _fake_export_run(**_kwargs):
-        return {
-            "provider": "gitea",
-            "owner": "local",
-            "repo": "artifacts",
-            "branch": "main",
-            "path": "runs/2026-03-05/sess-protocol-failed",
-            "commit": "def456",
-            "url": "http://localhost:3000/local/artifacts",
-        }
+        async def _fake_export_run(**_kwargs):
+            return {
+                "provider": "gitea",
+                "owner": "local",
+                "repo": "artifacts",
+                "branch": "main",
+                "path": "runs/2026-03-05/sess-protocol-failed",
+                "commit": "def456",
+                "url": "http://localhost:3000/local/artifacts",
+            }
 
-    monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _raise_execute_epic)
-    monkeypatch.setattr(pipeline.artifact_exporter, "export_run", _fake_export_run)
+        monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _raise_execute_epic)
+        monkeypatch.setattr(pipeline.artifact_exporter, "export_run", _fake_export_run)
 
-    observed = await pipeline.run_epic('protocol_ledger_epic_failed', build_id='build-protocol-ledger-epic-failed', session_id='sess-protocol-failed')
-    assert observed.observation == "published" and not observed.succeeded
-    assert re.search('forced protocol failure', observed.reason or "")
+        observed = await pipeline.run_epic('protocol_ledger_epic_failed', build_id='build-protocol-ledger-epic-failed', session_id='sess-protocol-failed')
+        assert observed.observation == "published" and not observed.succeeded
+        assert re.search('forced protocol failure', observed.reason or "")
 
-    run = await protocol_repo.get_run("sess-protocol-failed")
-    assert run is not None
-    assert run["status"] == "failed"
-    assert run["failure_class"] == "ExecutionFailed"
-    assert "forced protocol failure" in str(run["failure_reason"] or "")
-    assert run["summary_json"]["status"] == "failed"
-    assert "forced protocol failure" in str(run["summary_json"]["failure_reason"] or "")
-    assert run["summary_json"]["duration_ms"] >= 0
-    assert run["artifact_json"]["gitea_export"]["provider"] == "gitea"
-    assert run["artifact_json"]["gitea_export"]["commit"] == "def456"
-    assert _read_json(Path(run["artifact_json"]["run_summary_path"])) == run["summary_json"]
+        run = await protocol_repo.get_run("sess-protocol-failed")
+        assert run is not None
+        assert run["status"] == "failed"
+        assert run["failure_class"] == "ExecutionFailed"
+        assert "forced protocol failure" in str(run["failure_reason"] or "")
+        assert run["summary_json"]["status"] == "failed"
+        assert "forced protocol failure" in str(run["summary_json"]["failure_reason"] or "")
+        assert run["summary_json"]["duration_ms"] >= 0
+        assert run["artifact_json"]["gitea_export"]["provider"] == "gitea"
+        assert run["artifact_json"]["gitea_export"]["commit"] == "def456"
+        assert await asyncio.to_thread(_read_json, Path(run["artifact_json"]["run_summary_path"])) == run["summary_json"]
 
 
 @pytest.mark.asyncio
@@ -215,24 +219,24 @@ async def test_execution_pipeline_type_error_crashes_without_failed_run_record(
     db_path,
     monkeypatch,
 ):
-    _write_epic_assets(test_root, "protocol_ledger_epic_type_error")
-    protocol_repo, pipeline = _protocol_runtime(test_root, workspace, db_path)
+    await asyncio.to_thread(_write_epic_assets, test_root, "protocol_ledger_epic_type_error")
+    async with _protocol_runtime(test_root, workspace, db_path) as (protocol_repo, pipeline):
 
-    async def _raise_type_error(**_kwargs):
-        raise TypeError("forced programming error")
+        async def _raise_type_error(**_kwargs):
+            raise TypeError("forced programming error")
 
-    monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _raise_type_error)
+        monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _raise_type_error)
 
-    observed = await pipeline.run_epic('protocol_ledger_epic_type_error', build_id='build-protocol-ledger-epic-type-error', session_id='sess-protocol-type-error')
-    assert observed.observation == "unresolved" and not observed.succeeded
-    assert re.search('forced programming error', observed.reason or "")
+        observed = await pipeline.run_epic('protocol_ledger_epic_type_error', build_id='build-protocol-ledger-epic-type-error', session_id='sess-protocol-type-error')
+        assert observed.observation == "unresolved" and not observed.succeeded
+        assert re.search('forced programming error', observed.reason or "")
 
-    run = await protocol_repo.get_run("sess-protocol-type-error")
-    assert run is not None
-    assert run["status"] == "running"
-    assert run["failure_class"] is None
-    events = await protocol_repo.list_events("sess-protocol-type-error")
-    assert [event["kind"] for event in events] == ["run_started"]
+        run = await protocol_repo.get_run("sess-protocol-type-error")
+        assert run is not None
+        assert run["status"] == "running"
+        assert run["failure_class"] is None
+        events = await protocol_repo.list_events("sess-protocol-type-error")
+        assert [event["kind"] for event in events] == ["run_started"]
 
 
 @pytest.mark.asyncio
@@ -243,40 +247,40 @@ async def test_execution_pipeline_protocol_run_ledger_terminal_failure_path(
     db_path,
     monkeypatch,
 ):
-    _write_epic_assets(test_root, "protocol_ledger_epic_terminal_failure")
-    protocol_repo, pipeline = _protocol_runtime(test_root, workspace, db_path)
+    await asyncio.to_thread(_write_epic_assets, test_root, "protocol_ledger_epic_terminal_failure")
+    async with _protocol_runtime(test_root, workspace, db_path) as (protocol_repo, pipeline):
 
-    async def _blocked_execute_epic(**_kwargs):
-        await pipeline.async_cards.update_status("ISSUE-1", CardStatus.BLOCKED)
-        return None
+        async def _blocked_execute_epic(**_kwargs):
+            await pipeline.async_cards.update_status("ISSUE-1", CardStatus.BLOCKED)
+            return None
 
-    async def _fake_export_run(**_kwargs):
-        return {
-            "provider": "gitea",
-            "owner": "local",
-            "repo": "artifacts",
-            "branch": "main",
-            "path": "runs/2026-03-05/sess-protocol-terminal-failure",
-            "commit": "xyz789",
-            "url": "http://localhost:3000/local/artifacts",
-        }
+        async def _fake_export_run(**_kwargs):
+            return {
+                "provider": "gitea",
+                "owner": "local",
+                "repo": "artifacts",
+                "branch": "main",
+                "path": "runs/2026-03-05/sess-protocol-terminal-failure",
+                "commit": "xyz789",
+                "url": "http://localhost:3000/local/artifacts",
+            }
 
-    monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _blocked_execute_epic)
-    monkeypatch.setattr(pipeline.artifact_exporter, "export_run", _fake_export_run)
+        monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _blocked_execute_epic)
+        monkeypatch.setattr(pipeline.artifact_exporter, "export_run", _fake_export_run)
 
-    await pipeline.run_epic(
-        "protocol_ledger_epic_terminal_failure",
-        build_id="build-protocol-ledger-epic-terminal-failure",
-        session_id="sess-protocol-terminal-failure",
-    )
+        await pipeline.run_epic(
+            "protocol_ledger_epic_terminal_failure",
+            build_id="build-protocol-ledger-epic-terminal-failure",
+            session_id="sess-protocol-terminal-failure",
+        )
 
-    run = await protocol_repo.get_run("sess-protocol-terminal-failure")
-    assert run is not None
-    assert run["status"] == "terminal_failure"
-    assert run["summary_json"]["status"] == "terminal_failure"
-    assert run["summary_json"]["failure_reason"] == "card_completion_unverified:ISSUE-1"
-    assert run["summary_json"]["duration_ms"] >= 0
-    assert _read_json(Path(run["artifact_json"]["run_summary_path"])) == run["summary_json"]
+        run = await protocol_repo.get_run("sess-protocol-terminal-failure")
+        assert run is not None
+        assert run["status"] == "terminal_failure"
+        assert run["summary_json"]["status"] == "terminal_failure"
+        assert run["summary_json"]["failure_reason"] == "card_completion_unverified:ISSUE-1"
+        assert run["summary_json"]["duration_ms"] >= 0
+        assert await asyncio.to_thread(_read_json, Path(run["artifact_json"]["run_summary_path"])) == run["summary_json"]
 
 # Layer: integration
 @pytest.mark.asyncio
@@ -286,33 +290,33 @@ async def test_execution_pipeline_materializes_protocol_receipts_into_run_ledger
     db_path,
     monkeypatch,
 ):
-    _write_epic_assets(test_root, "protocol_ledger_epic_receipts")
-    _write_protocol_turn_receipts(workspace, session_id="sess-protocol-receipts")
-    protocol_repo, pipeline = _protocol_runtime(test_root, workspace, db_path)
+    await asyncio.to_thread(_write_epic_assets, test_root, "protocol_ledger_epic_receipts")
+    await asyncio.to_thread(_write_protocol_turn_receipts, workspace, session_id="sess-protocol-receipts")
+    async with _protocol_runtime(test_root, workspace, db_path) as (protocol_repo, pipeline):
 
-    async def _no_op_execute_epic(**_kwargs):
-        return None
+        async def _no_op_execute_epic(**_kwargs):
+            return None
 
-    async def _no_export(**_kwargs):
-        return None
+        async def _no_export(**_kwargs):
+            return None
 
-    monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _no_op_execute_epic)
-    monkeypatch.setattr(pipeline.artifact_exporter, "export_run", _no_export)
+        monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _no_op_execute_epic)
+        monkeypatch.setattr(pipeline.artifact_exporter, "export_run", _no_export)
 
-    await pipeline.run_epic(
-        "protocol_ledger_epic_receipts",
-        build_id="build-protocol-ledger-epic-receipts",
-        session_id="sess-protocol-receipts",
-    )
+        await pipeline.run_epic(
+            "protocol_ledger_epic_receipts",
+            build_id="build-protocol-ledger-epic-receipts",
+            session_id="sess-protocol-receipts",
+        )
 
-    run = await protocol_repo.get_run("sess-protocol-receipts")
-    assert run is not None
-    assert run["artifact_json"]["protocol_receipts"]["status"] == "ok"
-    assert run["artifact_json"]["protocol_receipts"]["source_receipts"] == 1
-    assert run["artifact_json"]["protocol_receipts"]["materialized_receipts"] == 1
-    receipts = await protocol_repo.list_receipts("sess-protocol-receipts")
-    assert len(receipts) == 1
-    assert receipts[0]["operation_id"] == "op-1"
+        run = await protocol_repo.get_run("sess-protocol-receipts")
+        assert run is not None
+        assert run["artifact_json"]["protocol_receipts"]["status"] == "ok"
+        assert run["artifact_json"]["protocol_receipts"]["source_receipts"] == 1
+        assert run["artifact_json"]["protocol_receipts"]["materialized_receipts"] == 1
+        receipts = await protocol_repo.list_receipts("sess-protocol-receipts")
+        assert len(receipts) == 1
+        assert receipts[0]["operation_id"] == "op-1"
 
 
 # Layer: integration
@@ -323,67 +327,67 @@ async def test_execution_pipeline_protocol_run_ledger_carries_runtime_contract_b
     db_path,
     monkeypatch,
 ):
-    _write_epic_assets(test_root, "protocol_ledger_epic_contract_bootstrap")
-    protocol_repo, pipeline = _protocol_runtime(test_root, workspace, db_path)
+    await asyncio.to_thread(_write_epic_assets, test_root, "protocol_ledger_epic_contract_bootstrap")
+    async with _protocol_runtime(test_root, workspace, db_path) as (protocol_repo, pipeline):
 
-    async def _no_op_execute_epic(**_kwargs):
-        return None
+        async def _no_op_execute_epic(**_kwargs):
+            return None
 
-    async def _no_export(**_kwargs):
-        return None
+        async def _no_export(**_kwargs):
+            return None
 
-    monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _no_op_execute_epic)
-    monkeypatch.setattr(pipeline.artifact_exporter, "export_run", _no_export)
+        monkeypatch.setattr(pipeline.orchestrator, "execute_epic", _no_op_execute_epic)
+        monkeypatch.setattr(pipeline.artifact_exporter, "export_run", _no_export)
 
-    await pipeline.run_epic(
-        "protocol_ledger_epic_contract_bootstrap",
-        build_id="build-protocol-ledger-epic-contract-bootstrap",
-        session_id="sess-protocol-contract-bootstrap",
-    )
+        await pipeline.run_epic(
+            "protocol_ledger_epic_contract_bootstrap",
+            build_id="build-protocol-ledger-epic-contract-bootstrap",
+            session_id="sess-protocol-contract-bootstrap",
+        )
 
-    run = await protocol_repo.get_run("sess-protocol-contract-bootstrap")
-    assert run is not None
-    artifact_json = run["artifact_json"]
-    assert artifact_json["tool_registry_snapshot"]["tool_registry_version"] == "1.2.0"
-    assert artifact_json["artifact_schema_snapshot"]["artifact_schema_registry_version"] == "1.0"
-    assert artifact_json["compatibility_map_schema_snapshot"]["mapping_count"] >= 1
-    assert artifact_json["run_identity"]["run_id"] == "sess-protocol-contract-bootstrap"
-    assert artifact_json["run_identity"]["workload"] == "protocol_ledger_epic_contract_bootstrap"
-    assert artifact_json["run_determinism_class"] == "workspace"
-    assert artifact_json["runtime_truth_contract_drift_report"]["schema_version"] == "1.0"
-    assert artifact_json["runtime_truth_contract_drift_report"]["ok"] is True
-    assert artifact_json["runtime_truth_trace_ids"]["schema_version"] == "1.0"
-    trace_artifacts = [row["artifact"] for row in artifact_json["runtime_truth_trace_ids"]["trace_ids"]]
-    assert "run_phase_contract" in trace_artifacts
-    assert "route_decision_artifact" in trace_artifacts
-    assert artifact_json["runtime_invariant_registry"]["schema_version"] == "1.0"
-    invariant_ids = [row["invariant_id"] for row in artifact_json["runtime_invariant_registry"]["invariants"]]
-    assert "INV-001" in invariant_ids
-    assert artifact_json["runtime_config_ownership_map"]["schema_version"] == "1.0"
-    config_keys = [row["config_key"] for row in artifact_json["runtime_config_ownership_map"]["rows"]]
-    assert "ORKET_STATE_BACKEND_MODE" in config_keys
-    assert "ORKET_PROVIDER_QUARANTINE" in config_keys
-    assert artifact_json["unknown_input_policy"]["schema_version"] == "1.0"
-    unknown_surfaces = [row["surface"] for row in artifact_json["unknown_input_policy"]["surfaces"]]
-    assert "provider_runtime_target.requested_provider" in unknown_surfaces
-    assert artifact_json["deterministic_mode_contract"]["schema_version"] == "1.0"
-    assert artifact_json["deterministic_mode_contract"]["deterministic_mode_enabled"] is False
-    assert artifact_json["deterministic_mode_contract"]["resolution_source"] == "default"
-    assert artifact_json["route_decision_artifact"]["schema_version"] == "1.0"
-    assert artifact_json["route_decision_artifact"]["route_target"] == "epic"
-    assert artifact_json["route_decision_artifact"]["reason_code"] == "default_epic_route"
-    assert artifact_json["route_decision_artifact"]["deterministic_mode_enabled"] is False
-    assert artifact_json["capability_manifest"]["run_id"] == "sess-protocol-contract-bootstrap"
-    assert artifact_json["workspace_state_snapshot"]["workspace_type"] == "filesystem"
-    assert len(str(artifact_json["workspace_state_snapshot"]["workspace_hash"])) == 64
-    for key in (
-        "tool_registry_snapshot_path",
-        "run_identity_path",
-        "runtime_truth_contract_drift_report_path",
-        "runtime_truth_trace_ids_path",
-        "runtime_invariant_registry_path",
-        "runtime_config_ownership_map_path",
-        "unknown_input_policy_path",
-        "workspace_state_snapshot_path",
-    ):
-        assert await _path_exists(Path(artifact_json[key]))
+        run = await protocol_repo.get_run("sess-protocol-contract-bootstrap")
+        assert run is not None
+        artifact_json = run["artifact_json"]
+        assert artifact_json["tool_registry_snapshot"]["tool_registry_version"] == "1.2.0"
+        assert artifact_json["artifact_schema_snapshot"]["artifact_schema_registry_version"] == "1.0"
+        assert artifact_json["compatibility_map_schema_snapshot"]["mapping_count"] >= 1
+        assert artifact_json["run_identity"]["run_id"] == "sess-protocol-contract-bootstrap"
+        assert artifact_json["run_identity"]["workload"] == "protocol_ledger_epic_contract_bootstrap"
+        assert artifact_json["run_determinism_class"] == "workspace"
+        assert artifact_json["runtime_truth_contract_drift_report"]["schema_version"] == "1.0"
+        assert artifact_json["runtime_truth_contract_drift_report"]["ok"] is True
+        assert artifact_json["runtime_truth_trace_ids"]["schema_version"] == "1.0"
+        trace_artifacts = [row["artifact"] for row in artifact_json["runtime_truth_trace_ids"]["trace_ids"]]
+        assert "run_phase_contract" in trace_artifacts
+        assert "route_decision_artifact" in trace_artifacts
+        assert artifact_json["runtime_invariant_registry"]["schema_version"] == "1.0"
+        invariant_ids = [row["invariant_id"] for row in artifact_json["runtime_invariant_registry"]["invariants"]]
+        assert "INV-001" in invariant_ids
+        assert artifact_json["runtime_config_ownership_map"]["schema_version"] == "1.0"
+        config_keys = [row["config_key"] for row in artifact_json["runtime_config_ownership_map"]["rows"]]
+        assert "ORKET_STATE_BACKEND_MODE" in config_keys
+        assert "ORKET_PROVIDER_QUARANTINE" in config_keys
+        assert artifact_json["unknown_input_policy"]["schema_version"] == "1.0"
+        unknown_surfaces = [row["surface"] for row in artifact_json["unknown_input_policy"]["surfaces"]]
+        assert "provider_runtime_target.requested_provider" in unknown_surfaces
+        assert artifact_json["deterministic_mode_contract"]["schema_version"] == "1.0"
+        assert artifact_json["deterministic_mode_contract"]["deterministic_mode_enabled"] is False
+        assert artifact_json["deterministic_mode_contract"]["resolution_source"] == "default"
+        assert artifact_json["route_decision_artifact"]["schema_version"] == "1.0"
+        assert artifact_json["route_decision_artifact"]["route_target"] == "epic"
+        assert artifact_json["route_decision_artifact"]["reason_code"] == "default_epic_route"
+        assert artifact_json["route_decision_artifact"]["deterministic_mode_enabled"] is False
+        assert artifact_json["capability_manifest"]["run_id"] == "sess-protocol-contract-bootstrap"
+        assert artifact_json["workspace_state_snapshot"]["workspace_type"] == "filesystem"
+        assert len(str(artifact_json["workspace_state_snapshot"]["workspace_hash"])) == 64
+        for key in (
+            "tool_registry_snapshot_path",
+            "run_identity_path",
+            "runtime_truth_contract_drift_report_path",
+            "runtime_truth_trace_ids_path",
+            "runtime_invariant_registry_path",
+            "runtime_config_ownership_map_path",
+            "unknown_input_policy_path",
+            "workspace_state_snapshot_path",
+        ):
+            assert await _path_exists(Path(artifact_json[key]))

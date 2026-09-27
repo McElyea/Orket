@@ -25,12 +25,14 @@ def _valid_payload() -> dict:
     }
 
 
+@pytest.mark.contract
 def test_workload_contract_accepts_valid_payload() -> None:
     model = parse_workload_contract(_valid_payload())
     assert isinstance(model, WorkloadContractV1)
     assert model.workload_type == "odr"
 
 
+@pytest.mark.contract
 def test_workload_contract_reports_missing_required_keys() -> None:
     payload = _valid_payload()
     del payload["validators"]
@@ -41,6 +43,7 @@ def test_workload_contract_reports_missing_required_keys() -> None:
         parse_workload_contract(payload)
 
 
+@pytest.mark.contract
 def test_workload_contract_rejects_unknown_contract_version() -> None:
     payload = _valid_payload()
     payload["workload_contract_version"] = "workload.contract.v0"
@@ -48,6 +51,7 @@ def test_workload_contract_rejects_unknown_contract_version() -> None:
         parse_workload_contract(payload)
 
 
+@pytest.mark.contract
 def test_workload_contract_rejects_extra_fields() -> None:
     payload = _valid_payload()
     payload["legacy_fallback"] = True
@@ -55,6 +59,7 @@ def test_workload_contract_rejects_extra_fields() -> None:
         WorkloadContractV1.model_validate(payload)
 
 
+@pytest.mark.contract
 def test_workload_contract_projects_into_control_plane_workload_record() -> None:
     record = _build_control_plane_workload_record_from_workload_contract(
         workload_id="odr-run-arbiter",

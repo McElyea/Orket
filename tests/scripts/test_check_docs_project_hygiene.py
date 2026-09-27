@@ -3,7 +3,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from scripts.governance.check_docs_project_hygiene import main
+
+pytestmark = pytest.mark.integration
 
 
 def _write(path: Path, content: str) -> None:

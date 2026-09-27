@@ -4,6 +4,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.governance.check_tool_invocation_policy_contract import (
     check_tool_invocation_policy_contract,
     evaluate_tool_invocation_policy_contract,
@@ -11,14 +13,14 @@ from scripts.governance.check_tool_invocation_policy_contract import (
 )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_evaluate_tool_invocation_policy_contract_passes_for_current_contract() -> None:
     payload = evaluate_tool_invocation_policy_contract()
     assert payload["ok"] is True
     assert payload["run_type_count"] >= 1
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_check_tool_invocation_policy_contract_writes_diff_ledger_payload(tmp_path: Path) -> None:
     out_path = tmp_path / "tool_invocation_policy_contract_check.json"
     exit_code, payload = check_tool_invocation_policy_contract(out_path=out_path)
@@ -29,7 +31,7 @@ def test_check_tool_invocation_policy_contract_writes_diff_ledger_payload(tmp_pa
     assert "diff_ledger" in written
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_main_returns_success(tmp_path: Path) -> None:
     out_path = tmp_path / "tool_invocation_policy_contract_check.json"
     exit_code = main(["--out", str(out_path)])

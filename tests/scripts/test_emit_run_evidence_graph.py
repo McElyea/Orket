@@ -5,6 +5,8 @@ import asyncio
 import json
 from pathlib import Path
 
+import pytest
+
 from orket.adapters.storage.outward_approval_store import OutwardApprovalStore
 from orket.adapters.storage.outward_run_event_store import OutwardRunEventStore
 from orket.adapters.storage.outward_run_store import OutwardRunStore
@@ -16,6 +18,8 @@ from tests.runtime.run_evidence_graph_test_support import (
     GENERATED_AT,
     seed_complete_primary_lineage_sqlite,
 )
+
+pytestmark = pytest.mark.integration
 
 
 # Layer: integration

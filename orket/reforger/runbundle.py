@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import shutil
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -29,7 +29,7 @@ def digest_tree(path: Path) -> str:
 
 
 def utc_now_iso() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def deterministic_run_stamp(*, mode_id: str, model_id: str, seed: int, budget: int, baseline_digest: str) -> str:

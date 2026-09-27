@@ -2,11 +2,15 @@ from __future__ import annotations
 
 from typing import Any
 
+import pytest
+
 from scripts.proof.trusted_scope_family_support import (
     ValidatorBackedScopeConfig,
     build_validator_backed_campaign_report,
     evaluate_validator_backed_scope_offline_claim,
 )
+
+pytestmark = pytest.mark.contract
 
 _CONFIG = ValidatorBackedScopeConfig(
     compare_scope="trusted_scope_family_test_v1",

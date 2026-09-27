@@ -4,6 +4,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.governance.check_canonical_examples_library import (
     check_canonical_examples_library,
     evaluate_canonical_examples_library,
@@ -11,14 +13,14 @@ from scripts.governance.check_canonical_examples_library import (
 )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_evaluate_canonical_examples_library_passes_for_current_contract() -> None:
     payload = evaluate_canonical_examples_library()
     assert payload["ok"] is True
     assert payload["example_count"] >= 1
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_check_canonical_examples_library_writes_diff_ledger_payload(tmp_path: Path) -> None:
     out_path = tmp_path / "canonical_examples_library_check.json"
     exit_code, payload = check_canonical_examples_library(out_path=out_path)
@@ -29,7 +31,7 @@ def test_check_canonical_examples_library_writes_diff_ledger_payload(tmp_path: P
     assert "diff_ledger" in written
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_main_returns_success(tmp_path: Path) -> None:
     out_path = tmp_path / "canonical_examples_library_check.json"
     exit_code = main(["--out", str(out_path)])

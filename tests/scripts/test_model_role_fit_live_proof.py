@@ -3,7 +3,11 @@ import asyncio
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.odr.model_role_fit_live_proof import run_model_role_fit_live_proof
+
+pytestmark = pytest.mark.integration
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 LANE_CONFIG_PATH = (

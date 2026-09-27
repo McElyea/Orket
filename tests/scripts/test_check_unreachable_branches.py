@@ -4,6 +4,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.governance.check_unreachable_branches import (
     check_unreachable_branches,
     evaluate_unreachable_branches,
@@ -16,7 +18,7 @@ def _write(path: Path, content: str) -> None:
     path.write_text(content, encoding="utf-8")
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_evaluate_unreachable_branches_flags_constant_false_and_true_else(tmp_path: Path) -> None:
     source = tmp_path / "module.py"
     _write(
@@ -43,7 +45,7 @@ def test_evaluate_unreachable_branches_flags_constant_false_and_true_else(tmp_pa
     assert "if_else_unreachable" in kinds
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_evaluate_unreachable_branches_ignores_type_checking_guards(tmp_path: Path) -> None:
     source = tmp_path / "typing_guard.py"
     _write(
@@ -66,7 +68,7 @@ def test_evaluate_unreachable_branches_ignores_type_checking_guards(tmp_path: Pa
     assert payload["findings"] == []
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_evaluate_unreachable_branches_parses_utf8_bom_files(tmp_path: Path) -> None:
     source = tmp_path / "bom_file.py"
     source.write_text("def run() -> int:\n    return 1\n", encoding="utf-8-sig")
@@ -75,7 +77,7 @@ def test_evaluate_unreachable_branches_parses_utf8_bom_files(tmp_path: Path) -> 
     assert payload["parse_errors"] == []
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_check_unreachable_branches_writes_out_payload_with_diff_ledger(tmp_path: Path) -> None:
     source = tmp_path / "module.py"
     _write(source, "def run() -> int:\n    return 1\n")
@@ -89,7 +91,7 @@ def test_check_unreachable_branches_writes_out_payload_with_diff_ledger(tmp_path
     assert "diff_ledger" in written
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_main_returns_failure_when_unreachable_branch_detected(tmp_path: Path) -> None:
     source = tmp_path / "module.py"
     _write(source, "if False:\n    x = 1\n")

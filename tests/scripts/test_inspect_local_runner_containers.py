@@ -1,5 +1,5 @@
 # LIFECYCLE: live
-# Layer: contract
+# Layers are declared per test for the exercised boundary.
 
 from __future__ import annotations
 
@@ -44,6 +44,7 @@ def _inspect_payload(
     }
 
 
+@pytest.mark.contract
 def test_classify_runner_container_marks_registered_runner_as_persistent() -> None:
     payload = _inspect_payload(
         name="orket-act-runner-1",
@@ -62,6 +63,7 @@ def test_classify_runner_container_marks_registered_runner_as_persistent() -> No
     assert assessment["runner_registration_name"] == "orket-ci-runner-1"
 
 
+@pytest.mark.contract
 def test_classify_runner_container_marks_version_probe_loop_as_cleanup_candidate() -> None:
     payload = _inspect_payload(
         name="brave_wright",
@@ -82,6 +84,7 @@ def test_classify_runner_container_marks_version_probe_loop_as_cleanup_candidate
     assert assessment["observed_failure_signature"] == "instance address is empty"
 
 
+@pytest.mark.contract
 def test_classify_runner_container_marks_exec_loop_as_cleanup_candidate() -> None:
     payload = _inspect_payload(
         name="silly_curie",
@@ -97,6 +100,7 @@ def test_classify_runner_container_marks_exec_loop_as_cleanup_candidate() -> Non
     assert assessment["policy_compliant"] is False
 
 
+@pytest.mark.integration
 def test_inspection_main_writes_diff_ledger_report(tmp_path: Path, monkeypatch) -> None:
     repo_root = tmp_path
     db_path = repo_root / "infrastructure" / "gitea" / "gitea"
@@ -165,6 +169,7 @@ def test_inspection_main_writes_diff_ledger_report(tmp_path: Path, monkeypatch) 
     assert "diff_ledger" in payload
 
 
+@pytest.mark.integration
 def test_inspection_main_fails_when_registration_remains_without_container(tmp_path: Path, monkeypatch) -> None:
     repo_root = tmp_path
     db_path = repo_root / "infrastructure" / "gitea" / "gitea"
@@ -206,6 +211,7 @@ def test_inspection_main_fails_when_registration_remains_without_container(tmp_p
     assert payload["summary"]["stale_registration_policy_violations"] == 1
 
 
+@pytest.mark.integration
 def test_inspection_main_treats_container_name_as_live_registration_when_env_name_is_absent(
     tmp_path: Path, monkeypatch
 ) -> None:
@@ -264,6 +270,7 @@ def test_inspection_main_treats_container_name_as_live_registration_when_env_nam
     assert payload["containers"][0]["observed_registration_name"] == "codex-ephemeral"
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_run_command_maps_missing_returncode_to_negative_one(monkeypatch: pytest.MonkeyPatch) -> None:
     """Layer: unit. Verifies subprocess returncode None is not reported as success."""
@@ -288,6 +295,7 @@ async def test_run_command_maps_missing_returncode_to_negative_one(monkeypatch: 
     assert result.stderr == "err"
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_collect_logs_uses_log_tail_and_separates_stderr(monkeypatch: pytest.MonkeyPatch) -> None:
     """Layer: unit. Verifies docker stdout/stderr logs remain distinguishable in inspection evidence."""
@@ -305,6 +313,7 @@ async def test_collect_logs_uses_log_tail_and_separates_stderr(monkeypatch: pyte
     assert logs == "stdout-log\n--- stderr ---\nstderr-log"
 
 
+@pytest.mark.unit
 def test_load_registered_runners_returns_empty_when_sqlite_is_locked(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

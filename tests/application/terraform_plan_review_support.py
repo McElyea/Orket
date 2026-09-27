@@ -8,8 +8,14 @@ from scripts.proof.terraform_plan_review_fixture_support import (
     FakeModelSummarizer,
     FakeS3Reader,
     FixtureCase,
-    load_fixture_case,
-    load_fixture_manifest,
+)
+from scripts.proof.terraform_plan_review_fixture_support import (
+    load_fixture_case as load_fixture_case,
+)
+from scripts.proof.terraform_plan_review_fixture_support import (
+    load_fixture_manifest as load_fixture_manifest,
+)
+from scripts.proof.terraform_plan_review_fixture_support import (
     run_fixture_case as _run_fixture_case,
 )
 

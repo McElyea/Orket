@@ -13,12 +13,8 @@ from orket.core.contracts import (
     CheckpointRecord,
     EffectJournalEntryRecord,
     FinalTruthRecord,
-    LeaseRecord,
     OperatorActionRecord,
-    ReconciliationRecord,
     RecoveryDecisionRecord,
-    ReservationRecord,
-    ResourceRecord,
     RunRecord,
 )
 from orket.core.contracts.repositories import (

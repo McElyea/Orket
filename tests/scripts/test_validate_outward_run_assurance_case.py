@@ -2,7 +2,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from scripts.proof.validate_outward_run_assurance_case import validate_assurance_case
+
+pytestmark = pytest.mark.contract
 
 
 def _doc(row: str) -> str:

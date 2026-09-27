@@ -4,14 +4,18 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.reviewrun.run_terraform_plan_review_live_smoke import main
+
+pytestmark = pytest.mark.integration
 
 
 def _load_json(path: Path) -> dict:
     return json.loads(path.read_bytes().decode("utf-8"))
 
 
-# Layer: contract
+# Layer: integration
 def test_run_terraform_plan_review_live_smoke_marks_missing_env_as_environment_blocker(tmp_path: Path, monkeypatch) -> None:
     out = tmp_path / "terraform_plan_review_live_smoke.json"
     monkeypatch.delenv("ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_S3_URI", raising=False)

@@ -1,11 +1,10 @@
 from __future__ import annotations
 
+from ..contracts import RuleSystem
 from .biased_first_player import BiasedFirstPlayerRuleSystem
 from .deadlock import DeadlockRuleSystem
 from .illegal_action import IllegalActionRuleSystem
 from .loop import LoopRuleSystem
-from ..contracts import RuleSystem
-
 
 TOY_RULESYSTEMS: dict[str, type[RuleSystem]] = {
     "toy_loop": LoopRuleSystem,

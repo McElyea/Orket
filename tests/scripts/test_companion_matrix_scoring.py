@@ -1,6 +1,8 @@
 # LIFECYCLE: live
 from __future__ import annotations
 
+import pytest
+
 from scripts.companion.companion_matrix_scoring import (
     build_recommendation_matrix,
     measured,
@@ -10,6 +12,8 @@ from scripts.companion.companion_matrix_scoring import (
     score_footprint,
     weighted_profile_score,
 )
+
+pytestmark = pytest.mark.unit
 
 
 def _base_scores() -> dict[str, dict[str, object]]:

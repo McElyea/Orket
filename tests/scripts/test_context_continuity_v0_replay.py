@@ -5,6 +5,8 @@ import pytest
 
 from scripts.odr.context_continuity_v0_replay import build_v0_loaded_context, build_v0_replay_block
 
+pytestmark = pytest.mark.contract
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 LANE_CONFIG_PATH = (
     REPO_ROOT

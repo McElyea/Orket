@@ -13,7 +13,7 @@ import enum
 from pydantic import BaseModel, Field
 
 
-class SandboxStatus(str, enum.Enum):
+class SandboxStatus(str, enum.Enum):  # noqa: UP042 - public enum representation contract
     """Sandbox lifecycle states."""
 
     CREATING = "creating"  # Docker Compose up in progress
@@ -24,7 +24,7 @@ class SandboxStatus(str, enum.Enum):
     DELETED = "deleted"  # Resources cleaned up
 
 
-class TechStack(str, enum.Enum):
+class TechStack(str, enum.Enum):  # noqa: UP042 - public enum representation contract
     """Supported technology stacks for generated projects."""
 
     FASTAPI_REACT_POSTGRES = "fastapi-react-postgres"

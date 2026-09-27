@@ -5,6 +5,7 @@ import pytest
 from orket.core.contracts import DeterminismTraceContract, RetrievalTraceEventContract
 
 
+@pytest.mark.contract
 def test_determinism_trace_contract_accepts_valid_payload() -> None:
     payload = {
         "run_id": "run-1",
@@ -36,6 +37,7 @@ def test_determinism_trace_contract_accepts_valid_payload() -> None:
     assert contract.visibility_mode == "read_only"
 
 
+@pytest.mark.contract
 def test_determinism_trace_contract_rejects_non_contiguous_event_indexes() -> None:
     payload = {
         "run_id": "run-1",
@@ -77,6 +79,7 @@ def test_determinism_trace_contract_rejects_non_contiguous_event_indexes() -> No
         DeterminismTraceContract.model_validate(payload)
 
 
+@pytest.mark.contract
 def test_determinism_trace_contract_enforces_non_live_visibility_for_determinism() -> None:
     payload = {
         "run_id": "run-1",
@@ -98,6 +101,7 @@ def test_determinism_trace_contract_enforces_non_live_visibility_for_determinism
         contract.enforce_non_live_visibility()
 
 
+@pytest.mark.contract
 def test_retrieval_trace_contract_rejects_non_contiguous_ranks() -> None:
     payload = {
         "retrieval_event_id": "ret-1",

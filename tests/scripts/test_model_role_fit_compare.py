@@ -12,6 +12,8 @@ from scripts.odr.model_role_fit_compare import (
 )
 from scripts.odr.model_role_fit_lane import load_lane_config, load_matrix_registry
 
+pytestmark = pytest.mark.contract
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 LANE_CONFIG_PATH = (
     REPO_ROOT / "docs" / "projects" / "archive" / "ODRModelRoleFit" / "MRF03212026" / "odr_model_role_fit_lane_config.json"

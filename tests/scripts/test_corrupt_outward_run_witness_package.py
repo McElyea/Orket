@@ -2,8 +2,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from scripts.proof.corrupt_outward_run_witness_package import corrupt_package
 from scripts.proof.verify_outward_run_witness_package import verify_package
+
+pytestmark = pytest.mark.contract
 
 BASE = Path("tests/proof_fixtures/outward_run/base_approved_package")
 BASE_DENIED = Path("tests/proof_fixtures/outward_run/base_denied_package")

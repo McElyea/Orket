@@ -1,6 +1,6 @@
 # API Runtime Lifecycle
 
-Last updated: 2026-09-20
+Last updated: 2026-09-27
 Status: Active
 
 `orket.application.services.api_runtime_container.ApiRuntimeContainer` owns the
@@ -64,7 +64,15 @@ claim. Existing manually registered API tasks keep their registration contract.
 Startup captures the engine, authentication, state, root and governed-agent owner
 before awaiting. Initialization is an admitted invocation: concurrent close cancels
 and drains it before resources and the engine. Root validation uses an owned file
-worker. The event broadcaster receives captured state/strategy inputs and uses
+worker. Startup also captures the bound authentication validator and logger before
+its first await, then owns the complete synchronous validation call through
+`run_owned_thread` before engine initialization. Required diagnostic handlers run
+in that worker with the invocation context; repeated cancellation waits for their
+settlement. Worker failure takes precedence over caller cancellation. Production
+and staging still refuse the insecure bypass flag after its critical diagnostic.
+A handler that never returns can keep startup and close pending. Migration and
+scope: `docs/architecture/CONTRACT_DELTA_API_STARTUP_AUTH_DIAGNOSTIC_D_2026-09-27.md`.
+The event broadcaster receives captured state/strategy inputs and uses
 managed background admission; it never reacquires the app context after close.
 Its delivery failure releases queue bookkeeping, closes new admission and remains
 observable at teardown even when the task has already finished. A registered

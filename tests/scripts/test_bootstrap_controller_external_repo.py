@@ -7,6 +7,8 @@ import pytest
 
 from scripts.extensions.bootstrap_controller_external_repo import bootstrap_controller_external_repo, main
 
+pytestmark = pytest.mark.integration
+
 
 def test_bootstrap_controller_external_repo_writes_template_files(tmp_path: Path) -> None:
     target = tmp_path / "external_controller"

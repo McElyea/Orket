@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class CardType(str, Enum):
+class CardType(str, Enum):  # noqa: UP042 - public enum representation contract
     ROCK = "rock"
     EPIC = "epic"
     ISSUE = "issue"
@@ -9,7 +9,7 @@ class CardType(str, Enum):
     APP = "app"
 
 
-class CardStatus(str, Enum):
+class CardStatus(str, Enum):  # noqa: UP042 - public enum representation contract
     READY = "ready"
     IN_PROGRESS = "in_progress"
     BLOCKED = "blocked"
@@ -25,7 +25,7 @@ class CardStatus(str, Enum):
     ARCHIVED = "archived"
 
 
-class WaitReason(str, Enum):
+class WaitReason(str, Enum):  # noqa: UP042 - public enum representation contract
     RESOURCE = "resource"  # Waiting on a specific person/role
     DEPENDENCY = "dependency"  # Waiting on another task/card
     REVIEW = "review"  # Waiting on approval/feedback

@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.proof.check_trusted_terraform_live_setup_preflight import (
     build_live_setup_preflight_report,
     main,
@@ -14,8 +16,9 @@ def _load(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+@pytest.mark.integration
 def test_live_setup_preflight_blocks_without_spending_when_required_inputs_missing(tmp_path: Path, monkeypatch) -> None:
-    """Layer: contract. Verifies the setup preflight records missing inputs without provider calls."""
+    """Layer: integration. Verifies the setup preflight records missing inputs without provider calls."""
     monkeypatch.delenv("ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_S3_URI", raising=False)
     monkeypatch.delenv("ORKET_TERRAFORM_PLAN_REVIEW_SMOKE_MODEL_ID", raising=False)
     monkeypatch.delenv("AWS_REGION", raising=False)
@@ -33,6 +36,7 @@ def test_live_setup_preflight_blocks_without_spending_when_required_inputs_missi
     assert isinstance(payload.get("diff_ledger"), list)
 
 
+@pytest.mark.contract
 def test_live_setup_preflight_succeeds_for_well_formed_low_cost_inputs() -> None:
     """Layer: contract. Verifies well-formed live setup inputs pass without making AWS calls."""
     report = build_live_setup_preflight_report(
@@ -54,6 +58,7 @@ def test_live_setup_preflight_succeeds_for_well_formed_low_cost_inputs() -> None
     ]
 
 
+@pytest.mark.contract
 def test_live_setup_preflight_rejects_invalid_s3_and_unsupported_model() -> None:
     """Layer: contract. Verifies invalid local configuration fails before any provider call."""
     report = build_live_setup_preflight_report(
@@ -70,6 +75,7 @@ def test_live_setup_preflight_rejects_invalid_s3_and_unsupported_model() -> None
     assert "unsupported_bedrock_model_for_smoke" in report["blocking_reasons"]
 
 
+@pytest.mark.contract
 def test_live_setup_preflight_rejects_template_placeholder_s3_uri() -> None:
     """Layer: contract. Verifies setup-packet placeholders cannot pass live preflight."""
     report = build_live_setup_preflight_report(
@@ -86,6 +92,7 @@ def test_live_setup_preflight_rejects_template_placeholder_s3_uri() -> None:
     assert report["provider_calls_executed"] == []
 
 
+@pytest.mark.contract
 def test_live_setup_preflight_accepts_nova_inference_profile_and_records_converse_operation() -> None:
     """Layer: contract. Verifies the setup preflight admits Nova inference profiles and records Converse truthfully."""
     report = build_live_setup_preflight_report(
@@ -106,6 +113,7 @@ def test_live_setup_preflight_accepts_nova_inference_profile_and_records_convers
     assert report["config_summary"]["bedrock_runtime_operation"] == "Converse"
 
 
+@pytest.mark.contract
 def test_live_setup_preflight_accepts_palmyra_x4_and_records_converse_operation() -> None:
     """Layer: contract. Verifies the setup preflight admits Palmyra X4 and records Converse truthfully."""
     report = build_live_setup_preflight_report(
@@ -126,6 +134,7 @@ def test_live_setup_preflight_accepts_palmyra_x4_and_records_converse_operation(
     assert report["config_summary"]["bedrock_runtime_operation"] == "Converse"
 
 
+@pytest.mark.contract
 def test_live_setup_preflight_accepts_palmyra_x5_and_records_converse_operation() -> None:
     """Layer: contract. Verifies the setup preflight admits Palmyra X5 and records Converse truthfully."""
     report = build_live_setup_preflight_report(

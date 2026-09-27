@@ -4,13 +4,15 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.governance.check_environment_parity_checklist import (
     check_environment_parity_checklist,
     evaluate_environment_parity_checklist,
 )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_environment_parity_checklist_passes_with_empty_env_and_no_required_keys() -> None:
     payload = evaluate_environment_parity_checklist(environment={}, required_keys=[])
     assert payload["ok"] is True
@@ -18,7 +20,7 @@ def test_environment_parity_checklist_passes_with_empty_env_and_no_required_keys
     assert "protocol_network_mode_env_valid" in checks
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_environment_parity_checklist_fails_on_invalid_network_mode_value() -> None:
     payload = evaluate_environment_parity_checklist(
         environment={"ORKET_PROTOCOL_NETWORK_MODE": "internet"},
@@ -29,7 +31,7 @@ def test_environment_parity_checklist_fails_on_invalid_network_mode_value() -> N
     assert row["ok"] is False
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_environment_parity_checklist_fails_on_invalid_provider_model_quarantine_tokens() -> None:
     payload = evaluate_environment_parity_checklist(
         environment={"ORKET_PROVIDER_MODEL_QUARANTINE": "badtoken,ollama:"},
@@ -41,7 +43,7 @@ def test_environment_parity_checklist_fails_on_invalid_provider_model_quarantine
     assert row["invalid_tokens"] == ["badtoken", "ollama:"]
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_environment_parity_checklist_writes_diff_ledger_payload(tmp_path: Path) -> None:
     out_path = tmp_path / "parity.json"
     exit_code, payload = check_environment_parity_checklist(

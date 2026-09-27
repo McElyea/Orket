@@ -12,6 +12,7 @@ from orket.core.domain.sandbox_lifecycle import (
 )
 
 
+@pytest.mark.unit
 def test_lifecycle_fence_accepts_matching_owner_epoch_and_version() -> None:
     assert (
         assert_lifecycle_fence(
@@ -26,6 +27,7 @@ def test_lifecycle_fence_accepts_matching_owner_epoch_and_version() -> None:
     )
 
 
+@pytest.mark.unit
 def test_lifecycle_fence_rejects_stale_owner() -> None:
     with pytest.raises(SandboxLifecycleError, match="Stale owner"):
         assert_lifecycle_fence(
@@ -38,6 +40,7 @@ def test_lifecycle_fence_rejects_stale_owner() -> None:
         )
 
 
+@pytest.mark.unit
 def test_lifecycle_fence_rejects_lease_epoch_mismatch() -> None:
     with pytest.raises(SandboxLifecycleError, match="Lease epoch mismatch"):
         assert_lifecycle_fence(
@@ -50,6 +53,7 @@ def test_lifecycle_fence_rejects_lease_epoch_mismatch() -> None:
         )
 
 
+@pytest.mark.unit
 def test_lifecycle_fence_rejects_record_version_mismatch() -> None:
     with pytest.raises(SandboxLifecycleError, match="Record version mismatch"):
         assert_lifecycle_fence(
@@ -62,6 +66,7 @@ def test_lifecycle_fence_rejects_record_version_mismatch() -> None:
         )
 
 
+@pytest.mark.unit
 def test_cleanup_claim_accepts_unowned_scheduled_record() -> None:
     assert (
         assert_cleanup_claim(
@@ -75,6 +80,7 @@ def test_cleanup_claim_accepts_unowned_scheduled_record() -> None:
     )
 
 
+@pytest.mark.unit
 def test_cleanup_claim_rejects_non_scheduled_state() -> None:
     with pytest.raises(SandboxLifecycleError, match="requires scheduled cleanup state"):
         assert_cleanup_claim(
@@ -86,6 +92,7 @@ def test_cleanup_claim_rejects_non_scheduled_state() -> None:
         )
 
 
+@pytest.mark.unit
 def test_cleanup_claim_rejects_competing_owner() -> None:
     with pytest.raises(SandboxLifecycleError, match="owned by another actor"):
         assert_cleanup_claim(
@@ -97,6 +104,7 @@ def test_cleanup_claim_rejects_competing_owner() -> None:
         )
 
 
+@pytest.mark.unit
 def test_cleanup_claim_rejects_record_version_mismatch() -> None:
     with pytest.raises(SandboxLifecycleError, match="record version mismatch"):
         assert_cleanup_claim(

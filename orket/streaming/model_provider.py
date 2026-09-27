@@ -16,7 +16,7 @@ from pydantic import BaseModel, Field
 side_effecting = True
 
 
-class ProviderEventType(str, Enum):
+class ProviderEventType(str, Enum):  # noqa: UP042 - public enum representation contract
     SELECTED = "selected"
     LOADING = "loading"
     READY = "ready"
@@ -266,7 +266,6 @@ class OllamaModelStreamProvider(ModelStreamProvider):
             KeyError,
             OSError,
             TimeoutError,
-            asyncio.TimeoutError,
             json.JSONDecodeError,
             httpx.HTTPError,
         ) as exc:  # pragma: no cover - provider/runtime variability
@@ -485,7 +484,6 @@ class OpenAICompatModelStreamProvider(ModelStreamProvider):
             KeyError,
             OSError,
             TimeoutError,
-            asyncio.TimeoutError,
             json.JSONDecodeError,
             httpx.HTTPError,
         ) as exc:  # pragma: no cover - provider/runtime variability

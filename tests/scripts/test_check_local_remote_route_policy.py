@@ -4,6 +4,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.governance.check_local_remote_route_policy import (
     check_local_remote_route_policy,
     evaluate_local_remote_route_policy,
@@ -11,14 +13,14 @@ from scripts.governance.check_local_remote_route_policy import (
 )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_evaluate_local_remote_route_policy_passes_for_current_contract() -> None:
     payload = evaluate_local_remote_route_policy()
     assert payload["ok"] is True
     assert payload["lane_count"] >= 1
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_check_local_remote_route_policy_writes_diff_ledger_payload(tmp_path: Path) -> None:
     out_path = tmp_path / "local_remote_route_policy_check.json"
     exit_code, payload = check_local_remote_route_policy(out_path=out_path)
@@ -29,7 +31,7 @@ def test_check_local_remote_route_policy_writes_diff_ledger_payload(tmp_path: Pa
     assert "diff_ledger" in written
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_main_returns_success(tmp_path: Path) -> None:
     out_path = tmp_path / "local_remote_route_policy_check.json"
     exit_code = main(["--out", str(out_path)])

@@ -4,6 +4,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.governance.check_result_error_invariants import (
     check_result_error_invariants,
     evaluate_result_error_invariants,
@@ -11,7 +13,7 @@ from scripts.governance.check_result_error_invariants import (
 )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_evaluate_result_error_invariants_passes_for_current_contract() -> None:
     payload = evaluate_result_error_invariants()
     assert payload["ok"] is True
@@ -19,7 +21,7 @@ def test_evaluate_result_error_invariants_passes_for_current_contract() -> None:
     assert payload["behavior_case_count"] >= 1
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_check_result_error_invariants_writes_diff_ledger_payload(tmp_path: Path) -> None:
     out_path = tmp_path / "result_error_invariants_check.json"
     exit_code, payload = check_result_error_invariants(out_path=out_path)
@@ -30,7 +32,7 @@ def test_check_result_error_invariants_writes_diff_ledger_payload(tmp_path: Path
     assert "diff_ledger" in written
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_main_returns_success(tmp_path: Path) -> None:
     out_path = tmp_path / "result_error_invariants_check.json"
     exit_code = main(["--out", str(out_path)])

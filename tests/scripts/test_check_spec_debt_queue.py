@@ -4,6 +4,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.governance.check_spec_debt_queue import (
     check_spec_debt_queue,
     evaluate_spec_debt_queue,
@@ -11,14 +13,14 @@ from scripts.governance.check_spec_debt_queue import (
 )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_evaluate_spec_debt_queue_passes_for_current_contract() -> None:
     payload = evaluate_spec_debt_queue()
     assert payload["ok"] is True
     assert payload["debt_count"] >= 1
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_check_spec_debt_queue_writes_diff_ledger_payload(tmp_path: Path) -> None:
     out_path = tmp_path / "spec_debt_queue_check.json"
     exit_code, payload = check_spec_debt_queue(out_path=out_path)
@@ -29,7 +31,7 @@ def test_check_spec_debt_queue_writes_diff_ledger_payload(tmp_path: Path) -> Non
     assert "diff_ledger" in written
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_main_returns_success(tmp_path: Path) -> None:
     out_path = tmp_path / "spec_debt_queue_check.json"
     exit_code = main(["--out", str(out_path)])

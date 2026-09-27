@@ -4,7 +4,11 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
+import pytest
+
 from scripts.governance.prepare_core_release import main
+
+pytestmark = pytest.mark.integration
 
 
 def _write(path: Path, content: str) -> None:
@@ -47,7 +51,7 @@ def _init_repo(tmp_path: Path, *, version: str) -> None:
     subprocess.run(["git", "commit", "-m", "initial"], cwd=tmp_path, check=True, capture_output=True)
 
 
-# Layer: contract
+# Layer: integration
 def test_prepare_core_release_updates_canonical_files_for_minor_release(tmp_path: Path) -> None:
     _init_repo(tmp_path, version="0.3.18")
 
@@ -62,7 +66,7 @@ def test_prepare_core_release_updates_canonical_files_for_minor_release(tmp_path
     assert "Git tag: `v0.4.0`" in proof_text
 
 
-# Layer: contract
+# Layer: integration
 def test_prepare_core_release_commit_and_tag_rejects_placeholder_minor_release_content(tmp_path: Path) -> None:
     _init_repo(tmp_path, version="0.3.18")
 

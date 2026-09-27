@@ -4,6 +4,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.reviewrun.check_1000_consistency import (
     REPORT_CONTRACT_VERSION,
     evaluate_consistency_report,
@@ -81,7 +83,7 @@ def _valid_truncation_report_payload() -> dict[str, object]:
     return report
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_evaluate_consistency_report_accepts_valid_payload(tmp_path: Path) -> None:
     payload = evaluate_consistency_report(
         payload=_valid_report_payload(),
@@ -94,7 +96,7 @@ def test_evaluate_consistency_report_accepts_valid_payload(tmp_path: Path) -> No
     assert payload["summary"]["runs_checked"] == 3
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_evaluate_consistency_report_rejects_contract_version_drift(tmp_path: Path) -> None:
     report = _valid_report_payload()
     report["contract_version"] = "drifted"
@@ -109,7 +111,7 @@ def test_evaluate_consistency_report_rejects_contract_version_drift(tmp_path: Pa
     assert "reviewrun_consistency_contract_version_invalid" in payload["issues"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_evaluate_consistency_report_rejects_missing_default_run_id(tmp_path: Path) -> None:
     report = _valid_report_payload()
     report["default_run"] = {
@@ -130,7 +132,7 @@ def test_evaluate_consistency_report_rejects_missing_default_run_id(tmp_path: Pa
     assert "reviewrun_consistency_default_run_id_required" in payload["issues"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_evaluate_consistency_report_rejects_missing_baseline_run_id(tmp_path: Path) -> None:
     report = _valid_report_payload()
     report["consistency"] = {
@@ -148,7 +150,7 @@ def test_evaluate_consistency_report_rejects_missing_baseline_run_id(tmp_path: P
     assert "reviewrun_consistency_baseline_run_id_required" in payload["issues"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_evaluate_consistency_report_allows_failed_outcome_when_success_not_required(tmp_path: Path) -> None:
     report = _valid_report_payload()
     report["ok"] = False
@@ -172,7 +174,7 @@ def test_evaluate_consistency_report_allows_failed_outcome_when_success_not_requ
     assert payload["issues"] == []
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_evaluate_consistency_report_rejects_truncation_check_contract_drift_when_success_not_required(
     tmp_path: Path,
 ) -> None:
@@ -193,7 +195,7 @@ def test_evaluate_consistency_report_rejects_truncation_check_contract_drift_whe
     assert "reviewrun_consistency_truncation_check_ok_invalid" in payload["issues"]
 
 
-# Layer: integration
+@pytest.mark.contract
 def test_evaluate_consistency_report_rejects_default_signature_contract_drift(tmp_path: Path) -> None:
     report = _valid_report_payload()
     report["default_run"] = {
@@ -214,7 +216,7 @@ def test_evaluate_consistency_report_rejects_default_signature_contract_drift(tm
     assert "reviewrun_consistency_default_signature_executed_checks_invalid" in payload["issues"]
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_evaluate_consistency_report_rejects_signature_finding_row_contract_drift(
     tmp_path: Path,
 ) -> None:
@@ -247,7 +249,7 @@ def test_evaluate_consistency_report_rejects_signature_finding_row_contract_drif
     assert "reviewrun_consistency_strict_signature_findings_severity_invalid" in payload["issues"]
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_main_returns_failure_for_missing_default_run_id(tmp_path: Path) -> None:
     report_path = tmp_path / "reviewrun_consistency.json"
     report = _valid_report_payload()
@@ -265,7 +267,7 @@ def test_main_returns_failure_for_missing_default_run_id(tmp_path: Path) -> None
     assert exit_code == 1
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_main_returns_failure_for_invalid_signature_finding_row_contract(tmp_path: Path) -> None:
     report_path = tmp_path / "reviewrun_consistency.json"
     report = _valid_report_payload()
@@ -292,7 +294,7 @@ def test_main_returns_failure_for_invalid_signature_finding_row_contract(tmp_pat
     assert exit_code == 1
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_main_returns_failure_for_invalid_truncation_check_contract(tmp_path: Path) -> None:
     report_path = tmp_path / "reviewrun_consistency.json"
     report = _valid_truncation_report_payload()

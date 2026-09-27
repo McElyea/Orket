@@ -3,10 +3,14 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.proof.outward_run_witness_contract import compute_package_digest, file_sha256
-from scripts.proof.outward_run_witness_package import load_witness_package
 from scripts.proof.outward_run_witness_ledger import verify_committed_artifact, verify_package_ledger
+from scripts.proof.outward_run_witness_package import load_witness_package
 from tests.scripts.test_outward_run_witness_package import _minimal_package
+
+pytestmark = pytest.mark.contract
 
 
 def _rewrite_manifest(package_root: Path) -> None:

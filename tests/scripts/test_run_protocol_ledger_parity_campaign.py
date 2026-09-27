@@ -6,9 +6,13 @@ import json
 import sqlite3
 from pathlib import Path
 
+import pytest
+
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
 from orket.adapters.storage.async_repositories import AsyncRunLedgerRepository
 from scripts.protocol.run_protocol_ledger_parity_campaign import main
+
+pytestmark = pytest.mark.integration
 
 
 async def _seed_run(

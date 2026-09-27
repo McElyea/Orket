@@ -4,6 +4,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 import scripts.protocol.run_protocol_enforce_window_capture as capture_script
 
 
@@ -12,6 +14,7 @@ def _value_after(argv: list[str], flag: str) -> str:
     return str(argv[index + 1])
 
 
+@pytest.mark.integration
 def test_run_protocol_enforce_window_capture_writes_manifest_and_passes(tmp_path: Path, monkeypatch) -> None:
     out_root = tmp_path / "window_x"
 
@@ -74,6 +77,7 @@ def test_run_protocol_enforce_window_capture_writes_manifest_and_passes(tmp_path
     assert manifest["failed_steps"] == []
 
 
+@pytest.mark.integration
 def test_run_protocol_enforce_window_capture_fails_when_step_fails(tmp_path: Path, monkeypatch) -> None:
     out_root = tmp_path / "window_fail"
 
@@ -122,6 +126,7 @@ def test_run_protocol_enforce_window_capture_fails_when_step_fails(tmp_path: Pat
     assert "ledger_parity_campaign" in manifest["failed_steps"]
 
 
+@pytest.mark.unit
 def test_run_protocol_enforce_window_capture_defaults_session_id_to_run_id(tmp_path: Path, monkeypatch) -> None:
     seen: dict[str, list[str]] = {}
 
@@ -183,6 +188,7 @@ def test_run_protocol_enforce_window_capture_defaults_session_id_to_run_id(tmp_p
     assert _value_after(seen["determinism"], "--baseline-run-id") == "run-default"
 
 
+@pytest.mark.integration
 def test_run_protocol_enforce_window_capture_preserves_signoff_invalid_projection_counts(
     tmp_path: Path, monkeypatch
 ) -> None:
