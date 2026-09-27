@@ -7,8 +7,10 @@ from orket.runtime.workspace_hygiene_rules import (
     workspace_hygiene_rules_snapshot,
 )
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_workspace_hygiene_rules_snapshot_contains_expected_rule_ids() -> None:
     payload = workspace_hygiene_rules_snapshot()
     assert payload["schema_version"] == "1.0"

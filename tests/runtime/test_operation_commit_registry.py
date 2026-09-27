@@ -2,7 +2,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from orket.adapters.storage.operation_commit_registry import OperationCommitRegistry
+
+pytestmark = pytest.mark.integration
 
 
 def test_operation_commit_registry_accepts_first_commit(tmp_path: Path) -> None:

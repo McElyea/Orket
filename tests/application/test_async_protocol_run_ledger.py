@@ -55,6 +55,7 @@ def _tool_result_payload(
     return payload
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_async_protocol_run_ledger_start_and_finalize(tmp_path: Path) -> None:
     repo = AsyncProtocolRunLedgerRepository(tmp_path)
@@ -73,7 +74,6 @@ async def test_async_protocol_run_ledger_start_and_finalize(tmp_path: Path) -> N
         summary={"session_status": "incomplete"},
         artifacts={"gitea_export": {"provider": "gitea"}},
     )
-
     run = await repo.get_run("sess-1")
     assert run is not None
     assert run["session_id"] == "sess-1"
@@ -95,6 +95,7 @@ async def test_async_protocol_run_ledger_start_and_finalize(tmp_path: Path) -> N
     assert events[1]["sequence_number"] == events[1]["event_seq"]
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_async_protocol_run_ledger_start_and_finalize_are_idempotent(tmp_path: Path) -> None:
     """Layer: integration. Verifies crash recovery replays do not duplicate lifecycle records."""
@@ -115,12 +116,11 @@ async def test_async_protocol_run_ledger_start_and_finalize_are_idempotent(tmp_p
     )
     await repo.finalize_run(session_id="sess-idempotent", status="incomplete")
     await repo.finalize_run(session_id="sess-idempotent", status="incomplete")
-
     events = await repo.list_events("sess-idempotent")
     assert [event["kind"] for event in events] == ["run_started", "run_finalized"]
 
 
-# Layer: contract
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_async_protocol_run_ledger_finalize_rejects_done_with_failure(tmp_path: Path) -> None:
     repo = AsyncProtocolRunLedgerRepository(tmp_path)
@@ -140,6 +140,7 @@ async def test_async_protocol_run_ledger_finalize_rejects_done_with_failure(tmp_
         )
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_async_protocol_run_ledger_append_event_is_monotonic(tmp_path: Path) -> None:
     repo = AsyncProtocolRunLedgerRepository(tmp_path)
@@ -157,6 +158,7 @@ async def test_async_protocol_run_ledger_append_event_is_monotonic(tmp_path: Pat
     assert [row["kind"] for row in events] == ["event_a", "event_b"]
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_async_protocol_run_ledger_uses_injected_timestamp_factory(tmp_path: Path) -> None:
     """Layer: contract. Verifies touched ledger event timestamps can be supplied by explicit runtime input."""
@@ -164,12 +166,11 @@ async def test_async_protocol_run_ledger_uses_injected_timestamp_factory(tmp_pat
         tmp_path,
         timestamp_factory=lambda: "2025-01-01T00:00:00+00:00",
     )
-
     appended = await repo.append_event(session_id="sess-ts-factory", kind="event_a", payload={"x": 1})
-
     assert appended["timestamp"] == "2025-01-01T00:00:00+00:00"
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_async_protocol_run_ledger_returns_none_for_missing_run(tmp_path: Path) -> None:
     repo = AsyncProtocolRunLedgerRepository(tmp_path)
@@ -177,6 +178,7 @@ async def test_async_protocol_run_ledger_returns_none_for_missing_run(tmp_path: 
     assert run is None
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_async_protocol_run_ledger_isolated_by_session(tmp_path: Path) -> None:
     repo = AsyncProtocolRunLedgerRepository(tmp_path)
@@ -202,6 +204,7 @@ async def test_async_protocol_run_ledger_isolated_by_session(tmp_path: Path) -> 
     assert events_b[0]["session_id"] == "sess-b"
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_async_protocol_run_ledger_operation_commit_is_first_wins(tmp_path: Path) -> None:
     repo = AsyncProtocolRunLedgerRepository(tmp_path)
@@ -236,6 +239,7 @@ async def test_async_protocol_run_ledger_operation_commit_is_first_wins(tmp_path
     assert second["idempotent_reuse"] is False
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_async_protocol_run_ledger_duplicate_same_payload_marks_idempotent_reuse(tmp_path: Path) -> None:
     repo = AsyncProtocolRunLedgerRepository(tmp_path)
@@ -257,6 +261,7 @@ async def test_async_protocol_run_ledger_duplicate_same_payload_marks_idempotent
     assert second["idempotent_reuse"] is True
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_async_protocol_run_ledger_append_event_flattens_payload_fields(tmp_path: Path) -> None:
     repo = AsyncProtocolRunLedgerRepository(tmp_path)
@@ -286,6 +291,7 @@ async def test_async_protocol_run_ledger_append_event_flattens_payload_fields(tm
     assert events[1]["step_id"] == "ISSUE-1:1"
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_async_protocol_run_ledger_append_receipt_assigns_seq_and_digest(tmp_path: Path) -> None:
     repo = AsyncProtocolRunLedgerRepository(tmp_path)
@@ -323,6 +329,7 @@ async def test_async_protocol_run_ledger_append_receipt_assigns_seq_and_digest(t
     ]
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_async_protocol_run_ledger_append_receipt_dedupes_existing_digest(tmp_path: Path) -> None:
     repo = AsyncProtocolRunLedgerRepository(tmp_path)
@@ -341,6 +348,7 @@ async def test_async_protocol_run_ledger_append_receipt_dedupes_existing_digest(
     assert len(rows) == 1
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_async_protocol_run_ledger_append_receipt_rejects_non_monotonic_seq(tmp_path: Path) -> None:
     repo = AsyncProtocolRunLedgerRepository(tmp_path)
@@ -369,7 +377,7 @@ async def test_async_protocol_run_ledger_append_receipt_rejects_non_monotonic_se
         )
 
 
-# Layer: contract
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_async_protocol_run_ledger_enforces_max_tool_invocations_per_run(tmp_path: Path) -> None:
     repo = AsyncProtocolRunLedgerRepository(tmp_path, max_tool_invocations_per_run=2)
@@ -393,7 +401,6 @@ async def test_async_protocol_run_ledger_enforces_max_tool_invocations_per_run(t
         kind="tool_call",
         payload=_tool_call_payload(session_id="sess-limit", operation_id="op-2"),
     )
-
     assert first["kind"] == "tool_call"
     assert second["kind"] == "operation_result"
     assert third["kind"] == "tool_invocation_rejected"
@@ -403,7 +410,7 @@ async def test_async_protocol_run_ledger_enforces_max_tool_invocations_per_run(t
     assert len(events) == 2
 
 
-# Layer: contract
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_async_protocol_run_ledger_append_event_ignores_protected_payload_fields(tmp_path: Path) -> None:
     repo = AsyncProtocolRunLedgerRepository(tmp_path)
@@ -421,7 +428,6 @@ async def test_async_protocol_run_ledger_append_event_ignores_protected_payload_
             "x": 1,
         },
     )
-
     assert appended["run_id"] == "sess-protected"
     assert appended["session_id"] == "sess-protected"
     assert appended["ledger_schema_version"] == "1.0"
@@ -432,12 +438,11 @@ async def test_async_protocol_run_ledger_append_event_ignores_protected_payload_
     assert appended["x"] == 1
 
 
-# Layer: contract
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_async_protocol_run_ledger_rejects_non_monotonic_timestamps(tmp_path: Path, monkeypatch) -> None:
     repo = AsyncProtocolRunLedgerRepository(tmp_path)
     _ = await repo.append_event(session_id="sess-ts", kind="event_a", payload={"x": 1})
-
     def _fake_build_event(*, session_id: str, kind: str, event_type: str, **extra):
         return {
             "ledger_schema_version": "1.0",
@@ -449,14 +454,12 @@ async def test_async_protocol_run_ledger_rejects_non_monotonic_timestamps(tmp_pa
             "tool_name": "",
             **dict(extra),
         }
-
     monkeypatch.setattr(repo, "_build_event", _fake_build_event)
-
     with pytest.raises(ValueError, match="E_LEDGER_TIMESTAMP_NON_MONOTONIC"):
         _ = await repo.append_event(session_id="sess-ts", kind="event_b", payload={"x": 2})
 
 
-# Layer: contract
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_async_protocol_run_ledger_accepts_later_timestamp_with_different_offset_format(
     tmp_path: Path,
@@ -470,14 +473,11 @@ async def test_async_protocol_run_ledger_accepts_later_timestamp_with_different_
         ]
     )
     original_build_event = repo._build_event
-
     def _fake_build_event(*, session_id: str, kind: str, event_type: str, **extra):
         event = original_build_event(session_id=session_id, kind=kind, event_type=event_type, **extra)
         event["timestamp"] = next(timestamps)
         return event
-
     monkeypatch.setattr(repo, "_build_event", _fake_build_event)
-
     first = await repo.append_event(session_id="sess-ts-offset", kind="event_a", payload={"x": 1})
     second = await repo.append_event(session_id="sess-ts-offset", kind="event_b", payload={"x": 2})
 
@@ -485,7 +485,7 @@ async def test_async_protocol_run_ledger_accepts_later_timestamp_with_different_
     assert second["event_seq"] == 2
 
 
-# Layer: contract
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_async_protocol_run_ledger_get_run_returns_none_without_run_started(tmp_path: Path) -> None:
     repo = AsyncProtocolRunLedgerRepository(tmp_path)
@@ -496,7 +496,7 @@ async def test_async_protocol_run_ledger_get_run_returns_none_without_run_starte
     assert run is None
 
 
-# Layer: contract
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_async_protocol_run_ledger_adds_tool_invocation_manifest_for_tool_events(tmp_path: Path) -> None:
     repo = AsyncProtocolRunLedgerRepository(tmp_path)
@@ -534,7 +534,7 @@ async def test_async_protocol_run_ledger_adds_tool_invocation_manifest_for_tool_
     assert len(str(appended["tool_call_hash"])) == 64
 
 
-# Layer: contract
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_async_protocol_run_ledger_rejects_invalid_tool_invocation_manifest(tmp_path: Path) -> None:
     repo = AsyncProtocolRunLedgerRepository(tmp_path)
@@ -556,7 +556,7 @@ async def test_async_protocol_run_ledger_rejects_invalid_tool_invocation_manifes
     assert rejected["error_code"] == "E_TOOL_INVOCATION_MANIFEST_INVALID"
 
 
-# Layer: contract
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_async_protocol_run_ledger_requires_manifest_for_tool_invocation_events(tmp_path: Path) -> None:
     repo = AsyncProtocolRunLedgerRepository(tmp_path)
@@ -569,7 +569,7 @@ async def test_async_protocol_run_ledger_requires_manifest_for_tool_invocation_e
     assert rejected["error_code"] == "E_TOOL_INVOCATION_MANIFEST_INVALID"
 
 
-# Layer: contract
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_async_protocol_run_ledger_requires_call_sequence_for_result_events(tmp_path: Path) -> None:
     repo = AsyncProtocolRunLedgerRepository(tmp_path)
@@ -590,7 +590,7 @@ async def test_async_protocol_run_ledger_requires_call_sequence_for_result_event
     assert rejected["error_code"] == "E_CALL_SEQUENCE_REQUIRED"
 
 
-# Layer: contract
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_async_protocol_run_ledger_rejects_artifact_emission_before_result(tmp_path: Path) -> None:
     repo = AsyncProtocolRunLedgerRepository(tmp_path)
@@ -613,7 +613,7 @@ async def test_async_protocol_run_ledger_rejects_artifact_emission_before_result
     assert rejected["error_code"] == "E_ARTIFACT_EMIT_BEFORE_RESULT"
 
 
-# Layer: contract
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_async_protocol_run_ledger_allows_artifact_emission_after_result(tmp_path: Path) -> None:
     repo = AsyncProtocolRunLedgerRepository(tmp_path)
@@ -647,7 +647,7 @@ async def test_async_protocol_run_ledger_allows_artifact_emission_after_result(t
     assert appended["artifact_hash"] == "b" * 64
 
 
-# Layer: contract
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_async_protocol_run_ledger_rejects_finalize_when_tool_call_orphaned(tmp_path: Path) -> None:
     repo = AsyncProtocolRunLedgerRepository(tmp_path)

@@ -43,8 +43,9 @@ from orket_extension_sdk.result import ArtifactRef, WorkloadResult
 from tests.helpers.runtime_result import published_result
 
 
+@pytest.mark.contract
 def test_extension_catalog_load_and_list(tmp_path: Path) -> None:
-    """Layer: unit. Verifies installed extension catalog rows use manifest-entry storage."""
+    """Layer: contract. Verifies installed extension catalog rows use manifest-entry storage."""
     catalog_path = tmp_path / "catalog.json"
     payload = {
         "extensions": [
@@ -57,17 +58,16 @@ def test_extension_catalog_load_and_list(tmp_path: Path) -> None:
         ]
     }
     catalog_path.write_text(json.dumps(payload), encoding="utf-8")
-
     catalog = ExtensionCatalog(catalog_path)
     records = catalog.list_extensions()
-
     assert len(records) == 1
     assert records[0].extension_id == "demo.ext"
     assert records[0].manifest_entries[0].workload_id == "demo_v1"
 
 
+@pytest.mark.contract
 def test_extension_catalog_load_and_list_supports_legacy_workloads_key(tmp_path: Path) -> None:
-    """Layer: unit. Verifies installed catalog reads remain backward-compatible with legacy workload rows."""
+    """Layer: contract. Verifies installed catalog reads remain backward-compatible with legacy workload rows."""
     catalog_path = tmp_path / "catalog.json"
     payload = {
         "extensions": [
@@ -80,17 +80,16 @@ def test_extension_catalog_load_and_list_supports_legacy_workloads_key(tmp_path:
         ]
     }
     catalog_path.write_text(json.dumps(payload), encoding="utf-8")
-
     catalog = ExtensionCatalog(catalog_path)
     records = catalog.list_extensions()
-
     assert len(records) == 1
     assert records[0].extension_id == "demo.ext"
     assert records[0].manifest_entries[0].workload_id == "demo_v1"
 
 
+@pytest.mark.integration
 def test_extension_catalog_workload_projects_into_control_plane_workload_record(tmp_path: Path) -> None:
-    """Layer: unit. Verifies persisted extension catalog manifest entries still resolve canonical workload authority."""
+    """Layer: integration. Verifies persisted extension catalog manifest entries still resolve canonical workload authority."""
     catalog_path = tmp_path / "catalog.json"
     payload = {
         "extensions": [
@@ -112,7 +111,6 @@ def test_extension_catalog_workload_projects_into_control_plane_workload_record(
         ]
     }
     catalog_path.write_text(json.dumps(payload), encoding="utf-8")
-
     catalog = ExtensionCatalog(catalog_path)
     extension = catalog.list_extensions()[0]
     workload = extension.manifest_entries[0]
@@ -129,13 +127,13 @@ def test_extension_catalog_workload_projects_into_control_plane_workload_record(
             manifest_digest_sha256=extension.manifest_digest_sha256,
         )
     )
-
     assert record.workload_id == "demo_v1"
     assert record.input_contract_ref == "extension_manifest:sdk_v0"
     assert record.output_contract_ref == "extension_run_result_identity_v1"
     assert record.workload_digest.startswith("sha256:")
 
 
+@pytest.mark.contract
 def test_manifest_parser_load_manifest_legacy(tmp_path: Path) -> None:
     repo = tmp_path / "repo"
     repo.mkdir()
@@ -150,10 +148,8 @@ def test_manifest_parser_load_manifest_legacy(tmp_path: Path) -> None:
         ),
         encoding="utf-8",
     )
-
     parser = ManifestParser()
     loaded = parser.load_manifest(repo)
-
     assert loaded.contract_style == CONTRACT_STYLE_LEGACY
     record = parser.record_from_manifest(
         loaded.payload,
@@ -164,7 +160,7 @@ def test_manifest_parser_load_manifest_legacy(tmp_path: Path) -> None:
     )
     assert record.extension_id == "demo.ext"
 
-# Layer: integration
+@pytest.mark.contract
 def test_sdk_agent_manifest_metadata_survives_catalog_round_trip(tmp_path: Path) -> None:
     """Host catalog storage preserves the typed agent negotiation fields."""
     parser = ManifestParser()
@@ -194,22 +190,21 @@ def test_sdk_agent_manifest_metadata_survives_catalog_round_trip(tmp_path: Path)
         path=tmp_path,
         manifest_path=tmp_path / "extension.yaml",
     )
-
     catalog_path = tmp_path / "catalog.json"
     catalog_path.write_text(json.dumps({"extensions": [ExtensionCatalog.row_from_record(record)]}), encoding="utf-8")
     loaded = ExtensionCatalog(catalog_path).list_extensions()[0]
     entry, = loaded.manifest_entries
-
     assert (loaded.register_callable, entry.workload_kind) == ("", "agent")
     assert (entry.input_contract, entry.output_contract) == ("agent_iteration_request.v1", "agent_iteration_result.v1")
     assert entry.agent_declaration["contract_version"] == "governed_agent_loop.v1"
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 # Layer: integration
 async def test_generic_sdk_executor_refuses_agent_workload_before_runtime_side_effects(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Layer: integration. Agent declarations cannot fall through the legacy generic subprocess path."""
+    """Layer: contract. Agent declarations cannot fall through the legacy generic subprocess path."""
     executor = await run_owned_thread(lambda: WorkloadExecutor(
         project_root=tmp_path,
         reproducibility=ReproducibilityEnforcer(tmp_path),
@@ -240,12 +235,9 @@ async def test_generic_sdk_executor_refuses_agent_workload_before_runtime_side_e
         manifest_entries=(workload,),
         contract_style=CONTRACT_STYLE_SDK_V0,
     )
-
     def unexpected_artifact_root(*_args: object, **_kwargs: object) -> Path:
         raise AssertionError("agent refusal must happen before artifact allocation")
-
     monkeypatch.setattr(executor.artifacts, "artifact_root", unexpected_artifact_root)
-
     with pytest.raises(ValueError, match="E_AGENT_RUNTIME_NOT_ADMITTED"):
         await executor.run_sdk_workload(policy=capture_workload_policy(),
             extension=extension,
@@ -258,6 +250,7 @@ async def test_generic_sdk_executor_refuses_agent_workload_before_runtime_side_e
 
 
 
+@pytest.mark.unit
 def test_workload_loader_parse_sdk_entrypoint() -> None:
     loader = WorkloadLoader(registry_factory=lambda: None)  # type: ignore[arg-type]
     module_name, attr_name = loader.parse_sdk_entrypoint("demo.module:run")
@@ -265,12 +258,12 @@ def test_workload_loader_parse_sdk_entrypoint() -> None:
     assert attr_name == "run"
 
 
+@pytest.mark.integration
 def test_workload_artifacts_build_manifest(tmp_path: Path) -> None:
     """Layer: integration. Validate real artifacts under explicitly captured policy."""
     artifact_root = tmp_path / "artifacts"
     artifact_root.mkdir(parents=True)
     (artifact_root / "a.txt").write_text("hello", encoding="utf-8")
-
     artifacts = WorkloadArtifacts(tmp_path, ReproducibilityEnforcer(tmp_path))
     governed_identity = build_governed_identity(
         operator_surface="extension_run_result_identity_v1",
@@ -283,7 +276,6 @@ def test_workload_artifacts_build_manifest(tmp_path: Path) -> None:
         plan_hash="plan-123",
         governed_identity=governed_identity,
     )
-
     assert manifest["files"][0]["path"] == "a.txt"
     assert len(manifest["manifest_sha256"]) == 64
     assert manifest["claim_tier"] == "non_deterministic_lab_only"
@@ -296,26 +288,26 @@ def test_workload_artifacts_build_manifest(tmp_path: Path) -> None:
     assert manifest["determinism_class"] == "workspace"
 
 
+@pytest.mark.contract
 def test_workload_artifacts_validate_sdk_artifacts_rejects_prefix_escape(tmp_path: Path) -> None:
-    """Layer: integration. Validate real artifacts under explicitly captured policy."""
+    """Layer: contract. Validate real artifacts under explicitly captured policy."""
     artifact_root = tmp_path / "artifacts"
     artifact_root.mkdir(parents=True)
     outside_dir = tmp_path / "artifacts-evil"
     outside_dir.mkdir(parents=True)
     outside_file = outside_dir / "outside.txt"
     outside_file.write_text("not-inside-root", encoding="utf-8")
-
     digest = hashlib.sha256(outside_file.read_bytes()).hexdigest()
     result = WorkloadResult(
         ok=True,
         artifacts=[ArtifactRef(path="../artifacts-evil/outside.txt", digest_sha256=digest, kind="text")],
     )
-
     artifacts = WorkloadArtifacts(tmp_path, ReproducibilityEnforcer(tmp_path))
     with pytest.raises(ValueError, match="E_ARTIFACT_PATH_TRAVERSAL"):
         artifacts.validate_sdk_artifacts(result, artifact_root, policy=capture_workload_policy())
 
 
+@pytest.mark.integration
 def test_workload_artifacts_rejects_symlink_in_sdk_validation_and_manifest(tmp_path: Path) -> None:
     """Layer: integration. Validate real artifacts under explicitly captured policy."""
     artifact_root = tmp_path / "artifacts"
@@ -327,22 +319,21 @@ def test_workload_artifacts_rejects_symlink_in_sdk_validation_and_manifest(tmp_p
         link_path.symlink_to(outside)
     except OSError as exc:
         pytest.skip(f"symlink unsupported in this environment: {exc}")
-
     digest = hashlib.sha256(outside.read_bytes()).hexdigest()
     result = WorkloadResult(
         ok=True,
         artifacts=[ArtifactRef(path="linked.txt", digest_sha256=digest, kind="text")],
     )
     artifacts = WorkloadArtifacts(tmp_path, ReproducibilityEnforcer(tmp_path))
-
     with pytest.raises(ValueError, match="E_ARTIFACT_SYMLINK_FORBIDDEN"):
         artifacts.validate_sdk_artifacts(result, artifact_root, policy=capture_workload_policy())
     with pytest.raises(ValueError, match="E_ARTIFACT_SYMLINK_FORBIDDEN"):
         artifacts.build_artifact_manifest(artifact_root, policy=capture_workload_policy())
 
 
+@pytest.mark.contract
 def test_workload_artifacts_validate_sdk_artifacts_emits_deterministic_ordered_payload(tmp_path: Path) -> None:
-    """Layer: integration. Validate real artifacts under explicitly captured policy."""
+    """Layer: contract. Validate real artifacts under explicitly captured policy."""
     artifact_root = tmp_path / "artifacts"
     artifact_root.mkdir(parents=True)
     (artifact_root / "ok.txt").write_text("ok", encoding="utf-8")
@@ -366,6 +357,7 @@ def test_workload_artifacts_validate_sdk_artifacts_emits_deterministic_ordered_p
     assert errors[1]["path_norm"] == "ok.txt"
 
 
+@pytest.mark.integration
 def test_workload_artifacts_enforces_file_and_total_size_caps(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Layer: integration. Validate real artifacts under explicitly captured policy."""
     artifact_root = tmp_path / "artifacts"
@@ -405,6 +397,7 @@ def test_workload_artifacts_enforces_file_and_total_size_caps(tmp_path: Path, mo
         )
 
 
+@pytest.mark.contract
 def test_workload_artifacts_build_sdk_capability_registry_registers_audio_defaults(tmp_path: Path) -> None:
     artifacts = WorkloadArtifacts(tmp_path, ReproducibilityEnforcer(tmp_path))
     registry = artifacts.build_sdk_capability_registry(
@@ -422,6 +415,7 @@ def test_workload_artifacts_build_sdk_capability_registry_registers_audio_defaul
     assert isinstance(registry.voice_turn_controller(), HostVoiceTurnController)
 
 
+@pytest.mark.integration
 def test_workload_artifacts_build_sdk_capability_registry_honors_memory_toggles(tmp_path: Path) -> None:
     """Layer: integration. Verifies runtime memory toggles are propagated into capability provider controls."""
     artifacts = WorkloadArtifacts(tmp_path, ReproducibilityEnforcer(tmp_path))
@@ -444,6 +438,7 @@ def test_workload_artifacts_build_sdk_capability_registry_honors_memory_toggles(
     assert profile_write.ok is True
 
 
+@pytest.mark.integration
 def test_workload_artifacts_build_sdk_capability_registry_scopes_extension_memory(tmp_path: Path) -> None:
     """Layer: integration. Verifies SDK extension memory writes are namespaced per extension while SDK responses stay unscoped."""
     artifacts = WorkloadArtifacts(tmp_path, ReproducibilityEnforcer(tmp_path))
@@ -477,8 +472,9 @@ def test_workload_artifacts_build_sdk_capability_registry_scopes_extension_memor
     assert row.key == "ext:demo.ext:companion_setting.role_id"
 
 
+@pytest.mark.contract
 def test_workload_artifacts_build_sdk_capability_registry_honors_voice_bounds(tmp_path: Path) -> None:
-    """Layer: integration. Verifies voice-turn controller receives bounded silence-delay defaults from input config."""
+    """Layer: contract. Verifies voice-turn controller receives bounded silence-delay defaults from input config."""
     artifacts = WorkloadArtifacts(tmp_path, ReproducibilityEnforcer(tmp_path))
     registry = artifacts.build_sdk_capability_registry(
         workspace=tmp_path / "workspace",
@@ -532,7 +528,7 @@ async def test_extension_engine_adapter_normalizes_legacy_run_ops_to_run_card(
     assert all(result["succeeded"] for result in (epic_result, rock_result, issue_result))
     assert [result["session_id"] for result in (epic_result, rock_result, issue_result)] == ["demo-epic", "demo-rock", "ISSUE-7"]
 
-# Layer: unit
+@pytest.mark.unit
 def test_extension_engine_adapter_treats_run_rock_as_legacy_alias_only() -> None:
     """Layer: unit. Verifies extension runtime keeps `run_rock` as explicit alias normalization, not a primary op set member."""
     runtime_text = inspect.getsource(ExtensionEngineAdapter)
@@ -540,8 +536,9 @@ def test_extension_engine_adapter_treats_run_rock_as_legacy_alias_only() -> None
     assert 'canonical_op = "run_card" if op in {"run_epic", "run_issue", "run_rock"} else op' in runtime_text
 
 
+@pytest.mark.contract
 def test_extensions_package_root_does_not_export_manifest_workload_alias() -> None:
-    """Layer: unit. Verifies package-root extension exports do not bless workload metadata authority nouns."""
+    """Layer: contract. Verifies package-root extension exports do not bless workload metadata authority nouns."""
     assert not hasattr(extensions_package, "WorkloadRecord")
     assert not hasattr(extensions_package, "ExtensionManifestWorkload")
     assert not hasattr(extension_manager_module, "ExtensionManifestWorkload")
@@ -550,14 +547,16 @@ def test_extensions_package_root_does_not_export_manifest_workload_alias() -> No
     assert not hasattr(extension_models, "WorkloadRecord")
 
 
+@pytest.mark.contract
 def test_extension_catalog_manifest_lookup_is_internal_only() -> None:
-    """Layer: unit. Verifies extension catalog no longer exposes a public-looking manifest lookup method."""
+    """Layer: contract. Verifies extension catalog no longer exposes a public-looking manifest lookup method."""
     assert not hasattr(ExtensionCatalog, "resolve_manifest_entry")
     assert hasattr(ExtensionCatalog, "_resolve_manifest_entry")
 
 
+@pytest.mark.contract
 def test_build_host_authorization_envelope_can_narrow_governed_capability_admission() -> None:
-    """Layer: unit. Verifies the host envelope can deny declared governed capabilities without mutating declaration truth."""
+    """Layer: contract. Verifies the host envelope can deny declared governed capabilities without mutating declaration truth."""
     envelope = build_host_authorization_envelope(
         extension_id="demo.ext",
         workload_id="sdk_v1",
@@ -571,8 +570,9 @@ def test_build_host_authorization_envelope_can_narrow_governed_capability_admiss
     assert envelope.authorization_digest.startswith("sha256:")
 
 
+@pytest.mark.contract
 def test_workload_artifacts_build_sdk_capability_registry_respects_admitted_governed_capabilities(tmp_path: Path) -> None:
-    """Layer: unit. Verifies raw child instantiation does not auto-register denied governed providers."""
+    """Layer: contract. Verifies raw child instantiation does not auto-register denied governed providers."""
     artifacts = WorkloadArtifacts(tmp_path, ReproducibilityEnforcer(tmp_path))
     registry = artifacts.build_sdk_capability_registry(
         workspace=tmp_path / "workspace",

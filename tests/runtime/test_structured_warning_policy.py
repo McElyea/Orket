@@ -7,8 +7,10 @@ from orket.runtime.structured_warning_policy import (
     validate_structured_warning_policy,
 )
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_structured_warning_policy_snapshot_contains_warning_codes() -> None:
     payload = structured_warning_policy_snapshot()
     assert payload["schema_version"] == "1.0"

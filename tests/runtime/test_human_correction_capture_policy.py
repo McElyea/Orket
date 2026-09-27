@@ -7,8 +7,10 @@ from orket.runtime.human_correction_capture_policy import (
     validate_human_correction_capture_policy,
 )
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_human_correction_capture_policy_snapshot_contains_expected_target_surfaces() -> None:
     payload = human_correction_capture_policy_snapshot()
     assert payload["schema_version"] == "1.0"

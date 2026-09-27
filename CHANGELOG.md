@@ -5,6 +5,17 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.109] - 2026-09-27
+
+### Fixed
+- Add reviewed canonical markers to 901 existing cases across 145 runtime, application and contract test modules, preserving assertions, parameters and nonlayer markers.
+- Canonical collection confirms the exact 901-case reduction in missing classifications: 1,908 remain among 10,606 cases, with no conflicts or collection errors. The strict taxonomy gate remains failing.
+- Record the reproduced supporting-diagnostic failures and extract their accepted target contract. Runtime implementation and closing proof remain pending; this checkpoint introduces no handler migration.
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+- Full-suite coverage, installed acceptance for this checkpoint, remaining D/E/CAP and whole-lane acceptance remain open in the architectural-truth plan.
+
 ## [0.6.108] - 2026-09-27
 
 ### Fixed

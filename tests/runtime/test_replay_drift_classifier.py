@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import pytest
+
 from orket.runtime.replay_drift_classifier import classify_replay_drift
+
+pytestmark = pytest.mark.unit
 
 
 # Layer: unit

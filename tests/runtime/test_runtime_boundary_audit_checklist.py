@@ -7,8 +7,10 @@ from orket.runtime.runtime_boundary_audit_checklist import (
     validate_runtime_boundary_audit_checklist,
 )
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_runtime_boundary_audit_checklist_snapshot_contains_expected_boundaries() -> None:
     payload = runtime_boundary_audit_checklist_snapshot()
     assert payload["schema_version"] == "1.0"

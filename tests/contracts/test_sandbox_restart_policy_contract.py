@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+import pytest
+
 from orket.application.services.sandbox_lifecycle_policy import SandboxLifecyclePolicy
 from orket.application.services.sandbox_restart_policy_service import (
     SandboxRestartPolicyService,
     SandboxServiceRuntimeSnapshot,
 )
+
+pytestmark = pytest.mark.contract
 
 
 def _snapshot(

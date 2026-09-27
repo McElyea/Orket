@@ -1,19 +1,21 @@
 from __future__ import annotations
 
+import pytest
+
 from orket.runtime.deterministic_mode_contract import (
     deterministic_mode_contract_snapshot,
     resolve_deterministic_mode_flag,
 )
 
 
-# Layer: unit
+@pytest.mark.unit
 def test_resolve_deterministic_mode_flag_defaults_to_false() -> None:
     enabled, source = resolve_deterministic_mode_flag(environment={})
     assert enabled is False
     assert source == "default"
 
 
-# Layer: contract
+@pytest.mark.unit
 def test_resolve_deterministic_mode_flag_prefers_primary_env_key() -> None:
     enabled, source = resolve_deterministic_mode_flag(
         environment={
@@ -25,7 +27,7 @@ def test_resolve_deterministic_mode_flag_prefers_primary_env_key() -> None:
     assert source == "ORKET_DETERMINISTIC_MODE"
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_deterministic_mode_contract_snapshot_reflects_enabled_behavior() -> None:
     payload = deterministic_mode_contract_snapshot(
         environment={"ORKET_PROTOCOL_DETERMINISTIC_MODE": "1"}

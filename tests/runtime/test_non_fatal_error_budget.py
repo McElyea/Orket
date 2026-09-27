@@ -7,8 +7,10 @@ from orket.runtime.non_fatal_error_budget import (
     validate_non_fatal_error_budget,
 )
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_non_fatal_error_budget_snapshot_contains_expected_budget_ids() -> None:
     payload = non_fatal_error_budget_snapshot()
     assert payload["schema_version"] == "1.0"

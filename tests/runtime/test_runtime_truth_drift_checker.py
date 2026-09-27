@@ -7,8 +7,10 @@ from orket.runtime.runtime_truth_drift_checker import (
     runtime_truth_contract_drift_report,
 )
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_runtime_truth_contract_drift_report_passes_for_current_contracts() -> None:
     payload = runtime_truth_contract_drift_report()
     assert payload["schema_version"] == "1.0"

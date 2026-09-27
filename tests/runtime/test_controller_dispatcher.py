@@ -170,9 +170,10 @@ def _init_controller_bootstrap_repo(repo_root: Path) -> None:
     _init_git_repo(repo_root)
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_controller_dispatcher_caps_and_stop_on_first_failure() -> None:
-    """Layer: unit."""
+    """Layer: contract."""
     manager = _StubExtensionManager(
         workload_styles={"sdk_a": CONTRACT_STYLE_SDK_V0, "sdk_b": CONTRACT_STYLE_SDK_V0, "sdk_c": CONTRACT_STYLE_SDK_V0},
         outcomes={
@@ -210,15 +211,15 @@ async def test_controller_dispatcher_caps_and_stop_on_first_failure() -> None:
     assert manager.calls == ["sdk_a", "sdk_b"]
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_controller_dispatcher_depth_recursion_cycle_and_timeout_validation() -> None:
-    """Layer: unit."""
+    """Layer: contract."""
     manager = _StubExtensionManager(
         workload_styles={"sdk_a": CONTRACT_STYLE_SDK_V0, "legacy_a": "legacy_v1"},
         outcomes={"sdk_a": [_extension_result("sdk_a", ok=True, suffix="a")]},
     )
     dispatcher = ControllerDispatcher(extension_manager=manager)
-
     depth = await dispatcher.dispatch(
         payload={
             "controller_contract_version": "controller.workload.v1",
@@ -232,7 +233,6 @@ async def test_controller_dispatcher_depth_recursion_cycle_and_timeout_validatio
         department="core",
     )
     assert depth.error_code == ERROR_MAX_DEPTH_EXCEEDED
-
     recursion = await dispatcher.dispatch(
         payload={
             "controller_contract_version": "controller.workload.v1",
@@ -245,7 +245,6 @@ async def test_controller_dispatcher_depth_recursion_cycle_and_timeout_validatio
         department="core",
     )
     assert recursion.error_code == ERROR_RECURSION_DENIED
-
     cycle = await dispatcher.dispatch(
         payload={
             "controller_contract_version": "controller.workload.v1",
@@ -290,6 +289,7 @@ async def test_controller_dispatcher_depth_recursion_cycle_and_timeout_validatio
     assert timeout_invalid.error_code == ERROR_CHILD_TIMEOUT_INVALID
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_controller_dispatcher_integration_runtime_path_and_determinism(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Layer: integration."""

@@ -7,8 +7,10 @@ from orket.runtime.retry_classification_policy import (
     validate_retry_classification_policy,
 )
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_retry_classification_policy_snapshot_contains_expected_signals() -> None:
     payload = retry_classification_policy_snapshot()
     assert payload["schema_version"] == "1.0"

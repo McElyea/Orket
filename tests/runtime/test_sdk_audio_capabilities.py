@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from orket.capabilities.audio_player import build_audio_player
 from orket.capabilities.tts_piper import PiperTTSProvider, build_tts_provider
 from orket.core.contracts.owned_command import OwnedCommandResult
@@ -26,13 +28,13 @@ def write_model(path, sample_rate=22050):
     path.with_suffix(".onnx.json").write_text(json.dumps({"audio": {"sample_rate": sample_rate}}), encoding="utf-8")
 
 
-# Layer: contract
+@pytest.mark.unit
 def test_build_tts_provider_defaults_to_null() -> None:
     provider = build_tts_provider(input_config={})
     assert isinstance(provider, NullTTSProvider)
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_build_tts_provider_uses_piper_when_configured(tmp_path: Path, monkeypatch) -> None:
     model = tmp_path / "voice.onnx"
     write_model(model, 24000)
@@ -60,7 +62,7 @@ def test_build_tts_provider_uses_piper_when_configured(tmp_path: Path, monkeypat
     assert runner.calls[0][1]["output_limit_bytes"] == 64 * 1024 * 1024
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_piper_provider_lists_and_resolves_multiple_voice_models(tmp_path: Path, monkeypatch) -> None:
     default_model = tmp_path / "voice_default.onnx"
     write_model(default_model)
@@ -91,13 +93,13 @@ def test_piper_provider_lists_and_resolves_multiple_voice_models(tmp_path: Path,
     assert str(cmd[model_index + 1]).endswith("voice_alt.onnx")
 
 
-# Layer: contract
+@pytest.mark.unit
 def test_build_audio_player_defaults_to_null() -> None:
     player = build_audio_player(input_config={})
     assert isinstance(player, NullAudioPlayer)
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_capability_registry_builder_registers_configured_piper_provider(tmp_path: Path, monkeypatch) -> None:
     model = tmp_path / "voice.onnx"
     write_model(model)
@@ -117,7 +119,7 @@ def test_capability_registry_builder_registers_configured_piper_provider(tmp_pat
     assert isinstance(registry.tts(), PiperTTSProvider)
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_build_tts_provider_falls_back_to_python_module_piper_when_path_shim_missing(tmp_path: Path, monkeypatch) -> None:
     model = tmp_path / "voice.onnx"
     write_model(model)

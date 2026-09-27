@@ -38,6 +38,7 @@ def _init_repo(repo: Path) -> None:
     _git(repo, "config", "user.name", "tester")
 
 
+@pytest.mark.integration
 def test_review_run_diff_writes_bundle_and_replay(tmp_path: Path) -> None:
     """Layer: integration. Verifies review runs persist artifact bundles and first-class control-plane execution truth."""
     repo = tmp_path / "repo"
@@ -50,7 +51,6 @@ def test_review_run_diff_writes_bundle_and_replay(tmp_path: Path) -> None:
     _git(repo, "add", ".")
     _git(repo, "commit", "-m", "change")
     head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, check=True, capture_output=True).stdout.decode().strip()
-
     workspace = tmp_path / "workspace" / "default"
     control_plane_db = tmp_path / "control_plane.sqlite3"
     service = ReviewRunService(workspace=workspace, control_plane_db_path=control_plane_db)
@@ -87,7 +87,6 @@ def test_review_run_diff_writes_bundle_and_replay(tmp_path: Path) -> None:
     assert deterministic_payload["control_plane_run_id"] == run.run_id
     assert deterministic_payload["control_plane_attempt_id"] == run.manifest["control_plane_attempt_id"]
     assert deterministic_payload["control_plane_step_id"] == run.manifest["control_plane_step_id"]
-
     execution_repo = AsyncControlPlaneExecutionRepository(control_plane_db)
     record_repo = AsyncControlPlaneRecordRepository(control_plane_db)
     persisted_run = run_coro_sync(execution_repo.get_run_record(run_id=run.run_id))
@@ -130,7 +129,6 @@ def test_review_run_diff_writes_bundle_and_replay(tmp_path: Path) -> None:
         ReviewRunControlPlaneService.effect_id_for(run_id=run.run_id, stage="closeout"),
     ]
     assert effects[-1].observed_result_ref == final_truth.authoritative_result_ref
-
     snapshot = json.loads((run_dir / "snapshot.json").read_text(encoding="utf-8"))
     policy = json.loads((run_dir / "policy_resolved.json").read_text(encoding="utf-8"))
     replay = service.replay(
@@ -150,6 +148,7 @@ def test_review_run_diff_writes_bundle_and_replay(tmp_path: Path) -> None:
     assert first_decision["findings"] == replay_decision["findings"]
 
 
+@pytest.mark.integration
 def test_review_run_model_assisted_artifact_marks_execution_state_non_authoritative(tmp_path: Path) -> None:
     """Layer: integration. Verifies advisory review-lane artifacts point back to durable control-plane execution truth."""
     repo = tmp_path / "repo"
@@ -162,7 +161,6 @@ def test_review_run_model_assisted_artifact_marks_execution_state_non_authoritat
     _git(repo, "add", ".")
     _git(repo, "commit", "-m", "change")
     head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, check=True, capture_output=True).stdout.decode().strip()
-
     workspace = tmp_path / "workspace" / "default"
     service = ReviewRunService(workspace=workspace, control_plane_db_path=tmp_path / "control_plane.sqlite3")
     run = service.run_diff(
@@ -180,7 +178,6 @@ def test_review_run_model_assisted_artifact_marks_execution_state_non_authoritat
             "refs": [],
         },
     )
-
     critique_payload = json.loads((Path(run.artifact_dir) / "model_assisted_critique.json").read_text(encoding="utf-8"))
     assert critique_payload["execution_state_authority"] == "control_plane_records"
     assert critique_payload["lane_output_execution_state_authoritative"] is False
@@ -190,6 +187,7 @@ def test_review_run_model_assisted_artifact_marks_execution_state_non_authoritat
     assert critique_payload["summary"] == ["Advisory only."]
 
 
+@pytest.mark.unit
 def test_token_resolution_precedence(monkeypatch) -> None:
     """Layer: unit. Verifies CLI and environment token precedence remains explicit and stable."""
     monkeypatch.setenv("ORKET_GITEA_TOKEN", "canon")
@@ -197,17 +195,16 @@ def test_token_resolution_precedence(monkeypatch) -> None:
     token, source = _resolve_token("cli")
     assert token == "cli"
     assert source == "token_flag"
-
     token, source = _resolve_token("")
     assert token == "canon"
     assert source == "token_env"
-
     monkeypatch.delenv("ORKET_GITEA_TOKEN")
     token, source = _resolve_token("")
     assert token == "alias"
     assert source == "token_env"
 
 
+@pytest.mark.integration
 def test_run_diff_defaults_to_code_only_scope(tmp_path: Path) -> None:
     """Layer: integration. Verifies diff reviews honor the default code-only snapshot policy."""
     repo = tmp_path / "repo"
@@ -223,7 +220,6 @@ def test_run_diff_defaults_to_code_only_scope(tmp_path: Path) -> None:
     _git(repo, "add", ".")
     _git(repo, "commit", "-m", "change")
     head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, check=True, capture_output=True).stdout.decode().strip()
-
     workspace = tmp_path / "workspace" / "default"
     service = ReviewRunService(workspace=workspace, control_plane_db_path=tmp_path / "control_plane.sqlite3")
     run = service.run_diff(repo_root=repo, base_ref=base, head_ref=head, bounds=SnapshotBounds())
@@ -233,8 +229,9 @@ def test_run_diff_defaults_to_code_only_scope(tmp_path: Path) -> None:
     assert "app/x.py" in changed_paths
 
 
+@pytest.mark.unit
 def test_run_pr_fetches_snapshot_once_in_code_only_mode(monkeypatch, tmp_path: Path) -> None:
-    """Layer: contract. Verifies code-only PR reviews filter the fetched snapshot locally instead of reloading it."""
+    """Layer: unit. Verifies code-only PR reviews filter the fetched snapshot locally instead of reloading it."""
     repo = tmp_path / "repo"
     _init_repo(repo)
     _git(repo, "remote", "add", "origin", "https://example.test/org/repo.git")
@@ -242,7 +239,6 @@ def test_run_pr_fetches_snapshot_once_in_code_only_mode(monkeypatch, tmp_path: P
     service = ReviewRunService(workspace=workspace, control_plane_db_path=tmp_path / "control_plane.sqlite3")
     calls: list[set[str] | None] = []
     captured: dict[str, list[str]] = {}
-
     snapshot = ReviewSnapshot(
         source="pr",
         repo={"remote": "https://example.test", "repo_id": "org/repo"},
@@ -281,7 +277,6 @@ def test_run_pr_fetches_snapshot_once_in_code_only_mode(monkeypatch, tmp_path: P
         metadata={"title": "PR"},
     )
     snapshot.compute_snapshot_digest()
-
     monkeypatch.setattr(
         run_service_module,
         "resolve_review_policy",
@@ -290,11 +285,9 @@ def test_run_pr_fetches_snapshot_once_in_code_only_mode(monkeypatch, tmp_path: P
             policy_digest="policy",
         ),
     )
-
     def _fake_load_from_pr(**kwargs):  # type: ignore[no-untyped-def]
         calls.append(kwargs.get("include_paths"))
         return snapshot
-
     def _fake_execute(self, *, snapshot, **_kwargs):  # type: ignore[no-untyped-def]
         captured["paths"] = [row.path for row in snapshot.changed_files]
         return "ok"
@@ -315,8 +308,9 @@ def test_run_pr_fetches_snapshot_once_in_code_only_mode(monkeypatch, tmp_path: P
     assert captured["paths"] == ["app/main.py"]
 
 
+@pytest.mark.integration
 def test_review_run_failure_closes_control_plane_run_failed(tmp_path: Path, monkeypatch) -> None:
-    """Layer: contract. Verifies review-run execution errors close durable control-plane truth on the real service path."""
+    """Layer: integration. Verifies review-run execution errors close durable control-plane truth on the real service path."""
     repo = tmp_path / "repo"
     _init_repo(repo)
     (repo / "a.txt").write_text("one\n", encoding="utf-8")
@@ -370,6 +364,7 @@ def test_review_run_failure_closes_control_plane_run_failed(tmp_path: Path, monk
     assert effects[-1].observed_result_ref == final_truth.authoritative_result_ref
 
 
+@pytest.mark.contract
 def test_review_run_service_rejects_control_plane_summary_identifier_drift(tmp_path: Path, monkeypatch) -> None:
     """Layer: contract. Verifies review-run execution fails closed if a patched projection source reports identifier drift."""
     repo = tmp_path / "repo"
@@ -417,6 +412,7 @@ def test_review_run_service_rejects_control_plane_summary_identifier_drift(tmp_p
     assert persisted_run.lifecycle_state is RunState.COMPLETED
 
 
+@pytest.mark.contract
 @pytest.mark.parametrize(
     ("summary_overrides", "expected_error"),
     [
@@ -478,6 +474,7 @@ def test_review_run_service_rejects_incomplete_control_plane_lifecycle_projectio
     assert persisted_run.lifecycle_state is RunState.COMPLETED
 
 
+@pytest.mark.contract
 @pytest.mark.parametrize(
     ("summary_overrides", "expected_error"),
     [
@@ -552,6 +549,7 @@ def test_review_run_service_rejects_orphaned_control_plane_identifier_hierarchy(
     assert persisted_run.lifecycle_state is RunState.COMPLETED
 
 
+@pytest.mark.contract
 @pytest.mark.parametrize(
     ("summary_overrides", "expected_error"),
     [
@@ -638,6 +636,7 @@ def test_review_run_service_rejects_orphaned_control_plane_projection_metadata(
     assert persisted_run.lifecycle_state is RunState.COMPLETED
 
 
+@pytest.mark.contract
 def test_review_run_result_rejects_malformed_control_plane_projection() -> None:
     """Layer: contract. Verifies review result JSON fail-closes if control-plane projection framing drifts."""
     result = ReviewRunResult(
@@ -666,6 +665,7 @@ def test_review_run_result_rejects_malformed_control_plane_projection() -> None:
         result.to_dict()
 
 
+@pytest.mark.contract
 @pytest.mark.parametrize(
     ("factory", "expected_error"),
     [

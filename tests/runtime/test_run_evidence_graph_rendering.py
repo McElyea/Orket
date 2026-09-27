@@ -19,7 +19,7 @@ from tests.runtime.run_evidence_graph_test_support import (
 FIXTURES_ROOT = Path(__file__).resolve().parents[1] / "fixtures" / "run_evidence_graph"
 
 
-# Layer: integration
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_build_run_evidence_graph_views_derives_required_filtered_views_from_one_payload(
     tmp_path: Path,
@@ -126,7 +126,7 @@ async def test_build_run_evidence_graph_views_derives_required_filtered_views_fr
     assert "reservation" not in {node["family"] for node in view_by_name["closure_path"]["nodes"]}
 
 
-# Layer: integration
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_write_run_evidence_graph_rendered_artifacts_writes_mermaid_and_html(
     tmp_path: Path,
@@ -167,7 +167,7 @@ async def test_write_run_evidence_graph_rendered_artifacts_writes_mermaid_and_ht
     assert "events.log" in html
 
 
-# Layer: integration
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_build_run_evidence_graph_mermaid_matches_showcase_snapshot(
     tmp_path: Path,

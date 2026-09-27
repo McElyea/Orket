@@ -1,4 +1,4 @@
-# Layer: contract
+# Layers: contract and unit; repository responses are declared in memory.
 
 from __future__ import annotations
 
@@ -82,6 +82,7 @@ def _record(**overrides) -> SandboxLifecycleRecord:
     return SandboxLifecycleRecord(**payload)
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_duplicate_operation_id_reuses_prior_cleanup_claim_result() -> None:
     repo = _FakeRepo(_record())
@@ -105,6 +106,7 @@ async def test_duplicate_operation_id_reuses_prior_cleanup_claim_result() -> Non
     assert second.record.cleanup_owner_instance_id == "sweeper-a"
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_requires_reconciliation_blocks_cleanup_and_state_mutation() -> None:
     repo = _FakeRepo(_record(requires_reconciliation=True))
@@ -129,6 +131,7 @@ async def test_requires_reconciliation_blocks_cleanup_and_state_mutation() -> No
         )
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_transition_state_uses_single_initial_record_read() -> None:
     repo = _FakeRepo(_record(state=SandboxState.ACTIVE, cleanup_state=CleanupState.NONE))

@@ -7,8 +7,10 @@ from orket.runtime.clock_time_authority_policy import (
     validate_clock_time_authority_policy,
 )
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_clock_time_authority_policy_snapshot_contains_expected_defaults() -> None:
     payload = clock_time_authority_policy_snapshot()
     assert payload["schema_version"] == "1.0"

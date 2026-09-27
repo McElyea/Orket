@@ -17,18 +17,22 @@ from orket.runtime.determinism_controls import (
 )
 
 
+@pytest.mark.unit
 def test_resolve_timezone_defaults_to_utc() -> None:
     assert resolve_timezone("", None) == "UTC"
 
 
+@pytest.mark.unit
 def test_resolve_timezone_prefers_first_non_empty() -> None:
     assert resolve_timezone("", "America/Denver", "UTC") == "America/Denver"
 
 
+@pytest.mark.unit
 def test_resolve_locale_defaults_to_c_utf8() -> None:
     assert resolve_locale("", None) == "C.UTF-8"
 
 
+@pytest.mark.unit
 @pytest.mark.parametrize(
     ("raw", "expected"),
     [
@@ -44,20 +48,24 @@ def test_resolve_network_mode_aliases(raw: str, expected: str) -> None:
     assert resolve_network_mode(raw) == expected
 
 
+@pytest.mark.contract
 def test_resolve_network_mode_rejects_unknown_value() -> None:
     with pytest.raises(ValueError) as exc:
         resolve_network_mode("internet")
     assert "E_NETWORK_MODE_INVALID" in str(exc.value)
 
 
+@pytest.mark.unit
 def test_parse_env_allowlist_accepts_csv_and_dedupes() -> None:
     assert parse_env_allowlist("PATH, HOME,PATH") == ["HOME", "PATH"]
 
 
+@pytest.mark.unit
 def test_parse_env_allowlist_accepts_list() -> None:
     assert parse_env_allowlist(["A", "B", "A"]) == ["A", "B"]
 
 
+@pytest.mark.unit
 def test_parse_network_allowlist_accepts_csv_and_dedupes() -> None:
     assert parse_network_allowlist("api.example.com, api.example.com,cache.example.com") == [
         "api.example.com",
@@ -65,23 +73,28 @@ def test_parse_network_allowlist_accepts_csv_and_dedupes() -> None:
     ]
 
 
+@pytest.mark.unit
 def test_resolve_network_allowlist_chooses_first_non_empty_source() -> None:
     assert resolve_network_allowlist("", ["api.example.com"], "cache.example.com") == ["api.example.com"]
 
 
+@pytest.mark.unit
 def test_resolve_clock_mode_aliases() -> None:
     assert resolve_clock_mode("wall-clock") == "wall"
     assert resolve_clock_mode("artifact") == "artifact_replay"
 
 
+@pytest.mark.unit
 def test_resolve_clock_artifact_ref_prefers_first_non_empty() -> None:
     assert resolve_clock_artifact_ref("", "artifacts/clock/run-a.json", "fallback.json") == "artifacts/clock/run-a.json"
 
 
+@pytest.mark.unit
 def test_resolve_env_allowlist_chooses_first_non_empty_source() -> None:
     assert resolve_env_allowlist("", ["A"], "B,C") == ["A"]
 
 
+@pytest.mark.unit
 def test_snapshot_env_allowlist_uses_selected_keys_only() -> None:
     snapshot = snapshot_env_allowlist(
         allowlist=["HOME", "PATH", "MISSING"],
@@ -90,6 +103,7 @@ def test_snapshot_env_allowlist_uses_selected_keys_only() -> None:
     assert snapshot == {"HOME": "/home/user", "PATH": "/bin"}
 
 
+@pytest.mark.unit
 def test_build_determinism_controls_contains_stable_hash() -> None:
     first = build_determinism_controls(
         timezone="UTC",
@@ -117,6 +131,7 @@ def test_build_determinism_controls_contains_stable_hash() -> None:
     assert first["clock_artifact_hash"] == second["clock_artifact_hash"]
 
 
+@pytest.mark.unit
 def test_build_determinism_controls_hash_changes_when_value_changes() -> None:
     first = build_determinism_controls(
         env_allowlist="HOME",
@@ -129,6 +144,7 @@ def test_build_determinism_controls_hash_changes_when_value_changes() -> None:
     assert first["env_allowlist_hash"] != second["env_allowlist_hash"]
 
 
+@pytest.mark.unit
 def test_build_determinism_controls_clock_hash_changes_when_artifact_changes() -> None:
     first = build_determinism_controls(clock_artifact_ref="artifacts/clock/a.json")
     second = build_determinism_controls(clock_artifact_ref="artifacts/clock/b.json")

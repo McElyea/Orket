@@ -13,17 +13,32 @@ engine initialization. Required handlers execute in the native worker, retaining
 failure precedence and production/staging refusal. Other logging preparation and
 required producers remain open. Contract: `docs/specs/API_RUNTIME_LIFECYCLE.md`.
 
-E1 adds canonical markers to 841 reviewed existing cases and repairs governance,
-driver and pipeline fixtures. The ownership scanner recognizes captured bindings
+E1 has marked 1,742 reviewed existing cases across the 0.6.108 and 0.6.109
+checkpoints, and repairs governance, driver and pipeline fixtures.
+The ownership scanner recognizes captured bindings
 without changing its exact caller map. Fifty-two enum declarations retain existing
 diagnostic and JSON behavior under declaration-local Ruff exceptions, with explicit
-member, reexport and serialization controls. The same 686 selected cases pass in
-source and installed Windows Python 3.11/3.12; package parity, real CLI paths and
-strict tool-audit payload readback pass. Ruff, dependency and critical no-op checks
-pass. Taxonomy still fails with 2,809 missing layers among 10,606 collected cases;
-full coverage, hosted Quality, Linux application proof and whole-lane acceptance
-remain open. The architectural-truth plan records the frozen scope and proof limits.
+member, reexport and serialization controls. The published 0.6.108 cohort has 686
+passing cases in source and installed Windows Python 3.11/3.12, with package parity,
+real CLI paths and strict tool-audit payload readback. That checkpoint also passes
+Ruff, dependency and critical no-op checks. The 0.6.109 checkpoint adds 901
+reviewed markers: runtime collection includes 709 cases, 43 application contract
+cases execute successfully, and a further 302-case scoped collection preserves
+all 270 newly reviewed classifications and 32 existing ones. These collections
+do not establish execution of those test bodies. Fresh global collection confirms
+all 901 reviewed classifications: 10,606 cases, 1,908 still missing layers, no
+conflicts or collection errors. Strict taxonomy still fails; Ruff and independent
+test-body parity pass. Current checkpoint installation, full coverage, hosted
+Quality, Linux application proof and
+whole-lane acceptance remain open. The architectural-truth plan records exact
+source bindings and proof limits.
 Contract: `docs/specs/PUBLIC_ENUM_REPRESENTATION_CONTRACT.md`.
+
+Supporting cancellation, preparation and cleanup diagnostics have reproduced
+blocking-handler and abandoned-cleanup failures. Their accepted target contract
+is `docs/specs/RUNTIME_FAILURE_DIAGNOSTICS.md`; implementation, handler migration
+and scoped closing acceptance remain pending. The 0.6.109 checkpoint records the
+target and opening evidence without changing those runtime paths.
 
 The 0.6.107 checkpoint corrects the five retained optional logging openings. Its
 combined 385-case cohort passes in source and installed Windows Python 3.11/3.12,

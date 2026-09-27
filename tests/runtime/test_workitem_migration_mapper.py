@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import pytest
+
 from orket.runtime.migrations.workitem_mapper import map_legacy_records
+
+pytestmark = pytest.mark.contract
 
 
 def test_migration_rock_epic_issue_mapping_is_lossless() -> None:

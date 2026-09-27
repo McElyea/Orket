@@ -7,8 +7,10 @@ from orket.runtime.runtime_config_ownership_map import (
     validate_runtime_config_ownership_map,
 )
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_runtime_config_ownership_map_snapshot_contains_expected_key() -> None:
     payload = runtime_config_ownership_map_snapshot()
     assert payload["schema_version"] == "1.0"

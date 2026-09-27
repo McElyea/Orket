@@ -7,8 +7,10 @@ from orket.runtime.narration_effect_audit_policy import (
     validate_narration_effect_audit_policy,
 )
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_narration_effect_audit_policy_snapshot_contains_expected_tools() -> None:
     payload = narration_effect_audit_policy_snapshot()
     assert payload["schema_version"] == "1.0"

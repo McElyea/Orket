@@ -19,7 +19,7 @@ def _manifest(run_id: str, tool_name: str) -> dict[str, str]:
     }
 
 
-# Layer: contract
+@pytest.mark.unit
 def test_build_tool_scoreboard_is_reproducible_from_same_ledger_events() -> None:
     events = [
         {"event_seq": 1, "kind": "tool_call", "tool_name": "write_file"},
@@ -40,7 +40,7 @@ def test_build_tool_scoreboard_is_reproducible_from_same_ledger_events() -> None
     assert first["tools"][0]["success_rate"] == 1.0
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_build_tool_scoreboard_fails_closed_on_incomplete_ledger_coverage() -> None:
     events = [
         {"event_seq": 1, "kind": "tool_call", "tool_name": "write_file"},
@@ -50,7 +50,7 @@ def test_build_tool_scoreboard_fails_closed_on_incomplete_ledger_coverage() -> N
         _ = build_tool_scoreboard(events)
 
 
-# Layer: integration
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_build_tool_scoreboard_from_protocol_ledger_events(tmp_path) -> None:
     repo = AsyncProtocolRunLedgerRepository(tmp_path)
@@ -93,7 +93,7 @@ async def test_build_tool_scoreboard_from_protocol_ledger_events(tmp_path) -> No
     assert scoreboard["tools"][0]["invocations"] == 1
 
 
-# Layer: integration
+@pytest.mark.unit
 def test_evaluate_promotion_gate_pass_and_fail_paths() -> None:
     passing = evaluate_promotion_gate(
         tool_score={"tool": "write_file", "invocations": 10, "success_rate": 0.97},

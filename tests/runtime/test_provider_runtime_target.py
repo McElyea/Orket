@@ -6,6 +6,8 @@ import pytest
 from orket.runtime import provider_runtime_target as runtime_target
 from orket.runtime.config.gguf_model_inventory import GGUFModelInventoryRecord, GGUFModelInventoryResult
 
+pytestmark = pytest.mark.contract
+
 
 @pytest.mark.asyncio
 async def test_resolve_provider_runtime_target_auto_selects_ollama_from_cli_inventory(

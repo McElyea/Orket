@@ -7,8 +7,10 @@ from orket.runtime.sampling_discipline_guide import (
     validate_sampling_discipline_guide,
 )
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_sampling_discipline_guide_snapshot_contains_expected_event_classes() -> None:
     payload = sampling_discipline_guide_snapshot()
     assert payload["schema_version"] == "1.0"

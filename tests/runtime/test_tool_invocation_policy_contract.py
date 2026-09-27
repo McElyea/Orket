@@ -8,8 +8,10 @@ from orket.runtime.tool_invocation_policy_contract import (
     validate_tool_invocation_policy_contract,
 )
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_tool_invocation_policy_contract_snapshot_contains_epic_policy() -> None:
     payload = tool_invocation_policy_contract_snapshot()
     assert payload["schema_version"] == "1.0"

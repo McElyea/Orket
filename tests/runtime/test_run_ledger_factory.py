@@ -2,10 +2,14 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
 from orket.adapters.storage.async_repositories import AsyncRunLedgerRepository
 from orket.application.services.dual_write_run_ledger import AsyncDualModeLedgerRepository
 from orket.runtime.run_ledger_factory import build_run_ledger_repository
+
+pytestmark = pytest.mark.unit
 
 
 def test_build_run_ledger_repository_returns_sqlite_for_sqlite_mode(tmp_path: Path) -> None:

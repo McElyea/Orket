@@ -8,8 +8,10 @@ from orket.runtime.timeout_streaming_contracts import (
     validate_streaming_event_trace,
 )
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_timeout_semantics_snapshot_contains_expected_surfaces() -> None:
     payload = timeout_semantics_snapshot()
     assert payload["schema_version"] == "1.0"

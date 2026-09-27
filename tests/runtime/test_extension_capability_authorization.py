@@ -11,6 +11,8 @@ from orket.adapters.storage.async_control_plane_record_repository import AsyncCo
 from orket.application.services.extension_catalog_commands import prepare_extension_manager
 from orket.extensions.manager import ExtensionManager
 
+pytestmark = pytest.mark.integration
+
 PROOF_REF = "python -m pytest -q tests/runtime/test_extension_capability_authorization.py"
 HOST_CONTROLS_KEY = "__orket_host_capability_authorization__"
 

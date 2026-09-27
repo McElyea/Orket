@@ -2,7 +2,11 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
+import pytest
+
 from orket.runtime.retention_policy import RetentionPolicy, build_retention_plan
+
+pytestmark = pytest.mark.unit
 
 
 def _action_map(plan: dict) -> dict[str, dict]:

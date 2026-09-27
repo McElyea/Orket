@@ -7,8 +7,10 @@ from orket.runtime.runtime_truth_trace_ids import (
     runtime_truth_trace_ids_snapshot,
 )
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_runtime_truth_trace_ids_snapshot_contains_expected_rows() -> None:
     payload = runtime_truth_trace_ids_snapshot()
     assert payload["schema_version"] == "1.0"

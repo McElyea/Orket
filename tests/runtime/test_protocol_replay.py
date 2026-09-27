@@ -115,18 +115,19 @@ def _matching_run_started_artifacts(*, workspace: Path | None = None) -> dict[st
     return artifacts
 
 
+@pytest.mark.integration
 def test_artifact_digest_inventory_is_stable_and_sorted(tmp_path: Path) -> None:
     artifact_root = tmp_path / "artifacts"
     (artifact_root / "b").mkdir(parents=True, exist_ok=True)
     (artifact_root / "a").mkdir(parents=True, exist_ok=True)
     (artifact_root / "b" / "z.txt").write_text("z", encoding="utf-8")
     (artifact_root / "a" / "x.txt").write_text("x", encoding="utf-8")
-
     inventory = artifact_digest_inventory(artifact_root)
     assert [row["path"] for row in inventory] == ["a/x.txt", "b/z.txt"]
     assert all(len(row["sha256"]) == 64 for row in inventory)
 
 
+@pytest.mark.contract
 def test_receipt_digest_inventory_is_stable_and_sorted(tmp_path: Path) -> None:
     receipts = tmp_path / "receipts.log"
     receipts.write_text(
@@ -146,6 +147,7 @@ def test_receipt_digest_inventory_is_stable_and_sorted(tmp_path: Path) -> None:
     assert inventory[1]["execution_capsule"] == {}
 
 
+@pytest.mark.contract
 def test_receipt_digest_inventory_surfaces_execution_capsule_subset(tmp_path: Path) -> None:
     receipts = tmp_path / "receipts.log"
     _write_receipts(receipts, operation_id="op-clock")
@@ -159,6 +161,7 @@ def test_receipt_digest_inventory_surfaces_execution_capsule_subset(tmp_path: Pa
     assert capsule["clock_artifact_hash"] == "c" * 64
 
 
+@pytest.mark.integration
 def test_protocol_replay_engine_reconstructs_summary(tmp_path: Path) -> None:
     events = tmp_path / "runs" / "sess-1" / "events.log"
     _write_run_events(events, status="incomplete", operation_ok=True)
@@ -166,10 +169,8 @@ def test_protocol_replay_engine_reconstructs_summary(tmp_path: Path) -> None:
     artifacts = tmp_path / "runs" / "sess-1" / "artifacts"
     artifacts.mkdir(parents=True, exist_ok=True)
     (artifacts / "out.txt").write_text("ok", encoding="utf-8")
-
     engine = ProtocolReplayEngine()
     replay = engine.replay_from_ledger(events_log_path=events, artifact_root=artifacts)
-
     assert replay["session_id"] == "sess-1"
     assert replay["status"] == "incomplete"
     assert replay["operation_count"] == 1
@@ -182,7 +183,7 @@ def test_protocol_replay_engine_reconstructs_summary(tmp_path: Path) -> None:
     assert len(replay["artifact_inventory"]) == 1
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_protocol_replay_engine_compare_reports_match_for_identical_runs(tmp_path: Path) -> None:
     run_a = tmp_path / "run_a" / "events.log"
     run_b = tmp_path / "run_b" / "events.log"
@@ -190,7 +191,6 @@ def test_protocol_replay_engine_compare_reports_match_for_identical_runs(tmp_pat
     _write_run_events(run_b, status="incomplete", operation_ok=True)
     _write_receipts(run_a.with_name("receipts.log"))
     _write_receipts(run_b.with_name("receipts.log"))
-
     engine = ProtocolReplayEngine()
     comparison = engine.compare_replays(run_a_events_path=run_a, run_b_events_path=run_b)
 
@@ -203,7 +203,7 @@ def test_protocol_replay_engine_compare_reports_match_for_identical_runs(tmp_pat
     assert drift_report["primary_layer"] == "none"
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_protocol_replay_engine_compare_ignores_fresh_session_identity_when_state_matches(tmp_path: Path) -> None:
     run_a = tmp_path / "run_a" / "events.log"
     run_b = tmp_path / "run_b" / "events.log"
@@ -220,7 +220,7 @@ def test_protocol_replay_engine_compare_ignores_fresh_session_identity_when_stat
     assert comparison["state_digest_a"] == comparison["state_digest_b"]
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_protocol_replay_engine_compare_reports_divergence(tmp_path: Path) -> None:
     run_a = tmp_path / "run_a" / "events.log"
     run_b = tmp_path / "run_b" / "events.log"
@@ -244,7 +244,7 @@ def test_protocol_replay_engine_compare_reports_divergence(tmp_path: Path) -> No
     assert drift_report["primary_layer"] == "tool_behavior_drift"
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_protocol_replay_engine_includes_runtime_contract_snapshot_versions(tmp_path: Path) -> None:
     events = tmp_path / "runs" / "sess-contracts" / "events.log"
     _write_run_events(events, status="incomplete", operation_ok=True)
@@ -261,7 +261,7 @@ def test_protocol_replay_engine_includes_runtime_contract_snapshot_versions(tmp_
     assert replay["runtime_contract_hash"] == runtime_contract_hash(contracts, replay["runtime_policy_versions"])
 
 
-# Layer: contract
+@pytest.mark.unit
 def test_runtime_contract_hash_changes_when_runtime_policy_versions_change() -> None:
     base_contracts = {
         "tool_registry_version": "1.2.0",
@@ -277,7 +277,7 @@ def test_runtime_contract_hash_changes_when_runtime_policy_versions_change() -> 
     assert runtime_contract_hash(base_contracts, base_policies) != runtime_contract_hash(base_contracts, changed_policies)
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_protocol_replay_engine_rejects_incompatible_ledger_schema_version(tmp_path: Path) -> None:
     events = tmp_path / "runs" / "sess-schema-mismatch" / "events.log"
     ledger = AppendOnlyRunLedger(events)
@@ -293,7 +293,7 @@ def test_protocol_replay_engine_rejects_incompatible_ledger_schema_version(tmp_p
         raise AssertionError("expected ledger schema incompatibility failure")
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_protocol_replay_engine_requires_complete_lifecycle_when_enabled(tmp_path: Path) -> None:
     events = tmp_path / "runs" / "sess-incomplete-lifecycle" / "events.log"
     ledger = AppendOnlyRunLedger(events)
@@ -319,7 +319,7 @@ def test_protocol_replay_engine_requires_complete_lifecycle_when_enabled(tmp_pat
     assert "run_finalized" in str(exc.value)
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_protocol_replay_engine_rejects_runtime_contract_mismatch_when_enforced(tmp_path: Path) -> None:
     events = tmp_path / "runs" / "sess-compat-mismatch" / "events.log"
     current_contracts = runtime_contract_versions_snapshot()
@@ -356,7 +356,7 @@ def test_protocol_replay_engine_rejects_runtime_contract_mismatch_when_enforced(
     assert "tool_registry_version" in str(exc.value)
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_protocol_replay_engine_requires_contract_artifacts_when_enforced(tmp_path: Path) -> None:
     events = tmp_path / "runs" / "sess-artifacts-missing" / "events.log"
     _write_run_events(events, status="incomplete", operation_ok=True)
@@ -372,7 +372,7 @@ def test_protocol_replay_engine_requires_contract_artifacts_when_enforced(tmp_pa
     assert "tool_registry_version" in str(exc.value)
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_protocol_replay_engine_rejects_capability_manifest_source_mismatch_when_enforced(tmp_path: Path) -> None:
     events = tmp_path / "runs" / "sess-capability-mismatch" / "events.log"
     workspace = tmp_path / "workspace-capability"
@@ -394,7 +394,7 @@ def test_protocol_replay_engine_rejects_capability_manifest_source_mismatch_when
     assert "capability_manifest_source_tool_contract_snapshot_hash" in str(exc.value)
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_protocol_replay_engine_requires_workspace_snapshot_for_workspace_runs_when_enforced(tmp_path: Path) -> None:
     events = tmp_path / "runs" / "sess-workspace-snapshot-missing" / "events.log"
     run_started_artifacts = _matching_run_started_artifacts(workspace=None)
@@ -411,7 +411,7 @@ def test_protocol_replay_engine_requires_workspace_snapshot_for_workspace_runs_w
     assert "workspace_state_snapshot.workspace_hash" in str(exc.value)
 
 
-# Layer: contract
+@pytest.mark.integration
 def test_protocol_replay_engine_rejects_workspace_snapshot_hash_mismatch_when_enforced(tmp_path: Path) -> None:
     events = tmp_path / "runs" / "sess-workspace-snapshot-mismatch" / "events.log"
     workspace = tmp_path / "workspace-snapshot"

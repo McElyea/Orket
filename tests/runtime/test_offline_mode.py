@@ -10,20 +10,24 @@ from orket.runtime.offline_mode import (
 )
 
 
+@pytest.mark.unit
 def test_resolve_network_mode_defaults_offline() -> None:
     assert resolve_network_mode() == "offline"
 
 
+@pytest.mark.contract
 def test_resolve_network_mode_rejects_unknown_value() -> None:
     with pytest.raises(OfflineModeError) as exc:
         resolve_network_mode("invalid-mode")
     assert exc.value.code == "E_NETWORK_MODE_INVALID"
 
 
+@pytest.mark.contract
 def test_default_offline_surface_requires_core_v1_commands() -> None:
     assert_default_offline_surface(["init", "api_add", "refactor"])
 
 
+@pytest.mark.contract
 def test_command_offline_capability_unknown_raises() -> None:
     with pytest.raises(OfflineModeError) as exc:
         command_offline_capability("unknown")

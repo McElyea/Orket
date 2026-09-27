@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import pytest
+
 from orket.runtime import protocol_error_codes as codes
+
+pytestmark = pytest.mark.contract
 
 
 def test_all_protocol_error_codes_are_unique() -> None:
@@ -92,7 +96,7 @@ def test_error_family_returns_exact_or_prefix_for_registered_codes() -> None:
     assert codes.error_family("X_CUSTOM:detail") == ""
 
 
-# Layer: unit
+# Layer: contract
 def test_is_registered_protocol_error_code_accepts_replay_codes() -> None:
     assert codes.is_registered_protocol_error_code(codes.E_REPLAY_OPERATION_MISSING) is True
     assert codes.is_registered_protocol_error_code("E_REPLAY_COMPATIBILITY_MISMATCH:tool_registry_version") is True
@@ -100,7 +104,7 @@ def test_is_registered_protocol_error_code_accepts_replay_codes() -> None:
     assert codes.is_registered_protocol_error_code("E_REPLAY_INCOMPLETE:run_finalized") is True
 
 
-# Layer: unit
+# Layer: contract
 def test_error_description_returns_replay_code_messages() -> None:
     assert "recorded operation result" in codes.error_description(codes.E_REPLAY_OPERATION_MISSING)
     assert "contract mismatch" in codes.error_description("E_REPLAY_COMPATIBILITY_MISMATCH:field")

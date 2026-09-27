@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from orket.adapters.storage.protocol_append_only_ledger import AppendOnlyRunLedger
 from orket.runtime.protocol_determinism_campaign import compare_protocol_determinism_campaign
 
@@ -39,6 +41,7 @@ def _write_run(path: Path, *, status: str, ok: bool, session_id: str = "sess-1")
     )
 
 
+@pytest.mark.integration
 def test_compare_protocol_determinism_campaign_returns_clean_match(tmp_path: Path) -> None:
     runs_root = tmp_path / "runs"
     _write_run(runs_root / "run-a", status="incomplete", ok=True)
@@ -53,6 +56,7 @@ def test_compare_protocol_determinism_campaign_returns_clean_match(tmp_path: Pat
     assert payload["candidate_count"] == 2
 
 
+@pytest.mark.integration
 def test_compare_protocol_determinism_campaign_detects_mismatch(tmp_path: Path) -> None:
     runs_root = tmp_path / "runs"
     _write_run(runs_root / "run-a", status="incomplete", ok=True)
@@ -67,7 +71,7 @@ def test_compare_protocol_determinism_campaign_detects_mismatch(tmp_path: Path) 
     assert any(row["run_id"] == "run-b" and row["deterministic_match"] is False for row in payload["comparisons"])
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_compare_protocol_determinism_campaign_surfaces_primary_drift_layer(tmp_path: Path) -> None:
     runs_root = tmp_path / "runs"
     _write_run(runs_root / "run-a", status="incomplete", ok=True)
@@ -84,6 +88,7 @@ def test_compare_protocol_determinism_campaign_surfaces_primary_drift_layer(tmp_
     assert drift_report["drift_detected"] is True
 
 
+@pytest.mark.integration
 def test_compare_protocol_determinism_campaign_supports_explicit_run_id_filter(tmp_path: Path) -> None:
     runs_root = tmp_path / "runs"
     _write_run(runs_root / "run-a", status="incomplete", ok=True)
@@ -99,6 +104,7 @@ def test_compare_protocol_determinism_campaign_supports_explicit_run_id_filter(t
     assert sorted(row["run_id"] for row in payload["comparisons"]) == ["run-a", "run-b"]
 
 
+@pytest.mark.integration
 def test_compare_protocol_determinism_campaign_marks_missing_events_candidates(tmp_path: Path) -> None:
     runs_root = tmp_path / "runs"
     _write_run(runs_root / "run-a", status="incomplete", ok=True)
@@ -114,6 +120,7 @@ def test_compare_protocol_determinism_campaign_marks_missing_events_candidates(t
     assert missing["status"] == "missing_events"
 
 
+@pytest.mark.contract
 def test_compare_protocol_determinism_campaign_raises_when_no_runs_found(tmp_path: Path) -> None:
     runs_root = tmp_path / "runs"
     runs_root.mkdir(parents=True, exist_ok=True)
@@ -129,6 +136,7 @@ def test_compare_protocol_determinism_campaign_raises_when_no_runs_found(tmp_pat
         raise AssertionError("expected ValueError for empty runs directory")
 
 
+@pytest.mark.contract
 def test_compare_protocol_determinism_campaign_rejects_traversal_run_id(tmp_path: Path) -> None:
     runs_root = tmp_path / "runs"
     _write_run(runs_root / "run-a", status="incomplete", ok=True)

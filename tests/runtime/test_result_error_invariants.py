@@ -8,8 +8,10 @@ from orket.core.contracts.result_error_invariants import (
     validate_result_error_invariant_contract,
 )
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_validate_result_error_invariant_accepts_failed_with_failure_reason() -> None:
     assert (
         validate_result_error_invariant(

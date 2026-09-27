@@ -63,7 +63,7 @@ def _complete_payload() -> dict[str, object]:
     )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_build_blocked_run_evidence_graph_payload_emits_blocked_artifact_shell() -> None:
     payload = build_blocked_run_evidence_graph_payload(
         run_id="cards-epic-run:sess-graph-blocked:build-1:20360305T120000000000Z",
@@ -87,7 +87,7 @@ def test_build_blocked_run_evidence_graph_payload_emits_blocked_artifact_shell()
     assert payload["edges"] == []
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_validate_run_evidence_graph_payload_rejects_noncanonical_view_order() -> None:
     payload = _complete_payload()
     payload["selected_views"] = ["resource_authority_path", "full_lineage"]
@@ -96,7 +96,7 @@ def test_validate_run_evidence_graph_payload_rejects_noncanonical_view_order() -
         validate_run_evidence_graph_payload(payload)
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_build_run_evidence_graph_payload_canonicalizes_authority_and_decision_view_order() -> None:
     payload = build_run_evidence_graph_payload(
         run_id="cards-epic-run:sess-graph-runtime:build-2:20360305T120000000000Z",
@@ -126,7 +126,7 @@ def test_build_run_evidence_graph_payload_canonicalizes_authority_and_decision_v
     assert payload["selected_views"] == ["full_lineage", "authority", "decision"]
 
 
-# Layer: integration
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_write_run_evidence_graph_artifact_writes_canonical_json(tmp_path: Path) -> None:
     payload = _complete_payload()

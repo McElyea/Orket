@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import pytest
+
 from orket.runtime.run_summary import build_run_summary_payload, reconstruct_run_summary
+
+pytestmark = pytest.mark.contract
 
 _STARTED_AT = "2036-03-05T12:00:00+00:00"
 _FINALIZED_AT = "2036-03-05T12:00:05+00:00"
 _PACKET2_KEY = "truthful_runtime_packet2"
-
 
 def _run_identity(*, run_id: str) -> dict[str, str | bool]:
     return {
@@ -16,7 +19,6 @@ def _run_identity(*, run_id: str) -> dict[str, str | bool]:
         "projection_source": "session_bootstrap_artifacts",
         "projection_only": True,
     }
-
 
 def _control_plane_refs(*, session_id: str, role_name: str) -> dict[str, str]:
     return {
@@ -37,7 +39,6 @@ def _packet2_payload(*, packet2_facts: dict) -> dict:
             "packet2_facts": packet2_facts,
         },
     )[_PACKET2_KEY]
-
 
 # Layer: contract
 def test_packet2_repair_ledger_contract() -> None:
@@ -78,7 +79,6 @@ def test_packet2_repair_ledger_contract() -> None:
             "material_change": True,
         }
     ]
-
 
 # Layer: contract
 def test_packet2_phase_c_contract_allows_non_repair_sections() -> None:
@@ -222,7 +222,7 @@ def test_packet2_extension_is_omitted_without_repair_entries() -> None:
     assert _PACKET2_KEY not in payload
 
 
-# Layer: integration
+# Layer: contract
 def test_packet2_reconstruction_matches_emitted_summary_for_phase_c_sections() -> None:
     events = [
         {
@@ -340,7 +340,7 @@ def test_packet2_reconstruction_matches_emitted_summary_for_phase_c_sections() -
     )
     assert reconstructed == emitted
 
-# Layer: integration
+# Layer: contract
 def test_packet2_reconstruction_matches_emitted_summary() -> None:
     events = [
         {

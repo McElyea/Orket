@@ -13,6 +13,8 @@ from orket.core.contracts.tool_invocation_contracts import (
 )
 from orket.runtime.protocol_receipt_materializer import materialize_protocol_receipts
 
+pytestmark = pytest.mark.integration
+
 
 def _write_turn_receipts(path: Path, rows: list[dict]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)

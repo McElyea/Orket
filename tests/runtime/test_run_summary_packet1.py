@@ -8,6 +8,8 @@ from orket.runtime.run_summary import (
     reconstruct_run_summary,
 )
 
+pytestmark = pytest.mark.contract
+
 _STARTED_AT = "2036-03-05T12:00:00+00:00"
 _FINALIZED_AT = "2036-03-05T12:00:05+00:00"
 _PACKET1_KEY = "truthful_runtime_packet1"
@@ -242,7 +244,7 @@ def test_packet1_negative_detector_case_has_no_defect() -> None:
     assert packet1["packet1_conformance"] == {"status": "conformant", "reasons": []}
 
 
-# Layer: integration
+# Layer: contract
 def test_packet1_reconstruction_matches_emitted_summary() -> None:
     events = [
         {

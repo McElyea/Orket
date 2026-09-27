@@ -8,15 +8,14 @@ import pytest
 from orket.application.services.runtime_verifier import RuntimeVerifier, build_runtime_guard_contract
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_runtime_verifier_passes_valid_python(tmp_path: Path):
-    """Layer: contract. Verifies the builtin python profile command plan executes a real verifier command."""
+    """Layer: integration. Verifies the builtin python profile command plan executes a real verifier command."""
     agent_output = tmp_path / "agent_output"
     agent_output.mkdir(parents=True, exist_ok=True)
     (agent_output / "main.py").write_text("print('ok')\n", encoding="utf-8")
-
     result = await RuntimeVerifier(tmp_path).verify()
-
     assert result.ok is True
     assert "agent_output/main.py" in result.checked_files
     assert result.errors == []
@@ -35,15 +34,14 @@ async def test_runtime_verifier_passes_valid_python(tmp_path: Path):
     assert result.guard_contract.violations == []
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_runtime_verifier_fails_invalid_python(tmp_path: Path):
-    """Layer: contract. Verifies syntax failures remain explicit even when builtin verifier commands also run."""
+    """Layer: integration. Verifies syntax failures remain explicit even when builtin verifier commands also run."""
     agent_output = tmp_path / "agent_output"
     agent_output.mkdir(parents=True, exist_ok=True)
     (agent_output / "main.py").write_text("def broken(:\n    pass\n", encoding="utf-8")
-
     result = await RuntimeVerifier(tmp_path).verify()
-
     assert result.ok is False
     assert "agent_output/main.py" in result.checked_files
     assert len(result.errors) >= 1
@@ -56,15 +54,14 @@ async def test_runtime_verifier_fails_invalid_python(tmp_path: Path):
     assert result.guard_contract.violations[0].evidence
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_runtime_verifier_runs_policy_commands(tmp_path: Path):
     agent_output = tmp_path / "agent_output"
     agent_output.mkdir(parents=True, exist_ok=True)
     (agent_output / "main.py").write_text("print('ok')\n", encoding="utf-8")
-
     org = type("Org", (), {"process_rules": {"runtime_verifier_commands": [[sys.executable, "-c", "print('ok')"]]}})
     result = await RuntimeVerifier(tmp_path, organization=org).verify()
-
     assert result.ok is True
     assert len(result.command_results) == 1
     assert result.command_results[0]["returncode"] == 0
@@ -73,6 +70,7 @@ async def test_runtime_verifier_runs_policy_commands(tmp_path: Path):
     assert result.overall_evidence_class == "command_execution"
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_runtime_verifier_runs_issue_scoped_behavioral_commands(tmp_path: Path):
     agent_output = tmp_path / "agent_output"
@@ -92,7 +90,6 @@ async def test_runtime_verifier_runs_issue_scoped_behavioral_commands(tmp_path: 
         encoding="utf-8",
     )
     (tests_root / "test_smoke.py").write_text("def test_smoke():\n    assert True\n", encoding="utf-8")
-
     result = await RuntimeVerifier(
         tmp_path,
         artifact_contract={"kind": "artifact", "primary_output": "agent_output/README.md"},
@@ -123,7 +120,6 @@ async def test_runtime_verifier_runs_issue_scoped_behavioral_commands(tmp_path: 
             }
         },
     ).verify()
-
     assert result.ok is True
     assert len(result.command_results) == 3
     assert result.command_results[0]["policy_source"] == "issue_override"
@@ -144,6 +140,7 @@ async def test_runtime_verifier_runs_issue_scoped_behavioral_commands(tmp_path: 
     assert result.evidence_summary["behavioral_verification"]["evaluated"] is True
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_runtime_verifier_supports_nested_list_json_assertions(tmp_path: Path):
     agent_output = tmp_path / "agent_output"
@@ -153,7 +150,6 @@ async def test_runtime_verifier_supports_nested_list_json_assertions(tmp_path: P
         "print(json.dumps({'layers': [['task1'], ['task2', 'task3'], ['task4']]}))\n",
         encoding="utf-8",
     )
-
     result = await RuntimeVerifier(
         tmp_path,
         issue_params={
@@ -168,21 +164,19 @@ async def test_runtime_verifier_supports_nested_list_json_assertions(tmp_path: P
             }
         },
     ).verify()
-
     assert result.ok is True
     assert result.command_results[0]["stdout_contract_ok"] is True
     assert result.command_results[0]["stdout_json"]["layers"][1][1] == "task3"
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_runtime_verifier_fails_on_runtime_command_error(tmp_path: Path):
     agent_output = tmp_path / "agent_output"
     agent_output.mkdir(parents=True, exist_ok=True)
     (agent_output / "main.py").write_text("print('ok')\n", encoding="utf-8")
-
     org = type("Org", (), {"process_rules": {"runtime_verifier_commands": [[sys.executable, "-c", "import sys; sys.exit(3)"]]}})
     result = await RuntimeVerifier(tmp_path, organization=org).verify()
-
     assert result.ok is False
     assert len(result.errors) >= 1
     assert result.command_results[0]["returncode"] == 3
@@ -190,14 +184,14 @@ async def test_runtime_verifier_fails_on_runtime_command_error(tmp_path: Path):
     assert result.failure_breakdown.get("command_failed", 0) >= 1
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_runtime_verifier_preserves_traceback_tail_for_long_inline_commands(tmp_path: Path):
-    """Layer: contract. Verifies long inline verifier commands still surface the exception tail in stored stderr and summary errors."""
+    """Layer: integration. Verifies long inline verifier commands still surface the exception tail in stored stderr and summary errors."""
     agent_output = tmp_path / "agent_output"
     agent_output.mkdir(parents=True, exist_ok=True)
     (agent_output / "main.py").write_text("print('ok')\n", encoding="utf-8")
     padding = "x=0;" * 700
-
     result = await RuntimeVerifier(
         tmp_path,
         issue_params={
@@ -208,7 +202,6 @@ async def test_runtime_verifier_preserves_traceback_tail_for_long_inline_command
             }
         },
     ).verify()
-
     assert result.ok is False
     assert result.command_results[0]["returncode"] == 1
     assert "RuntimeError: tail-visible" in result.command_results[0]["stderr"]
@@ -217,11 +210,11 @@ async def test_runtime_verifier_preserves_traceback_tail_for_long_inline_command
     assert "RuntimeError: tail-visible" in result.errors[0]
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_runtime_verifier_rejects_issue_command_cwd_escape(tmp_path: Path):
     agent_output = tmp_path / "agent_output"
     agent_output.mkdir(parents=True, exist_ok=True)
-
     result = await RuntimeVerifier(
         tmp_path,
         issue_params={
@@ -232,7 +225,6 @@ async def test_runtime_verifier_rejects_issue_command_cwd_escape(tmp_path: Path)
             }
         },
     ).verify()
-
     assert result.ok is False
     assert result.command_results[0]["returncode"] == 126
     assert result.command_results[0]["working_directory"] == ".."
@@ -240,12 +232,12 @@ async def test_runtime_verifier_rejects_issue_command_cwd_escape(tmp_path: Path)
     assert "escapes workspace" in result.command_results[0]["stderr"]
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_runtime_verifier_can_require_deployment_files(tmp_path: Path):
     agent_output = tmp_path / "agent_output"
     agent_output.mkdir(parents=True, exist_ok=True)
     (agent_output / "main.py").write_text("print('ok')\n", encoding="utf-8")
-
     org = type(
         "Org",
         (),
@@ -259,18 +251,17 @@ async def test_runtime_verifier_can_require_deployment_files(tmp_path: Path):
         },
     )
     result = await RuntimeVerifier(tmp_path, organization=org).verify()
-
     assert result.ok is False
     assert any("missing deployment artifacts" in err for err in result.errors)
     assert result.failure_breakdown.get("deployment_missing", 0) >= 1
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_runtime_verifier_uses_deployment_planner_required_files_when_present(tmp_path: Path):
     agent_output = tmp_path / "agent_output"
     agent_output.mkdir(parents=True, exist_ok=True)
     (agent_output / "main.py").write_text("print('ok')\n", encoding="utf-8")
-
     org = type(
         "Org",
         (),
@@ -289,6 +280,7 @@ async def test_runtime_verifier_uses_deployment_planner_required_files_when_pres
     assert any("custom.Dockerfile" in err for err in result.errors)
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_runtime_verifier_uses_profile_policy_commands(tmp_path: Path):
     agent_output = tmp_path / "agent_output"
@@ -312,6 +304,7 @@ async def test_runtime_verifier_uses_profile_policy_commands(tmp_path: Path):
     assert result.command_results[0]["policy_source"] == "profile_policy:python"
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_runtime_verifier_classifies_timeout_failures(tmp_path: Path):
     agent_output = tmp_path / "agent_output"
@@ -333,6 +326,7 @@ async def test_runtime_verifier_classifies_timeout_failures(tmp_path: Path):
     assert result.failure_breakdown.get("timeout", 0) >= 1
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_runtime_verifier_backend_profile_requires_backend_deployment_defaults(tmp_path: Path):
     agent_output = tmp_path / "agent_output"
@@ -359,6 +353,7 @@ async def test_runtime_verifier_backend_profile_requires_backend_deployment_defa
     assert "docker-compose.yml" not in joined
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_runtime_verifier_microservices_pattern_requires_microservices_deployment_defaults(tmp_path: Path):
     agent_output = tmp_path / "agent_output"
@@ -384,6 +379,7 @@ async def test_runtime_verifier_microservices_pattern_requires_microservices_dep
     assert "Dockerfile.worker" in joined
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_runtime_verifier_rejects_shell_string_commands(tmp_path: Path):
     """Layer: contract. Verifies runtime verifier refuses shell-string commands instead of executing them with shell=True."""
@@ -399,17 +395,16 @@ async def test_runtime_verifier_rejects_shell_string_commands(tmp_path: Path):
             }
         },
     )
-
     result = await RuntimeVerifier(tmp_path, organization=org).verify()
-
     assert result.ok is False
     assert result.command_results[0]["returncode"] == 126
     assert "argv lists" in result.command_results[0]["stderr"]
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_runtime_verifier_reports_when_no_builtin_defaults_exist_for_node_profile(tmp_path: Path):
-    """Layer: contract. Verifies command-plan source is explicit when a stack profile has no builtin verifier commands."""
+    """Layer: unit. Verifies command-plan source is explicit when a stack profile has no builtin verifier commands."""
     agent_output = tmp_path / "agent_output"
     agent_output.mkdir(parents=True, exist_ok=True)
     (agent_output / "package.json").write_text("{\"name\": \"demo\"}\n", encoding="utf-8")
@@ -422,13 +417,12 @@ async def test_runtime_verifier_reports_when_no_builtin_defaults_exist_for_node_
             }
         },
     )
-
     plan = await RuntimeVerifier(tmp_path, organization=org)._resolve_runtime_command_plan()
-
     assert plan["commands"] == []
     assert plan["source"] == "profile_default_none:node"
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_runtime_verifier_runs_app_entrypoint_when_artifact_contract_is_app(tmp_path: Path):
     agent_output = tmp_path / "agent_output"
@@ -443,7 +437,6 @@ async def test_runtime_verifier_runs_app_entrypoint_when_artifact_contract_is_ap
         "print(json.dumps({'files_count': len(files), 'files_list': files}))\n",
         encoding="utf-8",
     )
-
     result = await RuntimeVerifier(
         tmp_path,
         artifact_contract={"kind": "app", "entrypoint_path": "agent_output/main.py"},
@@ -457,7 +450,6 @@ async def test_runtime_verifier_runs_app_entrypoint_when_artifact_contract_is_ap
             }
         },
     ).verify()
-
     assert result.ok is True
     assert len(result.command_results) == 2
     assert result.command_results[-1]["command_display"].endswith("agent_output/main.py")
@@ -467,6 +459,7 @@ async def test_runtime_verifier_runs_app_entrypoint_when_artifact_contract_is_ap
     assert result.overall_evidence_class == "behavioral_verification"
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_runtime_verifier_does_not_run_entrypoint_when_artifact_contract_is_artifact(tmp_path: Path):
     agent_output = tmp_path / "agent_output"
@@ -486,6 +479,7 @@ async def test_runtime_verifier_does_not_run_entrypoint_when_artifact_contract_i
     assert result.overall_evidence_class == "syntax_only"
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_runtime_verifier_fails_when_stdout_json_assertions_fail(tmp_path: Path):
     agent_output = tmp_path / "agent_output"
@@ -512,6 +506,7 @@ async def test_runtime_verifier_fails_when_stdout_json_assertions_fail(tmp_path:
     assert "runtime stdout assertion failed" in "\n".join(result.errors)
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_runtime_verifier_classifies_stdout_json_parse_failures(tmp_path: Path):
     agent_output = tmp_path / "agent_output"
@@ -536,6 +531,7 @@ async def test_runtime_verifier_classifies_stdout_json_parse_failures(tmp_path: 
     assert result.failure_breakdown.get("stdout_json_parse_failed", 0) >= 1
 
 
+@pytest.mark.unit
 def test_runtime_verifier_resolve_command_cwd_rejects_escape_with_relative_workspace_root(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -546,11 +542,13 @@ def test_runtime_verifier_resolve_command_cwd_rejects_escape_with_relative_works
     assert RuntimeVerifier._resolve_command_cwd("../../../etc", Path()) is None
 
 
+@pytest.mark.unit
 def test_runtime_verifier_classifies_oom_returncode() -> None:
     """Layer: unit. Verifies Linux OOM/SIGKILL exit status is explicit in failure breakdowns."""
     assert RuntimeVerifier._failure_class_from_returncode(137) == "oom_killed"
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_runtime_verifier_unknown_json_assertion_op_is_explicit_failure(tmp_path: Path):
     """Layer: contract. Verifies unsupported stdout assertion ops fail loudly instead of silently returning false."""
@@ -576,8 +574,9 @@ async def test_runtime_verifier_unknown_json_assertion_op_is_explicit_failure(tm
     assert "unknown assertion op" in "\n".join(result.errors)
 
 
+@pytest.mark.contract
 def test_build_runtime_guard_contract_surfaces_multiple_errors_and_truncation() -> None:
-    """Layer: unit. Verifies guard contracts preserve one violation per runtime verifier error."""
+    """Layer: contract. Verifies guard contracts preserve one violation per runtime verifier error."""
     contract = build_runtime_guard_contract(ok=False, errors=["first failure", "x" * 300])
 
     assert len(contract.violations) == 2
@@ -590,6 +589,7 @@ def test_build_runtime_guard_contract_surfaces_multiple_errors_and_truncation() 
     assert contract.violations[1].evidence_truncated is True
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_runtime_verifier_reports_not_evaluated_when_no_targets_or_commands(tmp_path: Path) -> None:
     """Layer: contract. Verifies empty verifier runs report not-evaluated evidence instead of implying proof."""

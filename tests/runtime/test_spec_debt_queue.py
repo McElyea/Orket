@@ -4,8 +4,10 @@ import pytest
 
 from orket.runtime.spec_debt_queue import spec_debt_queue_snapshot, validate_spec_debt_queue
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_spec_debt_queue_snapshot_contains_expected_debt_types() -> None:
     payload = spec_debt_queue_snapshot()
     assert payload["schema_version"] == "1.0"

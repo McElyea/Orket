@@ -21,6 +21,8 @@ from orket.runtime import protocol_error_codes as codes
 from orket.runtime.determinism_controls import resolve_network_mode
 from tests.helpers.turn_artifacts import artifact_destination, artifact_test_utc_now
 
+pytestmark = pytest.mark.contract
+
 
 def _code_prefix(value: str) -> str:
     return str(value or "").split(":", 1)[0]

@@ -4,6 +4,8 @@ import pytest
 
 from orket.application.review.models import ReviewRunResult
 
+pytestmark = pytest.mark.contract
+
 
 def test_review_run_result_rejects_malformed_manifest_authority_markers() -> None:
     """Layer: contract. Verifies review result JSON fail-closes if embedded manifest authority markers drift."""
@@ -21,7 +23,6 @@ def test_review_run_result_rejects_malformed_manifest_authority_markers() -> Non
             "lane_outputs_execution_state_authoritative": True,
         },
     )
-
     with pytest.raises(ValueError, match="review_run_manifest_execution_state_authoritative_invalid"):
         result.to_dict()
 
@@ -43,7 +44,6 @@ def test_review_run_result_rejects_manifest_run_id_mismatch() -> None:
             "lane_outputs_execution_state_authoritative": False,
         },
     )
-
     with pytest.raises(ValueError, match="review_run_manifest_run_id_mismatch"):
         result.to_dict()
 

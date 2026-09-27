@@ -341,7 +341,6 @@ def _assert_governed_identity(result) -> None:
     artifact_manifest_path = Path(result.artifact_manifest_path)
     provenance = json.loads(provenance_path.read_text(encoding="utf-8"))
     artifact_manifest = json.loads(artifact_manifest_path.read_text(encoding="utf-8"))
-
     assert result.claim_tier == "non_deterministic_lab_only"
     assert result.compare_scope == "extension_workload_provenance_family_v1"
     assert result.operator_surface == "extension_run_result_identity_v1"
@@ -350,7 +349,6 @@ def _assert_governed_identity(result) -> None:
     assert result.artifact_manifest_hash == f"sha256:{artifact_manifest['manifest_sha256']}"
     assert result.provenance_hash.startswith("sha256:")
     assert result.determinism_class == "workspace"
-
     assert provenance["claim_tier"] == result.claim_tier
     assert provenance["compare_scope"] == result.compare_scope
     assert provenance["operator_surface"] == "extension_provenance_v1"
@@ -378,7 +376,6 @@ def _assert_governed_identity(result) -> None:
     assert result.control_plane["control_plane_start_step_id"]
     assert result.control_plane["control_plane_checkpoint_id"]
     assert result.control_plane["control_plane_final_truth_record_id"]
-
     assert artifact_manifest["claim_tier"] == result.claim_tier
     assert artifact_manifest["compare_scope"] == result.compare_scope
     assert artifact_manifest["operator_surface"] == "extension_artifact_manifest_v1"
@@ -393,8 +390,9 @@ def _control_plane_db_path(project_root: Path) -> Path:
     return project_root / ".orket" / "durable" / "db" / "control_plane_records.sqlite3"
 
 
+@pytest.mark.contract
 def test_list_extensions_from_catalog(tmp_path):
-    """Layer: unit. Verifies installed extension catalog rows are read from manifest-entry storage."""
+    """Layer: contract. Verifies installed extension catalog rows are read from manifest-entry storage."""
     catalog = tmp_path / "extensions_catalog.json"
     catalog.write_text(
         json.dumps(
@@ -413,17 +411,16 @@ def test_list_extensions_from_catalog(tmp_path):
         ),
         encoding="utf-8",
     )
-
     manager = ExtensionManager(catalog_path=catalog)
     extensions = manager.list_extensions()
-
     assert len(extensions) == 1
     assert extensions[0].extension_id == "mystery.extension"
     assert extensions[0].manifest_entries[0].workload_id == "mystery_v1"
 
 
+@pytest.mark.contract
 def test_resolve_manifest_entry_returns_extension_and_workload(tmp_path):
-    """Layer: unit. Verifies manifest-entry lookup works against installed catalog rows."""
+    """Layer: contract. Verifies manifest-entry lookup works against installed catalog rows."""
     catalog = tmp_path / "extensions_catalog.json"
     catalog.write_text(
         json.dumps(
@@ -442,18 +439,17 @@ def test_resolve_manifest_entry_returns_extension_and_workload(tmp_path):
         ),
         encoding="utf-8",
     )
-
     manager = ExtensionManager(catalog_path=catalog)
     resolved = manager._resolve_manifest_entry("mystery_v1")
-
     assert resolved is not None
     extension, workload = resolved
     assert extension.extension_id == "mystery.extension"
     assert workload.workload_id == "mystery_v1"
 
 
+@pytest.mark.contract
 def test_uses_sdk_contract_reflects_manifest_style(tmp_path):
-    """Layer: unit. Verifies manager exposes SDK eligibility as a boolean probe instead of leaking manifest metadata."""
+    """Layer: contract. Verifies manager exposes SDK eligibility as a boolean probe instead of leaking manifest metadata."""
     catalog = tmp_path / "extensions_catalog.json"
     catalog.write_text(
         json.dumps(
@@ -478,9 +474,7 @@ def test_uses_sdk_contract_reflects_manifest_style(tmp_path):
         ),
         encoding="utf-8",
     )
-
     manager = ExtensionManager(catalog_path=catalog)
-
     assert manager.has_manifest_entry("legacy_v1") is True
     assert manager.uses_sdk_contract("legacy_v1") is False
     assert manager.has_manifest_entry("sdk_v1") is True
@@ -489,15 +483,14 @@ def test_uses_sdk_contract_reflects_manifest_style(tmp_path):
     assert manager.uses_sdk_contract("missing_v1") is False
 
 
+@pytest.mark.integration
 def test_install_from_repo_registers_extension(tmp_path):
     """Layer: integration. Exercise the admitted extension through its async command boundary."""
     repo = tmp_path / "ext_repo"
     repo.mkdir(parents=True, exist_ok=True)
     _init_test_extension_repo(repo)
-
     manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
     record = asyncio.run(manager.install_from_repo(str(repo)))
-
     assert record.extension_id == "mystery.extension"
     assert record.manifest_entries[0].workload_id == "mystery_v1"
     assert len(record.resolved_commit_sha) == 40
@@ -510,17 +503,15 @@ def test_install_from_repo_registers_extension(tmp_path):
     assert manager._resolve_manifest_entry("mystery_v1") is not None
 
 
+@pytest.mark.integration
 def test_install_from_repo_registers_sdk_extension(tmp_path):
     """Layer: integration. Exercise the admitted extension through its async command boundary."""
     repo = tmp_path / "sdk_repo"
     repo.mkdir(parents=True, exist_ok=True)
     _init_sdk_extension_repo(repo, config_sections=["appearance"], allowed_stdlib_modules=["hashlib", "pathlib"])
-
     manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
     record = asyncio.run(manager.install_from_repo(str(repo)))
-
     assert "appearance" in manager.config_sections()
-
     assert record.extension_id == "sdk.extension"
     assert record.contract_style == "sdk_v0"
     assert record.config_sections == ("appearance",)
@@ -532,6 +523,7 @@ def test_install_from_repo_registers_sdk_extension(tmp_path):
     assert len(record.security_policy_version) == 64
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_run_sdk_workload_blocks_undeclared_stdlib_import_when_declared_allowlist_exists(tmp_path):
     """Layer: integration. Verifies declared stdlib import sandboxing blocks undeclared runtime imports."""
@@ -540,7 +532,6 @@ async def test_run_sdk_workload_blocks_undeclared_stdlib_import_when_declared_al
     _init_sdk_extension_repo(repo, allowed_stdlib_modules=["pathlib"])
     manager = await prepare_extension_manager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
     await manager.install_from_repo(str(repo))
-
     with pytest.raises(ValueError, match="E_EXT_STDLIB_IMPORT_UNDECLARED: hashlib"):
         await manager.run_workload(
             workload_id="sdk_v1",
@@ -550,6 +541,7 @@ async def test_run_sdk_workload_blocks_undeclared_stdlib_import_when_declared_al
         )
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_run_sdk_workload_subprocess_blocks_dynamic_undeclared_stdlib_import(tmp_path):
     """Layer: integration. Verifies subprocess import-hook sandboxing catches dynamic stdlib imports."""
@@ -558,7 +550,6 @@ async def test_run_sdk_workload_subprocess_blocks_dynamic_undeclared_stdlib_impo
     _init_sdk_dynamic_import_repo(repo)
     manager = await prepare_extension_manager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
     await manager.install_from_repo(str(repo))
-
     with pytest.raises(RuntimeError, match="E_EXT_STDLIB_IMPORT_UNDECLARED: subprocess"):
         await manager.run_workload(
             workload_id="sdk_dynamic_import_v1",
@@ -568,21 +559,21 @@ async def test_run_sdk_workload_subprocess_blocks_dynamic_undeclared_stdlib_impo
         )
 
 
+@pytest.mark.integration
 def test_install_from_repo_registers_sdk_json_manifest_extension(tmp_path):
     """Layer: integration. Exercise the admitted extension through its async command boundary."""
     repo = tmp_path / "sdk_json_repo"
     repo.mkdir(parents=True, exist_ok=True)
     _init_sdk_extension_repo_json_manifest(repo)
-
     manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
     record = asyncio.run(manager.install_from_repo(str(repo)))
-
     assert record.extension_id == "sdk.json.extension"
     assert record.contract_style == "sdk_v0"
     assert record.manifest_entries[0].workload_id == "sdk_json_v1"
     assert record.manifest_entries[0].entrypoint == "sdk_json_extension:JsonWorkload"
 
 
+@pytest.mark.contract
 def test_list_extensions_includes_entry_point_discovery(monkeypatch, tmp_path):
     manager = ExtensionManager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
     monkeypatch.setattr(
@@ -607,6 +598,7 @@ def test_list_extensions_includes_entry_point_discovery(monkeypatch, tmp_path):
     assert rows[0].manifest_entries[0].workload_id == "demo_v1"
 
 
+@pytest.mark.unit
 def test_extension_manager_exposes_helper_methods_explicitly():
     """Layer: unit. Verifies helper methods are statically discoverable instead of hidden behind `__getattr__`."""
     explicit_helpers = {
@@ -622,6 +614,7 @@ def test_extension_manager_exposes_helper_methods_explicitly():
     assert explicit_helpers.issubset(ExtensionManager.__dict__)
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_run_workload_emits_provenance(tmp_path):
     """Layer: integration. Exercise the admitted extension through its async command boundary."""
@@ -630,7 +623,6 @@ async def test_run_workload_emits_provenance(tmp_path):
     _init_test_extension_repo(repo)
     manager = await prepare_extension_manager(catalog_path=tmp_path / "extensions_catalog.json", project_root=tmp_path)
     await manager.install_from_repo(str(repo))
-
     workspace = tmp_path / "workspace" / "default"
     workspace.mkdir(parents=True, exist_ok=True)
     result = await manager.run_workload(
@@ -639,7 +631,6 @@ async def test_run_workload_emits_provenance(tmp_path):
         workspace=workspace,
         department="core",
     )
-
     assert result.workload_id == "mystery_v1"
     assert "provenance.json" in result.provenance_path
     assert await _path_exists(Path(result.provenance_path))
@@ -647,6 +638,7 @@ async def test_run_workload_emits_provenance(tmp_path):
     _assert_governed_identity(result)
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_run_workload_publishes_control_plane_execution_and_checkpoint(tmp_path):
     """Layer: integration. Verifies legacy extension workload execution publishes run, checkpoint, effect, and final-truth records."""
@@ -684,6 +676,7 @@ async def test_run_workload_publishes_control_plane_execution_and_checkpoint(tmp
     assert effects[-1].step_id == result.control_plane["control_plane_closeout_step_id"]
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_run_workload_rejects_private_orket_imports(tmp_path):
     """Layer: integration. Exercise the admitted extension through its async command boundary."""
@@ -737,6 +730,7 @@ async def test_run_workload_context_leaves_finalization_to_owner(tmp_path):
     assert not ctx.commits  # The interaction owner finalizes after it observes the workload result.
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_run_sdk_workload_emits_provenance(tmp_path):
     """Layer: integration. Exercise the admitted extension through its async command boundary."""
@@ -775,6 +769,7 @@ async def test_run_sdk_workload_emits_provenance(tmp_path):
     _assert_governed_identity(result)
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_run_sdk_workload_provenance_verbose_mode_includes_raw_payloads(tmp_path, monkeypatch):
     """Layer: integration. Exercise the admitted extension through its async command boundary."""
@@ -799,6 +794,7 @@ async def test_run_sdk_workload_provenance_verbose_mode_includes_raw_payloads(tm
     assert provenance["summary"]["artifact_count"] >= 1
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_run_sdk_workload_declared_invalid_capability_fails_closed(tmp_path):
     """Layer: integration. Exercise the admitted extension through its async command boundary."""
@@ -819,6 +815,7 @@ async def test_run_sdk_workload_declared_invalid_capability_fails_closed(tmp_pat
         )
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_mixed_catalog_runs_legacy_and_sdk_workloads(tmp_path):
     """Layer: integration. Exercise the admitted extension through its async command boundary."""
@@ -856,6 +853,7 @@ async def test_mixed_catalog_runs_legacy_and_sdk_workloads(tmp_path):
     assert await _path_exists(Path(sdk_result.provenance_path))
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_run_sdk_workload_blocks_artifact_path_escape(tmp_path):
     """Layer: integration. Exercise the admitted extension through its async command boundary."""
@@ -876,6 +874,7 @@ async def test_run_sdk_workload_blocks_artifact_path_escape(tmp_path):
         )
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_run_sdk_workload_rejects_artifact_digest_mismatch(tmp_path):
     """Layer: integration. Exercise the admitted extension through its async command boundary."""
@@ -896,6 +895,7 @@ async def test_run_sdk_workload_rejects_artifact_digest_mismatch(tmp_path):
         )
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_run_workload_rejects_manifest_digest_tamper(tmp_path):
     """Layer: integration. Exercise the admitted extension through its async command boundary."""

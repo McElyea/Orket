@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from orket.runtime.error_codes import (
     EXTRANEOUS_TEXT,
     SCHEMA_MISMATCH,
@@ -8,6 +10,8 @@ from orket.runtime.error_codes import (
     error_family_for_leaf,
     error_registry_snapshot,
 )
+
+pytestmark = pytest.mark.contract
 
 
 def test_error_registry_snapshot_has_expected_shape() -> None:

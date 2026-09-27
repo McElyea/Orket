@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-# Layer: unit/integration
+# Layers are declared per test for the exercised boundary.
 from pathlib import Path
 
 import pytest
@@ -12,6 +12,7 @@ from tests.runtime.test_controller_dispatcher import _init_git_repo, _init_sdk_c
 from tests.runtime.test_controller_observability import _build_controller_manager
 
 
+@pytest.mark.unit
 def test_compare_controller_replay_outputs_detects_status_drift() -> None:
     """Layer: unit."""
     expected = {
@@ -96,6 +97,7 @@ def test_compare_controller_replay_outputs_detects_status_drift() -> None:
     assert report["expected_digest"] != report["actual_digest"]
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_compare_controller_replay_outputs_passes_for_equivalent_controller_runs(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -140,6 +142,7 @@ async def test_compare_controller_replay_outputs_passes_for_equivalent_controlle
     assert report["expected_digest"] == report["actual_digest"]
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_external_template_repo_installs_and_runs_controller_workload(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch

@@ -2,8 +2,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from orket.application.services.sdk_memory_provider import SQLiteMemoryCapabilityProvider
 from orket_extension_sdk.memory import MemoryQueryRequest, MemoryWriteRequest
+
+pytestmark = pytest.mark.integration
 
 
 def test_sqlite_memory_provider_writes_and_queries_session_scope(tmp_path: Path) -> None:

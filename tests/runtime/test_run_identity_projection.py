@@ -8,6 +8,8 @@ import pytest
 
 from orket.runtime.run_start_artifacts import capture_run_start_artifacts
 
+pytestmark = pytest.mark.contract
+
 
 def _run_identity_path(*, workspace: Path, run_id: str) -> Path:
     return workspace / "observability" / run_id / "runtime_contracts" / "run_identity.json"

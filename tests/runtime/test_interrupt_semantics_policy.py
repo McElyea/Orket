@@ -7,8 +7,10 @@ from orket.runtime.interrupt_semantics_policy import (
     validate_interrupt_semantics_policy,
 )
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_interrupt_semantics_policy_snapshot_contains_expected_surfaces() -> None:
     payload = interrupt_semantics_policy_snapshot()
     assert payload["schema_version"] == "1.0"

@@ -4,6 +4,10 @@ import ast
 import importlib
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.contract
+
 RUNTIME_ROOT = Path(__file__).resolve().parents[2] / "orket" / "runtime"
 DOMAIN_PACKAGES = frozenset({"config", "evidence", "execution", "policy", "registry", "summary"})
 MIGRATED_TARGETS = {

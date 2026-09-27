@@ -2,6 +2,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
+
 
 def _read(path: Path) -> str:
     return path.read_text(encoding="utf-8")

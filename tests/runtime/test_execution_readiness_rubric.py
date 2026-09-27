@@ -7,8 +7,10 @@ from orket.runtime.execution_readiness_rubric import (
     validate_execution_readiness_rubric,
 )
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_execution_readiness_rubric_snapshot_contains_expected_criteria() -> None:
     payload = execution_readiness_rubric_snapshot()
     assert payload["schema_version"] == "1.0"

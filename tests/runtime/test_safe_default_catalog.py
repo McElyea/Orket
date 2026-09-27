@@ -4,8 +4,10 @@ import pytest
 
 from orket.runtime.safe_default_catalog import safe_default_catalog_snapshot, validate_safe_default_catalog
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_safe_default_catalog_snapshot_contains_expected_defaults() -> None:
     payload = safe_default_catalog_snapshot()
     assert payload["schema_version"] == "1.0"

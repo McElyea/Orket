@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import pytest
 import yaml
 
 from orket.runtime.config.contract_assets import ARTIFACT_RETENTION_TIERS_PATH
+
+pytestmark = pytest.mark.contract
 
 
 # Layer: contract

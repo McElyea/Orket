@@ -10,9 +10,9 @@ from orket.runtime import run_start_contract_artifacts
 from orket.runtime.run_start_artifacts import capture_run_start_artifacts
 
 
-# Layer: unit
+@pytest.mark.integration
 def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: Path) -> None:
-    """Layer: contract. Verifies run-start artifact provider truth captures admitted local providers."""
+    """Layer: integration. Verifies run-start artifact provider truth captures admitted local providers."""
     workspace = tmp_path / "workspace"
     (workspace / "a.txt").parent.mkdir(parents=True, exist_ok=True)
     (workspace / "a.txt").write_text("alpha", encoding="utf-8")
@@ -256,7 +256,7 @@ def test_capture_run_start_artifacts_writes_required_run_start_files(tmp_path: P
     assert len(str(workspace_snapshot["workspace_hash"])) == 64
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_capture_run_start_artifacts_stages_initial_write_and_leaves_no_partial_final_directory_on_failure(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -286,7 +286,7 @@ def test_capture_run_start_artifacts_stages_initial_write_and_leaves_no_partial_
     assert staging_root.exists() is True
 
 
-# Layer: integration
+@pytest.mark.contract
 def test_capture_run_start_artifacts_fails_loudly_when_incomplete_staging_directory_exists(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     staging_root = workspace / "observability" / "run-stage-incomplete" / "runtime_contracts_staging"
@@ -302,7 +302,7 @@ def test_capture_run_start_artifacts_fails_loudly_when_incomplete_staging_direct
         )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_capture_run_start_artifacts_emits_v0_boundary_artifacts_only(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     payload = capture_run_start_artifacts(
@@ -329,7 +329,7 @@ def test_capture_run_start_artifacts_emits_v0_boundary_artifacts_only(tmp_path: 
     assert not (runtime_root / "runtime_violation.json").exists()
 
 
-# Layer: contract
+@pytest.mark.integration
 def test_capture_run_start_artifacts_reuses_existing_run_identity_for_same_run(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     first = capture_run_start_artifacts(
@@ -349,7 +349,7 @@ def test_capture_run_start_artifacts_reuses_existing_run_identity_for_same_run(t
     assert first["run_identity"]["start_time"].startswith("2026-03-06T17:00:00")
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_capture_run_start_artifacts_fails_closed_on_run_identity_workload_mismatch(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     _ = capture_run_start_artifacts(
@@ -368,7 +368,7 @@ def test_capture_run_start_artifacts_fails_closed_on_run_identity_workload_misma
         )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_capture_run_start_artifacts_fails_closed_on_run_phase_contract_mutation(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     _ = capture_run_start_artifacts(
@@ -398,7 +398,7 @@ def test_capture_run_start_artifacts_fails_closed_on_run_phase_contract_mutation
         )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_capture_run_start_artifacts_fails_closed_on_runtime_status_vocabulary_mutation(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     _ = capture_run_start_artifacts(
@@ -428,7 +428,7 @@ def test_capture_run_start_artifacts_fails_closed_on_runtime_status_vocabulary_m
         )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_capture_run_start_artifacts_fails_closed_on_provider_truth_table_mutation(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     _ = capture_run_start_artifacts(
@@ -458,7 +458,7 @@ def test_capture_run_start_artifacts_fails_closed_on_provider_truth_table_mutati
         )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_capture_run_start_artifacts_fails_closed_on_state_transition_registry_mutation(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     _ = capture_run_start_artifacts(
@@ -488,7 +488,7 @@ def test_capture_run_start_artifacts_fails_closed_on_state_transition_registry_m
         )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_capture_run_start_artifacts_fails_closed_on_streaming_semantics_mutation(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     _ = capture_run_start_artifacts(
@@ -518,7 +518,7 @@ def test_capture_run_start_artifacts_fails_closed_on_streaming_semantics_mutatio
         )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_capture_run_start_artifacts_fails_closed_on_clock_time_authority_policy_mutation(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     _ = capture_run_start_artifacts(
@@ -548,7 +548,7 @@ def test_capture_run_start_artifacts_fails_closed_on_clock_time_authority_policy
         )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_capture_run_start_artifacts_fails_closed_on_capability_fallback_hierarchy_mutation(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     _ = capture_run_start_artifacts(
@@ -578,7 +578,7 @@ def test_capture_run_start_artifacts_fails_closed_on_capability_fallback_hierarc
         )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_capture_run_start_artifacts_fails_closed_on_model_profile_bios_mutation(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     _ = capture_run_start_artifacts(
@@ -608,7 +608,7 @@ def test_capture_run_start_artifacts_fails_closed_on_model_profile_bios_mutation
         )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_capture_run_start_artifacts_fails_closed_on_interrupt_semantics_policy_mutation(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     _ = capture_run_start_artifacts(
@@ -638,7 +638,7 @@ def test_capture_run_start_artifacts_fails_closed_on_interrupt_semantics_policy_
         )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_capture_run_start_artifacts_fails_closed_on_idempotency_discipline_policy_mutation(
     tmp_path: Path,
 ) -> None:
@@ -670,7 +670,7 @@ def test_capture_run_start_artifacts_fails_closed_on_idempotency_discipline_poli
         )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_capture_run_start_artifacts_fails_closed_on_artifact_provenance_block_policy_mutation(
     tmp_path: Path,
 ) -> None:
@@ -702,7 +702,7 @@ def test_capture_run_start_artifacts_fails_closed_on_artifact_provenance_block_p
         )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_capture_run_start_artifacts_fails_closed_on_operator_override_logging_policy_mutation(
     tmp_path: Path,
 ) -> None:
@@ -734,7 +734,7 @@ def test_capture_run_start_artifacts_fails_closed_on_operator_override_logging_p
         )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_capture_run_start_artifacts_fails_closed_on_demo_production_labeling_policy_mutation(
     tmp_path: Path,
 ) -> None:
@@ -766,7 +766,7 @@ def test_capture_run_start_artifacts_fails_closed_on_demo_production_labeling_po
         )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_capture_run_start_artifacts_fails_closed_on_human_correction_capture_policy_mutation(
     tmp_path: Path,
 ) -> None:
@@ -798,7 +798,7 @@ def test_capture_run_start_artifacts_fails_closed_on_human_correction_capture_po
         )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_capture_run_start_artifacts_fails_closed_on_sampling_discipline_guide_mutation(
     tmp_path: Path,
 ) -> None:
@@ -830,7 +830,7 @@ def test_capture_run_start_artifacts_fails_closed_on_sampling_discipline_guide_m
         )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_capture_run_start_artifacts_fails_closed_on_execution_readiness_rubric_mutation(
     tmp_path: Path,
 ) -> None:
@@ -862,7 +862,7 @@ def test_capture_run_start_artifacts_fails_closed_on_execution_readiness_rubric_
         )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_capture_run_start_artifacts_fails_closed_on_release_confidence_scorecard_mutation(
     tmp_path: Path,
 ) -> None:
@@ -894,7 +894,7 @@ def test_capture_run_start_artifacts_fails_closed_on_release_confidence_scorecar
         )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_capture_run_start_artifacts_fails_closed_on_feature_flag_expiration_policy_mutation(
     tmp_path: Path,
 ) -> None:
@@ -926,7 +926,7 @@ def test_capture_run_start_artifacts_fails_closed_on_feature_flag_expiration_pol
         )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_capture_run_start_artifacts_fails_closed_on_workspace_hygiene_rules_mutation(
     tmp_path: Path,
 ) -> None:
@@ -958,7 +958,7 @@ def test_capture_run_start_artifacts_fails_closed_on_workspace_hygiene_rules_mut
         )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_capture_run_start_artifacts_fails_closed_on_canonical_examples_library_mutation(
     tmp_path: Path,
 ) -> None:
@@ -990,7 +990,7 @@ def test_capture_run_start_artifacts_fails_closed_on_canonical_examples_library_
         )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_capture_run_start_artifacts_fails_closed_on_promotion_rollback_criteria_mutation(
     tmp_path: Path,
 ) -> None:
@@ -1022,7 +1022,7 @@ def test_capture_run_start_artifacts_fails_closed_on_promotion_rollback_criteria
         )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_capture_run_start_artifacts_fails_closed_on_conformance_governance_contract_mutation(
     tmp_path: Path,
 ) -> None:
@@ -1054,7 +1054,7 @@ def test_capture_run_start_artifacts_fails_closed_on_conformance_governance_cont
         )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_capture_run_start_artifacts_fails_closed_on_truth_contract_drift(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -1083,7 +1083,7 @@ def test_capture_run_start_artifacts_fails_closed_on_truth_contract_drift(
         )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_capture_run_start_artifacts_fails_closed_before_persisting_invalid_retry_projection(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

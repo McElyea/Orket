@@ -9,7 +9,7 @@ from orket.runtime.trust_language_review_policy import (
 )
 
 
-# Layer: unit
+@pytest.mark.contract
 def test_trust_language_review_policy_snapshot_contains_expected_claims() -> None:
     payload = trust_language_review_policy_snapshot()
     assert payload["schema_version"] == "1.0"
@@ -23,19 +23,19 @@ def test_trust_language_review_policy_snapshot_contains_expected_claims() -> Non
     }
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_validate_trust_language_review_policy_accepts_current_snapshot() -> None:
     claims = validate_trust_language_review_policy()
     assert "saved" in claims
 
 
-# Layer: contract
+@pytest.mark.unit
 def test_classify_trust_language_phrase_marks_unqualified_and_qualified_examples() -> None:
     assert classify_trust_language_phrase("saved") == "unqualified"
     assert classify_trust_language_phrase("saved with durable receipt") == "qualified"
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_validate_trust_language_review_policy_rejects_claim_set_mismatch() -> None:
     payload = trust_language_review_policy_snapshot()
     payload["claims"] = [row for row in payload["claims"] if row["claim"] != "verified"]

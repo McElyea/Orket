@@ -7,8 +7,10 @@ from orket.runtime.ui_lane_security_boundary_test_contract import (
     validate_ui_lane_security_boundary_test_contract,
 )
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_ui_lane_security_boundary_test_contract_snapshot_contains_expected_check_ids() -> None:
     payload = ui_lane_security_boundary_test_contract_snapshot()
     assert payload["schema_version"] == "1.0"

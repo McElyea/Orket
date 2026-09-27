@@ -7,6 +7,8 @@ import pytest
 
 from orket.runtime.run_start_artifacts import capture_run_start_artifacts
 
+pytestmark = pytest.mark.contract
+
 
 # Layer: contract
 def test_capture_run_start_artifacts_fails_closed_on_non_fatal_error_budget_mutation(tmp_path: Path) -> None:

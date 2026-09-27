@@ -86,6 +86,7 @@ def _payload(entries: list[dict[str, object]]) -> dict[str, object]:
     return {"schema_version": "local_prompt_profiles.v1", "profiles": entries}
 
 
+@pytest.mark.integration
 def test_load_registry_file_defaults_to_packaged_contract(tmp_path: Path, monkeypatch) -> None:
     """Layer: integration. Default registry loading is independent of the caller's directory."""
     monkeypatch.chdir(tmp_path)
@@ -94,6 +95,7 @@ def test_load_registry_file_defaults_to_packaged_contract(tmp_path: Path, monkey
     assert len(registry.profiles) >= 1
 
 
+@pytest.mark.contract
 def test_resolve_profile_by_provider_and_model() -> None:
     registry = load_local_prompt_profile_registry_payload(
         _payload(
@@ -112,6 +114,7 @@ def test_resolve_profile_by_provider_and_model() -> None:
     assert resolved.resolution_path == "matched"
 
 
+@pytest.mark.contract
 def test_resolve_profile_normalizes_lmstudio_provider_alias() -> None:
     registry = load_local_prompt_profile_registry_payload(
         _payload(
@@ -130,6 +133,7 @@ def test_resolve_profile_normalizes_lmstudio_provider_alias() -> None:
     assert resolved.profile.profile_id == "openai_compat.qwen.v1"
 
 
+@pytest.mark.contract
 def test_resolve_profile_preserves_llama_cpp_provider() -> None:
     """Layer: contract. Verifies llama.cpp does not collapse to generic openai_compat prompt authority."""
     registry = load_local_prompt_profile_registry_payload(
@@ -149,6 +153,7 @@ def test_resolve_profile_preserves_llama_cpp_provider() -> None:
     assert resolved.profile.profile_id == "llama_cpp.qwen.chatml.v1"
 
 
+@pytest.mark.contract
 def test_resolve_profile_fail_closed_when_no_match() -> None:
     registry = load_local_prompt_profile_registry_payload(
         _payload(
@@ -166,6 +171,7 @@ def test_resolve_profile_fail_closed_when_no_match() -> None:
         registry.resolve_profile(provider="ollama", model="llama3.1:8b")
 
 
+@pytest.mark.contract
 def test_resolve_profile_uses_explicit_fallback_when_allowed() -> None:
     registry = load_local_prompt_profile_registry_payload(
         _payload(
@@ -194,6 +200,7 @@ def test_resolve_profile_uses_explicit_fallback_when_allowed() -> None:
     assert resolved.resolution_path == "fallback"
 
 
+@pytest.mark.contract
 def test_resolve_profile_rejects_missing_override() -> None:
     registry = load_local_prompt_profile_registry_payload(
         _payload(
@@ -211,6 +218,7 @@ def test_resolve_profile_rejects_missing_override() -> None:
         registry.resolve_profile(provider="ollama", model="qwen2.5-coder:14b", override_profile_id="missing.v1")
 
 
+@pytest.mark.contract
 def test_resolve_profile_rejects_missing_fallback_profile() -> None:
     registry = load_local_prompt_profile_registry_payload(
         _payload(
@@ -233,6 +241,7 @@ def test_resolve_profile_rejects_missing_fallback_profile() -> None:
         )
 
 
+@pytest.mark.contract
 def test_resolve_profile_rejects_ambiguous_matches() -> None:
     registry = load_local_prompt_profile_registry_payload(
         _payload(
@@ -255,6 +264,7 @@ def test_resolve_profile_rejects_ambiguous_matches() -> None:
         registry.resolve_profile(provider="ollama", model="qwen2.5-coder:14b")
 
 
+@pytest.mark.contract
 def test_registry_schema_rejects_missing_required_task_class() -> None:
     profile = _base_profile("ollama.qwen.v1")
     sampling_bundles = dict(profile["sampling_bundles"])
@@ -275,6 +285,7 @@ def test_registry_schema_rejects_missing_required_task_class() -> None:
         )
 
 
+@pytest.mark.contract
 def test_registry_normalizes_intro_phrase_denylist_tokens() -> None:
     profile = _base_profile("ollama.qwen.v1")
     profile["intro_phrase_denylist"] = ["Sure", "  Here is ", "sure", ""]
@@ -293,6 +304,7 @@ def test_registry_normalizes_intro_phrase_denylist_tokens() -> None:
     assert resolved.profile.intro_phrase_denylist == ["sure", "here is"]
 
 
+@pytest.mark.contract
 def test_registry_file_load_rejects_invalid_json(tmp_path: Path) -> None:
     path = tmp_path / "profiles.json"
     path.write_text("{not-json}", encoding="utf-8")
@@ -300,6 +312,7 @@ def test_registry_file_load_rejects_invalid_json(tmp_path: Path) -> None:
         load_local_prompt_profile_registry_file(path)
 
 
+@pytest.mark.contract
 def test_registry_file_load_rejects_non_object_root(tmp_path: Path) -> None:
     path = tmp_path / "profiles.json"
     path.write_text(json.dumps(["bad"]), encoding="utf-8")

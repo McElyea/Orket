@@ -2,7 +2,11 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
+import pytest
+
 from orket import utils
+
+pytestmark = pytest.mark.unit
 
 
 def test_get_current_level_reads_environment_after_cache_reset(monkeypatch) -> None:

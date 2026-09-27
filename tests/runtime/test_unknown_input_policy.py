@@ -8,8 +8,10 @@ from orket.runtime.unknown_input_policy import (
     validate_unknown_input_policy,
 )
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_unknown_input_policy_snapshot_includes_provider_surface() -> None:
     payload = unknown_input_policy_snapshot()
     assert payload["schema_version"] == "1.0"

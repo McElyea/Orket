@@ -127,7 +127,7 @@ def _control_plane_summary_artifacts(*, session_id: str) -> dict[str, Any]:
     }
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_run_summary_schema_contract_is_canonical() -> None:
     payload = build_run_summary_payload(
         run_id="sess-summary-contract",
@@ -155,7 +155,7 @@ def test_run_summary_schema_contract_is_canonical() -> None:
     assert payload["is_degraded"] is False
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_run_summary_emits_control_plane_projection() -> None:
     payload = build_run_summary_payload(
         run_id="sess-summary-control-plane",
@@ -188,7 +188,7 @@ def test_run_summary_emits_control_plane_projection() -> None:
     }
 
 
-# Layer: integration
+@pytest.mark.contract
 def test_control_plane_reconstruction_matches_emitted_summary() -> None:
     artifacts = _control_plane_summary_artifacts(session_id="sess-summary-control-plane-reconstruct")
     events = [
@@ -227,7 +227,7 @@ def test_control_plane_reconstruction_matches_emitted_summary() -> None:
     assert reconstructed == emitted
 
 
-# Layer: integration
+@pytest.mark.contract
 def test_reconstruct_run_summary_rejects_run_identity_run_id_mismatch() -> None:
     events = [
         {
@@ -252,7 +252,7 @@ def test_reconstruct_run_summary_rejects_run_identity_run_id_mismatch() -> None:
         reconstruct_run_summary(events, session_id="sess-summary-reconstruct-mismatch")
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_run_summary_emits_odr_cards_runtime_fields() -> None:
     payload = build_run_summary_payload(
         run_id="sess-summary-odr",
@@ -295,7 +295,7 @@ def test_run_summary_emits_odr_cards_runtime_fields() -> None:
     assert payload["last_emitted_round_index"] == 3
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_run_summary_emits_cards_runtime_resolution_state_without_empty_odr_projection() -> None:
     payload = build_run_summary_payload(
         run_id="sess-summary-cards-runtime-state",
@@ -318,7 +318,7 @@ def test_run_summary_emits_cards_runtime_resolution_state_without_empty_odr_proj
     assert "stop_reason" not in payload
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_run_summary_emits_cards_runtime_scenario_truth_projection() -> None:
     payload = build_run_summary_payload(
         run_id="sess-summary-soak",
@@ -355,7 +355,7 @@ def test_run_summary_emits_cards_runtime_scenario_truth_projection() -> None:
     assert payload["cards_runtime"]["scenario_truth_alignment"]["expected_terminal_status_match"] is True
 
 
-# Layer: contract
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_generate_run_summary_for_finalize_uses_receipts_and_filtered_artifact_ids(tmp_path: Path) -> None:
     receipt_path = (
@@ -465,7 +465,7 @@ async def _record_protocol_run(
     return emitted, reconstructed
 
 
-# Layer: integration
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_run_summary_emitted_and_reconstructed_live_replay_are_equal(tmp_path: Path) -> None:
     live_emitted, live_reconstructed = await _record_protocol_run(
@@ -484,7 +484,7 @@ async def test_run_summary_emitted_and_reconstructed_live_replay_are_equal(tmp_p
     assert live_emitted == replay_emitted
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_build_degraded_run_summary_marks_payload_as_degraded() -> None:
     payload = build_degraded_run_summary_payload(
         run_id="sess-summary-degraded",

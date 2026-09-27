@@ -75,6 +75,7 @@ def _control_plane_workload_record(extension: ExtensionRecord, workload: _Extens
     ).model_dump(mode="json")
 
 
+@pytest.mark.unit
 def test_extension_import_guard_prefix_policy() -> None:
     """Layer: unit. Verifies runtime import guard blocks internal `orket.*` and allows SDK namespace."""
     guard = ExtensionImportGuard()
@@ -89,6 +90,7 @@ def test_extension_import_guard_prefix_policy() -> None:
     assert guard.is_blocked("json") is False
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_sdk_run_blocks_dynamic_internal_orket_import_and_does_not_leak_guard(tmp_path: Path) -> None:
     """Layer: integration. Verifies runtime guard blocks dynamic host imports during SDK run and is removed after failure."""
@@ -137,6 +139,7 @@ async def test_sdk_run_blocks_dynamic_internal_orket_import_and_does_not_leak_gu
     assert imported.__name__ == _BLOCKED_MODULE
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_sdk_run_allows_dynamic_sdk_imports(tmp_path: Path) -> None:
     """Layer: integration. Verifies runtime guard allows dynamic imports from the SDK namespace."""

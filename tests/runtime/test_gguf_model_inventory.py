@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from orket.runtime.config.gguf_model_inventory import (
     alias_from_gguf_path,
     inventory_gguf_models,
@@ -9,7 +11,7 @@ from orket.runtime.config.gguf_model_inventory import (
 )
 
 
-# Layer: contract
+@pytest.mark.integration
 def test_gguf_inventory_records_files_under_configured_root(tmp_path: Path) -> None:
     model_root = tmp_path / "models"
     model_root.mkdir()
@@ -24,7 +26,7 @@ def test_gguf_inventory_records_files_under_configured_root(tmp_path: Path) -> N
     assert payload.records[0].digest_status == "pending"
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_gguf_inventory_empty_root_blocks(tmp_path: Path) -> None:
     model_root = tmp_path / "empty"
     model_root.mkdir()
@@ -36,7 +38,7 @@ def test_gguf_inventory_empty_root_blocks(tmp_path: Path) -> None:
     assert payload.records == ()
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_gguf_inventory_uses_path_containment_check(tmp_path: Path) -> None:
     model_root = tmp_path / "models"
     outside = tmp_path / "outside.gguf"
@@ -46,7 +48,7 @@ def test_gguf_inventory_uses_path_containment_check(tmp_path: Path) -> None:
     assert is_gguf_path_inside_root(root=model_root, candidate=outside) is False
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_gguf_inventory_digest_states_are_explicit(tmp_path: Path) -> None:
     model_root = tmp_path / "models"
     model_root.mkdir()
@@ -69,7 +71,7 @@ def test_gguf_inventory_digest_states_are_explicit(tmp_path: Path) -> None:
     assert {record.digest_status for record in missing.records} == {"pending", "missing"}
 
 
-# Layer: unit
+@pytest.mark.unit
 def test_alias_from_gguf_path_uses_lowercase_stem() -> None:
     assert alias_from_gguf_path("Qwen3.6-27B-Q4_K_M.gguf") == "qwen3.6-27b-q4_k_m"
 

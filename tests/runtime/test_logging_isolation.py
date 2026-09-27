@@ -20,6 +20,7 @@ def _read_log_records(path: Path) -> list[dict]:
     return rows
 
 
+@pytest.mark.integration
 def test_log_event_isolates_interleaved_workspace_writes(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.chdir(tmp_path)
     workspace_a = tmp_path / "workspace_a"
@@ -39,6 +40,7 @@ def test_log_event_isolates_interleaved_workspace_writes(tmp_path: Path, monkeyp
     assert all("logging_context_mode" not in dict(row.get("data") or {}) for row in records_a + records_b)
 
 
+@pytest.mark.contract
 def test_log_event_missing_workspace_fail_fast_has_stable_error(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.chdir(tmp_path)
     monkeypatch.setenv("ORKET_LOGGING_MISSING_CONTEXT_MODE", "fail_fast")
@@ -47,6 +49,7 @@ def test_log_event_missing_workspace_fail_fast_has_stable_error(tmp_path: Path, 
         log_event("event_missing_workspace", {"ok": False})
 
 
+@pytest.mark.integration
 def test_log_event_missing_workspace_legacy_mode_writes_marker(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.chdir(tmp_path)
     monkeypatch.setenv("ORKET_LOGGING_MISSING_CONTEXT_MODE", "legacy_default")

@@ -7,8 +7,10 @@ from orket.runtime.release_confidence_scorecard import (
     validate_release_confidence_scorecard,
 )
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_release_confidence_scorecard_snapshot_contains_expected_dimensions() -> None:
     payload = release_confidence_scorecard_snapshot()
     assert payload["schema_version"] == "1.0"

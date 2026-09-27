@@ -138,7 +138,7 @@ def _tool_result_payload(
     }
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_run_graph_reconstruction_is_reproducible_and_idempotent() -> None:
     events = _sample_events()
     graph_a = reconstruct_run_graph(events, session_id="sess-graph")
@@ -151,7 +151,7 @@ def test_run_graph_reconstruction_is_reproducible_and_idempotent() -> None:
     assert len(str(graph_a["graph_digest"])) == 64
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_run_graph_reconstruction_enforces_artifact_lineage() -> None:
     graph = reconstruct_run_graph(_sample_events(), session_id="sess-graph")
     artifact_nodes = {
@@ -168,7 +168,7 @@ def test_run_graph_reconstruction_enforces_artifact_lineage() -> None:
     assert artifact_nodes.issubset(produced_targets)
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_run_graph_reconstruction_builds_compatibility_expansion_edges() -> None:
     graph = reconstruct_run_graph(_sample_events(), session_id="sess-graph")
     compat_nodes = [node for node in graph["nodes"] if node.get("type") == "compat_mapping"]
@@ -192,7 +192,7 @@ def test_run_graph_reconstruction_builds_compatibility_expansion_edges() -> None
     assert artifact["event_seq"] == 3
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_run_graph_reconstruction_preserves_canonical_control_plane_refs_on_tool_call_nodes() -> None:
     graph = reconstruct_run_graph(_sample_events(), session_id="sess-graph")
 
@@ -259,7 +259,7 @@ async def _record_protocol_run(
     return json.loads(run_graph_path.read_text(encoding="utf-8"))
 
 
-# Layer: integration
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_protocol_run_graph_reconstruction_writes_golden_artifact(tmp_path: Path) -> None:
     session_id = "sess-run-graph-golden"
@@ -284,7 +284,7 @@ async def test_protocol_run_graph_reconstruction_writes_golden_artifact(tmp_path
     assert rebuilt == graph
 
 
-# Layer: integration
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_run_graph_live_vs_replay_parity_for_deterministic_runs(tmp_path: Path) -> None:
     live = await _record_protocol_run(root=tmp_path / "live", session_id="sess-run-graph-parity", replayed=False)

@@ -7,8 +7,10 @@ from orket.runtime.artifact_provenance_block_policy import (
     validate_artifact_provenance_block_policy,
 )
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_artifact_provenance_block_policy_snapshot_contains_expected_fields() -> None:
     payload = artifact_provenance_block_policy_snapshot()
     assert payload["schema_version"] == "1.0"

@@ -12,7 +12,7 @@ def _write(path: Path, content: str) -> None:
     path.write_text(content, encoding="utf-8")
 
 
-# Layer: unit
+@pytest.mark.contract
 def test_load_prompt_budget_policy_parses_valid_policy(tmp_path: Path) -> None:
     policy_path = tmp_path / "core" / "policies" / "prompt_budget.yaml"
     _write(
@@ -46,7 +46,7 @@ stages:
     assert policy["stages"]["executor"]["max_tokens"] == 1200
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_load_prompt_budget_policy_fails_closed_on_missing_stage(tmp_path: Path) -> None:
     policy_path = tmp_path / "core" / "policies" / "prompt_budget.yaml"
     _write(
@@ -73,7 +73,7 @@ stages:
         _ = load_prompt_budget_policy(policy_path)
 
 
-# Layer: unit
+@pytest.mark.unit
 def test_resolve_prompt_stage_defaults_by_role() -> None:
     assert resolve_prompt_stage({"role": "architect"}) == "planner"
     assert resolve_prompt_stage({"role": "coder"}) == "executor"

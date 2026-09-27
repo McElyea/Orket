@@ -8,6 +8,8 @@ from pydantic import ValidationError
 from orket.core.domain.sandbox_lifecycle import CleanupState, SandboxState, TerminalReason
 from orket.core.domain.sandbox_lifecycle_records import SandboxLifecycleRecord
 
+pytestmark = pytest.mark.contract
+
 
 def test_sandbox_lifecycle_record_schema_exposes_required_fields() -> None:
     required = set(SandboxLifecycleRecord.model_json_schema().get("required", []))

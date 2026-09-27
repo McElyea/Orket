@@ -7,8 +7,10 @@ from orket.runtime.decision_record_operating_principles_contract import (
     validate_decision_record_operating_principles_contract,
 )
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_decision_record_operating_principles_contract_snapshot_contains_expected_check_ids() -> None:
     payload = decision_record_operating_principles_contract_snapshot()
     assert payload["schema_version"] == "1.0"

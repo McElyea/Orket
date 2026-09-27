@@ -19,6 +19,8 @@ from orket.core.domain.sandbox_lifecycle import (
 )
 from orket.core.domain.sandbox_lifecycle_records import ManagedResourceInventory, SandboxLifecycleRecord
 
+pytestmark = pytest.mark.contract
+
 
 class _Repo:
     def __init__(self, record: SandboxLifecycleRecord):

@@ -82,27 +82,23 @@ def _role():
     return RoleConfig(id="DEV", summary="developer", description="Build code", tools=["write_file"])
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_turn_executor_middleware_hook_order(tmp_path):
     hook_order = []
-
     class _Hooks:
         def before_prompt(self, messages, **_kwargs):
             hook_order.append("before_prompt")
             return MiddlewareOutcome(replacement=messages)
-
         def after_model(self, response, **_kwargs):
             hook_order.append("after_model")
             return MiddlewareOutcome(replacement=response)
-
         def before_tool(self, tool_name, args, **_kwargs):
             hook_order.append(f"before_tool:{tool_name}")
             return None
-
         def after_tool(self, tool_name, args, result, **_kwargs):
             hook_order.append(f"after_tool:{tool_name}")
             return MiddlewareOutcome(replacement=result)
-
     executor = TurnExecutor(
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
@@ -111,30 +107,26 @@ async def test_turn_executor_middleware_hook_order(tmp_path):
      utc_now=artifact_test_utc_now)
     model = _Model(['{"tool": "write_file", "args": {"path": "out.txt", "content": "ok"}}'])
     toolbox = _ToolBox()
-
     result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
     assert result.success is True
     assert hook_order == ["before_prompt", "after_model", "before_tool:write_file", "after_tool:write_file"]
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_turn_executor_isolates_broken_before_prompt_interceptor(tmp_path):
-    """Layer: integration. Verifies a broken interceptor does not abort the turn."""
+    """Layer: unit. Verifies a broken interceptor does not abort the turn."""
     hook_order = []
-
     class _BrokenHooks:
         def before_prompt(self, messages, **_kwargs):
             raise RuntimeError("broken interceptor")
-
     class _HealthyHooks:
         def before_prompt(self, messages, **_kwargs):
             hook_order.append("healthy_before_prompt")
             return MiddlewareOutcome(replacement=messages)
-
         def after_model(self, response, **_kwargs):
             hook_order.append("healthy_after_model")
             return MiddlewareOutcome(replacement=response)
-
     executor = TurnExecutor(
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
@@ -143,20 +135,18 @@ async def test_turn_executor_isolates_broken_before_prompt_interceptor(tmp_path)
      utc_now=artifact_test_utc_now)
     model = _Model(['{"tool": "write_file", "args": {"path": "out.txt", "content": "ok"}}'])
     toolbox = _ToolBox()
-
     result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
-
     assert result.success is True
     assert hook_order == ["healthy_before_prompt", "healthy_after_model"]
     assert toolbox.calls == [("write_file", {"path": "out.txt", "content": "ok"})]
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_turn_executor_middleware_short_circuit_before_tool(tmp_path):
     class _Hooks:
         def before_tool(self, tool_name, args, **_kwargs):
             return MiddlewareOutcome(short_circuit=True, reason="blocked by middleware")
-
     executor = TurnExecutor(
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
@@ -165,20 +155,18 @@ async def test_turn_executor_middleware_short_circuit_before_tool(tmp_path):
      utc_now=artifact_test_utc_now)
     model = _Model(['{"tool": "write_file", "args": {"path": "out.txt", "content": "ok"}}'])
     toolbox = _ToolBox()
-
     result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
     assert result.success is False
     assert "blocked by middleware" in (result.error or "")
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_turn_executor_mandatory_before_tool_crash_blocks_execution(tmp_path):
-    """Layer: integration. Verifies mandatory interceptor crashes fail closed before tool execution."""
-
+    """Layer: contract. Verifies mandatory interceptor crashes fail closed before tool execution."""
     class _Hooks:
         def before_tool(self, tool_name, args, **_kwargs):
             raise RuntimeError("broken mandatory interceptor")
-
     middleware = TurnLifecycleInterceptors([])
     middleware.register(_Hooks(), kind=InterceptorKind.MANDATORY)
     executor = TurnExecutor(
@@ -189,17 +177,16 @@ async def test_turn_executor_mandatory_before_tool_crash_blocks_execution(tmp_pa
      utc_now=artifact_test_utc_now)
     model = _Model(['{"tool": "write_file", "args": {"path": "out.txt", "content": "ok"}}'])
     toolbox = _ToolBox()
-
     result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
-
     assert result.success is False
     assert "interceptor_crash" in (result.error or "")
     assert toolbox.calls == []
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_turn_executor_partial_parse_failure_blocks_without_recovery_tool(tmp_path):
-    """Layer: integration. Verifies partial recovery does not execute a hardcoded recovery tool."""
+    """Layer: contract. Verifies partial recovery does not execute a hardcoded recovery tool."""
     executor = TurnExecutor(
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
@@ -214,9 +201,7 @@ async def test_turn_executor_partial_parse_failure_blocks_without_recovery_tool(
         ]
     )
     toolbox = _ToolBox()
-
     result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
-
     assert result.success is False
     assert result.turn is not None
     assert result.turn.partial_parse_failure is True
@@ -226,18 +211,16 @@ async def test_turn_executor_partial_parse_failure_blocks_without_recovery_tool(
     assert model.calls == 1
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_turn_executor_calls_on_turn_failure_hook(tmp_path):
     hit = {"called": False}
-
     class _Hooks:
         def on_turn_failure(self, error, **_kwargs):
             hit["called"] = True
-
     class _FailingModel:
         async def complete(self, _messages):
             raise RuntimeError("boom")
-
     executor = TurnExecutor(
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
@@ -245,42 +228,37 @@ async def test_turn_executor_calls_on_turn_failure_hook(tmp_path):
         middleware=TurnLifecycleInterceptors([_Hooks()]),
      utc_now=artifact_test_utc_now)
     toolbox = _ToolBox()
-
     result = await executor.execute_turn(_issue(), _role(), _FailingModel(), toolbox, _context())
     assert result.success is False
     assert hit["called"] is True
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_turn_executor_on_turn_failure_continues_after_broken_hook(tmp_path):
-    """Layer: integration. Verifies failure hooks remain isolated from one another."""
+    """Layer: unit. Verifies failure hooks remain isolated from one another."""
     hit = {"called": False}
-
     class _BrokenHooks:
         def on_turn_failure(self, error, **_kwargs):
             raise RuntimeError("broken failure hook")
-
     class _HealthyHooks:
         def on_turn_failure(self, error, **_kwargs):
             hit["called"] = True
-
     class _FailingModel:
         async def complete(self, _messages):
             raise RuntimeError("boom")
-
     executor = TurnExecutor(
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path),
         middleware=TurnLifecycleInterceptors([_BrokenHooks(), _HealthyHooks()]),
      utc_now=artifact_test_utc_now)
-
     result = await executor.execute_turn(_issue(), _role(), _FailingModel(), _ToolBox(), _context())
-
     assert result.success is False
     assert hit["called"] is True
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_turn_executor_non_progress_fails_after_one_reprompt(tmp_path):
     executor = TurnExecutor(
@@ -290,13 +268,13 @@ async def test_turn_executor_non_progress_fails_after_one_reprompt(tmp_path):
      utc_now=artifact_test_utc_now)
     model = _Model(["No-op", "Still no-op"])
     toolbox = _ToolBox()
-
     result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
     assert result.success is False
     assert model.calls == 2
     assert "Deterministic failure" in (result.error or "")
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_turn_executor_non_progress_recovery_after_reprompt(tmp_path):
     executor = TurnExecutor(
@@ -311,21 +289,19 @@ async def test_turn_executor_non_progress_recovery_after_reprompt(tmp_path):
         ]
     )
     toolbox = _ToolBox()
-
     result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
     assert result.success is True
     assert model.calls == 2
     assert len(toolbox.calls) == 1
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_turn_executor_retries_transient_model_failure(tmp_path):
-    """Layer: integration. Verifies transient model provider errors are retried before parsing."""
-
+    """Layer: unit. Verifies transient model provider errors are retried before parsing."""
     class _FlakyModel:
         def __init__(self):
             self.calls = 0
-
         async def complete(self, _messages):
             self.calls += 1
             if self.calls == 1:
@@ -334,7 +310,6 @@ async def test_turn_executor_retries_transient_model_failure(tmp_path):
                 "content": '{"tool": "write_file", "args": {"path": "out.txt", "content": "ok"}}',
                 "raw": {"total_tokens": 1},
             }
-
     executor = TurnExecutor(
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
@@ -345,26 +320,22 @@ async def test_turn_executor_retries_transient_model_failure(tmp_path):
     context = _context()
     context["max_turn_retries"] = 1
     context["turn_retry_backoff_seconds"] = 0
-
     result = await executor.execute_turn(_issue(), _role(), model, toolbox, context)
-
     assert result.success is True
     assert model.calls == 2
     assert toolbox.calls == [("write_file", {"path": "out.txt", "content": "ok"})]
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_turn_executor_blocks_after_model_retry_exhaustion(tmp_path):
-    """Layer: integration. Verifies exhausted transient model errors return a blocked turn result."""
-
+    """Layer: unit. Verifies exhausted transient model errors return a blocked turn result."""
     class _FailingModel:
         def __init__(self):
             self.calls = 0
-
         async def complete(self, _messages):
             self.calls += 1
             raise ModelConnectionError("provider unavailable")
-
     executor = TurnExecutor(
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
@@ -374,15 +345,14 @@ async def test_turn_executor_blocks_after_model_retry_exhaustion(tmp_path):
     context = _context()
     context["max_turn_retries"] = 1
     context["turn_retry_backoff_seconds"] = 0
-
     result = await executor.execute_turn(_issue(), _role(), model, _ToolBox(), context)
-
     assert result.success is False
     assert result.should_retry is False
     assert model.calls == 2
     assert context["turn_retry_exhausted"] is True
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_turn_executor_context_only_tool_call_is_non_progress(tmp_path):
     executor = TurnExecutor(
@@ -406,7 +376,6 @@ async def test_turn_executor_context_only_tool_call_is_non_progress(tmp_path):
     context = _context()
     context["role"] = "requirements_analyst"
     context["roles"] = ["requirements_analyst"]
-
     result = await executor.execute_turn(
         _issue(),
         role,
@@ -419,6 +388,7 @@ async def test_turn_executor_context_only_tool_call_is_non_progress(tmp_path):
     assert "Deterministic failure" in (result.error or "")
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_turn_executor_enforces_required_status_after_reprompt(tmp_path):
     executor = TurnExecutor(
@@ -444,7 +414,6 @@ async def test_turn_executor_enforces_required_status_after_reprompt(tmp_path):
     context["roles"] = ["requirements_analyst"]
     context["required_action_tools"] = ["write_file", "update_issue_status"]
     context["required_statuses"] = ["code_review"]
-
     result = await executor.execute_turn(
         _issue(),
         role,
@@ -458,6 +427,7 @@ async def test_turn_executor_enforces_required_status_after_reprompt(tmp_path):
     assert toolbox.calls[1][1]["status"] == "code_review"
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_turn_executor_blocked_requires_wait_reason(tmp_path):
     executor = TurnExecutor(
@@ -483,7 +453,6 @@ async def test_turn_executor_blocked_requires_wait_reason(tmp_path):
     context["roles"] = ["integrity_guard"]
     context["required_action_tools"] = ["update_issue_status"]
     context["required_statuses"] = ["done", "blocked"]
-
     result = await executor.execute_turn(
         _issue(status=CardStatus.AWAITING_GUARD_REVIEW),
         role,
@@ -497,6 +466,7 @@ async def test_turn_executor_blocked_requires_wait_reason(tmp_path):
     assert "Deterministic failure" in (result.error or "")
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_turn_executor_blocks_approval_required_tool_and_persists_request(tmp_path):
     executor = TurnExecutor(
@@ -506,13 +476,10 @@ async def test_turn_executor_blocks_approval_required_tool_and_persists_request(
      utc_now=artifact_test_utc_now)
     model = _Model(['{"tool": "write_file", "args": {"path": "out.txt", "content": "ok"}}'])
     toolbox = _ToolBox()
-
     request_calls = []
-
     async def _request_writer(*, destination, tool_name, tool_args):
         request_calls.append({"tool_name": tool_name, "tool_args": tool_args})
         return "REQ-TOOL-1"
-
     context = _context()
     context["approval_required_tools"] = ["write_file"]
     context["create_pending_gate_request"] = _request_writer
@@ -528,6 +495,7 @@ async def test_turn_executor_blocks_approval_required_tool_and_persists_request(
     assert request_calls[0]["tool_name"] == "write_file"
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_turn_executor_write_file_approval_resume_continues_same_governed_run(tmp_path):
     control_plane = build_turn_tool_control_plane_service(tmp_path / "control_plane.sqlite3")
@@ -826,6 +794,7 @@ async def test_turn_executor_create_issue_approval_resume_continues_same_governe
     assert truth.result_class.value == "success"
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_turn_executor_guard_rejection_payload_contract_recovers_after_reprompt(tmp_path):
     executor = TurnExecutor(
@@ -867,6 +836,7 @@ async def test_turn_executor_guard_rejection_payload_contract_recovers_after_rep
     assert toolbox.calls[0][1]["status"] == "blocked"
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_turn_executor_guard_rejection_payload_contract_fails_after_reprompt(tmp_path):
     executor = TurnExecutor(
@@ -907,6 +877,7 @@ async def test_turn_executor_guard_rejection_payload_contract_fails_after_reprom
     assert "guard rejection payload contract not met" in (result.error or "")
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_turn_executor_guard_payload_reprompt_still_enforces_progress_contract(tmp_path):
     executor = TurnExecutor(
@@ -947,6 +918,7 @@ async def test_turn_executor_guard_payload_reprompt_still_enforces_progress_cont
     assert "progress contract not met after corrective reprompt" in (result.error or "")
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_prepare_messages_includes_guard_rejection_contract(tmp_path):
     executor = TurnExecutor(
@@ -970,6 +942,7 @@ async def test_prepare_messages_includes_guard_rejection_contract(tmp_path):
     assert "remediation_actions" in joined
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_turn_executor_guard_dependency_block_rejected_when_dependencies_resolved(tmp_path):
     executor = TurnExecutor(
@@ -1018,6 +991,7 @@ async def test_turn_executor_guard_dependency_block_rejected_when_dependencies_r
     assert "guard rejection payload contract not met" in (result.error or "")
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_prepare_messages_includes_read_path_contract(tmp_path):
     executor = TurnExecutor(
@@ -1044,6 +1018,7 @@ async def test_prepare_messages_includes_read_path_contract(tmp_path):
     assert "agent_output/main.py" in joined
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_prepare_messages_includes_write_path_contract(tmp_path):
     executor = TurnExecutor(
@@ -1068,6 +1043,7 @@ async def test_prepare_messages_includes_write_path_contract(tmp_path):
     assert "agent_output/main.py" in joined
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_turn_executor_write_path_contract_recovers_after_reprompt(tmp_path):
     executor = TurnExecutor(
@@ -1109,6 +1085,7 @@ async def test_turn_executor_write_path_contract_recovers_after_reprompt(tmp_pat
     assert toolbox.calls[0][1]["path"] == "agent_output/main.py"
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_turn_executor_read_path_contract_recovers_after_reprompt(tmp_path):
     executor = TurnExecutor(
@@ -1153,6 +1130,7 @@ async def test_turn_executor_read_path_contract_recovers_after_reprompt(tmp_path
     assert toolbox.calls[0][1]["path"] == "agent_output/main.py"
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_turn_executor_missing_required_read_paths_are_preflighted(tmp_path):
     executor = TurnExecutor(
@@ -1194,6 +1172,7 @@ async def test_turn_executor_missing_required_read_paths_are_preflighted(tmp_pat
     assert toolbox.calls[1][0] == "update_issue_status"
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_turn_executor_hallucination_scope_contract_recovers_after_reprompt(tmp_path):
     executor = TurnExecutor(
@@ -1240,6 +1219,7 @@ async def test_turn_executor_hallucination_scope_contract_recovers_after_repromp
     assert toolbox.calls[0][1]["path"] == "agent_output/main.py"
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_turn_executor_hallucination_scope_contract_fails_after_reprompt(tmp_path):
     executor = TurnExecutor(
@@ -1280,6 +1260,7 @@ async def test_turn_executor_hallucination_scope_contract_fails_after_reprompt(t
     assert "hallucination scope contract not met after corrective reprompt" in (result.error or "")
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_turn_executor_hallucination_strict_grounding_ignores_non_json_residue(tmp_path):
     executor = TurnExecutor(
@@ -1318,6 +1299,7 @@ async def test_turn_executor_hallucination_strict_grounding_ignores_non_json_res
     assert len(toolbox.calls) == 1
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_turn_executor_hallucination_strict_grounding_ignores_json_payload_content(tmp_path):
     executor = TurnExecutor(
@@ -1359,6 +1341,7 @@ async def test_turn_executor_hallucination_strict_grounding_ignores_json_payload
     assert toolbox.calls[1][0] == "update_issue_status"
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_turn_executor_hallucination_contradiction_detects_forbidden_phrase(tmp_path):
     executor = TurnExecutor(
@@ -1398,6 +1381,7 @@ async def test_turn_executor_hallucination_contradiction_detects_forbidden_phras
     assert "hallucination scope contract not met after corrective reprompt" in (result.error or "")
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_turn_executor_hallucination_context_partition_enforces_active_context_only(tmp_path):
     executor = TurnExecutor(
@@ -1440,6 +1424,7 @@ async def test_turn_executor_hallucination_context_partition_enforces_active_con
     assert "hallucination scope contract not met after corrective reprompt" in (result.error or "")
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_turn_executor_hallucination_context_budget_exceeded_fails_after_reprompt(tmp_path):
     executor = TurnExecutor(
@@ -1481,6 +1466,7 @@ async def test_turn_executor_hallucination_context_budget_exceeded_fails_after_r
     assert "hallucination scope contract not met after corrective reprompt" in (result.error or "")
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_turn_executor_hallucination_context_budget_within_limit_succeeds(tmp_path):
     executor = TurnExecutor(
@@ -1520,6 +1506,7 @@ async def test_turn_executor_hallucination_context_budget_within_limit_succeeds(
     assert len(toolbox.calls) == 1
 
 
+@pytest.mark.unit
 def test_build_corrective_instruction_includes_rule_specific_hints(tmp_path):
     """Layer: unit. Verifies corrective prompt hints remain available through the explicit builder collaborator."""
     executor = TurnExecutor(
@@ -1547,6 +1534,7 @@ def test_build_corrective_instruction_includes_rule_specific_hints(tmp_path):
     assert "../secret.txt" in instruction
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_turn_executor_security_scope_rejects_path_traversal(tmp_path):
     executor = TurnExecutor(
@@ -1588,6 +1576,7 @@ async def test_turn_executor_security_scope_rejects_path_traversal(tmp_path):
     assert "security scope contract not met after corrective reprompt" in (result.error or "")
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_turn_executor_security_scope_recovers_after_reprompt(tmp_path):
     executor = TurnExecutor(
@@ -1629,6 +1618,7 @@ async def test_turn_executor_security_scope_recovers_after_reprompt(tmp_path):
     assert toolbox.calls[0][1]["path"] == "agent_output/main.py"
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_turn_executor_consistency_scope_rejects_extra_prose(tmp_path):
     executor = TurnExecutor(
@@ -1668,6 +1658,7 @@ async def test_turn_executor_consistency_scope_rejects_extra_prose(tmp_path):
     assert "consistency scope contract not met after corrective reprompt" in (result.error or "")
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_turn_executor_consistency_scope_recovers_after_reprompt(tmp_path):
     executor = TurnExecutor(
@@ -1707,6 +1698,7 @@ async def test_turn_executor_consistency_scope_recovers_after_reprompt(tmp_path)
     assert toolbox.calls[0][1]["status"] == "code_review"
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_turn_executor_consistency_scope_allows_markdown_json_fences(tmp_path):
     executor = TurnExecutor(
@@ -1745,6 +1737,7 @@ async def test_turn_executor_consistency_scope_allows_markdown_json_fences(tmp_p
     assert toolbox.calls[0][1]["status"] == "code_review"
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_turn_executor_consistency_scope_allows_json_array_envelope(tmp_path):
     executor = TurnExecutor(
@@ -1783,6 +1776,7 @@ async def test_turn_executor_consistency_scope_allows_json_array_envelope(tmp_pa
     assert toolbox.calls[0][1]["status"] == "code_review"
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_turn_executor_consistency_scope_allows_comma_separated_objects(tmp_path):
     executor = TurnExecutor(
@@ -1822,6 +1816,7 @@ async def test_turn_executor_consistency_scope_allows_comma_separated_objects(tm
     assert toolbox.calls[1][1]["status"] == "code_review"
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_turn_executor_architecture_contract_recovers_after_reprompt(tmp_path):
     executor = TurnExecutor(
@@ -1860,6 +1855,7 @@ async def test_turn_executor_architecture_contract_recovers_after_reprompt(tmp_p
     assert len(toolbox.calls) == 2
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_turn_executor_architecture_contract_enforces_forced_pattern(tmp_path):
     executor = TurnExecutor(
@@ -1899,6 +1895,7 @@ async def test_turn_executor_architecture_contract_enforces_forced_pattern(tmp_p
     assert "architecture decision contract not met" in (result.error or "")
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_turn_executor_architecture_contract_enforces_forced_frontend_framework(tmp_path):
     executor = TurnExecutor(
@@ -1939,6 +1936,7 @@ async def test_turn_executor_architecture_contract_enforces_forced_frontend_fram
     assert "architecture decision contract not met" in (result.error or "")
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_turn_executor_architecture_contract_allows_relaxed_json_like_content(tmp_path):
     executor = TurnExecutor(
@@ -1986,6 +1984,7 @@ async def test_turn_executor_architecture_contract_allows_relaxed_json_like_cont
     assert toolbox.calls[1][1]["status"] == "code_review"
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_turn_executor_autofills_required_status_tool_call(tmp_path):
     executor = TurnExecutor(
@@ -2027,6 +2026,7 @@ async def test_turn_executor_autofills_required_status_tool_call(tmp_path):
     assert toolbox.calls[1][1]["status"] == "code_review"
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 # Layer: unit
 async def test_turn_executor_does_not_autofill_done_from_legacy_runtime_success(tmp_path):

@@ -5,6 +5,8 @@ import pytest
 import orket.runtime.run_summary as run_summary_module
 from orket.runtime.run_summary import build_run_summary_payload, validate_run_summary_payload
 
+pytestmark = pytest.mark.contract
+
 _STARTED_AT = "2036-03-05T12:00:00+00:00"
 _FINALIZED_AT = "2036-03-05T12:00:05+00:00"
 
@@ -125,7 +127,6 @@ def test_run_summary_rejects_projection_blocks_with_wrong_source(
         extension_artifacts=extension_artifacts,
     )
     payload[payload_key]["projection_source"] = "wrong_source"
-
     with pytest.raises(ValueError, match=expected_error):
         validate_run_summary_payload(payload)
 
@@ -220,7 +221,6 @@ def test_run_summary_rejects_projection_blocks_without_projection_only(
         extension_artifacts=extension_artifacts,
     )
     payload[payload_key]["projection_only"] = False
-
     with pytest.raises(ValueError, match=expected_error):
         validate_run_summary_payload(payload)
 

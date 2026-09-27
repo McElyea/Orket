@@ -7,8 +7,10 @@ from orket.runtime.canonical_examples_library import (
     validate_canonical_examples_library,
 )
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_canonical_examples_library_snapshot_contains_expected_ids() -> None:
     payload = canonical_examples_library_snapshot()
     assert payload["schema_version"] == "1.0"

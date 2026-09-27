@@ -53,6 +53,7 @@ async def _seed_run(
     )
 
 
+@pytest.mark.integration
 def test_protocol_ledger_parity_campaign_reports_clean_match(tmp_path: Path) -> None:
     sqlite_db = tmp_path / "runtime.db"
     protocol_root = tmp_path / "workspace"
@@ -80,6 +81,7 @@ def test_protocol_ledger_parity_campaign_reports_clean_match(tmp_path: Path) -> 
     assert payload["compatibility_telemetry_delta"]["field_delta_counts"] == {}
 
 
+@pytest.mark.integration
 def test_protocol_ledger_parity_campaign_detects_mismatch_and_reports_deltas(tmp_path: Path) -> None:
     sqlite_db = tmp_path / "runtime.db"
     protocol_root = tmp_path / "workspace"
@@ -110,6 +112,7 @@ def test_protocol_ledger_parity_campaign_detects_mismatch_and_reports_deltas(tmp
     assert signatures.get("status:incomplete->failed", 0) >= 1
 
 
+@pytest.mark.integration
 def test_protocol_ledger_parity_campaign_preserves_invalid_projection_fields(tmp_path: Path) -> None:
     sqlite_db = tmp_path / "runtime.db"
     protocol_root = tmp_path / "workspace"
@@ -146,6 +149,7 @@ def test_protocol_ledger_parity_campaign_preserves_invalid_projection_fields(tmp
     assert payload["compatibility_telemetry_delta"]["protocol_invalid_projection_field_counts"] == {}
 
 
+@pytest.mark.integration
 def test_protocol_ledger_parity_campaign_filters_to_requested_session_ids(tmp_path: Path) -> None:
     sqlite_db = tmp_path / "runtime.db"
     protocol_root = tmp_path / "workspace"
@@ -180,6 +184,7 @@ def test_protocol_ledger_parity_campaign_filters_to_requested_session_ids(tmp_pa
     assert payload["rows"][0]["session_id"] == "sess-2"
 
 
+@pytest.mark.contract
 def test_protocol_ledger_parity_campaign_raises_when_no_sessions_available(tmp_path: Path) -> None:
     sqlite_db = tmp_path / "missing.db"
     protocol_root = tmp_path / "workspace"

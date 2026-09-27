@@ -105,19 +105,18 @@ def orchestrator(tmp_path, monkeypatch):
     return orch, cards, loader
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
-# Layer: unit
+# Layers are declared per test for the exercised boundary.
 async def test_execute_epic_completion(orchestrator, tmp_path):
     orch, cards, _loader = orchestrator
     epic = SimpleNamespace(name="Test Epic", issues=[], references=[])
     team = SimpleNamespace(seats={})
     env = SimpleNamespace(temperature=0.1, timeout=30)
-
     # Existing completed backlog means no candidates and immediate completion path.
     cards.get_by_build.side_effect = [[SimpleNamespace(id="I1", status=CardStatus.DONE)]]
     cards.independent_ready.side_effect = [[]]
     (tmp_path / "user_settings.json").write_text('{"models": {}}', encoding="utf-8")
-
     await orch.execute_epic(
         active_build="build-1",
         run_id="run-1",
@@ -125,10 +124,10 @@ async def test_execute_epic_completion(orchestrator, tmp_path):
         team=team,
         env=env,
     )
-
     assert len(cards.independent_ready.calls) == 1
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 # Layer: unit
 async def test_execute_epic_raises_when_no_candidates_and_backlog_incomplete(orchestrator, tmp_path):
@@ -136,11 +135,9 @@ async def test_execute_epic_raises_when_no_candidates_and_backlog_incomplete(orc
     epic = SimpleNamespace(name="Stalled Epic", issues=[], references=[])
     team = SimpleNamespace(seats={})
     env = SimpleNamespace(temperature=0.1, timeout=30)
-
     cards.get_by_build.side_effect = [[SimpleNamespace(id="I1", status=CardStatus.IN_PROGRESS)]]
     cards.independent_ready.side_effect = [[]]
     (tmp_path / "user_settings.json").write_text('{"models": {}}', encoding="utf-8")
-
     with pytest.raises(ExecutionFailed, match="No executable candidates while backlog incomplete"):
         await orch.execute_epic(
             active_build="build-stalled",
@@ -151,6 +148,7 @@ async def test_execute_epic_raises_when_no_candidates_and_backlog_incomplete(orc
         )
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 # Layer: unit
 async def test_execute_epic_propagates_dependency_block_before_stall(orchestrator, tmp_path):
@@ -160,11 +158,9 @@ async def test_execute_epic_propagates_dependency_block_before_stall(orchestrato
     epic = SimpleNamespace(name="Dependency Block Epic", issues=[], references=[])
     team = SimpleNamespace(seats={})
     env = SimpleNamespace(temperature=0.1, timeout=30)
-
     cards.get_by_build.side_effect = [[parent, child], [parent, child]]
     cards.independent_ready.side_effect = [[], []]
     (tmp_path / "user_settings.json").write_text('{"models": {}}', encoding="utf-8")
-
     await orch.execute_epic(
         active_build="build-dependency-block",
         run_id="run-dependency-block",
@@ -172,12 +168,12 @@ async def test_execute_epic_propagates_dependency_block_before_stall(orchestrato
         team=team,
         env=env,
     )
-
     assert child.status == CardStatus.BLOCKED
     assert cards.update_status.calls[0][0] == ("COD-1", CardStatus.BLOCKED)
     assert cards.update_status.calls[0][1]["reason"] == "dependency_blocked"
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 # Layer: unit
 async def test_execute_epic_runs_scaffolder_stage(orchestrator, tmp_path, monkeypatch):
@@ -188,19 +184,14 @@ async def test_execute_epic_runs_scaffolder_stage(orchestrator, tmp_path, monkey
     cards.get_by_build.side_effect = [[SimpleNamespace(id="I1", status=CardStatus.DONE)]]
     cards.independent_ready.side_effect = [[]]
     (tmp_path / "user_settings.json").write_text('{"models": {}}', encoding="utf-8")
-
     hit = {"count": 0}
-
     class _FakeScaffolder:
         def __init__(self, workspace_root, file_tools, organization):
             self.workspace_root = workspace_root
-
         async def ensure(self):
             hit["count"] += 1
             return {"created_directories": [], "created_files": []}
-
     monkeypatch.setattr("orket.application.workflows.orchestrator.Scaffolder", _FakeScaffolder)
-
     await orch.execute_epic(
         active_build="build-scaffold",
         run_id="run-scaffold",
@@ -208,14 +199,14 @@ async def test_execute_epic_runs_scaffolder_stage(orchestrator, tmp_path, monkey
         team=team,
         env=env,
     )
-
     assert hit["count"] == 1
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 # Layer: unit
 async def test_execute_epic_support_services_can_override_scaffolder(orchestrator, tmp_path, monkeypatch):
-    """Layer: integration. Verifies execute_epic uses the explicit orchestrator support-service seam for scaffolder construction."""
+    """Layer: unit. Verifies execute_epic uses the explicit orchestrator support-service seam for scaffolder construction."""
     orch, cards, _loader = orchestrator
     epic = SimpleNamespace(name="Scoped Support Epic", issues=[], references=[])
     team = SimpleNamespace(seats={})
@@ -223,16 +214,12 @@ async def test_execute_epic_support_services_can_override_scaffolder(orchestrato
     cards.get_by_build.side_effect = [[SimpleNamespace(id="I1", status=CardStatus.DONE)]]
     cards.independent_ready.side_effect = [[]]
     (tmp_path / "user_settings.json").write_text('{"models": {}}', encoding="utf-8")
-
     hit = {"count": 0}
-
     class _FakeScaffolder:
         async def ensure(self):
             hit["count"] += 1
             return {"created_directories": [], "created_files": []}
-
     monkeypatch.setattr(orch.support_services, "create_scaffolder", lambda **kwargs: _FakeScaffolder())
-
     await orch.execute_epic(
         active_build="build-support-seam",
         run_id="run-support-seam",
@@ -240,10 +227,10 @@ async def test_execute_epic_support_services_can_override_scaffolder(orchestrato
         team=team,
         env=env,
     )
-
     assert hit["count"] == 1
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 # Layer: unit
 async def test_execute_epic_passes_microservices_pattern_to_stabilizers(orchestrator, tmp_path, monkeypatch):
@@ -262,9 +249,7 @@ async def test_execute_epic_passes_microservices_pattern_to_stabilizers(orchestr
     cards.get_by_build.side_effect = [[SimpleNamespace(id="I1", status=CardStatus.DONE)]]
     cards.independent_ready.side_effect = [[]]
     (tmp_path / "user_settings.json").write_text('{"models": {}}', encoding="utf-8")
-
     captured = {}
-
     class _FakeScaffolder:
         def __init__(
             self,
@@ -275,12 +260,9 @@ async def test_execute_epic_passes_microservices_pattern_to_stabilizers(orchestr
             architecture_pattern=None,
         ):
             captured["architecture_pattern"] = architecture_pattern
-
         async def ensure(self):
             return {"created_directories": [], "created_files": []}
-
     monkeypatch.setattr("orket.application.workflows.orchestrator.Scaffolder", _FakeScaffolder)
-
     await orch.execute_epic(
         active_build="build-scaffold-ms",
         run_id="run-scaffold-ms",
@@ -288,10 +270,10 @@ async def test_execute_epic_passes_microservices_pattern_to_stabilizers(orchestr
         team=team,
         env=env,
     )
-
     assert captured["architecture_pattern"] == "microservices"
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 # Layer: unit
 async def test_execute_epic_preserves_deferred_architecture_mode_for_stabilizers(orchestrator, tmp_path, monkeypatch):
@@ -310,9 +292,7 @@ async def test_execute_epic_preserves_deferred_architecture_mode_for_stabilizers
     cards.get_by_build.side_effect = [[SimpleNamespace(id="I1", status=CardStatus.DONE)]]
     cards.independent_ready.side_effect = [[]]
     (tmp_path / "user_settings.json").write_text('{"models": {}}', encoding="utf-8")
-
     captured = {}
-
     class _FakeScaffolder:
         def __init__(
             self,
@@ -323,12 +303,9 @@ async def test_execute_epic_preserves_deferred_architecture_mode_for_stabilizers
             architecture_pattern=None,
         ):
             captured["architecture_pattern"] = architecture_pattern
-
         async def ensure(self):
             return {"created_directories": [], "created_files": []}
-
     monkeypatch.setattr("orket.application.workflows.orchestrator.Scaffolder", _FakeScaffolder)
-
     await orch.execute_epic(
         active_build="build-scaffold-deferred",
         run_id="run-scaffold-deferred",
@@ -336,10 +313,10 @@ async def test_execute_epic_preserves_deferred_architecture_mode_for_stabilizers
         team=team,
         env=env,
     )
-
     assert captured["architecture_pattern"] is None
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 # Layer: unit
 async def test_execute_epic_fails_on_scaffolder_validation_error(orchestrator, tmp_path, monkeypatch):
@@ -350,16 +327,12 @@ async def test_execute_epic_fails_on_scaffolder_validation_error(orchestrator, t
     cards.get_by_build.side_effect = [[SimpleNamespace(id="I1", status=CardStatus.DONE)]]
     cards.independent_ready.side_effect = [[]]
     (tmp_path / "user_settings.json").write_text('{"models": {}}', encoding="utf-8")
-
     class _BadScaffolder:
         def __init__(self, workspace_root, file_tools, organization):
             self.workspace_root = workspace_root
-
         async def ensure(self):
             raise ScaffoldValidationError("missing directories: agent_output/src")
-
     monkeypatch.setattr("orket.application.workflows.orchestrator.Scaffolder", _BadScaffolder)
-
     with pytest.raises(ExecutionFailed, match="Scaffolder validation failed"):
         await orch.execute_epic(
             active_build="build-scaffold-fail",
@@ -370,6 +343,7 @@ async def test_execute_epic_fails_on_scaffolder_validation_error(orchestrator, t
         )
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 # Layer: unit
 async def test_execute_epic_runs_dependency_manager_stage(orchestrator, tmp_path, monkeypatch):
@@ -380,17 +354,13 @@ async def test_execute_epic_runs_dependency_manager_stage(orchestrator, tmp_path
     cards.get_by_build.side_effect = [[SimpleNamespace(id="I1", status=CardStatus.DONE)]]
     cards.independent_ready.side_effect = [[]]
     (tmp_path / "user_settings.json").write_text('{"models": {}}', encoding="utf-8")
-
     hit = {"count": 0}
-
     class _FakeDependencyManager:
         def __init__(self, workspace_root, file_tools, organization):
             self.workspace_root = workspace_root
-
         async def ensure(self):
             hit["count"] += 1
             return {"created_files": []}
-
     monkeypatch.setattr(
         "orket.application.workflows.orchestrator.DependencyManager",
         _FakeDependencyManager,
@@ -407,6 +377,7 @@ async def test_execute_epic_runs_dependency_manager_stage(orchestrator, tmp_path
     assert hit["count"] == 1
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 # Layer: unit
 async def test_execute_epic_fails_on_dependency_manager_validation_error(orchestrator, tmp_path, monkeypatch):
@@ -442,6 +413,7 @@ async def test_execute_epic_fails_on_dependency_manager_validation_error(orchest
         )
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 # Layer: unit
 async def test_execute_epic_runs_deployment_planner_stage(orchestrator, tmp_path, monkeypatch):
@@ -479,6 +451,7 @@ async def test_execute_epic_runs_deployment_planner_stage(orchestrator, tmp_path
     assert hit["count"] == 1
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 # Layer: unit
 async def test_execute_epic_fails_on_deployment_planner_validation_error(orchestrator, tmp_path, monkeypatch):
@@ -514,6 +487,7 @@ async def test_execute_epic_fails_on_deployment_planner_validation_error(orchest
         )
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_handle_failure_retry_limit(orchestrator, monkeypatch, fresh_runtime_state):
     orch, cards, _loader = orchestrator
@@ -536,6 +510,7 @@ async def test_handle_failure_retry_limit(orchestrator, monkeypatch, fresh_runti
     assert cards.save.calls[-1][0][0]["retry_count"] == 4
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_handle_failure_retry_increment(orchestrator):
     orch, cards, _loader = orchestrator
@@ -675,6 +650,7 @@ async def test_handle_failure_approval_pending_preserves_issue_state_without_sch
     assert saved_issue["status"] == CardStatus.IN_PROGRESS.value
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 # Layer: unit
 async def test_execute_epic_honors_custom_loop_policy(orchestrator, tmp_path):
@@ -724,6 +700,7 @@ async def test_execute_epic_honors_custom_loop_policy(orchestrator, tmp_path):
     assert hit["count"] == 1
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 # Layer: unit
 async def test_execute_issue_turn_uses_custom_model_clients(orchestrator, monkeypatch):
@@ -819,6 +796,7 @@ async def test_execute_issue_turn_uses_custom_model_clients(orchestrator, monkey
     assert orch.model_clients.close_calls == 1
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 # Layer: unit
 async def test_execute_issue_turn_prefers_explicit_model_override_for_prompt_strategy(orchestrator, monkeypatch):
@@ -917,6 +895,7 @@ async def test_execute_issue_turn_prefers_explicit_model_override_for_prompt_str
     assert orch.model_clients.provider_model == "google/gemma-4-26b-a4b"
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 # Layer: unit
 async def test_execute_issue_turn_closes_provider_per_turn_across_repeated_cycles(orchestrator, monkeypatch):
@@ -1124,6 +1103,7 @@ async def test_execute_issue_turn_skips_sandbox_when_policy_disabled(orchestrato
     assert trigger_calls["count"] == 0
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 # Layer: unit
 async def test_execute_issue_turn_blocks_review_when_runtime_verifier_fails(orchestrator, monkeypatch):
@@ -1256,6 +1236,7 @@ async def test_execute_issue_turn_blocks_review_when_runtime_verifier_fails(orch
     assert report.get("guard_decision", {}).get("action") == "retry"
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 # Layer: unit
 async def test_execute_issue_turn_marks_terminal_failure_when_runtime_retries_exhausted(orchestrator, monkeypatch):
@@ -1345,6 +1326,7 @@ async def test_execute_issue_turn_marks_terminal_failure_when_runtime_retries_ex
     assert report.get("guard_decision", {}).get("action") == "terminal_failure"
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 # Layer: unit
 async def test_execute_issue_turn_marks_terminal_failure_for_repeated_guard_fingerprint(orchestrator, monkeypatch):
@@ -1443,6 +1425,7 @@ async def test_execute_issue_turn_marks_terminal_failure_for_repeated_guard_fing
     assert report.get("guard_decision", {}).get("terminal_reason", {}).get("code") == "MODEL_NON_COMPLIANT"
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 # Layer: unit
 async def test_execute_issue_turn_uses_prompt_resolver_when_policy_enabled(orchestrator, monkeypatch):
@@ -1555,6 +1538,7 @@ async def test_execute_issue_turn_uses_prompt_resolver_when_policy_enabled(orche
     assert captured["context"]["prompt_layers"]["role_base"]["version"] == "2.1.0"
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 # Layer: unit
 async def test_execute_issue_turn_uses_prompt_compiler_when_resolver_disabled(orchestrator, monkeypatch):
@@ -1649,6 +1633,7 @@ async def test_execute_issue_turn_uses_prompt_compiler_when_resolver_disabled(or
     assert captured["context"]["prompt_metadata"]["resolver_policy"] == "compiler"
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 # Layer: unit
 async def test_execute_issue_turn_suppresses_reference_context_for_cards_runtime_issue(orchestrator, monkeypatch):
@@ -1750,6 +1735,7 @@ async def test_execute_issue_turn_suppresses_reference_context_for_cards_runtime
     assert captured["system_prompt"].partition("\n\nDeclared card acceptance:\n")[0] == "COMPILER PROMPT"
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 # Layer: unit
 async def test_execute_issue_turn_passes_default_prompt_selection_policy(orchestrator, monkeypatch):
@@ -1861,6 +1847,7 @@ async def test_execute_issue_turn_passes_default_prompt_selection_policy(orchest
     assert "HALLUCINATION.FILE_NOT_FOUND" in captured["kwargs"]["context"]["runtime_guard_rule_ids"]
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 # Layer: unit
 async def test_execute_issue_turn_passes_runtime_prompt_patch_into_resolver(orchestrator, monkeypatch):
@@ -1970,6 +1957,7 @@ async def test_execute_issue_turn_passes_runtime_prompt_patch_into_resolver(orch
     assert captured["context"]["prompt_layers"]["patch"]["applied"] is True
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 # Layer: unit
 async def test_execute_issue_turn_passes_runtime_prompt_patch_into_compiler(orchestrator, monkeypatch):
@@ -2061,6 +2049,7 @@ async def test_execute_issue_turn_passes_runtime_prompt_patch_into_compiler(orch
     assert captured["system_prompt"].partition("\n\nDeclared card acceptance:\n")[0] == "COMPILER PROMPT"
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 # Layer: unit
 # Layer: unit
@@ -2640,6 +2629,7 @@ async def test_build_turn_context_defaults_to_monolith_and_vue(orchestrator):
     assert context["project_surface_profile"] == "unspecified"
 
 
+@pytest.mark.unit
 def test_resolve_architecture_pattern_preserves_architect_decides(orchestrator):
     orch, _cards, _loader = orchestrator
     orch.org = SimpleNamespace(process_rules={"architecture_mode": "architect_decides"})
@@ -2799,6 +2789,7 @@ async def test_build_turn_context_uses_active_run_policy_overrides(orchestrator)
 
 
 
+@pytest.mark.unit
 def test_resolve_runtime_modes_honor_user_settings_when_process_rules_unset(orchestrator, monkeypatch):
     """Layer: unit. Architecture evaluation consumes the explicit unlock snapshot."""
     orch, _cards, _loader = orchestrator
@@ -2817,6 +2808,7 @@ def test_resolve_runtime_modes_honor_user_settings_when_process_rules_unset(orch
     assert orch._resolve_project_surface_profile() == "api_vue"
 
 
+@pytest.mark.unit
 def test_resolve_small_project_builder_variant_from_user_settings(orchestrator, monkeypatch):
     orch, _cards, _loader = orchestrator
     orch.org = SimpleNamespace(process_rules={})
@@ -2827,11 +2819,13 @@ def test_resolve_small_project_builder_variant_from_user_settings(orchestrator, 
     assert orch._resolve_small_project_builder_variant() == "architect"
 
 
+@pytest.mark.unit
 def test_orchestrator_helper_methods_are_explicit_class_members() -> None:
     assert "_resolve_architecture_mode" in Orchestrator.__dict__
     assert "_build_dependency_context" in Orchestrator.__dict__
 
 
+@pytest.mark.unit
 def test_resolve_small_project_policy_maps_architect_to_lead_architect(orchestrator):
     orch, _cards, _loader = orchestrator
     epic = SimpleNamespace(issues=[SimpleNamespace(id="I1")])
@@ -2850,6 +2844,7 @@ def test_resolve_small_project_policy_maps_architect_to_lead_architect(orchestra
     assert policy["builder_seat"] == "lead_architect"
 
 
+@pytest.mark.unit
 def test_auto_inject_small_project_reviewer_from_process_rules(orchestrator):
     orch, _cards, _loader = orchestrator
     orch.org = SimpleNamespace(
@@ -2871,6 +2866,7 @@ def test_auto_inject_small_project_reviewer_from_process_rules(orchestrator):
     assert policy["reviewer_seat"] == "reviewer_auto"
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 # Layer: unit
 async def test_execute_epic_requires_reviewer_for_small_project(orchestrator, tmp_path):
@@ -2893,6 +2889,7 @@ async def test_execute_epic_requires_reviewer_for_small_project(orchestrator, tm
         )
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 # Layer: unit
 async def test_execute_issue_turn_small_project_variant_overrides_builder_seat(orchestrator, monkeypatch):
@@ -2981,6 +2978,7 @@ async def test_execute_issue_turn_small_project_variant_overrides_builder_seat(o
     assert captured["role"] == "architect"
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 # Layer: unit
 async def test_execute_issue_turn_does_not_coerce_builder_seat_when_small_project_policy_inactive(
@@ -3077,6 +3075,7 @@ async def test_execute_issue_turn_does_not_coerce_builder_seat_when_small_projec
     assert captured["reviewer_seat_choice"] == "integrity_guard"
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_team_replan_schedules_card_when_requirements_request_replan(orchestrator):
     orch, cards, _loader = orchestrator
@@ -3113,6 +3112,7 @@ async def test_team_replan_schedules_card_when_requirements_request_replan(orche
     assert any(payload.get("id") == "REPLAN-RUN-AB-1" for payload in saved_payloads)
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_team_replan_limit_exceeded_raises_terminal_failure(orchestrator):
     orch, cards, _loader = orchestrator

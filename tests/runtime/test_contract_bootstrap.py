@@ -6,13 +6,15 @@ import pytest
 
 from orket.runtime.contract_bootstrap import load_runtime_contract_snapshots
 
+pytestmark = pytest.mark.contract
+
 
 def _write(path: Path, content: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content, encoding="utf-8")
 
 
-# Layer: unit
+# Layer: contract
 def test_load_runtime_contract_snapshots_parses_valid_contract_sources(tmp_path: Path) -> None:
     _write(
         tmp_path / "core" / "artifacts" / "schema_registry.yaml",

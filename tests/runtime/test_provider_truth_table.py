@@ -7,8 +7,10 @@ from orket.runtime.provider_truth_table import (
     validate_provider_truth_table,
 )
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_provider_truth_table_snapshot_has_expected_providers() -> None:
     payload = provider_truth_table_snapshot()
     assert payload["schema_version"] == "1.0"

@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import pytest
+
 from orket.capabilities.sdk_voice_provider import HostSTTCapabilityProvider, HostVoiceTurnController
 from orket_extension_sdk.voice import TranscribeRequest, TranscribeResponse, VoiceTurnControlRequest
 
 
+@pytest.mark.contract
 def test_host_voice_turn_controller_transition_happy_path() -> None:
-    """Layer: integration. Verifies start/submit/stop transitions for host-owned voice turn control."""
+    """Layer: contract. Verifies start/submit/stop transitions for host-owned voice turn control."""
     controller = HostVoiceTurnController()
     started = controller.control(VoiceTurnControlRequest(command="start"))
     assert started.ok is True
@@ -22,8 +25,9 @@ def test_host_voice_turn_controller_transition_happy_path() -> None:
     assert stopped.state == "idle"
 
 
+@pytest.mark.contract
 def test_host_voice_turn_controller_invalid_transition_fails_closed() -> None:
-    """Layer: integration. Verifies invalid transitions return explicit errors without mutating state."""
+    """Layer: contract. Verifies invalid transitions return explicit errors without mutating state."""
     controller = HostVoiceTurnController()
     invalid_submit = controller.control(VoiceTurnControlRequest(command="submit"))
     assert invalid_submit.ok is False
@@ -37,8 +41,9 @@ def test_host_voice_turn_controller_invalid_transition_fails_closed() -> None:
     assert controller.state() == "listening"
 
 
+@pytest.mark.unit
 def test_host_voice_turn_controller_clamps_silence_delay() -> None:
-    """Layer: integration. Verifies silence-delay updates are clamped to host-configured min/max bounds."""
+    """Layer: unit. Verifies silence-delay updates are clamped to host-configured min/max bounds."""
     controller = HostVoiceTurnController(
         default_silence_delay_seconds=2.0,
         min_silence_delay_seconds=0.5,
@@ -50,8 +55,9 @@ def test_host_voice_turn_controller_clamps_silence_delay() -> None:
     assert controller.silence_delay_seconds() == 0.5
 
 
+@pytest.mark.contract
 def test_host_stt_provider_default_and_custom_transcriber() -> None:
-    """Layer: integration. Verifies STT provider reports unavailable by default and uses host transcriber when configured."""
+    """Layer: contract. Verifies STT provider reports unavailable by default and uses host transcriber when configured."""
     unavailable = HostSTTCapabilityProvider()
     unavailable_result = unavailable.transcribe(TranscribeRequest(audio_bytes=b"pcm"))
     assert unavailable_result.ok is False

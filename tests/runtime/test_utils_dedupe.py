@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import pytest
+
 from orket.utils import dedupe_ordered
+
+pytestmark = pytest.mark.unit
 
 
 def test_dedupe_ordered_trims_and_preserves_first_seen_order() -> None:

@@ -7,8 +7,10 @@ from orket.runtime.failure_replay_harness_contract import (
     validate_failure_replay_harness_contract,
 )
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_failure_replay_harness_contract_snapshot_contains_expected_fields() -> None:
     payload = failure_replay_harness_contract_snapshot()
     assert payload["schema_version"] == "1.0"

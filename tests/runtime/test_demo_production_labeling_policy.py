@@ -7,8 +7,10 @@ from orket.runtime.demo_production_labeling_policy import (
     validate_demo_production_labeling_policy,
 )
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_demo_production_labeling_policy_snapshot_contains_expected_labels() -> None:
     payload = demo_production_labeling_policy_snapshot()
     assert payload["schema_version"] == "1.0"

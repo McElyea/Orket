@@ -7,8 +7,10 @@ from orket.runtime.feature_flag_expiration_policy import (
     validate_feature_flag_expiration_policy,
 )
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_feature_flag_expiration_policy_snapshot_contains_expected_fields() -> None:
     payload = feature_flag_expiration_policy_snapshot()
     assert payload["schema_version"] == "1.0"

@@ -7,8 +7,10 @@ from orket.runtime.resource_pressure_simulation_lane import (
     validate_resource_pressure_simulation_lane,
 )
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_resource_pressure_simulation_lane_snapshot_contains_expected_check_ids() -> None:
     payload = resource_pressure_simulation_lane_snapshot()
     assert payload["schema_version"] == "1.0"

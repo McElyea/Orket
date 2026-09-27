@@ -7,8 +7,10 @@ from orket.runtime.evidence_package_generator_contract import (
     validate_evidence_package_generator_contract,
 )
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_evidence_package_generator_contract_snapshot_contains_expected_sections() -> None:
     payload = evidence_package_generator_contract_snapshot()
     assert payload["schema_version"] == "1.0"

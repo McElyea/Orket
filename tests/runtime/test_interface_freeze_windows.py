@@ -7,8 +7,10 @@ from orket.runtime.interface_freeze_windows import (
     validate_interface_freeze_windows,
 )
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_interface_freeze_windows_snapshot_contains_expected_window_ids() -> None:
     payload = interface_freeze_windows_snapshot()
     assert payload["schema_version"] == "1.0"

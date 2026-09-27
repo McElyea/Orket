@@ -7,8 +7,10 @@ from orket.runtime.source_attribution_policy import (
     validate_source_attribution_policy,
 )
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_source_attribution_policy_snapshot_contains_expected_modes() -> None:
     payload = source_attribution_policy_snapshot()
     assert payload["schema_version"] == "1.0"

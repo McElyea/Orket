@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import pytest
+
 from orket.runtime.route_decision_artifact import build_route_decision_artifact
+
+pytestmark = pytest.mark.contract
 
 
 class _ExecutionNode:
@@ -11,7 +15,7 @@ class _WiringNode:
     pass
 
 
-# Layer: unit
+# Layer: contract
 def test_build_route_decision_artifact_defaults_to_epic_route() -> None:
     payload = build_route_decision_artifact(
         run_id="run-1",

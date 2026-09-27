@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+import pytest
+
 from orket.runtime.run_summary import build_run_summary_payload, reconstruct_run_summary
 from orket.runtime.run_summary_artifact_provenance import ARTIFACT_PROVENANCE_KEY
+
+pytestmark = pytest.mark.contract
 
 _STARTED_AT = "2036-03-05T12:00:00+00:00"
 _FINALIZED_AT = "2036-03-05T12:00:05+00:00"
@@ -99,7 +103,7 @@ def test_artifact_provenance_extension_is_omitted_without_artifacts() -> None:
     assert ARTIFACT_PROVENANCE_KEY not in payload
 
 
-# Layer: integration
+# Layer: contract
 def test_artifact_provenance_reconstruction_matches_emitted_summary() -> None:
     events = [
         {

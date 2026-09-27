@@ -13,7 +13,7 @@ from tests.runtime.run_evidence_graph_test_support import (
 )
 
 
-# Layer: integration
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_project_run_evidence_graph_primary_lineage_emits_complete_deterministic_graph(
     tmp_path: Path,
@@ -126,7 +126,7 @@ async def test_project_run_evidence_graph_primary_lineage_emits_complete_determi
     assert commit_step["attributes"]["supplemental_run_ledger_selected_step"] is True
 
 
-# Layer: integration
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_project_run_evidence_graph_primary_lineage_prefers_canonical_run_reservation_over_approval_hold(
     tmp_path: Path,

@@ -7,8 +7,10 @@ from orket.runtime.operator_override_logging_policy import (
     validate_operator_override_logging_policy,
 )
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_operator_override_logging_policy_snapshot_contains_expected_override_types() -> None:
     payload = operator_override_logging_policy_snapshot()
     assert payload["schema_version"] == "1.0"

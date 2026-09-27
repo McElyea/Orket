@@ -19,6 +19,7 @@ class _Repo:
         return self._row
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_compare_run_ledger_rows_reports_parity_for_identical_rows() -> None:
     row = {
@@ -43,6 +44,7 @@ async def test_compare_run_ledger_rows_reports_parity_for_identical_rows() -> No
     assert result["sqlite_digest"] == result["protocol_digest"]
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_compare_run_ledger_rows_reports_field_differences() -> None:
     sqlite_row = {
@@ -69,6 +71,7 @@ async def test_compare_run_ledger_rows_reports_field_differences() -> None:
     assert result["sqlite_digest"] != result["protocol_digest"]
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_compare_run_ledger_rows_reports_missing_rows() -> None:
     result = await compare_run_ledger_rows(
@@ -80,6 +83,7 @@ async def test_compare_run_ledger_rows_reports_missing_rows() -> None:
     assert result["differences"][0]["field"] == "__row__"
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_compare_run_ledger_rows_with_real_repositories(tmp_path: Path) -> None:
     sqlite_repo = AsyncRunLedgerRepository(tmp_path / "runtime.db")
@@ -123,6 +127,7 @@ async def test_compare_run_ledger_rows_with_real_repositories(tmp_path: Path) ->
     assert result["differences"] == []
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_compare_run_ledger_rows_missing_both_is_clean() -> None:
     result = await compare_run_ledger_rows(
@@ -136,6 +141,7 @@ async def test_compare_run_ledger_rows_missing_both_is_clean() -> None:
     assert result["protocol_digest"] is None
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_compare_run_ledger_rows_rejects_invalid_projection_shapes() -> None:
     sqlite_row = {
@@ -169,6 +175,7 @@ async def test_compare_run_ledger_rows_rejects_invalid_projection_shapes() -> No
     assert any(row["field"] == "__projection_validation__" for row in result["differences"])
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_compare_run_ledger_rows_accepts_valid_json_string_payloads() -> None:
     summary = {
@@ -209,6 +216,7 @@ async def test_compare_run_ledger_rows_accepts_valid_json_string_payloads() -> N
     assert result["differences"] == []
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_compare_run_ledger_rows_detects_missing_protocol_row_with_real_sqlite(tmp_path: Path) -> None:
     sqlite_repo = AsyncRunLedgerRepository(tmp_path / "runtime.db")
@@ -234,6 +242,7 @@ async def test_compare_run_ledger_rows_detects_missing_protocol_row_with_real_sq
     assert result["protocol_row"] is None
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_compare_run_ledger_rows_digest_changes_when_summary_changes() -> None:
     base = {

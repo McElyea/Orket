@@ -7,8 +7,10 @@ from orket.runtime.long_session_soak_test_contract import (
     validate_long_session_soak_test_contract,
 )
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_long_session_soak_test_contract_snapshot_contains_expected_check_ids() -> None:
     payload = long_session_soak_test_contract_snapshot()
     assert payload["schema_version"] == "1.0"

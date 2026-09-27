@@ -13,7 +13,7 @@ from orket.application.workflows.turn_artifact_destination import TurnArtifactDe
 from orket.application.workflows.turn_response_capture import capture_turn_response
 from orket.application.workflows.turn_response_parser import ResponseParser
 
-pytestmark = pytest.mark.asyncio
+pytestmark = [pytest.mark.asyncio, pytest.mark.contract]
 _NOW = datetime(2026, 9, 23, tzinfo=UTC)
 
 

@@ -7,8 +7,10 @@ from orket.runtime.idempotency_discipline_policy import (
     validate_idempotency_discipline_policy,
 )
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_idempotency_discipline_policy_snapshot_contains_expected_surfaces() -> None:
     payload = idempotency_discipline_policy_snapshot()
     assert payload["schema_version"] == "1.0"

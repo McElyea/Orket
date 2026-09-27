@@ -7,6 +7,8 @@ from orket.runtime.provider_quarantine_policy_contract import (
     validate_provider_quarantine_policy_contract,
 )
 
+pytestmark = pytest.mark.contract
+
 
 # Layer: contract
 def test_provider_quarantine_policy_contract_snapshot_contains_expected_env_keys() -> None:

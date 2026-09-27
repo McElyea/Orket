@@ -7,8 +7,10 @@ from orket.runtime.conformance_governance_contract import (
     validate_conformance_governance_contract,
 )
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_conformance_governance_contract_snapshot_contains_expected_sections() -> None:
     payload = conformance_governance_contract_snapshot()
     assert payload["schema_version"] == "1.0"

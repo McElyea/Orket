@@ -7,6 +7,8 @@ import pytest
 
 from orket.runtime.run_start_artifacts import capture_run_start_artifacts
 
+pytestmark = pytest.mark.contract
+
 
 # Layer: contract
 def test_capture_run_start_artifacts_fails_closed_on_long_session_soak_test_contract_mutation(

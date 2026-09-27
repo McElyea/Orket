@@ -7,8 +7,10 @@ from orket.runtime.promotion_rollback_criteria import (
     validate_promotion_rollback_criteria,
 )
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_promotion_rollback_criteria_snapshot_contains_expected_triggers() -> None:
     payload = promotion_rollback_criteria_snapshot()
     assert payload["schema_version"] == "1.0"

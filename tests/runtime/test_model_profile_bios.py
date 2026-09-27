@@ -4,8 +4,10 @@ import pytest
 
 from orket.runtime.model_profile_bios import model_profile_bios_snapshot, validate_model_profile_bios
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_model_profile_bios_snapshot_contains_expected_profiles() -> None:
     payload = model_profile_bios_snapshot()
     assert payload["schema_version"] == "1.0"

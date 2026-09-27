@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-# Layer: contract/unit/integration
+# Layers are declared per test for the exercised boundary.
 from pathlib import Path
 from typing import Any
 
@@ -27,6 +27,7 @@ from tests.runtime.test_controller_dispatcher import (
 )
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_observability_batch_is_ordered_and_schema_valid() -> None:
     """Layer: contract."""
@@ -72,6 +73,7 @@ async def test_observability_batch_is_ordered_and_schema_valid() -> None:
     assert all(event["projection_only"] is True for event in events[1:])
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_observability_projection_excludes_run_id() -> None:
     """Layer: unit."""
@@ -96,9 +98,10 @@ async def test_observability_projection_excludes_run_id() -> None:
     assert controller_observability.canonical_projection(events_a) == controller_observability.canonical_projection(events_b)
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_dispatcher_blocked_mapping_and_not_attempted_timeout_shape() -> None:
-    """Layer: unit."""
+    """Layer: contract."""
     manager = _StubExtensionManager(
         workload_styles={"sdk_a": CONTRACT_STYLE_SDK_V0, "sdk_b": CONTRACT_STYLE_SDK_V0},
         outcomes={
@@ -176,6 +179,7 @@ async def _build_controller_manager(tmp_path: Path, monkeypatch: pytest.MonkeyPa
     return manager, workspace
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_controller_workload_observability_emission_and_fail_closed(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -247,6 +251,7 @@ async def test_controller_workload_observability_emission_and_fail_closed(
     assert "forced observability failure" in str(fail_output["controller_observability_error"] or "")
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_controller_workload_enablement_policy_blocks_run(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch

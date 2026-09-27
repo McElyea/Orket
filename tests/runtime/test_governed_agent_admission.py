@@ -52,6 +52,7 @@ def _write_agent_repo(path: Path) -> None:
     )
 
 
+@pytest.mark.contract
 def test_host_validation_accepts_implemented_agent_features(tmp_path: Path) -> None:
     extension = tmp_path / "extension"
     extension.mkdir()
@@ -64,6 +65,7 @@ def test_host_validation_accepts_implemented_agent_features(tmp_path: Path) -> N
     assert result["errors"] == []
 
 
+@pytest.mark.contract
 def test_host_validation_refuses_unknown_agent_feature(tmp_path: Path) -> None:
     extension = tmp_path / "extension"
     extension.mkdir()
@@ -86,6 +88,7 @@ def test_host_validation_refuses_unknown_agent_feature(tmp_path: Path) -> None:
     assert [item["code"] for item in result["errors"]] == ["E_AGENT_HOST_FEATURE_UNSUPPORTED"]
 
 
+@pytest.mark.integration
 def test_install_publishes_agent_for_dedicated_catalog_resolution(tmp_path: Path) -> None:
     """Layer: integration. Exercise the admitted extension through its async command boundary."""
     repo = tmp_path / "repo"
@@ -105,6 +108,7 @@ def test_install_publishes_agent_for_dedicated_catalog_resolution(tmp_path: Path
     assert launch.agent_declaration["contract_version"] == "governed_agent_loop.v1"
 
 
+@pytest.mark.contract
 def test_catalog_reload_refuses_marker_only_legacy_row(tmp_path: Path) -> None:
     catalog_path = tmp_path / "catalog.json"
     catalog_path.write_text(
@@ -134,6 +138,7 @@ def test_catalog_reload_refuses_marker_only_legacy_row(tmp_path: Path) -> None:
         ExtensionCatalog(catalog_path).list_extensions()
 
 
+@pytest.mark.contract
 @pytest.mark.parametrize("capability", ["agent.iteration.v1", "read_file", "write_file"])
 def test_child_configuration_cannot_materialize_agent_host_authority(
     tmp_path: Path,

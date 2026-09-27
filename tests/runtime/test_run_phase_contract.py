@@ -8,8 +8,10 @@ from orket.runtime.run_phase_contract import (
     validate_phase_trace,
 )
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_run_phase_contract_snapshot_matches_canonical_order() -> None:
     payload = run_phase_contract_snapshot()
     assert payload["schema_version"] == "1.0"

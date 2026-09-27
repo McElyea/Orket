@@ -8,8 +8,10 @@ from orket.runtime.state_transition_registry import (
     validate_state_transition,
 )
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_state_transition_registry_snapshot_contains_required_domains() -> None:
     payload = state_transition_registry_snapshot()
     assert payload["schema_version"] == "1.0"

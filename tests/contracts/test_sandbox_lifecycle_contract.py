@@ -17,6 +17,8 @@ from orket.core.domain.sandbox_lifecycle import (
     validate_lifecycle_transition,
 )
 
+pytestmark = pytest.mark.contract
+
 
 @pytest.mark.parametrize(
     ("current_state", "event", "next_state", "terminal_reason", "cleanup_state"),

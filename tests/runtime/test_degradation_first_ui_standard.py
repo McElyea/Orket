@@ -7,8 +7,10 @@ from orket.runtime.degradation_first_ui_standard import (
     validate_degradation_first_ui_standard,
 )
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_degradation_first_ui_standard_snapshot_contains_expected_check_ids() -> None:
     payload = degradation_first_ui_standard_snapshot()
     assert payload["schema_version"] == "1.0"

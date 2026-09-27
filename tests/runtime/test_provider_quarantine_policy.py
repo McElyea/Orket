@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from orket.runtime.provider_quarantine_policy import (
     is_model_quarantined,
     is_provider_quarantined,
@@ -7,6 +9,8 @@ from orket.runtime.provider_quarantine_policy import (
     parse_quarantined_providers,
     resolve_provider_quarantine_policy,
 )
+
+pytestmark = pytest.mark.unit
 
 
 # Layer: unit
@@ -18,13 +22,13 @@ def test_parse_quarantined_providers_normalizes_tokens() -> None:
     }
 
 
-# Layer: contract
+# Layer: unit
 def test_parse_quarantined_provider_models_supports_model_ids_with_colons() -> None:
     rows = parse_quarantined_provider_models("ollama:qwen2.5-coder:7b,lmstudio:qwen3.5-4b")
     assert rows == {("ollama", "qwen2.5-coder:7b"), ("lmstudio", "qwen3.5-4b")}
 
 
-# Layer: contract
+# Layer: unit
 def test_resolve_provider_quarantine_policy_reads_environment() -> None:
     payload = resolve_provider_quarantine_policy(
         environment={
@@ -36,7 +40,7 @@ def test_resolve_provider_quarantine_policy_reads_environment() -> None:
     assert payload["provider_models"] == [("openai_compat", "gpt-4o-mini")]
 
 
-# Layer: contract
+# Layer: unit
 def test_provider_and_model_quarantine_checks_are_provider_aware() -> None:
     assert is_provider_quarantined(
         requested_provider="lmstudio",

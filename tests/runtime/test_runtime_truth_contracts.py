@@ -12,8 +12,10 @@ from orket.runtime.runtime_truth_contracts import (
     validate_runtime_status_vocabulary_contract,
 )
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_runtime_status_vocabulary_snapshot_has_expected_terms() -> None:
     payload = runtime_status_vocabulary_snapshot()
     assert payload["schema_version"] == "1.0"

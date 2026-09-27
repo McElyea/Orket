@@ -7,8 +7,10 @@ from orket.runtime.capability_fallback_hierarchy import (
     validate_capability_fallback_hierarchy,
 )
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_capability_fallback_hierarchy_snapshot_contains_streaming_hierarchy() -> None:
     payload = capability_fallback_hierarchy_snapshot()
     assert payload["schema_version"] == "1.0"

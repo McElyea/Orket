@@ -26931,3 +26931,110 @@ stay unchanged, while byte-identical commit-to-wheel claims exclude normalized
 paths. Full source coverage, Linux application/provider proof, hosted Quality,
 remaining D/E/CAP and explicit whole-lane acceptance remain open. This checkpoint
 does not merge main or retire the active lane.
+
+### E1 classification and failure-diagnostic opening checkpoint: 0.6.109
+
+The prior goal turn made progress by publishing `02270e5ae9e1cce13d41edd2bce1b419909a3d13`
+and annotated `v0.6.108` together on `codex/architectural-truth-bt0`; remote branch,
+tag object, peeled commit, complete candidate Git blobs and clean worktree were
+read back. This continuation remains in the same authorized worktree and branch.
+
+Reviewed E1 migration adds 588 runtime cases across 553 functions in 125 modules:
+445 contract, 83 integration and 60 unit. Actual functions, fixtures and callees
+were reviewed; naming or prose alone did not determine layers. Source hashes,
+normalized bodies, assertions, parameters and prior markers are preserved, and
+no oversized file grows. Ruff and whitespace checks pass. Fresh canonical runtime
+collection has 709 cases, zero missing/conflicting layers and zero errors; the
+588 exact migrated item identities match their reviewed decisions. This is
+collection/classification proof, not execution of all runtime test bodies.
+Receipt: `.tmp/goal-20260927-quality/v109/runtime-collection.json`, SHA-256
+`52ef4535cf2ac3db53e247ccee9833dfd04889b42dc19265b349c2be2ad27259`;
+applied source binding: `runtime-application-after.json` in the same directory,
+SHA-256 `9efcf0f9db09c3bd782b5f1bc414271e2120a0eec24be1dc50d262ad72c6db04`.
+
+The two reviewed parser/review-result modules add 43 contract cases. Their test
+ASTs are unchanged, including assertions and parameters; the 544-line result
+module does not grow. All 43 exact reviewed cases pass with no skips or input
+drift and terminal native ownership. In-memory artifact writers and pure schema
+checks do not establish provider or filesystem-publication proof. Receipt:
+`.tmp/goal-e1-v109-application/report.json`, SHA-256
+`8405b863197f4cc46eb04e20de612a8da85d44dbb061679432c2d59a05fdda56`.
+
+The first global taxonomy observation collects 10,606 cases with 2,178 missing layers, no
+conflicts and no collection errors. The exact missing-node set decreases by
+these 631 reviewed cases, with no new missing items; strict exit 1 remains the
+correct refusal. Migration readback:
+`.tmp/goal-e1-v109-taxonomy/migration-readback.json`, SHA-256
+`72c74ffda65cd0d036616902fcfe1c0b100ae77e881528762ecf3633c9da3ddd`.
+
+A further reviewed migration classifies 200 application cases in six modules
+(124 contract, 46 unit, 30 integration) and 70 cases in twelve `tests/contracts`
+modules (59 contract, 11 unit). Documentation token/presence checks are unit
+proof; declared sandbox transition and cleanup inputs do not establish Docker
+execution. The original root patch's import-order defect was caught before
+application and corrected in a preserved successor. All 270 reviewed identities
+and classifications match canonical scoped collection, alongside 32 unchanged
+existing classifications: 302 collected, zero missing/conflicting markers,
+errors or unexpected items. This is structural collection proof, not execution
+of those test bodies. The source owner exited 0 and was reaped after 4.609 seconds
+with no observed residual. Receipt:
+`.tmp/goal-20260927-quality/v109/application-review/combined-collection.json`;
+source binding: `combined-after.json` in that directory, SHA-256
+`64e70c756082ed669debfdab5eb966ad3800be627f4b3441f9a177fa798c3980`.
+The checkpoint now adds 901 reviewed classifications across 145 test modules.
+
+Final current-source global collection confirms 10,606 cases, 1,908 missing
+classifications, no conflicts and no collection errors. Exactly the reviewed 901
+items leave the 0.6.108 missing set, including the 270 after the first observation;
+no new missing item appears. All reviewed layers match. Strict exit 1 remains a
+truthful failure. Source inputs are unchanged across collection; this is
+structural proof with observed path `primary`, successful migration readback and
+failed strict taxonomy acceptance. Readback:
+`.tmp/goal-20260927-quality/v109/publication-gates/readback.json`, SHA-256
+`793fe93feca4c8fcf7810b73eb6ed13bb580cb0588eef76ff223800d4e067658`.
+Independent AST comparison confirms all 145 modules preserve assertions,
+parameters, fixture bodies and ordered nonlayer markers after the narrowly
+specified classification/import/prose normalization. The receipt retains the
+initial normalizer refusal for a singleton-to-list marker representation and its
+correction; it is not a source defect or an erased failed test. Receipt:
+`.tmp/goal-20260927-publication-v109/peer_marker_ast_review.json`, SHA-256
+`601229cba6f1004f79d6329e7828fa508e664ae956c7ca2cb089441bf7166ffe`.
+Canonical `ruff check orket tests`, docs project hygiene and precommit core
+version/changelog alignment pass. No new full-suite, 89% coverage or installed
+runtime acceptance is claimed. Publication binds the exact 151 changed paths,
+staged Git blobs and annotated tag in
+`.tmp/goal-20260927-publication-v109/receipt.json`; the overall lane stays active.
+
+The next bounded D opening covers the existing cancellation-drain diagnostic,
+API preparation, application task/resource lifetime and nested runtime cleanup.
+Proposed semantics preserve selected primary failure/cancellation, retain native
+supporting diagnostics and attempt every declared peer/final resource. Twenty
+reviewed controls use actual API graphs, SQLite, held/failing standard handlers
+and pre-release ownership observations. Original fixture drafts are preserved;
+the corrected successor avoids shadowing `logging.Handler.release` and proves
+managed diagnostics stay retained before later cleanup begins. Its frozen input
+manifest at `.tmp/d-failure-diagnostics-draft-v2/input_manifest.json` has SHA-256
+`1839338bb59a99910d2e3a424e5d74d5e7216dae5924c5d90abf48666372015e`.
+The live copied-source opening reproduces 20 failures with zero errors/skips.
+Exact cases/markers, 1,004 imported origins and all 5,458 inputs match; the owner
+settles in 55.468 seconds without timeout, kill or observed residual. All 20
+separate emergency-cleanup records prove physical SQLite closure and observed API
+resource/task settlement after product-state inspection. Nineteen independent
+SQLite responses take 2.001470-6.002252 seconds against the preselected 0.5-second
+bound; logger replacement prevents the twentieth case reaching its captured
+handler. Handler failure replaces original outcomes and abandons acquired peers
+or the final engine; managed background failure escapes its callback and is
+counted twice. These are failure observations, not successful product cleanup.
+Readback: `.tmp/d-failure-diagnostics-draft-v2/opening_readback.json`, SHA-256
+`9babae2aa2ce880860d6e7a2c4abb3be337ff859a97bf89bbc856553e99bb761`.
+The reviewed target contract is extracted before implementation into
+`docs/specs/RUNTIME_FAILURE_DIAGNOSTICS.md` with its September 27 contract delta.
+Implementation and closing acceptance are pending; fatal-handler and executor
+refusal controls must substantiate the same selected-outcome promise.
+The runtime candidate and closing controls remain ignored scratch work and are
+not part of this checkpoint. Recording the target contract does not activate its
+handler migration or claim that the observed failures are repaired. Source
+classification checks used the active editable interpreter with retained 0.6.108
+distribution metadata; no installed 0.6.109 acceptance is claimed.
+Required producers/preparation, empirical inputs, E2 authority cutover,
+full coverage, Linux/platform proof and proposed capabilities remain unclosed.

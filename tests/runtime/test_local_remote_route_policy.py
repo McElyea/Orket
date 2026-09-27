@@ -7,8 +7,10 @@ from orket.runtime.local_remote_route_policy import (
     validate_local_remote_route_policy,
 )
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_local_remote_route_policy_snapshot_contains_expected_lanes() -> None:
     payload = local_remote_route_policy_snapshot()
     assert payload["schema_version"] == "1.0"
