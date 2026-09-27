@@ -66,6 +66,35 @@
 
 ## Canonical Commands
 
+Test-layer authority is exactly one distinct canonical pytest marker per collected
+item: `unit`, `contract`, `integration` or `end_to_end`. Prose and directories do
+not classify tests. The v2 taxonomy checker retains missing/conflicting items and
+collection failures; strict acceptance requires zero of each. Both taxonomy and
+critical no-op checks use the shared Git-visible inventory, including nonignored
+untracked files. Run their regression tests and preserve the canonical Ruff and
+coverage gates. Contract: `docs/specs/QUALITY_CHECKER_CONTRACT.md`.
+
+Optional loop logging captures supported built-in inputs and admits independent
+main/artifact stages to the existing bounded writer. Return is admission only.
+Both Quality selections retain capture, overflow, fatal-writer and API handoff
+controls. Explicit preparation and required-producer migration remain separate
+under `docs/specs/LOG_WRITE_SETTLEMENT.md`.
+
+Direct sandbox cleanup decision builders supply `compose_path_available`; the
+application observes it once through the retained native owner. Both Quality
+selections retain the cleanup observation and existing recovery/authority cases.
+Contract: `docs/specs/SANDBOX_CLEANUP_OBSERVATION.md`.
+
+Direct review preflight construction supplies `utc_now`; direct `Note` values
+supply `id` and `created_at`. Standard composition passes the existing turn clock.
+Keep support/guard decisions and their completion-authority limits intact under
+`docs/specs/EPIC_RUNTIME_TIME_INPUTS.md`.
+
+Verifier input and support-artifact ownership controls run in both Quality jobs,
+alongside real verification process lifetime, card acceptance and review-time
+cases. Preserve native failure precedence and record/latest/index partial effects
+under `docs/specs/RUNTIME_VERIFICATION_OWNERSHIP.md`.
+
 Gitea state/webhook HTTP composition uses captured network policy and one native
 resource owner. Async callers use owned factories; native constructors refuse
 entry on the event loop. Both Gitea CLI paths retain adapters through cleanup,

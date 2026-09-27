@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import asyncio
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from orket.adapters.execution.owned_io import run_owned_thread
 from orket.application.services.sandbox_cleanup_decision_service import SandboxCleanupDecisionService
 from orket.core.domain.sandbox_cleanup import DockerResourceType, ObservedDockerResource
 from orket.core.domain.sandbox_lifecycle import CleanupState, LifecycleEvent, SandboxLifecycleError, SandboxState
@@ -28,14 +28,15 @@ class SandboxRuntimeCleanupService:
     ) -> dict[str, object]:
         observed_at = self.lifecycle_service._now()
         observed_resources = await self.lifecycle_service._observe_project_resources(record.compose_project)
+        compose_path_available = await run_owned_thread(compose_path.exists, label="sandbox-cleanup-compose-path")
         authority = self.lifecycle_service.cleanup_authority.decide(
             record=record,
             observed_resources=observed_resources,
-            compose_path_available=await asyncio.to_thread(compose_path.exists),
+            compose_path_available=compose_path_available,
         )
         decision = self.decision_service.build_decision(
             record=record,
-            compose_path=compose_path,
+            compose_path_available=compose_path_available,
             observed_resources=observed_resources,
             authority=authority,
             dry_run=True,
@@ -69,14 +70,15 @@ class SandboxRuntimeCleanupService:
                 },
                 expected_cleanup_state=CleanupState.IN_PROGRESS,
             )
+        compose_path_available = await run_owned_thread(compose_path.exists, label="sandbox-cleanup-compose-path")
         authority = self.lifecycle_service.cleanup_authority.decide(
             record=current,
             observed_resources=observed_before,
-            compose_path_available=await asyncio.to_thread(compose_path.exists),
+            compose_path_available=compose_path_available,
         )
         decision = self.decision_service.build_decision(
             record=current,
-            compose_path=compose_path,
+            compose_path_available=compose_path_available,
             observed_resources=observed_before,
             authority=authority,
             dry_run=False,

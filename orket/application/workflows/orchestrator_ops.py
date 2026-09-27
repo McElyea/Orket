@@ -1246,7 +1246,7 @@ async def _execute_issue_turn(
     if dependency_context["unresolved_dependencies"]:
         raise ExecutionFailed("E_CARD_DEPENDENCY_UNSATISFIED:" + ",".join(dependency_context["unresolved_dependencies"]))
     preflight = OrchestratorReviewPreflightService(
-        workspace_root=self.workspace,
+        workspace_root=self.workspace, utc_now=self.turn_clock,
         organization=self.org,
         support_services=self.support_services,
         async_cards=self.async_cards,

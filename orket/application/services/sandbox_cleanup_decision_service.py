@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from pathlib import Path
 
 from orket.application.services.sandbox_cleanup_authority_service import CleanupAuthorityDecision
 from orket.application.services.sandbox_lifecycle_event_publisher import SandboxLifecycleEventPublisher
@@ -52,7 +51,7 @@ class SandboxCleanupDecisionService:
         self,
         *,
         record: SandboxLifecycleRecord,
-        compose_path: Path,
+        compose_path_available: bool,
         observed_resources: list[ObservedDockerResource],
         authority: CleanupAuthorityDecision,
         dry_run: bool,
@@ -73,7 +72,7 @@ class SandboxCleanupDecisionService:
             dry_run=dry_run,
             cleanup_strategy=strategy,
             cleanup_result=result,
-            compose_path_available=compose_path.exists(),
+            compose_path_available=compose_path_available,
             observed_resource_names=sorted(resource.name for resource in observed_resources),
             authority_reason_codes=authority.reason_codes,
             fallback_resource_names=authority.fallback_resource_names,

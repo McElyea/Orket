@@ -1,6 +1,6 @@
-from datetime import UTC, datetime
+from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class Note(BaseModel):
@@ -10,11 +10,11 @@ class Note(BaseModel):
     without polluting the global task description.
     """
 
-    id: str = Field(default_factory=lambda: str(datetime.now(UTC).timestamp()))
+    id: str
     from_role: str
     to_role: str | None = None  # None = Broadcast to all
     content: str
-    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    created_at: datetime
     step_index: int
 
 

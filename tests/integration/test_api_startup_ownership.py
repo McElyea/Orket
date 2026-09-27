@@ -5,10 +5,12 @@ from __future__ import annotations
 import asyncio
 import threading
 from contextlib import asynccontextmanager, suppress
+from functools import partial
 
 import httpx
 import pytest
 
+from orket.adapters.execution.owned_io import run_owned_thread
 from orket.application.services import api_startup_service
 from orket.application.services.api_runtime_container import ApiRuntimeContainer
 from orket.interfaces.runtime_entrypoints import create_api_app
@@ -127,6 +129,7 @@ async def test_startup_warning_matches_authenticated_tcp_policy(tmp_path, monkey
 
 
 async def test_broadcaster_failure_stops_http_admission_and_remains_a_close_failure(tmp_path, monkeypatch):
+    """Layer: integration. Native publication reaches the actual WebSocket encoder failure."""
     app = _app(tmp_path, monkeypatch)
     baseline, observed = event_subscriber_count(), {}
     settled = asyncio.Event()
@@ -141,9 +144,11 @@ async def test_broadcaster_failure_stops_http_admission_and_remains_a_close_fail
     with pytest.raises(RuntimeError, match="teardown failed") as failed_close:
         async with app.router.lifespan_context(app), _event_socket(app):
             owner = app.state.api_runtime_context
-            # The logging API accepts arbitrary data; WebSocket JSON serialization
-            # genuinely raises on this set after the real subscription receives it.
-            log_event("startup-broadcast-failure", {"unsupported_json": {1}}, tmp_path)
+            # Native compatibility still admits this set. Optional loop capture
+            # refuses it earlier, so retain the native owner to reach the encoder.
+            await run_owned_thread(partial(
+                log_event, "startup-broadcast-failure", {"unsupported_json": {1}}, tmp_path),
+                label="startup-broadcaster-failure-publication")
             await asyncio.wait_for(settled.wait(), 3)
             observed["admission_closed"] = not owner.accepting_work
             await asyncio.wait_for(owner.runtime_state.event_queue.join(), RESPONSIVENESS_SECONDS)

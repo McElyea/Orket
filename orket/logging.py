@@ -33,10 +33,12 @@ from orket.adapters.observability.log_publication import (
 from orket.adapters.observability.log_publication import (
     unsubscribe_from_events as unsubscribe_from_events,
 )
+from orket.adapters.storage.async_file_tools import capture_file_roots
+from orket.core.contracts.log_event_inputs import LOG_EVENT_INPUT_ERROR, capture_log_event_inputs
 from orket.core.runtime_event import RUNTIME_EVENT_ARTIFACT_EVENTS, _build_runtime_event
 from orket.core.runtime_event import RUNTIME_EVENT_SCHEMA_VERSION as RUNTIME_EVENT_SCHEMA_VERSION
 from orket.naming import sanitize_name
-from orket.time_utils import now_local
+from orket.time_utils import configured_timezone_name, now_local
 
 side_effecting = True
 
@@ -123,6 +125,9 @@ def log_event(
     - log_event("event_name", data_dict, workspace=workspace)
     - log_event(level, component, event, payload) [Legacy Compat]
     """
+    if publication._running_on_event_loop():
+        _enqueue_optional_event(event, data, workspace, role, kwargs)
+        return
     # 1. Handle legacy signature if 'event' looks like a level and data is component-like
     if (
         event in {"debug", "info", "warn", "warning", "error", "critical"}
@@ -146,18 +151,86 @@ def log_event(
     if context_marker:
         full_data.update(context_marker)
     role_name = role or full_data.get("role") or "system"
-    runtime_event = _build_runtime_event(event, full_data, role_name)
-    full_data = {**full_data, "runtime_event": runtime_event}
+    record, runtime_event = _build_log_record(event, full_data, role_name, level_name)
+    _publish_record(workspace, record, runtime_event)
 
+
+def _build_log_record(event: str, full_data: dict[str, Any], role_name: Any, level_name: str,
+                      timezone_name: str | None = None) -> tuple[dict[str, Any], dict[str, Any]]:
+    runtime_event = _build_runtime_event(event, full_data, role_name)
     record = {
-        "timestamp": now_local().isoformat(),
+        "timestamp": now_local(timezone_name).isoformat(),
         "level": level_name,
         "role": role_name,
         "event": event,
-        "data": full_data,
+        "data": {**full_data, "runtime_event": runtime_event},
     }
+    return record, runtime_event
 
-    _publish_record(workspace, record, runtime_event)
+
+def _enqueue_optional_event(event: str, data: Any, workspace: Any, role: Any, options: dict[str, Any]) -> None:
+    """Detach built-in inputs before any deferred stage can observe caller mutation."""
+    if type(event) is not str:
+        raise TypeError(LOG_EVENT_INPUT_ERROR)
+    if event in publication._LOG_LEVELS and type(data) is str and not options:
+        event, data, workspace, role, options = (
+            workspace if type(workspace) is str else "generic_event",
+            role if type(role) is dict else {}, None, data, {"level": event})
+    if role is not None and type(role) is not str:
+        raise TypeError(LOG_EVENT_INPUT_ERROR)
+    if workspace is not None and type(workspace) is not type(Path()):
+        raise TypeError(LOG_EVENT_INPUT_ERROR)
+    event, captured = capture_log_event_inputs(event, {
+        "data": {} if data is None else data, "options": options})
+    if type(captured["data"]) is not dict:
+        raise TypeError(LOG_EVENT_INPUT_ERROR)
+    workspace, marker = _resolve_workspace(workspace)
+    workspace, = capture_file_roots([workspace])
+    level = captured["options"].pop("level", None)
+    values = {**captured["data"], **captured["options"]}
+    values.update(marker)
+    role_name = role or values.get("role") or "system"
+    native = _OptionalEvent(event, values, workspace, role_name, level, configured_timezone_name())
+    operations = [(workspace / "orket.log", native.main)]
+    if event.strip() in RUNTIME_EVENT_ARTIFACT_EVENTS and values.get("session_id"):
+        operations.append((workspace / "agent_output/observability/runtime_events.jsonl", native.artifact))
+    batch = publication.OptionalPublication(operations, native.complete)
+    native.batch = batch
+    publication.admit_optional_publication(batch)
+
+
+class _OptionalEvent:
+    """Per-event native stages; all process-wide ownership stays in publication."""
+
+    def __init__(self, event: str, data: dict[str, Any], workspace: Path, role: Any,
+                 level: Any, timezone_name: str) -> None:
+        self.event, self.data, self.workspace = event, data, workspace
+        self.role, self.level, self.timezone_name = role, level, timezone_name
+        self.record: dict[str, Any] = {}
+        self.runtime_event: dict[str, Any] = {}
+        self.batch: publication.OptionalPublication
+
+    def materialize(self) -> None:
+        if not self.record:
+            self.record, self.runtime_event = _build_log_record(
+                self.event, self.data, self.role, publication._resolve_level_name(self.level), self.timezone_name)
+
+    def main(self) -> None:
+        self.materialize()
+        publication._emit_stdlib_record(self.record["level"], self.event, self.record)
+        log_file = setup_logging(self.workspace)
+        # Optional native append retains the existing best-effort OSError posture.
+        with contextlib.suppress(OSError):
+            publication._append_json_record(log_file, self.record)
+
+    def artifact(self) -> None:
+        self.materialize()
+        with contextlib.suppress(OSError):
+            _append_runtime_event_artifact(self.workspace, self.runtime_event)
+
+    def complete(self) -> None:
+        _notify_subscribers(self.workspace / "orket.log", self.record, self.batch.deliveries,
+                            timezone_name=self.timezone_name, optional_append=True)
 
 
 def _publish_record(workspace: Path, record: dict[str, Any], runtime_event: dict[str, Any]) -> None:
@@ -174,20 +247,22 @@ def _publish_record(workspace: Path, record: dict[str, Any], runtime_event: dict
             delivery.release_untransferred()
 
 
-def _notify_subscribers(log_file: Path, record: dict[str, Any], deliveries: list[publication.EventDelivery]) -> None:
+def _notify_subscribers(log_file: Path, record: dict[str, Any], deliveries: list[publication.EventDelivery],
+                        *, timezone_name: str | None = None, optional_append: bool = False) -> None:
     for delivery in deliveries:
         try:
             delivery.invoke(record)
         except (RuntimeError, ValueError, TypeError, OSError) as e:
             failure_record = {
-                "timestamp": now_local().isoformat(),
+                "timestamp": now_local(timezone_name).isoformat(),
                 "level": "error",
                 "role": "system",
                 "event": "logging_subscriber_failed",
                 "data": {"error": str(e)},
             }
             publication._emit_stdlib_record("error", "logging_subscriber_failed", failure_record)
-            publication._append_json_record(log_file, failure_record)
+            with contextlib.suppress(OSError) if optional_append else contextlib.nullcontext():
+                publication._append_json_record(log_file, failure_record)
 
 
 def log_model_selected(

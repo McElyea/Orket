@@ -25,8 +25,8 @@ def configured_timezone(name: str | None = None) -> tzinfo:
         return UTC
 
 
-def now_local() -> datetime:
-    return datetime.now(configured_timezone())
+def now_local(timezone_name: str | None = None) -> datetime:
+    return datetime.now(configured_timezone(timezone_name))
 
 
 def utc_now_iso() -> str:

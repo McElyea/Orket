@@ -1,4 +1,4 @@
-"""Layer: contract. Provider omission and invalid input cannot select Ollama."""
+"""Provider omission and invalid input cannot select Ollama; layers are marked per case."""
 from __future__ import annotations
 
 import os
@@ -19,8 +19,6 @@ from orket.runtime.config.provider_runtime_target import default_base_url
 from orket.workloads.model_stream_v1 import _real_provider_name
 from scripts.streaming.provider_identity import provider_identity
 
-pytestmark = pytest.mark.contract
-
 
 @pytest.fixture(autouse=True)
 def clean_provider_settings(monkeypatch):
@@ -31,6 +29,7 @@ def clean_provider_settings(monkeypatch):
 
 
 @pytest.mark.asyncio
+@pytest.mark.contract
 async def test_omitted_provider_uses_llama_cpp_transport_and_endpoint(monkeypatch):
     monkeypatch.setattr("ollama.AsyncClient", lambda **kw: pytest.fail("Implicit Ollama client"))
     provider = (await create_local_model_provider_async(model=DEFAULT_LOCAL_MODEL))
@@ -58,7 +57,7 @@ async def test_unavailable_default_endpoint_does_not_switch_provider(monkeypatch
 
 
 @pytest.mark.asyncio
-# Layer: contract
+@pytest.mark.contract
 async def test_defaults_and_blank_settings_preserve_provider_identity(monkeypatch):
     monkeypatch.setenv("ORKET_LLM_PROVIDER", " ")
     monkeypatch.setenv("ORKET_MODEL_STREAM_PROVIDER", "real")
@@ -70,12 +69,14 @@ async def test_defaults_and_blank_settings_preserve_provider_identity(monkeypatc
     assert selection.select("coder").final_model == DEFAULT_LOCAL_MODEL
 
 
+@pytest.mark.contract
 def test_unknown_provider_is_rejected_before_client_creation(monkeypatch):
     monkeypatch.setattr("ollama.AsyncClient", lambda **kw: pytest.fail("Implicit Ollama client"))
     with pytest.raises(ValueError, match="E_UNKNOWN_PROVIDER_INPUT"):
         create_local_model_provider(model=DEFAULT_LOCAL_MODEL, provider="unknown-provider")
 
 
+@pytest.mark.contract
 def test_legacy_model_variable_requires_explicit_ollama_provider(monkeypatch):
     monkeypatch.setenv("ORKET_GOVERNED_AGENT_OLLAMA_MODEL", "legacy-ollama-model")
     assert configured_provider("ORKET_GOVERNED_AGENT_PROVIDER") == "llama_cpp"
@@ -85,6 +86,7 @@ def test_legacy_model_variable_requires_explicit_ollama_provider(monkeypatch):
 
 
 @pytest.mark.parametrize("provider", ["llama_cpp", "lmstudio", "ollama", "openai_compat"])
+@pytest.mark.contract
 def test_explicit_provider_remains_authoritative(monkeypatch, provider):
     monkeypatch.setenv("ORKET_MODEL_PROVIDER", provider)
     assert configured_provider() == _real_provider_name() == provider

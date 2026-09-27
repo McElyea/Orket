@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import pytest
+
 from orket.application.services.sandbox_cleanup_authority_service import CleanupAuthorityDecision
 from orket.application.services.sandbox_cleanup_decision_service import SandboxCleanupDecisionService
 from orket.core.domain.sandbox_cleanup import DockerResourceType, ObservedDockerResource
 from orket.core.domain.sandbox_lifecycle import CleanupState, SandboxState, TerminalReason
 from orket.core.domain.sandbox_lifecycle_records import ManagedResourceInventory, SandboxLifecycleRecord
 
+pytestmark = pytest.mark.contract
 
 class _Publisher:
     async def emit(self, **_kwargs) -> str:
@@ -40,14 +43,12 @@ def _record(**overrides) -> SandboxLifecycleRecord:
     return SandboxLifecycleRecord(**payload)
 
 
-def test_cleanup_decision_payload_exposes_required_reason_policy_and_mode_fields(tmp_path) -> None:
-    compose_path = tmp_path / "docker-compose.sandbox.yml"
-    compose_path.touch()
+def test_cleanup_decision_payload_exposes_required_reason_policy_and_mode_fields() -> None:
     service = SandboxCleanupDecisionService(event_publisher=_Publisher())
 
     decision = service.build_decision(
         record=_record(),
-        compose_path=compose_path,
+        compose_path_available=True,
         observed_resources=[
             ObservedDockerResource(
                 resource_type=DockerResourceType.CONTAINER,

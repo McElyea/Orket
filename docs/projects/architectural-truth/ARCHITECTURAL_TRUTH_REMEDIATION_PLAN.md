@@ -12479,8 +12479,9 @@ GitHub push authorization after the temporary local-only restriction. Scoped com
 matching annotated version tags and branch/tag publication are authorized; a main
 merge and whole-lane retirement are not. Earlier local-only checkpoint observations
 remain historical. Each checkpoint records its exact verification and publication
-disposition. The next September 22 session resumes from published .98 under the
-complete-plan goal, starting with packet-2 ownership. The lane remains active;
+disposition. The current session resumes from published .106 under the
+complete-plan goal, with the remaining logging and verifier ownership boundaries
+and quality-checker correction in progress. The lane remains active;
 scoped checkpoint proof does not close the remaining C/D/E/CAP obligations.
 
 Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
@@ -12519,7 +12520,17 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
   Scoped installed-build/host acceptance now passes; this does not close the
   full plan or imply generic exactly-once effects or historical authenticity.
 
-Next action: complete D's remaining explicit core input/effect, immutable decision
+Next action (2026-09-27): preserve the scoped 0.6.107 source/Windows installed
+acceptance below while repairing the remaining D owners, starting with retained
+sandbox event publication/replay counterexamples. Logging preparation and required
+producers remain open. Migrate the reviewed E1 script/core test classifications,
+repair the retained governance fixture drift, clear Ruff without silently changing
+public enum representations, and obtain named full-suite failures and the unchanged
+coverage gate. Complete E2 authority/decomposition and the ordered accepted capability
+gates afterward. The fresh Linux clock observation remains an environment blocker;
+Linux application proof, capability admission and whole-lane acceptance remain open.
+
+Historical .101 next-action snapshot (superseded, retained as evidence): complete D's remaining explicit core input/effect, immutable decision
 context, adapter-classification and async-reachability obligations after the verified
 0.6.101 shared required-input and Packet-1 construction-intent boundary. Next is
 turn artifact publication with coherent captured identity/input ownership across response,
@@ -26614,3 +26625,154 @@ This session additionally touched only CHANGELOG.md, CURRENT_AUTHORITY.md, this
 plan, tests/helpers/logging_async_opening.py and
  tests/integration/test_logging_async_opening.py. Git's branch and annotated tag
 refs record the publication result; the active plan remains incomplete.
+
+### Continued D and E1 corrections: 2026-09-27, candidate 0.6.107
+
+Published branch checkpoint 0.6.106 is commit
+`969ef3e5b5b2e5ede92318716d3728c778a194d7`; annotated tag object
+`30b116a6a9bd2e99bb5c4c4d2f87d894fbaf97ec`. The branch and peeled tag were
+independently read back from GitHub. The complete-plan goal remains active.
+
+The successor changes existing ownership boundaries without admitting new
+capabilities. Optional log events capture built-in inputs and use the existing
+bounded writer for native main/artifact/subscriber stages. Verifier invocation
+inputs detach before native observations, and support-artifact publication stays
+owned through interruption. Cleanup authorization and decision projection share
+one retained compose-path observation. Review support records and notes consume
+the selected aware clock. Durable contracts and migration deltas are linked from
+`CURRENT_AUTHORITY.md`, `docs/ARCHITECTURE.md` and `docs/CONTRIBUTOR.md`.
+
+Scoped source observations, with `ORKET_DISABLE_SANDBOX=1`:
+
+| Boundary | Retained opening | Scoped closing and limits |
+|---|---|---|
+| Optional logging | Five caller-loop failures, one native pass | 122 passed; final queue/marker/coalescing controls six passed. A subsequent review found an optional diagnostic-append `OSError` failure; its correction requires successor proof. |
+| Verifier inputs and support publication | Five initial ownership failures; additional cancellation/failure and root-binding controls retained | 96 passed using real files, SQLite and supervised processes; subsequent clock validation adds cases. Support history retains partial-publication limits. |
+| Cleanup availability observation | Six reached failures; one closing command selected a nonexistent module and ran no tests | Corrected selection 32 passed; actual files/SQLite, fixture Docker responses. No Docker-resource acceptance claim. |
+| Review clock | Initial fixture-reader and note-owner mistakes retained separately from timestamp failures; validation opening six failures plus two healthy controls | 18 engine/guard/empirical/verification cases and six clock regressions passed. Model responses and clocks are declared fixtures; no live inference. |
+| Quality checker semantics | Prose taxonomy and type-only no-op misclassifications; adversarial binding counterexamples retained | 55 focused regressions passed. Native no-op scan: 694 files, zero findings/errors. Taxonomy: 10,447 collected items, 3,651 missing layers, zero conflicts or collection errors; strict command correctly fails. |
+
+These are scoped observations of the bytes recorded by their receipts, not
+acceptance of all successor bytes. Review changed the optional diagnostic append
+and clock contract afterward; the combined source/installed successor must retain
+the original controls. Marker conflicts were corrected by reviewing four existing
+modules and the new queue cases; no directory-wide default was introduced.
+
+Retained report fingerprints (SHA-256):
+
+- `.tmp/goal-logging-correction-20260927/final-cohort-v3.xml`:
+  `7026de773709c0f3c633fb9e5ef60aa86dcb2f3a3b55182244a1fbdd44a6c501`.
+- `.tmp/goal-logging-correction-20260927/queue-final.xml`:
+  `439a795ac3308a7912c6811ebe5f08d8b7bc290175f889abd5f7506c4236ba5f`.
+- `.tmp/d-runtime-verification-owner/accepted-guards.xml`:
+  `9c8e33773689432beb0a0398db7af185f4c085d649983fa90405cd54e3cbf1f7`.
+- `.tmp/goal-20260927-cleanup/closing-v2.xml`:
+  `646e4280fe0903b17932a9634c0916b00b75ca651637c7965e04ef3ad370c280`.
+- `.tmp/d-review-time-validation/closing.xml`:
+  `91656f713d182721ca16a35f5bde5aab8e93ff8a9b3d7a5ccedba5b059d666a1`.
+- `.tmp/goal-20260927-quality/taxonomy-current.json`:
+  `cd2de1d618883cc17b15fc13e049052b602b57f9509911335f5efb596a9896d2`.
+
+Dependency structure passes: 1,183 modules, 3,971 edges, six recognized dynamic
+routes, zero violations/unknowns/cycles/analysis/effect errors. Docs hygiene and
+0.6.107 version alignment pass. Both Quality jobs select the new ownership and
+checker regressions; workflow configuration is structural evidence, not hosted
+execution. Canonical Ruff still reports 88 historical findings. Full source
+coverage, installed successor acceptance, Linux application proof, logging
+preparation/required producers, other D owners, E1 marker migration, E2 authority
+consolidation and CAP admission remain open. The retained Linux clock blocker has
+not been rechecked. No whole-lane acceptance, main merge or retirement is claimed.
+
+#### Scoped 0.6.107 acceptance and publication checkpoint
+
+The combined successor now passes **385 identical cases**, with zero failures,
+errors, skips or deselections, in source Python 3.11.14 and installed Windows
+Python 3.11.14 / 3.12.2. The 40-selector cohort covers logging, verification,
+cleanup, review clocks, quality checkers and the corrected corpus fixture. Both
+installed cells also pass real CLI startup flows (`primary` and declared
+`degraded`) and the strict tool-gate audit. Overall scoped observation:
+**primary / success**, live local source and installed proof with fixture model,
+Docker and repository responses where declared; no actual provider/Docker/Gitea claim.
+
+Campaign `.tmp/goal-20260927-installed-v107-v4/` retains the exact selection,
+source/installed reports, JUnit, package origins, child ownership and physical
+artifacts. Freeze SHA-256 is
+`c189ffca624a6928357e98729834fe93366d349ade9509cfebea6475ff429302`.
+
+| Receipt | SHA-256 |
+|---|---|
+| `source-results/report.json` | `93f970f7c6e6f23f3e61cc7b4d6ad916f87f311ed0846d84200dee661a814de5` |
+| `win-py311/results/report.json` | `6c88286c6e6ba9d697e72b80de5fdfca7a434274dda106b0a02d8ad51c769f47` |
+| `win-py312/results/report.json` | `db621f9a9aa53bbb2b6111ce70662c7f3d8d5ac40852e0dfa2328acfddd2fcc5` |
+| `acceptance-readback.json` | `6d73f29206de457e40750aa3e36430639c503cd76a9e7f4c39dacc477d7e4070` |
+
+Readback rehashes 8,956 evidence files and 5,436 frozen inputs. Each cell verifies
+1,012 loaded package origins and 49 SQLite response observations strictly below
+0.5 seconds (maxima 0.04445 / 0.05013 / 0.04201 seconds). Core source/sdist/wheel
+parity covers 1,203 namespace files, including all 1,183 Python files; SDK parity
+covers 31 files, including 29 Python files. No mismatch, timeout, forced kill or
+observed surviving owner occurred; awake requests were released. Process polling
+cannot prove absence of an unobserved detached descendant. Namespace byte parity
+does not certify every unshipped non-Python repository resource.
+
+V1's coverage-output inventory refusal and V3's **382 passes / two fixture
+failures** remain preserved. The missing-Git fixtures had discovered the outer
+worktree after renaming their local `.git`; explicit Git ceilings repair those
+fixtures without changing checker assertions. V4 also selects the scorer fixture
+using its module-derived checkout and the existing corpus constant. Its separate
+relocated-copy proof passes two cases while refusing other-checkout file access.
+V4 reuses the still-active, previously unexecuted installed environments created
+for V3 and the unchanged exact wheels; it does not claim new installations.
+
+The attempted canonical source/coverage run stopped at 48% after discovery of the
+other-checkout corpus path. Failure indicators were present, but no final JUnit
+or coverage report was produced; individual outcomes cannot be recovered from
+progress dots. It is **primary / failure**, incomplete proof, not a passing suite.
+`.tmp/goal-20260927-candidate/source/abort_receipt.json` has SHA-256
+`bc9d56ddb435bab911592cbfbea53196a577094797b52f3745e9c97a4434c692`.
+All 989 coverage shards are hash-preserved beneath its `coverage-shards/`; the
+tracked coverage file was restored from Git, not substituted as current proof.
+No matching test process was visible after interruption, but the interrupted
+helper lost its in-memory descendant inventory; that cleanup observation is limited.
+
+Fresh structural gates retain 1,183 modules / 3,971 edges / six dynamic routes
+with zero dependency/effect/analysis/unknown/cycle findings, and 694 no-op targets
+with zero findings/errors. Changed-file Ruff and whitespace checks pass. Canonical
+Ruff still fails with **88 findings**. Strict taxonomy collects **10,458 cases**,
+with **3,650 missing layers**, zero conflicts and zero collection errors; it
+correctly fails. Report `.tmp/goal-20260927-candidate/final-taxonomy.json`:
+`cd8233841be49dc374baf64477326800e9f600a42ca8699a06da76a4334eaf0b`.
+The earlier unsupported `--out` invocation is retained separately as an invocation
+error, not collection evidence. Reviewed script/core marker and spool candidates
+remain unapplied scratch, outside this checkpoint.
+
+A fresh passive Ubuntu 24.04 observation uses the unchanged 60-second synchronized
+quiet requirement, 0.01-second step bound, 240-second observation and 280-second
+outer limit. It remains **blocked / environment blocker**: only 21.748081 quiet
+seconds, with steps from -6.693338 to +6.707824 seconds. The native process group
+and Windows wrapper settled without outer timeout or forced kill. System Python
+3.12.3 was used; no ended environment or clock setting changed. No Linux
+application cell launched. Receipt:
+`.tmp/d-a107-linux-clock-readiness-v1/linux-clock-invocation.json` has SHA-256
+`48b4e74c5b6d3c18351a7da8d0c33c9153ef21dd03fc5b9a3c7ed4948ae832e9`; raw report hash
+`a72158a91b815d84281b0a8af0f29994bb79dacc2f9c14c3b13c76e06aee6209`.
+
+Scoped compliance: AC-01 through AC-04 and AC-06 through AC-09 pass for these
+changed boundaries and their declared evidence ceilings. AC-05 remains partial
+at `orket/logging.py` / `orket/adapters/observability/log_publication.py` for relative
+root observation, lazy preparation and remaining required producers; D owns that
+follow-up. AC-10 is partial: contracts/authority are updated in the same change, but the
+unbounded authority snapshot remains explicit E2 debt. Support history retains
+its declared partial-publication and concurrency limits.
+
+The source/archive/runtime hashes bind tested working bytes. Git's configured
+clean filter normalizes CRLF to LF; the independent binding receipt
+`.tmp/goal-20260927-quality/git-normalized-acceptance-binding.json` records the
+exact prospective product blobs and four modified Python files affected solely
+by that normalization (SHA-256
+`4d10b567b008dcd324e1eb4f527fd897a7d7f4051245bfe00c2da19a242b8139`).
+This docs-only closeout supersedes the full-tree freeze; tested product/test bytes
+remain unchanged. The versioned commit diff records exact checkpoint files and
+the branch/annotated tag refs record publication. Full source coverage, hosted
+Quality, Linux application/provider acceptance, remaining D/E/CAP and whole-lane
+acceptance remain open. No main merge or lane retirement is included.

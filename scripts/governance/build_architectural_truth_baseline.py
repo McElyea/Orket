@@ -314,13 +314,13 @@ def load_exception_register() -> dict[str, Any]:
 
 def _summarize_taxonomy(payload: dict[str, Any]) -> dict[str, Any]:
     missing = list(payload.get("missing_layers") or [])
+    invalid = list(payload.get("invalid_layers") or [])
     return {
-        "schema_version": payload.get("schema_version"),
-        "tests_total": int(payload.get("tests_total") or 0),
-        "missing_layer_total": int(payload.get("missing_layer_total") or 0),
-        "by_layer": dict(payload.get("by_layer") or {}),
+        **{key: value for key, value in payload.items() if key not in {"missing_layers", "invalid_layers", "collection_output"}},
         "missing_layers_sample": missing[:100],
         "missing_layers_omitted": max(0, len(missing) - 100),
+        "invalid_layers_sample": invalid[:100],
+        "invalid_layers_omitted": max(0, len(invalid) - 100),
     }
 
 

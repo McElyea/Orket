@@ -5,6 +5,22 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.107] - 2026-09-27
+
+### Fixed
+- Capture optional event inputs before bounded admission and execute handlers, filesystem publication and subscriber attempts on the existing log writer; preserve independent main/artifact drops and fatal-writer refusal.
+- Retain verifier metadata, syntax observations and support-artifact publication through cancellation using captured invocation inputs and the existing I/O owners.
+- Share one owned compose-path observation between sandbox cleanup authorization and decision receipts.
+- Use the selected review clock for support history and explicit note identity/creation time.
+- Classify actual pytest items with canonical layer markers; retain collection failures and conflicting markers. Restrict no-op exemptions to recognized type-only and abstract declarations.
+- Resolve the scorer corpus from its own checkout and bound negative Git-discovery fixtures to their temporary repository.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `runtime embedders and test-governance consumers`
+- `migration_requirement`: `required`
+- Direct review preflight callers supply an aware clock; direct notes supply identity and creation time. Cleanup decision builders supply observed path availability. Optional loop logging accepts plain built-in JSON values and a native path; return establishes admission only. Taxonomy consumers handle v2 item counts and failure fields.
+- Contracts: `docs/specs/LOG_WRITE_SETTLEMENT.md`, `docs/specs/RUNTIME_VERIFICATION_OWNERSHIP.md`, `docs/specs/SANDBOX_CLEANUP_OBSERVATION.md`, `docs/specs/EPIC_RUNTIME_TIME_INPUTS.md`, and `docs/specs/QUALITY_CHECKER_CONTRACT.md`.
+- The architectural-truth plan records 385 passing cases in source and each installed Windows Python 3.11/3.12 cell, retained failed attempts, and a fresh Linux clock blocker. Wider D/E/CAP, full quality and platform acceptance remain open.
+
 ## [0.6.106] - 2026-09-27
 
 ### Fixed

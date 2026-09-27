@@ -75,6 +75,30 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e "./orket_extension_sdk[testing]" -e ".[dev]"
 
+      - name: Enforce truthful quality checker observations
+        env:
+          ORKET_DISABLE_SANDBOX: "1"
+        run: |
+          python -m pytest -q tests/scripts/test_enforce_test_taxonomy.py tests/scripts/test_check_noop_critical_paths.py tests/scripts/test_build_architectural_truth_baseline.py::test_taxonomy_summary_preserves_collection_failure_and_conflicts
+
+      - name: Enforce optional log publication ownership
+        env:
+          ORKET_DISABLE_SANDBOX: "1"
+        run: |
+          python -m pytest -q tests/integration/test_optional_logging_capture.py tests/integration/test_optional_logging_queue.py tests/integration/test_optional_logging_diagnostic_failure.py tests/integration/test_api_event_input_capture.py tests/integration/test_api_log_handoff_lifetime.py tests/integration/test_api_log_handoff_failures.py tests/integration/test_log_write_frontier_lifetime.py tests/integration/test_audit_double_failure_precedence.py tests/integration/test_api_startup_ownership.py
+
+      - name: Enforce verifier publication and review time ownership
+        env:
+          ORKET_DISABLE_SANDBOX: "1"
+        run: |
+          python -m pytest -q tests/integration/test_runtime_verifier_input_ownership.py tests/integration/test_runtime_verification_artifact_ownership.py tests/application/test_runtime_verifier_service.py tests/application/test_runtime_verification_artifact_service.py tests/integration/test_runtime_verifier_output_integrity.py tests/integration/test_verification_process_lifetime.py tests/integration/test_verification_shutdown.py tests/integration/test_card_acceptance_service.py tests/application/test_orchestrator_verification_async.py tests/integration/test_review_preflight_clock.py
+
+      - name: Enforce cleanup observation ownership
+        env:
+          ORKET_DISABLE_SANDBOX: "1"
+        run: |
+          python -m pytest -q tests/integration/test_sandbox_cleanup_observation.py tests/integration/test_sandbox_runtime_recovery_service.py tests/contracts/test_sandbox_cleanup_decision_contract.py tests/contracts/test_sandbox_cleanup_authority_contract.py tests/integration/test_sandbox_cleanup_verification_service.py tests/integration/test_sandbox_cleanup_scheduler_service.py
+
       - name: Enforce construction, cancellation and catalog ownership
         env:
           ORKET_DISABLE_SANDBOX: "1"
@@ -507,6 +531,30 @@ jobs:
             echo "Found disallowed datetime.now() usage"
             exit 1
           fi
+
+      - name: Enforce truthful quality checker observations
+        env:
+          ORKET_DISABLE_SANDBOX: "1"
+        run: |
+          python -m pytest -q tests/scripts/test_enforce_test_taxonomy.py tests/scripts/test_check_noop_critical_paths.py tests/scripts/test_build_architectural_truth_baseline.py::test_taxonomy_summary_preserves_collection_failure_and_conflicts
+
+      - name: Enforce optional log publication ownership
+        env:
+          ORKET_DISABLE_SANDBOX: "1"
+        run: |
+          python -m pytest -q tests/integration/test_optional_logging_capture.py tests/integration/test_optional_logging_queue.py tests/integration/test_optional_logging_diagnostic_failure.py tests/integration/test_api_event_input_capture.py tests/integration/test_api_log_handoff_lifetime.py tests/integration/test_api_log_handoff_failures.py tests/integration/test_log_write_frontier_lifetime.py tests/integration/test_audit_double_failure_precedence.py tests/integration/test_api_startup_ownership.py
+
+      - name: Enforce verifier publication and review time ownership
+        env:
+          ORKET_DISABLE_SANDBOX: "1"
+        run: |
+          python -m pytest -q tests/integration/test_runtime_verifier_input_ownership.py tests/integration/test_runtime_verification_artifact_ownership.py tests/application/test_runtime_verifier_service.py tests/application/test_runtime_verification_artifact_service.py tests/integration/test_runtime_verifier_output_integrity.py tests/integration/test_verification_process_lifetime.py tests/integration/test_verification_shutdown.py tests/integration/test_card_acceptance_service.py tests/application/test_orchestrator_verification_async.py tests/integration/test_review_preflight_clock.py
+
+      - name: Enforce cleanup observation ownership
+        env:
+          ORKET_DISABLE_SANDBOX: "1"
+        run: |
+          python -m pytest -q tests/integration/test_sandbox_cleanup_observation.py tests/integration/test_sandbox_runtime_recovery_service.py tests/contracts/test_sandbox_cleanup_decision_contract.py tests/contracts/test_sandbox_cleanup_authority_contract.py tests/integration/test_sandbox_cleanup_verification_service.py tests/integration/test_sandbox_cleanup_scheduler_service.py
 
       - name: Enforce construction, cancellation and catalog ownership
         env:

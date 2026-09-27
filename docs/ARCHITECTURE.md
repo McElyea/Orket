@@ -1,6 +1,6 @@
 # Orket Architecture (Target State)
 
-Last updated: 2026-09-23
+Last updated: 2026-09-27
 
 Legacy Kernel capability evaluation uses a package-owned default and one validated
 immutable policy observation. Application capture owns the read-only adapter;
@@ -31,6 +31,35 @@ run time. The concrete refusal and partial-effect limits live in
 `docs/architecture/CONTRACT_DELTA_RUN_START_PUBLICATION_D_2026-09-19.md`.
 
 ## Implementation Status
+
+Optional event publication captures supported built-in inputs before admission
+to the existing bounded writer. Native stages retain independent main/artifact
+capacity and API token ownership; fatal failures refuse append settlement. This
+does not close lifecycle preparation or required-producer migration.
+Contract: `docs/specs/LOG_WRITE_SETTLEMENT.md`.
+
+Quality observations use actual pytest item markers and Git-visible source
+inventory. Type-only/abstract declaration exemptions do not authorize executable
+no-ops. Marker absence, conflicts and collection failures remain gate debt under
+`docs/specs/QUALITY_CHECKER_CONTRACT.md`.
+
+Sandbox cleanup preview and execution share one owned compose-path metadata
+observation with authorization and decision projection. The projection consumes
+the explicit boolean without filesystem work. Existing claims, command policy and
+post-cleanup absence checks remain authoritative. Contract and limits:
+`docs/specs/SANDBOX_CLEANUP_OBSERVATION.md`.
+
+Review preflight receives and captures the existing turn clock. Support history
+and ephemeral notes use explicit selected observations; `Note` requires identity
+and creation time instead of reading host UTC. Contract and migration:
+`docs/specs/EPIC_RUNTIME_TIME_INPUTS.md` and
+`docs/architecture/CONTRACT_DELTA_REVIEW_PREFLIGHT_TIME_D_2026-09-27.md`.
+
+Runtime verification captures invocation inputs before observation. Native
+metadata, syntax reads and support-artifact publication use existing owned I/O;
+command cancellation diagnostics share the captured workspace. Interrupted native
+failure cannot authorize later verification commands. Record/latest/index writes
+retain partial-publication limits under `docs/specs/RUNTIME_VERIFICATION_OWNERSHIP.md`.
 
 Gitea state/webhook HTTP composition uses captured network policy and one native
 resource owner. Async callers use owned factories; native constructors refuse

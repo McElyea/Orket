@@ -1,4 +1,4 @@
-# Layer: integration and end-to-end
+# Layer: integration
 
 from __future__ import annotations
 
@@ -45,7 +45,6 @@ pytestmark = pytest.mark.integration
 
 
 @pytest.mark.asyncio
-@pytest.mark.end_to_end
 @pytest.mark.parametrize("staged,memory", [(False, False), (True, False), (True, True)])
 # Layer: integration
 async def test_two_iteration_governor_replays_decisions_and_publishes_verified_truth(
@@ -54,7 +53,7 @@ async def test_two_iteration_governor_replays_decisions_and_publishes_verified_t
     staged: bool,
     memory: bool,
 ) -> None:
-    """Layer: end-to-end. Exercises two real child invocations through durable host authority."""
+    """Layer: integration. Exercises two real child invocations through durable host authority."""
     monkeypatch.setenv("ORKET_DISABLE_SANDBOX", "1")
     db_path = tmp_path / "agent-loop.sqlite3"
     request = staged_agent_request() if staged else agent_request()

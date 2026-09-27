@@ -6,6 +6,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from pydantic import AwareDatetime, TypeAdapter, ValidationError
+
 from orket.application.services.guard_agent import GuardAgent
 from orket.application.services.runtime_verification_artifact_service import (
     RuntimeVerificationArtifactContext,
@@ -16,6 +18,16 @@ from orket.exceptions import CardNotFound
 from orket.logging import log_event
 from orket.orchestration.notes import Note
 from orket.schema import CardStatus, IssueConfig, IssueVerification
+
+# Reuse one pure schema validator; it observes no clock or runtime state.
+_REVIEW_TIME = TypeAdapter(AwareDatetime)
+
+
+def _review_time(observed_at: datetime) -> datetime:
+    try:
+        return _REVIEW_TIME.validate_python(observed_at, strict=True).astimezone(UTC)
+    except ValidationError as exc:
+        raise ValueError("E_REVIEW_PREFLIGHT_TIME_REQUIRES_AWARE_DATETIME") from exc
 
 
 @dataclass
@@ -36,6 +48,7 @@ class OrchestratorReviewPreflightService:
         async_cards: Any,
         notes: Any,
         transcript: list[Any],
+        utc_now: Callable[[], datetime],
         request_issue_transition: Callable[..., Awaitable[None]],
         verify_issue: Callable[..., Awaitable[Any]],
         resolve_project_surface_profile: Callable[[], str],
@@ -50,6 +63,7 @@ class OrchestratorReviewPreflightService:
         self.async_cards = async_cards
         self.notes = notes
         self.transcript = transcript
+        self.utc_now = utc_now
         self.request_issue_transition = request_issue_transition
         self.verify_issue = verify_issue
         self.resolve_project_surface_profile = resolve_project_surface_profile
@@ -66,6 +80,7 @@ class OrchestratorReviewPreflightService:
         is_review_turn: bool,
         cards_runtime: dict[str, Any],
     ) -> ReviewTurnPreflightResult:
+        utc_now = self.utc_now
         runtime_result = None
         if is_review_turn and not self.is_runtime_verifier_disabled():
             turn_index = len(self.transcript) + 1
@@ -104,7 +119,7 @@ class OrchestratorReviewPreflightService:
             if not isinstance(getattr(issue, "params", None), dict):
                 issue.params = {}
             issue.params["guard_retry_fingerprints"] = existing_fingerprints[-10:]
-            recorded_at = datetime.now(UTC).isoformat()
+            recorded_at = _review_time(utc_now()).isoformat()
             artifact_writer = RuntimeVerificationArtifactService(self.workspace_root)
             await artifact_writer.write(
                 context=RuntimeVerificationArtifactContext(
@@ -162,12 +177,9 @@ class OrchestratorReviewPreflightService:
                         },
                         self.workspace_root,
                     )
-                    self.notes.add(
-                        Note(
-                            from_role="system",
-                            content="RUNTIME VERIFIER FAILED (RETRY): " + " | ".join(runtime_result.errors[:2]),
-                            step_index=len(self.transcript),
-                        )
+                    self._add_note(
+                        "RUNTIME VERIFIER FAILED (RETRY): " + " | ".join(runtime_result.errors[:2]),
+                        observed_at=utc_now(),
                     )
                 else:
                     self.clear_issue_runtime_retry_note(issue)
@@ -194,12 +206,9 @@ class OrchestratorReviewPreflightService:
                         },
                         self.workspace_root,
                     )
-                    self.notes.add(
-                        Note(
-                            from_role="system",
-                            content="RUNTIME VERIFIER TERMINAL FAILURE: " + " | ".join(runtime_result.errors[:2]),
-                            step_index=len(self.transcript),
-                        )
+                    self._add_note(
+                        "RUNTIME VERIFIER TERMINAL FAILURE: " + " | ".join(runtime_result.errors[:2]),
+                        observed_at=utc_now(),
                     )
                 return ReviewTurnPreflightResult(runtime_result=runtime_result, stop_execution=True)
             self.clear_issue_runtime_retry_note(issue)
@@ -216,15 +225,17 @@ class OrchestratorReviewPreflightService:
                 if verified_issue is None:
                     raise CardNotFound(f"Verified issue disappeared before turn preparation: {issue.id}")
                 issue.verification = IssueVerification.model_validate(verified_issue.verification)
-                self.notes.add(
-                    Note(
-                        from_role="system",
-                        content=(
-                            "EMPIRICAL VERIFICATION RESULT: "
-                            f"{verification_result.passed}/{verification_result.total_scenarios} Passed."
-                        ),
-                        step_index=len(self.transcript),
-                    )
+                self._add_note(
+                    "EMPIRICAL VERIFICATION RESULT: "
+                    f"{verification_result.passed}/{verification_result.total_scenarios} Passed.",
+                    observed_at=utc_now(),
                 )
 
         return ReviewTurnPreflightResult(runtime_result=runtime_result, stop_execution=False)
+
+    def _add_note(self, content: str, *, observed_at: datetime) -> None:
+        observed_at = _review_time(observed_at)
+        self.notes.add(Note(
+            id=str(observed_at.timestamp()), created_at=observed_at,
+            from_role="system", content=content, step_index=len(self.transcript),
+        ))

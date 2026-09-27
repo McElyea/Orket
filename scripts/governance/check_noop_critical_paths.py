@@ -8,17 +8,16 @@ from pathlib import Path
 from typing import Any
 
 try:
+    from scripts.common.git_inventory import GitInventoryError
     from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
+    from scripts.governance.noop_analysis import NoopVisitor
+    from scripts.governance.quality_scan_inventory import git_visible_python_files
 except ModuleNotFoundError:  # pragma: no cover - script execution fallback
-    import importlib.util
-
-    helper_path = Path(__file__).resolve().parents[1] / "common" / "rerun_diff_ledger.py"
-    spec = importlib.util.spec_from_file_location("rerun_diff_ledger", helper_path)
-    if spec is None or spec.loader is None:  # pragma: no cover - defensive fallback
-        raise RuntimeError(f"E_DIFF_LEDGER_HELPER_LOAD_FAILED:{helper_path}")
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    write_payload_with_diff_ledger = module.write_payload_with_diff_ledger
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+    from scripts.common.git_inventory import GitInventoryError
+    from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
+    from scripts.governance.noop_analysis import NoopVisitor
+    from scripts.governance.quality_scan_inventory import git_visible_python_files
 
 
 DEFAULT_SCAN_ROOTS: tuple[str, ...] = (
@@ -26,7 +25,6 @@ DEFAULT_SCAN_ROOTS: tuple[str, ...] = (
     "orket/runtime",
     "orket/interfaces",
 )
-_SKIP_PARTS = {".git", ".venv", "node_modules", "__pycache__"}
 
 
 def _parse_args(argv: list[str]) -> argparse.Namespace:
@@ -45,103 +43,28 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def _iter_python_files(roots: list[Path]) -> list[Path]:
-    files: list[Path] = []
-    for root in roots:
-        if not root.exists():
-            continue
-        for path in root.rglob("*.py"):
-            if any(part in _SKIP_PARTS for part in path.parts):
-                continue
-            files.append(path)
-    return sorted(files)
-
-
-def _decorator_name(node: ast.AST) -> str:
-    if isinstance(node, ast.Name):
-        return node.id
-    if isinstance(node, ast.Attribute):
-        return str(node.attr or "")
-    return ""
-
-
-def _is_abstract_function(node: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
-    return any(_decorator_name(decorator) == "abstractmethod" for decorator in node.decorator_list)
-
-
-def _class_is_protocol(node: ast.ClassDef) -> bool:
-    for base in node.bases:
-        if isinstance(base, ast.Name) and base.id == "Protocol":
-            return True
-        if isinstance(base, ast.Attribute) and str(base.attr or "") == "Protocol":
-            return True
-    return False
-
-
-def _is_noop_body(body: list[ast.stmt]) -> str | None:
-    statements = [stmt for stmt in body if not isinstance(stmt, ast.Expr) or not isinstance(stmt.value, ast.Constant)]
-    if len(statements) == 1 and isinstance(statements[0], ast.Pass):
-        return "pass_statement"
-    if len(statements) == 1 and isinstance(statements[0], ast.Return):
-        if statements[0].value is None:
-            return "return_none"
-        if isinstance(statements[0].value, ast.Constant) and statements[0].value.value is None:
-            return "return_none"
-    if len(body) == 1 and isinstance(body[0], ast.Expr):
-        expr = body[0].value
-        if isinstance(expr, ast.Constant) and expr.value is Ellipsis:
-            return "ellipsis"
-    return None
-
-
-def _is_protocol_ellipsis_method(node: ast.FunctionDef | ast.AsyncFunctionDef, *, reason: str) -> bool:
-    if reason != "ellipsis":
-        return False
-    parent = getattr(node, "_parent", None)
-    while parent is not None:
-        if isinstance(parent, ast.ClassDef) and _class_is_protocol(parent):
-            return True
-        parent = getattr(parent, "_parent", None)
-    return False
-
-
 def _collect_noop_findings(path: Path, source: str) -> list[dict[str, Any]]:
     tree = ast.parse(source, filename=str(path))
-    for parent in ast.walk(tree):
-        for child in ast.iter_child_nodes(parent):
-            setattr(child, "_parent", parent)
-    findings: list[dict[str, Any]] = []
-    for node in ast.walk(tree):
-        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            continue
-        if _is_abstract_function(node):
-            continue
-        reason = _is_noop_body(node.body)
-        if reason is None:
-            continue
-        if _is_protocol_ellipsis_method(node, reason=reason):
-            continue
-        findings.append(
-            {
-                "path": str(path),
-                "line": int(node.lineno),
-                "name": str(node.name or ""),
-                "reason": reason,
-                "async": isinstance(node, ast.AsyncFunctionDef),
-            }
-        )
-    return findings
+    visitor = NoopVisitor()
+    visitor.visit(tree)
+    return [{"path": str(path), **finding} for finding in visitor.findings]
 
 
 def evaluate_noop_critical_paths(*, roots: list[Path]) -> dict[str, Any]:
     findings: list[dict[str, Any]] = []
     parse_errors: list[dict[str, Any]] = []
-    files = _iter_python_files(roots)
+    try:
+        files = git_visible_python_files(roots)
+    except (GitInventoryError, OSError) as exc:
+        files = []
+        parse_errors.append({"path": "", "error": f"scan_inventory_error:{exc}"})
+    if not files and not parse_errors:
+        parse_errors.append({"path": "", "error": "scan_files_empty"})
     for path in files:
         try:
             source = path.read_text(encoding="utf-8-sig")
             findings.extend(_collect_noop_findings(path, source))
-        except (OSError, SyntaxError) as exc:
+        except (OSError, SyntaxError, UnicodeError) as exc:
             parse_errors.append({"path": str(path), "error": str(exc)})
     return {
         "schema_version": "1.0",

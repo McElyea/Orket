@@ -4,7 +4,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.prompt_lab import score_prompt_reforger_gemma_tool_use_corpus as script
+
+pytestmark = pytest.mark.integration
 
 
 def _write_json(path: Path, payload: object) -> None:
@@ -13,12 +17,12 @@ def _write_json(path: Path, payload: object) -> None:
 
 
 def test_main_scores_bootstrap_corpus_from_observed_turns(tmp_path: Path) -> None:
-    """Layer: contract. Verifies the bounded Gemma tool-use scorer emits the fixed measured outputs from run artifacts."""
+    """Layer: integration. Scores fixture run artifacts through the real bounded Gemma scorer file pipeline."""
     repo_root = tmp_path
     run_summary_path = repo_root / "runs" / "run-001" / "run_summary.json"
     observability_root = repo_root / "observability" / "run-001"
     out_path = repo_root / "benchmarks" / "staging" / "General" / "prompt_reforger_gemma_tool_use_score.json"
-    corpus_path = Path("c:/Source/Orket/docs/projects/PromptReforgerToolCompatibility/GEMMA_TOOL_USE_CHALLENGE_CORPUS_V1.json")
+    corpus_path = Path(__file__).resolve().parents[2] / script.DEFAULT_CORPUS
 
     _write_json(
         run_summary_path,

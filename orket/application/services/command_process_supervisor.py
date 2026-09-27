@@ -37,6 +37,10 @@ class CommandProcessSupervisor:
         self.workspace = workspace
         self.cancellation_event = cancellation_event
 
+    def for_workspace(self, workspace: Path) -> CommandProcessSupervisor:
+        """Bind event context; process resources belong only to each run invocation."""
+        return CommandProcessSupervisor(workspace, cancellation_event=self.cancellation_event)
+
     async def run(self, argv, *, cwd, timeout_seconds, environment=None, input_data=None,
                   output_limit_bytes=None, jsonl_requests=None, io_timeout_seconds=None) -> OwnedCommandResult:
         cwd, environment = capture_process_context(cwd=cwd, environment=environment)

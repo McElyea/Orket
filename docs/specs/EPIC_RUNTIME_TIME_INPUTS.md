@@ -1,6 +1,6 @@
 # Epic bootstrap and summary time inputs
 
-Last updated: 2026-09-23
+Last updated: 2026-09-27
 Status: Active contract; scoped acceptance belongs to the architectural-truth plan.
 
 The standard `ExecutionPipeline` receives a `RuntimeInputService`. Epic bootstrap
@@ -41,6 +41,23 @@ explain historical clock reversal, make UTC a monotonic latency measurement,
 or close the remaining explicit-input and clock inventory under D. Default
 `RuntimeInputService` behavior remains the host UTC clock; controlled clocks
 are caller-provided inputs rather than hidden global overrides.
+
+Review preflight also receives the orchestrator's selected `turn_clock` and retains
+that callable at invocation entry. It samples support-artifact `recorded_at` after
+verification and samples note time at note creation after the corresponding state
+or verification publication. A note's explicit id is the string form of that same
+sample's timestamp; its `created_at` consumes the same sample. No second host-clock
+read occurs inside `Note`. This retains timestamp-shaped note identifiers without
+adding a uniqueness guarantee or making support evidence completion authority.
+Direct preflight constructors supply `utc_now`; direct `Note` constructors supply
+both `id` and `created_at`. Notes remain ephemeral; existing complete serialized
+values require no migration. Every selected support/note observation must be an
+actual timezone-aware `datetime`; naive datetimes and non-datetime values refuse
+with `E_REVIEW_PREFLIGHT_TIME_REQUIRES_AWARE_DATETIME` before that publication.
+Accepted explicit offsets normalize to UTC, so note identity never interprets a
+naive value using the host timezone. Refusal at a later note cannot undo earlier
+support or state publication. Contract delta:
+`../architecture/CONTRACT_DELTA_REVIEW_PREFLIGHT_TIME_D_2026-09-27.md`.
 
 The 0.6.102 turn-artifact migration explicitly forwards this same service's
 UTC callback through pipeline wiring and Orchestrator into TurnExecutor/parser.

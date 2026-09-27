@@ -12,6 +12,12 @@ The subsequent API registration drain shares this owner and its condition but
 has a separate cutoff and acknowledgement protocol; it does not expand the
 append frontier. See `docs/architecture/CONTRACT_DELTA_API_LOG_HANDOFF_D_2026-09-25.md`.
 
+The subsequent optional-publication correction captures built-in event inputs
+before admission and moves native processing onto this same writer. Its scope
+and migration are in
+`docs/architecture/CONTRACT_DELTA_OPTIONAL_LOG_PUBLICATION_D_2026-09-27.md`.
+Lifecycle preparation and migration of other required producers remain separate.
+
 ## Authority and admission
 
 Optional async log appends retain the existing bounded queue and single daemon.
@@ -19,6 +25,31 @@ Ordinary records use nonblocking admission; a full queue drops the record and
 increments `dropped_log_entry_count()`. `ORKET_LOG_QUEUE_MAX` keeps its existing
 meaning and default. Event fields remain owned by
 `docs/architecture/event_taxonomy.md`.
+
+Event-loop `log_event` detaches exact built-in payload and option graphs with the
+shared `capture_log_event_inputs` authority. Event names and explicit roles must
+be exact strings; workspaces must be `None` or an exact platform-native `Path`.
+Custom values, cycles, non-string mapping keys and non-finite scalars refuse with
+`E_LOG_EVENT_INPUT_UNSUPPORTED` before subscriber capture or queue effects.
+Relative workspaces bind through the existing file-root capture; drive-relative
+paths refuse. Missing-workspace policy and timezone are selected at call entry.
+The timestamp is sampled natively in that selected timezone. This does not claim
+that the remaining relative-root cwd observation or lazy writer startup is
+nonblocking; canonical lifecycle preparation is still required for complete D3.
+
+Main and applicable runtime-artifact attempts occupy independent bounded slots.
+A dropped main suppresses its handler and subscriber attempts; an independently
+accepted artifact can still append. A dropped artifact does not suppress an
+accepted main's subscriber attempts. The main's handler, directory preparation,
+serialization and write execute natively, followed by any admitted artifact and
+subscriber attempts. Uninvoked delivery tokens settle on drop or writer failure.
+API handoffs retain their separate later acknowledgement and registration drain.
+
+Optional admission increments the same per-path drop counter. Sparse overflow
+warnings execute on the writer, using one bounded pending warning slot. Multiple
+sparse warning thresholds reached while it is held coalesce to the latest pending
+threshold/path; the total drop count remains exact. A dead writer cannot deliver
+these warnings. The lower-level append interface keeps its existing semantics.
 
 `settle_log_write_frontier()` is a synchronous native-context boundary. It starts
 the same daemon when necessary, inserts one marker into the existing queue and
@@ -38,9 +69,16 @@ Acknowledgement means that every optional append accepted before the marker has
 finished its append attempt. Records admitted after the marker are excluded even
 if their appends are already running when the caller resumes. Native direct writes,
 subscriber callbacks and other producers are outside this queue frontier.
+Earlier optional publication stages can delay the marker, but it grants no
+subscriber delivery or API handoff acknowledgement claim.
 
 An optional append `OSError` retains its existing best-effort behavior: the daemon
 continues and a later marker can settle even though the record was not delivered.
+This includes the `logging_subscriber_failed` diagnostic append: a refused optional
+diagnostic write cannot skip later subscriber attempts or strand their tokens.
+Its timestamp/materialization and standard-handler failures remain fatal; only
+the optional append has `OSError` best effort. Native required diagnostic appends
+continue to propagate their write failures to the retained caller.
 Settlement establishes neither durable delivery nor effect/recovery authority.
 
 Unexpected daemon termination is retained by the existing daemon supervisor.
@@ -50,6 +88,13 @@ Thread-start `RuntimeError` uses that refusal too; process interrupts retain the
 original type. A subsequent frontier cannot replace the retained writer handle.
 Ordinary optional logging after daemon death retains bounded enqueue/drop behavior;
 it does not gain a delivery guarantee or automatically restart the writer.
+Those post-death optional calls issue no registration tokens. Non-`OSError`
+failures in deferred stages still terminate the writer and retain their original
+cause; they are not converted to a successful frontier or a late-warning counter.
+Handler and main-directory preparation failures, including `OSError`, are fatal
+too; best-effort `OSError` handling belongs to the admitted append attempts.
+Required/native publication still runs inline and propagates its main-write
+failure to its retained caller.
 
 A live held append keeps the native waiter pending. This boundary adds no forced
 thread termination, settlement deadline, retry, application shutdown or global

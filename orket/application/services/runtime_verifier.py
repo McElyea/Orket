@@ -8,11 +8,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-import aiofiles
-
+from orket.adapters.execution.owned_io import run_owned_thread
 from orket.application.services.command_process_supervisor import CommandProcessSupervisor
 from orket.application.services.runtime_verifier_capture import captured_runtime_streams, stdout_capture_error
 from orket.application.services.runtime_verifier_evidence import annotate_runtime_verifier_evidence
+from orket.application.services.runtime_verifier_inputs import capture_verifier_inputs
 from orket.core.domain.guard_contract import GuardContract, GuardViolation
 
 _COMMAND_FAILURE_SUMMARY_LIMIT = 240
@@ -59,6 +59,11 @@ class RuntimeVerifier:
         self.process_supervisor = CommandProcessSupervisor(workspace_root, cancellation_event="verification_process_cancelled")
 
     async def verify(self) -> RuntimeVerificationResult:
+        return await capture_verifier_inputs(self)._verify()
+
+    async def _verify(self) -> RuntimeVerificationResult:
+        caller = asyncio.current_task()
+        cancellations_at_admission = caller.cancelling() if caller is not None else 0
         targets = await self._python_targets()
         errors: list[str] = []
         checked_files: list[str] = []
@@ -69,6 +74,8 @@ class RuntimeVerifier:
             try:
                 await self._check_python_syntax(target)
             except (SyntaxError, ValueError, OSError) as exc:
+                if caller is not None and caller.cancelling() > cancellations_at_admission:
+                    raise
                 failure_breakdown["python_compile"] = failure_breakdown.get("python_compile", 0) + 1
                 errors.append(str(exc))
 
@@ -121,10 +128,10 @@ class RuntimeVerifier:
 
     async def _python_targets(self) -> list[Path]:
         root = self.workspace_root / "agent_output"
-        exists = await asyncio.to_thread(root.exists)
+        exists = await run_owned_thread(root.exists, label="verifier-target-root")
         if not exists:
             return []
-        files = await asyncio.to_thread(lambda: sorted([p for p in root.rglob("*.py") if p.is_file()]))
+        files = await run_owned_thread(lambda: sorted(p for p in root.rglob("*.py") if p.is_file()), label="verifier-targets")
         return files
 
     async def _resolve_runtime_command_plan(self) -> dict[str, Any]:
@@ -179,9 +186,9 @@ class RuntimeVerifier:
 
     async def _infer_stack_profile(self) -> str:
         deps_root = self.workspace_root / "agent_output" / "dependencies"
-        has_pyproject = await asyncio.to_thread((deps_root / "pyproject.toml").is_file)
-        has_requirements = await asyncio.to_thread((deps_root / "requirements.txt").is_file)
-        has_package_json = await asyncio.to_thread((deps_root / "package.json").is_file)
+        has_pyproject = await run_owned_thread((deps_root / "pyproject.toml").is_file, label="verifier-pyproject")
+        has_requirements = await run_owned_thread((deps_root / "requirements.txt").is_file, label="verifier-requirements")
+        has_package_json = await run_owned_thread((deps_root / "package.json").is_file, label="verifier-package-json")
         if (has_pyproject or has_requirements) and has_package_json:
             return "polyglot"
         if has_package_json:
@@ -190,7 +197,7 @@ class RuntimeVerifier:
 
     async def _default_commands_for_profile(self, stack_profile: str) -> list[Any]:
         # Only Python-backed surfaces have a safe cross-platform builtin verifier command.
-        agent_output_exists = await asyncio.to_thread((self.workspace_root / "agent_output").exists)
+        agent_output_exists = await run_owned_thread((self.workspace_root / "agent_output").exists, label="verifier-output")
         commands: list[Any] = []
         if agent_output_exists and stack_profile in {"python", "polyglot"}:
             commands.append(["python", "-m", "compileall", "-q", "agent_output"])
@@ -200,9 +207,7 @@ class RuntimeVerifier:
         return commands
 
     async def _check_python_syntax(self, path: Path) -> None:
-        async with aiofiles.open(path, encoding="utf-8") as handle:
-            source = await handle.read()
-        await asyncio.to_thread(compile, source, str(path), "exec")
+        await run_owned_thread(lambda: compile(path.read_text(encoding="utf-8"), str(path), "exec"), label="verifier-syntax")
 
     def _resolve_runtime_timeout_seconds(self) -> int:
         process_rules = {}
@@ -238,21 +243,10 @@ class RuntimeVerifier:
         for rel_path in expected:
             if not str(rel_path).strip():
                 continue
-            exists = await asyncio.to_thread((self.workspace_root / str(rel_path)).is_file)
+            exists = await run_owned_thread((self.workspace_root / str(rel_path)).is_file, label="verifier-deployment-file")
             if not exists:
                 missing.append(str(rel_path))
         return missing
-
-    async def _resolve_stack_profile(self, process_rules: dict[str, Any]) -> str:
-        stack_profile = str(process_rules.get("runtime_verifier_stack_profile", "")).strip().lower()
-        if stack_profile in {"python", "node", "polyglot"}:
-            return stack_profile
-        profile_stack = self._stack_profile_from_surface(
-            self.project_surface_profile or str(process_rules.get("project_surface_profile", "unspecified"))
-        )
-        if profile_stack:
-            return profile_stack
-        return await self._infer_stack_profile()
 
     def _resolve_expected_deployment_files(self, process_rules: dict[str, Any]) -> list[str]:
         explicit = process_rules.get("runtime_verifier_required_deployment_files")
@@ -386,8 +380,8 @@ class RuntimeVerifier:
             }
 
         command_text = self._display_command(argv)
-        workspace_root = await asyncio.to_thread(self.workspace_root.resolve)
-        resolved_cwd = await asyncio.to_thread(self._resolve_command_cwd, declared_cwd, workspace_root)
+        workspace_root = await run_owned_thread(self.workspace_root.resolve, label="verifier-workspace")
+        resolved_cwd = await run_owned_thread(lambda: self._resolve_command_cwd(declared_cwd, workspace_root), label="verifier-cwd")
         if resolved_cwd is None:
             return {
                 "invalid": True,
@@ -395,7 +389,7 @@ class RuntimeVerifier:
                 "working_directory": declared_cwd.replace("\\", "/"),
                 "error": f"runtime verifier cwd escapes workspace: {declared_cwd}",
             }
-        cwd_exists = await asyncio.to_thread(resolved_cwd.is_dir)
+        cwd_exists = await run_owned_thread(resolved_cwd.is_dir, label="verifier-cwd-exists")
         working_directory = "." if resolved_cwd == workspace_root else str(resolved_cwd.relative_to(workspace_root)).replace("\\", "/")
         if not cwd_exists:
             return {

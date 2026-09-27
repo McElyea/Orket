@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-import asyncio
 import json
+from copy import copy, deepcopy
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-import aiofiles
-
+from orket.adapters.execution.owned_io import run_owned_io, run_owned_thread
+from orket.adapters.storage.async_file_tools import AsyncFileTools, capture_file_roots
 from orket.core.cards_runtime_contract import (
     DEFAULT_RUNTIME_VERIFICATION_INDEX_PATH,
     DEFAULT_RUNTIME_VERIFICATION_PATH,
@@ -60,24 +60,28 @@ class RuntimeVerificationArtifactService:
         guard_contract: dict[str, Any],
         guard_decision: dict[str, Any],
     ) -> RuntimeVerificationArtifactWriteResult:
+        captured = copy(self)
+        captured.workspace_root = capture_file_roots([self.workspace_root])[0]
+        payload = deepcopy(captured._build_payload(
+            context=context, runtime_result=runtime_result, guard_contract=guard_contract,
+            guard_decision=guard_decision, record_id=captured._record_id(context),
+            record_path="", latest_path="", index_path="",
+        ))
+        return await run_owned_io(lambda: captured._publish(context, payload),
+                                  label="runtime-verification-publication", preserve_failure=True)
+
+    async def _publish(
+        self, context: RuntimeVerificationArtifactContext, payload: dict[str, Any],
+    ) -> RuntimeVerificationArtifactWriteResult:
         record_id = self._record_id(context)
         record_path = self._record_path(context)
         latest_path = self.workspace_root / DEFAULT_RUNTIME_VERIFICATION_PATH
         index_path = self.workspace_root / DEFAULT_RUNTIME_VERIFICATION_INDEX_PATH
-        record_rel = self._relative_path(record_path)
-        latest_rel = self._relative_path(latest_path)
-        index_rel = self._relative_path(index_path)
-
-        payload = self._build_payload(
-            context=context,
-            runtime_result=runtime_result,
-            guard_contract=guard_contract,
-            guard_decision=guard_decision,
-            record_id=record_id,
-            record_path=record_rel,
-            latest_path=latest_rel,
-            index_path=index_rel,
+        record_rel, latest_rel, index_rel = await run_owned_thread(
+            lambda: tuple(self._relative_path(path) for path in (record_path, latest_path, index_path)),
+            label="runtime-verification-paths",
         )
+        payload["history"] = {"record_path": record_rel, "latest_path": latest_rel, "index_path": index_rel}
         await self._write_json(record_path, payload)
         await self._write_json(latest_path, payload)
 
@@ -227,18 +231,12 @@ class RuntimeVerificationArtifactService:
         return path.resolve().relative_to(self.workspace_root.resolve()).as_posix()
 
     async def _read_json_object(self, path: Path) -> dict[str, Any]:
-        exists = await asyncio.to_thread(path.exists)
-        if not exists:
-            return {}
         try:
-            async with aiofiles.open(path, encoding="utf-8") as handle:
-                payload = json.loads(await handle.read())
+            payload = json.loads(await AsyncFileTools(self.workspace_root).read_file(str(path)))
         except (OSError, ValueError, TypeError):
             return {}
         return dict(payload) if isinstance(payload, dict) else {}
 
     async def _write_json(self, path: Path, payload: dict[str, Any]) -> None:
-        await asyncio.to_thread(path.parent.mkdir, parents=True, exist_ok=True)
         content = json.dumps(payload, ensure_ascii=True, indent=2, sort_keys=True) + "\n"
-        async with aiofiles.open(path, mode="w", encoding="utf-8") as handle:
-            await handle.write(content)
+        await AsyncFileTools(self.workspace_root).write_file(str(path), content)

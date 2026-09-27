@@ -138,6 +138,11 @@ Current allowed surfaces:
 `runtime_verification.json` is a support-verification artifact, not an authored output.
 Its fixed latest path is allowed only because the verifier now preserves materially distinct history in `runtime_verification_index.json` and per-record artifacts under `runtime_verifier_records/`.
 
+Verifier input capture and support-publication lifetime are governed by
+`RUNTIME_VERIFICATION_OWNERSHIP.md`. Interrupted publication retains its native
+work through settlement; earlier output effects can survive later failure. This
+does not make the record, latest artifact and index one atomic transaction.
+
 ### 4.5 Stability Evidence Group
 
 `replay_ready` requires:

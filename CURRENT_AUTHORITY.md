@@ -2,6 +2,42 @@
 
 Last updated: 2026-09-27
 
+The 0.6.107 checkpoint corrects the five retained optional logging openings. Its
+combined 385-case cohort passes in source and installed Windows Python 3.11/3.12,
+including diagnostic-append, overflow and layer controls. Event-loop callers detach supported built-in values
+and admit native stages to the existing bounded writer. Independent drops,
+registration tokens and fatal-writer refusal remain. Relative-root observation,
+lazy startup, preparation and required-producer migration are still open D work.
+Contract: `docs/specs/LOG_WRITE_SETTLEMENT.md`.
+
+Repaired taxonomy v2 classifies actual pytest items rather than nearby prose.
+Missing and conflicting layers and collection failures are explicit; strict
+acceptance still requires their removal. The repaired no-op gate passes its
+Git-visible inventory. Checker regression success does not establish runtime,
+full-suite, coverage or hosted Quality acceptance.
+Contract: `docs/specs/QUALITY_CHECKER_CONTRACT.md`.
+
+The checkpoint gives sandbox cleanup authorization and decision receipts one
+shared compose-path availability observation. Its native metadata operation stays
+owned through repeated cancellation; direct decision builders receive the boolean.
+Six reached opening failures now pass alongside 26 existing source guards using
+real files/SQLite and fixture Docker responses. This is not Docker acceptance.
+Contract: `docs/specs/SANDBOX_CLEANUP_OBSERVATION.md`.
+
+Review preflight captures the orchestrator's selected clock, samples support time
+after verification and supplies explicit note identity/creation time. Notes no
+longer read host time implicitly. Real-engine source controls use a declared model
+fixture and the selected synthetic clock; live inference is outside that proof.
+Contract: `docs/specs/EPIC_RUNTIME_TIME_INPUTS.md`.
+
+Runtime verification captures its selected root, environment and nested command
+and evidence inputs per invocation. Existing native owners retain metadata,
+syntax reads and support-artifact record/latest/index work through interruption;
+the command supervisor binds cancellation logging to that same selected root.
+Worker failure during cancellation cannot become a result that admits later
+commands. Publication can retain a partial prefix and remains support evidence.
+Contract: `docs/specs/RUNTIME_VERIFICATION_OWNERSHIP.md`.
+
 The user-requested 0.6.106 branch checkpoint preserves the implemented corrections
 and their open acceptance obligations. Fresh Windows Python 3.11 source proof on
 September 27 passes the 96 API handoff/logging guards; the separate optional logging

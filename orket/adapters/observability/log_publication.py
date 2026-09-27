@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import logging
 import os
@@ -14,33 +15,16 @@ from typing import Any
 side_effecting = True
 
 _logger = logging.getLogger("orket")
-
-
 _logger.setLevel(logging.INFO)
-
-
 _LOG_LEVELS = {
-    "debug": logging.DEBUG,
-    "info": logging.INFO,
-    "warn": logging.WARNING,
-    "warning": logging.WARNING,
-    "error": logging.ERROR,
-    "critical": logging.CRITICAL,
+    "debug": logging.DEBUG, "info": logging.INFO,
+    "warn": logging.WARNING, "warning": logging.WARNING,
+    "error": logging.ERROR, "critical": logging.CRITICAL,
 }
-
-
 _prepared_log_dirs: set[Path] = set()
-
-
 _prepared_log_dirs_lock = threading.Lock()
-
-
 LOG_QUEUE_MAX_ENV = "ORKET_LOG_QUEUE_MAX"
-
-
 DEFAULT_LOG_QUEUE_MAX = 10_000
-
-
 LOG_WRITER_TERMINATED_ERROR = "E_LOG_WRITER_TERMINATED: log writer stopped before the requested frontier"
 
 
@@ -57,28 +41,47 @@ class _LogWriteFrontier:
         self.settled = False
 
 
-_LogWriteItem = tuple[Path, str] | _LogWriteFrontier
+class OptionalPublication:
+    """One event's independently admitted sink attempts and captured registrations."""
+
+    def __init__(self, operations: list[tuple[Path, Callable[[], None]]], complete: Callable[[], None]) -> None:
+        self.operations = operations
+        self.complete = complete
+        self.pending = len(operations)
+        self.main_succeeded = False
+        self.deliveries: list[EventDelivery] = []
+
+    def release(self) -> None:
+        for delivery in self.deliveries:
+            delivery.release_untransferred()
+
+    def invoke(self, index: int) -> None:
+        succeeded = False
+        try:
+            self.operations[index][1]()
+            succeeded = True
+            if index == 0:
+                self.main_succeeded = True
+        finally:
+            self.pending -= 1
+            if not self.pending:
+                try:
+                    if self.main_succeeded and succeeded:
+                        self.complete()
+                finally:
+                    self.release()
 
 
+_LogWriteItem = tuple[Path, str] | _LogWriteFrontier | tuple[OptionalPublication, int]
 _log_write_queue: queue.Queue[_LogWriteItem] = queue.Queue(maxsize=_resolve_log_queue_max())
-
-
 _log_writer_lock = threading.Lock()
-
-
 _log_writer_state = threading.Condition()
-
-
 _log_writer_thread: threading.Thread | None = None
-
-
 _log_writer_failure: BaseException | None = None
-
-
 _dropped_log_entries = 0
-
-
 _dropped_log_entries_lock = threading.Lock()
+
+_pending_drop_warning: tuple[Path, int] | None = None
 
 
 def _record_log_writer_failure(failure: BaseException) -> None:
@@ -86,6 +89,12 @@ def _record_log_writer_failure(failure: BaseException) -> None:
     with _log_writer_state:
         if _log_writer_failure is None:
             _log_writer_failure = failure
+        # Fatal supervision must also settle captured but never invoked handoffs.
+        with _log_write_queue.mutex:
+            stranded = list(_log_write_queue.queue)
+        for item in stranded:
+            if isinstance(item, tuple) and isinstance(item[0], OptionalPublication):
+                item[0].release()
         _log_writer_state.notify_all()
 
 
@@ -121,15 +130,18 @@ def _log_writer_loop() -> None:
             try:
                 if frontier is None:
                     path, line = item
-                    _append_line_sync(path, line)
-            except OSError:
-                pass
+                    if isinstance(path, OptionalPublication):
+                        _invoke_optional_publication(path, line)
+                    else:
+                        with contextlib.suppress(OSError):
+                            _append_line_sync(path, line)
             finally:
                 _log_write_queue.task_done()
                 if frontier is not None:
                     with _log_writer_state:
                         frontier.settled = True
                         _log_writer_state.notify_all()
+            _emit_pending_drop_warning()
     except BaseException as exc:  # daemon supervisor boundary must not strand a frontier waiter
         _record_log_writer_failure(exc)
         raise
@@ -166,19 +178,51 @@ def _record_dropped_log_entry(path: Path) -> None:
         _dropped_log_entries += 1
         dropped = _dropped_log_entries
     if dropped == 1 or dropped % 1000 == 0:
-        _logger.warning(
-            "log_write_queue_full",
-            extra={
-                "orket_record": {
-                    "event": "log_write_queue_full",
-                    "data": {
-                        "dropped_log_entries": dropped,
-                        "queue_max": _log_write_queue.maxsize,
-                        "path": str(path),
-                    },
-                }
-            },
-        )
+        _emit_drop_warning(path, dropped)
+
+
+def _emit_drop_warning(path: Path, dropped: int) -> None:
+    _logger.warning("log_write_queue_full", extra={"orket_record": {
+        "event": "log_write_queue_full", "data": {
+            "dropped_log_entries": dropped, "queue_max": _log_write_queue.maxsize, "path": str(path)}}})
+
+
+def _invoke_optional_publication(batch: OptionalPublication, index: int) -> None:
+    try:
+        batch.invoke(index)
+    except BaseException:
+        batch.release()
+        raise
+
+
+def _emit_pending_drop_warning() -> None:
+    global _pending_drop_warning
+    with _log_writer_state:
+        warning, _pending_drop_warning = _pending_drop_warning, None
+    if warning is not None:
+        _emit_drop_warning(*warning)
+
+
+def admit_optional_publication(batch: OptionalPublication) -> None:
+    """Nonblocking per-file admission on the existing FIFO and writer."""
+    global _dropped_log_entries, _pending_drop_warning
+    _start_log_writer()
+    with _log_writer_state:
+        if _log_writer_failure is None:
+            batch.deliveries = capture_event_deliveries()
+        for index, (path, _operation) in enumerate(batch.operations):
+            try:
+                _log_write_queue.put_nowait((batch, index))
+            except queue.Full:
+                batch.pending -= 1
+                with _dropped_log_entries_lock:
+                    _dropped_log_entries += 1
+                    dropped = _dropped_log_entries
+                if dropped == 1 or dropped % 1000 == 0:
+                    # One pending sparse warning is bounded even while the writer is held.
+                    _pending_drop_warning = (path, dropped)
+        if not batch.pending:
+            batch.release()
 
 
 def _append_line_sync(path: Path, line: str) -> None:
@@ -273,8 +317,6 @@ class EventDelivery:
     def release_untransferred(self) -> None:
         if not self.transferred:
             self.acknowledge()
-
-
 _subscribers: list[EventSubscription] = []
 
 

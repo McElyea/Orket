@@ -1,4 +1,4 @@
-# Layer: end-to-end
+# Layer: integration (real child/service boundary with deterministic provider fixture)
 
 from __future__ import annotations
 
@@ -47,7 +47,7 @@ from tests.runtime.governed_agent_test_support import (
     resolved_profiles,
 )
 
-pytestmark = [pytest.mark.end_to_end, pytest.mark.integration, pytest.mark.usefixtures("elapsed_agent_clock")]
+pytestmark = [pytest.mark.integration, pytest.mark.usefixtures("elapsed_agent_clock")]
 
 
 @pytest.fixture
@@ -102,7 +102,7 @@ async def _resume_child(process, delay):
 
 
 @pytest.mark.asyncio
-# Layer: end-to-end
+# Layer: integration
 async def test_effect_approval_pauses_then_resumes_with_verified_receipts(
     tmp_path: Path, monkeypatch, startup_case,
 ) -> None:
@@ -130,7 +130,7 @@ async def test_effect_approval_pauses_then_resumes_with_verified_receipts(
 
 
 @pytest.mark.asyncio
-# Layer: end-to-end
+# Layer: integration
 async def test_effect_resume_rejections_preserve_blocked_authority(tmp_path, monkeypatch, native_children):
     """Rejection checks have their own real pause, outside the successful resume's deadline."""
     monkeypatch.setenv("ORKET_DISABLE_SANDBOX", "1")
@@ -156,7 +156,7 @@ async def test_effect_resume_rejections_preserve_blocked_authority(tmp_path, mon
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("phase", ["first", "resume"])
-# Layer: end-to-end
+# Layer: integration
 async def test_wall_clock_expiry_retains_native_uncertainty(
     tmp_path, monkeypatch, native_children, elapsed_agent_clock, phase,
 ):

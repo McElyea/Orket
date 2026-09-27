@@ -3,9 +3,29 @@ from __future__ import annotations
 import pytest
 
 from scripts.governance.build_architectural_truth_baseline import (
+    _summarize_taxonomy,
     collect_api_factory_behavior,
     load_exception_register,
 )
+
+
+@pytest.mark.contract
+def test_taxonomy_summary_preserves_collection_failure_and_conflicts() -> None:
+    invalid = [{"nodeid": f"test_sample.py::test_case[{index}]", "layers": ["unit", "integration"]} for index in range(105)]
+    payload = {
+        "schema_version": "test_taxonomy_report.v2", "ok": False, "tests_total": 105,
+        "missing_layer_total": 0, "invalid_layer_total": 105, "invalid_layers": invalid,
+        "collection_exit_code": 2, "collection_errors": ["failed to import selected test module"],
+        "classification_source": "pytest_collection",
+    }
+    summary = _summarize_taxonomy(payload)
+    assert summary["ok"] is False
+    assert summary["invalid_layer_total"] == 105
+    assert summary["invalid_layers_sample"] == invalid[:100]
+    assert summary["invalid_layers_omitted"] == 5
+    assert summary["collection_exit_code"] == 2
+    assert summary["collection_errors"] == payload["collection_errors"]
+    assert summary["classification_source"] == "pytest_collection"
 
 
 # Layer: contract

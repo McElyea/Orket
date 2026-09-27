@@ -19,7 +19,7 @@ from tests.integration.test_verification_process_lifetime import (
     stop_observed,
 )
 
-pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
+pytestmark = pytest.mark.asyncio
 
 
 class HeldListener:
@@ -54,7 +54,7 @@ async def accepts_connections(address):
 
 
 @pytest.mark.parametrize("stop", ["normal", "cancel", "repeated-cancel", "concurrent"])
-# Layer: integration
+@pytest.mark.integration
 async def test_container_close_waits_for_real_resources_through_cancellation(tmp_path, boundary, stop):
     app = create_api_app(CompositionConfig(project_root=tmp_path))
     async with app.router.lifespan_context(app):
@@ -100,6 +100,7 @@ async def test_container_close_waits_for_real_resources_through_cancellation(tmp
 
 @pytest.mark.parametrize("stop", ["normal", "repeated-cancel"])
 # Layer: integration
+@pytest.mark.integration
 async def test_api_close_settles_registered_native_command_tree(tmp_path, boundary, stop):
     app = create_api_app(CompositionConfig(project_root=tmp_path))
     async with app.router.lifespan_context(app):
@@ -166,6 +167,7 @@ async def test_live_tcp_api_server_finishes_application_teardown(tmp_path, bound
 
 
 # Layer: integration
+@pytest.mark.integration
 async def test_repeated_lifespan_cancellation_finishes_owned_teardown(tmp_path, boundary):
     app = create_api_app(CompositionConfig(project_root=tmp_path))
     context = None
