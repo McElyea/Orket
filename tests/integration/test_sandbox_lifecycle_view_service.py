@@ -13,6 +13,8 @@ from orket.core.domain.sandbox_lifecycle_records import (
     SandboxLifecycleRecord,
 )
 
+pytestmark = pytest.mark.integration
+
 
 def _record(sandbox_id: str, *, cleanup_due_at: str | None, last_heartbeat_at: str | None, requires_reconciliation: bool = False) -> SandboxLifecycleRecord:
     return SandboxLifecycleRecord(

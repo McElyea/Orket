@@ -1,4 +1,4 @@
-# Layer: integration and end-to-end
+# Layers are declared per test for the exercised boundary.
 
 from __future__ import annotations
 
@@ -8,6 +8,7 @@ import time
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
+import pytest
 import yaml
 from fastapi.testclient import TestClient
 
@@ -20,36 +21,34 @@ from orket_extension_sdk.agent_fixtures import prefixed_digest
 from tests.runtime.governed_agent_test_support import agent_request
 
 
+@pytest.mark.integration
 def test_api_wake_ingress_is_idempotent_and_survives_app_restart(tmp_path: Path, monkeypatch) -> None:
     """Layer: integration. Authenticated ingress persists without requiring supervisor activation."""
     db_path = tmp_path / "agent.sqlite3"
     _configure_api(monkeypatch, db_path, enabled=False)
     payload = _wake_payload()
-
     first_app = create_api_app(project_root=tmp_path)
     with TestClient(first_app) as client:
         unauthorized = client.post("/v1/agent-wakes", json=payload)
         admitted = client.post("/v1/agent-wakes", headers=_headers(), json=payload)
         repeated = client.post("/v1/agent-wakes", headers=_headers(), json=payload)
-
     assert unauthorized.status_code == 403
     assert admitted.status_code == 202
     assert admitted.json()["status"] == "enqueued"
     assert repeated.status_code == 202
     assert repeated.json()["status"] == "idempotent"
     wake_id = admitted.json()["wake"]["wake_id"]
-
     second_app = create_api_app(project_root=tmp_path)
     with TestClient(second_app) as client:
         retained = client.get(f"/v1/agent-wakes/{wake_id}", headers=_headers())
         listed = client.get("/v1/agent-wakes", headers=_headers())
-
     assert retained.status_code == 200
     assert retained.json()["state"] == "queued"
     assert [item["wake_id"] for item in listed.json()["items"]] == [wake_id]
     assert second_app.state.api_runtime_context.active_background_task_count == 0
 
 
+@pytest.mark.integration
 def test_api_wake_controls_are_authenticated_durable_and_evidence_gated(tmp_path: Path, monkeypatch) -> None:
     """Layer: integration. API control receipts survive restart and recovery fails closed without proof."""
     db_path = tmp_path / "agent.sqlite3"
@@ -77,7 +76,6 @@ def test_api_wake_controls_are_authenticated_durable_and_evidence_gated(tmp_path
         "effect_uncertainty_cleared": True,
         "evidence_refs": ["process-reap:api", "effect-reconciliation:api"],
     }
-
     with TestClient(create_api_app(project_root=tmp_path)) as client:
         unauthorized = client.post(f"/v1/agent-wakes/{wake_id}/cancel", json=cancel_payload)
         cancelled = client.post(f"/v1/agent-wakes/{wake_id}/cancel", headers=_headers(), json=cancel_payload)
@@ -90,7 +88,6 @@ def test_api_wake_controls_are_authenticated_durable_and_evidence_gated(tmp_path
         refused = client.post(f"/v1/agent-wakes/{wake_id}/recover", headers=_headers(), json=refused_payload)
         recovered = client.post(f"/v1/agent-wakes/{wake_id}/recover", headers=_headers(), json=recovery_payload)
         listed = client.get(f"/v1/agent-wakes/{wake_id}/actions", headers=_headers())
-
     assert unauthorized.status_code == 403
     assert cancelled.status_code == 200 and cancelled.json()["wake"]["uncertainty"] is True
     assert refused.status_code == 409 and refused.json()["detail"]["status"] == "conflict"
@@ -100,20 +97,19 @@ def test_api_wake_controls_are_authenticated_durable_and_evidence_gated(tmp_path
         "wake-action:api-refused",
         "wake-action:api-recover",
     ]
-
     with TestClient(create_api_app(project_root=tmp_path)) as client:
         retained = client.get(f"/v1/agent-wakes/{wake_id}/actions", headers=_headers())
     assert retained.json()["items"] == listed.json()["items"]
     assert retained.json()["items"][-1]["request"]["evidence_refs"] == recovery_payload["evidence_refs"]
 
 
+@pytest.mark.integration
 def test_scheduled_wake_api_is_authenticated_durable_and_coalesced(tmp_path: Path, monkeypatch) -> None:
     """Layer: integration. Schedule evaluation and selected wake survive API restart as one transaction."""
     db_path = tmp_path / "agent.sqlite3"
     _configure_api(monkeypatch, db_path, enabled=False)
     payload = _schedule_payload(evaluation_id="schedule-evaluation:api-1", include_prior=True)
     route = "/v1/agent-schedules/daily-report/evaluations"
-
     with TestClient(create_api_app(project_root=tmp_path)) as client:
         unauthorized = client.post(route, json=payload)
         admitted = client.post(route, headers=_headers(), json=payload)
@@ -123,7 +119,6 @@ def test_scheduled_wake_api_is_authenticated_durable_and_coalesced(tmp_path: Pat
             headers=_headers(),
             json={**payload, "misfire_grace_seconds": 1},
         )
-
     assert unauthorized.status_code == 403
     assert admitted.status_code == 202 and admitted.json()["status"] == "enqueued"
     assert replayed.status_code == 202 and replayed.json()["status"] == "idempotent"
@@ -132,7 +127,6 @@ def test_scheduled_wake_api_is_authenticated_durable_and_coalesced(tmp_path: Pat
     assert wake["source"] == "scheduled"
     assert wake["trigger"]["schedule_id"] == "daily-report"
     assert len(wake["trigger"]["coalesced_occurrence_ids"]) == 1
-
     with TestClient(create_api_app(project_root=tmp_path)) as client:
         evaluations = client.get(route, headers=_headers())
         retained = client.get(f"/v1/agent-wakes/{wake['wake_id']}", headers=_headers())
@@ -143,15 +137,15 @@ def test_scheduled_wake_api_is_authenticated_durable_and_coalesced(tmp_path: Pat
     assert retained.json()["trigger"] == wake["trigger"]
 
 
+@pytest.mark.end_to_end
 def test_api_owned_supervisor_dispatches_scheduled_wake(tmp_path: Path, monkeypatch) -> None:
-    """Layer: end-to-end. Authenticated scheduled ingress reaches the API-owned real child loop."""
+    """Layer: end_to_end. Authenticated scheduled ingress reaches the API-owned real child loop."""
     db_path = tmp_path / "agent.sqlite3"
     catalog_path = _write_catalog(tmp_path)
     _configure_api(monkeypatch, db_path, enabled=True)
     monkeypatch.setenv("ORKET_EXTENSIONS_CATALOG", str(catalog_path))
     app = create_api_app(project_root=tmp_path)
     route = "/v1/agent-schedules/hourly-report/evaluations"
-
     with TestClient(app) as client:
         # Layer: integration. WAL must exist before scheduled ingress races the supervisor.
         from orket.adapters.storage.sqlite_connection import current_journal_mode
@@ -174,11 +168,12 @@ def test_api_owned_supervisor_dispatches_scheduled_wake(tmp_path: Path, monkeypa
     assert app.state.api_runtime_context.active_background_task_count == 0
 
 
+@pytest.mark.end_to_end
 def test_api_owned_supervisor_dispatches_real_child_and_exposes_composed_inspection(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
-    """Layer: end-to-end. API wake reaches the real child/broker loop and durable inspector."""
+    """Layer: end_to_end. API wake reaches the real child/broker loop and durable inspector."""
     db_path = tmp_path / "agent.sqlite3"
     catalog_path = _write_catalog(tmp_path)
     _configure_api(monkeypatch, db_path, enabled=True)
@@ -221,11 +216,12 @@ def test_api_owned_supervisor_dispatches_real_child_and_exposes_composed_inspect
     assert app.state.api_runtime_context.active_background_task_count == 0
 
 
+@pytest.mark.end_to_end
 def test_api_owned_supervisor_prepares_approved_effect_and_resumes_real_child(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
-    """Layer: end-to-end. A wake-fenced effect pause resumes only through authenticated approval."""
+    """Layer: end_to_end. A wake-fenced effect pause resumes only through authenticated approval."""
     db_path = tmp_path / "agent.sqlite3"
     catalog_path = _write_catalog(tmp_path)
     _configure_api(monkeypatch, db_path, enabled=True)
@@ -300,11 +296,12 @@ def test_api_owned_supervisor_prepares_approved_effect_and_resumes_real_child(
     assert third_app.state.api_runtime_context.active_background_task_count == 0
 
 
+@pytest.mark.end_to_end
 def test_authenticated_effect_denial_closes_run_without_write_or_resume_wake(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
-    """Layer: end-to-end. Public denial retains one paused wake and performs no proposed write."""
+    """Layer: end_to_end. Public denial retains one paused wake and performs no proposed write."""
     db_path = tmp_path / "agent.sqlite3"
     catalog_path = _write_catalog(tmp_path)
     _configure_api(monkeypatch, db_path, enabled=True)
@@ -341,11 +338,12 @@ def test_authenticated_effect_denial_closes_run_without_write_or_resume_wake(
     assert not tmp_path.joinpath("reports", "ticket-report.json").exists()
 
 
+@pytest.mark.end_to_end
 def test_observed_read_only_effect_can_resume_without_a_write_approval(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
-    """Layer: end-to-end. Safe read-only proposals use explicit continuation without a fake gate."""
+    """Layer: end_to_end. Safe read-only proposals use explicit continuation without a fake gate."""
     db_path = tmp_path / "agent.sqlite3"
     catalog_path = _write_catalog(tmp_path)
     _configure_api(monkeypatch, db_path, enabled=True)
@@ -384,11 +382,12 @@ def test_observed_read_only_effect_can_resume_without_a_write_approval(
     assert not tmp_path.joinpath("reports", "ticket-report.json").exists()
 
 
+@pytest.mark.end_to_end
 def test_failed_wake_driven_read_enters_recovery_without_preparing_later_write(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
-    """Layer: end-to-end. Read uncertainty fences later proposals and the claimed wake."""
+    """Layer: end_to_end. Read uncertainty fences later proposals and the claimed wake."""
     db_path = tmp_path / "agent.sqlite3"
     catalog_path = _write_catalog(tmp_path)
     _configure_api(monkeypatch, db_path, enabled=True)
@@ -411,8 +410,9 @@ def test_failed_wake_driven_read_enters_recovery_without_preparing_later_write(
     assert not tmp_path.joinpath("reports", "ticket-report.json").exists()
 
 
+@pytest.mark.end_to_end
 def test_manual_cli_wake_is_consumed_by_api_owned_supervisor(tmp_path: Path, monkeypatch, capsys) -> None:
-    """Layer: end-to-end. The public manual transport feeds the same production dispatcher as API ingress."""
+    """Layer: end_to_end. The public manual transport feeds the same production dispatcher as API ingress."""
     db_path = tmp_path / "agent.sqlite3"
     catalog_path = _write_catalog(tmp_path)
     payload = _wake_payload(occurrence_id="manual-cli-1")

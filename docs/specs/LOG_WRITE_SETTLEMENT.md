@@ -37,6 +37,16 @@ The timestamp is sampled natively in that selected timezone. This does not claim
 that the remaining relative-root cwd observation or lazy writer startup is
 nonblocking; canonical lifecycle preparation is still required for complete D3.
 
+The event-specific wrapper delegates its graph walk to the single pure
+`core/contracts/value_capture.py` owner and supplies its unchanged stable error
+code. This extraction adds fixture admission as another caller without changing
+logging's root/event checks, admitted types, capture behavior or publication policy.
+This shared capture extraction is active for prospective checkpoint 0.6.113.
+Its copied-source and current-source event/fixture controls and pending installed
+acceptance are recorded in
+`../architecture/CONTRACT_DELTA_FIXTURE_INPUT_TIME_D_2026-09-27.md`; it adds no broader
+logging-preparation claim.
+
 Main and applicable runtime-artifact attempts occupy independent bounded slots.
 A dropped main suppresses its handler and subscriber attempts; an independently
 accepted artifact can still append. A dropped artifact does not suppress an

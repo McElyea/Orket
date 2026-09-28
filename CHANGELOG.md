@@ -5,6 +5,19 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.113] - 2026-09-27
+
+### Fixed
+- Capture fixture scenario values, process inputs and selected verification clocks before awaits; retain native metadata and required security publication through interruption. Capture sandbox HTTP factory and timeout ports before observation.
+- Share the existing built-in value copier and add complete Git-visible architecture size inventories with nested-function context and unchanged size limits.
+- Classify 643 existing cases and add 55 marked controls. Exact collection confirms 10,693 cases, 496 missing layers and no conflicts or collection errors; strict taxonomy remains failing.
+- Align the authority snapshot's human-readable and machine-readable dates.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Direct fixture and sandbox verification constructors require an aware-datetime `utc_now` callable. Replace sandbox `runtime_inputs`; explicitly convert custom fixture payloads to supported built-in values without cycles or non-finite numbers.
+- Scoped verifier and size-inventory selections pass 211 and 12 cases. The broader run records 10,585 passes, 15 failures and 93 skips; coverage aggregation fails on mixed statement/branch data. The authority-date guard passes after its separate correction. Installed/platform, remaining failures, coverage and whole-plan acceptance remain open in the architectural-truth plan.
+
 ## [0.6.112] - 2026-09-27
 
 ### Fixed

@@ -6,6 +6,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
 from jsonschema import Draft202012Validator
 from referencing import Registry, Resource
 
@@ -48,19 +49,17 @@ def _load_compare_fixture_payload() -> dict:
     return json.loads(fixture_path.read_text(encoding="utf-8"))
 
 
+@pytest.mark.contract
 def test_kernel_lifecycle_endpoint_routes_to_engine(monkeypatch) -> None:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     captured = {}
-
     def fake_kernel_run_lifecycle(*, workflow_id, execute_turn_requests, finish_outcome="PASS", start_request=None):
         captured["workflow_id"] = workflow_id
         captured["execute_turn_requests"] = execute_turn_requests
         captured["finish_outcome"] = finish_outcome
         captured["start_request"] = start_request
         return {"ok": True, "workflow_id": workflow_id}
-
     monkeypatch.setattr(api_module._get_engine(client.app), "kernel_run_lifecycle", fake_kernel_run_lifecycle)
-
     response = client.post(
         "/v1/kernel/lifecycle",
         headers={"X-API-Key": "test-key"},
@@ -77,16 +76,14 @@ def test_kernel_lifecycle_endpoint_routes_to_engine(monkeypatch) -> None:
     assert captured["execute_turn_requests"][0]["turn_id"] == "turn-0001"
 
 
+@pytest.mark.contract
 def test_kernel_compare_endpoint_routes_to_engine(monkeypatch) -> None:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     captured = {}
-
     def fake_kernel_compare_runs(request):
         captured["request"] = request
         return {"outcome": "FAIL", "issues": [{"code": "E_REPLAY_EQUIVALENCE_FAILED"}]}
-
     monkeypatch.setattr(api_module._get_engine(client.app), "kernel_compare_runs", fake_kernel_compare_runs)
-
     response = client.post(
         "/v1/kernel/compare",
         headers={"X-API-Key": "test-key"},
@@ -103,16 +100,14 @@ def test_kernel_compare_endpoint_routes_to_engine(monkeypatch) -> None:
     assert captured["request"]["run_a"]["run_id"] == "run-a"
 
 
+@pytest.mark.contract
 def test_kernel_projection_pack_endpoint_routes_to_engine(monkeypatch) -> None:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     captured = {}
-
     def fake_kernel_projection_pack(request):
         captured["request"] = request
         return {"ok": True, "projection_pack_digest": "a" * 64}
-
     monkeypatch.setattr(api_module._get_engine(client.app), "kernel_projection_pack", fake_kernel_projection_pack)
-
     response = client.post(
         "/v1/kernel/projection-pack",
         headers={"X-API-Key": "test-key"},
@@ -130,16 +125,14 @@ def test_kernel_projection_pack_endpoint_routes_to_engine(monkeypatch) -> None:
     assert captured["request"]["session_id"] == "sess-api-1"
 
 
+@pytest.mark.contract
 def test_kernel_admit_proposal_endpoint_routes_to_engine(monkeypatch) -> None:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     captured = {}
-
     async def fake_kernel_admit_proposal_async(request):
         captured["request"] = request
         return {"proposal_digest": "b" * 64, "admission_decision": {"decision": "ACCEPT_TO_UNIFY"}}
-
     monkeypatch.setattr(api_module._get_engine(client.app), "kernel_admit_proposal_async", fake_kernel_admit_proposal_async)
-
     response = client.post(
         "/v1/kernel/admit-proposal",
         headers={"X-API-Key": "test-key"},
@@ -154,16 +147,14 @@ def test_kernel_admit_proposal_endpoint_routes_to_engine(monkeypatch) -> None:
     assert captured["request"]["contract_version"] == "kernel_api/v1"
 
 
+@pytest.mark.contract
 def test_kernel_commit_proposal_endpoint_routes_to_engine(monkeypatch) -> None:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     captured = {}
-
     async def fake_kernel_commit_proposal_async(request):
         captured["request"] = request
         return {"status": "COMMITTED", "commit_event_digest": "c" * 64}
-
     monkeypatch.setattr(api_module._get_engine(client.app), "kernel_commit_proposal_async", fake_kernel_commit_proposal_async)
-
     response = client.post(
         "/v1/kernel/commit-proposal",
         headers={"X-API-Key": "test-key"},
@@ -190,16 +181,14 @@ def test_kernel_commit_proposal_endpoint_routes_to_engine(monkeypatch) -> None:
     assert captured["request"]["block_result_leaks"] is True
 
 
+@pytest.mark.contract
 def test_kernel_end_session_endpoint_routes_to_engine(monkeypatch) -> None:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     captured = {}
-
     async def fake_kernel_end_session_async(request):
         captured["request"] = request
         return {"status": "ENDED", "event_digest": "1" * 64}
-
     monkeypatch.setattr(api_module._get_engine(client.app), "kernel_end_session_async", fake_kernel_end_session_async)
-
     response = client.post(
         "/v1/kernel/end-session",
         headers={"X-API-Key": "test-key"},
@@ -219,13 +208,13 @@ def test_kernel_end_session_endpoint_routes_to_engine(monkeypatch) -> None:
     assert captured["request"]["operator_actor_ref"].startswith("api_key_fingerprint:sha256:")
 
 
+@pytest.mark.integration
 def test_kernel_projection_admit_commit_end_session_real_engine_flow(monkeypatch) -> None:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setenv("ORKET_ENABLE_NERVOUS_SYSTEM", "true")
     monkeypatch.setenv("ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS", "true")
     session_id = "sess-real-kernel-1"
     trace_id = "trace-real-kernel-1"
-
     projection = client.post(
         "/v1/kernel/projection-pack",
         headers={"X-API-Key": "test-key"},
@@ -241,7 +230,6 @@ def test_kernel_projection_admit_commit_end_session_real_engine_flow(monkeypatch
     projection_payload = projection.json()
     assert projection_payload["contract_version"] == "kernel_api/v1"
     assert projection_payload["canonical_state_digest"] == "0" * 64
-
     admitted = client.post(
         "/v1/kernel/admit-proposal",
         headers={"X-API-Key": "test-key"},
@@ -254,7 +242,6 @@ def test_kernel_projection_admit_commit_end_session_real_engine_flow(monkeypatch
     assert admitted.status_code == 200
     admitted_payload = admitted.json()
     assert admitted_payload["admission_decision"]["decision"] == "ACCEPT_TO_UNIFY"
-
     committed = client.post(
         "/v1/kernel/commit-proposal",
         headers={"X-API-Key": "test-key"},
@@ -270,7 +257,6 @@ def test_kernel_projection_admit_commit_end_session_real_engine_flow(monkeypatch
     commit_payload = committed.json()
     assert commit_payload["status"] == "COMMITTED"
     assert isinstance(commit_payload["commit_event_digest"], str) and len(commit_payload["commit_event_digest"]) == 64
-
     ended = client.post(
         "/v1/kernel/end-session",
         headers={"X-API-Key": "test-key"},
@@ -280,6 +266,7 @@ def test_kernel_projection_admit_commit_end_session_real_engine_flow(monkeypatch
     assert ended.json()["status"] == "ENDED"
 
 
+@pytest.mark.contract
 def test_kernel_api_real_engine_flow_publishes_control_plane_governed_action_truth(monkeypatch) -> None:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setenv("ORKET_ENABLE_NERVOUS_SYSTEM", "true")
@@ -305,7 +292,6 @@ def test_kernel_api_real_engine_flow_publishes_control_plane_governed_action_tru
             execution_repository=execution_repo,
         ),
     )
-
     session_id = "sess-real-kernel-cp-1"
     trace_id = "trace-real-kernel-cp-1"
     admitted = client.post(
@@ -320,7 +306,6 @@ def test_kernel_api_real_engine_flow_publishes_control_plane_governed_action_tru
     assert admitted.status_code == 200
     admitted_payload = admitted.json()
     assert admitted_payload["control_plane_reservation_id"].startswith("kernel-action-reservation:")
-
     committed = client.post(
         "/v1/kernel/commit-proposal",
         headers={"X-API-Key": "test-key"},
@@ -396,6 +381,7 @@ def test_kernel_api_real_engine_flow_publishes_control_plane_governed_action_tru
     ]
 
 
+@pytest.mark.contract
 def test_kernel_api_replay_exposes_active_reservation_for_needs_approval_trace(monkeypatch) -> None:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setenv("ORKET_ENABLE_NERVOUS_SYSTEM", "true")
@@ -462,6 +448,7 @@ def test_kernel_api_replay_exposes_active_reservation_for_needs_approval_trace(m
     assert control_plane["latest_lease"] is None
 
 
+@pytest.mark.contract
 def test_kernel_api_end_session_publishes_operator_cancel_for_unfinished_trace(monkeypatch) -> None:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setenv("ORKET_ENABLE_NERVOUS_SYSTEM", "true")
@@ -539,6 +526,7 @@ def test_kernel_api_end_session_publishes_operator_cancel_for_unfinished_trace(m
     ]
 
 
+@pytest.mark.contract
 def test_kernel_api_end_session_publishes_attestation_when_requested(monkeypatch) -> None:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setenv("ORKET_ENABLE_NERVOUS_SYSTEM", "true")
@@ -625,6 +613,7 @@ def test_kernel_api_end_session_publishes_attestation_when_requested(monkeypatch
     ]
 
 
+@pytest.mark.contract
 def test_kernel_projection_pack_returns_400_when_nervous_system_flag_off(monkeypatch) -> None:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.delenv("ORKET_ENABLE_NERVOUS_SYSTEM", raising=False)
@@ -644,6 +633,7 @@ def test_kernel_projection_pack_returns_400_when_nervous_system_flag_off(monkeyp
     assert "disabled" in response.json()["detail"].lower()
 
 
+@pytest.mark.contract
 def test_kernel_replay_endpoint_routes_to_engine_and_propagates_failure_codes(monkeypatch) -> None:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
 
@@ -681,6 +671,7 @@ def test_kernel_replay_endpoint_routes_to_engine_and_propagates_failure_codes(mo
     assert mismatch.json()["issues"][0]["code"] == "E_REPLAY_VERSION_MISMATCH"
 
 
+@pytest.mark.contract
 def test_kernel_replay_endpoint_real_engine_success_with_full_descriptor(monkeypatch) -> None:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     response = client.post(
@@ -709,6 +700,7 @@ def test_kernel_replay_endpoint_real_engine_success_with_full_descriptor(monkeyp
     Draft202012Validator(schema, registry=registry).validate(payload)
 
 
+@pytest.mark.contract
 def test_kernel_replay_endpoint_real_engine_fail_payload_conforms_schema(monkeypatch) -> None:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     response = client.post(
@@ -725,6 +717,7 @@ def test_kernel_replay_endpoint_real_engine_fail_payload_conforms_schema(monkeyp
     Draft202012Validator(schema, registry=registry).validate(payload)
 
 
+@pytest.mark.contract
 def test_kernel_compare_endpoint_real_engine_detects_pointer_drift(monkeypatch) -> None:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     response = client.post(
@@ -779,6 +772,7 @@ def test_kernel_compare_endpoint_real_engine_detects_pointer_drift(monkeypatch) 
     assert payload["issues"][0]["details"]["mismatch_fields"] == ["issue_codes"]
 
 
+@pytest.mark.contract
 def test_kernel_compare_endpoint_real_engine_contract_version_drift(monkeypatch) -> None:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     response = client.post(
@@ -813,6 +807,7 @@ def test_kernel_compare_endpoint_real_engine_contract_version_drift(monkeypatch)
     assert payload["issues"][0]["details"]["mismatch_fields"] == ["contract_version"]
 
 
+@pytest.mark.contract
 def test_kernel_compare_endpoint_real_engine_pointer_and_stage_drift_ordering(monkeypatch) -> None:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     response = client.post(
@@ -867,6 +862,7 @@ def test_kernel_compare_endpoint_real_engine_pointer_and_stage_drift_ordering(mo
     assert payload["issues"][0]["details"]["mismatch_fields"] == ["issue_codes", "stage_outcomes"]
 
 
+@pytest.mark.contract
 def test_kernel_compare_endpoint_real_engine_passes_mixed_order_normalization(monkeypatch) -> None:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     response = client.post(
@@ -942,6 +938,7 @@ def test_kernel_compare_endpoint_real_engine_passes_mixed_order_normalization(mo
     assert response.json()["outcome"] == "PASS"
 
 
+@pytest.mark.contract
 def test_kernel_compare_endpoint_response_conforms_to_replay_report_schema(monkeypatch) -> None:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     response = client.post(
@@ -959,6 +956,7 @@ def test_kernel_compare_endpoint_response_conforms_to_replay_report_schema(monke
     Draft202012Validator(schema, registry=registry).validate(response.json())
 
 
+@pytest.mark.contract
 def test_kernel_compare_endpoint_malformed_payload_rejected(monkeypatch) -> None:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     response = client.post(
@@ -974,6 +972,7 @@ def test_kernel_compare_endpoint_malformed_payload_rejected(monkeypatch) -> None
     assert payload["detail"][0]["loc"][-1] == "run_b"
 
 
+@pytest.mark.contract
 def test_kernel_compare_endpoint_realistic_artifact_fixture(monkeypatch) -> None:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     fixture = _load_compare_fixture_payload()
@@ -991,6 +990,7 @@ def test_kernel_compare_endpoint_realistic_artifact_fixture(monkeypatch) -> None
     assert response.json()["outcome"] == fixture["expect_outcome"]
 
 
+@pytest.mark.integration
 def test_kernel_compare_endpoint_generated_fixture_optional_parity_source(monkeypatch, tmp_path: Path) -> None:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     generated_fixture = tmp_path / "kernel_compare_generated_fixture.json"

@@ -3,8 +3,11 @@ from __future__ import annotations
 import json
 
 import httpx
+import pytest
 
 import orket.interfaces.orket_bundle_cli as cli_module
+
+pytestmark = pytest.mark.contract
 
 
 def test_ledger_cli_exports_summarizes_and_verifies_offline(monkeypatch, capsys, tmp_path) -> None:

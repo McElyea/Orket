@@ -7,6 +7,7 @@ import pytest
 from orket.application.services.sandbox_verification_service import SandboxVerificationService
 from orket.schema import IssueVerification, VerificationScenario
 from tests.helpers.observed_http_server import observed_http_server
+from tests.helpers.turn_artifacts import artifact_test_utc_now
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 
@@ -28,7 +29,7 @@ async def test_http_verification_compares_falsy_expected_values(expected, matche
 
     async with observed_http_server(respond) as (url, requests):
         verification = verification_for(expected)
-        result = await SandboxVerificationService().verify_sandbox(SimpleNamespace(id="observed", api_url=url), verification)
+        result = await SandboxVerificationService(utc_now=artifact_test_utc_now).verify_sandbox(SimpleNamespace(id="observed", api_url=url), verification)
         assert [request[0].split()[:2] for request in requests] == [["GET", "/probe"]]
         assert result.total_scenarios == 1
         assert (result.passed, result.failed) == ((1, 0) if matches else (0, 1))
@@ -45,7 +46,7 @@ async def test_http_verification_captures_expectations_before_waiting_for_respon
 
     async with observed_http_server(respond) as (url, requests):
         verification = verification_for({"expected": "original"})
-        task = asyncio.create_task(SandboxVerificationService().verify_sandbox(SimpleNamespace(id="observed", api_url=url), verification))
+        task = asyncio.create_task(SandboxVerificationService(utc_now=artifact_test_utc_now).verify_sandbox(SimpleNamespace(id="observed", api_url=url), verification))
         try:
             await asyncio.wait_for(entered.wait(), timeout=5)
             verification.scenarios[0].expected_output.clear()
@@ -75,7 +76,7 @@ async def test_http_verification_captures_remaining_target_method_and_body():
             }, expected_output={"nested": [1]}),
         ])
         sandbox = SimpleNamespace(id="original", api_url=url)
-        task = asyncio.create_task(SandboxVerificationService().verify_sandbox(sandbox, verification))
+        task = asyncio.create_task(SandboxVerificationService(utc_now=artifact_test_utc_now).verify_sandbox(sandbox, verification))
         try:
             await asyncio.wait_for(entered.wait(), timeout=5)
             sandbox.id, sandbox.api_url = "diverted", other
@@ -108,7 +109,7 @@ async def test_http_observation_requires_status_parsed_body_and_exact_types(stat
 
     async with observed_http_server(respond, content_type=content_type) as (url, requests):
         verification = verification_for(expected)
-        result = await SandboxVerificationService().verify_sandbox(SimpleNamespace(id="observed", api_url=url), verification)
+        result = await SandboxVerificationService(utc_now=artifact_test_utc_now).verify_sandbox(SimpleNamespace(id="observed", api_url=url), verification)
         assert len(requests) == 1
         assert (result.passed, result.failed) == ((1, 0) if passes else (0, 1))
 
@@ -123,7 +124,7 @@ async def test_held_http_request_does_not_block_another_verification(record_test
         return 200, {}
 
     async with observed_http_server(respond) as (url, requests):
-        service = SandboxVerificationService()
+        service = SandboxVerificationService(utc_now=artifact_test_utc_now)
         sandbox = SimpleNamespace(id="observed", api_url=url)
         held = verification_for({})
         held.scenarios[0].input_data["endpoint"] = "/held"
@@ -149,7 +150,7 @@ async def test_http_transport_does_not_adopt_ambient_proxy(monkeypatch):
         for name in ("HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY"):
             monkeypatch.setenv(name, proxy)
         monkeypatch.setenv("NO_PROXY", "")
-        result = await SandboxVerificationService().verify_sandbox(
+        result = await SandboxVerificationService(utc_now=artifact_test_utc_now).verify_sandbox(
             SimpleNamespace(id="observed", api_url=url), verification_for({}),
         )
         assert result.passed == 1 and len(requests) == 1 and not diverted

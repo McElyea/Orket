@@ -24,9 +24,10 @@ def tree_provider(root, mode):
                             workspace=root)
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 @pytest.mark.parametrize("mode", ["cancel", "repeated-cancel", "timeout", "leader-exit", "leader-failure"])
-# Layer: integration
+# Layers are declared per test for the exercised boundary.
 async def test_piper_owns_detached_resistant_children_and_grandchildren(tmp_path, mode, caplog):
     provider = await asyncio.to_thread(tree_provider, tmp_path, mode)
     task = asyncio.create_task(provider.synthesize_async("hello", "voice"))
@@ -67,6 +68,7 @@ async def test_piper_owns_detached_resistant_children_and_grandchildren(tmp_path
         await asyncio.to_thread(stop_observed, processes)
 
 
+@pytest.mark.end_to_end
 @pytest.mark.asyncio
 # Layer: integration
 async def test_tcp_piper_shutdown_stops_the_active_native_tree(generation_app, tmp_path, caplog):

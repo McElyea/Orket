@@ -4,7 +4,10 @@ import shutil
 import tarfile
 from pathlib import Path
 
+import pytest
 from setuptools import build_meta
+
+pytestmark = pytest.mark.integration
 
 
 def test_governed_agent_external_sdist_preserves_validation_surface(

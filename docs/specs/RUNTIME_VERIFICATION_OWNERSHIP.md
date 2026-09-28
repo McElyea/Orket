@@ -6,7 +6,8 @@ Last updated: 2026-09-27
 ## Scope
 
 This contract covers `RuntimeVerifier.verify()` and
-`RuntimeVerificationArtifactService.write()`. Card acceptance authority remains
+`RuntimeVerificationArtifactService.write()`, and fixture admission through
+`FixtureVerificationService.verify()`. Card acceptance authority remains
 in `CARD_COMPLETION_ACCEPTANCE_CONTRACT.md`; support-artifact roles and history
 remain in `MINIMUM_AUDITABLE_RECORD_V1.md`. A successful support verifier is not
 accepted card completion.
@@ -40,6 +41,55 @@ Commands retain the existing process supervisor, finite deadlines, cwd admission
 bounded output, complete-capture checks and descendant cleanup contract. Native
 file observation has no new forced-stop deadline. These operations do not provide
 a filesystem snapshot or hostile-code containment.
+
+## Fixture admission
+
+Fixture verification captures its destination object, consumed scenario graph,
+workspace/environment and selected time/identity provider methods before its first
+await. Standard `IssueVerification` and `VerificationScenario` models are required.
+Their consumed fields detach through the single pure built-in graph capture owner
+in `core/contracts/value_capture.py`: exact strings, booleans, integers, finite
+floats, null, lists, tuples and string-keyed dictionaries. Custom models/values,
+cycles, excessive recursion and non-finite values refuse before native effects
+with `E_FIXTURE_VERIFICATION_INPUT_UNSUPPORTED`; no copy/serializer hooks run.
+The log-event wrapper retains its existing API and `E_LOG_EVENT_INPUT_UNSUPPORTED`.
+
+The service's constructor-selected environment is copied per invocation; an
+explicit empty environment remains empty. Relative workspace binds to invocation
+cwd through the existing process-context capture. The stateless supervisor binds
+its cancellation-log workspace to that same root. Provider handles are borrowed;
+their internal mutable state and external filesystem contents are not frozen.
+
+Owned metadata resolution and `is_file` use the existing `run_owned_thread` owner.
+Repeated cancellation and timeout wait for settlement. Successful metadata after
+interruption propagates cancellation, admits no child and publishes no scenario
+changes. An OSError/ValueError during that drain escapes instead of becoming a
+failed-result value. Previously handled cancellation does not reclassify a new
+operation. Without new interruption, current missing-file, invalid-policy and
+native admission error mapping remains unchanged.
+
+The required security event is also an owned native publication. Success without
+interruption rethrows the original security refusal. Interruption during successful
+publication propagates caller cancellation (or the caller's elapsed timeout) after
+settlement. Native publication failure takes precedence, including after interruption;
+it is not converted into a supporting note or ordinary verification result. An
+append may already exist when failure is reported. Lifetime-event retention and
+command/container cleanup authority remain unchanged; events are not durable
+recovery authority. Captured roots and fields apply to all these observations.
+
+Both fixture and sandbox HTTP services require an explicit `utc_now` callable.
+Each invocation samples once, requires an aware datetime and normalizes it to UTC;
+naive/non-datetime values refuse with `E_VERIFICATION_TIME_REQUIRES_AWARE_DATETIME`.
+Orchestration binds its selected turn clock before its first card await. Direct
+embeddings supply the port. Captured scenario results replace the destination's
+scenario sequence only after settled execution; concurrent edits are not merged.
+No new `last_run`, scenario result or clean outcome follows cancellation or
+unconfirmed cleanup. Native child effects already performed are not rolled back.
+
+Fixture admission and explicit time are active additions for prospective checkpoint
+0.6.113. Copied-source and current-source closing are recorded separately;
+installed acceptance remains pending. Migration and scoped proof limits:
+`../architecture/CONTRACT_DELTA_FIXTURE_INPUT_TIME_D_2026-09-27.md`.
 
 ## Support-artifact publication
 

@@ -6,6 +6,7 @@ from orket.interfaces import api as api_module
 from orket.logging import event_subscriber_count, subscribe_to_events, unsubscribe_from_events
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_api_lifespan_subscriber_count_stable_across_repeated_cycles(tmp_path) -> None:
     baseline = event_subscriber_count()
@@ -16,6 +17,7 @@ async def test_api_lifespan_subscriber_count_stable_across_repeated_cycles(tmp_p
         assert event_subscriber_count() == baseline
 
 
+@pytest.mark.unit
 def test_subscribe_to_events_is_idempotent_for_same_callback_identity() -> None:
     baseline = event_subscriber_count()
 

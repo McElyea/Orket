@@ -1,4 +1,4 @@
-# Layer: integration and end-to-end
+# Layers are declared per test for the exercised boundary.
 
 from __future__ import annotations
 
@@ -22,6 +22,7 @@ _KEY_ID = "key-test-1"
 _SECRET = "test-only-webhook-secret"
 
 
+@pytest.mark.integration
 def test_webhook_api_enforces_both_auth_boundaries_and_survives_restart(
     tmp_path: Path,
     monkeypatch,
@@ -78,11 +79,12 @@ def test_webhook_api_enforces_both_auth_boundaries_and_survives_restart(
     assert runtime.json()["webhook_ingress_configured"] is True
 
 
+@pytest.mark.contract
 def test_webhook_api_rejects_stale_delivery_and_incomplete_configuration(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
-    """Layer: integration. Freshness and composition configuration fail closed."""
+    """Layer: contract. Freshness and composition configuration fail closed."""
     db_path = tmp_path / "agent.sqlite3"
     _configure_api(monkeypatch, db_path, enabled=False)
     stale = (datetime.now(UTC) - timedelta(minutes=6)).isoformat(timespec="microseconds").replace("+00:00", "Z")
@@ -108,11 +110,12 @@ def test_webhook_api_rejects_stale_delivery_and_incomplete_configuration(
         pass
 
 
+@pytest.mark.end_to_end
 def test_api_owned_supervisor_dispatches_authenticated_webhook_wake(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
-    """Layer: end-to-end. Signed webhook ingress reaches the API-owned real child loop."""
+    """Layer: end_to_end. Signed webhook ingress reaches the API-owned real child loop."""
     db_path = tmp_path / "agent.sqlite3"
     catalog_path = _write_catalog(tmp_path)
     _configure_api(monkeypatch, db_path, enabled=True)

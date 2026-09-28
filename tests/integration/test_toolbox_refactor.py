@@ -8,6 +8,7 @@ from orket.application.services.toolbox import ToolBox, get_tool_map
 from orket.core.types import CardStatus
 
 
+@pytest.mark.unit
 def test_toolbox_composition(tmp_path):
     workspace = tmp_path / "workspace"
     workspace.mkdir()
@@ -19,6 +20,7 @@ def test_toolbox_composition(tmp_path):
     assert toolbox.fs.workspace_root == workspace
 
 
+@pytest.mark.contract
 def test_tool_map_default_parity(tmp_path):
     workspace = tmp_path / "workspace"
     workspace.mkdir()
@@ -48,6 +50,7 @@ def test_tool_map_default_parity(tmp_path):
     ])
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_toolbox_execute_uses_resolved_tool_strategy(tmp_path):
     """Layer: integration. Selected names execute the application-owned filesystem binding."""
@@ -67,6 +70,7 @@ async def test_toolbox_execute_uses_resolved_tool_strategy(tmp_path):
     assert tuple(get_tool_map(toolbox)) == ("read_file",)
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_filesystem_tools_security(tmp_path):
     workspace = tmp_path / "workspace"
@@ -88,6 +92,7 @@ async def test_filesystem_tools_security(tmp_path):
     assert res["ok"] is False
     assert "denied" in res["error"].lower()
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_write_file_creation(tmp_path):
     workspace = tmp_path / "workspace"
@@ -98,6 +103,7 @@ async def test_write_file_creation(tmp_path):
     assert res["ok"] is True
     assert (workspace / "subdir" / "new.txt").read_text() == "data"
 
+@pytest.mark.contract
 def test_vision_tools_stub(tmp_path):
     """Layer: contract. Unsupported analysis remains an explicit refusal."""
     workspace = tmp_path / "workspace"
@@ -108,6 +114,7 @@ def test_vision_tools_stub(tmp_path):
     assert res["ok"] is False
     assert "not implemented" in res["error"]
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_academy_tools_promote_prompt(tmp_path):
     # Setup project structure
@@ -129,6 +136,7 @@ async def test_academy_tools_promote_prompt(tmp_path):
     assert expected_path.exists()
     assert expected_path.read_text() == "You are a lead architect."
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_card_management_create_issue(tmp_path):
     workspace = tmp_path / "workspace"
@@ -153,6 +161,7 @@ async def test_card_management_create_issue(tmp_path):
     assert float(issue.priority) == 3.0
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_toolbox_report_credits_uses_async_repository(tmp_path):
     workspace = tmp_path / "workspace"
@@ -177,6 +186,7 @@ async def test_toolbox_report_credits_uses_async_repository(tmp_path):
     assert float(row[0]) == 2.5
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_toolbox_request_excuse_updates_issue_status(tmp_path):
     workspace = tmp_path / "workspace"
@@ -207,6 +217,7 @@ async def test_toolbox_request_excuse_updates_issue_status(tmp_path):
     assert any(c["content"] == "Blocked waiting for external dependency" for c in comments)
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_get_issue_context_handles_issue_record_shape(tmp_path):
     workspace = tmp_path / "workspace"
@@ -234,6 +245,7 @@ async def test_get_issue_context_handles_issue_record_shape(tmp_path):
     assert len(result["comments"]) == 1
 
 
+@pytest.mark.contract
 def test_nominate_card_handles_none_context(tmp_path):
     workspace = tmp_path / "workspace"
     workspace.mkdir()
@@ -245,6 +257,7 @@ def test_nominate_card_handles_none_context(tmp_path):
     assert result["ok"] is True
 
 
+@pytest.mark.unit
 def test_toolbox_forwarding_methods_delegate_to_governance(tmp_path, monkeypatch):
     workspace = tmp_path / "workspace"
     workspace.mkdir()

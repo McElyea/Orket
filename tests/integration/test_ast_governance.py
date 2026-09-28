@@ -7,16 +7,19 @@ from orket.services.ast_validator import ASTValidator
 from orket.services.tool_gate import ToolGate
 
 
+@pytest.mark.contract
 def test_ast_validator_suffix_violation():
     code = "class WrongName:\n    pass"
     violations = ASTValidator.validate_code(code, "test_manager.py")
     assert any("must end with 'Manager' suffix" in v.message for v in violations)
 
+@pytest.mark.contract
 def test_ast_validator_layer_violation():
     code = "import orket.managers.engine_manager\nclass MyAccessor:\n    pass"
     violations = ASTValidator.validate_code(code, "db_accessor.py")
     assert any("Layer Violation: Accessor cannot depend on" in v.message for v in violations)
 
+@pytest.mark.contract
 def test_ast_validator_god_class_warning():
     # 16 methods to trigger warning
     methods = "\n".join([f"    def method_{i}(self): pass" for i in range(16)])
@@ -25,6 +28,7 @@ def test_ast_validator_god_class_warning():
     assert any("iDesign recommends splitting high-complexity components" in v.message for v in violations)
     assert all(v.severity == "warning" for v in violations if "complexity" in v.message)
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_tool_gate_blocks_ast_violation(tmp_path):
     gate = ToolGate(None, tmp_path)
@@ -38,6 +42,7 @@ async def test_tool_gate_blocks_ast_violation(tmp_path):
     result = await gate.validate("write_file", args, context, ["coder"])
     assert "iDesign AST Violation: Layer Violation" in result
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_tool_gate_allows_valid_ast(tmp_path):
     gate = ToolGate(None, tmp_path)
@@ -51,6 +56,7 @@ async def test_tool_gate_allows_valid_ast(tmp_path):
     assert result is None
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_tool_gate_skips_idesign_ast_when_disabled(tmp_path):
     gate = ToolGate(None, tmp_path)
@@ -64,9 +70,10 @@ async def test_tool_gate_skips_idesign_ast_when_disabled(tmp_path):
     assert result is None
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_tool_gate_passes_real_role_and_issue_id_to_idesign_validator(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
-    """Layer: integration. Verifies file-write validation passes the actual execution identity to iDesign validation."""
+    """Layer: unit. Verifies file-write validation passes the actual execution identity to iDesign validation."""
     gate = ToolGate(None, tmp_path)
     captured = {}
 
@@ -88,9 +95,10 @@ async def test_tool_gate_passes_real_role_and_issue_id_to_idesign_validator(monk
     assert captured == {"role": "coder", "issue_id": "iss-001", "workspace_root": tmp_path}
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_tool_gate_uses_configured_idesign_categories(tmp_path):
-    """Layer: integration. Verifies organization-configured iDesign categories replace the built-in fallback."""
+    """Layer: contract. Verifies organization-configured iDesign categories replace the built-in fallback."""
     org = OrganizationConfig(
         name="demo",
         vision="ship",

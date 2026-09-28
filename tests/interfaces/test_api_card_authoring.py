@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 client = None
 
 
@@ -29,6 +31,7 @@ def _card_draft(**overrides: object) -> dict[str, object]:
     return payload
 
 
+@pytest.mark.contract
 def test_card_authoring_validate_route_accepts_valid_payload(monkeypatch, tmp_path) -> None:
     """Layer: contract."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
@@ -47,6 +50,7 @@ def test_card_authoring_validate_route_accepts_valid_payload(monkeypatch, tmp_pa
     assert payload["reason_codes"] == ["card_authoring.valid"]
 
 
+@pytest.mark.integration
 def test_card_authoring_create_and_save_round_trip(monkeypatch, tmp_path) -> None:
     """Layer: integration."""
     root = Path(tmp_path).resolve()
@@ -111,8 +115,9 @@ def test_card_authoring_create_and_save_round_trip(monkeypatch, tmp_path) -> Non
     assert updated_issue["params"]["authoring_revision_id"] == saved["revision_id"]
 
 
+@pytest.mark.integration
 def test_card_authoring_save_conflict_fails_closed(monkeypatch, tmp_path) -> None:
-    """Layer: contract."""
+    """Layer: integration."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     client.configure(project_root=Path(tmp_path).resolve())
 

@@ -19,6 +19,8 @@ from orket.core.domain.sandbox_lifecycle_records import (
     SandboxOperationDedupeEntry,
 )
 
+pytestmark = pytest.mark.integration
+
 
 def _record(**overrides) -> SandboxLifecycleRecord:
     payload = {

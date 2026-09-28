@@ -26,8 +26,9 @@ def _run_identity(*, run_id: str, workload: str = "cards-runtime") -> dict[str, 
     }
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
-# Layer: integration
+# Layers are declared per test for the exercised boundary.
 async def test_cards_and_runs_operator_views_project_truthful_outcomes(monkeypatch, tmp_path: Path) -> None:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     created_app = api_module.create_api_app(project_root=tmp_path)
@@ -213,8 +214,9 @@ async def test_cards_and_runs_operator_views_project_truthful_outcomes(monkeypat
         assert "agent_output/main.py" in run_payload["key_artifacts"]
 
 
+@pytest.mark.contract
 def test_system_operator_views_surface_provider_and_health_status(monkeypatch, test_client) -> None:
-    """Layer: integration. Verifies provider and system health operator views expose degraded-first status on the API."""
+    """Layer: contract. Verifies provider and system health operator views expose degraded-first status on the API."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
 
     from tests.helpers.model_selection import ModelSelectionFixture

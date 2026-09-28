@@ -1,7 +1,11 @@
 from pathlib import Path
 
+import pytest
+
 from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.services.idesign_validator import ViolationCode, iDesignValidator
+
+pytestmark = pytest.mark.contract
 
 
 def test_idesign_naming_violations():

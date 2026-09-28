@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import ast
 import json
 import os
 import subprocess
@@ -14,6 +13,7 @@ from typing import Any
 
 try:
     from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
+    from scripts.governance.architecture_size_inventory import collect_architecture_sizes
     from scripts.governance.check_noop_critical_paths import (
         DEFAULT_SCAN_ROOTS,
         evaluate_noop_critical_paths,
@@ -23,6 +23,7 @@ try:
 except ModuleNotFoundError:  # pragma: no cover - direct script execution fallback
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
     from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
+    from scripts.governance.architecture_size_inventory import collect_architecture_sizes
     from scripts.governance.check_noop_critical_paths import (
         DEFAULT_SCAN_ROOTS,
         evaluate_noop_critical_paths,
@@ -223,46 +224,7 @@ def collect_api_factory_behavior() -> dict[str, Any]:
 
 
 def collect_size_inventory() -> dict[str, Any]:
-    files: list[dict[str, Any]] = []
-    functions: list[dict[str, Any]] = []
-    parse_errors: list[dict[str, str]] = []
-    for path in sorted((PROJECT_ROOT / "orket").rglob("*.py")):
-        if "__pycache__" in path.parts:
-            continue
-        relative = path.relative_to(PROJECT_ROOT).as_posix()
-        try:
-            source = path.read_text(encoding="utf-8-sig")
-            tree = ast.parse(source, filename=relative)
-        except (OSError, SyntaxError, UnicodeDecodeError) as exc:
-            parse_errors.append({"path": relative, "error": str(exc)})
-            continue
-        line_count = len(source.splitlines())
-        if line_count > 400:
-            files.append({"path": relative, "lines": line_count})
-        for node in ast.walk(tree):
-            if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                continue
-            function_lines = int((node.end_lineno or node.lineno) - node.lineno + 1)
-            if function_lines > 70:
-                functions.append(
-                    {
-                        "path": relative,
-                        "line": int(node.lineno),
-                        "name": node.name,
-                        "lines": function_lines,
-                    }
-                )
-    files.sort(key=lambda row: (-int(row["lines"]), str(row["path"])))
-    functions.sort(key=lambda row: (-int(row["lines"]), str(row["path"]), int(row["line"])))
-    return {
-        "proof": "structural_ast",
-        "python_files_scanned": sum(1 for path in (PROJECT_ROOT / "orket").rglob("*.py") if "__pycache__" not in path.parts),
-        "files_over_400_total": len(files),
-        "functions_over_70_total": len(functions),
-        "largest_files": files[:25],
-        "largest_functions": functions[:25],
-        "parse_errors": parse_errors,
-    }
+    return collect_architecture_sizes(PROJECT_ROOT)
 
 
 def collect_ruff() -> dict[str, Any]:
@@ -349,7 +311,7 @@ def build_baseline() -> dict[str, Any]:
         and all(row["result"] == "success" for row in commands)
         and api_factory["result"] == "success"
         and ruff["executed"]
-        and not sizes["parse_errors"]
+        and sizes["collection_ok"]
     )
     return {
         "schema_version": "architectural_truth.baseline.v1",

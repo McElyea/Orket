@@ -18,6 +18,8 @@ from orket.core.domain import ClosureBasisClassification, ResultClass
 from orket.core.domain.sandbox_lifecycle import CleanupState, SandboxState, TerminalReason
 from orket.core.domain.sandbox_lifecycle_records import ManagedResourceInventory, SandboxLifecycleRecord
 
+pytestmark = pytest.mark.integration
+
 
 class _Runner:
     async def run_async(self, *cmd: str) -> CommandResult:

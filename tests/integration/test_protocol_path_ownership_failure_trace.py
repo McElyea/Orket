@@ -111,6 +111,7 @@ async def _assert_published_trace(root: Path) -> None:
     assert trace["events"][-1]["decision_type"] == "tool_violation"
 
 
+@pytest.mark.integration
 async def test_dispatch_failure_trace_uses_captured_turn(tmp_path, monkeypatch) -> None:
     """Caller mutation during preflight cannot replace failure or memory-trace inputs."""
     root, toolbox = tmp_path / "workspace", _FailingToolbox()
@@ -179,6 +180,7 @@ async def test_dispatch_failure_trace_uses_captured_turn(tmp_path, monkeypatch) 
             primary_error.add_note(f"Failure-trace cleanup failed: {cleanup_error!r}")
 
 
+@pytest.mark.contract
 async def test_dispatch_cancellation_publishes_completed_original_sink(tmp_path) -> None:
     """Cancellation adopts the captured turn and publishes each completed original sink."""
     root = tmp_path / "workspace"

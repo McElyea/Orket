@@ -73,6 +73,9 @@ collection failures; strict acceptance requires zero of each. Both taxonomy and
 critical no-op checks use the shared Git-visible inventory, including nonignored
 untracked files. Run their regression tests and preserve the canonical Ruff and
 coverage gates. Contract: `docs/specs/QUALITY_CHECKER_CONTRACT.md`.
+The architectural baseline's size collector uses that inventory too. Retain its
+complete oversized lists and nested-function context for no-growth comparisons;
+inclusive parent/child spans overlap and cannot be summed as independent defects.
 Turn-tool ownership controls recognize explicit service and captured-binding
 imports; both Quality selections retain the exact caller map and adverse scan
 controls. These are bounded structural observations, not general alias analysis.
@@ -114,6 +117,11 @@ Verifier input and support-artifact ownership controls run in both Quality jobs,
 alongside real verification process lifetime, card acceptance and review-time
 cases. Preserve native failure precedence and record/latest/index partial effects
 under `docs/specs/RUNTIME_VERIFICATION_OWNERSHIP.md`.
+Fixture and sandbox HTTP verifier constructors require the selected aware
+`utc_now` port. Fixture invocation detaches supported built-in scenario values,
+captures process inputs and retains metadata and required security publication
+through interruption. Both Quality jobs include the selected-clock and publication
+controls; supplied container observations do not establish live Docker teardown.
 
 Gitea state/webhook HTTP composition uses captured network policy and one native
 resource owner. Async callers use owned factories; native constructors refuse

@@ -12,7 +12,6 @@ from orket.services.tool_gate import ToolGate
 
 pytestmark = pytest.mark.asyncio
 
-
 @pytest.fixture
 def workspace(tmp_path):
     """Create a temporary workspace."""
@@ -20,12 +19,10 @@ def workspace(tmp_path):
     workspace.mkdir()
     return workspace
 
-
 @pytest.fixture
 def tool_gate(workspace):
     """Create a ToolGate with no organization (permissive mode)."""
     return ToolGate(organization=None, workspace_root=workspace)
-
 
 @pytest.fixture
 def strict_tool_gate(workspace):
@@ -44,11 +41,11 @@ def strict_tool_gate(workspace):
     )
     return ToolGate(organization=org, workspace_root=workspace)
 
-
 # ============================================================================
 # File Write Boundary Enforcement
 # ============================================================================
 
+@pytest.mark.contract
 async def test_write_file_within_workspace_allowed(tool_gate, workspace):
     """Validate that writing within workspace is allowed."""
     result = await tool_gate.validate(
@@ -59,7 +56,7 @@ async def test_write_file_within_workspace_allowed(tool_gate, workspace):
     )
     assert result is None, "Should allow writes within workspace"
 
-
+@pytest.mark.contract
 async def test_write_file_absolute_path_within_workspace(tool_gate, workspace):
     """Validate absolute paths within workspace are allowed."""
     file_path = str(workspace / "subdir" / "file.txt")
@@ -71,7 +68,7 @@ async def test_write_file_absolute_path_within_workspace(tool_gate, workspace):
     )
     assert result is None, "Should allow absolute paths within workspace"
 
-
+@pytest.mark.contract
 async def test_write_file_escapes_workspace_blocked(tool_gate, workspace):
     """Validate that path traversal outside workspace is blocked."""
     result = await tool_gate.validate(
@@ -83,7 +80,7 @@ async def test_write_file_escapes_workspace_blocked(tool_gate, workspace):
     assert result is not None, "Should block path traversal"
     assert "outside workspace" in result.lower()
 
-
+@pytest.mark.contract
 async def test_write_file_missing_path_blocked(tool_gate):
     """Validate that missing path argument is caught."""
     result = await tool_gate.validate(
@@ -95,7 +92,7 @@ async def test_write_file_missing_path_blocked(tool_gate):
     assert result is not None
     assert "requires 'path'" in result.lower()
 
-
+@pytest.mark.contract
 async def test_dependency_manifest_write_blocked_for_non_owner_role(workspace):
     org = OrganizationConfig(
         name="Test Org",
@@ -115,7 +112,6 @@ async def test_dependency_manifest_write_blocked_for_non_owner_role(workspace):
         },
     )
     gate = ToolGate(organization=org, workspace_root=workspace)
-
     result = await gate.validate(
         tool_name="write_file",
         args={"path": "agent_output/dependencies/requirements.txt", "content": "httpx==0.28.1"},
@@ -125,7 +121,7 @@ async def test_dependency_manifest_write_blocked_for_non_owner_role(workspace):
     assert result is not None
     assert "dependency manifest" in result.lower()
 
-
+@pytest.mark.contract
 async def test_dependency_manifest_write_allowed_for_owner_role(workspace):
     org = OrganizationConfig(
         name="Test Org",
@@ -145,7 +141,6 @@ async def test_dependency_manifest_write_allowed_for_owner_role(workspace):
         },
     )
     gate = ToolGate(organization=org, workspace_root=workspace)
-
     result = await gate.validate(
         tool_name="write_file",
         args={"path": "agent_output/dependencies/requirements.txt", "content": "httpx==0.28.1"},
@@ -154,7 +149,7 @@ async def test_dependency_manifest_write_allowed_for_owner_role(workspace):
     )
     assert result is None
 
-
+@pytest.mark.contract
 async def test_deployment_artifact_write_blocked_for_non_owner_role(workspace):
     org = OrganizationConfig(
         name="Test Org",
@@ -174,7 +169,6 @@ async def test_deployment_artifact_write_blocked_for_non_owner_role(workspace):
         },
     )
     gate = ToolGate(organization=org, workspace_root=workspace)
-
     result = await gate.validate(
         tool_name="write_file",
         args={"path": "agent_output/deployment/Dockerfile", "content": "FROM python:3.11"},
@@ -184,7 +178,7 @@ async def test_deployment_artifact_write_blocked_for_non_owner_role(workspace):
     assert result is not None
     assert "deployment artifact" in result.lower()
 
-
+@pytest.mark.contract
 async def test_deployment_artifact_write_allowed_for_owner_role(workspace):
     org = OrganizationConfig(
         name="Test Org",
@@ -204,7 +198,6 @@ async def test_deployment_artifact_write_allowed_for_owner_role(workspace):
         },
     )
     gate = ToolGate(organization=org, workspace_root=workspace)
-
     result = await gate.validate(
         tool_name="write_file",
         args={"path": "agent_output/deployment/Dockerfile", "content": "FROM python:3.11"},
@@ -213,11 +206,11 @@ async def test_deployment_artifact_write_allowed_for_owner_role(workspace):
     )
     assert result is None
 
-
 # ============================================================================
 # State Transition Enforcement
 # ============================================================================
 
+@pytest.mark.contract
 async def test_state_change_valid_transition_allowed(strict_tool_gate):
     """Validate that valid state transitions are allowed."""
     result = await strict_tool_gate.validate(
@@ -228,7 +221,7 @@ async def test_state_change_valid_transition_allowed(strict_tool_gate):
     )
     assert result is None, "Should allow valid transitions"
 
-
+@pytest.mark.contract
 async def test_state_change_invalid_status_blocked(strict_tool_gate):
     """Validate that invalid status values are blocked."""
     result = await strict_tool_gate.validate(
@@ -240,7 +233,7 @@ async def test_state_change_invalid_status_blocked(strict_tool_gate):
     assert result is not None
     assert "invalid status" in result.lower()
 
-
+@pytest.mark.contract
 async def test_state_change_missing_status_blocked(strict_tool_gate):
     """Validate that missing status argument is caught."""
     result = await strict_tool_gate.validate(
@@ -253,6 +246,7 @@ async def test_state_change_missing_status_blocked(strict_tool_gate):
     assert "requires 'status'" in result.lower()
 
 
+@pytest.mark.contract
 async def test_state_change_to_blocked_without_wait_reason_blocked(strict_tool_gate):
     """Validate that transitions to BLOCKED require wait_reason."""
     result = await strict_tool_gate.validate(
@@ -265,6 +259,7 @@ async def test_state_change_to_blocked_without_wait_reason_blocked(strict_tool_g
     assert "wait_reason" in result.lower()
 
 
+@pytest.mark.contract
 async def test_state_change_to_blocked_with_wait_reason_allowed(strict_tool_gate):
     """Validate that transitions to BLOCKED with wait_reason are allowed."""
     result = await strict_tool_gate.validate(
@@ -276,6 +271,7 @@ async def test_state_change_to_blocked_with_wait_reason_allowed(strict_tool_gate
     assert result is None, "Should allow blocked with wait_reason"
 
 
+@pytest.mark.contract
 async def test_state_change_to_done_without_integrity_guard_blocked(strict_tool_gate):
     """Validate that only integrity_guard can finalize to DONE."""
     result = await strict_tool_gate.validate(
@@ -288,6 +284,7 @@ async def test_state_change_to_done_without_integrity_guard_blocked(strict_tool_
     assert "integrity_guard" in result.lower()
 
 
+@pytest.mark.contract
 async def test_state_change_to_done_with_integrity_guard_allowed(strict_tool_gate):
     """Validate that integrity_guard CAN finalize to DONE."""
     result = await strict_tool_gate.validate(
@@ -303,6 +300,7 @@ async def test_state_change_to_done_with_integrity_guard_allowed(strict_tool_gat
 # Destructive Operation Protection
 # ============================================================================
 
+@pytest.mark.contract
 async def test_destructive_operation_without_confirm_blocked(tool_gate):
     """Validate that destructive operations require confirmation."""
     result = await tool_gate.validate(
@@ -315,6 +313,7 @@ async def test_destructive_operation_without_confirm_blocked(tool_gate):
     assert "confirmation" in result.lower()
 
 
+@pytest.mark.contract
 async def test_destructive_operation_with_confirm_allowed(tool_gate):
     """Validate that confirmed destructive operations are allowed."""
     result = await tool_gate.validate(
@@ -330,6 +329,7 @@ async def test_destructive_operation_with_confirm_allowed(tool_gate):
 # Issue Creation Validation
 # ============================================================================
 
+@pytest.mark.contract
 async def test_issue_creation_with_valid_summary_allowed(tool_gate):
     """Validate that issue creation with proper summary is allowed."""
     result = await tool_gate.validate(
@@ -341,6 +341,7 @@ async def test_issue_creation_with_valid_summary_allowed(tool_gate):
     assert result is None
 
 
+@pytest.mark.contract
 async def test_issue_creation_with_short_summary_blocked(tool_gate):
     """Validate that issues must have meaningful summaries."""
     result = await tool_gate.validate(
@@ -357,6 +358,7 @@ async def test_issue_creation_with_short_summary_blocked(tool_gate):
 # Unknown/Ungated Tools
 # ============================================================================
 
+@pytest.mark.contract
 async def test_unknown_tool_passes_through(tool_gate):
     """Validate that unknown tools pass through without error."""
     result = await tool_gate.validate(
@@ -372,6 +374,7 @@ async def test_unknown_tool_passes_through(tool_gate):
 # Integration Test: Multi-Gate Validation
 # ============================================================================
 
+@pytest.mark.contract
 async def test_multi_gate_validation_blocks_multiple_violations(strict_tool_gate, workspace):
     """Test that gate correctly identifies first violation in a sequence."""
     # This would be blocked due to workspace escape
@@ -381,7 +384,6 @@ async def test_multi_gate_validation_blocks_multiple_violations(strict_tool_gate
         {},
         ["developer"]
     )
-
     # This would be blocked due to missing wait_reason
     result2 = await strict_tool_gate.validate(
         "update_issue_status",
@@ -389,7 +391,6 @@ async def test_multi_gate_validation_blocks_multiple_violations(strict_tool_gate
         {"current_status": "in_progress"},
         ["developer"]
     )
-
     # This would be blocked due to missing integrity_guard
     result3 = await strict_tool_gate.validate(
         "update_issue_status",
@@ -397,7 +398,6 @@ async def test_multi_gate_validation_blocks_multiple_violations(strict_tool_gate
         {"current_status": "code_review"},
         ["developer"]
     )
-
     assert result1 is not None
     assert result2 is not None
     assert result3 is not None

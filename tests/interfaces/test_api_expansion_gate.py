@@ -10,6 +10,7 @@ from tests.helpers.card_completion import complete_existing_card
 client = None
 
 
+@pytest.mark.contract
 def test_api_expansion_gate_model_assignments_contract(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     response = client.get(
@@ -85,6 +86,7 @@ async def test_api_expansion_gate_execution_graph_contract(monkeypatch, tmp_path
         assert nodes["CHILD"]["blocked_by"] == ["ROOT"]
 
 
+@pytest.mark.integration
 def test_api_expansion_gate_token_summary_contract(monkeypatch, tmp_path):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     client.configure(project_root=Path(tmp_path).resolve())
@@ -144,6 +146,7 @@ def test_api_expansion_gate_token_summary_contract(monkeypatch, tmp_path):
     assert payload["turns"][0]["turn_trace_id"] == "GATE-TOK-1:ISS-1:coder:1"
 
 
+@pytest.mark.contract
 def test_api_expansion_gate_system_teams_contract(monkeypatch):
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     response = client.get("/v1/system/teams?department=core", headers={"X-API-Key": "test-key"})

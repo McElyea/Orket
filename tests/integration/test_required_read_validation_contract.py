@@ -4,12 +4,16 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from orket.application.workflows.turn_contract_validator import ContractValidator
 from orket.application.workflows.turn_read_context import RequiredReadObservation
 from orket.application.workflows.turn_response_parser import ResponseParser
 from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.schema import RoleConfig
 from tests.helpers.turn_artifacts import artifact_test_utc_now
+
+pytestmark = pytest.mark.contract
 
 
 def test_progress_predicate_retains_all_missing_required_read_refusal(tmp_path: Path) -> None:

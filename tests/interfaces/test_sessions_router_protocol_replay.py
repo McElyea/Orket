@@ -5,6 +5,7 @@ import sqlite3
 from pathlib import Path
 from typing import Any
 
+import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
@@ -136,11 +137,11 @@ async def _seed_sqlite_run(*, sqlite_db: Path, session_id: str, status: str) -> 
     )
 
 
+@pytest.mark.integration
 def test_sessions_router_replay_protocol_run(tmp_path: Path) -> None:
     workspace_root = tmp_path / "workspace"
     _write_protocol_run(workspace_root, "run-a", status="incomplete", ok=True)
     client = _build_client(workspace_root)
-
     response = client.get("/v1/protocol/runs/run-a/replay")
     assert response.status_code == 200
     payload = response.json()
@@ -149,12 +150,12 @@ def test_sessions_router_replay_protocol_run(tmp_path: Path) -> None:
     assert payload["operation_count"] == 1
 
 
+@pytest.mark.integration
 def test_sessions_router_compare_protocol_runs(tmp_path: Path) -> None:
     workspace_root = tmp_path / "workspace"
     _write_protocol_run(workspace_root, "run-a", status="incomplete", ok=True)
     _write_protocol_run(workspace_root, "run-b", status="failed", ok=False)
     client = _build_client(workspace_root)
-
     response = client.get("/v1/protocol/replay/compare?run_a=run-a&run_b=run-b")
     assert response.status_code == 200
     payload = response.json()
@@ -162,6 +163,7 @@ def test_sessions_router_compare_protocol_runs(tmp_path: Path) -> None:
     assert any(row["field"] == "status" for row in payload["differences"])
 
 
+@pytest.mark.integration
 def test_sessions_router_protocol_run_missing_events_returns_404(tmp_path: Path) -> None:
     client = _build_client(tmp_path / "workspace")
     response = client.get("/v1/protocol/runs/missing/replay")
@@ -169,6 +171,7 @@ def test_sessions_router_protocol_run_missing_events_returns_404(tmp_path: Path)
     assert "Protocol events log not found for run 'missing'" in response.text
 
 
+@pytest.mark.contract
 def test_sessions_router_protocol_run_rejects_traversal_run_id(tmp_path: Path) -> None:
     client = _build_client(tmp_path / "workspace")
     response = client.get("/v1/protocol/replay/compare?run_a=../../etc&run_b=run-b")
@@ -176,11 +179,11 @@ def test_sessions_router_protocol_run_rejects_traversal_run_id(tmp_path: Path) -
     assert "Invalid run_id" in response.text
 
 
+@pytest.mark.contract
 def test_sessions_router_begin_interaction_turn_rejects_workspace_outside_root(tmp_path: Path) -> None:
     """Layer: contract. Verifies extension workloads cannot target a workspace outside the configured root."""
     workspace_root = tmp_path / "workspace"
     client = _build_client(workspace_root)
-
     response = client.post(
         "/v1/interactions/session-1/turns",
         json={
@@ -189,18 +192,17 @@ def test_sessions_router_begin_interaction_turn_rejects_workspace_outside_root(t
             "input_config": {"seed": 1},
         },
     )
-
     assert response.status_code == 400
     assert "Invalid workspace" in response.text
 
 
+@pytest.mark.integration
 def test_sessions_router_protocol_ledger_parity_endpoint(tmp_path: Path) -> None:
     workspace_root = tmp_path / "workspace"
     sqlite_db = workspace_root / ".orket" / "durable" / "db" / "orket_persistence.db"
     _write_protocol_run(workspace_root, "run-a", status="incomplete", ok=True)
     asyncio.run(_seed_sqlite_run(sqlite_db=sqlite_db, session_id="run-a", status="incomplete"))
     client = _build_client(workspace_root)
-
     response = client.get(f"/v1/protocol/runs/run-a/ledger-parity?sqlite_db_path={sqlite_db}")
     assert response.status_code == 200
     payload = response.json()
@@ -208,38 +210,37 @@ def test_sessions_router_protocol_ledger_parity_endpoint(tmp_path: Path) -> None
     assert payload["differences"] == []
 
 
+@pytest.mark.integration
 def test_sessions_router_protocol_ledger_parity_missing_sqlite_returns_404(tmp_path: Path) -> None:
     workspace_root = tmp_path / "workspace"
     _write_protocol_run(workspace_root, "run-a", status="incomplete", ok=True)
     client = _build_client(workspace_root)
-
     missing = workspace_root / "missing.db"
     response = client.get(f"/v1/protocol/runs/run-a/ledger-parity?sqlite_db_path={missing}")
     assert response.status_code == 404
     assert "SQLite run ledger database not found" in response.text
 
 
+@pytest.mark.contract
 def test_sessions_router_protocol_ledger_parity_rejects_sqlite_outside_workspace(tmp_path: Path) -> None:
     """Layer: contract. Verifies run-ledger parity rejects caller-provided SQLite paths outside the workspace."""
     workspace_root = tmp_path / "workspace"
     _write_protocol_run(workspace_root, "run-a", status="incomplete", ok=True)
     client = _build_client(workspace_root)
-
     outside_db = tmp_path / "outside.db"
     outside_db.write_text("", encoding="utf-8")
     response = client.get("/v1/protocol/runs/run-a/ledger-parity", params={"sqlite_db_path": str(outside_db)})
-
     assert response.status_code == 400
     assert "Invalid sqlite_db_path" in response.text
 
 
+@pytest.mark.integration
 def test_sessions_router_protocol_ledger_parity_reports_mismatch(tmp_path: Path) -> None:
     workspace_root = tmp_path / "workspace"
     sqlite_db = workspace_root / ".orket" / "durable" / "db" / "orket_persistence.db"
     _write_protocol_run(workspace_root, "run-a", status="failed", ok=False)
     asyncio.run(_seed_sqlite_run(sqlite_db=sqlite_db, session_id="run-a", status="incomplete"))
     client = _build_client(workspace_root)
-
     response = client.get(f"/v1/protocol/runs/run-a/ledger-parity?sqlite_db_path={sqlite_db}")
     assert response.status_code == 200
     payload = response.json()
@@ -248,12 +249,12 @@ def test_sessions_router_protocol_ledger_parity_reports_mismatch(tmp_path: Path)
     assert "status" in fields
 
 
+@pytest.mark.integration
 def test_sessions_router_protocol_campaign_endpoint_reports_clean_match(tmp_path: Path) -> None:
     workspace_root = tmp_path / "workspace"
     _write_protocol_run(workspace_root, "run-a", status="incomplete", ok=True, session_id="sess-campaign")
     _write_protocol_run(workspace_root, "run-b", status="incomplete", ok=True, session_id="sess-campaign")
     client = _build_client(workspace_root)
-
     response = client.get("/v1/protocol/replay/campaign?baseline_run=run-a")
     assert response.status_code == 200
     payload = response.json()
@@ -262,12 +263,12 @@ def test_sessions_router_protocol_campaign_endpoint_reports_clean_match(tmp_path
     assert payload["mismatch_count"] == 0
 
 
+@pytest.mark.integration
 def test_sessions_router_protocol_campaign_endpoint_reports_mismatch(tmp_path: Path) -> None:
     workspace_root = tmp_path / "workspace"
     _write_protocol_run(workspace_root, "run-a", status="incomplete", ok=True, session_id="sess-campaign")
     _write_protocol_run(workspace_root, "run-b", status="failed", ok=False, session_id="sess-campaign")
     client = _build_client(workspace_root)
-
     response = client.get("/v1/protocol/replay/campaign?baseline_run=run-a")
     assert response.status_code == 200
     payload = response.json()
@@ -275,13 +276,13 @@ def test_sessions_router_protocol_campaign_endpoint_reports_mismatch(tmp_path: P
     assert payload["mismatch_count"] == 1
 
 
+@pytest.mark.integration
 def test_sessions_router_protocol_campaign_endpoint_supports_run_id_filter(tmp_path: Path) -> None:
     workspace_root = tmp_path / "workspace"
     _write_protocol_run(workspace_root, "run-a", status="incomplete", ok=True, session_id="sess-campaign")
     _write_protocol_run(workspace_root, "run-b", status="incomplete", ok=True, session_id="sess-campaign")
     _write_protocol_run(workspace_root, "run-c", status="failed", ok=False, session_id="sess-campaign")
     client = _build_client(workspace_root)
-
     response = client.get("/v1/protocol/replay/campaign?baseline_run=run-a&run_id=run-a&run_id=run-b")
     assert response.status_code == 200
     payload = response.json()
@@ -290,39 +291,39 @@ def test_sessions_router_protocol_campaign_endpoint_supports_run_id_filter(tmp_p
     assert sorted(row["run_id"] for row in payload["comparisons"]) == ["run-a", "run-b"]
 
 
+@pytest.mark.contract
 def test_sessions_router_protocol_campaign_endpoint_rejects_invalid_run_id_filter(tmp_path: Path) -> None:
     workspace_root = tmp_path / "workspace"
     _write_protocol_run(workspace_root, "run-a", status="incomplete", ok=True, session_id="sess-campaign")
     client = _build_client(workspace_root)
-
     response = client.get("/v1/protocol/replay/campaign?baseline_run=run-a&run_id=../outside")
     assert response.status_code == 400
     assert "invalid run id" in response.text.lower()
 
 
+@pytest.mark.integration
 def test_sessions_router_protocol_campaign_endpoint_reports_missing_runs_root(tmp_path: Path) -> None:
     workspace_root = tmp_path / "workspace"
     client = _build_client(workspace_root)
-
     missing_root = workspace_root / "missing-runs"
     response = client.get(f"/v1/protocol/replay/campaign?runs_root={missing_root}")
     assert response.status_code == 404
     assert "Runs root not found" in response.text
 
 
+@pytest.mark.contract
 def test_sessions_router_protocol_campaign_endpoint_rejects_runs_root_outside_workspace(tmp_path: Path) -> None:
     """Layer: contract. Verifies campaign replay rejects runs_root values that escape the workspace root."""
     workspace_root = tmp_path / "workspace"
     client = _build_client(workspace_root)
-
     outside_root = tmp_path / "outside-runs"
     outside_root.mkdir()
     response = client.get("/v1/protocol/replay/campaign", params={"runs_root": str(outside_root)})
-
     assert response.status_code == 400
     assert "Invalid runs_root" in response.text
 
 
+@pytest.mark.integration
 def test_sessions_router_protocol_ledger_parity_campaign_endpoint_reports_clean_match(tmp_path: Path) -> None:
     workspace_root = tmp_path / "workspace"
     sqlite_db = workspace_root / ".orket" / "durable" / "db" / "orket_persistence.db"
@@ -331,7 +332,6 @@ def test_sessions_router_protocol_ledger_parity_campaign_endpoint_reports_clean_
     asyncio.run(_seed_sqlite_run(sqlite_db=sqlite_db, session_id="run-a", status="incomplete"))
     asyncio.run(_seed_sqlite_run(sqlite_db=sqlite_db, session_id="run-b", status="incomplete"))
     client = _build_client(workspace_root)
-
     response = client.get(
         "/v1/protocol/ledger-parity/campaign"
         f"?sqlite_db_path={sqlite_db}&session_id=run-a&session_id=run-b&discover_limit=10"
@@ -343,13 +343,13 @@ def test_sessions_router_protocol_ledger_parity_campaign_endpoint_reports_clean_
     assert payload["mismatch_count"] == 0
 
 
+@pytest.mark.integration
 def test_sessions_router_protocol_ledger_parity_campaign_endpoint_reports_mismatch(tmp_path: Path) -> None:
     workspace_root = tmp_path / "workspace"
     sqlite_db = workspace_root / ".orket" / "durable" / "db" / "orket_persistence.db"
     _write_protocol_run(workspace_root, "run-a", status="failed", ok=False)
     asyncio.run(_seed_sqlite_run(sqlite_db=sqlite_db, session_id="run-a", status="incomplete"))
     client = _build_client(workspace_root)
-
     response = client.get(
         "/v1/protocol/ledger-parity/campaign"
         f"?sqlite_db_path={sqlite_db}&session_id=run-a&discover_limit=10"
@@ -361,6 +361,7 @@ def test_sessions_router_protocol_ledger_parity_campaign_endpoint_reports_mismat
     assert payload["compatibility_telemetry_delta"]["field_delta_counts"]["status"] >= 1
 
 
+@pytest.mark.integration
 def test_sessions_router_protocol_ledger_parity_campaign_preserves_invalid_projection_fields(tmp_path: Path) -> None:
     workspace_root = tmp_path / "workspace"
     sqlite_db = workspace_root / ".orket" / "durable" / "db" / "orket_persistence.db"
@@ -373,7 +374,6 @@ def test_sessions_router_protocol_ledger_parity_campaign_preserves_invalid_proje
         )
         conn.commit()
     client = _build_client(workspace_root)
-
     response = client.get(
         "/v1/protocol/ledger-parity/campaign"
         f"?sqlite_db_path={sqlite_db}&session_id=run-a&discover_limit=10"
@@ -389,11 +389,11 @@ def test_sessions_router_protocol_ledger_parity_campaign_preserves_invalid_proje
     }
 
 
+@pytest.mark.contract
 def test_sessions_router_protocol_ledger_parity_campaign_rejects_sqlite_outside_workspace(tmp_path: Path) -> None:
     """Layer: contract. Verifies campaign ledger parity rejects caller-provided SQLite paths outside the workspace."""
     workspace_root = tmp_path / "workspace"
     client = _build_client(workspace_root)
-
     outside_db = tmp_path / "outside.db"
     outside_db.write_text("", encoding="utf-8")
     response = client.get("/v1/protocol/ledger-parity/campaign", params={"sqlite_db_path": str(outside_db)})

@@ -24,6 +24,8 @@ from orket.core.domain import (
 from orket.core.domain.sandbox_lifecycle import CleanupState, SandboxLifecycleError, SandboxState, TerminalReason
 from orket.core.domain.sandbox_lifecycle_records import ManagedResourceInventory, SandboxLifecycleRecord
 
+pytestmark = pytest.mark.integration
+
 
 class FakeInspectRunner:
     def __init__(self, payloads: list[list[dict[str, object]]]) -> None:

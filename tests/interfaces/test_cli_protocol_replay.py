@@ -163,12 +163,12 @@ def _write_campaign_run(workspace: Path, run_id: str, *, session_id: str, status
     )
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_cli_protocol_replay_prints_summary(monkeypatch, tmp_path: Path, capsys) -> None:
     """Layer: integration. Verifies protocol replay output while intentionally bypassing startup semantics."""
     workspace = tmp_path / "workspace" / "default"
     _write_run(workspace, "run-a", status="incomplete", ok=True)
-
     _bypass_startup_for_protocol_path_test(monkeypatch)
     monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
     monkeypatch.setattr(cli_module.sys, "platform", "linux")
@@ -182,19 +182,18 @@ async def test_cli_protocol_replay_prints_summary(monkeypatch, tmp_path: Path, c
             workspace=str(workspace),
         ),
     )
-
     await cli_module.run_cli()
     out = capsys.readouterr().out
     assert '"session_id": "run-a"' in out
     assert '"status": "incomplete"' in out
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_cli_protocol_replay_requires_run_id_target(monkeypatch, tmp_path: Path, capsys) -> None:
-    """Layer: integration. Verifies the canonical replay surface is run-id based, not fixture-path based."""
+    """Layer: contract. Verifies the canonical replay surface is run-id based, not fixture-path based."""
     workspace = tmp_path / "workspace" / "default"
     workspace.mkdir(parents=True, exist_ok=True)
-
     _bypass_startup_for_protocol_path_test(monkeypatch)
     monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
     monkeypatch.setattr(cli_module.sys, "platform", "linux")
@@ -208,19 +207,18 @@ async def test_cli_protocol_replay_requires_run_id_target(monkeypatch, tmp_path:
             workspace=str(workspace),
         ),
     )
-
     await cli_module.run_cli()
     out = capsys.readouterr().out
     assert "protocol replay requires target run_id" in out
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_cli_protocol_compare_strict_reports_mismatch(monkeypatch, tmp_path: Path, capsys) -> None:
     """Layer: integration. Verifies protocol compare strict mismatch reporting on the protocol path only."""
     workspace = tmp_path / "workspace" / "default"
     _write_run(workspace, "run-a", status="incomplete", ok=True)
     _write_run(workspace, "run-b", status="failed", ok=False)
-
     _bypass_startup_for_protocol_path_test(monkeypatch)
     monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
     monkeypatch.setattr(cli_module.sys, "platform", "linux")
@@ -236,13 +234,13 @@ async def test_cli_protocol_compare_strict_reports_mismatch(monkeypatch, tmp_pat
             workspace=str(workspace),
         ),
     )
-
     await cli_module.run_cli()
     out = capsys.readouterr().out
     assert '"deterministic_match": false' in out.lower()
     assert "Protocol replay mismatch detected under --protocol-strict." in out
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_cli_protocol_parity_prints_parity_result(monkeypatch, tmp_path: Path, capsys) -> None:
     """Layer: integration. Verifies protocol parity output while startup is intentionally bypassed."""
@@ -250,7 +248,6 @@ async def test_cli_protocol_parity_prints_parity_result(monkeypatch, tmp_path: P
     sqlite_db = workspace / ".orket" / "durable" / "db" / "orket_persistence.db"
     _write_run(workspace, "run-a", status="incomplete", ok=True)
     await _write_sqlite_run(sqlite_db, "run-a", status="incomplete")
-
     _bypass_startup_for_protocol_path_test(monkeypatch)
     monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
     monkeypatch.setattr(cli_module.sys, "platform", "linux")
@@ -265,12 +262,12 @@ async def test_cli_protocol_parity_prints_parity_result(monkeypatch, tmp_path: P
             workspace=str(workspace),
         ),
     )
-
     await cli_module.run_cli()
     out = capsys.readouterr().out
     assert '"parity_ok": true' in out.lower()
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_cli_protocol_parity_strict_reports_mismatch(monkeypatch, tmp_path: Path, capsys) -> None:
     """Layer: integration. Verifies parity strict-mode mismatch reporting on the protocol path only."""
@@ -278,7 +275,6 @@ async def test_cli_protocol_parity_strict_reports_mismatch(monkeypatch, tmp_path
     sqlite_db = workspace / ".orket" / "durable" / "db" / "orket_persistence.db"
     _write_run(workspace, "run-a", status="failed", ok=False)
     await _write_sqlite_run(sqlite_db, "run-a", status="incomplete")
-
     _bypass_startup_for_protocol_path_test(monkeypatch)
     monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
     monkeypatch.setattr(cli_module.sys, "platform", "linux")
@@ -294,13 +290,13 @@ async def test_cli_protocol_parity_strict_reports_mismatch(monkeypatch, tmp_path
             workspace=str(workspace),
         ),
     )
-
     await cli_module.run_cli()
     out = capsys.readouterr().out
     assert '"parity_ok": false' in out.lower()
     assert "Run ledger parity mismatch detected under --protocol-strict." in out
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_cli_protocol_parity_missing_sqlite_reports_error(monkeypatch, tmp_path: Path, capsys) -> None:
     """Layer: integration. Verifies parity command surfaces missing-SQLite errors on the protocol path only."""
@@ -328,6 +324,7 @@ async def test_cli_protocol_parity_missing_sqlite_reports_error(monkeypatch, tmp
     assert "SQLite run ledger database not found" in out
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_cli_protocol_campaign_prints_match_summary(monkeypatch, tmp_path: Path, capsys) -> None:
     """Layer: integration. Verifies replay campaign output while startup is intentionally bypassed."""
@@ -355,6 +352,7 @@ async def test_cli_protocol_campaign_prints_match_summary(monkeypatch, tmp_path:
     assert '"candidate_count": 2' in out.lower()
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_cli_protocol_campaign_strict_reports_mismatch(monkeypatch, tmp_path: Path, capsys) -> None:
     """Layer: integration. Verifies replay campaign strict mismatch reporting on the protocol path only."""
@@ -383,6 +381,7 @@ async def test_cli_protocol_campaign_strict_reports_mismatch(monkeypatch, tmp_pa
     assert "Protocol replay campaign mismatch detected under --protocol-strict." in out
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_cli_protocol_campaign_supports_explicit_run_id_filter(monkeypatch, tmp_path: Path, capsys) -> None:
     """Layer: integration. Verifies campaign filtering semantics without treating the test as startup proof."""
@@ -413,6 +412,7 @@ async def test_cli_protocol_campaign_supports_explicit_run_id_filter(monkeypatch
     assert '"candidate_count": 2' in out.lower()
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_cli_protocol_campaign_uses_explicit_runs_root(monkeypatch, tmp_path: Path, capsys) -> None:
     """Layer: integration. Verifies explicit runs-root support on the protocol path only."""

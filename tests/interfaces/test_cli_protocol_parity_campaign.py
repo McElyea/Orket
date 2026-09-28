@@ -14,6 +14,8 @@ from tests.interfaces.test_cli_protocol_replay import (
     _write_sqlite_run,
 )
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.asyncio
 async def test_cli_protocol_parity_campaign_prints_summary(monkeypatch, tmp_path: Path, capsys) -> None:

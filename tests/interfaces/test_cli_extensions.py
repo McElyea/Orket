@@ -61,6 +61,7 @@ def _init_test_extension_repo(repo_root):
     )
 
 
+@pytest.mark.integration
 def test_print_extensions_list_shows_installed_extensions(tmp_path, capsys):
     """Layer: integration. Verifies extension CLI lists current manifest-entry catalog rows."""
     catalog = tmp_path / "extensions_catalog.json"
@@ -102,7 +103,7 @@ async def test_run_extension_workload_requires_registered_workload(tmp_path):
         await _run_extension_workload(args, manager, invocation_root=tmp_path)
 
 
-# Layer: integration
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_run_extension_workload_executes_installed_workload(tmp_path, capsys):
     """Layer: integration. Verifies CLI install output and workload execution use manifest-entry-backed records."""

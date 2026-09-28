@@ -12,6 +12,7 @@ def _write_config(path: Path, payload: dict) -> None:
     path.write_text(json.dumps(payload), encoding="utf-8")
 
 
+@pytest.mark.contract
 def test_resolve_api_launch_settings_defaults_are_safe() -> None:
     settings = resolve_api_launch_settings(
         cli_host=None,
@@ -27,6 +28,7 @@ def test_resolve_api_launch_settings_defaults_are_safe() -> None:
     assert settings.reload is False
 
 
+@pytest.mark.contract
 def test_resolve_api_launch_settings_applies_env_when_no_higher_precedence() -> None:
     settings = resolve_api_launch_settings(
         cli_host=None,
@@ -40,6 +42,7 @@ def test_resolve_api_launch_settings_applies_env_when_no_higher_precedence() -> 
     assert settings.port == 8091
 
 
+@pytest.mark.integration
 def test_resolve_api_launch_settings_precedence_cli_over_config_over_env(tmp_path: Path) -> None:
     config_path = tmp_path / "launcher.json"
     _write_config(config_path, {"host": "127.0.0.7", "port": 8093})
@@ -55,6 +58,7 @@ def test_resolve_api_launch_settings_precedence_cli_over_config_over_env(tmp_pat
     assert settings.port == 8095
 
 
+@pytest.mark.contract
 def test_resolve_api_launch_settings_dev_profile_enables_reload_by_default() -> None:
     settings = resolve_api_launch_settings(
         cli_host=None,
@@ -68,6 +72,7 @@ def test_resolve_api_launch_settings_dev_profile_enables_reload_by_default() -> 
     assert settings.reload is True
 
 
+@pytest.mark.contract
 def test_resolve_api_launch_settings_rejects_reload_when_profile_not_dev() -> None:
     with pytest.raises(LauncherConfigError, match="profile=dev"):
         resolve_api_launch_settings(
@@ -80,6 +85,7 @@ def test_resolve_api_launch_settings_rejects_reload_when_profile_not_dev() -> No
         )
 
 
+@pytest.mark.integration
 def test_resolve_api_launch_settings_rejects_reload_enabled_in_safe_config(tmp_path: Path) -> None:
     config_path = tmp_path / "launcher.json"
     _write_config(config_path, {"reload": True})

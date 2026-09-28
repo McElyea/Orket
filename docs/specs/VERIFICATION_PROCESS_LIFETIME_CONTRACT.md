@@ -161,11 +161,19 @@ descendant cleanup guarantee. See
 The fixture cutover follows
 `docs/architecture/CONTRACT_DELTA_FIXTURE_LIFETIME_BT4_2026-09-13.md`; its current
 proof state remains in the canonical architectural-truth plan.
+The prospective 0.6.113 input/time and required-security-publication additions are
+active under `docs/architecture/CONTRACT_DELTA_FIXTURE_INPUT_TIME_D_2026-09-27.md`.
+Their separate 211-case copied-source and current-source closing does not establish
+installed or live Docker acceptance and does not replace the process/container owners below.
 
 1. `FixtureVerificationService.verify` owns asynchronous fixture execution for
    `Orchestrator.verify_issue`. It supplies explicit environment/time inputs and
    filesystem observations to one deterministic fixture policy/result authority.
    It applies scenario changes only after the observed execution outcome.
+   Fixture graph/context capture, retained metadata and required security-event
+   publication follow `RUNTIME_VERIFICATION_OWNERSHIP.md`. Both verification
+   services require explicit aware `utc_now`; orchestration forwards its selected
+   turn clock rather than constructing an implicit host-clock input.
 2. Synchronous `FixtureVerifier.verify` and `VerificationEngine.verify` refuse
    before any effect with an explicit migration error. They are temporary
    tombstones under `BT4-FIXTURE-SYNC-RETIRE`, not functioning fallback executors.

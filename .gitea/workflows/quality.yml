@@ -79,7 +79,13 @@ jobs:
         env:
           ORKET_DISABLE_SANDBOX: "1"
         run: |
-          python -m pytest -q tests/scripts/test_enforce_test_taxonomy.py tests/scripts/test_check_noop_critical_paths.py tests/scripts/test_build_architectural_truth_baseline.py::test_taxonomy_summary_preserves_collection_failure_and_conflicts tests/contracts/test_turn_tool_authority_scan.py tests/application/test_control_plane_workload_authority_governance.py
+          python -m pytest -q tests/scripts/test_enforce_test_taxonomy.py tests/scripts/test_check_noop_critical_paths.py tests/scripts/test_build_architectural_truth_baseline.py::test_taxonomy_summary_preserves_collection_failure_and_conflicts tests/contracts/test_architecture_size_inventory.py tests/contracts/test_turn_tool_authority_scan.py tests/application/test_control_plane_workload_authority_governance.py
+
+      - name: Enforce captured fixture verification ownership
+        env:
+          ORKET_DISABLE_SANDBOX: "1"
+        run: |
+          python -m pytest -q tests/integration/test_fixture_verification_inputs.py tests/integration/test_fixture_input_adverse_controls.py tests/integration/test_verification_selected_clock.py tests/contracts/test_builtin_value_capture.py tests/contracts/test_fixture_identity_capture.py tests/integration/test_fixture_security_publication.py tests/integration/test_sandbox_verification_port_capture.py tests/adapters/test_verification_subprocess.py tests/contract/test_fixture_container_ownership.py tests/contracts/test_sandbox_verification_values.py tests/application/test_resize_extracted_components.py::test_sandbox_verifier_rejects_non_endpoint_scenarios tests/integration/test_sandbox_verification_authority.py tests/integration/test_sandbox_verification_lifetime.py tests/integration/test_sandbox_verification_json_admission.py tests/integration/test_sandbox_verification_persistence.py tests/integration/test_api_event_input_capture.py tests/integration/test_optional_logging_capture.py tests/integration/test_sandbox_event_input_capture.py tests/integration/test_runtime_verifier_input_ownership.py tests/integration/test_owned_io_cancellation_identity.py
 
       - name: Enforce optional log publication ownership
         env:
@@ -575,7 +581,13 @@ jobs:
         env:
           ORKET_DISABLE_SANDBOX: "1"
         run: |
-          python -m pytest -q tests/scripts/test_enforce_test_taxonomy.py tests/scripts/test_check_noop_critical_paths.py tests/scripts/test_build_architectural_truth_baseline.py::test_taxonomy_summary_preserves_collection_failure_and_conflicts tests/contracts/test_turn_tool_authority_scan.py tests/application/test_control_plane_workload_authority_governance.py
+          python -m pytest -q tests/scripts/test_enforce_test_taxonomy.py tests/scripts/test_check_noop_critical_paths.py tests/scripts/test_build_architectural_truth_baseline.py::test_taxonomy_summary_preserves_collection_failure_and_conflicts tests/contracts/test_architecture_size_inventory.py tests/contracts/test_turn_tool_authority_scan.py tests/application/test_control_plane_workload_authority_governance.py
+
+      - name: Enforce captured fixture verification ownership
+        env:
+          ORKET_DISABLE_SANDBOX: "1"
+        run: |
+          python -m pytest -q tests/integration/test_fixture_verification_inputs.py tests/integration/test_fixture_input_adverse_controls.py tests/integration/test_verification_selected_clock.py tests/contracts/test_builtin_value_capture.py tests/contracts/test_fixture_identity_capture.py tests/integration/test_fixture_security_publication.py tests/integration/test_sandbox_verification_port_capture.py tests/adapters/test_verification_subprocess.py tests/contract/test_fixture_container_ownership.py tests/contracts/test_sandbox_verification_values.py tests/application/test_resize_extracted_components.py::test_sandbox_verifier_rejects_non_endpoint_scenarios tests/integration/test_sandbox_verification_authority.py tests/integration/test_sandbox_verification_lifetime.py tests/integration/test_sandbox_verification_json_admission.py tests/integration/test_sandbox_verification_persistence.py tests/integration/test_api_event_input_capture.py tests/integration/test_optional_logging_capture.py tests/integration/test_sandbox_event_input_capture.py tests/integration/test_runtime_verifier_input_ownership.py tests/integration/test_owned_io_cancellation_identity.py
 
       - name: Enforce optional log publication ownership
         env:

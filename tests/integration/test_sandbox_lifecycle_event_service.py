@@ -1,4 +1,4 @@
-# Layer: integration
+# Layers are declared per test for the exercised boundary.
 
 from __future__ import annotations
 
@@ -39,6 +39,7 @@ def _event(event_id: str) -> SandboxLifecycleEventRecord:
     )
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_emit_uses_primary_store_when_available(tmp_path) -> None:
     repo = _Repo()
@@ -51,6 +52,7 @@ async def test_emit_uses_primary_store_when_available(tmp_path) -> None:
     assert not (tmp_path / "events.jsonl").exists()
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_emit_falls_back_to_local_spool_when_primary_store_fails(tmp_path) -> None:
     repo = _Repo(fail=True)
@@ -66,6 +68,7 @@ async def test_emit_falls_back_to_local_spool_when_primary_store_fails(tmp_path)
     assert "evt-1" in content
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_replay_spool_rehydrates_primary_store_and_clears_spool(tmp_path) -> None:
     repo = _Repo(fail=True)
@@ -81,6 +84,7 @@ async def test_replay_spool_rehydrates_primary_store_and_clears_spool(tmp_path) 
     assert not spool_path.exists()
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_emit_raises_when_primary_and_spool_sinks_fail(tmp_path) -> None:
     repo = _Repo(fail=True)
@@ -93,6 +97,7 @@ async def test_emit_raises_when_primary_and_spool_sinks_fail(tmp_path) -> None:
         await service.emit(_event("evt-1"))
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_replay_spool_requeues_then_dead_letters_after_retry_limit(tmp_path, caplog) -> None:
     repo = _Repo(fail=True)
@@ -121,6 +126,7 @@ async def test_replay_spool_requeues_then_dead_letters_after_retry_limit(tmp_pat
     )
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_replay_spool_atomic_rewrite_keeps_original_when_commit_fails(tmp_path, monkeypatch) -> None:
     repo = _Repo(fail=True)
@@ -144,6 +150,7 @@ async def test_replay_spool_atomic_rewrite_keeps_original_when_commit_fails(tmp_
     assert spool_path.with_suffix(spool_path.suffix + ".tmp").exists()
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_concurrent_replay_spool_calls_do_not_double_replay_or_lose_records(tmp_path) -> None:
     repo = _Repo(delay=0.05)

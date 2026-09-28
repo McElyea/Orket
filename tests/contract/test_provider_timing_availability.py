@@ -9,6 +9,8 @@ import pytest
 from orket.adapters.llm.provider_extractors import OllamaExtractor, OpenAIExtractor
 from orket.application.workflows.turn_executor_runtime import runtime_tokens_payload
 
+pytestmark = pytest.mark.contract
+
 
 @pytest.mark.parametrize("extractor", [OllamaExtractor(), OpenAIExtractor()])
 @pytest.mark.parametrize("reported", [{}, {"total_duration": 12_000_000}, {"eval_duration": 4_000_000}])

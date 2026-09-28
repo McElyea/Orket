@@ -24,6 +24,8 @@ from orket.core.domain.sandbox import SandboxRegistry, TechStack
 from orket.core.domain.sandbox_lifecycle import CleanupState, SandboxState, TerminalReason
 from orket.services.sandbox_orchestrator import SandboxOrchestrator
 
+pytestmark = pytest.mark.integration
+
 
 class FakeLifecycleRunner:
     def __init__(
@@ -131,14 +133,12 @@ async def test_create_sandbox_persists_active_lifecycle_and_operator_view(tmp_pa
     compose_project = "orket-sandbox-rock-1"
     runner = FakeLifecycleRunner(compose_project=compose_project, sandbox_id=sandbox_id, run_id="rock-1")
     orchestrator = _orchestrator(tmp_path, runner)
-
     sandbox = await orchestrator.create_sandbox(
         rock_id="rock-1",
         project_name="Integration Sandbox",
         tech_stack=TechStack.FASTAPI_REACT_POSTGRES,
         workspace_path=str(tmp_path),
     )
-
     record = await orchestrator.lifecycle_service.repository.get_record(sandbox_id)
     reservation = await orchestrator.control_plane_repository.get_latest_reservation_record(
         reservation_id=f"sandbox-reservation:{sandbox_id}"

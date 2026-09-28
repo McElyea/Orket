@@ -9,6 +9,8 @@ import pytest
 
 from orket.capabilities import piper_voice_assets
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.asyncio
 # Layer: integration

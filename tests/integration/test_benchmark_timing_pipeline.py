@@ -9,6 +9,8 @@ from pathlib import Path
 
 import pytest
 
+pytestmark = pytest.mark.integration
+
 ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -39,7 +41,7 @@ def pipeline(folder):
                                                       ([None, None], None, 'unavailable'),
                                                       ([None, 50.0], None, 'unavailable'),
                                                       ([0.0, 0.0], 0.0, '0.0')])
-# Layer: end-to-end
+# Layer: integration
 def test_native_pipeline_and_reruns_preserve_reported_duration_coverage(tmp_path, durations, expected, display):
     (tmp_path / 'tasks.json').write_text('[{"id":"001","tier":1}]', encoding='utf-8')
     (tmp_path / 'leaderboard.json').write_text('{"group_count":0,"groups":[]}', encoding='utf-8')

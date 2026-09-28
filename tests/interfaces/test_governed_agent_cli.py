@@ -1,4 +1,4 @@
-# Layer: integration
+# Layers are declared per test for the exercised boundary.
 
 from __future__ import annotations
 
@@ -7,6 +7,7 @@ import json
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
+import pytest
 import yaml
 
 from orket.adapters.storage.async_governed_agent_wake_repository import (
@@ -88,6 +89,7 @@ async def _prepare_decided_run(db_path: Path) -> None:
     ).status == "accepted"
 
 
+@pytest.mark.integration
 def test_agent_inspect_and_replay_commands_read_durable_state(tmp_path: Path, capsys) -> None:
     db_path = tmp_path / "agent.sqlite3"
     asyncio.run(_prepare_decided_run(db_path))
@@ -103,6 +105,7 @@ def test_agent_inspect_and_replay_commands_read_durable_state(tmp_path: Path, ca
     assert replay["status"] == "matched"
 
 
+@pytest.mark.integration
 def test_agent_cancel_command_publishes_terminal_operator_truth(tmp_path: Path, capsys) -> None:
     db_path = tmp_path / "cancel.sqlite3"
     request = agent_request()
@@ -138,6 +141,7 @@ def test_agent_cancel_command_publishes_terminal_operator_truth(tmp_path: Path, 
     assert payload["final_truth"]["residual_uncertainty_classification"] == "unresolved_residual_uncertainty"
 
 
+@pytest.mark.integration
 def test_agent_wake_commands_enqueue_idempotent_manual_work_and_inspect_it(tmp_path: Path, capsys) -> None:
     """Layer: integration. The public manual transport persists through the canonical wake repository."""
     request_path = tmp_path / "manual-request.json"
@@ -176,6 +180,7 @@ def test_agent_wake_commands_enqueue_idempotent_manual_work_and_inspect_it(tmp_p
     assert inspected["wake"] == first["wake"]
 
 
+@pytest.mark.integration
 def test_agent_wake_cli_cancels_and_resolves_uncertain_claim(tmp_path: Path, capsys) -> None:
     """Layer: integration. CLI controls publish durable evidence-bearing transitions."""
     db_path = tmp_path / "agent.sqlite3"
@@ -244,6 +249,7 @@ async def _prepare_claimed_wake(db_path: Path) -> None:
     assert claim.status == "claimed"
 
 
+@pytest.mark.end_to_end
 def test_agent_submit_runs_catalog_resolved_deterministic_fixture(tmp_path: Path, capsys, elapsed_agent_clock) -> None:
     template_root = Path("docs/templates/governed_agent_external").resolve()
     manifest_path = template_root / "extension.yaml"

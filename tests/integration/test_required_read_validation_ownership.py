@@ -135,6 +135,7 @@ def _executor(root: Path) -> TurnExecutor:
     return TurnExecutor(StateMachine(), ToolGate(organization=None, workspace_root=root), workspace=root, utc_now=artifact_test_utc_now)
 
 
+@pytest.mark.contract
 def test_validator_and_corrective_are_pure_after_explicit_observation(tmp_path, monkeypatch) -> None:
     """Layer: contract. Explicit classification removes filesystem access from both consumers."""
     monkeypatch.setattr(Path, "resolve", lambda *_args, **_kwargs: pytest.fail("unexpected metadata"))
@@ -151,6 +152,7 @@ def test_validator_and_corrective_are_pure_after_explicit_observation(tmp_path, 
     assert f"  - {_A}" in prompt and f"  - {_B}" in prompt
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_partial_parse_keeps_validation_metadata_free(tmp_path, monkeypatch) -> None:
     """Layer: contract. The attempt coordinator returns partial diagnostics without observation."""
@@ -170,6 +172,7 @@ async def test_partial_parse_keeps_validation_metadata_free(tmp_path, monkeypatc
     assert [item["reason"] for item in violations] == ["partial_parse_failure"]
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_composed_validation_executes_captured_turn(tmp_path, monkeypatch, record_property) -> None:
     """Layer: integration. Mutation during metadata cannot change the validated or dispatched command."""
@@ -223,6 +226,7 @@ async def test_composed_validation_executes_captured_turn(tmp_path, monkeypatch,
             primary_error.add_note(f"Validation capture cleanup failed: {cleanup_error!r}")
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_corrective_reuses_initial_observation_and_retry_observes_fresh_state(
     tmp_path, monkeypatch, record_property,
@@ -267,6 +271,7 @@ async def test_corrective_reuses_initial_observation_and_retry_observes_fresh_st
             primary_error.add_note(f"Corrective capture cleanup failed: {cleanup_error!r}")
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 @pytest.mark.parametrize("timed", [False, True], ids=["repeated-cancel", "timeout"])
 async def test_validation_late_native_failure_settles_before_return(

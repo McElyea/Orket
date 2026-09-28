@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import pytest
+
 from scripts.proof.run_outward_run_corruption_suite import run_corruption_suite
+
+pytestmark = pytest.mark.contract
 
 
 def test_outward_run_corruption_suite_accepts_base_and_rejects_implemented_corruptions() -> None:

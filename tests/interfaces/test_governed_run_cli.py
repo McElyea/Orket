@@ -11,7 +11,7 @@ from orket.interfaces.orket_bundle_cli import main
 from tests.application.test_governed_run_demo_service import _write_test_scenario
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_governed_run_cli_run_inspect_and_replay(tmp_path: Path, capsys) -> None:
     """Layer: integration. Proves the CLI boundary can run, inspect, and replay a governed-run bundle."""
     scenario = _write_test_scenario(tmp_path)
@@ -36,7 +36,7 @@ def test_governed_run_cli_run_inspect_and_replay(tmp_path: Path, capsys) -> None
     assert "side_effects_replayed: false" in replay_output
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_governed_run_demo_uses_packaged_default_outside_repo(tmp_path: Path, monkeypatch, capsys) -> None:
     """Layer: integration. Proves the default governed-run scenario is not resolved from the checkout CWD."""
     monkeypatch.chdir(tmp_path)

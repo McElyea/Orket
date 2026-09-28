@@ -2,13 +2,16 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
 from fastapi.testclient import TestClient
 
 from orket.interfaces.api import create_api_app
 
+pytestmark = pytest.mark.contract
+
 
 def test_extension_runtime_routes_available_under_v1_only(tmp_path: Path, monkeypatch) -> None:
-    """Layer: integration. Verifies generic extension runtime routes are mounted on `/v1` and old Companion aliases are gone."""
+    """Layer: contract. Verifies generic extension runtime routes are mounted on `/v1` and old Companion aliases are gone."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     with TestClient(create_api_app(project_root=tmp_path)) as client:
         headers = {"X-API-Key": "test-key"}
@@ -22,7 +25,7 @@ def test_extension_runtime_routes_available_under_v1_only(tmp_path: Path, monkey
 
 
 def test_extension_runtime_routes_use_only_core_api_key(tmp_path: Path, monkeypatch) -> None:
-    """Layer: integration. Verifies legacy Companion-specific API keys no longer authorize generic extension runtime routes."""
+    """Layer: contract. Verifies legacy Companion-specific API keys no longer authorize generic extension runtime routes."""
     monkeypatch.setenv("ORKET_API_KEY", "core-key")
     monkeypatch.setenv("ORKET_COMPANION_API_KEY", "companion-key")
     with TestClient(create_api_app(project_root=tmp_path)) as client:

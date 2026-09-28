@@ -20,6 +20,8 @@ from orket.core.domain.sandbox_lifecycle import CleanupState, SandboxState, Term
 from orket.core.domain.sandbox_lifecycle_records import ManagedResourceInventory, SandboxLifecycleRecord
 from orket.core.domain.verification import AGENT_OUTPUT_DIR
 
+pytestmark = pytest.mark.integration
+
 
 class FakeRecoveryRunner:
     def __init__(
@@ -200,10 +202,8 @@ async def test_recovery_reconciles_blocked_starting_record_to_active_when_resour
     recovery.lifecycle_service.control_plane_publication = ControlPlanePublicationService(repository=control_plane_repo)
     recovery.lifecycle_service._now = staticmethod(lambda: "2026-03-11T00:01:00+00:00")
     await repo.save_record(_record())
-
     record = await recovery.reconcile_sandbox(sandbox_id="sb-1")
     lease = await control_plane_repo.get_latest_lease_record(lease_id="sandbox-lease:sb-1")
-
     assert record.state is SandboxState.ACTIVE
     assert record.requires_reconciliation is False
     assert record.managed_resource_inventory.containers == ["orket-sandbox-sb-1-api-1"]

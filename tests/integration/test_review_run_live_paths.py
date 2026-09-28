@@ -1,4 +1,4 @@
-# Layer: end-to-end
+# Layer: integration
 
 from __future__ import annotations
 
@@ -15,6 +15,8 @@ from orket.application.review.models import SnapshotBounds
 from orket.application.review.run_service import ReviewRunService
 from orket.capabilities.sync_bridge import run_coro_sync
 from orket.core.domain import RunState
+
+pytestmark = pytest.mark.integration
 
 
 def _git(repo: Path, *args: str) -> str:
@@ -124,7 +126,7 @@ class _StubGiteaServer:
 
 
 def test_review_run_pr_sends_token_only_to_bound_live_remote(tmp_path: Path) -> None:
-    """Layer: end-to-end. Verifies PR review succeeds against a live local remote only when it is bound to the repo remote."""
+    """Layer: integration. Verifies PR review succeeds against a live local remote only when it is bound to the repo remote."""
     repo = tmp_path / "repo"
     _init_repo(repo)
     workspace = tmp_path / "workspace" / "default"
@@ -167,7 +169,7 @@ def test_review_run_pr_sends_token_only_to_bound_live_remote(tmp_path: Path) -> 
 
 
 def test_review_run_pr_blocks_unbound_live_remote_before_request(tmp_path: Path) -> None:
-    """Layer: end-to-end. Verifies PR review refuses an unbound remote before any live HTTP request is sent."""
+    """Layer: integration. Verifies PR review refuses an unbound remote before any live HTTP request is sent."""
     repo = tmp_path / "repo"
     _init_repo(repo)
     _git(repo, "remote", "add", "origin", "https://trusted.example/org/repo.git")
@@ -189,7 +191,7 @@ def test_review_run_pr_blocks_unbound_live_remote_before_request(tmp_path: Path)
 
 
 def test_review_run_files_missing_ref_path_fails_closed_live(tmp_path: Path) -> None:
-    """Layer: end-to-end. Verifies review files fails closed when a requested file cannot be loaded from the requested ref."""
+    """Layer: integration. Verifies review files fails closed when a requested file cannot be loaded from the requested ref."""
     repo = tmp_path / "repo"
     _init_repo(repo)
     (repo / "existing.py").write_text("print('ok')\n", encoding="utf-8")

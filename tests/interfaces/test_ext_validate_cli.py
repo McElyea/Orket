@@ -3,7 +3,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from orket.interfaces.orket_bundle_cli import main
+
+pytestmark = pytest.mark.integration
 
 
 def _write_extension(root: Path, *, workload_source: str) -> None:

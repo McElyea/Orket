@@ -14,6 +14,8 @@ from orket.application.services.extension_runtime_service import ExtensionRuntim
 from orket.capabilities.tts_piper import PiperConfig, PiperTTSProvider
 from tests.contract.test_piper_command_contract import BASE, ResultRunner
 
+pytestmark = pytest.mark.integration
+
 
 def voice_file(root, name, sample_rate=22050):
     model = root / f"{name}.onnx"
@@ -40,7 +42,7 @@ def service_for(model, *, runner=None, **config):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("requested,expected,rate", [("", "z_default", 22050), ("A_OTHER", "a_other", 24000)])
-# Layer: contract
+# Layer: integration
 async def test_api_reports_the_selected_canonical_voice_and_model_sample_rate(voices, requested, expected, rate):
     default, _other = voices
     service, owner = service_for(default)

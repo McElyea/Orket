@@ -24,6 +24,7 @@ def score(durations, policy):
     return score_benchmark_run.score_report(report(durations), {'001': {'tier': 1}}, policy)
 
 
+@pytest.mark.contract
 @pytest.mark.parametrize('durations,expected,status,count', [
     ([25.0, 75.0], 50.0, 'reported', 2), ([0.0, 0.0], 0.0, 'reported', 2),
     ([None, None], None, 'unavailable', 0), ([None, 50.0], None, 'partial', 1),
@@ -32,7 +33,7 @@ def score(durations, policy):
     ([float('nan'), 10], None, 'partial', 1), ([float('inf'), 10], None, 'partial', 1),
     ([sys.float_info.max, sys.float_info.max], sys.float_info.max, 'reported', 2),
 ])
-# Layer: contract
+# Layers are declared per test for the exercised boundary.
 def test_only_complete_finite_duration_records_establish_an_average(policy, durations, expected, status, count):
     scored = score(durations, policy)
     assert scored['schema_version'] == 'v2'
@@ -43,7 +44,7 @@ def test_only_complete_finite_duration_records_establish_an_average(policy, dura
             'samples_reported': count, 'runs_total': len(durations)}
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_an_unmeasured_task_cannot_lower_the_overall_average(policy):
     payload = report([100.0])
     payload['details']['002'] = report([None])['details']['001']
@@ -52,7 +53,7 @@ def test_an_unmeasured_task_cannot_lower_the_overall_average(policy):
     assert scored['avg_latency_ms'] is None and scored['latency_summary']['status'] == 'partial'
 
 
-# Layer: contract
+@pytest.mark.integration
 def test_legacy_scored_numbers_remain_visible_without_becoming_timing_evidence(tmp_path):
     inputs = []
     for index, duration in enumerate((40.0, 0.0)):
@@ -68,7 +69,7 @@ def test_legacy_scored_numbers_remain_visible_without_becoming_timing_evidence(t
     assert rendered.count('unavailable') >= 4
 
 
-# Layer: contract
+@pytest.mark.integration
 def test_partial_current_timing_has_no_trend_delta_and_does_not_render_as_zero(tmp_path, policy):
     inputs = []
     for index, durations in enumerate(([25.0, 75.0], [None, 50.0], [0.0, 0.0])):
@@ -83,6 +84,7 @@ def test_partial_current_timing_has_no_trend_delta_and_does_not_render_as_zero(t
     assert [row[8].strip() for row in rows] == ['50.0', 'unavailable', '0.0']
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize('field,value', [('avg_latency_ms', -1), ('avg_latency_ms', float('inf')),
                                       ('status', 'measured'), ('samples_reported', True),
                                       ('runs_total', 3), ('source', 'invented')])
@@ -97,7 +99,7 @@ def test_current_summary_metadata_cannot_contradict_its_timing_value(tmp_path, p
         report_benchmark_trends.build_trend_report([path])
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_nonobject_runs_fail_before_any_partial_scoring_can_escape(policy):
     payload = report([25.0])
     payload['details']['001']['runs'].append(None)
@@ -105,6 +107,7 @@ def test_nonobject_runs_fail_before_any_partial_scoring_can_escape(policy):
         score_benchmark_run.score_report(payload, {}, policy)
 
 
+@pytest.mark.contract
 @pytest.mark.parametrize('detail,message', [(None, 'Report task details must contain only JSON objects'),
                                           ({'runs': None}, 'Benchmark runs must be a JSON array')])
 # Layer: contract

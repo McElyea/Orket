@@ -59,6 +59,21 @@ naive value using the host timezone. Refusal at a later note cannot undo earlier
 support or state publication. Contract delta:
 `../architecture/CONTRACT_DELTA_REVIEW_PREFLIGHT_TIME_D_2026-09-27.md`.
 
+Empirical `verify_issue` binds the same selected turn clock, workspace and
+decision environment before the first card lookup await. It forwards that clock
+to both fixture and sandbox HTTP services. Each service samples once when its own
+verification invocation begins; the two stage timestamps need not be equal. The
+combined result keeps the fixture timestamp and both stage logs. Direct service
+constructors require `utc_now`. Every observation must be an aware datetime;
+accepted offsets normalize to UTC and invalid observations refuse with
+`E_VERIFICATION_TIME_REQUIRES_AWARE_DATETIME`. Replacing the orchestrator's clock
+slot during card lookup cannot redirect the admitted work. A captured callback's
+internal state remains borrowed; no new host clock or global override is added.
+Fixture `runtime_inputs` retains only effect-owner identity selection. This is an
+active addition for prospective checkpoint 0.6.113. Copied-source and current-source
+closing are recorded separately; installed acceptance remains pending. Migration and proof scope:
+`../architecture/CONTRACT_DELTA_FIXTURE_INPUT_TIME_D_2026-09-27.md`.
+
 The 0.6.102 turn-artifact migration explicitly forwards this same service's
 UTC callback through pipeline wiring and Orchestrator into TurnExecutor/parser.
 Parser completion samples after its artifact batch. New local/control-plane

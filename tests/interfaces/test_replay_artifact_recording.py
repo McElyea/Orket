@@ -3,7 +3,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from orket.interfaces.orket_bundle_cli import main
+
+pytestmark = pytest.mark.integration
 
 
 def _artifact_files(root: Path) -> list[Path]:

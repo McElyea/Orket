@@ -1,7 +1,11 @@
 # Layer: contract
 from __future__ import annotations
 
+import pytest
+
 import orket.interfaces.api as api_module
+
+pytestmark = pytest.mark.contract
 
 
 def _settings_reader(payload):

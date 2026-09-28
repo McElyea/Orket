@@ -12479,9 +12479,9 @@ GitHub push authorization after the temporary local-only restriction. Scoped com
 matching annotated version tags and branch/tag publication are authorized; a main
 merge and whole-lane retirement are not. Earlier local-only checkpoint observations
 remain historical. Each checkpoint records its exact verification and publication
-disposition. The current session resumes from published .109 under the
-complete-plan goal, with the remaining logging and verifier ownership boundaries
-and quality-checker correction in progress. The lane remains active;
+disposition. The current session resumes from published .112 under the
+complete-plan goal, with verifier ownership, remaining required logging/preparation,
+quality migration and authority correction in progress. The lane remains active;
 scoped checkpoint proof does not close the remaining C/D/E/CAP obligations.
 
 Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
@@ -12520,12 +12520,12 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
   Scoped installed-build/host acceptance now passes; this does not close the
   full plan or imply generic exactly-once effects or historical authenticity.
 
-Next action (2026-09-27): continue after the 0.6.109 classification checkpoint,
-retaining scoped 0.6.108 source/installed acceptance as historical proof.
-Close remaining D cleanup diagnostics, required producers and explicit logging
-preparation; capture empirical-verification inputs and the selected turn clock.
-Continue reviewed marker migration and named full-suite diagnosis through the
-unchanged coverage gate. Complete E2 authority/decomposition and the ordered
+Next action (2026-09-27): continue after the 0.6.113 fixture/time/inventory checkpoint,
+retaining earlier source/installed acceptance as historical proof. Current-source
+fixture/time controls pass 211 cases; complete their installed/platform acceptance
+and remaining required producers and explicit logging preparation.
+Continue reviewed marker migration and diagnose the retained full-suite failures
+and mixed statement/branch aggregation error through the unchanged coverage gate. Complete E2 authority/decomposition and the ordered
 accepted capability gates afterward. The fresh Linux clock observation remains
 an environment blocker; Linux application proof, capability admission and
 whole-lane acceptance remain open.
@@ -27318,3 +27318,200 @@ proof, path `primary`, migration result `success`; strict taxonomy correctly
 returns failure. It does not execute test bodies. Readback:
 `.tmp/goal-20260927-quality/v112/publication-taxonomy/readback.json`, SHA-256
 `2a2da52c6def4e17c4c535183283b5186a28253e2c30da3c8db54e772ff9b42b`.
+
+### Continued D/E1 candidate after published 0.6.112
+
+The previous goal turn made progress: commit
+`6eaceed4ca749fc43e47e73c4af9ed73d55fc5bc` and annotated `v0.6.112` were pushed
+together and remote refs verified. This continuation remains on
+`codex/architectural-truth-bt0`; no main merge or whole-lane retirement occurred.
+
+The six required-security-publication openings retained four interruption failures
+and two healthy cases. The fixture/time candidate now detaches exact supported
+scenario values, binds process inputs and selected clock/identity ports, owns
+native metadata and required security publication through interruption, and captures
+HTTP factory/timeout selection before scheduling. Native publication failure still
+takes precedence; native effects may remain after interruption. Both direct
+verifier constructors require an aware `utc_now` callable. The value copier is
+extracted once and retains the existing log-input refusal behavior. The original
+fixture-input opening and all failed fixture/proof successors remain preserved.
+
+Copied-source closing now passes 211 distinct cases: 152 integration and 59
+contract. A separate affected-clock run repeats one of those cases. These execute
+the frozen .111 source plus reviewed candidate with active editable .112 metadata;
+the complete .112 source delta changes no observed imported module or selected
+direct baseline. This is not current-worktree or installed-package acceptance.
+All six collection/body owners are reaped without timeout, observed residual or
+emergency cleanup. Readback verifies 19 control databases, 14 guard databases and
+the separate affected-clock database, three stopped native identities and six
+settled required publications. The persisted CLOCK card retains two passes,
+actual output seven and selected timestamp `2042-06-15T12:00:00+00:00`.
+Proof is live Windows Python 3.11 local process/file/SQLite/HTTP within declared
+fixture scopes, path `primary`, closing result `success`; supplied container ports
+do not establish Docker or external-provider acceptance. Final copied readback:
+`.tmp/d-fixture-inputs-proof-v4/final-review.json`, SHA-256
+`c25b3b4c723a188d475fdb4606c6a91d1b501d1f279ae2b820badf47436a5d79`.
+
+The 29 reviewed files are now applied with exact product/test byte parity;
+contract activation is a subsequent six-document edit. Both Quality jobs select
+the 46 controls and 165 guards. Migration and proof limits:
+`docs/architecture/CONTRACT_DELTA_FIXTURE_INPUT_TIME_D_2026-09-27.md`.
+The separate current-source combined invocation now passes the exact same 211
+cases with no failure, error or skip (8.90 pytest seconds, 10.922 owner seconds).
+All 5,478 Git-visible inputs stay fixed during collection/execution/readback;
+807 observed module origins match. Readback reopens 33 actual SQLite artifacts,
+confirms three stopped native identities, six settled security publications and
+the selected CLOCK row. Twenty-seven independent SQLite responses span
+0.0008702-0.0016603 seconds under the unchanged 0.5-second bound. The owner is
+reaped without timeout, observed residual or emergency cleanup. Both Quality
+jobs structurally retain the exact 20 selectors and disable sandbox creation.
+Proof is scoped live current-source Windows Python 3.11 with editable .112 metadata,
+path `primary`, result `success`. Readback:
+`.tmp/d-fixture-inputs-current-v1/current-source-review.json`, SHA-256
+`9b0592a56b86e46b67bf8684ae86d95882edd8ba0fa6806856fc582dc5086f1c`.
+Installed, additional platform and full D acceptance remain pending.
+
+E1's size collector now uses shared Git-visible source discovery rather than a
+recursive walk. Its complete oversized lists retain qualified names, lexical
+class/function context, direct nested definitions and route-decorator syntax.
+The 400/70 thresholds and inclusive nested spans remain unchanged: overlapping
+spans cannot be summed as independent defects. Missing/empty inventory, source
+read/parse failure and observed source mutation refuse collection. Nine new
+contract cases plus three existing baseline guards pass (12 total, 2.28 seconds),
+including the existing live API-factory isolation guard. The initial structural
+observation scans 1,184 package files and finds 49 oversized files and 195
+oversized functions; this precedes the fixture candidate's two new core modules.
+Collection itself claims no debt reduction or runtime defect count. Inputs stay
+fixed and the owner is reaped without timeout or observed residual. Readback:
+`.tmp/e1-size-inventory-proof/readback.json`, SHA-256
+`2237e39be34a4c6f80d684d7c32e99cd12c64246e5766bc9e2c96024ff82fbb5`.
+Contract: `docs/architecture/CONTRACT_DELTA_SIZE_INVENTORY_E1_2026-09-27.md`.
+Full baseline execution and current canonical collection remain subsequent gates.
+
+The coverage calibration isolates the earlier absent report: with installed
+pytest 9.1.1, pytest-cov 6.3.0 and coverage 7.16.2, an intentional first failure
+under `--maxfail=1` produces no JSON; the same two-case control under
+`--maxfail=0` finishes and produces JSON while still failing both the deliberate
+test and unchanged 89-percent coverage gate. Both owners are reaped without
+timeout or observed residual. This is tool-behavior evidence, not application
+coverage acceptance. The next full-suite diagnostic retains the threshold and
+allows all cases to run. Calibration readback:
+`.tmp/root-v112-fixes/coverage-calibration/readback.json`, SHA-256
+`75b427e829836c4fa83cc871cd574a895968629e0358f9a6f14c4efaa4d3a645`.
+
+Further reviewed marker applications classify 613 previously missing cases across
+82 modules: 267 contract, 304 integration, 28 end-to-end and 14 unit. Each slice
+preserves assertions, parameters, existing/nonlayer markers and oversized-file
+length. Public-path labels retain their supplied-provider and ASGI/TCP ceilings;
+they do not imply actual model execution. Applied receipts under
+`.tmp/goal-20260927-quality/v113/` are:
+
+- `integration-preapply/applied.json` (261), SHA-256
+  `5c811f506cb53db82f715d141d7975cf2addfc396d05e75e04b8a811a9e002f8`.
+- `contract-review/applied.json` (141), SHA-256
+  `d8c9ff27764a1eb7e9e81627167a4110e74c4ad080a03906f8213884af57ab6d`.
+- `interfaces-review-first/applied.json` (112), SHA-256
+  `81c09763c6f602d572b3ebf09b3ca814386f99413a15ee1520cf7e98fdf6fb28`.
+- `interfaces-review-rest/applied.json` (99), SHA-256
+  `00345e6cf04a801e1467fc9baab317706b89204f50bb86c8c35aa9c67cd1846b`.
+
+The canonical baseline command now executes against the combined current source
+and updates its existing stable JSON with the diff ledger. Collection succeeds
+and release readiness remains false. Its native command/API-factory observations
+succeed within their reported local scopes. Structural observation reports 10,693
+collected tests, 496 missing layers, no conflicts or collection errors, passing
+dependency/no-op verdicts and zero package Ruff findings. A separate canonical
+`ruff check orket/ tests/` also passes. The v2 size inventory binds 1,186 package
+sources, with 49 files over 400 lines and 195 functions over 70; both complete
+lists agree with their totals. The baseline owner is reaped and all other frozen
+Git-visible files stay unchanged. Readback:
+`.tmp/e1-size-inventory-proof/baseline/readback.json`, SHA-256
+`e9af6f7a617959e89ae8aa87f9df645a69481455ed293f46c58e3db63fcedd35`.
+This is successful baseline collection, not strict taxonomy, coverage or release
+acceptance. Remaining marker proposals and the E2 assembly stay unapplied while
+the next complete-suite observation holds its candidate fixed.
+
+
+### User-requested publication checkpoint 0.6.113
+
+The user requested commit and GitHub push of the applied checkpoint on
+`codex/architectural-truth-bt0`. The scope contains captured fixture/time/security
+publication, the contextual size collector, the 613 reviewed marker changes and
+30 affected verifier classifications, their controls and active contracts.
+Unapplied logging-preparation, E2 and further marker proposals remain scratch.
+No main merge, full-plan completion or lane retirement is authorized here.
+
+The complete `tests/` diagnostic retained `--maxfail=0` and the 89-percent gate.
+It reports **10,585 passed, 15 failed, 93 skipped**, with two warnings, in 4319.10
+pytest seconds. Its owner exits 3 after 4322.954 seconds, reaped without timeout,
+observed residual or emergency cleanup; every frozen Git-visible input stays
+unchanged. All 10,693 collected identities have a matching ordinary JUnit row.
+JUnit additionally contains `pytest.internal`, so the original raw 10,694-row
+readback correctly refuses its unadjusted completeness check. The supplemental
+classification separates that error without changing the original failed report.
+
+Coverage aggregation raises `coverage.exceptions.DataError: Can't combine
+statement coverage data with branch data`; no coverage JSON or percentage exists.
+This differs from the earlier maxfail truncation and remains undiagnosed. Neither
+the coverage threshold nor test deadlines were relaxed. Runtime proof is local
+Windows Python 3.11 source with editable 0.6.112 metadata, path `primary`, result
+`failure`; individual tests retain their native/supplied-provider/structural limits.
+Full readback `.tmp/goal-e1-v113-suite-diagnostic/readback.json`, SHA-256
+`51eaeae86fad248faaa162ed8ce69801c7e4128701d35295632ab2799ea68874`.
+Supplemental identity/count record:
+`.tmp/goal-20260927-publication-v113/suite-classification.json`.
+
+Retained test failures, without assuming their cause or classifying them as
+pre-existing regressions:
+
+- `tests.integration.test_api_sandbox_log_shutdown.test_sandbox_log_shutdown_settles_pipeline_and_native_work[False-close]`: AssertionError: assert (not True)
+- `tests.integration.test_api_server_reload.test_canonical_server_tcp_and_repeated_file_reload[True]`: AssertionError: assert 1 == 0
+- `tests.integration.test_outward_command_lifetime.test_outward_command_stops_children_and_grandchildren[ordinary-timeout]`: AssertionError: Fixture process tree did not become ready
+- `tests.integration.test_outward_command_lifetime.test_outward_command_stops_children_and_grandchildren[detached-resistant-timeout]`: AssertionError: Fixture process tree did not become ready
+- `tests.integration.test_run_start_ownership.test_bootstrap_worker_settles_before_interruption_truth[published-cancel]`: Failed: Fixture "ledger_pipeline" called directly. Fixtures are not meant to be called directly,
+- `tests.integration.test_run_start_ownership.test_bootstrap_worker_settles_before_interruption_truth[published-timeout]`: Failed: Fixture "ledger_pipeline" called directly. Fixtures are not meant to be called directly,
+- `tests.integration.test_run_start_ownership.test_bootstrap_worker_settles_before_interruption_truth[worker-failure-cancel]`: Failed: Fixture "ledger_pipeline" called directly. Fixtures are not meant to be called directly,
+- `tests.integration.test_run_start_ownership.test_bootstrap_worker_settles_before_interruption_truth[worker-failure-timeout]`: Failed: Fixture "ledger_pipeline" called directly. Fixtures are not meant to be called directly,
+- `tests.integration.test_tool_result_persistence.test_ordinary_result_without_control_plane_retains_its_worker[captured]`: TypeError: TurnArtifactWriter.load_replay_tool_result() got an unexpected keyword argument 'session_id'
+- `tests.integration.test_tool_result_persistence.test_ordinary_result_without_control_plane_retains_its_worker[cancelled]`: TypeError: TurnArtifactWriter.load_replay_tool_result() got an unexpected keyword argument 'session_id'
+- `tests.interfaces.test_api_composition_isolation.test_api_router_constructs_no_runtime_implementation`: AssertionError: assert ['RuntimePolicyInputService'] == []
+- `tests.live.test_system_acceptance_pipeline.test_system_acceptance_role_pipeline_with_guard`: AssertionError: REQ-1 did not reach DONE
+- `tests.platform.test_current_authority_map.test_contract_current_authority_dates_are_in_sync`: AssertionError: assert '2026-09-27' == '2026-09-25'
+- `tests.platform.test_quality_workflow_gates.test_quality_workflow_enforces_architecture_and_volatility_gates`: AssertionError: quality workflow gates must be present in both architecture_gates and quality jobs: tests/integration/test_workload_publication_ownership.py tests/integration/test_workload_publication_inputs.py tests/integration/test_legacy_publication_ownership.py tests/integration/test_workload_policy_inputs.py tests/integration/test_workload_reproducibility_inputs.py tests/runtime/test_workload_policy.py tests/integration/test_extension_installation_ownership.py tests/integration/test_extension_catalog_publication.py tests/integration/test_extension_manager_preflight.py tests/integration/test_extension_git_lifetime.py tests/runtime/test_extension_source_policy.py tests/contracts/test_extension_cli_ownership.py tests/contracts/test_extension_git_cancellation.py tests/integration/test_sandbox_deploy_publication_recovery.py tests/rulesim/test_interruption_reproducibility.py
+- `tests.runtime.test_runtime_subpackage_boundaries.test_runtime_domain_packages_declare_complete_public_surfaces`: AssertionError: assert {'epic_run_ap...n_types', ...} == {'epic_run_ap...n_types', ...}
+
+The authority date mismatch is corrected in the already-touched snapshot by
+aligning its embedded `last_updated` with September 27. Its targeted follow-up is
+recorded separately; the frozen 15-failure observation is not rewritten.
+The remaining 14 test failures and coverage aggregation require diagnosis.
+
+Fresh canonical collection then observes all 10,693 item identities and proves
+the exact 643-case decrease in missing labels, the exact 55 additions, no removed
+identities and no unexpected layer changes. There are 3,969 contract, 5,377
+integration, 730 unit, 121 end-to-end and 496 unlabelled cases. Collection succeeds
+with no conflicts/errors; strict taxonomy correctly exits 1. The owned collector
+settles without timeout or observed residue and all its input bindings hold.
+Readback `.tmp/goal-20260927-quality/v113/publication-taxonomy/readback.json`, SHA-256
+`7ba00400f30c6e181bc0259ca4483f26b8cf2c7869ecd4793ac48c31c6147d95`. This is structural collection, not body execution.
+
+Version/changelog and authority closeout follow the frozen proof; product, test,
+script, workflow and baseline bytes remain those observed. Scoped source controls
+remain 211 verifier cases and 12 size/baseline guards passing. Fresh installed,
+Linux/native-platform, Docker/provider, full Quality and remaining C/D/E/CAP
+acceptance stay open. Exact checkpoint files are the versioned commit diff against
+v0.6.112; staged/blob/remote bindings are retained under
+`.tmp/goal-20260927-publication-v113/`. Commit/tag/remote receipts determine actual
+publication; version preparation alone does not establish it.
+
+Publication checks pass canonical `ruff check orket/ tests/`, Ruff on all three
+changed scripts, docs project hygiene, dependency direction and precommit release
+alignment. The dependency report observes 1,186 files and 3,987 edges with no
+violations, analysis errors, unknown modules or authority cycles. The corrected
+authority-date guard passes one case in 0.09 seconds. These are structural checks;
+they do not replace the failed complete-suite observation. All six check owners
+are reaped without timeout or observed residue and their frozen inputs stay fixed.
+Readback `.tmp/goal-20260927-publication-v113/checks/readback.json`, SHA-256
+`6cae65634aa4ddd0ae8a05fbed2e3d1773314e29b0fe711fd8380b2b794cf67a`.
+Only version/changelog and authority closeout differ from the frozen complete run;
+the final proof-binding receipt enumerates those five paths. Remaining failures
+and whole-lane obligations are unchanged.

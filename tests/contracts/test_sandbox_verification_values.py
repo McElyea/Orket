@@ -1,5 +1,6 @@
 """Layer: contract. Captured HTTP inputs and pure interpretation have one meaning."""
 from dataclasses import FrozenInstanceError
+from datetime import datetime
 from types import SimpleNamespace
 
 import pytest
@@ -13,6 +14,7 @@ from orket.core.domain.sandbox_verifier import (
 )
 from orket.schema import IssueVerification, VerificationScenario
 from orket_extension_sdk import FrozenJson
+from tests.helpers.turn_artifacts import artifact_test_utc_now
 
 pytestmark = pytest.mark.contract
 NOW = "2026-09-18T12:00:00+00:00"
@@ -85,7 +87,7 @@ async def test_inadmissible_scenarios_fail_without_constructing_transport(invali
 
     verification = inputs()
     verification.scenarios[0].input_data = invalid
-    result = await SandboxVerificationService(http_factory=forbidden).verify_sandbox(
+    result = await SandboxVerificationService(utc_now=artifact_test_utc_now, http_factory=forbidden).verify_sandbox(
         SimpleNamespace(id="sandbox", api_url="http://localhost"), verification,
     )
     assert (result.total_scenarios, result.passed, result.failed) == (1, 0, 1)
@@ -96,8 +98,8 @@ async def test_empty_verification_has_explicit_time_and_no_empirical_proof():
     def forbidden(_timeout):
         pytest.fail("Empty verification must not construct HTTP resources")
 
-    clock = SimpleNamespace(utc_now_iso=lambda: NOW)
-    result = await SandboxVerificationService(runtime_inputs=clock, http_factory=forbidden).verify_sandbox(
+    clock = SimpleNamespace(utc_now=lambda: datetime.fromisoformat(NOW))
+    result = await SandboxVerificationService(utc_now=clock.utc_now, http_factory=forbidden).verify_sandbox(
         SimpleNamespace(id="sandbox", api_url="http://localhost"), IssueVerification(),
     )
     assert (result.timestamp, result.total_scenarios, result.passed, result.failed) == (NOW, 0, 0, 0)
@@ -107,4 +109,4 @@ async def test_empty_verification_has_explicit_time_and_no_empirical_proof():
 @pytest.mark.parametrize("timeout", [0, -1, float("inf"), float("nan")])
 def test_invalid_timeout_refuses_before_transport(timeout):
     with pytest.raises(ValueError, match="E_SANDBOX_HTTP_TIMEOUT_INVALID"):
-        SandboxVerificationService(timeout_s=timeout)
+        SandboxVerificationService(utc_now=artifact_test_utc_now, timeout_s=timeout)

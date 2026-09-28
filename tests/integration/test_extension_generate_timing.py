@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
@@ -10,8 +11,10 @@ from orket.application.services.extension_runtime_service import ExtensionRuntim
 from orket.capabilities.sdk_static_provider import StaticLLMCapabilityProvider
 from orket.interfaces.routers.extension_runtime import build_extension_runtime_router
 
+pytestmark = pytest.mark.contract
 
-# Layer: integration
+
+# Layer: contract
 def test_extension_generate_route_retains_unavailable_latency(tmp_path: Path):
     service = ExtensionRuntimeService(project_root=tmp_path,model_provider=StaticLLMCapabilityProvider(text="fixture answer"))
     app = FastAPI()

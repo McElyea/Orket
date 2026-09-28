@@ -14,8 +14,9 @@ from orket.application.services.fixture_verification_service import (
 )
 from orket.core.contracts.owned_command import OwnedCommandResult
 from orket.schema import IssueVerification, VerificationScenario
+from tests.helpers.turn_artifacts import artifact_test_utc_now
 
-pytestmark = pytest.mark.asyncio
+pytestmark = [pytest.mark.contract, pytest.mark.asyncio]
 IDENTITY = "a" * 64
 
 
@@ -102,13 +103,13 @@ async def test_unconfirmed_cleanup_cannot_publish_success(tmp_path, monkeypatch)
     await asyncio.to_thread((directory / "fixture.py").write_text, "def verify(data): return 1\n", encoding="utf-8")
     verification = IssueVerification(fixture_path="verification/fixture.py", scenarios=[
         VerificationScenario(id="one", description="unconfirmed", input_data={}, expected_output=1)])
-    service = FixtureVerificationService(tmp_path, environment={})
+    service = FixtureVerificationService(tmp_path, utc_now=artifact_test_utc_now, environment={})
 
     async def unconfirmed(*args, **kwargs):
         return command(cleanup_confirmed=False, reason="cleanup_unconfirmed", stdout=json.dumps({
             "ok": True, "results": [{"id": "one", "status": "pass", "actual_output": 1}]}).encode())
 
-    monkeypatch.setattr(service.supervisor, "run", unconfirmed)
+    monkeypatch.setattr(type(service.supervisor), "run", unconfirmed)
     with pytest.raises(FixtureVerificationUncertain) as observed:
         await service.verify(verification)
     assert observed.value.lifetime["cleanup_confirmed"] is False

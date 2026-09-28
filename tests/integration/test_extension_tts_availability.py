@@ -6,9 +6,11 @@ import pytest
 from tests.integration.test_api_active_request_ownership import serving_api
 from tests.integration.test_extension_generation_api_lifetime import generation_app as generation_app
 
+pytestmark = pytest.mark.end_to_end
+
 
 @pytest.mark.asyncio
-# Layer: integration
+# Layer: end_to_end
 async def test_null_tts_status_catalog_and_synthesis_agree(generation_app):
     async with serving_api(generation_app) as client:
         prefix = "/v1/extensions/orket.test/runtime/"

@@ -12,10 +12,12 @@ from tests.helpers.provider_preparation import ControlledPreparation
 from tests.integration.test_api_active_request_ownership import serving_api
 from tests.integration.test_extension_generation_api_lifetime import generation_app as generation_app
 
+pytestmark = pytest.mark.end_to_end
+
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("invalid_stop", [False, True])
-# Layer: integration
+# Layer: end_to_end
 async def test_api_preserves_generation_options_and_rejects_empty_stop(generation_app, invalid_stop):
     observed = []
 

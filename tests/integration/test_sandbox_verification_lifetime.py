@@ -8,6 +8,7 @@ from orket.adapters.execution.sandbox_http import SandboxHttpAdapter
 from orket.application.services.sandbox_verification_service import SandboxVerificationService
 from orket.schema import IssueVerification, VerificationScenario
 from tests.helpers.observed_http_server import observed_http_server
+from tests.helpers.turn_artifacts import artifact_test_utc_now
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 
@@ -44,7 +45,7 @@ async def test_repeated_cancellation_retains_cleanup_and_stops_dispatch(cleanup_
     async with observed_http_server(respond, allow_disconnect=True) as (url, requests):
         inputs = verification()
         before = inputs.model_dump()
-        service = SandboxVerificationService(http_factory=create)
+        service = SandboxVerificationService(utc_now=artifact_test_utc_now, http_factory=create)
         task = asyncio.create_task(service.verify_sandbox(SimpleNamespace(id="observed", api_url=url), inputs))
         try:
             await asyncio.wait_for(entered.wait(), timeout=5)
@@ -82,7 +83,7 @@ async def test_real_http_timeout_closes_client_and_publishes_failure():
     async with observed_http_server(respond, allow_disconnect=True) as (url, requests):
         inputs = verification()
         inputs.scenarios = inputs.scenarios[:1]
-        task = asyncio.create_task(SandboxVerificationService(timeout_s=0.1, http_factory=create).verify_sandbox(
+        task = asyncio.create_task(SandboxVerificationService(utc_now=artifact_test_utc_now, timeout_s=0.1, http_factory=create).verify_sandbox(
             SimpleNamespace(id="observed", api_url=url), inputs,
         ))
         try:

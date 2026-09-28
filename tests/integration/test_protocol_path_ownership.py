@@ -93,6 +93,7 @@ async def _files(root: Path) -> tuple[Path, Path, tuple[bytes, bytes]]:
     return a_path, b_path, (b"a unchanged\n", b"b unchanged\n")
 
 
+@pytest.mark.integration
 async def test_two_required_reads_preserve_cardinality(tmp_path) -> None:
     """Two existing declarations and one call refuse before gate admission."""
     root = tmp_path / "workspace"
@@ -112,6 +113,7 @@ async def test_two_required_reads_preserve_cardinality(tmp_path) -> None:
     ) == list(before)
 
 
+@pytest.mark.unit
 async def test_protocol_preflight_preserves_exact_stage_order(tmp_path, monkeypatch) -> None:
     """Binding, policy, compatibility, workspace, gate, skill and approval retain order."""
     root = tmp_path / "workspace"
@@ -156,6 +158,7 @@ async def test_protocol_preflight_preserves_exact_stage_order(tmp_path, monkeypa
     assert order == ["binding", "policy", "compatibility", "workspace", "gate", "permissions", "limits"]
 
 
+@pytest.mark.contract
 async def test_earlier_gate_refusal_never_observes_later_tool_path(tmp_path, monkeypatch) -> None:
     """A refused earlier tool prevents admission of later submitted-path metadata."""
     root = tmp_path / "workspace"
@@ -180,6 +183,7 @@ async def test_earlier_gate_refusal_never_observes_later_tool_path(tmp_path, mon
     assert later_observed == []
 
 
+@pytest.mark.integration
 async def test_relative_workspace_is_bound_before_gate_changes_cwd(tmp_path, monkeypatch) -> None:
     """A gate-time CWD change cannot rebind the second submitted path."""
     root = tmp_path / "workspace"
@@ -207,6 +211,7 @@ async def test_relative_workspace_is_bound_before_gate_changes_cwd(tmp_path, mon
     ) == list(before)
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize("boundary", ["required", "submitted"])
 @pytest.mark.parametrize("timed", [False, True], ids=["repeated-cancel", "timeout"])
 async def test_protocol_metadata_failure_settles_before_interruption_returns(
@@ -268,6 +273,7 @@ def _dispatch_context(sentinel: object) -> dict[str, Any]:
     }
 
 
+@pytest.mark.integration
 async def test_dispatch_uses_captured_commands_and_publishes_original_sink(
     tmp_path, monkeypatch, record_property,
 ) -> None:
@@ -327,6 +333,7 @@ async def test_dispatch_uses_captured_commands_and_publishes_original_sink(
             primary_error.add_note(f"Dispatch capture cleanup failed: {cleanup_error!r}")
 
 
+@pytest.mark.contract
 async def test_dispatch_failure_publishes_each_original_tool_sink(tmp_path) -> None:
     """A later execution failure retains earlier result and later error on original ToolCall objects."""
     root = tmp_path / "workspace"

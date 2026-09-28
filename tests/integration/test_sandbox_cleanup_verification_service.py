@@ -1,11 +1,15 @@
-# Layer: integration
+# Layer: contract
 
 from __future__ import annotations
+
+import pytest
 
 from orket.application.services.sandbox_cleanup_verification_service import SandboxCleanupVerificationService
 from orket.core.domain.sandbox_cleanup import DockerResourceType, ObservedDockerResource
 from orket.core.domain.sandbox_lifecycle import CleanupState, SandboxState
 from orket.core.domain.sandbox_lifecycle_records import ManagedResourceInventory, SandboxLifecycleRecord
+
+pytestmark = pytest.mark.contract
 
 
 def _record() -> SandboxLifecycleRecord:

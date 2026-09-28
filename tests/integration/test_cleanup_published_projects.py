@@ -4,7 +4,11 @@ import json
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
+import pytest
+
 from scripts.governance.cleanup_published_projects import CleanupConfig, apply_cleanup
+
+pytestmark = pytest.mark.integration
 
 
 def _write_registry(path: Path, payload: dict) -> None:

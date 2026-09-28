@@ -10,6 +10,8 @@ from orket.application.services.sdk_llm_provider import LocalModelCapabilityProv
 from orket.capabilities.sdk_static_provider import StaticLLMCapabilityProvider
 from orket_extension_sdk.llm import GenerateRequest, GenerateResponse, NullLLMProvider
 
+pytestmark = pytest.mark.contract
+
 
 @pytest.mark.parametrize("latency", [None, True, False, -1, "12", 2.5, float("nan"), 0, 17])
 # Layer: contract

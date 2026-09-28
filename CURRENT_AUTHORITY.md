@@ -2,6 +2,27 @@
 
 Last updated: 2026-09-27
 
+The 0.6.113 branch checkpoint captures fixture-verification inputs and the
+selected turn clock, retains required security publication through interruption,
+and captures HTTP factory/timeout ports before observation. Direct verifier
+constructors require aware `utc_now`. Copied-source and current-source controls
+and guards each pass 211 distinct cases on Windows Python 3.11; installed and broader D
+acceptance remain separate obligations. Contract:
+`docs/specs/RUNTIME_VERIFICATION_OWNERSHIP.md`.
+
+The baseline's v2 size inventory now uses Git-visible sources and retains complete
+oversized lists with qualified nested-function context. Its 400/70-line thresholds
+and inclusive spans are unchanged. Counts are structural debt observations, not
+runtime defect counts. Contract: `docs/specs/QUALITY_CHECKER_CONTRACT.md`.
+The refreshed development baseline collects 10,693 cases with 496 missing layers
+and no conflicts or collection errors. It reports successful collection and
+`release_ready=false`. Exact comparison confirms 643 existing marker migrations
+and 55 added cases. The full diagnostic records 10,585 passes, 15 failures and
+93 skips; mixed statement/branch coverage data prevents report generation.
+The authority-date mismatch is corrected after that frozen run; its targeted
+structural guard now passes.
+Remaining failures, coverage and whole-lane acceptance stay open in the plan.
+
 The 0.6.112 checkpoint retains cooperative signal handling in the dedicated API
 reload worker through native process finalization. Its four reproduced late-signal
 failures and eight existing reload cases pass on Windows source Python 3.11 with
@@ -1867,7 +1888,7 @@ Trust Kernel and Portable Conformance completed lane authority is archived under
 ```json
 {
   "version": 1,
-  "last_updated": "2026-09-25",
+  "last_updated": "2026-09-27",
   "authority": {
     "dependency_authority": {
       "primary": "pyproject.toml",

@@ -5,7 +5,11 @@ import json
 import time
 from pathlib import Path
 
+import pytest
+
 import orket.interfaces.api as api_module
+
+pytestmark = pytest.mark.integration
 
 client = None
 
@@ -258,7 +262,7 @@ def test_flow_run_route_accepts_single_card_slice(monkeypatch, tmp_path) -> None
 
 
 def test_flow_run_route_blocks_branching_topology(monkeypatch, tmp_path) -> None:
-    """Layer: contract."""
+    """Layer: integration."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     client.configure(project_root=Path(tmp_path).resolve())
 

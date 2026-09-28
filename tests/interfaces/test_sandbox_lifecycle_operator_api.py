@@ -4,7 +4,11 @@ from __future__ import annotations
 
 import hashlib
 
+import pytest
+
 import orket.interfaces.api as api_module
+
+pytestmark = pytest.mark.contract
 
 
 def test_sandbox_operator_list_exposes_required_lifecycle_fields(monkeypatch, test_client):

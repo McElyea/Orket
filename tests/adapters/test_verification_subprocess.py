@@ -6,6 +6,7 @@ import pytest
 from orket.application.services.fixture_verification_service import FixtureVerificationService
 from orket.core.domain.verification import FixtureVerifier, VerificationEngine, VerificationSecurityError
 from orket.schema import IssueVerification, VerificationScenario
+from tests.helpers.turn_artifacts import artifact_test_utc_now
 
 pytestmark = pytest.mark.asyncio
 
@@ -27,9 +28,10 @@ def prepare(root, source="def verify(data):\n    return data['value']\n"):
     ("x = 1\n", 0, "No verify function"),
 ])
 # Layer: integration
+@pytest.mark.integration
 async def test_fixture_outcomes(tmp_path, source, passed, detail):
     verification = await asyncio.to_thread(prepare, tmp_path, source)
-    result = await FixtureVerificationService(tmp_path).verify(verification)
+    result = await FixtureVerificationService(tmp_path, utc_now=artifact_test_utc_now).verify(verification)
     assert (result.passed, result.failed) == (passed, 1 - passed)
     assert any(detail in line for line in result.logs)
     assert result.process_lifetime["cleanup_confirmed"] is True
@@ -37,29 +39,32 @@ async def test_fixture_outcomes(tmp_path, source, passed, detail):
 
 
 # Layer: integration
+@pytest.mark.integration
 async def test_fixture_timeout(tmp_path, monkeypatch):
     verification = await asyncio.to_thread(prepare, tmp_path, "def verify(data):\n    while True: pass\n")
     monkeypatch.setenv("ORKET_VERIFY_TIMEOUT_SEC", "0.3")
-    result = await FixtureVerificationService(tmp_path).verify(verification)
+    result = await FixtureVerificationService(tmp_path, utc_now=artifact_test_utc_now).verify(verification)
     assert result.failed == 1 and result.process_lifetime["reason"] == "timeout"
     assert result.process_lifetime["cleanup_confirmed"] is True
 
 
 # Layer: integration
+@pytest.mark.integration
 async def test_missing_fixture(tmp_path):
     verification = await asyncio.to_thread(prepare, tmp_path)
     verification.fixture_path = "verification/missing.py"
-    result = await FixtureVerificationService(tmp_path).verify(verification)
+    result = await FixtureVerificationService(tmp_path, utc_now=artifact_test_utc_now).verify(verification)
     assert result.failed == 1 and result.process_lifetime is None
     assert any("not found" in line for line in result.logs)
 
 
 # Layer: integration
+@pytest.mark.integration
 async def test_fixture_path_containment(tmp_path):
     verification = await asyncio.to_thread(prepare, tmp_path)
     verification.fixture_path = "../outside.py"
     with pytest.raises(VerificationSecurityError, match="SECURITY VIOLATION"):
-        await FixtureVerificationService(tmp_path).verify(verification)
+        await FixtureVerificationService(tmp_path, utc_now=artifact_test_utc_now).verify(verification)
     assert verification.scenarios[0].status == "pending"
 
 
@@ -70,13 +75,14 @@ async def test_fixture_path_containment(tmp_path):
     ({"ORKET_VERIFY_TIMEOUT_SEC": "nan"}, "finite positive"),
 ])
 # Layer: integration
+@pytest.mark.integration
 async def test_invalid_admission_does_not_execute(tmp_path, monkeypatch, settings, detail):
     verification = await asyncio.to_thread(prepare, tmp_path,
         "from pathlib import Path\nPath('executed').touch()\ndef verify(data): return 7\n")
     monkeypatch.setenv("ORKET_VERIFY_EXECUTION_MODE", "subprocess")
     for key, value in settings.items():
         monkeypatch.setenv(key, value)
-    result = await FixtureVerificationService(tmp_path).verify(verification)
+    result = await FixtureVerificationService(tmp_path, utc_now=artifact_test_utc_now).verify(verification)
     assert result.failed == 1 and result.process_lifetime is None
     assert any(detail in line for line in result.logs)
     assert not await asyncio.to_thread((tmp_path / "verification/executed").exists)
@@ -84,6 +90,7 @@ async def test_invalid_admission_does_not_execute(tmp_path, monkeypatch, setting
 
 @pytest.mark.parametrize("entrypoint", [FixtureVerifier().verify, VerificationEngine.verify])
 # Layer: contract
+@pytest.mark.contract
 async def test_sync_entrypoint_requires_explicit_migration(tmp_path, entrypoint):
     verification = await asyncio.to_thread(prepare, tmp_path)
     with pytest.raises(RuntimeError, match="FixtureVerificationService"):
@@ -92,14 +99,15 @@ async def test_sync_entrypoint_requires_explicit_migration(tmp_path, entrypoint)
 
 
 # Layer: contract
+@pytest.mark.contract
 async def test_pre_admission_oserror_is_failure(tmp_path, monkeypatch):
     verification = await asyncio.to_thread(prepare, tmp_path)
-    service = FixtureVerificationService(tmp_path)
+    service = FixtureVerificationService(tmp_path, utc_now=artifact_test_utc_now)
 
     async def unavailable(*args, **kwargs):
         raise OSError("controlled pre-admission failure")
 
-    monkeypatch.setattr(service.supervisor, "run", unavailable)
+    monkeypatch.setattr(type(service.supervisor), "run", unavailable)
     result = await service.verify(verification)
     assert result.failed == 1 and result.process_lifetime is None
     assert any("controlled pre-admission failure" in line for line in result.logs)

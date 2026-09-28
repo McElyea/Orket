@@ -77,7 +77,7 @@ def _cli_args(**overrides) -> SimpleNamespace:
     return SimpleNamespace(**base)
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_parse_args_uses_explicit_runtime_vector_and_program_name(monkeypatch) -> None:
     """Layer: contract. Verifies the installed root can parse runtime args independently of process argv."""
     monkeypatch.setattr(sys, "argv", ["unexpected-process", "--not-a-runtime-option"])
@@ -135,6 +135,7 @@ async def test_cli_startup_runs_reconciliation_without_bypass(monkeypatch, capsy
     assert ("discovery_startup_path", {"path": "no_op", "reason": "setup_complete"}) in startup_events
 
 
+@pytest.mark.contract
 def test_perform_first_run_onboarding_marks_first_run(monkeypatch, capsys) -> None:
     """Layer: contract. Verifies first-run onboarding status, persistence, and telemetry."""
     startup_events = []
@@ -157,7 +158,7 @@ def test_perform_first_run_onboarding_marks_first_run(monkeypatch, capsys) -> No
     assert "orket runtime --rock initialize_orket" not in out
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_perform_first_run_onboarding_does_not_claim_success_before_persistence(monkeypatch, capsys) -> None:
     """Layer: contract. Verifies first-run narration is emitted only after settings persistence succeeds."""
     monkeypatch.setattr(discovery_module, "load_user_settings", lambda: {})
@@ -173,6 +174,7 @@ def test_perform_first_run_onboarding_does_not_claim_success_before_persistence(
     assert capsys.readouterr().out == ""
 
 
+@pytest.mark.unit
 def test_perform_first_run_onboarding_no_op_when_complete(monkeypatch) -> None:
     """Layer: unit. Verifies onboarding no-op branch when setup already completed."""
     startup_events = []
@@ -190,6 +192,7 @@ def test_perform_first_run_onboarding_no_op_when_complete(monkeypatch) -> None:
     assert ("discovery_startup_path", {"path": "no_op", "reason": "setup_complete"}) in startup_events
 
 
+@pytest.mark.contract
 def test_parse_args_hides_legacy_rock_alias_from_help(monkeypatch, capsys) -> None:
     """Layer: contract. Verifies `--rock` stays accepted as a hidden compatibility alias instead of a canonical help surface."""
     monkeypatch.setattr(sys, "argv", ["main.py", "--help"])
@@ -257,7 +260,7 @@ async def test_cli_startup_runs_sync_setup_outside_the_event_loop(monkeypatch) -
     assert setup_observation == {"running_loop": False}
 
 
-# Layer: contract
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_cli_known_fatal_error_returns_nonzero(monkeypatch, capsys) -> None:
     """Layer: contract. Verifies handled fatal CLI errors return a failing process status."""

@@ -24,9 +24,10 @@ def generation_app(tmp_path, monkeypatch):
     return create_api_app(CompositionConfig(project_root=tmp_path))
 
 
+@pytest.mark.end_to_end
 @pytest.mark.asyncio
 @pytest.mark.parametrize("override", [False, True])
-# Layer: integration
+# Layers are declared per test for the exercised boundary.
 async def test_tcp_generation_shutdown_waits_for_worker_and_closes_all_clients(generation_app, monkeypatch, tmp_path, override):
     entered, release, finished = threading.Event(), threading.Event(), threading.Event()
     clients = []
@@ -71,6 +72,7 @@ async def test_tcp_generation_shutdown_waits_for_worker_and_closes_all_clients(g
             await asyncio.gather(*(t for t in (request, closing) if t is not None), return_exceptions=True)
 
 
+@pytest.mark.end_to_end
 @pytest.mark.asyncio
 # Layer: integration
 async def test_tcp_generation_success_closes_default_client_at_lifespan_exit(generation_app, monkeypatch):
@@ -87,6 +89,7 @@ async def test_tcp_generation_success_closes_default_client_at_lifespan_exit(gen
     assert context.closed and default._provider.client.is_closed
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 # Layer: contract
 async def test_injected_provider_remains_owned_by_embedding(tmp_path):
@@ -98,6 +101,7 @@ async def test_injected_provider_remains_owned_by_embedding(tmp_path):
     await service.close()
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 # Layer: contract
 async def test_default_client_cleanup_failure_prevents_closed_claim(generation_app, monkeypatch):

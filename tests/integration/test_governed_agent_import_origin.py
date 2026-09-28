@@ -4,8 +4,12 @@ import asyncio
 import sys
 from pathlib import Path
 
+import pytest
+
 import orket
 from orket.extensions.governed_agent_process import sanitized_agent_environment
+
+pytestmark = pytest.mark.integration
 
 _DRIVER = '''
 import builtins

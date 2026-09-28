@@ -791,13 +791,14 @@ def _history_context(self: Any, seat_name: str | None = None) -> list[dict[str, 
 
 
 async def verify_issue(self: Any, issue_id: str, run_id: str | None = None) -> Any:
-    """
-    Runs empirical verification for a specific issue.
-    """
+    """Runs empirical verification for a specific issue."""
     from orket.application.services.fixture_verification_service import FixtureVerificationService
     from orket.application.services.sandbox_verification_service import SandboxVerificationService
     from orket.core.domain.sandbox import SandboxStatus
 
+    workspace, utc_now = self.workspace, self.turn_clock
+    fixture_verifier = FixtureVerificationService(workspace, utc_now=utc_now, environment=self.decision_environment)
+    sandbox_verifier = SandboxVerificationService(utc_now=utc_now)
     issue_data = await self.async_cards.get_by_id(issue_id)
     if not issue_data:
         from orket.exceptions import CardNotFound
@@ -812,12 +813,11 @@ async def verify_issue(self: Any, issue_id: str, run_id: str | None = None) -> A
         issue_payload = dict(getattr(issue_data, "__dict__", {}))
     issue = IssueConfig.model_validate(issue_payload)
 
-    # 2. Execute Verification (Fixtures)
     verification_event = {"issue_id": issue_id}
     if run_id:
         verification_event["run_id"] = run_id
-    log_event("verification_started", verification_event, self.workspace)
-    result = await FixtureVerificationService(self.workspace).verify(issue.verification)
+    log_event("verification_started", verification_event, workspace)
+    result = await fixture_verifier.verify(issue.verification)
 
     # 3. Optional: Execute Sandbox Verification (HTTP)
     rock_id = issue.build_id
@@ -826,8 +826,8 @@ async def verify_issue(self: Any, issue_id: str, run_id: str | None = None) -> A
         sandbox_event = {"issue_id": issue_id}
         if run_id:
             sandbox_event["run_id"] = run_id
-        log_event("verification_sandbox_started", sandbox_event, self.workspace)
-        sb_result = await SandboxVerificationService().verify_sandbox(sandbox, issue.verification)
+        log_event("verification_sandbox_started", sandbox_event, workspace)
+        sb_result = await sandbox_verifier.verify_sandbox(sandbox, issue.verification)
         # Merge results
         result.passed += sb_result.passed
         result.failed += sb_result.failed

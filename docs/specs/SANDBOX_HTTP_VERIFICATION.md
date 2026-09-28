@@ -1,6 +1,6 @@
 # Sandbox HTTP verification
 
-Last updated: 2026-09-18
+Last updated: 2026-09-27
 Status: Active implementation contract; proof status remains in the architectural-truth plan.
 
 ## Authority and inputs
@@ -13,7 +13,12 @@ JSON inputs are immutable captured values. Later caller changes cannot alter the
 admitted target, remaining requests or comparison criteria. The result log retains
 the captured base URL; it does not reread a mutable sandbox object for evidence.
 
-The timestamp comes from the supplied `RuntimeInputService`. The base URL must be
+The required `utc_now` callable supplies one aware datetime per invocation,
+normalized to UTC. Naive/non-datetime values refuse with
+`E_VERIFICATION_TIME_REQUIRES_AWARE_DATETIME` before HTTP. Orchestration binds its
+selected turn clock before the first card await; direct embeddings pass the port.
+The former timestamp-only `runtime_inputs` argument is removed without fallback.
+The base URL must be
 HTTP(S), have a host, and contain no user information, query or fragment. Scenario
 ids must be unique. Raw scenario values must be JSON-compatible before model
 serialization; callers explicitly convert Python models or dataclasses to JSON
@@ -30,6 +35,10 @@ cannot establish empirical completion.
    construction uses `trust_env=False` and does not adopt ambient HTTP proxy
    settings. Custom transport/TLS configuration belongs to the application-supplied
    transport factory.
+   The service captures its selected factory and timeout at invocation entry before
+   scheduling the owned observation. Replacing those service attributes afterward
+   cannot redirect transport construction. A factory's internal mutable state remains
+   borrowed; this does not freeze arbitrary custom client configuration.
 2. Responses whose Content-Type contains `application/json` (case insensitive)
    are parsed as JSON; other response bodies are observed as text.
    Both the observed status and canonical JSON representation of the body must
@@ -56,7 +65,8 @@ failure is not converted into clean cancellation. Cancellation publishes no new
 scenario status. A completed HTTP request is not rolled back by cancellation, and
 client cleanup does not prove that a remote server stopped its own work.
 
-Use `await SandboxVerificationService(...).verify_sandbox(sandbox, verification)`.
+Use `await SandboxVerificationService(utc_now=clock).verify_sandbox(sandbox, verification)`
+with the embedding's selected aware-datetime callable.
 The old core `SandboxVerifier` and `VerificationEngine.verify_sandbox` execution
 surfaces are removed without forwarding shims. Core retains only captured-value
 and interpretation functions. Fixture subprocess support code moves to
@@ -66,3 +76,7 @@ use that one definition. Existing synchronous fixture tombstones retain their
 
 This contract does not change Docker deployment admission, fixture execution
 policy, OS isolation, provider promotion or the trusted-code claim ceiling.
+The explicit clock and invocation-selected transport ports are active additions
+for prospective checkpoint 0.6.113. Their copied-source and current-source proof
+and pending installed acceptance are distinguished in
+`../architecture/CONTRACT_DELTA_FIXTURE_INPUT_TIME_D_2026-09-27.md`.

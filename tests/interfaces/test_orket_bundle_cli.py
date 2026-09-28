@@ -7,6 +7,7 @@ import zipfile
 from pathlib import Path
 
 import httpx
+import pytest
 
 import orket.cli as entrypoint_module
 import orket.interfaces.orket_bundle_cli as cli_module
@@ -42,6 +43,7 @@ def _create_valid_bundle(bundle_root: Path) -> None:
         _write_json(bundle_root / "guards" / f"{guard}.json", {"id": guard})
 
 
+@pytest.mark.integration
 def test_validate_bundle_success(tmp_path: Path) -> None:
     """Layer: integration. Validate real bundle files through the application boundary."""
     _create_valid_bundle(tmp_path)
@@ -50,6 +52,7 @@ def test_validate_bundle_success(tmp_path: Path) -> None:
     assert result["error_count"] == 0
 
 
+@pytest.mark.integration
 def test_validate_bundle_manifest_missing(tmp_path: Path) -> None:
     """Layer: integration. Validate real bundle files through the application boundary."""
     result = asyncio.run(BundleService().validate(tmp_path))
@@ -57,6 +60,7 @@ def test_validate_bundle_manifest_missing(tmp_path: Path) -> None:
     assert result["errors"][0]["code"] == "E_MANIFEST_NOT_FOUND"
 
 
+@pytest.mark.integration
 def test_validate_bundle_schema_error_is_deterministic(tmp_path: Path) -> None:
     """Layer: integration. Validate real bundle files through the application boundary."""
     _write_json(tmp_path / "orket.json", _fixture_payload("invalid_missing_permissions.json"))
@@ -66,6 +70,7 @@ def test_validate_bundle_schema_error_is_deterministic(tmp_path: Path) -> None:
     assert result["errors"][0]["location"] == "permissions"
 
 
+@pytest.mark.integration
 def test_validate_bundle_missing_state_machine_file(tmp_path: Path) -> None:
     """Layer: integration. Validate real bundle files through the application boundary."""
     _create_valid_bundle(tmp_path)
@@ -75,6 +80,7 @@ def test_validate_bundle_missing_state_machine_file(tmp_path: Path) -> None:
     assert any(item["code"] == "E_STATE_MACHINE_MISSING" for item in result["errors"])
 
 
+@pytest.mark.integration
 def test_validate_bundle_missing_guard_file_returns_expected_code(tmp_path: Path) -> None:
     """Layer: integration. Validate real bundle files through the application boundary."""
     _create_valid_bundle(tmp_path)
@@ -84,6 +90,7 @@ def test_validate_bundle_missing_guard_file_returns_expected_code(tmp_path: Path
     assert any(item["code"] == "E_GUARD_FILE_MISSING" for item in result["errors"])
 
 
+@pytest.mark.integration
 def test_cli_validate_json_exit_code_for_failure(tmp_path: Path, capsys) -> None:
     """Layer: integration. Validate real bundle files through the application boundary."""
     _write_json(tmp_path / "orket.json", _fixture_payload("invalid_guard_enum.json"))
@@ -95,22 +102,20 @@ def test_cli_validate_json_exit_code_for_failure(tmp_path: Path, capsys) -> None
     assert payload["errors"][0]["code"] == "E_MANIFEST_SCHEMA"
 
 
+@pytest.mark.integration
 def test_cli_pack_and_inspect_archive_success(tmp_path: Path, capsys) -> None:
     bundle_dir = tmp_path / "bundle"
     _create_valid_bundle(bundle_dir)
     archive_path = tmp_path / "bundle.orket"
-
     pack_code = main(["pack", str(bundle_dir), "--out", str(archive_path), "--json"])
     pack_payload = json.loads(capsys.readouterr().out)
     assert pack_code == 0
     assert pack_payload["ok"] is True
     assert archive_path.is_file()
-
     with zipfile.ZipFile(archive_path, "r") as archive:
         names = set(archive.namelist())
     assert "orket.json" in names
     assert "state_machine.json" in names
-
     inspect_code = main(["inspect", str(archive_path), "--json"])
     inspect_payload = json.loads(capsys.readouterr().out)
     assert inspect_code == 0
@@ -119,12 +124,12 @@ def test_cli_pack_and_inspect_archive_success(tmp_path: Path, capsys) -> None:
     assert inspect_payload["entry_count"] >= 1
 
 
+@pytest.mark.integration
 def test_cli_inspect_archive_without_manifest_fails(tmp_path: Path, capsys) -> None:
     """Layer: integration. Validate real bundle files through the application boundary."""
     archive_path = tmp_path / "invalid.orket"
     with zipfile.ZipFile(archive_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
         archive.writestr("notes.txt", "missing manifest")
-
     code = main(["inspect", str(archive_path), "--json"])
     payload = json.loads(capsys.readouterr().out)
     assert code == 1
@@ -132,17 +137,16 @@ def test_cli_inspect_archive_without_manifest_fails(tmp_path: Path, capsys) -> N
     assert payload["errors"][0]["code"] == "E_INSPECT_MANIFEST_NOT_FOUND"
 
 
+@pytest.mark.integration
 def test_cli_pack_is_deterministic_for_same_source(tmp_path: Path, capsys) -> None:
     bundle_dir = tmp_path / "bundle"
     _create_valid_bundle(bundle_dir)
     archive_one = tmp_path / "one.orket"
     archive_two = tmp_path / "two.orket"
-
     assert main(["pack", str(bundle_dir), "--out", str(archive_one), "--json"]) == 0
     _ = capsys.readouterr()
     assert main(["pack", str(bundle_dir), "--out", str(archive_two), "--json"]) == 0
     _ = capsys.readouterr()
-
     hash_one = hashlib.sha256(archive_one.read_bytes()).hexdigest()
     hash_two = hashlib.sha256(archive_two.read_bytes()).hexdigest()
     assert hash_one == hash_two
@@ -150,6 +154,7 @@ def test_cli_pack_is_deterministic_for_same_source(tmp_path: Path, capsys) -> No
 
 
 
+@pytest.mark.integration
 def test_cli_validate_detects_engine_incompatibility(tmp_path: Path, capsys) -> None:
     """Layer: integration. Validate real bundle files through the application boundary."""
     _create_valid_bundle(tmp_path)
@@ -160,13 +165,13 @@ def test_cli_validate_detects_engine_incompatibility(tmp_path: Path, capsys) -> 
     assert any(item["code"] == "E_ENGINE_INCOMPATIBLE" for item in payload["errors"])
 
 
+@pytest.mark.integration
 def test_cli_validate_rejects_model_override_when_policy_disallows(tmp_path: Path, capsys) -> None:
     _create_valid_bundle(tmp_path)
     manifest_path = tmp_path / "orket.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     manifest["model"]["allowOverride"] = False
     manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
-
     code = main(
         [
             "validate",
@@ -184,6 +189,7 @@ def test_cli_validate_rejects_model_override_when_policy_disallows(tmp_path: Pat
     assert any(item["code"] == "E_MODEL_OVERRIDE_NOT_ALLOWED" for item in payload["errors"])
 
 
+@pytest.mark.contract
 def test_cli_sdk_version_json(capsys) -> None:
     code = main(["sdk", "--version", "--json"])
     payload = json.loads(capsys.readouterr().out)
@@ -192,6 +198,7 @@ def test_cli_sdk_version_json(capsys) -> None:
     assert isinstance(payload["sdk_version"], str)
 
 
+@pytest.mark.contract
 def test_cli_sdk_requires_command(capsys) -> None:
     code = main(["sdk", "--json"])
     payload = json.loads(capsys.readouterr().out)
@@ -200,64 +207,51 @@ def test_cli_sdk_requires_command(capsys) -> None:
     assert payload["errors"][0]["code"] == ERROR_SDK_COMMAND_REQUIRED
 
 
-# Layer: contract
+@pytest.mark.unit
 def test_runtime_command_forwards_remaining_arguments(monkeypatch) -> None:
-    """Layer: contract. Verifies the installed root delegates runtime arguments without reparsing them."""
+    """Layer: unit. Verifies the installed root delegates runtime arguments without reparsing them."""
     captured: list[str] = []
-
     def _capture_runtime(argv: list[str]) -> int:
         captured.extend(argv)
         return 17
-
     monkeypatch.setattr(entrypoint_module, "_run_runtime_command", _capture_runtime)
-
     code = entrypoint_module.main(["runtime", "--card", "named-card", "--workspace", "named-workspace"])
-
     assert code == 17
     assert captured == ["--card", "named-card", "--workspace", "named-workspace"]
 
 
-# Layer: contract
+@pytest.mark.unit
 def test_installed_root_forwards_non_runtime_commands_to_bundle_cli(monkeypatch) -> None:
-    """Layer: contract. Verifies root convergence preserves the existing bundle command tree."""
+    """Layer: unit. Verifies root convergence preserves the existing bundle command tree."""
     captured: list[str] = []
-
     def _capture_bundle(argv: list[str]) -> int:
         captured.extend(argv)
         return 23
-
     monkeypatch.setattr(cli_module, "main", _capture_bundle)
-
     code = entrypoint_module.main(["validate", "bundle-path", "--json"])
-
     assert code == 23
     assert captured == ["validate", "bundle-path", "--json"]
 
 
+@pytest.mark.contract
 def test_run_submit_cli_uses_api_and_prints_response(monkeypatch, capsys) -> None:
     """Layer: contract. Verifies outward run CLI submits through the API client only."""
     requests: list[dict] = []
-
     class _FakeClient:
         def __init__(self, *, base_url: str, timeout: float) -> None:
             assert base_url == "http://127.0.0.1:9999"
             assert timeout == 30.0
-
         def __enter__(self):
             return self
-
         def __exit__(self, _exc_type, _exc, _tb) -> None:
             return None
-
         def request(self, method: str, path: str, **kwargs):
             requests.append({"method": method, "path": path, **kwargs})
             request = httpx.Request(method, f"http://127.0.0.1:9999{path}")
             return httpx.Response(200, json={"run_id": "run-cli", "status": "queued"}, request=request)
-
     monkeypatch.setenv("ORKET_API_URL", "http://127.0.0.1:9999")
     monkeypatch.setenv("ORKET_API_KEY", "secret")
     monkeypatch.setattr(cli_module.httpx, "Client", _FakeClient)
-
     code = cli_module.main(["run", "submit", "--description", "Demo", "--instruction", "Do it"])
     payload = json.loads(capsys.readouterr().out)
 
@@ -274,6 +268,7 @@ def test_run_submit_cli_uses_api_and_prints_response(monkeypatch, capsys) -> Non
     ]
 
 
+@pytest.mark.contract
 def test_run_status_cli_prints_api_payload(monkeypatch, capsys) -> None:
     """Layer: contract. Verifies outward run status CLI displays the API payload."""
 
@@ -304,6 +299,7 @@ def test_run_status_cli_prints_api_payload(monkeypatch, capsys) -> None:
     assert payload == {"run_id": "run-cli", "status": "queued", "current_turn": 0}
 
 
+@pytest.mark.contract
 def test_run_list_cli_sends_status_filter(monkeypatch, capsys) -> None:
     """Layer: contract. Verifies outward run list CLI delegates filtering to the API."""
     requests: list[dict] = []
@@ -335,6 +331,7 @@ def test_run_list_cli_sends_status_filter(monkeypatch, capsys) -> None:
     assert requests[0]["params"] == {"status": "queued", "limit": 20, "offset": 0}
 
 
+@pytest.mark.contract
 def test_approvals_cli_delegates_list_review_and_decisions(monkeypatch, capsys) -> None:
     """Layer: contract. Verifies outward approvals CLI commands are API-client wrappers."""
     requests: list[dict] = []
@@ -398,6 +395,7 @@ def test_approvals_cli_delegates_list_review_and_decisions(monkeypatch, capsys) 
     ]
 
 
+@pytest.mark.contract
 def test_run_inspection_cli_delegates_events_summary_and_watch(monkeypatch, capsys) -> None:
     """Layer: contract. Verifies outward run inspection CLI commands are API-client wrappers."""
     requests: list[dict] = []
@@ -452,8 +450,9 @@ def test_run_inspection_cli_delegates_events_summary_and_watch(monkeypatch, caps
     ]
 
 
+@pytest.mark.integration
 def test_connectors_cli_lists_shows_and_tests_local_harness(tmp_path: Path, capsys) -> None:
-    """Layer: contract. Verifies built-in connector CLI uses the local Phase 5 harness."""
+    """Layer: integration. Verifies built-in connector CLI uses the local Phase 5 harness."""
     list_code = cli_module.main(["connectors", "list", "--workspace", str(tmp_path)])
     listed = json.loads(capsys.readouterr().out)
     show_code = cli_module.main(["connectors", "show", "write_file", "--workspace", str(tmp_path)])
@@ -482,6 +481,7 @@ def test_connectors_cli_lists_shows_and_tests_local_harness(tmp_path: Path, caps
     assert (tmp_path / "made").is_dir()
 
 
+@pytest.mark.contract
 def test_connectors_cli_rejects_invalid_args_before_harness_invocation(tmp_path: Path, capsys) -> None:
     """Layer: contract. Verifies connector CLI reports field-level validation errors."""
     code = cli_module.main(

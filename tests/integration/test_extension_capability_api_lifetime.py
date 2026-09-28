@@ -10,6 +10,8 @@ from tests.integration.test_api_active_request_ownership import serving_api
 from tests.integration.test_extension_capability_lifetime import CAPABILITIES, delay_capability
 from tests.integration.test_extension_generation_api_lifetime import generation_app as generation_app
 
+pytestmark = pytest.mark.end_to_end
+
 
 def capability_route(capability):
     if capability.endswith("status"):
@@ -26,7 +28,7 @@ def capability_route(capability):
 @pytest.mark.asyncio
 @pytest.mark.parametrize("capability", CAPABILITIES)
 @pytest.mark.parametrize("fail", [False, True])
-# Layer: integration
+# Layer: end_to_end
 async def test_tcp_shutdown_retains_capability_effect_and_failure(generation_app, monkeypatch, tmp_path, capability, fail):
     method, route, body = capability_route(capability)
     request, closing = None, None

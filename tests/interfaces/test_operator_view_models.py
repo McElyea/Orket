@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+import pytest
+
 from orket.interfaces.operator_view_models import build_card_list_item_view, build_run_detail_view
 from orket.interfaces.operator_view_support import build_provider_status_view, build_system_health_view
+
+pytestmark = pytest.mark.contract
 
 
 def test_run_detail_view_uses_verified_completion_vocabulary() -> None:

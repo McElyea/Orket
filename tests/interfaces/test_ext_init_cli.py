@@ -3,7 +3,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from orket.interfaces.orket_bundle_cli import main
+
+pytestmark = pytest.mark.integration
 
 
 def test_ext_init_scaffolds_template_repo(tmp_path: Path, capsys) -> None:
@@ -35,7 +39,7 @@ def test_ext_init_scaffolds_template_repo(tmp_path: Path, capsys) -> None:
 
 
 def test_ext_init_fails_when_target_exists_without_force(tmp_path: Path, capsys) -> None:
-    """Layer: contract. Verifies `orket ext init` fails closed when target already exists."""
+    """Layer: integration. Verifies `orket ext init` fails closed when target already exists."""
     target = tmp_path / "companion_ext"
     target.mkdir(parents=True, exist_ok=True)
     code = main(["ext", "init", str(target), "--json"])

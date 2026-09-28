@@ -10,6 +10,8 @@ from orket.application.services.sandbox_lifecycle_mutation_service import Sandbo
 from orket.core.domain.sandbox_lifecycle import CleanupState, SandboxState, TerminalReason
 from orket.core.domain.sandbox_lifecycle_records import ManagedResourceInventory, SandboxLifecycleRecord
 
+pytestmark = pytest.mark.integration
+
 
 def _record(sandbox_id: str, *, cleanup_due_at: str, record_version: int, requires_reconciliation: bool = False) -> SandboxLifecycleRecord:
     return SandboxLifecycleRecord(

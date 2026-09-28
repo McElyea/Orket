@@ -4,7 +4,11 @@ import json
 import subprocess
 from pathlib import Path
 
+import pytest
+
 from orket.interfaces.orket_bundle_cli import main
+
+pytestmark = pytest.mark.integration
 
 
 def _git(repo: Path, *args: str) -> subprocess.CompletedProcess[str]:

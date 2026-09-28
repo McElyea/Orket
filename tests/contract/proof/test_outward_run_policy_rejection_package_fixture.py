@@ -3,12 +3,16 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.proof.outward_run_witness_contract import (
     COMPARE_SCOPE_POLICY_REJECTED,
     compute_package_digest,
     file_sha256,
 )
 from scripts.proof.verify_outward_run_witness_package import verify_package
+
+pytestmark = pytest.mark.contract
 
 BASE_POLICY_REJECTED = Path("tests/proof_fixtures/outward_run/base_policy_rejected_package")
 

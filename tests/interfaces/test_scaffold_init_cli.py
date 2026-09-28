@@ -3,8 +3,12 @@ from __future__ import annotations
 import hashlib
 from pathlib import Path
 
+import pytest
+
 import orket.interfaces.scaffold_init as scaffold_init_module
 from orket.interfaces.orket_bundle_cli import main
+
+pytestmark = pytest.mark.integration
 
 
 def _tree_hash(root: Path) -> str:

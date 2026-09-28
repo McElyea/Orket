@@ -33,6 +33,7 @@ def piper_model(tmp_path):
     return model
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 @pytest.mark.parametrize("changes", [
     {"reason": "timeout", "returncode": None}, {"returncode": 7},
@@ -40,7 +41,7 @@ def piper_model(tmp_path):
     {"reason": "capture_incomplete", "capture_complete": False},
     {"reason": "cleanup_unconfirmed", "cleanup_confirmed": False},
 ])
-# Layer: contract
+# Layers are declared per test for the exercised boundary.
 async def test_piper_cannot_return_pcm_from_a_failed_native_observation(piper_model, changes):
     result = replace(BASE, **changes)
     runner = ResultRunner(result)
@@ -53,6 +54,7 @@ async def test_piper_cannot_return_pcm_from_a_failed_native_observation(piper_mo
     assert runner.calls[0][1]["input_data"] == b"hello"
 
 
+@pytest.mark.contract
 @pytest.mark.parametrize("config,code", [
     ({"tts_backend": "missing"}, "E_TTS_BACKEND_UNSUPPORTED"),
     ({"tts_backend": "piper"}, "E_PIPER_MODEL_REQUIRED"),
@@ -64,6 +66,7 @@ def test_explicit_tts_selection_does_not_silently_become_null(config, code):
         build_tts_provider(input_config=config)
 
 
+@pytest.mark.contract
 @pytest.mark.parametrize("timeout", [0, -1, float("nan"), float("inf")])
 # Layer: contract
 def test_piper_requires_a_finite_positive_deadline(piper_model, timeout):
@@ -71,7 +74,7 @@ def test_piper_requires_a_finite_positive_deadline(piper_model, timeout):
         PiperConfig(piper_model, timeout_seconds=timeout)
 
 
-# Layer: contract
+@pytest.mark.integration
 def test_missing_explicit_executable_has_no_available_voice_catalog(piper_model):
     runner = ResultRunner(BASE)
     provider = build_tts_provider(command_runner=runner, workspace=piper_model.parent,
@@ -81,12 +84,13 @@ def test_missing_explicit_executable_has_no_available_voice_catalog(piper_model)
     assert runner.calls == [], "Construction and discovery must not spawn probe processes"
 
 
-# Layer: contract
+@pytest.mark.unit
 def test_quoted_executable_path_preserves_its_arguments(piper_model):
     command = f'"{sys.executable}" "-m" "piper"'
     assert PiperTTSProvider._resolve_executable(command) == [sys.executable, "-m", "piper"]
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 # Layer: contract
 async def test_embedding_piper_subclass_keeps_its_synchronous_implementation(piper_model):
@@ -105,6 +109,7 @@ async def test_embedding_piper_subclass_keeps_its_synchronous_implementation(pip
     await service.close()
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 @pytest.mark.parametrize("samples", [b"\x02\x00", b""])
 # Layer: contract

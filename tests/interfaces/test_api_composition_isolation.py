@@ -10,11 +10,13 @@ import sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
+import pytest
 from fastapi.testclient import TestClient
 
 
+@pytest.mark.integration
 def test_api_import_constructs_no_app_or_runtime_owner() -> None:
-    """Layer: contract. Importing the router module has no application-owner side effects."""
+    """Layer: integration. Importing the router module has no application-owner side effects."""
     script = """
 import json
 from fastapi import FastAPI
@@ -39,8 +41,9 @@ print(json.dumps({
     assert payload == {"present_owner_names": [], "fastapi_instances": 0}
 
 
+@pytest.mark.unit
 def test_api_router_constructs_no_runtime_implementation() -> None:
-    """Layer: contract. The transport module invokes composition but constructs no protected-layer class."""
+    """Layer: unit. The transport module invokes composition but constructs no protected-layer class."""
     module = importlib.import_module("orket.interfaces.api")
     tree = ast.parse(inspect.getsource(module))
     protected_prefixes = (
@@ -67,6 +70,7 @@ def test_api_router_constructs_no_runtime_implementation() -> None:
     assert constructed == []
 
 
+@pytest.mark.integration
 def test_factory_owns_distinct_runtime_graphs_for_distinct_roots(tmp_path: Path) -> None:
     """Layer: integration. Factory results retain independent application-owned runtime graphs."""
     module = importlib.import_module("orket.interfaces.api")
@@ -115,6 +119,7 @@ def test_factory_owns_distinct_runtime_graphs_for_distinct_roots(tmp_path: Path)
 
 
 
+@pytest.mark.integration
 def test_concurrent_requests_observe_their_own_app_root(tmp_path: Path, monkeypatch) -> None:
     """Layer: integration. Concurrent HTTP requests resolve the root from their ASGI app."""
     module = importlib.import_module("orket.interfaces.api")
@@ -136,6 +141,7 @@ def test_concurrent_requests_observe_their_own_app_root(tmp_path: Path, monkeypa
         assert response_b.result().json() == {"root": str(root_b)}
 
 
+@pytest.mark.integration
 def test_lifespan_closes_engine_and_tracked_tasks_once(tmp_path: Path, monkeypatch) -> None:
     """Layer: integration. Observe actual engine initialization, teardown and idempotent owner close."""
     from orket.orchestration.engine import OrchestrationEngine
@@ -166,6 +172,7 @@ def test_lifespan_closes_engine_and_tracked_tasks_once(tmp_path: Path, monkeypat
     assert closed == [context.engine]
 
 
+@pytest.mark.integration
 def test_repeated_app_lifecycles_leave_no_tracked_tasks(tmp_path: Path, monkeypatch) -> None:
     """Layer: integration. Repeated construction and teardown leaves every owner closed and task-free."""
     module = importlib.import_module("orket.interfaces.api")
@@ -184,6 +191,7 @@ def test_repeated_app_lifecycles_leave_no_tracked_tasks(tmp_path: Path, monkeypa
     assert all(context.active_background_task_count == 0 for context in contexts)
 
 
+@pytest.mark.contract
 def test_explicit_app_lookup_never_crosses_runtime_owners(tmp_path: Path) -> None:
     """Layer: contract. Explicit lookup always resolves the selected app-owned runtime."""
     module = importlib.import_module("orket.interfaces.api")

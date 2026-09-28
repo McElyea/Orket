@@ -29,6 +29,7 @@ async def active_api_app(tmp_path, fresh_runtime_state, monkeypatch):
         api_module._ACTIVE_API_APP.reset(token)
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_scheduled_task_is_removed_after_completion(fresh_runtime_state, active_api_app):
     session_id = "task-cleanup-test"
@@ -45,9 +46,10 @@ async def test_scheduled_task_is_removed_after_completion(fresh_runtime_state, a
     assert await state_module.runtime_state.get_task(session_id) is None
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_runtime_state_tracks_multiple_tasks_per_session(fresh_runtime_state, active_api_app):
-    """Layer: integration. Verifies one session can track and clean up multiple concurrent tasks independently."""
+    """Layer: unit. Verifies one session can track and clean up multiple concurrent tasks independently."""
     session_id = "task-multi-test"
     await state_module.runtime_state.remove_task(session_id)
 
@@ -72,6 +74,7 @@ async def test_runtime_state_tracks_multiple_tasks_per_session(fresh_runtime_sta
     assert await state_module.runtime_state.get_tasks(session_id) == []
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_runtime_state_get_task_returns_none_when_only_completed_tasks_remain(fresh_runtime_state, active_api_app):
     """Layer: unit. Verifies session task lookup does not surface completed tasks as if they were active."""
@@ -85,6 +88,7 @@ async def test_runtime_state_get_task_returns_none_when_only_completed_tasks_rem
     assert await state_module.runtime_state.get_task(session_id) is None
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_heartbeat_active_tasks_converges_after_run_active_completion(
     monkeypatch, fresh_runtime_state, active_api_app
@@ -138,6 +142,7 @@ async def test_heartbeat_active_tasks_converges_after_run_active_completion(
         assert settled_zero is True
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_concurrent_run_active_task_cleanup_stress(monkeypatch, fresh_runtime_state, active_api_app):
     """Layer: integration. Verifies concurrent run-active cleanup stays correct when session ids come from the explicit API runtime host."""

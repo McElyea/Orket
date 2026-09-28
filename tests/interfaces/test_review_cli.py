@@ -32,7 +32,6 @@ def _create_review_bundle(tmp_path: Path, capsys) -> tuple[Path, dict[str, objec
     _git(repo, "add", ".")
     _git(repo, "commit", "-m", "next")
     head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, check=True, capture_output=True).stdout.decode().strip()
-
     workspace = tmp_path / "workspace" / "default"
     code = main(
         [
@@ -54,6 +53,7 @@ def _create_review_bundle(tmp_path: Path, capsys) -> tuple[Path, dict[str, objec
     return workspace, payload
 
 
+@pytest.mark.integration
 def test_review_diff_cli_emits_bundle(tmp_path: Path, capsys) -> None:
     repo = tmp_path / "repo"
     _init_repo(repo)
@@ -65,7 +65,6 @@ def test_review_diff_cli_emits_bundle(tmp_path: Path, capsys) -> None:
     _git(repo, "add", ".")
     _git(repo, "commit", "-m", "next")
     head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, check=True, capture_output=True).stdout.decode().strip()
-
     workspace = tmp_path / "workspace" / "default"
     code = main(
         [
@@ -95,6 +94,7 @@ def test_review_diff_cli_emits_bundle(tmp_path: Path, capsys) -> None:
     assert payload["control_plane"]["step_id"].startswith(f"{payload['run_id']}:step:")
 
 
+@pytest.mark.integration
 def test_review_diff_cli_human_output_surfaces_control_plane_refs(tmp_path: Path, capsys) -> None:
     repo = tmp_path / "repo"
     _init_repo(repo)
@@ -106,7 +106,6 @@ def test_review_diff_cli_human_output_surfaces_control_plane_refs(tmp_path: Path
     _git(repo, "add", ".")
     _git(repo, "commit", "-m", "next")
     head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, check=True, capture_output=True).stdout.decode().strip()
-
     workspace = tmp_path / "workspace" / "default"
     code = main(
         [
@@ -130,6 +129,7 @@ def test_review_diff_cli_human_output_surfaces_control_plane_refs(tmp_path: Path
     assert "step_id=" in output
 
 
+@pytest.mark.contract
 def test_review_replay_cli_requires_inputs(tmp_path: Path, capsys) -> None:
     code = main(["review", "replay", "--workspace", str(tmp_path), "--json"])
     payload = json.loads(capsys.readouterr().out)
@@ -137,10 +137,10 @@ def test_review_replay_cli_requires_inputs(tmp_path: Path, capsys) -> None:
     assert payload["ok"] is False
 
 
+@pytest.mark.integration
 def test_review_replay_cli_run_dir_validates_bundle_and_replays(tmp_path: Path, capsys) -> None:
     """contract: run-dir replay must validate canonical bundle authority markers."""
     workspace, payload = _create_review_bundle(tmp_path, capsys)
-
     replay_code = main(
         [
             "review",
@@ -159,15 +159,14 @@ def test_review_replay_cli_run_dir_validates_bundle_and_replays(tmp_path: Path, 
     assert replay_payload["control_plane"]["projection_only"] is True
 
 
+@pytest.mark.integration
 def test_review_replay_cli_run_dir_rejects_drifted_review_manifest(tmp_path: Path, capsys) -> None:
     """contract: run-dir replay must fail closed when canonical bundle authority drifts."""
     workspace, payload = _create_review_bundle(tmp_path, capsys)
-
     run_dir = Path(str(payload["artifact_dir"]))
     manifest = json.loads((run_dir / "run_manifest.json").read_text(encoding="utf-8"))
     manifest["lane_outputs_execution_state_authoritative"] = True
     (run_dir / "run_manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
-
     replay_code = main(
         [
             "review",
@@ -185,11 +184,11 @@ def test_review_replay_cli_run_dir_rejects_drifted_review_manifest(tmp_path: Pat
     assert "review_run_manifest_execution_state_authoritative_invalid" in replay_payload["errors"][0]["message"]
 
 
+@pytest.mark.integration
 def test_review_replay_cli_snapshot_policy_bundle_paths_validate_bundle_and_replay(tmp_path: Path, capsys) -> None:
     """contract: direct snapshot/policy replay must validate canonical bundle artifacts when present."""
     workspace, payload = _create_review_bundle(tmp_path, capsys)
     run_dir = Path(str(payload["artifact_dir"]))
-
     replay_code = main(
         [
             "review",
@@ -210,6 +209,7 @@ def test_review_replay_cli_snapshot_policy_bundle_paths_validate_bundle_and_repl
     assert replay_payload["control_plane"]["projection_only"] is True
 
 
+@pytest.mark.integration
 def test_review_replay_cli_snapshot_policy_bundle_paths_reject_drifted_review_manifest(tmp_path: Path, capsys) -> None:
     """contract: direct snapshot/policy replay must fail closed on canonical bundle authority drift."""
     workspace, payload = _create_review_bundle(tmp_path, capsys)
@@ -217,7 +217,6 @@ def test_review_replay_cli_snapshot_policy_bundle_paths_reject_drifted_review_ma
     manifest = json.loads((run_dir / "run_manifest.json").read_text(encoding="utf-8"))
     manifest["lane_outputs_execution_state_authoritative"] = True
     (run_dir / "run_manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
-
     replay_code = main(
         [
             "review",
@@ -237,15 +236,14 @@ def test_review_replay_cli_snapshot_policy_bundle_paths_reject_drifted_review_ma
     assert "review_run_manifest_execution_state_authoritative_invalid" in replay_payload["errors"][0]["message"]
 
 
+@pytest.mark.integration
 def test_review_replay_cli_run_dir_rejects_missing_bundle_control_plane_ref(tmp_path: Path, capsys) -> None:
     """contract: run-dir replay must fail closed when canonical lane control-plane refs are missing."""
     workspace, payload = _create_review_bundle(tmp_path, capsys)
-
     run_dir = Path(str(payload["artifact_dir"]))
     deterministic = json.loads((run_dir / "deterministic_decision.json").read_text(encoding="utf-8"))
     deterministic.pop("control_plane_step_id", None)
     (run_dir / "deterministic_decision.json").write_text(json.dumps(deterministic), encoding="utf-8")
-
     replay_code = main(
         [
             "review",
@@ -263,9 +261,9 @@ def test_review_replay_cli_run_dir_rejects_missing_bundle_control_plane_ref(tmp_
     assert "deterministic_review_decision_control_plane_step_id_missing" in replay_payload["errors"][0]["message"]
 
 
+@pytest.mark.contract
 def test_review_diff_cli_returns_structured_error_on_result_manifest_control_plane_drift(tmp_path: Path, capsys, monkeypatch) -> None:
     """contract: diff CLI must surface structured failure when result serialization detects embedded manifest/control-plane drift."""
-
     def _fake_run_diff(self, **_kwargs):  # type: ignore[no-untyped-def]
         return ReviewRunResult(
             ok=True,
@@ -299,9 +297,7 @@ def test_review_diff_cli_returns_structured_error_on_result_manifest_control_pla
                 "step_kind": "review_run_start",
             },
         )
-
     monkeypatch.setattr("orket.interfaces.orket_bundle_cli.ReviewRunService.run_diff", _fake_run_diff)
-
     code = main(
         [
             "review",
@@ -324,6 +320,7 @@ def test_review_diff_cli_returns_structured_error_on_result_manifest_control_pla
     assert "review_run_manifest_control_plane_step_id_missing" in payload["errors"][0]["message"]
 
 
+@pytest.mark.contract
 def test_review_diff_cli_returns_structured_error_on_result_manifest_missing_run_id(tmp_path: Path, capsys, monkeypatch) -> None:
     """contract: diff CLI must surface structured failure when result serialization detects missing manifest run identity."""
 
@@ -367,6 +364,7 @@ def test_review_diff_cli_returns_structured_error_on_result_manifest_missing_run
     assert "review_run_manifest_run_id_required" in payload["errors"][0]["message"]
 
 
+@pytest.mark.contract
 @pytest.mark.parametrize(
     ("control_plane_overrides", "expected_error"),
     [
@@ -457,6 +455,7 @@ def test_review_diff_cli_returns_structured_error_on_orphaned_control_plane_proj
     assert expected_error in payload["errors"][0]["message"]
 
 
+@pytest.mark.contract
 def test_review_diff_cli_returns_structured_error_on_orphaned_manifest_control_plane_refs(tmp_path: Path, capsys, monkeypatch) -> None:
     """contract: diff CLI must surface structured failure when result serialization detects orphaned manifest ids."""
 
@@ -504,6 +503,7 @@ def test_review_diff_cli_returns_structured_error_on_orphaned_manifest_control_p
     assert "review_run_manifest_control_plane_attempt_id_required" in payload["errors"][0]["message"]
 
 
+@pytest.mark.contract
 def test_review_cli_rejects_conflicting_scope_flags(tmp_path: Path, capsys) -> None:
     code = main(
         [

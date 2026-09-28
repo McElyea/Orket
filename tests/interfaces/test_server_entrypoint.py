@@ -5,8 +5,12 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import pytest
+
 import orket.interfaces.runtime_entrypoints as entrypoints_module
 import orket.settings as settings_module
+
+pytestmark = pytest.mark.contract
 
 
 def test_server_entrypoint_bootstraps_repo_env_before_app_creation(monkeypatch) -> None:

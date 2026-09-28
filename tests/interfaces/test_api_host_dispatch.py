@@ -1,11 +1,15 @@
 # Layer: contract. Controlled host ports; no provider execution claim.
+import pytest
+
 import orket.interfaces.api as api_module
+
+pytestmark = pytest.mark.contract
 
 client = None
 
 
 def test_preview_asset_uses_runtime_invocation(monkeypatch):
-    """Layer: integration. Verifies preview construction now comes from the explicit API runtime host while invocation policy stays strategy-owned."""
+    """Layer: contract. Verifies preview construction now comes from the explicit API runtime host while invocation policy stays strategy-owned."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
 
     class FakeBuilder:

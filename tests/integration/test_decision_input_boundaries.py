@@ -19,6 +19,7 @@ from orket.runtime.config.config_loader import ConfigLoader
 from orket.settings import set_runtime_settings_context
 
 
+@pytest.mark.contract
 @pytest.mark.parametrize(
     "name",
     ["TOOL_STRATEGY", "API_RUNTIME", "SANDBOX_POLICY", "LOADER_STRATEGY", "EXECUTION_RUNTIME", "ORCHESTRATION_LOOP"],
@@ -42,6 +43,7 @@ def test_registry_captures_environment_and_stored_settings(monkeypatch, name):
     assert getattr(stored, "resolve_" + slot)(org) is stale
 
 
+@pytest.mark.contract
 def test_loop_limits_are_immutable_captured_values(monkeypatch):
     """Layer: contract. The same captured values produce the same limits after mutation."""
     environment = {"ORKET_ORCHESTRATOR_CONCURRENCY": "2", "ORKET_CONTEXT_WINDOW": "6"}
@@ -56,6 +58,7 @@ def test_loop_limits_are_immutable_captured_values(monkeypatch):
         inputs.concurrency = "9"
 
 
+@pytest.mark.contract
 @pytest.mark.parametrize("source", ["environment", "stored", "constructor", "organization", "module"])
 def test_retired_model_client_strategy_configuration_is_rejected(source):
     """Layer: contract. Removed executable strategy configuration never silently falls back."""
@@ -74,6 +77,7 @@ def test_retired_model_client_strategy_configuration_is_rejected(source):
             registry.register_module_nodes("custom", {"model_client": object()})
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 @pytest.mark.parametrize("selection", ["callable", "mapping", "unknown", "duplicate"])
 async def test_tool_strategy_cannot_substitute_executable_bindings(tmp_path, selection):
@@ -104,6 +108,7 @@ async def test_tool_strategy_cannot_substitute_executable_bindings(tmp_path, sel
     assert not marker.exists()
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_loader_owns_overrides_and_captures_environment_before_io(tmp_path, monkeypatch):
     config = tmp_path / "config"
@@ -150,6 +155,7 @@ async def test_loader_owns_overrides_and_captures_environment_before_io(tmp_path
         await asyncio.gather(operation, return_exceptions=True)
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_application_model_factory_uses_captured_http_target(monkeypatch):
     requests, owners, failures = [], set(), []

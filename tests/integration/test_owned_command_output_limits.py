@@ -9,10 +9,11 @@ import pytest
 from orket.application.services.command_process_supervisor import CommandProcessSupervisor
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 @pytest.mark.parametrize("stream", ["stdout", "stderr"])
 @pytest.mark.parametrize("exceeds", [False, True])
-# Layer: integration
+# Layers are declared per test for the exercised boundary.
 async def test_owned_command_capture_uses_the_admitted_limit(tmp_path, stream, exceeds):
     size = (7 if exceeds else 5) * 1024 * 1024
     limit = 6 * 1024 * 1024
@@ -26,6 +27,7 @@ async def test_owned_command_capture_uses_the_admitted_limit(tmp_path, stream, e
         assert result.returncode == 0
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 @pytest.mark.parametrize("limit", [0, -1, True, 1.5, "4096", 64 * 1024 * 1024 + 1])
 # Layer: integration

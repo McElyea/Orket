@@ -28,9 +28,10 @@ class OllamaTransport:
         return None
 
 
+@pytest.mark.contract
 @pytest.mark.parametrize("backend", ["lmstudio", "ollama"])
 @pytest.mark.parametrize("model", ["qwen2.5:7b", "unknown-model-family"])
-# Layer: contract
+# Layers are declared per test for the exercised boundary.
 def test_sdk_options_reach_transport_without_mutating_provider_defaults(monkeypatch, backend, model):
     observed = []
 
@@ -61,6 +62,7 @@ def test_sdk_options_reach_transport_without_mutating_provider_defaults(monkeypa
         provider.close()
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 @pytest.mark.parametrize("provider", ["ollama", "openai_compat"])
 # Layer: contract
@@ -73,6 +75,7 @@ async def test_unresolved_profile_preserves_only_explicit_generation_options(pro
     assert result.profile_id == "unresolved" and result.sampling_bundle == {"max_output_tokens": 37}
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 @pytest.mark.parametrize("model", ["qwen2.5:7b", "unknown-model-family"])
 @pytest.mark.parametrize(("key", "value"), [
@@ -89,6 +92,7 @@ async def test_invalid_generation_options_are_rejected_for_every_profile(model, 
             messages=[{"role": "user", "content": "hello"}], runtime_context={"local_prompting_mode": "shadow", key: value})
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 @pytest.mark.parametrize("provider", ["ollama", "openai_compat"])
 @pytest.mark.parametrize("mode", ["shadow", "compat", "enforce"])
@@ -102,6 +106,7 @@ async def test_large_request_never_widens_selected_profile(provider, mode):
     assert result.effective_stop_sequences == (" caller-stop\n", *baseline.effective_stop_sequences)
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 @pytest.mark.parametrize("stops", [["  PROFILE\n", " "], [""], [1]])
 # Layer: integration

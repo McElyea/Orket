@@ -9,6 +9,7 @@ from orket.application.services.sandbox_verification_service import SandboxVerif
 from orket.core.contracts.protocol_hashing import ProtocolCanonicalizationError
 from orket.schema import IssueVerification, VerificationScenario
 from tests.helpers.observed_http_server import observed_http_server
+from tests.helpers.turn_artifacts import artifact_test_utc_now
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 
@@ -43,7 +44,7 @@ async def test_unsupported_values_refuse_entire_batch_before_http(field, value):
             invalid.expected_output = value
         verification = IssueVerification(scenarios=[scenario("first"), invalid])
         with pytest.raises(ProtocolCanonicalizationError):
-            await SandboxVerificationService().verify_sandbox(SimpleNamespace(id="typed", api_url=url), verification)
+            await SandboxVerificationService(utc_now=artifact_test_utc_now).verify_sandbox(SimpleNamespace(id="typed", api_url=url), verification)
         assert not requests
         assert all(item.status == "pending" for item in verification.scenarios)
 
@@ -54,7 +55,7 @@ async def test_equivalent_json_value_is_admitted():
 
     async with observed_http_server(respond) as (url, requests):
         verification = IssueVerification(scenarios=[scenario("json")])
-        result = await SandboxVerificationService().verify_sandbox(SimpleNamespace(id="json", api_url=url), verification)
+        result = await SandboxVerificationService(utc_now=artifact_test_utc_now).verify_sandbox(SimpleNamespace(id="json", api_url=url), verification)
         assert result.passed == 1 and len(requests) == 1
         assert verification.scenarios[0].actual_output == {"value": 1}
 
@@ -69,6 +70,6 @@ async def test_invalid_scenario_shape_refuses_entire_batch_before_http(invalid_i
         invalid.id = invalid_id
         verification = IssueVerification(scenarios=[scenario("first"), invalid])
         with pytest.raises(ValidationError):
-            await SandboxVerificationService().verify_sandbox(SimpleNamespace(id="sandbox", api_url=url), verification)
+            await SandboxVerificationService(utc_now=artifact_test_utc_now).verify_sandbox(SimpleNamespace(id="sandbox", api_url=url), verification)
         assert not requests
         assert all(item.status == "pending" for item in verification.scenarios)

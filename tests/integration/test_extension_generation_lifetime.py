@@ -14,6 +14,8 @@ from orket.application.services.extension_runtime_support import generate_respon
 from orket.application.services.sdk_llm_provider import LocalModelCapabilityProvider
 from orket_extension_sdk.llm import GenerateRequest, GenerateResponse
 
+pytestmark = pytest.mark.integration
+
 REQUEST = GenerateRequest(system_prompt="", user_message="hello")
 
 

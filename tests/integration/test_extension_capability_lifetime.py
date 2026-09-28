@@ -10,6 +10,8 @@ import pytest
 from orket.application.services.extension_runtime_service import ExtensionRuntimeService
 from orket_extension_sdk.audio import NullTTSProvider
 
+pytestmark = pytest.mark.integration
+
 CAPABILITIES = ["model_status", "stt_status", "transcribe", "tts_voices", "synthesize", "voice_control"]
 
 

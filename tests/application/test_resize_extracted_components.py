@@ -7,6 +7,7 @@ from orket.core.domain.fixture_verifier import FixtureVerifier
 from orket.orchestration.engine_services import KernelGatewayFacade
 from orket.orchestration.orchestration_config import OrchestrationConfig
 from orket.schema import IssueVerification, VerificationScenario
+from tests.helpers.turn_artifacts import artifact_test_utc_now
 
 
 def test_fixture_verifier_mark_all_failed() -> None:
@@ -28,7 +29,7 @@ async def test_sandbox_verifier_rejects_non_endpoint_scenarios() -> None:
         id = "sbx"
         api_url = "http://localhost"
 
-    verifier = SandboxVerificationService()
+    verifier = SandboxVerificationService(utc_now=artifact_test_utc_now)
     verification = IssueVerification(
         fixture_path="",
         scenarios=[VerificationScenario(id="S1", description="d", input_data={}, expected_output={})],

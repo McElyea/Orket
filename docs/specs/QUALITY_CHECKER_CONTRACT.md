@@ -70,6 +70,21 @@ with `--out` retains the existing diff-ledger publication behavior.
 
 ## Required checks and limits
 
+The architectural-truth baseline's size observation uses the same Git-visible
+Python inventory under `orket/`. Missing or empty inventory, Git discovery, source
+read/encoding/parse failure and observed in-scan source changes make collection
+fail. The v2 size payload retains the 400-line file and 70-line function thresholds
+and complete oversized inventories, alongside the existing largest-25 summaries.
+Source hashes bind the observation; counts do not establish runtime defects.
+
+Function spans remain inclusive of nested definitions. Qualified names, enclosing
+class/function scopes, direct nested-definition counts and route-decorator syntax
+make that overlap visible; spans must not be summed as independent debt. Decorator
+spelling is a syntactic observation, not proof of FastAPI binding or an exemption.
+Nested router factories and their route functions retain their measured spans.
+The complete inventories support later no-growth and shrinking-baseline comparison;
+collecting them alone does not establish that a refactor reduced debt.
+
 Run both checker regression modules, the taxonomy-summary regression, the native
 checker commands, and canonical `ruff check orket tests`. Migrate classification
 by reviewing test behavior; do not add blanket directory labels or weaken coverage

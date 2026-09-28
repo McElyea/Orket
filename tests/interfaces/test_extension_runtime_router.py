@@ -54,6 +54,7 @@ def extension_runtime_client(tmp_path: Path) -> TestClient:
     return TestClient(app)
 
 
+@pytest.mark.integration
 def test_extension_runtime_router_llm_memory_and_voice_flow(extension_runtime_client: TestClient) -> None:
     """Layer: integration. Verifies generic generate, memory, and voice routes round-trip through the router contract."""
     generate = extension_runtime_client.post(
@@ -98,6 +99,7 @@ def test_extension_runtime_router_llm_memory_and_voice_flow(extension_runtime_cl
     assert base64.b64decode(synthesize.json()["audio_b64"].encode("utf-8"), validate=True) == b"\xAA\xBB"
 
 
+@pytest.mark.contract
 def test_extension_runtime_router_invalid_scope_returns_error_envelope(extension_runtime_client: TestClient) -> None:
     """Layer: contract. Verifies invalid memory scopes fail closed with structured error envelopes."""
     response = extension_runtime_client.post(
@@ -107,6 +109,7 @@ def test_extension_runtime_router_invalid_scope_returns_error_envelope(extension
     assert response.status_code == 422
 
 
+@pytest.mark.contract
 def test_extension_runtime_router_models_failure_returns_truthful_degraded_error() -> None:
     """Layer: contract. Verifies model-catalog failures stay degraded and explicit on the generic extension seam."""
 

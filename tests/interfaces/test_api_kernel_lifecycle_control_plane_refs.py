@@ -1,7 +1,8 @@
-# Layer: unit
+# Layer: contract
 
 from __future__ import annotations
 
+import pytest
 from fastapi.testclient import TestClient
 
 import orket.interfaces.api as api_module
@@ -15,6 +16,8 @@ from orket.application.services.kernel_action_control_plane_view_service import 
 from orket.core.domain import LeaseStatus, ReservationStatus
 from tests.application.test_control_plane_publication_service import InMemoryControlPlaneRecordRepository
 from tests.helpers.control_plane_execution_memory import InMemoryControlPlaneExecutionRepository
+
+pytestmark = pytest.mark.contract
 
 client = None
 
@@ -104,7 +107,7 @@ def test_kernel_api_observed_policy_reject_returns_post_effect_recovery_and_leas
     assert control_plane["latest_resource"]["resource_kind"] == "kernel_action_scope"
 
 
-# Layer: unit
+# Layer: contract
 def test_kernel_api_pre_effect_policy_reject_returns_abandoned_attempt_and_recovery_refs(monkeypatch) -> None:
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
     monkeypatch.setenv("ORKET_ENABLE_NERVOUS_SYSTEM", "true")

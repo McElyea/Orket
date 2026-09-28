@@ -33,6 +33,8 @@ from orket.core.domain import (
 from orket.core.domain.sandbox_lifecycle import CleanupState, SandboxState, TerminalReason
 from orket.core.domain.sandbox_lifecycle_records import ManagedResourceInventory, SandboxLifecycleRecord
 
+pytestmark = pytest.mark.integration
+
 
 def _record(**overrides) -> SandboxLifecycleRecord:
     payload = {

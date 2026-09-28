@@ -44,6 +44,7 @@ async def _assert_durable_success(manager: ExtensionManager, result) -> None:
 
 
 # Layer: contract. Full inputs are exclusive with the manager's legacy root/environment selectors.
+@pytest.mark.contract
 @pytest.mark.parametrize("legacy_argument", ["invocation_root", "environment"])
 def test_extension_manager_refuses_ambiguous_complete_inputs(
     tmp_path: Path, legacy_argument: str,
@@ -55,6 +56,7 @@ def test_extension_manager_refuses_ambiguous_complete_inputs(
 
 
 # Layer: contract. Explicit empty values remain authoritative through manager/executor construction.
+@pytest.mark.contract
 def test_extension_manager_retains_complete_empty_inputs(tmp_path: Path) -> None:
     inputs = _inputs(tmp_path)
     manager = ExtensionManager(
@@ -69,7 +71,8 @@ def test_extension_manager_retains_complete_empty_inputs(tmp_path: Path) -> None
     assert inputs.user_settings() == {} and inputs.user_preferences() == {}
 
 
-# Layer: contract. The action helper admits the exact explicit object before interaction awaits.
+# Layer: unit. The action helper admits the exact explicit object before interaction awaits.
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_action_helper_routes_exact_inputs_before_interaction(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
@@ -109,6 +112,7 @@ async def test_action_helper_routes_exact_inputs_before_interaction(
 
 
 # Layer: integration. A real legacy workload carries manager inputs into the action helper.
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_manager_executor_routes_exact_inputs_to_legacy_action_helper(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
@@ -183,6 +187,7 @@ async def test_manager_executor_routes_exact_inputs_to_legacy_action_helper(
 
 
 # Layer: integration. The actual engine uses explicit inputs and closes on real runtime refusal.
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_explicit_inputs_bypass_capture_in_actual_legacy_engine(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,

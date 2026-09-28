@@ -86,4 +86,4 @@ class FixtureVerifier:
 
     def verify(self, verification: IssueVerification, workspace_root: Path) -> VerificationResult:
         raise RuntimeError("Synchronous fixture execution was retired. "
-                           "Use await FixtureVerificationService(workspace).verify(verification).")
+                           "Use await FixtureVerificationService(workspace, utc_now=...).verify(verification).")

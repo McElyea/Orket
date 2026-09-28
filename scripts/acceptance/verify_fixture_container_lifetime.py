@@ -90,7 +90,8 @@ async def run_case(root, case):
                              expected_output=2 if case == "mismatch" else 1)])
     environment = {**os.environ, "ORKET_VERIFY_EXECUTION_MODE": "container",
                    "ORKET_VERIFY_TIMEOUT_SEC": "4" if case == "timeout" else "15"}
-    service = FixtureVerificationService(root, environment=environment, runtime_inputs=Inputs(identity))
+    inputs = Inputs(identity)
+    service = FixtureVerificationService(root, utc_now=inputs.utc_now, environment=environment, runtime_inputs=inputs)
     task = asyncio.create_task(service.verify(verification))
     row = {"case": case, "name": name, "owner_id": identity, "path": "primary", "result": "failure"}
     try:
