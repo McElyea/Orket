@@ -6,6 +6,8 @@ import pytest
 
 from orket.application.services.gitea_state_worker import GiteaStateWorker
 
+pytestmark = pytest.mark.unit
+
 
 class _FakeAdapter:
     def __init__(self):

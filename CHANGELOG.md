@@ -5,6 +5,14 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.111] - 2026-09-27
+
+### Fixed
+- Classify another 543 reviewed application cases through canonical pytest markers, preserving their assertions, parameters and existing marks.
+- Preserve actual provider construction and cleanup in the parallel-execution fixture, assert the current typed outbound-policy value, and measure sandbox-log responsiveness from native hold admission with the same 0.5-second bound.
+- Keep the shared sandbox-log helper's release timer optional for capture and shutdown callers. All 31 affected cases pass; two deliberately blocked-loop counterexamples exceed the bound and fail as expected.
+- Global collection confirms 1,365 remaining unclassified cases with no conflicts or collection errors. A broader diagnostic stopped after 10 failures with 5,730 passes and 42 skips; seven helper regressions are corrected by the scoped successor, while three other failures and the absent coverage report remain open in the architectural-truth plan.
+
 ## [0.6.110] - 2026-09-27
 
 ### Fixed

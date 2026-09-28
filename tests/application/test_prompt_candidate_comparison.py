@@ -2,12 +2,15 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from scripts.prompt_lab.compare_candidates import (
     DEFAULT_THRESHOLDS_PATH,
     compare_candidate_against_stable,
 )
 
 
+@pytest.mark.contract
 def test_compare_candidate_passes_without_regression() -> None:
     stable_eval = {
         "tool_parse_rate": 0.7,
@@ -69,6 +72,7 @@ def test_compare_candidate_passes_without_regression() -> None:
     assert report["blockers"] == []
 
 
+@pytest.mark.contract
 def test_compare_candidate_fails_on_regression() -> None:
     stable_eval = {
         "tool_parse_rate": 0.8,
@@ -134,6 +138,7 @@ def test_compare_candidate_fails_on_regression() -> None:
     assert len(report["blockers"]) >= 1
 
 
+@pytest.mark.contract
 def test_compare_candidate_custom_thresholds() -> None:
     report = compare_candidate_against_stable(
         stable_eval={
@@ -156,6 +161,7 @@ def test_compare_candidate_custom_thresholds() -> None:
     assert report["gates"]["tool_parse_rate_min_delta"] is False
 
 
+@pytest.mark.contract
 def test_compare_candidate_guard_domain_custom_thresholds() -> None:
     report = compare_candidate_against_stable(
         stable_eval={
@@ -217,6 +223,7 @@ def test_compare_candidate_guard_domain_custom_thresholds() -> None:
     assert report["pass"] is True
 
 
+@pytest.mark.contract
 def test_compare_candidate_exposes_machine_readable_blockers() -> None:
     report = compare_candidate_against_stable(
         stable_eval={
@@ -248,7 +255,7 @@ def test_compare_candidate_exposes_machine_readable_blockers() -> None:
     assert any(item["type"] == "criteria" for item in report["blockers"])
 
 
-# Layer: contract
+@pytest.mark.unit
 def test_compare_candidates_default_thresholds_file_exists() -> None:
-    """Layer: contract. The default thresholds are owned by the comparison script."""
+    """Layer: unit. The default thresholds are owned by the comparison script."""
     assert Path(DEFAULT_THRESHOLDS_PATH).exists()

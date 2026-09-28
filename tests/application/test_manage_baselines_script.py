@@ -4,6 +4,10 @@ import json
 import subprocess
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 
 def test_manage_baselines_resolve_statuses(tmp_path: Path) -> None:
     baselines_root = tmp_path / "orket_storage" / "baselines"

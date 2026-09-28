@@ -16,6 +16,7 @@ from orket.application.services.runtime_policy_inputs import ArchitecturePolicyS
 from orket.orchestration.engine import OrchestrationEngine
 
 
+@pytest.mark.unit
 def test_state_backend_mode_policy_defaults_to_local():
     """Layer: unit. Explicit locked policy retains the local default."""
     options = runtime_policy_options(RuntimePolicySnapshot(ArchitecturePolicySnapshot(False), False, {}))
@@ -24,6 +25,7 @@ def test_state_backend_mode_policy_defaults_to_local():
     assert any(opt["value"] == "gitea" for opt in options["state_backend_mode"]["options"])
 
 
+@pytest.mark.unit
 def test_run_ledger_mode_policy_defaults_to_sqlite():
     """Layer: unit. Explicit locked policy retains the SQLite default."""
     options = runtime_policy_options(RuntimePolicySnapshot(ArchitecturePolicySnapshot(False), False, {}))
@@ -33,6 +35,7 @@ def test_run_ledger_mode_policy_defaults_to_sqlite():
     assert any(opt["value"] == "dual_write" for opt in options["run_ledger_mode"]["options"])
 
 
+@pytest.mark.unit
 def test_resolve_state_backend_mode_aliases():
     assert resolve_state_backend_mode("local") == "local"
     assert resolve_state_backend_mode("sqlite") == "local"
@@ -40,6 +43,7 @@ def test_resolve_state_backend_mode_aliases():
     assert resolve_state_backend_mode("unknown-value") == "local"
 
 
+@pytest.mark.unit
 def test_resolve_run_ledger_mode_aliases():
     assert resolve_run_ledger_mode("sqlite") == "sqlite"
     assert resolve_run_ledger_mode("compat") == "sqlite"
@@ -49,6 +53,7 @@ def test_resolve_run_ledger_mode_aliases():
     assert resolve_run_ledger_mode("unknown-value") == "sqlite"
 
 
+@pytest.mark.unit
 def test_resolve_gitea_state_pilot_enabled_aliases():
     assert resolve_gitea_state_pilot_enabled("enabled") is True
     assert resolve_gitea_state_pilot_enabled("true") is True
@@ -56,6 +61,7 @@ def test_resolve_gitea_state_pilot_enabled_aliases():
     assert resolve_gitea_state_pilot_enabled("false") is False
 
 
+@pytest.mark.unit
 def test_resolve_gitea_worker_bounds():
     assert resolve_gitea_worker_max_iterations("25") == 25
     assert resolve_gitea_worker_max_iterations("-1") == 1
@@ -70,6 +76,7 @@ def test_resolve_gitea_worker_bounds():
     assert resolve_gitea_worker_max_duration_seconds("bad", None) == 60.0
 
 
+@pytest.mark.contract
 def test_engine_rejects_gitea_state_backend_without_pilot_enablement(monkeypatch, tmp_path):
     monkeypatch.setenv("ORKET_STATE_BACKEND_MODE", "gitea")
     monkeypatch.delenv("ORKET_ENABLE_GITEA_STATE_PILOT", raising=False)
@@ -77,6 +84,7 @@ def test_engine_rejects_gitea_state_backend_without_pilot_enablement(monkeypatch
         OrchestrationEngine(tmp_path, config_root=tmp_path)
 
 
+@pytest.mark.contract
 def test_engine_rejects_gitea_state_backend_when_readiness_is_incomplete(monkeypatch, tmp_path):
     monkeypatch.setenv("ORKET_STATE_BACKEND_MODE", "gitea")
     monkeypatch.setenv("ORKET_ENABLE_GITEA_STATE_PILOT", "true")
@@ -88,6 +96,7 @@ def test_engine_rejects_gitea_state_backend_when_readiness_is_incomplete(monkeyp
         OrchestrationEngine(tmp_path, config_root=tmp_path)
 
 
+@pytest.mark.contract
 def test_engine_allows_gitea_state_backend_after_pilot_gate_passes(monkeypatch, tmp_path):
     monkeypatch.setenv("ORKET_STATE_BACKEND_MODE", "gitea")
     monkeypatch.setenv("ORKET_ENABLE_GITEA_STATE_PILOT", "true")
@@ -99,6 +108,7 @@ def test_engine_allows_gitea_state_backend_after_pilot_gate_passes(monkeypatch, 
     assert engine.state_backend_mode == "gitea"
 
 
+@pytest.mark.contract
 def test_engine_defaults_run_ledger_mode_to_sqlite(monkeypatch, tmp_path):
     monkeypatch.delenv("ORKET_RUN_LEDGER_MODE", raising=False)
     engine = OrchestrationEngine(tmp_path, config_root=tmp_path)
@@ -106,6 +116,7 @@ def test_engine_defaults_run_ledger_mode_to_sqlite(monkeypatch, tmp_path):
     assert isinstance(engine.run_ledger, AsyncRunLedgerRepository)
 
 
+@pytest.mark.contract
 def test_engine_uses_protocol_run_ledger_mode(monkeypatch, tmp_path):
     monkeypatch.setenv("ORKET_RUN_LEDGER_MODE", "protocol")
     engine = OrchestrationEngine(tmp_path, config_root=tmp_path)
@@ -113,6 +124,7 @@ def test_engine_uses_protocol_run_ledger_mode(monkeypatch, tmp_path):
     assert isinstance(engine.run_ledger, AsyncProtocolRunLedgerRepository)
 
 
+@pytest.mark.contract
 def test_engine_uses_dual_write_run_ledger_mode(monkeypatch, tmp_path):
     monkeypatch.setenv("ORKET_RUN_LEDGER_MODE", "dual_write")
     engine = OrchestrationEngine(tmp_path, config_root=tmp_path)

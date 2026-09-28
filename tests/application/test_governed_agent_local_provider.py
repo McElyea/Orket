@@ -20,6 +20,8 @@ from orket.exceptions import ModelConnectionError
 from orket_extension_sdk import AgentModelCallRequest
 from orket_extension_sdk.agent_fixtures import agent_model_call_request
 
+pytestmark = pytest.mark.contract
+
 
 def _target(provider="llama_cpp", status="OK") -> ProviderRuntimeTarget:
     return ProviderRuntimeTarget(provider, "openai_compat", "qwen", "qwen", "http://127.0.0.1:8080/v1",

@@ -8,35 +8,30 @@ from orket.driver import OrketDriver
 from orket.exceptions import ModelConnectionError
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_process_request_conversation_short_circuits_model_call():
     driver = OrketDriver.__new__(OrketDriver)
     driver.model_root = Path("model")
     driver.skill = None
     driver.dialect = None
-
     class _Provider:
         def __init__(self):
             self.called = False
-
         async def complete(self, _messages):
             self.called = True
             return SimpleNamespace(content='{"action":"create_epic"}')
-
     provider = _Provider()
     driver.provider = provider
-
     async def _fake_inventory(_self):
         return {"departments": {}}
-
     driver._get_inventory = MethodType(_fake_inventory, driver)
-
     response = await driver.process_request("hi")
-
     assert provider.called is False
     assert "chat normally" in response.lower()
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_execute_plan_converse_response():
     driver = OrketDriver.__new__(OrketDriver)
@@ -46,6 +41,7 @@ async def test_execute_plan_converse_response():
     assert result == "I can chat with you."
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_execute_plan_unknown_action_does_not_emit_structural_fallback():
     driver = OrketDriver.__new__(OrketDriver)
@@ -54,18 +50,16 @@ async def test_execute_plan_unknown_action_does_not_emit_structural_fallback():
     assert "Strategic Insight:" not in result
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_execute_plan_assign_team_missing_fields_uses_fallback_labels(monkeypatch):
     """Layer: unit. Verifies assign_team payload parsing fallback labels."""
     driver = OrketDriver.__new__(OrketDriver)
     events = []
-
     def _capture(event_name, payload, _workspace, role=None):
         events.append((event_name, payload, role))
-
     monkeypatch.setattr("orket.driver.log_event", _capture)
     result = await driver.execute_plan({"action": "assign_team", "reasoning": "test suggestion"})
-
     assert "unknown_team" in result
     assert "unknown_department" in result
     assert result.startswith("Resource Selection Suggestion:")
@@ -73,15 +67,14 @@ async def test_execute_plan_assign_team_missing_fields_uses_fallback_labels(monk
     assert events[0][1]["mode"] == "suggestion_only"
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_execute_plan_assign_team_contract_is_suggestion_only(monkeypatch):
     """Layer: contract. Verifies assign_team response and telemetry semantics."""
     driver = OrketDriver.__new__(OrketDriver)
     events = []
-
     def _capture(event_name, payload, _workspace, role=None):
         events.append((event_name, payload, role))
-
     monkeypatch.setattr("orket.driver.log_event", _capture)
     result = await driver.execute_plan(
         {
@@ -91,7 +84,6 @@ async def test_execute_plan_assign_team_contract_is_suggestion_only(monkeypatch)
             "reasoning": "best fit for current incident",
         }
     )
-
     assert "Resource Selection Suggestion:" in result
     assert "No runtime team switch was applied." in result
     assert "Switching to Team" not in result
@@ -101,6 +93,7 @@ async def test_execute_plan_assign_team_contract_is_suggestion_only(monkeypatch)
     assert events[0][1]["mode"] == "suggestion_only"
 
 
+@pytest.mark.unit
 def test_should_route_to_conversation_detects_structural_intent():
     """Layer: unit. Verifies the conversation route is only the fallback when no explicit structural intent is present."""
     driver = OrketDriver.__new__(OrketDriver)
@@ -109,6 +102,7 @@ def test_should_route_to_conversation_detects_structural_intent():
     assert driver._has_explicit_structural_intent("/create epic billing_rewrite core") is True
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_process_request_answers_basic_math_without_structural_action():
     driver = OrketDriver.__new__(OrketDriver)
@@ -116,12 +110,11 @@ async def test_process_request_answers_basic_math_without_structural_action():
     driver.skill = None
     driver.dialect = None
     driver.provider = SimpleNamespace(complete=None)
-
     response = await driver.process_request("What is 2 + 2?")
-
     assert response == "4"
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_process_request_handles_cool_as_conversation():
     driver = OrketDriver.__new__(OrketDriver)
@@ -129,15 +122,14 @@ async def test_process_request_handles_cool_as_conversation():
     driver.skill = None
     driver.dialect = None
     driver.provider = SimpleNamespace(complete=None)
-
     response = await driver.process_request("Cool")
-
     assert "nice" in response.lower()
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_process_request_capabilities_question_returns_help(tmp_path):
-    """Layer: integration. Verifies capabilities output states the exact supported action surface."""
+    """Layer: contract. Verifies capabilities output states the exact supported action surface."""
     driver = OrketDriver.__new__(OrketDriver)
     driver.model_root = tmp_path / "model"
     driver.skill = None
@@ -147,9 +139,7 @@ async def test_process_request_capabilities_question_returns_help(tmp_path):
     driver.json_parse_mode = "compatibility"
     driver.config_degraded = False
     driver.config_load_failures = []
-
     response = await driver.process_request("What can you do in this environment?")
-
     assert "Operator CLI is available." in response
     assert "/list" in response
     assert "Supported model-directed actions:" in response
@@ -160,6 +150,7 @@ async def test_process_request_capabilities_question_returns_help(tmp_path):
     assert "Conversation mode is on by default" in response
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_process_request_anything_else_not_generic_fallback():
     driver = OrketDriver.__new__(OrketDriver)
@@ -167,13 +158,13 @@ async def test_process_request_anything_else_not_generic_fallback():
     driver.skill = None
     driver.dialect = None
     driver.provider = SimpleNamespace(complete=None)
-
     response = await driver.process_request("Do you say anything else?")
 
     assert "Understood. What would you like to talk about?" not in response
     assert "/help" in response
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_process_request_general_conversation_uses_model_reply():
     driver = OrketDriver.__new__(OrketDriver)
@@ -192,6 +183,7 @@ async def test_process_request_general_conversation_uses_model_reply():
     assert response == "I can help reason through that tradeoff."
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_conversation_model_reply_logs_provider_failures(monkeypatch):
     """Layer: contract. Verifies swallowed conversation provider errors are recorded before the fallback path is used."""
@@ -221,6 +213,7 @@ async def test_conversation_model_reply_logs_provider_failures(monkeypatch):
     ]
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_process_request_about_application_question():
     driver = OrketDriver.__new__(OrketDriver)
@@ -235,6 +228,7 @@ async def test_process_request_about_application_question():
     assert "/list" in response
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_process_request_can_you_converse_question():
     driver = OrketDriver.__new__(OrketDriver)
@@ -249,6 +243,7 @@ async def test_process_request_can_you_converse_question():
     assert "converse" in response.lower()
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_process_request_can_you_really_converse_question():
     driver = OrketDriver.__new__(OrketDriver)
@@ -263,6 +258,7 @@ async def test_process_request_can_you_really_converse_question():
     assert "converse" in response.lower()
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_process_request_plain_text_with_apostrophe_not_cli_error():
     driver = OrketDriver.__new__(OrketDriver)
@@ -277,6 +273,7 @@ async def test_process_request_plain_text_with_apostrophe_not_cli_error():
     assert "pushback" in response.lower()
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_process_request_what_question_not_generic_fallback():
     driver = OrketDriver.__new__(OrketDriver)
@@ -342,9 +339,10 @@ async def test_process_request_assign_team_reports_suggestion_only(tmp_path):
     assert "No runtime team switch was applied." in response
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_process_request_reforge_bare_and_slash_forms_match_usage_contract():
-    """Layer: integration. Verifies CLI recognizer supports bare and slash reforge forms."""
+    """Layer: contract. Verifies CLI recognizer supports bare and slash reforge forms."""
     driver = OrketDriver.__new__(OrketDriver)
     driver.model_root = Path("model")
     driver.skill = None
@@ -359,9 +357,10 @@ async def test_process_request_reforge_bare_and_slash_forms_match_usage_contract
     assert slash == "Usage: /reforge <inspect|run> [options]"
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_process_request_capabilities_reports_degraded_config_status(tmp_path):
-    """Layer: integration. Verifies operator-visible degradation status in capabilities output."""
+    """Layer: contract. Verifies operator-visible degradation status in capabilities output."""
     driver = OrketDriver.__new__(OrketDriver)
     driver.model_root = tmp_path / "model"
     driver.skill = None
@@ -377,6 +376,7 @@ async def test_process_request_capabilities_reports_degraded_config_status(tmp_p
     assert "Config load status: degraded (1 dependency load failure(s))." in response
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_execute_plan_structural_error_omits_strategic_insight():
     """Layer: unit. Verifies structural failure text is returned plainly without success-flavored strategic narration."""

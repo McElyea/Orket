@@ -8,6 +8,8 @@ import pytest
 from orket.reforger.modes import ModeValidationError, load_mode
 from orket.reforger.packs import PackValidationError, resolve_pack
 
+pytestmark = pytest.mark.contract
+
 
 def _write_json(path: Path, payload: dict[str, object]) -> None:
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")

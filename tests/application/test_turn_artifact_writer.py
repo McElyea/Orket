@@ -26,7 +26,7 @@ def _destination(writer: TurnArtifactWriter, turn_index: int) -> TurnArtifactDes
     )
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_turn_artifact_writer_replay_round_trip(tmp_path: Path) -> None:
     writer = TurnArtifactWriter(tmp_path)
     destination = _destination(writer, 1)
@@ -50,7 +50,7 @@ def test_turn_artifact_writer_replay_round_trip(tmp_path: Path) -> None:
     assert loaded == payload
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_turn_artifact_writer_checkpoint_writes_file(tmp_path: Path) -> None:
     writer = TurnArtifactWriter(tmp_path)
     writer.write_turn_checkpoint(
@@ -71,7 +71,7 @@ def test_turn_artifact_writer_checkpoint_writes_file(tmp_path: Path) -> None:
     assert data["captured_at"] == "2026-09-23T12:34:56+00:00"
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_turn_artifact_writer_operation_result_round_trip(tmp_path: Path) -> None:
     writer = TurnArtifactWriter(tmp_path)
     destination = _destination(writer, 3)
@@ -92,7 +92,7 @@ def test_turn_artifact_writer_operation_result_round_trip(tmp_path: Path) -> Non
     assert loaded["result"] == {"ok": True, "status": "done"}
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_turn_artifact_writer_append_protocol_receipt_writes_digest(tmp_path: Path) -> None:
     writer = TurnArtifactWriter(tmp_path)
     manifest = build_tool_invocation_manifest(
@@ -159,7 +159,7 @@ def test_turn_artifact_writer_append_protocol_receipt_writes_digest(tmp_path: Pa
     assert "retry_policy" not in manifest_payload
 
 
-# Layer: integration
+@pytest.mark.integration
 def test_turn_artifact_writer_append_protocol_receipt_writes_compat_translation_artifact(tmp_path: Path) -> None:
     writer = TurnArtifactWriter(tmp_path)
     manifest = build_tool_invocation_manifest(run_id="s1", tool_name="openclaw.file_read", ring="compatibility")
@@ -206,7 +206,7 @@ def test_turn_artifact_writer_append_protocol_receipt_writes_compat_translation_
     assert latency_payload["profiles"][0]["latency_ms"] == 12
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_turn_artifact_writer_append_protocol_receipt_rejects_missing_manifest(tmp_path: Path) -> None:
     writer = TurnArtifactWriter(tmp_path)
     with pytest.raises(ValueError, match="E_TOOL_INVOCATION_MANIFEST_REQUIRED"):
@@ -216,7 +216,7 @@ def test_turn_artifact_writer_append_protocol_receipt_rejects_missing_manifest(t
         )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_turn_artifact_writer_rejects_foreign_destination(tmp_path: Path) -> None:
     writer = TurnArtifactWriter(tmp_path)
     foreign = TurnArtifactWriter(tmp_path)
@@ -226,7 +226,7 @@ def test_turn_artifact_writer_rejects_foreign_destination(tmp_path: Path) -> Non
         )
 
 
-# Layer: contract
+@pytest.mark.integration
 def test_turn_artifact_writer_uses_captured_workspace_after_writer_mutation(tmp_path: Path) -> None:
     writer = TurnArtifactWriter(tmp_path / "original")
     destination = _destination(writer, 1)
@@ -240,6 +240,7 @@ def test_turn_artifact_writer_uses_captured_workspace_after_writer_mutation(tmp_
     assert not (tmp_path / "changed" / "observability").exists()
 
 
+@pytest.mark.contract
 @pytest.mark.parametrize(
     ("method", "token", "field"),
     [

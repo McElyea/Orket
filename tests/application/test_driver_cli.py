@@ -75,6 +75,7 @@ def _seed_textmystery_inputs(root: Path) -> None:
     )
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_cli_list_departments(tmp_path: Path):
     driver = _build_driver(tmp_path)
@@ -83,6 +84,7 @@ async def test_cli_list_departments(tmp_path: Path):
     assert "core" in response
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_cli_create_and_show_team(tmp_path: Path):
     driver = _build_driver(tmp_path)
@@ -97,6 +99,7 @@ async def test_cli_create_and_show_team(tmp_path: Path):
     assert payload["seats"]["integrity_guard"]["roles"] == ["integrity_guard"]
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_cli_create_environment_and_list(tmp_path: Path):
     driver = _build_driver(tmp_path)
@@ -107,6 +110,7 @@ async def test_cli_create_environment_and_list(tmp_path: Path):
     assert "staging" in listed
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_cli_add_card_and_list_cards(tmp_path: Path):
     driver = _build_driver(tmp_path)
@@ -127,9 +131,10 @@ async def test_cli_add_card_and_list_cards(tmp_path: Path):
     assert updated_epic["issues"][0]["summary"] == "Implement retry policy"
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_cli_list_cards_surfaces_legacy_epic_child_key(tmp_path: Path):
-    """Layer: integration. Verifies list/add operations do not silently normalize legacy epic shape on read."""
+    """Layer: contract. Verifies list/add operations do not silently normalize legacy epic shape on read."""
     driver = _build_driver(tmp_path)
     epic_path = tmp_path / "model" / "core" / "epics" / "legacy_epic.json"
     epic_path.write_text(
@@ -151,6 +156,7 @@ async def test_cli_list_cards_surfaces_legacy_epic_child_key(tmp_path: Path):
     assert "legacy child key 'cards'" in listed
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_cli_add_card_migrates_legacy_epic_child_key_to_issues(tmp_path: Path):
     """Layer: integration. Verifies write paths normalize touched legacy epic payloads to `issues`."""
@@ -178,6 +184,7 @@ async def test_cli_add_card_migrates_legacy_epic_child_key_to_issues(tmp_path: P
     assert [issue["summary"] for issue in payload["issues"]] == ["legacy task", "new task"]
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_cli_reforge_inspect_and_run(tmp_path: Path):
     driver = _build_driver(tmp_path)
@@ -200,6 +207,7 @@ async def test_cli_reforge_inspect_and_run(tmp_path: Path):
     assert (out_dir / "content" / "prompts" / "archetypes.yaml").exists()
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_cli_reforge_run_block_lists_missing_details(tmp_path: Path):
     driver = _build_driver(tmp_path)
@@ -221,6 +229,7 @@ async def test_cli_reforge_run_block_lists_missing_details(tmp_path: Path):
     assert not out_dir.exists()
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_cli_reforge_run_force_includes_force_fields(tmp_path: Path):
     driver = _build_driver(tmp_path)

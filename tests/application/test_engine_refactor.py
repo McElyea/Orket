@@ -144,8 +144,9 @@ async def test_engine_run_card_forwards_model_override(monkeypatch):
         assert ("run_card", "some-card", None, None, False, None, "google/gemma-4-26b-a4b", None, None, None) in fake_pipeline.calls
 
 
+@pytest.mark.integration
 def test_engine_replay_turn_reads_artifacts(monkeypatch, tmp_path):
-    """Layer: unit. Verifies replay diagnostics are explicitly artifact-only on both the canonical and compatibility surfaces."""
+    """Layer: integration. Verifies replay diagnostics are explicitly artifact-only on both the canonical and compatibility surfaces."""
     fake_pipeline = _FakePipeline()
 
     monkeypatch.setattr("orket.settings.load_env", lambda: None)
@@ -180,7 +181,7 @@ def test_engine_replay_turn_reads_artifacts(monkeypatch, tmp_path):
     assert replay["parsed_tool_calls"][0]["tool"] == "write_file"
     assert compatibility_replay["diagnostics_class"] == "artifact_observability_only"
 
-# Layer: unit
+@pytest.mark.unit
 def test_engine_uses_explicit_control_plane_service_composition(monkeypatch, tmp_path):
     """Layer: unit. Verifies engine control-plane dependencies are composed through the extracted service builder."""
     fake_pipeline = _FakePipeline()
@@ -223,6 +224,7 @@ def test_engine_uses_explicit_control_plane_service_composition(monkeypatch, tmp
     assert engine.kernel_action_control_plane_view is fake_services.kernel_action_control_plane_view
 
 
+@pytest.mark.unit
 def test_engine_kernel_gateway_path(monkeypatch, tmp_path):
     fake_pipeline = _FakePipeline()
     fake_gateway = _FakeKernelGateway()
@@ -260,6 +262,7 @@ def test_engine_kernel_gateway_path(monkeypatch, tmp_path):
     ]
 
 
+@pytest.mark.contract
 def test_engine_kernel_lifecycle_and_compare_boundary_with_real_gateway(monkeypatch, tmp_path):
     fake_pipeline = _FakePipeline()
     monkeypatch.setattr("orket.settings.load_env", lambda: None)
@@ -309,6 +312,7 @@ def test_engine_kernel_lifecycle_and_compare_boundary_with_real_gateway(monkeypa
     assert compare["issues"][0]["code"] == "E_REPLAY_EQUIVALENCE_FAILED"
 
 
+@pytest.mark.unit
 def test_engine_module_reload_import_smoke():
     """Layer: unit. Verifies the engine module imports directly without routing through the legacy runtime shim."""
     # A fresh process keeps module reload from replacing classes used by later tests.
@@ -320,6 +324,7 @@ def test_engine_module_reload_import_smoke():
     assert result.returncode == 0, result.stdout + result.stderr
 
 
+@pytest.mark.unit
 def test_engine_reuses_shared_runtime_context(monkeypatch, tmp_path):
     fake_pipeline = _FakePipeline()
 

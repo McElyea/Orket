@@ -6,8 +6,9 @@ from orket.application.services.companion_config_models import CompanionRoleId, 
 from orket.application.services.config_precedence_resolver import ConfigPrecedenceResolver
 
 
+@pytest.mark.unit
 def test_config_precedence_order_and_pending_consumption() -> None:
-    """Layer: integration. Verifies precedence order and one-shot pending-next-turn consumption."""
+    """Layer: unit. Verifies precedence order and one-shot pending-next-turn consumption."""
     resolver = ConfigPrecedenceResolver(
         extension_defaults={"mode": {"role_id": "researcher", "relationship_style": "platonic"}},
         profile_defaults={
@@ -28,8 +29,9 @@ def test_config_precedence_order_and_pending_consumption() -> None:
     assert second.mode.relationship_style == RelationshipStyleId.ROMANTIC
 
 
+@pytest.mark.unit
 def test_config_precedence_recursive_merge_and_list_replacement() -> None:
-    """Layer: integration. Verifies dict keys merge recursively and list values are replaced, not appended."""
+    """Layer: unit. Verifies dict keys merge recursively and list values are replaced, not appended."""
     resolver = ConfigPrecedenceResolver(
         extension_defaults={
             "mode": {
@@ -57,8 +59,9 @@ def test_config_precedence_recursive_merge_and_list_replacement() -> None:
     assert limits == {"verbosity": "medium", "safety": "strict"}
 
 
+@pytest.mark.unit
 def test_config_precedence_clear_session_resets_session_and_pending_layers() -> None:
-    """Layer: integration. Verifies `clear_session()` drops session overrides and pending-next-turn state."""
+    """Layer: unit. Verifies `clear_session()` drops session overrides and pending-next-turn state."""
     resolver = ConfigPrecedenceResolver(extension_defaults={"mode": {"role_id": "general_assistant"}})
     resolver.set_session_override("mode", {"role_id": "strategist"})
     resolver.set_pending_next_turn("mode", {"role_id": "tutor"})
@@ -68,15 +71,17 @@ def test_config_precedence_clear_session_resets_session_and_pending_layers() -> 
     assert resolved.mode.role_id == CompanionRoleId.GENERAL_ASSISTANT
 
 
+@pytest.mark.contract
 def test_config_precedence_rejects_unknown_section() -> None:
-    """Layer: unit. Verifies invalid section updates fail closed."""
+    """Layer: contract. Verifies invalid section updates fail closed."""
     resolver = ConfigPrecedenceResolver()
     with pytest.raises(ValueError, match="E_COMPANION_CONFIG_SECTION_INVALID"):
         resolver.set_session_override("invalid_section", {"value": 1})
 
 
+@pytest.mark.contract
 def test_config_precedence_accepts_registered_extension_section() -> None:
-    """Layer: unit. Verifies extension-declared config sections can be layered."""
+    """Layer: contract. Verifies extension-declared config sections can be layered."""
     resolver = ConfigPrecedenceResolver(
         extension_defaults={"appearance": {"theme": "dark"}},
         extra_sections={"appearance"},
@@ -90,6 +95,7 @@ def test_config_precedence_accepts_registered_extension_section() -> None:
     assert "appearance" in resolver.section_keys
 
 
+@pytest.mark.unit
 def test_config_precedence_preview_does_not_consume_pending_layer() -> None:
     """Layer: unit. Verifies preview reads pending-next-turn config without consuming it."""
     resolver = ConfigPrecedenceResolver(extension_defaults={"mode": {"role_id": "researcher"}})

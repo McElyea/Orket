@@ -4,6 +4,8 @@ import importlib
 import json
 from pathlib import Path
 
+import pytest
+
 import orket.runtime_paths as runtime_paths_module
 import orket.settings as settings_module
 
@@ -13,8 +15,9 @@ def _write_json(path: Path, payload: dict):
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
 
+@pytest.mark.integration
 def test_migrate_legacy_model_preferences_moves_keys_and_strips_user_settings(monkeypatch, tmp_path: Path):
-    """Layer: contract. Verifies legacy model preferences migrate once, preserve settings, and mark completion."""
+    """Layer: integration. Verifies legacy model preferences migrate once, preserve settings, and mark completion."""
     settings_path = tmp_path / "user_settings.json"
     preferences_path = tmp_path / "preferences.json"
     _write_json(
@@ -42,6 +45,7 @@ def test_migrate_legacy_model_preferences_moves_keys_and_strips_user_settings(mo
     assert saved_settings["setup_complete"] is True
 
 
+@pytest.mark.contract
 def test_load_user_preferences_returns_existing_models_without_legacy(monkeypatch, tmp_path: Path):
     """Layer: contract. Verifies preferences keep existing models and record migration completion without legacy rewrites."""
     settings_path = tmp_path / "user_settings.json"
@@ -58,6 +62,7 @@ def test_load_user_preferences_returns_existing_models_without_legacy(monkeypatc
     assert preferences["_meta"]["migration_markers"]["legacy_model_preferences_v1"] is True
 
 
+@pytest.mark.integration
 def test_load_user_preferences_skips_second_migration_save_once_marker_exists(monkeypatch, tmp_path: Path):
     """Layer: integration. Observe actual publication, then prove a marked reload leaves both files unchanged."""
     settings_path = tmp_path / "user_settings.json"
@@ -86,6 +91,7 @@ def test_load_user_preferences_skips_second_migration_save_once_marker_exists(mo
     assert (settings_path.read_bytes(), preferences_path.read_bytes()) == before
 
 
+@pytest.mark.contract
 def test_settings_import_has_no_config_directory_side_effect(monkeypatch, tmp_path: Path):
     """Layer: contract. Verifies importing settings/runtime paths does not create config directories before first access."""
     monkeypatch.chdir(tmp_path)

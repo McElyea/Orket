@@ -1,4 +1,4 @@
-# Layer: unit
+# Layer: contract
 
 from __future__ import annotations
 
@@ -10,6 +10,8 @@ import pytest
 from orket.agents.agent_factory import build_team_agents
 from orket.application.services.toolbox import ToolBox
 from orket.exceptions import AgentConfigurationError
+
+pytestmark = pytest.mark.contract
 
 
 class _Provider:
@@ -53,7 +55,7 @@ def test_build_team_agents_assigns_no_tools_when_seat_has_no_roles(tmp_path) -> 
 
 
 def test_build_team_agents_logs_error_when_role_config_is_missing(caplog, tmp_path) -> None:
-    """Layer: unit. Verifies misconfigured role scopes are visible and fail closed."""
+    """Layer: contract. Verifies misconfigured role scopes are visible and fail closed."""
     team = SimpleNamespace(
         name="demo",
         seats={"coder": SimpleNamespace(roles=["missing_role"])},

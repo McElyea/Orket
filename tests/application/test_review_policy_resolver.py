@@ -4,10 +4,13 @@ import json
 import logging
 from pathlib import Path
 
+import pytest
+
 from orket.application.review.policy_resolver import resolve_review_policy
 from orket.settings import save_user_settings, set_settings_file
 
 
+@pytest.mark.integration
 def test_review_policy_precedence_cli_repo_user_defaults(tmp_path: Path) -> None:
     repo_root = tmp_path / "repo"
     repo_root.mkdir(parents=True)
@@ -34,6 +37,7 @@ def test_review_policy_precedence_cli_repo_user_defaults(tmp_path: Path) -> None
     assert resolved.policy_digest.startswith("sha256:")
 
 
+@pytest.mark.unit
 def test_review_policy_digest_stable_for_identical_payload(tmp_path: Path) -> None:
     repo_root = tmp_path / "repo"
     repo_root.mkdir(parents=True)
@@ -42,6 +46,7 @@ def test_review_policy_digest_stable_for_identical_payload(tmp_path: Path) -> No
     assert first.policy_digest == second.policy_digest
 
 
+@pytest.mark.contract
 def test_review_policy_scope_override_all_files(tmp_path: Path) -> None:
     repo_root = tmp_path / "repo"
     repo_root.mkdir(parents=True)
@@ -49,8 +54,9 @@ def test_review_policy_scope_override_all_files(tmp_path: Path) -> None:
     assert resolved.payload["input_scope"]["mode"] == "all_files"
 
 
+@pytest.mark.contract
 def test_review_policy_warns_on_malformed_repo_policy(tmp_path: Path, caplog) -> None:
-    """Layer: unit. Verifies malformed repo policy files are observable instead of silently ignored."""
+    """Layer: contract. Verifies malformed repo policy files are observable instead of silently ignored."""
     repo_root = tmp_path / "repo"
     repo_root.mkdir(parents=True)
     set_settings_file(tmp_path / "empty_settings.json")
@@ -70,8 +76,9 @@ def test_review_policy_warns_on_malformed_repo_policy(tmp_path: Path, caplog) ->
     )
 
 
+@pytest.mark.contract
 def test_review_policy_warns_on_unknown_top_level_key(tmp_path: Path, caplog) -> None:
-    """Layer: unit. Verifies typo-prone review policy keys are surfaced as warnings."""
+    """Layer: contract. Verifies typo-prone review policy keys are surfaced as warnings."""
     repo_root = tmp_path / "repo"
     repo_root.mkdir(parents=True)
     set_settings_file(tmp_path / "empty_settings.json")
@@ -90,6 +97,7 @@ def test_review_policy_warns_on_unknown_top_level_key(tmp_path: Path, caplog) ->
     )
 
 
+@pytest.mark.unit
 def test_review_policy_default_password_rule_requires_literal_assignment(tmp_path: Path) -> None:
     """Layer: unit. Verifies the default password pattern narrows to literal credential assignment."""
     repo_root = tmp_path / "repo"

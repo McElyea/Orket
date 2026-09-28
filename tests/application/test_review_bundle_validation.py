@@ -1,4 +1,4 @@
-# Layer: unit
+# Layer: contract
 from __future__ import annotations
 
 import json
@@ -11,6 +11,8 @@ from orket.application.review.bundle_validation import (
     load_validated_review_run_bundle_artifacts,
     load_validated_review_run_bundle_payloads,
 )
+
+pytestmark = pytest.mark.contract
 
 
 def _write_json(path: Path, payload: dict) -> None:
@@ -82,9 +84,7 @@ def _write_valid_bundle(run_dir: Path, *, manifest_authoritative: bool = False) 
 def test_load_validated_review_run_bundle_payloads_returns_authority_checked_payloads(tmp_path: Path) -> None:
     run_dir = tmp_path / "run"
     _write_valid_bundle(run_dir)
-
     payloads = load_validated_review_run_bundle_payloads(run_dir)
-
     assert payloads["manifest"] == {
         "run_id": "run-1",
         "execution_state_authority": "control_plane_records",
@@ -433,7 +433,7 @@ def test_load_validated_review_run_bundle_artifacts_requires_policy_when_request
 
 
 def test_review_bundle_error_exposes_error_code_and_field(tmp_path: Path) -> None:
-    """Layer: unit. Verifies review bundle validation failures use the typed error surface."""
+    """Layer: contract. Verifies review bundle validation failures use the typed error surface."""
     run_dir = tmp_path / "run"
     _write_valid_bundle(run_dir)
     (run_dir / "policy_resolved.json").unlink()

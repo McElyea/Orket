@@ -6,7 +6,10 @@ import os
 import subprocess
 from pathlib import Path
 
+import pytest
 
+
+@pytest.mark.integration
 def test_run_determinism_harness_emits_telemetry_manifest_defaults(tmp_path: Path) -> None:
     task_bank = tmp_path / "tasks.json"
     task_bank.write_text(
@@ -102,6 +105,7 @@ def test_run_determinism_harness_emits_telemetry_manifest_defaults(tmp_path: Pat
     }
 
 
+@pytest.mark.integration
 def test_run_determinism_harness_uses_runner_telemetry_when_present(tmp_path: Path) -> None:
     task_bank = tmp_path / "tasks.json"
     task_bank.write_text(
@@ -250,6 +254,7 @@ def test_run_determinism_harness_uses_runner_telemetry_when_present(tmp_path: Pa
     }
 
 
+@pytest.mark.unit
 def test_constraint_validator_handles_ast_and_empty_rules() -> None:
     module_path = Path("scripts/benchmarks/live_card_benchmark_runner.py")
     spec = importlib.util.spec_from_file_location("live_card_benchmark_runner_test", module_path)
@@ -276,6 +281,7 @@ def test_constraint_validator_handles_ast_and_empty_rules() -> None:
     assert neutral["adherence_score"] == 1.0
 
 
+@pytest.mark.unit
 def test_baseline_selection_and_vibe_delta(tmp_path: Path) -> None:
     module_path = Path("scripts/benchmarks/live_card_benchmark_runner.py")
     spec = importlib.util.spec_from_file_location("live_card_benchmark_runner_test_baseline", module_path)

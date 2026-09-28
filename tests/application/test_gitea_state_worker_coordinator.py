@@ -24,6 +24,7 @@ class _FakeWorker:
         return False
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_run_stops_on_max_iterations_and_reports_summary():
     worker = _FakeWorker([True, False, True])
@@ -45,6 +46,7 @@ async def test_run_stops_on_max_iterations_and_reports_summary():
     assert summary["elapsed_ms"] >= 0
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_run_stops_on_max_idle_streak():
     worker = _FakeWorker([False, False, False])
@@ -65,6 +67,7 @@ async def test_run_stops_on_max_idle_streak():
     assert summary["stop_reason"] == "max_idle_streak"
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_run_stops_on_max_duration_seconds():
     worker = _FakeWorker([False, False, False, False])
@@ -84,6 +87,7 @@ async def test_run_stops_on_max_duration_seconds():
     assert summary["iterations"] >= 1
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_run_passes_work_fn_to_worker_each_iteration():
     worker = _FakeWorker([True, False])
@@ -105,6 +109,7 @@ async def test_run_passes_work_fn_to_worker_each_iteration():
     assert worker.fetch_limits == [7, 7]
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_run_writes_summary_artifact_when_path_provided(tmp_path):
     worker = _FakeWorker([False, False])

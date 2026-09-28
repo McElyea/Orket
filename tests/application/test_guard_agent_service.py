@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from orket.application.services.guard_agent import GuardAgent, GuardController, GuardEvaluator
 from orket.core.domain.guard_contract import GuardContract, GuardViolation, TerminalReason
 
@@ -24,6 +26,7 @@ def _failing_contract() -> GuardContract:
     )
 
 
+@pytest.mark.contract
 def test_guard_agent_pass_result_continues_without_retry_change():
     contract = GuardContract(
         result="pass",
@@ -39,6 +42,7 @@ def test_guard_agent_pass_result_continues_without_retry_change():
     assert decision.terminal_failure is False
 
 
+@pytest.mark.contract
 def test_guard_agent_fail_result_schedules_retry_when_under_limit():
     decision = GuardAgent().evaluate(contract=_failing_contract(), retry_count=0, max_retries=2)
     assert decision.action == "retry"
@@ -48,6 +52,7 @@ def test_guard_agent_fail_result_schedules_retry_when_under_limit():
     assert decision.repeated_fingerprint is False
 
 
+@pytest.mark.contract
 def test_guard_agent_fail_result_becomes_terminal_when_limit_reached():
     decision = GuardAgent().evaluate(contract=_failing_contract(), retry_count=2, max_retries=2)
     assert decision.action == "terminal_failure"
@@ -56,6 +61,7 @@ def test_guard_agent_fail_result_becomes_terminal_when_limit_reached():
     assert decision.terminal_reason.code == "GUARD_RETRY_EXCEEDED"
 
 
+@pytest.mark.contract
 def test_guard_agent_respects_contract_terminal_failure():
     contract = GuardContract(
         result="fail",
@@ -80,6 +86,7 @@ def test_guard_agent_respects_contract_terminal_failure():
     assert decision.terminal_reason.code == "HALLUCINATION_PERSISTENT"
 
 
+@pytest.mark.contract
 def test_guard_agent_uses_hallucination_persistent_on_retry_exceed():
     contract = GuardContract(
         result="fail",
@@ -104,6 +111,7 @@ def test_guard_agent_uses_hallucination_persistent_on_retry_exceed():
     assert decision.terminal_reason.code == "HALLUCINATION_PERSISTENT"
 
 
+@pytest.mark.contract
 def test_guard_agent_repeated_retry_fingerprint_becomes_model_non_compliant():
     contract = _failing_contract()
     agent = GuardAgent()
@@ -130,6 +138,7 @@ def test_guard_agent_repeated_retry_fingerprint_becomes_model_non_compliant():
     assert second.repeated_fingerprint is True
 
 
+@pytest.mark.unit
 def test_guard_evaluator_and_controller_split_contract_and_policy():
     contract = _failing_contract()
     evaluator = GuardEvaluator()
@@ -139,7 +148,7 @@ def test_guard_evaluator_and_controller_split_contract_and_policy():
     assert decision.action == "retry"
 
 
-# Layer: unit
+@pytest.mark.unit
 def test_guard_evaluator_is_currently_an_identity_boundary():
     contract = _failing_contract()
     evaluator = GuardEvaluator()

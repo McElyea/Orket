@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+import pytest
+
 from orket.application.services.prompt_compiler import PromptCompiler
 from orket.schema import DialectConfig, SkillConfig
+
+pytestmark = pytest.mark.contract
 
 
 def test_prompt_compiler_protocol_governed_uses_single_envelope_contract() -> None:

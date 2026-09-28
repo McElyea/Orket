@@ -4,6 +4,8 @@ import importlib.util
 from pathlib import Path
 from types import ModuleType
 
+import pytest
+
 
 def _load_script_module(module_name: str, script_path: str) -> ModuleType:
     path = Path(script_path)
@@ -15,7 +17,7 @@ def _load_script_module(module_name: str, script_path: str) -> ModuleType:
     return module
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_trend_report_includes_required_fields(tmp_path: Path) -> None:
     mod = _load_script_module("report_benchmark_trends_test", "scripts/benchmarks/report_benchmark_trends.py")
     input_path = tmp_path / "scored.json"
@@ -42,7 +44,7 @@ def test_trend_report_includes_required_fields(tmp_path: Path) -> None:
     assert row["delta_overall_avg_score"] is None
 
 
-# Layer: contract
+@pytest.mark.unit
 def test_trend_report_computes_rolling_deltas(tmp_path: Path) -> None:
     mod = _load_script_module("report_benchmark_trends_delta_test", "scripts/benchmarks/report_benchmark_trends.py")
     first = tmp_path / "a.json"
@@ -86,7 +88,7 @@ def test_trend_report_computes_rolling_deltas(tmp_path: Path) -> None:
     assert second_row["delta_avg_cost_usd"] == -0.1
 
 
-# Layer: contract
+@pytest.mark.unit
 def test_leaderboard_groups_by_schema_and_policy(tmp_path: Path) -> None:
     mod = _load_script_module("build_benchmark_leaderboard_test", "scripts/benchmarks/build_benchmark_leaderboard.py")
     a = tmp_path / "a.json"

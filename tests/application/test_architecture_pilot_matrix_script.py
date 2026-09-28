@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from scripts.acceptance.run_architecture_pilot_matrix import (
     PilotCombo,
     _aggregate_by_architecture,
@@ -10,6 +12,7 @@ from scripts.acceptance.run_architecture_pilot_matrix import (
 )
 
 
+@pytest.mark.unit
 def test_build_combos_cartesian_product() -> None:
     combos = build_combos(
         ["force_monolith", "force_microservices"],
@@ -29,6 +32,7 @@ def test_build_combos_cartesian_product() -> None:
     )
 
 
+@pytest.mark.unit
 def test_build_env_sets_microservices_toggle_from_architecture_mode() -> None:
     mono_env = _build_env(
         PilotCombo(
@@ -50,7 +54,7 @@ def test_build_env_sets_microservices_toggle_from_architecture_mode() -> None:
     assert micro_env["ORKET_ENABLE_MICROSERVICES"] == "true"
 
 
-# Layer: contract
+@pytest.mark.unit
 def test_aggregate_and_comparison_metrics() -> None:
     entries = [
         {
@@ -100,7 +104,7 @@ def test_aggregate_and_comparison_metrics() -> None:
     assert comparison["invalid_payload_failures"] == []
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_aggregate_and_comparison_preserve_invalid_payload_drift() -> None:
     entries = [
         {
@@ -148,6 +152,7 @@ def test_aggregate_and_comparison_preserve_invalid_payload_drift() -> None:
     ]
 
 
+@pytest.mark.integration
 def test_rotate_previous_artifact_copies_existing_output(tmp_path) -> None:
     current = tmp_path / "current.json"
     previous = tmp_path / "history" / "previous.json"
@@ -159,6 +164,7 @@ def test_rotate_previous_artifact_copies_existing_output(tmp_path) -> None:
     assert previous.read_text(encoding="utf-8") == '{"ok": true}'
 
 
+@pytest.mark.unit
 def test_rotate_previous_artifact_noop_when_missing_current(tmp_path) -> None:
     current = tmp_path / "missing.json"
     previous = tmp_path / "previous.json"

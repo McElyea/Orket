@@ -7,6 +7,7 @@ import pytest
 from jose import jwt
 
 
+@pytest.mark.unit
 def test_auth_service_import_does_not_require_secret(monkeypatch):
     """Layer: unit. Verifies auth service import does not fail when ORKET_AUTH_SECRET is unset."""
     monkeypatch.delenv("ORKET_AUTH_SECRET", raising=False)
@@ -18,8 +19,9 @@ def test_auth_service_import_does_not_require_secret(monkeypatch):
     assert reloaded.SECRET_KEY is None
 
 
+@pytest.mark.contract
 def test_auth_service_create_access_token_requires_secret_at_call_time(monkeypatch):
-    """Layer: unit. Verifies token creation fails closed when no auth secret is configured."""
+    """Layer: contract. Verifies token creation fails closed when no auth secret is configured."""
     monkeypatch.delenv("ORKET_AUTH_SECRET", raising=False)
 
     import orket.services.auth_service as auth_service
@@ -30,8 +32,9 @@ def test_auth_service_create_access_token_requires_secret_at_call_time(monkeypat
         reloaded.create_access_token({"sub": "operator"})
 
 
+@pytest.mark.contract
 def test_auth_service_create_access_token_uses_env_secret(monkeypatch):
-    """Layer: unit. Verifies token creation succeeds once the auth secret is configured."""
+    """Layer: contract. Verifies token creation succeeds once the auth secret is configured."""
     monkeypatch.setenv("ORKET_AUTH_SECRET", "test-secret")
     monkeypatch.delenv("ORKET_AUTH_TOKEN_EXPIRE_MINUTES", raising=False)
 
@@ -50,8 +53,9 @@ def test_auth_service_create_access_token_uses_env_secret(monkeypatch):
     assert timedelta(minutes=55) <= remaining <= timedelta(minutes=65)
 
 
+@pytest.mark.contract
 def test_auth_service_create_access_token_honors_expiry_override(monkeypatch):
-    """Layer: unit. Verifies token expiry can be reduced explicitly through env configuration."""
+    """Layer: contract. Verifies token expiry can be reduced explicitly through env configuration."""
     monkeypatch.setenv("ORKET_AUTH_SECRET", "test-secret")
     monkeypatch.setenv("ORKET_AUTH_TOKEN_EXPIRE_MINUTES", "5")
 
@@ -66,8 +70,9 @@ def test_auth_service_create_access_token_honors_expiry_override(monkeypatch):
     assert timedelta(minutes=4) <= remaining <= timedelta(minutes=6)
 
 
+@pytest.mark.integration
 def test_auth_service_verify_access_token_rejects_revoked_token(monkeypatch, tmp_path):
-    """Layer: unit. Verifies JWT verification fails closed once a token `jti` is blocklisted."""
+    """Layer: integration. Verifies JWT verification fails closed once a token `jti` is blocklisted."""
     monkeypatch.setenv("ORKET_AUTH_SECRET", "test-secret")
 
     import orket.services.auth_service as auth_service

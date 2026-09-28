@@ -8,6 +8,7 @@ from orket.services.profile_write_policy import ProfileWritePolicyError
 from orket.services.scoped_memory_store import ScopedMemoryStore
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_scoped_memory_store_isolates_session_scope_and_clear_session(tmp_path: Path) -> None:
     """Layer: integration. Verifies session memory is isolated per session and clear_session is scope-safe."""
@@ -27,6 +28,7 @@ async def test_scoped_memory_store_isolates_session_scope_and_clear_session(tmp_
     assert rows_b[0].value == "testing"
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_scoped_memory_store_profile_access_patterns_are_deterministic(tmp_path: Path) -> None:
     """Layer: integration. Verifies profile upsert/read/list/query access patterns remain deterministic."""
@@ -47,14 +49,16 @@ async def test_scoped_memory_store_profile_access_patterns_are_deterministic(tmp
     assert queried[0].key == "user_preference.theme"
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_scoped_memory_store_enforces_profile_write_policy(tmp_path: Path) -> None:
-    """Layer: integration. Verifies profile write policy blocks unconfirmed user-fact writes."""
+    """Layer: contract. Verifies profile write policy blocks unconfirmed user-fact writes."""
     store = ScopedMemoryStore(tmp_path / "memory.db")
     with pytest.raises(ProfileWritePolicyError, match="E_PROFILE_MEMORY_CONFIRMATION_REQUIRED"):
         await store.write_profile(key="user_fact.name", value="Aster", metadata={})
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_scoped_memory_store_episodic_scope_isolated_and_clearable(tmp_path: Path) -> None:
     """Layer: integration. Verifies episodic memory is isolated by session and clear_session path only clears target scope."""

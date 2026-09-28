@@ -6,6 +6,8 @@ from pathlib import Path
 
 import pytest
 
+pytestmark = pytest.mark.contract
+
 
 def _load_module(path: Path):
     spec = importlib.util.spec_from_file_location("reviewrun_consistency_test", str(path))
@@ -65,12 +67,10 @@ def test_signature_from_run_accepts_valid_review_bundle(tmp_path: Path) -> None:
     module = _load_module(Path("scripts/reviewrun/run_1000_consistency.py"))
     run_dir = tmp_path / "run"
     _write_review_bundle(run_dir)
-
     signature = module._signature_from_run(  # type: ignore[attr-defined]
         run_dir=run_dir,
         run_result={"snapshot_digest": "sha256:abc", "policy_digest": "sha256:def"},
     )
-
     assert signature["snapshot_digest"] == "sha256:abc"
     assert signature["policy_digest"] == "sha256:def"
     assert signature["decision"] == "pass"
@@ -401,7 +401,7 @@ def test_main_rejects_consistency_signature_contract_drift_before_writing_report
     assert out_path.exists() is False
 
 
-# Layer: integration
+# Layer: contract
 def test_main_rejects_consistency_finding_row_contract_drift_before_writing_report(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -495,7 +495,7 @@ def test_main_rejects_consistency_finding_row_contract_drift_before_writing_repo
     assert out_path.exists() is False
 
 
-# Layer: integration
+# Layer: contract
 def test_main_rejects_truncation_check_contract_drift_before_writing_report(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

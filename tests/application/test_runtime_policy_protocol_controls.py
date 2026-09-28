@@ -10,6 +10,7 @@ from orket.application.services.runtime_policy import (
 )
 
 
+@pytest.mark.contract
 def test_resolve_protocol_determinism_controls_defaults() -> None:
     controls = resolve_protocol_determinism_controls()
     assert controls["timezone"] == "UTC"
@@ -27,6 +28,7 @@ def test_resolve_protocol_determinism_controls_defaults() -> None:
     assert len(controls["env_allowlist_hash"]) == 64
 
 
+@pytest.mark.contract
 def test_resolve_protocol_determinism_controls_uses_first_sources() -> None:
     controls = resolve_protocol_determinism_controls(
         timezone_values=["", "America/Denver"],
@@ -48,18 +50,21 @@ def test_resolve_protocol_determinism_controls_uses_first_sources() -> None:
     assert controls["env_snapshot"] == {"HOME": "/home/user", "PATH": "/bin"}
 
 
+@pytest.mark.contract
 def test_resolve_protocol_determinism_controls_rejects_invalid_network_mode() -> None:
     with pytest.raises(ValueError) as exc:
         resolve_protocol_determinism_controls(network_mode_values=["internet"])
     assert "E_NETWORK_MODE_INVALID" in str(exc.value)
 
 
+@pytest.mark.unit
 def test_resolve_local_prompting_mode_defaults_to_shadow() -> None:
     assert resolve_local_prompting_mode() == "shadow"
     assert resolve_local_prompting_mode("enforce") == "enforce"
     assert resolve_local_prompting_mode("invalid-mode") == "shadow"
 
 
+@pytest.mark.unit
 def test_resolve_local_prompting_fallback_controls() -> None:
     assert resolve_local_prompting_allow_fallback("enabled") is True
     assert resolve_local_prompting_allow_fallback("disabled") is False

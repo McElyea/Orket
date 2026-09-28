@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import pytest
+
 from scripts.acceptance.check_microservices_pilot_stability import evaluate_pilot_stability
+
+pytestmark = pytest.mark.contract
 
 
 def _artifact(

@@ -7,6 +7,8 @@ import pytest
 from orket.adapters.storage.async_file_tools import AsyncFileTools
 from orket.application.services.deployment_planner import DeploymentPlanner
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.asyncio
 async def test_deployment_planner_creates_default_artifacts(tmp_path: Path):

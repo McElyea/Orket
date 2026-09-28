@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from orket.application.services.governed_turn_tool_approval_continuation_service import (
     ADMITTED_GOVERNED_TURN_TOOL_APPROVAL_CONTINUATION_TOOLS,
 )
@@ -9,8 +11,10 @@ from orket.application.workflows.turn_tool_dispatcher_support import (
     tool_policy_violation,
 )
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_tool_policy_violation_rejects_ring_not_allowed() -> None:
     violation = tool_policy_violation(
         tool_name="write_file",
@@ -21,7 +25,7 @@ def test_tool_policy_violation_rejects_ring_not_allowed() -> None:
     assert "E_RING_POLICY_VIOLATION" in violation
 
 
-# Layer: unit
+# Layer: contract
 def test_tool_policy_violation_rejects_capability_profile_not_allowed() -> None:
     violation = tool_policy_violation(
         tool_name="write_file",
@@ -32,7 +36,7 @@ def test_tool_policy_violation_rejects_capability_profile_not_allowed() -> None:
     assert "E_CAPABILITY_VIOLATION" in violation
 
 
-# Layer: unit
+# Layer: contract
 def test_tool_policy_violation_rejects_namespace_scope_not_allowed() -> None:
     violation = tool_policy_violation(
         tool_name="write_file",
@@ -50,7 +54,7 @@ def test_tool_policy_violation_rejects_namespace_scope_not_allowed() -> None:
     assert "E_NAMESPACE_POLICY_VIOLATION" in violation
 
 
-# Layer: unit
+# Layer: contract
 def test_tool_policy_violation_accepts_default_issue_namespace_scope() -> None:
     violation = tool_policy_violation(
         tool_name="write_file",
@@ -61,7 +65,7 @@ def test_tool_policy_violation_accepts_default_issue_namespace_scope() -> None:
     assert violation is None
 
 
-# Layer: unit
+# Layer: contract
 def test_tool_policy_violation_rejects_determinism_class_more_nondeterministic_than_run() -> None:
     violation = tool_policy_violation(
         tool_name="write_file",
@@ -72,7 +76,7 @@ def test_tool_policy_violation_rejects_determinism_class_more_nondeterministic_t
     assert "E_DETERMINISM_POLICY_VIOLATION" in violation
 
 
-# Layer: unit
+# Layer: contract
 def test_tool_policy_violation_rejects_tool_to_tool_invocation_boundary() -> None:
     violation = tool_policy_violation(
         tool_name="write_file",
@@ -83,7 +87,7 @@ def test_tool_policy_violation_rejects_tool_to_tool_invocation_boundary() -> Non
     assert "E_TOOL_INVOCATION_BOUNDARY" in violation
 
 
-# Layer: unit
+# Layer: contract
 def test_tool_policy_violation_accepts_default_core_workspace_policy() -> None:
     violation = tool_policy_violation(
         tool_name="write_file",
@@ -93,7 +97,7 @@ def test_tool_policy_violation_accepts_default_core_workspace_policy() -> None:
     assert violation is None
 
 
-# Layer: unit
+# Layer: contract
 def test_determinism_violation_for_result_flags_declared_pure_side_effecting_tool() -> None:
     violation = determinism_violation_for_result(
         tool_name="write_file",
@@ -104,7 +108,7 @@ def test_determinism_violation_for_result_flags_declared_pure_side_effecting_too
     assert "E_DETERMINISM_VIOLATION" in violation
 
 
-# Layer: unit
+# Layer: contract
 def test_determinism_violation_for_result_allows_pure_without_side_effect_signals() -> None:
     violation = determinism_violation_for_result(
         tool_name="read_file",
@@ -114,7 +118,7 @@ def test_determinism_violation_for_result_allows_pure_without_side_effect_signal
     assert violation is None
 
 
-# Layer: unit
+# Layer: contract
 def test_determinism_violation_details_for_result_returns_structured_failure_payload() -> None:
     details = determinism_violation_details_for_result(
         tool_name="write_file",
@@ -130,6 +134,6 @@ def test_determinism_violation_details_for_result_returns_structured_failure_pay
     assert "changed_files" in details["side_effect_signal_keys"]
 
 
-# Layer: unit
+# Layer: contract
 def test_governed_approval_continuation_family_includes_create_directory() -> None:
     assert "create_directory" in ADMITTED_GOVERNED_TURN_TOOL_APPROVAL_CONTINUATION_TOOLS

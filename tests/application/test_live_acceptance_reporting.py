@@ -19,12 +19,12 @@ def _load_script_module(name: str, relative_path: str):
     return module
 
 
+@pytest.mark.unit
 def test_prompt_policy_summary_counts_from_turn_start_events() -> None:
     loop = _load_script_module(
         "run_live_acceptance_loop",
         "scripts/acceptance/run_live_acceptance_loop.py",
     )
-
     events = [
         {
             "event": "turn_start",
@@ -46,7 +46,6 @@ def test_prompt_policy_summary_counts_from_turn_start_events() -> None:
         },
         {"event": "turn_complete", "data": {}},
     ]
-
     summary = loop._prompt_policy_summary(events)
     assert summary["turn_start_count"] == 2
     assert summary["resolver_policy_counts"]["resolver_v1"] == 1
@@ -57,6 +56,7 @@ def test_prompt_policy_summary_counts_from_turn_start_events() -> None:
     assert summary["dialect_status_counts"]["stable"] == 2
 
 
+@pytest.mark.unit
 def test_runtime_failure_breakdown_count_from_events() -> None:
     loop = _load_script_module(
         "run_live_acceptance_loop_breakdown",
@@ -72,6 +72,7 @@ def test_runtime_failure_breakdown_count_from_events() -> None:
     assert loop._runtime_failure_breakdown_count(events, "python_compile") == 3
 
 
+@pytest.mark.unit
 def test_event_data_int_sum_from_events() -> None:
     loop = _load_script_module(
         "run_live_acceptance_loop_data_sum",
@@ -85,6 +86,7 @@ def test_event_data_int_sum_from_events() -> None:
     assert loop._event_data_int_sum(events, "preflight_missing_read_paths", "missing_required_read_paths_count") == 5
 
 
+@pytest.mark.unit
 def test_turn_non_progress_rule_counts_from_events() -> None:
     loop = _load_script_module(
         "run_live_acceptance_loop_rule_counts",
@@ -124,6 +126,7 @@ def test_turn_non_progress_rule_counts_from_events() -> None:
     assert counts["HALLUCINATION.INVENTED_DETAIL"] == 1
 
 
+@pytest.mark.unit
 def test_runtime_event_schema_counts_from_events() -> None:
     loop = _load_script_module(
         "run_live_acceptance_loop_runtime_event_schema",
@@ -140,6 +143,7 @@ def test_runtime_event_schema_counts_from_events() -> None:
     assert loop._runtime_event_schema_version_count(events, "v0") == 1
 
 
+@pytest.mark.unit
 def test_guard_terminal_reason_count_from_events() -> None:
     loop = _load_script_module(
         "run_live_acceptance_loop_guard_reason",
@@ -158,12 +162,12 @@ def test_guard_terminal_reason_count_from_events() -> None:
     assert loop._guard_terminal_reason_count(events, "HALLUCINATION_PERSISTENT") == 1
 
 
+@pytest.mark.unit
 def test_live_acceptance_loop_default_target_tracks_truthful_live_test() -> None:
     loop = _load_script_module(
         "run_live_acceptance_loop_default_target",
         "scripts/acceptance/run_live_acceptance_loop.py",
     )
-
     assert (
         loop.DEFAULT_TEST
         == "tests/live/test_system_acceptance_pipeline.py::"
@@ -171,12 +175,12 @@ def test_live_acceptance_loop_default_target_tracks_truthful_live_test() -> None
     )
 
 
+@pytest.mark.unit
 def test_live_acceptance_loop_aggregate_handles_missing_session_status() -> None:
     loop = _load_script_module(
         "run_live_acceptance_loop_aggregate_missing_status",
         "scripts/acceptance/run_live_acceptance_loop.py",
     )
-
     summary = loop._aggregate(
         [
             {
@@ -188,7 +192,6 @@ def test_live_acceptance_loop_aggregate_handles_missing_session_status() -> None
             }
         ]
     )
-
     assert summary["qwen2.5-coder:14b"] == {
         "runs": 1,
         "passed": 0,
@@ -198,12 +201,12 @@ def test_live_acceptance_loop_aggregate_handles_missing_session_status() -> None
     }
 
 
+@pytest.mark.unit
 def test_report_live_acceptance_patterns_includes_prompt_policy_counters() -> None:
     reporter = _load_script_module(
         "report_live_acceptance_patterns",
         "scripts/acceptance/report_live_acceptance_patterns.py",
     )
-
     runs = [
         {
             "model": "m1",
@@ -280,7 +283,6 @@ def test_report_live_acceptance_patterns_includes_prompt_policy_counters() -> No
             "chain_complete": False,
         },
     ]
-
     report = reporter._build_report("batch-1", runs)
     counters = report["pattern_counters"]
     assert counters["prompt_turn_start_total"] == 6
@@ -379,23 +381,20 @@ def test_report_live_acceptance_patterns_counts_invalid_row_payloads(tmp_path: P
             ),
         )
         conn.commit()
-
         runs = reporter._load_runs(conn, "batch-1")
     finally:
         conn.close()
-
     assert runs[0]["metrics_json_valid"] is True
     assert runs[0]["db_summary_json_valid"] is True
     assert runs[1]["metrics_json_valid"] is False
     assert runs[1]["db_summary_json_valid"] is False
-
     report = reporter._build_report("batch-1", runs)
-
     assert report["pattern_counters"]["prompt_turn_start_total"] == 2
     assert report["issue_status_totals"] == {"done": 1}
     assert report["invalid_payload_signals"] == {"metrics_json": 1, "db_summary_json": 1}
 
 
+@pytest.mark.unit
 def test_report_live_acceptance_patterns_loads_monolith_matrix_summary(tmp_path: Path) -> None:
     reporter = _load_script_module(
         "report_live_acceptance_patterns_matrix",
@@ -419,6 +418,7 @@ def test_report_live_acceptance_patterns_loads_monolith_matrix_summary(tmp_path:
     assert "trends" in summary
 
 
+@pytest.mark.unit
 def test_matrix_trends_group_by_builder_and_profile() -> None:
     reporter = _load_script_module(
         "report_live_acceptance_patterns_trends",

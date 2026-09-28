@@ -5,6 +5,8 @@ import pytest
 import orket.state as state_module
 from orket.state import GlobalState, reset_runtime_state
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.asyncio
 async def test_interventions_roundtrip_and_copy_semantics() -> None:

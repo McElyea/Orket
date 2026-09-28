@@ -14,7 +14,7 @@ from tests.turn_prompt_utils import extract_turn_prompt_context
 pytestmark = pytest.mark.usefixtures("deterministic_turn_clock")
 
 
-class ParallelDummyProvider(LocalModelProvider):
+class ParallelDummyProvider:
     def __init__(self):
         self.model = "dummy"
         self.timeout = 300
@@ -166,7 +166,8 @@ async def _run_epic_with_dummy_provider(
     )
 
     dummy_provider = ParallelDummyProvider()
-    monkeypatch.setattr(LocalModelProvider, "__init__", lambda *args, **kwargs: None)
+    # Replace inference only; real provider construction owns the transport that
+    # each turn closes. Bypassing __init__ leaves that required owner missing.
     monkeypatch.setattr(LocalModelProvider, "complete", dummy_provider.complete)
 
     engine = await asyncio.to_thread(

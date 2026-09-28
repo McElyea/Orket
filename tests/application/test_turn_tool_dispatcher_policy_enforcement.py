@@ -12,14 +12,14 @@ from orket.application.workflows.turn_tool_dispatcher import ToolDispatcher
 from orket.core.domain.execution import ExecutionTurn, ToolCall
 from tests.helpers.turn_artifacts import execute_dispatch_fixture
 
+pytestmark = pytest.mark.contract
+
 
 def _dispatcher(tmp_path: Path) -> ToolDispatcher:
     def _load_replay_tool_result(**_kwargs) -> dict[str, Any] | None:
         return None
-
     def _persist_tool_result(**_kwargs) -> None:
         return None
-
     def _load_operation_result(**_kwargs) -> dict[str, Any] | None:
         return None
 
@@ -53,7 +53,7 @@ class _NoOpToolbox:
         return {"ok": True}
 
 
-# Layer: integration
+# Layer: contract
 @pytest.mark.asyncio
 async def test_tool_dispatcher_preflight_rejects_ring_policy_violation(tmp_path: Path) -> None:
     dispatcher = _dispatcher(tmp_path)
@@ -91,7 +91,7 @@ async def test_tool_dispatcher_preflight_rejects_ring_policy_violation(tmp_path:
     assert toolbox.calls == 0
 
 
-# Layer: integration
+# Layer: contract
 @pytest.mark.asyncio
 async def test_tool_dispatcher_preflight_rejects_capability_violation(tmp_path: Path) -> None:
     dispatcher = _dispatcher(tmp_path)
@@ -130,7 +130,7 @@ async def test_tool_dispatcher_preflight_rejects_capability_violation(tmp_path: 
     assert toolbox.calls == 0
 
 
-# Layer: integration
+# Layer: contract
 @pytest.mark.asyncio
 async def test_tool_dispatcher_preflight_rejects_namespace_scope_violation(tmp_path: Path) -> None:
     dispatcher = _dispatcher(tmp_path)
@@ -171,7 +171,7 @@ async def test_tool_dispatcher_preflight_rejects_namespace_scope_violation(tmp_p
     assert toolbox.calls == 0
 
 
-# Layer: integration
+# Layer: contract
 @pytest.mark.asyncio
 async def test_tool_dispatcher_preflight_rejects_ring_policy_violation_without_protocol_governance(
     tmp_path: Path,
@@ -210,7 +210,7 @@ async def test_tool_dispatcher_preflight_rejects_ring_policy_violation_without_p
     assert toolbox.calls == 0
 
 
-# Layer: integration
+# Layer: contract
 @pytest.mark.asyncio
 async def test_tool_dispatcher_preflight_rejects_namespace_scope_violation_without_protocol_governance(
     tmp_path: Path,
@@ -252,7 +252,7 @@ async def test_tool_dispatcher_preflight_rejects_namespace_scope_violation_witho
     assert toolbox.calls == 0
 
 
-# Layer: integration
+# Layer: contract
 @pytest.mark.asyncio
 async def test_tool_dispatcher_preflight_rejects_missing_compatibility_mapping(tmp_path: Path) -> None:
     dispatcher = _dispatcher(tmp_path)
@@ -291,7 +291,7 @@ async def test_tool_dispatcher_preflight_rejects_missing_compatibility_mapping(t
     assert toolbox.calls == 0
 
 
-# Layer: integration
+# Layer: contract
 @pytest.mark.asyncio
 async def test_tool_dispatcher_emits_determinism_violation_for_declared_pure_side_effect_tool(tmp_path: Path) -> None:
     dispatcher = _dispatcher(tmp_path)
@@ -329,7 +329,7 @@ async def test_tool_dispatcher_emits_determinism_violation_for_declared_pure_sid
     assert toolbox.calls == 1
 
 
-# Layer: integration
+# Layer: contract
 @pytest.mark.asyncio
 async def test_tool_dispatcher_preflight_rejects_tool_invocation_boundary_violation(tmp_path: Path) -> None:
     dispatcher = _dispatcher(tmp_path)

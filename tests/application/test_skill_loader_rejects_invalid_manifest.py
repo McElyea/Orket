@@ -4,6 +4,8 @@ import pytest
 
 from orket.application.services.skill_loader import SkillLoaderError, load_skill_manifest_or_raise
 
+pytestmark = pytest.mark.contract
+
 
 def test_skill_loader_rejects_schema_invalid_manifest_with_canonical_error() -> None:
     payload = {

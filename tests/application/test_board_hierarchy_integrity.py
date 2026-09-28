@@ -33,6 +33,7 @@ class _Rock:
     epics: list[dict[str, str]]
 
 
+@pytest.mark.contract
 def test_get_board_hierarchy_marks_partial_success_on_load_failures(monkeypatch):
     """Layer: contract. Verifies integrity load failures are explicit and partial-success is surfaced."""
     loads = {
@@ -76,8 +77,9 @@ def test_get_board_hierarchy_marks_partial_success_on_load_failures(monkeypatch)
     assert any("Partial board load" in alert["message"] for alert in hierarchy["alerts"])
 
 
+@pytest.mark.unit
 def test_get_board_hierarchy_prefers_issue_id_for_reference_matching(monkeypatch):
-    """Layer: contract. Verifies orphan detection uses stable issue IDs before fallback names."""
+    """Layer: unit. Verifies orphan detection uses stable issue IDs before fallback names."""
     loads = {
         ("core", "rocks", "rock_ok"): _Rock("rock_ok", "ok", "on_track", [{"epic": "epic_ok", "department": "core"}]),
         ("core", "epics", "epic_ok"): _Epic("epic_ok", "ok", "planning", [_Issue("ISS-123", "Original summary")]),
@@ -113,8 +115,9 @@ def test_get_board_hierarchy_prefers_issue_id_for_reference_matching(monkeypatch
     assert hierarchy["orphaned_issues"] == []
 
 
+@pytest.mark.unit
 def test_get_board_hierarchy_auto_fix_executes_reconciliation(monkeypatch):
-    """Layer: integration. Verifies auto_fix executes reconciliation and reports explicit info status."""
+    """Layer: unit. Verifies auto_fix executes reconciliation and reports explicit info status."""
     calls = []
 
     class _FakeReconciler:
@@ -142,6 +145,7 @@ def test_get_board_hierarchy_auto_fix_executes_reconciliation(monkeypatch):
     assert any("auto_fix requested" in alert["message"] for alert in hierarchy["alerts"])
 
 
+@pytest.mark.contract
 def test_get_board_hierarchy_auto_fix_failure_is_explicit_partial_success(monkeypatch):
     """Layer: contract. Verifies auto_fix failures are explicit and cannot appear as complete success."""
     class _FailingReconciler:
@@ -167,9 +171,10 @@ def test_get_board_hierarchy_auto_fix_failure_is_explicit_partial_success(monkey
     assert any(item["stage"] == "auto_fix" for item in hierarchy["load_failures"])
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_get_board_hierarchy_async_uses_thread_wrapper(monkeypatch):
-    """Layer: integration. Verifies the async board helper delegates to the sync hierarchy builder for API callers."""
+    """Layer: unit. Verifies the async board helper delegates to the sync hierarchy builder for API callers."""
     seen: dict[str, object] = {}
 
     def _fake_get_board_hierarchy(department: str = "core", auto_fix: bool = False, *, project_root=None):

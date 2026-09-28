@@ -15,10 +15,12 @@ from orket.adapters.storage.protocol_append_only_ledger import (
 )
 
 
+@pytest.mark.contract
 def test_lpj_c32_uses_castagnoli_crc32c_vector() -> None:
     assert crc32c(b"123456789") == 0xE3069283
 
 
+@pytest.mark.contract
 def test_lpj_c32_encode_decode_round_trip() -> None:
     first = {"event_seq": 1, "kind": "run_started", "run_id": "r1"}
     second = {"event_seq": 2, "kind": "run_finished", "run_id": "r1"}
@@ -27,6 +29,7 @@ def test_lpj_c32_encode_decode_round_trip() -> None:
     assert records == [first, second]
 
 
+@pytest.mark.contract
 def test_lpj_c32_decode_ignores_partial_tail() -> None:
     first = {"event_seq": 1, "kind": "run_started"}
     second = {"event_seq": 2, "kind": "run_finished"}
@@ -36,6 +39,7 @@ def test_lpj_c32_decode_ignores_partial_tail() -> None:
     assert records == [first]
 
 
+@pytest.mark.contract
 def test_lpj_c32_decode_rejects_checksum_mismatch() -> None:
     payload = {"event_seq": 1, "kind": "run_started", "run_id": "r1"}
     frame = bytearray(encode_lpj_c32_record(payload))
@@ -45,6 +49,7 @@ def test_lpj_c32_decode_rejects_checksum_mismatch() -> None:
     assert exc.value.code == "E_LEDGER_CORRUPT"
 
 
+@pytest.mark.contract
 def test_lpj_c32_decode_rejects_non_monotonic_event_seq() -> None:
     first = {"event_seq": 1, "kind": "run_started"}
     second = {"event_seq": 1, "kind": "duplicate"}
@@ -54,6 +59,7 @@ def test_lpj_c32_decode_rejects_non_monotonic_event_seq() -> None:
     assert exc.value.code == "E_LEDGER_SEQ"
 
 
+@pytest.mark.contract
 def test_lpj_c32_decode_rejects_oversized_record_length() -> None:
     oversized_len = MAX_LEDGER_PAYLOAD_BYTES + 1
     stream = struct.pack(">I", oversized_len)
@@ -62,6 +68,7 @@ def test_lpj_c32_decode_rejects_oversized_record_length() -> None:
     assert exc.value.code == "E_LEDGER_RECORD_TOO_LARGE"
 
 
+@pytest.mark.contract
 def test_lpj_c32_encode_rejects_oversized_payload() -> None:
     big_value = "x" * (MAX_LEDGER_PAYLOAD_BYTES + 1024)
     with pytest.raises(LedgerFramingError) as exc:
@@ -69,6 +76,7 @@ def test_lpj_c32_encode_rejects_oversized_payload() -> None:
     assert exc.value.code == "E_LEDGER_RECORD_TOO_LARGE"
 
 
+@pytest.mark.integration
 def test_append_only_run_ledger_assigns_monotonic_event_seq(tmp_path: Path) -> None:
     path = tmp_path / "runs" / "r1" / "events.log"
     ledger = AppendOnlyRunLedger(path)
@@ -84,6 +92,7 @@ def test_append_only_run_ledger_assigns_monotonic_event_seq(tmp_path: Path) -> N
     assert replayed[1]["kind"] == "run_finished"
 
 
+@pytest.mark.contract
 def test_append_only_run_ledger_rejects_out_of_order_explicit_event_seq(tmp_path: Path) -> None:
     path = tmp_path / "runs" / "r1" / "events.log"
     ledger = AppendOnlyRunLedger(path)
@@ -94,8 +103,9 @@ def test_append_only_run_ledger_rejects_out_of_order_explicit_event_seq(tmp_path
     assert exc.value.code == "E_LEDGER_SEQ"
 
 
+@pytest.mark.contract
 def test_append_only_run_ledger_rejects_duplicate_explicit_event_seq(tmp_path: Path) -> None:
-    """Layer: unit. Verifies append-time monotonicity rejects duplicate or regressed event sequences."""
+    """Layer: contract. Verifies append-time monotonicity rejects duplicate or regressed event sequences."""
     path = tmp_path / "runs" / "r1" / "events.log"
     ledger = AppendOnlyRunLedger(path)
 
@@ -105,6 +115,7 @@ def test_append_only_run_ledger_rejects_duplicate_explicit_event_seq(tmp_path: P
     assert exc.value.code == "E_LEDGER_SEQ"
 
 
+@pytest.mark.integration
 def test_append_only_run_ledger_replay_survives_partial_tail(tmp_path: Path) -> None:
     path = tmp_path / "runs" / "r1" / "events.log"
     ledger = AppendOnlyRunLedger(path)
@@ -117,6 +128,7 @@ def test_append_only_run_ledger_replay_survives_partial_tail(tmp_path: Path) -> 
     assert replayed[0]["event_seq"] == 1
 
 
+@pytest.mark.integration
 def test_append_only_run_ledger_replay_fails_on_corrupt_record(tmp_path: Path) -> None:
     path = tmp_path / "runs" / "r1" / "events.log"
     first = encode_lpj_c32_record({"event_seq": 1, "kind": "ok"})
@@ -138,6 +150,7 @@ def _three_record_stream() -> bytes:
     return first + second + third
 
 
+@pytest.mark.contract
 def test_lpj_c32_decode_ignores_partial_tail_across_multiple_boundaries() -> None:
     stream = _three_record_stream()
     third = encode_lpj_c32_record({"event_seq": 3, "kind": "c"})
@@ -147,6 +160,7 @@ def test_lpj_c32_decode_ignores_partial_tail_across_multiple_boundaries() -> Non
         assert [row["event_seq"] for row in records] == [1, 2]
 
 
+@pytest.mark.contract
 def test_lpj_c32_decode_rejects_checksum_corruption_on_first_middle_and_last_records() -> None:
     records = [
         {"event_seq": 1, "kind": "a"},
@@ -171,6 +185,7 @@ def test_lpj_c32_decode_rejects_checksum_corruption_on_first_middle_and_last_rec
         assert f"offset={stream_offset}" in str(exc.value)
 
 
+@pytest.mark.contract
 def test_lpj_c32_decode_rejects_non_monotonic_event_seq_vectors() -> None:
     vector = [
         {"event_seq": 1, "kind": "a"},

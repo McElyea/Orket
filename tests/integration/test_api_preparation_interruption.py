@@ -10,6 +10,7 @@ import httpx
 import pytest
 
 from orket.application.services import api_runtime_preparation as preparation
+from orket.core.contracts.outbound_policy import OutboundPolicyInputs
 from orket.interfaces.runtime_entrypoints import create_api_app
 from orket.runtime import CompositionConfig
 from tests.helpers.outward_authorization import TEST_API_KEY
@@ -63,7 +64,7 @@ async def test_outbound_read_retains_constructed_owner(tmp_path, monkeypatch, st
     if refuse:
         target.mkdir()  # The real native file read must fail after resources were constructed.
     else:
-        await asyncio.to_thread(target.write_text, '{"policy_version":"captured"}', encoding="utf-8")
+        await asyncio.to_thread(target.write_text, '{"placeholder":"captured-placeholder"}', encoding="utf-8")
     monkeypatch.setenv("ORKET_API_KEY", TEST_API_KEY)
     monkeypatch.setenv("ORKET_OUTBOUND_POLICY_CONFIG_PATH", "outbound.json")
     hold, owners = NativeReadHold(target, monkeypatch), observe_containers(monkeypatch)
@@ -98,7 +99,8 @@ async def test_outbound_read_retains_constructed_owner(tmp_path, monkeypatch, st
                 await asyncio.wait_for(result_owner, 10)
         else:
             await asyncio.wait_for(task, 10)
-            assert app.state.outbound_policy_config == {"policy_version": "captured"}
+            assert isinstance(app.state.outbound_policy_config, OutboundPolicyInputs)
+            assert app.state.outbound_policy_config.placeholder == "captured-placeholder"
         assert hold.settled.is_set() and owners[0].closed and owners[0].engine._closed
         assert owners[0].extension_runtime_service._model_provider._closed
         assert not app.state.api_ready and owners[0].active_background_task_count == 0

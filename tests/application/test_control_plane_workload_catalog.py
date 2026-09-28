@@ -1,8 +1,10 @@
-# Layer: unit
+# Layer: contract
 
 from __future__ import annotations
 
 from pathlib import Path
+
+import pytest
 
 from orket.application.services.control_plane_workload_catalog import (
     CARDS_CONTROL_PLANE_WORKLOAD_ID,
@@ -46,6 +48,8 @@ from orket.application.services.turn_tool_control_plane_service import (
 from orket.core.contracts import WORKLOAD_CONTRACT_VERSION_V1, parse_workload_contract
 from orket.core.domain.sandbox import TechStack
 from orket.schema import ArchitectureGovernance, EpicConfig, IssueConfig
+
+pytestmark = pytest.mark.contract
 
 
 def _epic() -> EpicConfig:
@@ -127,7 +131,7 @@ def test_workload_authority_resolver_supports_catalog_and_contract_modes(tmp_pat
 
 
 def test_cards_workload_builders_route_through_shared_catalog(tmp_path: Path) -> None:
-    """Layer: unit. Verifies cards workload contract building and authority resolution now live only on the shared catalog."""
+    """Layer: contract. Verifies cards workload contract building and authority resolution now live only on the shared catalog."""
     contract_payload = build_cards_workload_contract(
         epic=_epic(),
         run_id="sess-1",
@@ -156,7 +160,7 @@ def test_cards_workload_builders_route_through_shared_catalog(tmp_path: Path) ->
 
 
 def test_cards_workload_record_helper_keeps_runtime_entrypoints_out_of_authority_input_shape(tmp_path: Path) -> None:
-    """Layer: unit. Verifies cards runtime entrypoints can resolve their workload record through one catalog-local helper."""
+    """Layer: contract. Verifies cards runtime entrypoints can resolve their workload record through one catalog-local helper."""
     contract_payload = build_cards_workload_contract(
         epic=_epic(),
         run_id="sess-3",
@@ -198,7 +202,7 @@ def test_extension_manifest_workload_projection_uses_shared_builder() -> None:
 
 
 def test_extension_workload_record_helper_keeps_manager_out_of_authority_input_shape() -> None:
-    """Layer: unit. Verifies extension workload start can resolve one workload record through a catalog-local helper."""
+    """Layer: contract. Verifies extension workload start can resolve one workload record through a catalog-local helper."""
     record = _resolve_extension_control_plane_workload(
         workload_id="demo_v1",
         workload_version="1.0.0",
@@ -217,7 +221,7 @@ def test_extension_workload_record_helper_keeps_manager_out_of_authority_input_s
 
 
 def test_odr_workload_record_helper_keeps_run_arbiter_out_of_authority_input_shape() -> None:
-    """Layer: unit. Verifies the ODR arbiter start path resolves its workload record through one catalog-local helper."""
+    """Layer: contract. Verifies the ODR arbiter start path resolves its workload record through one catalog-local helper."""
     record = _resolve_odr_arbiter_control_plane_workload_from_contract(
         contract_payload={
             "workload_contract_version": WORKLOAD_CONTRACT_VERSION_V1,

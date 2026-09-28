@@ -68,6 +68,7 @@ def test_model_family_registry_loads_operator_patterns_from_env(monkeypatch) -> 
     assert match.family == "mistral"
 
 
+@pytest.mark.unit
 def test_agent_logs_unrecognized_model_family(monkeypatch, tmp_path: Path) -> None:
     """Layer: unit. Verifies unknown model families fall back truthfully to generic."""
     events: list[tuple[str, dict[str, Any], dict[str, Any]]] = []
@@ -90,8 +91,9 @@ def test_agent_logs_unrecognized_model_family(monkeypatch, tmp_path: Path) -> No
     )
 
 
+@pytest.mark.contract
 def test_null_control_plane_authority_service_returns_chainable_sentinel() -> None:
-    """Layer: unit. Verifies null journaling returns a typed sentinel instead of None."""
+    """Layer: contract. Verifies null journaling returns a typed sentinel instead of None."""
     journal = NullControlPlaneAuthorityService()
 
     first = journal.append_effect_journal_entry()
@@ -103,6 +105,7 @@ def test_null_control_plane_authority_service_returns_chainable_sentinel() -> No
     assert second.journal_entry_id == "0"
 
 
+@pytest.mark.unit
 def test_agent_warns_once_when_journal_is_not_configured(monkeypatch, tmp_path: Path, caplog) -> None:
     """Layer: unit. Verifies null journal degradation is observable on agent construction."""
     monkeypatch.setattr(agent_module, "ConfigLoader", _MissingConfigLoader)
@@ -125,15 +128,17 @@ def test_agent_warns_once_when_journal_is_not_configured(monkeypatch, tmp_path: 
     assert isinstance(agent.journal, NullControlPlaneAuthorityService)
 
 
+@pytest.mark.contract
 def test_agent_requires_explicit_config_root() -> None:
-    """Layer: unit. Verifies Agent construction no longer falls back to the process working directory."""
+    """Layer: contract. Verifies Agent construction no longer falls back to the process working directory."""
     with pytest.raises(TypeError, match="config_root is required"):
         Agent("coder", "description", {}, _Provider("unknown-7b"), strict_config=False)
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_agent_tool_gate_blocks_before_direct_tool_execution(monkeypatch, tmp_path: Path) -> None:
-    """Layer: unit. Verifies legacy Agent.run applies the tool gate before executing direct tool maps."""
+    """Layer: contract. Verifies legacy Agent.run applies the tool gate before executing direct tool maps."""
     monkeypatch.setattr(agent_module, "ConfigLoader", _MissingConfigLoader)
     calls: list[dict[str, Any]] = []
 
@@ -172,9 +177,10 @@ async def test_agent_tool_gate_blocks_before_direct_tool_execution(monkeypatch, 
     assert "denied:write_file:coder" in str(turn.tool_calls[0].error)
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_agent_direct_tool_execution_requires_tool_gate(monkeypatch, tmp_path: Path) -> None:
-    """Layer: unit. Verifies legacy Agent.run fails closed before any direct tool call when no gate is present."""
+    """Layer: contract. Verifies legacy Agent.run fails closed before any direct tool call when no gate is present."""
     monkeypatch.setattr(agent_module, "ConfigLoader", _MissingConfigLoader)
     calls: list[dict[str, Any]] = []
 
@@ -208,12 +214,13 @@ async def test_agent_direct_tool_execution_requires_tool_gate(monkeypatch, tmp_p
     assert "tool_gate authority" in str(turn.tool_calls[0].error)
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_agent_partial_parse_failure_returns_structured_turn_without_recovery_tool(
     monkeypatch,
     tmp_path: Path,
 ) -> None:
-    """Layer: unit. Verifies Agent.run does not execute a hardcoded partial-parse recovery tool."""
+    """Layer: contract. Verifies Agent.run does not execute a hardcoded partial-parse recovery tool."""
     monkeypatch.setattr(agent_module, "ConfigLoader", _MissingConfigLoader)
     calls: list[tuple[str, dict[str, Any]]] = []
 
@@ -242,9 +249,10 @@ async def test_agent_partial_parse_failure_returns_structured_turn_without_recov
     assert calls == []
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_agent_run_records_optional_effect_journal_entry(monkeypatch, tmp_path: Path) -> None:
-    """Layer: integration. Verifies legacy Agent.run can emit a structured effect journal record when configured."""
+    """Layer: contract. Verifies legacy Agent.run can emit a structured effect journal record when configured."""
     monkeypatch.setattr(agent_module, "ConfigLoader", _MissingConfigLoader)
 
     class _ToolProvider:
@@ -295,9 +303,10 @@ async def test_agent_run_records_optional_effect_journal_entry(monkeypatch, tmp_
     assert entries[0]["uncertainty_classification"] == ResidualUncertaintyClassification.NONE.value
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_agent_direct_tool_execution_requires_journal_authority(monkeypatch, tmp_path: Path) -> None:
-    """Layer: unit. Verifies legacy Agent.run blocks direct tool execution without effect-journal authority."""
+    """Layer: contract. Verifies legacy Agent.run blocks direct tool execution without effect-journal authority."""
     monkeypatch.setattr(agent_module, "ConfigLoader", _MissingConfigLoader)
     calls: list[dict[str, Any]] = []
 
@@ -336,9 +345,10 @@ async def test_agent_direct_tool_execution_requires_journal_authority(monkeypatc
     assert "effect-journal authority" in str(turn.tool_calls[0].error)
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_agent_run_renders_context_as_delimited_labeled_data(monkeypatch, tmp_path: Path) -> None:
-    """Layer: unit. Verifies user-controlled context is rendered as labeled data instead of inline instructions."""
+    """Layer: contract. Verifies user-controlled context is rendered as labeled data instead of inline instructions."""
     monkeypatch.setattr(agent_module, "ConfigLoader", _MissingConfigLoader)
 
     class _CapturingProvider:
@@ -376,8 +386,9 @@ async def test_agent_run_renders_context_as_delimited_labeled_data(monkeypatch, 
     assert turn.content == "safe"
 
 
+@pytest.mark.contract
 def test_agent_strict_config_fails_closed_on_missing_role(monkeypatch, tmp_path: Path) -> None:
-    """Layer: unit. Verifies strict agent config does not silently fall back to bare descriptions."""
+    """Layer: contract. Verifies strict agent config does not silently fall back to bare descriptions."""
     monkeypatch.setattr(agent_module, "ConfigLoader", _MissingConfigLoader)
 
     with pytest.raises(AgentConfigurationError, match="agent role asset load failed"):

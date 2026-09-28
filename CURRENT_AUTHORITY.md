@@ -34,7 +34,20 @@ whole-lane acceptance remain open. The architectural-truth plan records exact
 source bindings and proof limits.
 Contract: `docs/specs/PUBLIC_ENUM_REPRESENTATION_CONTRACT.md`.
 
-The 0.6.110 candidate corrects the reproduced supporting-diagnostic failures in
+The 0.6.111 checkpoint adds 543 reviewed application classifications across 69
+modules with test-body and existing-marker parity. Canonical collection confirms
+10,634 items, 1,365 missing layers and zero conflicts/collection errors; strict
+taxonomy still fails. The 28 additional items versus .109 are the already marked
+diagnostic controls in .110. The final fixture successor passes 31 affected cases
+(27 integration, four contract), including all shared sandbox-log helper callers.
+Two deliberately blocked-loop controls fail the unchanged 0.5-second bound.
+The preceding broader diagnostic stopped after 10 failures, 5,730 passes and 42
+skips. Seven helper regressions are corrected by the scoped successor; server
+reload, calendar-input and mock-policy failures remain open. No coverage report
+was produced despite the retained 89-percent threshold. Complete suite, installed,
+platform and whole-lane acceptance remain open.
+
+The 0.6.110 checkpoint corrects the reproduced supporting-diagnostic failures in
 the shared I/O, API preparation/application lifetime and runtime cleanup owners.
 Native diagnostic attempts remain owned through interruption; handler/executor
 failure preserves the selected primary and adds only a fixed failure note.

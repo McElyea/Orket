@@ -50,7 +50,7 @@ class _ModelWithTokenizer:
         return {"token_count": max(1, total_chars // 4), "tokenizer_id": "unit-test-tokenizer"}
 
 
-# Layer: integration
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_evaluate_prompt_budget_uses_backend_tokenizer_counter(tmp_path: Path) -> None:
     policy_path = tmp_path / "core" / "policies" / "prompt_budget.yaml"
@@ -76,7 +76,7 @@ async def test_evaluate_prompt_budget_uses_backend_tokenizer_counter(tmp_path: P
     assert result["tokenizer_id"] == "unit-test-tokenizer"
 
 
-# Layer: contract
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_evaluate_prompt_budget_fails_closed_when_budget_exceeded(tmp_path: Path) -> None:
     policy_path = tmp_path / "core" / "policies" / "prompt_budget.yaml"
@@ -100,7 +100,7 @@ async def test_evaluate_prompt_budget_fails_closed_when_budget_exceeded(tmp_path
     assert "E_PROMPT_BUDGET_EXCEEDED" in str(result["error"])
 
 
-# Layer: contract
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_evaluate_prompt_budget_fails_when_backend_tokenizer_required_but_unavailable(tmp_path: Path) -> None:
     policy_path = tmp_path / "core" / "policies" / "prompt_budget.yaml"
@@ -121,7 +121,7 @@ async def test_evaluate_prompt_budget_fails_when_backend_tokenizer_required_but_
     assert "E_TOKENIZER_ACCOUNTING" in str(result["error"])
 
 
-# Layer: unit
+@pytest.mark.contract
 def test_build_prompt_structure_payload_captures_required_fields() -> None:
     payload = build_prompt_structure_payload(
         context={"prompt_metadata": {"prompt_version": "2026.03.06"}},
@@ -140,7 +140,7 @@ def test_build_prompt_structure_payload_captures_required_fields() -> None:
     assert payload["tokenizer_id"] == "tokenizer-x"
 
 
-# Layer: unit
+@pytest.mark.unit
 def test_counter_resolution_prefers_the_direct_client_binding() -> None:
     class Provider:
         def count_tokens(self, _messages):  # type: ignore[no-untyped-def]
@@ -159,7 +159,7 @@ def test_counter_resolution_prefers_the_direct_client_binding() -> None:
     assert selected([]) == 1
 
 
-# Layer: contract
+@pytest.mark.contract
 @pytest.mark.asyncio
 @pytest.mark.parametrize("error_type", [ValueError, TypeError, RuntimeError, OSError, AttributeError])
 async def test_recognized_callback_errors_keep_strict_and_nonstrict_results(error_type) -> None:
@@ -183,7 +183,7 @@ async def test_recognized_callback_errors_keep_strict_and_nonstrict_results(erro
     }
 
 
-# Layer: contract
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_counter_normalization_failure_is_not_converted() -> None:
     class BrokenTokenizerId:
@@ -200,7 +200,7 @@ async def test_counter_normalization_failure_is_not_converted() -> None:
         )
 
 
-# Layer: contract
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_counter_does_not_await_noncoroutine_awaitable() -> None:
     class AwaitableValue:

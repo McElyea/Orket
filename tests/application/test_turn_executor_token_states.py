@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+import pytest
+
 from orket.application.workflows.turn_executor_ops import runtime_tokens_payload
 from orket.core.domain.execution import ExecutionTurn
+
+pytestmark = pytest.mark.contract
 
 
 def _turn(raw: dict) -> ExecutionTurn:

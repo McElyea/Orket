@@ -27131,3 +27131,112 @@ The user's commit/push request publishes this bounded checkpoint; it does not
 close these failures, remaining classification debt, fresh installed/platform
 proof or the complete remediation goal. Unapplied marker/fixture/E2 proposals
 remain ignored scratch and are outside this commit.
+
+### Continued E1 fixture correction and classification: checkpoint 0.6.111
+
+The published 0.6.110 checkpoint is `5f06bf2b77965ba700ae15cd6919dd336cba6fc7`,
+with matching annotated tag verified remotely. Its full-suite failure remains
+retained. Three fixture corrections now address the five named failures without
+changing production behavior or weakening the 0.5-second response bound:
+
+1. The parallel model fixture replaces inference only. Real provider construction
+   establishes the HTTP client owner which each real turn closes; bypassing the
+   constructor left that owner absent and interrupted dependency-chain completion.
+2. API preparation reads an actually consumed placeholder value and asserts its
+   captured `OutboundPolicyInputs`, replacing the retired raw dictionary assertion.
+3. Sandbox-log timing begins at the held native operation. Pipeline construction
+   and child startup are recorded separately. The independent timer also starts at
+   that hold, so deliberately running the worker on the loop still violates the
+   same bound. An already released nonzero-command fixture needs no timer.
+
+Current-source execution with the active editable 0.6.110 metadata passes all
+20 cases in the three affected modules in 19.98 seconds. Nine SQLite response
+observations span 0.0018073-0.0032428 seconds. Two adverse fixture controls bind
+to the actual collected module, deliberately execute the close hold on the event
+loop, and each record exactly one injection. Both fail the unchanged bound at
+0.8020566 and 0.8020188 seconds. They are successful sensitivity observations,
+not passing runtime cases or newly discovered production failures. All owners
+are reaped without timeout or observed residual; executable inputs remain fixed.
+Proof is live local engine/API/SQLite/child integration with supplied model output
+and a declared local command port, path `primary`; closing result `success`,
+deliberate adverse execution result `failure`. No model or Docker acceptance is
+inferred. Readback: `.tmp/e1-v111-suite-failures/v2/readback.json`, SHA-256
+`82801089604d8473d107e57fd61d0bdba0b8e26f6b70e9bfd4baaf9314aa4b22`.
+
+The first successor is preserved separately: its closing run had 19 passes and
+one timer-setup fixture failure; its two intended adverse cases passed because
+the injection bound a separately imported module. Neither is used as closing or
+sensitivity acceptance. The corrected successor records injection invocation
+explicitly and preserves both earlier outcomes.
+
+The separately reviewed marker patches add 293 and 250 existing application
+cases across 22 and 47 disjoint modules. Static application readbacks confirm
+reviewed candidate bytes, normalized body/parameter/assertion parity, existing
+mark preservation and no oversized-file growth. They do not execute test bodies.
+Application receipts are `.tmp/goal-20260927-quality/v111/first-marker-applied.json`
+and `second-marker-applied.json`, SHA-256 respectively
+`dc126c36997cd71cf3c4a03d32fa3ef694c10372aef9041389a2fdd6de280d82`
+and `000ebd8974dffb5d7a8b6a65f7b60d5ed88d44d92c42ba6585fe48c0c5041168`.
+Fresh canonical collection and the next full-suite diagnostic must establish
+their current results before any wider gate acceptance.
+
+Canonical collection now confirms exactly 543 newly classified items: 344
+contract, 112 unit and 87 integration. All earlier collected layers are unchanged;
+exactly 28 already marked diagnostic integration items were added by .110, and
+no earlier items disappeared. Current total is 10,634 with 1,365 missing layers,
+zero conflicts and zero collection errors. Strict taxonomy correctly exits 1;
+canonical Ruff exits 0. All 69 marker-only modules retain normalized AST,
+assertion, parameter and nonlayer-marker parity; 3,276 executable/config input
+hashes remain unchanged during the observation. Both owners are reaped without
+timeout or observed residual. This is structural/collection proof, path `primary`,
+migration result `success`, strict quality-gate result `failure`.
+Readback: `.tmp/goal-20260927-quality/v111/current-taxonomy-v2/readback.json`,
+SHA-256 `bcf21e5558453a21dbae7decc1f13a6ea6c4e0aecf0b5d67495dd2a518e0e6c0`.
+The original wrapper's nonexistent collector `.items` field caused a post-collection
+reporting failure; its terminal owner/log remain in `current-taxonomy/`. The
+successor uses the canonical `.tests` field and preserves the failed attempt.
+
+These controls/collection used editable .110 metadata. After they settled, a
+no-dependency editable refresh selects .111 for the next full-suite diagnostic.
+That diagnostic keeps the 89-percent threshold and records coverage-plugin
+lifecycle/options separately; a missing report cannot establish coverage.
+
+The .111 broader diagnostic is now terminal: 5,730 passes, 10 failures and 42
+skips across 5,782 reported cases, stopping at `--maxfail=10` in 1,649.15 pytest
+seconds (1,652.218 owner seconds). Inputs remain unchanged; the owner is reaped
+without timeout or observed residual. This is live local suite execution, path
+`primary`, result `failure`, with each case retaining its own fixture/proof scope.
+Readback: `.tmp/goal-e1-v111-suite-diagnostic/readback.json`, SHA-256
+`671fd57ce2579673a1c9318dab3ae8a875548c22f016f7343d65864e6ac6f450`.
+The independent acceptance readback also refuses complete-suite acceptance.
+The passive configure/session-finish/terminal-summary observations retain the
+coverage plugin, `orket` source, enabled reports and 89-percent threshold, but no
+coverage JSON exists. Neither a percentage nor coverage acceptance is inferred.
+
+Seven failures exposed a regression in the revised shared sandbox-log helper:
+one capture caller and six shutdown callers did not supply the newly assumed
+timer. The final correction initializes that optional timer in the shared probe;
+only the responsiveness caller supplies and starts it at native admission.
+Capture retains its mutation-thread release and shutdown retains its own timer.
+The preserved failed diagnostic is not relabeled as passing evidence.
+
+The expanded successor executes all five affected modules: 31 passes (27
+integration, four contract), no failures/errors/skips, in 22.97 seconds. Both
+deliberate close-on-loop controls record exactly one injection and fail the same
+bound at 0.8020176 and 0.8022895 seconds. Nine native-hold SQLite responses span
+0.0012969-0.0031162 seconds. Both owners settle without timeout or observed
+residual, and executable/config inputs remain unchanged. This uses editable
+.111 metadata and is live local engine/API/TCP/SQLite/child proof with supplied
+model and command ports; closing result `success`, adverse result `failure`,
+path `primary`. Readback: `.tmp/e1-v111-suite-failures/v3/readback.json`, SHA-256
+`41596f55be2f6fc4dcbc16b5a874b5e652759bae4cd4a5c20afd49799725f79a`.
+The separate `v3/acceptance.json` verifies exact counts, interruption sensitivity,
+input stability and terminal ownership. Earlier v1/v2 observations remain intact.
+
+Three other observed failures remain uncorrected: server reload `[True]` exits
+1 instead of 0; `test_owner_without_construction_snapshot_captures_environment`
+dereferences absent runtime inputs; and mock-policy scanning reports unexpected
+usage in three script test modules. The broader suite has not rerun after the
+helper correction; later cases, complete coverage, fresh installed/platform
+acceptance and the remaining remediation gates remain open. This checkpoint
+does not retire the architectural-truth lane.

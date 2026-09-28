@@ -16,6 +16,8 @@ from orket.core.contracts.protocol_hashing import (
     hash_framed_fields,
 )
 
+pytestmark = pytest.mark.contract
+
 
 def test_canonical_json_is_stable_for_equivalent_objects() -> None:
     left = {"b": [3, 2, 1], "a": {"z": 1, "x": 2}}

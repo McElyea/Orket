@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from orket.application.workflows.turn_message_builder import MessageBuilder
 from orket.schema import IssueConfig, RoleConfig
 from tests.helpers.turn_artifacts import prepare_message_fixture
@@ -15,6 +17,7 @@ def _role() -> RoleConfig:
     return RoleConfig(id="coder", name="coder", description="Writes code", prompt="You are coder", tools=["write_file"])
 
 
+@pytest.mark.contract
 async def test_message_builder_includes_execution_context(tmp_path: Path) -> None:
     """Layer: contract. Verifies builder emits one compact turn packet instead of stacked user contract blocks."""
     builder = MessageBuilder(tmp_path)
@@ -39,6 +42,7 @@ async def test_message_builder_includes_execution_context(tmp_path: Path) -> Non
     assert "Write Path Contract:" not in rendered
 
 
+@pytest.mark.contract
 async def test_message_builder_serializes_history_as_user_block(tmp_path: Path) -> None:
     """Layer: contract. Verifies prior transcript history is folded into the compact turn packet."""
     builder = MessageBuilder(tmp_path)
@@ -61,6 +65,7 @@ async def test_message_builder_serializes_history_as_user_block(tmp_path: Path) 
     assert '"actor": "integrity_guard"' in rendered
 
 
+@pytest.mark.contract
 async def test_message_builder_adds_protocol_response_contract_when_governed(tmp_path: Path) -> None:
     """Layer: contract. Verifies governed turns keep the response envelope inside the compact packet."""
     builder = MessageBuilder(tmp_path)
@@ -74,7 +79,6 @@ async def test_message_builder_adds_protocol_response_contract_when_governed(tmp
         "required_write_paths": ["agent_output/main.py"],
         "history": [],
     }
-
     messages = await prepare_message_fixture(builder, issue=_issue(), role=_role(), context=context)
     assert [message["role"] for message in messages] == ["system", "user"]
     assert 'Response envelope: {"content":"","tool_calls":[...]}' in messages[0]["content"]
@@ -82,6 +86,7 @@ async def test_message_builder_adds_protocol_response_contract_when_governed(tmp
     assert "Protocol Response Contract:" not in messages[1]["content"]
 
 
+@pytest.mark.contract
 async def test_message_builder_includes_issue_brief_fields(tmp_path: Path) -> None:
     builder = MessageBuilder(tmp_path)
     issue = IssueConfig(
@@ -103,10 +108,8 @@ async def test_message_builder_includes_issue_brief_fields(tmp_path: Path) -> No
         "required_write_paths": ["agent_output/brief.md"],
         "history": [],
     }
-
     messages = await prepare_message_fixture(builder, issue=issue, role=_role(), context=context)
     rendered = "\n".join(m["content"] for m in messages)
-
     assert "Issue Brief:" in rendered
     assert "Description: Define operator-facing acceptance criteria." in rendered
     assert "Requirements: Keep the output repo-local and truthful." in rendered
@@ -115,6 +118,7 @@ async def test_message_builder_includes_issue_brief_fields(tmp_path: Path) -> No
     assert "- CURRENT_AUTHORITY.md" in rendered
 
 
+@pytest.mark.contract
 async def test_message_builder_preserves_issue_note_when_runtime_retry_note_is_present(tmp_path: Path) -> None:
     builder = MessageBuilder(tmp_path)
     issue = IssueConfig(
@@ -134,14 +138,13 @@ async def test_message_builder_preserves_issue_note_when_runtime_retry_note_is_p
         "required_write_paths": ["agent_output/challenge_runtime/simulator.py"],
         "history": [],
     }
-
     messages = await prepare_message_fixture(builder, issue=issue, role=_role(), context=context)
     rendered = "\n".join(m["content"] for m in messages)
-
     assert "Task Note: Keep dependency gating and truthful terminal states." in rendered
     assert "Retry Note: runtime_guard_retry_scheduled: timeout after 60s" in rendered
 
 
+@pytest.mark.contract
 async def test_message_builder_omits_issue_brief_for_guard_review_turn(tmp_path: Path) -> None:
     builder = MessageBuilder(tmp_path)
     issue = IssueConfig(
@@ -168,14 +171,13 @@ async def test_message_builder_omits_issue_brief_for_guard_review_turn(tmp_path:
         "required_write_paths": [],
         "history": [],
     }
-
     messages = await prepare_message_fixture(builder, issue=issue, role=role, context=context)
     rendered = "\n".join(m["content"] for m in messages)
-
     assert "Issue Brief:" not in rendered
     assert "Builder instructions should not leak into guard review." not in rendered
 
 
+@pytest.mark.contract
 async def test_message_builder_includes_comment_contract_when_required(tmp_path: Path) -> None:
     builder = MessageBuilder(tmp_path)
     required_path = tmp_path / "agent_output" / "requirements.txt"
@@ -192,10 +194,8 @@ async def test_message_builder_includes_comment_contract_when_required(tmp_path:
         "required_comment_contains": ["Findings", "Severity", "Path"],
         "history": [],
     }
-
     messages = await prepare_message_fixture(builder, issue=_issue(), role=_role(), context=context)
     rendered = "\n".join(m["content"] for m in messages)
-
     assert "Review Comment Rules:" in rendered
     assert "240 characters" in rendered
     assert "Findings, Severity, Path, agent_output/requirements.txt" in rendered
@@ -204,6 +204,7 @@ async def test_message_builder_includes_comment_contract_when_required(tmp_path:
     assert "A simple compliant citation pattern is: (agent_output/requirements.txt)." in rendered
 
 
+@pytest.mark.contract
 async def test_message_builder_includes_runtime_verifier_contract_for_app_entrypoint(tmp_path: Path) -> None:
     builder = MessageBuilder(tmp_path)
     context = {
@@ -227,10 +228,8 @@ async def test_message_builder_includes_runtime_verifier_contract_for_app_entryp
         },
         "history": [],
     }
-
     messages = await prepare_message_fixture(builder, issue=_issue(), role=_role(), context=context)
     rendered = "\n".join(m["content"] for m in messages)
-
     assert "Runtime Verification:" in rendered
     assert "python agent_output/main.py" in rendered
     assert "no positional arguments" in rendered
@@ -240,6 +239,7 @@ async def test_message_builder_includes_runtime_verifier_contract_for_app_entryp
     assert "files_list len_gte 1" in rendered
 
 
+@pytest.mark.contract
 async def test_message_builder_includes_explicit_runtime_verifier_commands(tmp_path: Path) -> None:
     builder = MessageBuilder(tmp_path)
     context = {
@@ -263,16 +263,15 @@ async def test_message_builder_includes_explicit_runtime_verifier_commands(tmp_p
         },
         "history": [],
     }
-
     messages = await prepare_message_fixture(builder, issue=_issue(), role=_role(), context=context)
     rendered = "\n".join(m["content"] for m in messages)
-
     assert "Runtime Verification:" in rendered
     assert "cwd=agent_output: python -m pytest -q tests" in rendered
     assert "cwd=.: python agent_output/main.py" in rendered
     assert "stdout must print valid JSON" in rendered
 
 
+@pytest.mark.contract
 async def test_message_builder_includes_runtime_verifier_contract_for_write_artifact_issue_override(tmp_path: Path) -> None:
     builder = MessageBuilder(tmp_path)
     context = {
@@ -301,14 +300,13 @@ async def test_message_builder_includes_runtime_verifier_contract_for_write_arti
         },
         "history": [],
     }
-
     messages = await prepare_message_fixture(builder, issue=_issue(), role=_role(), context=context)
     rendered = "\n".join(m["content"] for m in messages)
-
     assert "Runtime Verification:" in rendered
     assert "cwd=agent_output: python -c print('artifact-proof')" in rendered
 
 
+@pytest.mark.contract
 async def test_message_builder_includes_artifact_semantic_contract(tmp_path: Path) -> None:
     builder = MessageBuilder(tmp_path)
     context = {
@@ -333,10 +331,8 @@ async def test_message_builder_includes_artifact_semantic_contract(tmp_path: Pat
         },
         "history": [],
     }
-
     messages = await prepare_message_fixture(builder, issue=_issue(), role=_role(), context=context)
     rendered = "\n".join(m["content"] for m in messages)
-
     assert "Artifact Checks:" in rendered
     assert "checked as an exact substring" in rendered
     assert "Path: agent_output/main.py" in rendered
@@ -345,6 +341,7 @@ async def test_message_builder_includes_artifact_semantic_contract(tmp_path: Pat
     assert "Must not contain: from .challenge_runtime" in rendered
 
 
+@pytest.mark.contract
 async def test_message_builder_includes_artifact_exact_shape_hints_for_simulator_contract(tmp_path: Path) -> None:
     builder = MessageBuilder(tmp_path)
     context = {
@@ -375,15 +372,14 @@ async def test_message_builder_includes_artifact_exact_shape_hints_for_simulator
         },
         "history": [],
     }
-
     messages = await prepare_message_fixture(builder, issue=_issue(), role=_role(), context=context)
     rendered = "\n".join(m["content"] for m in messages)
-
     assert "Exact Shape Hints:" in rendered
     assert "Keep the planner loop in this exact layer-driven form" in rendered
     assert "Do not replace layers with self.layers" in rendered
 
 
+@pytest.mark.contract
 async def test_message_builder_includes_artifact_exact_shape_hints_for_validator_contract(tmp_path: Path) -> None:
     builder = MessageBuilder(tmp_path)
     context = {
@@ -412,15 +408,14 @@ async def test_message_builder_includes_artifact_exact_shape_hints_for_validator
         },
         "history": [],
     }
-
     messages = await prepare_message_fixture(builder, issue=_issue(), role=_role(), context=context)
     rendered = "\n".join(m["content"] for m in messages)
-
     assert "Exact Shape Hints:" in rendered
     assert "workflow_cycle_path = Path(__file__).resolve().parents[1] / 'challenge_inputs' / 'workflow_cycle.json'" in rendered
     assert "Never create or validate tmp_path / 'workflow_valid.json'." in rendered
 
 
+@pytest.mark.contract
 async def test_message_builder_includes_artifact_import_hints_for_loader_contract(tmp_path: Path) -> None:
     builder = MessageBuilder(tmp_path)
     context = {
@@ -455,15 +450,14 @@ async def test_message_builder_includes_artifact_import_hints_for_loader_contrac
         },
         "history": [],
     }
-
     messages = await prepare_message_fixture(builder, issue=_issue(), role=_role(), context=context)
     rendered = "\n".join(m["content"] for m in messages)
-
     assert "Exact Shape Hints:" in rendered
     assert "return {'workflow_id': data['workflow_id'], 'max_concurrency': data['max_concurrency'], 'tasks': [normalize_task(task) for task in data['tasks']]}" in rendered
     assert "Do not call WorkflowSpec(**data) or TaskSpec(**raw_task)" in rendered
 
 
+@pytest.mark.contract
 async def test_message_builder_includes_artifact_shape_hints_for_models_contract(tmp_path: Path) -> None:
     builder = MessageBuilder(tmp_path)
     context = {
@@ -493,15 +487,14 @@ async def test_message_builder_includes_artifact_shape_hints_for_models_contract
         },
         "history": [],
     }
-
     messages = await prepare_message_fixture(builder, issue=_issue(), role=_role(), context=context)
     rendered = "\n".join(m["content"] for m in messages)
-
     assert "Exact Shape Hints:" in rendered
     assert "TaskSpec limited to task-level fields only" in rendered
     assert "WorkflowSpec limited to root-level fields only" in rendered
 
 
+@pytest.mark.contract
 async def test_message_builder_includes_artifact_export_hints_for_package_init_contract(tmp_path: Path) -> None:
     builder = MessageBuilder(tmp_path)
     context = {
@@ -529,7 +522,6 @@ async def test_message_builder_includes_artifact_export_hints_for_package_init_c
         },
         "history": [],
     }
-
     messages = await prepare_message_fixture(builder, issue=_issue(), role=_role(), context=context)
     rendered = "\n".join(m["content"] for m in messages)
 
@@ -538,6 +530,7 @@ async def test_message_builder_includes_artifact_export_hints_for_package_init_c
     assert "from .loader import load_workflow, normalize_task" in rendered
 
 
+@pytest.mark.contract
 async def test_message_builder_includes_artifact_import_hints_for_validator_contract(tmp_path: Path) -> None:
     builder = MessageBuilder(tmp_path)
     context = {
@@ -576,6 +569,7 @@ async def test_message_builder_includes_artifact_import_hints_for_validator_cont
     assert "Never import through agent_output.challenge_runtime" in rendered
 
 
+@pytest.mark.contract
 async def test_message_builder_includes_artifact_order_hints_for_planner_contract(tmp_path: Path) -> None:
     builder = MessageBuilder(tmp_path)
     context = {
@@ -615,6 +609,7 @@ async def test_message_builder_includes_artifact_order_hints_for_planner_contrac
     assert "do not place every task in the first layer" in rendered
 
 
+@pytest.mark.contract
 async def test_message_builder_includes_artifact_shape_hints_for_simulator_resume_tests(tmp_path: Path) -> None:
     builder = MessageBuilder(tmp_path)
     context = {
@@ -669,6 +664,7 @@ async def test_message_builder_includes_artifact_shape_hints_for_simulator_resum
     assert "Do not invent a repo-local tmp directory" in rendered
 
 
+@pytest.mark.contract
 async def test_message_builder_includes_single_envelope_contract_for_legacy_multi_tool_turns(tmp_path: Path) -> None:
     builder = MessageBuilder(tmp_path)
     context = {
@@ -690,6 +686,7 @@ async def test_message_builder_includes_single_envelope_contract_for_legacy_mult
     assert "You must include all required tool calls in this same response." in rendered
 
 
+@pytest.mark.contract
 async def test_message_builder_suppresses_builder_contracts_for_review_comment_profile(tmp_path: Path) -> None:
     builder = MessageBuilder(tmp_path)
     context = {
@@ -734,6 +731,7 @@ async def test_message_builder_suppresses_builder_contracts_for_review_comment_p
     assert "RMS-22" in rendered
 
 
+@pytest.mark.integration
 async def test_message_builder_preloads_required_read_context(tmp_path: Path) -> None:
     builder = MessageBuilder(tmp_path)
     required_path = tmp_path / "agent_output" / "requirements.txt"
@@ -757,6 +755,7 @@ async def test_message_builder_preloads_required_read_context(tmp_path: Path) ->
     assert "repo-local soak goals" in rendered
 
 
+@pytest.mark.integration
 async def test_message_builder_preloads_comment_grounding_without_read_tool_requirement(tmp_path: Path) -> None:
     builder = MessageBuilder(tmp_path)
     required_path = tmp_path / "agent_output" / "requirements.txt"
@@ -782,6 +781,7 @@ async def test_message_builder_preloads_comment_grounding_without_read_tool_requ
     assert "truthful failure detection" in rendered
 
 
+@pytest.mark.integration
 async def test_message_builder_preloads_builder_grounding_without_read_tool_requirement(tmp_path: Path) -> None:
     builder = MessageBuilder(tmp_path)
     required_path = tmp_path / "agent_output" / "requirements.txt"

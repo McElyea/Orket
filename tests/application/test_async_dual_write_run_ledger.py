@@ -1,4 +1,4 @@
-# Layer: integration. Protocol lifecycle fixtures use supplied ordered clocks.
+# Layers are declared per test for the exercised boundary.
 from __future__ import annotations
 
 from pathlib import Path
@@ -12,6 +12,7 @@ from orket.application.services.dual_write_run_ledger import AsyncDualModeLedger
 from tests.helpers.protocol_ledger_clock import ProtocolLedgerClock
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_async_run_ledger_finalize_rejects_done_with_failure(tmp_path: Path) -> None:
     sqlite_repo = AsyncRunLedgerRepository(tmp_path / "runtime.db")
@@ -31,12 +32,12 @@ async def test_async_run_ledger_finalize_rejects_done_with_failure(tmp_path: Pat
         )
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_async_dual_write_run_ledger_writes_both_backends_and_reports_clean_parity(tmp_path: Path) -> None:
     sqlite_repo = AsyncRunLedgerRepository(tmp_path / "runtime.db")
     protocol_repo = AsyncProtocolRunLedgerRepository(tmp_path / "workspace", timestamp_factory=ProtocolLedgerClock().utc_now_iso)
     telemetry: list[dict[str, Any]] = []
-
     dual_repo = AsyncDualModeLedgerRepository(
         sqlite_repo=sqlite_repo,
         protocol_repo=protocol_repo,
@@ -57,7 +58,6 @@ async def test_async_dual_write_run_ledger_writes_both_backends_and_reports_clea
         summary={"session_status": "incomplete"},
         artifacts={"gitea_export": {"provider": "gitea"}},
     )
-
     run = await dual_repo.get_run("sess-1")
     assert run is not None
     assert run["status"] == "incomplete"
@@ -118,6 +118,7 @@ class _FailingProtocolRepository:
         return []
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_async_dual_write_run_ledger_degrades_on_protocol_error_and_keeps_sqlite_authoritative(tmp_path: Path) -> None:
     sqlite_repo = AsyncRunLedgerRepository(tmp_path / "runtime.db")
@@ -128,7 +129,6 @@ async def test_async_dual_write_run_ledger_degrades_on_protocol_error_and_keeps_
         protocol_root=tmp_path / "workspace",
         telemetry_sink=lambda payload: telemetry.append(dict(payload)),
     )
-
     await dual_repo.start_run(
         session_id="sess-error",
         run_type="epic",
@@ -140,7 +140,6 @@ async def test_async_dual_write_run_ledger_degrades_on_protocol_error_and_keeps_
         await dual_repo.finalize_run(
             session_id="sess-error", status="failed", failure_class="ExecutionFailed", failure_reason="forced",
         )
-
     run = await dual_repo.get_run("sess-error")
     assert run is not None
     assert run["status"] == "running"
@@ -152,6 +151,7 @@ async def test_async_dual_write_run_ledger_degrades_on_protocol_error_and_keeps_
     assert any("OSError:forced protocol write failure" in str(row.get("protocol_error")) for row in parity_events)
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_async_dual_write_run_ledger_supports_protocol_primary_reads(tmp_path: Path) -> None:
     sqlite_repo = AsyncRunLedgerRepository(tmp_path / "runtime.db")
@@ -178,6 +178,7 @@ async def test_async_dual_write_run_ledger_supports_protocol_primary_reads(tmp_p
     assert run["status"] == "incomplete"
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_async_dual_write_run_ledger_logs_sink_failures_without_interrupting(
     monkeypatch: pytest.MonkeyPatch,
@@ -187,20 +188,16 @@ async def test_async_dual_write_run_ledger_logs_sink_failures_without_interrupti
     sqlite_repo = AsyncRunLedgerRepository(tmp_path / "runtime.db")
     protocol_repo = AsyncProtocolRunLedgerRepository(tmp_path / "workspace", timestamp_factory=ProtocolLedgerClock().utc_now_iso)
     logged: list[dict[str, Any]] = []
-
     def _capture_log(event: str, data: dict[str, Any] | None = None, **_: Any) -> None:
         logged.append({"event": event, "data": dict(data or {})})
-
     def _broken_sink(_payload: dict[str, Any]) -> None:
         raise RuntimeError("forced telemetry sink failure")
-
     monkeypatch.setattr("orket.application.services.dual_write_telemetry.log_event", _capture_log)
     dual_repo = AsyncDualModeLedgerRepository(
         sqlite_repo=sqlite_repo,
         protocol_repo=protocol_repo,
         telemetry_sink=_broken_sink,
     )
-
     await dual_repo.start_run(
         session_id="sess-sink",
         run_type="epic",
@@ -208,7 +205,6 @@ async def test_async_dual_write_run_ledger_logs_sink_failures_without_interrupti
         department="core",
         build_id="build-1",
     )
-
     assert dual_repo.sink_failure_count >= 1
     assert any(
         row["event"] == "telemetry_sink_error"
@@ -239,6 +235,7 @@ class _BrokenProtocolRepository:
         return []
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_async_dual_write_run_ledger_propagates_structural_protocol_misconfiguration(tmp_path: Path) -> None:
     """Layer: unit. Verifies broken protocol repo wiring fails closed instead of being swallowed as transient I/O drift."""
@@ -248,7 +245,6 @@ async def test_async_dual_write_run_ledger_propagates_structural_protocol_miscon
         protocol_repo=_BrokenProtocolRepository(),
         protocol_root=tmp_path / "workspace",
     )
-
     with pytest.raises(AttributeError, match="missing method on protocol repo"):
         await dual_repo.start_run(
             session_id="sess-bad-struct",
@@ -259,12 +255,13 @@ async def test_async_dual_write_run_ledger_propagates_structural_protocol_miscon
         )
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_async_dual_write_run_ledger_distinguishes_parity_check_crash_from_parity_mismatch(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    """Layer: unit. Verifies parity telemetry distinguishes a comparator crash from a real parity mismatch."""
+    """Layer: contract. Verifies parity telemetry distinguishes a comparator crash from a real parity mismatch."""
     sqlite_repo = AsyncRunLedgerRepository(tmp_path / "runtime.db")
     protocol_repo = AsyncProtocolRunLedgerRepository(tmp_path / "workspace", timestamp_factory=ProtocolLedgerClock().utc_now_iso)
     telemetry: list[dict[str, Any]] = []
@@ -317,6 +314,7 @@ class _FinalizeFailingProtocolRepository:
         return await self._delegate.list_events(session_id)
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_async_dual_write_run_ledger_recovers_pending_start_intent_before_next_operation(
     tmp_path: Path,
@@ -359,6 +357,7 @@ async def test_async_dual_write_run_ledger_recovers_pending_start_intent_before_
     assert await recovered_repo._load_intents() == []
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_async_dual_write_run_ledger_recovers_pending_finalize_intent_before_next_operation(
     tmp_path: Path,
@@ -409,6 +408,7 @@ async def test_async_dual_write_run_ledger_recovers_pending_finalize_intent_befo
     assert await recovered_repo._load_intents() == []
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_async_dual_write_run_ledger_rechecks_recovery_without_duplicate_events(
     tmp_path: Path,

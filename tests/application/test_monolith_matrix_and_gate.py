@@ -11,6 +11,7 @@ from scripts.acceptance.check_monolith_readiness_gate import (
 from scripts.acceptance.run_monolith_variant_matrix import build_combos, choose_default_variant, summarize_report
 
 
+@pytest.mark.unit
 def test_build_combos_cartesian_product():
     combos = build_combos(["coder", "architect"], ["backend_only", "api_vue"])
     assert len(combos) == 4
@@ -18,6 +19,7 @@ def test_build_combos_cartesian_product():
     assert combos[0].project_surface_profile == "backend_only"
 
 
+@pytest.mark.unit
 def test_summarize_report_extracts_rates():
     report = {
         "run_count": 4,
@@ -53,6 +55,7 @@ def test_summarize_report_preserves_invalid_payload_signals():
     assert summary["invalid_payload_signals"] == {"db_summary_json": 0, "metrics_json": 1}
 
 
+@pytest.mark.unit
 def test_choose_default_variant_prefers_higher_pass_rate():
     entries = [
         {
@@ -77,6 +80,7 @@ def test_choose_default_variant_prefers_higher_pass_rate():
     assert choose_default_variant(entries) == "architect"
 
 
+@pytest.mark.unit
 def test_aggregate_metrics_average_values():
     entries = [
         {"executed": True, "summary": {"pass_rate": 0.8, "runtime_failure_rate": 0.2, "reviewer_rejection_rate": 0.4}},
@@ -88,6 +92,7 @@ def test_aggregate_metrics_average_values():
     assert metrics["reviewer_rejection_rate"] == pytest.approx(0.3)
 
 
+@pytest.mark.unit
 def test_aggregate_metrics_preserves_zero_values():
     entries = [
         {"executed": True, "summary": {"pass_rate": 0.5, "runtime_failure_rate": 0.0, "reviewer_rejection_rate": 0.0}},
@@ -142,6 +147,7 @@ def test_aggregate_invalid_payload_signals_rejects_missing_or_malformed_values()
     ]
 
 
+@pytest.mark.unit
 def test_missing_required_combinations_detected():
     entries = [{"builder_variant": "coder", "project_surface_profile": "backend_only"}]
     policy = {
@@ -154,6 +160,7 @@ def test_missing_required_combinations_detected():
     assert ("architect", "api_vue") in missing
 
 
+@pytest.mark.unit
 def test_policy_thresholds_override_args():
     class _Args:
         min_pass_rate = 0.1

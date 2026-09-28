@@ -2,9 +2,13 @@ from __future__ import annotations
 
 import hashlib
 
+import pytest
+
 from orket.application.review.lanes.deterministic import run_deterministic_lane
 from orket.application.review.models import ChangedFile, ReviewSnapshot, SnapshotBounds, TruncationReport
 from orket.application.review.policy_resolver import DEFAULT_POLICY
+
+pytestmark = pytest.mark.unit
 
 
 def _snapshot(diff: str) -> ReviewSnapshot:

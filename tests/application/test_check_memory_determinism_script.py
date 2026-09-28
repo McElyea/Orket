@@ -4,6 +4,10 @@ import json
 import subprocess
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 
 def test_check_memory_determinism_passes_with_minimal_valid_payloads(tmp_path: Path) -> None:
     trace = tmp_path / "memory_trace.json"

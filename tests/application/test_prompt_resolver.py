@@ -27,6 +27,7 @@ def _dialect() -> DialectConfig:
     )
 
 
+@pytest.mark.contract
 def test_prompt_resolver_composes_deterministically() -> None:
     skill = _skill()
     dialect = _dialect()
@@ -57,6 +58,7 @@ def test_prompt_resolver_composes_deterministically() -> None:
     assert resolution_a.layers["context_profile"] == "long_project"
 
 
+@pytest.mark.contract
 def test_prompt_resolver_applies_prefix_guards_and_context_overlay() -> None:
     resolution = PromptResolver.resolve(
         skill=_skill(),
@@ -76,6 +78,7 @@ def test_prompt_resolver_applies_prefix_guards_and_context_overlay() -> None:
     assert "required_read_paths" in resolution.system_prompt
 
 
+@pytest.mark.contract
 def test_prompt_resolver_stage_contract_and_render_order() -> None:
     resolution = PromptResolver.resolve(
         skill=_skill(),
@@ -93,6 +96,7 @@ def test_prompt_resolver_stage_contract_and_render_order() -> None:
     assert idx_context > idx_guard
 
 
+@pytest.mark.contract
 def test_prompt_resolver_stable_policy_strict_rejects_non_stable_assets() -> None:
     skill = _skill().model_copy(update={"prompt_metadata": {"id": "role.architect", "version": "1.2.0", "status": "draft"}})
     dialect = _dialect()
@@ -105,6 +109,7 @@ def test_prompt_resolver_stable_policy_strict_rejects_non_stable_assets() -> Non
         )
 
 
+@pytest.mark.contract
 def test_prompt_resolver_exact_policy_strict_requires_matching_version() -> None:
     skill = _skill()
     dialect = _dialect()
@@ -121,6 +126,7 @@ def test_prompt_resolver_exact_policy_strict_requires_matching_version() -> None
         )
 
 
+@pytest.mark.contract
 def test_prompt_resolver_exact_policy_allows_metadata_only_rollback() -> None:
     dialect = _dialect()
     current = _skill().model_copy(
@@ -153,6 +159,7 @@ def test_prompt_resolver_exact_policy_allows_metadata_only_rollback() -> None:
     assert rollback_resolution.metadata["prompt_version"] == "1.9.0/3.0.1"
 
 
+@pytest.mark.unit
 def test_prompt_resolver_normalizes_and_deduplicates_guard_layers() -> None:
     resolution = PromptResolver.resolve(
         skill=_skill(),
@@ -163,6 +170,7 @@ def test_prompt_resolver_normalizes_and_deduplicates_guard_layers() -> None:
     assert resolution.metadata["guard_count"] == 3
 
 
+@pytest.mark.contract
 def test_prompt_resolver_rejects_unknown_guard_layers() -> None:
     with pytest.raises(ValueError, match="Unsupported guard layer"):
         PromptResolver.resolve(
@@ -172,6 +180,7 @@ def test_prompt_resolver_rejects_unknown_guard_layers() -> None:
         )
 
 
+@pytest.mark.contract
 def test_prompt_resolver_rejects_prompt_rule_overlap_with_runtime_namespace() -> None:
     with pytest.raises(ValueError, match="Prompt rule_ids cannot use runtime guard namespaces"):
         PromptResolver.resolve(
@@ -184,6 +193,7 @@ def test_prompt_resolver_rejects_prompt_rule_overlap_with_runtime_namespace() ->
         )
 
 
+@pytest.mark.contract
 def test_prompt_resolver_allows_disjoint_rule_ownership() -> None:
     resolution = PromptResolver.resolve(
         skill=_skill(),
@@ -196,6 +206,7 @@ def test_prompt_resolver_allows_disjoint_rule_ownership() -> None:
     assert resolution.metadata["prompt_id"] == "role.architect+dialect.qwen"
 
 
+@pytest.mark.contract
 def test_prompt_resolver_rejects_unknown_runtime_guard_rule_ids() -> None:
     with pytest.raises(ValueError, match="Unknown runtime guard rule_id values"):
         PromptResolver.resolve(
@@ -208,6 +219,7 @@ def test_prompt_resolver_rejects_unknown_runtime_guard_rule_ids() -> None:
         )
 
 
+@pytest.mark.contract
 def test_prompt_resolver_rejects_duplicate_runtime_guard_rule_ids() -> None:
     with pytest.raises(ValueError, match="Duplicate runtime guard rule_id values"):
         PromptResolver.resolve(
@@ -222,6 +234,7 @@ def test_prompt_resolver_rejects_duplicate_runtime_guard_rule_ids() -> None:
         )
 
 
+@pytest.mark.contract
 def test_prompt_resolver_rejects_prompt_guard_namespace_conflicts() -> None:
     with pytest.raises(ValueError, match="Prompt rule_ids cannot use runtime guard namespaces"):
         PromptResolver.resolve(
@@ -234,6 +247,7 @@ def test_prompt_resolver_rejects_prompt_guard_namespace_conflicts() -> None:
         )
 
 
+@pytest.mark.contract
 def test_prompt_resolver_injects_canonical_hallucination_overlay() -> None:
     resolution = PromptResolver.resolve(
         skill=_skill(),

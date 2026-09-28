@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import pytest
+
 from scripts.acceptance.check_microservices_unlock import (
     _check_governance_stability,
     _check_matrix_stability,
     evaluate_unlock,
 )
+
+pytestmark = pytest.mark.contract
 
 
 def _unlock_policy() -> dict:

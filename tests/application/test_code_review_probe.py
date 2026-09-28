@@ -1,4 +1,4 @@
-# Layer: unit
+# Layers are declared per test for the exercised boundary.
 from __future__ import annotations
 
 import importlib.util
@@ -16,6 +16,7 @@ def _load_module(path: Path):
     return module
 
 
+@pytest.mark.contract
 def test_validated_review_payload_handles_fenced_payload() -> None:
     module = _load_module(Path("scripts/workloads/code_review_probe_support.py"))
     payload, response_json_found, contract_valid, advisory_errors = module.validated_review_payload(
@@ -23,24 +24,21 @@ def test_validated_review_payload_handles_fenced_payload() -> None:
         '{"summary":["one"],"high_risk_issues":[],"missing_tests":[],"questions_for_author":[],"nits":[],"refs":[]}\n'
         "```"
     )
-
     assert payload["summary"] == ["one"]
     assert response_json_found is True
     assert contract_valid is True
     assert advisory_errors == []
 
 
+@pytest.mark.contract
 def test_build_deterministic_payload_tracks_fixture_findings() -> None:
     module = _load_module(Path("scripts/workloads/code_review_probe_support.py"))
     answer_key = module.load_json_object(
         Path("scripts/workloads/fixtures/code_review_probe_v1/human_review_answer_key.json")
     )
     source_text = module.load_text(Path("scripts/workloads/fixtures/code_review_probe_v1/corrupt_order_processor.py"))
-
     payload = module.build_deterministic_payload(source_text=source_text, answer_key=answer_key, run_id="probe-run")
-
     hit_ids = {row["issue_id"] for row in payload["findings"]}
-
     assert payload["run_id"] == "probe-run"
     assert payload["deterministic_lane_version"] == "s04_static_fingerprint_v1"
     assert payload["execution_state_authority"] == "control_plane_records"
@@ -50,9 +48,9 @@ def test_build_deterministic_payload_tracks_fixture_findings() -> None:
     assert "VERIFY_SIGNATURE_ALWAYS_TRUE" in hit_ids
 
 
+@pytest.mark.contract
 def test_build_run_manifest_payload_marks_outputs_non_authoritative() -> None:
     module = _load_module(Path("scripts/workloads/code_review_probe_support.py"))
-
     payload = module.build_run_manifest_payload(
         run_id="probe-run",
         snapshot_digest="sha256:test",
@@ -61,16 +59,14 @@ def test_build_run_manifest_payload_marks_outputs_non_authoritative() -> None:
         prompt_profile="baseline_v2",
         review_method="single_pass",
     )
-
     assert payload["bundle_kind"] == "code_review_probe"
     assert payload["execution_state_authority"] == "control_plane_records"
     assert payload["lane_outputs_execution_state_authoritative"] is False
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_build_run_manifest_payload_requires_run_id() -> None:
     module = _load_module(Path("scripts/workloads/code_review_probe_support.py"))
-
     with pytest.raises(ValueError, match="code_review_probe_run_manifest_run_id_required"):
         module.build_run_manifest_payload(
             run_id="   ",
@@ -82,9 +78,9 @@ def test_build_run_manifest_payload_requires_run_id() -> None:
         )
 
 
+@pytest.mark.contract
 def test_build_model_assisted_payload_marks_outputs_non_authoritative() -> None:
     module = _load_module(Path("scripts/workloads/code_review_probe_reporting.py"))
-
     payload = module.build_model_assisted_payload(
         review_payload={
             "summary": ["summary"],
@@ -101,13 +97,12 @@ def test_build_model_assisted_payload_marks_outputs_non_authoritative() -> None:
         review_method="single_pass",
         policy_digest="sha256:policy",
     )
-
     assert payload["execution_state_authority"] == "control_plane_records"
     assert payload["lane_output_execution_state_authoritative"] is False
     assert payload["run_id"] == "probe-run"
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_build_model_assisted_payload_requires_run_id() -> None:
     module = _load_module(Path("scripts/workloads/code_review_probe_reporting.py"))
 
@@ -130,6 +125,7 @@ def test_build_model_assisted_payload_requires_run_id() -> None:
         )
 
 
+@pytest.mark.contract
 def test_build_guard_messages_includes_coverage_checklist() -> None:
     module = _load_module(Path("scripts/workloads/code_review_probe_support.py"))
 
@@ -144,6 +140,7 @@ def test_build_guard_messages_includes_coverage_checklist() -> None:
     assert "Return exactly one JSON object" in messages[0]["content"]
 
 
+@pytest.mark.contract
 def test_build_governed_claim_payload_tracks_locked_scope() -> None:
     module = _load_module(Path("scripts/workloads/code_review_probe_support.py"))
 
@@ -168,7 +165,7 @@ def test_build_governed_claim_payload_tracks_locked_scope() -> None:
     assert payload["control_bundle_hash"].startswith("sha256:")
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_build_deterministic_payload_requires_run_id() -> None:
     module = _load_module(Path("scripts/workloads/code_review_probe_support.py"))
     answer_key = module.load_json_object(
@@ -180,6 +177,7 @@ def test_build_deterministic_payload_requires_run_id() -> None:
         module.build_deterministic_payload(source_text=source_text, answer_key=answer_key, run_id="")
 
 
+@pytest.mark.unit
 def test_usage_responses_dedupes_single_pass() -> None:
     module = _load_module(Path("scripts/workloads/code_review_probe.py"))
     response = object()
@@ -199,6 +197,7 @@ def test_usage_responses_dedupes_single_pass() -> None:
     assert len(self_check) == 2
 
 
+@pytest.mark.contract
 def test_score_review_bundle_tracks_model_must_catch_hits(tmp_path: Path) -> None:
     module = _load_module(Path("scripts/workloads/code_review_probe.py"))
     artifact_dir = tmp_path / "artifact"
@@ -282,7 +281,7 @@ def test_score_review_bundle_tracks_model_must_catch_hits(tmp_path: Path) -> Non
     assert report["model_assisted"]["fix_score"] >= 1
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_score_review_bundle_rejects_drifted_score_report_contract(monkeypatch: pytest.MonkeyPatch) -> None:
     module = _load_module(Path("scripts/workloads/code_review_probe_reporting.py"))
 
@@ -305,7 +304,7 @@ def test_score_review_bundle_rejects_drifted_score_report_contract(monkeypatch: 
         )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_score_review_bundle_rejects_drifted_score_report_issue_rows(monkeypatch: pytest.MonkeyPatch) -> None:
     module = _load_module(Path("scripts/workloads/code_review_probe_reporting.py"))
 
@@ -363,7 +362,7 @@ def test_score_review_bundle_rejects_drifted_score_report_issue_rows(monkeypatch
         )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_score_review_bundle_rejects_drifted_score_report_aggregates(monkeypatch: pytest.MonkeyPatch) -> None:
     module = _load_module(Path("scripts/workloads/code_review_probe_reporting.py"))
 
@@ -409,7 +408,7 @@ def test_score_review_bundle_rejects_drifted_score_report_aggregates(monkeypatch
         )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_score_review_bundle_rejects_drifted_score_report_model_reasoning_aggregates(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -469,7 +468,7 @@ def test_score_review_bundle_rejects_drifted_score_report_model_reasoning_aggreg
         )
 
 
-# Layer: contract
+@pytest.mark.contract
 def test_score_review_bundle_rejects_drifted_score_report_snapshot_digest(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -517,6 +516,7 @@ def test_score_review_bundle_rejects_drifted_score_report_snapshot_digest(
         )
 
 
+@pytest.mark.contract
 def test_score_review_bundle_rejects_drifted_bundle_run_id(tmp_path: Path) -> None:
     module = _load_module(Path("scripts/workloads/code_review_probe.py"))
     artifact_dir = tmp_path / "artifact"

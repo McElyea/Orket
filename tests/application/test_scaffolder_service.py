@@ -8,6 +8,8 @@ import pytest
 from orket.adapters.storage.async_file_tools import AsyncFileTools
 from orket.application.services.scaffolder import Scaffolder, ScaffoldValidationError
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.asyncio
 async def test_scaffolder_creates_default_structure(tmp_path: Path):

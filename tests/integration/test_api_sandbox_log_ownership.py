@@ -17,12 +17,21 @@ from tests.adapters.test_sandbox_command_runner import _sandbox
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 
 
+def enter_hold(state):
+    # Measure responsiveness during native admission, including a faulty loop-
+    # thread invocation. Pipeline construction/child startup are separate work.
+    state.hold_started = time.perf_counter()
+    if state.timer is not None and not state.release.is_set():
+        state.timer.start()
+    state.entered.set()
+
+
 def hold_input_file(state, root, *, failure):
     try:
         with (root / "sandbox-log-input.txt").open("rb") as stream:
             state.files.append(stream)
             assert stream.read() == b"owned"
-            state.entered.set()
+            enter_hold(state)
             assert state.release.wait(5), "Sandbox log worker release deadline"
             if failure:
                 (root / "missing-sandbox-log-input.txt").read_bytes()
@@ -45,7 +54,7 @@ class NativeLogRunner:
                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as child:
                 self.state.children.append(child)
                 if self.stage == "read":
-                    self.state.entered.set()
+                    enter_hold(self.state)
                     assert self.state.release.wait(5), "Sandbox log child release deadline"
                 try:
                     stdout, stderr = child.communicate("release\n", timeout=5)
@@ -60,6 +69,7 @@ class NativeLogRunner:
 
 
 def install_pipeline_probe(app, root, monkeypatch, state, stage, stop):
+    state.timer = None  # Only responsiveness probes opt into timed release.
     host = app.state.api_runtime_context.api_runtime_host
     original = host.create_execution_pipeline
 
@@ -94,8 +104,7 @@ async def interrupt_request(client, context, root, state, stage, stop, record_pr
             state.deadline = deadline
             return await client.get("/v1/sandboxes/sandbox-test/logs")
 
-    timer = threading.Timer(.8, state.release.set)
-    timer.start()
+    timer = state.timer = threading.Timer(.8, state.release.set)
     started = time.perf_counter()
     request = asyncio.create_task(invoke())
     try:
@@ -108,7 +117,8 @@ async def interrupt_request(client, context, root, state, stage, stop, record_pr
             state.deadline.reschedule(asyncio.get_running_loop().time() + .05)
         async with aiosqlite.connect(root / "responsive.sqlite3") as connection:
             assert await (await connection.execute("SELECT 42")).fetchone() == (42,)
-        elapsed = time.perf_counter() - started
+        elapsed = time.perf_counter() - state.hold_started
+        record_property("request_to_native_hold_seconds", state.hold_started - started)
         record_property("responsive_sqlite_seconds", elapsed)
         assert elapsed < .5
         assert (await client.get("/v1/system/heartbeat")).status_code == 200
@@ -132,7 +142,8 @@ async def interrupt_request(client, context, root, state, stage, stop, record_pr
     finally:
         state.release.set()
         timer.cancel()
-        await asyncio.to_thread(timer.join, 5)
+        if timer.ident is not None:
+            await asyncio.to_thread(timer.join, 5)
         await asyncio.gather(request, return_exceptions=True)
         if state.entered.is_set():
             assert await asyncio.to_thread(state.finished.wait, 5)

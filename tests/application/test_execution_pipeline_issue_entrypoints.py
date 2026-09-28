@@ -10,6 +10,7 @@ from orket.runtime.execution_pipeline import ExecutionPipeline
 from tests.helpers.runtime_result import published_result
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_run_card_routes_atomic_issue_via_normalized_dispatcher() -> None:
     """Layer: unit. Verifies the canonical card surface dispatches through one normalized resolver."""
@@ -52,6 +53,7 @@ async def test_run_card_routes_atomic_issue_via_normalized_dispatcher() -> None:
     assert result == {"issue_id": "ISSUE-42"}
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_run_issue_wrapper_routes_through_run_card() -> None:
     """Layer: unit. Verifies the compatibility issue wrapper does not own dispatch logic."""
@@ -86,6 +88,7 @@ async def test_run_issue_wrapper_routes_through_run_card() -> None:
     assert result == {"card_id": "ISSUE-42"}
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_run_epic_wrapper_routes_through_run_card() -> None:
     """Layer: unit. Verifies the compatibility epic wrapper does not own dispatch logic."""
@@ -122,6 +125,7 @@ async def test_run_epic_wrapper_routes_through_run_card() -> None:
     assert result == {"card_id": "EPIC-42"}
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_run_rock_wrapper_routes_through_run_card() -> None:
     """Layer: unit. Verifies the compatibility rock wrapper does not own dispatch logic."""
@@ -156,6 +160,7 @@ async def test_run_rock_wrapper_routes_through_run_card() -> None:
     assert result == {"card_id": "demo-rock"}
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_issue_dispatch_keeps_cards_epic_workload_path(monkeypatch: pytest.MonkeyPatch) -> None:
     """Layer: unit. Verifies issue dispatch still reaches the cards-epic workload path after normalization."""
@@ -194,6 +199,7 @@ async def test_issue_dispatch_keeps_cards_epic_workload_path(monkeypatch: pytest
     assert result == [{"epic": "parent-epic"}]
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_issue_dispatch_ignores_forwarded_target_issue_id(monkeypatch: pytest.MonkeyPatch) -> None:
     """Layer: unit. Verifies issue-card dispatch does not forward a duplicate target_issue_id into epic execution."""

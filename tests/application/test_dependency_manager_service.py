@@ -9,6 +9,7 @@ from orket.adapters.storage.async_file_tools import AsyncFileTools
 from orket.application.services.dependency_manager import DependencyManager, DependencyValidationError
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_dependency_manager_creates_default_manifests(tmp_path: Path):
     fs = AsyncFileTools(tmp_path)
@@ -22,6 +23,7 @@ async def test_dependency_manager_creates_default_manifests(tmp_path: Path):
     assert (tmp_path / "agent_output" / "dependencies" / "package.json").is_file()
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_dependency_manager_is_deterministic_on_rerun(tmp_path: Path):
     fs = AsyncFileTools(tmp_path)
@@ -34,6 +36,7 @@ async def test_dependency_manager_is_deterministic_on_rerun(tmp_path: Path):
     assert sorted(first["required_files"]) == sorted(second["required_files"])
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_dependency_manager_python_profile_policy_driven_sets(tmp_path: Path):
     fs = AsyncFileTools(tmp_path)
@@ -71,6 +74,7 @@ async def test_dependency_manager_python_profile_policy_driven_sets(tmp_path: Pa
     assert "pytest==8.3.0" in requirements_dev
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_dependency_manager_rejects_unpinned_python_dependencies(tmp_path: Path):
     fs = AsyncFileTools(tmp_path)
@@ -90,6 +94,7 @@ async def test_dependency_manager_rejects_unpinned_python_dependencies(tmp_path:
         await manager.ensure()
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_dependency_manager_node_profile_policy_driven_sets(tmp_path: Path):
     fs = AsyncFileTools(tmp_path)
@@ -120,6 +125,7 @@ async def test_dependency_manager_node_profile_policy_driven_sets(tmp_path: Path
     assert package_json["devDependencies"]["eslint"] == "9.10.0"
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_dependency_manager_backend_profile_defaults_to_python(tmp_path: Path):
     fs = AsyncFileTools(tmp_path)
@@ -136,6 +142,7 @@ async def test_dependency_manager_backend_profile_defaults_to_python(tmp_path: P
     assert "agent_output/dependencies/package.json" not in result["required_files"]
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_dependency_manager_api_vue_profile_adds_vue_defaults(tmp_path: Path):
     fs = AsyncFileTools(tmp_path)
@@ -154,6 +161,7 @@ async def test_dependency_manager_api_vue_profile_adds_vue_defaults(tmp_path: Pa
     assert package_json["devDependencies"]["vite"] == "5.4.12"
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_dependency_manager_microservices_pattern_adds_services_manifest(tmp_path: Path):
     fs = AsyncFileTools(tmp_path)

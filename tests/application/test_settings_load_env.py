@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-# Layer: unit
+# Layers are declared per test for the exercised boundary.
 import asyncio
 import contextlib
 import os
@@ -22,8 +22,9 @@ def _unset_pytest_marker():
             os.environ["PYTEST_CURRENT_TEST"] = original
 
 
+@pytest.mark.integration
 def test_load_env_parses_values_before_event_loop(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    """Layer: unit. Verifies load_env parses real .env content, ignores comments/blanks, and preserves existing vars."""
+    """Layer: integration. Verifies load_env parses real .env content, ignores comments/blanks, and preserves existing vars."""
     monkeypatch.setattr(settings_module, "_ENV_LOADED", False)
     env_file = tmp_path / ".env"
     env_file.write_text(
@@ -44,8 +45,9 @@ def test_load_env_parses_values_before_event_loop(monkeypatch: pytest.MonkeyPatc
     assert os.environ["EXISTING"] == "already-set"
 
 
+@pytest.mark.contract
 def test_load_env_rejects_running_event_loop(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    """Layer: unit. Verifies load_env fails closed in async contexts instead of tripping a sync-bridge RuntimeError."""
+    """Layer: contract. Verifies load_env fails closed in async contexts instead of tripping a sync-bridge RuntimeError."""
     monkeypatch.setattr(settings_module, "_ENV_LOADED", False)
     env_file = tmp_path / ".env"
     env_file.write_text("FOO=from-file\n", encoding="utf-8")
@@ -58,10 +60,11 @@ def test_load_env_rejects_running_event_loop(monkeypatch: pytest.MonkeyPatch, tm
         asyncio.run(_invoke())
 
 
+@pytest.mark.integration
 def test_load_env_is_noop_after_preloop_load_even_if_called_in_event_loop(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    """Layer: unit. Verifies repeated load_env calls are no-ops after a successful pre-loop bootstrap."""
+    """Layer: integration. Verifies repeated load_env calls are no-ops after a successful pre-loop bootstrap."""
     monkeypatch.setattr(settings_module, "_ENV_LOADED", False)
     env_file = tmp_path / ".env"
     env_file.write_text("FOO=from-file\n", encoding="utf-8")
@@ -80,6 +83,7 @@ def test_load_env_is_noop_after_preloop_load_even_if_called_in_event_loop(
     assert os.environ["FOO"] == "from-file"
 
 
+@pytest.mark.unit
 def test_clear_settings_cache_resets_env_loaded_flag(monkeypatch: pytest.MonkeyPatch) -> None:
     """Layer: unit. Verifies cache clearing resets the env bootstrap guard for later test cases."""
     monkeypatch.setattr(settings_module, "_ENV_LOADED", True)

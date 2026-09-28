@@ -25,8 +25,9 @@ def test_corrective_prompt_binds_stable_failure_context(tmp_path: Path) -> None:
     assert builder.build_corrective_instruction(failures, {}, _observation()) != prompt
 
 
+@pytest.mark.contract
 def test_corrective_prompt_builder_includes_required_path_contracts(tmp_path: Path) -> None:
-    """Layer: unit. Corrective rendering consumes explicit read classification."""
+    """Layer: contract. Corrective rendering consumes explicit read classification."""
     required = tmp_path / "docs" / "spec.md"
     required.parent.mkdir(parents=True, exist_ok=True)
     required.write_text("spec", encoding="utf-8")
@@ -42,6 +43,7 @@ def test_corrective_prompt_builder_includes_required_path_contracts(tmp_path: Pa
     assert "agent_output/out.txt" in prompt
 
 
+@pytest.mark.unit
 def test_corrective_prompt_builder_failure_message_mapping() -> None:
     assert (
         CorrectivePromptBuilder.deterministic_failure_message("progress_contract_not_met")
@@ -49,8 +51,9 @@ def test_corrective_prompt_builder_failure_message_mapping() -> None:
     )
 
 
+@pytest.mark.contract
 def test_corrective_prompt_builder_protocol_governed_uses_single_envelope_template(tmp_path: Path) -> None:
-    """Layer: unit. Protocol corrective rendering keeps one envelope."""
+    """Layer: contract. Protocol corrective rendering keeps one envelope."""
     builder = CorrectivePromptBuilder()
     prompt = builder.build_corrective_instruction(
         [{"reason": "progress_contract_not_met"}],
@@ -67,8 +70,9 @@ def test_corrective_prompt_builder_protocol_governed_uses_single_envelope_templa
     assert "do not use markdown fences" in prompt.lower()
 
 
+@pytest.mark.contract
 def test_corrective_prompt_builder_includes_artifact_semantic_deltas(tmp_path: Path) -> None:
-    """Layer: unit. Corrective rendering preserves semantic deltas."""
+    """Layer: contract. Corrective rendering preserves semantic deltas."""
     builder = CorrectivePromptBuilder()
     prompt = builder.build_corrective_instruction(
         [
@@ -100,8 +104,9 @@ def test_corrective_prompt_builder_includes_artifact_semantic_deltas(tmp_path: P
     assert "Remove these forbidden substrings: plan_workflow(self.workflow)" in prompt
 
 
+@pytest.mark.contract
 def test_corrective_prompt_builder_highlights_write_text_json_dumps_when_required(tmp_path: Path) -> None:
-    """Layer: unit. Corrective rendering preserves exact-token guidance."""
+    """Layer: contract. Corrective rendering preserves exact-token guidance."""
     builder = CorrectivePromptBuilder()
     prompt = builder.build_corrective_instruction(
         [
@@ -129,8 +134,9 @@ def test_corrective_prompt_builder_highlights_write_text_json_dumps_when_require
     assert "open(...)/json.dump(...)" in prompt
 
 
+@pytest.mark.contract
 def test_corrective_prompt_builder_includes_preserve_tokens_when_present(tmp_path: Path) -> None:
-    """Layer: unit. Corrective rendering preserves already-correct tokens."""
+    """Layer: contract. Corrective rendering preserves already-correct tokens."""
     builder = CorrectivePromptBuilder()
     prompt = builder.build_corrective_instruction(
         [

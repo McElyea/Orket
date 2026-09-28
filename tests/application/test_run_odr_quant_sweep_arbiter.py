@@ -7,7 +7,11 @@ import sys
 from pathlib import Path
 from types import ModuleType
 
+import pytest
+
 from scripts.odr.provider_admission import resolve_selection
+
+pytestmark = pytest.mark.contract
 
 
 def _load_script_module(module_name: str, script_path: str) -> ModuleType:

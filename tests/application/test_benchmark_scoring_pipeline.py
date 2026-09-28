@@ -6,6 +6,10 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any
 
+import pytest
+
+pytestmark = pytest.mark.contract
+
 
 def _load_script_module(module_name: str, script_path: str) -> ModuleType:
     path = Path(script_path)

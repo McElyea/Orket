@@ -1,10 +1,12 @@
-# Layer: integration. Real child commands with the selected test interpreter.
+# Layers are declared per test for the exercised boundary.
 from __future__ import annotations
 
 import json
 import subprocess
 import sys
 from pathlib import Path
+
+import pytest
 
 
 def _init_fake_textmystery_tests(root: Path, *, should_pass: bool) -> None:
@@ -14,6 +16,7 @@ def _init_fake_textmystery_tests(root: Path, *, should_pass: bool) -> None:
     (tests_dir / "test_policy_gate.py").write_text(body, encoding="utf-8")
 
 
+@pytest.mark.integration
 def test_run_textmystery_policy_conformance_pass(tmp_path: Path) -> None:
     repo = tmp_path / "textmystery_repo"
     _init_fake_textmystery_tests(repo, should_pass=True)
@@ -40,6 +43,7 @@ def test_run_textmystery_policy_conformance_pass(tmp_path: Path) -> None:
     assert payload["run"]["returncode"] == 0
 
 
+@pytest.mark.integration
 def test_run_textmystery_policy_conformance_fail(tmp_path: Path) -> None:
     repo = tmp_path / "textmystery_repo"
     _init_fake_textmystery_tests(repo, should_pass=False)
@@ -65,6 +69,7 @@ def test_run_textmystery_policy_conformance_fail(tmp_path: Path) -> None:
     assert payload["run"]["returncode"] != 0
 
 
+@pytest.mark.contract
 def test_run_textmystery_policy_conformance_requires_root_argument_or_env(monkeypatch) -> None:
     monkeypatch.delenv("TEXTMYSTERY_ROOT", raising=False)
 
@@ -84,6 +89,7 @@ def test_run_textmystery_policy_conformance_requires_root_argument_or_env(monkey
     assert "Set --textmystery-root or TEXTMYSTERY_ROOT." in (result.stdout + result.stderr)
 
 
+@pytest.mark.unit
 def test_scripts_do_not_hardcode_local_source_paths() -> None:
     offenders = []
     for path in Path("scripts").rglob("*"):

@@ -4,7 +4,11 @@ import json
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
+
 from orket.discovery import discover_project_assets, get_engine_recommendations, perform_first_run_onboarding
+
+pytestmark = pytest.mark.unit
 
 
 def _patch_engine_registry(monkeypatch, payload: dict) -> None:
@@ -83,7 +87,7 @@ def test_get_engine_recommendations_suggests_higher_missing_tier(monkeypatch):
     assert recommendations[0]["tier"] == "mid"
 
 
-# Layer: contract
+# Layer: unit
 def test_discover_project_assets_passes_selected_project_to_loader(monkeypatch, tmp_path):
     """Check the loader boundary; real filesystem root proof is integration coverage."""
     captures = {}

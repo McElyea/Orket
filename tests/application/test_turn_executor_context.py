@@ -40,6 +40,7 @@ stages:
     )
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_prepare_messages_includes_dependency_context_block(tmp_path):
     """Layer: contract. Verifies compact turn packets preserve dependency context instead of verbose JSON blocks."""
@@ -59,7 +60,6 @@ async def test_prepare_messages_includes_dependency_context_block(tmp_path):
         "dependency_context": {"depends_on": ["REQ-1", "ARC-1"], "dependency_count": 2},
         "history": [],
     }
-
     messages = await prepare_executor_message_fixture(executor, issue, role, context)
     assert [message["role"] for message in messages] == ["system", "user"]
     rendered = messages[1]["content"]
@@ -68,6 +68,7 @@ async def test_prepare_messages_includes_dependency_context_block(tmp_path):
     assert "- dependency_count: 2" in rendered
     assert "- depends_on: REQ-1, ARC-1" in rendered
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 # Layer: integration
 async def test_execute_turn_writes_prompt_provenance_artifacts(tmp_path):
@@ -83,18 +84,15 @@ async def test_execute_turn_writes_prompt_provenance_artifacts(tmp_path):
         description="Builds code",
         tools=["write_file"],
     )
-
     class _ModelClient:
         async def complete(self, messages):
             return SimpleNamespace(
                 content='{"tool":"write_file","args":{"path":"agent_output/main.py","content":"print(1)"}}',
                 raw={"total_tokens": 7},
             )
-
     class _Toolbox:
         async def execute(self, tool_name, args, context=None):
             return {"ok": True}
-
     context = {
         "session_id": "sess-1",
         "turn_index": 0,
@@ -123,7 +121,6 @@ async def test_execute_turn_writes_prompt_provenance_artifacts(tmp_path):
             "context_profile": "default",
         },
     }
-
     result = await executor.execute_turn(
         issue=issue,
         role=role,
@@ -132,16 +129,15 @@ async def test_execute_turn_writes_prompt_provenance_artifacts(tmp_path):
         context=context,
         system_prompt="SYSTEM",
     )
-
     assert result.success is True
     out_dir = Path(tmp_path) / "observability" / "sess-1" / "issue-1" / "000_developer"
     layers = json.loads((out_dir / "prompt_layers.json").read_text(encoding="utf-8"))
     checkpoint = json.loads((out_dir / "checkpoint.json").read_text(encoding="utf-8"))
-
     assert layers["role_base"]["name"] == "developer"
     assert checkpoint["prompt_metadata"]["prompt_id"] == "role.developer+dialect.generic"
     assert checkpoint["prompt_metadata"]["resolver_policy"] == "resolver_v1"
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 # Layer: integration
 async def test_execute_turn_reprompt_overwrites_response_artifacts_with_accepted_response(tmp_path):
@@ -214,6 +210,7 @@ async def test_execute_turn_reprompt_overwrites_response_artifacts_with_accepted
     assert response_raw["response_id"] == "second"
     assert parsed_calls[0]["args"]["path"] == "agent_output/main.py"
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 # Layer: integration
 async def test_execute_turn_writes_prompt_budget_and_structure_artifacts(tmp_path):
@@ -280,6 +277,7 @@ async def test_execute_turn_writes_prompt_budget_and_structure_artifacts(tmp_pat
     assert structure["tokenizer_id"] == "test-tokenizer"
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_execute_turn_fails_closed_when_prompt_budget_exceeded(tmp_path):
     executor = TurnExecutor(
@@ -339,6 +337,7 @@ async def test_execute_turn_fails_closed_when_prompt_budget_exceeded(tmp_path):
     assert call_count["value"] == 0
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_execute_turn_rejects_ready_turn_context(tmp_path):
     """Layer: contract. Verifies execute_turn requires an active turn status instead of READY."""
@@ -390,6 +389,7 @@ async def test_execute_turn_rejects_ready_turn_context(tmp_path):
     assert model.calls == 0
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_execute_turn_rejects_status_context_mismatch(tmp_path):
     """Layer: contract. Verifies execute_turn fails fast when issue.status and context.current_status diverge."""

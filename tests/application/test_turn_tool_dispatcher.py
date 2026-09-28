@@ -34,14 +34,11 @@ def _dispatcher(
     operation_store = operation_store if operation_store is not None else {}
     replay_store = replay_store if replay_store is not None else {}
     receipt_rows = receipt_rows if receipt_rows is not None else []
-
     def _load_replay_tool_result(**kwargs) -> dict[str, Any] | None:
         key = (str(kwargs.get("tool_name")), str(kwargs.get("tool_args")))
         return replay_store.get(key)
-
     def _persist_tool_result(**_kwargs) -> None:
         return None
-
     def _load_operation_result(**kwargs) -> dict[str, Any] | None:
         key = (
             str(kwargs["destination"].session_id),
@@ -51,7 +48,6 @@ def _dispatcher(
             str(kwargs.get("operation_id")),
         )
         return operation_store.get(key)
-
     def _persist_operation_result(**kwargs) -> None:
         key = (
             str(kwargs["destination"].session_id),
@@ -66,12 +62,10 @@ def _dispatcher(
             tool_args=dict(kwargs.get("tool_args") or {}),
             result=dict(kwargs.get("result") or {}),
         )
-
     def _append_protocol_receipt(**kwargs) -> dict[str, Any]:
         row = dict(kwargs.get("receipt") or {})
         receipt_rows.append(row)
         return row
-
     return ToolDispatcher(
         tool_gate=ToolGate(organization=None, workspace_root=tmp_path),
         middleware=middleware or TurnLifecycleInterceptors([]),
@@ -88,6 +82,7 @@ def _dispatcher(
     )
 
 
+@pytest.mark.contract
 def test_tool_dispatcher_permission_and_runtime_validation(tmp_path: Path) -> None:
     dispatcher = _dispatcher(tmp_path)
     binding = {
@@ -105,6 +100,7 @@ def test_tool_dispatcher_permission_and_runtime_validation(tmp_path: Path) -> No
     assert sorted(limits) == ["max_execution_time", "max_memory"]
 
 
+@pytest.mark.unit
 def test_tool_dispatcher_skill_binding_resolution(tmp_path: Path) -> None:
     dispatcher = _dispatcher(tmp_path)
     context = {"skill_tool_bindings": {"write_file": {"entrypoint_id": "write-main"}}}
@@ -112,6 +108,7 @@ def test_tool_dispatcher_skill_binding_resolution(tmp_path: Path) -> None:
     assert dispatcher.resolve_skill_tool_binding(context, "read_file") is None
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_tool_dispatcher_protocol_preflight_blocks_execution(tmp_path: Path) -> None:
     dispatcher = _dispatcher(tmp_path)
@@ -124,15 +121,12 @@ async def test_tool_dispatcher_protocol_preflight_blocks_execution(tmp_path: Pat
             ToolCall(tool="read_file", args={"path": "a.txt"}),
         ],
     )
-
     class _Toolbox:
         def __init__(self) -> None:
             self.calls = 0
-
         async def execute(self, tool_name, args, context):
             self.calls += 1
             return {"ok": True}
-
     toolbox = _Toolbox()
     with pytest.raises(RuntimeError):
         await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
@@ -150,6 +144,7 @@ async def test_tool_dispatcher_protocol_preflight_blocks_execution(tmp_path: Pat
     assert toolbox.calls == 0
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_tool_dispatcher_protocol_preflight_enforces_max_tool_calls(tmp_path: Path) -> None:
     dispatcher = _dispatcher(tmp_path)
@@ -162,15 +157,12 @@ async def test_tool_dispatcher_protocol_preflight_enforces_max_tool_calls(tmp_pa
             ToolCall(tool="read_file", args={"path": "a.txt"}),
         ],
     )
-
     class _Toolbox:
         def __init__(self) -> None:
             self.calls = 0
-
         async def execute(self, tool_name, args, context):
             self.calls += 1
             return {"ok": True}
-
     toolbox = _Toolbox()
     with pytest.raises(RuntimeError) as exc:
         await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
@@ -189,6 +181,7 @@ async def test_tool_dispatcher_protocol_preflight_enforces_max_tool_calls(tmp_pa
     assert toolbox.calls == 0
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_tool_dispatcher_protocol_preflight_enforces_required_tool_presence(tmp_path: Path) -> None:
     dispatcher = _dispatcher(tmp_path)
@@ -198,7 +191,6 @@ async def test_tool_dispatcher_protocol_preflight_enforces_required_tool_presenc
         content="",
         tool_calls=[ToolCall(tool="read_file", args={"path": "a.txt"})],
     )
-
     class _Toolbox:
         async def execute(self, tool_name, args, context):
             return {"ok": True}
@@ -219,6 +211,7 @@ async def test_tool_dispatcher_protocol_preflight_enforces_required_tool_presenc
     assert "E_MISSING_REQUIRED_TOOL:write_file" in str(exc.value)
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_tool_dispatcher_protocol_preflight_allows_multi_read_for_required_paths(tmp_path: Path) -> None:
     dispatcher = _dispatcher(tmp_path)
@@ -265,6 +258,7 @@ async def test_tool_dispatcher_protocol_preflight_allows_multi_read_for_required
     assert toolbox.calls == 3
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_tool_dispatcher_protocol_preflight_rejects_insufficient_reads_for_required_paths(tmp_path: Path) -> None:
     dispatcher = _dispatcher(tmp_path)
@@ -306,6 +300,7 @@ async def test_tool_dispatcher_protocol_preflight_rejects_insufficient_reads_for
     assert "E_TOOL_CARDINALITY:read_file:1" in str(exc.value)
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_tool_dispatcher_protocol_preflight_rejects_duplicate_single_shot_required_tool(tmp_path: Path) -> None:
     dispatcher = _dispatcher(tmp_path)
@@ -339,6 +334,7 @@ async def test_tool_dispatcher_protocol_preflight_rejects_duplicate_single_shot_
     assert "E_TOOL_CARDINALITY:write_file:2" in str(exc.value)
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_tool_dispatcher_protocol_preflight_enforces_required_sequence(tmp_path: Path) -> None:
     dispatcher = _dispatcher(tmp_path)
@@ -372,6 +368,7 @@ async def test_tool_dispatcher_protocol_preflight_enforces_required_sequence(tmp
     assert "E_TOOL_SEQUENCE" in str(exc.value)
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_tool_dispatcher_protocol_preflight_enforces_workspace_constraints(tmp_path: Path) -> None:
     dispatcher = _dispatcher(tmp_path)
@@ -401,6 +398,7 @@ async def test_tool_dispatcher_protocol_preflight_enforces_workspace_constraints
     assert "E_WORKSPACE_CONSTRAINT:write_file:path_traversal" in str(exc.value)
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_tool_dispatcher_protocol_preflight_is_fail_fast(tmp_path: Path) -> None:
     dispatcher = _dispatcher(tmp_path)
@@ -436,6 +434,7 @@ async def test_tool_dispatcher_protocol_preflight_is_fail_fast(tmp_path: Path) -
     assert "E_MISSING_REQUIRED_TOOL" not in message
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_tool_dispatcher_protocol_operation_idempotency_reuses_cached_result(tmp_path: Path) -> None:
     operation_store: dict[tuple[str, str, str, int, str], dict[str, Any]] = {}
@@ -481,7 +480,7 @@ async def test_tool_dispatcher_protocol_operation_idempotency_reuses_cached_resu
     assert len(receipt_rows) == 2
 
 
-# Layer: integration
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_tool_dispatcher_treats_non_dict_middleware_result_as_explicit_failure(tmp_path: Path) -> None:
     class _BadAfterTool:
@@ -522,7 +521,7 @@ async def test_tool_dispatcher_treats_non_dict_middleware_result_as_explicit_fai
     }
 
 
-# Layer: integration
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_tool_dispatcher_replay_mode_uses_operation_record_and_skips_execution(tmp_path: Path) -> None:
     operation_store: dict[tuple[str, str, str, int, str], dict[str, Any]] = {}
@@ -568,7 +567,7 @@ async def test_tool_dispatcher_replay_mode_uses_operation_record_and_skips_execu
     assert replay_turn.tool_calls[0].result == {"ok": True, "call_count": 1}
 
 
-# Layer: integration
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_tool_dispatcher_replay_mode_missing_operation_fails_closed(tmp_path: Path) -> None:
     replay_store = {
@@ -608,6 +607,7 @@ async def test_tool_dispatcher_replay_mode_missing_operation_fails_closed(tmp_pa
     assert toolbox.calls == 0
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_tool_dispatcher_protocol_receipt_uses_turn_raw_metadata(tmp_path: Path) -> None:
     receipt_rows: list[dict[str, Any]] = []
@@ -670,7 +670,7 @@ async def test_tool_dispatcher_protocol_receipt_uses_turn_raw_metadata(tmp_path:
     assert len(capsule["env_allowlist_hash"]) == 64
 
 
-# Layer: integration
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_tool_dispatcher_executes_compatibility_mapping_and_records_translation(tmp_path: Path) -> None:
     receipt_rows: list[dict[str, Any]] = []
@@ -739,7 +739,7 @@ async def test_tool_dispatcher_executes_compatibility_mapping_and_records_transl
     assert isinstance(receipt_rows[0].get("compat_translation"), dict)
 
 
-# Layer: integration
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_tool_dispatcher_preflight_failure_publishes_control_plane_final_truth(tmp_path: Path) -> None:
     control_plane = build_turn_tool_control_plane_service(tmp_path / "control_plane.sqlite3")

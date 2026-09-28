@@ -1,11 +1,15 @@
 from __future__ import annotations
 
+import pytest
+
 from orket.application.services.microservices_acceptance_reports import (
     normalize_architecture_pilot_comparison,
     normalize_live_acceptance_pattern_report,
     normalize_microservices_pilot_stability_report,
     normalize_microservices_unlock_report,
 )
+
+pytestmark = pytest.mark.contract
 
 
 def _valid_unlock_criteria() -> dict[str, dict[str, object]]:

@@ -3,20 +3,21 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import pytest
 from fastapi.testclient import TestClient
 
 _SAME_ORIGIN_HEADERS = {"origin": "http://testserver"}
 
 
+@pytest.mark.integration
 def test_external_extension_template_server_serves_static_ui() -> None:
-    """Layer: contract. Verifies external extension template web server boots and serves static UI assets."""
+    """Layer: integration. Verifies external extension template web server boots and serves static UI assets."""
     repo_root = Path(__file__).resolve().parents[2]
     template_root = repo_root / "docs" / "templates" / "external_extension"
     src_root = template_root / "src"
     sys.path.insert(0, str(src_root))
     try:
         from companion_app.server import app
-
         client = TestClient(app)
         home = client.get("/")
         assert home.status_code == 200
@@ -38,15 +39,15 @@ def test_external_extension_template_server_serves_static_ui() -> None:
                 sys.modules.pop(module_name, None)
 
 
+@pytest.mark.contract
 def test_external_extension_template_server_proxies_voice_synthesize(monkeypatch) -> None:
-    """Layer: integration. Verifies template voice synthesize route proxies to the host API client seam."""
+    """Layer: contract. Verifies template voice synthesize route proxies to the host API client seam."""
     repo_root = Path(__file__).resolve().parents[2]
     template_root = repo_root / "docs" / "templates" / "external_extension"
     src_root = template_root / "src"
     sys.path.insert(0, str(src_root))
     try:
         import companion_app.server as server_module
-
         class _FakeClient:
             async def voice_voices(self) -> dict[str, object]:
                 return {
@@ -62,7 +63,6 @@ def test_external_extension_template_server_proxies_voice_synthesize(monkeypatch
                         }
                     ],
                 }
-
             async def voice_synthesize(
                 self,
                 *,
@@ -83,7 +83,6 @@ def test_external_extension_template_server_proxies_voice_synthesize(monkeypatch
                     "error_code": None,
                     "error_message": "",
                 }
-
             async def voice_cadence_suggest(self, *, session_id: str, text: str) -> dict[str, object]:
                 return {
                     "ok": True,
@@ -93,7 +92,6 @@ def test_external_extension_template_server_proxies_voice_synthesize(monkeypatch
                     "suggested_silence_delay_sec": 1.4,
                     "input_words": len(text.split()),
                 }
-
         monkeypatch.setattr(server_module, "_client", lambda: _FakeClient())
         client = TestClient(server_module.app)
         response = client.post(
@@ -129,21 +127,20 @@ def test_external_extension_template_server_proxies_voice_synthesize(monkeypatch
                 sys.modules.pop(module_name, None)
 
 
+@pytest.mark.contract
 def test_external_extension_template_server_proxies_chat_and_config(monkeypatch) -> None:
-    """Layer: integration. Verifies template chat/config routes proxy to the host API client seam."""
+    """Layer: contract. Verifies template chat/config routes proxy to the host API client seam."""
     repo_root = Path(__file__).resolve().parents[2]
     template_root = repo_root / "docs" / "templates" / "external_extension"
     src_root = template_root / "src"
     sys.path.insert(0, str(src_root))
     try:
         import companion_app.server as server_module
-
         class _FakeClient:
             def __init__(self) -> None:
                 self.last_get_config_session_id = ""
                 self.last_update_config: dict[str, object] = {}
                 self.last_chat: dict[str, object] = {}
-
             async def get_config(self, *, session_id: str) -> dict[str, object]:
                 self.last_get_config_session_id = session_id
                 return {
@@ -167,11 +164,9 @@ def test_external_extension_template_server_proxies_chat_and_config(monkeypatch)
                         },
                     },
                 }
-
             async def update_config(self, *, session_id: str, scope: str, patch: dict[str, object]) -> dict[str, object]:
                 self.last_update_config = {"session_id": session_id, "scope": scope, "patch": patch}
                 return {"ok": True, "session_id": session_id, "scope": scope, "config": patch}
-
             async def chat(
                 self,
                 *,
@@ -195,7 +190,6 @@ def test_external_extension_template_server_proxies_chat_and_config(monkeypatch)
                     "latency_ms": 7,
                     "text_only_degraded": False,
                 }
-
         fake_client = _FakeClient()
         monkeypatch.setattr(server_module, "_client", lambda: fake_client)
         client = TestClient(server_module.app)
@@ -254,6 +248,7 @@ def test_external_extension_template_server_proxies_chat_and_config(monkeypatch)
                 sys.modules.pop(module_name, None)
 
 
+@pytest.mark.contract
 def test_external_extension_template_server_requires_companion_api_key(monkeypatch) -> None:
     """Layer: contract. Verifies gateway fails closed when neither Companion nor host API key is present."""
     repo_root = Path(__file__).resolve().parents[2]
@@ -280,6 +275,7 @@ def test_external_extension_template_server_requires_companion_api_key(monkeypat
                 sys.modules.pop(module_name, None)
 
 
+@pytest.mark.contract
 def test_external_extension_template_server_blocks_cross_origin_mutations(monkeypatch) -> None:
     """Layer: contract. Verifies mutating routes are rejected when request Origin does not match gateway origin."""
     repo_root = Path(__file__).resolve().parents[2]
@@ -321,6 +317,7 @@ def test_external_extension_template_server_blocks_cross_origin_mutations(monkey
                 sys.modules.pop(module_name, None)
 
 
+@pytest.mark.contract
 def test_external_extension_template_server_enforces_loopback_clients(monkeypatch) -> None:
     """Layer: contract. Verifies gateway rejects non-loopback clients when loopback enforcement is enabled."""
     repo_root = Path(__file__).resolve().parents[2]
@@ -346,6 +343,7 @@ def test_external_extension_template_server_enforces_loopback_clients(monkeypatc
                 sys.modules.pop(module_name, None)
 
 
+@pytest.mark.contract
 def test_external_extension_template_server_rejects_oversized_config_patch(monkeypatch) -> None:
     """Layer: contract. Verifies oversized config patches are rejected before host client execution."""
     repo_root = Path(__file__).resolve().parents[2]
@@ -384,6 +382,7 @@ def test_external_extension_template_server_rejects_oversized_config_patch(monke
                 sys.modules.pop(module_name, None)
 
 
+@pytest.mark.contract
 def test_external_extension_template_server_rejects_oversized_chat_message(monkeypatch) -> None:
     """Layer: contract. Verifies oversized chat payloads are rejected before host client execution."""
     repo_root = Path(__file__).resolve().parents[2]
@@ -425,6 +424,7 @@ def test_external_extension_template_server_rejects_oversized_chat_message(monke
                 sys.modules.pop(module_name, None)
 
 
+@pytest.mark.contract
 def test_external_extension_template_server_rejects_oversized_audio_payload(monkeypatch) -> None:
     """Layer: contract. Verifies oversized audio payloads are rejected before host STT execution."""
     repo_root = Path(__file__).resolve().parents[2]

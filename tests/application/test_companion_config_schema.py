@@ -5,6 +5,8 @@ from pydantic import ValidationError
 
 from orket.application.services.companion_config_models import CompanionConfig
 
+pytestmark = pytest.mark.contract
+
 
 def test_companion_config_requires_custom_style_payload_for_custom_mode() -> None:
     """Layer: contract. Verifies custom relationship style requires explicit `custom_style` payload."""

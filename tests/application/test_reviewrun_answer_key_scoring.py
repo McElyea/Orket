@@ -6,6 +6,8 @@ from pathlib import Path
 
 import pytest
 
+pytestmark = pytest.mark.contract
+
 
 def _load_module(path: Path):
     spec = importlib.util.spec_from_file_location("reviewrun_answer_key_scoring_test", str(path))
@@ -32,7 +34,6 @@ def _write_review_authority_artifacts(
     }
     manifest_payload.update(dict(manifest_overrides or {}))
     (run_dir / "run_manifest.json").write_text(json.dumps(manifest_payload), encoding="utf-8")
-
     deterministic_payload = {
         "run_id": "run-1",
         "execution_state_authority": "control_plane_records",
@@ -43,7 +44,6 @@ def _write_review_authority_artifacts(
         **dict(deterministic),
     }
     (run_dir / "deterministic_decision.json").write_text(json.dumps(deterministic_payload), encoding="utf-8")
-
     if model_assisted is not None:
         critique_payload = {
             "run_id": "run-1",

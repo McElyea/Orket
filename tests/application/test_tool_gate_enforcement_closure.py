@@ -200,6 +200,7 @@ def _build_dispatcher(tmp_path: Path, tool_gate: ToolGate | None) -> ToolDispatc
     )
 
 
+@pytest.mark.contract
 def test_turn_executor_requires_tool_gate_at_construction(tmp_path: Path) -> None:
     """Layer: contract. Verifies the canonical turn executor path fails closed when tool-gate authority is missing."""
     with pytest.raises(TypeError, match="tool_gate authority"):
@@ -210,15 +211,17 @@ def test_turn_executor_requires_tool_gate_at_construction(tmp_path: Path) -> Non
          utc_now=artifact_test_utc_now)
 
 
+@pytest.mark.contract
 def test_tool_dispatcher_requires_tool_gate_at_construction(tmp_path: Path) -> None:
     """Layer: contract. Verifies the dispatcher seam fails closed before tool execution can start without a gate."""
     with pytest.raises(TypeError, match="tool_gate authority"):
         _build_dispatcher(tmp_path, None)
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_run_card_primary_path_blocks_before_tool_execution(tmp_path: Path) -> None:
-    """Layer: integration. Verifies the canonical run_card path blocks all tool execution under a deny-all gate."""
+    """Layer: contract. Verifies the canonical run_card path blocks all tool execution under a deny-all gate."""
     workspace_root = tmp_path / "workspace"
     workspace_root.mkdir()
     harness = _RunCardHarness(
@@ -272,9 +275,10 @@ async def test_extension_action_primary_path_reenters_run_card_under_same_deny_a
     assert "deny_all:write_file:write_file" in rejected.value.result.reason
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_canonical_dispatcher_blocks_write_escape_without_outside_side_effect(tmp_path: Path) -> None:
-    """Layer: integration. Verifies blocked write escapes leave no file outside workspace_root on the canonical path."""
+    """Layer: contract. Verifies blocked write escapes leave no file outside workspace_root on the canonical path."""
     workspace_root = tmp_path / "workspace"
     workspace_root.mkdir()
     outside_path = tmp_path / "outside.txt"
@@ -294,9 +298,10 @@ async def test_canonical_dispatcher_blocks_write_escape_without_outside_side_eff
     assert "outside workspace" in str(result.error).lower()
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_direct_tool_dispatcher_internal_seam_blocks_under_same_deny_all_policy(tmp_path: Path) -> None:
-    """Layer: integration. Verifies the internal dispatcher seam still blocks before execution under the deny-all gate."""
+    """Layer: contract. Verifies the internal dispatcher seam still blocks before execution under the deny-all gate."""
     dispatcher = _build_dispatcher(tmp_path, _DenyAllToolGate(tmp_path))
     toolbox = _WritingToolbox(tmp_path)
     turn = ExecutionTurn(timestamp=None,

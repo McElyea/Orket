@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import pytest
+
 from scripts.acceptance.decide_microservices_pilot import decide_from_unlock_report
+
+pytestmark = pytest.mark.contract
 
 
 def _valid_unlock_criteria() -> dict[str, dict[str, object]]:
