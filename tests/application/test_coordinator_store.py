@@ -7,8 +7,9 @@ from orket.application.services.coordinator_store import CoordinatorNotFoundErro
 from orket.core.domain.coordinator_card import Card
 
 
+@pytest.mark.contract
 def test_claim_missing_card_raises_service_error_not_http_exception() -> None:
-    """Layer: unit. Verifies coordinator store failures stay out of the FastAPI transport layer."""
+    """Layer: contract. Verifies coordinator store failures stay out of the FastAPI transport layer."""
     store = InMemoryCoordinatorStore()
     store.reset([])
 

@@ -4,6 +4,10 @@ import json
 import subprocess
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 
 def _row(status: str, errors: list[str] | None = None) -> dict:
     payload = {

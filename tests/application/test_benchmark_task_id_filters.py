@@ -4,6 +4,10 @@ import json
 import subprocess
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 
 def test_run_determinism_harness_filters_task_id_range(tmp_path: Path) -> None:
     task_bank = tmp_path / "tasks.json"

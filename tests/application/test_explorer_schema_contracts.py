@@ -4,6 +4,10 @@ import json
 import subprocess
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 
 def test_explorer_schema_contracts_pass_for_valid_payloads(tmp_path: Path) -> None:
     frontier = tmp_path / "frontier.json"

@@ -4,6 +4,10 @@ import json
 import subprocess
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 
 def test_quant_sweep_kpi_report_extracts_block(tmp_path: Path) -> None:
     summary = tmp_path / "sweep_summary.json"

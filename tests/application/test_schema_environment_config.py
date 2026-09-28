@@ -15,6 +15,7 @@ def test_environment_config_rejects_unknown_keys_at_direct_boundary() -> None:
         EnvironmentConfig(name="dev", model="test-model", legacy_key="ignored")
 
 
+@pytest.mark.contract
 def test_authoritative_environment_config_validation_rejects_unknown_keys() -> None:
     """Layer: contract. Verifies authoritative runtime environment validation fails closed on unknown keys."""
     with pytest.raises(ValueError, match="E_ENVIRONMENT_CONFIG_UNKNOWN_KEYS:legacy_key"):

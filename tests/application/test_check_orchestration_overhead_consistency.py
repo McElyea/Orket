@@ -4,6 +4,10 @@ import json
 import subprocess
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 
 def test_check_orchestration_overhead_consistency_passes_with_required_fields(tmp_path: Path) -> None:
     report = tmp_path / "report.json"

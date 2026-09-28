@@ -6,6 +6,8 @@ import sys
 from pathlib import Path
 from types import ModuleType
 
+import pytest
+
 
 def _load_script_module(module_name: str, script_path: str) -> ModuleType:
     path = Path(script_path)
@@ -34,6 +36,7 @@ class _FakeResponse:
         return self._payload
 
 
+@pytest.mark.contract
 def test_clear_loaded_models_unloads_all_instances(monkeypatch) -> None:
     module = _load_script_module("lmstudio_model_cache_clear", "scripts/providers/lmstudio_model_cache.py")
     loaded_instances = ["qwen3.5-2b:1", "qwen3.5-4b:2"]
@@ -78,6 +81,7 @@ def test_clear_loaded_models_unloads_all_instances(monkeypatch) -> None:
     assert result["unload_url"] == "http://127.0.0.1:1234/api/v1/models/unload"
 
 
+@pytest.mark.unit
 def test_default_lmstudio_base_url_prefers_env(monkeypatch) -> None:
     module = _load_script_module("lmstudio_model_cache_env", "scripts/providers/lmstudio_model_cache.py")
     monkeypatch.setenv("ORKET_LMSTUDIO_BASE_URL", "http://localhost:1234/custom")

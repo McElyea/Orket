@@ -2,7 +2,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from orket.application.services.memory_commit_buffer import JsonFileCommitStore
+
+pytestmark = pytest.mark.integration
 
 
 def test_json_file_commit_store_persists_snapshot_progression(tmp_path: Path) -> None:

@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import multiprocessing
+import signal
 from contextlib import suppress
 from multiprocessing.synchronize import Event
 from socket import socket
@@ -11,6 +12,7 @@ from types import FrameType
 
 import uvicorn
 from uvicorn._subprocess import get_subprocess
+from uvicorn.server import HANDLED_SIGNALS
 from uvicorn.supervisors import ChangeReload
 
 LOGGER = logging.getLogger("uvicorn.error")
@@ -20,6 +22,14 @@ class _ReloadServer(uvicorn.Server):
     def __init__(self, config: uvicorn.Config, stop: Event) -> None:
         super().__init__(config)
         self._stop = stop
+
+    def run(self, sockets: list[socket] | None = None) -> None:
+        # This server runs only in the dedicated reload worker. Keep cooperative
+        # handlers through native process finalization, after Uvicorn restores
+        # the handlers that preceded its serve scope.
+        for sig in HANDLED_SIGNALS:
+            signal.signal(sig, self.handle_exit)
+        super().run(sockets=sockets)
 
     def handle_exit(self, sig: int, frame: FrameType | None) -> None:
         # A console signal may coincide with a parent's IPC stop. Both request

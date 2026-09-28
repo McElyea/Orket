@@ -8,6 +8,8 @@ from orket.application.workflows.turn_executor import TurnExecutor
 from orket.core.domain.state_machine import StateMachine
 from tests.helpers.turn_artifacts import artifact_test_utc_now
 
+pytestmark = pytest.mark.unit
+
 
 def _executor(tmp_path: Path) -> TurnExecutor:
     return TurnExecutor(

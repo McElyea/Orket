@@ -6,6 +6,10 @@ import sys
 import tarfile
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 SCRIPT = Path("docs/templates/external_extension/scripts/check_release.py").resolve()
 
 
@@ -80,7 +84,7 @@ def _write_sdist(root: Path, *, version: str = "1.2.3", include_manifest: bool =
 
 
 def test_check_release_script_accepts_matching_tag_and_sdist(tmp_path: Path) -> None:
-    """Layer: contract. Verifies the publish-surface checker accepts aligned source, artifact, and tag truth."""
+    """Layer: integration. Verifies the publish-surface checker accepts aligned source, artifact, and tag truth."""
     _write_project(tmp_path)
     _write_sdist(tmp_path)
 
@@ -108,7 +112,7 @@ def test_check_release_script_accepts_matching_tag_and_sdist(tmp_path: Path) -> 
 
 
 def test_check_release_script_rejects_tag_mismatch(tmp_path: Path) -> None:
-    """Layer: contract. Verifies the publish-surface checker fails closed on tag/version drift."""
+    """Layer: integration. Verifies the publish-surface checker fails closed on tag/version drift."""
     _write_project(tmp_path)
     _write_sdist(tmp_path)
 
@@ -136,7 +140,7 @@ def test_check_release_script_rejects_tag_mismatch(tmp_path: Path) -> None:
 
 
 def test_check_release_script_rejects_missing_manifest_in_sdist(tmp_path: Path) -> None:
-    """Layer: contract. Verifies the publish-surface checker fails closed when the authoritative sdist drops manifest truth."""
+    """Layer: integration. Verifies the publish-surface checker fails closed when the authoritative sdist drops manifest truth."""
     _write_project(tmp_path)
     _write_sdist(tmp_path, include_manifest=False)
 

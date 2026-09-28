@@ -4,6 +4,10 @@ import importlib.util
 import json
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 
 def _load_script_module():
     script_path = Path("scripts/extensions/register_textmystery_bridge_extension.py").resolve()

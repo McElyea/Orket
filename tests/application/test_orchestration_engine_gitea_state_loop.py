@@ -4,6 +4,8 @@ import pytest
 
 from orket.orchestration.engine import OrchestrationEngine
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.asyncio
 async def test_engine_delegates_run_gitea_state_loop_to_pipeline():

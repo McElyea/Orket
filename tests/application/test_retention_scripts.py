@@ -6,6 +6,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 
 def test_retention_plan_and_policy_check_scripts(tmp_path: Path) -> None:
     inventory = tmp_path / "inventory.json"

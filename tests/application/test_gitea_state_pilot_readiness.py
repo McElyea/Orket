@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import pytest
+
 from scripts.gitea.check_gitea_state_pilot_readiness import evaluate_readiness
+
+pytestmark = pytest.mark.contract
 
 
 def test_readiness_passes_with_full_gitea_inputs() -> None:

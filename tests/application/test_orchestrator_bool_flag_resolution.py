@@ -2,11 +2,15 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+import pytest
+
 from orket.application.workflows.orchestrator import Orchestrator
+
+pytestmark = pytest.mark.unit
 
 
 def test_runtime_verifier_disable_flag_honors_explicit_false_env(monkeypatch) -> None:
-    """Layer: contract. Verifies explicit false environment values override truthy org defaults."""
+    """Layer: unit. Verifies explicit false environment values override truthy org defaults."""
     monkeypatch.setenv("ORKET_DISABLE_RUNTIME_VERIFIER", "false")
     orch = Orchestrator.__new__(Orchestrator)
     orch.org = SimpleNamespace(process_rules={"disable_runtime_verifier": True})
@@ -15,7 +19,7 @@ def test_runtime_verifier_disable_flag_honors_explicit_false_env(monkeypatch) ->
 
 
 def test_runtime_verifier_disable_flag_honors_explicit_true_env(monkeypatch) -> None:
-    """Layer: contract. Verifies explicit true environment values override false org defaults."""
+    """Layer: unit. Verifies explicit true environment values override false org defaults."""
     monkeypatch.setenv("ORKET_DISABLE_RUNTIME_VERIFIER", "true")
     orch = Orchestrator.__new__(Orchestrator)
     orch.org = SimpleNamespace(process_rules={"disable_runtime_verifier": False})

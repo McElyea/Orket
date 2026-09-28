@@ -5,7 +5,11 @@ import sys
 from pathlib import Path
 from types import ModuleType
 
+import pytest
+
 from orket.core.contracts import WORKLOAD_CONTRACT_VERSION_V1, parse_workload_contract
+
+pytestmark = pytest.mark.contract
 
 
 def _load_script_module(module_name: str, script_path: str) -> ModuleType:

@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from orket.interfaces.orket_bundle_cli import main
 
 
@@ -59,6 +61,7 @@ def _seed_mode_and_suite(root: Path, mode_id: str) -> None:
     (suites / "rubric.yaml").write_text("quality: 1.0\n", encoding="utf-8")
 
 
+@pytest.mark.integration
 def test_reforge_init_run_and_determinism(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.chdir(tmp_path)
     reforge_root = tmp_path / "reforge"
@@ -125,6 +128,7 @@ def test_reforge_init_run_and_determinism(tmp_path: Path, monkeypatch) -> None:
     assert diff == diff2
 
 
+@pytest.mark.contract
 def test_reforge_open_last_best_effort(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.chdir(tmp_path)
     (tmp_path / "reforge" / "runs").mkdir(parents=True, exist_ok=True)
@@ -132,6 +136,7 @@ def test_reforge_open_last_best_effort(tmp_path: Path, monkeypatch) -> None:
     assert rc == 0
 
 
+@pytest.mark.integration
 def test_reforge_run_exit_code_hard_fail_and_artifact_completeness(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.chdir(tmp_path)
     reforge_root = tmp_path / "reforge"

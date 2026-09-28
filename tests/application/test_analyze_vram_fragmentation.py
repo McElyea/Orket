@@ -4,6 +4,10 @@ import json
 import subprocess
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 
 def test_analyze_vram_fragmentation_emits_expected_report(tmp_path: Path) -> None:
     summary = tmp_path / "summary.json"

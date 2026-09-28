@@ -5,6 +5,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 
 # Layer: integration
 def test_run_context_sweep_generates_per_context_summaries_and_ceiling(tmp_path: Path) -> None:

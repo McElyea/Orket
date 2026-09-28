@@ -4,6 +4,10 @@ import importlib.util
 import sys
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.contract
+
 SCRIPTS_ROOT = Path(__file__).resolve().parents[2] / "scripts"
 if str(SCRIPTS_ROOT) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_ROOT))

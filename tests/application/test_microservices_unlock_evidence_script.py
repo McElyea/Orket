@@ -2,7 +2,11 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+import pytest
+
 from scripts.acceptance.run_microservices_unlock_evidence import build_command_plan
+
+pytestmark = pytest.mark.unit
 
 
 def test_build_command_plan_contains_expected_steps() -> None:

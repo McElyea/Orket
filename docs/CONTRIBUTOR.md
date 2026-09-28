@@ -338,7 +338,10 @@ the loop so spawned reload workers can later import the ASGI app. Canonical relo
 uses cooperative worker shutdown and waits for the old worker before replacement;
 it has no forced-stop deadline. Worker startup or cleanup failure remains a
 launcher failure. Both Quality jobs include the construction, server and
-affected caller regressions. Scoped source/installed proof and the remaining
+affected caller regressions. Retain the native process-finalization signal controls
+alongside the server reload cases: cooperative worker handlers remain installed
+until process exit, and a failed finalizer must still fail the launcher.
+Scoped source/installed proof and the remaining
 repository-wide verification limits remain in the architectural-truth plan.
 
 Standalone webhook apps also require their lifespan and retain one owner per

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from orket.application.services.skills_validator import validate_skill_manifest
 
 
@@ -32,6 +34,7 @@ def _valid_manifest() -> dict:
     }
 
 
+@pytest.mark.contract
 def test_skill_validation_metadata_marks_valid_manifest_as_deterministic_eligible() -> None:
     payload = _valid_manifest()
     result = validate_skill_manifest(payload)
@@ -43,6 +46,7 @@ def test_skill_validation_metadata_marks_valid_manifest_as_deterministic_eligibl
     assert result["errors"] == []
 
 
+@pytest.mark.unit
 def test_skill_validation_metadata_is_deterministic_for_identical_payload() -> None:
     payload = _valid_manifest()
     first = validate_skill_manifest(payload)
@@ -50,6 +54,7 @@ def test_skill_validation_metadata_is_deterministic_for_identical_payload() -> N
     assert first == second
 
 
+@pytest.mark.contract
 def test_skill_validation_metadata_flags_side_effect_declaration_gaps() -> None:
     payload = _valid_manifest()
     payload["entrypoints"][0]["side_effect_categories"] = ["network.http"]

@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import pytest
+
 from orket.session import Session, TranscriptTurn
+
+pytestmark = pytest.mark.contract
 
 
 def test_session_add_turn_validates_transcript_turn() -> None:

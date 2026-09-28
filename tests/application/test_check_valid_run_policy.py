@@ -4,6 +4,10 @@ import json
 import subprocess
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 
 def test_check_valid_run_policy_passes_when_frontier_quant_is_valid(tmp_path: Path) -> None:
     summary = tmp_path / "summary.json"

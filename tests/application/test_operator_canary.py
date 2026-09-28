@@ -1,10 +1,12 @@
-# Layer: integration. Controlled driver provider; actual command interpretation and resource boundary.
+# Layer: unit. Controlled driver provider; actual command interpretation and resource boundary.
 from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
 
 from orket.driver import OrketDriver
+
+pytestmark = pytest.mark.unit
 
 
 def _driver(root: Path) -> OrketDriver:

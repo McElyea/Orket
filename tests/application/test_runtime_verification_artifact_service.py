@@ -11,6 +11,8 @@ from orket.application.services.runtime_verification_artifact_service import (
     RuntimeVerificationArtifactService,
 )
 
+pytestmark = pytest.mark.integration
+
 
 def _runtime_result(*, overall_evidence_class: str) -> SimpleNamespace:
     return SimpleNamespace(
@@ -66,7 +68,7 @@ def _read_json(path: Path) -> dict:
 
 @pytest.mark.asyncio
 async def test_runtime_verification_artifact_service_preserves_record_history(tmp_path: Path) -> None:
-    """Layer: contract."""
+    """Layer: integration."""
     service = RuntimeVerificationArtifactService(tmp_path)
 
     first = await service.write(
@@ -110,7 +112,7 @@ async def test_runtime_verification_artifact_service_preserves_record_history(tm
 
 @pytest.mark.asyncio
 async def test_runtime_verification_artifact_service_marks_support_only_semantics(tmp_path: Path) -> None:
-    """Layer: contract."""
+    """Layer: integration."""
     service = RuntimeVerificationArtifactService(tmp_path)
 
     written = await service.write(

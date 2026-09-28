@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import pytest
+
 from orket.application.services.turn_tool_control_plane_support import run_id_for
+
+pytestmark = pytest.mark.unit
 
 
 def test_turn_tool_run_id_format_is_stable() -> None:

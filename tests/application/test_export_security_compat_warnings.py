@@ -4,6 +4,10 @@ import importlib.util
 import sys
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.contract
+
 
 def _load_script_module(name: str, relative_path: str):
     path = Path(relative_path).resolve()

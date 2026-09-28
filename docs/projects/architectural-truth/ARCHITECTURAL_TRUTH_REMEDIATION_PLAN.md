@@ -27240,3 +27240,81 @@ usage in three script test modules. The broader suite has not rerun after the
 helper correction; later cases, complete coverage, fresh installed/platform
 acceptance and the remaining remediation gates remain open. This checkpoint
 does not retire the architectural-truth lane.
+
+### User-requested publication checkpoint 0.6.112
+
+The .111 full-suite diagnostic remains failed evidence. This checkpoint addresses
+its three remaining named failures within scoped Windows source controls; it does
+not claim a fresh complete-suite result or retire this lane.
+
+The new reload controls hold an actual spawned worker in native process
+finalization after ASGI shutdown. All four opening cases fail when another console
+signal interrupts the finalizer; the retained log shows `KeyboardInterrupt` there.
+This establishes the late-signal defect, without claiming that every earlier
+transient worker exit has the same cause. The private reload server now installs
+its existing cooperative handler before Uvicorn captures its prior handlers.
+Uvicorn therefore restores that cooperative handler after serving; it remains
+installed through native process exit. The supervisor still joins the worker and
+rejects nonzero exit. There is no new forced-stop deadline or failure normalization.
+
+All four finalization controls plus eight existing reload cases pass (12 total,
+37.35 pytest seconds). Repeated real console signals leave the held worker and
+launcher pending; release permits termination. Deliberate finalizer exit 17 still
+produces launcher exit 1. Source proof uses Windows Python 3.11.14, Uvicorn 0.54.0
+and editable .111 metadata before the .112 metadata refresh. Path `primary`, live
+local process/TCP proof: opening result `failure`, closing result `success`.
+Both owners are reaped without timeout, emergency termination or observed residual;
+executable/config inputs remain unchanged within each observation. Readbacks:
+
+- `.tmp/root-v112-fixes/reload-opening/readback.json`, SHA-256
+  `1847e3d77839bd4af6701fbeebca21324cac7694b01ffc249c5edc54d37661cd`.
+- `.tmp/root-v112-fixes/reload-closing/readback.json`, SHA-256
+  `818144579b76b4ebcdf7144ba09e5e1ba76ea8fb9f2de67c6fcbf01cfcc5065e`.
+
+Contract and migration:
+`docs/architecture/CONTRACT_DELTA_API_RELOAD_FINALIZATION_D_2026-09-27.md`.
+Both Gitea Quality selections retain the new controls next to existing reload
+cases. This new finalization slice has no fresh installed/Linux or other-Uvicorn
+version proof; older reload proof must not be promoted to that claim.
+
+The calendar fixture now selects its environment before actual pipeline
+construction and rotates it afterward, asserting the retained calendar result.
+It no longer mutates the required construction snapshot to `None`. Script fixtures
+use one shared async adapter for their supplied in-memory providers instead of
+unnecessary `AsyncMock` imports. The mock-policy contract checks the canonical
+Git-visible inventory and reports repository-relative offenders. Its allowlist
+is unchanged. All 33 cases in the five affected modules pass in 2.88 pytest
+seconds after the editable .112 refresh. Proof is executed local fixture/contract
+work, including real calendar filesystem/SQLite behavior; supplied providers do
+not establish inference acceptance. Path `primary`, result `success`; owner reaped,
+no timeout/emergency termination/observed residual, inputs unchanged. Readback:
+`.tmp/root-v112-fixes/fixture-closing/readback.json`, SHA-256
+`25c22babf95c46ab522ffb3c8463a0276d25423b9f332f9ac505c25efe129607`.
+
+The reviewed application marker slice classifies 225 cases across 117 modules:
+88 contract, 99 integration and 38 unit, preserving six existing classifications.
+Independent review confirms exact candidate bytes, normalized AST, assertions,
+parameters, nonlayer marks, support bindings and no oversized-file growth. That is
+structural proof, not execution of these test bodies. Receipt:
+`.tmp/goal-20260927-quality/v112/application-marker-applied/receipt.json`, SHA-256
+`5a983f528444d1d5520c2b94c7674fed9ba76fd9c66d47c02ca463586b042482`.
+
+The D fixture/time/security-publication candidate and E2 authority candidate remain
+unapplied ignored scratch. Their retained failures and incomplete controls are not
+accepted implementation or part of this publication. The separate 261-case
+integration marker proposal is also unapplied. Full-suite/coverage, fresh installed
+and additional platform proof, remaining classification and whole C/D/E/CAP
+acceptance remain open. No coverage percentage is inferred from the absent report.
+
+Fresh canonical collection observes 10,638 cases with 1,139 missing layers, zero
+conflicts and zero collection errors. Exactly 226 previously unclassified cases
+receive the reviewed layers: the 225 application cases plus the mock-policy
+contract. Four new finalization integration cases and the explicit calendar rename
+account for all node changes; all other identities/layers remain intact. All
+5,465 Git-visible inputs stay fixed, with 1,715 observed source origins and 36
+contained namespaces verified. Editable metadata is .112; the owner settles in
+54.515 seconds with no timeout or observed residual. This is structural collection
+proof, path `primary`, migration result `success`; strict taxonomy correctly
+returns failure. It does not execute test bodies. Readback:
+`.tmp/goal-20260927-quality/v112/publication-taxonomy/readback.json`, SHA-256
+`2a2da52c6def4e17c4c535183283b5186a28253e2c30da3c8db54e772ff9b42b`.

@@ -4,6 +4,10 @@ import json
 import subprocess
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 
 def test_build_context_sweep_rollup_emits_compact_summary(tmp_path: Path) -> None:
     ceiling = tmp_path / "context_ceiling.json"

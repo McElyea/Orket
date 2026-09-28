@@ -4,6 +4,10 @@ import json
 import subprocess
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 
 def _summary(*, thermal_start: float | None, vram_total: float | None, vram_used: float | None, parse_status: str = "OK") -> dict:
     sidecar = {"sidecar_parse_status": parse_status}

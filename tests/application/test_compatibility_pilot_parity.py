@@ -15,6 +15,8 @@ from orket.application.workflows.turn_tool_dispatcher import ToolDispatcher
 from orket.core.domain.execution import ExecutionTurn, ToolCall
 from tests.helpers.turn_artifacts import execute_dispatch_fixture
 
+pytestmark = pytest.mark.contract
+
 
 def _dispatcher(
     tmp_path: Path,
@@ -90,7 +92,7 @@ class _PilotToolbox:
         return {"ok": False, "error": f"unknown_tool:{tool_name}"}
 
 
-# Layer: integration
+# Layer: contract
 @pytest.mark.asyncio
 async def test_compatibility_pilot_live_and_replay_parity(tmp_path: Path) -> None:
     operation_store: dict[tuple[str, str, str, int, str], dict[str, Any]] = {}

@@ -4,6 +4,10 @@ import json
 import subprocess
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 
 def test_cleanup_context_sweep_artifacts_removes_ephemeral_storage(tmp_path: Path) -> None:
     out_dir = tmp_path / "context_sweep"

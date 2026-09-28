@@ -1,8 +1,10 @@
-# Layer: unit
+# Layers are declared per test for the exercised boundary.
 from __future__ import annotations
 
 import importlib.util
 from pathlib import Path
+
+import pytest
 
 
 def _load_module(path: Path):
@@ -13,6 +15,7 @@ def _load_module(path: Path):
     return module
 
 
+@pytest.mark.contract
 def test_validate_decomposition_plan_requires_full_artifact_coverage() -> None:
     module = _load_module(Path("scripts/workloads/decompose_and_route.py"))
     spec = {
@@ -35,6 +38,7 @@ def test_validate_decomposition_plan_requires_full_artifact_coverage() -> None:
     assert "artifact_coverage_mismatch" in errors
 
 
+@pytest.mark.contract
 def test_decomposition_contract_normalizes_scalar_dependencies() -> None:
     module = _load_module(Path("scripts/workloads/decompose_and_route.py"))
     payload = module._DecompositionContract.model_validate(
@@ -51,6 +55,7 @@ def test_decomposition_contract_normalizes_scalar_dependencies() -> None:
     assert payload.subtasks[1].depends_on == ["1"]
 
 
+@pytest.mark.integration
 def test_verify_round_trip_loads_generated_writer_and_reader(tmp_path: Path) -> None:
     module = _load_module(Path("scripts/workloads/decompose_and_route.py"))
     workspace = tmp_path

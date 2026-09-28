@@ -1,4 +1,4 @@
-# Layer: unit
+# Layer: contract
 
 from __future__ import annotations
 
@@ -6,8 +6,12 @@ from dataclasses import dataclass
 from types import SimpleNamespace
 from typing import Any
 
+import pytest
+
 from orket.application.services.state_reconciliation_service import StateReconciliationService
 from orket.schema import CardStatus
+
+pytestmark = pytest.mark.contract
 
 
 @dataclass

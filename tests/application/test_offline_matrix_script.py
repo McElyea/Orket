@@ -6,6 +6,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 
 def test_check_offline_matrix_passes_with_offline_spec() -> None:
     out_path = Path("benchmarks/results/benchmarks/offline_matrix_check_test.json")

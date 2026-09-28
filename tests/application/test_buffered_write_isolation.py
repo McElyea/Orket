@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import pytest
+
 from orket.application.services.memory_commit_buffer import InMemoryCommitStore
+
+pytestmark = pytest.mark.contract
 
 
 def test_buffered_write_isolation_reads_do_not_see_uncommitted_writes() -> None:

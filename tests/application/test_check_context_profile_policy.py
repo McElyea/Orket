@@ -4,6 +4,10 @@ import json
 import subprocess
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 
 def test_check_context_profile_policy_passes_for_valid_inputs(tmp_path: Path) -> None:
     profiles = tmp_path / "profiles.json"

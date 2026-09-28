@@ -78,6 +78,7 @@ def test_runtime_override_matrix_process_rules_resolution(monkeypatch):
     assert registry.resolve_execution_runtime(org) is execution_custom
 
 
+@pytest.mark.contract
 def test_runtime_override_matrix_env_precedence(monkeypatch):
     """Layer: contract. Verifies env overrides still win over process rules on the surviving API runtime seam."""
     monkeypatch.setenv("ORKET_API_RUNTIME_NODE", "api-custom")

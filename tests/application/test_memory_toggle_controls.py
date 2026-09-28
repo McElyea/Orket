@@ -2,13 +2,16 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from orket.application.services.sdk_memory_provider import SQLiteMemoryCapabilityProvider
 from orket.services.scoped_memory_store import MemoryControls
 from orket_extension_sdk.memory import MemoryQueryRequest, MemoryWriteRequest
 
 
+@pytest.mark.contract
 def test_memory_controls_disable_session_scope_reads_and_writes(tmp_path: Path) -> None:
-    """Layer: integration. Verifies session-memory toggles fail closed for write/query operations."""
+    """Layer: contract. Verifies session-memory toggles fail closed for write/query operations."""
     provider = SQLiteMemoryCapabilityProvider(
         tmp_path / "memory.db",
         controls=MemoryControls(session_memory_enabled=False, profile_memory_enabled=True),
@@ -24,8 +27,9 @@ def test_memory_controls_disable_session_scope_reads_and_writes(tmp_path: Path) 
     assert query.error_code == "memory_session_disabled"
 
 
+@pytest.mark.contract
 def test_memory_controls_disable_profile_scope_reads_and_writes(tmp_path: Path) -> None:
-    """Layer: integration. Verifies profile-memory toggles fail closed for write/query operations."""
+    """Layer: contract. Verifies profile-memory toggles fail closed for write/query operations."""
     provider = SQLiteMemoryCapabilityProvider(
         tmp_path / "memory.db",
         controls=MemoryControls(session_memory_enabled=True, profile_memory_enabled=False),
@@ -41,6 +45,7 @@ def test_memory_controls_disable_profile_scope_reads_and_writes(tmp_path: Path) 
     assert query.error_code == "memory_profile_disabled"
 
 
+@pytest.mark.integration
 def test_clear_session_does_not_delete_profile_scope_records(tmp_path: Path) -> None:
     """Layer: integration. Verifies clear_session removes only session-memory rows."""
     provider = SQLiteMemoryCapabilityProvider(tmp_path / "memory.db")

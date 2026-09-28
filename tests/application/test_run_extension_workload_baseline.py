@@ -5,6 +5,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 
 def _init_sdk_benchmark_extension_repo(repo_root: Path) -> None:
     manifest = {

@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import pytest
+
 from scripts.gitea.run_gitea_state_rollout_gates import evaluate_gate_bundle
+
+pytestmark = pytest.mark.contract
 
 
 def test_gate_bundle_ready_when_all_gates_pass() -> None:

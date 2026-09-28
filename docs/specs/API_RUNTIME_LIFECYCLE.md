@@ -41,10 +41,15 @@ worker. Its supervisor requests shutdown through a process-shared event and join
 the worker before replacement. The worker waits for startup before requesting
 normal server shutdown; repeated console signals request the same cooperative
 close instead of escalating to a lifespan-skipping exit. Parent shutdown retains
-the worker and listener cleanup. This adds no hard-stop deadline: startup or cleanup
-that never settles can hold the supervisor. Real StatReload, active-work,
-interruption and failure paths pass on installed Windows/Linux Python
-3.11/3.12. Complete Linux 3.12 cohort acceptance remains blocked by native
+the worker and listener cleanup. The dedicated worker retains cooperative signal
+handlers after the server loop returns, through native process finalization.
+Additional handled signals cannot bypass pending finalizers; a nonzero finalizer exit
+still makes the launcher fail. This adds no hard-stop deadline: startup or cleanup
+that never settles can hold the supervisor. The finalization correction has current
+Windows source console-signal proof; fresh installed and Linux finalization proof
+remain open. Earlier installed Windows/Linux Python 3.11/3.12 observations pass
+real StatReload, active-work, interruption and failure paths. Complete Linux 3.12
+cohort acceptance remains blocked by native
 wall-clock discontinuities in governed-agent tests. Windows source also
 exercises Uvicorn 0.27.0 and 0.52.4.
 These observations do not cover all intermediate versions or optional watcher
@@ -54,6 +59,8 @@ Lifespan startup or shutdown failure makes the worker exit unsuccessfully. The
 supervisor observes unexpected worker exit and refuses replacement after failed
 cleanup; it closes its listener and reports failure to the launcher. The launcher
 requires Uvicorn lifespan support instead of accepting an unsupported protocol.
+The finalization correction and its current proof limits are recorded in
+`docs/architecture/CONTRACT_DELTA_API_RELOAD_FINALIZATION_D_2026-09-27.md`.
 
 API and standalone webhook owners share `ApplicationRuntimeLifetime`; their
 configuration and final resources remain separate. Managed background work uses

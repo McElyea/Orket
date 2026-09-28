@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import pytest
+
 from orket.application.services.canonical_role_templates import (
     canonical_role_conformance_violations,
     normalize_canonical_role_payload,
 )
+
+pytestmark = pytest.mark.contract
 
 
 def test_normalize_canonical_role_payload_fills_structure_defaults() -> None:

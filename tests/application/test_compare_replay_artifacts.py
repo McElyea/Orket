@@ -5,6 +5,8 @@ import json
 from pathlib import Path
 from types import ModuleType
 
+import pytest
+
 
 def _load_script_module(module_name: str, script_path: str) -> ModuleType:
     path = Path(script_path)
@@ -21,6 +23,7 @@ def _write(path: Path, payload: dict) -> None:
     path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 
 
+@pytest.mark.unit
 def test_compare_replay_artifacts_ignores_volatile_fields(tmp_path: Path) -> None:
     module = _load_script_module("compare_replay_artifacts_a", "scripts/replay/compare_replay_artifacts.py")
 
@@ -46,6 +49,7 @@ def test_compare_replay_artifacts_ignores_volatile_fields(tmp_path: Path) -> Non
     assert mismatches == []
 
 
+@pytest.mark.unit
 def test_compare_replay_artifacts_reports_deterministic_mismatch_order(tmp_path: Path) -> None:
     module = _load_script_module("compare_replay_artifacts_b", "scripts/replay/compare_replay_artifacts.py")
 
@@ -68,6 +72,7 @@ def test_compare_replay_artifacts_reports_deterministic_mismatch_order(tmp_path:
     assert [item["field"] for item in ordered] == ["command", "request.a", "request.z", "result.message", "result.ok"]
 
 
+@pytest.mark.integration
 def test_compare_replay_artifacts_cli_writes_fail_report(tmp_path: Path, monkeypatch: object) -> None:
     module = _load_script_module("compare_replay_artifacts_c", "scripts/replay/compare_replay_artifacts.py")
 

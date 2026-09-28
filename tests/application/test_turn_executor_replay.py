@@ -11,6 +11,8 @@ from orket.core.domain.state_machine import StateMachine
 from orket.schema import CardStatus, IssueConfig, RoleConfig
 from tests.helpers.turn_artifacts import artifact_test_utc_now
 
+pytestmark = pytest.mark.integration
+
 
 class _Model:
     async def complete(self, _messages):

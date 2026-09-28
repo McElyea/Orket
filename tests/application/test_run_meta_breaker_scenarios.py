@@ -7,6 +7,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 
 def _load_register_module():
     script_path = Path("scripts/extensions/register_meta_breaker_extension.py").resolve()

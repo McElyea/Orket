@@ -7,6 +7,8 @@ import sys
 from pathlib import Path
 from types import ModuleType
 
+import pytest
+
 
 def _load_script_module(module_name: str, script_path: str) -> ModuleType:
     path = Path(script_path)
@@ -21,6 +23,7 @@ def _load_script_module(module_name: str, script_path: str) -> ModuleType:
     return module
 
 
+@pytest.mark.integration
 def test_run_quant_sweep_series_executes_models_in_order(monkeypatch, tmp_path: Path) -> None:
     module = _load_script_module("run_quant_sweep_series_order", "scripts/quant/run_quant_sweep_series.py")
     matrix_path = tmp_path / "matrix.json"
@@ -71,6 +74,7 @@ def test_run_quant_sweep_series_executes_models_in_order(monkeypatch, tmp_path: 
     assert manifest["model_cache_sanitation"]["enabled"] is False
 
 
+@pytest.mark.unit
 def test_run_quant_sweep_series_uses_shared_model_cache_clear(monkeypatch, tmp_path: Path) -> None:
     module = _load_script_module("run_quant_sweep_series_shared_clear", "scripts/quant/run_quant_sweep_series.py")
     matrix_path = tmp_path / "matrix.json"

@@ -3,7 +3,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from orket.application.services.prompt_linter import lint_prompt_file
+
+pytestmark = pytest.mark.contract
 
 
 def test_prompt_linter_reports_json_invalid(tmp_path: Path) -> None:

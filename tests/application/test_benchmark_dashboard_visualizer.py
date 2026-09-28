@@ -4,6 +4,10 @@ import importlib.util
 from pathlib import Path
 from types import ModuleType
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
 
 def _load_script_module(module_name: str, script_path: str) -> ModuleType:
     path = Path(script_path)

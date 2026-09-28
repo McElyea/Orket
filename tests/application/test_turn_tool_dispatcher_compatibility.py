@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import pytest
+
 from orket.application.workflows.turn_tool_dispatcher_compatibility import resolve_compatibility_translation
 
+pytestmark = pytest.mark.contract
 
-# Layer: unit
+
+# Layer: contract
 def test_resolve_compatibility_translation_is_deterministic_for_identical_inputs() -> None:
     context = {
         "compatibility_mappings": {

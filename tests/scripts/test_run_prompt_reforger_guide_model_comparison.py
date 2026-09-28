@@ -4,12 +4,12 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from types import SimpleNamespace
-from unittest.mock import AsyncMock
 
 import pytest
 
 from scripts.prompt_lab import guide_model_prompt_patch as guide_script
 from scripts.prompt_lab import run_prompt_reforger_guide_model_comparison as script
+from tests.helpers.provider_preparation import as_async_provider_factory
 
 pytestmark = pytest.mark.integration
 
@@ -64,7 +64,7 @@ def test_generate_guide_candidate_emits_bounded_prompt_patch(monkeypatch, tmp_pa
             "resolution_mode": "canonical",
         },
     )
-    monkeypatch.setattr(guide_script, "create_local_model_provider_async", AsyncMock(side_effect=_FakeProvider))
+    monkeypatch.setattr(guide_script, "create_local_model_provider_async", as_async_provider_factory(_FakeProvider))
 
     out_path = tmp_path / "guide_generation.json"
     payload = guide_script.generate_guide_candidate(

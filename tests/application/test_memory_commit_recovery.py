@@ -5,6 +5,7 @@ import pytest
 from orket.application.services.memory_commit_buffer import InMemoryCommitStore
 
 
+@pytest.mark.unit
 def test_memory_commit_recovery_single_owner_lease_and_reassignment() -> None:
     store = InMemoryCommitStore()
     store.open_buffer("run-1")
@@ -17,6 +18,7 @@ def test_memory_commit_recovery_single_owner_lease_and_reassignment() -> None:
     assert store.try_acquire_recovery_lease("run-1", "worker-b", now_ts=16.0, lease_seconds=5.0) is True
 
 
+@pytest.mark.contract
 def test_memory_commit_recovery_marks_storage_apply_failed() -> None:
     store = InMemoryCommitStore()
     store.open_buffer("run-1")
@@ -35,6 +37,7 @@ def test_memory_commit_recovery_marks_storage_apply_failed() -> None:
     assert store.buffer_reason_code("run-1") == "storage_apply_failed"
 
 
+@pytest.mark.contract
 def test_memory_commit_recovery_requires_lease_ownership() -> None:
     store = InMemoryCommitStore()
     store.open_buffer("run-1")

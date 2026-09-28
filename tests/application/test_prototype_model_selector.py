@@ -5,6 +5,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 
 # Layer: integration
 def test_prototype_model_selector_picks_best_valid_candidate(tmp_path: Path) -> None:

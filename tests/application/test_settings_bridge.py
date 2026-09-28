@@ -1,4 +1,4 @@
-# Layer: unit
+# Layers are declared per test for the exercised boundary.
 
 from __future__ import annotations
 
@@ -13,11 +13,13 @@ async def _noop_settings() -> dict[str, str]:
     return {}
 
 
+@pytest.mark.contract
 async def test_run_settings_sync_raises_typed_error_inside_event_loop() -> None:
     with pytest.raises(SettingsBridgeError, match="load_user_settings must run before the event loop starts"):
         _run_settings_sync(_noop_settings(), operation="load_user_settings")
 
 
+@pytest.mark.unit
 def test_run_settings_sync_preserves_bound_runtime_context() -> None:
     """Layer: unit. asyncio.run propagates the caller's captured context into its coroutine."""
     async def read_snapshot():

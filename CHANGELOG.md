@@ -5,6 +5,17 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.112] - 2026-09-27
+
+### Fixed
+- Retain cooperative reload-worker signal handlers through native process finalization. Repeated console signals cannot bypass finalizers, and failed native cleanup still fails the launcher.
+- Classify another 225 reviewed application cases, preserving test bodies and existing markers.
+- Exercise calendar environment capture at actual pipeline construction, use supplied async provider factories in script fixtures, and restrict the mock-policy check to the canonical Git-visible inventory.
+- Full-suite coverage, installed/platform acceptance and remaining architectural-truth work stay open; exact scoped results are recorded in the remediation plan.
+- `compatibility_status`: `preserved`
+- `affected_audience`: `all`
+- `migration_requirement`: `none`
+
 ## [0.6.111] - 2026-09-27
 
 ### Fixed

@@ -2,6 +2,18 @@
 
 Last updated: 2026-09-27
 
+The 0.6.112 checkpoint retains cooperative signal handling in the dedicated API
+reload worker through native process finalization. Its four reproduced late-signal
+failures and eight existing reload cases pass on Windows source Python 3.11 with
+Uvicorn 0.54.0; failed finalizers still fail the launcher. Thirty-three calendar,
+mock-policy and script-fixture cases also pass. Contract:
+`docs/specs/API_RUNTIME_LIFECYCLE.md`. Another 225 application classifications have
+reviewed test-body parity. Canonical collection observes 10,638 cases with 1,139
+missing layers and no conflicts or collection errors; strict taxonomy still fails.
+Current publication evidence lives in the architectural-truth plan. Full-suite
+coverage, fresh installed/platform acceptance
+and remaining C/D/E/CAP work remain open; this is a branch checkpoint.
+
 The 0.6.108 checkpoint captures sandbox event values before identity generation
 and publication. Existing I/O owners retain primary/fallback and replay work;
 append and replay share nonblocking native ownership. Busy fallback refuses,

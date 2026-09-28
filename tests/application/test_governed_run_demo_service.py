@@ -11,6 +11,8 @@ from orket.application.services.governed_run_demo_service import (
     run_governed_run_scenario,
 )
 
+pytestmark = pytest.mark.integration
+
 
 def _write_test_scenario(tmp_path: Path) -> Path:
     example_dir = tmp_path / "demo-files"

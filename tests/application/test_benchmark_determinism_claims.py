@@ -1,14 +1,18 @@
 from __future__ import annotations
 
-# Layer: contract
+# Layer: integration
 import json
 import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 
 def test_run_determinism_harness_single_run_is_not_claimed_deterministic(tmp_path: Path) -> None:
-    """Layer: contract. Verifies a single successful run is reported as unproven, not deterministic."""
+    """Layer: integration. Verifies a single successful run is reported as unproven, not deterministic."""
     task_bank = tmp_path / "tasks.json"
     task_bank.write_text(
         json.dumps(
@@ -59,7 +63,7 @@ def test_run_determinism_harness_single_run_is_not_claimed_deterministic(tmp_pat
 
 
 def test_run_determinism_harness_hashes_stdout_only_when_stderr_differs(tmp_path: Path) -> None:
-    """Layer: contract. Verifies stderr-only runner noise remains debug evidence, not hash input."""
+    """Layer: integration. Verifies stderr-only runner noise remains debug evidence, not hash input."""
     task_bank = tmp_path / "tasks.json"
     task_bank.write_text(
         json.dumps(

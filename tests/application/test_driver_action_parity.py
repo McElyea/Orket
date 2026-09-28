@@ -8,6 +8,7 @@ import pytest
 from orket.driver import OrketDriver
 
 
+@pytest.mark.contract
 def test_fallback_prompt_advertises_only_canonical_actions():
     """Layer: contract. Verifies fallback prompt action surface is derived from canonical registry."""
     driver = OrketDriver.__new__(OrketDriver)
@@ -19,6 +20,7 @@ def test_fallback_prompt_advertises_only_canonical_actions():
     assert "constrained action router" in prompt.lower()
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_execute_plan_handles_all_advertised_actions(monkeypatch):
     """Layer: contract. Verifies every advertised action executes without unsupported-action fallback."""

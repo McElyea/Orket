@@ -3,6 +3,10 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.contract
+
 
 def test_external_extension_template_defaults_validate() -> None:
     """Layer: contract. Verifies external extension template defaults parse under the companion config schema."""

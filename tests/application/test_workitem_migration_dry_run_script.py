@@ -5,6 +5,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 
 def test_workitem_migration_dry_run_script_emits_report(tmp_path: Path) -> None:
     in_path = tmp_path / "legacy.json"

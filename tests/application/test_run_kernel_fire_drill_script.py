@@ -3,6 +3,10 @@ from __future__ import annotations
 import subprocess
 import sys
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 
 def test_run_kernel_fire_drill_script_returns_zero() -> None:
     result = subprocess.run(

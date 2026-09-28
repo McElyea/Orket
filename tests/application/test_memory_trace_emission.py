@@ -13,6 +13,8 @@ from orket.core.domain.state_machine import StateMachine
 from orket.schema import CardStatus, IssueConfig, RoleConfig
 from tests.helpers.turn_artifacts import artifact_test_utc_now
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.asyncio
 async def test_turn_executor_emits_memory_trace_artifacts_when_visibility_mode_present(tmp_path):

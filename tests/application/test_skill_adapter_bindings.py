@@ -7,6 +7,8 @@ from orket.application.services.skill_adapter import (
     synthesize_role_tool_profile_bindings,
 )
 
+pytestmark = pytest.mark.contract
+
 
 def _manifest() -> dict:
     return {

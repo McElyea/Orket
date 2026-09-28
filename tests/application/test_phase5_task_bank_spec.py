@@ -3,6 +3,10 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.contract
+
 
 def _load_tasks() -> list[dict]:
     path = Path("benchmarks/task_bank/v1/tasks.json")

@@ -11,8 +11,9 @@ from orket.application.services.config_precedence_resolver import ConfigPreceden
 from orket.application.services.mode_change_policy import ModeChangePolicy
 
 
+@pytest.mark.unit
 def test_mode_change_policy_pending_scope_is_next_resolve_only() -> None:
-    """Layer: integration. Verifies pending mode changes apply on next resolve and then clear."""
+    """Layer: unit. Verifies pending mode changes apply on next resolve and then clear."""
     resolver = ConfigPrecedenceResolver(extension_defaults={"mode": {"role_id": "researcher"}})
     policy = ModeChangePolicy()
     baseline = resolver.resolve()
@@ -33,8 +34,9 @@ def test_mode_change_policy_pending_scope_is_next_resolve_only() -> None:
     assert following_turn.mode.role_id == CompanionRoleId.RESEARCHER
 
 
+@pytest.mark.unit
 def test_mode_change_policy_session_scope_persists_until_clear_session() -> None:
-    """Layer: integration. Verifies session-scoped mode changes remain active across resolves."""
+    """Layer: unit. Verifies session-scoped mode changes remain active across resolves."""
     resolver = ConfigPrecedenceResolver(extension_defaults={"mode": {"role_id": "general_assistant"}})
     policy = ModeChangePolicy()
     policy.apply_mode_change(
@@ -54,8 +56,9 @@ def test_mode_change_policy_session_scope_persists_until_clear_session() -> None
     assert resolved_again.mode.role_id == CompanionRoleId.STRATEGIST
 
 
+@pytest.mark.contract
 def test_mode_change_policy_rejects_unknown_scope() -> None:
-    """Layer: unit. Verifies unknown mode-change scopes fail closed."""
+    """Layer: contract. Verifies unknown mode-change scopes fail closed."""
     resolver = ConfigPrecedenceResolver()
     policy = ModeChangePolicy()
     with pytest.raises(ValueError, match="E_COMPANION_MODE_SCOPE_INVALID"):

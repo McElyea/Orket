@@ -3,6 +3,10 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.contract
+
 
 def test_quant_sweep_preset_configs_include_required_controls() -> None:
     config_names = [

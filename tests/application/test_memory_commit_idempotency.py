@@ -4,6 +4,8 @@ import pytest
 
 from orket.application.services.memory_commit_buffer import InMemoryCommitStore
 
+pytestmark = pytest.mark.contract
+
 
 def test_memory_commit_idempotency_same_commit_id_same_payload_is_noop() -> None:
     store = InMemoryCommitStore()

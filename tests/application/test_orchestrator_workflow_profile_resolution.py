@@ -2,7 +2,11 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+import pytest
+
 from orket.application.workflows.orchestrator import Orchestrator
+
+pytestmark = pytest.mark.unit
 
 
 def test_resolve_workflow_profile_defaults_to_legacy(monkeypatch) -> None:

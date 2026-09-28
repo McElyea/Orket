@@ -4,6 +4,10 @@ import json
 import subprocess
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 
 def test_check_context_sweep_outputs_passes_with_complete_coverage(tmp_path: Path) -> None:
     for context in (4096, 8192):

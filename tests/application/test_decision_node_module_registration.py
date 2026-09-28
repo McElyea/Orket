@@ -4,6 +4,8 @@ import pytest
 
 from orket.application.services.decision_node_registry import DecisionNodeRegistry
 
+pytestmark = pytest.mark.contract
+
 
 class _StubPlanner:
     def create_parent_context(self, epic, model_selector):

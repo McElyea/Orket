@@ -5,6 +5,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 
 def test_gen_kernel_compare_fixture_script(tmp_path: Path) -> None:
     out_path = tmp_path / "kernel_compare_fixture.json"

@@ -36,6 +36,7 @@ class _FakeTTSProvider:
         return AudioClip(sample_rate=16000, channels=1, samples=b"\x01\x02", format="pcm_s16le")
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_extension_runtime_service_namespaces_profile_and_session_memory(tmp_path: Path) -> None:
     """Layer: integration. Verifies profile/session memory records stay isolated per extension id and session id."""
@@ -94,9 +95,10 @@ async def test_extension_runtime_service_namespaces_profile_and_session_memory(t
     assert other_profile["records"][0]["value"] == '{"mode":{"role_id":"researcher"}}'
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_extension_runtime_service_voice_and_transcribe_paths(tmp_path: Path) -> None:
-    """Layer: integration. Verifies generic voice state/control, STT, and TTS flows stay truthful."""
+    """Layer: contract. Verifies generic voice state/control, STT, and TTS flows stay truthful."""
     stt = HostSTTCapabilityProvider(transcriber=lambda req: TranscribeResponse(ok=True, text=f"len={len(req.audio_bytes)}"))
     service = ExtensionRuntimeService(
         project_root=tmp_path,
@@ -125,6 +127,7 @@ async def test_extension_runtime_service_voice_and_transcribe_paths(tmp_path: Pa
     assert base64.b64decode(synth["audio_b64"].encode("utf-8"), validate=True) == b"\x01\x02"
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_extension_runtime_service_list_models_and_override_generation(tmp_path: Path, monkeypatch) -> None:
     """Layer: contract. Verifies model catalog output and provider/model override generation stay available on the generic seam."""

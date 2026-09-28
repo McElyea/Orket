@@ -6,6 +6,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 
 def test_run_quant_sweep_injects_runtime_env_from_matrix_config(tmp_path: Path) -> None:
     task_bank = tmp_path / "tasks.json"

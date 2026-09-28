@@ -3,6 +3,10 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 LEDGER_ADAPTERS = (
     REPO_ROOT / "orket" / "adapters" / "storage" / "async_protocol_run_ledger.py",
@@ -11,7 +15,7 @@ LEDGER_ADAPTERS = (
 
 
 def test_cited_ledger_adapters_do_not_import_application_workflows() -> None:
-    """Layer: contract. Verifies Packet 2 ledger adapters stay below the application workflow layer."""
+    """Layer: unit. Verifies Packet 2 ledger adapters stay below the application workflow layer."""
     violations: list[str] = []
     for path in LEDGER_ADAPTERS:
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))

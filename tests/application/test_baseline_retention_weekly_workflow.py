@@ -2,9 +2,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
 
 def test_baseline_retention_weekly_workflow_uses_one_artifact_directory() -> None:
-    """Layer: contract. Verifies the workflow prepares, writes, and uploads the same artifact directory."""
+    """Layer: unit. Verifies the workflow prepares, writes, and uploads the same artifact directory."""
     workflow_path = Path(".gitea/workflows/baseline-retention-weekly.yml")
     workflow_text = workflow_path.read_text(encoding="utf-8")
 

@@ -1,8 +1,12 @@
-# Layer: unit
+# Layer: integration
 from __future__ import annotations
 
 import importlib.util
 from pathlib import Path
+
+import pytest
+
+pytestmark = pytest.mark.integration
 
 
 def _load_module(path: Path):

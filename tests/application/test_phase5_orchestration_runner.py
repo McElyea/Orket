@@ -4,6 +4,10 @@ import json
 import subprocess
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 
 def _run_runner(task_payload: dict, tmp_path: Path) -> subprocess.CompletedProcess[str]:
     task_path = tmp_path / "task.json"

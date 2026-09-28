@@ -3,7 +3,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.prompt_lab.optimize_prompts import generate_candidates
+
+pytestmark = pytest.mark.integration
 
 
 def _seed_assets(root: Path) -> None:

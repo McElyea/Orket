@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import pytest
+
 from scripts.gitea.check_gitea_state_phase3_readiness import evaluate_phase3_readiness
+
+pytestmark = pytest.mark.contract
 
 
 def test_phase3_readiness_passes_when_gates_and_targets_are_green() -> None:

@@ -25,3 +25,10 @@ def create_test_model_provider(*args, **kwargs):
 async def create_test_model_provider_async(*args, **kwargs):
     """Use owned construction with the same explicit controlled admission."""
     return await create_local_model_provider_async(*args, runtime_preparation=ControlledPreparation(), **kwargs)
+
+
+def as_async_provider_factory(provider_type):
+    """Supply an in-memory test provider through the existing async factory port."""
+    async def construct(*args, **kwargs):
+        return provider_type(*args, **kwargs)
+    return construct

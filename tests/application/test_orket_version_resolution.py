@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import pytest
+
 import orket
+
+pytestmark = pytest.mark.unit
 
 
 def test_resolve_runtime_version_prefers_installed_metadata(monkeypatch):

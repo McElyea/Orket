@@ -6,6 +6,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 
 def test_phase4_runner_executes_001_to_060_and_writes_report(tmp_path: Path) -> None:
     raw_out = tmp_path / "phase4_raw.json"

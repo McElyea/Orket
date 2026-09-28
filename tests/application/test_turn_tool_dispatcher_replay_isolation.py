@@ -16,6 +16,8 @@ from orket.core.contracts.protocol_hashing import build_step_id, derive_operatio
 from orket.core.domain.execution import ExecutionTurn, ToolCall
 from tests.helpers.turn_artifacts import execute_dispatch_fixture
 
+pytestmark = pytest.mark.contract
+
 
 def _make_dispatcher(
     tmp_path: Path,
@@ -73,7 +75,7 @@ class _NoOpToolbox:
         return {"ok": True, "executed": True}
 
 
-# Layer: integration
+# Layer: contract
 @pytest.mark.asyncio
 async def test_replay_mode_with_protocol_enabled_skips_persistence_side_effects(tmp_path: Path) -> None:
     operation_store: dict[tuple[str, str, str, int, str], dict[str, Any]] = {}
@@ -128,7 +130,7 @@ async def test_replay_mode_with_protocol_enabled_skips_persistence_side_effects(
     assert receipt_rows == []
 
 
-# Layer: integration
+# Layer: contract
 @pytest.mark.asyncio
 async def test_replay_mode_with_protocol_disabled_skips_legacy_tool_result_persist(tmp_path: Path) -> None:
     operation_store: dict[tuple[str, str, str, int, str], dict[str, Any]] = {}

@@ -1,10 +1,14 @@
-# Layer: contract. Controlled command dispatch; live child proof is recorded separately.
+# Layer: unit. Controlled command dispatch; live child proof is recorded separately.
 from __future__ import annotations
 
 import importlib.util
 import sys
 from pathlib import Path
 from types import ModuleType
+
+import pytest
+
+pytestmark = pytest.mark.unit
 
 
 def _load_script_module(module_name: str, script_path: str) -> ModuleType:

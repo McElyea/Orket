@@ -1,9 +1,13 @@
 
 from types import SimpleNamespace
 
+import pytest
+
 from orket.application.services.runtime_policy_inputs import ArchitecturePolicySnapshot
 from orket.application.workflows.orchestrator import Orchestrator
 from tests.helpers.turn_artifacts import artifact_test_utc_now
+
+pytestmark = pytest.mark.unit
 
 
 def test_orchestrator_history_context_defaults_to_10(monkeypatch, tmp_path):

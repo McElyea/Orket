@@ -4,6 +4,10 @@ import json
 import subprocess
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 
 def _summary(context: int, *, valid: bool, adherence: float, ttft_ms: float, decode_tps: float) -> dict:
     return {

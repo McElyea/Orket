@@ -4,6 +4,10 @@ import json
 import subprocess
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 
 def test_check_quant_sweep_kpis_passes_when_thresholds_met(tmp_path: Path) -> None:
     summary = tmp_path / "summary.json"

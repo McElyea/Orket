@@ -2,6 +2,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
 
 def test_runtime_state_test_references_require_fresh_fixture() -> None:
     """Layer: unit. Lints tests that touch the module-level runtime_state singleton."""

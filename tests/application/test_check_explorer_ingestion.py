@@ -4,6 +4,10 @@ import json
 import subprocess
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 
 def test_check_explorer_ingestion_passes_for_complete_index(tmp_path: Path) -> None:
     index = tmp_path / "index.json"

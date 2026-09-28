@@ -4,13 +4,17 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 from orket_extension_sdk import __version__
+
+pytestmark = pytest.mark.integration
 
 SCRIPT = Path("scripts/sdk/check_sdk_tag_version.py").resolve()
 
 
 def test_check_sdk_tag_version_accepts_matching_tag() -> None:
-    """Layer: contract. Verifies SDK release tag gate accepts matching tag/version pairs."""
+    """Layer: integration. Verifies SDK release tag gate accepts matching tag/version pairs."""
     completed = subprocess.run(
         [sys.executable, str(SCRIPT), "--tag", f"sdk-v{__version__}", "--repo-root", "."],
         check=False,
@@ -22,7 +26,7 @@ def test_check_sdk_tag_version_accepts_matching_tag() -> None:
 
 
 def test_check_sdk_tag_version_rejects_mismatch() -> None:
-    """Layer: contract. Verifies SDK release tag gate fails closed on tag/version drift."""
+    """Layer: integration. Verifies SDK release tag gate fails closed on tag/version drift."""
     completed = subprocess.run(
         [sys.executable, str(SCRIPT), "--tag", "sdk-v9.9.9", "--repo-root", "."],
         check=False,

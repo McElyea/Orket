@@ -4,6 +4,10 @@ import json
 import subprocess
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 
 def test_quant_frontier_explorer_builds_artifact_and_appends_store(tmp_path: Path) -> None:
     summary = tmp_path / "sweep_summary.json"

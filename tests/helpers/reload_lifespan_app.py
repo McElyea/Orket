@@ -3,7 +3,9 @@ from __future__ import annotations
 
 import asyncio
 import os
+import time
 from contextlib import asynccontextmanager
+from multiprocessing.util import Finalize
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -27,8 +29,23 @@ async def wait_for_release(phase):
         await asyncio.sleep(0.02)
 
 
+def finish_process():
+    """Native process-finalization callback, after the server event loop closes."""
+    (ROOT / f"{PID}-process-finalization-held").touch()
+    deadline = time.monotonic() + 10
+    while not (ROOT / "release-finalizer").exists():
+        if time.monotonic() >= deadline:
+            os._exit(18)
+        time.sleep(0.02)
+    (ROOT / f"{PID}-process-finalization-done").touch()
+    if os.environ["RELOAD_TEST_FINALIZER"] == "fail":
+        os._exit(17)
+
+
 @asynccontextmanager
 async def lifespan(app):
+    if os.environ.get("RELOAD_TEST_FINALIZER"):
+        Finalize(None, finish_process, exitpriority=0)
     await wait_for_release("startup")
     if os.environ.get("RELOAD_TEST_FAILURE") == "startup":
         raise RuntimeError("controlled startup failure")

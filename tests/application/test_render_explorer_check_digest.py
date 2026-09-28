@@ -4,6 +4,10 @@ import json
 import subprocess
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 
 def test_render_explorer_check_digest_writes_markdown(tmp_path: Path) -> None:
     summary = tmp_path / "summary.json"

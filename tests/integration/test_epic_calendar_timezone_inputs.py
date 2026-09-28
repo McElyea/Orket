@@ -63,16 +63,16 @@ async def test_owner_captures_timezone_and_clock_before_asset_reads(tmp_path, mo
         await pipeline.close()
 
 
-async def test_owner_without_construction_snapshot_captures_environment(tmp_path, monkeypatch):
+async def test_pipeline_without_explicit_snapshot_captures_environment_at_construction(tmp_path, monkeypatch):
     for suffix, value in (('DATE', '2026-02-02'), ('QUARTER', '1'), ('SPRINT', '6')):
         monkeypatch.setenv('ORKET_EOS_SPRINT_BASE_' + suffix, value)
-    pipeline = await pipeline_at(tmp_path)
-    pipeline.runtime_context.construction_inputs = None
     monkeypatch.setenv('ORKET_TIMEZONE', 'MST')
-    monkeypatch.setattr(pipeline.runtime_inputs, 'utc_now', lambda: datetime.fromisoformat('2026-07-06T06:30:00+00:00'))
-    owner = pipeline._build_epic_run_orchestrator()
-    monkeypatch.setenv('ORKET_TIMEZONE', 'UTC')
+    pipeline = await pipeline_at(tmp_path)
     try:
+        assert pipeline.runtime_context.construction_inputs.environment['ORKET_TIMEZONE'] == 'MST'
+        monkeypatch.setenv('ORKET_TIMEZONE', 'UTC')
+        monkeypatch.setattr(pipeline.runtime_inputs, 'utc_now', lambda: datetime.fromisoformat('2026-07-06T06:30:00+00:00'))
+        owner = pipeline._build_epic_run_orchestrator()
         await owner._ensure_session_and_cards(await setup_for(owner))
         assert (await pipeline.async_cards.get_by_id('ISSUE-1')).sprint == 'Q3 S1'
     finally:

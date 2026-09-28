@@ -18,6 +18,7 @@ class _DriverResourceHarness(DriverResourceMixin):
         return self.fs.workspace_root
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_run_coroutine_blocking_rejects_running_loop_usage() -> None:
     """Layer: contract. Verifies the sync bridge fails closed instead of blocking an active event loop."""
@@ -26,6 +27,7 @@ async def test_run_coroutine_blocking_rejects_running_loop_usage() -> None:
         service.run_coroutine_blocking(asyncio.sleep(0))
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_execute_structural_change_keeps_native_files_off_loop(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     """Layer: integration. Real structural storage reads and writes stay in the owned worker."""

@@ -60,9 +60,10 @@ class _Toolbox:
         return {"ok": True}
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_invoke_model_complete_passes_runtime_context_to_direct_complete() -> None:
-    """Layer: contract. Verifies direct model-client complete() receives runtime_context on success."""
+    """Layer: unit. Verifies direct model-client complete() receives runtime_context on success."""
 
     class _DirectClient:
         def __init__(self) -> None:
@@ -86,9 +87,10 @@ async def test_invoke_model_complete_passes_runtime_context_to_direct_complete()
     assert client.calls == [{"messages": messages, "runtime_context": context}]
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_invoke_model_complete_uses_provider_fallback_when_wrapper_omits_runtime_context() -> None:
-    """Layer: contract. Verifies wrapped clients fall back to provider.complete(..., runtime_context=...)."""
+    """Layer: unit. Verifies wrapped clients fall back to provider.complete(..., runtime_context=...)."""
 
     class _Provider:
         def __init__(self) -> None:
@@ -123,6 +125,7 @@ async def test_invoke_model_complete_uses_provider_fallback_when_wrapper_omits_r
     assert provider.calls == [{"messages": messages, "runtime_context": context}]
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_turn_executor_bridges_runtime_context_through_wrapped_model_client(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path

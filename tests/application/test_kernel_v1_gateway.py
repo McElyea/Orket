@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import pytest
+
 from orket.application.services.kernel_v1_gateway import KernelV1Gateway
+
+pytestmark = pytest.mark.contract
 
 
 def test_kernel_v1_gateway_uses_api_surface() -> None:

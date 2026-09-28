@@ -10,12 +10,14 @@ from orket.application.services.memory_access_policy import (
 )
 
 
+@pytest.mark.contract
 def test_resolve_utility_agent_profile_unknown_raises() -> None:
     with pytest.raises(MemoryAccessPolicyError) as exc:
         resolve_utility_agent_profile("unknown-profile")
     assert exc.value.code == "E_UTILITY_AGENT_PROFILE_UNKNOWN"
 
 
+@pytest.mark.contract
 def test_enforce_role_access_rejects_forbidden_role() -> None:
     profile = resolve_utility_agent_profile("ops_assistant")
     with pytest.raises(MemoryAccessPolicyError) as exc:
@@ -26,6 +28,7 @@ def test_enforce_role_access_rejects_forbidden_role() -> None:
     assert payload["detail"]["profile_id"] == "ops_assistant"
 
 
+@pytest.mark.unit
 def test_normalize_retrieval_rows_is_deterministic_across_input_order() -> None:
     rows_a = [
         {"content": "b", "metadata": {"i": 2}, "score": 1.0, "timestamp": "2026-02-24T10:00:00+00:00", "id": 7},
