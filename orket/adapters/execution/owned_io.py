@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections.abc import Awaitable, Callable
+from functools import partial
 from typing import TypeVar
 
 IOResult = TypeVar("IOResult")
@@ -15,6 +16,22 @@ async def run_owned_io(
     operation: Callable[[], Awaitable[IOResult]], *, label: str, preserve_failure: bool = False,
     cancel_on_interrupt: bool = False,
 ) -> IOResult:
+    warn = logger.warning
+    result, cancelled = await _settle_owned_io(operation, cancel_on_interrupt=cancel_on_interrupt)
+    if cancelled is not None:
+        if isinstance(result, BaseException) and not (cancel_on_interrupt and isinstance(result, asyncio.CancelledError)):
+            selected = result if preserve_failure else cancelled
+            await run_owned_diagnostic(partial(warn, "Owned I/O failed while draining cancellation (%s)", label,
+                exc_info=(type(result), result, result.__traceback__)), primary=selected)
+            raise selected
+        raise cancelled
+    if isinstance(result, BaseException):
+        raise result
+    return result
+
+
+async def _settle_owned_io(operation, *, cancel_on_interrupt=False):
+    """The single admission/settlement loop shared by operations and their finalizers."""
     task = asyncio.create_task(operation())
     joined = asyncio.gather(task, return_exceptions=True)
     cancelled: asyncio.CancelledError | None = None
@@ -37,17 +54,24 @@ async def run_owned_io(
             task.result()
         except asyncio.CancelledError as exc:
             result = exc
-    if cancelled is not None:
-        if isinstance(result, BaseException) and not (cancel_on_interrupt and isinstance(result, asyncio.CancelledError)):
-            logger.warning("Owned I/O failed while draining cancellation (%s)", label,
-                           exc_info=(type(result), result, result.__traceback__))
-            if preserve_failure:
-                # Resource owners must not turn failed cleanup into clean cancellation.
-                raise result
-        raise cancelled
-    if isinstance(result, BaseException):
-        raise result
-    return result
+    return result, cancelled
+
+
+async def run_owned_diagnostic(operation: Callable[[], object], *, primary: BaseException) -> None:
+    """Retain a supporting native attempt without replacing its selected failure."""
+    async def guarded_attempt() -> bool:
+        try:
+            await asyncio.to_thread(operation)
+        except BaseException:  # Diagnostic supervisor: contain even fatal handler/executor refusal before task completion.
+            return False
+        return True
+
+    succeeded, _cancelled = await _settle_owned_io(guarded_attempt)
+    # Ordinary exception state is borrowed. Do not invoke an overridden note hook,
+    # retain a secondary exception, or recursively log this supporting failure.
+    marker = "E_OWNED_DIAGNOSTIC_FAILED"
+    if succeeded is not True and marker not in getattr(primary, "__notes__", ()):
+        BaseException.add_note(primary, marker)
 
 
 async def run_owned_thread(operation: Callable[[], IOResult], *, label: str) -> IOResult:

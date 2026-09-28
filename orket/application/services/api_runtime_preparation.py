@@ -6,10 +6,11 @@ import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
+from functools import partial
 from pathlib import Path
 from typing import Any
 
-from orket.adapters.execution.owned_io import run_owned_io, run_owned_thread
+from orket.adapters.execution.owned_io import run_owned_diagnostic, run_owned_io, run_owned_thread
 from orket.application.services.api_runtime_composition import build_api_runtime_container
 from orket.application.services.api_runtime_container import ApiRuntimeContainer
 from orket.application.services.application_runtime_lifetime import close_owned_resource
@@ -36,6 +37,7 @@ class ApiRuntimePreparation:
 
     @asynccontextmanager
     async def open(self) -> AsyncIterator[PreparedApiRuntime]:
+        diagnose = LOGGER.error
         if self._started:
             raise RuntimeError("E_API_RESTART_REQUIRES_NEW_APP")
         self._started = True
@@ -53,7 +55,7 @@ class ApiRuntimePreparation:
 
         async def cleanup() -> None:
             owners = [completed[0]] if completed else list(reversed(acquired))
-            await _close_acquired(owners)
+            await _close_acquired(owners, diagnose)
 
         failure: BaseException | None = None
         try:
@@ -63,7 +65,8 @@ class ApiRuntimePreparation:
             # This lifespan boundary retains the original outcome through later cleanup cancellation.
             failure = exc
             if not isinstance(exc, asyncio.CancelledError):
-                LOGGER.error("API preparation or lifespan failed", exc_info=True)
+                await run_owned_diagnostic(partial(diagnose, "API preparation or lifespan failed",
+                    exc_info=(type(exc), exc, exc.__traceback__)), primary=exc)
         try:
             await run_owned_io(cleanup, label="api-construction-cleanup", preserve_failure=True)
         except asyncio.CancelledError:
@@ -82,15 +85,16 @@ def build_api_runtime_preparation(project_root: Path, *, inputs: RuntimeConstruc
     return ApiRuntimePreparation(project_root, inputs=inputs, runtime_inputs=runtime_inputs)
 
 
-async def _close_acquired(resources: list[Any]) -> None:
+async def _close_acquired(resources: list[Any], diagnose) -> None:
     errors: list[BaseException] = []
     for resource in resources:
         try:
             await close_owned_resource(resource)
         except (Exception, asyncio.CancelledError) as exc:
             # This construction supervisor must attempt every acquired resource's teardown.
-            LOGGER.error("API construction resource cleanup failed (%s)", type(resource).__name__, exc_info=True)
             errors.append(exc)
+            await run_owned_diagnostic(partial(diagnose, "API construction resource cleanup failed (%s)",
+                type(resource).__name__, exc_info=(type(exc), exc, exc.__traceback__)), primary=exc)
     if len(errors) == 1:
         raise errors[0]
     if errors:

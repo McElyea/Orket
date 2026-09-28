@@ -34,11 +34,17 @@ whole-lane acceptance remain open. The architectural-truth plan records exact
 source bindings and proof limits.
 Contract: `docs/specs/PUBLIC_ENUM_REPRESENTATION_CONTRACT.md`.
 
-Supporting cancellation, preparation and cleanup diagnostics have reproduced
-blocking-handler and abandoned-cleanup failures. Their accepted target contract
-is `docs/specs/RUNTIME_FAILURE_DIAGNOSTICS.md`; implementation, handler migration
-and scoped closing acceptance remain pending. The 0.6.109 checkpoint records the
-target and opening evidence without changing those runtime paths.
+The 0.6.110 candidate corrects the reproduced supporting-diagnostic failures in
+the shared I/O, API preparation/application lifetime and runtime cleanup owners.
+Native diagnostic attempts remain owned through interruption; handler/executor
+failure preserves the selected primary and adds only a fixed failure note.
+Managed background failure closes admission before diagnostic settlement and
+retains that settlement in its existing task. Custom handlers on these paths
+must support native worker invocation. Copied-source and current-source controls
+and guards each pass 94 cases. The wider suite diagnostic stops at five failures
+after 3,681 passes and 29 skips; installed and full-suite acceptance remain open. Contract:
+`docs/specs/RUNTIME_FAILURE_DIAGNOSTICS.md`. Required producers, explicit logging
+preparation and broader D acceptance remain open.
 
 The 0.6.107 checkpoint corrects the five retained optional logging openings. Its
 combined 385-case cohort passes in source and installed Windows Python 3.11/3.12,

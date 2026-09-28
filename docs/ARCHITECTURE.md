@@ -40,6 +40,13 @@ worker before engine initialization. Contracts and migration limits:
 `docs/specs/SANDBOX_EVENT_PUBLICATION_OWNERSHIP.md` and
 `docs/specs/API_RUNTIME_LIFECYCLE.md`.
 
+Cancellation-drain and API/runtime cleanup failure diagnostics share the existing
+native I/O settlement owner. Supporting handler failures preserve primary outcomes
+and later declared close attempts. Managed background diagnostics remain inside
+the same tracked owner and close drains them before resources. A fixed failure
+note establishes neither diagnostic delivery nor successful resource cleanup.
+Contract and current proof limits: `docs/specs/RUNTIME_FAILURE_DIAGNOSTICS.md`.
+
 Optional event publication captures supported built-in inputs before admission
 to the existing bounded writer. Native stages retain independent main/artifact
 capacity and API token ownership; fatal failures refuse append settlement. This

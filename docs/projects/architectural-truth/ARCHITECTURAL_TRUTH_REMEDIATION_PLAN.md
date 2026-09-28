@@ -12479,7 +12479,7 @@ GitHub push authorization after the temporary local-only restriction. Scoped com
 matching annotated version tags and branch/tag publication are authorized; a main
 merge and whole-lane retirement are not. Earlier local-only checkpoint observations
 remain historical. Each checkpoint records its exact verification and publication
-disposition. The current session resumes from published .106 under the
+disposition. The current session resumes from published .109 under the
 complete-plan goal, with the remaining logging and verifier ownership boundaries
 and quality-checker correction in progress. The lane remains active;
 scoped checkpoint proof does not close the remaining C/D/E/CAP obligations.
@@ -12520,7 +12520,8 @@ Remaining blockers or drift after scoped BT-1 through BT-5 acceptance:
   Scoped installed-build/host acceptance now passes; this does not close the
   full plan or imply generic exactly-once effects or historical authenticity.
 
-Next action (2026-09-27): continue after scoped 0.6.108 source/installed acceptance.
+Next action (2026-09-27): continue after the 0.6.109 classification checkpoint,
+retaining scoped 0.6.108 source/installed acceptance as historical proof.
 Close remaining D cleanup diagnostics, required producers and explicit logging
 preparation; capture empirical-verification inputs and the selected turn clock.
 Continue reviewed marker migration and named full-suite diagnosis through the
@@ -27038,3 +27039,95 @@ classification checks used the active editable interpreter with retained 0.6.108
 distribution metadata; no installed 0.6.109 acceptance is claimed.
 Required producers/preparation, empirical inputs, E2 authority cutover,
 full coverage, Linux/platform proof and proposed capabilities remain unclosed.
+
+### Retained diagnostic ownership and fixture-input opening: candidate 0.6.110
+
+Published checkpoint `b1e5f60ef3dbbc79e5974e73751d49359ece25da` and annotated
+`v0.6.109` are verified on the requested remote branch with a clean worktree at
+publication. The next candidate applies the reviewed four diagnostic owners and
+seven test/helper files. Shared native settlement preserves selected primary
+failure/cancellation, contains handler/executor failures with one fixed note,
+and retains declared cleanup attempts. Managed background diagnostics stay
+inside their original task while failure closes admission immediately.
+
+Live copied-source closing passes all 28 controls (the retained 20 openings plus
+eight fatal-handler, executor and managed-cancellation controls) and 66 existing
+guards. All exact cases, markers, origins and frozen inputs match. Independent
+readback reopens 26 control and 12 guard response databases, and inspects 24 parent
+plus four fatal-child cleanup records. The 26 measured control responses span
+0.0010643-0.0024059 seconds against the unchanged 0.5-second limit. All three
+process owners are reaped without timeout or observed residual. Proof is live
+local API/SQLite/native-handler execution, path `primary`, result `success`;
+declared command-uncertainty inputs do not establish actual command cleanup.
+Review: `.tmp/d-failure-diagnostics-closing-v1/review_manifest.json`, SHA-256
+`efcb18ba2cb2876493d45c2b3cd7e3bf299df61c0fb70c28b908a1e37aa81ff9`.
+Application binds all eleven current files to those reviewed candidate bytes in
+`applied.json` in that directory, SHA-256
+`c7eccdcfae9c58b09eb7b914c41de3b3398601dfc7161ed29dfaafbd83d5e8cd`.
+Current-source closing is recorded below; full-suite and fresh installed
+acceptance remain pending.
+
+Metadata correction: the copied diagnostic proof selects the environment's
+0.6.108 dist-info with copied 0.6.109 sources. Live-worktree lookup instead found
+stale ignored 0.6.107 egg-info. The preceding classification checkpoint's general
+0.6.108 metadata statement was too broad; it does not establish metadata selected
+by every root invocation. No installed .109 acceptance was claimed. The stale
+root metadata and prior environment METADATA are preserved under
+`.tmp/goal-v110-metadata-before-refresh/`. A no-dependency editable refresh now
+selects the active environment's 0.6.110 distribution for current-root execution.
+
+A separate live fixture-input opening executes five controls against unchanged
+current source: four fail and one healthy real-child control passes, with no
+errors/skips or changed source inputs. Nested scenario and selected environment
+mutation reaches the child after metadata admission; cancellation and timeout
+return while the native metadata worker remains held. Emergency fixture cleanup
+releases and joins the retained worker after those observations. The process
+owner exits 1 after 2.5 seconds, is reaped and leaves no observed residual.
+This is a reproduced failure, not fixture-input acceptance. Readback:
+`.tmp/d-fixture-inputs-opening-v1/readback.json`, SHA-256
+`1737fa288d60db21f610663629a6367078c28d56deeeb6f6d8f69ab4ed1804f2`.
+Its two JUnit record-property compatibility warnings remain in the original log.
+Input/clock semantics and their contract delta must be settled before correction.
+Required publication, explicit logging preparation, remaining D/E and capability
+acceptance continue under the existing plan; the lane is not closed.
+
+Current-source publication verification for 0.6.110 executes the exact same 94
+controls/guards with the active editable Python 3.11 interpreter: 94 pass, zero
+failures/errors/skips/deselections, in 31.61 seconds. Collected case identities,
+canonical markers, loaded source origins, metadata 0.6.110 and unchanged executable
+inputs are checked. Independent readback reopens all 38 response databases. The
+test owner is reaped with no observed child residue. This is scoped live proof,
+path `primary`, result `success`, not fresh installed-package acceptance.
+Canonical Ruff, docs project hygiene, dependency direction and precommit release
+alignment pass as structural checks. The dependency observation covers 1,184
+files and 3,981 edges with six resolved dynamic routes and zero violations,
+unknown modules, authority cycles, adapter-effect violations or analysis errors.
+Receipt: `.tmp/goal-20260927-publication-v110/checks/readback.json`, SHA-256
+`6fa1d78374196c65ff1e403d053ad56830db6757eef12ae58d9019dfcf4628f9`.
+
+The separate full-suite diagnostic invokes `python -B -m pytest tests/ -q
+--tb=short --maxfail=5 --cov=orket --cov-fail-under=89` with sandbox creation
+disabled, isolated temporary paths and the root database guard. It stops after
+3,681 passes, five failures and 29 explicit opt-in skips (471.68 seconds). Its
+process owner is reaped without timeout or observed residual, and frozen inputs
+are unchanged. No coverage JSON is produced; neither coverage nor the remainder
+of the suite is accepted. Proof is executed local tests within their declared
+fixture/integration scopes, path `primary`, result `failure`.
+The failures retained for the next diagnosis are:
+
+1. `tests/application/test_parallel_execution.py::test_parallel_execution_throughput`
+   and `::test_dependency_chain_serial`: throughput and terminal-status assertions
+   fail; logs also retain `LocalModelProvider` missing `_http_client_owner` during
+   fixture cleanup. That is a diagnostic lead, not completed cause isolation.
+2. `tests/integration/test_api_preparation_interruption.py::test_outbound_read_retains_constructed_owner[False-complete]`:
+   expected legacy dictionary differs from the observed `OutboundPolicyInputs`.
+3. `tests/integration/test_api_sandbox_log_ownership.py::test_api_sandbox_logs_retain_pipeline_and_native_work[cancel-close]`
+   and `[timeout-close]`: response observations are 0.7284932 and 0.7315514 seconds,
+   above the unchanged 0.5-second bound. Their cause remains unisolated.
+
+Receipt: `.tmp/goal-e1-v110-suite-diagnostic/readback.json`, SHA-256
+`9195533f1f5248a837e48106b990c8824dc2812e551a31778eb1de4123b1c058`.
+The user's commit/push request publishes this bounded checkpoint; it does not
+close these failures, remaining classification debt, fresh installed/platform
+proof or the complete remediation goal. Unapplied marker/fixture/E2 proposals
+remain ignored scratch and are outside this commit.

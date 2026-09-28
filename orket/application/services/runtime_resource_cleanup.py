@@ -2,13 +2,14 @@
 import asyncio
 import inspect
 import logging
+from functools import partial
 
-from orket.adapters.execution.owned_io import run_owned_io, run_owned_thread
+from orket.adapters.execution.owned_io import run_owned_diagnostic, run_owned_io, run_owned_thread
 
 logger = logging.getLogger(__name__)
 
 
-async def _close_resources(resources, label):
+async def _close_resources(resources, label, diagnose):
     failures = []
     for index, target in enumerate(resources):
         try:
@@ -23,8 +24,9 @@ async def _close_resources(resources, label):
                     await result
         except (Exception, asyncio.CancelledError) as exc:
             # Cleanup supervisor: one failed port must not abandon later resources.
-            logger.exception("Runtime cleanup failed (%s, resource %s, type %s)", label, index, type(target).__name__)
             failures.append(exc)
+            await run_owned_diagnostic(partial(diagnose, "Runtime cleanup failed (%s, resource %s, type %s)",
+                label, index, type(target).__name__, exc_info=(type(exc), exc, exc.__traceback__)), primary=exc)
     if len(failures) == 1:
         raise failures[0]
     if failures:
@@ -34,4 +36,5 @@ async def _close_resources(resources, label):
 async def close_runtime_resources(resources, *, label):
     """Keep the declared order and retain all failures after owned cleanup settles."""
     resources = tuple(resources)
-    await run_owned_io(lambda: _close_resources(resources, label), label=label, preserve_failure=True)
+    diagnose = logger.exception
+    await run_owned_io(lambda: _close_resources(resources, label, diagnose), label=label, preserve_failure=True)

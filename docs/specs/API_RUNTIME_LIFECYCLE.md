@@ -61,6 +61,19 @@ configuration and final resources remain separate. Managed background work uses
 Unexpected background failure stops new admission and prevents a clean teardown
 claim. Existing manually registered API tasks keep their registration contract.
 
+Supporting failure diagnostics in preparation, managed background work and
+teardown share the existing native I/O settlement owner. Captured logger methods
+and explicit exception triples run in its worker. Handler or executor failure
+adds only a fixed non-secret note to the selected primary exception; it does not
+replace that failure or stop later declared peer/final close attempts. Managed
+background failure closes admission immediately while its existing tracked task
+retains the diagnostic, which close drains before resources. Converted command
+cleanup uncertainty retains one identity and is not counted twice solely because
+its diagnostic is pending. No handler deadline is introduced. Contract and the
+0.6.110 candidate migration:
+`docs/specs/RUNTIME_FAILURE_DIAGNOSTICS.md` and
+`docs/architecture/CONTRACT_DELTA_FAILURE_DIAGNOSTICS_D_2026-09-27.md`.
+
 Startup captures the engine, authentication, state, root and governed-agent owner
 before awaiting. Initialization is an admitted invocation: concurrent close cancels
 and drains it before resources and the engine. Root validation uses an owned file
@@ -179,6 +192,9 @@ containment, forced worker termination or shutdown deadline. Migration:
    resource failure/cancellation, and engine failure prevent a successful close.
    Failures are logged with owner context. Peer resources and the engine still
    receive close attempts. The aggregate `RuntimeError` retains the first cause.
+   Supporting diagnostic failure retains that cause and the existing resource
+   failure count under `RUNTIME_FAILURE_DIAGNOSTICS.md`; it does not prove that
+   a failed resource closed.
 6. Teardown failure takes precedence over a close caller's cancellation. Every
    later close observes the same retained failure; it does not silently retry
    partially completed effects. Successful repeated close also works after the
@@ -290,9 +306,9 @@ Task completion and a cooperative resource's successful close are local lifecycl
 observations. Generic task cancellation is not a durable effect receipt. Native
 command cleanup observations follow `VERIFICATION_PROCESS_LIFETIME_CONTRACT.md`;
 the outward journal keeps unresolved dispatch according to its own contract.
-Already completed manually registered tasks are outside the close-time failure
-collector. Managed background tasks, including the event broadcaster, retain their
-unexpected failures when they finish.
+Manually registered tasks still retained at close are observed, including completed
+failures; explicitly released tasks are outside that collector. Managed background
+tasks, including the event broadcaster, retain unexpected failures when they finish.
 
 The factory owns admitted ASGI invocations and the connector calls they await.
 Builtin filesystem connectors now drain their I/O before caller cancellation or

@@ -99,6 +99,27 @@ jobs:
         run: |
           python -m pytest -q tests/integration/test_api_startup_diagnostic_ownership.py tests/integration/test_api_startup_ownership.py tests/integration/test_api_authority_inputs.py tests/runtime/test_startup_security_config.py
 
+      - name: Enforce supporting failure diagnostic ownership
+        env:
+          ORKET_DISABLE_SANDBOX: "1"
+        run: >-
+          python -m pytest -q
+          tests/integration/test_owned_io_failure_diagnostics.py
+          tests/integration/test_api_preparation_failure_diagnostics.py
+          tests/integration/test_api_lifetime_failure_diagnostics.py
+          tests/integration/test_runtime_cleanup_failure_diagnostics.py
+          tests/integration/test_failure_diagnostic_refusals.py
+          tests/integration/test_owned_io_cancellation_identity.py
+          tests/contract/test_application_background_lifetime.py
+          tests/contract/test_api_shutdown_outcomes.py
+          tests/integration/test_api_construction_ownership.py
+          tests/integration/test_api_startup_diagnostic_ownership.py
+          tests/integration/test_api_startup_ownership.py
+          tests/integration/test_api_shutdown_ownership.py
+          tests/integration/test_api_shutdown_timeout_race.py
+          tests/integration/test_api_active_request_ownership.py
+          tests/integration/test_runtime_resource_cleanup.py
+
       - name: Preserve public enum representations
         env:
           ORKET_DISABLE_SANDBOX: "1"
@@ -573,6 +594,27 @@ jobs:
           ORKET_DISABLE_SANDBOX: "1"
         run: |
           python -m pytest -q tests/integration/test_api_startup_diagnostic_ownership.py tests/integration/test_api_startup_ownership.py tests/integration/test_api_authority_inputs.py tests/runtime/test_startup_security_config.py
+
+      - name: Enforce supporting failure diagnostic ownership
+        env:
+          ORKET_DISABLE_SANDBOX: "1"
+        run: >-
+          python -m pytest -q
+          tests/integration/test_owned_io_failure_diagnostics.py
+          tests/integration/test_api_preparation_failure_diagnostics.py
+          tests/integration/test_api_lifetime_failure_diagnostics.py
+          tests/integration/test_runtime_cleanup_failure_diagnostics.py
+          tests/integration/test_failure_diagnostic_refusals.py
+          tests/integration/test_owned_io_cancellation_identity.py
+          tests/contract/test_application_background_lifetime.py
+          tests/contract/test_api_shutdown_outcomes.py
+          tests/integration/test_api_construction_ownership.py
+          tests/integration/test_api_startup_diagnostic_ownership.py
+          tests/integration/test_api_startup_ownership.py
+          tests/integration/test_api_shutdown_ownership.py
+          tests/integration/test_api_shutdown_timeout_race.py
+          tests/integration/test_api_active_request_ownership.py
+          tests/integration/test_runtime_resource_cleanup.py
 
       - name: Preserve public enum representations
         env:

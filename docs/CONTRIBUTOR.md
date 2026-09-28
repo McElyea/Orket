@@ -89,6 +89,14 @@ legacy-sentinel migration and partial effects. Both Quality jobs retain file,
 SQLite, process and input controls under `docs/specs/SANDBOX_EVENT_PUBLICATION_OWNERSHIP.md`.
 API startup validation uses the existing owned native worker before engine startup;
 keep handler/cancellation/security controls under `docs/specs/API_RUNTIME_LIFECYCLE.md`.
+
+Supporting failure diagnostics retain the existing native I/O owner through
+handler settlement. Both Quality jobs retain held/failing-handler, fatal-handler
+and executor-refusal controls with existing I/O and API lifecycle/cleanup guards.
+Preserve primary/cancellation identity, remaining close attempts and tracked
+background failure ownership under `docs/specs/RUNTIME_FAILURE_DIAGNOSTICS.md`.
+Affected custom standard handlers must support native worker invocation.
+
 Public enum representation controls run in both Quality selections; declaration-local
 exceptions preserve the bounded scope in `docs/specs/PUBLIC_ENUM_REPRESENTATION_CONTRACT.md`.
 

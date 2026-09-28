@@ -5,6 +5,16 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.110] - 2026-09-27
+
+### Fixed
+- Retain supporting failure diagnostics in the existing native task owner, preserve the selected primary exception through handler/executor failure, and continue declared API/runtime cleanup attempts.
+- Keep managed background diagnostics inside the tracked task while immediately closing admission; do not double-count the same retained failure during teardown.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `custom standard logging handlers on the scoped cancellation, preparation and cleanup paths`
+- `migration_requirement`: `Handlers on these paths must support native worker invocation. A failed supporting diagnostic adds E_OWNED_DIAGNOSTIC_FAILED to the primary exception.`
+- Copied-source and current-source controls and guards each pass 94 cases. The wider suite diagnostic retains five failures after 3,681 passes and 29 skips; installed-package, full-suite coverage and whole-lane acceptance remain pending in the architectural-truth plan.
+
 ## [0.6.109] - 2026-09-27
 
 ### Fixed

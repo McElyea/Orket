@@ -7,8 +7,10 @@ from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Callable
 from contextvars import ContextVar
 from dataclasses import dataclass, field
+from functools import partial
 from typing import Any, ClassVar
 
+from orket.adapters.execution.owned_io import run_owned_diagnostic
 from orket.application.services.command_process_supervisor import CommandProcessCancelled
 from orket.core.contracts.owned_command import CommandExecutionUncertain
 
@@ -25,6 +27,7 @@ class _RequestOutcome:
     # Task cancellation exceptions are consumed on observation. Retain the exact
     # cleanup outcome so both the request waiter and teardown see uncertainty.
     error: BaseException | None = None
+    diagnosed: bool = False
 
 
 @dataclass(eq=False)
@@ -87,10 +90,25 @@ class ApplicationRuntimeLifetime(ABC):
         """Admit before invocation; retain failure even when work ends before shutdown."""
         if not self.accepting_work:
             raise self._admission_error(f"{self._runtime_name} runtime is closing.")
-        task = asyncio.create_task(_invoke_request(invoke), name=f"orket-{self._runtime_name.lower()}-background")
+        diagnose = LOGGER.error
+        task = asyncio.create_task(self._invoke_background(invoke, diagnose),
+                                   name=f"orket-{self._runtime_name.lower()}-background")
         self.track_background_task(task)
         task.add_done_callback(self._background_settled)
         return task
+
+    async def _invoke_background(self, invoke, diagnose) -> _RequestOutcome:
+        outcome = await _invoke_request(invoke)
+        failure = _owned_failure(outcome.error)
+        if failure is None:
+            return outcome
+        # Close admission before diagnostic dispatch; this existing tracked task
+        # retains the complete supporting attempt while teardown waits for it.
+        self._background_failure = self._background_failure or failure
+        await run_owned_diagnostic(partial(diagnose, "Application background task failed",
+            extra={"task_name": asyncio.current_task().get_name()},
+            exc_info=(type(failure), failure, failure.__traceback__)), primary=failure)
+        return _RequestOutcome(failure, diagnosed=True)
 
     def _background_settled(self, task: asyncio.Task[Any]) -> None:
         try:
@@ -101,11 +119,6 @@ class ApplicationRuntimeLifetime(ABC):
         failure = _owned_failure(error)
         if failure is not None:
             self._background_failure = self._background_failure or failure
-            LOGGER.error(
-                "Application background task failed",
-                extra={"task_name": task.get_name()},
-                exc_info=(type(failure), failure, failure.__traceback__),
-            )
         self.release_background_task(task)
 
     async def run_request(self, invoke: Callable[[], Awaitable[None]]) -> None:
@@ -143,7 +156,7 @@ class ApplicationRuntimeLifetime(ABC):
             raise RuntimeError(f"An {self._runtime_name}-owned task cannot await its own teardown.")
         if self._close_task is None:
             self._close_task = asyncio.create_task(
-                self._teardown(), name=f"orket-{self._runtime_name.lower()}-teardown"
+                self._teardown(LOGGER.exception, LOGGER.error), name=f"orket-{self._runtime_name.lower()}-teardown"
             )
         cancelled = None
         while not self._close_task.done():
@@ -157,7 +170,8 @@ class ApplicationRuntimeLifetime(ABC):
         if cancelled is not None:
             raise cancelled
 
-    async def _teardown(self) -> None:
+    async def _teardown(self, diagnose, task_diagnostic) -> None:
+        already_retained = self._background_failure
         errors: list[BaseException] = [self._background_failure] if self._background_failure is not None else []
         # A completed background wrapper may still have its observation callback
         # queued. Consume its result here as well before releasing resources.
@@ -168,11 +182,17 @@ class ApplicationRuntimeLifetime(ABC):
             self._cancel_owned_task(task)
         if tasks:
             try:
-                results = await asyncio.gather(*(_wait_owned_task(task) for task in tasks))
-                errors.extend(error for error in results if error is not None)
+                results = await asyncio.gather(*(_wait_owned_task(task, task_diagnostic) for task in tasks))
+                for error in results:
+                    if error is not None:
+                        if error is already_retained:
+                            already_retained = None  # Its pending diagnostic is not another failed owner.
+                        else:
+                            errors.append(error)
             except asyncio.CancelledError as exc:
-                LOGGER.exception("%s teardown owner interrupted while waiting for owned tasks", self._runtime_name)
                 errors.append(exc)
+                await run_owned_diagnostic(partial(diagnose, "%s teardown owner interrupted while waiting for owned tasks",
+                    self._runtime_name, exc_info=(type(exc), exc, exc.__traceback__)), primary=exc)
         self._background_tasks.difference_update(task for task in tasks if task.done())
         self._cancellation_requests.difference_update(task for task in tasks if task.done())
 
@@ -180,15 +200,16 @@ class ApplicationRuntimeLifetime(ABC):
             try:
                 await close_owned_resource(resource)
             except (Exception, asyncio.CancelledError) as exc:  # lifecycle boundary still closes peers
-                LOGGER.exception(
-                    "Application-owned resource teardown failed", extra={"resource_type": type(resource).__name__}
-                )
                 errors.append(exc)
+                await run_owned_diagnostic(partial(diagnose, "Application-owned resource teardown failed",
+                    extra={"resource_type": type(resource).__name__},
+                    exc_info=(type(exc), exc, exc.__traceback__)), primary=exc)
         try:
             await self._close_final_resource()
         except (Exception, asyncio.CancelledError) as exc:  # lifecycle boundary reports all close attempts
-            LOGGER.exception("%s final resource teardown failed", self._runtime_name)
             errors.append(exc)
+            await run_owned_diagnostic(partial(diagnose, "%s final resource teardown failed", self._runtime_name,
+                exc_info=(type(exc), exc, exc.__traceback__)), primary=exc)
         if errors:
             raise RuntimeError(f"{self._runtime_name} runtime teardown failed for {len(errors)} owner(s).") from errors[
                 0
@@ -215,21 +236,21 @@ async def _invoke_request(invoke: Callable[[], Awaitable[None]]) -> _RequestOutc
         _REQUEST_OWNER.reset(token)
 
 
-async def _wait_owned_task(task: asyncio.Task[Any]) -> BaseException | None:
+async def _wait_owned_task(task: asyncio.Task[Any], diagnose) -> BaseException | None:
     try:
         result = await task
-        if isinstance(result, _RequestOutcome) and result.error is not None:
-            raise result.error
     except (Exception, asyncio.CancelledError) as exc:  # application shutdown boundary records failed owners
         failure = _owned_failure(exc)
-        if failure is not None:
-            LOGGER.error(
-                "Application owned task failed during teardown",
-                extra={"task_name": task.get_name()},
-                exc_info=(type(failure), failure, failure.__traceback__),
-            )
-        return failure
-    return None
+    else:
+        if not isinstance(result, _RequestOutcome):
+            return None
+        failure = _owned_failure(result.error)
+        if result.diagnosed:
+            return failure
+    if failure is not None:
+        await run_owned_diagnostic(partial(diagnose, "Application owned task failed during teardown",
+            extra={"task_name": task.get_name()}, exc_info=(type(failure), failure, failure.__traceback__)), primary=failure)
+    return failure
 
 
 def _owned_failure(error: BaseException | None) -> BaseException | None:
