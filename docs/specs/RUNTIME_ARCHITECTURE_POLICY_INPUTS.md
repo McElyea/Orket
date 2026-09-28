@@ -1,6 +1,6 @@
 # Runtime architecture policy inputs
 
-Last updated: 2026-09-22
+Last updated: 2026-09-27
 Status: Implementation contract; acceptance remains in the architectural-truth plan
 
 Architecture resolution consumes an explicit immutable snapshot of the microservices
@@ -30,6 +30,12 @@ needed report once and uses that same immutable policy/environment input for val
 effective values, options and returned metadata. Existing conditional settings writes
 and conflict refusals remain authoritative. This is not an atomic transaction over
 multiple report files or protection against unrelated filesystem mutation.
+
+The API router passes these captured inputs to `ApiRuntimeContainer`, which owns
+construction and settlement of the request's `RuntimePolicyInputService`. The
+router does not construct that runtime implementation. Moving this composition
+boundary preserves per-request observation, native I/O ownership and response
+contracts; it introduces no shared policy cache or construction-time policy freeze.
 
 Orchestrator composition supplies the architecture snapshot explicitly. Architecture
 mode and allowed-pattern context use that same value instead of independently reading

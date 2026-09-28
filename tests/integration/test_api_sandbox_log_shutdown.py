@@ -26,8 +26,8 @@ async def test_sandbox_log_shutdown_settles_pipeline_and_native_work(tmp_path, m
         context = app.state.api_runtime_context
         install_pipeline_probe(app, tmp_path, monkeypatch, state, stage, "worker_failure" if failure else "normal")
         request, closing = None, None
-        timer = threading.Timer(.8, state.release.set)
-        timer.start()
+        # The native hold starts the same .8s failsafe; startup is not held work.
+        timer = state.timer = threading.Timer(.8, state.release.set)
         try:
             request = asyncio.create_task(client.get("/v1/sandboxes/sandbox-test/logs"))
             assert await asyncio.to_thread(state.entered.wait, 5)
@@ -50,7 +50,8 @@ async def test_sandbox_log_shutdown_settles_pipeline_and_native_work(tmp_path, m
         finally:
             state.release.set()
             timer.cancel()
-            await asyncio.to_thread(timer.join, 5)
+            if timer.ident is not None:
+                await asyncio.to_thread(timer.join, 5)
             await asyncio.gather(*(task for task in (request, closing) if task is not None), return_exceptions=True)
             assert await asyncio.to_thread(state.finished.wait, 5)
             for close in state.cleanup:

@@ -60,7 +60,6 @@ from orket.application.services.runtime_policy import (
     resolve_state_backend_mode,
     runtime_policy_options,
 )
-from orket.application.services.runtime_policy_input_service import RuntimePolicyInputService
 from orket.application.services.runtime_policy_inputs import ArchitecturePolicySnapshot, RuntimePolicySnapshot
 from orket.application.services.runtime_result_lifetime import open_runtime_owner
 from orket.interfaces.api_runtime_context import (
@@ -785,8 +784,7 @@ def _parse_setting_value(field: str, value: Any) -> Any | None:
 
 async def _observe_runtime_policy() -> RuntimePolicySnapshot:
     # Policy is operator-changeable between requests; capture once before the first await.
-    owner = RuntimePolicyInputService(environment=dict(os.environ), invocation_root=Path.cwd())
-    return await owner.observe_runtime()
+    return await _runtime_context().observe_runtime_policy(environment=dict(os.environ), invocation_root=Path.cwd())
 
 
 def _runtime_policy_process_rules() -> dict[str, Any]:

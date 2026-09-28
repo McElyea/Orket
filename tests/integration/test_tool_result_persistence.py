@@ -125,7 +125,7 @@ async def test_ordinary_result_without_control_plane_retains_its_worker(tmp_path
             outcome, = await asyncio.gather(task, return_exceptions=True)
     assert not escaped and finished.is_set()
     assert isinstance(outcome, asyncio.CancelledError) if cancel else outcome is None
-    cached = await asyncio.to_thread(case.writer.load_replay_tool_result, **case.identity,
+    cached = await asyncio.to_thread(case.writer.load_replay_tool_result, destination=case.destination,
         tool_name="write_file", tool_args=case.expected[0], resume_mode=True)
     assert cached == case.expected[1]
     assert not await asyncio.to_thread((case.directory / "operations").exists)

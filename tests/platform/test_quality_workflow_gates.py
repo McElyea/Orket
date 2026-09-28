@@ -1,10 +1,42 @@
 from __future__ import annotations
 
+import shlex
 from pathlib import Path
+
+import pytest
+import yaml
+
+pytestmark = pytest.mark.unit
+
+
+def _job_command_gaps(jobs, required_commands):
+    """Observe explicit argv per job; text in another job/comment/echo is no gate."""
+    gaps = []
+    for name in ("architecture_gates", "quality"):
+        commands = []
+        for step in jobs[name]["steps"]:
+            for line in str(step.get("run", "")).replace("\\\n", " ").splitlines():
+                if line.strip().startswith(("python ", "pytest ", "bash ")):
+                    lexer = shlex.shlex(line, posix=True, punctuation_chars=True)
+                    lexer.whitespace_split = True
+                    tokens = list(lexer)
+                    # This guard admits simple argv only, not shell compound syntax.
+                    if not any(set(token) <= set("();<>|&") for token in tokens):
+                        commands.append(tokens)
+        for required in required_commands:
+            tokens = shlex.split(required)
+            if tokens[0].startswith("tests/"):
+                present = any((cmd[:3] == ["python", "-m", "pytest"] or cmd[:1] == ["pytest"])
+                              and set(tokens).issubset(cmd) for cmd in commands)
+            else:
+                present = any(cmd[:len(tokens)] == tokens for cmd in commands)
+            if not present:
+                gaps.append((name, required))
+    return gaps
 
 
 def test_quality_workflow_enforces_architecture_and_volatility_gates() -> None:
-    """Layer: contract. Verifies the quality workflow labels comparator identity checks truthfully while keeping the required gates present."""
+    """Layer: unit. Inspect workflow declarations; this does not execute hosted gates."""
     workflow_path = Path(".gitea/workflows/quality.yml")
     text = workflow_path.read_text(encoding="utf-8")
 
@@ -71,15 +103,15 @@ def test_quality_workflow_enforces_architecture_and_volatility_gates() -> None:
         "bash tests/acceptance/docs_gate/run.sh",
         "python -m pytest -q tests/application/test_docs_lint_script.py",
     ]
-    missing_dupes = [cmd for cmd in duplicated_in_both_jobs if text.count(cmd) < 2]
+    missing_dupes = _job_command_gaps(yaml.safe_load(text)["jobs"], duplicated_in_both_jobs)
     assert not missing_dupes, (
         "quality workflow gates must be present in both architecture_gates and quality jobs: "
-        + ", ".join(missing_dupes)
+        + ", ".join(f"{job}: {command}" for job, command in missing_dupes)
     )
 
 
 def test_nightly_benchmark_workflow_uses_valid_determinism_runs_and_extracted_fixture() -> None:
-    """Layer: contract. Verifies nightly benchmark determinism and memory fixture smoke remain workflow-level gates."""
+    """Layer: unit. Inspect nightly determinism and memory-fixture command declarations."""
     workflow_path = Path(".gitea/workflows/nightly-benchmark.yml")
     text = workflow_path.read_text(encoding="utf-8")
 
@@ -89,3 +121,22 @@ def test_nightly_benchmark_workflow_uses_valid_determinism_runs_and_extracted_fi
         in text
     )
     assert "python - <<'PY'" not in text
+
+
+@pytest.mark.parametrize("case", ["extra-selector", "wrong-job", "comment", "echo", "inline-comment", "compound-echo"])
+def test_job_selection_requires_real_pytest_argv_in_each_job(case):
+    command = "python -m pytest -q tests/first.py tests/new.py tests/second.py"
+    jobs = {name: {"steps": [{"run": command}]} for name in ("architecture_gates", "quality")}
+    if case == "wrong-job":
+        jobs["architecture_gates"]["steps"].append({"run": command})
+        jobs["quality"]["steps"] = []
+    elif case == "comment":
+        jobs["quality"]["steps"] = [{"run": "# " + command}]
+    elif case == "echo":
+        jobs["quality"]["steps"] = [{"run": "echo '" + command + "'"}]
+    elif case == "inline-comment":
+        jobs["quality"]["steps"] = [{"run": "python -m pytest tests/first.py # tests/second.py"}]
+    elif case == "compound-echo":
+        jobs["quality"]["steps"] = [{"run": "python -m pytest tests/first.py && echo tests/second.py"}]
+    gaps = _job_command_gaps(jobs, ["tests/first.py tests/second.py"])
+    assert gaps == ([] if case == "extra-selector" else [("quality", "tests/first.py tests/second.py")])

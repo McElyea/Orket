@@ -7,19 +7,21 @@ import pytest
 
 import orket.runtime.evidence.run_start_artifacts as artifacts
 from orket.application.services.runtime_execution_result_service import RuntimeExecutionCancelled
-from tests.application.test_execution_pipeline_run_ledger import _pipeline, _write_epic_assets
+from tests.application.test_execution_pipeline_run_ledger import _write_epic_assets
+from tests.helpers import ledger_pipeline_fixture
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
+_pipeline = ledger_pipeline_fixture.ledger_pipeline
 
 
 @pytest.mark.parametrize("stop", ["cancel", "timeout"])
 @pytest.mark.parametrize("failure", [False, True], ids=["published", "worker-failure"])
 async def test_bootstrap_worker_settles_before_interruption_truth(
-    test_root, workspace, db_path, monkeypatch, stop, failure
+    test_root, workspace, db_path, monkeypatch, stop, failure, _pipeline
 ):
     """Layer: integration. Controlled storage delay/failure, actual pipeline, artifacts and retained stores."""
     await asyncio.to_thread(_write_epic_assets, test_root, "bootstrap_owned")
-    pipeline = _pipeline(test_root, workspace, db_path, protocol=True)
+    pipeline = await _pipeline(test_root, workspace, db_path, protocol=True)
     entered, release, settled = threading.Event(), threading.Event(), threading.Event()
     original = artifacts._resolve_workspace_state_snapshot
     observed = {}

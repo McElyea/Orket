@@ -18,6 +18,8 @@ __all__ = [
     'gitea_state_loop',
     'live_acceptance_assets',
     'live_acceptance_contracts',
+    'packet2_receipt_observation',
     'phase_c_runtime_truth',
+    'source_attribution_receipt',
     'workload_shell'
 ]

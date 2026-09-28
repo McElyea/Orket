@@ -73,6 +73,9 @@ collection failures; strict acceptance requires zero of each. Both taxonomy and
 critical no-op checks use the shared Git-visible inventory, including nonignored
 untracked files. Run their regression tests and preserve the canonical Ruff and
 coverage gates. Contract: `docs/specs/QUALITY_CHECKER_CONTRACT.md`.
+The Quality coverage command is `pytest tests/ --cov=orket --cov-config=pyproject.toml --cov-fail-under=89`.
+Keep the explicit configuration path so native children launched from other
+directories retain the authored branch measurement. The 89-percent floor remains.
 The architectural baseline's size collector uses that inventory too. Retain its
 complete oversized lists and nested-function context for no-growth comparisons;
 inclusive parent/child spans overlap and cannot be summed as independent defects.
@@ -258,6 +261,8 @@ Architecture policy helpers and direct orchestrator construction require explici
 immutable policy snapshots. Application observation receives a captured environment
 and absolute invocation root; async callers await the owned observation service.
 Settings capture at each request to retain operator changes between requests. Keep
+policy-service construction in `ApiRuntimeContainer`; the router supplies its
+captured request inputs through that application owner. Keep
 readiness criteria, response schemas and conditional settings-write conflicts intact.
 Run the runtime-policy input/request/lifetime controls in both Quality jobs when
 changing this boundary. Contract: `docs/specs/RUNTIME_ARCHITECTURE_POLICY_INPUTS.md`.

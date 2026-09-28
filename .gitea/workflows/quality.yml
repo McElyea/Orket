@@ -79,7 +79,7 @@ jobs:
         env:
           ORKET_DISABLE_SANDBOX: "1"
         run: |
-          python -m pytest -q tests/scripts/test_enforce_test_taxonomy.py tests/scripts/test_check_noop_critical_paths.py tests/scripts/test_build_architectural_truth_baseline.py::test_taxonomy_summary_preserves_collection_failure_and_conflicts tests/contracts/test_architecture_size_inventory.py tests/contracts/test_turn_tool_authority_scan.py tests/application/test_control_plane_workload_authority_governance.py
+          python -m pytest -q tests/scripts/test_enforce_test_taxonomy.py tests/scripts/test_check_noop_critical_paths.py tests/scripts/test_build_architectural_truth_baseline.py::test_taxonomy_summary_preserves_collection_failure_and_conflicts tests/contracts/test_architecture_size_inventory.py tests/integration/test_coverage_subprocess_configuration.py tests/contracts/test_turn_tool_authority_scan.py tests/application/test_control_plane_workload_authority_governance.py
 
       - name: Enforce captured fixture verification ownership
         env:
@@ -562,7 +562,7 @@ jobs:
 
       - name: Run tests with coverage
         # Floor is set 5pts above the observed 83.94% baseline. See docs/internal/COVERAGE_DEBT.md.
-        run: pytest tests/ --cov=orket --cov-fail-under=89
+        run: pytest tests/ --cov=orket --cov-config=pyproject.toml --cov-fail-under=89
 
       - name: Ruff lint
         run: ruff check orket tests
@@ -581,7 +581,7 @@ jobs:
         env:
           ORKET_DISABLE_SANDBOX: "1"
         run: |
-          python -m pytest -q tests/scripts/test_enforce_test_taxonomy.py tests/scripts/test_check_noop_critical_paths.py tests/scripts/test_build_architectural_truth_baseline.py::test_taxonomy_summary_preserves_collection_failure_and_conflicts tests/contracts/test_architecture_size_inventory.py tests/contracts/test_turn_tool_authority_scan.py tests/application/test_control_plane_workload_authority_governance.py
+          python -m pytest -q tests/scripts/test_enforce_test_taxonomy.py tests/scripts/test_check_noop_critical_paths.py tests/scripts/test_build_architectural_truth_baseline.py::test_taxonomy_summary_preserves_collection_failure_and_conflicts tests/contracts/test_architecture_size_inventory.py tests/integration/test_coverage_subprocess_configuration.py tests/contracts/test_turn_tool_authority_scan.py tests/application/test_control_plane_workload_authority_governance.py
 
       - name: Enforce captured fixture verification ownership
         env:

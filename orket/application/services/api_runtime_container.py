@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, ClassVar
@@ -12,6 +13,8 @@ from orket.application.services.application_runtime_lifetime import (
     close_owned_resource,
 )
 from orket.application.services.interaction_cancellation_service import InteractionCancellationService
+from orket.application.services.runtime_policy_input_service import RuntimePolicyInputService
+from orket.application.services.runtime_policy_inputs import RuntimePolicySnapshot
 
 
 class ApiRequestAdmissionClosed(RequestAdmissionClosed):
@@ -60,6 +63,11 @@ class ApiRuntimeContainer(ApplicationRuntimeLifetime):
 
     def interactions(self) -> InteractionCommands:
         return InteractionCommands(self.interaction_manager, self.extension_manager, self, self.project_root)
+
+    async def observe_runtime_policy(self, *, environment: Mapping[str, str], invocation_root: Path) -> RuntimePolicySnapshot:
+        """Own the request's selected policy service while its native reads settle."""
+        owner = RuntimePolicyInputService(environment=environment, invocation_root=invocation_root)
+        return await owner.observe_runtime()
 
     async def _close_final_resource(self) -> None:
         await close_owned_resource(self.engine)

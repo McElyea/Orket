@@ -70,6 +70,16 @@ with `--out` retains the existing diff-ledger publication behavior.
 
 ## Required checks and limits
 
+Quality runs `pytest tests/ --cov=orket --cov-config=pyproject.toml --cov-fail-under=89`.
+The explicit configuration path binds the authored branch setting for measured
+native Python children even when their working directory differs. Implicit parent
+discovery alone can leave child data in statement mode and make combination fail.
+Keep native same-directory, lost-configuration and explicit-configuration controls
+in both Quality selections. Nested control measurements use their own data files
+and discard inherited coverage injection before starting their independent owner.
+These controls establish coverage-tool behavior, not application coverage or
+hosted Quality acceptance. The coverage floor and test deadlines are unchanged.
+
 The architectural-truth baseline's size observation uses the same Git-visible
 Python inventory under `orket/`. Missing or empty inventory, Git discovery, source
 read/encoding/parse failure and observed in-scan source changes make collection

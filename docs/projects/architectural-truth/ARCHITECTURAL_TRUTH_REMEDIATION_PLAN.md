@@ -27515,3 +27515,71 @@ Readback `.tmp/goal-20260927-publication-v113/checks/readback.json`, SHA-256
 Only version/changelog and authority closeout differ from the frozen complete run;
 the final proof-binding receipt enumerates those five paths. Remaining failures
 and whole-lane obligations are unchanged.
+
+### User-requested repair checkpoint 0.6.114
+
+The user requested commit and GitHub push while the next repairs were applied.
+This checkpoint preserves the branch `codex/architectural-truth-bt0`; it does not
+merge main or close the lane. Logging preparation, E2 cutover and the reviewed
+494-case marker proposal remain unapplied scratch candidates.
+
+Quality now supplies `--cov-config=pyproject.toml`, retaining the 89-percent floor.
+An independent native parent/child experiment reproduced mixed statement/branch
+data when a child changed directory. Explicit configuration restores both measured
+branches. Initial tool readback `.tmp/e1-v114-coverage-probe/readback.json`, SHA-256
+`01c2e696fa43d2446a57a5707096ed6d6d62f4d658a3122f61cb9120e2b841aa`.
+The three durable controls retain same-directory success, lost-configuration
+failure with no report, and explicit-configuration success. Healthy tiny subjects
+reach 100 percent with both branches executed; that is coverage-tool proof only.
+
+API request policy service construction moves into `ApiRuntimeContainer`, keeping
+per-request capture and the existing native observation owner. Fixture repairs
+await the owned pipeline factory, use the captured replay destination and start
+the unchanged sandbox shutdown failsafe at native hold admission. Runtime exports
+include the existing packet-2, source-attribution and summary-I/O modules.
+Workflow controls inspect each job's actual simple argv; extra selectors are
+accepted, while wrong-job duplicates, comments and echo/compound forms refuse.
+Contract delta:
+`docs/architecture/CONTRACT_DELTA_QUALITY_POLICY_COMPOSITION_E1_2026-09-27.md`.
+
+The first scoped run retains 114 passes and two failures: a bytes/text mistake in
+the new coverage control and the next missing summary export. The successor
+retains 115 passes and one failure because native coverage combination can report
+either statement/branch order. Both exact refusal messages are now admitted;
+exit 3, no coverage JSON, cleanup and capture assertions remain required. Retained
+readbacks under `.tmp/goal-20260927-publication-v114/`:
+
+- `scoped/readback.json`: SHA-256
+  `9507c78ad12110a9a16bb6b47c669155ef5ec4e52aa4d7158d4a33b6bc719db6`.
+- `scoped-successor/readback.json`: SHA-256
+  `e41865fbf27c2c5e723e1bf7673f7e606968601eb7d4c9b9cd7889692257ab3b`.
+- `scoped-final/readback.json`: **116 passed**, no skips, one upstream warning,
+  26.65 pytest seconds; SHA-256
+  `614ca75831d528ec93ba56d52724ce43d8e4f5f22208c5117de0e60688e215e9`.
+
+Final proof is Windows source Python 3.11.14 with editable 0.6.114 metadata,
+pytest 9.1.1, pytest-cov 6.3.0 and coverage 7.16.2; path `primary`, result `success`.
+Actual native process/filesystem, ASGI request and TCP shutdown flows are live
+within their supplied-provider scope; workflow, export and authority checks are
+structural. Owners are reaped without timeout, emergency cleanup or observed
+residue, and frozen Git-visible inputs stay unchanged during each run.
+
+Fresh canonical strict taxonomy collection observes **10,703 cases**, 494 missing
+layers, no conflicts and no collection errors. It exits 1 as required: observation
+succeeds but taxonomy acceptance fails. Counts are 3,969 contract, 5,380 integration,
+739 unit and 121 end-to-end. This checkpoint classifies two existing workflow
+cases and adds ten marked controls; it does not apply the remaining marker draft.
+`taxonomy/readback.json`, SHA-256
+`b260f2ecadb0d9785c8baba9b6b28216da5892422d1bad0774ceac15a838b354`.
+
+The complete suite has not been rerun. Four retained failures remain unaddressed:
+the reloaded server's final exit, two outward-command fixture-tree startup cases,
+and the supplied-provider role pipeline's completion. No repository-wide coverage
+percentage exists. Fresh installed wheels, Linux/native-platform matrix, actual
+provider/Docker, hosted Quality and whole C/D/E/CAP acceptance remain open.
+The unchanged API request `Path.cwd()` observation is still wider D debt; this
+composition repair does not introduce or claim to remove it. Scope review finds
+no new dependency, decision, timing, side-effect, event-schema or replay authority.
+AC-04 remains partial for that existing root observation; the active D workstream
+owns remediation. Exact files and branch/tag publication are bound by the commit
+diff and `.tmp/goal-20260927-publication-v114/receipt.json`.

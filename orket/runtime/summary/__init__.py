@@ -6,6 +6,7 @@ __all__ = [
     'run_summary',
     'run_summary_artifact_provenance',
     'run_summary_control_plane',
+    'run_summary_io',
     'run_summary_packet2',
     'tool_scoreboard'
 ]

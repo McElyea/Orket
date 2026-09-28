@@ -2,6 +2,20 @@
 
 Last updated: 2026-09-27
 
+Quality now selects its branch configuration explicitly:
+`pytest tests/ --cov=orket --cov-config=pyproject.toml --cov-fail-under=89`.
+Native coverage controls distinguish parent/child configuration loss from
+application coverage; the full-suite gate remains open. API request policy
+service construction belongs to `ApiRuntimeContainer`, using the router's
+per-request captured inputs and the existing native observation owner. Contracts:
+`docs/specs/QUALITY_CHECKER_CONTRACT.md` and
+`docs/specs/RUNTIME_ARCHITECTURE_POLICY_INPUTS.md`. Scoped checkpoint proof and
+remaining failures are recorded in the architectural-truth plan.
+The 0.6.114 source checkpoint passes 116 scoped cases on Windows Python 3.11.
+Fresh structural collection observes 10,703 cases, 494 missing layers and no
+conflicts or collection errors; strict taxonomy still fails. Full coverage,
+fresh installed/platform acceptance and the remaining lane are not established.
+
 The 0.6.113 branch checkpoint captures fixture-verification inputs and the
 selected turn clock, retains required security publication through interruption,
 and captures HTTP factory/timeout ports before observation. Direct verifier

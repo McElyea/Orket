@@ -5,6 +5,17 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.114] - 2026-09-27
+
+### Fixed
+- Bind Quality's coverage configuration explicitly so Python children launched from another directory retain branch measurement; preserve the 89-percent gate and add native success/failure controls.
+- Move per-request runtime-policy service construction into the application container, preserving captured inputs, native lifetime and existing API responses.
+- Repair pipeline fixture admission, replay destination assertions, sandbox shutdown hold timing and runtime module exports. Inspect workflow command arguments in each required job, with adverse controls.
+- Scoped verification and unresolved full-suite, installed/platform and architectural-truth acceptance are recorded in the remediation plan.
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
 ## [0.6.113] - 2026-09-27
 
 ### Fixed
