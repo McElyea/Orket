@@ -5,6 +5,15 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.118] - 2026-10-01
+
+### Changed
+- Activate the fixed ATG-v1 execution queue and freeze its remaining source-bound worksets. Reconcile guarded-mutation, logging-caller and fixture repairs without reopening accepted boundaries or applying archived proposals.
+- Refresh canonical Mypy: 415 errors in 170 files. Reuse the unchanged runtime/test inputs and retained complete Windows suite (11,584 passed, 93 skipped); coverage remains 87.035153%, below 89%. No new runtime, installed, provider or hosted Quality acceptance is claimed by this evidence checkpoint.
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
 ## [0.6.117] - 2026-10-01
 
 ### Fixed

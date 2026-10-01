@@ -408,7 +408,9 @@ This is not whole-core purity or C/D acceptance.
 ToolRuntimeExecutor's unguarded invocation retains the shared I/O owner through
 native tool settlement and async cleanup. Timeout/cancellation do not imply no
 effects; native failures retain their selected precedence. The guarded algorithm
-has separate unresolved failure/diagnostic debt. Contract:
+also retains its authority await and native failure provenance under the applied
+guarded-mutation correction. Its bounded source controls pass in the retained
+v0.6.117 suite; broader installed/platform acceptance remains open. Contract:
 `docs/specs/SHARED_IO_CANCELLATION.md`.
 
 ToolGate captures its validation workspace before the worker wait. Structural

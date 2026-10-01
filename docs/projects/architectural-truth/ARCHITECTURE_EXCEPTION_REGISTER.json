@@ -1,7 +1,7 @@
 {
   "schema_version": "architectural_truth.exception_register.v1",
   "owner": "Orket Core",
-  "last_reviewed": "2026-09-28",
+  "last_reviewed": "2026-10-01",
   "exceptions": [
     {
       "id": "AT-EX-001",
@@ -31,7 +31,7 @@
       "id": "AT-EX-005",
       "area": "async-reachable-sync-io",
       "status": "active_unaccepted_ship_risk",
-      "reason": "Scoped card/admission/replay, required logging, SDK cleanup, outward evidence and unguarded tool operations now retain their native owners in source controls. Remaining guarded tool failure/diagnostic ownership, streaming provider, marshaller and separately inventoried storage/application paths keep D acceptance open. Passing selected controls does not establish whole async reachability or installed acceptance.",
+      "reason": "ATG-01 reconciles the applied guarded-mutation correction, logging caller migration and eight fixture repairs against unchanged v0.6.117 runtime/test inputs and retained passing source controls. GOAL_WORKSETS.json freezes remaining streaming, required-producer input/proof, demo, marshaller, quickstart, outward-policy, offline-copy, evidence-graph and wake-read obligations. Guarded-mutation ownership is no longer an unfixed source defect. Passing selected controls does not establish whole async reachability or installed/platform/provider acceptance.",
       "removal_condition": "Reachability-aware static inventory and live responsiveness/cancellation tests pass with only explicit standalone-script exemptions.",
       "evidence": "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md"
     },

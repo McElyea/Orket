@@ -1,0 +1,36 @@
+{
+  "source_commit": "7d8daf386b40e3194b46da3e5431c6c3b4bcdb99",
+  "records": [
+    {
+      "original": "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
+      "snapshot": "REMEDIATION_PLAN_HISTORY.md",
+      "sha256": "7d3e6a61cb62f20702172101ea810b46b56af882b52b22917aaac881a62dec7e"
+    },
+    {
+      "original": "docs/projects/architectural-truth/README.md",
+      "snapshot": "PROJECT_REGISTRY_HISTORY.md",
+      "sha256": "fe3869146d3fd89d9eeae6a4bc8bb29165f0f09f303884abc9b203204528f558"
+    }
+  ],
+  "interpretation": "Exact historical bytes, including their original relative link base and superseded active instructions; not execution authority.",
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-10-01T11:39:06.490996Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:8ccf04f6b87c1f27b971fbd8a8130315f47e5ab0cfe8198b26de3360997365cb",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 19,
+        "paths_total_reference": 19,
+        "churn_paths": 19,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    }
+  ]
+}

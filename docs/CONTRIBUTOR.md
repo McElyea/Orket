@@ -45,6 +45,36 @@
 8. When closing a phase or slice in a multi-phase initiative or umbrella lane, archive only phase-scoped or slice-scoped docs. Keep the initiative mini-roadmap, umbrella README, and current canonical plan active while later phases or remaining slices exist. Do not retire the whole lane unless the user explicitly accepts whole-lane retirement.
 9. For `docs/projects/techdebt/`, leave only standing maintenance docs and docs for cycle ids still active in the roadmap.
 
+## Persistent goal queues
+
+When the user targets a canonical plan for continuing goal execution:
+
+1. Use that plan's fixed goal IDs, worksets, dependencies and start/exit criteria.
+   Creating the queue is planning; begin its implementation when the user invokes
+   it for execution. Do not replace the objective or enlarge its scope on resume.
+2. Resume the recorded unfinished batch after checking its source and process
+   state. Then take the first eligible goal in order. A completed batch or goal
+   does not require another user prompt to continue within the authorized queue.
+3. Checkpoint at cohesive batch boundaries and before interruption/budget limits:
+   record current goal/batch, completed and remaining work, source/dirty-file
+   identity, proof/artifact paths, blockers and the next exact action. For running
+   commands retain argv, environment posture, process identity/start time, log and
+   result paths. Observe that process before considering a replacement run.
+4. Keep tracked inputs frozen during source-bound verification. Link a stable
+   ignored process receipt before launch and let it retain live process status;
+   update the tracked checkpoint after the run. Reuse proof only while its relevant
+   inputs remain valid. Full campaigns require their stated gate, a changed
+   candidate, or an explained invalid run; scoped proof is preferred between them.
+5. Close an item only on its stated evidence and publication conditions. Never
+   weaken assertions, limits, mandatory environments or acceptance criteria to
+   finish it. Archive completed proof/history under contributor closeout rules;
+   keep the active plan a concise queue and resume record, not an execution journal.
+6. Record unrelated discoveries without adding executable goals or changing the
+   progress denominator. Continue independent eligible goals when one is blocked.
+   If none is eligible, report the exact blocker and required input; blocked,
+   budget-limited or unverified required work is not completed work. Existing user
+   authorization applies to routine choices; scope expansion needs a user decision.
+
 ## Repository Rules
 
 1. Keep runtime paths in `orket/` async-safe and governance mechanical.

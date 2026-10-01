@@ -1,0 +1,95 @@
+{
+  "proof": "structural",
+  "path": "primary",
+  "result": "success",
+  "checks": [
+    {
+      "argv": [
+        "C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Scripts\\python.exe",
+        "scripts/governance/check_docs_project_hygiene.py"
+      ],
+      "exit": 0,
+      "stdout": "Docs project hygiene check passed.\nNon-archive project folders: OrketUI, PromptReforgerToolCompatibility, architectural-truth, future, governed-proof, marshaller, northstar-aws-smoke-setup, northstar-governed-change-packets, techdebt",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Scripts\\python.exe",
+        "scripts/governance/check_current_authority.py"
+      ],
+      "exit": 0,
+      "stdout": "{\"structural_authority_valid\": true, \"current_proof_established\": false, \"requested_proof_satisfied\": true, \"failures\": []}",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Scripts\\python.exe",
+        "scripts/governance/render_current_authority.py",
+        "--check"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Scripts\\python.exe",
+        "scripts/governance/check_core_release_policy.py"
+      ],
+      "exit": 0,
+      "stdout": "Core release policy check passed.",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit": 0
+    }
+  ],
+  "source_fingerprints_match": true,
+  "mypy_receipt": ".tmp/atg01-mypy-receipt.json",
+  "full_suite_repeated": false,
+  "checkpoint_version": "0.6.118",
+  "publication": "Pending; require annotated v0.6.118, matching remote branch and clean worktree before ATG-02. Retain final Git observation in .tmp/atg01-publication.json.",
+  "exact_files_touched": [
+    "CHANGELOG.md",
+    "docs/ARCHITECTURE.md",
+    "docs/CONTRIBUTOR.md",
+    "docs/ROADMAP.md",
+    "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
+    "docs/projects/architectural-truth/ARCHITECTURE_EXCEPTION_REGISTER.json",
+    "docs/projects/architectural-truth/GOAL_WORKSETS.json",
+    "docs/projects/architectural-truth/README.md",
+    "docs/projects/archive/architectural-truth/AT10012026-ATG01/CLOSEOUT.md",
+    "docs/projects/archive/architectural-truth/AT10012026-ATG01/MYPY_DIAGNOSTICS.txt",
+    "docs/projects/archive/architectural-truth/AT10012026-ATG01/VERIFICATION.json",
+    "docs/projects/archive/architectural-truth/AT10012026-GOAL-QUEUE/PROJECT_REGISTRY_HISTORY.md",
+    "docs/projects/archive/architectural-truth/AT10012026-GOAL-QUEUE/README.md",
+    "docs/projects/archive/architectural-truth/AT10012026-GOAL-QUEUE/REMEDIATION_PLAN_HISTORY.md",
+    "docs/projects/archive/architectural-truth/AT10012026-GOAL-QUEUE/SNAPSHOT.json",
+    "pyproject.toml"
+  ],
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-10-01T12:05:57.543039Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:e7fd6ef8c990f58ce29dd589c94cf7ce02a178999d4e5d926eceeeaafe3e42f8",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 110,
+        "paths_total_reference": 110,
+        "churn_paths": 110,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    }
+  ]
+}
