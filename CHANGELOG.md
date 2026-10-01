@@ -5,6 +5,15 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.117] - 2026-10-01
+
+### Fixed
+- Repair eight outdated test-fixture callers: patch the actual pipeline initializer while preserving public lifetime construction, and pass captured environment inputs to provider selection.
+- Preserve all 48 existing assertions and timeout limits. All 20 targeted/adjacent cases pass. One complete coverage run reports 11,584 passed, 0 failed and 93 skipped; all eight repaired cases pass. Coverage is 87.035153% and fails the unchanged 89% gate. Remaining findings and proof limits are retained in the architectural plan.
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
 ## [0.6.116] - 2026-09-30
 
 ### Fixed

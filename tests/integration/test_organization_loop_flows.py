@@ -108,7 +108,7 @@ async def test_organization_joins_required_cleanup(test_root, db_path, monkeypat
     monkeypatch.chdir(test_root)
     owner = await loop_module.OrganizationLoop.create()
     state, construct = cleanup_factory(test_root, db_path, fail)
-    monkeypatch.setattr(loop_module, 'ExecutionPipeline', construct)
+    monkeypatch.setattr(loop_module.ExecutionPipeline, '__init__', construct)
     task = asyncio.create_task(owner.run_forever())
     try:
         await asyncio.wait_for(state.entered.wait(), 15)

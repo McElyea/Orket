@@ -61,7 +61,7 @@ async def test_unavailable_default_endpoint_does_not_switch_provider(monkeypatch
 async def test_defaults_and_blank_settings_preserve_provider_identity(monkeypatch):
     monkeypatch.setenv("ORKET_LLM_PROVIDER", " ")
     monkeypatch.setenv("ORKET_MODEL_STREAM_PROVIDER", "real")
-    assert configured_provider() == _real_provider_name() == "llama_cpp"
+    assert configured_provider() == _real_provider_name(dict(os.environ)) == "llama_cpp"
     assert provider_identity()["provider"] == "llama_cpp"
     assert normalize_provider("") == "openai_compat"
     assert normalize_provider_for_local_prompt_profile("") == "llama_cpp"
@@ -89,4 +89,4 @@ def test_legacy_model_variable_requires_explicit_ollama_provider(monkeypatch):
 @pytest.mark.contract
 def test_explicit_provider_remains_authoritative(monkeypatch, provider):
     monkeypatch.setenv("ORKET_MODEL_PROVIDER", provider)
-    assert configured_provider() == _real_provider_name() == provider
+    assert configured_provider() == _real_provider_name(dict(os.environ)) == provider

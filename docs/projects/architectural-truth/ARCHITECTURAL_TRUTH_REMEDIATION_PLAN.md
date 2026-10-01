@@ -28860,5 +28860,75 @@ and required-producer ownership migration stay open.
 
 Detailed evidence and limitations are in
 `docs/architecture/CONTRACT_DELTA_LOGGING_PREPARATION_D_2026-09-28.md`, subsection
-"September 30 caller migration verification". Exact current modified paths and
-hashes are retained in `.tmp/logging-goal-current-files.json`.
+"September 30 caller migration verification". Its historical modified paths and
+hashes are retained in `.tmp/logging-goal-current-files.json`; the applied
+checkpoint is commit `3bbb5c0a` / `v0.6.116`.
+
+### Eight-fixture migration closeout: 2026-10-01
+
+The verified logging migration is checkpointed and pushed as `3bbb5c0a`, with
+annotated tag `v0.6.116`. Its runtime/test inputs matched the retained verification;
+only version and changelog metadata were added for that checkpoint.
+
+The eight known fixture migration failures are repaired in the three named test
+files. Organization cleanup installs the existing initializer hook on the actual
+pipeline class. Public runtime construction likewise instruments `__init__`,
+preserving the class's public `.open` lifetime path. Provider-selection calls
+supply a copied environment. No runtime contract or production implementation
+changes were needed. All **48 existing assertions** and **10 wait/sleep calls**
+remain intact; assertion comparison normalizes only the newly required provider
+environment argument. Evidence: `.tmp/fixture-goal-preservation.json`.
+
+All **20 targeted and adjacent cleanup cases** pass in 9.67 seconds. This includes
+real SQLite publication, responsive observation and repeated-cancellation cleanup,
+with provider contract checks identified separately. The unchanged pre-repair
+source matches the previous eight-failure diagnostic, so that opening evidence
+was reused. Evidence: `.tmp/goal-20260928-fixture-migration-targeted-v1-*` and
+`.tmp/goal-20260928-logging-preparation-unrelated-diagnostic-v1-*`.
+
+The requested complete canonical coverage campaign ran **once**, starting on
+2026-09-30 and finishing on 2026-10-01, using
+`python -m pytest tests/ --cov=orket --cov-config=pyproject.toml --cov-fail-under=89`
+plus diagnostic verbosity, JUnit/coverage reports and an isolated basetemp.
+`ORKET_DISABLE_SANDBOX=1` remained set. It finished in **73.44 minutes**
+with **11,584 passed, 0 failed and 93 skipped**;
+all **eight repaired cases pass in that complete run**. All **5,653 Git-visible
+inputs remained unchanged** throughout execution. The full process exit status
+is **1**; that status includes the coverage gate.
+
+Coverage is **87.035153%** and **fails** the unchanged **89%** threshold.
+Test outcomes and coverage are separate verdicts; a below-threshold coverage
+result is not relabeled green. Machine evidence, exact command, input hashes,
+case accounting and measured totals:
+`.tmp/fixture-goal-full-suite-{inputs,readback}.json`,
+`.tmp/fixture-goal-full-suite.xml`, `.tmp/fixture-goal-full-suite.log` and
+`.tmp/fixture-goal-full-suite-coverage.json`.
+
+Remaining test failures observed by this full campaign:
+
+No test failures were observed in this complete run.
+
+Two warnings were observed: the installed Starlette test client's HTTPX
+deprecation and the `GenerateRequest.max_tokens` warning in the existing
+extension-runtime test. Neither was a test failure; no dependency migration or
+runtime change was added to this fixture slice.
+
+These observations are retained for the existing architectural lane; new unrelated
+work does not enter this fixture goal. Coverage remediation and Mypy cleanup remain
+outside this slice. The previous historical coverage percentage is not substituted
+for this new result. Skipped paths supply no live acceptance; no new actual-model,
+Docker, Linux or hosted CI acceptance is claimed.
+
+Observed repaired paths are **primary / success**. Proof comprises live local
+SQLite/publication/cleanup behavior plus explicitly marked contract and structural
+controls. Ruff and strict taxonomy pass; all 11,677 cases have exactly one layer
+marker. Final documentation, authority structure, whitespace and release-policy
+checks are recorded in `.tmp/fixture-goal-final-verification.json`. Current runtime
+authority proof remains separately unavailable. The unchanged production graph
+and critical no-op controls retain their preceding passing evidence.
+
+This closes the eight-fixture migration slice while the architectural umbrella
+plan, its remaining D/E work and its roadmap entry stay active. Archived proposal
+bundles remain unapplied. Version `0.6.117` checkpoints these test repairs and
+results on `codex/architectural-truth-bt0`; this is not a merge into `main` or a
+claim that the repository meets every release-readiness gate.

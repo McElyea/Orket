@@ -250,10 +250,11 @@ checker continues to report current runtime authority proof unavailable.
 
 Remaining blockers or drift: two organization cleanup fixture timeouts, one public
 runtime-factory fixture timeout, and five provider-default tests calling
-`_real_provider_name` without its captured `environment` argument. The timeout
-fixtures replace a pipeline class used through `.open` with constructor-only
-hooks; this source diagnosis is separate from their observed timeouts. Their
-three files remain unchanged. Evidence:
+`_real_provider_name` without its captured `environment` argument. The organization
+fixture installs an initializer as the pipeline class factory; the public runtime
+fixture replaces the class used through `.open` with a constructor function.
+This source diagnosis is separate from their observed timeouts. At the logging
+migration checkpoint their three files were unchanged. Evidence:
 `.tmp/goal-20260928-logging-preparation-unrelated-diagnostic-v1-*`.
 No fresh complete current suite, coverage, Mypy, actual model inference, Docker,
 Linux or hosted CI acceptance is claimed. Earlier typing/coverage debt remains
@@ -266,3 +267,9 @@ the public pipeline reuses its existing prepared selection. Real adverse-path,
 replay and log/context controls support the affected behavior; updated specs and
 workflow controls preserve the same contract. This is not whole-repository
 architecture compliance or release readiness.
+
+Subsequent fixture migration: the eight retained failures are repaired by the
+`0.6.117` test-only slice. Its complete current-suite and coverage results,
+including remaining gates, live in the canonical architectural plan's
+"Eight-fixture migration closeout: 2026-10-01" section. The logging checkpoint's
+earlier proof limits above remain historical observations, not the later verdict.

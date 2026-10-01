@@ -27,25 +27,24 @@ async def test_public_runtime_keeps_inputs_across_worker_admission(test_root, mo
     monkeypatch.setenv('ORKET_RUN_LEDGER_MODE', 'sqlite')
     set_runtime_settings_context(user_settings={'selected': {'value': 'original'}}, user_preferences={'theme': 'original'})
     entered, release, owners = asyncio.Event(), asyncio.Event(), []
-    worker, factory = lifetime_module.run_owned_thread, pipeline_module.ExecutionPipeline
+    worker, factory = lifetime_module.run_owned_thread, pipeline_module.ExecutionPipeline.__init__
 
     async def held_worker(operation, *, label):
         entered.set()
         await release.wait()
         return await worker(operation, label=label)
 
-    def construct(*args, **kwargs):
-        owner = factory(*args, **kwargs)
+    def construct(owner, *args, **kwargs):
+        factory(owner, *args, **kwargs)
         owners.append(owner)
 
         async def workload(**_kwargs):
             await accept_publication_card(owner, owner.workspace)
 
         owner.orchestrator.execute_epic = workload
-        return owner
 
     monkeypatch.setattr(lifetime_module, 'run_owned_thread', held_worker)
-    monkeypatch.setattr(pipeline_module, 'ExecutionPipeline', construct)
+    monkeypatch.setattr(pipeline_module.ExecutionPipeline, '__init__', construct)
     task = asyncio.create_task(pipeline_module.orchestrate_card('publication_epic', Path('workspace'),
         session_id='captured-factory', build_id='captured-build'))
     try:
