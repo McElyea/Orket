@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 from pathlib import Path
+from typing import cast
 
 import aiosqlite
 
@@ -81,17 +82,18 @@ class OutwardLedgerSnapshotStore:
         row = await (await connection.execute("SELECT * FROM outward_runs WHERE run_id=?", (run_id,))).fetchone()
         if row is None:
             raise OutwardLedgerIntegrityError(f"Run '{run_id}' not found", category="not_found")
-        tables = await (await connection.execute(
+        # Ungrouped aggregate queries retain one row even when their inputs are empty.
+        tables = cast(aiosqlite.Row, await (await connection.execute(
             """SELECT COUNT(*) FROM sqlite_master WHERE type='table'
             AND name IN ('outward_ledger_heads_v2', 'outward_ledger_commits_v2')""",
-        )).fetchone()
+        )).fetchone())
         if tables[0] != 2:
             raise OutwardLedgerIntegrityError("E_OUTWARD_LEDGER_UNSEALED: v2 storage absent", category="unsealed")
         head = await read_append_head(connection, run_id)
-        counts = await (await connection.execute(
+        counts = cast(aiosqlite.Row, await (await connection.execute(
             "SELECT COUNT(*), COALESCE(SUM(LENGTH(CAST(payload_json AS BLOB))), 0) FROM run_events WHERE run_id=?",
             (run_id,),
-        )).fetchone()
+        )).fetchone())
         # Bound the in-memory v1 projection; never return a prefix marked complete.
         if counts[0] > MAX_LEDGER_EXPORT_EVENTS or counts[1] > MAX_LEDGER_PAYLOAD_BYTES:
             raise OutwardLedgerIntegrityError("E_OUTWARD_LEDGER_SNAPSHOT_RESOURCE_LIMIT", category="resource")

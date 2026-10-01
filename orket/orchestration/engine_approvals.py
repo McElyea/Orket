@@ -242,12 +242,12 @@ async def decide_approval(
     resolution: dict[str, Any] = {"decision": decision_token}
     if edited_proposal is not None:
         resolution["edited_proposal"] = edited_proposal
-    note_text = str(notes or "").strip()
-    if note_text:
+    if note_text := str(notes or "").strip():
         resolution["notes"] = note_text
 
     current_status = existing["status"]
     current_resolution = dict(existing.get("resolution") or {})
+    updated: dict[str, Any] | None
     if current_status != "PENDING":
         if current_status != target_status or current_resolution != resolution:
             raise RuntimeError("approval already resolved with a conflicting decision")

@@ -23,9 +23,9 @@ async def validate_legacy_inventory(connection: aiosqlite.Connection) -> None:
     """Reject unsupported schemas/partial v2 state before creating any new authority."""
     async with aiosqlite.connect(":memory:") as expected:
         for namespace, migrations in (("outward_runs", RUN_MIGRATIONS), ("outward_run_events", EVENT_MIGRATIONS)):
-            versions = await (await connection.execute(
+            versions = list(await (await connection.execute(
                 "SELECT version, name FROM schema_migrations WHERE namespace=? ORDER BY version", (namespace,),
-            )).fetchall()
+            )).fetchall())
             selected = migrations[:len(versions)]
             if not versions or [tuple(row) for row in versions] != [(m.version, m.name) for m in selected]:
                 raise OutwardLedgerIntegrityError(f"E_OUTWARD_LEDGER_MIGRATION_SCHEMA: {namespace}")

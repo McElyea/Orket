@@ -8,6 +8,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from orket.application.services import api_policy_input_service as api_policy
+from orket.application.services.api_system_query_service import ApiSystemQueryService
 from orket.interfaces.operator_view_support import build_provider_status_view, build_system_health_view
 
 
@@ -32,7 +33,7 @@ def build_system_router(
     project_root_getter: Callable[[], Path],
     runtime_state: Any,
     api_runtime_node_getter: Callable[[], Any],
-    system_queries_getter: Callable[[], Any],
+    system_queries_getter: Callable[[], ApiSystemQueryService],
     runtime_host_getter: Callable[[], Any],
     now_local: Callable[[], Any],
     events_getter: Callable[[], Any],

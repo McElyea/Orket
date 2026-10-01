@@ -6,6 +6,7 @@ import subprocess
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import cast
 
 from orket.adapters.execution.owned_io import require_sync_context
 from orket.adapters.storage.async_executor_service import run_coroutine_blocking
@@ -52,13 +53,14 @@ class CommandRunner:
 
     async def run_async(self, *cmd: str) -> CommandResult:
         result = await self._run(cmd, self._timeout_seconds)
-        return CommandResult(result.returncode, result.stdout.decode(), result.stderr.decode(), result)
+        # _run returns only completed receipts with an observed integer exit code.
+        return CommandResult(cast(int, result.returncode), result.stdout.decode(), result.stderr.decode(), result)
 
     def run_sync(self, *cmd: str, timeout: float | None = None) -> CommandResult:
         require_sync_context(code="E_SANDBOX_COMMAND_REQUIRES_WORKER")
         result = run_coroutine_blocking(self._run(cmd, self._timeout_seconds if timeout is None else timeout))
         with io.TextIOWrapper(io.BytesIO(result.stdout)) as stdout, io.TextIOWrapper(io.BytesIO(result.stderr)) as stderr:
-            return CommandResult(result.returncode, stdout.read(), stderr.read(), result)
+            return CommandResult(cast(int, result.returncode), stdout.read(), stderr.read(), result)
 
     async def _run(self, cmd: tuple[str, ...], budget_seconds: float) -> OwnedCommandResult:
         owner, cwd, environment = self._owner, self._cwd, dict(self._environment)

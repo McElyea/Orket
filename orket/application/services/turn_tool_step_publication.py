@@ -22,7 +22,8 @@ from orket.application.services.turn_tool_control_plane_support import (
     tool_result_ref,
     utc_now,
 )
-from orket.core.contracts import StepRecord
+from orket.core.contracts import EffectJournalEntryRecord, StepRecord
+from orket.core.contracts.control_plane_transaction import ControlPlaneTransactionFactory
 from orket.core.contracts.turn_tool_dispatch import DISPATCH_STARTED, is_unresolved_tool_dispatch
 from orket.core.domain import ResidualUncertaintyClassification
 
@@ -60,8 +61,8 @@ def _require_same_step(existing, proposed, error_type):
 
 
 async def prepare_tool_dispatch(
-    *, transactions, authority, run_id, attempt_id, step_id, tool_name, tool_args, binding, operation_id, error_type,
-):
+    *, transactions: ControlPlaneTransactionFactory, authority, run_id, attempt_id, step_id, tool_name, tool_args, binding, operation_id, error_type,
+) -> StepRecord:
     # Capture caller-owned inputs before the first transaction await.
     tool_args, binding = deepcopy((tool_args, binding))
     async with transactions() as transaction:
@@ -80,9 +81,9 @@ async def prepare_tool_dispatch(
 
 
 async def publish_step_result_atomic(
-    *, transactions, authority, run_id, attempt_id, step_id, tool_name, tool_args, result, binding,
+    *, transactions: ControlPlaneTransactionFactory, authority, run_id, attempt_id, step_id, tool_name, tool_args, result, binding,
     operation_id, replayed, error_type,
-):
+) -> tuple[StepRecord, EffectJournalEntryRecord]:
     tool_args, binding, result = deepcopy((tool_args, binding, result))
     async with transactions() as transaction:
         publication = ControlPlanePublicationService(repository=transaction.records, authority=authority)

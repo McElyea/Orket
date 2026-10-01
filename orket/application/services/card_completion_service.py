@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import cast
 
 from pydantic import TypeAdapter
 
@@ -11,7 +12,7 @@ from orket.adapters.storage.async_file_tools import capture_file_roots
 from orket.application.services.card_acceptance_evaluation import build_card_acceptance_plan
 from orket.application.services.card_acceptance_service import CardAcceptanceService
 from orket.core.contracts.card_acceptance_inputs import CardAcceptanceDefinition
-from orket.core.contracts.card_completion import CardCompletionDecision, CompletionEvidenceSnapshot
+from orket.core.contracts.card_completion import CardCompletionDecision, CompletionEvidenceSnapshot, CompletionScope
 from orket.core.contracts.card_completion_commit import (
     CardCompletionContext,
     CardCompletionReceipt,
@@ -24,7 +25,7 @@ from orket.core.domain.records import IssueRecord
 from orket.core.policies.card_completion import evaluate_card_completion
 
 # Reuse one immutable union parser; no runtime authority is retained here.
-_DEFINITION_ADAPTER = TypeAdapter(CardAcceptanceDefinition)
+_DEFINITION_ADAPTER: TypeAdapter[CardAcceptanceDefinition] = TypeAdapter(CardAcceptanceDefinition)
 
 
 def declared_card_acceptance(record: IssueRecord) -> CardAcceptanceDefinition | None:
@@ -122,6 +123,7 @@ class CardCompletionService:
         workspace_root, = capture_file_roots([self.workspace_root])
         acceptance = self.acceptance
         definition = await self._current_definition(record, receipt.context, workspace_root=workspace_root)
+        # The receipt's binding validator requires a non-null accepted decision scope.
         return await acceptance.inspect(
-            receipt.request.evidence_digest, definition=definition, scope=receipt.decision.scope,
+            receipt.request.evidence_digest, definition=definition, scope=cast(CompletionScope, receipt.decision.scope),
         )

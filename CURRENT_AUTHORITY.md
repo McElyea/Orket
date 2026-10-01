@@ -51,7 +51,7 @@ Validate: `python scripts/governance/check_current_authority.py`.
 
 | Surface | Current scope | Source |
 | --- | --- | --- |
-| API construction and lifetime | Captured factory inputs, lifespan acquisition, request admission and cleanup. | [docs/specs/API_RUNTIME_LIFECYCLE.md](<docs/specs/API_RUNTIME_LIFECYCLE.md>) |
+| API construction and lifetime | Captured factory inputs, lifespan acquisition, required authentication/interaction owners, request admission and cleanup. | [docs/specs/API_RUNTIME_LIFECYCLE.md](<docs/specs/API_RUNTIME_LIFECYCLE.md>) |
 | Logging preparation and settlement | Explicit native preparation, operation-local bindings, captured required producers, process-owned writer and bounded optional publication/frontier. | [docs/specs/LOG_WRITE_SETTLEMENT.md](<docs/specs/LOG_WRITE_SETTLEMENT.md>) |
 | Quality checker and coverage contract | Actual pytest markers, native checker limits and unchanged 89-percent coverage floor. | [docs/specs/QUALITY_CHECKER_CONTRACT.md](<docs/specs/QUALITY_CHECKER_CONTRACT.md>) |
 | Runtime project roots | Invocation project selection and package-owned immutable assets. | [docs/specs/RUNTIME_PROJECT_ROOTS.md](<docs/specs/RUNTIME_PROJECT_ROOTS.md>) |

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Sequence
 from typing import Any
 
 from .turn_path_resolver import PathResolver
@@ -55,7 +56,7 @@ class CorrectivePromptBuilder:
                     lines.append(f"  - {path}")
 
         if "read_path_contract_not_met" in reason_set:
-            required_read_paths = required_read_observation.existing
+            required_read_paths: Sequence[str] = required_read_observation.existing
             if required_read_paths:
                 lines.append("- Required read_file paths:")
                 for path in required_read_paths:

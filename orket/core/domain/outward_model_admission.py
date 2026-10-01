@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 from orket.core.domain.outward_authorization import canonical_json
 
@@ -60,7 +60,7 @@ class OutwardModelAdmission:
         if any((value is not None) != observed for value in (self.result_json, self.result_digest, self.observed_at)):
             raise ValueError("E_OUTWARD_MODEL_ADMISSION_RESULT")
         if observed:
-            _validate_json(self.result_json, self.result_digest)
+            _validate_json(cast(str, self.result_json), cast(str, self.result_digest))
         if (self.published_at is not None) != (self.state == "published"):
             raise ValueError("E_OUTWARD_MODEL_ADMISSION_PUBLICATION")
 
@@ -76,7 +76,7 @@ class OutwardModelAdmission:
     def result(self) -> dict[str, Any]:
         if self.result_json is None:
             raise ValueError("E_OUTWARD_MODEL_ADMISSION_RESULT_REQUIRED")
-        return json.loads(self.result_json)
+        return cast(dict[str, Any], json.loads(self.result_json))
 
 
 def _validate_json(value: str, digest: str) -> None:

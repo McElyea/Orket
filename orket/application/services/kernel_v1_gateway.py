@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -19,7 +20,7 @@ class KernelV1Gateway:
     def close(self) -> None:
         self.runtime.close()
 
-    def _call(self, operation, request):
+    def _call(self, operation: Callable[[dict[str, Any]], dict[str, Any]], request: dict[str, Any]) -> dict[str, Any]:
         require_sync_context(code="E_KERNEL_INVOCATION_REQUIRES_ASYNC_OWNER")
         captured = capture_kernel_request(request)
         with self.runtime.activate(), self.runtime.lock:

@@ -3,6 +3,7 @@ from __future__ import annotations
 import ast
 import json
 import re
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -13,6 +14,8 @@ from orket.logging import log_event
 class DriverConversationMixin:
     model_root: Path
     provider: Any
+    _canonical_action_registry: Callable[[], dict[str, tuple[str, ...]]]
+    _operator_workspace_root: Callable[[], Path]
 
     def _supported_action_summary_lines(self) -> list[str]:
         raise NotImplementedError

@@ -5,7 +5,7 @@ from collections.abc import Callable, Sequence
 from contextlib import nullcontext
 from copy import deepcopy
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from orket.application.services.extension_workload_control_plane_service import (
     ExtensionWorkloadControlPlaneService,
@@ -59,7 +59,7 @@ async def execute_plan_actions(
         if interaction_context is not None:
             await emit_default_model_events(interaction_context, sdk=False)
         for action in run_plan.actions:
-            action_results.append(await adapter.execute_action(action))
+            action_results.append(await cast(ExtensionEngineAdapter, adapter).execute_action(action))
     return {"plan_hash": run_plan.plan_hash(), "action_count": len(run_plan.actions), "action_results": action_results}
 
 

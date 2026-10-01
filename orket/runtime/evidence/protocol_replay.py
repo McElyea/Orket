@@ -8,13 +8,13 @@ from typing import Any
 from orket.adapters.storage.protocol_append_only_ledger import AppendOnlyRunLedger
 from orket.core.contracts import protocol_hashing
 from orket.core.contracts.protocol_replay_comparison import compare_protocol_snapshots
-from orket.runtime.contract_bootstrap import load_runtime_contract_snapshots
 from orket.runtime.evidence.replay_compatibility import (
     evaluate_replay_compatibility,
     resolve_ledger_schema_version,
 )
 from orket.runtime.evidence.replay_drift_classifier import classify_replay_drift
-from orket.runtime.runtime_policy_versions import runtime_policy_versions_snapshot
+from orket.runtime.registry.contract_bootstrap import load_runtime_contract_snapshots
+from orket.runtime.registry.runtime_policy_versions import runtime_policy_versions_snapshot
 
 
 def _sha256_file(path: Path) -> str:

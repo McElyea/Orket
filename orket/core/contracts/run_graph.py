@@ -146,7 +146,7 @@ class _Graph:
                 self.nodes[identity]["artifact_ref"] = value
             self._edge("artifact_produced", self.root, identity, sequence)
 
-    def payload(self, events):
+    def payload(self, events) -> dict[str, Any]:
         calls = sorted(self.call_order)
         for previous, current in zip(calls, calls[1:], strict=False):
             self._edge("execution_order", self.calls[previous], self.calls[current], current)

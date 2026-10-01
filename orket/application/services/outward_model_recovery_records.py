@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import cast
+
 from orket.adapters.storage.outward_store_transaction import OutwardStoreTransaction
 from orket.core.contracts.control_plane_models import OperatorActionRecord, RecoveryDecisionRecord
 from orket.core.domain.control_plane_enums import (
@@ -64,13 +66,15 @@ async def validate_model_attempt_history(transaction: OutwardStoreTransaction, a
         previous = attempts[index - 1]
         if previous.state != "claimed" or previous.inputs_json != attempt.inputs_json:
             raise RuntimeError("E_OUTWARD_MODEL_ATTEMPT_HISTORY_CONFLICT")
-        records = await transaction.recovery.get(attempt.recovery_decision_id)
+        # OutwardModelAdmission requires this identity after the first fence.
+        decision_id = cast(str, attempt.recovery_decision_id)
+        records = await transaction.recovery.get(decision_id)
         if records is None:
             raise RuntimeError("E_OUTWARD_MODEL_RECOVERY_RECORD_MISSING")
         if model_recovery_commitment(records) != attempt.recovery_records_digest:
             raise RuntimeError("E_OUTWARD_MODEL_RECOVERY_RECORD_MISMATCH")
         decision, action = records
-        expected = _records(decision_id=attempt.recovery_decision_id, request_digest=action.precondition_basis_ref,
+        expected = _records(decision_id=decision_id, request_digest=action.precondition_basis_ref,
                             actor=action.actor_ref, previous=previous, replacement_id=attempt.attempt_id, at=attempt.created_at)
         if records != expected or not decision.required_precondition_refs:
             raise RuntimeError("E_OUTWARD_MODEL_RECOVERY_RECORD_MISMATCH")

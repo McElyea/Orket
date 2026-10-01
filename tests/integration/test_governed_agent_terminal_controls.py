@@ -104,3 +104,17 @@ async def test_terminal_control_is_atomic_and_retry_finishes_retained_outcome(tm
     assert run.lifecycle_state is (RunState.FAILED_TERMINAL if operation == "deny" else RunState.CANCELLED)
     assert attempt.end_timestamp == "2026-09-14T01:00:01Z"
     assert not (tmp_path / "reports/denied.json").exists()
+
+
+@pytest.mark.parametrize("attempt_id", [None, "missing-attempt"])
+# Layer: integration
+async def test_cancel_refuses_missing_attempt_without_publication(tmp_path, attempt_id):
+    request, execution, records, invoke = await terminal_control(tmp_path, "cancel")
+    run = await execution.get_run_record(run_id=request.identity.run_id)
+    retained = run.model_copy(update={"current_attempt_id": attempt_id})
+    retained = await execution.save_run_record(record=retained)
+    with pytest.raises(ValueError, match="E_AGENT_TERMINAL_AUTHORITY_CONFLICT"):
+        await invoke()
+    assert await execution.get_run_record(run_id=run.run_id) == retained
+    assert await records.get_final_truth(run_id=run.run_id) is None
+    assert await records.list_operator_actions(target_ref=run.run_id) == []

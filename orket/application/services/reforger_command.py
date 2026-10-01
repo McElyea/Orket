@@ -57,7 +57,7 @@ class ReforgerCommand(BaseTools):
 
         return self._publish_inspection(route_id, input_dir, mode_raw, plan, suite_ready, suite_requirements)
 
-    def _publish_inspection(self, route_id, input_dir, mode_raw, plan, suite_ready, suite_requirements):
+    def _publish_inspection(self, route_id, input_dir, mode_raw, plan, suite_ready, suite_requirements) -> dict[str, Any]:
         artifact_root = self._artifact_root("inspect", route_id, input_dir, mode_raw or "none", 0, 0)
         artifact_root.mkdir(parents=True, exist_ok=True)
 
@@ -133,7 +133,7 @@ class ReforgerCommand(BaseTools):
             }
         return self._compile(args, route_id, input_dir, output_dir, protected)
 
-    def _compile(self, args, route_id, input_dir, output_dir, protected):
+    def _compile(self, args, route_id, input_dir, output_dir, protected) -> dict[str, Any]:
         mode_raw, scenario_pack_raw = str(args.get("mode") or "").strip(), str(args.get("scenario_pack") or "").strip()
         forced, force_reason = bool(args.get("forced", False)), str(args.get("force_reason") or "")
         seed, max_iters = int(args.get("seed", 0)), int(args.get("max_iters", 10))
@@ -197,7 +197,7 @@ class ReforgerCommand(BaseTools):
         plan = candidate.inspect(input_dir)
         return candidate.route_id if plan.ok else None
 
-    def _resolve_scenario_pack_path(self, scenario_pack: str | None, input_dir: Path) -> Path | None:
+    def _resolve_scenario_pack_path(self, scenario_pack: str | None, input_dir: Path) -> Path:
         if not scenario_pack:
             return self._resolve_safe_path(str(input_dir / "reforge" / "scenario_packs" / "truth_only_v0.json"))
         raw = str(scenario_pack).strip()

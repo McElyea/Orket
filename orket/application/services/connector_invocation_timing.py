@@ -32,8 +32,8 @@ class ConnectorInvocationTimer:
         if duration is None:
             logger.warning("Connector timing unavailable: invalid monotonic interval")
             return unavailable_invocation_timing("invalid_monotonic_interval", clock=self._clock_ref)
-        return InvocationTiming(duration_ms=duration, timing=InvocationTimingProvenance(
-            status="measured", clock=self._clock_ref))
+        return InvocationTiming(duration_ms=duration, timing=InvocationTimingProvenance.model_validate(
+            {"status": "measured", "clock": self._clock_ref}))
 
     def _sample(self) -> tuple[int | None, str]:
         try:

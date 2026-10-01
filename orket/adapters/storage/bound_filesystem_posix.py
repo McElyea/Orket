@@ -6,8 +6,14 @@ import os
 import stat
 from contextlib import ExitStack, contextmanager, suppress
 from pathlib import Path
+from typing import Protocol, cast
 
 side_effecting = True
+
+
+class _PosixOpenFlags(Protocol):
+    O_DIRECTORY: int
+    O_NONBLOCK: int
 
 
 @contextmanager
@@ -17,7 +23,9 @@ def open_target(root: Path, target: Path, requested: Path, *, operation: str):
         raise RuntimeError("E_OUTWARD_BOUND_FILESYSTEM_HOST_UNSUPPORTED")
     # O_PATH pins Linux directories without requiring read permission in addition to traversal.
     path_access = getattr(os, "O_PATH", os.O_RDONLY)
-    flags = path_access | os.O_DIRECTORY | os.O_NOFOLLOW
+    # The guarded POSIX module supplies flags absent from Windows typing stubs.
+    posix_flags = cast(_PosixOpenFlags, os)
+    flags = path_access | posix_flags.O_DIRECTORY | os.O_NOFOLLOW
     with ExitStack() as owned:
         directory = os.open(target.anchor, flags)
         owned.callback(os.close, directory)
@@ -41,7 +49,7 @@ def open_target(root: Path, target: Path, requested: Path, *, operation: str):
         else:
             access = {"write_file": os.O_WRONLY | os.O_CREAT, "read_file": os.O_RDONLY,
                       "delete_file": path_access}[operation]
-            descriptor = os.open(target.name, access | os.O_NOFOLLOW | os.O_NONBLOCK, 0o666, dir_fd=directory)
+            descriptor = os.open(target.name, access | os.O_NOFOLLOW | posix_flags.O_NONBLOCK, 0o666, dir_fd=directory)
             owned.callback(os.close, descriptor)
             if not stat.S_ISREG(os.fstat(descriptor).st_mode):
                 raise RuntimeError("E_OUTWARD_BOUND_FILESYSTEM_REGULAR_FILE_REQUIRED")

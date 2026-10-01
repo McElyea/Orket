@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable
-from typing import Any
+from typing import Any, cast
 
 from orket.adapters.execution.owned_io import run_owned_io
 from orket.application.services.control_plane_resource_authority_checks import (
@@ -472,7 +472,7 @@ class GiteaStateWorker:
                 run_id=control_plane_run_id, attempt_id=control_plane_attempt_id, card_id=card_id,
                 final_state=final_state, error=error, success_state=self.success_state,
                 worker_id=self.worker_id, lease_observation=lease_state["lease_observation"],
-                lease_expired=lease_state["expired"], lease_service=self.control_plane_lease_service,
+                lease_expired=lease_state["expired"], lease_service=cast(GiteaStateControlPlaneLeaseService, self.control_plane_lease_service),
             )
         elif lease_state["expired"]:
             await self._publish_expired_lease_if_enabled(

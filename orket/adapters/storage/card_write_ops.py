@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, cast
 
 import aiosqlite
 
@@ -14,6 +14,7 @@ from orket.core.contracts.card_completion_commit import (
     CardCompletionReceipt,
     CardCompletionRejected,
     CardCompletionRequest,
+    SuccessfulCardStatus,
     card_completion_inputs,
     require_current_completion_receipt,
 )
@@ -112,14 +113,18 @@ async def authorize_card_completion(
     decision = await authority.authorize_completion(record=current, context=context, request=request)
     if not decision.sufficient:
         raise CardCompletionRejected("E_CARD_COMPLETION_ACCEPTANCE_REQUIRED", decision)
-    receipt = CardCompletionReceipt(context=context, request=request, target_status=status.value, decision=decision)
+    # update_card_status admits only SUCCESSFUL_CARD_STATUSES to this path.
+    receipt = CardCompletionReceipt(
+        context=context, request=request, target_status=cast(SuccessfulCardStatus, status.value), decision=decision,
+    )
     payload = receipt.model_dump_json()
     await conn.execute(
         "INSERT OR IGNORE INTO card_completion_commits VALUES (?, ?, ?, ?, ?)",
         (receipt.digest, current.id, status.value, context.model_dump_json(), payload),
     )
     cursor = await conn.execute("SELECT receipt_json FROM card_completion_commits WHERE completion_ref = ?", (receipt.digest,))
-    if (await cursor.fetchone())[0] != payload:
+    # The insert (or its existing digest row) is retained by this writer transaction.
+    if cast(aiosqlite.Row, await cursor.fetchone())[0] != payload:
         raise CardCompletionRejected("E_CARD_COMPLETION_RECEIPT_COLLISION")
     return receipt
 

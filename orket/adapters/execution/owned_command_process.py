@@ -10,6 +10,7 @@ import secrets
 import subprocess
 import sys
 from pathlib import Path
+from typing import TypedDict, cast
 
 from orket.adapters.execution.owned_command_limits import jsonl_request_frames
 from orket.adapters.execution.owned_command_limits import output_limit_bytes as validate_output_limit
@@ -20,12 +21,16 @@ WORKER = Path(__file__).with_name("owned_command_worker.py")
 _REASONS = {"completed", "timeout", "cancelled", "launch_failed", "cleanup_unconfirmed", "output_limit", "capture_incomplete", "protocol_failed"}
 
 
-def _unconfirmed(process, diagnostic):
+class _CreationOptions(TypedDict, total=False):
+    creationflags: int
+
+
+def _unconfirmed(process, diagnostic) -> OwnedCommandResult:
     return OwnedCommandResult(None, b"", b"", "cleanup_unconfirmed", False, False,
                               "unconfirmed", process.pid, None, None, (diagnostic,))
 
 
-def _decode(process, raw, request_id):
+def _decode(process, raw, request_id) -> OwnedCommandResult:
     try:
         record = json.loads(raw)
         if (process.returncode != 0 or record["schema_version"] != "owned_command.v1" or record["request_id"] != request_id
@@ -60,7 +65,7 @@ async def _collect(process, buffers):
     return bytes(buffers[0]), bytes(buffers[1])
 
 
-async def _stop_and_collect(process, collected, buffers, request_id):
+async def _stop_and_collect(process, collected, buffers, request_id) -> OwnedCommandResult:
     if collected.cancelling():
         # Event-loop shutdown cancels collectors too. Retain already-read bytes,
         # settle the cancelled readers, then resume capture under the cleanup owner.
@@ -93,7 +98,7 @@ async def _stop_and_collect(process, collected, buffers, request_id):
         return _unconfirmed(process, diagnostic)
 
 
-async def _finish_stop(process, collected, buffers, request_id):
+async def _finish_stop(process, collected, buffers, request_id) -> OwnedCommandResult:
     cleanup = asyncio.create_task(_stop_and_collect(process, collected, buffers, request_id))
     while True:
         try:
@@ -104,7 +109,7 @@ async def _finish_stop(process, collected, buffers, request_id):
 
 
 async def execute_owned_command(*, argv, cwd, environment, timeout_seconds, input_data, stop, output_limit_bytes=None,
-                                jsonl_requests=None, io_timeout_seconds=None):
+                                jsonl_requests=None, io_timeout_seconds=None) -> OwnedCommandResult:
     if not math.isfinite(timeout_seconds) or timeout_seconds <= 0:
         raise ValueError("E_VERIFICATION_COMMAND_TIMEOUT_INVALID")
     # Windows venv launchers have a different PID from the actual interpreter.
@@ -123,7 +128,7 @@ async def execute_owned_command(*, argv, cwd, environment, timeout_seconds, inpu
     payload = json.dumps(request).encode() + b"\n"
     if len(payload) > 8 * 1024 * 1024:
         raise ValueError("E_VERIFICATION_COMMAND_INPUT_LIMIT")
-    options = {"creationflags": subprocess.CREATE_NO_WINDOW} if os.name == "nt" else {}
+    options: _CreationOptions = {"creationflags": subprocess.CREATE_NO_WINDOW} if os.name == "nt" else {}
     process = await asyncio.create_subprocess_exec(
         sys.executable, "-I", "-S", str(WORKER), stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE, cwd=cwd, env=request["env"], **options)
@@ -134,8 +139,9 @@ async def execute_owned_command(*, argv, cwd, environment, timeout_seconds, inpu
         if stop.is_set():
             request["stop_requested"] = True
             payload = json.dumps(request).encode() + b"\n"
-        process.stdin.write(payload)
-        await process.stdin.drain()
+        # This private process is constructed with stdin=PIPE above.
+        cast(asyncio.StreamWriter, process.stdin).write(payload)
+        await cast(asyncio.StreamWriter, process.stdin).drain()
         done, _ = await asyncio.wait({collected, stopping}, timeout=timeout_seconds + 8, return_when=asyncio.FIRST_COMPLETED)
         if collected in done:
             raw, _ = await collected
@@ -147,4 +153,4 @@ async def execute_owned_command(*, argv, cwd, environment, timeout_seconds, inpu
     finally:
         stopping.cancel()
         await asyncio.gather(stopping, return_exceptions=True)
-        process.stdin.close()
+        cast(asyncio.StreamWriter, process.stdin).close()

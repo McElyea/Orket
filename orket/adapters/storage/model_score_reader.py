@@ -30,6 +30,9 @@ def read_model_scores(report_path: str) -> ModelScoreObservation:
     scores, invalid = [], 0
     for model, detail in rows.items():
         value = detail.get("compliance_score") if isinstance(detail, dict) else None
+        if value is None:
+            invalid += 1
+            continue
         try:
             score = float(value)
         except (TypeError, ValueError):

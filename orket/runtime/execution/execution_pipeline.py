@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 from functools import partial
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from orket.adapters.execution.owned_io import require_sync_context
 from orket.adapters.observability.logging_context import (
@@ -34,7 +34,9 @@ from orket.application.workflows.turn_artifact_writer import TurnArtifactWriter
 from orket.core.contracts.eos_calendar import EosSprintBaseline
 from orket.logging import log_event
 from orket.orchestration.orchestration_config import OrchestrationConfig, process_rule_value
-from orket.runtime.config_loader import ConfigLoader
+from orket.runtime.config.config_loader import ConfigLoader
+from orket.runtime.config.runtime_context import OrketRuntimeContext
+from orket.runtime.evidence.run_ledger_factory import build_run_ledger_repository
 from orket.runtime.execution.epic_run_orchestrator import EpicRunOrchestrator
 from orket.runtime.execution.epic_run_types import EpicRunCallbacks
 from orket.runtime.execution.execution_pipeline_artifact_provenance import ExecutionPipelineArtifactProvenanceMixin
@@ -45,8 +47,6 @@ from orket.runtime.execution.execution_pipeline_run_summary import ExecutionPipe
 from orket.runtime.execution.execution_pipeline_runtime_artifacts import ExecutionPipelineRuntimeArtifactsMixin
 from orket.runtime.execution.pipeline_wiring_service import PipelineWiringService
 from orket.runtime.execution.workload_shell import SharedWorkloadShell
-from orket.runtime.run_ledger_factory import build_run_ledger_repository
-from orket.runtime.runtime_context import OrketRuntimeContext
 from orket.settings import load_user_settings
 
 
@@ -250,7 +250,7 @@ class ExecutionPipeline(
         return OrchestrationConfig(self.org).resolve_gitea_state_pilot_enabled(user_settings=user_settings)
 
     def _build_epic_run_components(self) -> tuple[EpicRunOrchestrator, EpicApprovalPauseService]:
-        inputs = self.runtime_context.construction_inputs
+        inputs = cast(RuntimeConstructionInputs, self.runtime_context.construction_inputs)
         environment = dict(inputs.environment)
         build_packet1_facts = partial(self._build_packet1_facts, construction_inputs=inputs)
         materialize_run_summary = partial(
@@ -261,7 +261,7 @@ class ExecutionPipeline(
         timezone_name = (environment.get("ORKET_TIMEZONE") or "UTC").strip()
         approval_pauses = EpicApprovalPauseService(
             transactions=self.cards_epic_control_plane.transactions,
-            locks=EpicContinuationLocks(self.epic_publication.repository.db_path),
+            locks=EpicContinuationLocks(cast(SQLiteEpicPublicationRepository, self.epic_publication.repository).db_path),
             artifact_writer=TurnArtifactWriter(self.workspace), now=self.runtime_inputs.utc_now_iso,
             repository=self.epic_publication.repository, pending_gates=self.orchestrator.pending_gates,
             ledger=self.run_ledger, execution_repository=self.cards_epic_control_plane.execution_repository,

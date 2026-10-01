@@ -514,7 +514,19 @@
     "No fresh installed/platform/provider/hosted acceptance",
     "No whole-lane or main merge"
   ],
-  "publication": "pending annotated v0.6.122 checkpoint",
+  "publication": {
+    "commit": "64b39cb9cbdee5d0557b9a86a58c6358b22085fe",
+    "version": "0.6.122",
+    "tag_object": "1b01d14dd7abb7fc66c7f97e614e84240e6806e6",
+    "remote_refs": {
+      "refs/heads/codex/architectural-truth-bt0": "64b39cb9cbdee5d0557b9a86a58c6358b22085fe",
+      "refs/tags/v0.6.122": "1b01d14dd7abb7fc66c7f97e614e84240e6806e6",
+      "refs/tags/v0.6.122^{}": "64b39cb9cbdee5d0557b9a86a58c6358b22085fe"
+    },
+    "clean_worktree": true,
+    "path": "primary",
+    "result": "success"
+  },
   "exact_files_touched": [
     ".gitea/workflows/quality.yml",
     "CHANGELOG.md",
@@ -562,6 +574,27 @@
         "churn_paths": 934,
         "churn_ratio": 1.0,
         "sample_paths": []
+      }
+    },
+    {
+      "run_at_utc": "2026-10-01T14:27:32.037762Z",
+      "changed": true,
+      "before_digest": "sha256:e22bab8f9124c031034de4afa78d8ac32c52eaaa7820ada956125842feb064b2",
+      "after_digest": "sha256:42296fdaf230d51e23c2766846fecc51a7da53cb6fc2763c0275577915913218",
+      "diff": {
+        "added_paths": 1,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 934,
+        "paths_total_current": 982,
+        "paths_total_reference": 982,
+        "churn_paths": 2,
+        "churn_ratio": 0.002037,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.publication"
+        ]
       }
     }
   ]

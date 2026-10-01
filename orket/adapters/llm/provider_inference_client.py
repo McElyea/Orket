@@ -25,15 +25,17 @@ class CapturedOllamaAuth(httpx.Auth):
 
 def build_provider_inference_client(*, inputs: ProviderHttpInputs, backend: str, base_url: str,
                                     timeout_s: float, connect_timeout_s: float, ollama_api_key: str | None,
-                                    own_resource: Callable):
+                                    own_resource: Callable[[object], None]) -> httpx.AsyncClient | ollama.AsyncClient:
+    options: dict[str, object]
     if backend == "openai_compat":
-        factory = httpx.AsyncClient
+        http_factory = httpx.AsyncClient
         options = dict(base_url=base_url, follow_redirects=False,
             timeout=httpx.Timeout(connect=connect_timeout_s, read=max(1.0, timeout_s), write=30.0, pool=10.0))
+        return build_provider_http_client(inputs=inputs, factory=http_factory, options=options, own_resource=own_resource)
     elif backend == "ollama":
-        factory = ollama.AsyncClient
+        ollama_factory = ollama.AsyncClient
         # Preserve the SDK redirect policy and the provider's outer generation deadline.
         options = dict(host=base_url, follow_redirects=True, timeout=None, auth=CapturedOllamaAuth(ollama_api_key))
+        return build_provider_http_client(inputs=inputs, factory=ollama_factory, options=options, own_resource=own_resource)
     else:
         raise ValueError("E_PROVIDER_HTTP_BACKEND_INVALID")
-    return build_provider_http_client(inputs=inputs, factory=factory, options=options, own_resource=own_resource)

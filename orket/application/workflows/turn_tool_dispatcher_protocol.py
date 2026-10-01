@@ -191,13 +191,13 @@ async def load_or_execute_tool(
             load_operation_result, destination=destination, operation_id=operation_id,
         ), label="turn-operation-cache-read")
         if operation_record is not None:
-            replay_result = validate_operation_record(operation_record, operation_id=operation_id,
+            operation_result = validate_operation_record(operation_record, operation_id=operation_id,
                 tool_name=tool_name, tool_args=tool_args)
             await prepare_dispatch(
                 tool_name=tool_name, tool_args=tool_args, binding=binding, operation_id=operation_id,
                 replay_operation=True,
             )
-            return replay_result, True, True
+            return operation_result, True, True
     replay_result = None if completion_call else await run_owned_thread(partial(
         load_replay_tool_result, destination=destination,
         tool_name=tool_name,

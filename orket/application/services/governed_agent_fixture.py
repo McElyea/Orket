@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from typing import Any
+from typing import Any, TypeGuard
 
 from orket.application.services.governed_agent_broker_service import (
     GovernedAgentModelObservation,
@@ -54,8 +54,16 @@ class SecondIterationDeterministicVerifier:
         proposal = json.loads(result.advisory_proposal) if result.advisory_proposal is not None else None
         fixture = ticket_report_fixture(_fixture_case(request.objective_ref))
         expected = fixture["expected_report"]
-        admissible = _valid_ticket_report(proposal, fixture, request)
-        report_matches = admissible and proposal["source_refs"] == expected["source_refs"]
+        if _valid_ticket_report(proposal, fixture, request):
+            admissible = True
+            report_matches = proposal["source_refs"] == expected["source_refs"]
+            progress_digest = "sha256:" + canonical_digest_sha256({
+                "counts": proposal["counts"], "source_refs": proposal["source_refs"],
+            })
+        else:
+            admissible = False
+            report_matches = False
+            progress_digest = None
         satisfied = ordinal >= 2 and result.invocation_status == "returned" and report_matches
         return GovernedAgentVerificationObservation(
             verifier_id="deterministic-agent-fixture-verifier",
@@ -67,13 +75,11 @@ class SecondIterationDeterministicVerifier:
             authoritative_result_ref=(
                 f"agent-result:{request.identity.invocation_id}" if satisfied else None
             ),
-            progress_projection_digest=("sha256:" + canonical_digest_sha256({
-                "counts": proposal["counts"], "source_refs": proposal["source_refs"],
-            }) if admissible else None),
+            progress_projection_digest=progress_digest,
         )
 
 
-def _valid_ticket_report(proposal: Any, fixture: dict[str, Any], request: AgentIterationRequest) -> bool:
+def _valid_ticket_report(proposal: object, fixture: dict[str, Any], request: AgentIterationRequest) -> TypeGuard[dict[str, Any]]:
     if not isinstance(proposal, dict) or not isinstance(proposal.get("source_refs"), list):
         return False
     refs = proposal["source_refs"]

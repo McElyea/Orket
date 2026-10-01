@@ -8,10 +8,18 @@ import os
 import stat
 from contextlib import asynccontextmanager, contextmanager
 from pathlib import Path
+from typing import Protocol, cast
 
 from orket.core.contracts.local_file_lock import LocalFileLockError, LocalFileLockRef
 
 side_effecting = True
+
+
+class _PosixFileLocks(Protocol):
+    LOCK_EX: int
+    LOCK_NB: int
+
+    def flock(self, descriptor: int, operation: int) -> None: ...
 
 
 class NativeFileLocks:
@@ -104,7 +112,8 @@ def _lock(descriptor: int, prefix: str) -> None:
             msvcrt.locking(descriptor, msvcrt.LK_NBLCK, 1)
         elif os.name == "posix":
             import fcntl
-            fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            native = cast(_PosixFileLocks, fcntl)
+            native.flock(descriptor, native.LOCK_EX | native.LOCK_NB)
         else:
             raise RuntimeError(prefix + "_HOST_UNSUPPORTED")
     except OSError as exc:

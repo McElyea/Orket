@@ -12,4 +12,5 @@ RUN_STATE_FIELDS = frozenset({"lifecycle_state", "current_attempt_id", "final_tr
 
 
 def same_run_admission(existing: RunRecord, incoming: RunRecord) -> bool:
-    return existing.model_dump(exclude=RUN_STATE_FIELDS) == incoming.model_dump(exclude=RUN_STATE_FIELDS)
+    excluded = set(RUN_STATE_FIELDS)
+    return existing.model_dump(exclude=excluded) == incoming.model_dump(exclude=excluded)

@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from orket.adapters.storage.async_file_tools import capture_file_roots
-from orket.runtime.run_start_artifacts import validate_run_identity_projection
+from orket.runtime.evidence.run_start_artifacts import validate_run_identity_projection
 from orket.runtime.summary.run_summary_artifact_provenance import (
     ARTIFACT_PROVENANCE_KEY,
     build_artifact_provenance_extension,

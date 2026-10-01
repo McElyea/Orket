@@ -35,4 +35,5 @@ def validate_gitea_url(gitea_url: str, *, allow_insecure: bool) -> str:
 def build_webhook_http_client(*, username: str, password: str,
                               http_client_owner: CapturedHttpClientPort) -> httpx.AsyncClient:
     # Construction owns a connection pool; the application must close it after admitted work settles.
-    return http_client_owner.create_client(auth=(username, password), timeout_s=10.0)
+    client: httpx.AsyncClient = http_client_owner.create_client(auth=(username, password), timeout_s=10.0)
+    return client

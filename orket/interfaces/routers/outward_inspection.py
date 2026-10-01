@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 import json
 from collections.abc import AsyncIterator, Callable
-from typing import Any
+from typing import Any, cast
 
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import StreamingResponse
@@ -66,7 +66,7 @@ def build_outward_inspection_router(
             )
         except OutwardRunInspectionError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
-        return outbound_filter(payload, surface="api.runs.events")
+        return cast(dict[str, Any], outbound_filter(payload, surface="api.runs.events"))
 
     @router.get("/runs/{run_id}/summary")
     async def get_outward_run_summary(run_id: str) -> dict[str, Any]:
@@ -74,7 +74,7 @@ def build_outward_inspection_router(
             payload = await inspection_service_getter().summary(run_id)
         except OutwardRunInspectionError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
-        return outbound_filter(payload, surface="api.runs.summary")
+        return cast(dict[str, Any], outbound_filter(payload, surface="api.runs.summary"))
 
     @router.get("/runs/{run_id}/events/stream")
     async def stream_outward_run_events(

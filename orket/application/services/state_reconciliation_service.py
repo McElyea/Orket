@@ -96,8 +96,11 @@ def _snapshot_state(snapshot: dict[str, Any] | None) -> str | None:
 def _snapshot_version(snapshot: dict[str, Any] | None) -> int | None:
     if not isinstance(snapshot, dict):
         return None
+    value = snapshot.get("version")
+    if value is None:
+        return None
     try:
-        return int(snapshot.get("version"))
+        return int(value)
     except (TypeError, ValueError):
         return None
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import replace
-from typing import Any
+from typing import Any, cast
 
 from orket.adapters.storage.outward_store_transaction import OutwardStoreTransaction, OutwardStoreUnitOfWork
 from orket.application.services.outward_authorization_service import (
@@ -47,7 +47,7 @@ class OutwardEffectService:
                 raise ValueError(f"Approval proposal '{proposal_id}' not found")
             binding = proposal.authorization
             effect = await transaction.effects.get(binding.effect_id) if binding else None
-            if effect is not None:
+            if effect is not None and binding is not None:
                 await validate_effect_authority(transaction, binding, effect)
             return {
                 "proposal_id": proposal_id, "approval_status": proposal.status,
@@ -211,7 +211,7 @@ class OutwardEffectService:
             projected, advance = await publish_effect_projection(transaction, binding, current, run, at=at)
             entry = await self._journal(
                 transaction, binding, state="published", at=at, receipt_digest=current.receipt_digest,
-                successful=current.receipt["event"].get("outcome") == "success",
+                successful=cast(dict[str, Any], current.receipt)["event"].get("outcome") == "success",
                 fencing_generation=current.fencing_generation,
             )
             await transaction.effects.transition(replace(

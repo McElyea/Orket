@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from orket.adapters.storage.async_file_tools import capture_file_roots
 from orket.core.domain.execution import ExecutionTurn, ToolCall
@@ -272,7 +272,7 @@ def capture_validation_role(role: RoleConfig) -> RoleConfig:
 
 
 def capture_mapping(value: dict[str, Any]) -> dict[str, Any]:
-    return _capture_value(value)
+    return cast(dict[str, Any], _capture_value(value))
 
 
 def _capture_context(context: Mapping[str, Any], detached_keys: frozenset[str]) -> dict[str, Any]:

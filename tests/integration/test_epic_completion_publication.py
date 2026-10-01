@@ -11,6 +11,7 @@ import pytest
 
 from orket.adapters.storage.async_control_plane_execution_repository import AsyncControlPlaneExecutionRepository
 from orket.application.services.cards_epic_control_plane_service import CardsEpicControlPlaneError
+from orket.core.contracts.epic_publication import EpicPublicationPlan
 from orket.core.domain import AttemptState, RunState
 from orket.runtime.execution.execution_pipeline import ExecutionPipeline
 from tests.application.test_execution_pipeline_cards_epic_control_plane import _write_epic_assets
@@ -27,6 +28,22 @@ async def publication_pipeline(root, workspace, db_path):
 async def accept_publication_card(pipeline, workspace):
     service = pipeline.runtime_context.card_completion
     await complete_existing_card(pipeline.async_cards, "ISSUE-1", workspace, service=service)
+
+
+@pytest.mark.asyncio
+# Layer: integration
+async def test_success_phase_requires_snapshot_before_recording_success(test_root, workspace, db_path):
+    pipeline = await publication_pipeline(test_root, workspace, db_path)
+    plan = EpicPublicationPlan(session_id="missing-snapshot", request={}, ledger={"status": "done"},
+                               snapshot=None, transcript=[])
+    try:
+        assert await pipeline.success.get(plan.session_id) is None
+        with pytest.raises(ValueError, match="E_EPIC_PUBLICATION_SUCCESS_SNAPSHOT_REQUIRED"):
+            await pipeline.epic_publication._publish_success(plan, pipeline.snapshots)
+        assert await pipeline.success.get(plan.session_id) is None
+        assert await pipeline.snapshots.get(plan.session_id) is None
+    finally:
+        await pipeline.close()
 
 
 @pytest.mark.asyncio

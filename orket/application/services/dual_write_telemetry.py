@@ -7,7 +7,7 @@ from pathlib import Path
 from orket.adapters.execution.owned_io import run_owned_thread
 from orket.core.contracts.log_event_inputs import LOG_EVENT_INPUT_ERROR, capture_log_event_inputs
 from orket.logging import log_event
-from orket.runtime.run_ledger_parity import compare_run_ledger_rows
+from orket.runtime.evidence.run_ledger_parity import compare_run_ledger_rows
 
 
 class DualWriteTelemetry:

@@ -44,7 +44,7 @@ class RuntimeStoreBindingRepository:
                     cursor = await conn.execute("SELECT DISTINCT session_id FROM " + table)
                     if any(row[0] not in sessions for row in await cursor.fetchall()):
                         raise ValueError("E_RUNTIME_STORE_ADMISSION_HISTORY_MISSING")
-            return rows
+            return [(row[0], row[1], row[2]) for row in rows]
 
     async def approval_pause(self, session_id: str):
         async with aiosqlite.connect(self.journal_db.as_uri() + "?mode=ro", uri=True) as conn:

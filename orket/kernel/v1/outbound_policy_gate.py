@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, cast
 
 from orket.application.services.outbound_policy_input_service import (
     capture_outbound_policy_inputs,
@@ -39,7 +39,7 @@ class OutboundPolicyGate:
 
     def filter(self, event_type: str, payload: dict[str, Any]) -> dict[str, Any]:
         filtered, _report = self.filter_with_report(event_type, payload)
-        return filtered
+        return cast(dict[str, Any], filtered)
 
     def filter_with_report(self, event_type: str, payload: Any) -> tuple[Any, dict[str, Any]]:
         redacted_paths: list[str] = []
@@ -148,7 +148,7 @@ def _preserve_ledger_export_truth(original: Any, scrubbed: Any) -> tuple[Any, di
     original_events = [event for event in original.get("events", []) if isinstance(event, Mapping)]
     scrubbed_events = [event for event in scrubbed.get("events", []) if isinstance(event, Mapping)]
     redacted_positions = {
-        int(original_event.get("position"))
+        int(cast(int, original_event.get("position")))
         for original_event, scrubbed_event in zip(original_events, scrubbed_events, strict=False)
         if dict(original_event) != dict(scrubbed_event)
     }
@@ -158,7 +158,7 @@ def _preserve_ledger_export_truth(original: Any, scrubbed: Any) -> tuple[Any, di
     final_disclosed = [
         dict(event)
         for event in original_events
-        if int(event.get("position")) not in redacted_positions
+        if int(cast(int, event.get("position"))) not in redacted_positions
     ]
     canonical_count = int(original.get("canonical", {}).get("event_count") or len(original_events))
     transformed = dict(scrubbed)
@@ -186,10 +186,10 @@ def _ledger_omitted_spans(original: Mapping[str, Any], disclosed_positions: set[
     chain_by_position: dict[int, str] = {}
     for event in original.get("events", []):
         if isinstance(event, Mapping):
-            chain_by_position[int(event.get("position"))] = str(event.get("chain_hash") or "")
+            chain_by_position[int(cast(int, event.get("position")))] = str(event.get("chain_hash") or "")
     for span in original.get("omitted_spans", []):
         if isinstance(span, Mapping):
-            chain_by_position[int(span.get("to_position"))] = str(span.get("next_chain_hash") or "")
+            chain_by_position[int(cast(int, span.get("to_position")))] = str(span.get("next_chain_hash") or "")
     ledger_hash = str((original.get("canonical") or {}).get("ledger_hash") or "")
     if canonical_count > 0:
         chain_by_position.setdefault(canonical_count, ledger_hash)

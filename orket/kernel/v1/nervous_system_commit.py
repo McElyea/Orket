@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from copy import deepcopy
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, TypedDict
 
 from orket.application.services.kernel_action_input_service import capture_kernel_request
 from orket.application.services.kernel_runtime_owner import capture_kernel_observation, current_kernel_runtime
@@ -27,6 +27,13 @@ from .nervous_system_runtime_state import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+class _CommitEventContext(TypedDict):
+    session_id: str
+    trace_id: str
+    request_id: str | None
+    created_at: str
 
 
 @dataclass
@@ -51,12 +58,14 @@ def commit_proposal_v1(request: dict[str, Any], *, observation: KernelObservatio
     approval_id = normalized_optional_str(request.get("approval_id"))
     result_digest = normalized_optional_str(request.get("execution_result_digest"))
     key = (session_id, trace_id, proposal_digest, decision_digest, approval_id, result_digest)
-    event_context = dict(session_id=session_id, trace_id=trace_id, request_id=request_id)
     with owner.lock:
         existing = owner.commit_results_by_key.get(key)
         if existing is not None:
             return deepcopy(existing)
-        event_context["created_at"] = (capture_kernel_observation() if observation is None else observation).timestamp
+        event_context: _CommitEventContext = dict(
+            session_id=session_id, trace_id=trace_id, request_id=request_id,
+            created_at=(capture_kernel_observation() if observation is None else observation).timestamp,
+        )
         observed = CommitObservation(sanitization_digest=normalized_optional_str(request.get("sanitization_digest")))
         try:
             _evaluate_commit(request, observed, event_context, proposal_digest, decision_digest, approval_id)

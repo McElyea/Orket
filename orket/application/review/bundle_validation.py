@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, NoReturn
 
 from orket.application.review.control_plane_projection import (
     validate_review_control_plane_ref_hierarchy,
@@ -20,7 +20,7 @@ class ReviewBundleError(ValueError):
         super().__init__(self.error_code)
 
 
-def _raise_review_bundle_error(*, error_code: str, field: str) -> None:
+def _raise_review_bundle_error(*, error_code: str, field: str) -> NoReturn:
     raise ReviewBundleError(error_code=error_code, field=field)
 
 

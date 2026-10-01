@@ -1,6 +1,6 @@
 # Controller schema package and input ownership
 
-Last updated: 2026-09-19
+Last updated: 2026-10-01
 Status: Active contract delta; scoped source/installed proof recorded in the canonical plan
 Owner: Orket Core
 
@@ -19,7 +19,11 @@ or second editable schema remains. Archived planning references are historical.
 
 `validate_observability_schema` loads the packaged default unless a caller
 explicitly supplies a schema path. Each call reads its selected bytes without a
-shared schema cache. Nested event values are captured before awaiting the read.
+shared schema cache. The selected JSON root must be an object or boolean; other
+roots fail with `controller.observability_schema_root_invalid` before validator
+construction. Boolean schemas retain their normal allow/deny semantics, and
+invalid events report `controller.observability_schema_invalid:index=N`.
+Nested event values are captured before awaiting the read.
 Explicit relative paths retain normal process-working-directory semantics;
 callers requiring a bound root supply an absolute path.
 Application owns the read worker through cancellation; a failed read or invalid

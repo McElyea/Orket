@@ -12,7 +12,7 @@ from collections.abc import Coroutine
 from copy import copy
 from functools import partial
 from pathlib import Path
-from typing import Any, TypeVar
+from typing import Any, Literal, TypeVar, cast, overload
 
 import aiofiles
 
@@ -29,7 +29,9 @@ def capture_file_roots(paths: list[Path]) -> list[Path]:
     roots = [Path(path) for path in paths]
     if any(path.drive and not path.is_absolute() for path in roots):
         raise ValueError("E_FILE_TOOL_DRIVE_RELATIVE_ROOT_UNSUPPORTED")
-    invocation_root = Path.cwd() if any(not path.is_absolute() for path in roots) else None
+    if not any(not path.is_absolute() for path in roots):
+        return roots
+    invocation_root = Path.cwd()
     return [invocation_root / path if not path.is_absolute() else path for path in roots]
 
 
@@ -109,21 +111,32 @@ class AsyncFileTools:
     async def list_directory(self, path_str: str = ".") -> list[str]:
         return await self._operate("list", path_str)
 
-    async def _operate(self, operation: str, path_str: str, *, content: str | None = None):
+    @overload
+    async def _operate(self, operation: Literal["read", "create"], path_str: str,
+                       *, content: str | None = None) -> str: ...
+
+    @overload
+    async def _operate(self, operation: Literal["write"], path_str: str, *, content: str) -> str: ...
+
+    @overload
+    async def _operate(self, operation: Literal["list"], path_str: str,
+                       *, content: str | None = None) -> list[str]: ...
+
+    async def _operate(self, operation: str, path_str: str, *, content: str | None = None) -> str | list[str]:
         captured = self.capture()
 
-        async def execute():
+        async def execute() -> str | list[str]:
             path = await captured.resolve_path_async(path_str, write=operation in {"write", "create"})
             if operation in {"read", "list"} and not await run_owned_thread(path.exists, label="file-exists"):
                 kind = "File" if operation == "read" else "Directory"
                 raise FileNotFoundError(f"{kind} not found: {path_str}")
             if operation == "read":
                 async with aiofiles.open(path, encoding="utf-8") as stream:
-                    return await stream.read()
+                    return cast(str, await stream.read())  # aiofiles text mode returns str.
             if operation == "write":
                 await run_owned_thread(partial(path.parent.mkdir, parents=True, exist_ok=True), label="file-parent")
                 async with aiofiles.open(path, mode="w", encoding="utf-8") as stream:
-                    await stream.write(content)
+                    await stream.write(cast(str, content))  # The write overload requires text.
                 return str(path)
             if operation == "create":
                 await run_owned_thread(partial(path.mkdir, parents=True, exist_ok=True), label="file-directory")

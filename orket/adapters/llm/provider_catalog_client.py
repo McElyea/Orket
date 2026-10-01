@@ -4,6 +4,7 @@ from __future__ import annotations
 import ssl
 import sys
 from collections.abc import Callable
+from typing import TypeVar
 
 import certifi
 import httpx
@@ -11,18 +12,20 @@ import httpx
 from orket.adapters.execution.owned_io import require_sync_context
 from orket.core.contracts.provider_http import ProviderHttpInputs
 
+ClientT = TypeVar("ClientT")
+
 side_effecting = True  # Loads trust material and constructs explicitly owned network resources.
 
 
 def build_provider_catalog_client(*, inputs: ProviderHttpInputs, base_url: str, timeout_s: float,
-                                  api_key: str | None, own_resource: Callable) -> httpx.AsyncClient:
+                                  api_key: str | None, own_resource: Callable[[object], None]) -> httpx.AsyncClient:
     return build_provider_http_client(inputs=inputs, factory=httpx.AsyncClient, own_resource=own_resource,
         options=dict(base_url=base_url, timeout=httpx.Timeout(timeout_s), follow_redirects=False,
                      headers={"Authorization": "Bearer " + api_key} if api_key else {}))
 
 
-def build_provider_http_client(*, inputs: ProviderHttpInputs, factory: Callable, options: dict,
-                               own_resource: Callable):
+def build_provider_http_client(*, inputs: ProviderHttpInputs, factory: Callable[..., ClientT], options: dict[str, object],
+                               own_resource: Callable[[object], None]) -> ClientT:
     require_sync_context(code="E_PROVIDER_HTTP_REQUIRES_ASYNC_OWNER")
     # create_default_context consults ambient SSLKEYLOGFILE even with HTTPX
     # trust_env=False. Build the verified context directly from captured inputs.

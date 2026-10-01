@@ -13,11 +13,12 @@ from orket.core.contracts.card_completion import CardCompletionDecision, Complet
 if TYPE_CHECKING:
     from orket.core.domain.records import IssueRecord
 
-SUCCESSFUL_CARD_STATUSES = frozenset({"done", "guard_approved"})
+SuccessfulCardStatus = Literal["done", "guard_approved"]
+SUCCESSFUL_CARD_STATUSES: frozenset[SuccessfulCardStatus] = frozenset({"done", "guard_approved"})
 MutationResult = TypeVar("MutationResult")
 
 
-def is_card_completion_call(tool_name: str, arguments: dict) -> bool:
+def is_card_completion_call(tool_name: object, arguments: dict) -> bool:
     return tool_name == "update_issue_status" and str(arguments.get("status", "")).lower() in SUCCESSFUL_CARD_STATUSES
 
 
@@ -56,7 +57,7 @@ class CardCompletionReceipt(CompletionRecord):
     schema_version: Literal["card_completion_receipt.v1"] = "card_completion_receipt.v1"
     context: CardCompletionContext
     request: CardCompletionRequest
-    target_status: Literal["done", "guard_approved"]
+    target_status: SuccessfulCardStatus
     decision: CardCompletionDecision
 
     @model_validator(mode="after")

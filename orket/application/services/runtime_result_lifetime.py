@@ -1,9 +1,11 @@
 """Keep runtime owners alive until cleanup can be reflected in their result."""
 import asyncio
 import logging
+from collections.abc import Callable
 from contextlib import asynccontextmanager
 from functools import partial
 from pathlib import Path
+from typing import Protocol, TypeVar
 
 from orket.adapters.execution.owned_io import run_owned_thread
 from orket.application.services.runtime_construction_inputs import RuntimeConstructionInputs
@@ -11,6 +13,13 @@ from orket.application.services.runtime_execution_result_service import RuntimeE
 from orket.core.contracts.runtime_execution_result import RuntimeExecutionResult
 
 logger = logging.getLogger(__name__)
+
+
+class RuntimeOwner(Protocol):
+    async def close(self) -> object: ...
+
+
+RuntimeOwnerT = TypeVar("RuntimeOwnerT", bound=RuntimeOwner)
 
 
 async def execute_collection_member(*, create, creation, target, session_id, build_id, execution):
@@ -47,7 +56,7 @@ async def execute_collection_member(*, create, creation, target, session_id, bui
     return result
 
 
-async def close_runtime_owner(owner) -> bool:
+async def close_runtime_owner(owner: RuntimeOwner) -> bool:
     """Join owned cleanup through repeated caller cancellation and report it."""
     task = asyncio.create_task(owner.close())
     cancelled = False
@@ -60,11 +69,11 @@ async def close_runtime_owner(owner) -> bool:
     return cancelled
 
 
-async def create_runtime_owner(construct, *, label):
+async def create_runtime_owner(construct: Callable[[], RuntimeOwnerT], *, label: str) -> RuntimeOwnerT:
     """Close a completed runtime if interruption prevents transferring it to its caller."""
-    created = []
+    created: list[RuntimeOwnerT] = []
 
-    def create():
+    def create() -> RuntimeOwnerT:
         owner = construct()
         created.append(owner)
         return owner

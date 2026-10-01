@@ -298,9 +298,9 @@ async def run_cli(argv: list[str] | None = None, *, prog: str | None = None) -> 
             if args.rock or args.card:
                 target = args.rock or args.card
                 print(f"Running Orket Card: {target}")
-                result = await engine.run_card(target, build_id=args.build_id,
+                run_result = await engine.run_card(target, build_id=args.build_id,
                     driver_steered=args.driver_steered, model_override=args.model)
-                return await _finish_named_run(engine, result)
+                return await _finish_named_run(engine, run_result)
 
             if not args.epic:
                 # Interactive Driver Mode
@@ -324,14 +324,14 @@ async def run_cli(argv: list[str] | None = None, *, prog: str | None = None) -> 
                 return 0
 
             print(f"Running Orket Epic: {args.epic}")
-            result = await engine.run_epic(
+            run_result = await engine.run_epic(
                 args.epic,
                 build_id=args.build_id,
                 driver_steered=args.driver_steered,
                 target_issue_id=args.resume,
                 model_override=args.model,
             )
-            return await _finish_named_run(engine, result)
+            return await _finish_named_run(engine, run_result)
 
         except RuntimeExecutionCancelled as exc:
             return await _finish_named_run(engine, exc.result, cancelled=True)

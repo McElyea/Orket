@@ -147,8 +147,9 @@ async def outward_status_payload(transaction: OutwardStoreTransaction, run: Outw
     if terminal != (truth is not None):
         raise RuntimeError("E_OUTWARD_FINAL_TRUTH_PROJECTION_CONFLICT")
     if truth is not None:
-        step = await transaction.control_plane.execution.get_step_record(step_id=truth.authoritative_result_ref)
-        event = await transaction.get_event(step.output_ref) if step else None
+        step = (await transaction.control_plane.execution.get_step_record(step_id=truth.authoritative_result_ref)
+                if truth.authoritative_result_ref is not None else None)
+        event = await transaction.get_event(step.output_ref) if step and step.output_ref is not None else None
         if (step is None or event is None or step.attempt_id != record.current_attempt_id
                 or record.lifecycle_state not in {RunState.COMPLETED, RunState.FAILED_TERMINAL}
                 or attempt.attempt_state not in {AttemptState.COMPLETED, AttemptState.FAILED}

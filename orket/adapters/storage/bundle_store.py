@@ -71,6 +71,7 @@ class BundleStore:
 
 
 def _read_manifest(target: Path) -> BundleManifestSource:
+    path: Path | None
     if target.is_file():
         path, root = target, target.parent
     else:

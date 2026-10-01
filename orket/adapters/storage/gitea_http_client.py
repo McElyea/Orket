@@ -30,7 +30,7 @@ class GiteaHTTPClient:
 
     def __init__(self, adapter: Any, *, http_client_owner: CapturedHttpClientPort) -> None:
         self.adapter, self._http_client_owner = adapter, http_client_owner
-        self._client = http_client_owner.create_client(timeout_s=self.adapter.timeout_seconds)
+        self._client: httpx.AsyncClient = http_client_owner.create_client(timeout_s=self.adapter.timeout_seconds)
 
     async def close(self) -> None:
         await self._http_client_owner.close(self._client)

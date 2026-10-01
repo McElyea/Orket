@@ -1,6 +1,6 @@
 # API Runtime Lifecycle
 
-Last updated: 2026-09-28
+Last updated: 2026-10-01
 Status: Active
 
 `orket.application.services.api_runtime_container.ApiRuntimeContainer` owns the
@@ -96,7 +96,9 @@ its diagnostic is pending. No handler deadline is introduced. Contract and the
 `docs/architecture/CONTRACT_DELTA_FAILURE_DIAGNOSTICS_D_2026-09-27.md`.
 
 Startup captures the engine, authentication, state, root and governed-agent owner
-before awaiting. Initialization is an admitted invocation: concurrent close cancels
+before awaiting. Missing authentication refuses startup with `RuntimeError` before
+engine initialization or readiness; outer preparation still closes acquired owners.
+Initialization is an admitted invocation: concurrent close cancels
 and drains it before resources and the engine. Root validation uses an owned file
 worker. Startup also captures the bound authentication validator and logger before
 its first await, then owns the complete synchronous validation call through
@@ -129,6 +131,11 @@ receipts. Storage verifies immutable commit/trace artifacts; API workloads belon
 to the application lifetime. Core owns stream/context values. Migration, response
 vocabulary and remaining failure limits:
 `docs/architecture/CONTRACT_DELTA_INTERACTION_LIFECYCLE_CD_2026-09-19.md`.
+
+Interaction command and cancellation service selection requires a configured
+interaction manager. A missing manager raises `RuntimeError` before dispatch and
+cannot publish an accepted session or cancellation action. The application retains
+ownership of already acquired resources through the refusal and later shutdown.
 
 HTTP admission transfers work to the API lifetime before returning a turn ID.
 Premature public finalization of managed work is refused. A committed receipt

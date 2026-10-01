@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from orket.adapters.execution.owned_io import require_sync_context
 from orket.application.services.trust_handoff_contract import (
@@ -134,7 +134,7 @@ def _load_package(package_path: Path, state: _State) -> _LoadedPackage:
     for role, ref in refs.items():
         path = _resolve_package_ref(root, ref)
         state.check("MATH-CHECK-002", path is not None, "package_ref_outside_package", role)
-        resolved[role] = path
+        resolved[role] = cast(Path, path)
     for role, path in resolved.items():
         state.check("MATH-CHECK-002", path.exists(), _missing_code(role), role)
 
@@ -210,7 +210,8 @@ def _verify_loaded_package(
 
 
 def _check_witness_alignment(state: _State, witness: dict[str, Any], bundle: dict[str, Any]) -> None:
-    ledger = witness.get("ledger_evidence") if isinstance(witness.get("ledger_evidence"), dict) else {}
+    ledger = witness.get("ledger_evidence")
+    ledger = ledger if isinstance(ledger, dict) else {}
     valid_ref = _committed_artifact_ref(witness) is not None
     passed = (
         witness.get("schema_version") == "outward_run.witness_bundle.v1"
@@ -229,7 +230,8 @@ def _check_source_output_anchor(
     bundle: dict[str, Any],
 ) -> None:
     digest = str(bundle.get("committed_output_digest") or "")
-    payload = commitment.get("payload") if isinstance(commitment.get("payload"), dict) else {}
+    payload = commitment.get("payload")
+    payload = payload if isinstance(payload, dict) else {}
     path1 = payload.get("committed_output_digest") == digest
     ref = _committed_artifact_ref(witness)
     path2 = bool(ref and ref.get("digest") == digest and ref.get("package_path") == COMMITTED_OUTPUT_PATH)
@@ -239,7 +241,8 @@ def _check_source_output_anchor(
 
 
 def _check_source_policy_anchor(state: _State, witness: dict[str, Any], bundle: dict[str, Any]) -> None:
-    run_authority = witness.get("run_authority") if isinstance(witness.get("run_authority"), dict) else {}
+    run_authority = witness.get("run_authority")
+    run_authority = run_authority if isinstance(run_authority, dict) else {}
     anchored = run_authority.get("policy_overrides_digest") == bundle.get("source_policy_digest")
     state.policy_anchor = {
         "source_policy_digest": bundle.get("source_policy_digest"),
@@ -274,7 +277,8 @@ def _check_scope_and_identity(
     if context.expected_source_agent_id is not None:
         agent_ok = agent_ok and bundle.get("source_agent_id") == context.expected_source_agent_id
     state.check("MATH-CHECK-022", agent_ok, "trust_handoff_agent_not_admitted")
-    identity = bundle.get("source_policy_identity") if isinstance(bundle.get("source_policy_identity"), dict) else {}
+    identity = bundle.get("source_policy_identity")
+    identity = identity if isinstance(identity, dict) else {}
     state.check("MATH-CHECK-023", identity.get("policy_digest") == digest, "policy_identity_digest_mismatch")
     target_ok = bundle.get("target_agent_id") == manifest.get("target_agent_id")
     if context.expected_target_agent_id is not None:
@@ -285,7 +289,8 @@ def _check_scope_and_identity(
 
 
 def _manifest_refs(manifest: dict[str, Any]) -> dict[str, str]:
-    artifact_paths = manifest.get("artifact_paths") if isinstance(manifest.get("artifact_paths"), dict) else {}
+    artifact_paths = manifest.get("artifact_paths")
+    artifact_paths = artifact_paths if isinstance(artifact_paths, dict) else {}
     refs = {
         "bundle": str(manifest.get("bundle_path") or BUNDLE_PATH),
         "ledger": str(manifest.get("ledger_export_path") or LEDGER_EXPORT_PATH),
@@ -293,7 +298,8 @@ def _manifest_refs(manifest: dict[str, Any]) -> dict[str, str]:
         "compatibility_scope": str(manifest.get("compatibility_scope_path") or COMPATIBILITY_SCOPE_PATH),
         "committed_output": str(artifact_paths.get("committed_output") or COMMITTED_OUTPUT_PATH),
     }
-    supplement = manifest.get("supplementary_paths") if isinstance(manifest.get("supplementary_paths"), list) else []
+    supplement = manifest.get("supplementary_paths")
+    supplement = supplement if isinstance(supplement, list) else []
     refs.update({f"supplementary:{index}": str(path) for index, path in enumerate(supplement)})
     return refs
 

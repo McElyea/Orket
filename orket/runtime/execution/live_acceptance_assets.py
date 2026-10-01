@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, NotRequired, TypedDict
 
 from orket.runtime.execution.live_acceptance_contracts import (
     SUM_DESIGN_NOTE,
@@ -12,6 +12,15 @@ from orket.runtime.execution.live_acceptance_contracts import (
 )
 
 _DIALECTS = ("qwen", "llama3", "deepseek-r1", "phi", "generic")
+
+
+class _AcceptanceIssue(TypedDict):
+    id: str
+    summary: str
+    seat: str
+    priority: str
+    depends_on: NotRequired[list[str]]
+    params: NotRequired[dict[str, object]]
 
 
 def _source_attribution_receipt_payload() -> str:
@@ -238,7 +247,7 @@ def _epic_payload(
         model_overrides["evidence_reviewer"] = environment_model
 
     review_dependencies = ["COD-1"]
-    issues = [
+    issues: list[_AcceptanceIssue] = [
         {"id": "REQ-1", "summary": "Write requirements", "seat": "requirements_analyst", "priority": "High"},
         {
             "id": "ARC-1",

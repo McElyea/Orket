@@ -1,6 +1,8 @@
 """Shared inventory for synchronous discovery entrypoints."""
 from __future__ import annotations
 
+from typing import cast
+
 import httpx
 
 from orket.logging import log_event
@@ -17,4 +19,4 @@ def installed_models() -> list[str]:
     except (httpx.HTTPError, OSError, ValueError, ProviderRuntimeWarmupError) as exc:
         log_event("provider_discovery_failed", {"provider": provider, "error_type": type(exc).__name__})
         return []
-    return [str(model) for model in payload["models"]]
+    return [str(model) for model in cast(list[str], payload["models"])]

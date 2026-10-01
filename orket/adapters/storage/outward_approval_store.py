@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import aiosqlite
 
@@ -41,7 +41,8 @@ class OutwardApprovalStore:
             cursor = await conn.execute("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'outward_approval_proposals'")
             if await cursor.fetchone() is not None:
                 cursor = await conn.execute("SELECT COUNT(*) FROM outward_approval_proposals")
-                if int((await cursor.fetchone())[0]):
+                # COUNT without grouping returns one row even for an empty table.
+                if int(cast(aiosqlite.Row, await cursor.fetchone())[0]):
                     raise RuntimeError("E_OUTWARD_OFFLINE_APPROVAL_MIGRATION_REQUIRED")
             await SQLiteMigrationRunner(namespace="outward_approvals").apply(conn, OUTWARD_APPROVAL_MIGRATIONS)
             await conn.commit()
@@ -85,7 +86,7 @@ class OutwardApprovalStore:
         cursor = await connection.execute(
             "SELECT COUNT(*) FROM outward_approval_proposals_v2 WHERE run_id = ?", (run_id,),
         )
-        return int((await cursor.fetchone())[0])
+        return int(cast(aiosqlite.Row, await cursor.fetchone())[0])
 
     async def update_decision(self, proposal: OutwardApprovalProposal, *, connection: aiosqlite.Connection) -> bool:
         cursor = await connection.execute(

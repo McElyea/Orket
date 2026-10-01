@@ -11,6 +11,7 @@ import sys
 import threading
 from contextlib import ExitStack
 from pathlib import Path
+from types import FrameType
 from typing import Any
 
 from orket.adapters.execution.extension_modules import load_extension_module
@@ -20,6 +21,7 @@ from orket.adapters.observability.logging_context import (
     native_logging_inputs,
     prepare_logging_native,
 )
+from orket.application.services.sdk_llm_provider import LocalModelCapabilityProvider
 from orket.extensions.import_guard import ExtensionImportGuard
 from orket.extensions.sdk_capability_authorization import (
     FIRST_SLICE_CAPABILITIES,
@@ -28,7 +30,7 @@ from orket.extensions.sdk_capability_authorization import (
     capability_family,
     revalidate_child_capabilities,
 )
-from orket.extensions.sdk_capability_runtime import build_governed_sdk_capability_registry
+from orket.extensions.sdk_capability_runtime import SdkCapabilityTracker, build_governed_sdk_capability_registry
 from orket.extensions.workload_artifacts import WorkloadArtifacts
 from orket.extensions.workload_loader import WorkloadLoader
 from orket_extension_sdk.result import WorkloadResult
@@ -84,7 +86,7 @@ class DeclaredStdlibImportHook(importlib.abc.MetaPathFinder):
             self._origin_inspection.active = False
 
     def _inspect_request_origin(self) -> bool:
-        frame = sys._getframe()
+        frame: FrameType | None = sys._getframe()
         while frame is not None:
             filename = frame.f_code.co_filename
             frame = frame.f_back
@@ -140,7 +142,7 @@ def _run_owned_request(request: dict[str, Any], resources: ExitStack) -> dict[st
         if str(item).strip()
     }
     context_or_failure = _build_context(extension, workload, context, request, resources)
-    if "ok" in context_or_failure:
+    if isinstance(context_or_failure, dict):
         return context_or_failure
     sdk_context, tracker = context_or_failure
 
@@ -222,18 +224,21 @@ def _build_context(
     context: dict[str, Any],
     request: dict[str, Any],
     resources: ExitStack,
-) -> tuple[WorkloadContext, Any] | dict[str, Any]:
+) -> tuple[WorkloadContext, SdkCapabilityTracker] | dict[str, Any]:
     workspace_root = Path(str(context["workspace_root"]))
     output_dir = Path(str(context["output_dir"]))
     input_config = dict(context.get("config", {}))
     envelope = SdkAuthorizationEnvelope.from_payload(dict(request["authorization_envelope"]))
     audit_case = SdkCapabilityAuditCase(**dict(request.get("audit_case") or {}))
+    def own_model_provider(provider: LocalModelCapabilityProvider) -> None:
+        resources.callback(provider.close)
+
     raw_registry = WorkloadArtifacts.build_sdk_capability_registry(
         workspace=workspace_root,
         artifact_root=output_dir,
         input_config=input_config,
         extension_id=str(extension["extension_id"]),
-        own_model_provider=lambda provider: resources.callback(provider.close),
+        own_model_provider=own_model_provider,
         admitted_capabilities=set(envelope.admitted_capabilities),
         extra_first_slice_capabilities={
             str(item).strip() for item in list(request.get("child_extra_capabilities", [])) if str(item).strip()

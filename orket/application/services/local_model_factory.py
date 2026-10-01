@@ -26,7 +26,7 @@ def create_local_model_provider(*args: Any, environment: Mapping[str, str] | Non
     directory, captured = capture_process_context(cwd=cwd, environment=environment)
     owner = http_client_owner if http_client_owner is not None else ProviderInferenceHttpService(
         environment=captured, cwd=directory)
-    def construct():
+    def construct() -> LocalModelProvider:
         return LocalModelProvider(*args, environment=captured, http_client_owner=owner,
             prompt_policy=LocalPromptingService(environment=captured),
             runtime_preparation=(runtime_preparation if runtime_preparation is not None

@@ -101,7 +101,8 @@ class EpicPreparationService:
                     continue
                 if record.phase in (3, 4):
                     return await self._export_and_promote(record, transaction)
-                steps = (self._closeout, self._receipts, self._summary)
+                steps: tuple[Callable[[EpicPreparationRecord], Awaitable[EpicPreparationRecord]], ...] = (
+                    self._closeout, self._receipts, self._summary)
                 updated = await steps[record.phase](record)
                 await transaction.save_preparation(updated.model_copy(update={"phase": record.phase + 1}))
 

@@ -67,7 +67,7 @@ class ToolBox:
         self.fs = FileSystemTools(self.root, self.refs, mutation_authority=self.workspace_mutations)
         self.governance = GovernanceTools(self.root, self.refs, cards=self.cards)
         self.academy = AcademyTools(self.root, self.refs)
-        self.reforger = ReforgerService(self.root, self.refs)
+        self.reforger = ReforgerService(self.root, tuple(self.refs))
 
     async def execute(
         self,

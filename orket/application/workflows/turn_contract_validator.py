@@ -6,7 +6,7 @@ from typing import Any
 
 from orket.application.services.guard_review_payload import guard_review_for_turn
 from orket.core.domain.execution import ExecutionTurn
-from orket.runtime.error_codes import (
+from orket.runtime.registry.error_codes import (
     ERR_JSON_MD_FENCE,
     ERR_THINK_OVERFLOW,
     EXTRANEOUS_TEXT,

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from orket.application.services.governed_agent_wake_commands import GovernedAgentWakeCommands, read_manual_wake_request
 
@@ -117,7 +117,7 @@ async def _enqueue_manual_wake(
             "next_lease_expiries_utc": list(args.next_lease_expires_at_utc),
         },
     }
-    payload["dispatch"]["request"] = await read_manual_wake_request(request_path)
+    cast(dict[str, object], payload["dispatch"])["request"] = await read_manual_wake_request(request_path)
     return await enqueue(payload)
 
 

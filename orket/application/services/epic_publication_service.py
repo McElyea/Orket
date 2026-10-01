@@ -12,6 +12,7 @@ from orket.application.services.epic_admission_service import EpicAdmissionServi
 from orket.application.services.epic_approval_recovery_service import validate_approval_recovery_artifacts
 from orket.application.services.epic_export_recovery_service import validate_published_export
 from orket.application.services.runtime_execution_result_service import published_execution_result
+from orket.application.services.runtime_store_binding_service import RuntimeStoreBindingService
 from orket.core.contracts.epic_publication import (
     EpicPublicationPlan,
     EpicPublicationRecord,
@@ -26,7 +27,8 @@ from orket.logging import log_event
 
 class EpicPublicationService:
     def __init__(self, *, repository: EpicPublicationRepository, cards: CardRepository, sessions: Any,
-                 snapshots: Any, success: Any, ledger: Any, control_plane: Any, scope: dict[str, Any], storage_binding=None):
+                 snapshots: Any, success: Any, ledger: Any, control_plane: Any, scope: dict[str, Any],
+                 storage_binding: RuntimeStoreBindingService | None = None):
         self.repository, self.cards, self.sessions = repository, cards, sessions
         self.snapshots, self.success, self.ledger = snapshots, success, ledger
         self.control_plane, self.scope = control_plane, scope
@@ -166,7 +168,7 @@ class EpicPublicationService:
             label="epic-success-publication")
         await self._verify_published(plan, snapshots)
         await run_owned_thread(partial(log_event, "orchestrator_epic_complete",
-            {"run_id": plan.session_id, "epic": plan.snapshot["epic"]["name"]}, workspace=Path(self.scope["workspace"])),
+            {"run_id": plan.session_id, "epic": self._success_snapshot(plan)["epic"]["name"]}, workspace=Path(self.scope["workspace"])),
             label="epic-complete-publication")
 
     async def _verify_published(self, plan: EpicPublicationPlan, snapshots: Any) -> None:
@@ -203,4 +205,10 @@ class EpicPublicationService:
     @staticmethod
     def _success_payload(plan: EpicPublicationPlan) -> dict[str, Any]:
         return {"session_id": plan.session_id, "success_type": "EPIC_COMPLETED",
-                "artifact_ref": f"build:{plan.snapshot['build_id']}", "human_ack": None}
+                "artifact_ref": f"build:{EpicPublicationService._success_snapshot(plan)['build_id']}", "human_ack": None}
+
+    @staticmethod
+    def _success_snapshot(plan: EpicPublicationPlan) -> dict[str, Any]:
+        if plan.snapshot is None:
+            raise ValueError("E_EPIC_PUBLICATION_SUCCESS_SNAPSHOT_REQUIRED")
+        return plan.snapshot

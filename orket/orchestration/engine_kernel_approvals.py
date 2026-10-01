@@ -3,13 +3,17 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from orket.application.services.kernel_action_input_service import capture_kernel_request
 from orket.application.services.kernel_invocation_service import invoke_kernel
 from orket.kernel.v1.nervous_system_runtime_extensions import decide_approval_v1, get_approval_v1, list_approvals_v1
 
+if TYPE_CHECKING:
+    from orket.orchestration.engine import OrchestrationEngine
+
 EnrichApproval = Callable[[dict[str, Any]], Awaitable[dict[str, Any]]]
+_ResultT = TypeVar("_ResultT")
 
 
 async def list_kernel_approvals(*, enrich: EnrichApproval, **filters: Any) -> list[dict[str, Any]]:
@@ -56,10 +60,12 @@ async def decide_kernel_approval(
     return await operation()
 
 
-async def run_engine_approval(engine, operation, /, *args, **kwargs):
+async def run_engine_approval(
+    engine: OrchestrationEngine, operation: Callable[..., Awaitable[_ResultT]], /, *args, **kwargs,
+) -> _ResultT:
     captured = capture_kernel_request({"args": list(args), "kwargs": kwargs})
 
-    async def admitted():
+    async def admitted() -> _ResultT:
         await engine.initialize()
         return await operation(engine, *captured["args"], **captured["kwargs"])
 

@@ -4,7 +4,7 @@ import json
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from orket.application.services.tool_parser import ToolParser
 from orket.core.contracts.protocol_hashing import (
@@ -172,7 +172,7 @@ def _build_turn(
 ) -> ExecutionTurn:
     partial = parsed.partial_error
     tool_calls = [
-        ToolCall(tool=item.get("tool"), args=item.get("args", {}), result=None, error=None)
+        ToolCall(tool=cast(str, item.get("tool")), args=item.get("args", {}), result=None, error=None)
         for item in parsed.parsed_calls
     ]
     return ExecutionTurn(

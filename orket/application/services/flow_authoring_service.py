@@ -199,10 +199,10 @@ class FlowAuthoringService:
         try:
             resolved = definition if isinstance(definition, FlowDefinitionWriteModel) else FlowDefinitionWriteModel.model_validate(definition)
         except ValidationError as exc:
-            errors = [f"{'.'.join(str(part) for part in item['loc'])}: {item['msg']}" for item in exc.errors()]
+            schema_errors = [f"{'.'.join(str(part) for part in item['loc'])}: {item['msg']}" for item in exc.errors()]
             return FlowValidationResult(
                 is_valid=False,
-                errors=errors,
+                errors=schema_errors,
                 warnings=[],
                 summary="Flow definition payload is invalid.",
                 reason_codes=["flow_authoring.validation_failed"],

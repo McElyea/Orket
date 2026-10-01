@@ -71,7 +71,7 @@ class _SdkProcessOwner:
         self.dispatched = self.retain = False
         self.phase = "prepare"
 
-    async def run(self, request_bytes, timeout_seconds):
+    async def run(self, request_bytes, timeout_seconds) -> SdkSubprocessRunResult:
         completed = False
         try:
             await run_owned_thread(lambda: self.exchange.prepare(request_bytes), label="sdk-exchange-prepare")
@@ -143,7 +143,7 @@ class _SdkProcessOwner:
             error.diagnostic_error = exc
         return error
 
-    async def _execute(self, timeout_seconds):
+    async def _execute(self, timeout_seconds) -> SdkSubprocessRunResult:
         self.phase, self.dispatched = "native-execution", True
         exchange = self.exchange
         supervisor = CommandProcessSupervisor(self.workspace, cancellation_event="sdk_workload_process_cancelled")

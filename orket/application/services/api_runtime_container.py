@@ -7,6 +7,8 @@ from typing import Any, ClassVar
 
 from orket.adapters.observability.logging_context import PreparedLogging, bind_logging
 from orket.application.interactions.commands import InteractionCommands
+from orket.application.interactions.manager import InteractionManager
+from orket.application.services.api_authentication_service import ApiAuthenticationService
 from orket.application.services.api_event_service import ApiEventService
 from orket.application.services.application_runtime_lifetime import (
     ApplicationRuntimeLifetime,
@@ -35,11 +37,11 @@ class ApiRuntimeContainer(ApplicationRuntimeLifetime):
     engine: Any
     logging_context: PreparedLogging
     events: ApiEventService = field(init=False)
-    authentication: Any | None = None
+    authentication: ApiAuthenticationService | None = None
     system_queries: Any | None = None
     run_queries: Any | None = None
     stream_bus: Any | None = None
-    interaction_manager: Any | None = None
+    interaction_manager: InteractionManager | None = None
     extension_manager: Any | None = None
     extension_runtime_service: Any | None = None
     outward_run_store: Any | None = None
@@ -59,12 +61,18 @@ class ApiRuntimeContainer(ApplicationRuntimeLifetime):
 
     def interaction_cancellation(self) -> InteractionCancellationService:
         return InteractionCancellationService(
-            manager=self.interaction_manager, publication=self.engine.control_plane_publication,
+            manager=self._require_interaction_manager(), publication=self.engine.control_plane_publication,
             utc_now=self.api_runtime_host.utc_now_iso,
         )
 
     def interactions(self) -> InteractionCommands:
-        return InteractionCommands(self.interaction_manager, self.extension_manager, self, self.project_root)
+        return InteractionCommands(self._require_interaction_manager(), self.extension_manager, self, self.project_root)
+
+    def _require_interaction_manager(self) -> InteractionManager:
+        manager = self.interaction_manager
+        if manager is None:
+            raise RuntimeError("API interaction manager is not configured.")
+        return manager
 
     async def observe_runtime_policy(self, *, environment: Mapping[str, str], invocation_root: Path) -> RuntimePolicySnapshot:
         """Own the request's selected policy service while its native reads settle."""

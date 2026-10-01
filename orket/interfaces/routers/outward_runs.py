@@ -1,7 +1,7 @@
 """API transport over the existing application query and lifetime owners."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from fastapi import APIRouter, Body, HTTPException, Query
 
@@ -30,7 +30,8 @@ def build_outward_runs_router(
             raise HTTPException(status_code=409, detail=str(exc)) from exc
         except RuntimeError as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
-        return outbound_filter(await runtime_getter().outward_run_service.status_payload(record.run_id), surface="api.runs.submit")
+        return cast(dict[str, Any], outbound_filter(
+            await runtime_getter().outward_run_service.status_payload(record.run_id), surface="api.runs.submit"))
 
     @router.get("/runs")
     async def list_runs(

@@ -20,6 +20,7 @@ from orket.application.services.tool_parser import ToolParser
 from orket.core.contracts import EffectJournalEntryRecord
 from orket.core.domain import ResidualUncertaintyClassification
 from orket.core.domain.execution import ExecutionTurn, ToolCall, ToolCallErrorClass
+from orket.core.policies.tool_gate import ToolGateValidator
 from orket.exceptions import AgentConfigurationError, CardNotFound
 from orket.logging import log_event
 from orket.runtime import ConfigLoader
@@ -28,7 +29,6 @@ from orket.time_utils import utc_now_datetime
 from orket.utils import sanitize_name
 
 logger = logging.getLogger(__name__)
-
 
 class ModelProvider(Protocol):
     @property
@@ -94,7 +94,7 @@ class Agent:
         next_member: str | None = None,
         prompt_patch: str | None = None,
         config_root: Path | None = None,
-        tool_gate: Any | None = None,
+        tool_gate: ToolGateValidator | None = None,
         strict_config: bool = True,
         journal: ControlPlaneAuthorityService | NullControlPlaneAuthorityService | None = None,
         turn_clock: Callable[[], datetime] = utc_now_datetime,
@@ -116,7 +116,7 @@ class Agent:
         self.strict_config = bool(strict_config)
         if journal is None or isinstance(journal, NullControlPlaneAuthorityService):
             logger.warning("agent_effect_journaling_disabled", extra={"agent": self.name})
-            self.journal = journal or NullControlPlaneAuthorityService()
+            self.journal: ControlPlaneAuthorityService | NullControlPlaneAuthorityService = journal or NullControlPlaneAuthorityService()
         else:
             self.journal = journal
 

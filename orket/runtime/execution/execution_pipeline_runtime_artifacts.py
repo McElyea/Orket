@@ -8,10 +8,10 @@ from typing import TYPE_CHECKING, Any
 
 import aiofiles
 
-from orket.adapters.execution.owned_io import run_owned_io, run_owned_thread
+from orket.adapters.execution.owned_io import OwnedCoroutine, run_owned_io, run_owned_thread
 from orket.adapters.storage.async_file_tools import capture_file_roots
 from orket.core.cards_runtime_contract import normalize_scenario_truth_alignment, summarize_cards_runtime_issues
-from orket.runtime.phase_c_runtime_truth import collect_phase_c_packet2_facts
+from orket.runtime.execution.phase_c_runtime_truth import collect_phase_c_packet2_facts
 from orket.utils import sanitize_name
 
 if TYPE_CHECKING:
@@ -137,8 +137,11 @@ class ExecutionPipelineRuntimeArtifactsMixin:
         )
         selected: dict[str, Any] = {}
         for path in candidate_paths:
+            def read_candidate(path: Path = path) -> OwnedCoroutine[dict[str, Any] | None]:
+                return _read_optional_json(path)
+
             payload = await run_owned_io(
-                lambda path=path: _read_optional_json(path), label="packet1-response-read",
+                read_candidate, label="packet1-response-read",
                 preserve_failure=True,
             )
             if not isinstance(payload, dict):

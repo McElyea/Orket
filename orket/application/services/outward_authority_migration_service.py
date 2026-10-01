@@ -79,7 +79,7 @@ class OutwardAuthorityMigrationService:
                                                cause=cause, adoption=adoption)
             return await outward_status_payload(transaction, run)
 
-    async def _existing(self, transaction, snapshot, adoption, expected_run_digest, actor_ref):
+    async def _existing(self, transaction, snapshot, adoption, expected_run_digest, actor_ref) -> dict:
         if (adoption.event_type != OUTWARD_AUTHORITY_ADOPTION_EVENT
                 or adoption.payload.get("actor_ref") != actor_ref
                 or adoption.payload.get("reviewed_run_digest") != expected_run_digest):

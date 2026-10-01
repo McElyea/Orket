@@ -91,7 +91,7 @@ class ScopedMemoryRepository:
         async with connect_sqlite_wal(self.db_path) as connection, connection.execute(sql, args) as cursor:
             return [tuple(row) for row in await cursor.fetchall()]
 
-    async def clear(self, *, scope, session_id):
+    async def clear(self, *, scope, session_id) -> int:
         table, columns, identity = _identity(scope, session_id, "")
         sql = f"DELETE FROM {table} WHERE " + " AND ".join(f"{column} = ?" for column in columns[:-1])
         async with self.transaction() as connection, connection.execute(sql, identity[:-1]) as cursor:

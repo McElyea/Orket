@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from contextlib import nullcontext
+from typing import TYPE_CHECKING
 
 from orket.application.services.epic_admission_service import EpicAdmissionService
 from orket.application.services.runtime_execution_observation import shield_observation, unfinished_execution_result
@@ -13,6 +14,9 @@ from orket.core.contracts.runtime_execution_result import RuntimeExecutionResult
 from orket.exceptions import ApprovalPending, CardNotFound, ComplexityViolation, ExecutionFailed
 from orket.runtime.execution.epic_run_approval import restore_approval_context, retain_approval_pause
 from orket.runtime.execution.epic_run_support import build_legacy_transcript
+
+if TYPE_CHECKING:
+    from orket.runtime.execution.epic_run_orchestrator import EpicRunOrchestrator
 
 logger = logging.getLogger(__name__)
 
@@ -41,13 +45,15 @@ async def run_with_result(owner, setup, recovery_request, export_request, approv
         return result
 
 
-async def _observe(owner, setup, observation, reason):
+async def _observe(owner, setup, observation, reason) -> RuntimeExecutionResult | None:
     return await unfinished_execution_result(publication=owner.publication, session_id=setup.run_id,
         request=setup.publication_request, observation=observation, reason=reason,
         transcript=build_legacy_transcript(owner.orchestrator.transcript))
 
 
-async def _recover_or_execute(owner, setup, recovery_request, export_request, approval_request):
+async def _recover_or_execute(
+    owner: EpicRunOrchestrator, setup, recovery_request, export_request, approval_request,
+) -> RuntimeExecutionResult:
     observed_grant = False
     if approval_request is not None:
         if owner.approval_pauses is None:

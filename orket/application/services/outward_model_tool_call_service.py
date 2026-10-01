@@ -16,7 +16,7 @@ from orket.application.services.outward_model_observability import (
 )
 from orket.application.services.outward_run_execution_plan import current_step_index, previous_tool_results
 from orket.application.services.process_input_service import capture_process_context
-from orket.application.services.runtime_result_lifetime import create_runtime_owner
+from orket.application.services.runtime_result_lifetime import RuntimeOwner, create_runtime_owner
 from orket.core.domain.outward_runs import OutwardRunRecord
 from orket.exceptions import ModelProviderError
 
@@ -25,7 +25,7 @@ class OutwardModelToolCallError(RuntimeError):
     pass
 
 
-class OutwardModelClient(Protocol):
+class OutwardModelClient(RuntimeOwner, Protocol):
     async def complete(self, messages: list[dict[str, str]], runtime_context: dict[str, Any] | None = None) -> Any: ...
 
 

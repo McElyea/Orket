@@ -3,14 +3,19 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from typing import TypeVar
 
+from orket.adapters.execution.owned_io import OwnedCoroutine
 from orket.core.contracts.control_plane_models import RunRecord
 from orket.core.contracts.runtime_execution_result import RuntimeExecutionResult
 
 logger = logging.getLogger(__name__)
+_ResultT = TypeVar("_ResultT")
 
 
-async def unfinished_execution_result(*, publication, session_id, request, observation, reason, transcript=()):
+async def unfinished_execution_result(
+    *, publication, session_id, request, observation, reason, transcript=(),
+) -> RuntimeExecutionResult | None:
     references = []
     run = truth = None
     try:
@@ -55,7 +60,7 @@ async def unfinished_execution_result(*, publication, session_id, request, obser
         run=run, final_truth=truth, evidence_refs=tuple(references), reason=reason, transcript=tuple(transcript))
 
 
-async def shield_observation(awaitable):
+async def shield_observation(awaitable: OwnedCoroutine[_ResultT]) -> _ResultT:
     """Repeated caller cancellation must not abandon the evidence reader."""
     task = asyncio.create_task(awaitable)
     while not task.done():

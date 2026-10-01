@@ -3,7 +3,7 @@ import asyncio
 import re
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 from urllib.parse import urlsplit
 
 from orket.adapters.execution.owned_io import run_owned_io, run_owned_thread
@@ -32,6 +32,7 @@ async def create_project_vendor(
     values = tuple(config.get(key) for key in ("url", "token", "owner", "repo"))
     if any(not isinstance(value, str) or not value.strip() for value in values):
         raise ValueError("E_VENDOR_GITEA_CONFIGURATION_REQUIRED")
+    values = cast(tuple[str, ...], values)
     url, _, owner, repo = values
     try:
         address = urlsplit(url)

@@ -1,10 +1,11 @@
 """API transport over the existing application query and lifetime owners."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from fastapi import APIRouter, HTTPException
 
+from orket.application.services.api_run_query_service import ApiRunQueryService
 from orket.application.services.execution_graph_service import (
     execution_graph_payload,
     inspect_execution_graph,
@@ -39,7 +40,8 @@ class RunHistoryEndpoints:
     async def get_run_detail(self, session_id: str) -> dict[str, Any]:
         outward_record = await self._runtime().outward_run_service.get_status(session_id)
         if outward_record is not None:
-            return self._filter(await self._runtime().outward_run_service.status_payload(outward_record.run_id), surface="api.runs.status")
+            return cast(dict[str, Any], self._filter(
+                await self._runtime().outward_run_service.status_payload(outward_record.run_id), surface="api.runs.status"))
 
         runtime_engine = self._runtime().engine
         run_record = await runtime_engine.run_ledger.get_run(session_id)
@@ -69,7 +71,7 @@ class RunHistoryEndpoints:
             "session": session,
             "run_ledger": projected_run_record,
         }
-        return self._filter(payload, surface="api.runs.status")
+        return cast(dict[str, Any], self._filter(payload, surface="api.runs.status"))
 
     async def get_run_metrics(self, session_id: str) -> Any:
         await self._runtime().events.emit("api_run_metrics", {"session_id": session_id})
@@ -87,7 +89,7 @@ class RunHistoryEndpoints:
             raise HTTPException(status_code=404, detail=f"Run '{session_id}' not found")
 
         try:
-            return await self._runtime().run_queries.token_summary(session_id)
+            return await cast(ApiRunQueryService, self._runtime().run_queries).token_summary(session_id)
         except PermissionError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 

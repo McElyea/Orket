@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from fastapi import FastAPI, HTTPException, Query, Request
 from pydantic import BaseModel, ConfigDict
@@ -72,9 +72,10 @@ def create_coordinator_app(
     return app
 
 
-async def _perform(request: Request, operation: str, **values):
+async def _perform(request: Request, operation: str, **values) -> CoordinatorCardResponse | list[CoordinatorCardResponse]:
     try:
-        return await request.app.state.coordinator.execute(operation, **values)
+        coordinator = cast(CoordinatorRuntimeService, request.app.state.coordinator)
+        return await coordinator.execute(operation, **values)
     except CoordinatorUnavailableError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     except CoordinatorStoreError as exc:
@@ -88,20 +89,24 @@ async def _perform(request: Request, operation: str, **values):
 async def get_cards(request: Request, state: str = Query(default="open")) -> list[CoordinatorCardResponse]:
     if state.lower() != "open":
         raise HTTPException(status_code=400, detail='only "open" supported')
-    return await _perform(request, "list")
+    return cast(list[CoordinatorCardResponse], await _perform(request, "list"))
 
 
 async def claim_card(id: str, payload: ClaimRequest, request: Request) -> CoordinatorCardResponse:
-    return await _perform(request, "claim", card_id=id, node_id=payload.node_id, lease_duration=payload.lease_duration)
+    return cast(CoordinatorCardResponse, await _perform(request, "claim", card_id=id, node_id=payload.node_id,
+                                                       lease_duration=payload.lease_duration))
 
 
 async def renew_card(id: str, payload: RenewRequest, request: Request) -> CoordinatorCardResponse:
-    return await _perform(request, "renew", card_id=id, node_id=payload.node_id, lease_duration=payload.lease_duration)
+    return cast(CoordinatorCardResponse, await _perform(request, "renew", card_id=id, node_id=payload.node_id,
+                                                       lease_duration=payload.lease_duration))
 
 
 async def complete_card(id: str, payload: CompleteRequest, request: Request) -> CoordinatorCardResponse:
-    return await _perform(request, "complete", card_id=id, node_id=payload.node_id, result=payload.result)
+    return cast(CoordinatorCardResponse, await _perform(request, "complete", card_id=id, node_id=payload.node_id,
+                                                       result=payload.result))
 
 
 async def fail_card(id: str, payload: FailRequest, request: Request) -> CoordinatorCardResponse:
-    return await _perform(request, "fail", card_id=id, node_id=payload.node_id, result=payload.result)
+    return cast(CoordinatorCardResponse, await _perform(request, "fail", card_id=id, node_id=payload.node_id,
+                                                       result=payload.result))

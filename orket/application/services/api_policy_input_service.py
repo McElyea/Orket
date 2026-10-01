@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from types import MappingProxyType
-from typing import Any
+from typing import Any, cast
 
 from orket_extension_sdk import FrozenJson
 
@@ -32,7 +32,8 @@ def admit_api_bool(value: Any) -> bool:
 def capture_json_object(value: Any) -> dict[str, Any]:
     if not isinstance(value, dict) or any(type(key) is not str for key in value):
         raise ValueError("E_API_POLICY_INVALID_OBJECT")
-    return FrozenJson.freeze(value).thaw()
+    # The validated object root is preserved by the immutable JSON round trip.
+    return cast(dict[str, Any], FrozenJson.freeze(value).thaw())
 
 
 def capture_api_invocation(value: Any) -> dict[str, Any]:

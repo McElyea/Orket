@@ -45,7 +45,7 @@ class ExecutionPipelineResumeMixin:
                     target=entry["epic"], build_id=f"{active_build}-member-{index}", session_id=f"{sid}-member-{index}",
                     execution={"driver_steered": driver_steered, "model_override": model_override})
             except RuntimeExecutionCancelled as exc:
-                results.append(RuntimeCollectionMember(target=entry["epic"], result=exc.result))
+                results.append(RuntimeCollectionMember.model_validate({"target": entry["epic"], "result": exc.result}))
                 raise RuntimeExecutionCancelled(RuntimeCollectionResult(session_id=sid, build_id=active_build,
                     collection=collection.name, expected_members=tuple(entry["epic"] for entry in collection.epics),
                     members=tuple(results), reason="Collection interrupted")) from exc

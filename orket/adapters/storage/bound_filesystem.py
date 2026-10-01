@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -50,7 +51,8 @@ def _execute(binding: OutwardAuthorization, args: dict[str, Any]) -> dict[str, A
         return {"ok": False, "error": str(exc)}
 
 
-def _operate(tool, args, target, descriptor, delete):
+def _operate(tool: str, args: dict[str, Any], target: Path, descriptor: int,
+             delete: Callable[[], None]) -> dict[str, Any]:
     if tool == "read_file":
         with os.fdopen(os.dup(descriptor), "r", encoding="utf-8") as stream:
             return {"ok": True, "content": stream.read()}

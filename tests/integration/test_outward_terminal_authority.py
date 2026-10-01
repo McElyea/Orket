@@ -7,7 +7,10 @@ import asyncio
 import pytest
 
 from orket.adapters.storage.outward_store_transaction import OutwardStoreTransaction
+from orket.application.services.control_plane_closeout_evidence import read_terminal_truth
+from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.core.domain import AttemptState, RunState
+from orket.core.domain.control_plane_final_truth import ControlPlaneFinalTruthError
 from tests.helpers.outward_authorization import (
     append_command,
     approve,
@@ -18,6 +21,25 @@ from tests.helpers.outward_authorization import (
 from tests.helpers.outward_authorization import boundary as boundary
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
+
+
+@pytest.mark.parametrize("attempt_id", [None, "missing-attempt"])
+# Layer: integration
+async def test_closeout_without_current_attempt_refuses_retained_success(tmp_path, boundary, attempt_id):
+    _, inputs, calls = boundary
+    async with outward_api(tmp_path, inputs) as (client, context):
+        proposal = await submit_sequence(client, calls[:1])
+        assert (await approve(client, proposal)).status_code == 200
+        async with context.outward_approval_service.unit_of_work.transaction() as transaction:
+            cp = transaction.control_plane
+            run = await cp.execution.get_run_record(run_id="bt0-run")
+            publication = ControlPlanePublicationService(repository=cp.records)
+            attempt, truth = await read_terminal_truth(cp.execution, publication, run)
+            assert attempt.attempt_id == run.current_attempt_id and truth.result_class.value == "success"
+            with pytest.raises(ControlPlaneFinalTruthError, match="attempt_identity"):
+                await read_terminal_truth(cp.execution, publication, run.model_copy(update={"current_attempt_id": attempt_id}))
+            assert await cp.execution.get_run_record(run_id=run.run_id) == run
+            assert await cp.records.get_final_truth(run_id=run.run_id) == truth
 
 
 @pytest.mark.parametrize("corruption", ["run_state", "attempt_state", "end_timestamp", "step_result", "step_inputs"])

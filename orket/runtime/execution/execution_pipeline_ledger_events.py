@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any
 from orket.adapters.execution.owned_io import run_owned_io
 from orket.adapters.storage.async_file_tools import capture_file_roots
 from orket.logging import log_event
-from orket.runtime.protocol_receipt_materializer import materialize_protocol_receipts
+from orket.runtime.evidence.protocol_receipt_materializer import materialize_protocol_receipts
 
 
 class ExecutionPipelineLedgerEventsMixin:

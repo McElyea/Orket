@@ -1,6 +1,7 @@
 """Capture prompt command inputs before owning the complete model-file operation."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from copy import deepcopy
 from dataclasses import dataclass, field
 from datetime import date
@@ -37,7 +38,7 @@ class PromptAssetService:
     def _execute(self, operation: str, options: dict[str, Any], anchor: date) -> Any:
         store = PromptAssetStore(self.root)
         commands = PromptAssetCommands(store, anchor)
-        handlers = {"list": commands.list, "show": commands.show, "lint": commands.lint,
+        handlers: dict[str, Callable[..., dict[str, Any] | list[dict[str, Any]]]] = {"list": commands.list, "show": commands.show, "lint": commands.lint,
                     "resolve": commands.resolve, "update": commands.update,
                     "stale": commands.stale, "enforce_sla": commands.enforce_sla}
         if operation not in handlers:

@@ -5,7 +5,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from orket.application.services.control_plane_closeout_evidence import read_terminal_truth, require_closeout_evidence
-from orket.core.contracts import RunRecord, StepRecord
+from orket.core.contracts import AttemptRecord, RunRecord, StepRecord
 from orket.core.domain import (
     AttemptState,
     AuthoritySourceClass,
@@ -63,7 +63,7 @@ async def read_review_terminal(owner: ReviewRunControlPlaneService, run: RunReco
 async def finalize_review_run(
     owner: ReviewRunControlPlaneService, *, run_id: str, failed: bool, failure_class: str,
     preserve_terminal: bool = False,
-):
+) -> tuple[RunRecord, AttemptRecord]:
     run = await owner._require_run(run_id=run_id)
     attempt, truth = await read_review_terminal(owner, run)
     failure_class = str(failure_class or "review_run_failed")[:200] if failed else ""

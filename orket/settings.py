@@ -8,7 +8,7 @@ import os
 import threading
 from collections.abc import Coroutine, Mapping
 from pathlib import Path
-from typing import Any, TypeVar
+from typing import Any, TypeVar, cast
 
 from dotenv import dotenv_values
 
@@ -125,7 +125,8 @@ async def load_user_settings_async() -> dict[str, Any]:
 def load_user_settings() -> dict[str, Any]:
     snapshot = _RUNTIME_USER_SETTINGS.get()
     if snapshot is not None:
-        return json.loads(snapshot)
+        # Context snapshots are produced only by the dict-validating _encode.
+        return cast(dict[str, Any], json.loads(snapshot))
     return _run_settings_sync(load_user_settings_async(), operation="load_user_settings")
 
 
@@ -138,8 +139,8 @@ def _collect_runtime_settings(
         return json.loads(settings), json.loads(preferences)
     source = UserSettingsService(_capture_location())
     if persisted_after_preferences:
-        preferences = source.read_preferences()
-        return source.read_settings(), preferences
+        persisted_preferences = source.read_preferences()
+        return source.read_settings(), persisted_preferences
     return (
         json.loads(settings) if settings is not None else source.read_settings(),
         json.loads(preferences) if preferences is not None else source.read_preferences(),
@@ -192,7 +193,8 @@ async def load_user_preferences_async() -> dict[str, Any]:
 def load_user_preferences() -> dict[str, Any]:
     snapshot = _RUNTIME_USER_PREFERENCES.get()
     if snapshot is not None:
-        return json.loads(snapshot)
+        # Context snapshots are produced only by the dict-validating _encode.
+        return cast(dict[str, Any], json.loads(snapshot))
     return _run_settings_sync(load_user_preferences_async(), operation="load_user_preferences")
 
 

@@ -14,6 +14,8 @@ from orket.adapters.storage.async_file_tools import capture_file_roots
 from orket.adapters.storage.epic_approval_pause_store import EpicApprovalPauseStore
 from orket.adapters.storage.epic_export_dispatch_store import EpicExportDispatchStore
 from orket.adapters.storage.sqlite_connection import connect_sqlite_wal
+from orket.core.contracts.epic_approval_pause import EpicApprovalPauseTransaction
+from orket.core.contracts.epic_export_recovery import EpicExportDispatchTransaction
 from orket.core.contracts.epic_publication import (
     EpicPreparationRecord,
     EpicPublicationRecord,
@@ -34,8 +36,8 @@ class SQLiteEpicPublicationTransaction:
 
     def __init__(self, connection: aiosqlite.Connection, session_id: str):
         self.connection, self.session_id = connection, session_id
-        self.approval_pauses = EpicApprovalPauseStore(connection, session_id)
-        self.export_dispatch = EpicExportDispatchStore(connection, session_id)
+        self.approval_pauses: EpicApprovalPauseTransaction = EpicApprovalPauseStore(connection, session_id)
+        self.export_dispatch: EpicExportDispatchTransaction = EpicExportDispatchStore(connection, session_id)
 
     async def get(self) -> EpicPublicationRecord | None:
         return await self._load("epic_publications", EpicPublicationRecord, "PUBLICATION")

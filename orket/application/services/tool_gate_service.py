@@ -35,7 +35,7 @@ class ToolGate:
     ) -> str | None:
         context = context or {}
         captured_args, captured_roles = deepcopy(args), list(roles)
-        captured_context = {
+        captured_context: dict[str, Any] = {
             key: context.get(key)
             for key in (
                 "role",

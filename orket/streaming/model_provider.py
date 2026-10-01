@@ -187,7 +187,7 @@ def _initial_events(turn_id: str, model_id: str) -> list[ProviderEvent]:
 _PROVIDER_ERRORS = (RuntimeError, ValueError, TypeError, KeyError, OSError, httpx.HTTPError)
 
 
-async def _real_turn(provider, req):
+async def _real_turn(provider, req) -> AsyncIterator[ProviderEvent]:
     turn_id = f"provider-turn-{uuid.uuid4().hex[:12]}"
     async with provider._lock:
         provider._canceled[turn_id] = asyncio.Event()

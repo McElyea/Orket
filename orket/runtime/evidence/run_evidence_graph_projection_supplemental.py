@@ -17,7 +17,7 @@ from orket.runtime.evidence.run_evidence_graph_projection_support import (
     source_summary,
 )
 from orket.runtime.evidence.run_ledger_projection import project_run_ledger_record
-from orket.runtime.run_summary import validate_run_summary_payload
+from orket.runtime.summary.run_summary import validate_run_summary_payload
 
 
 @dataclass(slots=True)

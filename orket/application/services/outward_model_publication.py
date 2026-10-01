@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from typing import Any
+from typing import Any, cast
 
 from orket.adapters.storage.outward_store_transaction import OutwardStoreTransaction
 from orket.application.services.outward_approval_service import redacted_args_preview
@@ -124,7 +124,9 @@ async def policy_reject(
         await append_new_event(transaction, event)
     return await publish_outward_terminal(
         transaction, run_with_rejection, at=at, reason=reason, outcome="policy_rejected",
-        cause=await transaction.get_event(step_event_id(run.run_id, run.current_turn, 350, f"proposal_policy_rejected:{tool}")),
+        # This writer transaction just appended the rejection event.
+        cause=cast(LedgerEvent, await transaction.get_event(
+            step_event_id(run.run_id, run.current_turn, 350, f"proposal_policy_rejected:{tool}"))),
     )
 
 

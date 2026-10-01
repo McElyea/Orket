@@ -37,15 +37,15 @@ def core_acceptance_runtime_contract(issue_id: str, definition: dict[str, Any]) 
 
 
 def _artifact_definition(workload_id: str, cases: list[dict[str, Any]]) -> dict[str, Any]:
-    return ArtifactAcceptance(
+    return ArtifactAcceptance.model_validate(dict(
         schema_version="card_artifact_acceptance.v1", acceptance_ref=f"{workload_id}.acceptance.v1",
         policy_ref="tiny-summation-artifacts.v1", workload_id=workload_id,
         artifact_paths=tuple(sorted({case["path"] for case in cases})), cases=tuple(cases),
-    ).model_dump(mode="json")
+    )).model_dump(mode="json")
 
 
 def _sum_definition(workload_id: str) -> dict[str, Any]:
-    return PythonCliAcceptance(
+    return PythonCliAcceptance.model_validate(dict(
         acceptance_ref=f"{workload_id}.acceptance.v1", policy_ref="two-integer-summation.v1", workload_id=workload_id,
         entrypoint="agent_output/main.py",
         artifact_paths=("agent_output/main.py", "agent_output/requirements.txt", "agent_output/design.txt"),
@@ -55,7 +55,7 @@ def _sum_definition(workload_id: str) -> dict[str, Any]:
                         ("negative", "Sum integers with opposing signs", ("-5", "2"), "-3"),
                         ("zero", "Sum zeros", ("0", "0"), "0"),
                     )),
-    ).model_dump(mode="json")
+    )).model_dump(mode="json")
 
 
 def core_acceptance_definitions(*, source_attribution_json: str) -> dict[str, dict[str, Any]]:

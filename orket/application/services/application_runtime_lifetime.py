@@ -8,7 +8,7 @@ from collections.abc import Awaitable, Callable
 from contextvars import ContextVar
 from dataclasses import dataclass, field
 from functools import partial
-from typing import Any, ClassVar
+from typing import Any, ClassVar, cast
 
 from orket.adapters.execution.owned_io import run_owned_diagnostic
 from orket.application.services.command_process_supervisor import CommandProcessCancelled
@@ -106,7 +106,7 @@ class ApplicationRuntimeLifetime(ABC):
         # retains the complete supporting attempt while teardown waits for it.
         self._background_failure = self._background_failure or failure
         await run_owned_diagnostic(partial(diagnose, "Application background task failed",
-            extra={"task_name": asyncio.current_task().get_name()},
+            extra={"task_name": cast(asyncio.Task[object], asyncio.current_task()).get_name()},
             exc_info=(type(failure), failure, failure.__traceback__)), primary=failure)
         return _RequestOutcome(failure, diagnosed=True)
 

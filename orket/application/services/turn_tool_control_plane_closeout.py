@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import cast
+
 from orket.application.services.control_plane_authority_service import ControlPlaneAuthorityService
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.turn_tool_control_plane_resource_lifecycle import (
@@ -177,7 +179,7 @@ async def finalize_turn_execution(
     await require_resolved_tool_dispatches(execution_repository, publication.repository, run, error_type)
     existing_truth = await publication.repository.get_final_truth(run_id=run.run_id)
     if validate_terminal_record_consistency(run, attempt, existing_truth):
-        return run, attempt, existing_truth
+        return run, attempt, cast(FinalTruthRecord, existing_truth)
     await require_turn_dispatch_contract(publication.repository, run, error_type)
 
     ensure_current_execution_target(

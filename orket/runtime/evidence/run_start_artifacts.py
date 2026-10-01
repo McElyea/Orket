@@ -6,13 +6,13 @@ from pathlib import Path
 from typing import Any
 
 from orket.adapters.storage.run_start_publication import publish_run_start_directory
-from orket.runtime.contract_bootstrap import (
+from orket.runtime.evidence.run_start_contract_artifacts import CONTRACT_SNAPSHOT_DEFS
+from orket.runtime.evidence.workspace_snapshot import capture_workspace_state_snapshot
+from orket.runtime.registry.contract_bootstrap import (
     RuntimeContractSnapshots,
     load_runtime_contract_snapshots,
     write_runtime_contract_snapshots,
 )
-from orket.runtime.evidence.run_start_contract_artifacts import CONTRACT_SNAPSHOT_DEFS
-from orket.runtime.evidence.workspace_snapshot import capture_workspace_state_snapshot
 from orket.utils import sanitize_name
 
 _DETERMINISM_RANK = {

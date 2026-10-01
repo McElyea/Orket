@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from orket.runtime.compact_turn_packet import compact_turn_messages
+from orket.runtime.config.compact_turn_packet import compact_turn_messages
 from orket.schema import IssueConfig, RoleConfig
 
 from .turn_artifact_destination import TurnArtifactDestination

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from orket.runtime.module_registry import (
+from orket.runtime.registry.module_registry import (
     ensure_capability_enabled,
     ensure_module_enabled,
     resolve_module_profile,

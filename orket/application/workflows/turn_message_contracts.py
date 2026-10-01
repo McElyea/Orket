@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import json
-from typing import Any
+from typing import Any, cast
 
 from orket.runtime.config.turn_prompt_contracts import runtime_verifier_prompt_enabled
 
@@ -10,7 +10,7 @@ from .turn_artifact_destination import TurnArtifactDestination
 from .turn_artifact_semantic_prompt_hints import artifact_semantic_exact_shape_hints
 
 
-def append_artifact_contract(messages: list[dict[str, str]], context: dict[str, Any], artifact_contract: Any) -> None:
+def append_artifact_contract(messages: list[dict[str, str]], context: dict[str, Any], artifact_contract: Any | None) -> None:
     profile_traits = context.get("profile_traits")
     profile_traits = dict(profile_traits) if isinstance(profile_traits, dict) else {}
     artifact_contract_allowed = bool(profile_traits.get("artifact_contract_required", True))
@@ -97,10 +97,11 @@ def append_scenario_contract(
         messages.append({"role": "user", "content": "Scenario Truth Contract:\n" + "\n".join(scenario_lines)})
 
 
-def append_verifier_contract(messages: list[dict[str, str]], context: dict[str, Any], artifact_contract: Any) -> None:
+def append_verifier_contract(messages: list[dict[str, str]], context: dict[str, Any], artifact_contract: Any | None) -> None:
     runtime_verifier_contract = context.get("runtime_verifier_contract")
     runtime_verifier_contract = dict(runtime_verifier_contract) if isinstance(runtime_verifier_contract, dict) else {}
     if runtime_verifier_prompt_enabled(context):
+        artifact_contract = cast(dict[str, Any], artifact_contract)
         entrypoint_path = str(artifact_contract.get("entrypoint_path") or "").strip()
         artifact_kind = str(artifact_contract.get("kind") or "").strip().lower()
         verifier_lines: list[str] = []

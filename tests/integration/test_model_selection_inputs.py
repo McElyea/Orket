@@ -120,10 +120,11 @@ async def test_score_report_is_reobserved_by_new_preparation(tmp_path):
 
 
 # Layer: integration
-async def test_partial_score_report_rejects_nonfinite_rows_and_retains_valid_scores(tmp_path, caplog):
+@pytest.mark.parametrize("invalid_score", [float("nan"), None])
+async def test_partial_score_report_rejects_invalid_rows_and_retains_valid_scores(tmp_path, caplog, invalid_score):
     path = tmp_path / "scores.json"
     await asyncio.to_thread(path.write_text, json.dumps({"model_compliance": {
-        "candidate": {"compliance_score": float("nan")}, "other": {"compliance_score": 10}}}))
+        "candidate": {"compliance_score": invalid_score}, "other": {"compliance_score": 10}}}))
     prepared = await module.ModelSelectionService(environment={}).prepare(
         preferences={"models": {"coder": "candidate", "reviewer": "other"}}, user_settings={
             "model_compliance_policy": {"min_score": 85, "score_source": str(path), "fallback_model": "fallback"}})

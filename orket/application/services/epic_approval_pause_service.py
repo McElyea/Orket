@@ -146,7 +146,7 @@ class EpicApprovalPauseService:
                 raise ValueError("E_EPIC_APPROVAL_CLAIM_UNCONFIRMED")
             return claimed
 
-    async def _recover_claim(self, tx, record, request, export_binding, lock, recovery, destinations):
+    async def _recover_claim(self, tx, record: EpicApprovalPause, request, export_binding, lock, recovery, destinations) -> EpicApprovalPause:
         pause, retained_lock, current, observed = await inspect_approval_recovery(tx, recovery, request, export_binding)
         if pause != record or lock != retained_lock:
             raise ValueError("E_EPIC_APPROVAL_RECOVERY_LOCK_CHANGED")
@@ -192,7 +192,7 @@ class EpicApprovalPauseService:
             raise ValueError("E_EPIC_APPROVAL_PARENT_CONFLICT")
 
     async def resume_turns(self, pause: EpicApprovalPause) -> dict[str, int]:
-        turns = {}
+        turns: dict[str, int] = {}
         denied = "denied" in pause.decisions.values()
         for approval_id, identity in pause.approvals.items():
             target = identity["payload_json"]["control_plane_target_ref"]

@@ -138,7 +138,7 @@ jobs:
         env:
           ORKET_DISABLE_SANDBOX: "1"
         run: |
-          python -m pytest -q tests/integration/test_api_startup_diagnostic_ownership.py tests/integration/test_api_startup_ownership.py tests/integration/test_api_authority_inputs.py tests/runtime/test_startup_security_config.py
+          python -m pytest -q tests/integration/test_api_startup_diagnostic_ownership.py tests/integration/test_api_startup_ownership.py tests/integration/test_api_authority_inputs.py tests/runtime/test_startup_security_config.py tests/integration/test_api_required_runtime_owners.py
 
       - name: Enforce supporting failure diagnostic ownership
         env:
@@ -729,7 +729,7 @@ jobs:
         env:
           ORKET_DISABLE_SANDBOX: "1"
         run: |
-          python -m pytest -q tests/integration/test_api_startup_diagnostic_ownership.py tests/integration/test_api_startup_ownership.py tests/integration/test_api_authority_inputs.py tests/runtime/test_startup_security_config.py
+          python -m pytest -q tests/integration/test_api_startup_diagnostic_ownership.py tests/integration/test_api_startup_ownership.py tests/integration/test_api_authority_inputs.py tests/runtime/test_startup_security_config.py tests/integration/test_api_required_runtime_owners.py
 
       - name: Enforce supporting failure diagnostic ownership
         env:

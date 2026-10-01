@@ -184,7 +184,7 @@ class GovernedAgentEffectService:
                 return await scoped._resolve_pending(previous, normalized_decision, actor_ref, timestamp)
         return await self._resolve_pending(previous, normalized_decision, actor_ref, timestamp)
 
-    async def _resolve_pending(self, previous, normalized_decision, actor_ref, timestamp):
+    async def _resolve_pending(self, previous, normalized_decision, actor_ref, timestamp) -> GovernedAgentEffectResolution:
         approval_id = str(previous["request_id"])
         claimed = await self._pending.resolve_request(
             request_id=approval_id,

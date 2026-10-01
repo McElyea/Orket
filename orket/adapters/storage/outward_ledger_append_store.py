@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import replace
+from typing import cast
 
 import aiosqlite
 
@@ -55,10 +56,11 @@ async def read_append_head(connection: aiosqlite.Connection, run_id: str) -> Led
         "schema_version": ANCHOR_SCHEMA, "run_id": run_id,
         "event_count": row[0], "chain_hash": row[1], "origin_ref": row[2],
     }) if row is not None else LedgerAnchor(run_id)
-    counts = await (await connection.execute(
+    # The scalar SELECT returns exactly one aggregate row, including empty runs.
+    counts = cast(aiosqlite.Row, await (await connection.execute(
         """SELECT (SELECT COUNT(*) FROM run_events WHERE run_id=?),
                   (SELECT COUNT(*) FROM outward_ledger_commits_v2 WHERE run_id=?)""", (run_id, run_id),
-    )).fetchone()
+    )).fetchone())
     if row is None and (counts[0] or counts[1]):
         raise OutwardLedgerIntegrityError("E_OUTWARD_LEDGER_UNSEALED: explicit legacy disposition required", category="unsealed")
     if counts[0] != anchor.event_count or counts[1] != anchor.event_count:

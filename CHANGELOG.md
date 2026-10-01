@@ -5,6 +5,16 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.123] - 2026-10-01
+
+### Fixed
+- Clear ATG-06's 49 frozen typing batches and their canonical remainder: accurate owner/result annotations, canonical imports, and removal of incomplete local JSON Schema/JWT stub overrides. Canonical Mypy passes all 1,222 sources with the existing configuration.
+- Refuse missing API authentication/interaction owners, absent epic success snapshots and invalid controller schema roots explicitly; retain native cleanup, partial effects and existing authority-conflict outcomes. Internal embeddings must provide the required owners/snapshots and object-or-boolean schemas. See the required-values contract delta for migration.
+- Retain native Windows and applicable Linux source controls and both Quality API-owner selections. This is a scoped checkpoint; the unchanged 89-percent coverage gate and fresh installed/platform/provider/hosted acceptance remain open.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `required`
+
 ## [0.6.122] - 2026-10-01
 
 ### Changed

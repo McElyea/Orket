@@ -13,6 +13,7 @@ from orket.application.services.kernel_runtime_lifetime import KernelRuntimeLife
 from orket.application.services.tool_approval_control_plane_reservation_service import (
     ToolApprovalControlPlaneReservationService,
 )
+from orket.orchestration.engine_services import KernelGatewayFacade
 
 
 def build_kernel_async_control_plane(engine: Any) -> KernelAsyncControlPlaneService:
@@ -34,7 +35,7 @@ class KernelAsyncControlPlaneService:
     def __init__(
         self,
         *,
-        gateway_facade: Any,
+        gateway_facade: KernelGatewayFacade,
         lifetime: KernelRuntimeLifetime,
         kernel_action_control_plane: Any,
         kernel_action_control_plane_operator: Any,

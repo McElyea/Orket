@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, TypeVar
+from typing import Any, NoReturn, TypeVar, cast
 
 from orket.logging import log_event
 from orket_extension_sdk.audio import AudioClip, AudioPlayer, NullAudioPlayer, TTSProvider, VoiceInfo
@@ -132,7 +132,7 @@ class SdkCapabilityTracker:
             ],
         }
 
-    def _block(self, capability_id: str, *, denial_class: str) -> None:
+    def _block(self, capability_id: str, *, denial_class: str) -> NoReturn:
         declared = capability_declared(self._envelope, capability_id)
         admitted = capability_admitted(self._envelope, capability_id)
         error_code = {
@@ -247,7 +247,7 @@ class GovernedLLMProvider:
         self._delegate = delegate
 
     def generate(self, request: GenerateRequest) -> GenerateResponse:
-        operation = (lambda: self._delegate.generate(request)) if self._delegate is not None else None
+        operation = (lambda: cast(LLMProvider, self._delegate).generate(request)) if self._delegate is not None else None
         return self._tracker.invoke("model.generate", operation, side_effect_observed=lambda _result: False)
 
     def is_available(self) -> bool:
@@ -260,7 +260,7 @@ class GovernedMemoryProvider:
         self._delegate = delegate
 
     def write(self, request: MemoryWriteRequest) -> MemoryWriteResponse:
-        operation = (lambda: self._delegate.write(request)) if self._delegate is not None else None
+        operation = (lambda: cast(MemoryProvider, self._delegate).write(request)) if self._delegate is not None else None
         return self._tracker.invoke(
             "memory.write",
             operation,
@@ -268,7 +268,7 @@ class GovernedMemoryProvider:
         )
 
     def query(self, request: MemoryQueryRequest) -> MemoryQueryResponse:
-        operation = (lambda: self._delegate.query(request)) if self._delegate is not None else None
+        operation = (lambda: cast(MemoryProvider, self._delegate).query(request)) if self._delegate is not None else None
         return self._tracker.invoke("memory.query", operation, side_effect_observed=lambda _response: False)
 
 
@@ -278,7 +278,7 @@ class GovernedSTTProvider:
         self._delegate = delegate
 
     def transcribe(self, request: TranscribeRequest) -> TranscribeResponse:
-        operation = (lambda: self._delegate.transcribe(request)) if self._delegate is not None else None
+        operation = (lambda: cast(STTProvider, self._delegate).transcribe(request)) if self._delegate is not None else None
         return self._tracker.invoke("speech.transcribe", operation, side_effect_observed=lambda _response: False)
 
 
@@ -295,7 +295,7 @@ class GovernedTTSProvider:
         speed: float = 1.0,
     ) -> AudioClip:
         operation = (
-            lambda: self._delegate.synthesize(
+            lambda: cast(TTSProvider, self._delegate).synthesize(
                 text,
                 voice_id,
                 emotion_hint=emotion_hint,
@@ -353,7 +353,7 @@ class GovernedVoiceTurnController:
         self._delegate = delegate
 
     def control(self, request: VoiceTurnControlRequest) -> VoiceTurnControlResponse:
-        operation = (lambda: self._delegate.control(request)) if self._delegate is not None else None
+        operation = (lambda: cast(VoiceTurnController, self._delegate).control(request)) if self._delegate is not None else None
         return self._tracker.invoke(
             "voice.turn_control",
             operation,

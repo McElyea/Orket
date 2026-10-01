@@ -12,7 +12,7 @@ from orket.adapters.storage.async_file_tools import capture_file_roots
 from orket.adapters.storage.scoped_memory_repository import ScopedMemoryRepository
 from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.core.contracts.memory_inputs import memory_timestamp
-from orket.runtime.truthful_memory_policy import evaluate_memory_write_policy
+from orket.runtime.policy.truthful_memory_policy import evaluate_memory_write_policy
 
 from .profile_write_policy import ProfileWritePolicy, ProfileWritePolicyError
 
@@ -72,7 +72,7 @@ class ScopedMemoryStore:
     ) -> ScopedMemoryRecord:
         return await self._write_reference("episodic_memory", session_id, key, value, metadata)
 
-    async def _write_reference(self, scope, session_id, key, value, metadata):
+    async def _write_reference(self, scope, session_id, key, value, metadata) -> ScopedMemoryRecord:
         key, value = str(key or "").strip(), str(value or "")
         decision = evaluate_memory_write_policy(scope=scope, key=key, value=value, metadata=deepcopy(metadata or {}))
         captured = dict(
@@ -100,7 +100,7 @@ class ScopedMemoryStore:
             preserve_failure=True,
         )
 
-    async def _persist_profile(self, key, value, payload, timestamp):
+    async def _persist_profile(self, key, value, payload, timestamp) -> ScopedMemoryRecord:
         await self.ensure_initialized()
         identity = dict(scope="profile_memory", session_id=self.normalize_session_id("profile_memory", ""), key=key)
         async with self._repository.transaction() as connection:
@@ -129,7 +129,7 @@ class ScopedMemoryStore:
             record = _required_record(row, scope="profile_memory")
         return record
 
-    async def _persist_record(self, captured):
+    async def _persist_record(self, captured) -> ScopedMemoryRecord:
         await self.ensure_initialized()
         async with self._repository.transaction() as connection:
             row = await self._repository.publish(connection, **captured)
@@ -142,8 +142,8 @@ class ScopedMemoryStore:
     async def clear_episodic(self, *, session_id: str) -> int:
         return await self._clear("episodic_memory", self.normalize_session_id("episodic_memory", session_id))
 
-    async def _clear(self, scope, session_id):
-        async def operation():
+    async def _clear(self, scope, session_id) -> int:
+        async def operation() -> int:
             await self.ensure_initialized()
             return await self._repository.clear(scope=scope, session_id=session_id)
 
@@ -290,7 +290,7 @@ def _parse_metadata(payload: Any) -> dict[str, Any]:
     return {}
 
 
-def _required_record(row, *, scope):
+def _required_record(row, *, scope) -> ScopedMemoryRecord:
     if row is None:
         code = (
             "E_SCOPED_MEMORY_EPISODIC_WRITE_READBACK_FAILED"

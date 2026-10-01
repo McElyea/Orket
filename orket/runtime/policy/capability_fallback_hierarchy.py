@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from orket.runtime.provider_truth_table import provider_truth_table_snapshot
+from orket.runtime.config.provider_truth_table import provider_truth_table_snapshot
 
 _FALLBACK_ELIGIBLE_STATES = {"supported", "conditional"}
 

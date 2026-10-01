@@ -183,7 +183,8 @@ def _event_from_export(payload: Mapping[str, Any]) -> LedgerEvent:
     for field in ("event_id", "event_type", "run_id", "at"):
         if not isinstance(payload.get(field), str) or not payload[field].strip():
             raise ValueError(f"{field} must be a nonempty string")
-    if payload.get("turn") is not None and type(payload["turn"]) is not int:
+    turn = payload.get("turn")
+    if turn is not None and type(turn) is not int:
         raise ValueError("turn must be an integer or null")
     if not isinstance(raw_payload, Mapping):
         raise ValueError("payload must be an object")
@@ -191,7 +192,7 @@ def _event_from_export(payload: Mapping[str, Any]) -> LedgerEvent:
         event_id=str(payload.get("event_id") or ""),
         event_type=str(payload.get("event_type") or ""),
         run_id=str(payload.get("run_id") or ""),
-        turn=payload.get("turn") if payload.get("turn") is None else int(payload.get("turn")),
+        turn=turn if turn is None else int(turn),
         agent_id=payload.get("agent_id") if payload.get("agent_id") is None else str(payload.get("agent_id")),
         at=str(payload.get("at") or ""),
         payload=dict(raw_payload) if isinstance(raw_payload, Mapping) else {},

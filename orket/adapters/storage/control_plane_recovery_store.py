@@ -37,9 +37,11 @@ class ControlPlaneRecoveryTransactionStore:
     async def get(self, decision_id: str) -> tuple[RecoveryDecisionRecord, OperatorActionRecord] | None:
         decision = await get_recovery_decision(self.connection, decision_id=decision_id)
         action = await get_operator_action(self.connection, action_id=decision_id)
-        if (decision is None) != (action is None):
-            raise RuntimeError("E_OUTWARD_RECOVERY_RECORD_INCOMPLETE")
-        return (decision, action) if decision is not None else None
+        if decision is None and action is None:
+            return None
+        if decision is not None and action is not None:
+            return decision, action
+        raise RuntimeError("E_OUTWARD_RECOVERY_RECORD_INCOMPLETE")
 
     async def save(self, decision: RecoveryDecisionRecord, action: OperatorActionRecord) -> None:
         await insert_recovery_decision(self.connection, decision=decision)

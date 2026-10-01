@@ -17,7 +17,7 @@ from orket.services.extension_memory_namespace import (
 )
 from orket.services.scoped_memory_store import ScopedMemoryRecord, ScopedMemoryStore
 from orket_extension_sdk.audio import AudioClip, TTSProvider, VoiceInfo
-from orket_extension_sdk.llm import GenerateRequest, GenerateResponse
+from orket_extension_sdk.llm import GenerateRequest, GenerateResponse, LLMProvider
 
 
 def validate_memory_scope(scope: str) -> str:
@@ -90,7 +90,7 @@ async def query_profile_records(
 async def generate_response(
     *,
     request: GenerateRequest,
-    model_provider: LocalModelCapabilityProvider,
+    model_provider: LLMProvider,
     provider_override: str,
     model_override: str,
 ) -> GenerateResponse:
@@ -113,7 +113,9 @@ async def synthesize_audio(
     return clip, None, voice_id, None
 
 
-def _generate_response_sync(request, model_provider, provider_override, model_override) -> GenerateResponse:
+def _generate_response_sync(
+    request: GenerateRequest, model_provider: LLMProvider, provider_override: str, model_override: str,
+) -> GenerateResponse:
     provider = str(provider_override or "").strip()
     model = str(model_override or "").strip()
     if not provider and not model:

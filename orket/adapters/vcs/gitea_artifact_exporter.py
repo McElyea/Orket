@@ -186,7 +186,7 @@ class GiteaArtifactExporter:
 
     async def _request(self, method: str, path: str, payload: dict[str, Any] | None = None) -> int:
         try:
-            response = await self._http_requester.request(method, self._binding["gitea_url"].rstrip("/") + path,
+            response: httpx.Response = await self._http_requester.request(method, self._binding["gitea_url"].rstrip("/") + path,
                 timeout_s=30, auth=(self._username, self._password), json=payload)
         except httpx.HTTPError as exc:
             raise RuntimeError("E_GITEA_EXPORT_HTTP_UNAVAILABLE") from exc

@@ -6,14 +6,22 @@ import logging
 import multiprocessing
 import signal
 from contextlib import suppress
+from multiprocessing.context import SpawnProcess
 from multiprocessing.synchronize import Event
+from pathlib import Path
 from socket import socket
 from types import FrameType
+from typing import TYPE_CHECKING
 
 import uvicorn
 from uvicorn._subprocess import get_subprocess
 from uvicorn.server import HANDLED_SIGNALS
-from uvicorn.supervisors import ChangeReload
+
+if TYPE_CHECKING:
+    # Both runtime-selected reload strategies implement this canonical base.
+    from uvicorn.supervisors.basereload import BaseReload as ChangeReload
+else:
+    from uvicorn.supervisors import ChangeReload
 
 LOGGER = logging.getLogger("uvicorn.error")
 
@@ -66,12 +74,12 @@ class _ReloadSupervisor(ChangeReload):
     def __init__(self, config: uvicorn.Config, server: _ReloadServer, sockets: list[socket], stop: Event) -> None:
         super().__init__(config, target=server.run, sockets=sockets)
         self._stop, self._closed = stop, False
-        self.process = None
 
     def _stop_worker(self) -> None:
         self._stop.set()
-        if self.process is not None and self.process.pid is not None:
-            self.process.join()
+        process: SpawnProcess | None = getattr(self, "process", None)
+        if process is not None and process.pid is not None:
+            process.join()
 
     def restart(self) -> None:
         self._stop_worker()
@@ -82,15 +90,17 @@ class _ReloadSupervisor(ChangeReload):
         self.process = get_subprocess(config=self.config, target=self.target, sockets=self.sockets)
         self.process.start()
 
-    def should_restart(self):
+    def should_restart(self) -> list[Path] | None:
         changes = super().should_restart()
-        if self.process is not None and self.process.exitcode is not None:
-            raise RuntimeError(f"E_API_RELOAD_WORKER_EXIT: {self.process.exitcode}")
+        process: SpawnProcess | None = getattr(self, "process", None)
+        if process is not None and process.exitcode is not None:
+            raise RuntimeError(f"E_API_RELOAD_WORKER_EXIT: {process.exitcode}")
         return changes
 
     def _check_worker_success(self) -> None:
-        if self.process is not None and self.process.exitcode not in (None, 0):
-            raise RuntimeError(f"E_API_RELOAD_WORKER_FAILED: {self.process.exitcode}")
+        process: SpawnProcess | None = getattr(self, "process", None)
+        if process is not None and process.exitcode not in (None, 0):
+            raise RuntimeError(f"E_API_RELOAD_WORKER_FAILED: {process.exitcode}")
 
     def shutdown(self) -> None:
         if self._closed:

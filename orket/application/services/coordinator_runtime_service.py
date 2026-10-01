@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from math import isfinite
 from pathlib import Path
 from types import MappingProxyType
-from typing import Any
+from typing import Any, cast
 
 from orket.adapters.execution.owned_io import run_owned_io, run_owned_thread
 from orket.adapters.storage.async_control_plane_record_repository import AsyncControlPlaneRecordRepository
@@ -72,8 +72,9 @@ class CoordinatorRuntimeService:
         durable = Path(raw_root) if raw_root else Path(".orket/durable")
         durable = durable if durable.is_absolute() else self.project_root / durable
         self._db_path = (durable / "db/control_plane_records.sqlite3").resolve() if publication is None else None
+        # The native publication branch owns the path initialized above.
         self.publication = publication or ControlPlanePublicationService(
-            repository=AsyncControlPlaneRecordRepository(self._db_path),
+            repository=AsyncControlPlaneRecordRepository(cast(Path, self._db_path)),
         )
         self.repository = self.publication.repository
         self.lease_service = CoordinatorControlPlaneLeaseService(
@@ -139,7 +140,7 @@ class CoordinatorRuntimeService:
         try:
             if self._db_path is not None:
                 await run_owned_thread(
-                    lambda: self._db_path.parent.mkdir(parents=True, exist_ok=True), label="coordinator-storage-parent",
+                    lambda: cast(Path, self._db_path).parent.mkdir(parents=True, exist_ok=True), label="coordinator-storage-parent",
                 )
             observed = _Observation(self.runtime_inputs.utc_now_iso(), self.runtime_inputs.monotonic_seconds())
             if command.kind == "list":

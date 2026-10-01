@@ -13,6 +13,7 @@ from fastapi.security import APIKeyHeader
 from orket import __version__
 from orket.application.interactions.manager import InteractionManager
 from orket.application.services import api_policy_input_service as api_policy
+from orket.application.services.api_authentication_service import ApiAuthenticationService
 from orket.application.services.api_runtime_host_service import ApiRuntimeHostService
 from orket.application.services.api_runtime_preparation import build_api_runtime_preparation
 from orket.application.services.api_startup_service import api_runtime_lifespan
@@ -87,7 +88,8 @@ async def get_api_key(request: Request, api_key_header: str | None = Security(ap
     request_path = str(request.url.path or "")
     provided_key_present = bool(str(api_key_header or "").strip())
 
-    if _runtime_context().authentication.authenticate(api_key_header):
+    # Startup admission requires this owner before the app accepts requests.
+    if cast(ApiAuthenticationService, _runtime_context().authentication).authenticate(api_key_header):
         request.state.authenticated_actor_ref = _api_key_actor_ref(api_key_header)
         return api_key_header
 
@@ -151,7 +153,7 @@ def _get_runtime_state(target_app: FastAPI | None = None) -> Any:
 
 
 def _get_api_runtime_host(target_app: FastAPI | None = None) -> ApiRuntimeHostService:
-    return _runtime_context(target_app).api_runtime_host
+    return cast(ApiRuntimeHostService, _runtime_context(target_app).api_runtime_host)
 
 
 def _get_engine(target_app: FastAPI | None = None) -> Any:

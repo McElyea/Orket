@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any
+from typing import Any, cast
 
 from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, ConfigDict
@@ -24,7 +24,7 @@ def build_outward_ledger_router(
             payload = await service_getter().verify_run(run_id, external_anchor=external_anchor)
         except OutwardLedgerValidationError as exc:
             raise _http_error(exc) from exc
-        return outbound_filter(payload, "api.runs.ledger.verify")
+        return cast(dict[str, Any], outbound_filter(payload, "api.runs.ledger.verify"))
 
     @router.get("/runs/{run_id}/ledger")
     async def export_ledger(
@@ -39,7 +39,7 @@ def build_outward_ledger_router(
             )
         except OutwardLedgerValidationError as exc:
             raise _http_error(exc) from exc
-        return outbound_filter(payload, "api.runs.ledger")
+        return cast(dict[str, Any], outbound_filter(payload, "api.runs.ledger"))
 
     @router.get("/runs/{run_id}/ledger/verify")
     async def verify_ledger(run_id: str) -> dict[str, Any]:

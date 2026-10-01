@@ -12,6 +12,8 @@ from orket.core.contracts.card_acceptance_inputs import (
     normalized_json_text,
 )
 from orket.core.contracts.card_completion import (
+    AcceptanceEvidenceClass,
+    AcceptanceObservation,
     AcceptanceRequirement,
     CardAcceptanceEvidence,
     CardAcceptancePlan,
@@ -37,7 +39,7 @@ def build_artifact_acceptance_plan(definition: ArtifactAcceptance) -> CardAccept
         acceptance_ref=definition.acceptance_ref, policy_ref=definition.policy_ref, policy_digest=definition.digest,
         workload_id=definition.workload_id, requirements=tuple(AcceptanceRequirement(
             criterion_id=case.criterion_id, description=case.description, verifier_ref=_verifier_ref(case),
-            verifier_digest=_verifier_digest(case), evidence_class="artifact_verification",
+            verifier_digest=_verifier_digest(case), evidence_class=AcceptanceEvidenceClass.ARTIFACT_VERIFICATION,
         ) for case in definition.cases),
     )
 
@@ -72,7 +74,8 @@ def artifact_acceptance_evidence(
             evidence_ref=f"card-artifact:{scope.attempt_id}:{case.criterion_id}:{digest}", evidence_digest=digest,
             plan_digest=plan.digest, scope=scope, criterion_id=case.criterion_id,
             verifier_ref=_verifier_ref(case), verifier_digest=_verifier_digest(case),
-            evidence_class="artifact_verification", observation="passed" if _matches(case, content) else "failed",
+            evidence_class=AcceptanceEvidenceClass.ARTIFACT_VERIFICATION,
+            observation=AcceptanceObservation.PASSED if _matches(case, content) else AcceptanceObservation.FAILED,
             source="runtime_verifier",
         ))
     return tuple(records)

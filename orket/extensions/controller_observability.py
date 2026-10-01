@@ -120,6 +120,8 @@ async def validate_observability_schema(
 ) -> None:
     captured_events = deepcopy(list(events))
     schema = await run_owned_thread(partial(read_controller_schema, schema_path), label="controller-schema-read")
+    if not isinstance(schema, (dict, bool)):
+        raise ValueError("controller.observability_schema_root_invalid")
     validator = Draft202012Validator(schema)
     for index, event in enumerate(captured_events):
         try:

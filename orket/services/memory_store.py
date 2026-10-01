@@ -16,7 +16,7 @@ from orket.adapters.storage.async_file_tools import capture_file_roots
 from orket.adapters.storage.project_memory_repository import ProjectMemoryRepository
 from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.core.contracts.memory_inputs import memory_observation_time, memory_timestamp
-from orket.runtime.truthful_memory_policy import (
+from orket.runtime.policy.truthful_memory_policy import (
     classify_memory_trust_level,
     evaluate_memory_write_policy,
     synthesis_disposition_for_trust_level,

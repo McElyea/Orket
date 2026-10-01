@@ -7,6 +7,7 @@ import os
 import sqlite3
 from contextlib import AsyncExitStack, asynccontextmanager, closing
 from pathlib import Path
+from typing import cast
 
 import aiosqlite
 
@@ -84,10 +85,11 @@ class RuntimeStoreMigrationIO:
     async def _publish(self, staging: Path, target: Path) -> None:
         async with aiosqlite.connect(staging) as conn:
             cursor = await conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
-            if (await cursor.fetchone())[0] != 0:
+            # Both supported PRAGMAs return one status row on this SQLite connection.
+            if cast(aiosqlite.Row, await cursor.fetchone())[0] != 0:
                 raise ValueError("E_RUNTIME_STORE_MIGRATION_CHECKPOINT_BUSY")
             cursor = await conn.execute("PRAGMA journal_mode=DELETE")
-            if (await cursor.fetchone())[0] != "delete":
+            if cast(aiosqlite.Row, await cursor.fetchone())[0] != "delete":
                 raise ValueError("E_RUNTIME_STORE_MIGRATION_CHECKPOINT_FAILED")
         await asyncio.to_thread(_publish, staging, target)
 

@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from orket.interfaces.api_app_context_middleware import ApiAppContextMiddleware
 from orket.interfaces.routers.streaming import register_streaming_routes
-from orket.runtime.cors_config import resolve_cors_config
+from orket.runtime.config.cors_config import resolve_cors_config
 
 
 def register_api_transport(

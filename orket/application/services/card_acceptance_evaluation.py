@@ -25,6 +25,8 @@ from orket.core.contracts.card_acceptance_inputs import (
     normalized_json_text,
 )
 from orket.core.contracts.card_completion import (
+    AcceptanceEvidenceClass,
+    AcceptanceObservation,
     AcceptanceRequirement,
     CardAcceptanceEvidence,
     CardAcceptancePlan,
@@ -53,7 +55,7 @@ def build_card_acceptance_plan(definition: CardAcceptanceDefinition) -> CardAcce
         acceptance_ref=definition.acceptance_ref, policy_ref=definition.policy_ref, policy_digest=definition.digest,
         workload_id=definition.workload_id, requirements=tuple(AcceptanceRequirement(
             criterion_id=case.criterion_id, description=case.description, verifier_ref=VERIFIER_REF,
-            verifier_digest=_verifier_digest(definition, case), evidence_class="behavioral_verification",
+            verifier_digest=_verifier_digest(definition, case), evidence_class=AcceptanceEvidenceClass.BEHAVIORAL_VERIFICATION,
         ) for case in definition.cases),
     )
 
@@ -122,5 +124,6 @@ def _evidence_for_command(command: RetainedCardCommand, package: CardAcceptanceP
         evidence_ref=f"card-command:{package.scope.attempt_id}:{command.criterion_id}:{digest}", evidence_digest=digest,
         plan_digest=package.plan.digest, scope=package.scope, criterion_id=command.criterion_id,
         verifier_ref=VERIFIER_REF, verifier_digest=_verifier_digest(package.definition, case) if case else "0" * 64,
-        evidence_class="behavioral_verification", observation="passed" if passed else "failed", source="runtime_verifier",
+        evidence_class=AcceptanceEvidenceClass.BEHAVIORAL_VERIFICATION,
+        observation=AcceptanceObservation.PASSED if passed else AcceptanceObservation.FAILED, source="runtime_verifier",
     )

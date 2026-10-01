@@ -169,7 +169,7 @@ async def write_turn_checkpoint_and_publish_if_needed(
         and not replay_mode
         and not status_only_without_protocol
     )
-    if control_plane_publish_enabled:
+    if control_plane_publish_enabled and control_plane_service is not None:
         await control_plane_service.ensure_reentry_allowed(
             session_id=session_id, issue_id=issue_id, role_name=role_name, turn_index=turn_index,
             resume_mode=resume_mode,

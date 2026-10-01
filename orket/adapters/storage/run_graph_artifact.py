@@ -24,7 +24,7 @@ async def reconstruct_run_graph_from_events_log(*, events_log_path: Path, sessio
     """Retain file replay and graph projection in a worker through interruption."""
     path, selected = Path(events_log_path), str(session_id or "").strip()
 
-    def reconstruct():
+    def reconstruct() -> dict:
         events = AppendOnlyRunLedger(path).replay_events()
         return reconstruct_run_graph(events, session_id=selected or path.parent.name.strip())
 

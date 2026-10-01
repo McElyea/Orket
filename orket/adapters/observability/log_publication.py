@@ -10,7 +10,7 @@ import queue
 import threading
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from orket.adapters.execution.owned_io import require_sync_context
 from orket.core.contracts.logging_inputs import DEFAULT_LOG_QUEUE_MAX, LOG_QUEUE_MAX_ENV, log_queue_capacity
@@ -147,13 +147,13 @@ def _log_writer_loop() -> None:
                 _log_writer_state.notify_all()  # a full queue now has one available slot
             frontier = item if isinstance(item, _LogWriteFrontier) else None
             try:
-                if frontier is None:
-                    path, line = item
-                    if isinstance(path, OptionalPublication):
-                        _invoke_optional_publication(path, line)
+                if not isinstance(item, _LogWriteFrontier):
+                    # The queue union pairs OptionalPublication/int and Path/str.
+                    if isinstance(item[0], OptionalPublication):
+                        _invoke_optional_publication(item[0], cast(int, item[1]))
                     else:
                         with contextlib.suppress(OSError):
-                            _append_line_sync(path, line)
+                            _append_line_sync(item[0], cast(str, item[1]))
             finally:
                 _log_write_queue.task_done()
                 if frontier is not None:

@@ -12,7 +12,7 @@ from orket.core.contracts.protocol_error_codes import (
     format_protocol_error,
 )
 from orket.runtime.config import contract_assets
-from orket.runtime.prompt_budget_policy import load_prompt_budget_policy, resolve_prompt_stage
+from orket.runtime.policy.prompt_budget_policy import load_prompt_budget_policy, resolve_prompt_stage
 
 from .prompt_token_counter import (
     count_prompt_token_buckets,

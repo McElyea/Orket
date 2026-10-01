@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from orket.application.services.kernel_action_input_service import capture_kernel_request
 from orket.application.services.kernel_credential_input_service import (
@@ -321,7 +321,7 @@ def consume_credential_token_v1(
         raise ValueError("scope_json must be an object")
     with owner.lock:
         if inputs is None:
-            inputs = CredentialObservation(observed_at=capture_kernel_observation().observed_at, hmac_key=key)
+            inputs = CredentialObservation(observed_at=capture_kernel_observation().observed_at, hmac_key=cast(bytes, key))
         return consume_credential_token(
             session_id=session_id,
             trace_id=trace_id,

@@ -62,7 +62,8 @@ class GovernedAgentOperatorService:
                 raise ValueError("E_AGENT_RUN_NOT_FOUND")
             if run.final_truth_record_id is not None or await transaction.records.get_final_truth(run_id=run_id):
                 raise ValueError("E_AGENT_RUN_ALREADY_TERMINAL")
-            attempt = await transaction.execution.get_attempt_record(attempt_id=run.current_attempt_id)
+            attempt = (await transaction.execution.get_attempt_record(attempt_id=run.current_attempt_id)
+                       if run.current_attempt_id is not None else None)
             if attempt is None or attempt.run_id != run.run_id or attempt.attempt_state is not AttemptState.EXECUTING:
                 raise ValueError("E_AGENT_TERMINAL_AUTHORITY_CONFLICT")
             action = await self._publish_action(

@@ -68,7 +68,7 @@ class OrketDriver(DriverResourceMixin, DriverConversationMixin):
             self.model_root = default_model_root(self.project_root)
             self.workspace_root = default_workspace_root(self.project_root)
             self.fs = fs or AsyncFileTools(self.project_root)
-            self.reforger_tools = reforger_tools or ReforgerService(self.workspace_root, [self.project_root])
+            self.reforger_tools = reforger_tools or ReforgerService(self.workspace_root, (self.project_root,))
 
             from orket.schema import OrganizationConfig
 
@@ -119,7 +119,7 @@ class OrketDriver(DriverResourceMixin, DriverConversationMixin):
                   else await RuntimeConstructionInputs.capture_async(environment=environment))
         root = inputs.invocation_root / relative_root
 
-        def construct():
+        def construct() -> OrketDriver:
             inputs.bind_settings()
             return cls(model, provider=provider, fs=fs, reforger_tools=reforger_tools,
                        strict_config=strict_config, json_parse_mode=json_parse_mode,

@@ -94,14 +94,16 @@ def ticket_report_fixture(case_id: str = "mixed") -> dict[str, Any]:
             },
         }
     )
+    batches = cast(dict[str, list[dict[str, str]]], fixture["batches"])
+    expected_report = cast(dict[str, dict[str, int] | list[str]], fixture["expected_report"])
     if case_id == "all-open":
-        for batch in fixture["batches"].values():
+        for batch in batches.values():
             for ticket in batch:
                 ticket["status"] = "open"
-        fixture["expected_report"]["counts"] = {"open": 5}
+        expected_report["counts"] = {"open": 5}
     elif case_id == "empty-first":
-        fixture["batches"]["artifact:ticket-batch-a"] = []
-        fixture["expected_report"]["counts"] = {"blocked": 1, "closed": 1}
+        batches["artifact:ticket-batch-a"] = []
+        expected_report["counts"] = {"blocked": 1, "closed": 1}
     elif case_id != "mixed":
         raise ValueError("E_SDK_TICKET_FIXTURE_CASE_UNKNOWN")
     return fixture

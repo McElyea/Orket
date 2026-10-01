@@ -124,9 +124,12 @@ def _rejection_report(reason: str, *, detail: str | None = None) -> dict[str, An
 
 
 def _verified_payload(report: dict[str, Any], package_path: Path) -> dict[str, Any]:
-    output = report.get("source_output_anchor_result") if isinstance(report.get("source_output_anchor_result"), dict) else {}
-    policy = report.get("source_policy_anchor_result") if isinstance(report.get("source_policy_anchor_result"), dict) else {}
-    compatibility = report.get("policy_compatibility_result") if isinstance(report.get("policy_compatibility_result"), dict) else {}
+    output = report.get("source_output_anchor_result")
+    output = output if isinstance(output, dict) else {}
+    policy = report.get("source_policy_anchor_result")
+    policy = policy if isinstance(policy, dict) else {}
+    compatibility = report.get("policy_compatibility_result")
+    compatibility = compatibility if isinstance(compatibility, dict) else {}
     return {
         "bundle_id": report.get("bundle_id"),
         "source_run_id": report.get("source_run_id"),

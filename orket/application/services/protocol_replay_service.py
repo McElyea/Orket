@@ -9,10 +9,10 @@ from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLed
 from orket.adapters.storage.async_repositories import AsyncRunLedgerRepository
 from orket.adapters.storage.protocol_append_only_ledger import LedgerFramingError
 from orket.application.services.protocol_query_scope import ProtocolQueryScope, resolve_protocol_run_root
-from orket.runtime.protocol_determinism_campaign import compare_protocol_determinism_campaign
-from orket.runtime.protocol_ledger_parity_campaign import compare_protocol_ledger_parity_campaign
-from orket.runtime.protocol_replay import ProtocolReplayEngine
-from orket.runtime.run_ledger_parity import compare_run_ledger_rows
+from orket.runtime.evidence.protocol_ledger_parity_campaign import compare_protocol_ledger_parity_campaign
+from orket.runtime.evidence.protocol_replay import ProtocolReplayEngine
+from orket.runtime.evidence.run_ledger_parity import compare_run_ledger_rows
+from orket.runtime.policy.protocol_determinism_campaign import compare_protocol_determinism_campaign
 
 
 class ProtocolReplayService:

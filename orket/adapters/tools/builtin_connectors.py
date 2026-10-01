@@ -111,7 +111,7 @@ class BuiltInConnectorExecutor:
             raise CommandExecutionUncertain(result)
         stdout_text = result.stdout.decode("utf-8", errors="replace")
         stderr_text = result.stderr.decode("utf-8", errors="replace")
-        payload = {
+        payload: dict[str, object] = {
             "ok": result.reason == "completed" and result.returncode == 0,
             "returncode": result.returncode,
             "stdout_bytes": len(result.stdout),

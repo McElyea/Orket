@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 import aiosqlite
+from pydantic import BaseModel
 
 from orket.adapters.execution.owned_io import run_owned_io
 from orket.adapters.storage.async_file_tools import capture_file_roots
@@ -60,7 +61,7 @@ async def _read_replay_evidence_at(path: Path, run_id: str) -> GovernedAgentRepl
 
 async def _rows(conn: aiosqlite.Connection, sql: str, parameters: tuple = ()) -> list[aiosqlite.Row]:
     async with conn.execute(sql, parameters) as cursor:
-        rows = await cursor.fetchmany(_MAX_ROWS + 1)
+        rows = list(await cursor.fetchmany(_MAX_ROWS + 1))
     if len(rows) > _MAX_ROWS or sum(len(str(value).encode("utf-8")) for row in rows for value in row) > _MAX_BYTES:
         raise ReplayEvidenceError("replay_evidence_resource_limit")
     return rows
@@ -73,7 +74,7 @@ def _object(raw: str) -> dict[str, Any]:
     return value
 
 
-def _record(row: aiosqlite.Row, model: Any, *identity_fields: str) -> dict[str, Any]:
+def _record(row: aiosqlite.Row, model: type[BaseModel], *identity_fields: str) -> dict[str, Any]:
     payload = model.model_validate_json(row["payload_json"]).model_dump(mode="json")
     if any(payload.get(field) != row[field] for field in identity_fields):
         raise ValueError("replay_record_identity_mismatch")

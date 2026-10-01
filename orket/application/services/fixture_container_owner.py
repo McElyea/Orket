@@ -24,7 +24,7 @@ class FixtureContainerOwner:
         self.name, self.owner_id = name, owner_id
         self.supervisor = CommandProcessSupervisor(workspace, cancellation_event="verification_process_cancelled")
         self.adapter = FixtureDockerAdapter(self._command)
-        self.identity = None
+        self.identity: str | None = None
         self.attached = None
         self.commands: list[dict] = []
         self.diagnostics: list[str] = []
@@ -96,7 +96,7 @@ class FixtureContainerOwner:
             self.diagnostics.append(f"Container cleanup unconfirmed: {type(exc).__name__}: {exc}")
             return False
 
-    async def _lifecycle(self, root, image, payload, timeout_seconds):
+    async def _lifecycle(self, root, image, payload, timeout_seconds) -> OwnedContainerResult:
         try:
             async with asyncio.timeout(timeout_seconds):
                 self.command_timeout = timeout_seconds

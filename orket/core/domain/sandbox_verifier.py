@@ -64,13 +64,15 @@ def capture_sandbox_verification(
         inputs = VerificationScenario.model_validate(definition.thaw()).input_data
         endpoint, method = inputs.get("endpoint"), inputs.get("method", "GET")
         rejection = None
+        request: SandboxHttpRequest | None = None
         if not isinstance(endpoint, str) or not endpoint.startswith("/"):
             rejection = "E_SANDBOX_ENDPOINT_REQUIRED"
         elif not isinstance(method, str) or not method.isascii() or not method.isalpha():
             rejection = "E_SANDBOX_HTTP_METHOD_INVALID"
-        request = None if rejection else SandboxHttpRequest(
-            identity, method.upper(), base_url.rstrip("/") + endpoint, FrozenJson(canonical_json(inputs.get("payload"))),
-        )
+        else:
+            request = SandboxHttpRequest(
+                identity, method.upper(), base_url.rstrip("/") + endpoint, FrozenJson(canonical_json(inputs.get("payload"))),
+            )
         captured.append(CapturedSandboxScenario(identity, definition, request, rejection))
     return SandboxVerificationInput(str(sandbox_id), timestamp, base_url, tuple(captured))
 

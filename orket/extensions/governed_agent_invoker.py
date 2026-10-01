@@ -9,7 +9,7 @@ from collections.abc import Mapping
 from copy import deepcopy
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from orket.adapters.execution.owned_io import run_owned_io, run_owned_thread
 from orket.adapters.execution.process_lifecycle import await_process_stopped
@@ -154,12 +154,13 @@ class GovernedAgentSubprocessInvoker:
         aggregate_bytes = 0
         ready_seen = False
         while True:
-            if active.process.stdout is None:
+            process = cast(asyncio.subprocess.Process, active.process)
+            if process.stdout is None:
                 raise OSError("E_AGENT_CHILD_STDOUT_UNAVAILABLE")
             timeout = self._remaining_seconds(request)
             if not ready_seen:
                 timeout = min(timeout, self._handshake_timeout_seconds)
-            frame = await read_agent_frame(active.process.stdout, timeout_seconds=timeout)
+            frame = await read_agent_frame(process.stdout, timeout_seconds=timeout)
             child_frames.accept(frame)
             aggregate_bytes += len(frame.model_dump_json().encode("utf-8"))
             if aggregate_bytes > request.remaining_iteration_budget.output_bytes:
@@ -232,9 +233,10 @@ class GovernedAgentSubprocessInvoker:
         if active.parent_frames is None:
             raise ValueError("E_AGENT_PARENT_FRAME_STATE_MISSING")
         active.parent_frames.accept(frame)
-        if active.process.stdin is None:
+        process = cast(asyncio.subprocess.Process, active.process)
+        if process.stdin is None:
             raise OSError("E_AGENT_CHILD_STDIN_UNAVAILABLE")
-        await write_agent_frame(active.process.stdin, frame)
+        await write_agent_frame(process.stdin, frame)
         active.bootstrap_sent = True
 
     async def _send_parent_frame(
@@ -261,9 +263,10 @@ class GovernedAgentSubprocessInvoker:
             if active.parent_frames is None:
                 raise ValueError("E_AGENT_PARENT_FRAME_STATE_MISSING")
             active.parent_frames.accept(frame)
-            if active.process.stdin is None:
+            process = cast(asyncio.subprocess.Process, active.process)
+            if process.stdin is None:
                 raise OSError("E_AGENT_CHILD_STDIN_UNAVAILABLE")
-            await write_agent_frame(active.process.stdin, frame)
+            await write_agent_frame(process.stdin, frame)
             active.parent_sequence += 1
 
     async def _start_child(self) -> asyncio.subprocess.Process:

@@ -77,7 +77,7 @@ async def publish_outward_terminal(
     return terminal
 
 
-async def _terminal_projection(transaction, run, at, status, reason, outcome, adoption):
+async def _terminal_projection(transaction, run, at, status, reason, outcome, adoption) -> tuple[OutwardRunRecord, LedgerEvent]:
     if adoption is None:
         return terminal_transition(run, at=at, status=status, reason=reason, outcome=outcome)
     if (adoption.event_id != authority_adoption_event_id(run.run_id)

@@ -53,6 +53,8 @@ async def api_runtime_lifespan(
     # Capture selected owners before startup can await or another caller can close.
     root, engine, authentication = owner.project_root, owner.engine, owner.authentication
     state, governed_runtime, events = owner.runtime_state, owner.governed_agent_runtime, owner.events
+    if authentication is None:
+        raise RuntimeError("API authentication is not configured.")
     validate_authentication = partial(authentication.validate_startup, LOGGER)
 
     async def initialize() -> None:

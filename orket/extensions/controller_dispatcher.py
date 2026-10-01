@@ -56,7 +56,7 @@ class _ChildOutcome:
 
 
 def _artifact_refs_for_run_result(run_result: Any) -> list[dict[str, Any]]:
-    refs = [
+    refs: list[dict[str, Any]] = [
         {"kind": "artifact_root", "path": str(run_result.artifact_root)},
         {"kind": "provenance", "path": str(run_result.provenance_path)},
     ]

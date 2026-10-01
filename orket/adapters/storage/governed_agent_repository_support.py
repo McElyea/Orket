@@ -96,7 +96,8 @@ async def budget_admits(
         # V1 admits one bounded objective-memory query per iteration; iterations bound the run total.
         cursor = await conn.execute("SELECT COUNT(*) FROM governed_agent_calls WHERE invocation_id=? AND operation=?",
                                     (invocation_id, operation))
-        return int((await cursor.fetchone())[0]) < 1
+        # COUNT without grouping always produces one row, including an empty input.
+        return int(cast(aiosqlite.Row, await cursor.fetchone())[0]) < 1
     budget = request["remaining_iteration_budget"]
     cursor = await conn.execute(
         """
@@ -106,7 +107,7 @@ async def budget_admits(
         """,
         (invocation_id,),
     )
-    rows = await cursor.fetchall()
+    rows = list(await cursor.fetchall())
     used_input = sum(_charged_or_reserved(row, "input") for row in rows)
     used_output = sum(_charged_or_reserved(row, "output") for row in rows)
     role_limit = {

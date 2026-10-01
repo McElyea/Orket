@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.control_plane_snapshot_publication import publish_run_snapshots
@@ -107,7 +107,7 @@ class TurnToolControlPlaneService:
         existing_truth = await self.publication.repository.get_final_truth(run_id=run.run_id)
         current_attempt = await self._current_attempt_for_run(run=run)
         if validate_terminal_record_consistency(run, current_attempt, existing_truth):
-            return run, existing_truth
+            return run, cast(FinalTruthRecord, existing_truth)
         preflight_ref = preflight_result_ref(run_id=run.run_id, violation_reasons=violation_reasons)
         if current_attempt is None:
             current_attempt = await self._ensure_attempt(run=run)

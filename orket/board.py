@@ -134,7 +134,7 @@ def get_board_hierarchy(
                     for i in epic.issues:
                         if getattr(i, "id", None):
                             issue_ids_in_epics.add(i.id)
-                        if getattr(i, "name", None):
+                        if i.name:
                             issue_names_in_epics.add(i.name)
                         issue_dict = i.model_dump(by_alias=True)
                         issue_dict["name"] = i.name
@@ -186,7 +186,7 @@ def get_board_hierarchy(
                 for i in epic.issues:
                     if getattr(i, "id", None):
                         issue_ids_in_epics.add(i.id)
-                    if getattr(i, "name", None):
+                    if i.name:
                         issue_names_in_epics.add(i.name)
                     issue_dict = i.model_dump(by_alias=True)
                     issue_dict["name"] = i.name

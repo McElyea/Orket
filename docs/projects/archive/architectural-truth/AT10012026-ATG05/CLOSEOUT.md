@@ -1,7 +1,7 @@
 # ATG-05 named E2 hotspot closeout
 
 Date: 2026-10-01 (America/Denver)
-Status: Source exit passed; annotated v0.6.122 publication pending
+Status: Complete; published `64b39cb9` / annotated `v0.6.122`
 Owner: Orket Core
 
 ## What changed
@@ -54,7 +54,9 @@ policy. Both Quality job declarations retain the affected controls. Hosted jobs
 were not executed. Final Ruff passes after the guard-only correction; relevant
 unchanged structural evidence is reused. The receipt binds commands, source/log
 hashes, exact file list and scope. Local process records are `.tmp/atg05-proof.json`
-and `.tmp/atg05-structural.json`.
+and `.tmp/atg05-structural.json`. Publication receipt `.tmp/atg05-publication.json`
+verifies matching remote branch/annotated and peeled tag plus a clean worktree.
+ATG-06 is the next eligible goal.
 
 ## What was not verified
 

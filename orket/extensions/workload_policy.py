@@ -3,8 +3,17 @@ from __future__ import annotations
 
 import os
 from dataclasses import asdict, dataclass
+from typing import TypedDict, cast
 
 from .models import RELIABLE_MODE_ENV, RELIABLE_REQUIRE_CLEAN_GIT_ENV
+
+
+class _IdentityInputs(TypedDict):
+    reliable_mode_enabled: bool
+    reliable_require_clean_git: bool
+    provenance_verbose_enabled: bool
+    artifact_file_size_cap_bytes: int
+    artifact_total_size_cap_bytes: int
 
 
 @dataclass(frozen=True)
@@ -15,8 +24,8 @@ class WorkloadPolicy:
     artifact_file_size_cap_bytes: int
     artifact_total_size_cap_bytes: int
 
-    def identity_inputs(self) -> dict[str, bool | int]:
-        return asdict(self)
+    def identity_inputs(self) -> _IdentityInputs:
+        return cast(_IdentityInputs, asdict(self))
 
 
 def _size_cap(environment: dict[str, str], key: str, default: int) -> int:

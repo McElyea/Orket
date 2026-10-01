@@ -4,11 +4,14 @@ import os
 from collections.abc import Mapping
 from pathlib import Path
 from types import MappingProxyType
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from orket.adapters.execution.owned_io import run_owned_io, run_owned_thread
 from orket.application.services.runtime_construction_inputs import RuntimeConstructionInputs
 from orket.application.services.runtime_input_service import RuntimeInputService
+
+if TYPE_CHECKING:
+    from orket.application.services.flow_authoring_service import FlowAuthoringService
 
 
 class ApiRuntimeHostService:
@@ -25,7 +28,7 @@ class ApiRuntimeHostService:
     def create_session_id(self) -> str:
         return self.runtime_inputs.create_session_id()
 
-    def create_flow_authoring_service(self) -> Any:
+    def create_flow_authoring_service(self) -> FlowAuthoringService:
         from orket.application.services.flow_runtime_service import build_flow_authoring_service
 
         return build_flow_authoring_service(self.project_root, self.runtime_inputs)
@@ -53,7 +56,7 @@ class ApiRuntimeHostService:
         await run_owned_io(driver.close, label="api-chat-driver-close", preserve_failure=True)
 
     def create_execution_pipeline(self, workspace_root: Path | None = None) -> Any:
-        from orket.runtime.execution_pipeline import ExecutionPipeline
+        from orket.runtime.execution.execution_pipeline import ExecutionPipeline
 
         return ExecutionPipeline(
             workspace_root or self.project_root / "workspace" / "default",

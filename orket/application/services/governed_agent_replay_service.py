@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import fields
 from typing import Any
 
@@ -97,7 +98,7 @@ def _inventory_diagnostics(run_id: str, evidence: GovernedAgentReplayEvidence, e
     return diagnostics
 
 
-def _compare_iteration(item: dict, expected: dict, run: Any) -> dict[str, Any]:
+def _compare_iteration(item: Mapping[str, Any], expected: dict, run: Any) -> dict[str, Any]:
     result = {"invocation_id": item.get("invocation_id"), "matched": False, "compared": False}
     if item.get("evidence_error"):
         return {**result, "evidence_status": "invalid", "reason": item["evidence_error"]}
@@ -125,7 +126,7 @@ def _compare_iteration(item: dict, expected: dict, run: Any) -> dict[str, Any]:
     }
 
 
-def _validate_evidence(item: dict, expected: dict, run: dict) -> None:
+def _validate_evidence(item: Mapping[str, Any], expected: dict, run: dict) -> None:
     binding, request = item["binding"], item["request"]
     if not isinstance(binding.get("step_id"), str):
         raise ReplayIntegrityError("step_binding_invalid")

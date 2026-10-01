@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 from types import MappingProxyType
-from typing import Any
+from typing import Any, cast
 
 from orket.adapters.execution.owned_io import run_owned_thread
 from orket.settings import (
@@ -43,7 +43,7 @@ class RuntimeConstructionInputs:
         return cls(root, observed, json.dumps(settings, allow_nan=False), preferences)
 
     def user_settings(self) -> dict[str, Any]:
-        return json.loads(self.user_settings_json)
+        return cast(dict[str, Any], json.loads(self.user_settings_json))
 
     @classmethod
     def _capture_native(
@@ -65,7 +65,7 @@ class RuntimeConstructionInputs:
     def user_preferences(self) -> dict[str, Any]:
         if self.user_preferences_json is None:
             raise ValueError("E_RUNTIME_PREFERENCES_NOT_CAPTURED")
-        return json.loads(self.user_preferences_json)
+        return cast(dict[str, Any], json.loads(self.user_preferences_json))
 
     def bind_settings(self) -> None:
         """Bind only the calling execution context; never mutate process environment."""

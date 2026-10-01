@@ -30,9 +30,9 @@ async def prepare_sqlite_migration_copy(
 ) -> SQLiteMigrationCopy:
     if not writers_stopped:
         raise ValueError("E_OUTWARD_WRITERS_MUST_BE_STOPPED")
-    paths = capture_file_roots([source, backup, destination])
+    input_roots = capture_file_roots([source, backup, destination])
     source, backup, destination = await run_owned_thread(
-        lambda: tuple(path.resolve() for path in paths), label="sqlite-migration-paths")
+        lambda: tuple(path.resolve() for path in input_roots), label="sqlite-migration-paths")
     if len({source, backup, destination}) != 3:
         raise ValueError("E_OUTWARD_MIGRATION_PATH_COLLISION")
     paths = (source, backup, destination)

@@ -51,6 +51,7 @@ from .turn_approval_publication import create_pending_tool_approval_request
 
 class Orchestrator:
     """Coordinates execution, verification, and ordered issue publication."""
+    run_ledger: object
 
     def __init__(
         self,

@@ -8,6 +8,7 @@ import os
 from dataclasses import dataclass
 from functools import partial
 from pathlib import Path
+from typing import TypedDict
 
 from orket.adapters.execution.owned_io import run_owned_thread
 
@@ -18,13 +19,19 @@ MAX_SNAPSHOT_BYTES = 8_388_608
 side_effecting = True
 
 
+class CardArtifactManifestEntry(TypedDict):
+    path: str
+    sha256: str
+    size_bytes: int
+
+
 @dataclass(frozen=True)
 class CapturedCardArtifact:
     path: str
     content: bytes
 
     @property
-    def manifest_entry(self) -> dict[str, str | int]:
+    def manifest_entry(self) -> CardArtifactManifestEntry:
         return {"path": self.path, "sha256": hashlib.sha256(self.content).hexdigest(), "size_bytes": len(self.content)}
 
 

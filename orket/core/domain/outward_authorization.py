@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import asdict, dataclass
-from typing import Any
+from typing import Any, cast
 
 
 def args_hash(args: dict[str, Any]) -> str:
@@ -57,7 +57,7 @@ class OutwardAuthorization:
 
     @property
     def arguments(self) -> dict[str, Any]:
-        return json.loads(self.arguments_json)
+        return cast(dict[str, Any], json.loads(self.arguments_json))
 
     @property
     def digest(self) -> str:

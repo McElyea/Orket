@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import replace
 from functools import partial
-from typing import Any
+from typing import Any, cast
 
 from orket.adapters.execution.owned_io import run_owned_thread
 from orket.application.services.outward_approval_service import OutwardApprovalService
@@ -151,16 +151,17 @@ class OutwardModelAdmissionService:
             context_summary=MODEL_PROPOSAL_CONTEXT,
             timeout_seconds=timeout,
         )
-        return await transaction.get_run(run.run_id)
+        # The current writer transaction retains the run admitted by _publish.
+        return cast(OutwardRunRecord, await transaction.get_run(run.run_id))
 
     def _invalid_result(self, run: OutwardRunRecord, result: dict[str, Any]) -> str | None:
         if "error" in result:
-            return result["error"]
+            return cast(str, result["error"])
         call = result["tool_call"]
         tool = call["tool"]
         if self.connectors.connector_registry.get(tool) is None:
             return f"model tool is not registered: {tool}"
-        if tool != current_step(run, acceptance_tool_steps(run))["tool"]:
+        if tool != cast(dict[str, Any], current_step(run, acceptance_tool_steps(run)))["tool"]:
             return f"model tool does not match acceptance_contract tool: {tool}"
         try:
             self.connectors.validate_args(tool, call["args"])

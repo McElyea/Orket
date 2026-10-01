@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any
+from typing import Any, TypeVar, cast
 
 from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel
 
 from orket.interfaces.routers.outward_effects import build_outward_effects_router
+
+_PayloadT = TypeVar("_PayloadT")
 
 
 class ApprovalDecisionRequest(BaseModel):
@@ -24,10 +26,10 @@ class OutwardApprovalApproveRequest(BaseModel):
     note: str | None = None
 
 
-def _filter_payload(outbound_filter: Callable[[Any, str], Any] | None, payload: Any, surface: str) -> Any:
+def _filter_payload(outbound_filter: Callable[[Any, str], Any] | None, payload: _PayloadT, surface: str) -> _PayloadT:
     if outbound_filter is None:
         return payload
-    return outbound_filter(payload, surface)
+    return cast(_PayloadT, outbound_filter(payload, surface))
 
 
 def build_approvals_router(

@@ -27,10 +27,11 @@ class SettingsLocation:
     preferences_override: Path | None = None
 
     def resolve(self) -> tuple[Path, Path, Path | None]:
-        options = {"invocation_root": self.invocation_root, "environment": {"ORKET_DURABLE_ROOT": self.durable_root},
-                   "create_parent": False}
-        settings = resolve_user_settings_path(self.settings_override, migrate_legacy=False, **options)
-        preferences = resolve_user_preferences_path(self.preferences_override, **options)
+        root, environment = self.invocation_root, {"ORKET_DURABLE_ROOT": self.durable_root}
+        settings = resolve_user_settings_path(self.settings_override, migrate_legacy=False,
+            invocation_root=root, environment=environment, create_parent=False)
+        preferences = resolve_user_preferences_path(self.preferences_override,
+            invocation_root=root, environment=environment, create_parent=False)
         if settings == preferences:
             raise ValueError("E_SETTINGS_PATHS_MUST_DIFFER")
         legacy = self.invocation_root / "user_settings.json" if self.settings_override is None else None

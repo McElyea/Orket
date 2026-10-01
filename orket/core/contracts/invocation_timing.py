@@ -32,7 +32,8 @@ class InvocationTiming(BaseModel):
 
 
 def unavailable_invocation_timing(reason: str, *, clock: str | None = None) -> InvocationTiming:
-    return InvocationTiming(timing=InvocationTimingProvenance(status="unavailable", clock=clock, reason=reason))
+    return InvocationTiming(timing=InvocationTimingProvenance.model_validate(
+        {"status": "unavailable", "clock": clock, "reason": reason}))
 
 
 def read_invocation_timing(payload: dict[str, Any]) -> InvocationTiming:

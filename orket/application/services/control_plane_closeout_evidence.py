@@ -14,7 +14,8 @@ from orket.core.domain.control_plane_final_truth import (
 async def read_terminal_truth(
     execution: ControlPlaneExecutionRepository, publication: ControlPlanePublicationService, run: RunRecord,
 ) -> tuple[AttemptRecord, FinalTruthRecord | None]:
-    attempt = await execution.get_attempt_record(attempt_id=run.current_attempt_id)
+    attempt = (await execution.get_attempt_record(attempt_id=run.current_attempt_id)
+               if run.current_attempt_id is not None else None)
     if attempt is None or attempt.run_id != run.run_id or attempt.attempt_id != run.current_attempt_id:
         raise ControlPlaneFinalTruthError("E_CONTROL_PLANE_TERMINAL_AUTHORITY_CONFLICT:attempt_identity")
     truth = await publication.repository.get_final_truth(run_id=run.run_id)

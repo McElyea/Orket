@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any, cast
+
 from orket.adapters.storage.outward_store_transaction import OutwardStoreTransaction
 from orket.application.services.outward_effect_authority import validate_effect_authority
 from orket.application.services.outward_run_execution_plan import acceptance_tool_steps, previous_tool_results
@@ -67,7 +69,8 @@ async def _successful_sequence_refs(transaction: OutwardStoreTransaction, run: O
         if effect is None or effect.state not in {"observed", "published"}:
             raise RuntimeError("E_OUTWARD_TERMINAL_EFFECT_NOT_OBSERVED")
         await validate_effect_authority(transaction, binding, effect)
-        receipt = effect.receipt
+        # Observed/published effect records require a validated receipt.
+        receipt = cast(dict[str, Any], effect.receipt)
         if receipt["event"].get("outcome") != "success" or receipt["result"] != result.get("result"):
             raise RuntimeError("E_OUTWARD_TERMINAL_EFFECT_NOT_SUCCESSFUL")
         refs.append(f"{effect.effect_id}:receipt:sha256:{effect.receipt_digest}")

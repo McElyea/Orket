@@ -239,6 +239,9 @@ legacy-sentinel migration and partial effects. Both Quality jobs retain file,
 SQLite, process and input controls under `docs/specs/SANDBOX_EVENT_PUBLICATION_OWNERSHIP.md`.
 API startup validation uses the existing owned native worker before engine startup;
 keep handler/cancellation/security controls under `docs/specs/API_RUNTIME_LIFECYCLE.md`.
+Both Quality selections also retain native missing-authentication and missing-
+interaction-owner refusal/cleanup controls in `test_api_required_runtime_owners.py`.
+The required-value delta is `docs/architecture/CONTRACT_DELTA_TYPING_REQUIRED_VALUES_2026-10-01.md`.
 
 Supporting failure diagnostics retain the existing native I/O owner through
 handler settlement. Both Quality jobs retain held/failing-handler, fatal-handler

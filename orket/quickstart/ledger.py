@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from orket.application.services.quickstart_io_service import QuickstartLedgerIO
 
@@ -103,7 +103,7 @@ class QuickstartLedgerWriter:
         )
         storage = QuickstartLedgerIO(self.path)
         line = canonical_json(event) + "\n"
-        event = json.loads(line)
+        event = cast(dict[str, Any], json.loads(line))
 
         def adopt() -> dict[str, Any]:
             self._previous_event_hash = str(event["event_hash"])
@@ -131,7 +131,7 @@ async def verify_ledger_file(path: Path) -> LedgerVerificationResult:
     return verify_ledger_events(events)
 
 
-def verify_ledger_events(events: list[Mapping[str, Any]]) -> LedgerVerificationResult:
+def verify_ledger_events(events: Sequence[Mapping[str, Any]]) -> LedgerVerificationResult:
     errors: list[str] = []
     if not events:
         errors.append("ledger must contain at least one event")

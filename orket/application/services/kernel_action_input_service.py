@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, cast
 
 from orket_extension_sdk import FrozenJson
 
 
 def capture_kernel_request(request: dict[str, Any]) -> dict[str, Any]:
-    return FrozenJson.freeze(request).thaw()
+    # FrozenJson preserves the dictionary shape admitted by this boundary.
+    return cast(dict[str, Any], FrozenJson.freeze(request).thaw())
 
 
 def capture_kernel_publication_inputs(

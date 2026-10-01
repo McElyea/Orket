@@ -11,10 +11,10 @@ from orket.application.services.control_plane_snapshot_publication import publis
 from orket.application.services.control_plane_workload_catalog import (
     GITEA_STATE_WORKER_EXECUTION_WORKLOAD,
 )
-from orket.application.services.gitea_state_control_plane_closeout import publish_gitea_closeout
+from orket.application.services.gitea_state_control_plane_closeout import GiteaCloseoutResult, publish_gitea_closeout
 from orket.application.services.gitea_state_control_plane_lease_service import GiteaStateControlPlaneLeaseService
 from orket.application.services.runtime_input_service import RuntimeInputService
-from orket.core.contracts import AttemptRecord, EffectJournalEntryRecord, FinalTruthRecord, RunRecord, StepRecord
+from orket.core.contracts import AttemptRecord, EffectJournalEntryRecord, RunRecord, StepRecord
 from orket.core.contracts.control_plane_transaction import ControlPlaneTransactionFactory
 from orket.core.contracts.repositories import ControlPlaneExecutionRepository
 from orket.core.domain import (
@@ -173,7 +173,7 @@ class GiteaStateControlPlaneExecutionService:
         error: str | None, success_state: str, worker_id: str,
         lease_observation: Mapping[str, object], lease_expired: bool,
         lease_service: GiteaStateControlPlaneLeaseService,
-    ) -> tuple[RunRecord, AttemptRecord, StepRecord, EffectJournalEntryRecord, FinalTruthRecord]:
+    ) -> GiteaCloseoutResult:
         async with self.transactions() as transaction:
             publication = ControlPlanePublicationService(
                 repository=transaction.records, authority=self.publication.authority,

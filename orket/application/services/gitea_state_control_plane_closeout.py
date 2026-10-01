@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from orket.application.services.control_plane_resource_authority_checks import require_resource_snapshot_matches_lease
-from orket.core.contracts import StepRecord
+from orket.core.contracts import AttemptRecord, EffectJournalEntryRecord, FinalTruthRecord, RunRecord, StepRecord
 from orket.core.domain import (
     AttemptState,
     AuthoritySourceClass,
@@ -22,11 +22,13 @@ from orket.core.domain import (
 )
 from orket.core.domain.control_plane_final_truth import validate_terminal_record_consistency
 
+GiteaCloseoutResult = tuple[RunRecord, AttemptRecord, StepRecord, EffectJournalEntryRecord, FinalTruthRecord]
+
 
 async def publish_gitea_closeout(
     service, leases, *, run_id, attempt_id, card_id, final_state, error, success_state,
     worker_id, lease_observation, lease_expired,
-):
+) -> GiteaCloseoutResult:
     run = await service._require_run(run_id=run_id)
     attempt = await service._require_attempt(attempt_id=attempt_id)
     lease, resource = await _require_identity(service, leases, run, attempt, card_id, worker_id, lease_observation)

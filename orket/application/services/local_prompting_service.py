@@ -103,7 +103,7 @@ async def resolve_local_prompting_policy(**kwargs: Any) -> LocalPromptingPolicyR
 
 def _resolve_registry_policy(*, registry, registry_hash, provider_backend, model, messages, context,
     requested_sampling, requested_stops, mode, task_class, strict_task, allow_fallback, fallback_profile_id,
-    override_profile_id, lmstudio_session_mode, lmstudio_session_id, provider_for_profile):
+    override_profile_id, lmstudio_session_mode, lmstudio_session_id, provider_for_profile) -> LocalPromptingPolicyResult:
     try:
         resolved = registry.resolve_profile(
             provider=provider_for_profile,
@@ -121,7 +121,7 @@ def _resolve_registry_policy(*, registry, registry_hash, provider_backend, model
             provider=provider_for_profile,
             mode=mode,
             task_class=task_class,
-            messages=normalized_messages,
+            messages=tuple(normalized_messages),
             profile_id="unresolved",
             template_family="unknown",
             template_version="unknown",
@@ -136,12 +136,12 @@ def _resolve_registry_policy(*, registry, registry_hash, provider_backend, model
             history_policy="unknown",
             allows_thinking_blocks=False,
             thinking_block_format="none",
-            intro_phrase_denylist=[],
+            intro_phrase_denylist=(),
             lmstudio_session_mode=lmstudio_session_mode,
             lmstudio_session_id=lmstudio_session_id,
             resolution_path="unresolved",
             profile_registry_snapshot_hash=registry_hash,
-            warnings=[f"{E_LOCAL_PROMPT_PROFILE_RESOLUTION}:{exc}"],
+            warnings=(f"{E_LOCAL_PROMPT_PROFILE_RESOLUTION}:{exc}",),
         )
     resolved_messages, warnings, effective_context_budget_tokens = _shape_messages(
         messages, context, resolved.profile, provider_backend, model, task_class, mode,
@@ -231,7 +231,7 @@ def _apply_budget(resolved_messages, context, profile, task_class, mode):
 
 def _resolved_policy(resolved, resolved_messages, warnings, effective_context_budget_tokens,
     provider_backend, provider_for_profile, mode, task_class, requested_stops, requested_sampling,
-    lmstudio_session_mode, lmstudio_session_id, registry_hash):
+    lmstudio_session_mode, lmstudio_session_id, registry_hash) -> LocalPromptingPolicyResult:
     effective_stops = _effective_stops(provider_backend, resolved.profile, task_class)
     effective_stops = list(dict.fromkeys(requested_stops + effective_stops))
     sampling_bundle = cap_sampling_bundle(_sampling_bundle(resolved.profile, task_class), requested_sampling)
@@ -257,13 +257,13 @@ def _resolved_policy(resolved, resolved_messages, warnings, effective_context_bu
         rendered_prompt_byte_count=byte_count,
         render_observability_classification=render_classification,
         stop_sequences_by_task_class=dict(resolved.profile.stop_sequences_by_task_class),
-        effective_stop_sequences=effective_stops,
+        effective_stop_sequences=tuple(effective_stops),
         sampling_bundle=sampling_bundle,
         tool_call_mode=str(resolved.profile.tool_call_mode),
         history_policy=str(resolved.profile.history_policy),
         allows_thinking_blocks=bool(resolved.profile.allows_thinking_blocks),
         thinking_block_format=str(resolved.profile.thinking_block_format),
-        intro_phrase_denylist=list(resolved.profile.intro_phrase_denylist),
+        intro_phrase_denylist=tuple(resolved.profile.intro_phrase_denylist),
         lmstudio_session_mode=lmstudio_session_mode,
         lmstudio_session_id=lmstudio_session_id,
         resolution_path=resolved.resolution_path,

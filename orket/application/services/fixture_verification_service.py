@@ -10,6 +10,7 @@ from collections.abc import Callable, Mapping
 from datetime import datetime
 from functools import partial
 from pathlib import Path
+from typing import cast
 from uuid import UUID
 
 from orket.adapters.execution.fixture_runner import RUNNER_CODE
@@ -101,7 +102,7 @@ class FixtureVerificationService:
         if verification.fixture_path:
             try:
                 root, path, exists = await run_owned_thread(
-                    lambda: paths(workspace, verification.fixture_path), label="fixture-admission-metadata")
+                    lambda: paths(workspace, cast(str, verification.fixture_path)), label="fixture-admission-metadata")
                 if not exists:
                     raise ValueError(f"Fixture file not found at {path}")
                 mode, timeout = self._settings(environment)

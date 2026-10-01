@@ -20,7 +20,7 @@ async def read_final_truth(
         'SELECT final_truth_record_id, run_id, payload_json FROM final_truth_records WHERE run_id = ? LIMIT 2',
         (run_id,),
     ) as cursor:
-        rows = await cursor.fetchall()
+        rows = list(await cursor.fetchall())
     if max_bytes is not None and sum(len(str(value).encode('utf-8')) for row in rows for value in row) > max_bytes:
         raise FinalTruthReadLimitError('final_truth_read_resource_limit')
     if len(rows) > 1:

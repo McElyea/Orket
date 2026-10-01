@@ -1,6 +1,6 @@
 # Card Completion Acceptance Contract
 
-Last updated: 2026-09-28
+Last updated: 2026-10-01
 Status: Active contract; builtin completion passes scoped BT-3 acceptance
 Owner: Orket Core
 
@@ -506,6 +506,10 @@ environment is supplied; this service supplies the sanitized environment.
    empty, canceled and archived backlogs. It does not use a strategy's event name
    as completion authority. `orchestrator_epic_complete` is emitted only after
    accepted finalization through the control plane and run ledger.
+   The success publication phase also requires the retained plan's snapshot.
+   An absent snapshot raises `E_EPIC_PUBLICATION_SUCCESS_SNAPSHOT_REQUIRED` before
+   recording success or emitting the completion event. Earlier publication phases
+   remain retained; this refusal does not imply a cross-store rollback.
 6. This is a consistent retained acceptance snapshot, not a cross-database commit
    or a permanent claim about current workspace files. The writer guard is released
    before downstream session, summary, success-store and control-plane publication.

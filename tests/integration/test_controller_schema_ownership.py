@@ -71,3 +71,24 @@ async def test_schema_read_is_owned_and_captures_nested_events(tmp_path, monkeyp
         if not task.done():
             task.cancel()
         await asyncio.gather(task, *([timeout_owner] if timeout_owner else []), return_exceptions=True)
+
+
+@pytest.mark.parametrize("root", [None, [], [{}], "schema", 1])
+# Layer: integration
+async def test_selected_schema_rejects_invalid_json_root(tmp_path, root):
+    path = tmp_path / "invalid-root.json"
+    await asyncio.to_thread(path.write_text, json.dumps(root), encoding="utf-8")
+    with pytest.raises(ValueError, match="controller.observability_schema_root_invalid"):
+        await owner.validate_observability_schema([{}], schema_path=path)
+
+
+@pytest.mark.parametrize("admitted", [True, False])
+# Layer: integration
+async def test_selected_boolean_schema_keeps_its_validation_semantics(tmp_path, admitted):
+    path = tmp_path / "boolean-schema.json"
+    await asyncio.to_thread(path.write_text, json.dumps(admitted), encoding="utf-8")
+    if admitted:
+        await owner.validate_observability_schema([{}], schema_path=path)
+    else:
+        with pytest.raises(ValueError, match="controller.observability_schema_invalid:index=0"):
+            await owner.validate_observability_schema([{}], schema_path=path)

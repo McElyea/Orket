@@ -1,7 +1,7 @@
 """Explicit observed revisions for mutable execution records; no hidden caller state."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, TypeVar, cast
 
 from orket.core.domain.control_plane_enums import AttemptState
 
@@ -16,12 +16,13 @@ STEP_STATE_FIELDS = frozenset({'state_revision', 'output_ref', 'capability_used'
 
 
 def read_execution_record(record_type: type[ExecutionRecord], payload: str) -> ExecutionRecord:
-    record = record_type.model_validate_json(payload)
+    # Pydantic validation and copies preserve the supplied concrete model class.
+    record = cast(ExecutionRecord, record_type.model_validate_json(payload))
     if record.state_revision is None:
         if 'state_revision' in record.model_fields_set:
             raise ValueError('E_CONTROL_PLANE_STATE_CONFLICT: persisted revision cannot be null')
         # Historical rows expose baseline revision zero without rewriting retained bytes.
-        record = record.model_copy(update={'state_revision': 0})
+        record = cast(ExecutionRecord, record.model_copy(update={'state_revision': 0}))
     return record
 
 
@@ -30,20 +31,21 @@ def next_execution_record(existing: ExecutionRecord | None, incoming: ExecutionR
     if existing is None:
         if incoming.state_revision is not None:
             raise error_type('E_CONTROL_PLANE_STATE_CONFLICT: observed identity no longer exists')
-        return incoming.model_copy(update={'state_revision': 0})
+        return cast(ExecutionRecord, incoming.model_copy(update={'state_revision': 0}))
     if incoming.state_revision is None or incoming.state_revision != existing.state_revision:
         raise error_type('E_CONTROL_PLANE_STATE_CONFLICT: creation requires absence; update requires current revision')
     if incoming == existing:
         return existing
-    return incoming.model_copy(update={'state_revision': existing.state_revision + 1})
+    return cast(ExecutionRecord, incoming.model_copy(update={'state_revision': existing.state_revision + 1}))
 
 
 def same_attempt_admission(existing: AttemptRecord, incoming: AttemptRecord) -> bool:
-    mutable = ATTEMPT_STATE_FIELDS
+    mutable = set(ATTEMPT_STATE_FIELDS)
     if existing.attempt_state is AttemptState.CREATED and incoming.attempt_state is AttemptState.EXECUTING:
         mutable = mutable | {'start_timestamp'}
     return existing.model_dump(exclude=mutable) == incoming.model_dump(exclude=mutable)
 
 
 def same_step_admission(existing: StepRecord, incoming: StepRecord) -> bool:
-    return existing.model_dump(exclude=STEP_STATE_FIELDS) == incoming.model_dump(exclude=STEP_STATE_FIELDS)
+    excluded = set(STEP_STATE_FIELDS)
+    return existing.model_dump(exclude=excluded) == incoming.model_dump(exclude=excluded)

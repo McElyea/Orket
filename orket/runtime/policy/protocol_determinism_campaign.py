@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any
 
 from orket.application.services.protocol_query_scope import validate_protocol_replay_paths
-from orket.runtime.protocol_replay import ProtocolReplayEngine
+from orket.runtime.evidence.protocol_replay import ProtocolReplayEngine
 
 
 def resolve_run_ids(*, runs_root: Path, run_ids: list[str]) -> list[str]:

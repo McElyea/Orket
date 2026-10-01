@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from orket.schema import IssueVerification, VerificationResult
+from orket.schema import IssueVerification, VerificationResult, VerificationScenario
 
 
 class VerificationSecurityError(Exception):
@@ -37,7 +37,7 @@ def _outcomes(stdout: bytes) -> dict:
 
 
 def interpret_fixture(verification: IssueVerification, *, timestamp: str, stdout: bytes = b"",
-                      error: str | None = None, lifetime: dict | None = None) -> tuple:
+                      error: str | None = None, lifetime: dict | None = None) -> tuple[VerificationResult, list[VerificationScenario]]:
     """Return a result and copied scenarios; callers own applying the observation."""
     scenarios = [scenario.model_copy(deep=True) for scenario in verification.scenarios]
     logs = [f"--- Verification Started at {timestamp} ---"]

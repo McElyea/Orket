@@ -3,17 +3,18 @@ from __future__ import annotations
 import hashlib
 import re
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, cast
 
 from orket.application.review.models import (
     DeterministicDecision,
     DeterministicFinding,
     DeterministicReviewDecisionPayload,
     ReviewSnapshot,
+    Severity,
 )
 
-SEVERITY_RANK = {"info": 0, "low": 1, "medium": 2, "high": 3, "critical": 4}
-DEFAULT_FORBIDDEN_PATTERN_SEVERITY = "high"
+SEVERITY_RANK: dict[Severity, int] = {"info": 0, "low": 1, "medium": 2, "high": 3, "critical": 4}
+DEFAULT_FORBIDDEN_PATTERN_SEVERITY: Severity = "high"
 
 
 def _added_diff_lines(diff_unified: str) -> list[dict[str, Any]]:
@@ -124,7 +125,8 @@ def run_deterministic_lane(
         added_lines = _added_diff_lines(snapshot.diff_unified)
         for row in patterns:
             pattern = str(row["pattern"])
-            severity = str(row["severity"])
+            # _forbidden_pattern_rows admits only the canonical severity rank keys.
+            severity = cast(Severity, str(row["severity"]))
             try:
                 regex = re.compile(pattern, re.MULTILINE)
             except re.error:

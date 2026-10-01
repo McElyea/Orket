@@ -538,7 +538,7 @@ class DefaultOrchestrationLoopPolicyNode:
     def context_window(self, inputs: LoopPolicyInputs) -> int:
         raw = inputs.context_window
         try:
-            return max(1, int(raw))
+            return 10 if raw is None else max(1, int(raw))
         except (TypeError, ValueError):
             return 10
 

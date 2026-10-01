@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from orket.adapters.execution.owned_io import require_sync_context
 from orket.application.services.command_process_supervisor import CommandProcessSupervisor
@@ -36,7 +36,7 @@ def _run_command_sync(cmd: list[str], *, timeout_s: float, cwd: Path | None = No
     # Retain subprocess text-mode universal-newline behavior for inventory parsers.
     stdout, stderr = [value.decode("utf-8", errors="replace").replace("\r\n", "\n").replace("\r", "\n")
                       for value in (result.stdout, result.stderr)]
-    if int(result.returncode) != 0:
+    if int(cast(int, result.returncode)) != 0:
         detail = stderr.strip() or stdout.strip() or f"exit={result.returncode}"
         raise ProviderRuntimeWarmupError(f"command failed: {' '.join(command)} ({detail})")
     return stdout

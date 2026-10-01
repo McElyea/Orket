@@ -97,8 +97,11 @@ async def preload_required_read_context(
     files = AsyncFileTools(workspace).capture()
     for rel_path in required_read_paths:
         candidate = await files.resolve_path_async(rel_path)
+        def inspect_candidate(candidate: Path = candidate) -> bool:
+            return candidate.exists() and candidate.is_file()
+
         is_file = await run_owned_thread(
-            lambda candidate=candidate: candidate.exists() and candidate.is_file(),
+            inspect_candidate,
             label="turn-required-read-file-type",
         )
         if not is_file:

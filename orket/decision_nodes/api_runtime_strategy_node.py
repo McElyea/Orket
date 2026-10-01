@@ -4,7 +4,7 @@ from collections.abc import Mapping
 from datetime import timedelta
 from pathlib import Path
 from types import MappingProxyType
-from typing import Any
+from typing import Any, cast
 
 from orket_extension_sdk import FrozenJson
 
@@ -84,7 +84,7 @@ class DefaultApiRuntimeStrategyNode:
         return {"method_name": "write_file", "args": [path, content]}
 
     def normalize_metrics(self, snapshot: FrozenJson) -> dict[str, Any]:
-        normalized = snapshot.thaw()
+        normalized = cast(dict[str, Any], snapshot.thaw())
         if "cpu" not in normalized and "cpu_percent" in normalized:
             normalized["cpu"] = normalized["cpu_percent"]
         if "memory" not in normalized and "ram_percent" in normalized:

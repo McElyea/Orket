@@ -8,7 +8,7 @@ from collections.abc import Mapping
 from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal, cast
 
 import aiofiles
 
@@ -137,7 +137,8 @@ def _model_invocation_payload(
     refs: dict[str, str],
 ) -> dict[str, Any]:
     raw = _response_raw(response)
-    usage = raw.get("usage") if isinstance(raw.get("usage"), Mapping) else {}
+    raw_usage = raw.get("usage")
+    usage = raw_usage if isinstance(raw_usage, Mapping) else {}
     return {
         "schema_version": "outward_model_invocation.v1",
         "result": result,
@@ -216,7 +217,7 @@ def _runtime_context_payload(runtime_context: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-async def _write_json(path: Path, payload: dict[str, Any], *, mode: str) -> None:
+async def _write_json(path: Path, payload: dict[str, Any], *, mode: Literal["w", "x"]) -> None:
     async with aiofiles.open(path, mode=mode, encoding="utf-8") as handle:
         await handle.write(json.dumps(payload, indent=2, sort_keys=True))
         await handle.write("\n")
@@ -340,7 +341,7 @@ def _redact_tool_content(content: str, pii_fields: tuple[str, ...]) -> str:
     try:
         parsed = json.loads(content)
     except json.JSONDecodeError:
-        return _redact(content)
+        return cast(str, _redact(content))
     return json.dumps(_redacted_tool_call(parsed, pii_fields), sort_keys=True)
 
 
@@ -360,7 +361,7 @@ def _redacted_args(args: Any, pii_fields: tuple[str, ...]) -> dict[str, Any] | N
     for field in pii_fields:
         if field in payload:
             payload[field] = "[REDACTED]"
-    return _redact(payload)
+    return cast(dict[str, Any], _redact(payload))
 
 
 def _redact(value: Any) -> Any:

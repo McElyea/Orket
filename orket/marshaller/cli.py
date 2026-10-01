@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from orket.adapters.execution.owned_io import run_owned_thread
 from orket.adapters.storage.async_file_tools import capture_file_roots
@@ -55,7 +55,7 @@ async def execute_marshaller_from_files(
     if promote and outcome.accept:
         promotion = await promote_run(
             run_path,
-            actor_id=selected_actor,
+            actor_id=cast(str, selected_actor),
             actor_source=actor_source,
             branch=branch,
         )

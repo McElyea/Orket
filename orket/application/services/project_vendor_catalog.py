@@ -94,7 +94,7 @@ class ProjectVendorCatalog:
         payload = self._load("epics", department, name)
         aliases = EpicConfig.model_fields["issues"].validation_alias
         assert isinstance(aliases, AliasChoices)
-        rows = next((payload[key] for key in aliases.choices if key in payload), [])
+        rows: object = next((payload[key] for key in aliases.choices if key in payload), [])
         if not isinstance(rows, list) or any(not isinstance(row, dict) for row in rows):
             raise ValueError("E_VENDOR_EPIC_CARDS_INVALID")
         result = []
