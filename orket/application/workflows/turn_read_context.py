@@ -8,6 +8,7 @@ from typing import Any
 
 from orket.adapters.execution.owned_io import run_owned_thread
 from orket.adapters.storage.async_file_tools import AsyncFileTools, capture_file_roots
+from orket.core.contracts.log_event_inputs import capture_log_event_inputs
 from orket.logging import log_event
 
 from .turn_path_resolver import PathResolver
@@ -125,7 +126,8 @@ async def publish_missing_read_event(
         "missing_required_read_paths_count": len(missing),
         "missing_required_read_paths": missing,
     }
+    event, payload = capture_log_event_inputs("preflight_missing_read_paths", payload)
     await run_owned_thread(
-        partial(log_event, "preflight_missing_read_paths", payload, workspace),
+        partial(log_event, event, payload, workspace),
         label="turn-missing-read-log",
     )

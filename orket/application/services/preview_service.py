@@ -47,13 +47,14 @@ class PreviewBuilder:
         return await run_owned_thread(partial(ConfigLoader, self.project_root, department), label="preview-loader")
 
     async def _organization(self) -> OrganizationConfig | None:
+        workspace = self.project_root / "workspace/default"
         try:
             content = await run_owned_thread(partial(self.fs.read_file_sync, str(self.model_root / "organization.json")),
                                              label="preview-organization")
             return OrganizationConfig.model_validate_json(content)
         except (ValueError, FileNotFoundError) as exc:
             await run_owned_thread(partial(log_event, "preview_org_config_missing", {"error": str(exc)},
-                                          workspace=self.project_root / "workspace/default"), label="preview-config-observation")
+                                          workspace=workspace), label="preview-config-observation")
             return None
 
     async def _asset(self, loader: ConfigLoader, category: str, name: str, model_type: Any) -> Any:
@@ -62,6 +63,7 @@ class PreviewBuilder:
     async def _get_compiled_prompt(
         self, seat_name: str, issue_summary: str, epic: EpicConfig, team: TeamConfig, department: str
     ) -> str:
+        workspace = self.project_root / "workspace/default"
         epic, team = deepcopy(epic), deepcopy(team)
         loader = await self._loader(department)
         seat = team.seats.get(sanitize_name(seat_name))
@@ -79,7 +81,7 @@ class PreviewBuilder:
                 await run_owned_thread(partial(
                     log_event, "preview_role_asset_missing",
                     {"role": r_name, "department": department, "error": str(e)},
-                    workspace=self.project_root / "workspace/default",
+                    workspace=workspace,
                 ), label="preview-role-observation")
 
         # 2. Select Model

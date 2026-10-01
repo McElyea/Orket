@@ -9,6 +9,7 @@ from orket.adapters.execution.owned_io import run_owned_io, run_owned_thread
 from orket.adapters.storage.async_executor_service import run_coroutine_blocking
 from orket.adapters.storage.async_file_tools import capture_file_roots
 from orket.adapters.storage.structural_board_store import StructuralBoardStore
+from orket.core.contracts.log_event_inputs import capture_log_event_inputs
 from orket.core.domain.reconciler import ReconciliationPlan
 from orket.core.domain.reconciler import StructuralReconciler as ReconciliationPolicy
 from orket.logging import log_event
@@ -70,4 +71,5 @@ class StructuralReconciler:
 
     @staticmethod
     async def _event(name: str, payload: dict, workspace: Path) -> None:
+        name, payload = capture_log_event_inputs(name, payload)
         await run_owned_thread(partial(log_event, name, payload, workspace=workspace), label=f"structural-event:{name}")

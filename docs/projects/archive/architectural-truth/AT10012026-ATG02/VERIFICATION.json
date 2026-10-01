@@ -268,7 +268,39 @@
     "No current complete-suite/coverage or canonical Mypy rerun",
     "No whole-lane acceptance or main merge"
   ],
-  "publication": "Pending annotated v0.6.119, remote branch/tag identity and clean checkpoint; receipt .tmp/atg02-publication.json",
+  "publication": {
+    "commit": "b6a54b3ee930d2b9a0a5cb74b05cc64b9b339d59",
+    "version": "0.6.119",
+    "tag_object": "7cf4851c0b73703ba718263ded75d5c3baa84bb3",
+    "remote_refs": {
+      "refs/heads/codex/architectural-truth-bt0": "b6a54b3ee930d2b9a0a5cb74b05cc64b9b339d59",
+      "refs/tags/v0.6.119": "7cf4851c0b73703ba718263ded75d5c3baa84bb3",
+      "refs/tags/v0.6.119^{}": "b6a54b3ee930d2b9a0a5cb74b05cc64b9b339d59"
+    },
+    "clean_worktree": true,
+    "path": "primary",
+    "result": "success",
+    "diff_ledger": [
+      {
+        "run_at_utc": "2026-10-01T12:47:07.038953Z",
+        "changed": true,
+        "before_digest": null,
+        "after_digest": "sha256:17138e93464b97c4dab8ed2cf0aaf4755d84843b17b85ab4bac01a7f3f23d821",
+        "diff": {
+          "initial_write": true,
+          "added_paths": 0,
+          "removed_paths": 0,
+          "changed_paths": 0,
+          "paths_total_previous": 0,
+          "paths_total_current": 19,
+          "paths_total_reference": 19,
+          "churn_paths": 19,
+          "churn_ratio": 1.0,
+          "sample_paths": []
+        }
+      }
+    ]
+  },
   "exact_files_touched": [
     ".gitea/workflows/quality.yml",
     "CHANGELOG.md",
@@ -358,6 +390,26 @@
         "churn_ratio": 0.002079,
         "sample_paths": [
           "$.structural_reuse"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-01T12:49:07.036782Z",
+      "changed": true,
+      "before_digest": "sha256:b3a66fb70f1a30ed96713c5358856d0135c4b599c2c970cde869cb05ee0d6584",
+      "after_digest": "sha256:44ca8a23893951f63241d1258cbbb4ae40a565654aebcc8173ed02b2b65c9d39",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 481,
+        "paths_total_current": 529,
+        "paths_total_reference": 529,
+        "churn_paths": 1,
+        "churn_ratio": 0.00189,
+        "sample_paths": [
+          "$.publication"
         ]
       }
     }

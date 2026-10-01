@@ -5,6 +5,15 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.120] - 2026-10-01
+
+### Fixed
+- Finish the five frozen required logging sites: capture bug-fix and structural/missing-read event values before native admission, and select bug-fix/preview destinations before preceding persistence/read waits. Preserve required failure precedence and visible prior durable effects; no new logger or writer lifecycle.
+- Retain physical SQLite/file/log and interruption controls in both Gitea Quality selections. ATG-03 is a scoped source checkpoint; typing, coverage, installed/platform/provider/hosted gates and remaining ATG-v1 goals stay open.
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
 ## [0.6.119] - 2026-10-01
 
 ### Fixed

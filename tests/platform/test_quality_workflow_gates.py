@@ -87,6 +87,7 @@ def test_quality_workflow_enforces_architecture_and_volatility_gates() -> None:
 
     # The quick gate job and the full quality job should both run these checks.
     duplicated_in_both_jobs = [
+        "tests/integration/test_bug_fix_event_inputs.py tests/integration/test_preview_required_events.py tests/integration/test_structural_required_events.py tests/integration/test_missing_read_event_inputs.py",
         "tests/integration/test_model_stream_iterator_lifetime.py tests/integration/test_model_stream_transport_lifetime.py tests/integration/test_model_stream_transport_inputs.py tests/integration/test_model_stream_transport_failure.py",
         "tests/integration/test_tool_runtime_ownership.py tests/integration/test_guarded_mutation_ownership.py tests/integration/test_application_root_inputs.py tests/integration/test_epic_execution_phase_ownership.py",
         "tests/integration/test_extension_capability_api_lifetime.py tests/integration/test_extension_generation_options_api.py tests/integration/test_piper_process_lifetime.py tests/integration/test_interaction_cancel_ownership.py tests/integration/test_operator_completion_views.py",

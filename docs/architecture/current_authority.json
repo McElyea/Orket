@@ -239,7 +239,7 @@
       "kind": "contract",
       "label": "Logging preparation and settlement",
       "source": "docs/specs/LOG_WRITE_SETTLEMENT.md",
-      "scope": "Explicit native preparation, operation-local bindings, process-owned writer and bounded optional publication/frontier."
+      "scope": "Explicit native preparation, operation-local bindings, captured required producers, process-owned writer and bounded optional publication/frontier."
     },
     {
       "id": "compatibility.main",

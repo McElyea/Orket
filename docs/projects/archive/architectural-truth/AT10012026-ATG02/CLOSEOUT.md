@@ -1,7 +1,7 @@
 # ATG-02 scoped model-stream lifetime closeout
 
 Date: 2026-10-01 (America/Denver)
-Status: Source exit criteria passed; annotated v0.6.119 publication gate pending
+Status: Complete; published `b6a54b3e` / annotated `v0.6.119`
 Owner: Orket Core
 
 ## What changed
@@ -53,8 +53,8 @@ include all new controls in both jobs; no hosted job was run.
 proof limits and exact touched files. Local full receipts are
 `.tmp/atg02-proof.json` and `.tmp/atg02-structural.json`. A prior intermediate native
 dependency check correctly rejected two reverse imports; explicit port composition
-removed them without modifying the policy. Publication must verify the annotated
-tag, remote branch/peeled tag and clean worktree before moving to ATG-03.
+removed them without modifying the policy. Publication verified the annotated tag, remote branch/peeled tag and clean
+worktree in `.tmp/atg02-publication.json` before ATG-03.
 
 ## What was not verified
 

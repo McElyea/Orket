@@ -94,6 +94,14 @@ When the user targets a canonical plan for continuing goal execution:
    - `python scripts/governance/sync_published_index.py --check`
 12. Commit staged artifacts, `benchmarks/staging/index.json`, and `benchmarks/staging/README.md` together. Commit published artifacts, `benchmarks/published/index.json`, and `benchmarks/published/README.md` together.
 
+Required bug-fix, preview, structural adoption and missing-read producers retain
+captured event values/workspaces before their owned native publication. Both Quality
+selections include the five-site controls for actual append, held-write cancellation,
+native failure and partial effects, alongside existing logging preparation/subscriber/
+overflow/fatal-writer controls. Keep successful completion conditional on required
+publication; earlier durable effects need not roll back. Contract:
+`docs/specs/LOG_WRITE_SETTLEMENT.md`.
+
 ## Current Authority Maintenance
 
 `docs/architecture/current_authority.json` is the bounded authored index;

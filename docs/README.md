@@ -191,6 +191,7 @@ This index is the canonical map for markdown docs under `docs/`, excluding `docs
 52. `docs/architecture/CONTRACT_DELTA_EXTENSION_CAPABILITY_SLICE_AND_PROJECTION_SURFACES_2026-04-23.md`
 
 53. `docs/architecture/CONTRACT_DELTA_MODEL_STREAM_ITERATOR_D_2026-10-01.md`
+54. `docs/architecture/CONTRACT_DELTA_REQUIRED_PRODUCER_INPUTS_D_2026-10-01.md`
 
 ## Releases
 1. `docs/releases/0.4.0/PROOF_REPORT.md`

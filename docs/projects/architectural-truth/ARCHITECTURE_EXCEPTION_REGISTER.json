@@ -31,7 +31,7 @@
       "id": "AT-EX-005",
       "area": "async-reachable-sync-io",
       "status": "active_unaccepted_ship_risk",
-      "reason": "ATG-01 reconciles the applied guarded-mutation correction, logging caller migration and eight fixture repairs against unchanged v0.6.117 runtime/test inputs and retained passing source controls. GOAL_WORKSETS.json freezes remaining streaming, required-producer input/proof, demo, marshaller, quickstart, outward-policy, offline-copy, evidence-graph and wake-read obligations. Guarded-mutation ownership is no longer an unfixed source defect. Passing selected controls does not establish whole async reachability or installed/platform/provider acceptance.",
+      "reason": "ATG-01 freezes the finite ownership/input inventory. ATG-02 closes model-stream iterator/transport ownership with 150-case controlled HTTP/API proof. ATG-03 closes the five required producer input sites with 251-case real SQLite/file/log and retained logging proof. Remaining ATG-04 ownership families and later typing/coverage/installed/platform/provider/hosted gates stay open; these scoped closures do not accept whole D.",
       "removal_condition": "Reachability-aware static inventory and live responsiveness/cancellation tests pass with only explicit standalone-script exemptions.",
       "evidence": "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md"
     },

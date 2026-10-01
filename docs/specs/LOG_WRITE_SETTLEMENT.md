@@ -1,7 +1,7 @@
-# Optional log-write settlement
+# Log publication inputs and settlement
 
 Status: Active
-Last updated: 2026-09-30
+Last updated: 2026-10-01
 
 Owner: Orket Core. Public facade: `orket/logging.py`. The single process-global
 queue, writer, failure, drop, directory and subscriber state lives in
@@ -135,6 +135,30 @@ interruption keeps its existing cancellation policy. The supporting uncertainty
 event keeps its exact secondary-error protocol. Result/effect authority and
 migration belong to `docs/specs/SDK_WORKLOAD_PROCESS_LIFETIME.md`; this adds no
 optional queue or process-exit settlement guarantee.
+
+Bug-fix phase publication captures its selected workspace and exact builtin event
+payload before SQLite persistence/readback can yield. Invalid event inputs refuse
+before that publication's persistence. Existing durable/cache adoption precedes the
+native log attempt; log failure can therefore leave persisted/adopted phase state.
+It must not return a successful transition. Publication is not a cross-store
+transaction and does not roll back effects.
+
+Preview missing-organization and missing-role observations select the applicable
+workspace before their read/loader waits. Their locally constructed scalar payloads
+remain private. Native required publication must settle before a fallback preview
+result; failure refuses that result. Structural adoption events detach their
+payloads before native admission, after the corresponding verified file update.
+Earlier board changes can remain when publication fails; later writes do not gain
+authority from the failed observation. Missing-read publication similarly detaches
+its complete builtin payload, including nested metadata, before the native attempt.
+The caller's notice/compaction steps require that attempt to settle successfully.
+
+These five sites retain their existing required `run_owned_thread` semantics,
+prepared logging selection and native timestamp behavior. Repeated cancellation
+and timeout retain admitted work; native failure keeps precedence, including after
+partial file effects. No optional queue admission, writer restart, new logger,
+whole-request atomicity or unbound-native input guarantee is introduced. Scoped
+migration: `docs/architecture/CONTRACT_DELTA_REQUIRED_PRODUCER_INPUTS_D_2026-10-01.md`.
 
 ## Optional publication stages
 

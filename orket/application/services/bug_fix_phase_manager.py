@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any, TypeVar
 
 from orket.adapters.execution.owned_io import OwnedCoroutine, run_owned_io, run_owned_thread
+from orket.core.contracts.log_event_inputs import capture_log_event_inputs
 from orket.core.domain.bug_fix_phase import BugDiscoveryMetrics, BugFixPhase, BugFixPhaseStatus
 from orket.logging import log_event
 
@@ -110,6 +111,9 @@ class BugFixPhaseManager:
         return phase2_rock_id
 
     async def _publish(self, phase: BugFixPhase, event: str | None = None, payload: dict | None = None) -> None:
+        workspace = self.workspace
+        if event is not None:
+            event, payload = capture_log_event_inputs(event, {} if payload is None else payload)
         if self.db is not None:
             await self.db.save_bug_fix_phase(phase)
             saved = await self.db.get_bug_fix_phase(phase.rock_id)
@@ -121,5 +125,5 @@ class BugFixPhaseManager:
             self.active_phases[phase.rock_id] = phase.model_copy(deep=True)
         if event is not None:
             await run_owned_thread(
-                partial(log_event, event, payload, self.workspace), label=f"bug-fix-event:{event}",
+                partial(log_event, event, payload, workspace), label=f"bug-fix-event:{event}",
             )

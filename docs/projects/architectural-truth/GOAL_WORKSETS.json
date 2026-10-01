@@ -2730,9 +2730,12 @@
         "BugFixPhaseManager._publish"
       ],
       "historical_sites": 1,
-      "proof_tests": [],
-      "disposition": "pending_input_and_adverse_proof",
-      "batch": "ATG-03-B01"
+      "proof_tests": [
+        "tests/integration/test_bug_fix_event_inputs.py"
+      ],
+      "disposition": "satisfied_scoped_boundary",
+      "batch": "ATG-03-B01",
+      "current_proof": "docs/projects/archive/architectural-truth/AT10012026-ATG03/VERIFICATION.json"
     },
     {
       "path": "orket/application/services/dual_write_telemetry.py",
@@ -2765,9 +2768,12 @@
         "PreviewBuilder._get_compiled_prompt"
       ],
       "historical_sites": 2,
-      "proof_tests": [],
-      "disposition": "pending_input_and_adverse_proof",
-      "batch": "ATG-03-B02"
+      "proof_tests": [
+        "tests/integration/test_preview_required_events.py"
+      ],
+      "disposition": "satisfied_scoped_boundary",
+      "batch": "ATG-03-B02",
+      "current_proof": "docs/projects/archive/architectural-truth/AT10012026-ATG03/VERIFICATION.json"
     },
     {
       "path": "orket/application/services/structural_reconciliation_service.py",
@@ -2775,9 +2781,12 @@
         "StructuralReconciler._event"
       ],
       "historical_sites": 1,
-      "proof_tests": [],
-      "disposition": "pending_input_and_adverse_proof",
-      "batch": "ATG-03-B03"
+      "proof_tests": [
+        "tests/integration/test_structural_required_events.py"
+      ],
+      "disposition": "satisfied_scoped_boundary",
+      "batch": "ATG-03-B03",
+      "current_proof": "docs/projects/archive/architectural-truth/AT10012026-ATG03/VERIFICATION.json"
     },
     {
       "path": "orket/application/workflows/turn_read_context.py",
@@ -2785,9 +2794,12 @@
         "publish_missing_read_event"
       ],
       "historical_sites": 1,
-      "proof_tests": [],
-      "disposition": "pending_input_and_adverse_proof",
-      "batch": "ATG-03-B04"
+      "proof_tests": [
+        "tests/integration/test_missing_read_event_inputs.py"
+      ],
+      "disposition": "satisfied_scoped_boundary",
+      "batch": "ATG-03-B04",
+      "current_proof": "docs/projects/archive/architectural-truth/AT10012026-ATG03/VERIFICATION.json"
     },
     {
       "path": "orket/application/services/gitea_webhook_runtime.py",
@@ -4865,7 +4877,7 @@
       "goal": "ATG-02",
       "owner": "Orket Core",
       "title": "Workload iterator ownership",
-      "status": "source exit passed; publication pending",
+      "status": "complete",
       "paths": [
         "orket/workloads/model_stream_v1.py"
       ],
@@ -4888,14 +4900,16 @@
       "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG02/VERIFICATION.json",
       "closing_sha256": {
         "orket/workloads/model_stream_v1.py": "5e2c2bbcc2022312213daff639883f66b5bed9896d01ba2fecbf792a948f280e"
-      }
+      },
+      "checkpoint": "b6a54b3ee930d2b9a0a5cb74b05cc64b9b339d59",
+      "tag": "v0.6.119"
     },
     {
       "id": "ATG-02-B02",
       "goal": "ATG-02",
       "owner": "Orket Core",
       "title": "Provider transport and client settlement",
-      "status": "source exit passed; publication pending",
+      "status": "complete",
       "paths": [
         "orket/streaming/model_provider.py",
         "orket/application/services/model_stream_http_service.py",
@@ -4925,14 +4939,16 @@
         "orket/application/services/model_stream_http_service.py": "6f25762f0ab66a37dcbcc599029035b5e6c428c842567d3b0cb15a486cbbd739",
         "orket/workloads/model_stream_v1.py": "5e2c2bbcc2022312213daff639883f66b5bed9896d01ba2fecbf792a948f280e",
         "orket/core/contracts/provider_http.py": "a3c7602e97e6f2f15380ed1bd617fb5ad6c4b81196344e50b298a908a3a4182a"
-      }
+      },
+      "checkpoint": "b6a54b3ee930d2b9a0a5cb74b05cc64b9b339d59",
+      "tag": "v0.6.119"
     },
     {
       "id": "ATG-03-B01",
       "goal": "ATG-03",
       "owner": "Orket Core",
       "title": "Required producer capture/settlement: bug_fix_phase_manager",
-      "status": "pending",
+      "status": "source exit passed; publication pending",
       "paths": [
         "orket/application/services/bug_fix_phase_manager.py"
       ],
@@ -4944,7 +4960,7 @@
         "docs/specs/SHARED_IO_CANCELLATION.md"
       ],
       "recorded_obligation": "19-site required-producer inventory; optional preparation migration excluded",
-      "opening": "missing proof; reproduce before repair",
+      "opening": "B01-opening: 7 failed, 3 passed",
       "completion_checks": [
         "Healthy output plus independent actual file/SQLite/HTTP effects as applicable.",
         "Held native work: repeated cancellation and timeout retain the admitted attempt and cleanup.",
@@ -4952,14 +4968,18 @@
         "Mutate borrowed inputs/CWD during a hold; only the admitted values are observed.",
         "Independent SQLite observer completes within the predeclared 0.5-second bound during native holds."
       ],
-      "production_file_limit": 5
+      "production_file_limit": 5,
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG03/VERIFICATION.json",
+      "closing_sha256": {
+        "orket/application/services/bug_fix_phase_manager.py": "3bcf1ce5a3fc29e77c42dce227db724626883e9044247bc25f0b4dff59976f0a"
+      }
     },
     {
       "id": "ATG-03-B02",
       "goal": "ATG-03",
       "owner": "Orket Core",
       "title": "Required producer capture/settlement: preview_service",
-      "status": "pending",
+      "status": "source exit passed; publication pending",
       "paths": [
         "orket/application/services/preview_service.py"
       ],
@@ -4972,7 +4992,7 @@
         "docs/specs/SHARED_IO_CANCELLATION.md"
       ],
       "recorded_obligation": "19-site required-producer inventory; optional preparation migration excluded",
-      "opening": "missing proof; reproduce before repair",
+      "opening": "B02-opening: 2 failed, 18 passed; existing native settlement retained, event workspace drift reproduced",
       "completion_checks": [
         "Healthy output plus independent actual file/SQLite/HTTP effects as applicable.",
         "Held native work: repeated cancellation and timeout retain the admitted attempt and cleanup.",
@@ -4980,14 +5000,18 @@
         "Mutate borrowed inputs/CWD during a hold; only the admitted values are observed.",
         "Independent SQLite observer completes within the predeclared 0.5-second bound during native holds."
       ],
-      "production_file_limit": 5
+      "production_file_limit": 5,
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG03/VERIFICATION.json",
+      "closing_sha256": {
+        "orket/application/services/preview_service.py": "924bc1c575762b0641802d2be356b86d300d62299ab772a6d06eb5eabdcdbb97"
+      }
     },
     {
       "id": "ATG-03-B03",
       "goal": "ATG-03",
       "owner": "Orket Core",
       "title": "Required producer capture/settlement: structural_reconciliation_service",
-      "status": "pending",
+      "status": "source exit passed; publication pending",
       "paths": [
         "orket/application/services/structural_reconciliation_service.py"
       ],
@@ -4999,7 +5023,7 @@
         "docs/specs/SHARED_IO_CANCELLATION.md"
       ],
       "recorded_obligation": "19-site required-producer inventory; optional preparation migration excluded",
-      "opening": "missing proof; reproduce before repair",
+      "opening": "B03-opening: 6 failed, 3 passed; native lifetime and physical prior effects already retained",
       "completion_checks": [
         "Healthy output plus independent actual file/SQLite/HTTP effects as applicable.",
         "Held native work: repeated cancellation and timeout retain the admitted attempt and cleanup.",
@@ -5007,14 +5031,18 @@
         "Mutate borrowed inputs/CWD during a hold; only the admitted values are observed.",
         "Independent SQLite observer completes within the predeclared 0.5-second bound during native holds."
       ],
-      "production_file_limit": 5
+      "production_file_limit": 5,
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG03/VERIFICATION.json",
+      "closing_sha256": {
+        "orket/application/services/structural_reconciliation_service.py": "9b99a584a7f068c3a817f5c7d3de8f719dbf928f33d228d5c4f43ece82cc4620"
+      }
     },
     {
       "id": "ATG-03-B04",
       "goal": "ATG-03",
       "owner": "Orket Core",
       "title": "Required producer capture/settlement: turn_read_context",
-      "status": "pending",
+      "status": "source exit passed; publication pending",
       "paths": [
         "orket/application/workflows/turn_read_context.py"
       ],
@@ -5026,7 +5054,7 @@
         "docs/specs/SHARED_IO_CANCELLATION.md"
       ],
       "recorded_obligation": "19-site required-producer inventory; optional preparation migration excluded",
-      "opening": "missing proof; reproduce before repair",
+      "opening": "B04-opening: 6 failed, 3 passed; nested session metadata was retained by reference across native admission",
       "completion_checks": [
         "Healthy output plus independent actual file/SQLite/HTTP effects as applicable.",
         "Held native work: repeated cancellation and timeout retain the admitted attempt and cleanup.",
@@ -5034,7 +5062,11 @@
         "Mutate borrowed inputs/CWD during a hold; only the admitted values are observed.",
         "Independent SQLite observer completes within the predeclared 0.5-second bound during native holds."
       ],
-      "production_file_limit": 5
+      "production_file_limit": 5,
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG03/VERIFICATION.json",
+      "closing_sha256": {
+        "orket/application/workflows/turn_read_context.py": "bacf45b9484fd80dc3f16019db2f6ab1c00fcaead1e66af424fdd07c62e8e820"
+      }
     },
     {
       "id": "ATG-04-B01",
@@ -7142,6 +7174,141 @@
         "churn_paths": 0,
         "churn_ratio": 0.0,
         "sample_paths": []
+      }
+    },
+    {
+      "run_at_utc": "2026-10-01T12:49:07.055305Z",
+      "changed": true,
+      "before_digest": "sha256:66c7556cb87fcb20df7e78ed05277d88fadcc37fd1b03eaaf1a3f9dfcf385b77",
+      "after_digest": "sha256:ba3b2d73dbcbb0a8135b114ecf909bcf69b2c72ea7233a8a3fbaab40ed5bc492",
+      "diff": {
+        "added_paths": 4,
+        "removed_paths": 0,
+        "changed_paths": 3,
+        "initial_write": false,
+        "paths_total_previous": 9846,
+        "paths_total_current": 9854,
+        "paths_total_reference": 9854,
+        "churn_paths": 7,
+        "churn_ratio": 0.00071,
+        "sample_paths": [
+          "$.batches[0].checkpoint",
+          "$.batches[0].tag",
+          "$.batches[0].status",
+          "$.batches[1].checkpoint",
+          "$.batches[1].tag",
+          "$.batches[1].status",
+          "$.batches[2].status"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-01T12:54:48.135907Z",
+      "changed": true,
+      "before_digest": "sha256:ba3b2d73dbcbb0a8135b114ecf909bcf69b2c72ea7233a8a3fbaab40ed5bc492",
+      "after_digest": "sha256:be402e6a44005abd7e91bda9b961818403a37846454d3e0caa2d61a2219b7918",
+      "diff": {
+        "added_paths": 1,
+        "removed_paths": 0,
+        "changed_paths": 4,
+        "initial_write": false,
+        "paths_total_previous": 9854,
+        "paths_total_current": 9856,
+        "paths_total_reference": 9856,
+        "churn_paths": 5,
+        "churn_ratio": 0.000507,
+        "sample_paths": [
+          "$.batches[2].proof",
+          "$.batches[2].opening",
+          "$.batches[2].status",
+          "$.batches[3].opening",
+          "$.batches[3].status"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-01T12:57:29.580814Z",
+      "changed": true,
+      "before_digest": "sha256:be402e6a44005abd7e91bda9b961818403a37846454d3e0caa2d61a2219b7918",
+      "after_digest": "sha256:72e6f10e34839a049acbe020494111bb4d4335d9a9bccbb39ba62b1f94593727",
+      "diff": {
+        "added_paths": 1,
+        "removed_paths": 0,
+        "changed_paths": 3,
+        "initial_write": false,
+        "paths_total_previous": 9856,
+        "paths_total_current": 9858,
+        "paths_total_reference": 9858,
+        "churn_paths": 4,
+        "churn_ratio": 0.000406,
+        "sample_paths": [
+          "$.batches[3].proof",
+          "$.batches[3].status",
+          "$.batches[4].opening",
+          "$.batches[4].status"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-01T12:59:17.923834Z",
+      "changed": true,
+      "before_digest": "sha256:72e6f10e34839a049acbe020494111bb4d4335d9a9bccbb39ba62b1f94593727",
+      "after_digest": "sha256:603bfe4a8e49aa56428eaec81bd4107917ba6cdb367990cf069f547c5ab31bfc",
+      "diff": {
+        "added_paths": 1,
+        "removed_paths": 0,
+        "changed_paths": 3,
+        "initial_write": false,
+        "paths_total_previous": 9858,
+        "paths_total_current": 9860,
+        "paths_total_reference": 9860,
+        "churn_paths": 4,
+        "churn_ratio": 0.000406,
+        "sample_paths": [
+          "$.batches[4].proof",
+          "$.batches[4].status",
+          "$.batches[5].opening",
+          "$.batches[5].status"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-01T13:06:38.170081Z",
+      "changed": true,
+      "before_digest": "sha256:603bfe4a8e49aa56428eaec81bd4107917ba6cdb367990cf069f547c5ab31bfc",
+      "after_digest": "sha256:28b294b65c28376b5edf0a763bf7154362cebe528a9f1ddc688859570b2f2214",
+      "diff": {
+        "added_paths": 13,
+        "removed_paths": 0,
+        "changed_paths": 11,
+        "initial_write": false,
+        "paths_total_previous": 9860,
+        "paths_total_current": 9890,
+        "paths_total_reference": 9890,
+        "churn_paths": 24,
+        "churn_ratio": 0.002427,
+        "sample_paths": [
+          "$.batches[2].closing_sha256",
+          "$.batches[2].proof",
+          "$.batches[2].status",
+          "$.batches[3].closing_sha256",
+          "$.batches[3].proof",
+          "$.batches[3].status",
+          "$.batches[4].closing_sha256",
+          "$.batches[4].proof",
+          "$.batches[4].status",
+          "$.batches[5].closing_sha256",
+          "$.batches[5].proof",
+          "$.batches[5].status",
+          "$.required_producers[4].current_proof",
+          "$.required_producers[4].disposition",
+          "$.required_producers[4].proof_tests",
+          "$.required_producers[7].current_proof",
+          "$.required_producers[7].disposition",
+          "$.required_producers[7].proof_tests",
+          "$.required_producers[8].current_proof",
+          "$.required_producers[8].disposition"
+        ]
       }
     }
   ]
