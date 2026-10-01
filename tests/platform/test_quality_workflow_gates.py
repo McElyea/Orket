@@ -87,6 +87,15 @@ def test_quality_workflow_enforces_architecture_and_volatility_gates() -> None:
 
     # The quick gate job and the full quality job should both run these checks.
     duplicated_in_both_jobs = [
+        "tests/integration/test_marshaller_attempt_ownership.py tests/marshaller/test_workload_registry.py",
+        "tests/integration/test_marshaller_command_ownership.py tests/marshaller/test_cli.py",
+        "tests/integration/test_marshaller_publication_ownership.py tests/marshaller/test_runner.py tests/marshaller/test_contracts.py",
+        "tests/integration/test_manual_wake_read_ownership.py",
+        "tests/integration/test_evidence_graph_ownership.py",
+        "tests/integration/test_offline_migration_ownership.py",
+        "tests/integration/test_outward_policy_worker_ownership.py",
+        "tests/integration/test_quickstart_ownership.py tests/quickstart",
+        "tests/integration/test_governed_demo_ownership.py tests/application/test_governed_run_demo_service.py tests/interfaces/test_governed_run_cli.py",
         "tests/integration/test_bug_fix_event_inputs.py tests/integration/test_preview_required_events.py tests/integration/test_structural_required_events.py tests/integration/test_missing_read_event_inputs.py",
         "tests/integration/test_model_stream_iterator_lifetime.py tests/integration/test_model_stream_transport_lifetime.py tests/integration/test_model_stream_transport_inputs.py tests/integration/test_model_stream_transport_failure.py",
         "tests/integration/test_tool_runtime_ownership.py tests/integration/test_guarded_mutation_ownership.py tests/integration/test_application_root_inputs.py tests/integration/test_epic_execution_phase_ownership.py",

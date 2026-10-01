@@ -1,10 +1,14 @@
 """Application boundary for manual wake admission, inspection and controls."""
 from __future__ import annotations
 
+import json
 from collections.abc import Callable, Mapping
+from functools import partial
 from pathlib import Path
 from typing import Any
 
+from orket.adapters.execution.owned_io import run_owned_thread
+from orket.adapters.storage.async_file_tools import capture_file_roots
 from orket.adapters.storage.async_governed_agent_wake_control_repository import AsyncGovernedAgentWakeControlRepository
 from orket.adapters.storage.async_governed_agent_wake_repository import AsyncGovernedAgentWakeRepository
 from orket.application.services.governed_agent_runtime import governed_agent_wake_view
@@ -90,3 +94,16 @@ def build_governed_agent_wake_commands(
         AsyncGovernedAgentWakeRepository(db_path), AsyncGovernedAgentWakeControlRepository(db_path),
         now_utc=lambda: inputs.utc_now().isoformat(timespec="microseconds").replace("+00:00", "Z"),
     )
+
+
+async def read_manual_wake_request(path: Path) -> dict[str, Any]:
+    path, = capture_file_roots([path])
+    return await run_owned_thread(partial(_read_json_object, str(path)), label="manual-wake-request")
+
+
+def _read_json_object(raw_path: str) -> dict[str, Any]:
+    path = Path(raw_path).resolve()
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError("E_AGENT_REQUEST_OBJECT_REQUIRED")
+    return payload

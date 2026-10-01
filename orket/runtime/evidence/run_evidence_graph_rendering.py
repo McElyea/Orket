@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-import asyncio
 import html
 import re
+from functools import partial
 from pathlib import Path
 from typing import Any
 
-import aiofiles
-
+from orket.adapters.execution.owned_io import run_owned_thread
+from orket.adapters.storage.async_file_tools import capture_file_roots
 from orket.runtime.evidence.run_evidence_graph import validate_run_evidence_graph_payload
 
 _VIEW_TITLES = {
@@ -175,20 +175,18 @@ async def write_run_evidence_graph_rendered_artifacts(
     session_id: str,
     payload: dict[str, Any],
 ) -> dict[str, Path]:
-    mermaid_path = await write_run_evidence_graph_mermaid_artifact(
-        root=root, session_id=session_id, payload=payload
-    )
-    html_path = await write_run_evidence_graph_html_artifact(
-        root=root, session_id=session_id, payload=payload
-    )
+    root, = capture_file_roots([root])
+    mermaid, html_content = build_run_evidence_graph_mermaid(payload), build_run_evidence_graph_html(payload)
+    mermaid_path = await _write_text_artifact(root=root, session_id=session_id, filename="run_evidence_graph.mmd", content=mermaid)
+    html_path = await _write_text_artifact(root=root, session_id=session_id, filename="run_evidence_graph.html", content=html_content)
     return {"mermaid_path": mermaid_path, "html_path": html_path}
 
 
 async def _write_text_artifact(*, root: Path, session_id: str, filename: str, content: str) -> Path:
-    artifact_path = Path(root) / "runs" / str(session_id).strip() / filename
-    await asyncio.to_thread(artifact_path.parent.mkdir, parents=True, exist_ok=True)
-    async with aiofiles.open(artifact_path, mode="w", encoding="utf-8") as handle:
-        await handle.write(content)
+    root, = capture_file_roots([root])
+    artifact_path = root / "runs" / str(session_id).strip() / filename
+    await run_owned_thread(partial(artifact_path.parent.mkdir, parents=True, exist_ok=True), label="graph-render-directory")
+    await run_owned_thread(partial(artifact_path.write_text, content, encoding="utf-8"), label="graph-render-write")
     return artifact_path
 
 

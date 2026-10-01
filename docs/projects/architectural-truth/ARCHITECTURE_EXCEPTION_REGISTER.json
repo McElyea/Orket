@@ -31,7 +31,7 @@
       "id": "AT-EX-005",
       "area": "async-reachable-sync-io",
       "status": "active_unaccepted_ship_risk",
-      "reason": "ATG-01 freezes the finite ownership/input inventory. ATG-02 closes model-stream iterator/transport ownership with 150-case controlled HTTP/API proof. ATG-03 closes the five required producer input sites with 251-case real SQLite/file/log and retained logging proof. Remaining ATG-04 ownership families and later typing/coverage/installed/platform/provider/hosted gates stay open; these scoped closures do not accept whole D.",
+      "reason": "ATG-01 freezes the finite inventory. ATG-02 closes iterator/transport and ATG-03 the five required producer input sites. ATG-04 closes nine frozen native operation/input families with 634 combined source passes plus 168 affected boundary passes and the unchanged dependency gate. Broader D, deferred marshaller subprocess cancellation/descendant cleanup and later typing/coverage/installed/platform/provider/hosted gates remain unaccepted. These scoped closures do not accept whole D.",
       "removal_condition": "Reachability-aware static inventory and live responsiveness/cancellation tests pass with only explicit standalone-script exemptions.",
       "evidence": "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md"
     },
@@ -122,6 +122,28 @@
       "reason": "Resolved as a bounded structural authority cutover: the initial 39-record manifest generated an 89-line view, with 325,283 pre-cutover bytes retained and hash-bound as linked history. Actual-root equality and unavailable-proof refusal pass; source/consumer/adverse controls pass in the 278-case selection. No portable runtime-proof freshness or general semantic contradiction validator is claimed; current proof is explicitly unavailable.",
       "removal_condition": "A small validated manifest is canonical and generates a bounded human snapshot and historical closeout records.",
       "evidence": "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md"
+    }
+  ],
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-10-01T14:06:30.908273Z",
+      "changed": true,
+      "before_digest": "sha256:5223faab2c0813225dc35b847f45a45ce038ec4cacb6142ed8fcd1c638441d1b",
+      "after_digest": "sha256:36976aefb553607f80a6f80d881eda15be1bb81c0d016e18292d458c935e042a",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 202,
+        "paths_total_current": 202,
+        "paths_total_reference": 202,
+        "churn_paths": 1,
+        "churn_ratio": 0.00495,
+        "sample_paths": [
+          "$.exceptions[3].reason"
+        ]
+      }
     }
   ]
 }

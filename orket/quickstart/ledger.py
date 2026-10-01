@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 import hashlib
 import json
 from collections.abc import Callable, Mapping
@@ -8,7 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-import aiofiles
+from orket.application.services.quickstart_io_service import QuickstartLedgerIO
 
 REQUIRED_EVENT_FIELDS = (
     "run_id",
@@ -72,7 +71,7 @@ class QuickstartLedgerWriter:
     ) -> None:
         if sequence_start not in {0, 1}:
             raise ValueError("sequence_start must be 0 or 1")
-        self.path = path
+        self.path = QuickstartLedgerIO(path).path
         self.run_id = run_id
         self._timestamp_factory = timestamp_factory
         self._next_sequence = sequence_start
@@ -87,15 +86,11 @@ class QuickstartLedgerWriter:
         timestamp_factory: Callable[[], str],
         sequence_start: int = 1,
     ) -> QuickstartLedgerWriter:
-        await _mkdir(path.parent)
-        async with aiofiles.open(path, "w", encoding="utf-8") as ledger_file:
-            await ledger_file.write("")
-        return cls(
-            path=path,
-            run_id=run_id,
-            timestamp_factory=timestamp_factory,
+        storage = QuickstartLedgerIO(path)
+        return await storage.create(lambda: cls(
+            path=storage.path, run_id=run_id, timestamp_factory=timestamp_factory,
             sequence_start=sequence_start,
-        )
+        ))
 
     async def emit(self, event_type: str, payload: Mapping[str, Any]) -> dict[str, Any]:
         event = build_event(
@@ -106,30 +101,20 @@ class QuickstartLedgerWriter:
             payload=payload,
             previous_event_hash=self._previous_event_hash,
         )
-        async with aiofiles.open(self.path, "a", encoding="utf-8") as ledger_file:
-            await ledger_file.write(canonical_json(event) + "\n")
-        self._previous_event_hash = str(event["event_hash"])
-        self._next_sequence += 1
-        return event
+        storage = QuickstartLedgerIO(self.path)
+        line = canonical_json(event) + "\n"
+        event = json.loads(line)
+
+        def adopt() -> dict[str, Any]:
+            self._previous_event_hash = str(event["event_hash"])
+            self._next_sequence += 1
+            return event
+
+        return await storage.append(line, adopt)
 
 
 async def load_ledger_events(path: Path) -> list[dict[str, Any]]:
-    events: list[dict[str, Any]] = []
-    async with aiofiles.open(path, encoding="utf-8") as ledger_file:
-        line_number = 0
-        async for raw_line in ledger_file:
-            line_number += 1
-            line = raw_line.strip()
-            if not line:
-                continue
-            try:
-                payload = json.loads(line)
-            except json.JSONDecodeError as exc:
-                raise ValueError(f"ledger line {line_number} is not valid JSON: {exc.msg}") from exc
-            if not isinstance(payload, dict):
-                raise ValueError(f"ledger line {line_number} must be a JSON object")
-            events.append(payload)
-    return events
+    return await QuickstartLedgerIO(path).load()
 
 
 async def verify_ledger_file(path: Path) -> LedgerVerificationResult:
@@ -220,7 +205,3 @@ def _sequence_value(prefix: str, value: Any, errors: list[str]) -> int:
         errors.append(f"{prefix}.sequence must be an integer")
         return -1
     return value
-
-
-async def _mkdir(path: Path) -> None:
-    await asyncio.to_thread(path.mkdir, parents=True, exist_ok=True)

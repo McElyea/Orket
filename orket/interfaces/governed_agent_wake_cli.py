@@ -1,12 +1,10 @@
 from __future__ import annotations
 
 import argparse
-import asyncio
-import json
 from pathlib import Path
 from typing import Any
 
-from orket.application.services.governed_agent_wake_commands import GovernedAgentWakeCommands
+from orket.application.services.governed_agent_wake_commands import GovernedAgentWakeCommands, read_manual_wake_request
 
 
 def add_governed_agent_wake_subparser(commands: Any) -> None:
@@ -103,7 +101,8 @@ async def _enqueue_manual_wake(
     args: argparse.Namespace,
     commands: GovernedAgentWakeCommands,
 ) -> dict[str, Any]:
-    request = await asyncio.to_thread(_read_json_object, str(args.request))
+    request_path = Path(str(args.request))
+    enqueue = commands.enqueue
     run_id = _optional_text(args.run_id)
     workload_id = _optional_text(args.workload_id)
     payload = {
@@ -113,13 +112,13 @@ async def _enqueue_manual_wake(
         "workload_id": workload_id,
         "dispatch": {
             "schema_version": "governed_agent_wake_dispatch.v1",
-            "request": request,
             "creation_timestamp_utc": str(args.creation_timestamp_utc),
             "decision_timestamps_utc": list(args.decision_timestamp_utc),
             "next_lease_expiries_utc": list(args.next_lease_expires_at_utc),
         },
     }
-    return await commands.enqueue(payload)
+    payload["dispatch"]["request"] = await read_manual_wake_request(request_path)
+    return await enqueue(payload)
 
 
 def _add_common_arguments(parser: argparse.ArgumentParser) -> None:
@@ -132,14 +131,6 @@ def _add_control_identity_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--actor-ref", required=True)
     parser.add_argument("--timestamp-utc", required=True)
     parser.add_argument("--reason", required=True)
-
-
-def _read_json_object(raw_path: str) -> dict[str, Any]:
-    path = Path(raw_path).resolve()
-    payload = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(payload, dict):
-        raise ValueError("E_AGENT_REQUEST_OBJECT_REQUIRED")
-    return payload
 
 
 def _optional_text(value: object) -> str | None:

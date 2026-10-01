@@ -1,17 +1,18 @@
 from __future__ import annotations
 
-import asyncio
 import hashlib
 import json
 import re
 from collections.abc import Mapping
+from functools import partial
 from importlib.resources import files
 from pathlib import Path
 from typing import Any
 
-import aiofiles
 import yaml
 
+from orket.adapters.execution.owned_io import run_owned_thread
+from orket.adapters.storage.async_file_tools import capture_file_roots
 from orket.application.services.governed_run_demo_rendering import (
     render_console_output,
     render_summary,
@@ -38,8 +39,11 @@ async def run_governed_run_scenario(
     *,
     workspace_root: Path | None = None,
 ) -> dict[str, Any]:
-    workspace = (workspace_root or Path()).resolve()
-    scenario_file = _resolve_scenario_path(scenario_path, workspace)
+    workspace, = capture_file_roots([workspace_root or Path()])
+    scenario_path = Path(scenario_path)
+    workspace = await run_owned_thread(workspace.resolve, label="demo-workspace")
+    scenario_file = await run_owned_thread(
+        partial(_resolve_scenario_path, scenario_path, workspace), label="demo-scenario-path")
     scenario = await _load_scenario(scenario_file)
     policy = GovernedRunPolicy.from_mapping(_dict_value(scenario.get("policy")))
     run_id = _safe_run_id(str(scenario.get("run_id") or scenario.get("name") or "governed-run-demo"))
@@ -71,6 +75,11 @@ async def run_governed_run_scenario(
     await _write_json(run_dir / "replay.json", replay)
     await _write_text(run_dir / "summary.md", summary)
 
+    return await run_owned_thread(
+        partial(_execution_result, run_id, run_dir, workspace, evidence, replay), label="demo-result-paths")
+
+
+def _execution_result(run_id: str, run_dir: Path, workspace: Path, evidence: dict, replay: dict) -> dict[str, Any]:
     return {
         "kind": "governed_run_execution",
         "ok": True,
@@ -190,7 +199,8 @@ async def _evaluate_action(action: dict[str, Any], *, policy: GovernedRunPolicy,
         "side_effect_occurred": False,
     }
     if decision.decision == "allow" and classification.risk == "read_only":
-        observation = await asyncio.to_thread(_read_only_observation, workspace, str(action.get("target") or "."))
+        observation = await run_owned_thread(
+            partial(_read_only_observation, workspace, str(action.get("target") or ".")), label="demo-observation")
         row["observation"] = observation
         row["resulting_status"] = "success" if observation.get("status") == "success" else "failure"
     elif decision.decision == "requires_approval":
@@ -239,8 +249,7 @@ def _build_evidence(
 
 async def _load_scenario(path: Path) -> dict[str, Any]:
     try:
-        async with aiofiles.open(path, encoding="utf-8") as scenario_file:
-            raw = await scenario_file.read()
+        raw = await run_owned_thread(partial(path.read_text, encoding="utf-8"), label="demo-scenario-read")
     except OSError as exc:
         raise ValueError(f"governed-run scenario not found: {path}") from exc
     payload = yaml.safe_load(raw)
@@ -301,7 +310,7 @@ def _resolve_scenario_path(path: Path, workspace: Path) -> Path:
 
 
 async def _mkdir(path: Path) -> None:
-    await asyncio.to_thread(path.mkdir, parents=True, exist_ok=True)
+    await run_owned_thread(partial(path.mkdir, parents=True, exist_ok=True), label="demo-directory")
 
 
 async def _write_json(path: Path, payload: Mapping[str, Any]) -> None:
@@ -309,14 +318,14 @@ async def _write_json(path: Path, payload: Mapping[str, Any]) -> None:
 
 
 async def _write_text(path: Path, content: str) -> None:
+    path, = capture_file_roots([path])
     await _mkdir(path.parent)
-    async with aiofiles.open(path, "w", encoding="utf-8") as output_file:
-        await output_file.write(content)
+    await run_owned_thread(partial(path.write_text, content, encoding="utf-8"), label="demo-write")
 
 
 async def _read_json(path: Path) -> dict[str, Any]:
-    async with aiofiles.open(path, encoding="utf-8") as input_file:
-        raw = await input_file.read()
+    path, = capture_file_roots([path])
+    raw = await run_owned_thread(partial(path.read_text, encoding="utf-8"), label="demo-read")
     payload = json.loads(raw)
     if not isinstance(payload, dict):
         raise ValueError(f"expected JSON object in {path.as_posix()}")

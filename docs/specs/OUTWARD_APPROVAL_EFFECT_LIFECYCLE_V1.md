@@ -296,3 +296,19 @@ This acceptance is not core release approval or proof of untested hosts/provider
 Connector
 receipts and local fixture proof do not extend workload acceptance or formal
 single-turn claims.
+
+## Model proposal policy worker ownership
+
+Model proposal projection captures the selected connector policy inputs through
+`OutwardConnectorService._capture_authorization_inputs` before evidence/publication
+waits. The shared native I/O owner retains that validation through repeated caller
+interruption. Its captured filesystem roots/arguments remain stable during the native
+attempt. Later approval authorization is a separate existing admission; this does not
+bind every future policy observation to the earlier validation snapshot.
+
+A native validation failure takes precedence after settlement. Existing policy errors
+retain the `policy_rejected` terminal event and completed-run projection; an unexpected
+native failure or caller-only interruption rolls back the proposal publication
+transaction while retaining the earlier observed model result. No tool effect is
+performed by validation. Real API-lifespan/service/SQLite controls use fixture model
+output and do not establish actual provider inference.

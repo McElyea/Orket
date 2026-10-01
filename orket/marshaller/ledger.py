@@ -1,9 +1,12 @@
 from __future__ import annotations
 
-import asyncio
 import json
+from functools import partial
 from pathlib import Path
 from typing import Any
+
+from orket.adapters.execution.owned_io import run_owned_io, run_owned_thread
+from orket.adapters.storage.async_file_tools import capture_file_roots
 
 from .canonical import hash_canonical_json
 
@@ -12,7 +15,7 @@ class LedgerWriter:
     """Append-only JSONL ledger with tamper-evident hash chaining."""
 
     def __init__(self, ledger_path: Path) -> None:
-        self.ledger_path = ledger_path
+        self.ledger_path, = capture_file_roots([ledger_path])
         self._event_seq = 0
         self._prev_digest = ""
 
@@ -23,9 +26,10 @@ class LedgerWriter:
     @classmethod
     async def resume(cls, ledger_path: Path) -> LedgerWriter:
         writer = cls(ledger_path)
-        if not await asyncio.to_thread(ledger_path.exists):
+        ledger_path = writer.ledger_path
+        if not await run_owned_thread(ledger_path.exists, label="marshaller-ledger-exists"):
             return writer
-        last_record = await asyncio.to_thread(_last_record, ledger_path)
+        last_record = await run_owned_thread(partial(_last_record, ledger_path), label="marshaller-ledger-read")
         if not last_record:
             return writer
         writer._event_seq = int(last_record.get("event_seq", 0))
@@ -41,14 +45,21 @@ class LedgerWriter:
             "payload": payload,
         }
         record["entry_digest"] = hash_canonical_json(record)
-        await self._append_json_line(record)
-        self._prev_digest = str(record["entry_digest"])
-        return record
+        path, = capture_file_roots([self.ledger_path])
+        line = json.dumps(record, sort_keys=True, separators=(",", ":"), ensure_ascii=False) + "\n"
+        # Return the detached JSON value actually published, not a borrowed payload.
+        record = json.loads(line)
 
-    async def _append_json_line(self, payload: dict[str, Any]) -> None:
-        await asyncio.to_thread(self.ledger_path.parent.mkdir, parents=True, exist_ok=True)
-        line = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False) + "\n"
-        await asyncio.to_thread(_append_text, self.ledger_path, line)
+        async def publish() -> dict[str, Any]:
+            await self._append_json_line(path, line)
+            self._prev_digest = str(record["entry_digest"])
+            return record
+
+        return await run_owned_io(publish, label="marshaller-ledger-publication", preserve_failure=True)
+
+    async def _append_json_line(self, path: Path, line: str) -> None:
+        await run_owned_thread(partial(path.parent.mkdir, parents=True, exist_ok=True), label="marshaller-ledger-parent")
+        await run_owned_thread(partial(_append_text, path, line), label="marshaller-ledger-append")
 
 
 def _append_text(path: Path, text: str) -> None:

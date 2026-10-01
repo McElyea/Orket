@@ -990,3 +990,13 @@ proof must demonstrate teardown in the same execution path.
    SDK and host bindings against the same bytes; do not copy schema authority.
    Matching built host/SDK/extension versions and legacy combinations must be
    tested before publishing compatibility claims.
+
+## Manual wake request read ownership
+
+The asynchronous manual-wake CLI route captures its request path, enqueue method,
+occurrence/target identity and timestamp sequences before reading request JSON.
+Resolution and complete native read/close use the shared I/O owner. Later Namespace
+or CWD changes cannot alter that admitted request. Caller-only interruption or a
+native read failure returns after settlement without calling enqueue; native failure
+has precedence over concurrent interruption. Existing object validation, application
+admission, deduplication/conflict, control and durable wake state remain authoritative.

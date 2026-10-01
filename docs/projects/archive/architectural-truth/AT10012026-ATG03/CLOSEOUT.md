@@ -1,7 +1,7 @@
 # ATG-03 required producer closeout
 
 Date: 2026-10-01 (America/Denver)
-Status: Source exit passed; annotated v0.6.120 publication gate pending
+Status: Complete; published `5e878cc2` / annotated `v0.6.120`
 Owner: Orket Core
 
 ## What changed
@@ -46,8 +46,9 @@ controls. This is workflow declaration proof, not a hosted job result.
 
 The tracked `VERIFICATION.json` binds commands, source/log hashes, exact touched
 files, limits and publication gate. Full local receipts are `.tmp/atg03-proof.json`
-and `.tmp/atg03-structural.json`. Verify annotated v0.6.120, remote branch/peeled tag
-and a clean worktree before moving to ATG-04.
+and `.tmp/atg03-structural.json`. Publication receipt `.tmp/atg03-publication.json`
+verifies annotated v0.6.120, matching remote branch/peeled tag and a clean worktree.
+ATG-04 is the next eligible goal.
 
 ## What was not verified
 

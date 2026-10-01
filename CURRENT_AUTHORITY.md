@@ -55,7 +55,7 @@ Validate: `python scripts/governance/check_current_authority.py`.
 | Logging preparation and settlement | Explicit native preparation, operation-local bindings, captured required producers, process-owned writer and bounded optional publication/frontier. | [docs/specs/LOG_WRITE_SETTLEMENT.md](<docs/specs/LOG_WRITE_SETTLEMENT.md>) |
 | Quality checker and coverage contract | Actual pytest markers, native checker limits and unchanged 89-percent coverage floor. | [docs/specs/QUALITY_CHECKER_CONTRACT.md](<docs/specs/QUALITY_CHECKER_CONTRACT.md>) |
 | Runtime project roots | Invocation project selection and package-owned immutable assets. | [docs/specs/RUNTIME_PROJECT_ROOTS.md](<docs/specs/RUNTIME_PROJECT_ROOTS.md>) |
-| Runtime result and lifecycle | Application results, owned runtime lifecycle and linked model-stream iterator lifetime. | [docs/specs/RUNTIME_EXECUTION_RESULT_CONTRACT.md](<docs/specs/RUNTIME_EXECUTION_RESULT_CONTRACT.md>) |
+| Runtime result and lifecycle | Application results, owned runtime/model-stream lifetimes and bounded demo/marshaller native publication. | [docs/specs/RUNTIME_EXECUTION_RESULT_CONTRACT.md](<docs/specs/RUNTIME_EXECUTION_RESULT_CONTRACT.md>) |
 | Trusted workload process lifetime | Trusted extension process lifetime; not hostile-code containment. | [docs/specs/SDK_WORKLOAD_PROCESS_LIFETIME.md](<docs/specs/SDK_WORKLOAD_PROCESS_LIFETIME.md>) |
 | Settings and preference inputs | Bound configuration, persistence and migration. | [docs/specs/SETTINGS_INPUT_OWNERSHIP.md](<docs/specs/SETTINGS_INPUT_OWNERSHIP.md>) |
 | Runtime store binding | Durable store locations bind once; historical migration stays explicit. | [docs/specs/RUNTIME_STORE_BINDING.md](<docs/specs/RUNTIME_STORE_BINDING.md>) |

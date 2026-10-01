@@ -104,3 +104,20 @@ proof roots use the persistent cache after the first temporary roots disappeared
 The canonical plan records artifact identities and the acceptance audit. Unknown
 legacy terminal shapes remain refused. Card/common-family conformance and the
 later architectural/capability gates remain open.
+
+## Offline migration native lifetime
+
+The migration service binds its construction database root and selects its unit of
+work and runtime input owner before the first database metadata wait. That check uses
+the shared native owner; interruption or failure before transaction admission leaves
+history unchanged. Reviewed digest, actor and stopped-owner attestations retain their
+existing admission rules. Later adoption remains one atomic SQLite transaction.
+
+SQLite migration-copy preparation captures all three paths before owned resolution
+and retains each metadata, directory, exclusive creation and digest operation. Each
+SQLite backup owns both connections through acquisition, committed-WAL copying and
+close, including repeated interruption and native failure. Native failure has priority;
+caller-only interruption stops later stages after the current one settles. Backup or
+empty destination files can remain; a failed call returns no successful copy receipt.
+No replacement, automatic rollback or concurrent-writer safety is introduced. The
+stopped-writer flag remains an operator attestation, not an observed process census.

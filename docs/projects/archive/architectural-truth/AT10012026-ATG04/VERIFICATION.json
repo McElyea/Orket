@@ -1,0 +1,500 @@
+{
+  "goal": "ATG-04",
+  "base_commit": "5e878cc2460ff192121cc2e56d50192e1eb28745",
+  "source_version": "0.6.121",
+  "proof": "live native files/SQLite/WAL/healthy Git/CLI and structural",
+  "path": "primary",
+  "result": "success",
+  "source_sha256": {
+    ".gitea/workflows/quality.yml": "ed84d8a3707650c257956b53ce999c0bbc5207caaff2146f9726d59c0442ff84",
+    "orket/adapters/storage/sqlite_backup.py": "01a9ae21c3f3ce3195245e71103b3b4058c47974872f054eb1843475b744cb8f",
+    "orket/application/services/governed_agent_wake_commands.py": "6d3ee1dc3b52cefe2e683797bf05d7bbcdfbc1d81d3e0d39fc2f4d694d81d89a",
+    "orket/application/services/governed_run_demo_service.py": "790dcacbe4ce9e0bcb710455ccf68dae163183ef17827d6e668db91438d77426",
+    "orket/application/services/outward_authority_migration_service.py": "433782b28e312f682d398d2da6f483f881d1660d6225e39cb15650c69ffa42c2",
+    "orket/application/services/outward_model_admission_service.py": "e6d5e1cc93de55f8b0f7e145f1e7419bae335be13b4c701c01b53e45447390a4",
+    "orket/application/services/quickstart_io_service.py": "b32bb81d6f1868477e380ac85720ff36f1c1e940480273ca895ac0ceff9b2084",
+    "orket/interfaces/governed_agent_wake_cli.py": "8c089436a1159edcaa17ab7def6bdc2336518d2f5d106959cedfc5573039d1fc",
+    "orket/marshaller/artifacts.py": "807cbbc86eae46499a1b9254aee5c05d368684bf615d3cf1b237e45574d2d09f",
+    "orket/marshaller/attempt_runtime.py": "ea18acca538c634cb9739c25275caa622bfc36c265e8c3b7633147357da49cc0",
+    "orket/marshaller/cli.py": "5afcb2a75ce579a6e5d35e615f7ffe8850e442d3da2dc7059205e625110b665b",
+    "orket/marshaller/ledger.py": "b4958420aad7140d715bc1ada75ab5cced12a7925c16ac5aa347136d728d1c1d",
+    "orket/marshaller/promotion.py": "ae0fbf9c2b43ef9c241ea68bdc684564b3d5cce1786bb0ff85c5daae3819cf4a",
+    "orket/marshaller/replay.py": "60366b50a1a725ad1b86a53263d7852016ba614e46edc55a24a3ab04a039ed4b",
+    "orket/quickstart/governed_action_demo.py": "9e287769dab9f8e45b3f3d3ed7b695a25eb395b08766ba174988613767edeb15",
+    "orket/quickstart/ledger.py": "447652047b42d4f8aeba9e3b48ca46768079cf3e40018940f72cc9ff511550ce",
+    "orket/runtime/evidence/run_evidence_graph.py": "31d0add33774f1fabfa6b4a45bcc1d19c13001f44f43185af3012ac7ca01175b",
+    "orket/runtime/evidence/run_evidence_graph_projection.py": "2f918c7111909cdc70b8ebf29091890cc5f5311e15c39d48e48b82c379fb8356",
+    "orket/runtime/evidence/run_evidence_graph_projection_supplemental.py": "97e3d848bc2d30470432637d7f654386c061585abff78d6d721f30a567855cf6",
+    "orket/runtime/evidence/run_evidence_graph_rendering.py": "a7f0d79193fe543aba9b1a67757580caa63a1bfd505179b38bb313b49b5d44c7",
+    "orket/workloads/marshaller_v0.py": "bd6cb82869202b3318b0faf871c4cdc6d6c1ca2a822fbaa751e99fe7fcdbc026",
+    "tests/integration/test_evidence_graph_ownership.py": "286c98915d201d1c3814e24f8d340c872ab611c194f12bf8d7fce5dbd4b5aeed",
+    "tests/integration/test_governed_demo_ownership.py": "9cc9df968ecad6708e99e8017d0dea178d233d62c9ad1a34355ce1b5ad89296d",
+    "tests/integration/test_manual_wake_read_ownership.py": "255958bb3ba4f3842bd0792624a9567388aff9f5fa9ea7ee0f31e2cd944fb7d0",
+    "tests/integration/test_marshaller_attempt_ownership.py": "eb079acf459698e5e2e901bc0ec6e5c7e011f481206a466b019425d3f308b5f4",
+    "tests/integration/test_marshaller_command_ownership.py": "e9be69035e716ee97e0dce2ecf6d51bddb2cc057b77759c111ed3ef6c9c845ee",
+    "tests/integration/test_marshaller_publication_ownership.py": "60bd3a41f4cf66f37354e38c8ea8081edf33d7397d83e486d7660502bcd25f3e",
+    "tests/integration/test_offline_migration_ownership.py": "fc8bda0d48616e65cba2e31af2abd96f97bf086acf1a176e8222e0a3b64c50b3",
+    "tests/integration/test_outward_policy_worker_ownership.py": "a05ab22ad102977d16dd96d313e0b688b0be1f8054e86cbc23bab8bffcd51575",
+    "tests/integration/test_quickstart_ownership.py": "b79a4586cd1a6db6ca6afda7851929c71dfd799f4d8d5549e36ef53e8eb23091",
+    "tests/platform/test_quality_workflow_gates.py": "196f12ead54f5894aec59ad47e4a71c95534a830e0b6f8fd5bd851dbb8a4e0d7"
+  },
+  "tests": {
+    "combined_passed": 634,
+    "affected_recheck_passed": 168,
+    "failed": 0,
+    "combined_warnings": 1
+  },
+  "final_selection": {
+    "name": "final-source",
+    "argv": [
+      "C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Scripts\\python.exe",
+      "-m",
+      "pytest",
+      "-q",
+      "tests/integration/test_governed_demo_ownership.py",
+      "tests/integration/test_marshaller_publication_ownership.py",
+      "tests/integration/test_marshaller_command_ownership.py",
+      "tests/integration/test_marshaller_attempt_ownership.py",
+      "tests/integration/test_quickstart_ownership.py",
+      "tests/integration/test_outward_policy_worker_ownership.py",
+      "tests/integration/test_offline_migration_ownership.py",
+      "tests/integration/test_evidence_graph_ownership.py",
+      "tests/integration/test_manual_wake_read_ownership.py",
+      "tests/application/test_governed_run_demo_service.py",
+      "tests/interfaces/test_governed_run_cli.py",
+      "tests/marshaller",
+      "tests/quickstart",
+      "tests/integration/test_outward_model_admission_recovery.py",
+      "tests/integration/test_outward_model_owner_recovery.py",
+      "tests/integration/test_outward_model_evidence_ownership.py",
+      "tests/integration/test_outward_authority_migration.py",
+      "tests/integration/test_outward_authority_migration_process.py",
+      "tests/integration/test_outward_model_admission_migration.py",
+      "tests/runtime/test_run_evidence_graph_projection.py",
+      "tests/runtime/test_run_evidence_graph_rendering.py",
+      "tests/runtime/test_run_evidence_graph_runtime_contract.py",
+      "tests/contracts/test_run_evidence_graph_contract.py",
+      "tests/contracts/test_run_evidence_graph_projection_validation.py",
+      "tests/scripts/test_emit_run_evidence_graph.py",
+      "tests/e2e/test_governed_agent_wake_commands.py",
+      "tests/integration/test_governed_agent_wake_command_clock.py",
+      "tests/integration/test_governed_agent_wake_ingress_inputs.py",
+      "tests/integration/test_governed_agent_wake_dispatch_inputs.py",
+      "tests/platform/test_quality_workflow_gates.py",
+      "tests/contracts/test_core_effect_values.py",
+      "tests/contracts/test_dispatch_decision_inputs.py",
+      "tests/integration/test_core_effect_boundaries.py",
+      "tests/integration/test_decision_input_boundaries.py",
+      "tests/integration/test_owned_io_failure_diagnostics.py",
+      "tests/integration/test_owned_io_cancellation_identity.py",
+      "tests/integration/test_owned_io_admission_contract.py",
+      "tests/integration/test_nested_owned_io_fatal_ownership.py",
+      "tests/integration/test_nested_owned_io_executor_refusal.py",
+      "--tb=short",
+      "--junitxml=C:\\Source\\Orket-architectural-truth\\.tmp\\atg04-runs\\final-source.xml",
+      "-o",
+      "junit_family=legacy"
+    ],
+    "cwd": "C:\\Source\\Orket-architectural-truth",
+    "status": "finished",
+    "sandbox_disabled": true,
+    "log": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg04-runs\\final-source.log",
+    "xml": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg04-runs\\final-source.xml",
+    "owner_pid": 19772,
+    "started_at_unix": 1790863145.0364873,
+    "pid": 19796,
+    "exit_code": 0,
+    "changed_inputs": [],
+    "finished_at_unix": 1790863295.1991792,
+    "log_sha256": "92eb5b5a53f9b11445cdb57d0f685c25731f067664e3c439e2337478d4239790"
+  },
+  "affected_recheck": {
+    "name": "final-dependency-boundaries",
+    "argv": [
+      "C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Scripts\\python.exe",
+      "-m",
+      "pytest",
+      "-q",
+      "tests/integration/test_quickstart_ownership.py",
+      "tests/quickstart",
+      "tests/integration/test_manual_wake_read_ownership.py",
+      "tests/e2e/test_governed_agent_wake_commands.py",
+      "tests/integration/test_governed_agent_wake_command_clock.py",
+      "tests/integration/test_governed_agent_wake_ingress_inputs.py",
+      "tests/integration/test_governed_agent_wake_dispatch_inputs.py",
+      "tests/integration/test_owned_io_admission_contract.py",
+      "tests/integration/test_owned_io_cancellation_identity.py",
+      "tests/integration/test_owned_io_failure_diagnostics.py",
+      "tests/platform/test_quality_workflow_gates.py",
+      "--tb=short",
+      "--junitxml=C:\\Source\\Orket-architectural-truth\\.tmp\\atg04-runs\\final-dependency-boundaries.xml",
+      "-o",
+      "junit_family=legacy"
+    ],
+    "cwd": "C:\\Source\\Orket-architectural-truth",
+    "status": "finished",
+    "sandbox_disabled": true,
+    "log": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg04-runs\\final-dependency-boundaries.log",
+    "xml": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg04-runs\\final-dependency-boundaries.xml",
+    "owner_pid": 15112,
+    "started_at_unix": 1790863442.0779529,
+    "pid": 17040,
+    "exit_code": 0,
+    "changed_inputs": [],
+    "finished_at_unix": 1790863468.6542308,
+    "log_sha256": "f162c9388757388914279d9c074fc67cfc51a8e5c7a60bf8806bae82664779a2"
+  },
+  "structural": [
+    {
+      "argv": [
+        "C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Scripts\\python.exe",
+        "-m",
+        "ruff",
+        "check",
+        "orket",
+        "tests"
+      ],
+      "pid": 30820,
+      "started_at_unix": 1790863442.0734465,
+      "log": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg04-structural-0.log",
+      "status": "finished",
+      "exit_code": 0,
+      "finished_at_unix": 1790863442.1627727,
+      "log_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    {
+      "argv": [
+        "C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Scripts\\python.exe",
+        "scripts/governance/check_dependency_direction.py"
+      ],
+      "pid": 12992,
+      "started_at_unix": 1790863442.1953666,
+      "log": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg04-structural-1.log",
+      "status": "finished",
+      "exit_code": 0,
+      "finished_at_unix": 1790863460.3427231,
+      "log_sha256": "4baba63916adbcbcb8614f521000cd2654a9ed0d6928b78c340c41a590121114"
+    },
+    {
+      "argv": [
+        "C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Scripts\\python.exe",
+        "scripts/governance/enforce_test_taxonomy.py",
+        "--strict"
+      ],
+      "pid": 6152,
+      "started_at_unix": 1790863460.3762572,
+      "log": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg04-structural-2.log",
+      "status": "finished",
+      "exit_code": 0,
+      "finished_at_unix": 1790863522.5636106,
+      "log_sha256": "976f3209150421a7893bed6415fe482c7b448b7e7e84dea5dba362ab6ed4a99e"
+    },
+    {
+      "argv": [
+        "C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Scripts\\python.exe",
+        "scripts/governance/check_noop_critical_paths.py"
+      ],
+      "pid": 17236,
+      "started_at_unix": 1790863522.595695,
+      "log": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg04-structural-3.log",
+      "status": "finished",
+      "exit_code": 0,
+      "finished_at_unix": 1790863524.525546,
+      "log_sha256": "d67505e5906fdd19b512bc651599f867bb1d0d61b0e9f3cceb81baf02af5cc5b"
+    },
+    {
+      "argv": [
+        "C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Scripts\\python.exe",
+        "scripts/governance/check_docs_project_hygiene.py"
+      ],
+      "pid": 20040,
+      "started_at_unix": 1790863524.5631626,
+      "log": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg04-structural-4.log",
+      "status": "finished",
+      "exit_code": 0,
+      "finished_at_unix": 1790863524.6113136,
+      "log_sha256": "8d1bf1af779ff045b85d7cb11f0397a564628c421af4baca5d9668060f8a78cd"
+    },
+    {
+      "argv": [
+        "C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Scripts\\python.exe",
+        "scripts/governance/check_current_authority.py"
+      ],
+      "pid": 5752,
+      "started_at_unix": 1790863524.6408346,
+      "log": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg04-structural-5.log",
+      "status": "finished",
+      "exit_code": 0,
+      "finished_at_unix": 1790863526.1439412,
+      "log_sha256": "60da3e5f32e6a4562cf852361518ea7083286596650be4fe599ffa51b4597574"
+    },
+    {
+      "argv": [
+        "C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Scripts\\python.exe",
+        "scripts/governance/render_current_authority.py",
+        "--check"
+      ],
+      "pid": 21868,
+      "started_at_unix": 1790863526.176476,
+      "log": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg04-structural-6.log",
+      "status": "finished",
+      "exit_code": 0,
+      "finished_at_unix": 1790863527.6238232,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Scripts\\python.exe",
+        "scripts/governance/check_core_release_policy.py"
+      ],
+      "pid": 12380,
+      "started_at_unix": 1790863527.6538455,
+      "log": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg04-structural-7.log",
+      "status": "finished",
+      "exit_code": 0,
+      "finished_at_unix": 1790863527.7236626,
+      "log_sha256": "2679e4568af02f4e23201b689b5dadb73b41eb43412cbf9d7224a03969034dd8"
+    }
+  ],
+  "structural_inputs_unchanged": true,
+  "earlier_campaigns": [
+    {
+      "name": "B01-opening",
+      "exit_code": 1,
+      "changed_inputs": [],
+      "log_sha256": "14811597def0dc15c0928a8cee2a26b9927d2ce4201879efcf1eb1429de126c1"
+    },
+    {
+      "name": "B01-closing",
+      "exit_code": 0,
+      "changed_inputs": [],
+      "log_sha256": "af3c7f71e64339092bde3db341fc198e4430065fea2dc8a65ac64ec9ab136128"
+    },
+    {
+      "name": "B02-opening",
+      "exit_code": 1,
+      "changed_inputs": [],
+      "log_sha256": "ca91ebd9115965fe1c889c0225d5c23f83e45202c0bf6ad23de73edc12b3188b"
+    },
+    {
+      "name": "B02-closing",
+      "exit_code": 0,
+      "changed_inputs": [],
+      "log_sha256": "bd46ad082118b107656418b9341a92963d355e3b54e75ee13c4b4fa755876cbb"
+    },
+    {
+      "name": "B03-opening",
+      "exit_code": 1,
+      "changed_inputs": [],
+      "log_sha256": "e293e8426a8bfa4578d4e2cbc1cf2dc1265aa8e3e656ce05b50b2e4b86ca04bd"
+    },
+    {
+      "name": "B03-closing",
+      "exit_code": 0,
+      "changed_inputs": [],
+      "log_sha256": "c29c26bf941eb900fd31077b0ae5238896f167426895ad8bd1b5fe9c9fb51315"
+    },
+    {
+      "name": "B04-opening",
+      "exit_code": 1,
+      "changed_inputs": [],
+      "log_sha256": "0f15e8b0ce32e7a6e1558f762d1700b964923a392d8c980a38feb2766f95e163"
+    },
+    {
+      "name": "B04-closing",
+      "exit_code": 0,
+      "changed_inputs": [],
+      "log_sha256": "84f3eccdecacfaffc0265fe0c987474217a84422e609711bfe61e055ab950bf1"
+    },
+    {
+      "name": "B05-opening",
+      "exit_code": 1,
+      "changed_inputs": [],
+      "log_sha256": "8428bf5f1e4fc48949696cb1727ba6d61cb440905a409ff1e4a1a15ffc537f8a"
+    },
+    {
+      "name": "B05-closing",
+      "exit_code": 0,
+      "changed_inputs": [],
+      "log_sha256": "62315c14b4f580db0b89c9a09487eb461b8fbe1a7078a1edc4b1119c24a838c7"
+    },
+    {
+      "name": "B06-opening",
+      "exit_code": 1,
+      "changed_inputs": [],
+      "log_sha256": "65d585bf9072d98b1f43df054ef7db6a2fb6f237331c010962a3a8834564fac8"
+    },
+    {
+      "name": "B06-closing",
+      "exit_code": 1,
+      "changed_inputs": [],
+      "log_sha256": "d7e63f130880f22d5c9f9af5d588dec619bf9303f90734207e7b66953ff7ccde"
+    },
+    {
+      "name": "B06-closing-observer",
+      "exit_code": 0,
+      "changed_inputs": [],
+      "log_sha256": "eb957c0301ab5cd78087d89401d7e36ef3edb49597f76f83dba15709a1777262"
+    },
+    {
+      "name": "B07-opening",
+      "exit_code": 1,
+      "changed_inputs": [],
+      "log_sha256": "785a7d8c4b1111b3624f0a61ab10d01db121da4ec60eee9ae03fce1359a76642"
+    },
+    {
+      "name": "B07-closing",
+      "exit_code": 0,
+      "changed_inputs": [],
+      "log_sha256": "066a96087000c54f2ea0bd7d7e58433b47b53183baba15e0020c2446218613c2"
+    },
+    {
+      "name": "B08-opening",
+      "exit_code": 1,
+      "changed_inputs": [],
+      "log_sha256": "980a00db9da7806f8d130fdaaee05180ecf7da3dd0d59cea9a5384b4eff61d58"
+    },
+    {
+      "name": "B08-closing",
+      "exit_code": 0,
+      "changed_inputs": [],
+      "log_sha256": "29b4e6e901403365c788b8dc9eb32a8758adb0fc9c3fb4d5f149730f6410ee9c"
+    },
+    {
+      "name": "B09-opening",
+      "exit_code": 1,
+      "changed_inputs": [],
+      "log_sha256": "62312241cd2a01aed46c66fe9a446d65399cf34f9cdd0ae85349c0b609522fe8"
+    },
+    {
+      "name": "B09-closing",
+      "exit_code": 0,
+      "changed_inputs": [],
+      "log_sha256": "27350e3d81e58fc165309aca15b9c82936880272deec9a0556a4a5558ce17099"
+    }
+  ],
+  "limits": [
+    "No new full suite/coverage or Mypy",
+    "No fresh installed/platform/inference/hosted proof",
+    "No adverse marshaller subprocess cleanup proof",
+    "No whole-lane acceptance or main merge"
+  ],
+  "publication": "pending annotated v0.6.121 checkpoint",
+  "exact_files_touched": [
+    ".gitea/workflows/quality.yml",
+    "CHANGELOG.md",
+    "CURRENT_AUTHORITY.md",
+    "docs/CONTRIBUTOR.md",
+    "docs/README.md",
+    "docs/architecture/CONTRACT_DELTA_NATIVE_OWNER_COMPLETION_D_2026-10-01.md",
+    "docs/architecture/current_authority.json",
+    "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
+    "docs/projects/architectural-truth/ARCHITECTURE_EXCEPTION_REGISTER.json",
+    "docs/projects/architectural-truth/GOAL_WORKSETS.json",
+    "docs/projects/architectural-truth/README.md",
+    "docs/projects/archive/architectural-truth/AT10012026-ATG03/CLOSEOUT.md",
+    "docs/projects/archive/architectural-truth/AT10012026-ATG03/VERIFICATION.json",
+    "docs/projects/archive/architectural-truth/AT10012026-ATG04/CLOSEOUT.md",
+    "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+    "docs/specs/GOVERNED_AGENT_LOOP_V1.md",
+    "docs/specs/OUTWARD_APPROVAL_EFFECT_LIFECYCLE_V1.md",
+    "docs/specs/OUTWARD_RUN_AUTHORITY.md",
+    "docs/specs/RUNTIME_EXECUTION_RESULT_CONTRACT.md",
+    "docs/specs/RUN_EVIDENCE_GRAPH_V1.md",
+    "orket/adapters/storage/sqlite_backup.py",
+    "orket/application/services/governed_agent_wake_commands.py",
+    "orket/application/services/governed_run_demo_service.py",
+    "orket/application/services/outward_authority_migration_service.py",
+    "orket/application/services/outward_model_admission_service.py",
+    "orket/application/services/quickstart_io_service.py",
+    "orket/interfaces/governed_agent_wake_cli.py",
+    "orket/marshaller/artifacts.py",
+    "orket/marshaller/attempt_runtime.py",
+    "orket/marshaller/cli.py",
+    "orket/marshaller/ledger.py",
+    "orket/marshaller/promotion.py",
+    "orket/marshaller/replay.py",
+    "orket/quickstart/governed_action_demo.py",
+    "orket/quickstart/ledger.py",
+    "orket/runtime/evidence/run_evidence_graph.py",
+    "orket/runtime/evidence/run_evidence_graph_projection.py",
+    "orket/runtime/evidence/run_evidence_graph_projection_supplemental.py",
+    "orket/runtime/evidence/run_evidence_graph_rendering.py",
+    "orket/workloads/marshaller_v0.py",
+    "pyproject.toml",
+    "tests/integration/test_evidence_graph_ownership.py",
+    "tests/integration/test_governed_demo_ownership.py",
+    "tests/integration/test_manual_wake_read_ownership.py",
+    "tests/integration/test_marshaller_attempt_ownership.py",
+    "tests/integration/test_marshaller_command_ownership.py",
+    "tests/integration/test_marshaller_publication_ownership.py",
+    "tests/integration/test_offline_migration_ownership.py",
+    "tests/integration/test_outward_policy_worker_ownership.py",
+    "tests/integration/test_quickstart_ownership.py",
+    "tests/platform/test_quality_workflow_gates.py"
+  ],
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-10-01T14:06:31.009144Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:7c0406e978251bf1fe67a4018a63cc29688a0c45983dc81d9dd9052cf3b668a6",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 712,
+        "paths_total_reference": 712,
+        "churn_paths": 712,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    },
+    {
+      "run_at_utc": "2026-10-01T14:07:12.639486Z",
+      "changed": true,
+      "before_digest": "sha256:7c0406e978251bf1fe67a4018a63cc29688a0c45983dc81d9dd9052cf3b668a6",
+      "after_digest": "sha256:2db69a512ccf957f0ffff55826470256940a5ef83adf5e72626842ab24896723",
+      "diff": {
+        "added_paths": 2,
+        "removed_paths": 0,
+        "changed_paths": 3,
+        "initial_write": false,
+        "paths_total_previous": 712,
+        "paths_total_current": 770,
+        "paths_total_reference": 770,
+        "churn_paths": 5,
+        "churn_ratio": 0.006494,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.post_verification_nonsemantic_changes",
+          "$.source_sha256.orket/application/services/governed_agent_wake_commands.py",
+          "$.source_sha256.orket/marshaller/replay.py",
+          "$.source_sha256.orket/quickstart/ledger.py"
+        ]
+      }
+    }
+  ],
+  "post_verification_nonsemantic_changes": [
+    {
+      "path": "orket/application/services/governed_agent_wake_commands.py",
+      "tested_sha256": "97d8cb555e9acfee3acb80805e26fe6e49965438330d5128f4bb78e5b943d813",
+      "final_sha256": "6d3ee1dc3b52cefe2e683797bf05d7bbcdfbc1d81d3e0d39fc2f4d694d81d89a",
+      "change": "Remove trailing blank lines only; AST equality verified"
+    },
+    {
+      "path": "orket/marshaller/replay.py",
+      "tested_sha256": "de907a5124fb9cbc28904ec4dd33f43b6e19e477b3ea6388811205c455456c9d",
+      "final_sha256": "60366b50a1a725ad1b86a53263d7852016ba614e46edc55a24a3ab04a039ed4b",
+      "change": "Remove trailing blank lines only; AST equality verified"
+    },
+    {
+      "path": "orket/quickstart/ledger.py",
+      "tested_sha256": "31bd854f10e6351002c83a681308caeabcbd122af709a4c120799a3f3f28c514",
+      "final_sha256": "447652047b42d4f8aeba9e3b48ca46768079cf3e40018940f72cc9ff511550ce",
+      "change": "Remove trailing blank lines only; AST equality verified"
+    }
+  ]
+}

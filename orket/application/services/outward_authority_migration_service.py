@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-import asyncio
 from dataclasses import asdict
 from pathlib import Path
 
+from orket.adapters.execution.owned_io import run_owned_thread
+from orket.adapters.storage.async_file_tools import capture_file_roots
 from orket.adapters.storage.outward_ledger_snapshot_store import OutwardLedgerSnapshotStore
 from orket.adapters.storage.outward_run_event_store import OutwardRunEventStore
 from orket.adapters.storage.outward_run_store import OutwardRunStore
@@ -28,6 +29,7 @@ from orket.core.domain.outward_run_events import LedgerEvent
 
 class OutwardAuthorityMigrationService:
     def __init__(self, db_path: Path, *, runtime_inputs: RuntimeInputService | None = None):
+        db_path, = capture_file_roots([db_path])
         self.db_path = db_path
         self.inputs = runtime_inputs or RuntimeInputService()
         self.ledger = OutwardLedgerSnapshotStore(db_path)
@@ -44,9 +46,11 @@ class OutwardAuthorityMigrationService:
             raise ValueError("E_OUTWARD_MIGRATION_OFFLINE_REQUIRED")
         if not actor_ref.strip() or not expected_run_digest.strip():
             raise ValueError("E_OUTWARD_MIGRATION_REVIEW_REQUIRED")
-        if not await asyncio.to_thread(self.db_path.is_file):
+        db_path, = capture_file_roots([self.db_path])
+        unit, inputs = self.unit, self.inputs
+        if not await run_owned_thread(db_path.is_file, label="outward-migration-database"):
             raise ValueError("E_OUTWARD_MIGRATION_DATABASE_MISSING")
-        async with self.unit.transaction() as transaction:
+        async with unit.transaction() as transaction:
             # Validate the ledger through the owning writer transaction, including its schema migrations.
             snapshot = await transaction.ledger.read(run_id)
             run = snapshot.run
@@ -57,7 +61,7 @@ class OutwardAuthorityMigrationService:
             if snapshot_digest(asdict(run)) != expected_run_digest:
                 raise RuntimeError("E_OUTWARD_MIGRATION_REVIEWED_STATE_CHANGED")
             basis = await migration_evidence(transaction, snapshot)
-            at = self.inputs.utc_now_iso()
+            at = inputs.utc_now_iso()
             adoption = await transaction.append_event(LedgerEvent(
                 event_id=authority_adoption_event_id(run_id), event_type=OUTWARD_AUTHORITY_ADOPTION_EVENT,
                 run_id=run_id, turn=run.current_turn, agent_id="operator", at=at,

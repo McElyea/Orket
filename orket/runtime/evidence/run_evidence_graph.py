@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-import asyncio
 import json
+from functools import partial
 from pathlib import Path
 from typing import Any
 
-import aiofiles
+from orket.adapters.execution.owned_io import run_owned_thread
+from orket.adapters.storage.async_file_tools import capture_file_roots
 
 RUN_EVIDENCE_GRAPH_SCHEMA_VERSION = "1.0"
 _GRAPH_RESULTS = {"complete", "degraded", "blocked"}
@@ -124,11 +125,11 @@ async def write_run_evidence_graph_artifact(
     payload: dict[str, Any],
 ) -> Path:
     validate_run_evidence_graph_payload(payload)
-    graph_path = Path(root) / "runs" / str(session_id).strip() / "run_evidence_graph.json"
-    await asyncio.to_thread(graph_path.parent.mkdir, parents=True, exist_ok=True)
+    root, = capture_file_roots([root])
+    graph_path = root / "runs" / str(session_id).strip() / "run_evidence_graph.json"
     content = json.dumps(payload, ensure_ascii=True, indent=2, sort_keys=True) + "\n"
-    async with aiofiles.open(graph_path, mode="w", encoding="utf-8") as handle:
-        await handle.write(content)
+    await run_owned_thread(partial(graph_path.parent.mkdir, parents=True, exist_ok=True), label="graph-directory")
+    await run_owned_thread(partial(graph_path.write_text, content, encoding="utf-8"), label="graph-json")
     return graph_path
 
 

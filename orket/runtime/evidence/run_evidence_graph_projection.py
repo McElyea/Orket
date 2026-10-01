@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-import asyncio
 from pathlib import Path
 from typing import Any
 
+from orket.adapters.execution.owned_io import run_owned_thread
+from orket.adapters.storage.async_file_tools import capture_file_roots
 from orket.runtime.evidence.run_evidence_graph import (
     build_blocked_run_evidence_graph_payload,
     build_run_evidence_graph_payload,
@@ -34,6 +35,7 @@ async def project_run_evidence_graph_primary_lineage(
     record_repository: Any,
     selected_views: list[str] | None = None,
 ) -> dict[str, Any]:
+    root, = capture_file_roots([root])
     normalized_run_id = str(run_id or "").strip()
     normalized_session_id = str(session_id or "").strip()
     views = list(selected_views or DEFAULT_VIEWS)
@@ -57,7 +59,7 @@ async def project_run_evidence_graph_primary_lineage(
         )
 
     session_root = Path(root) / "runs" / normalized_session_id
-    if not await asyncio.to_thread(session_root.exists):
+    if not await run_owned_thread(session_root.exists, label="graph-projection-root"):
         return build_blocked_run_evidence_graph_payload(
             run_id=normalized_run_id or "unknown-run",
             generation_timestamp=generation_timestamp,

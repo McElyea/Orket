@@ -258,7 +258,19 @@
     "No fresh installed/platform/inference/hosted proof",
     "No whole-lane or main merge acceptance"
   ],
-  "publication": "Pending annotated v0.6.120, matching remote branch/tag and clean checkpoint; receipt .tmp/atg03-publication.json",
+  "publication": {
+    "commit": "5e878cc2460ff192121cc2e56d50192e1eb28745",
+    "version": "0.6.120",
+    "tag_object": "7693848d736883a3e3e564cc61e6e13aeed8f62c",
+    "remote_refs": {
+      "refs/heads/codex/architectural-truth-bt0": "5e878cc2460ff192121cc2e56d50192e1eb28745",
+      "refs/tags/v0.6.120": "7693848d736883a3e3e564cc61e6e13aeed8f62c",
+      "refs/tags/v0.6.120^{}": "5e878cc2460ff192121cc2e56d50192e1eb28745"
+    },
+    "clean_worktree": true,
+    "path": "primary",
+    "result": "success"
+  },
   "exact_files_touched": [
     ".gitea/workflows/quality.yml",
     "CHANGELOG.md",
@@ -322,6 +334,26 @@
         "churn_paths": 0,
         "churn_ratio": 0.0,
         "sample_paths": []
+      }
+    },
+    {
+      "run_at_utc": "2026-10-01T13:13:11.488386Z",
+      "changed": true,
+      "before_digest": "sha256:cb0050528997469e1ecdb106460d8c14587e10d3e14d2f4afa29a5ed36de9770",
+      "after_digest": "sha256:7ba304414a26a52f368703a57a9fdcd254367d6212727b77a128754949aabfbd",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 459,
+        "paths_total_current": 477,
+        "paths_total_reference": 477,
+        "churn_paths": 1,
+        "churn_ratio": 0.002096,
+        "sample_paths": [
+          "$.publication"
+        ]
       }
     }
   ]

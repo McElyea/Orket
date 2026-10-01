@@ -760,3 +760,19 @@ V1 is required to ship only:
 Later graph families may be added only when:
 1. they reuse the same semantic-core rules, or
 2. they land with explicit same-change contract, schema, registry, and authority updates
+
+## Native observation and publication ownership
+
+Graph projection captures its invocation root and selected views before native root
+observation. Supplemental run-summary metadata and complete read/close attempts use
+the shared I/O owner. A native read/parse failure retains the existing contradictory
+source/degraded graph classification; a caller-only interruption propagates after
+settlement. These are support observations and cannot alter execution lineage.
+
+JSON publication validates and serializes its admitted payload before directory work.
+The paired renderer captures its root and both rendered strings before the first
+write. Each native directory/write/close settles before interruption escapes; a
+failed or interrupted stage does not start later files. Partial JSON/Mermaid/HTML
+files may remain, and one file cannot establish success for the pair. Schema,
+projection-only framing, authoritative record owners and graph-result semantics
+remain unchanged. This is not a filesystem transaction or a lineage snapshot lock.

@@ -1,12 +1,14 @@
 from __future__ import annotations
 
-import asyncio
-import json
 import os
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
+from orket.adapters.execution.owned_io import run_owned_thread
+from orket.adapters.storage.async_file_tools import capture_file_roots
+
+from .artifacts import read_json_object
 from .promotion import promote_run
 from .replay import replay_run
 from .runner import MarshallerRunner
@@ -24,13 +26,17 @@ async def execute_marshaller_from_files(
     actor_source: str = "cli",
     branch: str = "main",
 ) -> dict[str, Any]:
-    run_request = await _read_json(run_request_path)
-    proposals = [await _read_json(path) for path in proposal_paths]
+    workspace_root, run_request_path, *proposal_paths = capture_file_roots(
+        [workspace_root, run_request_path, *proposal_paths])
+    allowed_paths = tuple(allowed_paths)
+    selected_actor = resolve_actor_id(actor_id) if promote else actor_id
+    run_request = await read_json_object(run_request_path, error_location="in")
+    proposals = [await read_json_object(path, error_location="in") for path in proposal_paths]
     outcome = await MarshallerRunner(workspace_root).execute(
         run_id=run_id,
         run_request_payload=run_request,
         proposal_payloads=proposals,
-        allowed_paths=tuple(allowed_paths),
+        allowed_paths=allowed_paths,
     )
     run_path = Path(outcome.run_path)
     replay = await replay_run(run_path)
@@ -49,7 +55,7 @@ async def execute_marshaller_from_files(
     if promote and outcome.accept:
         promotion = await promote_run(
             run_path,
-            actor_id=_resolve_actor_id(actor_id),
+            actor_id=selected_actor,
             actor_source=actor_source,
             branch=branch,
         )
@@ -58,16 +64,17 @@ async def execute_marshaller_from_files(
 
 
 async def list_marshaller_runs(workspace_root: Path, *, limit: int = 20) -> list[dict[str, Any]]:
+    workspace_root, = capture_file_roots([workspace_root])
     runs_root = _runs_root(workspace_root)
-    if not await asyncio.to_thread(runs_root.exists):
+    if not await run_owned_thread(runs_root.exists, label="marshaller-exists"):
         return []
-    run_dirs = await asyncio.to_thread(
-        lambda: sorted([p for p in runs_root.iterdir() if p.is_dir()], key=lambda p: p.name, reverse=True)
-    )
+    run_dirs = await run_owned_thread(
+        lambda: sorted([p for p in runs_root.iterdir() if p.is_dir()], key=lambda p: p.name, reverse=True),
+        label="marshaller-runs")
     rows: list[dict[str, Any]] = []
     for run_dir in run_dirs[: max(1, int(limit))]:
         summary_path = run_dir / "summary.json"
-        summary = await _read_json(summary_path) if await asyncio.to_thread(summary_path.exists) else {}
+        summary = await read_json_object(summary_path, error_location="in") if await run_owned_thread(summary_path.exists, label="marshaller-exists") else {}
         rows.append(
             {
                 "run_id": run_dir.name,
@@ -87,28 +94,29 @@ async def inspect_marshaller_attempt(
     run_id: str,
     attempt_index: int | None = None,
 ) -> dict[str, Any]:
+    workspace_root, = capture_file_roots([workspace_root])
     run_path = _runs_root(workspace_root) / str(run_id).strip()
-    if not await asyncio.to_thread(run_path.exists):
+    if not await run_owned_thread(run_path.exists, label="marshaller-exists"):
         raise ValueError(f"Run not found: {run_id}")
     selected_attempt = await _resolve_attempt_index(run_path, attempt_index)
     attempt_dir = run_path / "attempts" / str(selected_attempt)
     checks_dir = attempt_dir / "checks"
     check_files = (
-        await asyncio.to_thread(
-            lambda: sorted([p for p in checks_dir.glob("*.json") if p.is_file()], key=lambda p: p.name)
-        )
-        if await asyncio.to_thread(checks_dir.exists)
+        await run_owned_thread(
+            lambda: sorted([p for p in checks_dir.glob("*.json") if p.is_file()], key=lambda p: p.name),
+            label="marshaller-checks")
+        if await run_owned_thread(checks_dir.exists, label="marshaller-exists")
         else []
     )
-    checks = {path.stem: await _read_json(path) for path in check_files}
+    checks = {path.stem: await read_json_object(path, error_location="in") for path in check_files}
     return {
         "run_id": run_id,
         "run_path": str(run_path),
         "attempt_index": selected_attempt,
-        "proposal": await _read_json(attempt_dir / "proposal.json"),
-        "decision": await _read_json(attempt_dir / "decision.json"),
-        "metrics": await _read_json(attempt_dir / "metrics.json"),
-        "apply_result": await _read_json(attempt_dir / "apply_result.json"),
+        "proposal": await read_json_object(attempt_dir / "proposal.json", error_location="in"),
+        "decision": await read_json_object(attempt_dir / "decision.json", error_location="in"),
+        "metrics": await read_json_object(attempt_dir / "metrics.json", error_location="in"),
+        "apply_result": await read_json_object(attempt_dir / "apply_result.json", error_location="in"),
         "checks": checks,
     }
 
@@ -120,27 +128,19 @@ def default_run_id() -> str:
     return f"marshaller-{stamp}"
 
 
-async def _read_json(path: Path) -> dict[str, Any]:
-    text = await asyncio.to_thread(path.read_text, "utf-8")
-    payload = json.loads(text)
-    if not isinstance(payload, dict):
-        raise ValueError(f"Expected object in {path}")
-    return payload
-
-
 async def _resolve_attempt_index(run_path: Path, attempt_index: int | None) -> int:
     if isinstance(attempt_index, int) and attempt_index >= 1:
         return attempt_index
     summary_path = run_path / "summary.json"
-    if await asyncio.to_thread(summary_path.exists):
-        summary = await _read_json(summary_path)
+    if await run_owned_thread(summary_path.exists, label="marshaller-exists"):
+        summary = await read_json_object(summary_path, error_location="in")
         accepted = summary.get("accepted_attempt_index")
         if isinstance(accepted, int) and accepted >= 1:
             return accepted
     attempts_root = run_path / "attempts"
     names = (
-        await asyncio.to_thread(lambda: [p.name for p in attempts_root.iterdir() if p.is_dir()])
-        if await asyncio.to_thread(attempts_root.exists)
+        await run_owned_thread(lambda: [p.name for p in attempts_root.iterdir() if p.is_dir()], label="marshaller-attempts")
+        if await run_owned_thread(attempts_root.exists, label="marshaller-exists")
         else []
     )
     numeric = sorted(int(name) for name in names if name.isdigit())
@@ -153,7 +153,7 @@ def _runs_root(workspace_root: Path) -> Path:
     return workspace_root / "workspace" / "default" / "stabilizer" / "run"
 
 
-def _resolve_actor_id(actor_id: str | None) -> str:
+def resolve_actor_id(actor_id: str | None) -> str:
     value = (actor_id or "").strip()
     if value:
         return value

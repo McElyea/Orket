@@ -1,7 +1,7 @@
 # Runtime execution results
 
 Status: Active contract; scoped BT-4 combined acceptance recorded in the canonical plan
-Last updated: 2026-09-25
+Last updated: 2026-10-01
 Owner: Orket Core
 
 ## Authority and scope
@@ -222,3 +222,76 @@ Scoped BT-4 acceptance does not establish broader host-death, unregistered-worke
 or remote-effect recovery; typed results must preserve their uncertainty. Current
 implementation/proof status lives in
 `docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md`.
+
+## Governed-run demo native ownership
+
+The direct asynchronous run, inspection and replay entrypoints retain each admitted
+native operation through repeated cancellation or timeout. Scenario/workspace paths
+bind before the first owned wait; native resolution, directory observation, file
+open/read/write/close and result-path rendering execute through the shared native
+I/O owner. Native failure takes precedence over concurrent interruption; scenario
+read failures retain the existing ValueError envelope and native cause.
+
+An interrupted operation settles before its caller returns and does not admit later
+publication stages. Earlier evidence files or a partially completed bundle may remain;
+a failed call does not return a successful execution result. Inspection/replay read
+retained evidence without executing recorded actions. Approval-gated and denied
+actions remain unexecuted. This is operation ownership, not a bundle transaction or
+handle-bound filesystem confinement. Installed/platform acceptance is separate from
+the local source controls in `tests/integration/test_governed_demo_ownership.py`.
+
+## Marshaller artifact and ledger publication
+
+Artifact/ledger writers bind their relative construction roots lexically once.
+Each publication captures its destination and serialized JSON before a native wait.
+The existing compact JSON, UTF-8/LF output and hash algorithm remain authoritative.
+`write_check` captures its summary before directory creation; interruption of an
+artifact operation settles that operation without admitting later files.
+
+Ledger append retains one directory/append/close/digest-adoption attempt through
+interruption. Successful native append adopts the digest before caller cancellation
+escapes; native failure takes precedence. Returned records are detached JSON values
+matching the physical ledger, including JSON array normalization. Resume retains
+native existence/read/close with its captured path. A failed append can leave bytes;
+its writer does not claim a new digest. Inspect retained evidence before recovery.
+Sequence allocation timing remains unchanged. This does not add concurrent-writer
+serialization, cross-process exclusion, whole-run rollback or automatic repair.
+
+Marshaller file commands capture workspace/request/proposal paths, the proposal
+sequence, allowed paths and fallback actor identity before their first wait.
+List/inspection/replay/promotion retain each native metadata/read/write operation.
+Promotion resolves relative repository inputs against its admission directory.
+They share the artifact module's native JSON/text operations; existing sorting,
+selection/refusal, JSON formatting and Git operation order remain unchanged.
+Interruption after a promotion commit can leave that commit and a partial promotion
+record without a ledger event. Replay writes its existing `replay_result.json` but
+does not reapply the patch. These file-operation guarantees do not claim cancellation
+or descendant cleanup for the separate marshaller process adapter.
+
+Attempt execution detaches proposal/request values, binds repository/artifact roots
+and captures its policy and artifact owner before publishing the proposal. Native
+repository existence, clone removal and tree-digest observation use shared ownership.
+Cancellation after a removal can leave the prior clone absent; interruption during
+digest observation leaves the applied clone without a completion decision/event.
+The marshaller workload captures consumed configuration, path list and fallback actor
+before owned path resolution. No event or turn-finalize intent is emitted if that
+resolution fails or its successful result is interrupted. Later event/commit authority
+and the separate process-adapter limits remain unchanged.
+
+## Governed-action quickstart native ownership
+
+Quickstart captures the invocation workspace and constructs ledger writers with bound
+paths. Create retains directory creation, truncate/write/close and construction;
+emit captures serialized event values before opening the file and retains append,
+close, hash and sequence adoption as one operation. Its returned event is a detached
+JSON value. Load retains the complete read/parse/close attempt and existing malformed
+line/object errors. Verification keeps its invalid-ledger result envelope.
+
+The demo retains operator input and output callbacks through native settlement; these
+synchronous callbacks now run in a worker. Custom callbacks must permit that invocation.
+An interactive input has no added deadline: cancellation waits for the admitted input
+call to settle. File write and readback verification use the same shared native owner.
+Only successful verification permits the effect event. Interruption can leave a file
+without that event or a terminal record; successful native ledger work still adopts
+its hash/sequence before interruption escapes. Approval, denial, invalid input and
+EOF outcomes remain unchanged. No callback, filesystem or whole-run rollback is added.

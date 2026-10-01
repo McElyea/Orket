@@ -1,12 +1,12 @@
 # Architectural Truth: Executable Goal Queue
 
 Last updated: 2026-10-01 (America/Denver)
-Status: Active implementation; ATG-01/02 published, ATG-03 required producers in progress
+Status: Active implementation; ATG-01/02/03 published, ATG-04 in progress
 Queue: ATG-v1 — ten fixed goals for the existing revamp
 Owner: Orket Core
 Worktree: `C:/Source/Orket-architectural-truth`
 Branch: `codex/architectural-truth-bt0`
-Next goal: **ATG-03**
+Next goal: **ATG-04**
 
 ## Purpose and authority
 
@@ -71,8 +71,8 @@ do not repeat the 73-minute suite solely to restate this starting point.
 |---|---|---|---|
 | ATG-01 | Reconcile evidence and freeze the remaining worksets | Published `v0.6.117` inputs identified | complete: `20eaba3a` / `v0.6.118` |
 | ATG-02 | Settle model-stream iterator and client lifetime | ATG-01 | complete: `b6a54b3e` / `v0.6.119` |
-| ATG-03 | Finish already-inventoried required log producers | ATG-01 | source passed; v0.6.120 publication pending |
-| ATG-04 | Close the other frozen D ownership/input defects | ATG-01; affected ATG-02/03 work | waiting |
+| ATG-03 | Finish already-inventoried required log producers | ATG-01 | complete: `5e878cc2` / `v0.6.120` |
+| ATG-04 | Close the other frozen D ownership/input defects | ATG-01; affected ATG-02/03 work | source exit passed; publication pending |
 | ATG-05 | Finish the three named E2 hotspots | ATG-01; affected D repairs | waiting |
 | ATG-06 | Clear canonical typing debt in bounded batches | ATG-02 through ATG-05 | waiting |
 | ATG-07 | Restore the unchanged 89% coverage gate | ATG-02 through ATG-06 | waiting |
@@ -148,7 +148,7 @@ closes by evidence, not by manufacturing replacement work.
 ATG-03 scoped source proof: [closeout](../archive/architectural-truth/AT10012026-ATG03/CLOSEOUT.md)
 and [receipt](../archive/architectural-truth/AT10012026-ATG03/VERIFICATION.json).
 All five frozen sites pass the 251-case combined selection and native structural
-gates. Publication remains the card exit gate; later queue gates remain open.
+gates. Annotated checkpoint publication passes; later queue gates remain open.
 
 ### ATG-04 — Close the other frozen D ownership/input defects
 
@@ -276,23 +276,29 @@ are outside ATG-v1. Reading history does not activate its proposed decisions.
 The authority checker's explicit lack of general current-runtime proof remains a
 claim limit; adding a new proof-adapter system is outside this queue.
 
-Current deferred findings: none newly added by this planning change. Historical
-capability/compatibility obligations remain in the archive and active specs. Add
-new unrelated findings here with evidence and their existing owner; do not add
-new executable goal IDs without user authorization.
+Deferred finding (structural observation, not live proof):
+`orket/marshaller/process.py::run_process` directly awaits subprocess creation and
+communication and catches timeout only. Caller cancellation/descendant teardown and
+ambient environment capture are not established by the frozen native-file worksets.
+No historical row assigns this process owner to ATG-v1. Retain it as separate debt;
+B03/B04 native-file and healthy real Git controls do not prove adverse process cleanup.
+Do not expand this queue or its denominator without user authorization. Historical
+capability/compatibility obligations remain in the archive and active specs.
 
 ## Resume record
 
-- Current card/batch: ATG-03 / source exit passed; publication pending.
-- Completed cards: 2 of 10. This is queue completion, not whole-project percentage.
-- Last verified checkpoint: `b6a54b3e` / `v0.6.119`; annotated tag and branch
-  remote identities plus clean worktree verified in `.tmp/atg02-publication.json`.
-- Running commands: ATG-03 source-bound campaigns use `.tmp/atg03-proof.json` for
+- Current card/batch: ATG-04 / checkpoint publication. All nine frozen source
+  batches and final structural gates pass; tracked closeout binds the evidence.
+- Completed cards: 3 of 10. This is queue completion, not whole-project percentage.
+- Last verified checkpoint: `5e878cc2` / `v0.6.120`; annotated tag and branch
+  remote identities plus clean worktree verified in `.tmp/atg03-publication.json`.
+- Running commands: ATG-04 source-bound campaigns use `.tmp/atg04-proof.json` for
   current process identity/status, command, source hashes and log/result paths.
-  Inspect that receipt before replacing any run. ATG-01/02 campaigns and the historical
+  Structural process identity is `.tmp/atg04-structural.json`.
+  Inspect those receipts before replacing any run. ATG-01/02/03 campaigns and the historical
   full suite are finished; do not repeat them solely to restate their observations.
-- Next exact action: publish the verified v0.6.120 checkpoint, verify remote
-  identity and clean worktree, then begin ATG-04-B01 governed demo async lifetime.
+- Next exact action: publish annotated v0.6.121, verify remote branch/tag and clean worktree,
+  then begin ATG-05-B01 on the three named E2 hotspots.
 - Blockers: none for eligible local work. Typing/coverage remain red; the default
   llama.cpp catalog is unavailable, hosted Gitea access is unestablished, and
   current Linux clock/installed acceptance remains unverified for ATG-08/09.

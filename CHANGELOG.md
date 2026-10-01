@@ -5,6 +5,16 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.121] - 2026-10-01
+
+### Fixed
+- Close the nine frozen ATG-04 native ownership/input batches across governed demo, marshaller, quickstart, outward policy validation, offline SQLite migration, support graphs and manual wake requests. Retain admitted work and cleanup through repeated interruption, bind inputs before waits, and preserve native failure precedence and partial effects.
+- Retain real file/SQLite/WAL/Git/CLI controls in both Quality selections. Relative writer roots bind at construction, ledger returns reflect detached JSON values, and quickstart synchronous I/O callbacks run in workers; direct embeddings must accommodate those rules. No new process supervision, rollback or whole-run atomicity is claimed.
+- ATG-04 is a scoped checkpoint. Named E2 extraction, canonical typing, unchanged 89-percent coverage, installed-platform/provider/hosted proof and later ATG-v1 publication gates remain open. Separate marshaller process-adapter interruption/descendant cleanup is recorded as deferred debt.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `required`
+
 ## [0.6.120] - 2026-10-01
 
 ### Fixed

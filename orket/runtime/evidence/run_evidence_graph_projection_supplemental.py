@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-import asyncio
 import json
 from dataclasses import dataclass, field
+from functools import partial
 from pathlib import Path
 from typing import Any
 
-import aiofiles
-
+from orket.adapters.execution.owned_io import run_owned_thread
+from orket.adapters.storage.async_file_tools import capture_file_roots
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
 from orket.application.services.run_ledger_summary_projection import validated_run_ledger_record_projection
 from orket.runtime.evidence.run_evidence_graph_projection_support import (
@@ -37,6 +37,7 @@ async def load_supplemental_projection(
     run_id: str,
     context: PrimaryLineageContext,
 ) -> SupplementalProjection:
+    root, session_root = capture_file_roots([root, session_root])
     projection = SupplementalProjection()
     _merge_projection(
         projection,
@@ -86,15 +87,15 @@ async def _load_run_summary_annotation(
     context: PrimaryLineageContext,
 ) -> SupplementalProjection:
     projection = SupplementalProjection()
-    run_summary_path = session_root / "run_summary.json"
-    if not await asyncio.to_thread(run_summary_path.exists):
+    run_summary_path, = capture_file_roots([session_root / "run_summary.json"])
+    if not await run_owned_thread(run_summary_path.exists, label="graph-summary-exists"):
         return projection
 
     path_ref = f"runs/{session_id}/run_summary.json"
     summary_source_id = source_id("run_summary.json", path_ref)
     try:
-        async with aiofiles.open(run_summary_path, encoding="utf-8") as handle:
-            payload = json.loads(await handle.read())
+        text = await run_owned_thread(partial(run_summary_path.read_text, encoding="utf-8"), label="graph-summary-read")
+        payload = json.loads(text)
         if not isinstance(payload, dict):
             raise ValueError("run_summary_payload_not_object")
         validate_run_summary_payload(payload)

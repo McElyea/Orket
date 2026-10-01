@@ -7,10 +7,10 @@ import uuid
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from functools import partial
 from pathlib import Path
 
-import aiofiles
-
+from orket.application.services.quickstart_io_service import QuickstartActionIO
 from orket.quickstart.ledger import QuickstartLedgerWriter
 
 TOOL_NAME = "write_file"
@@ -53,7 +53,8 @@ async def run_governed_action_demo(
     run_id_factory: Callable[[], str] = generate_run_id,
     timestamp_factory: Callable[[], str] = utc_timestamp,
 ) -> DemoResult:
-    root = workspace or Path()
+    action_io = QuickstartActionIO(workspace or Path())
+    root = action_io.workspace
     read_input = input_func or input
     write_output = output_func or print
     run_id = run_id_factory()
@@ -87,18 +88,14 @@ async def run_governed_action_demo(
         },
     )
 
-    write_output("GOVERNED ACTION REQUEST")
-    write_output(f"tool: {proposal['tool_name']}")
-    write_output(f"path: {proposal['path']}")
-    write_output("status: waiting_for_operator")
-    operator_input = await asyncio.to_thread(read_input, "Approve this action? [a]pprove / [d]eny: ")
+    operator_input = await action_io.request_decision(partial(_print_request, proposal, write_output), read_input)
     normalized_input = operator_input.strip().lower()
 
     if normalized_input in {"a", "approve"}:
         terminal_status = "approved_executed"
         await ledger.emit("operator_approved", {"operator_input": normalized_input})
-        await _write_text_file(output_path, proposal["content"])
-        await _assert_file_content(output_path, proposal["content"])
+        await action_io.write_file(output_path, proposal["content"])
+        await action_io.verify_file(output_path, proposal["content"])
         await ledger.emit(
             "tool_effect_executed",
             {
@@ -157,7 +154,7 @@ async def run_governed_action_demo(
             verifier_command=_verifier_command(display_ledger_path),
         )
 
-    _print_result(result, display_output_path, display_ledger_path, write_output)
+    await action_io.publish_result(partial(_print_result, result, display_output_path, display_ledger_path, write_output))
     return result
 
 
@@ -195,17 +192,11 @@ def main(argv: list[str] | None = None) -> int:
     return 1 if result.terminal_status == "invalid_input_skipped" else 0
 
 
-async def _write_text_file(path: Path, content: str) -> None:
-    await asyncio.to_thread(path.parent.mkdir, parents=True, exist_ok=True)
-    async with aiofiles.open(path, "w", encoding="utf-8") as output_file:
-        await output_file.write(content)
-
-
-async def _assert_file_content(path: Path, expected_content: str) -> None:
-    async with aiofiles.open(path, encoding="utf-8") as output_file:
-        observed = await output_file.read()
-    if observed != expected_content:
-        raise RuntimeError(f"file write verification failed for {path.as_posix()}")
+def _print_request(proposal: dict[str, str], write_output: Callable[[str], None]) -> None:
+    write_output("GOVERNED ACTION REQUEST")
+    write_output(f"tool: {proposal['tool_name']}")
+    write_output(f"path: {proposal['path']}")
+    write_output("status: waiting_for_operator")
 
 
 def _print_result(

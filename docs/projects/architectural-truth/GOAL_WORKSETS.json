@@ -437,8 +437,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "conditional_route",
       "recorded_reason": "No tracked production caller; raw offline copy function has no owner.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B07"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B07",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/adapters/storage/sqlite_backup.py",
@@ -447,8 +449,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "conditional_route",
       "recorded_reason": "Same unadopted offline copy route.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B07"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B07",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/adapters/storage/sqlite_backup.py",
@@ -457,8 +461,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "conditional_route",
       "recorded_reason": "Same unadopted offline copy route.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B07"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B07",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/adapters/storage/sqlite_backup.py",
@@ -467,8 +473,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "conditional_route",
       "recorded_reason": "Same unadopted offline copy route.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B07"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B07",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/adapters/storage/sqlite_backup.py",
@@ -477,8 +485,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "conditional_route",
       "recorded_reason": "Same unadopted offline copy route.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B07"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B07",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/adapters/storage/sqlite_backup.py",
@@ -487,8 +497,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "conditional_route",
       "recorded_reason": "Same unadopted offline copy route; digest worker would be unowned if adopted unchanged.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B07"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B07",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/adapters/tools/runtime.py",
@@ -705,8 +717,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "conditional_route",
       "recorded_reason": "Ownership differs between the named reviewed route and direct or alternate async embedding. See the bound part b report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B01"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B01",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/application/services/governed_run_demo_service.py",
@@ -715,8 +729,10 @@
       "original_call": "aiofiles.open",
       "original_classification": "conditional_route",
       "recorded_reason": "Ownership differs between the named reviewed route and direct or alternate async embedding. See the bound part b report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B01"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B01",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/application/services/governed_run_demo_service.py",
@@ -725,8 +741,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "conditional_route",
       "recorded_reason": "Ownership differs between the named reviewed route and direct or alternate async embedding. See the bound part b report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B01"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B01",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/application/services/governed_run_demo_service.py",
@@ -735,8 +753,10 @@
       "original_call": "aiofiles.open",
       "original_classification": "conditional_route",
       "recorded_reason": "Ownership differs between the named reviewed route and direct or alternate async embedding. See the bound part b report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B01"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B01",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/application/services/governed_run_demo_service.py",
@@ -745,8 +765,10 @@
       "original_call": "aiofiles.open",
       "original_classification": "conditional_route",
       "recorded_reason": "Ownership differs between the named reviewed route and direct or alternate async embedding. See the bound part b report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B01"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B01",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/application/services/governed_run_demo_service.py",
@@ -755,8 +777,10 @@
       "original_call": "resolve",
       "original_classification": "reachable_blocking",
       "recorded_reason": "Receiver tracing resolves synchronous native filesystem work directly on the event-loop route. See the bound part b report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B01"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B01",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/application/services/outward_authority_migration_service.py",
@@ -765,8 +789,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "conditional_route",
       "recorded_reason": "Ownership differs between the named reviewed route and direct or alternate async embedding. See the bound part b report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B07"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B07",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/application/services/outward_ledger_service.py",
@@ -788,8 +814,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part b report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B06"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B06",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/application/services/outward_model_observability.py",
@@ -1838,8 +1866,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "conditional_route",
       "recorded_reason": "Tracked caller is a blocking CLI `asyncio.run`; an embedded coroutine caller would have no native owner.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B09"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B09",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/interfaces/routers/system.py",
@@ -1874,8 +1904,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B02"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B02",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/marshaller/artifacts.py",
@@ -1884,8 +1916,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B02"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B02",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/marshaller/artifacts.py",
@@ -1894,8 +1928,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B02"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B02",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/marshaller/artifacts.py",
@@ -1904,8 +1940,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B02"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B02",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/marshaller/attempt_runtime.py",
@@ -1914,8 +1952,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B04"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B04",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/marshaller/attempt_runtime.py",
@@ -1924,8 +1964,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B04"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B04",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/marshaller/attempt_runtime.py",
@@ -1934,8 +1976,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B04"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B04",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/marshaller/cli.py",
@@ -1944,8 +1988,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B03"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B03",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/marshaller/cli.py",
@@ -1954,8 +2000,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B03"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B03",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/marshaller/cli.py",
@@ -1964,8 +2012,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B03"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B03",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/marshaller/cli.py",
@@ -1974,8 +2024,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B03"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B03",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/marshaller/cli.py",
@@ -1984,8 +2036,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B03"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B03",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/marshaller/cli.py",
@@ -1994,8 +2048,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B03"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B03",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/marshaller/cli.py",
@@ -2004,8 +2060,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B03"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B03",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/marshaller/cli.py",
@@ -2014,8 +2072,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B03"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B03",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/marshaller/cli.py",
@@ -2024,8 +2084,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B03"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B03",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/marshaller/cli.py",
@@ -2034,8 +2096,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B03"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B03",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/marshaller/ledger.py",
@@ -2044,8 +2108,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B02"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B02",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/marshaller/ledger.py",
@@ -2054,8 +2120,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B02"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B02",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/marshaller/ledger.py",
@@ -2064,8 +2132,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B02"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B02",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/marshaller/ledger.py",
@@ -2074,8 +2144,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B02"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B02",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/marshaller/promotion.py",
@@ -2084,8 +2156,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B03"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B03",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/marshaller/promotion.py",
@@ -2094,8 +2168,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B03"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B03",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/marshaller/promotion.py",
@@ -2104,8 +2180,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B03"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B03",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/marshaller/promotion.py",
@@ -2114,8 +2192,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B03"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B03",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/marshaller/promotion.py",
@@ -2124,8 +2204,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B03"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B03",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/marshaller/promotion.py",
@@ -2134,8 +2216,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B03"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B03",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/marshaller/replay.py",
@@ -2144,8 +2228,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B03"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B03",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/marshaller/replay.py",
@@ -2154,8 +2240,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B03"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B03",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/marshaller/replay.py",
@@ -2164,8 +2252,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B03"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B03",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/marshaller/replay.py",
@@ -2174,8 +2264,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B03"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B03",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/marshaller/replay.py",
@@ -2184,8 +2276,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B03"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B03",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/marshaller/replay.py",
@@ -2194,8 +2288,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B03"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B03",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/quickstart/governed_action_demo.py",
@@ -2204,8 +2300,10 @@
       "original_call": "aiofiles.open",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B05"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B05",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/quickstart/governed_action_demo.py",
@@ -2214,8 +2312,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B05"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B05",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/quickstart/governed_action_demo.py",
@@ -2224,8 +2324,10 @@
       "original_call": "aiofiles.open",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B05"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B05",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/quickstart/governed_action_demo.py",
@@ -2234,8 +2336,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B05"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B05",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/quickstart/ledger.py",
@@ -2244,8 +2348,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B05"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B05",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/quickstart/ledger.py",
@@ -2254,8 +2360,10 @@
       "original_call": "aiofiles.open",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B05"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B05",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/quickstart/ledger.py",
@@ -2264,8 +2372,10 @@
       "original_call": "aiofiles.open",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B05"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B05",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/quickstart/ledger.py",
@@ -2274,8 +2384,10 @@
       "original_call": "aiofiles.open",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B05"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B05",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/runtime/evidence/protocol_receipt_materializer.py",
@@ -2310,8 +2422,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "conditional_route",
       "recorded_reason": "Tracked callers are tests/support only; raw writer has no owner.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B08"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B08",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/runtime/evidence/run_evidence_graph.py",
@@ -2320,8 +2434,10 @@
       "original_call": "aiofiles.open",
       "original_classification": "conditional_route",
       "recorded_reason": "Same test-only tracked route; adoption would require whole-write ownership.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B08"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B08",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/runtime/evidence/run_evidence_graph_projection.py",
@@ -2330,8 +2446,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "conditional_route",
       "recorded_reason": "Tracked callers are tests/support only; raw projection has no owner.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B08"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B08",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/runtime/evidence/run_evidence_graph_projection_supplemental.py",
@@ -2340,8 +2458,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "conditional_route",
       "recorded_reason": "Reached only through the currently test-only projection route.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B08"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B08",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/runtime/evidence/run_evidence_graph_projection_supplemental.py",
@@ -2350,8 +2470,10 @@
       "original_call": "aiofiles.open",
       "original_classification": "conditional_route",
       "recorded_reason": "Same route; open/read/close would be unowned if production adopted it.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B08"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B08",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/runtime/evidence/run_evidence_graph_rendering.py",
@@ -2360,8 +2482,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "conditional_route",
       "recorded_reason": "Tracked callers are tests/support only; raw renderer has no owner.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B08"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B08",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/runtime/evidence/run_evidence_graph_rendering.py",
@@ -2370,8 +2494,10 @@
       "original_call": "aiofiles.open",
       "original_classification": "conditional_route",
       "recorded_reason": "Same route; whole artifact publication needs ownership if adopted.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B08"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B08",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/runtime/execution/execution_pipeline_artifact_provenance.py",
@@ -2647,8 +2773,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Owned background task cancellation does not join the path-resolution worker.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B04"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B04",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/workloads/marshaller_v0.py",
@@ -2657,8 +2785,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Same issue for each proposal path.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B04"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B04",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     },
     {
       "path": "orket/workloads/marshaller_v0.py",
@@ -2667,8 +2797,10 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Same issue for workspace-root resolution.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-04-B04"
+      "disposition": "satisfied_at_retained_scoped_boundary",
+      "batch": "ATG-04-B04",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "proof_limit": "Live Windows source native file/SQLite/WAL/healthy Git/CLI; frozen operation boundaries, not whole transactions or adverse subprocess teardown"
     }
   ],
   "required_producers": [
@@ -4948,7 +5080,7 @@
       "goal": "ATG-03",
       "owner": "Orket Core",
       "title": "Required producer capture/settlement: bug_fix_phase_manager",
-      "status": "source exit passed; publication pending",
+      "status": "complete",
       "paths": [
         "orket/application/services/bug_fix_phase_manager.py"
       ],
@@ -4972,14 +5104,15 @@
       "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG03/VERIFICATION.json",
       "closing_sha256": {
         "orket/application/services/bug_fix_phase_manager.py": "3bcf1ce5a3fc29e77c42dce227db724626883e9044247bc25f0b4dff59976f0a"
-      }
+      },
+      "publication": "5e878cc2460ff192121cc2e56d50192e1eb28745"
     },
     {
       "id": "ATG-03-B02",
       "goal": "ATG-03",
       "owner": "Orket Core",
       "title": "Required producer capture/settlement: preview_service",
-      "status": "source exit passed; publication pending",
+      "status": "complete",
       "paths": [
         "orket/application/services/preview_service.py"
       ],
@@ -5004,14 +5137,15 @@
       "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG03/VERIFICATION.json",
       "closing_sha256": {
         "orket/application/services/preview_service.py": "924bc1c575762b0641802d2be356b86d300d62299ab772a6d06eb5eabdcdbb97"
-      }
+      },
+      "publication": "5e878cc2460ff192121cc2e56d50192e1eb28745"
     },
     {
       "id": "ATG-03-B03",
       "goal": "ATG-03",
       "owner": "Orket Core",
       "title": "Required producer capture/settlement: structural_reconciliation_service",
-      "status": "source exit passed; publication pending",
+      "status": "complete",
       "paths": [
         "orket/application/services/structural_reconciliation_service.py"
       ],
@@ -5035,14 +5169,15 @@
       "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG03/VERIFICATION.json",
       "closing_sha256": {
         "orket/application/services/structural_reconciliation_service.py": "9b99a584a7f068c3a817f5c7d3de8f719dbf928f33d228d5c4f43ece82cc4620"
-      }
+      },
+      "publication": "5e878cc2460ff192121cc2e56d50192e1eb28745"
     },
     {
       "id": "ATG-03-B04",
       "goal": "ATG-03",
       "owner": "Orket Core",
       "title": "Required producer capture/settlement: turn_read_context",
-      "status": "source exit passed; publication pending",
+      "status": "complete",
       "paths": [
         "orket/application/workflows/turn_read_context.py"
       ],
@@ -5066,14 +5201,15 @@
       "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG03/VERIFICATION.json",
       "closing_sha256": {
         "orket/application/workflows/turn_read_context.py": "bacf45b9484fd80dc3f16019db2f6ab1c00fcaead1e66af424fdd07c62e8e820"
-      }
+      },
+      "publication": "5e878cc2460ff192121cc2e56d50192e1eb28745"
     },
     {
       "id": "ATG-04-B01",
       "goal": "ATG-04",
       "owner": "Orket Core",
       "title": "Governed demo public async lifetime",
-      "status": "pending",
+      "status": "source exit passed; publication pending",
       "paths": [
         "orket/application/services/governed_run_demo_service.py"
       ],
@@ -5089,7 +5225,7 @@
         "docs/specs/RUNTIME_EXECUTION_RESULT_CONTRACT.md"
       ],
       "recorded_obligation": "Existing .99/.100 combined async inventory; bounded source rebind, not new architecture review",
-      "opening": "missing proof; reproduce before repair",
+      "opening": "B01-opening: 33 failed, 16 passed; native abandonment and event-loop resolution reproduced",
       "completion_checks": [
         "Healthy output plus independent actual file/SQLite/HTTP effects as applicable.",
         "Held native work: repeated cancellation and timeout retain the admitted attempt and cleanup.",
@@ -5097,14 +5233,21 @@
         "Mutate borrowed inputs/CWD during a hold; only the admitted values are observed.",
         "Independent SQLite observer completes within the predeclared 0.5-second bound during native holds."
       ],
-      "production_file_limit": 5
+      "production_file_limit": 5,
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "scope_note": "One frozen production file; reuse existing native I/O ownership and lexical root capture. No new filesystem policy.",
+      "closing": "B01-closing: 53 passed, one upstream warning; unchanged campaign inputs",
+      "closing_sha256": {
+        "orket/application/services/governed_run_demo_service.py": "790dcacbe4ce9e0bcb710455ccf68dae163183ef17827d6e668db91438d77426"
+      },
+      "final_selection": "634 passed on final-source; changed B05/B09 application boundaries reverified by 168 passing cases"
     },
     {
       "id": "ATG-04-B02",
       "goal": "ATG-04",
       "owner": "Orket Core",
       "title": "Marshaller artifact and ledger lifetime",
-      "status": "pending",
+      "status": "source exit passed; publication pending",
       "paths": [
         "orket/marshaller/artifacts.py",
         "orket/marshaller/ledger.py"
@@ -5117,7 +5260,7 @@
         "docs/specs/SHARED_IO_CANCELLATION.md"
       ],
       "recorded_obligation": "Existing .99/.100 combined async inventory; bounded source rebind, not new architecture review",
-      "opening": "missing proof; reproduce before repair",
+      "opening": "B02-opening: 35 failed, 14 passed; lifetime, late payload/destination, and relative construction-root gaps reproduced",
       "completion_checks": [
         "Healthy output plus independent actual file/SQLite/HTTP effects as applicable.",
         "Held native work: repeated cancellation and timeout retain the admitted attempt and cleanup.",
@@ -5125,14 +5268,21 @@
         "Mutate borrowed inputs/CWD during a hold; only the admitted values are observed.",
         "Independent SQLite observer completes within the predeclared 0.5-second bound during native holds."
       ],
-      "production_file_limit": 5
+      "production_file_limit": 5,
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "closing": "B02-closing: 139 passed; unchanged inputs; includes real runner Git/promotion and B01/Quality guards",
+      "closing_sha256": {
+        "orket/marshaller/artifacts.py": "807cbbc86eae46499a1b9254aee5c05d368684bf615d3cf1b237e45574d2d09f",
+        "orket/marshaller/ledger.py": "b4958420aad7140d715bc1ada75ab5cced12a7925c16ac5aa347136d728d1c1d"
+      },
+      "final_selection": "634 passed on final-source; changed B05/B09 application boundaries reverified by 168 passing cases"
     },
     {
       "id": "ATG-04-B03",
       "goal": "ATG-04",
       "owner": "Orket Core",
       "title": "Marshaller inspection/replay/promotion inputs and reads",
-      "status": "pending",
+      "status": "source exit passed; publication pending",
       "paths": [
         "orket/marshaller/cli.py",
         "orket/marshaller/replay.py",
@@ -5149,7 +5299,7 @@
         "docs/specs/SHARED_IO_CANCELLATION.md"
       ],
       "recorded_obligation": "Existing .99/.100 combined async inventory; bounded source rebind, not new architecture review",
-      "opening": "missing proof; reproduce before repair",
+      "opening": "B03-opening: 29 failed, 12 passed; native interruption and command input/root drift reproduced",
       "completion_checks": [
         "Healthy output plus independent actual file/SQLite/HTTP effects as applicable.",
         "Held native work: repeated cancellation and timeout retain the admitted attempt and cleanup.",
@@ -5157,14 +5307,26 @@
         "Mutate borrowed inputs/CWD during a hold; only the admitted values are observed.",
         "Independent SQLite observer completes within the predeclared 0.5-second bound during native holds."
       ],
-      "production_file_limit": 5
+      "production_file_limit": 5,
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "directly_required_owners": [
+        "orket/marshaller/artifacts.py"
+      ],
+      "scope_note": "Share existing artifact read/write implementation across the three frozen consumers; four production files, no second filesystem owner. Native Git process lifetime remains separately evaluated under the frozen attempt workload batch.",
+      "closing": "B03-closing: 101 passed; unchanged inputs; real command execution, replay, Git promotion and prior publication regressions",
+      "closing_sha256": {
+        "orket/marshaller/cli.py": "5afcb2a75ce579a6e5d35e615f7ffe8850e442d3da2dc7059205e625110b665b",
+        "orket/marshaller/replay.py": "60366b50a1a725ad1b86a53263d7852016ba614e46edc55a24a3ab04a039ed4b",
+        "orket/marshaller/promotion.py": "ae0fbf9c2b43ef9c241ea68bdc684564b3d5cce1786bb0ff85c5daae3819cf4a"
+      },
+      "final_selection": "634 passed on final-source; changed B05/B09 application boundaries reverified by 168 passing cases"
     },
     {
       "id": "ATG-04-B04",
       "goal": "ATG-04",
       "owner": "Orket Core",
       "title": "Marshaller attempt and workload ownership",
-      "status": "pending",
+      "status": "source exit passed; publication pending",
       "paths": [
         "orket/marshaller/attempt_runtime.py",
         "orket/workloads/marshaller_v0.py"
@@ -5178,7 +5340,7 @@
         "docs/specs/SHARED_IO_CANCELLATION.md"
       ],
       "recorded_obligation": "Existing .99/.100 combined async inventory; bounded source rebind, not new architecture review",
-      "opening": "missing proof; reproduce before repair",
+      "opening": "B04-opening: 18 failed, 7 passed; native lifetime and nested owner/workload input drift reproduced",
       "completion_checks": [
         "Healthy output plus independent actual file/SQLite/HTTP effects as applicable.",
         "Held native work: repeated cancellation and timeout retain the admitted attempt and cleanup.",
@@ -5186,14 +5348,25 @@
         "Mutate borrowed inputs/CWD during a hold; only the admitted values are observed.",
         "Independent SQLite observer completes within the predeclared 0.5-second bound during native holds."
       ],
-      "production_file_limit": 5
+      "production_file_limit": 5,
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "directly_required_owners": [
+        "orket/marshaller/cli.py"
+      ],
+      "scope_note": "Three production files: frozen attempt/workload and existing CLI actor resolver, shared for fallback-identity capture before workload path waits. No process-adapter expansion.",
+      "closing": "B04-closing: 139 passed; includes complete marshaller suite and B02/B03 native controls; unchanged inputs",
+      "closing_sha256": {
+        "orket/marshaller/attempt_runtime.py": "ea18acca538c634cb9739c25275caa622bfc36c265e8c3b7633147357da49cc0",
+        "orket/workloads/marshaller_v0.py": "bd6cb82869202b3318b0faf871c4cdc6d6c1ca2a822fbaa751e99fe7fcdbc026"
+      },
+      "final_selection": "634 passed on final-source; changed B05/B09 application boundaries reverified by 168 passing cases"
     },
     {
       "id": "ATG-04-B05",
       "goal": "ATG-04",
       "owner": "Orket Core",
       "title": "Quickstart ledger and output lifetime",
-      "status": "pending",
+      "status": "source exit passed; publication pending",
       "paths": [
         "orket/quickstart/ledger.py",
         "orket/quickstart/governed_action_demo.py"
@@ -5207,7 +5380,7 @@
         "docs/specs/SHARED_IO_CANCELLATION.md"
       ],
       "recorded_obligation": "Existing .99/.100 combined async inventory; bounded source rebind, not new architecture review",
-      "opening": "missing proof; reproduce before repair",
+      "opening": "B05-opening: 43 failed, 19 passed; native abandonment, event payload/root drift and output callback on loop reproduced",
       "completion_checks": [
         "Healthy output plus independent actual file/SQLite/HTTP effects as applicable.",
         "Held native work: repeated cancellation and timeout retain the admitted attempt and cleanup.",
@@ -5215,14 +5388,26 @@
         "Mutate borrowed inputs/CWD during a hold; only the admitted values are observed.",
         "Independent SQLite observer completes within the predeclared 0.5-second bound during native holds."
       ],
-      "production_file_limit": 5
+      "production_file_limit": 5,
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "closing": "B05-closing: 156 passed; includes native approval/denial/invalid/EOF processes, B01 and workflow guards. One import-group blank line removed afterward for Ruff; final goal selection must use current bytes.",
+      "closing_sha256": {
+        "orket/quickstart/ledger.py": "447652047b42d4f8aeba9e3b48ca46768079cf3e40018940f72cc9ff511550ce",
+        "orket/quickstart/governed_action_demo.py": "9e287769dab9f8e45b3f3d3ed7b695a25eb395b08766ba174988613767edeb15",
+        "orket/application/services/quickstart_io_service.py": "b32bb81d6f1868477e380ac85720ff36f1c1e940480273ca895ac0ceff9b2084"
+      },
+      "dependency_correction": "Final combined source proof passes 634 cases, but the unchanged dependency gate rejects quickstart interface imports of adapters. Extract concrete native ledger/action operations into application/services/quickstart_io_service.py; retain existing public quickstart symbols, formats, callback settlement and adoption timing. Three production files, no policy exception/reclassification or re-export shim.",
+      "directly_required_paths": [
+        "orket/application/services/quickstart_io_service.py"
+      ],
+      "final_selection": "634 passed on final-source; changed B05/B09 application boundaries reverified by 168 passing cases"
     },
     {
       "id": "ATG-04-B06",
       "goal": "ATG-04",
       "owner": "Orket Core",
       "title": "Outward policy-validation worker",
-      "status": "pending",
+      "status": "source exit passed; publication pending",
       "paths": [
         "orket/application/services/outward_model_admission_service.py"
       ],
@@ -5234,7 +5419,7 @@
         "docs/specs/OUTWARD_APPROVAL_EFFECT_LIFECYCLE_V1.md"
       ],
       "recorded_obligation": "Existing .99/.100 combined async inventory; bounded source rebind, not new architecture review",
-      "opening": "missing proof; reproduce before repair",
+      "opening": "B06-opening: 9 failed; native early return and held-worker workspace drift reproduced",
       "completion_checks": [
         "Healthy output plus independent actual file/SQLite/HTTP effects as applicable.",
         "Held native work: repeated cancellation and timeout retain the admitted attempt and cleanup.",
@@ -5242,14 +5427,20 @@
         "Mutate borrowed inputs/CWD during a hold; only the admitted values are observed.",
         "Independent SQLite observer completes within the predeclared 0.5-second bound during native holds."
       ],
-      "production_file_limit": 5
+      "production_file_limit": 5,
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "closing": "B06-closing-observer: 9 passed; earlier B06-closing passed all 61 existing recovery/evidence cases and 5 new cases. Four initial new-test observer failures corrected: isolate first policy call from later approval admission, assert existing completed/policy_rejected terminal vocabulary.",
+      "closing_sha256": {
+        "orket/application/services/outward_model_admission_service.py": "e6d5e1cc93de55f8b0f7e145f1e7419bae335be13b4c701c01b53e45447390a4"
+      },
+      "final_selection": "634 passed on final-source; changed B05/B09 application boundaries reverified by 168 passing cases"
     },
     {
       "id": "ATG-04-B07",
       "goal": "ATG-04",
       "owner": "Orket Core",
       "title": "Explicit offline migration and copy lifetime",
-      "status": "pending",
+      "status": "source exit passed; publication pending",
       "paths": [
         "orket/application/services/outward_authority_migration_service.py",
         "orket/adapters/storage/sqlite_backup.py"
@@ -5264,7 +5455,7 @@
         "docs/specs/OUTWARD_RUN_AUTHORITY.md"
       ],
       "recorded_obligation": "Existing .99/.100 combined async inventory; bounded source rebind, not new architecture review",
-      "opening": "missing proof; reproduce before repair",
+      "opening": "B07-opening: 21 failed, 10 passed; native interruption/failure precedence and root/owner drift reproduced",
       "completion_checks": [
         "Healthy output plus independent actual file/SQLite/HTTP effects as applicable.",
         "Held native work: repeated cancellation and timeout retain the admitted attempt and cleanup.",
@@ -5272,14 +5463,21 @@
         "Mutate borrowed inputs/CWD during a hold; only the admitted values are observed.",
         "Independent SQLite observer completes within the predeclared 0.5-second bound during native holds."
       ],
-      "production_file_limit": 5
+      "production_file_limit": 5,
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "closing": "B07-closing: 41 passed; includes actual committed WAL snapshots, closed connections, partial copies, existing adoption/refusal/process-death recovery. Test imports sorted after proof; final selection uses current bytes.",
+      "closing_sha256": {
+        "orket/application/services/outward_authority_migration_service.py": "433782b28e312f682d398d2da6f483f881d1660d6225e39cb15650c69ffa42c2",
+        "orket/adapters/storage/sqlite_backup.py": "01a9ae21c3f3ce3195245e71103b3b4058c47974872f054eb1843475b744cb8f"
+      },
+      "final_selection": "634 passed on final-source; changed B05/B09 application boundaries reverified by 168 passing cases"
     },
     {
       "id": "ATG-04-B08",
       "goal": "ATG-04",
       "owner": "Orket Core",
       "title": "Support-only evidence graph native lifetime",
-      "status": "pending",
+      "status": "source exit passed; publication pending",
       "paths": [
         "orket/runtime/evidence/run_evidence_graph.py",
         "orket/runtime/evidence/run_evidence_graph_projection.py",
@@ -5297,7 +5495,7 @@
         "docs/specs/RUN_EVIDENCE_GRAPH_V1.md"
       ],
       "recorded_obligation": "Existing .99/.100 combined async inventory; bounded source rebind, not new architecture review",
-      "opening": "missing proof; reproduce before repair",
+      "opening": "B08-opening: 42 failed, 14 passed; native lifetime, payload reuse and relative-root drift reproduced",
       "completion_checks": [
         "Healthy output plus independent actual file/SQLite/HTTP effects as applicable.",
         "Held native work: repeated cancellation and timeout retain the admitted attempt and cleanup.",
@@ -5305,14 +5503,23 @@
         "Mutate borrowed inputs/CWD during a hold; only the admitted values are observed.",
         "Independent SQLite observer completes within the predeclared 0.5-second bound during native holds."
       ],
-      "production_file_limit": 5
+      "production_file_limit": 5,
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "closing": "B08-closing: 79 passed; real SQLite lineage and retained input files, degraded summary observations, physical JSON/Mermaid/HTML and partial publication. Two import-group blank lines removed afterward; final selection binds current bytes.",
+      "closing_sha256": {
+        "orket/runtime/evidence/run_evidence_graph.py": "31d0add33774f1fabfa6b4a45bcc1d19c13001f44f43185af3012ac7ca01175b",
+        "orket/runtime/evidence/run_evidence_graph_projection.py": "2f918c7111909cdc70b8ebf29091890cc5f5311e15c39d48e48b82c379fb8356",
+        "orket/runtime/evidence/run_evidence_graph_projection_supplemental.py": "97e3d848bc2d30470432637d7f654386c061585abff78d6d721f30a567855cf6",
+        "orket/runtime/evidence/run_evidence_graph_rendering.py": "a7f0d79193fe543aba9b1a67757580caa63a1bfd505179b38bb313b49b5d44c7"
+      },
+      "final_selection": "634 passed on final-source; changed B05/B09 application boundaries reverified by 168 passing cases"
     },
     {
       "id": "ATG-04-B09",
       "goal": "ATG-04",
       "owner": "Orket Core",
       "title": "Manual wake request capture and read lifetime",
-      "status": "pending",
+      "status": "source exit passed; publication pending",
       "paths": [
         "orket/interfaces/governed_agent_wake_cli.py"
       ],
@@ -5325,7 +5532,7 @@
         "docs/specs/GOVERNED_AGENT_LOOP_V1.md"
       ],
       "recorded_obligation": "Existing .99/.100 combined async inventory; bounded source rebind, not new architecture review",
-      "opening": "missing proof; reproduce before repair",
+      "opening": "B09-opening: 15 failed, 3 passed; native lifetime, namespace and path drift reproduced",
       "completion_checks": [
         "Healthy output plus independent actual file/SQLite/HTTP effects as applicable.",
         "Held native work: repeated cancellation and timeout retain the admitted attempt and cleanup.",
@@ -5333,7 +5540,18 @@
         "Mutate borrowed inputs/CWD during a hold; only the admitted values are observed.",
         "Independent SQLite observer completes within the predeclared 0.5-second bound during native holds."
       ],
-      "production_file_limit": 5
+      "production_file_limit": 5,
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG04/VERIFICATION.json",
+      "closing": "B09-closing: 30 passed; real SQLite command service and native CLI admission/conflict/cancel/restart controls",
+      "closing_sha256": {
+        "orket/interfaces/governed_agent_wake_cli.py": "8c089436a1159edcaa17ab7def6bdc2336518d2f5d106959cedfc5573039d1fc",
+        "orket/application/services/governed_agent_wake_commands.py": "6d3ee1dc3b52cefe2e683797bf05d7bbcdfbc1d81d3e0d39fc2f4d694d81d89a"
+      },
+      "dependency_correction": "Final dependency gate rejects interface imports of native adapters. Move request-file capture/read/validation to existing application/services/governed_agent_wake_commands.py; CLI retains argument capture and enqueue order. Two production files; no policy exception.",
+      "directly_required_paths": [
+        "orket/application/services/governed_agent_wake_commands.py"
+      ],
+      "final_selection": "634 passed on final-source; changed B05/B09 application boundaries reverified by 168 passing cases"
     },
     {
       "id": "ATG-05-B01",
@@ -7308,6 +7526,388 @@
           "$.required_producers[7].proof_tests",
           "$.required_producers[8].current_proof",
           "$.required_producers[8].disposition"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-01T13:13:11.499900Z",
+      "changed": true,
+      "before_digest": "sha256:28b294b65c28376b5edf0a763bf7154362cebe528a9f1ddc688859570b2f2214",
+      "after_digest": "sha256:2d868f10aed224ce23bd1af39cff1807152ba3b7770f8316530f3566b6932681",
+      "diff": {
+        "added_paths": 6,
+        "removed_paths": 0,
+        "changed_paths": 5,
+        "initial_write": false,
+        "paths_total_previous": 9890,
+        "paths_total_current": 9902,
+        "paths_total_reference": 9902,
+        "churn_paths": 11,
+        "churn_ratio": 0.001111,
+        "sample_paths": [
+          "$.batches[2].publication",
+          "$.batches[2].status",
+          "$.batches[3].publication",
+          "$.batches[3].status",
+          "$.batches[4].publication",
+          "$.batches[4].status",
+          "$.batches[5].publication",
+          "$.batches[5].status",
+          "$.batches[6].proof",
+          "$.batches[6].scope_note",
+          "$.batches[6].status"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-01T13:17:23.357738Z",
+      "changed": true,
+      "before_digest": "sha256:2d868f10aed224ce23bd1af39cff1807152ba3b7770f8316530f3566b6932681",
+      "after_digest": "sha256:0edf90684a5c42e8ce7f6214c6dde31b4300c842f17170729cb7f7d5b578d070",
+      "diff": {
+        "added_paths": 3,
+        "removed_paths": 0,
+        "changed_paths": 3,
+        "initial_write": false,
+        "paths_total_previous": 9902,
+        "paths_total_current": 9909,
+        "paths_total_reference": 9909,
+        "churn_paths": 6,
+        "churn_ratio": 0.000606,
+        "sample_paths": [
+          "$.batches[6].closing",
+          "$.batches[6].closing_sha256",
+          "$.batches[6].opening",
+          "$.batches[6].status",
+          "$.batches[7].proof",
+          "$.batches[7].status"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-01T13:22:10.515774Z",
+      "changed": true,
+      "before_digest": "sha256:0edf90684a5c42e8ce7f6214c6dde31b4300c842f17170729cb7f7d5b578d070",
+      "after_digest": "sha256:5891faee2ae7ea3c260708106144f46e6838cb7524755dd968eefde5b2f695f6",
+      "diff": {
+        "added_paths": 5,
+        "removed_paths": 0,
+        "changed_paths": 3,
+        "initial_write": false,
+        "paths_total_previous": 9909,
+        "paths_total_current": 9923,
+        "paths_total_reference": 9923,
+        "churn_paths": 8,
+        "churn_ratio": 0.000806,
+        "sample_paths": [
+          "$.batches[7].closing",
+          "$.batches[7].closing_sha256",
+          "$.batches[7].opening",
+          "$.batches[7].status",
+          "$.batches[8].directly_required_owners",
+          "$.batches[8].proof",
+          "$.batches[8].scope_note",
+          "$.batches[8].status"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-01T13:27:21.821084Z",
+      "changed": true,
+      "before_digest": "sha256:5891faee2ae7ea3c260708106144f46e6838cb7524755dd968eefde5b2f695f6",
+      "after_digest": "sha256:a777f93944c93d32fac6a5a91436379dea57519419761ef86a9467b5ed9eba16",
+      "diff": {
+        "added_paths": 3,
+        "removed_paths": 0,
+        "changed_paths": 3,
+        "initial_write": false,
+        "paths_total_previous": 9923,
+        "paths_total_current": 9936,
+        "paths_total_reference": 9936,
+        "churn_paths": 6,
+        "churn_ratio": 0.000604,
+        "sample_paths": [
+          "$.batches[8].closing",
+          "$.batches[8].closing_sha256",
+          "$.batches[8].opening",
+          "$.batches[8].status",
+          "$.batches[9].proof",
+          "$.batches[9].status"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-01T13:30:43.083440Z",
+      "changed": true,
+      "before_digest": "sha256:a777f93944c93d32fac6a5a91436379dea57519419761ef86a9467b5ed9eba16",
+      "after_digest": "sha256:d71fa8e39d500b85fa19104516174bde2fe8362460ddf31eb05a723d390dae2b",
+      "diff": {
+        "added_paths": 2,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 9936,
+        "paths_total_current": 9941,
+        "paths_total_reference": 9941,
+        "churn_paths": 3,
+        "churn_ratio": 0.000302,
+        "sample_paths": [
+          "$.batches[9].directly_required_owners",
+          "$.batches[9].scope_note",
+          "$.batches[9].opening"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-01T13:32:13.845638Z",
+      "changed": true,
+      "before_digest": "sha256:d71fa8e39d500b85fa19104516174bde2fe8362460ddf31eb05a723d390dae2b",
+      "after_digest": "sha256:87efb0e1f5ce9931447f8bc5c484dd93a3deeb1fc56aae69d4168c3269eace1d",
+      "diff": {
+        "added_paths": 3,
+        "removed_paths": 0,
+        "changed_paths": 2,
+        "initial_write": false,
+        "paths_total_previous": 9941,
+        "paths_total_current": 9952,
+        "paths_total_reference": 9952,
+        "churn_paths": 5,
+        "churn_ratio": 0.000502,
+        "sample_paths": [
+          "$.batches[9].closing",
+          "$.batches[9].closing_sha256",
+          "$.batches[9].status",
+          "$.batches[10].proof",
+          "$.batches[10].status"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-01T13:36:34.542031Z",
+      "changed": true,
+      "before_digest": "sha256:87efb0e1f5ce9931447f8bc5c484dd93a3deeb1fc56aae69d4168c3269eace1d",
+      "after_digest": "sha256:9be00d13860b13cb97a46819e09437432a2b17a2828f608831693298dbd4f429",
+      "diff": {
+        "added_paths": 3,
+        "removed_paths": 0,
+        "changed_paths": 3,
+        "initial_write": false,
+        "paths_total_previous": 9952,
+        "paths_total_current": 9961,
+        "paths_total_reference": 9961,
+        "churn_paths": 6,
+        "churn_ratio": 0.000602,
+        "sample_paths": [
+          "$.batches[10].closing",
+          "$.batches[10].closing_sha256",
+          "$.batches[10].opening",
+          "$.batches[10].status",
+          "$.batches[11].proof",
+          "$.batches[11].status"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-01T13:42:02.063908Z",
+      "changed": true,
+      "before_digest": "sha256:9be00d13860b13cb97a46819e09437432a2b17a2828f608831693298dbd4f429",
+      "after_digest": "sha256:bb57ac8a87a5bc9716ab7e7ae8d6aac7fec693dd7eae9b027c6427c7e568bfe4",
+      "diff": {
+        "added_paths": 3,
+        "removed_paths": 0,
+        "changed_paths": 3,
+        "initial_write": false,
+        "paths_total_previous": 9961,
+        "paths_total_current": 9968,
+        "paths_total_reference": 9968,
+        "churn_paths": 6,
+        "churn_ratio": 0.000602,
+        "sample_paths": [
+          "$.batches[11].closing",
+          "$.batches[11].closing_sha256",
+          "$.batches[11].opening",
+          "$.batches[11].status",
+          "$.batches[12].proof",
+          "$.batches[12].status"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-01T13:46:56.083378Z",
+      "changed": true,
+      "before_digest": "sha256:bb57ac8a87a5bc9716ab7e7ae8d6aac7fec693dd7eae9b027c6427c7e568bfe4",
+      "after_digest": "sha256:645658c43d30c2eceb40c897e6b8fc959e7b9b2077610dba94c19e940c63ffec",
+      "diff": {
+        "added_paths": 3,
+        "removed_paths": 0,
+        "changed_paths": 3,
+        "initial_write": false,
+        "paths_total_previous": 9968,
+        "paths_total_current": 9977,
+        "paths_total_reference": 9977,
+        "churn_paths": 6,
+        "churn_ratio": 0.000601,
+        "sample_paths": [
+          "$.batches[12].closing",
+          "$.batches[12].closing_sha256",
+          "$.batches[12].opening",
+          "$.batches[12].status",
+          "$.batches[13].proof",
+          "$.batches[13].status"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-01T13:52:22.218261Z",
+      "changed": true,
+      "before_digest": "sha256:645658c43d30c2eceb40c897e6b8fc959e7b9b2077610dba94c19e940c63ffec",
+      "after_digest": "sha256:1a73b60e13af168ad9b4ff86a802edb3c5d60b684423304054485fa04016cec8",
+      "diff": {
+        "added_paths": 3,
+        "removed_paths": 0,
+        "changed_paths": 3,
+        "initial_write": false,
+        "paths_total_previous": 9977,
+        "paths_total_current": 9990,
+        "paths_total_reference": 9990,
+        "churn_paths": 6,
+        "churn_ratio": 0.000601,
+        "sample_paths": [
+          "$.batches[13].closing",
+          "$.batches[13].closing_sha256",
+          "$.batches[13].opening",
+          "$.batches[13].status",
+          "$.batches[14].proof",
+          "$.batches[14].status"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-01T13:55:12.661984Z",
+      "changed": true,
+      "before_digest": "sha256:1a73b60e13af168ad9b4ff86a802edb3c5d60b684423304054485fa04016cec8",
+      "after_digest": "sha256:0a4d8761d68e8ee78d4b6da7e3ccb8a0938754f56b6d6198b771f37d12aa8500",
+      "diff": {
+        "added_paths": 2,
+        "removed_paths": 0,
+        "changed_paths": 2,
+        "initial_write": false,
+        "paths_total_previous": 9990,
+        "paths_total_current": 9995,
+        "paths_total_reference": 9995,
+        "churn_paths": 4,
+        "churn_ratio": 0.0004,
+        "sample_paths": [
+          "$.batches[14].closing",
+          "$.batches[14].closing_sha256",
+          "$.batches[14].opening",
+          "$.batches[14].status"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-01T14:02:08.380612Z",
+      "changed": true,
+      "before_digest": "sha256:0a4d8761d68e8ee78d4b6da7e3ccb8a0938754f56b6d6198b771f37d12aa8500",
+      "after_digest": "sha256:32daffab23693333fd24ae19eb11f136f17b920551496b2de7bc40c4561710b7",
+      "diff": {
+        "added_paths": 3,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "initial_write": false,
+        "paths_total_previous": 9995,
+        "paths_total_current": 10996,
+        "paths_total_reference": 10996,
+        "churn_paths": 3,
+        "churn_ratio": 0.000273,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.batches[10].dependency_correction",
+          "$.batches[14].dependency_correction"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-01T14:03:59.094419Z",
+      "changed": true,
+      "before_digest": "sha256:e469f647d258964475972fa7231f7365837ae5ff9001f92a557a4628a3c1f0d8",
+      "after_digest": "sha256:149ba1baa65af56b2b7b6a791375319b656ade8ab5193995b270d64675acee2a",
+      "diff": {
+        "added_paths": 3,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "initial_write": false,
+        "paths_total_previous": 9999,
+        "paths_total_current": 11037,
+        "paths_total_reference": 11037,
+        "churn_paths": 3,
+        "churn_ratio": 0.000272,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.batches[10].directly_required_paths",
+          "$.batches[14].directly_required_paths"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-01T14:06:30.902775Z",
+      "changed": true,
+      "before_digest": "sha256:e0bd88620cf1f4349c7496334c1d1efe3b926713ccf31c3ef13dc5da6d585b87",
+      "after_digest": "sha256:3270b4c9df2250e564e54e7e99ae1d9604ceb392a1f7a9c5ea781f61bfd5747f",
+      "diff": {
+        "added_paths": 144,
+        "removed_paths": 2,
+        "changed_paths": 89,
+        "initial_write": false,
+        "paths_total_previous": 10005,
+        "paths_total_current": 11354,
+        "paths_total_reference": 11354,
+        "churn_paths": 235,
+        "churn_ratio": 0.020698,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.batches[6].final_selection",
+          "$.batches[6].proof",
+          "$.batches[6].status",
+          "$.batches[7].final_selection",
+          "$.batches[7].closing_sha256.orket/marshaller/artifacts.py",
+          "$.batches[7].proof",
+          "$.batches[7].status",
+          "$.batches[8].final_selection",
+          "$.batches[8].closing_sha256.orket/marshaller/artifacts.py",
+          "$.batches[8].closing_sha256.orket/marshaller/cli.py",
+          "$.batches[8].proof",
+          "$.batches[8].status",
+          "$.batches[9].final_selection",
+          "$.batches[9].closing_sha256.orket/marshaller/cli.py",
+          "$.batches[9].proof",
+          "$.batches[9].status",
+          "$.batches[10].final_selection",
+          "$.batches[10].closing_sha256.orket/application/services/quickstart_io_service.py",
+          "$.batches[10].closing_sha256.orket/quickstart/governed_action_demo.py"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-01T14:07:12.633980Z",
+      "changed": true,
+      "before_digest": "sha256:99ada5031e06b4f3c7a95d2ada9f1a25333782e29efe8e0aae72b5fed8056d27",
+      "after_digest": "sha256:1076bf713a742ea73a18ee453fe99f2fb54f2f762ab59c22112258deb5b07c52",
+      "diff": {
+        "added_paths": 1,
+        "removed_paths": 0,
+        "changed_paths": 3,
+        "initial_write": false,
+        "paths_total_previous": 10287,
+        "paths_total_current": 11423,
+        "paths_total_reference": 11423,
+        "churn_paths": 4,
+        "churn_ratio": 0.00035,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.batches[8].closing_sha256.orket/marshaller/replay.py",
+          "$.batches[10].closing_sha256.orket/quickstart/ledger.py",
+          "$.batches[14].closing_sha256.orket/application/services/governed_agent_wake_commands.py"
         ]
       }
     }

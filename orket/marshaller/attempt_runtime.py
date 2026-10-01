@@ -1,11 +1,15 @@
 from __future__ import annotations
 
-import asyncio
 import shutil
 from collections.abc import Mapping, Sequence
+from copy import copy, deepcopy
 from dataclasses import dataclass
+from functools import partial
 from pathlib import Path
 from typing import Any
+
+from orket.adapters.execution.owned_io import run_owned_thread
+from orket.adapters.storage.async_file_tools import capture_file_roots
 
 from .artifacts import MarshallerArtifacts
 from .canonical import compute_tree_digest, hash_canonical_json
@@ -52,7 +56,16 @@ class AttemptRuntime:
         attempt_index: int,
         proposal_payload: Mapping[str, Any],
     ) -> AttemptResult:
-        raw_payload = dict(proposal_payload)
+        captured = copy(self)
+        captured.run_request = self.run_request.model_copy(deep=True)
+        captured.artifacts = copy(self.artifacts)
+        repo, captured.artifacts.run_root = capture_file_roots([Path(captured.run_request.repo_path), self.artifacts.run_root])
+        captured.run_request.repo_path = str(repo)
+        captured.allowed_paths = tuple(self.allowed_paths)
+        raw_payload = deepcopy(dict(proposal_payload))
+        return await captured._execute_captured(ledger, attempt_index, raw_payload)
+
+    async def _execute_captured(self, ledger: LedgerWriter, attempt_index: int, raw_payload: dict[str, Any]) -> AttemptResult:
         await self.artifacts.write_proposal(attempt_index, raw_payload)
         patch_text = str(raw_payload.get("patch", "")) if isinstance(raw_payload.get("patch"), str) else ""
         patch_path = await self.artifacts.write_patch(attempt_index, patch_text)
@@ -93,7 +106,7 @@ class AttemptRuntime:
         clone_path = Path(str(apply_result["clone_path"]))
         gate_results = await self._run_gates(clone_path=clone_path, attempt_index=attempt_index)
         rejection_codes = tuple(code for code in collect_gate_rejection_codes(gate_results) if code)
-        tree_digest = await asyncio.to_thread(compute_tree_digest, clone_path)
+        tree_digest = await run_owned_thread(partial(compute_tree_digest, clone_path), label="marshaller-tree-digest")
         await self.artifacts.write_tree_digest(attempt_index, tree_digest)
         return await self._finalize_attempt(
             ledger=ledger,
@@ -207,7 +220,7 @@ class AttemptRuntime:
         attempt_dir: Path,
     ) -> dict[str, Any]:
         repo_path = Path(self.run_request.repo_path)
-        if not await asyncio.to_thread(repo_path.exists):
+        if not await run_owned_thread(repo_path.exists, label="marshaller-attempt-repo"):
             return {"ok": False, "reason": f"repo_path does not exist: {repo_path}"}
 
         head = await run_process(("git", "rev-parse", "HEAD"), cwd=repo_path)
@@ -223,7 +236,7 @@ class AttemptRuntime:
             }
 
         clone_path = attempt_dir / "workspace_clone"
-        await asyncio.to_thread(shutil.rmtree, clone_path, True)
+        await run_owned_thread(partial(shutil.rmtree, clone_path, True), label="marshaller-clone-removal")
         clone_result = await run_process(
             # Scope Windows long-path support to this command and the owned clone.
             ("git", "-c", "core.longpaths=true", "clone", "--quiet", "--config", "core.longpaths=true",

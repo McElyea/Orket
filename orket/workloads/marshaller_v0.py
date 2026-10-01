@@ -1,16 +1,18 @@
 from __future__ import annotations
 
-import asyncio
+from functools import partial
 from pathlib import Path
 from typing import Any
 
+from orket.adapters.execution.owned_io import run_owned_thread
+from orket.adapters.storage.async_file_tools import capture_file_roots
 from orket.application.interactions.context import InteractionContext
 from orket.core.contracts.interaction_stream import CommitIntent, StreamEventType
-from orket.marshaller.cli import default_run_id, execute_marshaller_from_files
+from orket.marshaller.cli import default_run_id, execute_marshaller_from_files, resolve_actor_id
 
 
-def _resolve_input_path(raw: str) -> Path:
-    return Path(raw).resolve()
+def _resolve_input_paths(paths: list[Path]) -> list[Path]:
+    return [path.resolve() for path in paths]
 
 
 async def run_marshaller_v0(
@@ -19,22 +21,20 @@ async def run_marshaller_v0(
     turn_params: dict[str, Any],
     interaction_context: InteractionContext,
 ) -> dict[str, int]:
-    run_request_path = await asyncio.to_thread(
-        _resolve_input_path,
-        str(input_config.get("run_request_path") or "").strip(),
-    )
-    proposal_paths = [
-        await asyncio.to_thread(_resolve_input_path, str(item))
-        for item in list(input_config.get("proposal_paths") or [])
-        if str(item).strip()
-    ]
-    workspace_root = await asyncio.to_thread(_resolve_input_path, str(input_config.get("workspace_root") or "."))
+    run_request_path = Path(str(input_config.get("run_request_path") or "").strip())
+    proposal_paths = [Path(str(item)) for item in list(input_config.get("proposal_paths") or []) if str(item).strip()]
+    workspace_root = Path(str(input_config.get("workspace_root") or "."))
+    captured_paths = capture_file_roots([workspace_root, run_request_path, *proposal_paths])
     run_id = str(input_config.get("run_id") or default_run_id()).strip()
     allowed_paths = [str(item).strip() for item in list(input_config.get("allowed_paths") or []) if str(item).strip()]
     promote = bool(input_config.get("promote", False))
     actor_id = str(input_config.get("actor_id") or "").strip() or None
+    actor_id = resolve_actor_id(actor_id) if promote else actor_id
     actor_source = str(input_config.get("actor_source") or "stream").strip() or "stream"
     branch = str(input_config.get("branch") or "main").strip() or "main"
+
+    workspace_root, run_request_path, *proposal_paths = await run_owned_thread(
+        partial(_resolve_input_paths, captured_paths), label="marshaller-workload-paths")
 
     await interaction_context.emit_event(
         StreamEventType.MODEL_SELECTED,

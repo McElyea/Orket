@@ -190,7 +190,7 @@
       "kind": "contract",
       "label": "Runtime result and lifecycle",
       "source": "docs/specs/RUNTIME_EXECUTION_RESULT_CONTRACT.md",
-      "scope": "Application results, owned runtime lifecycle and linked model-stream iterator lifetime."
+      "scope": "Application results, owned runtime/model-stream lifetimes and bounded demo/marshaller native publication."
     },
     {
       "id": "contract.sdk",
@@ -300,7 +300,7 @@
       "kind": "ceiling",
       "label": "Evidence graph projections",
       "source": "docs/specs/RUN_EVIDENCE_GRAPH_V1.md",
-      "scope": "evidence graph",
+      "scope": "evidence graph; owned support observation/publication adds no execution authority",
       "posture": "support_only",
       "statement": "Projection and rendering do not acquire executor, approval, effect or terminal authority; canonical view tokens remain in the graph contract."
     },

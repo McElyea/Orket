@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "orket"
-version = "0.6.120"
+version = "0.6.121"
 description = "Local-first workflow runtime for card-based execution"
 authors = [
     { name = "Jonathan McElyea" }

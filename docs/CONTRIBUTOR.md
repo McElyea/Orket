@@ -102,6 +102,22 @@ overflow/fatal-writer controls. Keep successful completion conditional on requir
 publication; earlier durable effects need not roll back. Contract:
 `docs/specs/LOG_WRITE_SETTLEMENT.md`.
 
+Governed-run demo changes retain the direct async native-operation controls and
+public CLI/inspection/replay cases in both Quality selections. Marshaller artifact/
+ledger changes retain native holds, input/JSON capture, partial effects and real
+runner/promotion controls in both selections. Quickstart retains ledger/adoption,
+operator/file ownership and native CLI outcome controls. Outward model policy
+validation retains connector-capture, native settlement and transaction-recovery
+controls under `docs/specs/OUTWARD_APPROVAL_EFFECT_LIFECYCLE_V1.md`. Offline migration
+retains metadata, committed-WAL copy/close, partial-copy and process-death controls
+under `docs/specs/OUTWARD_RUN_AUTHORITY.md`. Support graph changes retain native
+read/write/input controls and projection-only semantics from
+`docs/specs/RUN_EVIDENCE_GRAPH_V1.md`. Manual wake routes retain request read/close,
+argument capture and native command guards under `docs/specs/GOVERNED_AGENT_LOOP_V1.md`.
+Preserve captured
+paths, native failure precedence and partial bundles under
+`docs/specs/RUNTIME_EXECUTION_RESULT_CONTRACT.md`.
+
 ## Current Authority Maintenance
 
 `docs/architecture/current_authority.json` is the bounded authored index;

@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
 from dataclasses import replace
+from functools import partial
 from typing import Any
 
+from orket.adapters.execution.owned_io import run_owned_thread
 from orket.application.services.outward_approval_service import OutwardApprovalService
 from orket.application.services.outward_connector_service import (
     OutwardConnectorArgumentError,
@@ -137,11 +138,11 @@ class OutwardModelAdmissionService:
             return await publish_outward_terminal(transaction, run, at=at, reason=reason, outcome="failed", cause=admission)
         tool_call, evidence = result["tool_call"], result["model_invocation"]
         tool = tool_call["tool"]
-        connector = self.connectors.connector_registry.get(tool)
+        captured, connector, arguments = self.connectors._capture_authorization_inputs(tool, tool_call["args"])
         await verify_model_evidence(workspace_root=self.model.workspace_root, evidence=evidence)
         projected = await record_model_proposal_event(transaction, run, tool, tool_call, evidence, connector.pii_fields, at=at)
         try:
-            await asyncio.to_thread(self.connectors.validate_policy, tool, tool_call["args"])
+            await run_owned_thread(partial(captured.validate_policy, tool, arguments), label="outward-model-policy")
         except OutwardConnectorPolicyError as exc:
             return await policy_reject(transaction, projected, tool, tool_call, connector.pii_fields, exc.reason, at=at)
         timeout = int(run.policy_overrides.get("approval_timeout_seconds") or connector.timeout_seconds)
