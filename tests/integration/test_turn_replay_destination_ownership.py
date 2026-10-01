@@ -86,7 +86,7 @@ async def test_completed_replay_keeps_admitted_destination_service_and_record_ti
     tmp_path, monkeypatch, record_property, deterministic_turn_clock,
 ) -> None:
     case = _case(tmp_path, monkeypatch, deterministic_turn_clock, held_model=False)
-    async with _turn_task(case) as task:
+    async with _turn_task(case, logging_required=True) as task:
         await asyncio.wait_for(case.owner.entered.wait(), 5)
         case.owner.release.set()
         seeded = await asyncio.wait_for(asyncio.shield(task), 15)
@@ -96,7 +96,7 @@ async def test_completed_replay_keeps_admitted_destination_service_and_record_ti
     clock_count = len(case.clock.observations)
 
     _reset_owner(case)
-    async with _turn_task(case) as task:
+    async with _turn_task(case, logging_required=True) as task:
         await asyncio.wait_for(case.owner.entered.wait(), 5)
         assert case.owner.keys == [_RUN_A]
         await responsive_sqlite(
@@ -147,7 +147,7 @@ async def test_pre_effect_resume_keeps_admitted_destination_service_and_record_t
     snapshot_path, snapshot_before = await _snapshot_bytes(case)
     case.context["resume_mode"] = True
 
-    async with _turn_task(case) as task:
+    async with _turn_task(case, logging_required=True) as task:
         await asyncio.wait_for(case.owner.entered.wait(), 5)
         assert case.owner.keys == [_RUN_A]
         await responsive_sqlite(

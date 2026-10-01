@@ -3,7 +3,9 @@ import aiosqlite
 import pytest
 
 from orket.adapters.vcs.webhook_db import WebhookDatabase
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain.bug_fix_phase import BugFixPhase, BugFixPhaseStatus
+from orket.logging import bind_logging, prepare_logging
 
 
 @pytest.fixture
@@ -14,14 +16,16 @@ def webhook_db(tmp_path):
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_get_pr_cycle_count_defaults_zero(webhook_db):
-    count = await webhook_db.get_pr_cycle_count("org/repo", 1)
+    with bind_logging(await prepare_logging(LoggingInputs(webhook_db.db_path.parent))):
+        count = await webhook_db.get_pr_cycle_count("org/repo", 1)
     assert count == 0
 
 
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_increment_pr_cycle_starts_at_one(webhook_db):
-    count = await webhook_db.increment_pr_cycle("org/repo", 1)
+    with bind_logging(await prepare_logging(LoggingInputs(webhook_db.db_path.parent))):
+        count = await webhook_db.increment_pr_cycle("org/repo", 1)
     assert count == 1
 
 
@@ -29,16 +33,17 @@ async def test_increment_pr_cycle_starts_at_one(webhook_db):
 @pytest.mark.asyncio
 async def test_try_record_webhook_event_returns_false_for_duplicate_delivery(webhook_db):
     """Layer: integration. Verifies webhook delivery ids are persisted as idempotency keys."""
-    first = await webhook_db.try_record_webhook_event(
-        event_id="evt-1",
-        event_type="pull_request_review",
-        pr_key="org/repo#1",
-    )
-    second = await webhook_db.try_record_webhook_event(
-        event_id="evt-1",
-        event_type="pull_request_review",
-        pr_key="org/repo#1",
-    )
+    with bind_logging(await prepare_logging(LoggingInputs(webhook_db.db_path.parent))):
+        first = await webhook_db.try_record_webhook_event(
+            event_id="evt-1",
+            event_type="pull_request_review",
+            pr_key="org/repo#1",
+        )
+        second = await webhook_db.try_record_webhook_event(
+            event_id="evt-1",
+            event_type="pull_request_review",
+            pr_key="org/repo#1",
+        )
 
     assert first is True
     assert second is False
@@ -47,19 +52,21 @@ async def test_try_record_webhook_event_returns_false_for_duplicate_delivery(web
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_increment_pr_cycle_accumulates(webhook_db):
-    await webhook_db.increment_pr_cycle("org/repo", 1)
-    count = await webhook_db.increment_pr_cycle("org/repo", 1)
+    with bind_logging(await prepare_logging(LoggingInputs(webhook_db.db_path.parent))):
+        await webhook_db.increment_pr_cycle("org/repo", 1)
+        count = await webhook_db.increment_pr_cycle("org/repo", 1)
     assert count == 2
 
 
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_increment_pr_cycle_isolated_per_pr(webhook_db):
-    await webhook_db.increment_pr_cycle("org/repo", 1)
-    await webhook_db.increment_pr_cycle("org/repo", 2)
+    with bind_logging(await prepare_logging(LoggingInputs(webhook_db.db_path.parent))):
+        await webhook_db.increment_pr_cycle("org/repo", 1)
+        await webhook_db.increment_pr_cycle("org/repo", 2)
 
-    count1 = await webhook_db.get_pr_cycle_count("org/repo", 1)
-    count2 = await webhook_db.get_pr_cycle_count("org/repo", 2)
+        count1 = await webhook_db.get_pr_cycle_count("org/repo", 1)
+        count2 = await webhook_db.get_pr_cycle_count("org/repo", 2)
 
     assert count1 == 1
     assert count2 == 1
@@ -68,10 +75,11 @@ async def test_increment_pr_cycle_isolated_per_pr(webhook_db):
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_add_failure_reason_records_cycle_number(webhook_db):
-    await webhook_db.increment_pr_cycle("org/repo", 7)
-    await webhook_db.add_failure_reason("org/repo", 7, "bot", "first reason")
+    with bind_logging(await prepare_logging(LoggingInputs(webhook_db.db_path.parent))):
+        await webhook_db.increment_pr_cycle("org/repo", 7)
+        await webhook_db.add_failure_reason("org/repo", 7, "bot", "first reason")
 
-    reasons = await webhook_db.get_failure_reasons("org/repo", 7)
+        reasons = await webhook_db.get_failure_reasons("org/repo", 7)
 
     assert len(reasons) == 1
     assert reasons[0]["cycle_number"] == 1
@@ -82,12 +90,13 @@ async def test_add_failure_reason_records_cycle_number(webhook_db):
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_get_failure_reasons_ordered_by_cycle(webhook_db):
-    await webhook_db.increment_pr_cycle("org/repo", 7)
-    await webhook_db.add_failure_reason("org/repo", 7, "bot", "cycle1")
-    await webhook_db.increment_pr_cycle("org/repo", 7)
-    await webhook_db.add_failure_reason("org/repo", 7, "bot", "cycle2")
+    with bind_logging(await prepare_logging(LoggingInputs(webhook_db.db_path.parent))):
+        await webhook_db.increment_pr_cycle("org/repo", 7)
+        await webhook_db.add_failure_reason("org/repo", 7, "bot", "cycle1")
+        await webhook_db.increment_pr_cycle("org/repo", 7)
+        await webhook_db.add_failure_reason("org/repo", 7, "bot", "cycle2")
 
-    reasons = await webhook_db.get_failure_reasons("org/repo", 7)
+        reasons = await webhook_db.get_failure_reasons("org/repo", 7)
 
     assert [r["cycle_number"] for r in reasons] == [1, 2]
     assert [r["reason"] for r in reasons] == ["cycle1", "cycle2"]
@@ -96,15 +105,16 @@ async def test_get_failure_reasons_ordered_by_cycle(webhook_db):
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_close_pr_cycle_updates_status(webhook_db):
-    await webhook_db.increment_pr_cycle("org/repo", 9)
-    await webhook_db.close_pr_cycle("org/repo", 9, status="rejected")
+    with bind_logging(await prepare_logging(LoggingInputs(webhook_db.db_path.parent))):
+        await webhook_db.increment_pr_cycle("org/repo", 9)
+        await webhook_db.close_pr_cycle("org/repo", 9, status="rejected")
 
-    async with aiosqlite.connect(webhook_db.db_path) as conn:
-        conn.row_factory = aiosqlite.Row
-        row = await (await conn.execute(
-            "SELECT status FROM pr_review_cycles WHERE pr_key = ?",
-            ("org/repo#9",),
-        )).fetchone()
+        async with aiosqlite.connect(webhook_db.db_path) as conn:
+            conn.row_factory = aiosqlite.Row
+            row = await (await conn.execute(
+                "SELECT status FROM pr_review_cycles WHERE pr_key = ?",
+                ("org/repo#9",),
+            )).fetchone()
 
     assert row["status"] == "rejected"
 
@@ -112,11 +122,12 @@ async def test_close_pr_cycle_updates_status(webhook_db):
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_get_active_prs_returns_only_active(webhook_db):
-    await webhook_db.increment_pr_cycle("org/repo", 1)
-    await webhook_db.increment_pr_cycle("org/repo", 2)
-    await webhook_db.close_pr_cycle("org/repo", 2, status="merged")
+    with bind_logging(await prepare_logging(LoggingInputs(webhook_db.db_path.parent))):
+        await webhook_db.increment_pr_cycle("org/repo", 1)
+        await webhook_db.increment_pr_cycle("org/repo", 2)
+        await webhook_db.close_pr_cycle("org/repo", 2, status="merged")
 
-    active = await webhook_db.get_active_prs()
+        active = await webhook_db.get_active_prs()
 
     assert len(active) == 1
     assert active[0]["pr_number"] == 1
@@ -125,7 +136,8 @@ async def test_get_active_prs_returns_only_active(webhook_db):
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_get_bug_fix_phase_missing_returns_none(webhook_db):
-    phase = await webhook_db.get_bug_fix_phase("missing")
+    with bind_logging(await prepare_logging(LoggingInputs(webhook_db.db_path.parent))):
+        phase = await webhook_db.get_bug_fix_phase("missing")
     assert phase is None
 
 
@@ -136,8 +148,9 @@ async def test_save_and_get_bug_fix_phase_round_trip(webhook_db):
     phase = BugFixPhase(id="phase-1", rock_id="ROCK-1", status=BugFixPhaseStatus.ACTIVE,
                         started_at="2041-01-01T00:00:00+00:00")
 
-    await webhook_db.save_bug_fix_phase(phase)
-    loaded = await webhook_db.get_bug_fix_phase("ROCK-1")
+    with bind_logging(await prepare_logging(LoggingInputs(webhook_db.db_path.parent))):
+        await webhook_db.save_bug_fix_phase(phase)
+        loaded = await webhook_db.get_bug_fix_phase("ROCK-1")
 
     assert loaded is not None
     assert loaded.rock_id == "ROCK-1"
@@ -150,22 +163,24 @@ async def test_save_bug_fix_phase_overwrites_existing(webhook_db):
     """Layer: integration. A phase update round-trips through the existing adapter."""
     phase = BugFixPhase(id="phase-1", rock_id="ROCK-1", status=BugFixPhaseStatus.ACTIVE,
                         started_at="2041-01-01T00:00:00+00:00")
-    await webhook_db.save_bug_fix_phase(phase)
+    with bind_logging(await prepare_logging(LoggingInputs(webhook_db.db_path.parent))):
+        await webhook_db.save_bug_fix_phase(phase)
 
-    phase.status = BugFixPhaseStatus.EXTENDED
-    await webhook_db.save_bug_fix_phase(phase)
+        phase.status = BugFixPhaseStatus.EXTENDED
+        await webhook_db.save_bug_fix_phase(phase)
 
-    loaded = await webhook_db.get_bug_fix_phase("ROCK-1")
+        loaded = await webhook_db.get_bug_fix_phase("ROCK-1")
     assert loaded.status == BugFixPhaseStatus.EXTENDED
 
 
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_get_active_prs_includes_cycle_count(webhook_db):
-    await webhook_db.increment_pr_cycle("org/repo", 5)
-    await webhook_db.increment_pr_cycle("org/repo", 5)
+    with bind_logging(await prepare_logging(LoggingInputs(webhook_db.db_path.parent))):
+        await webhook_db.increment_pr_cycle("org/repo", 5)
+        await webhook_db.increment_pr_cycle("org/repo", 5)
 
-    active = await webhook_db.get_active_prs()
+        active = await webhook_db.get_active_prs()
 
     assert len(active) == 1
     assert active[0]["cycle_count"] == 2
@@ -174,14 +189,15 @@ async def test_get_active_prs_includes_cycle_count(webhook_db):
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_increment_then_failure_reason_for_multiple_prs(webhook_db):
-    await webhook_db.increment_pr_cycle("org/repo", 10)
-    await webhook_db.add_failure_reason("org/repo", 10, "bot", "reason-a")
+    with bind_logging(await prepare_logging(LoggingInputs(webhook_db.db_path.parent))):
+        await webhook_db.increment_pr_cycle("org/repo", 10)
+        await webhook_db.add_failure_reason("org/repo", 10, "bot", "reason-a")
 
-    await webhook_db.increment_pr_cycle("org/repo", 11)
-    await webhook_db.add_failure_reason("org/repo", 11, "bot", "reason-b")
+        await webhook_db.increment_pr_cycle("org/repo", 11)
+        await webhook_db.add_failure_reason("org/repo", 11, "bot", "reason-b")
 
-    reasons_10 = await webhook_db.get_failure_reasons("org/repo", 10)
-    reasons_11 = await webhook_db.get_failure_reasons("org/repo", 11)
+        reasons_10 = await webhook_db.get_failure_reasons("org/repo", 10)
+        reasons_11 = await webhook_db.get_failure_reasons("org/repo", 11)
 
     assert reasons_10[0]["reason"] == "reason-a"
     assert reasons_11[0]["reason"] == "reason-b"
@@ -190,15 +206,16 @@ async def test_increment_then_failure_reason_for_multiple_prs(webhook_db):
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_close_pr_cycle_default_status_closed(webhook_db):
-    await webhook_db.increment_pr_cycle("org/repo", 15)
-    await webhook_db.close_pr_cycle("org/repo", 15)
+    with bind_logging(await prepare_logging(LoggingInputs(webhook_db.db_path.parent))):
+        await webhook_db.increment_pr_cycle("org/repo", 15)
+        await webhook_db.close_pr_cycle("org/repo", 15)
 
-    async with aiosqlite.connect(webhook_db.db_path) as conn:
-        conn.row_factory = aiosqlite.Row
-        row = await (await conn.execute(
-            "SELECT status FROM pr_review_cycles WHERE pr_key = ?",
-            ("org/repo#15",),
-        )).fetchone()
+        async with aiosqlite.connect(webhook_db.db_path) as conn:
+            conn.row_factory = aiosqlite.Row
+            row = await (await conn.execute(
+                "SELECT status FROM pr_review_cycles WHERE pr_key = ?",
+                ("org/repo#15",),
+            )).fetchone()
 
     assert row["status"] == "closed"
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import os
 import shutil
 import subprocess
 import sys
@@ -13,6 +14,12 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
+
+from orket.adapters.observability.logging_context import (  # noqa: E402 - project path bootstrap
+    bind_logging,
+    prepare_logging,
+    select_logging_inputs,
+)
 
 
 def _run(cmd: list[str]) -> None:
@@ -64,11 +71,13 @@ async def _bootstrap_databases(runtime_db: str, webhook_db: str) -> None:
     from orket.adapters.storage.async_card_repository import AsyncCardRepository
     from orket.adapters.vcs.webhook_db import WebhookDatabase
 
-    runtime_repo = AsyncCardRepository(runtime_db)
-    await runtime_repo.get_by_build("_release_smoke_bootstrap_")
+    logging_inputs = select_logging_inputs(Path.cwd(), dict(os.environ))  # noqa: ASYNC240 - capture CLI inputs before admission
+    with bind_logging(await prepare_logging(logging_inputs)):
+        runtime_repo = AsyncCardRepository(runtime_db)
+        await runtime_repo.get_by_build("_release_smoke_bootstrap_")
 
-    webhook_repo = WebhookDatabase(Path(webhook_db))
-    await webhook_repo.get_active_prs()
+        webhook_repo = WebhookDatabase(Path(webhook_db))
+        await webhook_repo.get_active_prs()
 
 
 def main() -> None:

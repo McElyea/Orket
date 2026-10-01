@@ -177,3 +177,92 @@ pass (primary, success); actual provider and fresh installed proof are separate.
 Evidence: `.tmp/goal-20260928-turn-application-artifact-import-opening-v1-*`,
 `.tmp/goal-20260928-roots-remaining-opening-app-imports-closing-v1-*` and
 `.tmp/goal-20260928-roots-remaining-epic-closing-v1-*`.
+
+### September 30 caller migration verification
+
+The bounded goal starts at `b69baeae` and completes callers of the adopted
+logging-preparation contract. Archived checkpoint proposals remain unapplied;
+general architecture, required-producer ownership, typing and coverage work
+remain outside this goal. The umbrella lane and its roadmap entry remain active.
+
+`ExecutionPipeline.verify_issue` binds the pipeline's existing prepared selection
+in the operation task and restores its caller on success, refusal and interruption.
+Thirteen standalone owners now prepare captured invocation inputs before their
+first owned await: eleven provider owners (replay, strict JSON, code review,
+prompting conformance, two Qwen readiness probes, guide/judge, transient ODR,
+role-matrix ODR and P-02 isolation) and two database smoke bootstraps.
+Lower-level library embeddings retain the explicit caller-binding requirement.
+
+Ninety-four existing test functions adopt local prepared bindings or explicitly
+request the existing turn helper's logging scope. Structural normalization of
+the 42 modified existing Python files preserves all original function bodies
+apart from the added preparation/binding and five explicit helper arguments;
+all **764 original test assertions** remain unchanged. The comparison removes
+only those declared logging additions and the added `tmp_path` fixture argument.
+No global logging fixture, logger substitute or missing-preparation fallback was
+introduced. `.tmp/logging-goal-preservation.json` records exact source hashes.
+
+The complete untouched `b69baeae` baseline finishes with **11,437 passed,
+114 failed and 93 skipped** in 3,070.77 seconds. **106 previously failing cases
+now pass** in the current affected selection. The baseline's failure envelopes
+include 92 explicit preparation refusals, four missing logging-helper arguments
+and ten synchronization/readiness failures repaired by the explicit scopes.
+The other eight failures reproduce unchanged in a separate current diagnostic
+(ten other cases pass). Exact case accounting is in
+`.tmp/logging-goal-baseline-comparison.json`; it accounts for every baseline
+failure without claiming a complete current-suite verdict.
+
+The combined affected/current logging selection passes **524 cases**,
+with **9 gated Docker skips**, zero failures and **5,653 unchanged
+Git-visible inputs**. It includes every modified test module, both Quality jobs'
+canonical logging selection and existing script/workflow regressions.
+Evidence: `.tmp/goal-20260928-logging-preparation-final-acceptance-v1-*`.
+
+Live local proof includes six real SQLite/native-fixture pipeline cases,
+22 retry recovery/exhaustion cases through the actual eleven script/provider
+owners and loopback HTTP, physical UTC log records, captured CWD/environment,
+caller-context restoration and real HTTP resource cleanup. Five database cases
+exercise actual repositories and the native bootstrap -> migrate -> validate
+command sequence. Controlled HTTP responses do not establish model inference.
+Both Quality jobs retain the three new integration modules; the contributor and
+logging contract documents describe the same ownership boundaries.
+
+A clean-source wheel passes all six pipeline verification cases from a separate
+installed environment and outside-checkout working directory. All **1,233 package
+namespace files** match the current source, wheel and installation; all loaded
+Orket module origins resolve inside that environment. Installed dependency
+consistency also passes. Evidence: `.tmp/logging-goal-installed-readback.json`
+and `.tmp/logging-goal-wheel-inputs.json`. This is Windows Python 3.11 proof for
+the changed public operation; no release publication is implied.
+
+Opening evidence is retained rather than relabeled: the first bootstrap opening
+contains three genuine preparation refusals and two incorrect new-test table-name
+assertions; the first expanded script run contains incorrect new-test close-count
+expectations. Corrected closing runs pass with real logging intact. The P-02
+opening reproduces the preparation refusal and an incorrect new-test history-count
+assumption; its corrected retry controls pass. Existing assertions were not relaxed.
+
+Observed repaired paths: **primary / success**. Proof is live local runtime
+execution plus separately identified contract/structural checks. Canonical Ruff,
+changed-script Ruff, dependency direction, strict taxonomy (11,677 classified
+cases), critical no-op, docs hygiene and authority structure pass. The authority
+checker continues to report current runtime authority proof unavailable.
+
+Remaining blockers or drift: two organization cleanup fixture timeouts, one public
+runtime-factory fixture timeout, and five provider-default tests calling
+`_real_provider_name` without its captured `environment` argument. The timeout
+fixtures replace a pipeline class used through `.open` with constructor-only
+hooks; this source diagnosis is separate from their observed timeouts. Their
+three files remain unchanged. Evidence:
+`.tmp/goal-20260928-logging-preparation-unrelated-diagnostic-v1-*`.
+No fresh complete current suite, coverage, Mypy, actual model inference, Docker,
+Linux or hosted CI acceptance is claimed. Earlier typing/coverage debt remains
+under the existing architectural plan, without enlarging this migration.
+
+Scope review: AC-01 through AC-10 pass for this change. Imports obey the existing
+dependency policy; decision nodes, effect authority, event schema and replay
+semantics remain unchanged. Invocation input capture occurs at script owners;
+the public pipeline reuses its existing prepared selection. Real adverse-path,
+replay and log/context controls support the affected behavior; updated specs and
+workflow controls preserve the same contract. This is not whole-repository
+architecture compliance or release readiness.

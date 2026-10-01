@@ -12,6 +12,7 @@ from orket.application.services.control_plane_workload_catalog import (
     sandbox_runtime_workload_for_tech_stack,
 )
 from orket.application.services.sandbox_terminal_evidence_service import SandboxTerminalEvidenceService
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain import (
     AttemptState,
     ClosureBasisClassification,
@@ -22,6 +23,7 @@ from orket.core.domain import (
 )
 from orket.core.domain.sandbox import SandboxRegistry, TechStack
 from orket.core.domain.sandbox_lifecycle import CleanupState, SandboxState, TerminalReason
+from orket.logging import bind_logging, prepare_logging
 from orket.services.sandbox_orchestrator import SandboxOrchestrator
 
 pytestmark = pytest.mark.integration
@@ -133,29 +135,30 @@ async def test_create_sandbox_persists_active_lifecycle_and_operator_view(tmp_pa
     compose_project = "orket-sandbox-rock-1"
     runner = FakeLifecycleRunner(compose_project=compose_project, sandbox_id=sandbox_id, run_id="rock-1")
     orchestrator = _orchestrator(tmp_path, runner)
-    sandbox = await orchestrator.create_sandbox(
-        rock_id="rock-1",
-        project_name="Integration Sandbox",
-        tech_stack=TechStack.FASTAPI_REACT_POSTGRES,
-        workspace_path=str(tmp_path),
-    )
-    record = await orchestrator.lifecycle_service.repository.get_record(sandbox_id)
-    reservation = await orchestrator.control_plane_repository.get_latest_reservation_record(
-        reservation_id=f"sandbox-reservation:{sandbox_id}"
-    )
-    reservation_history = await orchestrator.control_plane_repository.list_reservation_records(
-        reservation_id=f"sandbox-reservation:{sandbox_id}"
-    )
-    run = await orchestrator.control_plane_execution_repository.get_run_record(run_id="rock-1")
-    attempts = await orchestrator.control_plane_execution_repository.list_attempt_records(run_id="rock-1")
-    journal_entries = await orchestrator.control_plane_repository.list_effect_journal_entries(run_id="rock-1")
-    lease = await orchestrator.control_plane_repository.get_latest_lease_record(
-        lease_id=f"sandbox-lease:{sandbox_id}"
-    )
-    resource = await orchestrator.control_plane_repository.get_latest_resource_record(
-        resource_id=f"sandbox-scope:{sandbox_id}"
-    )
-    views = await orchestrator.list_sandboxes()
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        sandbox = await orchestrator.create_sandbox(
+            rock_id="rock-1",
+            project_name="Integration Sandbox",
+            tech_stack=TechStack.FASTAPI_REACT_POSTGRES,
+            workspace_path=str(tmp_path),
+        )
+        record = await orchestrator.lifecycle_service.repository.get_record(sandbox_id)
+        reservation = await orchestrator.control_plane_repository.get_latest_reservation_record(
+            reservation_id=f"sandbox-reservation:{sandbox_id}"
+        )
+        reservation_history = await orchestrator.control_plane_repository.list_reservation_records(
+            reservation_id=f"sandbox-reservation:{sandbox_id}"
+        )
+        run = await orchestrator.control_plane_execution_repository.get_run_record(run_id="rock-1")
+        attempts = await orchestrator.control_plane_execution_repository.list_attempt_records(run_id="rock-1")
+        journal_entries = await orchestrator.control_plane_repository.list_effect_journal_entries(run_id="rock-1")
+        lease = await orchestrator.control_plane_repository.get_latest_lease_record(
+            lease_id=f"sandbox-lease:{sandbox_id}"
+        )
+        resource = await orchestrator.control_plane_repository.get_latest_resource_record(
+            resource_id=f"sandbox-scope:{sandbox_id}"
+        )
+        views = await orchestrator.list_sandboxes()
     workspace_token = str(tmp_path).replace("\\", "/").strip("/")
 
     assert sandbox.status.value == "running"
@@ -257,39 +260,40 @@ async def test_delete_sandbox_marks_cleaned_after_live_absence_even_if_down_warn
         evidence_root=tmp_path / "terminal_evidence"
     )
 
-    await orchestrator.create_sandbox(
-        rock_id="rock-2",
-        project_name="Cleanup Sandbox",
-        tech_stack=TechStack.FASTAPI_REACT_POSTGRES,
-        workspace_path=str(tmp_path),
-    )
-    await orchestrator.delete_sandbox(sandbox_id, operator_actor_ref="operator:test")
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        await orchestrator.create_sandbox(
+            rock_id="rock-2",
+            project_name="Cleanup Sandbox",
+            tech_stack=TechStack.FASTAPI_REACT_POSTGRES,
+            workspace_path=str(tmp_path),
+        )
+        await orchestrator.delete_sandbox(sandbox_id, operator_actor_ref="operator:test")
 
-    record = await orchestrator.lifecycle_service.repository.get_record(sandbox_id)
-    lease = await orchestrator.control_plane_repository.get_latest_lease_record(
-        lease_id=f"sandbox-lease:{sandbox_id}"
-    )
-    resource = await orchestrator.control_plane_repository.get_latest_resource_record(
-        resource_id=f"sandbox-scope:{sandbox_id}"
-    )
-    final_truth = await orchestrator.control_plane_repository.get_final_truth(run_id="rock-2")
-    operator_actions = await orchestrator.control_plane_repository.list_operator_actions(target_ref="rock-2")
-    journal_entries = await orchestrator.control_plane_repository.list_effect_journal_entries(run_id="rock-2")
-    events = await orchestrator.lifecycle_service.repository.list_events(sandbox_id)
-    views = await orchestrator.list_sandboxes()
-    workspace_token = str(tmp_path).replace("\\", "/").strip("/")
+        record = await orchestrator.lifecycle_service.repository.get_record(sandbox_id)
+        lease = await orchestrator.control_plane_repository.get_latest_lease_record(
+            lease_id=f"sandbox-lease:{sandbox_id}"
+        )
+        resource = await orchestrator.control_plane_repository.get_latest_resource_record(
+            resource_id=f"sandbox-scope:{sandbox_id}"
+        )
+        final_truth = await orchestrator.control_plane_repository.get_final_truth(run_id="rock-2")
+        operator_actions = await orchestrator.control_plane_repository.list_operator_actions(target_ref="rock-2")
+        journal_entries = await orchestrator.control_plane_repository.list_effect_journal_entries(run_id="rock-2")
+        events = await orchestrator.lifecycle_service.repository.list_events(sandbox_id)
+        views = await orchestrator.list_sandboxes()
+        workspace_token = str(tmp_path).replace("\\", "/").strip("/")
 
-    assert record is not None
-    assert record.state.value == "cleaned"
-    assert record.cleanup_state.value == "completed"
-    assert record.cleanup_attempts == 1
-    assert record.required_evidence_ref is not None
-    assert lease is not None
-    assert lease.status is LeaseStatus.RELEASED
-    assert resource is not None
-    assert resource.current_observed_state.startswith("sandbox_state:cleaned")
-    async with aiofiles.open(record.required_evidence_ref, encoding="utf-8") as handle:
-        evidence = await handle.read()
+        assert record is not None
+        assert record.state.value == "cleaned"
+        assert record.cleanup_state.value == "completed"
+        assert record.cleanup_attempts == 1
+        assert record.required_evidence_ref is not None
+        assert lease is not None
+        assert lease.status is LeaseStatus.RELEASED
+        assert resource is not None
+        assert resource.current_observed_state.startswith("sandbox_state:cleaned")
+        async with aiofiles.open(record.required_evidence_ref, encoding="utf-8") as handle:
+            evidence = await handle.read()
     assert "sandbox_cancellation_receipt" in evidence
     assert final_truth is not None
     assert final_truth.result_class is ResultClass.BLOCKED
@@ -365,31 +369,32 @@ async def test_delete_sandbox_retries_terminal_records_after_a_failed_cleanup_at
     )
     orchestrator = _orchestrator(tmp_path, runner)
 
-    sandbox = await orchestrator.create_sandbox(
-        rock_id="rock-2b",
-        project_name="Cleanup Retry Sandbox",
-        tech_stack=TechStack.FASTAPI_REACT_POSTGRES,
-        workspace_path=str(tmp_path),
-    )
-    record = await orchestrator.lifecycle_service.repository.get_record(sandbox.id)
-    assert record is not None
-    await orchestrator.lifecycle_service.repository.save_record(
-        record.model_copy(
-            update={
-                "state": SandboxState.TERMINAL,
-                "cleanup_state": CleanupState.FAILED,
-                "record_version": record.record_version + 1,
-                "terminal_reason": TerminalReason.SUCCESS,
-                "terminal_at": record.created_at,
-                "cleanup_due_at": record.created_at,
-                "cleanup_failure_reason": "cleanup_authority_blocked",
-            }
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        sandbox = await orchestrator.create_sandbox(
+            rock_id="rock-2b",
+            project_name="Cleanup Retry Sandbox",
+            tech_stack=TechStack.FASTAPI_REACT_POSTGRES,
+            workspace_path=str(tmp_path),
         )
-    )
+        record = await orchestrator.lifecycle_service.repository.get_record(sandbox.id)
+        assert record is not None
+        await orchestrator.lifecycle_service.repository.save_record(
+            record.model_copy(
+                update={
+                    "state": SandboxState.TERMINAL,
+                    "cleanup_state": CleanupState.FAILED,
+                    "record_version": record.record_version + 1,
+                    "terminal_reason": TerminalReason.SUCCESS,
+                    "terminal_at": record.created_at,
+                    "cleanup_due_at": record.created_at,
+                    "cleanup_failure_reason": "cleanup_authority_blocked",
+                }
+            )
+        )
 
-    await orchestrator.delete_sandbox(sandbox.id)
+        await orchestrator.delete_sandbox(sandbox.id)
 
-    stored = await orchestrator.lifecycle_service.repository.get_record(sandbox.id)
+        stored = await orchestrator.lifecycle_service.repository.get_record(sandbox.id)
 
     assert stored is not None
     assert stored.state.value == "cleaned"
@@ -408,31 +413,32 @@ async def test_delete_reclaimable_sandbox_publishes_lease_expiry_final_truth(tmp
     )
     orchestrator = _orchestrator(tmp_path, runner)
 
-    sandbox = await orchestrator.create_sandbox(
-        rock_id="rock-2d",
-        project_name="Reclaimable Cleanup Sandbox",
-        tech_stack=TechStack.FASTAPI_REACT_POSTGRES,
-        workspace_path=str(tmp_path),
-    )
-    record = await orchestrator.lifecycle_service.repository.get_record(sandbox.id)
-    assert record is not None
-    await orchestrator.lifecycle_service.repository.save_record(
-        record.model_copy(
-            update={
-                "state": SandboxState.RECLAIMABLE,
-                "record_version": record.record_version + 1,
-                "terminal_reason": TerminalReason.LEASE_EXPIRED,
-                "terminal_at": record.created_at,
-                "cleanup_due_at": record.created_at,
-            }
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        sandbox = await orchestrator.create_sandbox(
+            rock_id="rock-2d",
+            project_name="Reclaimable Cleanup Sandbox",
+            tech_stack=TechStack.FASTAPI_REACT_POSTGRES,
+            workspace_path=str(tmp_path),
         )
-    )
+        record = await orchestrator.lifecycle_service.repository.get_record(sandbox.id)
+        assert record is not None
+        await orchestrator.lifecycle_service.repository.save_record(
+            record.model_copy(
+                update={
+                    "state": SandboxState.RECLAIMABLE,
+                    "record_version": record.record_version + 1,
+                    "terminal_reason": TerminalReason.LEASE_EXPIRED,
+                    "terminal_at": record.created_at,
+                    "cleanup_due_at": record.created_at,
+                }
+            )
+        )
 
-    await orchestrator.delete_sandbox(sandbox.id)
+        await orchestrator.delete_sandbox(sandbox.id)
 
-    stored = await orchestrator.lifecycle_service.repository.get_record(sandbox.id)
-    final_truth = await orchestrator.control_plane_repository.get_final_truth(run_id="rock-2d")
-    events = await orchestrator.lifecycle_service.repository.list_events(sandbox.id)
+        stored = await orchestrator.lifecycle_service.repository.get_record(sandbox.id)
+        final_truth = await orchestrator.control_plane_repository.get_final_truth(run_id="rock-2d")
+        events = await orchestrator.lifecycle_service.repository.list_events(sandbox.id)
 
     assert stored is not None
     assert stored.state.value == "cleaned"
@@ -454,18 +460,19 @@ async def test_delete_sandbox_fails_closed_when_cleanup_observation_is_unavailab
     )
     orchestrator = _orchestrator(tmp_path, runner)
 
-    await orchestrator.create_sandbox(
-        rock_id="rock-2c",
-        project_name="Cleanup Observation Failure Sandbox",
-        tech_stack=TechStack.FASTAPI_REACT_POSTGRES,
-        workspace_path=str(tmp_path),
-    )
-    runner.list_returncode = 1
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        await orchestrator.create_sandbox(
+            rock_id="rock-2c",
+            project_name="Cleanup Observation Failure Sandbox",
+            tech_stack=TechStack.FASTAPI_REACT_POSTGRES,
+            workspace_path=str(tmp_path),
+        )
+        runner.list_returncode = 1
 
-    with pytest.raises(RuntimeError, match="Failed to observe sandbox resources before cleanup"):
-        await orchestrator.delete_sandbox(sandbox_id)
+        with pytest.raises(RuntimeError, match="Failed to observe sandbox resources before cleanup"):
+            await orchestrator.delete_sandbox(sandbox_id)
 
-    record = await orchestrator.lifecycle_service.repository.get_record(sandbox_id)
+        record = await orchestrator.lifecycle_service.repository.get_record(sandbox_id)
 
     assert record is not None
     assert record.state.value == "terminal"
@@ -569,17 +576,18 @@ async def test_create_sandbox_terminalizes_when_initial_runtime_never_reaches_ru
     orchestrator._initial_health_attempts = 2
     orchestrator._initial_health_delay_seconds = 0.0
 
-    with pytest.raises(RuntimeError, match="startup health verification failed"):
-        await orchestrator.create_sandbox(
-            rock_id="rock-4",
-            project_name="Broken Startup",
-            tech_stack=TechStack.FASTAPI_REACT_POSTGRES,
-            workspace_path=str(tmp_path),
-        )
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        with pytest.raises(RuntimeError, match="startup health verification failed"):
+            await orchestrator.create_sandbox(
+                rock_id="rock-4",
+                project_name="Broken Startup",
+                tech_stack=TechStack.FASTAPI_REACT_POSTGRES,
+                workspace_path=str(tmp_path),
+            )
 
-    record = await orchestrator.lifecycle_service.repository.get_record(sandbox_id)
-    final_truth = await orchestrator.control_plane_repository.get_final_truth(run_id="rock-4")
-    events = await orchestrator.lifecycle_service.repository.list_events(sandbox_id)
+        record = await orchestrator.lifecycle_service.repository.get_record(sandbox_id)
+        final_truth = await orchestrator.control_plane_repository.get_final_truth(run_id="rock-4")
+        events = await orchestrator.lifecycle_service.repository.list_events(sandbox_id)
 
     assert record is not None
     assert record.state.value == "terminal"

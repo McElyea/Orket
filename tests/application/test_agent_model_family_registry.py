@@ -12,9 +12,11 @@ from orket.agents.agent import Agent, NullControlPlaneAuthorityService
 from orket.agents.model_family_registry import ModelFamilyRegistry
 from orket.application.services.control_plane_authority_service import ControlPlaneAuthorityService
 from orket.core.contracts import EffectJournalEntryRecord
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain import ResidualUncertaintyClassification
 from orket.core.domain.execution import ToolCallErrorClass
 from orket.exceptions import AgentConfigurationError
+from orket.logging import bind_logging, prepare_logging
 
 
 class _Provider:
@@ -170,7 +172,8 @@ async def test_agent_tool_gate_blocks_before_direct_tool_execution(monkeypatch, 
         tool_gate=_DenyAllGate(),
     )
 
-    turn = await agent.run({"description": "do work"}, {"issue_id": "ISSUE-1", "roles": ["coder"]}, tmp_path)
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        turn = await agent.run({"description": "do work"}, {"issue_id": "ISSUE-1", "roles": ["coder"]}, tmp_path)
 
     assert calls == []
     assert turn.tool_calls[0].error_class is ToolCallErrorClass.GATE_BLOCKED
@@ -207,7 +210,8 @@ async def test_agent_direct_tool_execution_requires_tool_gate(monkeypatch, tmp_p
         strict_config=False,
     )
 
-    turn = await agent.run({"description": "do work"}, {"issue_id": "ISSUE-1", "roles": ["coder"]}, tmp_path)
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        turn = await agent.run({"description": "do work"}, {"issue_id": "ISSUE-1", "roles": ["coder"]}, tmp_path)
 
     assert calls == []
     assert turn.tool_calls[0].error_class is ToolCallErrorClass.GATE_BLOCKED
@@ -237,11 +241,12 @@ async def test_agent_partial_parse_failure_returns_structured_turn_without_recov
         strict_config=False,
     )
 
-    turn = await agent.run(
-        {"description": "do work"},
-        {"issue_id": "ISSUE-1"},
-        tmp_path,
-    )
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        turn = await agent.run(
+            {"description": "do work"},
+            {"issue_id": "ISSUE-1"},
+            tmp_path,
+        )
 
     assert turn.partial_parse_failure is True
     assert turn.error_class is ToolCallErrorClass.PARSE_PARTIAL
@@ -283,17 +288,18 @@ async def test_agent_run_records_optional_effect_journal_entry(monkeypatch, tmp_
         tool_gate=_AllowAllGate(),
     )
 
-    turn = await agent.run(
-        {"description": "do work"},
-        {
-            "issue_id": "ISSUE-1",
-            "run_id": "run-1",
-            "attempt_id": "attempt-1",
-            "step_id": "step-1",
-            "journal_publication_timestamp": "2026-04-07T00:00:00+00:00",
-        },
-        tmp_path,
-    )
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        turn = await agent.run(
+            {"description": "do work"},
+            {
+                "issue_id": "ISSUE-1",
+                "run_id": "run-1",
+                "attempt_id": "attempt-1",
+                "step_id": "step-1",
+                "journal_publication_timestamp": "2026-04-07T00:00:00+00:00",
+            },
+            tmp_path,
+        )
 
     entries = turn.raw["effect_journal_entries"]
     assert len(entries) == 1
@@ -338,7 +344,8 @@ async def test_agent_direct_tool_execution_requires_journal_authority(monkeypatc
         tool_gate=_AllowAllGate(),
     )
 
-    turn = await agent.run({"description": "do work"}, {"issue_id": "ISSUE-1", "roles": ["coder"]}, tmp_path)
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        turn = await agent.run({"description": "do work"}, {"issue_id": "ISSUE-1", "roles": ["coder"]}, tmp_path)
 
     assert calls == []
     assert turn.tool_calls[0].error_class is ToolCallErrorClass.GATE_BLOCKED

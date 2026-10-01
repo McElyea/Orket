@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any, TypeVar
@@ -11,6 +12,11 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from orket.adapters.observability.logging_context import (  # noqa: E402 - project path bootstrap
+    bind_logging,
+    prepare_logging,
+    select_logging_inputs,
+)
 from orket.application.services.local_model_factory import (  # noqa: E402 - project path bootstrap
     create_local_model_provider_async,  # noqa: E402 - project path bootstrap
 )
@@ -110,7 +116,8 @@ async def run_strict_json_model(
     messages: list[dict[str, str]],
     runtime_context: dict[str, Any] | None = None,
 ) -> tuple[str, dict[str, Any]]:
-    with applied_probe_env(
+    logging_inputs = select_logging_inputs(Path.cwd(), dict(os.environ))  # noqa: ASYNC240 - capture CLI inputs before admission
+    with bind_logging(await prepare_logging(logging_inputs)), applied_probe_env(
         provider=str(provider),
         ollama_host=str(ollama_host or "").strip() or None,
         disable_sandbox=True,

@@ -13,6 +13,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
+from orket.adapters.observability.logging_context import (  # noqa: E402 - script bootstrap
+    bind_logging,
+    prepare_logging,
+    select_logging_inputs,
+)
 from orket.application.services.local_model_factory import create_local_model_provider_async
 from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.application.workflows.turn_contract_validator import ContractValidator
@@ -27,65 +32,67 @@ OUTPUT = ROOT / "benchmarks/results/protocol/local_prompting/qwen38_promotion/re
 
 
 async def prove() -> dict:
-    context = {
-        "protocol_governed_enabled": True,
-        "local_prompt_task_class": "tool_call",
-        "local_prompting_mode": "enforce",
-    }
-    parser = ResponseParser(utc_now=RuntimeInputService().utc_now)
-    validator = ContractValidator(parser)
-    builder = CorrectivePromptBuilder()
-    client = (await create_local_model_provider_async(model=DEFAULT_LOCAL_MODEL, provider="llama_cpp", timeout=90))
-    rows = []
-    try:
-        # Deliberately request noncompliance to exercise a real validator rejection.
-        initial = await client.complete(
-            [
-                {
-                    "role": "user",
-                    "content": 'Show this object in a markdown code block with triple backticks: {"content":"","tool_calls":[]}',
-                }
-            ],
-            runtime_context={"local_prompt_task_class": "concise_text", "local_prompting_mode": "enforce"},
-        )
-        turn = ExecutionTurn(timestamp=None, role="actor", issue_id="repair-proof", content=initial.content, raw=initial.raw)
-        diagnostics = validator.local_prompt_anti_meta_diagnostics(turn, context)
-        violations = diagnostics["violations"]
-        if not violations:
-            return {
-                "passed": False,
-                "reason": "negative stimulus did not produce a validator rejection",
-                "initial": initial.content,
-            }
-        failures = [{"reason": "local_prompt_contract_not_met", "violations": violations}]
-        observation = await observe_legacy_required_read_paths(context=context, workspace=ROOT)
-        corrective = builder.build_corrective_instruction(failures, context, observation)
-        deterministic = corrective == builder.build_corrective_instruction(failures, context, observation)
-        for attempt in range(1, 3):
-            response = await client.complete([{"role": "user", "content": corrective}], runtime_context=context)
-            observed = ExecutionTurn(timestamp=None, role="actor", issue_id="repair-proof", content=response.content, raw=response.raw)
-            errors = validator.local_prompt_anti_meta_diagnostics(observed, context)["violations"]
-            try:
-                payload = json.loads(response.content)
-            except json.JSONDecodeError:
-                payload = None
-            passed = not errors and payload == {"content": "", "tool_calls": []}
-            rows.append({"attempt": attempt, "response": response.content, "violations": errors, "passed": passed})
-            if passed:
-                break
-        return {
-            "passed": deterministic and rows[-1]["passed"],
-            "initial": initial.content,
-            "initial_violations": violations,
-            "corrective_prompt_sha256": hashlib.sha256(corrective.encode()).hexdigest(),
-            "failure_context_included": all(item["prior_output_excerpt_hash"] in corrective for item in violations),
-            "deterministic_reprompt": deterministic,
-            "max_repairs": 2,
-            "repairs": rows,
-            "scope": "live model + shared host validator/builder; deliberately induced invalid output; no tools executed",
+    logging_inputs = select_logging_inputs(Path.cwd(), dict(os.environ))  # noqa: ASYNC240 - capture CLI inputs before admission
+    with bind_logging(await prepare_logging(logging_inputs)):
+        context = {
+            "protocol_governed_enabled": True,
+            "local_prompt_task_class": "tool_call",
+            "local_prompting_mode": "enforce",
         }
-    finally:
-        await client.close()
+        parser = ResponseParser(utc_now=RuntimeInputService().utc_now)
+        validator = ContractValidator(parser)
+        builder = CorrectivePromptBuilder()
+        client = (await create_local_model_provider_async(model=DEFAULT_LOCAL_MODEL, provider="llama_cpp", timeout=90))
+        rows = []
+        try:
+            # Deliberately request noncompliance to exercise a real validator rejection.
+            initial = await client.complete(
+                [
+                    {
+                        "role": "user",
+                        "content": 'Show this object in a markdown code block with triple backticks: {"content":"","tool_calls":[]}',
+                    }
+                ],
+                runtime_context={"local_prompt_task_class": "concise_text", "local_prompting_mode": "enforce"},
+            )
+            turn = ExecutionTurn(timestamp=None, role="actor", issue_id="repair-proof", content=initial.content, raw=initial.raw)
+            diagnostics = validator.local_prompt_anti_meta_diagnostics(turn, context)
+            violations = diagnostics["violations"]
+            if not violations:
+                return {
+                    "passed": False,
+                    "reason": "negative stimulus did not produce a validator rejection",
+                    "initial": initial.content,
+                }
+            failures = [{"reason": "local_prompt_contract_not_met", "violations": violations}]
+            observation = await observe_legacy_required_read_paths(context=context, workspace=ROOT)
+            corrective = builder.build_corrective_instruction(failures, context, observation)
+            deterministic = corrective == builder.build_corrective_instruction(failures, context, observation)
+            for attempt in range(1, 3):
+                response = await client.complete([{"role": "user", "content": corrective}], runtime_context=context)
+                observed = ExecutionTurn(timestamp=None, role="actor", issue_id="repair-proof", content=response.content, raw=response.raw)
+                errors = validator.local_prompt_anti_meta_diagnostics(observed, context)["violations"]
+                try:
+                    payload = json.loads(response.content)
+                except json.JSONDecodeError:
+                    payload = None
+                passed = not errors and payload == {"content": "", "tool_calls": []}
+                rows.append({"attempt": attempt, "response": response.content, "violations": errors, "passed": passed})
+                if passed:
+                    break
+            return {
+                "passed": deterministic and rows[-1]["passed"],
+                "initial": initial.content,
+                "initial_violations": violations,
+                "corrective_prompt_sha256": hashlib.sha256(corrective.encode()).hexdigest(),
+                "failure_context_included": all(item["prior_output_excerpt_hash"] in corrective for item in violations),
+                "deterministic_reprompt": deterministic,
+                "max_repairs": 2,
+                "repairs": rows,
+                "scope": "live model + shared host validator/builder; deliberately induced invalid output; no tools executed",
+            }
+        finally:
+            await client.close()
 
 
 def main() -> int:

@@ -5,6 +5,16 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.116] - 2026-09-30
+
+### Fixed
+- Complete the adopted logging-preparation caller migration: bind public pipeline verification, prepare 13 standalone owners, and supply explicit scopes at direct test callers without weakening their 764 existing assertions.
+- Retain pipeline, provider-retry and database-bootstrap controls in both Quality jobs. Scoped acceptance passes 524 cases with nine gated Docker skips; six fresh installed pipeline cases pass. All 106 affected baseline failures are repaired; eight unrelated fixture failures remain recorded in the architectural plan.
+- This branch checkpoint does not establish complete current-suite coverage, Mypy, live model/Docker, Linux or hosted CI acceptance. Archived architectural proposals remain unapplied.
+- `compatibility_status`: `preserved`
+- `affected_audience`: `all`
+- `migration_requirement`: `none`
+
 ## [0.6.115] - 2026-09-30
 
 ### Changed

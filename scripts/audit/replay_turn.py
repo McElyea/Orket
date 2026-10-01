@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
 import sys
 from collections.abc import Awaitable, Callable
 from functools import partial
@@ -15,6 +16,11 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from orket.adapters.execution.owned_io import run_owned_thread  # noqa: E402 - project path bootstrap
+from orket.adapters.observability.logging_context import (  # noqa: E402 - project path bootstrap
+    bind_logging,
+    prepare_logging,
+    select_logging_inputs,
+)
 from orket.application.services.local_model_factory import (  # noqa: E402 - project path bootstrap
     create_local_model_provider,  # noqa: E402 - project path bootstrap
 )
@@ -54,9 +60,11 @@ async def _default_replay_call(
     model: str,
     runtime_context: dict[str, Any],
 ) -> dict[str, Any]:
+    logging_inputs = select_logging_inputs(Path.cwd(), dict(os.environ))  # noqa: ASYNC240 - capture CLI inputs before admission
     construct = partial(create_local_model_provider, model=model, temperature=0.0, timeout=300)
-    async with open_runtime_owner(construct, label="replay-provider-construction") as provider:
-        response = await provider.complete(messages, runtime_context=runtime_context)
+    with bind_logging(await prepare_logging(logging_inputs)):
+        async with open_runtime_owner(construct, label="replay-provider-construction") as provider:
+            response = await provider.complete(messages, runtime_context=runtime_context)
     return {
         "content": str(response.content or ""),
         "raw": json_safe(dict(response.raw or {})),

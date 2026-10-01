@@ -10,8 +10,10 @@ import shutil
 import pytest
 
 from orket.application.services.sandbox_command_composition import create_sandbox_command_runner
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain.sandbox import SandboxRegistry, TechStack
 from orket.core.domain.sandbox_lifecycle import CleanupState, LifecycleEvent, SandboxState, TerminalReason
+from orket.logging import bind_logging, prepare_logging
 from orket.services.sandbox_orchestrator import SandboxOrchestrator
 from tests.acceptance._sandbox_live_ports import patch_orchestrator_port_allocator
 
@@ -108,45 +110,46 @@ async def test_live_unknown_outcome_reconciliation_recovers_to_active(tmp_path, 
     compose_project = orchestrator.sandbox_policy_node.build_compose_project(sandbox_id)
     compose_path = str(orchestrator._compose_path(str(tmp_path)))
 
-    try:
-        with pytest.raises(OSError, match="ambiguous create outcome"):
-            await orchestrator.create_sandbox(
-                rock_id="live-unknown-1",
-                project_name="Live Unknown Outcome",
-                tech_stack=TechStack.FASTAPI_REACT_POSTGRES,
-                workspace_path=str(tmp_path),
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        try:
+            with pytest.raises(OSError, match="ambiguous create outcome"):
+                await orchestrator.create_sandbox(
+                    rock_id="live-unknown-1",
+                    project_name="Live Unknown Outcome",
+                    tech_stack=TechStack.FASTAPI_REACT_POSTGRES,
+                    workspace_path=str(tmp_path),
+                )
+
+            blocked = await orchestrator.lifecycle_service.repository.get_record(sandbox_id)
+            assert blocked is not None
+            assert blocked.state is SandboxState.STARTING
+            assert blocked.requires_reconciliation is True
+
+            await orchestrator.reconcile_sandbox(sandbox_id)
+
+            reconciled = await orchestrator.lifecycle_service.repository.get_record(sandbox_id)
+            assert reconciled is not None
+            assert reconciled.state is SandboxState.ACTIVE
+            assert reconciled.requires_reconciliation is False
+            assert reconciled.managed_resource_inventory.containers
+
+            await orchestrator.delete_sandbox(sandbox_id)
+            cleaned = await orchestrator.lifecycle_service.repository.get_record(sandbox_id)
+            containers = await _docker_rows(
+                "docker",
+                "ps",
+                "-a",
+                "--filter",
+                f"label=com.docker.compose.project={compose_project}",
+                "--format",
+                "{{json .}}",
             )
 
-        blocked = await orchestrator.lifecycle_service.repository.get_record(sandbox_id)
-        assert blocked is not None
-        assert blocked.state is SandboxState.STARTING
-        assert blocked.requires_reconciliation is True
-
-        await orchestrator.reconcile_sandbox(sandbox_id)
-
-        reconciled = await orchestrator.lifecycle_service.repository.get_record(sandbox_id)
-        assert reconciled is not None
-        assert reconciled.state is SandboxState.ACTIVE
-        assert reconciled.requires_reconciliation is False
-        assert reconciled.managed_resource_inventory.containers
-
-        await orchestrator.delete_sandbox(sandbox_id)
-        cleaned = await orchestrator.lifecycle_service.repository.get_record(sandbox_id)
-        containers = await _docker_rows(
-            "docker",
-            "ps",
-            "-a",
-            "--filter",
-            f"label=com.docker.compose.project={compose_project}",
-            "--format",
-            "{{json .}}",
-        )
-
-        assert cleaned is not None
-        assert cleaned.state is SandboxState.CLEANED
-        assert containers == []
-    finally:
-        await _compose_cleanup(compose_path, compose_project)
+            assert cleaned is not None
+            assert cleaned.state is SandboxState.CLEANED
+            assert containers == []
+        finally:
+            await _compose_cleanup(compose_path, compose_project)
 
 
 @pytest.mark.asyncio
@@ -165,48 +168,49 @@ async def test_live_cleanup_sweeper_cleans_due_terminal_sandbox(tmp_path, monkey
     compose_project = "orket-sandbox-live-sweeper-1"
     compose_path = str(orchestrator._compose_path(str(tmp_path)))
     sandbox = None
-    try:
-        sandbox = await orchestrator.create_sandbox(
-            rock_id="live-sweeper-1",
-            project_name="Live Sweeper",
-            tech_stack=TechStack.FASTAPI_REACT_POSTGRES,
-            workspace_path=str(tmp_path),
-        )
-        record = await orchestrator.lifecycle_service.repository.get_record(sandbox.id)
-        assert record is not None
-        await orchestrator.lifecycle_service.repository.save_record(
-            record.model_copy(
-                update={
-                    "state": SandboxState.TERMINAL,
-                    "cleanup_state": CleanupState.SCHEDULED,
-                    "record_version": record.record_version + 1,
-                    "terminal_reason": TerminalReason.SUCCESS,
-                    "terminal_at": record.created_at,
-                    "cleanup_due_at": record.created_at,
-                }
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        try:
+            sandbox = await orchestrator.create_sandbox(
+                rock_id="live-sweeper-1",
+                project_name="Live Sweeper",
+                tech_stack=TechStack.FASTAPI_REACT_POSTGRES,
+                workspace_path=str(tmp_path),
             )
-        )
+            record = await orchestrator.lifecycle_service.repository.get_record(sandbox.id)
+            assert record is not None
+            await orchestrator.lifecycle_service.repository.save_record(
+                record.model_copy(
+                    update={
+                        "state": SandboxState.TERMINAL,
+                        "cleanup_state": CleanupState.SCHEDULED,
+                        "record_version": record.record_version + 1,
+                        "terminal_reason": TerminalReason.SUCCESS,
+                        "terminal_at": record.created_at,
+                        "cleanup_due_at": record.created_at,
+                    }
+                )
+            )
 
-        swept = await orchestrator.sweep_due_cleanups(max_records=1)
-        cleaned = await orchestrator.lifecycle_service.repository.get_record(sandbox.id)
-        containers = await _docker_rows(
-            "docker",
-            "ps",
-            "-a",
-            "--filter",
-            f"label=com.docker.compose.project={compose_project}",
-            "--format",
-            "{{json .}}",
-        )
+            swept = await orchestrator.sweep_due_cleanups(max_records=1)
+            cleaned = await orchestrator.lifecycle_service.repository.get_record(sandbox.id)
+            containers = await _docker_rows(
+                "docker",
+                "ps",
+                "-a",
+                "--filter",
+                f"label=com.docker.compose.project={compose_project}",
+                "--format",
+                "{{json .}}",
+            )
 
-        assert len(swept) == 1
-        assert cleaned is not None
-        assert cleaned.state is SandboxState.CLEANED
-        assert cleaned.cleanup_state is CleanupState.COMPLETED
-        assert orchestrator.registry.get(sandbox.id) is None
-        assert containers == []
-    finally:
-        await _compose_cleanup(compose_path, compose_project)
+            assert len(swept) == 1
+            assert cleaned is not None
+            assert cleaned.state is SandboxState.CLEANED
+            assert cleaned.cleanup_state is CleanupState.COMPLETED
+            assert orchestrator.registry.get(sandbox.id) is None
+            assert containers == []
+        finally:
+            await _compose_cleanup(compose_path, compose_project)
 
 
 @pytest.mark.asyncio
@@ -233,39 +237,40 @@ async def test_live_reconciliation_recovers_after_crash_between_delete_and_verif
         return await original_transition(**kwargs)
 
     monkeypatch.setattr(orchestrator.lifecycle_service.mutations, "transition_state", crash_on_cleanup_complete)
-    try:
-        sandbox = await orchestrator.create_sandbox(
-            rock_id="live-crash-recovery-1",
-            project_name="Live Crash Recovery",
-            tech_stack=TechStack.FASTAPI_REACT_POSTGRES,
-            workspace_path=str(tmp_path),
-        )
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        try:
+            sandbox = await orchestrator.create_sandbox(
+                rock_id="live-crash-recovery-1",
+                project_name="Live Crash Recovery",
+                tech_stack=TechStack.FASTAPI_REACT_POSTGRES,
+                workspace_path=str(tmp_path),
+            )
 
-        with pytest.raises(RuntimeError, match="simulated crash after delete"):
-            await orchestrator.delete_sandbox(sandbox.id)
+            with pytest.raises(RuntimeError, match="simulated crash after delete"):
+                await orchestrator.delete_sandbox(sandbox.id)
 
-        blocked = await orchestrator.lifecycle_service.repository.get_record(sandbox.id)
-        assert blocked is not None
-        assert blocked.state is SandboxState.TERMINAL
-        assert blocked.cleanup_state is CleanupState.IN_PROGRESS
+            blocked = await orchestrator.lifecycle_service.repository.get_record(sandbox.id)
+            assert blocked is not None
+            assert blocked.state is SandboxState.TERMINAL
+            assert blocked.cleanup_state is CleanupState.IN_PROGRESS
 
-        await orchestrator.reconcile_sandbox(sandbox.id)
+            await orchestrator.reconcile_sandbox(sandbox.id)
 
-        cleaned = await orchestrator.lifecycle_service.repository.get_record(sandbox.id)
-        containers = await _docker_rows(
-            "docker",
-            "ps",
-            "-a",
-            "--filter",
-            f"label=com.docker.compose.project={compose_project}",
-            "--format",
-            "{{json .}}",
-        )
+            cleaned = await orchestrator.lifecycle_service.repository.get_record(sandbox.id)
+            containers = await _docker_rows(
+                "docker",
+                "ps",
+                "-a",
+                "--filter",
+                f"label=com.docker.compose.project={compose_project}",
+                "--format",
+                "{{json .}}",
+            )
 
-        assert cleaned is not None
-        assert cleaned.state is SandboxState.CLEANED
-        assert cleaned.terminal_reason is TerminalReason.CLEANED_EXTERNALLY
-        assert orchestrator.registry.get(sandbox.id) is None
-        assert containers == []
-    finally:
-        await _compose_cleanup(compose_path, compose_project)
+            assert cleaned is not None
+            assert cleaned.state is SandboxState.CLEANED
+            assert cleaned.terminal_reason is TerminalReason.CLEANED_EXTERNALLY
+            assert orchestrator.registry.get(sandbox.id) is None
+            assert containers == []
+        finally:
+            await _compose_cleanup(compose_path, compose_project)

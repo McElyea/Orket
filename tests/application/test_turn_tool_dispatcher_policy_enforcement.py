@@ -9,7 +9,9 @@ from orket.application.middleware import TurnLifecycleInterceptors
 from orket.application.services.tool_gate_service import ToolGate
 from orket.application.workflows.turn_artifact_writer import TurnArtifactWriter
 from orket.application.workflows.turn_tool_dispatcher import ToolDispatcher
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain.execution import ExecutionTurn, ToolCall
+from orket.logging import bind_logging, prepare_logging
 from tests.helpers.turn_artifacts import execute_dispatch_fixture
 
 pytestmark = pytest.mark.contract
@@ -65,7 +67,7 @@ async def test_tool_dispatcher_preflight_rejects_ring_policy_violation(tmp_path:
         tool_calls=[ToolCall(tool="write_file", args={"path": "a.txt", "content": "x"})],
     )
 
-    with pytest.raises(RuntimeError) as exc:
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))), pytest.raises(RuntimeError) as exc:
         await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
             turn=turn,
             toolbox=toolbox,
@@ -103,7 +105,7 @@ async def test_tool_dispatcher_preflight_rejects_capability_violation(tmp_path: 
         tool_calls=[ToolCall(tool="write_file", args={"path": "a.txt", "content": "x"})],
     )
 
-    with pytest.raises(RuntimeError) as exc:
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))), pytest.raises(RuntimeError) as exc:
         await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
             turn=turn,
             toolbox=toolbox,
@@ -142,7 +144,7 @@ async def test_tool_dispatcher_preflight_rejects_namespace_scope_violation(tmp_p
         tool_calls=[ToolCall(tool="write_file", args={"path": "a.txt", "content": "x"})],
     )
 
-    with pytest.raises(RuntimeError) as exc:
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))), pytest.raises(RuntimeError) as exc:
         await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
             turn=turn,
             toolbox=toolbox,
@@ -185,7 +187,7 @@ async def test_tool_dispatcher_preflight_rejects_ring_policy_violation_without_p
         tool_calls=[ToolCall(tool="write_file", args={"path": "a.txt", "content": "x"})],
     )
 
-    with pytest.raises(RuntimeError) as exc:
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))), pytest.raises(RuntimeError) as exc:
         await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
             turn=turn,
             toolbox=toolbox,
@@ -224,7 +226,7 @@ async def test_tool_dispatcher_preflight_rejects_namespace_scope_violation_witho
         tool_calls=[ToolCall(tool="write_file", args={"path": "a.txt", "content": "x"})],
     )
 
-    with pytest.raises(RuntimeError) as exc:
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))), pytest.raises(RuntimeError) as exc:
         await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
             turn=turn,
             toolbox=toolbox,
@@ -264,7 +266,7 @@ async def test_tool_dispatcher_preflight_rejects_missing_compatibility_mapping(t
         tool_calls=[ToolCall(tool="openclaw.file_read", args={"path": "a.txt"})],
     )
 
-    with pytest.raises(RuntimeError) as exc:
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))), pytest.raises(RuntimeError) as exc:
         await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
             turn=turn,
             toolbox=toolbox,
@@ -303,7 +305,7 @@ async def test_tool_dispatcher_emits_determinism_violation_for_declared_pure_sid
         tool_calls=[ToolCall(tool="write_file", args={"path": "a.txt", "content": "x"})],
     )
 
-    with pytest.raises(RuntimeError) as exc:
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))), pytest.raises(RuntimeError) as exc:
         await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
             turn=turn,
             toolbox=toolbox,
@@ -341,7 +343,7 @@ async def test_tool_dispatcher_preflight_rejects_tool_invocation_boundary_violat
         tool_calls=[ToolCall(tool="write_file", args={"path": "a.txt", "content": "x"})],
     )
 
-    with pytest.raises(RuntimeError) as exc:
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))), pytest.raises(RuntimeError) as exc:
         await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
             turn=turn,
             toolbox=toolbox,
@@ -389,7 +391,7 @@ async def test_tool_dispatcher_records_determinism_violation_event(tmp_path: Pat
         tool_calls=[ToolCall(tool="write_file", args={"path": "a.txt", "content": "x"})],
     )
 
-    with pytest.raises(RuntimeError) as exc:
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))), pytest.raises(RuntimeError) as exc:
         await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
             turn=turn,
             toolbox=toolbox,
@@ -447,7 +449,7 @@ async def test_tool_dispatcher_records_preflight_boundary_rejection_as_runtime_e
         tool_calls=[ToolCall(tool="write_file", args={"path": "a.txt", "content": "x"})],
     )
 
-    with pytest.raises(RuntimeError) as exc:
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))), pytest.raises(RuntimeError) as exc:
         await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
             turn=turn,
             toolbox=toolbox,

@@ -8,6 +8,8 @@ import pytest
 from orket.adapters.storage.gitea_state_adapter import GiteaStateAdapter
 from orket.adapters.storage.gitea_state_models import CardSnapshot, encode_snapshot
 from orket.application.services.gitea_state_worker import GiteaStateWorker
+from orket.core.contracts.logging_inputs import LoggingInputs
+from orket.logging import bind_logging, prepare_logging
 from tests.helpers.gitea_state_adapter_fixture import gitea_adapter_factory as gitea_adapter_factory
 
 pytestmark = pytest.mark.contract
@@ -121,29 +123,30 @@ async def test_multi_runner_lease_lifecycle_with_renew_and_takeover(monkeypatch,
 
 
 @pytest.mark.asyncio
-async def test_worker_takeover_after_expired_foreign_lease(monkeypatch, gitea_adapter_factory):
+async def test_worker_takeover_after_expired_foreign_lease(tmp_path, monkeypatch, gitea_adapter_factory):
     store = _Store()
-    adapter_a = await gitea_adapter_factory(base_url="https://gitea.local", owner="acme", repo="orket", token="x")
-    adapter_b = await gitea_adapter_factory(base_url="https://gitea.local", owner="acme", repo="orket", token="x")
-    _wire(adapter_a, store)
-    _wire(adapter_b, store)
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        adapter_a = await gitea_adapter_factory(base_url="https://gitea.local", owner="acme", repo="orket", token="x")
+        adapter_b = await gitea_adapter_factory(base_url="https://gitea.local", owner="acme", repo="orket", token="x")
+        _wire(adapter_a, store)
+        _wire(adapter_b, store)
 
-    worker_b = GiteaStateWorker(
-        adapter=adapter_b,
-        worker_id="runner-b",
-        lease_seconds=5,
-        renew_interval_seconds=0.1,
-    )
+        worker_b = GiteaStateWorker(
+            adapter=adapter_b,
+            worker_id="runner-b",
+            lease_seconds=5,
+            renew_interval_seconds=0.1,
+        )
 
-    # Runner A claims lease and then disappears without processing.
-    lease_a = await adapter_a.acquire_lease(str(store.issue_number), owner_id="runner-a", lease_seconds=5)
-    assert lease_a is not None
-    blocked = await worker_b.run_once(work_fn=lambda _c: _noop_result())
-    assert blocked is False
+        # Runner A claims lease and then disappears without processing.
+        lease_a = await adapter_a.acquire_lease(str(store.issue_number), owner_id="runner-a", lease_seconds=5)
+        assert lease_a is not None
+        blocked = await worker_b.run_once(work_fn=lambda _c: _noop_result())
+        assert blocked is False
 
-    # Force lease expiry; worker B should now be able to process.
-    store.snapshot.lease.expires_at = "2024-01-01T00:00:00+00:00"
-    processed = await worker_b.run_once(work_fn=lambda _c: _noop_result())
+        # Force lease expiry; worker B should now be able to process.
+        store.snapshot.lease.expires_at = "2024-01-01T00:00:00+00:00"
+        processed = await worker_b.run_once(work_fn=lambda _c: _noop_result())
     assert processed is True
     assert str(store.snapshot.lease.owner_id or "") == ""
     assert store.snapshot.state == "code_review"

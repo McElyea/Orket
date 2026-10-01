@@ -7,8 +7,10 @@ import asyncio
 import pytest
 
 from orket.adapters.storage.command_runner import CommandResult
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain.sandbox import SandboxRegistry, TechStack
 from orket.core.domain.sandbox_lifecycle import CleanupState, SandboxState, TerminalReason
+from orket.logging import bind_logging, prepare_logging
 from orket.services.sandbox_orchestrator import SandboxOrchestrator
 
 pytestmark = pytest.mark.integration
@@ -93,32 +95,33 @@ async def test_cleanup_claim_race_allows_only_one_cleanup_execution(tmp_path) ->
         lifecycle_db_path=str(tmp_path / "sandbox_lifecycle.db"),
     )
 
-    sandbox = await orchestrator.create_sandbox(
-        rock_id="race-1",
-        project_name="Cleanup Race",
-        tech_stack=TechStack.FASTAPI_REACT_POSTGRES,
-        workspace_path=str(tmp_path),
-    )
-    record = await orchestrator.lifecycle_service.repository.get_record(sandbox.id)
-    assert record is not None
-    await orchestrator.lifecycle_service.repository.save_record(
-        record.model_copy(
-            update={
-                "state": SandboxState.TERMINAL,
-                "cleanup_state": CleanupState.SCHEDULED,
-                "record_version": record.record_version + 1,
-                "terminal_reason": TerminalReason.SUCCESS,
-                "terminal_at": record.created_at,
-                "cleanup_due_at": record.created_at,
-            }
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        sandbox = await orchestrator.create_sandbox(
+            rock_id="race-1",
+            project_name="Cleanup Race",
+            tech_stack=TechStack.FASTAPI_REACT_POSTGRES,
+            workspace_path=str(tmp_path),
         )
-    )
+        record = await orchestrator.lifecycle_service.repository.get_record(sandbox.id)
+        assert record is not None
+        await orchestrator.lifecycle_service.repository.save_record(
+            record.model_copy(
+                update={
+                    "state": SandboxState.TERMINAL,
+                    "cleanup_state": CleanupState.SCHEDULED,
+                    "record_version": record.record_version + 1,
+                    "terminal_reason": TerminalReason.SUCCESS,
+                    "terminal_at": record.created_at,
+                    "cleanup_due_at": record.created_at,
+                }
+            )
+        )
 
-    first, second = await asyncio.gather(
-        orchestrator.sweep_due_cleanups(max_records=1),
-        orchestrator.sweep_due_cleanups(max_records=1),
-    )
-    stored = await orchestrator.lifecycle_service.repository.get_record(sandbox.id)
+        first, second = await asyncio.gather(
+            orchestrator.sweep_due_cleanups(max_records=1),
+            orchestrator.sweep_due_cleanups(max_records=1),
+        )
+        stored = await orchestrator.lifecycle_service.repository.get_record(sandbox.id)
 
     assert sorted([len(first), len(second)]) == [0, 1]
     assert runner.down_calls == 1

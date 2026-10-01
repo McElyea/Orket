@@ -4,6 +4,7 @@ import argparse
 import asyncio
 import itertools
 import json
+import os
 import sys
 from contextlib import AsyncExitStack
 from dataclasses import dataclass
@@ -16,6 +17,11 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from orket.adapters.llm.local_model_provider import LocalModelProvider  # noqa: E402
+from orket.adapters.observability.logging_context import (  # noqa: E402 - script bootstrap
+    bind_logging,
+    prepare_logging,
+    select_logging_inputs,
+)
 from orket.application.services.local_model_factory import (  # noqa: E402 - project path bootstrap
     create_local_model_provider_async,
 )
@@ -216,27 +222,29 @@ async def _run_pairing(
     model_timeout: int,
     provider_selection: ProviderSelection,
 ) -> dict[str, Any]:
-    scenarios: list[dict[str, Any]] = []
-    started = datetime.now(UTC).isoformat()
-    async with AsyncExitStack() as stack:
-        providers = [await stack.enter_async_context(await create_local_model_provider_async(
-            model=model, temperature=temperature, timeout=model_timeout,
-            provider=provider_selection.provider, base_url=provider_selection.base_url,
-        )) for model in (pairing.architect, pairing.auditor)]
-        for scenario_input in scenario_inputs:
-            case = await _run_scenario_live(
-                scenario_input=scenario_input, architect_provider=providers[0], auditor_provider=providers[1],
-                rounds=rounds, odr_cfg=odr_cfg,
-            )
-            scenarios.append(case)
-    ended = datetime.now(UTC).isoformat()
-    return {
-        "architect_model": pairing.architect,
-        "auditor_model": pairing.auditor,
-        "started_at": started,
-        "ended_at": ended,
-        "scenarios": scenarios,
-    }
+    logging_inputs = select_logging_inputs(Path.cwd(), dict(os.environ))  # noqa: ASYNC240 - capture CLI inputs before admission
+    with bind_logging(await prepare_logging(logging_inputs)):
+        scenarios: list[dict[str, Any]] = []
+        started = datetime.now(UTC).isoformat()
+        async with AsyncExitStack() as stack:
+            providers = [await stack.enter_async_context(await create_local_model_provider_async(
+                model=model, temperature=temperature, timeout=model_timeout,
+                provider=provider_selection.provider, base_url=provider_selection.base_url,
+            )) for model in (pairing.architect, pairing.auditor)]
+            for scenario_input in scenario_inputs:
+                case = await _run_scenario_live(
+                    scenario_input=scenario_input, architect_provider=providers[0], auditor_provider=providers[1],
+                    rounds=rounds, odr_cfg=odr_cfg,
+                )
+                scenarios.append(case)
+        ended = datetime.now(UTC).isoformat()
+        return {
+            "architect_model": pairing.architect,
+            "auditor_model": pairing.auditor,
+            "started_at": started,
+            "ended_at": ended,
+            "scenarios": scenarios,
+        }
 
 
 async def _main_async(args: argparse.Namespace) -> int:

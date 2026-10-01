@@ -1,11 +1,18 @@
 from __future__ import annotations
 
 import asyncio
+import os
 import subprocess
 import time
+from pathlib import Path
 from typing import Any
 
 from orket.adapters.llm.local_model_provider import ModelResponse
+from orket.adapters.observability.logging_context import (  # noqa: E402 - script bootstrap
+    bind_logging,
+    prepare_logging,
+    select_logging_inputs,
+)
 from orket.application.services.local_model_factory import (
     create_local_model_provider_async,
 )
@@ -167,61 +174,63 @@ async def complete_with_transient_provider(
     swap_timeout_s: float = DEFAULT_SWAP_TIMEOUT_SEC,
     swap_poll_interval_s: float = DEFAULT_SWAP_POLL_INTERVAL_SEC,
 ) -> tuple[ModelResponse, int, dict[str, Any]]:
-    provider = (await create_local_model_provider_async(
-        model=model,
-        temperature=temperature,
-        timeout=timeout,
-        provider=provider_name,
-        base_url=base_url,
-        api_key=api_key,
-    ))
-    started_at = time.perf_counter()
-    response: ModelResponse | None = None
-    release_payload: dict[str, Any] = {}
-    call_error: Exception | None = None
-
-    try:
-        response = await provider.complete(messages)
-    except Exception as exc:  # noqa: BLE001
-        call_error = exc
-    latency_ms = int((time.perf_counter() - started_at) * 1000)
-
-    close_error: Exception | None = None
-    try:
-        await provider.close()
-    except Exception as exc:  # noqa: BLE001
-        close_error = exc
-
-    provider_name = str(getattr(provider, "provider_name", "") or getattr(provider, "provider_backend", "") or "")
-    base_url = (
-        str(getattr(provider, "openai_base_url", "") or "")
-        if provider_name in {"lmstudio", "openai_compat", "llama_cpp"}
-        else str(getattr(provider, "ollama_host", "") or "")
-    )
-    resolved_model = str(getattr(provider, "model", "") or model)
-
-    try:
-        release_payload = await release_model_residency(
-            provider_name=provider_name,
-            model_id=resolved_model,
+    logging_inputs = select_logging_inputs(Path.cwd(), dict(os.environ))  # noqa: ASYNC240 - capture CLI inputs before admission
+    with bind_logging(await prepare_logging(logging_inputs)):
+        provider = (await create_local_model_provider_async(
+            model=model,
+            temperature=temperature,
+            timeout=timeout,
+            provider=provider_name,
             base_url=base_url,
-            timeout_s=swap_timeout_s,
-            poll_interval_s=swap_poll_interval_s,
-        )
-    except Exception as release_exc:  # noqa: BLE001
-        if call_error is None and close_error is None:
-            raise
-        release_payload = {
-            "status": "release_error_after_call_failure",
-            "provider": provider_name,
-            "model_id": resolved_model,
-            "error": str(release_exc),
-        }
+            api_key=api_key,
+        ))
+        started_at = time.perf_counter()
+        response: ModelResponse | None = None
+        release_payload: dict[str, Any] = {}
+        call_error: Exception | None = None
 
-    if call_error is not None:
-        raise call_error
-    if close_error is not None:
-        raise close_error
-    if response is None:
-        raise RuntimeError(f"Transient provider call returned no response for model={model}")
-    return response, latency_ms, release_payload
+        try:
+            response = await provider.complete(messages)
+        except Exception as exc:  # noqa: BLE001
+            call_error = exc
+        latency_ms = int((time.perf_counter() - started_at) * 1000)
+
+        close_error: Exception | None = None
+        try:
+            await provider.close()
+        except Exception as exc:  # noqa: BLE001
+            close_error = exc
+
+        provider_name = str(getattr(provider, "provider_name", "") or getattr(provider, "provider_backend", "") or "")
+        base_url = (
+            str(getattr(provider, "openai_base_url", "") or "")
+            if provider_name in {"lmstudio", "openai_compat", "llama_cpp"}
+            else str(getattr(provider, "ollama_host", "") or "")
+        )
+        resolved_model = str(getattr(provider, "model", "") or model)
+
+        try:
+            release_payload = await release_model_residency(
+                provider_name=provider_name,
+                model_id=resolved_model,
+                base_url=base_url,
+                timeout_s=swap_timeout_s,
+                poll_interval_s=swap_poll_interval_s,
+            )
+        except Exception as release_exc:  # noqa: BLE001
+            if call_error is None and close_error is None:
+                raise
+            release_payload = {
+                "status": "release_error_after_call_failure",
+                "provider": provider_name,
+                "model_id": resolved_model,
+                "error": str(release_exc),
+            }
+
+        if call_error is not None:
+            raise call_error
+        if close_error is not None:
+            raise close_error
+        if response is None:
+            raise RuntimeError(f"Transient provider call returned no response for model={model}")
+        return response, latency_ms, release_payload

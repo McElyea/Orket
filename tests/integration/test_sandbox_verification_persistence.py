@@ -8,7 +8,9 @@ import pytest
 from orket.adapters.storage.async_card_repository import AsyncCardRepository
 from orket.application.services.runtime_policy_inputs import ArchitecturePolicySnapshot
 from orket.application.workflows.orchestrator import Orchestrator
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain.sandbox import SandboxStatus
+from orket.logging import bind_logging, prepare_logging
 from tests.helpers.observed_http_server import observed_http_server
 from tests.helpers.turn_artifacts import artifact_test_utc_now
 
@@ -38,16 +40,17 @@ async def test_public_http_and_fixture_observations_are_persisted(tmp_path, monk
     async def respond(_request):
         return 200, actual
 
-    async with observed_http_server(respond) as (url, requests):
-        orchestrator, cards = await prepare(tmp_path, url)
-        result = await orchestrator.verify_issue("HTTP")
-        retained = (await cards.get_by_id("HTTP")).model_dump()["verification"]
-        assert len(requests) == 1
-        assert (result.total_scenarios, result.passed, result.failed) == (2, *counts)
-        assert result.process_lifetime["cleanup_confirmed"]
-        assert retained["last_run"] == result.model_dump()
-        assert retained["scenarios"][0]["actual_output"] == actual
-        assert retained["scenarios"][0]["status"] == ("pass" if counts[1] == 0 else "fail")
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        async with observed_http_server(respond) as (url, requests):
+            orchestrator, cards = await prepare(tmp_path, url)
+            result = await orchestrator.verify_issue("HTTP")
+            retained = (await cards.get_by_id("HTTP")).model_dump()["verification"]
+            assert len(requests) == 1
+            assert (result.total_scenarios, result.passed, result.failed) == (2, *counts)
+            assert result.process_lifetime["cleanup_confirmed"]
+            assert retained["last_run"] == result.model_dump()
+            assert retained["scenarios"][0]["actual_output"] == actual
+            assert retained["scenarios"][0]["status"] == ("pass" if counts[1] == 0 else "fail")
 
 
 async def test_public_cancelled_http_does_not_persist_fixture_or_http_results(tmp_path, monkeypatch):
@@ -59,17 +62,18 @@ async def test_public_cancelled_http_does_not_persist_fixture_or_http_results(tm
         await asyncio.wait_for(release.wait(), timeout=5)
         return 200, 0
 
-    async with observed_http_server(respond, allow_disconnect=True) as (url, requests):
-        orchestrator, cards = await prepare(tmp_path, url)
-        before = (await cards.get_by_id("HTTP")).model_dump()
-        task = asyncio.create_task(orchestrator.verify_issue("HTTP"))
-        try:
-            await asyncio.wait_for(entered.wait(), timeout=5)
-            task.cancel()
-            with pytest.raises(asyncio.CancelledError):
-                await asyncio.wait_for(task, timeout=2)
-        finally:
-            release.set()
-            await asyncio.wait_for(asyncio.gather(task, return_exceptions=True), timeout=5)
-        assert len(requests) == 1
-        assert (await cards.get_by_id("HTTP")).model_dump() == before
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        async with observed_http_server(respond, allow_disconnect=True) as (url, requests):
+            orchestrator, cards = await prepare(tmp_path, url)
+            before = (await cards.get_by_id("HTTP")).model_dump()
+            task = asyncio.create_task(orchestrator.verify_issue("HTTP"))
+            try:
+                await asyncio.wait_for(entered.wait(), timeout=5)
+                task.cancel()
+                with pytest.raises(asyncio.CancelledError):
+                    await asyncio.wait_for(task, timeout=2)
+            finally:
+                release.set()
+                await asyncio.wait_for(asyncio.gather(task, return_exceptions=True), timeout=5)
+            assert len(requests) == 1
+            assert (await cards.get_by_id("HTTP")).model_dump() == before

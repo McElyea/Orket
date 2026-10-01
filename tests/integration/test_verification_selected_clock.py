@@ -9,7 +9,9 @@ import pytest
 
 from orket.application.services.fixture_verification_service import FixtureVerificationService
 from orket.application.services.sandbox_verification_service import SandboxVerificationService
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain.sandbox import SandboxStatus
+from orket.logging import bind_logging, prepare_logging
 from orket.orchestration.engine import OrchestrationEngine
 from tests.adapters.test_sandbox_command_runner import _sandbox
 from tests.helpers.fixture_input_controls import NOW, prepare_native
@@ -119,16 +121,17 @@ async def _exercise_selected_orchestrator(engine, url, workspace, monkeypatch, c
 
 
 async def test_real_orchestrator_binds_selected_clock_before_first_card_await(tmp_path, monkeypatch, record_property):
-    await asyncio.to_thread(_build_assets, tmp_path, with_guard=False, epic_id="selected_verification_clock")
-    monkeypatch.setenv("ORKET_VERIFY_EXECUTION_MODE", "subprocess")
-    clock, entered, release = RecordingClock(), asyncio.Event(), asyncio.Event()
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        await asyncio.to_thread(_build_assets, tmp_path, with_guard=False, epic_id="selected_verification_clock")
+        monkeypatch.setenv("ORKET_VERIFY_EXECUTION_MODE", "subprocess")
+        clock, entered, release = RecordingClock(), asyncio.Event(), asyncio.Event()
 
-    async def respond(_request):
-        return 200, 7
+        async def respond(_request):
+            return 200, 7
 
-    async with observed_http_server(respond) as (url, requests):
-        async with OrchestrationEngine.open(tmp_path / "workspace", department="core",
-            db_path=str(tmp_path / "cards.db"), config_root=tmp_path, runtime_inputs=clock) as engine:
-            await _exercise_selected_orchestrator(engine, url, tmp_path / "workspace", monkeypatch, clock, release, entered)
-        assert engine._closed and len(requests) == 1
-        record_property("selected_clock_engine_closed", engine._closed)
+        async with observed_http_server(respond) as (url, requests):
+            async with OrchestrationEngine.open(tmp_path / "workspace", department="core",
+                db_path=str(tmp_path / "cards.db"), config_root=tmp_path, runtime_inputs=clock) as engine:
+                await _exercise_selected_orchestrator(engine, url, tmp_path / "workspace", monkeypatch, clock, release, entered)
+            assert engine._closed and len(requests) == 1
+            record_property("selected_clock_engine_closed", engine._closed)

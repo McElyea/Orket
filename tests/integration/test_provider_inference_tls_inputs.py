@@ -5,7 +5,9 @@ import base64
 import pytest
 
 from orket.application.services import local_model_factory as factory
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.exceptions import ModelConnectionError, ModelProviderError
+from orket.logging import bind_logging, prepare_logging
 from tests.helpers.observed_http_server import observed_http_server
 from tests.helpers.provider_inference_observation import create_observed_provider, http_transport, observe_completion
 from tests.integration.test_provider_http_environment import _ambient_proxy
@@ -18,38 +20,39 @@ pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 @pytest.mark.parametrize('provider', ['openai_compat', 'ollama'])
 @pytest.mark.parametrize('mode', ['file', 'directory', 'file-precedence', 'empty', 'wrong-file', 'missing-file'])
 async def test_inference_tls_preserves_verification_and_captured_trust(tmp_path, monkeypatch, provider, mode):
-    context = await asyncio.to_thread(server_context)
-    ambient_log = tmp_path / 'ambient-keys.log'
-    _ambient_proxy(monkeypatch, 'http://127.0.0.1:1')
-    monkeypatch.setenv('SSL_CERT_FILE', str(FIXTURES / 'ca.pem'))
-    monkeypatch.setenv('SSLKEYLOGFILE', str(ambient_log))
-    environments = {
-        'file': {'SSL_CERT_FILE': 'ca.pem'}, 'directory': {'SSL_CERT_DIR': 'trust-directory'},
-        'file-precedence': {'SSL_CERT_FILE': 'ca.pem', 'SSL_CERT_DIR': 'missing-directory'},
-        'empty': {}, 'wrong-file': {'SSL_CERT_FILE': 'unrelated-ca.pem'},
-        'missing-file': {'SSL_CERT_FILE': 'missing.pem'},
-    }
-    async with observed_http_server(response_for(provider, 'verified'), ssl_context=context) as server:
-        call = create_observed_provider(provider, server[0], environment=environments[mode], cwd=FIXTURES)
-        if mode == 'missing-file':
-            with pytest.raises(FileNotFoundError):
-                await call
-        else:
-            client = await call
-            transport = http_transport(client)
-            try:
-                if mode in {'empty', 'wrong-file'}:
-                    with pytest.raises(ModelConnectionError):
-                        await observe_completion(client)
-                else:
-                    assert (await observe_completion(client)).content == 'verified'
-                    assert len(server[1]) == 1
-            finally:
-                await client.close()
-                assert transport.is_closed
-        if mode in {'empty', 'wrong-file', 'missing-file'}:
-            assert server[1] == []
-    assert not await asyncio.to_thread(ambient_log.exists)
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        context = await asyncio.to_thread(server_context)
+        ambient_log = tmp_path / 'ambient-keys.log'
+        _ambient_proxy(monkeypatch, 'http://127.0.0.1:1')
+        monkeypatch.setenv('SSL_CERT_FILE', str(FIXTURES / 'ca.pem'))
+        monkeypatch.setenv('SSLKEYLOGFILE', str(ambient_log))
+        environments = {
+            'file': {'SSL_CERT_FILE': 'ca.pem'}, 'directory': {'SSL_CERT_DIR': 'trust-directory'},
+            'file-precedence': {'SSL_CERT_FILE': 'ca.pem', 'SSL_CERT_DIR': 'missing-directory'},
+            'empty': {}, 'wrong-file': {'SSL_CERT_FILE': 'unrelated-ca.pem'},
+            'missing-file': {'SSL_CERT_FILE': 'missing.pem'},
+        }
+        async with observed_http_server(response_for(provider, 'verified'), ssl_context=context) as server:
+            call = create_observed_provider(provider, server[0], environment=environments[mode], cwd=FIXTURES)
+            if mode == 'missing-file':
+                with pytest.raises(FileNotFoundError):
+                    await call
+            else:
+                client = await call
+                transport = http_transport(client)
+                try:
+                    if mode in {'empty', 'wrong-file'}:
+                        with pytest.raises(ModelConnectionError):
+                            await observe_completion(client)
+                    else:
+                        assert (await observe_completion(client)).content == 'verified'
+                        assert len(server[1]) == 1
+                finally:
+                    await client.close()
+                    assert transport.is_closed
+            if mode in {'empty', 'wrong-file', 'missing-file'}:
+                assert server[1] == []
+        assert not await asyncio.to_thread(ambient_log.exists)
 
 
 @pytest.mark.parametrize('provider', ['openai_compat', 'ollama'])

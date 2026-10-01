@@ -28833,3 +28833,32 @@ Remaining D/E, logging-consumer, typing, full-suite/coverage and applicable
 installed/platform/provider/hosted Quality obligations remain open. CAP proposals
 are not activated. This closes the interrupted branch handoff, not the whole lane;
 the roadmap entry and canonical plan remain active.
+
+### Logging-preparation caller migration: 2026-09-30
+
+The bounded migration from `b69baeae` repairs public pipeline verification,
+13 standalone owners and 94 direct test consumers under the already adopted
+logging contract. All 764 existing assertions remain intact. Archived proposals
+remain unapplied; this closes the caller migration without retiring the umbrella
+lane or changing its scope or overall completion percentage.
+
+The complete baseline has 11,437 passes, 114 failures and 93 skips. The current
+affected acceptance passes 524 cases with nine gated Docker skips,
+including all 106 baseline failures attributable to the repaired caller selection.
+Eight unrelated failures reproduce separately and remain unchanged: organization
+and runtime-factory fixture hooks (three cases), and missing provider environment
+arguments (five cases). This comparison is not a complete current-suite verdict.
+
+Live proof covers actual local files, SQLite, child processes and controlled HTTP
+retries for all eleven changed provider owners. Six fresh installed pipeline cases
+also pass outside the checkout with verified package origins and byte equality.
+Canonical Ruff, changed-script Ruff, dependency, taxonomy, no-op, docs hygiene
+and authority structure checks pass. Current runtime authority proof remains
+unavailable. No fresh full-suite coverage, Mypy, model inference, live Docker,
+Linux or hosted CI acceptance is claimed; the existing remaining D/E obligations
+and required-producer ownership migration stay open.
+
+Detailed evidence and limitations are in
+`docs/architecture/CONTRACT_DELTA_LOGGING_PREPARATION_D_2026-09-28.md`, subsection
+"September 30 caller migration verification". Exact current modified paths and
+hashes are retained in `.tmp/logging-goal-current-files.json`.

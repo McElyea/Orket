@@ -8,7 +8,7 @@ from orket.application.services.runtime_execution_result_service import RuntimeE
 from orket.application.services.runtime_result_lifetime import execute_collection_member
 from orket.core.contracts.runtime_execution_result import RuntimeCollectionMember, RuntimeCollectionResult
 from orket.exceptions import CardNotFound
-from orket.logging import log_event
+from orket.logging import bind_logging, log_event
 from orket.schema import CardStatus, EpicConfig, IssueConfig, RockConfig
 
 
@@ -22,6 +22,7 @@ class ExecutionPipelineResumeMixin:
         bug_fix_manager: Any
         async_cards: Any
         orchestrator: Any
+        logging_context: Any
 
     async def _run_epic_collection_entry(
         self,
@@ -234,4 +235,5 @@ class ExecutionPipelineResumeMixin:
         )
 
     async def verify_issue(self, issue_id: str) -> Any:
-        return await self.orchestrator.verify_issue(issue_id)
+        with bind_logging(self.logging_context):
+            return await self.orchestrator.verify_issue(issue_id)

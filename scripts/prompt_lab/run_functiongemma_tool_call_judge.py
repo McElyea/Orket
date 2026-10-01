@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
 import sys
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -12,6 +13,12 @@ from typing import Any
 REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
+
+from orket.adapters.observability.logging_context import (  # noqa: E402 - script bootstrap
+    bind_logging,
+    prepare_logging,
+    select_logging_inputs,
+)
 
 try:
     from orket.application.services.local_model_factory import create_local_model_provider_async
@@ -419,85 +426,87 @@ async def _run_judgments(
     packets: list[dict[str, Any]],
     timeout_sec: int,
 ) -> list[dict[str, Any]]:
-    provider = (await create_local_model_provider_async(
-        model=target.model,
-        timeout=max(1, int(timeout_sec)),
-        provider=target.provider,
-        base_url=target.base_url,
-    ))
-    results: list[dict[str, Any]] = []
-    try:
-        for packet in packets:
-            parser_truth = _parser_overall(packet, packet["diagnostics"])
-            evidence_packet = {
-                "judge_protocol_ref": JUDGE_PROTOCOL_REF,
-                "slice_id": packet["slice_id"],
-                "issue_id": packet["issue_id"],
-                "role_name": packet["role_name"],
-                "turn_index": packet["turn_index"],
-                "turn_dir": packet["turn_dir"],
-                "description": packet["description"],
-                "required_action_tools": packet["required_action_tools"],
-                "required_read_paths": packet["required_read_paths"],
-                "required_write_paths": packet["required_write_paths"],
-                "required_statuses": packet["required_statuses"],
-                "prompt_messages": packet["messages"],
-                "provider_tool_calls": list(packet["model_response_raw"].get("tool_calls") or []),
-                "parsed_tool_calls": packet["parsed_tool_calls"],
-                "accepted_tool_calls": packet["accepted_tool_calls"],
-                "rejected_tool_calls": packet["rejected_tool_calls"],
-                "argument_shape_defects": packet["argument_shape_defects"],
-                "tool_parser_diagnostics": packet["diagnostics"],
-                "valid_completion": packet["valid_completion"],
-                "parser_authority_truth": parser_truth,
-            }
-            try:
-                response = await provider.complete(
-                    _judge_prompt(evidence_packet),
-                    runtime_context={
-                        "local_prompt_task_class": "strict_json",
-                        "protocol_governed_enabled": True,
-                        "native_tools": _judge_native_tools(),
-                        "native_tool_choice": "required",
-                        "native_payload_overrides": {"reasoning_effort": "none"},
-                    },
-                )
-                response_content = str(getattr(response, "content", "") or "")
-                response_raw = dict(getattr(response, "raw", {}) or {})
-                tool_payload, tool_call_count = _extract_native_tool_payload(response_raw)
-                response_raw["judge_tool_call_count"] = int(tool_call_count)
-                parsed_judgment = _normalize_judge_payload(tool_payload or _extract_json_object(response_content) or {})
-            except Exception as exc:  # pragma: no cover - live-path failure recording
-                response_content = ""
-                response_raw = {"error": str(exc)}
-                parsed_judgment = {
-                    "verdict": "inconclusive",
-                    "dimensions": {name: "inconclusive" for name in _DIMENSIONS},
-                    "rationale": str(exc),
-                }
-            results.append(
-                {
+    logging_inputs = select_logging_inputs(Path.cwd(), dict(os.environ))  # noqa: ASYNC240 - capture CLI inputs before admission
+    with bind_logging(await prepare_logging(logging_inputs)):
+        provider = (await create_local_model_provider_async(
+            model=target.model,
+            timeout=max(1, int(timeout_sec)),
+            provider=target.provider,
+            base_url=target.base_url,
+        ))
+        results: list[dict[str, Any]] = []
+        try:
+            for packet in packets:
+                parser_truth = _parser_overall(packet, packet["diagnostics"])
+                evidence_packet = {
+                    "judge_protocol_ref": JUDGE_PROTOCOL_REF,
                     "slice_id": packet["slice_id"],
                     "issue_id": packet["issue_id"],
                     "role_name": packet["role_name"],
                     "turn_index": packet["turn_index"],
                     "turn_dir": packet["turn_dir"],
+                    "description": packet["description"],
+                    "required_action_tools": packet["required_action_tools"],
+                    "required_read_paths": packet["required_read_paths"],
+                    "required_write_paths": packet["required_write_paths"],
+                    "required_statuses": packet["required_statuses"],
+                    "prompt_messages": packet["messages"],
+                    "provider_tool_calls": list(packet["model_response_raw"].get("tool_calls") or []),
+                    "parsed_tool_calls": packet["parsed_tool_calls"],
+                    "accepted_tool_calls": packet["accepted_tool_calls"],
+                    "rejected_tool_calls": packet["rejected_tool_calls"],
+                    "argument_shape_defects": packet["argument_shape_defects"],
+                    "tool_parser_diagnostics": packet["diagnostics"],
+                    "valid_completion": packet["valid_completion"],
                     "parser_authority_truth": parser_truth,
-                    "judge_advisory_verdict": parsed_judgment,
-                    "judge_vs_parser_agreement": parsed_judgment["verdict"] == parser_truth["verdict"],
-                    "messages_ref": packet["messages_ref"],
-                    "model_response_raw_ref": packet["model_response_raw_ref"],
-                    "parsed_tool_calls_ref": packet["parsed_tool_calls_ref"],
-                    "evidence_packet": evidence_packet,
-                    "judge_response": {
-                        "content": response_content,
-                        "raw": response_raw,
-                    },
                 }
-            )
-    finally:
-        await provider.close()
-    return results
+                try:
+                    response = await provider.complete(
+                        _judge_prompt(evidence_packet),
+                        runtime_context={
+                            "local_prompt_task_class": "strict_json",
+                            "protocol_governed_enabled": True,
+                            "native_tools": _judge_native_tools(),
+                            "native_tool_choice": "required",
+                            "native_payload_overrides": {"reasoning_effort": "none"},
+                        },
+                    )
+                    response_content = str(getattr(response, "content", "") or "")
+                    response_raw = dict(getattr(response, "raw", {}) or {})
+                    tool_payload, tool_call_count = _extract_native_tool_payload(response_raw)
+                    response_raw["judge_tool_call_count"] = int(tool_call_count)
+                    parsed_judgment = _normalize_judge_payload(tool_payload or _extract_json_object(response_content) or {})
+                except Exception as exc:  # pragma: no cover - live-path failure recording
+                    response_content = ""
+                    response_raw = {"error": str(exc)}
+                    parsed_judgment = {
+                        "verdict": "inconclusive",
+                        "dimensions": {name: "inconclusive" for name in _DIMENSIONS},
+                        "rationale": str(exc),
+                    }
+                results.append(
+                    {
+                        "slice_id": packet["slice_id"],
+                        "issue_id": packet["issue_id"],
+                        "role_name": packet["role_name"],
+                        "turn_index": packet["turn_index"],
+                        "turn_dir": packet["turn_dir"],
+                        "parser_authority_truth": parser_truth,
+                        "judge_advisory_verdict": parsed_judgment,
+                        "judge_vs_parser_agreement": parsed_judgment["verdict"] == parser_truth["verdict"],
+                        "messages_ref": packet["messages_ref"],
+                        "model_response_raw_ref": packet["model_response_raw_ref"],
+                        "parsed_tool_calls_ref": packet["parsed_tool_calls_ref"],
+                        "evidence_packet": evidence_packet,
+                        "judge_response": {
+                            "content": response_content,
+                            "raw": response_raw,
+                        },
+                    }
+                )
+        finally:
+            await provider.close()
+        return results
 
 
 def run_judge(*, repo_root: Path, score_report: dict[str, Any], inventory: dict[str, Any], timeout_sec: int) -> dict[str, Any]:

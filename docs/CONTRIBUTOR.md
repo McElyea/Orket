@@ -148,6 +148,10 @@ Return is admission only. Both Quality selections retain preparation, native
 startup failure, task-context, capture, overflow, fatal-writer and API handoff
 controls. The single daemon remains process-owned; the separately inventoried
 required-producer migration stays open under `docs/specs/LOG_WRITE_SETTLEMENT.md`.
+Keep the public pipeline verification, database bootstrap and standalone provider retry controls in
+both Quality selections. These cover real local fixture/HTTP/logging behavior;
+controlled HTTP responses do not establish actual model inference or live Docker
+acceptance. Direct calls to services borrowed from a runtime still bind explicitly.
 
 Required epic completion logs retain the existing native I/O owner through
 interruption. Keep the real append, retained-store and recovery controls in both

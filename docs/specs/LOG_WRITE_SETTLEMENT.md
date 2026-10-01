@@ -1,7 +1,7 @@
 # Optional log-write settlement
 
 Status: Active
-Last updated: 2026-09-28
+Last updated: 2026-09-30
 
 Owner: Orket Core. Public facade: `orket/logging.py`. The single process-global
 queue, writer, failure, drop, directory and subscriber state lives in
@@ -72,6 +72,18 @@ Canonical API, CLI, engine/pipeline, driver, organization and webhook compositio
 prepare their selections and bind admitted operations and cleanup. Borrowed engine,
 pipeline, API and webhook lifetime yields carry no binding token to another task.
 CLI command setup enters and exits its application context in the same task.
+Public `ExecutionPipeline.verify_issue` binds the pipeline's prepared selection
+through verification and restores the operation task's previous binding on return,
+failure or interruption. Accessing a pipeline's internal services directly does
+not inherit a logging scope from its borrowed lifespan.
+Standalone replay, workload, local-prompting, proof and ODR provider owners prepare
+their captured invocation-root/environment selection before their first owned
+await and bind provider work and cleanup. Retry logging retains that selection
+if CWD or environment changes during HTTP work. Preparation failure refuses the
+operation before provider admission; it does not select a fallback logger.
+Migration and release smoke database bootstraps likewise prepare and bind their
+captured invocation selection before initializing the logging-enabled repositories.
+Their schema and migration validation behavior stays unchanged.
 The Gitea reconciliation and worker-coordinator CLIs select logging from
 their captured process root and environment before adapter admission. They bind
 the adapter's construction, operation and cleanup in the invocation task. State

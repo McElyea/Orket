@@ -14,8 +14,10 @@ from orket.application.services.tool_gate_service import ToolGate
 from orket.application.workflows import turn_tool_dispatcher_protocol as protocol_owner
 from orket.application.workflows.turn_executor import ToolValidationError, TurnExecutor
 from orket.application.workflows.turn_tool_dispatcher_protocol import collect_protocol_preflight_violations
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.core.domain.state_machine import StateMachine
+from orket.logging import bind_logging, prepare_logging
 from tests.helpers.kernel_state_probe import interrupt_owned, responsive_sqlite
 from tests.helpers.turn_artifacts import artifact_test_utc_now, execute_executor_dispatch_fixture
 
@@ -279,79 +281,81 @@ async def test_dispatch_uses_captured_commands_and_publishes_original_sink(
 ) -> None:
     """Mutation during preflight cannot alter dispatch; original result sink still receives the outcome."""
     root = tmp_path / "workspace"
-    a_path, _b_path, before = await _files(root)
-    state = _hold_resolve(monkeypatch, a_path)
-    sentinel, replacement = object(), object()
-    context, toolbox = _dispatch_context(sentinel), _Toolbox()
-    extension_dict, extension_list = context["extension_dict_sink"], context["extension_list_sink"]
-    completion_authority = object()
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        a_path, _b_path, before = await _files(root)
+        state = _hold_resolve(monkeypatch, a_path)
+        sentinel, replacement = object(), object()
+        context, toolbox = _dispatch_context(sentinel), _Toolbox()
+        extension_dict, extension_list = context["extension_dict_sink"], context["extension_list_sink"]
+        completion_authority = object()
 
-    def callback(**_kwargs):
-        return None
+        def callback(**_kwargs):
+            return None
 
-    prompt_sink = {}
-    context["create_pending_gate_request"], context["prompt_metadata"] = callback, prompt_sink
-    context["card_completion_context"] = completion_authority
-    turn = _turn(("read_file", {"path": _A}))
-    original_call = turn.tool_calls[0]
-    adopted: list[ExecutionTurn] = []
-    operation = asyncio.create_task(
-        execute_executor_dispatch_fixture(_executor(root),
-            turn=turn, toolbox=toolbox, context=context, on_turn_captured=adopted.append,
+        prompt_sink = {}
+        context["create_pending_gate_request"], context["prompt_metadata"] = callback, prompt_sink
+        context["card_completion_context"] = completion_authority
+        turn = _turn(("read_file", {"path": _A}))
+        original_call = turn.tool_calls[0]
+        adopted: list[ExecutionTurn] = []
+        operation = asyncio.create_task(
+            execute_executor_dispatch_fixture(_executor(root),
+                turn=turn, toolbox=toolbox, context=context, on_turn_captured=adopted.append,
+            )
         )
-    )
-    primary_error: BaseException | None = None
-    try:
-        assert await asyncio.to_thread(state.entered.wait, 5)
-        await responsive_sqlite(tmp_path / "dispatch.sqlite3", record_property)
-        original_call.args["path"] = _B
-        context["roles"].append("mutated")
-        context["approval_required_tools"].append("read_file")
-        context["sentinel"] = replacement
-        state.release.set()
-        captured_turn = await asyncio.wait_for(operation, 5)
-
-        assert captured_turn is not turn and captured_turn.tool_calls[0].args == {"path": _A}
-        assert adopted == [captured_turn]
-        assert toolbox.calls[0][1] == {"path": _A} and toolbox.calls[0][2]["sentinel"] is sentinel
-        assert toolbox.calls[0][2]["extension_dict_sink"] is extension_dict
-        assert toolbox.calls[0][2]["extension_list_sink"] is extension_list
-        assert toolbox.calls[0][2]["create_pending_gate_request"] is callback
-        assert toolbox.calls[0][2]["prompt_metadata"] is prompt_sink
-        assert toolbox.calls[0][2]["card_completion_context"] is completion_authority
-        assert original_call.result is captured_turn.tool_calls[0].result
-        assert original_call.error is None and original_call.error_class is None
-    except BaseException as error:
-        primary_error = error
-        raise
-    finally:
+        primary_error: BaseException | None = None
         try:
-            await _settle_task(operation, state, ((a_path, before[0]),))
-        except BaseException as cleanup_error:
-            if primary_error is None:
-                raise
-            primary_error.add_note(f"Dispatch capture cleanup failed: {cleanup_error!r}")
+            assert await asyncio.to_thread(state.entered.wait, 5)
+            await responsive_sqlite(tmp_path / "dispatch.sqlite3", record_property)
+            original_call.args["path"] = _B
+            context["roles"].append("mutated")
+            context["approval_required_tools"].append("read_file")
+            context["sentinel"] = replacement
+            state.release.set()
+            captured_turn = await asyncio.wait_for(operation, 5)
+
+            assert captured_turn is not turn and captured_turn.tool_calls[0].args == {"path": _A}
+            assert adopted == [captured_turn]
+            assert toolbox.calls[0][1] == {"path": _A} and toolbox.calls[0][2]["sentinel"] is sentinel
+            assert toolbox.calls[0][2]["extension_dict_sink"] is extension_dict
+            assert toolbox.calls[0][2]["extension_list_sink"] is extension_list
+            assert toolbox.calls[0][2]["create_pending_gate_request"] is callback
+            assert toolbox.calls[0][2]["prompt_metadata"] is prompt_sink
+            assert toolbox.calls[0][2]["card_completion_context"] is completion_authority
+            assert original_call.result is captured_turn.tool_calls[0].result
+            assert original_call.error is None and original_call.error_class is None
+        except BaseException as error:
+            primary_error = error
+            raise
+        finally:
+            try:
+                await _settle_task(operation, state, ((a_path, before[0]),))
+            except BaseException as cleanup_error:
+                if primary_error is None:
+                    raise
+                primary_error.add_note(f"Dispatch capture cleanup failed: {cleanup_error!r}")
 
 
 @pytest.mark.contract
 async def test_dispatch_failure_publishes_each_original_tool_sink(tmp_path) -> None:
     """A later execution failure retains earlier result and later error on original ToolCall objects."""
     root = tmp_path / "workspace"
-    await _files(root)
-    turn = _turn(("read_file", {"path": _A}), ("read_file", {"path": _B}))
-    original_calls = tuple(turn.tool_calls)
-    toolbox = _Toolbox(fail_second=True)
-    adopted: list[ExecutionTurn] = []
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        await _files(root)
+        turn = _turn(("read_file", {"path": _A}), ("read_file", {"path": _B}))
+        original_calls = tuple(turn.tool_calls)
+        toolbox = _Toolbox(fail_second=True)
+        adopted: list[ExecutionTurn] = []
 
-    def adopt(captured: ExecutionTurn) -> None:
-        adopted.append(captured)
-        turn.content, turn.raw = "mutated", {"proposal_hash": "mutated"}
-        original_calls[1].args["path"] = _A
+        def adopt(captured: ExecutionTurn) -> None:
+            adopted.append(captured)
+            turn.content, turn.raw = "mutated", {"proposal_hash": "mutated"}
+            original_calls[1].args["path"] = _A
 
-    with pytest.raises(ToolValidationError, match="second tool failed"):
-        await execute_executor_dispatch_fixture(_executor(root),
-            turn=turn, toolbox=toolbox, context=_dispatch_context(object()), on_turn_captured=adopt,
-        )
+        with pytest.raises(ToolValidationError, match="second tool failed"):
+            await execute_executor_dispatch_fixture(_executor(root),
+                turn=turn, toolbox=toolbox, context=_dispatch_context(object()), on_turn_captured=adopt,
+            )
 
     assert adopted[0].content == "" and adopted[0].raw == {}
     assert adopted[0].tool_calls[1].args == {"path": _B}

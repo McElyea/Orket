@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
 import secrets
 import sys
 from pathlib import Path
@@ -14,6 +15,11 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from orket.adapters.llm.local_model_provider import LocalModelProvider  # noqa: E402 - project path bootstrap
+from orket.adapters.observability.logging_context import (  # noqa: E402 - script bootstrap
+    bind_logging,
+    prepare_logging,
+    select_logging_inputs,
+)
 from orket.application.services.local_model_factory import (  # noqa: E402 - project path bootstrap
     create_local_model_provider_async,
 )
@@ -185,160 +191,162 @@ def _write_artifacts(
 
 
 async def _run_probe(args: argparse.Namespace) -> dict[str, Any]:
-    fixture_path = Path(str(args.fixture)).resolve()  # noqa: ASYNC240 - standalone CLI tooling
-    answer_key_path = Path(str(args.answer_key)).resolve()  # noqa: ASYNC240 - standalone CLI tooling
-    workspace = Path(str(args.workspace)).resolve()  # noqa: ASYNC240 - standalone CLI tooling
-    if not fixture_path.is_file():
-        raise FileNotFoundError(f"fixture_not_found:{fixture_path}")
-    if not answer_key_path.is_file():
-        raise FileNotFoundError(f"answer_key_not_found:{answer_key_path}")
+    logging_inputs = select_logging_inputs(Path.cwd(), dict(os.environ))  # noqa: ASYNC240 - capture CLI inputs before admission
+    with bind_logging(await prepare_logging(logging_inputs)):
+        fixture_path = Path(str(args.fixture)).resolve()  # noqa: ASYNC240 - standalone CLI tooling
+        answer_key_path = Path(str(args.answer_key)).resolve()  # noqa: ASYNC240 - standalone CLI tooling
+        workspace = Path(str(args.workspace)).resolve()  # noqa: ASYNC240 - standalone CLI tooling
+        if not fixture_path.is_file():
+            raise FileNotFoundError(f"fixture_not_found:{fixture_path}")
+        if not answer_key_path.is_file():
+            raise FileNotFoundError(f"answer_key_not_found:{answer_key_path}")
 
-    source_text = load_text(fixture_path)
-    answer_key = load_json_object(answer_key_path)
-    fixture_display_path = Path(display_path(fixture_path))
-    initial_messages = build_review_messages(
-        fixture_path=fixture_display_path,
-        source_text=source_text,
-        prompt_profile=str(args.prompt_profile),
-    )
-    run_id = _run_id()
-    deterministic_payload = build_deterministic_payload(source_text=source_text, answer_key=answer_key, run_id=run_id)
-    governed_claim = build_governed_claim_payload(
-        provider=str(args.provider),
-        model=str(args.model),
-        prompt_profile=str(args.prompt_profile),
-        review_method=str(args.review_method),
-        temperature=float(args.temperature),
-        seed=int(args.seed),
-        timeout=int(args.timeout),
-        fixture_path=fixture_display_path,
-        answer_key_path=answer_key_path,
-    )
-    artifact_dir = workspace / "workloads" / "s04_code_review_probe" / run_id
-    artifact_dir.mkdir(parents=True, exist_ok=True)
-
-    guard_messages: list[dict[str, str]] | None = None
-    final_response = None
-    final_review: dict[str, Any] = {}
-    initial_review: dict[str, Any] = {}
-    initial_response = None
-
-    with applied_probe_env(
-        provider=str(args.provider),
-        ollama_host=str(args.ollama_host or "").strip() or None,
-        disable_sandbox=True,
-    ):
-        provider = (await create_local_model_provider_async(
+        source_text = load_text(fixture_path)
+        answer_key = load_json_object(answer_key_path)
+        fixture_display_path = Path(display_path(fixture_path))
+        initial_messages = build_review_messages(
+            fixture_path=fixture_display_path,
+            source_text=source_text,
+            prompt_profile=str(args.prompt_profile),
+        )
+        run_id = _run_id()
+        deterministic_payload = build_deterministic_payload(source_text=source_text, answer_key=answer_key, run_id=run_id)
+        governed_claim = build_governed_claim_payload(
+            provider=str(args.provider),
             model=str(args.model),
+            prompt_profile=str(args.prompt_profile),
+            review_method=str(args.review_method),
             temperature=float(args.temperature),
             seed=int(args.seed),
             timeout=int(args.timeout),
-        ))
-        try:
-            initial_response = await _complete_review(
-                provider,
-                messages=initial_messages,
-                answer_key=answer_key,
-                args=args,
-                review_pass="initial",
-            )
-            initial_review, _, _, _ = validated_review_payload(str(initial_response.content or ""))
-            final_response = initial_response
-            final_review = initial_review
-            if str(args.review_method) == "self_check":
-                guard_messages = build_guard_messages(
-                    fixture_path=fixture_display_path,
-                    source_text=source_text,
-                    draft_response_text=str(initial_response.content or ""),
-                    prompt_profile=str(args.prompt_profile),
-                )
-                final_response = await _complete_review(
+            fixture_path=fixture_display_path,
+            answer_key_path=answer_key_path,
+        )
+        artifact_dir = workspace / "workloads" / "s04_code_review_probe" / run_id
+        artifact_dir.mkdir(parents=True, exist_ok=True)
+
+        guard_messages: list[dict[str, str]] | None = None
+        final_response = None
+        final_review: dict[str, Any] = {}
+        initial_review: dict[str, Any] = {}
+        initial_response = None
+
+        with applied_probe_env(
+            provider=str(args.provider),
+            ollama_host=str(args.ollama_host or "").strip() or None,
+            disable_sandbox=True,
+        ):
+            provider = (await create_local_model_provider_async(
+                model=str(args.model),
+                temperature=float(args.temperature),
+                seed=int(args.seed),
+                timeout=int(args.timeout),
+            ))
+            try:
+                initial_response = await _complete_review(
                     provider,
-                    messages=guard_messages,
+                    messages=initial_messages,
                     answer_key=answer_key,
                     args=args,
-                    review_pass="guard",
+                    review_pass="initial",
                 )
-                final_review, _, _, _ = validated_review_payload(str(final_response.content or ""))
-        finally:
-            await provider.close()
+                initial_review, _, _, _ = validated_review_payload(str(initial_response.content or ""))
+                final_response = initial_response
+                final_review = initial_review
+                if str(args.review_method) == "self_check":
+                    guard_messages = build_guard_messages(
+                        fixture_path=fixture_display_path,
+                        source_text=source_text,
+                        draft_response_text=str(initial_response.content or ""),
+                        prompt_profile=str(args.prompt_profile),
+                    )
+                    final_response = await _complete_review(
+                        provider,
+                        messages=guard_messages,
+                        answer_key=answer_key,
+                        args=args,
+                        review_pass="guard",
+                    )
+                    final_review, _, _, _ = validated_review_payload(str(final_response.content or ""))
+            finally:
+                await provider.close()
 
-    parsed_review, response_json_found, contract_valid, advisory_errors = validated_review_payload(str(final_response.content or ""))
-    score = _write_artifacts(
-        artifact_dir=artifact_dir,
-        fixture_path=fixture_display_path,
-        answer_key_path=answer_key_path,
-        source_text=source_text,
-        initial_messages=initial_messages,
-        initial_response_text=str(initial_response.content or ""),
-        initial_response_raw=json_safe(dict(initial_response.raw or {})),
-        initial_review=initial_review,
-        final_response_text=str(final_response.content or ""),
-        final_response_raw=json_safe(dict(final_response.raw or {})),
-        final_review=parsed_review,
-        guard_messages=guard_messages,
-        deterministic_payload=deterministic_payload,
-        run_id=run_id,
-        model=str(args.model),
-        prompt_profile=str(args.prompt_profile),
-        review_method=str(args.review_method),
-        policy_digest=str(governed_claim["policy_digest"]),
-    )
-    quality = quality_summary(score, contract_valid=contract_valid)
-    observed_result = "partial success" if advisory_errors else "success"
-    return {
-        "schema_version": "workloads.s04_code_review_probe.v2",
-        "recorded_at_utc": now_utc_iso(),
-        "workload_id": "S-04",
-        "claim_tier": governed_claim["claim_tier"],
-        "compare_scope": governed_claim["compare_scope"],
-        "operator_surface": governed_claim["operator_surface"],
-        "policy_digest": governed_claim["policy_digest"],
-        "control_bundle_hash": governed_claim["control_bundle_hash"],
-        "authoritative_truth_surface": governed_claim["authoritative_truth_surface"],
-        "model_assistance_surface": governed_claim["model_assistance_surface"],
-        "probe_status": "observed",
-        "proof_kind": "live",
-        "observed_path": "primary",
-        "observed_result": observed_result,
-        "requested_provider": str(args.provider),
-        "requested_model": str(args.model),
-        "prompt_profile": str(args.prompt_profile),
-        "review_method": str(args.review_method),
-        "fixture": {
-            "fixture_id": str(answer_key.get("fixture_id") or ""),
-            "source_path": display_path(fixture_path),
-            "answer_key_path": display_path(answer_key_path),
-            "source_sha256": sha256_text(source_text),
-            "source_lines": len(source_text.splitlines()),
-        },
-        "artifact_bundle": {
-            "run_id": run_id,
-            "artifact_dir": artifact_dir.as_posix(),
-            "files": artifact_inventory(artifact_dir),
-        },
-        "review_contract": {
-            "contract_version": "review_critique_v0",
-            "response_json_found": response_json_found,
-            "contract_valid": contract_valid,
-            "advisory_errors": advisory_errors,
-            "high_risk_issue_count": len(list(parsed_review.get("high_risk_issues") or [])),
-        },
-        "score": quality,
-        "score_report": score,
-        "deterministic_lane": {
-            "version": str(deterministic_payload.get("deterministic_lane_version") or ""),
-            "finding_count": len(list(deterministic_payload.get("findings") or [])),
-            "executed_check_count": len(list(deterministic_payload.get("executed_checks") or [])),
-        },
-        "provider_usage": usage_payload(
-            usage_responses(
-                initial_response=initial_response,
-                final_response=final_response,
-                review_method=str(args.review_method),
-            )
-        ),
-    }
+        parsed_review, response_json_found, contract_valid, advisory_errors = validated_review_payload(str(final_response.content or ""))
+        score = _write_artifacts(
+            artifact_dir=artifact_dir,
+            fixture_path=fixture_display_path,
+            answer_key_path=answer_key_path,
+            source_text=source_text,
+            initial_messages=initial_messages,
+            initial_response_text=str(initial_response.content or ""),
+            initial_response_raw=json_safe(dict(initial_response.raw or {})),
+            initial_review=initial_review,
+            final_response_text=str(final_response.content or ""),
+            final_response_raw=json_safe(dict(final_response.raw or {})),
+            final_review=parsed_review,
+            guard_messages=guard_messages,
+            deterministic_payload=deterministic_payload,
+            run_id=run_id,
+            model=str(args.model),
+            prompt_profile=str(args.prompt_profile),
+            review_method=str(args.review_method),
+            policy_digest=str(governed_claim["policy_digest"]),
+        )
+        quality = quality_summary(score, contract_valid=contract_valid)
+        observed_result = "partial success" if advisory_errors else "success"
+        return {
+            "schema_version": "workloads.s04_code_review_probe.v2",
+            "recorded_at_utc": now_utc_iso(),
+            "workload_id": "S-04",
+            "claim_tier": governed_claim["claim_tier"],
+            "compare_scope": governed_claim["compare_scope"],
+            "operator_surface": governed_claim["operator_surface"],
+            "policy_digest": governed_claim["policy_digest"],
+            "control_bundle_hash": governed_claim["control_bundle_hash"],
+            "authoritative_truth_surface": governed_claim["authoritative_truth_surface"],
+            "model_assistance_surface": governed_claim["model_assistance_surface"],
+            "probe_status": "observed",
+            "proof_kind": "live",
+            "observed_path": "primary",
+            "observed_result": observed_result,
+            "requested_provider": str(args.provider),
+            "requested_model": str(args.model),
+            "prompt_profile": str(args.prompt_profile),
+            "review_method": str(args.review_method),
+            "fixture": {
+                "fixture_id": str(answer_key.get("fixture_id") or ""),
+                "source_path": display_path(fixture_path),
+                "answer_key_path": display_path(answer_key_path),
+                "source_sha256": sha256_text(source_text),
+                "source_lines": len(source_text.splitlines()),
+            },
+            "artifact_bundle": {
+                "run_id": run_id,
+                "artifact_dir": artifact_dir.as_posix(),
+                "files": artifact_inventory(artifact_dir),
+            },
+            "review_contract": {
+                "contract_version": "review_critique_v0",
+                "response_json_found": response_json_found,
+                "contract_valid": contract_valid,
+                "advisory_errors": advisory_errors,
+                "high_risk_issue_count": len(list(parsed_review.get("high_risk_issues") or [])),
+            },
+            "score": quality,
+            "score_report": score,
+            "deterministic_lane": {
+                "version": str(deterministic_payload.get("deterministic_lane_version") or ""),
+                "finding_count": len(list(deterministic_payload.get("findings") or [])),
+                "executed_check_count": len(list(deterministic_payload.get("executed_checks") or [])),
+            },
+            "provider_usage": usage_payload(
+                usage_responses(
+                    initial_response=initial_response,
+                    final_response=final_response,
+                    review_method=str(args.review_method),
+                )
+            ),
+        }
 
 
 def _blocked_payload(args: argparse.Namespace, error: Exception) -> dict[str, Any]:

@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -11,6 +12,11 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from orket.adapters.observability.logging_context import (  # noqa: E402 - project path bootstrap
+    bind_logging,
+    prepare_logging,
+    select_logging_inputs,
+)
 from orket.application.services.local_model_factory import (  # noqa: E402 - project path bootstrap
     create_local_model_provider_async,  # noqa: E402 - project path bootstrap
 )
@@ -100,30 +106,32 @@ def _summary(results: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 async def _run_probe(args: argparse.Namespace) -> dict[str, Any]:
-    results: list[dict[str, Any]] = []
-    with applied_probe_env(
-        provider=str(args.provider),
-        ollama_host=str(args.ollama_host or "").strip() or None,
-        disable_sandbox=True,
-    ):
-        for run_index in range(1, int(args.runs) + 1):
-            results.append(await _run_once(args, run_index))
-    return {
-        "schema_version": "phase1_probe.p02.v1",
-        "recorded_at_utc": now_utc_iso(),
-        "probe_id": "P-02",
-        "probe_status": "observed",
-        "proof_kind": "live",
-        "observed_path": "primary",
-        "observed_result": "success",
-        "requested_provider": str(args.provider),
-        "requested_model": str(args.model),
-        "task": str(args.task),
-        "runs_requested": int(args.runs),
-        "max_rounds": int(args.max_rounds),
-        "results": results,
-        "summary": _summary(results),
-    }
+    logging_inputs = select_logging_inputs(Path.cwd(), dict(os.environ))  # noqa: ASYNC240 - capture CLI inputs before admission
+    with bind_logging(await prepare_logging(logging_inputs)):
+        results: list[dict[str, Any]] = []
+        with applied_probe_env(
+            provider=str(args.provider),
+            ollama_host=str(args.ollama_host or "").strip() or None,
+            disable_sandbox=True,
+        ):
+            for run_index in range(1, int(args.runs) + 1):
+                results.append(await _run_once(args, run_index))
+        return {
+            "schema_version": "phase1_probe.p02.v1",
+            "recorded_at_utc": now_utc_iso(),
+            "probe_id": "P-02",
+            "probe_status": "observed",
+            "proof_kind": "live",
+            "observed_path": "primary",
+            "observed_result": "success",
+            "requested_provider": str(args.provider),
+            "requested_model": str(args.model),
+            "task": str(args.task),
+            "runs_requested": int(args.runs),
+            "max_rounds": int(args.max_rounds),
+            "results": results,
+            "summary": _summary(results),
+        }
 
 
 def _blocked_payload(args: argparse.Namespace, error: Exception) -> dict[str, Any]:

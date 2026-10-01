@@ -48,7 +48,7 @@ async def test_composed_turn_keeps_original_memory_sink_after_context_replacemen
     case = _case(tmp_path, monkeypatch, deterministic_turn_clock, held_model=True)
     replacement = [{"marker": "replacement"}]
 
-    async with _turn_task(case) as task:
+    async with _turn_task(case, logging_required=True) as task:
         await asyncio.wait_for(case.owner.entered.wait(), 5)
         case.owner.release.set()
         await asyncio.wait_for(case.model.entered.wait(), 5)
@@ -83,7 +83,7 @@ async def test_disabled_composed_turn_does_not_consume_unused_memory_config(
     for key in ("workflow_id", "memory_snapshot_id", "model_config_id", "policy_set_id", "output_type"):
         case.context[key] = unused
 
-    async with _turn_task(case) as task:
+    async with _turn_task(case, logging_required=True) as task:
         await asyncio.wait_for(case.owner.entered.wait(), 5)
         assert unused.observations == []
         assert "_memory_trace_events" not in case.context

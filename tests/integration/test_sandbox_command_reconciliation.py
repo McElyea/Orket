@@ -6,8 +6,10 @@ from dataclasses import replace
 import pytest
 
 from orket.adapters.storage.command_runner import CommandRunner, SandboxCommandTimeout, SandboxCommandUncertain
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.contracts.owned_command import OwnedCommandResult
 from orket.core.domain.sandbox_lifecycle import SandboxState
+from orket.logging import bind_logging, prepare_logging
 from tests.integration.test_sandbox_deploy_publication_recovery import _create, _owner
 
 pytestmark = pytest.mark.asyncio
@@ -37,14 +39,15 @@ async def test_incomplete_deployment_keeps_reconciliation_and_no_terminal_receip
     observed = replace(COMPLETED, **changes)
     owner.command_runner = CommandRunner(owner=ControlledReceipt(observed), cwd=tmp_path,
                                          environment={}, timeout_seconds=10)
-    with pytest.raises(exception) as caught:
-        await _create(owner, tmp_path)
-    assert caught.value.lifetime == observed
-    record = await owner.lifecycle_repository.get_record("sandbox-rock-1")
-    assert record.state is SandboxState.STARTING
-    assert record.requires_reconciliation is True
-    assert record.terminal_reason is None
-    assert await owner.control_plane_repository.list_effect_journal_entries(run_id="rock-1") == []
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        with pytest.raises(exception) as caught:
+            await _create(owner, tmp_path)
+        assert caught.value.lifetime == observed
+        record = await owner.lifecycle_repository.get_record("sandbox-rock-1")
+        assert record.state is SandboxState.STARTING
+        assert record.requires_reconciliation is True
+        assert record.terminal_reason is None
+        assert await owner.control_plane_repository.list_effect_journal_entries(run_id="rock-1") == []
 
 
 @pytest.mark.contract

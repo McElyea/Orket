@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+import os
 import re
 import sys
 from dataclasses import dataclass
@@ -13,6 +14,12 @@ from typing import Any
 REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
+
+from orket.adapters.observability.logging_context import (  # noqa: E402 - script bootstrap
+    bind_logging,
+    prepare_logging,
+    select_logging_inputs,
+)
 
 try:
     from orket.application.services.local_model_factory import create_local_model_provider_async
@@ -265,49 +272,51 @@ async def _invoke_guide_model(
     timeout_sec: int,
     max_prompt_patch_chars: int,
 ) -> tuple[str, str, str, dict[str, Any], dict[str, Any] | None, str]:
-    provider = (await create_local_model_provider_async(
-        model=str(runtime_payload.get("requested_model") or guide_spec.model),
-        temperature=0.0,
-        seed=7,
-        timeout=max(1, int(timeout_sec)),
-        provider=guide_spec.provider,
-        base_url=str(runtime_payload.get("base_url") or guide_spec.base_url or ""),
-    ))
-    response_content = ""
-    response_raw: dict[str, Any] = {}
-    try:
-        response = await provider.complete(
-            _guide_prompt(packet, max_prompt_patch_chars=max_prompt_patch_chars),
-            runtime_context={
-                "local_prompt_task_class": "strict_json",
-                "protocol_governed_enabled": True,
-                "native_tools": _guide_native_tools(max_prompt_patch_chars),
-                "native_tool_choice": "required",
-                "native_payload_overrides": {"reasoning_effort": "none"},
-            },
-        )
-        response_content = str(getattr(response, "content", "") or "")
-        response_raw = dict(getattr(response, "raw", {}) or {})
-        tool_payload, tool_call_count = _extract_native_tool_payload(response_raw)
-        response_raw["guide_tool_call_count"] = int(tool_call_count)
-        if tool_payload is not None:
-            return "primary", "success", response_content, response_raw, tool_payload, ""
-        content_payload = _extract_json_object(response_content)
-        if content_payload is not None:
-            return "degraded", "partial success", response_content, response_raw, content_payload, ""
-        return (
-            "degraded",
-            "failure",
-            response_content,
-            response_raw,
-            None,
-            "guide_model_did_not_emit_parseable_candidate",
-        )
-    except Exception as exc:  # pragma: no cover - live-path failure recording
-        response_raw = {"error": str(exc)}
-        return "blocked", "environment blocker", "", response_raw, None, str(exc)
-    finally:
-        await provider.close()
+    logging_inputs = select_logging_inputs(Path.cwd(), dict(os.environ))  # noqa: ASYNC240 - capture CLI inputs before admission
+    with bind_logging(await prepare_logging(logging_inputs)):
+        provider = (await create_local_model_provider_async(
+            model=str(runtime_payload.get("requested_model") or guide_spec.model),
+            temperature=0.0,
+            seed=7,
+            timeout=max(1, int(timeout_sec)),
+            provider=guide_spec.provider,
+            base_url=str(runtime_payload.get("base_url") or guide_spec.base_url or ""),
+        ))
+        response_content = ""
+        response_raw: dict[str, Any] = {}
+        try:
+            response = await provider.complete(
+                _guide_prompt(packet, max_prompt_patch_chars=max_prompt_patch_chars),
+                runtime_context={
+                    "local_prompt_task_class": "strict_json",
+                    "protocol_governed_enabled": True,
+                    "native_tools": _guide_native_tools(max_prompt_patch_chars),
+                    "native_tool_choice": "required",
+                    "native_payload_overrides": {"reasoning_effort": "none"},
+                },
+            )
+            response_content = str(getattr(response, "content", "") or "")
+            response_raw = dict(getattr(response, "raw", {}) or {})
+            tool_payload, tool_call_count = _extract_native_tool_payload(response_raw)
+            response_raw["guide_tool_call_count"] = int(tool_call_count)
+            if tool_payload is not None:
+                return "primary", "success", response_content, response_raw, tool_payload, ""
+            content_payload = _extract_json_object(response_content)
+            if content_payload is not None:
+                return "degraded", "partial success", response_content, response_raw, content_payload, ""
+            return (
+                "degraded",
+                "failure",
+                response_content,
+                response_raw,
+                None,
+                "guide_model_did_not_emit_parseable_candidate",
+            )
+        except Exception as exc:  # pragma: no cover - live-path failure recording
+            response_raw = {"error": str(exc)}
+            return "blocked", "environment blocker", "", response_raw, None, str(exc)
+        finally:
+            await provider.close()
 
 
 def generate_guide_candidate(

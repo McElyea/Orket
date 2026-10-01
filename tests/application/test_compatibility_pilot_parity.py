@@ -12,7 +12,9 @@ from orket.application.workflows.turn_artifact_writer import (
     build_operation_record,
 )
 from orket.application.workflows.turn_tool_dispatcher import ToolDispatcher
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain.execution import ExecutionTurn, ToolCall
+from orket.logging import bind_logging, prepare_logging
 from tests.helpers.turn_artifacts import execute_dispatch_fixture
 
 pytestmark = pytest.mark.contract
@@ -141,43 +143,44 @@ async def test_compatibility_pilot_live_and_replay_parity(tmp_path: Path) -> Non
     ]
     live_results: list[dict[str, Any]] = []
 
-    for turn_index, (tool_name, tool_args) in enumerate(pilot_calls, start=1):
-        turn = ExecutionTurn(timestamp=None,
-            role="coder",
-            issue_id="ISSUE-PILOT",
-            content="",
-            tool_calls=[ToolCall(tool=tool_name, args=tool_args)],
-        )
-        await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
-            turn=turn,
-            toolbox=toolbox,
-            context={**base_context, "turn_index": turn_index},
-            issue=None,
-        )
-        result = dict(turn.tool_calls[0].result or {})
-        live_results.append(result)
-        translation = result.get("compat_translation")
-        assert isinstance(translation, dict)
-        assert translation["mapping_version"] == 1
-        assert translation["mapping_determinism"] == "workspace"
-        assert int(translation.get("latency_ms", 0)) >= 0
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        for turn_index, (tool_name, tool_args) in enumerate(pilot_calls, start=1):
+            turn = ExecutionTurn(timestamp=None,
+                role="coder",
+                issue_id="ISSUE-PILOT",
+                content="",
+                tool_calls=[ToolCall(tool=tool_name, args=tool_args)],
+            )
+            await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
+                turn=turn,
+                toolbox=toolbox,
+                context={**base_context, "turn_index": turn_index},
+                issue=None,
+            )
+            result = dict(turn.tool_calls[0].result or {})
+            live_results.append(result)
+            translation = result.get("compat_translation")
+            assert isinstance(translation, dict)
+            assert translation["mapping_version"] == 1
+            assert translation["mapping_determinism"] == "workspace"
+            assert int(translation.get("latency_ms", 0)) >= 0
 
-    live_call_count = len(toolbox.calls)
-    assert live_call_count >= 4
+        live_call_count = len(toolbox.calls)
+        assert live_call_count >= 4
 
-    for turn_index, (tool_name, tool_args) in enumerate(pilot_calls, start=1):
-        turn = ExecutionTurn(timestamp=None,
-            role="coder",
-            issue_id="ISSUE-PILOT",
-            content="",
-            tool_calls=[ToolCall(tool=tool_name, args=tool_args)],
-        )
-        await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
-            turn=turn,
-            toolbox=toolbox,
-            context={**base_context, "turn_index": turn_index, "protocol_replay_mode": True},
-            issue=None,
-        )
-        assert dict(turn.tool_calls[0].result or {}) == live_results[turn_index - 1]
+        for turn_index, (tool_name, tool_args) in enumerate(pilot_calls, start=1):
+            turn = ExecutionTurn(timestamp=None,
+                role="coder",
+                issue_id="ISSUE-PILOT",
+                content="",
+                tool_calls=[ToolCall(tool=tool_name, args=tool_args)],
+            )
+            await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
+                turn=turn,
+                toolbox=toolbox,
+                context={**base_context, "turn_index": turn_index, "protocol_replay_mode": True},
+                issue=None,
+            )
+            assert dict(turn.tool_calls[0].result or {}) == live_results[turn_index - 1]
 
     assert len(toolbox.calls) == live_call_count

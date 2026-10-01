@@ -9,7 +9,9 @@ from pathlib import Path
 
 import pytest
 
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain.sandbox import SandboxRegistry, TechStack
+from orket.logging import bind_logging, prepare_logging
 from orket.services.sandbox_orchestrator import SandboxOrchestrator
 
 
@@ -216,12 +218,13 @@ async def test_create_sandbox_uses_generated_password_in_database_url_and_compos
     monkeypatch.setattr(orchestrator, "_deploy_sandbox", _fake_deploy)
     monkeypatch.setattr(orchestrator, "_wait_for_initial_health", _fake_wait_for_initial_health)
 
-    sandbox = await orchestrator.create_sandbox(
-        rock_id="rock-password",
-        project_name="Password Test",
-        tech_stack=TechStack.FASTAPI_REACT_POSTGRES,
-        workspace_path=str(tmp_path),
-    )
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        sandbox = await orchestrator.create_sandbox(
+            rock_id="rock-password",
+            project_name="Password Test",
+            tech_stack=TechStack.FASTAPI_REACT_POSTGRES,
+            workspace_path=str(tmp_path),
+        )
 
     assert "db-pass-123" in sandbox.database_url
     assert captured["path"] == str(tmp_path / "agent_output" / "deployment" / "docker-compose.sandbox.yml")

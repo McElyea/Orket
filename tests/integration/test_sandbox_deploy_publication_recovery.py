@@ -8,7 +8,9 @@ from contextlib import closing
 
 import pytest
 
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain.sandbox import TechStack
+from orket.logging import bind_logging, prepare_logging
 from tests.integration.test_sandbox_orchestrator_lifecycle import FakeLifecycleRunner, _orchestrator
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
@@ -56,14 +58,15 @@ async def test_clock_regression_retry_verifies_deployment_journal(tmp_path):
             owner.lifecycle_service._now = lambda: "2030-01-01T00:00:21+00:00"
 
     owner.lifecycle_service.mark_deployment_verified = regressed
-    result = await _create(owner, tmp_path)
-    assert failures == ["lease publication timestamps must increase monotonically"]
-    assert result.status.value == "running" and result.health_checks_failed == 1
-    expected = [("sandbox-effect:sandbox-rock-1:deploy:lease_epoch:00000001",)]
-    database = tmp_path / "control_plane_records.sqlite3"
-    assert await asyncio.to_thread(_journal_rows, database) == expected
-    assert await owner.health_check("sandbox-rock-1")
-    assert await asyncio.to_thread(_journal_rows, database) == expected
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await _create(owner, tmp_path)
+        assert failures == ["lease publication timestamps must increase monotonically"]
+        assert result.status.value == "running" and result.health_checks_failed == 1
+        expected = [("sandbox-effect:sandbox-rock-1:deploy:lease_epoch:00000001",)]
+        database = tmp_path / "control_plane_records.sqlite3"
+        assert await asyncio.to_thread(_journal_rows, database) == expected
+        assert await owner.health_check("sandbox-rock-1")
+        assert await asyncio.to_thread(_journal_rows, database) == expected
 
 
 async def test_native_journal_write_refusal_cannot_become_healthy_on_retry(tmp_path):
@@ -78,15 +81,16 @@ async def test_native_journal_write_refusal_cannot_become_healthy_on_retry(tmp_p
         return await original(**kwargs)
 
     owner.lifecycle_service.mark_deployment_verified = refuse
-    with pytest.raises(sqlite3.IntegrityError, match="controlled deployment journal refusal"):
-        await _create(owner, tmp_path)
-    owner.lifecycle_service._now = lambda: "2030-01-01T00:00:21+00:00"
-    with pytest.raises(sqlite3.IntegrityError, match="controlled deployment journal refusal"):
-        await owner.health_check("sandbox-rock-1")
-    assert await asyncio.to_thread(_journal_rows, database) == []
-    await asyncio.to_thread(_execute_sql, database, "DROP TRIGGER refuse_deploy;")
-    assert await owner.health_check("sandbox-rock-1")
-    expected = [("sandbox-effect:sandbox-rock-1:deploy:lease_epoch:00000001",)]
-    assert await asyncio.to_thread(_journal_rows, database) == expected
-    assert await owner.health_check("sandbox-rock-1")
-    assert await asyncio.to_thread(_journal_rows, database) == expected
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        with pytest.raises(sqlite3.IntegrityError, match="controlled deployment journal refusal"):
+            await _create(owner, tmp_path)
+        owner.lifecycle_service._now = lambda: "2030-01-01T00:00:21+00:00"
+        with pytest.raises(sqlite3.IntegrityError, match="controlled deployment journal refusal"):
+            await owner.health_check("sandbox-rock-1")
+        assert await asyncio.to_thread(_journal_rows, database) == []
+        await asyncio.to_thread(_execute_sql, database, "DROP TRIGGER refuse_deploy;")
+        assert await owner.health_check("sandbox-rock-1")
+        expected = [("sandbox-effect:sandbox-rock-1:deploy:lease_epoch:00000001",)]
+        assert await asyncio.to_thread(_journal_rows, database) == expected
+        assert await owner.health_check("sandbox-rock-1")
+        assert await asyncio.to_thread(_journal_rows, database) == expected

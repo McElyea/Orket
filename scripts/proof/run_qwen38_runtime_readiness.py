@@ -18,6 +18,11 @@ sys.path.insert(0, str(ROOT))
 
 from orket.adapters.llm.llama_cpp_render_verification import expected_text_render
 from orket.adapters.llm.local_model_provider import LocalModelProvider
+from orket.adapters.observability.logging_context import (  # noqa: E402 - script bootstrap
+    bind_logging,
+    prepare_logging,
+    select_logging_inputs,
+)
 from orket.application.services.local_model_factory import (
     create_local_model_provider_async,
 )
@@ -154,34 +159,36 @@ def must_stop_cases(client: httpx.Client) -> list[dict]:
 
 
 async def adapter_cases() -> list[dict]:
-    client = (await create_local_model_provider_async(model=DEFAULT_LOCAL_MODEL, provider="llama_cpp"))
-    rows = []
-    try:
-        for task in ("strict_json", "tool_call", "concise_text", "reasoning"):
-            response = await client.complete(
-                [{"role": "user", "content": 'Return only {"ok":true}'}],
-                runtime_context={
-                    "protocol_governed_enabled": True,
-                    "local_prompt_task_class": task,
-                    "local_prompting_mode": "enforce",
-                    "local_prompt_max_output_tokens": 64,
-                },
-            )
-            raw = response.raw
-            rows.append(
-                {
-                    "task_class": task,
-                    "response": response.content,
-                    "metadata": raw,
-                    "passed": json.loads(response.content) == {"ok": True}
-                    and raw.get("render_verified")
-                    and raw.get("token_counter_source") == "llama_cpp_native_tokenize",
-                }
-            )
-        rows.extend(await role_and_budget_cases(client))
-    finally:
-        await client.close()
-    return rows
+    logging_inputs = select_logging_inputs(Path.cwd(), dict(os.environ))  # noqa: ASYNC240 - capture CLI inputs before admission
+    with bind_logging(await prepare_logging(logging_inputs)):
+        client = (await create_local_model_provider_async(model=DEFAULT_LOCAL_MODEL, provider="llama_cpp"))
+        rows = []
+        try:
+            for task in ("strict_json", "tool_call", "concise_text", "reasoning"):
+                response = await client.complete(
+                    [{"role": "user", "content": 'Return only {"ok":true}'}],
+                    runtime_context={
+                        "protocol_governed_enabled": True,
+                        "local_prompt_task_class": task,
+                        "local_prompting_mode": "enforce",
+                        "local_prompt_max_output_tokens": 64,
+                    },
+                )
+                raw = response.raw
+                rows.append(
+                    {
+                        "task_class": task,
+                        "response": response.content,
+                        "metadata": raw,
+                        "passed": json.loads(response.content) == {"ok": True}
+                        and raw.get("render_verified")
+                        and raw.get("token_counter_source") == "llama_cpp_native_tokenize",
+                    }
+                )
+            rows.extend(await role_and_budget_cases(client))
+        finally:
+            await client.close()
+        return rows
 
 
 async def role_and_budget_cases(client: LocalModelProvider) -> list[dict]:

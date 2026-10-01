@@ -23,6 +23,7 @@ from orket.application.services.tool_approval_control_plane_reservation_service 
 )
 from orket.core.domain.execution import ExecutionTurn
 from orket.core.domain.records import IssueRecord
+from orket.logging import bind_logging
 from orket.runtime.execution.execution_pipeline import ExecutionPipeline
 from orket.schema import CardStatus, IssueConfig
 from tests.helpers.kernel_state_probe import responsive_sqlite
@@ -336,10 +337,11 @@ async def test_public_guard_success_uses_selected_clock_for_request_and_hold(
             content=json.dumps({"rationale": "", "violations": [], "remediation_actions": ["Fix it"]}))
         clock.current = _EXPECTED_TIME
         clock.observations.clear()
-        await handler.handle(issue=issue, result=SimpleNamespace(turn=turn), provider=None,
-            run_id="guard-session", seat_name="integrity_guard", roles_to_load=["integrity_guard"],
-            turn_index=1, turn_status=CardStatus.AWAITING_GUARD_REVIEW, is_guard_turn=True,
-            is_review_turn=True, epic=None, team=None, env=None, active_build="guard-build", context={})
+        with bind_logging(pipeline.logging_context):
+            await handler.handle(issue=issue, result=SimpleNamespace(turn=turn), provider=None,
+                run_id="guard-session", seat_name="integrity_guard", roles_to_load=["integrity_guard"],
+                turn_index=1, turn_status=CardStatus.AWAITING_GUARD_REVIEW, is_guard_turn=True,
+                is_review_turn=True, epic=None, team=None, env=None, active_build="guard-build", context={})
         observation = await _observe(case, session_id="guard-session")
         _record(record_property, "public_guard_observation", observation)
         _record(record_property, "public_guard_failures", failures)

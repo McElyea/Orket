@@ -5,7 +5,9 @@ import pytest
 from pydantic import ValidationError
 
 from orket.application.services.runtime_input_service import RuntimeInputService
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.decision_nodes.builtins import DefaultSandboxPolicyNode
+from orket.logging import bind_logging, prepare_logging
 from tests.integration.test_sandbox_creation_capture import _create, _owner
 
 pytestmark = pytest.mark.integration
@@ -97,15 +99,16 @@ async def test_compose_refusal_preserves_durable_reconciliation_state_without_do
             sandbox.ports.api = 9999
     owner = _owner(tmp_path, CapturedSecrets())
     owner.sandbox_policy_node = Mutation()
-    with pytest.raises(ValidationError, match="frozen_instance"):
-        await _create(owner, tmp_path)
-    assert calls == [("synthetic-admitted-1", "synthetic-admitted-2")]
-    sandbox = owner.registry.get("sandbox-captured")
-    assert sandbox.ports.api == 8001 and sandbox.rock_id == "captured"
-    record = await owner.lifecycle_repository.get_record(sandbox.id)
-    assert record.state.value == "starting" and record.requires_reconciliation is True
-    assert not owner._compose_path(tmp_path).exists()
-    effects = await owner.control_plane_repository.list_effect_journal_entries(run_id="captured")
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        with pytest.raises(ValidationError, match="frozen_instance"):
+            await _create(owner, tmp_path)
+        assert calls == [("synthetic-admitted-1", "synthetic-admitted-2")]
+        sandbox = owner.registry.get("sandbox-captured")
+        assert sandbox.ports.api == 8001 and sandbox.rock_id == "captured"
+        record = await owner.lifecycle_repository.get_record(sandbox.id)
+        assert record.state.value == "starting" and record.requires_reconciliation is True
+        assert not owner._compose_path(tmp_path).exists()
+        effects = await owner.control_plane_repository.list_effect_journal_entries(run_id="captured")
     assert effects == []
 
 
@@ -129,18 +132,19 @@ async def test_compose_uses_admitted_policy_and_secrets_after_publication_await(
         await release.wait()
         return result
     monkeypatch.setattr(owner.control_plane_reservations, "publish_allocation_reservation", held)
-    operation = asyncio.create_task(_create(owner, tmp_path))
-    try:
-        await asyncio.wait_for(entered.wait(), 5)
-        owner.sandbox_policy_node = Observer("replacement")
-        inputs.suffix = "replacement"
-        release.set()
-        with pytest.raises(ValueError, match="controlled compose refusal"):
-            await asyncio.wait_for(operation, 5)
-    finally:
-        release.set()
-        await asyncio.gather(operation, return_exceptions=True)
-    assert observed == [("admitted", "sandbox-captured", "synthetic-admitted-1", "synthetic-admitted-2")]
-    assert inputs.calls == ["admitted", "admitted"]
-    record = await owner.lifecycle_repository.get_record("sandbox-captured")
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        operation = asyncio.create_task(_create(owner, tmp_path))
+        try:
+            await asyncio.wait_for(entered.wait(), 5)
+            owner.sandbox_policy_node = Observer("replacement")
+            inputs.suffix = "replacement"
+            release.set()
+            with pytest.raises(ValueError, match="controlled compose refusal"):
+                await asyncio.wait_for(operation, 5)
+        finally:
+            release.set()
+            await asyncio.gather(operation, return_exceptions=True)
+        assert observed == [("admitted", "sandbox-captured", "synthetic-admitted-1", "synthetic-admitted-2")]
+        assert inputs.calls == ["admitted", "admitted"]
+        record = await owner.lifecycle_repository.get_record("sandbox-captured")
     assert record.state.value == "starting" and record.requires_reconciliation is True

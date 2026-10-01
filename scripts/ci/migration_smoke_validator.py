@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import os
 import sqlite3
 import sys
 from pathlib import Path
 
+from orket.adapters.observability.logging_context import bind_logging, prepare_logging, select_logging_inputs
 from orket.adapters.storage.async_card_repository import AsyncCardRepository
 from orket.adapters.vcs.webhook_db import WebhookDatabase
 
@@ -20,12 +22,14 @@ def _build_parser() -> argparse.ArgumentParser:
 
 
 async def _bootstrap(runtime_db: Path, webhook_db: Path) -> None:
-    runtime_db.parent.mkdir(parents=True, exist_ok=True)
-    webhook_db.parent.mkdir(parents=True, exist_ok=True)
-    repo = AsyncCardRepository(str(runtime_db))
-    await repo.get_by_build("_migration_smoke_bootstrap_")
-    webhook = WebhookDatabase(webhook_db)
-    await webhook.get_active_prs()
+    logging_inputs = select_logging_inputs(Path.cwd(), dict(os.environ))  # noqa: ASYNC240 - capture CLI inputs before admission
+    with bind_logging(await prepare_logging(logging_inputs)):
+        runtime_db.parent.mkdir(parents=True, exist_ok=True)
+        webhook_db.parent.mkdir(parents=True, exist_ok=True)
+        repo = AsyncCardRepository(str(runtime_db))
+        await repo.get_by_build("_migration_smoke_bootstrap_")
+        webhook = WebhookDatabase(webhook_db)
+        await webhook.get_active_prs()
 
 
 def _migration_count(path: Path) -> int:

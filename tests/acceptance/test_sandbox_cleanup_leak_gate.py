@@ -8,7 +8,9 @@ import shutil
 
 import pytest
 
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain.sandbox import SandboxRegistry, TechStack
+from orket.logging import bind_logging, prepare_logging
 from orket.services.sandbox_orchestrator import SandboxOrchestrator
 from tests.acceptance._sandbox_live_common import compose_cleanup, sandbox_resource_inventory
 from tests.acceptance._sandbox_live_ports import patch_orchestrator_port_allocator
@@ -37,33 +39,34 @@ async def test_live_cleanup_leak_gate_leaves_no_new_sandbox_resources(tmp_path, 
     if shutil.which("docker-compose") is None or shutil.which("docker") is None:
         pytest.skip("docker tooling is unavailable")
 
-    before = await sandbox_resource_inventory()
-    orchestrator = SandboxOrchestrator(
-        workspace_root=tmp_path,
-        registry=SandboxRegistry(),
-        lifecycle_db_path=str(tmp_path / "sandbox_lifecycle.db"),
-    )
-    monkeypatch.setattr(orchestrator, "_generate_compose_file", _lightweight_compose)
-    patch_orchestrator_port_allocator(orchestrator, monkeypatch)
-
-    compose_project = "orket-sandbox-live-leak-gate-1"
-    compose_path = str(orchestrator._compose_path(str(tmp_path)))
-    try:
-        sandbox = await orchestrator.create_sandbox(
-            rock_id="live-leak-gate-1",
-            project_name="Live Leak Gate",
-            tech_stack=TechStack.FASTAPI_REACT_POSTGRES,
-            workspace_path=str(tmp_path),
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        before = await sandbox_resource_inventory()
+        orchestrator = SandboxOrchestrator(
+            workspace_root=tmp_path,
+            registry=SandboxRegistry(),
+            lifecycle_db_path=str(tmp_path / "sandbox_lifecycle.db"),
         )
-        await orchestrator.delete_sandbox(sandbox.id)
-    finally:
-        await compose_cleanup(compose_path, compose_project)
+        monkeypatch.setattr(orchestrator, "_generate_compose_file", _lightweight_compose)
+        patch_orchestrator_port_allocator(orchestrator, monkeypatch)
 
-    after = await sandbox_resource_inventory()
-    for _ in range(10):
-        if after == before:
-            break
-        await asyncio.sleep(0.2)
+        compose_project = "orket-sandbox-live-leak-gate-1"
+        compose_path = str(orchestrator._compose_path(str(tmp_path)))
+        try:
+            sandbox = await orchestrator.create_sandbox(
+                rock_id="live-leak-gate-1",
+                project_name="Live Leak Gate",
+                tech_stack=TechStack.FASTAPI_REACT_POSTGRES,
+                workspace_path=str(tmp_path),
+            )
+            await orchestrator.delete_sandbox(sandbox.id)
+        finally:
+            await compose_cleanup(compose_path, compose_project)
+
         after = await sandbox_resource_inventory()
+        for _ in range(10):
+            if after == before:
+                break
+            await asyncio.sleep(0.2)
+            after = await sandbox_resource_inventory()
 
     assert after == before
