@@ -12,10 +12,12 @@ from orket.application.services.tool_gate_service import ToolGate
 from orket.application.workflows.turn_artifact_writer import TurnArtifactWriter
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.application.workflows.turn_tool_dispatcher import ToolDispatcher
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.core.domain.state_machine import StateMachine
 from orket.extensions.contracts import RunAction
 from orket.extensions.runtime import ExtensionEngineAdapter, RunContext
+from orket.logging import bind_logging, prepare_logging
 from orket.runtime.execution.execution_pipeline_card_dispatch import ExecutionPipelineCardDispatchMixin
 from orket.schema import CardStatus, IssueConfig, RoleConfig
 from tests.helpers.turn_artifacts import artifact_test_utc_now, execute_dispatch_fixture
@@ -230,6 +232,7 @@ async def test_run_card_primary_path_blocks_before_tool_execution(tmp_path: Path
         tool_args={"path": "agent_output/denied.txt", "content": "x"},
     )
 
+    harness.logging_context = await prepare_logging(LoggingInputs(tmp_path))
     result = await harness.run_card("ISSUE-1")
 
     assert result["success"] is False
@@ -251,6 +254,8 @@ async def test_extension_action_primary_path_reenters_run_card_under_same_deny_a
         workspace_root=workspace_root, tool_gate=_DenyAllToolGate(workspace_root),
         tool_args={"path": "agent_output/extension-denied.txt", "content": "x"},
     )
+
+    harness.logging_context = await prepare_logging(LoggingInputs(tmp_path))
 
     class _EngineProxy:
         def __init__(self, *_args: Any, **_kwargs: Any) -> None:
@@ -284,13 +289,15 @@ async def test_canonical_dispatcher_blocks_write_escape_without_outside_side_eff
     outside_path = tmp_path / "outside.txt"
     toolbox = _WritingToolbox(workspace_root)
 
-    result = await _execute_turn(
-        workspace_root=workspace_root,
-        tool_gate=ToolGate(organization=None, workspace_root=workspace_root),
-        tool_args={"path": "../outside.txt", "content": "escape"},
-        toolbox=toolbox,
-        issue_id="ISSUE-1",
-    )
+    prepared = await prepare_logging(LoggingInputs(tmp_path))
+    with bind_logging(prepared):
+        result = await _execute_turn(
+            workspace_root=workspace_root,
+            tool_gate=ToolGate(organization=None, workspace_root=workspace_root),
+            tool_args={"path": "../outside.txt", "content": "escape"},
+            toolbox=toolbox,
+            issue_id="ISSUE-1",
+        )
 
     assert result.success is False
     assert toolbox.calls == 0
@@ -311,7 +318,8 @@ async def test_direct_tool_dispatcher_internal_seam_blocks_under_same_deny_all_p
         tool_calls=[ToolCall(tool="write_file", args={"path": "agent_output/direct.txt", "content": "x"})],
     )
 
-    with pytest.raises(RuntimeError, match="deny_all:write_file:write_file"):
+    prepared = await prepare_logging(LoggingInputs(tmp_path))
+    with bind_logging(prepared), pytest.raises(RuntimeError, match="deny_all:write_file:write_file"):
         await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
             turn=turn,
             toolbox=toolbox,

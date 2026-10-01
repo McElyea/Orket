@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from orket.kernel.v1 import run_experiment
 from orket.kernel.v1.experiments.report import report_canonical_bytes
 from orket.kernel.v1.experiments.scoring import score_run
@@ -24,6 +26,7 @@ def _base_request() -> dict:
     }
 
 
+@pytest.mark.unit
 def test_experiment_runner_enumeration_is_stable() -> None:
     spec = normalize_spec(_base_request())
     refs = expand_run_refs(spec)
@@ -40,6 +43,7 @@ def test_experiment_runner_enumeration_is_stable() -> None:
     assert keys == sorted(keys)
 
 
+@pytest.mark.unit
 def test_experiment_scoring_pure_function() -> None:
     result = {
         "forbidden_hits": 0,
@@ -55,6 +59,7 @@ def test_experiment_scoring_pure_function() -> None:
     assert left == right
 
 
+@pytest.mark.contract
 def test_experiment_report_canonical_bytes_stable() -> None:
     request = _base_request()
     request["run_results"] = [
@@ -80,6 +85,7 @@ def test_experiment_report_canonical_bytes_stable() -> None:
     assert a == b
 
 
+@pytest.mark.unit
 def test_experiment_nondeterminism_is_measured_as_variance() -> None:
     request = {
         "experiment_id": "variance-check",

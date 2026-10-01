@@ -4,7 +4,11 @@ import hashlib
 import json
 from pathlib import Path
 
+import pytest
+
 from orket.interfaces.orket_bundle_cli import main
+
+pytestmark = pytest.mark.end_to_end
 
 
 def _seed_base_pack(base_pack: Path) -> None:

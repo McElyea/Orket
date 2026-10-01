@@ -11,8 +11,10 @@ from orket.application.services.tool_gate_service import ToolGate
 from orket.application.services.turn_tool_control_plane_resource_lifecycle import lease_id_for_run
 from orket.application.services.turn_tool_control_plane_service import build_turn_tool_control_plane_service
 from orket.application.workflows.turn_executor import TurnExecutor
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain import LeaseStatus, RunState
 from orket.core.domain.state_machine import StateMachine
+from orket.logging import bind_logging, prepare_logging
 from tests.helpers.turn_artifacts import artifact_test_utc_now
 from tests.helpers.turn_control_plane_clock import deterministic_turn_clock as deterministic_turn_clock
 from tests.integration.test_turn_executor_control_plane import _context, _issue, _Model, _role, _Toolbox
@@ -40,6 +42,12 @@ def executor(workspace, db):
                         control_plane_service=build_turn_tool_control_plane_service(db), utc_now=artifact_test_utc_now)
 
 
+async def execute_prepared_turn(workspace, execute_turn, *args):
+    """Admit logging in the same Task that awaits this actual turn operation."""
+    with bind_logging(await prepare_logging(LoggingInputs(workspace))):
+        return await execute_turn(*args)
+
+
 @pytest.mark.parametrize("protocol", [False, True], ids=["ordinary", "protocol"])
 @pytest.mark.parametrize("resume", [False, True], ids=["reentry", "resume"])
 # Layer: integration
@@ -49,11 +57,11 @@ async def test_active_turn_excludes_competing_dispatch_before_model_or_effect(tm
     entered, release = asyncio.Event(), asyncio.Event()
     first_tools = ObservedToolbox(tmp_path, "first", entered, release)
     second_tools, second_model = ObservedToolbox(tmp_path, "second"), _Model()
-    task = asyncio.create_task(first.execute_turn(_issue(), _role(), _Model(), first_tools,
+    task = asyncio.create_task(execute_prepared_turn(tmp_path, first.execute_turn, _issue(), _role(), _Model(), first_tools,
                                                  _context(protocol_governed_enabled=protocol)))
     try:
         await asyncio.wait_for(entered.wait(), timeout=20)
-        other = await asyncio.wait_for(second.execute_turn(_issue(), _role(), second_model, second_tools,
+        other = await asyncio.wait_for(execute_prepared_turn(tmp_path, second.execute_turn, _issue(), _role(), second_model, second_tools,
             _context(protocol_governed_enabled=protocol, resume_mode=resume)), timeout=20)
     finally:
         release.set()
@@ -68,9 +76,9 @@ async def test_active_turn_excludes_competing_dispatch_before_model_or_effect(tm
 async def test_completed_turn_reentry_remains_observation_only(tmp_path):
     db = tmp_path / "control_plane.sqlite3"
     tools = ObservedToolbox(tmp_path, "first")
-    first = await executor(tmp_path, db).execute_turn(_issue(), _role(), _Model(), tools, _context())
+    first = await execute_prepared_turn(tmp_path, executor(tmp_path, db).execute_turn, _issue(), _role(), _Model(), tools, _context())
     later_tools, later_model = ObservedToolbox(tmp_path, "second"), _Model()
-    later = await executor(tmp_path, db).execute_turn(_issue(), _role(), later_model, later_tools, _context())
+    later = await execute_prepared_turn(tmp_path, executor(tmp_path, db).execute_turn, _issue(), _role(), later_model, later_tools, _context())
     assert first.success and later.success and tools.calls == 1
     assert later_model.calls == later_tools.calls == 0
 
@@ -93,14 +101,14 @@ async def test_interrupted_dispatch_retains_uncertainty_and_refuses_reexecution(
     db = tmp_path / "control_plane.sqlite3"
     first = executor(tmp_path, db)
     tools = InterruptedToolbox(tmp_path, interruption)
-    execution = first.execute_turn(_issue(), _role(), _Model(), tools, _context(protocol_governed_enabled=protocol))
+    execution = execute_prepared_turn(tmp_path, first.execute_turn, _issue(), _role(), _Model(), tools, _context(protocol_governed_enabled=protocol))
     if interruption is asyncio.CancelledError:
         with pytest.raises(asyncio.CancelledError):
             await execution
     else:
         assert not (await execution).success
     later_tools, later_model = ObservedToolbox(tmp_path, "second"), _Model()
-    later = await executor(tmp_path, db).execute_turn(_issue(), _role(), later_model, later_tools,
+    later = await execute_prepared_turn(tmp_path, executor(tmp_path, db).execute_turn, _issue(), _role(), later_model, later_tools,
         _context(protocol_governed_enabled=protocol, resume_mode=resume))
     assert not later.success and "dispatch outcome unknown" in later.error
     assert tools.calls == 1 and later_tools.calls == later_model.calls == 0
@@ -135,7 +143,7 @@ async def test_native_owner_death_does_not_authorize_tool_redispatch(tmp_path, p
                     pytest.fail(f"child exited {child.returncode}: {stdout!r} {stderr!r}")
                 await asyncio.sleep(0.02)
         contender_tools, contender_model = ObservedToolbox(tmp_path, "second"), _Model()
-        busy = await executor(tmp_path, db).execute_turn(_issue(), _role(), contender_model, contender_tools, _context())
+        busy = await execute_prepared_turn(tmp_path, executor(tmp_path, db).execute_turn, _issue(), _role(), contender_model, contender_tools, _context())
         assert not busy.success and "owner_busy" in busy.error
         assert contender_tools.calls == contender_model.calls == 0
     finally:
@@ -146,7 +154,7 @@ async def test_native_owner_death_does_not_authorize_tool_redispatch(tmp_path, p
         await files.write_file("child.stderr.txt", stderr.decode("utf-8", errors="replace"))
     assert child.returncode is not None and child.returncode != 0
     later_tools, later_model = ObservedToolbox(tmp_path, "second"), _Model()
-    later = await executor(tmp_path, db).execute_turn(_issue(), _role(), later_model, later_tools,
+    later = await execute_prepared_turn(tmp_path, executor(tmp_path, db).execute_turn, _issue(), _role(), later_model, later_tools,
         _context(protocol_governed_enabled=protocol, resume_mode=True))
     assert not later.success and "dispatch outcome unknown" in later.error
     assert later_tools.calls == later_model.calls == 0

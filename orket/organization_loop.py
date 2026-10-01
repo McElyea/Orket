@@ -3,6 +3,11 @@ from functools import partial
 from pathlib import Path
 
 from orket.adapters.execution.owned_io import require_sync_context, run_owned_thread
+from orket.adapters.observability.logging_context import (
+    bind_logging,
+    prepare_logging_native,
+    select_logging_inputs,
+)
 from orket.adapters.storage.async_file_tools import AsyncFileTools
 from orket.application.services.runtime_construction_inputs import RuntimeConstructionInputs
 from orket.application.services.runtime_result_lifetime import open_runtime_owner
@@ -20,15 +25,18 @@ class OrganizationLoop:
     ) -> None:
         require_sync_context(code="E_ORGANIZATION_LOOP_ASYNC_CREATE_REQUIRED")
         self.construction_inputs = construction_inputs or RuntimeConstructionInputs.capture()
-        self.project_root = self.construction_inputs.invocation_root
-        self.workspace = self.project_root / "workspace/default"
-        self.org_path = self.project_root / organization_path
-        self.fs = AsyncFileTools(self.project_root)
-        if not self.org_path.exists():
-            self.org_path = self.project_root / "model/organization.json"
-        self.org = self._load_org()
-        self._departments = tuple(self.org.departments)
-        self.running = False
+        self.logging_context = prepare_logging_native(select_logging_inputs(
+            self.construction_inputs.invocation_root, self.construction_inputs.environment))
+        with bind_logging(self.logging_context):
+            self.project_root = self.construction_inputs.invocation_root
+            self.workspace = self.project_root / "workspace/default"
+            self.org_path = self.project_root / organization_path
+            self.fs = AsyncFileTools(self.project_root)
+            if not self.org_path.exists():
+                self.org_path = self.project_root / "model/organization.json"
+            self.org = self._load_org()
+            self._departments = tuple(self.org.departments)
+            self.running = False
 
     @classmethod
     async def create(
@@ -43,26 +51,27 @@ class OrganizationLoop:
         return OrganizationConfig.model_validate_json(self.fs.read_file_sync(str(self.org_path)))
 
     async def run_forever(self) -> None:
-        self.running = True
-        try:
-            log_event("organization_loop_started", {"mode": "critical_path"}, workspace=self.workspace)
-            while self.running:
-                next_card = await run_owned_thread(self._find_next_critical_card, label="organization-card-scan")
-                if next_card:
-                    log_event(
-                        "organization_loop_execute_card",
-                        {"card_id": next_card["id"], "department": next_card["dept"]},
-                        workspace=self.workspace,
-                    )
-                    construct = partial(ExecutionPipeline, self.workspace, str(next_card["dept"]),
-                                        construction_inputs=self.construction_inputs)
-                    async with open_runtime_owner(construct, label="organization-card-construction") as pipeline:
-                        require_runtime_success(await pipeline.run_card(str(next_card["id"])))
-                else:
-                    await asyncio.sleep(10)
-                await asyncio.sleep(0)
-        finally:
-            self.running = False
+        with bind_logging(self.logging_context):
+            self.running = True
+            try:
+                log_event("organization_loop_started", {"mode": "critical_path"}, workspace=self.workspace)
+                while self.running:
+                    next_card = await run_owned_thread(self._find_next_critical_card, label="organization-card-scan")
+                    if next_card:
+                        log_event(
+                            "organization_loop_execute_card",
+                            {"card_id": next_card["id"], "department": next_card["dept"]},
+                            workspace=self.workspace,
+                        )
+                        construct = partial(ExecutionPipeline, self.workspace, str(next_card["dept"]),
+                                            construction_inputs=self.construction_inputs)
+                        async with open_runtime_owner(construct, label="organization-card-construction") as pipeline:
+                            require_runtime_success(await pipeline.run_card(str(next_card["id"])))
+                    else:
+                        await asyncio.sleep(10)
+                    await asyncio.sleep(0)
+            finally:
+                self.running = False
 
     def _find_next_critical_card(self) -> dict[str, str | int] | None:
         """Finds the most critical READY card across all departments."""

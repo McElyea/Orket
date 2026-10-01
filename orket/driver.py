@@ -10,6 +10,11 @@ from typing import Any
 
 from orket.adapters.execution.owned_io import require_sync_context, run_owned_io
 from orket.adapters.llm.local_model_provider import LocalModelProvider
+from orket.adapters.observability.logging_context import (
+    bind_logging,
+    prepare_logging_native,
+    select_logging_inputs,
+)
 from orket.adapters.storage.async_file_tools import AsyncFileTools
 from orket.application.services.driver_command_service import DriverCommandService, collect_driver_inventory
 from orket.application.services.local_model_factory import create_local_model_provider
@@ -57,44 +62,47 @@ class OrketDriver(DriverResourceMixin, DriverConversationMixin):
         captured_environment = dict(os.environ if environment is None else environment)
         self._environment = MappingProxyType(captured_environment)
         self.project_root = Path(project_root).resolve() if project_root is not None else _default_project_root()
-        self.model_root = default_model_root(self.project_root)
-        self.workspace_root = default_workspace_root(self.project_root)
-        self.fs = fs or AsyncFileTools(self.project_root)
-        self.reforger_tools = reforger_tools or ReforgerService(self.workspace_root, [self.project_root])
+        self.logging_context = prepare_logging_native(select_logging_inputs(
+            invocation_root if invocation_root is not None else Path.cwd(), captured_environment))
+        with bind_logging(self.logging_context):
+            self.model_root = default_model_root(self.project_root)
+            self.workspace_root = default_workspace_root(self.project_root)
+            self.fs = fs or AsyncFileTools(self.project_root)
+            self.reforger_tools = reforger_tools or ReforgerService(self.workspace_root, [self.project_root])
 
-        from orket.schema import OrganizationConfig
+            from orket.schema import OrganizationConfig
 
-        org_path = self.model_root / "organization.json"
-        self.org = None
-        if org_path.exists():
-            with contextlib.suppress(ValueError, FileNotFoundError):
-                self.org = OrganizationConfig.model_validate_json(self.fs.read_file_sync(str(org_path)))
+            org_path = self.model_root / "organization.json"
+            self.org = None
+            if org_path.exists():
+                with contextlib.suppress(ValueError, FileNotFoundError):
+                    self.org = OrganizationConfig.model_validate_json(self.fs.read_file_sync(str(org_path)))
 
-        if provider is None:
-            selection = prepare_bootstrap_model_selection(environment=captured_environment, organization=self.org)
-            selected_model = selection.select("operations_lead", override=model).final_model
-        self.provider = provider
-        self._configured_model_name = selected_model if provider is None else provider.model
-        self.skill: SkillConfig | None = None
-        self.dialect: DialectConfig | None = None
-        strict_from_env = str(captured_environment.get("ORKET_DRIVER_STRICT_CONFIG", "")).strip().lower()
-        self.strict_config_mode = (
-            strict_config if strict_config is not None else strict_from_env in {"1", "true", "yes", "on"}
-        )
-        parse_mode_from_env = str(captured_environment.get("ORKET_DRIVER_JSON_PARSE_MODE", "")).strip().lower()
-        self.json_parse_mode = "compatibility"
-        self.prompting_mode = "fallback"
-        self.config_degraded = False
-        self.config_dependency_classification: dict[str, str] = {}
-        self.config_load_failures: list[dict[str, str]] = []
-        self._load_engine_configs()
-        self.json_parse_mode = self._resolve_json_parse_mode(
-            explicit_mode=json_parse_mode,
-            env_mode=parse_mode_from_env,
-        )
-        if self.provider is None:
-            self.provider = create_local_model_provider(model=self._configured_model_name, temperature=0.1,
-                                               environment=captured_environment, cwd=invocation_root)
+            if provider is None:
+                selection = prepare_bootstrap_model_selection(environment=captured_environment, organization=self.org)
+                selected_model = selection.select("operations_lead", override=model).final_model
+            self.provider = provider
+            self._configured_model_name = selected_model if provider is None else provider.model
+            self.skill: SkillConfig | None = None
+            self.dialect: DialectConfig | None = None
+            strict_from_env = str(captured_environment.get("ORKET_DRIVER_STRICT_CONFIG", "")).strip().lower()
+            self.strict_config_mode = (
+                strict_config if strict_config is not None else strict_from_env in {"1", "true", "yes", "on"}
+            )
+            parse_mode_from_env = str(captured_environment.get("ORKET_DRIVER_JSON_PARSE_MODE", "")).strip().lower()
+            self.json_parse_mode = "compatibility"
+            self.prompting_mode = "fallback"
+            self.config_degraded = False
+            self.config_dependency_classification: dict[str, str] = {}
+            self.config_load_failures: list[dict[str, str]] = []
+            self._load_engine_configs()
+            self.json_parse_mode = self._resolve_json_parse_mode(
+                explicit_mode=json_parse_mode,
+                env_mode=parse_mode_from_env,
+            )
+            if self.provider is None:
+                self.provider = create_local_model_provider(model=self._configured_model_name, temperature=0.1,
+                                                   environment=captured_environment, cwd=invocation_root)
 
     @classmethod
     async def create(
@@ -120,7 +128,8 @@ class OrketDriver(DriverResourceMixin, DriverConversationMixin):
         return await create_runtime_owner(construct, label="driver-construction")
 
     async def close(self) -> None:
-        await run_owned_io(self.provider.close, label="driver-provider-close", preserve_failure=True)
+        with bind_logging(self.logging_context):
+            await run_owned_io(self.provider.close, label="driver-provider-close", preserve_failure=True)
 
     def _operator_workspace_root(self) -> Path:
         return Path(getattr(self, "workspace_root", _default_workspace_root()))
@@ -237,135 +246,137 @@ class OrketDriver(DriverResourceMixin, DriverConversationMixin):
         return f"Unsupported action '{attempted_action}'.\n{summary}"
 
     async def process_request(self, message: str) -> str:
-        request_text = str(message or "").strip()
-        workspace_root = self._operator_workspace_root()
-        self._log_operator_metric("operator_request_total", route="received")
+        with bind_logging(self.logging_context):
+            request_text = str(message or "").strip()
+            workspace_root = self._operator_workspace_root()
+            self._log_operator_metric("operator_request_total", route="received")
 
-        cli_response = await DriverCommandService(
-            self.model_root, getattr(self, "reforger_tools", None), self._capability_lines()).execute(message)
-        if cli_response is not None:
-            self._log_operator_metric("operator_request_total", route="cli")
-            return cli_response
+            cli_response = await DriverCommandService(
+                self.model_root, getattr(self, "reforger_tools", None), self._capability_lines()).execute(message)
+            if cli_response is not None:
+                self._log_operator_metric("operator_request_total", route="cli")
+                return cli_response
 
-        if self._should_route_to_conversation(message):
-            self._log_operator_metric("operator_request_total", route="conversation")
-            rule_reply = self._conversation_reply(message)
-            if rule_reply is not None:
-                return rule_reply
-            model_reply = await self._conversation_model_reply(request_text)
-            if model_reply:
-                return model_reply
-            return "I can chat normally and help with Orket operations when you ask explicitly."
+            if self._should_route_to_conversation(message):
+                self._log_operator_metric("operator_request_total", route="conversation")
+                rule_reply = self._conversation_reply(message)
+                if rule_reply is not None:
+                    return rule_reply
+                model_reply = await self._conversation_model_reply(request_text)
+                if model_reply:
+                    return model_reply
+                return "I can chat normally and help with Orket operations when you ask explicitly."
 
-        context = await collect_driver_inventory(self.project_root, self.model_root, self._environment)
-        context["request"] = message
+            context = await collect_driver_inventory(self.project_root, self.model_root, self._environment)
+            context["request"] = message
 
-        if self.skill and self.dialect:
-            system_prompt = f"IDENTITY: {self.skill.name}\nINTENT: {self.skill.intent}\n\n"
-            system_prompt += "RESPONSIBILITIES:\n" + "\n".join([f"- {r}" for r in self.skill.responsibilities]) + "\n\n"
-            system_prompt += f"SYNTAX DIALECT ({self.dialect.model_family}):\n"
-            system_prompt += "YOU MUST RESPOND WITH VALID JSON matching the Orket Schema.\n"
-            system_prompt += "\nCONSTRAINTS:\n" + "\n".join([f"- {c}" for c in self.dialect.constraints])
-            system_prompt += f"\nGUARDRAIL: {self.dialect.hallucination_guard}\n"
-        else:
-            system_prompt = self._build_fallback_system_prompt()
+            if self.skill and self.dialect:
+                system_prompt = f"IDENTITY: {self.skill.name}\nINTENT: {self.skill.intent}\n\n"
+                system_prompt += "RESPONSIBILITIES:\n" + "\n".join([f"- {r}" for r in self.skill.responsibilities]) + "\n\n"
+                system_prompt += f"SYNTAX DIALECT ({self.dialect.model_family}):\n"
+                system_prompt += "YOU MUST RESPOND WITH VALID JSON matching the Orket Schema.\n"
+                system_prompt += "\nCONSTRAINTS:\n" + "\n".join([f"- {c}" for c in self.dialect.constraints])
+                system_prompt += f"\nGUARDRAIL: {self.dialect.hallucination_guard}\n"
+            else:
+                system_prompt = self._build_fallback_system_prompt()
 
-        response = await self.provider.complete(
-            [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": f"Context: {context}\nRequest: {message}"},
-            ]
-        )
-
-        try:
-            plan = self._parse_model_plan(str(response.content or ""))
-            compatibility_warning = self._compatibility_parse_warning()
-            if compatibility_warning:
-                log_event(
-                    "driver_json_parse_compatibility_fallback_used",
-                    {"mode": "compatibility"},
-                    workspace_root,
-                    role="DRIVER",
-                )
-            action = str(plan.get("action") or "").strip().lower()
-            if action in {"create_issue", "create_epic", "create_rock"} and not self._has_explicit_structural_intent(
-                request_text
-            ):
-                self._log_operator_metric("operator_structural_action_blocked", action=action)
-                log_event(
-                    "operator_structural_action_blocked",
-                    {"action": action, "request": request_text},
-                    workspace_root,
-                    role="DRIVER",
-                )
-                return (
-                    compatibility_warning + "I can do that, but please ask explicitly for a board change. "
-                    "For example: '/create epic <name> <department>' or 'create epic <name>'."
-                )
-            self._log_operator_metric("operator_request_total", route="model")
-            return compatibility_warning + await self.execute_plan(plan)
-        except json.JSONDecodeError as e:
-            self._log_operator_metric("operator_request_total", route="model_json_error")
-            return f"Driver failed to parse JSON: {str(e)}"
-        except (RuntimeError, ValueError, TypeError, KeyError, OSError) as e:
-            import traceback
-
-            log_event(
-                "driver_process_failed",
-                {"error": str(e), "traceback": traceback.format_exc()},
-                workspace_root,
-                role="DRIVER",
+            response = await self.provider.complete(
+                [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": f"Context: {context}\nRequest: {message}"},
+                ]
             )
-            return f"Driver failed to process request due to internal error: {str(e)}"
+
+            try:
+                plan = self._parse_model_plan(str(response.content or ""))
+                compatibility_warning = self._compatibility_parse_warning()
+                if compatibility_warning:
+                    log_event(
+                        "driver_json_parse_compatibility_fallback_used",
+                        {"mode": "compatibility"},
+                        workspace_root,
+                        role="DRIVER",
+                    )
+                action = str(plan.get("action") or "").strip().lower()
+                if action in {"create_issue", "create_epic", "create_rock"} and not self._has_explicit_structural_intent(
+                    request_text
+                ):
+                    self._log_operator_metric("operator_structural_action_blocked", action=action)
+                    log_event(
+                        "operator_structural_action_blocked",
+                        {"action": action, "request": request_text},
+                        workspace_root,
+                        role="DRIVER",
+                    )
+                    return (
+                        compatibility_warning + "I can do that, but please ask explicitly for a board change. "
+                        "For example: '/create epic <name> <department>' or 'create epic <name>'."
+                    )
+                self._log_operator_metric("operator_request_total", route="model")
+                return compatibility_warning + await self.execute_plan(plan)
+            except json.JSONDecodeError as e:
+                self._log_operator_metric("operator_request_total", route="model_json_error")
+                return f"Driver failed to parse JSON: {str(e)}"
+            except (RuntimeError, ValueError, TypeError, KeyError, OSError) as e:
+                import traceback
+
+                log_event(
+                    "driver_process_failed",
+                    {"error": str(e), "traceback": traceback.format_exc()},
+                    workspace_root,
+                    role="DRIVER",
+                )
+                return f"Driver failed to process request due to internal error: {str(e)}"
 
     async def execute_plan(self, plan: dict[str, Any]) -> str:
-        action = plan.get("action")
-        reasoning = str(plan.get("reasoning", "No reasoning provided."))
-        response_text = str(plan.get("response", "") or "").strip()
-        normalized_action = str(action or "").strip().lower()
-        workspace_root = self._operator_workspace_root()
+        with bind_logging(self.logging_context):
+            action = plan.get("action")
+            reasoning = str(plan.get("reasoning", "No reasoning provided."))
+            response_text = str(plan.get("response", "") or "").strip()
+            normalized_action = str(action or "").strip().lower()
+            workspace_root = self._operator_workspace_root()
 
-        if normalized_action and normalized_action not in self._supported_plan_actions():
-            return self._supported_action_error_text(normalized_action)
+            if normalized_action and normalized_action not in self._supported_plan_actions():
+                return self._supported_action_error_text(normalized_action)
 
-        if normalized_action == "assign_team":
-            team = plan.get("suggested_team")
-            dept = plan.get("suggested_department")
-            log_event(
-                "team_assignment_suggested",
-                {
-                    "team": team,
-                    "department": dept,
-                    "reason": reasoning,
-                    "mode": "suggestion_only",
-                },
-                workspace_root,
-                role="DRIVER",
-            )
-            team_label = str(team or "unknown_team")
-            dept_label = str(dept or "unknown_department")
-            return (
-                f"Resource Selection Suggestion: Consider Team '{team_label}' in '{dept_label}'. "
-                "No runtime team switch was applied.\n"
-                f"Reason: {reasoning}"
-            )
+            if normalized_action == "assign_team":
+                team = plan.get("suggested_team")
+                dept = plan.get("suggested_department")
+                log_event(
+                    "team_assignment_suggested",
+                    {
+                        "team": team,
+                        "department": dept,
+                        "reason": reasoning,
+                        "mode": "suggestion_only",
+                    },
+                    workspace_root,
+                    role="DRIVER",
+                )
+                team_label = str(team or "unknown_team")
+                dept_label = str(dept or "unknown_department")
+                return (
+                    f"Resource Selection Suggestion: Consider Team '{team_label}' in '{dept_label}'. "
+                    "No runtime team switch was applied.\n"
+                    f"Reason: {reasoning}"
+                )
 
-        if normalized_action == "turn_directive":
-            target = plan.get("target_seat")
-            directive = plan.get("directive")
-            return f"Tactical Directive issued to {target}: {directive}"
+            if normalized_action == "turn_directive":
+                target = plan.get("target_seat")
+                directive = plan.get("directive")
+                return f"Tactical Directive issued to {target}: {directive}"
 
-        if normalized_action in {"converse", "chat", "respond", "conversation"}:
+            if normalized_action in {"converse", "chat", "respond", "conversation"}:
+                if response_text:
+                    return response_text
+                return reasoning
+
+            if normalized_action in {"create_issue", "create_epic", "create_rock"}:
+                res = await self._execute_structural_change(plan)
+                if str(res).strip().lower().startswith("error:"):
+                    return res
+                return f"{res}\n\nStrategic Insight: {reasoning}"
+
             if response_text:
                 return response_text
-            return reasoning
-
-        if normalized_action in {"create_issue", "create_epic", "create_rock"}:
-            res = await self._execute_structural_change(plan)
-            if str(res).strip().lower().startswith("error:"):
-                return res
-            return f"{res}\n\nStrategic Insight: {reasoning}"
-
-        if response_text:
-            return response_text
-        return "I can chat normally or help with board actions. Tell me what you want to do."
+            return "I can chat normally or help with board actions. Tell me what you want to do."

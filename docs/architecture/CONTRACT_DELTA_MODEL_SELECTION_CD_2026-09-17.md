@@ -53,9 +53,15 @@
    installed package parity and actual llama.cpp behavior before accepting the change.
 
 ## Scope and limitations
-- Canonical default settings readers run on owned workers, preserving existing
-  runtime settings context and legacy migration. This does not eliminate their
-  process-global path/cache authority or make two default files an atomic snapshot.
+- Canonical default settings readers run on owned workers, preserving runtime
+  settings context and legacy migration. Settings ownership was outside the
+  original model-selection slice. The current authority is
+  `docs/specs/SETTINGS_INPUT_OWNERSHIP.md`: persistent data and default paths have
+  no implicit cache; explicit process-wide path overrides and context-bound
+  snapshots remain. Model preparation does not make two default files atomic.
+- Subsequent score-root capture and Windows drive-relative admission are specified
+  in `docs/architecture/CONTRACT_DELTA_MODEL_SCORE_ROOT_D_2026-09-28.md`.
+  The original checkpoint below does not establish that later migration's proof.
 - Nonfinite score values are unobserved, not `score_ok`. Invalid report rows yield
   `partial` plus a count; valid rows and inline scores remain available.
 - A configured report is prepared once even if a later explicit override makes its

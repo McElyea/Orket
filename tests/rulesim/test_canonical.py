@@ -5,19 +5,23 @@ import pytest
 from orket.rulesim.canonical import StateSerializationError, canonical_json, hash_state
 
 
+@pytest.mark.contract
 def test_canonical_json_sorts_keys_and_compacts() -> None:
     assert canonical_json({"b": 1, "a": 2}) == '{"a":2,"b":1}'
 
 
+@pytest.mark.contract
 def test_canonical_json_normalizes_floats() -> None:
     assert canonical_json({"value": 1.23456789}) == '{"value":1.23457}'
 
 
+@pytest.mark.unit
 def test_hash_state_is_stable() -> None:
     state = {"k": [1, 2, 3], "f": 1.23456789}
     assert hash_state(state) == hash_state(state)
 
 
+@pytest.mark.contract
 def test_non_serializable_error_has_path() -> None:
     with pytest.raises(StateSerializationError) as exc:
         canonical_json({"x": object()})

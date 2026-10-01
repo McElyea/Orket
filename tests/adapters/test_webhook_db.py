@@ -11,18 +11,21 @@ def webhook_db(tmp_path):
     return WebhookDatabase(db_path=tmp_path / "webhook_test.db")
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_get_pr_cycle_count_defaults_zero(webhook_db):
     count = await webhook_db.get_pr_cycle_count("org/repo", 1)
     assert count == 0
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_increment_pr_cycle_starts_at_one(webhook_db):
     count = await webhook_db.increment_pr_cycle("org/repo", 1)
     assert count == 1
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_try_record_webhook_event_returns_false_for_duplicate_delivery(webhook_db):
     """Layer: integration. Verifies webhook delivery ids are persisted as idempotency keys."""
@@ -41,6 +44,7 @@ async def test_try_record_webhook_event_returns_false_for_duplicate_delivery(web
     assert second is False
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_increment_pr_cycle_accumulates(webhook_db):
     await webhook_db.increment_pr_cycle("org/repo", 1)
@@ -48,6 +52,7 @@ async def test_increment_pr_cycle_accumulates(webhook_db):
     assert count == 2
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_increment_pr_cycle_isolated_per_pr(webhook_db):
     await webhook_db.increment_pr_cycle("org/repo", 1)
@@ -60,6 +65,7 @@ async def test_increment_pr_cycle_isolated_per_pr(webhook_db):
     assert count2 == 1
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_add_failure_reason_records_cycle_number(webhook_db):
     await webhook_db.increment_pr_cycle("org/repo", 7)
@@ -73,6 +79,7 @@ async def test_add_failure_reason_records_cycle_number(webhook_db):
     assert reasons[0]["reason"] == "first reason"
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_get_failure_reasons_ordered_by_cycle(webhook_db):
     await webhook_db.increment_pr_cycle("org/repo", 7)
@@ -86,6 +93,7 @@ async def test_get_failure_reasons_ordered_by_cycle(webhook_db):
     assert [r["reason"] for r in reasons] == ["cycle1", "cycle2"]
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_close_pr_cycle_updates_status(webhook_db):
     await webhook_db.increment_pr_cycle("org/repo", 9)
@@ -101,6 +109,7 @@ async def test_close_pr_cycle_updates_status(webhook_db):
     assert row["status"] == "rejected"
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_get_active_prs_returns_only_active(webhook_db):
     await webhook_db.increment_pr_cycle("org/repo", 1)
@@ -113,6 +122,7 @@ async def test_get_active_prs_returns_only_active(webhook_db):
     assert active[0]["pr_number"] == 1
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_get_bug_fix_phase_missing_returns_none(webhook_db):
     phase = await webhook_db.get_bug_fix_phase("missing")
@@ -149,6 +159,7 @@ async def test_save_bug_fix_phase_overwrites_existing(webhook_db):
     assert loaded.status == BugFixPhaseStatus.EXTENDED
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_get_active_prs_includes_cycle_count(webhook_db):
     await webhook_db.increment_pr_cycle("org/repo", 5)
@@ -160,6 +171,7 @@ async def test_get_active_prs_includes_cycle_count(webhook_db):
     assert active[0]["cycle_count"] == 2
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_increment_then_failure_reason_for_multiple_prs(webhook_db):
     await webhook_db.increment_pr_cycle("org/repo", 10)
@@ -175,6 +187,7 @@ async def test_increment_then_failure_reason_for_multiple_prs(webhook_db):
     assert reasons_11[0]["reason"] == "reason-b"
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_close_pr_cycle_default_status_closed(webhook_db):
     await webhook_db.increment_pr_cycle("org/repo", 15)

@@ -2,9 +2,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
 
 def test_monorepo_packages_ci_calver_step_names_dry_run_truthfully() -> None:
-    """Layer: contract. Verifies CalVer package CI is named as validation while it keeps dry-run behavior."""
+    """Layer: unit. Verifies CalVer package CI is named as validation while it keeps dry-run behavior."""
     workflow_text = Path(".gitea/workflows/monorepo-packages-ci.yml").read_text(encoding="utf-8")
 
     assert "- name: Validate CalVer preview" in workflow_text

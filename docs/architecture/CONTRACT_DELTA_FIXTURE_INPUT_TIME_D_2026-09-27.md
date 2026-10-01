@@ -28,8 +28,10 @@
   publication followed by interruption propagates cancellation; a native publication
   failure takes precedence over interruption. Uninterrupted successful publication
   still raises the original security refusal. No required event becomes a supporting
-  diagnostic note. Captured-root lifetime publications retain their existing owner
-  loop and outcome precedence; no writer/lifecycle redesign is introduced.
+  diagnostic note. This input slice originally retained the lifetime owner loop.
+  The later shared-finalizer migration removes that duplicated loop while keeping
+  caller outcome policy and native failure identity; see
+  `CONTRACT_DELTA_REQUIRED_FINALIZERS_D_2026-09-28.md`.
 - Scenario publication remains replacement after settled execution, without a
   concurrent-edit merge, transaction or stronger completion authority. Native
   append/child effects may remain after failure or interruption.

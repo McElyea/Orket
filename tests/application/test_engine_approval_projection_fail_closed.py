@@ -15,23 +15,23 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.asyncio
-async def test_engine_get_approval_rejects_unsupported_packet1_status() -> None:
+async def test_engine_get_approval_rejects_unsupported_packet1_status(tmp_path) -> None:
     row = _tool_approval_row()
     row["status"] = "approved_with_edits"
-    engine = _make_engine(rows=[row])
+    engine = await _make_engine(tmp_path, rows=[row])
 
     with pytest.raises(RuntimeError, match="unsupported Packet 1 status"):
         await engine.get_approval("apr-1")
 
 
 @pytest.mark.asyncio
-async def test_engine_get_approval_rejects_target_projection_drift() -> None:
+async def test_engine_get_approval_rejects_target_projection_drift(tmp_path) -> None:
     row = _tool_approval_row()
     row["payload_json"] = {
         **dict(row["payload_json"]),
         "control_plane_target_ref": "turn-tool-run:sess-1:ISS-1:coder:9999",
     }
-    engine = _make_engine(rows=[row])
+    engine = await _make_engine(tmp_path, rows=[row])
     await _seed_tool_approval_reservation(engine)
 
     with pytest.raises(RuntimeError, match="target projection drift"):
@@ -39,10 +39,10 @@ async def test_engine_get_approval_rejects_target_projection_drift() -> None:
 
 
 @pytest.mark.asyncio
-async def test_engine_get_approval_rejects_conflicting_operator_action_projection() -> None:
+async def test_engine_get_approval_rejects_conflicting_operator_action_projection(tmp_path) -> None:
     row = _tool_approval_row()
     row["status"] = "approved"
-    engine = _make_engine(rows=[row])
+    engine = await _make_engine(tmp_path, rows=[row])
     await engine.control_plane_publication.publish_operator_action(
         action_id="approval-op-1",
         actor_ref="api_key_fingerprint:sha256:test",

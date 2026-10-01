@@ -59,7 +59,7 @@ class NoEffectProtocol(AsyncProtocolRunLedgerRepository):
 
 async def test_success_shaped_return_without_effect_retains_intent_and_refuses_success(tmp_path):
     """Layer: integration. Readback detects a controlled adapter's missing physical effect."""
-    repo = AsyncDualModeLedgerRepository(sqlite_repo=AsyncRunLedgerRepository(tmp_path / "runtime.db"),
+    repo = AsyncDualModeLedgerRepository(workspace_root=tmp_path, sqlite_repo=AsyncRunLedgerRepository(tmp_path / "runtime.db"),
                                          protocol_repo=NoEffectProtocol(tmp_path / "protocol"))
     with pytest.raises(RuntimeError, match="EFFECT_UNVERIFIED:protocol"):
         await repo.start_run(**start_values())
@@ -101,7 +101,7 @@ async def test_protocol_primary_failure_is_not_reported_as_completed_lifecycle(t
         async def start_run(self, **kwargs):
             raise OSError("provider storage unavailable")
 
-    repo = AsyncDualModeLedgerRepository(sqlite_repo=AsyncRunLedgerRepository(tmp_path / "runtime.db"),
+    repo = AsyncDualModeLedgerRepository(workspace_root=tmp_path, sqlite_repo=AsyncRunLedgerRepository(tmp_path / "runtime.db"),
         protocol_repo=UnavailableProtocol(tmp_path / "protocol", timestamp_factory=ProtocolLedgerClock().utc_now_iso),
         primary_mode="protocol")
     with pytest.raises(RuntimeError, match="PRIMARY_UNAVAILABLE"):
@@ -112,7 +112,7 @@ async def test_protocol_primary_failure_is_not_reported_as_completed_lifecycle(t
 async def test_relative_backend_paths_refuse_ambient_working_directory_binding(tmp_path):
     """Layer: integration. Admission requires explicit absolute storage identities."""
     with pytest.raises(RuntimeError, match="absolute_backend_paths"):
-        AsyncDualModeLedgerRepository(sqlite_repo=AsyncRunLedgerRepository("runtime.db"),
+        AsyncDualModeLedgerRepository(workspace_root=tmp_path, sqlite_repo=AsyncRunLedgerRepository("runtime.db"),
                                        protocol_repo=AsyncProtocolRunLedgerRepository(tmp_path / "protocol"))
 
 

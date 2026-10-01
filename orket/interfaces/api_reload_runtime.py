@@ -25,11 +25,17 @@ class _ReloadServer(uvicorn.Server):
 
     def run(self, sockets: list[socket] | None = None) -> None:
         # This server runs only in the dedicated reload worker. Keep cooperative
-        # handlers through native process finalization, after Uvicorn restores
-        # the handlers that preceded its serve scope.
+        # handlers through the serving loop, including Uvicorn restoration.
         for sig in HANDLED_SIGNALS:
             signal.signal(sig, self.handle_exit)
-        super().run(sockets=sockets)
+        try:
+            super().run(sockets=sockets)
+        finally:
+            # CPython resets callable handlers to OS defaults during interpreter
+            # teardown. Native ignore survives that teardown; the parent still
+            # joins this dedicated worker and rejects every nonzero finalizer exit.
+            for sig in HANDLED_SIGNALS:
+                signal.signal(sig, signal.SIG_IGN)
 
     def handle_exit(self, sig: int, frame: FrameType | None) -> None:
         # A console signal may coincide with a parent's IPC stop. Both request

@@ -6,6 +6,7 @@ from types import MethodType, SimpleNamespace
 import pytest
 
 from orket.driver import OrketDriver
+from tests.helpers.logging_fixture_owner import prepared_fixture_owner
 
 
 @pytest.mark.contract
@@ -22,9 +23,9 @@ def test_fallback_prompt_advertises_only_canonical_actions():
 
 @pytest.mark.contract
 @pytest.mark.asyncio
-async def test_execute_plan_handles_all_advertised_actions(monkeypatch):
+async def test_execute_plan_handles_all_advertised_actions(tmp_path, monkeypatch):
     """Layer: contract. Verifies every advertised action executes without unsupported-action fallback."""
-    driver = OrketDriver.__new__(OrketDriver)
+    driver = await prepared_fixture_owner(OrketDriver, tmp_path)
 
     async def _fake_structural_change(_self, _plan):
         return "structural change applied"
@@ -53,7 +54,7 @@ async def test_execute_plan_handles_all_advertised_actions(monkeypatch):
 @pytest.mark.contract
 async def test_process_request_returns_stable_unsupported_action_error(tmp_path):
     """Verifies the prompt/executor guard with controlled model-selected actions."""
-    driver = OrketDriver.__new__(OrketDriver)
+    driver = await prepared_fixture_owner(OrketDriver, tmp_path)
     driver.project_root, driver.model_root = tmp_path, tmp_path / "model"
     driver._environment = {}
     await asyncio.to_thread(driver.model_root.mkdir)
@@ -77,7 +78,7 @@ async def test_process_request_returns_stable_unsupported_action_error(tmp_path)
 @pytest.mark.contract
 async def test_process_request_treats_adopt_issue_as_unsupported_action(tmp_path):
     """Verifies the contract refuses a controlled `adopt_issue` model response."""
-    driver = OrketDriver.__new__(OrketDriver)
+    driver = await prepared_fixture_owner(OrketDriver, tmp_path)
     driver.project_root, driver.model_root = tmp_path, tmp_path / "model"
     driver._environment = {}
     await asyncio.to_thread(driver.model_root.mkdir)

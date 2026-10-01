@@ -14,6 +14,7 @@ import pytest
 
 from orket.adapters.storage.async_control_plane_record_repository import AsyncControlPlaneRecordRepository
 from orket.adapters.storage.async_pending_gate_repository import AsyncPendingGateRepository
+from orket.application.services import orchestrator_runtime_policy as orchestrator_policy
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
 from orket.application.services.orchestrator_turn_success_handler import OrchestratorTurnSuccessHandler
 from orket.application.services.runtime_input_service import RuntimeInputService
@@ -323,7 +324,7 @@ async def test_public_guard_success_uses_selected_clock_for_request_and_hold(
             issue_control_plane=orchestrator.issue_control_plane,
             request_issue_transition=orchestrator._request_issue_transition,
             trigger_sandbox=orchestrator._trigger_sandbox,
-            is_sandbox_disabled=orchestrator._is_sandbox_disabled,
+            is_sandbox_disabled=lambda: orchestrator_policy.select_bool_flag('ORKET_DISABLE_SANDBOX', 'disable_sandbox', process_rules=orchestrator_policy.organization_process_rules(orchestrator.org)),
             save_checkpoint=orchestrator._save_checkpoint,
             create_pending_gate_request=orchestrator._create_pending_gate_request,
             validate_guard_rejection_payload=orchestrator._validate_guard_rejection_payload,

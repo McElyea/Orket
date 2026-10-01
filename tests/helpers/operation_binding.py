@@ -17,10 +17,12 @@ from orket.application.services.turn_tool_control_plane_resource_lifecycle impor
 )
 from orket.application.services.turn_tool_control_plane_service import build_turn_tool_control_plane_service
 from orket.application.workflows.turn_executor import TurnExecutor
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.contracts.protocol_hashing import build_step_id, derive_operation_id
 from orket.core.domain import ClosureBasisClassification, ResultClass, RunState
 from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.core.domain.state_machine import StateMachine
+from orket.logging import bind_logging, prepare_logging
 from orket.schema import CardStatus, IssueConfig, RoleConfig
 from tests.helpers.turn_artifacts import (
     artifact_destination,
@@ -328,14 +330,12 @@ def mutate_record(record: dict[str, Any], mutation: str) -> dict[str, Any]:
 
 
 async def seed_terminal(case, *, success: bool) -> SimpleNamespace:  # type: ignore[no-untyped-def]
-    result = await case.executor.execute_turn(
-        case.issue,
-        case.role,
-        case.model,
-        case.toolbox,
-        context(),
-        system_prompt="SYSTEM",
-    )
+    with bind_logging(await prepare_logging(LoggingInputs(case.workspace))):
+        result = await case.executor.execute_turn(
+            case.issue, case.role, case.model,
+            case.toolbox, context(),
+            system_prompt="SYSTEM",
+        )
     state = await control_plane_state(case)
     stored = await operation_record(case)
     observed = await immutable_physical(case)
@@ -390,10 +390,11 @@ async def dispatch(case, proposed: dict[str, Any], *, resume: bool = False):  # 
         content="",
         tool_calls=[ToolCall(tool=proposed["tool"], args=dict(proposed["args"]))],
     )
-    return await execute_executor_dispatch_fixture(
-        case.executor,
-        turn=turn,
-        toolbox=case.toolbox,
-        context=context(resume=resume),
-        issue=case.issue,
-    )
+    with bind_logging(await prepare_logging(LoggingInputs(case.workspace))):
+        return await execute_executor_dispatch_fixture(
+            case.executor,
+            turn=turn,
+            toolbox=case.toolbox,
+            context=context(resume=resume),
+            issue=case.issue,
+        )

@@ -16,6 +16,7 @@ from orket.application.services.turn_tool_control_plane_service import (
 )
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.core.contracts import StepRecord
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain import (
     CapabilityClass,
     ClosureBasisClassification,
@@ -30,6 +31,7 @@ from orket.core.domain import (
 )
 from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.core.domain.state_machine import StateMachine
+from orket.logging import bind_logging, prepare_logging
 from orket.schema import CardStatus, IssueConfig, RoleConfig
 from tests.helpers.turn_artifacts import artifact_test_utc_now, write_checkpoint_fixture
 from tests.helpers.turn_control_plane_clock import deterministic_turn_clock as deterministic_turn_clock
@@ -120,20 +122,18 @@ async def _recovery_decision(control_plane, attempt_id: str):
 @pytest.mark.asyncio
 async def test_turn_executor_skill_contract_failure_publishes_terminal_recovery_decision(tmp_path: Path) -> None:
     control_plane, executor = _executor(tmp_path)
-
-    result = await executor.execute_turn(
-        _issue(),
-        _role(),
-        _Model(),
-        _OkToolbox(),
-        _context(skill_contract_enforced=True, protocol_governed_enabled=False),
-    )
-
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(
+            _issue(),
+            _role(),
+            _Model(),
+            _OkToolbox(),
+            _context(skill_contract_enforced=True, protocol_governed_enabled=False),
+        )
     run = await control_plane.execution_repository.get_run_record(run_id=_run_id())
     attempt = await control_plane.execution_repository.get_attempt_record(attempt_id=_attempt_id())
     truth = await control_plane.publication.repository.get_final_truth(run_id=_run_id())
     decision = await _recovery_decision(control_plane, _attempt_id())
-
     assert result.success is False
     assert run is not None
     assert attempt is not None
@@ -154,8 +154,8 @@ async def test_turn_executor_skill_contract_failure_publishes_terminal_recovery_
 async def test_turn_executor_post_effect_tool_failure_publishes_terminal_recovery_decision(tmp_path: Path) -> None:
     control_plane, executor = _executor(tmp_path)
     toolbox = _FailToolbox()
-
-    result = await executor.execute_turn(_issue(), _role(), _Model(), toolbox, _context())
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), _role(), _Model(), toolbox, _context())
 
     run = await control_plane.execution_repository.get_run_record(run_id=_run_id())
     attempt = await control_plane.execution_repository.get_attempt_record(attempt_id=_attempt_id())
@@ -219,8 +219,8 @@ async def test_turn_executor_resume_mode_interrupts_effect_boundary_uncertain_at
             closure_classification="step_completed",
         )
     )
-
-    result = await executor.execute_turn(_issue(), _role(), _Model(), _OkToolbox(), _context(resume_mode=True))
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), _role(), _Model(), _OkToolbox(), _context(resume_mode=True))
 
     run = await control_plane.execution_repository.get_run_record(run_id=_run_id())
     attempt = await control_plane.execution_repository.get_attempt_record(attempt_id=_attempt_id())
@@ -282,8 +282,8 @@ async def test_turn_control_plane_rejects_regular_begin_after_reconciliation_clo
         operation_id="op-post-effect",
         replayed=False,
     )
-    failed = await executor.execute_turn(_issue(), _role(), _Model(), _OkToolbox(), _context(resume_mode=True))
-
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        failed = await executor.execute_turn(_issue(), _role(), _Model(), _OkToolbox(), _context(resume_mode=True))
     assert failed.success is False
     with pytest.raises(TurnToolControlPlaneError, match="already closed with blocked via reconciliation_closed"):
         await control_plane.begin_execution(
@@ -302,7 +302,6 @@ async def test_turn_executor_resume_mode_fails_closed_after_reconciliation_close
     class _CountingModel:
         def __init__(self) -> None:
             self.calls = 0
-
         async def complete(self, _messages):
             self.calls += 1
             return {
@@ -311,7 +310,6 @@ async def test_turn_executor_resume_mode_fails_closed_after_reconciliation_close
                 ),
                 "raw": {"total_tokens": 1},
             }
-
     turn = ExecutionTurn(timestamp=None,
         role="developer",
         issue_id="ISSUE-1",
@@ -336,10 +334,12 @@ async def test_turn_executor_resume_mode_fails_closed_after_reconciliation_close
         replayed=False,
     )
 
-    first = await executor.execute_turn(_issue(), _role(), _Model(), _OkToolbox(), _context(resume_mode=True))
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        first = await executor.execute_turn(_issue(), _role(), _Model(), _OkToolbox(), _context(resume_mode=True))
     model = _CountingModel()
     toolbox = _OkToolbox()
-    second = await executor.execute_turn(_issue(), _role(), model, toolbox, _context(resume_mode=True))
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        second = await executor.execute_turn(_issue(), _role(), model, toolbox, _context(resume_mode=True))
 
     assert first.success is False
     assert second.success is False
@@ -352,7 +352,6 @@ async def test_turn_executor_resume_mode_fails_closed_after_reconciliation_close
 @pytest.mark.asyncio
 async def test_turn_executor_recovery_pending_run_fails_before_model_and_checkpoint_rewrite(tmp_path: Path) -> None:
     control_plane, executor = _executor(tmp_path)
-
     class _CountingModel:
         def __init__(self) -> None:
             self.calls = 0
@@ -388,7 +387,8 @@ async def test_turn_executor_recovery_pending_run_fails_before_model_and_checkpo
 
     model = _CountingModel()
     toolbox = _OkToolbox()
-    result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context(resume_mode=False))
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context(resume_mode=False))
 
     snapshot_files_after = sorted(turn_dir.glob("control_plane_checkpoint_snapshot_*.json"))
     assert result.success is False

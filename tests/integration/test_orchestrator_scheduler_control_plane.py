@@ -12,9 +12,12 @@ from orket.application.services.orchestrator_issue_control_plane_support import 
     lease_id_for_run,
     scheduler_run_id_for_transition,
 )
+from orket.application.services.orchestrator_team_replan import propagate_dependency_blocks
 from orket.application.services.runtime_policy_inputs import ArchitecturePolicySnapshot
 from orket.application.workflows.orchestrator import Orchestrator
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain import AttemptState, LeaseStatus, ReservationKind, ReservationStatus, RunState
+from orket.logging import bind_logging, log_event, prepare_logging
 from orket.schema import CardStatus, EnvironmentConfig, IssueConfig, SeatConfig, TeamConfig
 from tests.helpers.model_selection import prepared_model_selection
 from tests.helpers.turn_artifacts import artifact_test_utc_now
@@ -120,38 +123,17 @@ async def _assert_scheduler_truth(
 
 @pytest.mark.asyncio
 async def test_dependency_block_propagation_publishes_scheduler_namespace_truth(tmp_path: Path) -> None:
-    cards = AsyncCardRepository(tmp_path / "cards.sqlite3")
-    parent = IssueConfig(
-        id="ARC-1",
-        summary="Architecture blocked",
-        seat="architect",
-        status=CardStatus.BLOCKED,
-        build_id="build-1",
-        session_id="run-dependency-block",
-    )
-    child = IssueConfig(
-        id="COD-1",
-        summary="Implementation blocked by dependency",
-        seat="developer",
-        status=CardStatus.READY,
-        build_id="build-1",
-        session_id="run-dependency-block",
-        depends_on=["ARC-1"],
-    )
-    await cards.save(parent.model_dump())
-    await cards.save(child.model_dump())
-    orch = _build_orchestrator(tmp_path, cards)
-
-    backlog = [
-        IssueConfig(
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        cards = AsyncCardRepository(tmp_path / "cards.sqlite3")
+        parent = IssueConfig(
             id="ARC-1",
             summary="Architecture blocked",
             seat="architect",
             status=CardStatus.BLOCKED,
             build_id="build-1",
             session_id="run-dependency-block",
-        ),
-        IssueConfig(
+        )
+        child = IssueConfig(
             id="COD-1",
             summary="Implementation blocked by dependency",
             seat="developer",
@@ -159,29 +141,51 @@ async def test_dependency_block_propagation_publishes_scheduler_namespace_truth(
             build_id="build-1",
             session_id="run-dependency-block",
             depends_on=["ARC-1"],
-        ),
-    ]
-    propagated = await orch._propagate_dependency_blocks(backlog, "run-dependency-block")
+        )
+        await cards.save(parent.model_dump())
+        await cards.save(child.model_dump())
+        orch = _build_orchestrator(tmp_path, cards)
 
-    assert propagated == 1
-    updated_child = await cards.get_by_id("COD-1")
-    assert updated_child is not None
-    assert updated_child.status == CardStatus.BLOCKED
-    run_id = scheduler_run_id_for_transition(
-        session_id="run-dependency-block",
-        issue_id="COD-1",
-        current_status=CardStatus.READY,
-        target_status=CardStatus.BLOCKED,
-        reason="dependency_blocked",
-        metadata={"run_id": "run-dependency-block", "blocked_by": ["ARC-1"], "wait_reason": "dependency"},
-    )
-    await _assert_scheduler_truth(
-        orch=orch,
-        run_id=run_id,
-        expected_issue_id="COD-1",
-        expected_result="blocked",
-        expected_run_state=RunState.FAILED_TERMINAL,
-    )
+        backlog = [
+            IssueConfig(
+                id="ARC-1",
+                summary="Architecture blocked",
+                seat="architect",
+                status=CardStatus.BLOCKED,
+                build_id="build-1",
+                session_id="run-dependency-block",
+            ),
+            IssueConfig(
+                id="COD-1",
+                summary="Implementation blocked by dependency",
+                seat="developer",
+                status=CardStatus.READY,
+                build_id="build-1",
+                session_id="run-dependency-block",
+                depends_on=["ARC-1"],
+            ),
+        ]
+        propagated = await propagate_dependency_blocks(backlog, 'run-dependency-block', request_transition=lambda **fields: orch._request_issue_transition(**fields), emit=lambda event, fields: log_event(event, fields, orch.workspace))
+
+        assert propagated == 1
+        updated_child = await cards.get_by_id("COD-1")
+        assert updated_child is not None
+        assert updated_child.status == CardStatus.BLOCKED
+        run_id = scheduler_run_id_for_transition(
+            session_id="run-dependency-block",
+            issue_id="COD-1",
+            current_status=CardStatus.READY,
+            target_status=CardStatus.BLOCKED,
+            reason="dependency_blocked",
+            metadata={"run_id": "run-dependency-block", "blocked_by": ["ARC-1"], "wait_reason": "dependency"},
+        )
+        await _assert_scheduler_truth(
+            orch=orch,
+            run_id=run_id,
+            expected_issue_id="COD-1",
+            expected_result="blocked",
+            expected_run_state=RunState.FAILED_TERMINAL,
+        )
 
 
 @pytest.mark.asyncio
@@ -189,121 +193,123 @@ async def test_pre_dispatch_runtime_guard_retry_publishes_scheduler_effect_truth
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    cards = AsyncCardRepository(tmp_path / "cards.sqlite3")
-    issue = IssueConfig(
-        id="REV-1",
-        summary="Review implementation",
-        seat="code_reviewer",
-        status=CardStatus.CODE_REVIEW,
-        retry_count=0,
-        max_retries=3,
-        build_id="build-1",
-        session_id="run-guard",
-    )
-    await cards.save(issue.model_dump())
-    orch = _build_orchestrator(tmp_path, cards)
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        cards = AsyncCardRepository(tmp_path / "cards.sqlite3")
+        issue = IssueConfig(
+            id="REV-1",
+            summary="Review implementation",
+            seat="code_reviewer",
+            status=CardStatus.CODE_REVIEW,
+            retry_count=0,
+            max_retries=3,
+            build_id="build-1",
+            session_id="run-guard",
+        )
+        await cards.save(issue.model_dump())
+        orch = _build_orchestrator(tmp_path, cards)
 
-    class _RuntimeVerifier:
-        def __init__(self, workspace_root, organization=None):
-            self.workspace_root = workspace_root
+        class _RuntimeVerifier:
+            def __init__(self, workspace_root, organization=None, *, project_surface_profile=None, architecture_pattern=None, artifact_contract=None, issue_params=None):
+                self.workspace_root = workspace_root
 
-        async def verify(self):
-            return SimpleNamespace(
-                ok=False,
-                checked_files=["agent_output/main.py"],
-                errors=["SyntaxError: invalid syntax"],
-                command_results=[],
-                failure_breakdown={},
-            )
+            async def verify(self):
+                return SimpleNamespace(
+                    ok=False,
+                    checked_files=["agent_output/main.py"],
+                    errors=["SyntaxError: invalid syntax"],
+                    command_results=[],
+                    failure_breakdown={},
+                )
 
-    class _Executor:
-        def __init__(self) -> None:
-            self.calls = 0
+        class _Executor:
+            def __init__(self) -> None:
+                self.calls = 0
 
-        async def execute_turn(self, *args, **kwargs):
-            self.calls += 1
-            raise AssertionError("executor should not be reached when runtime verification fails pre-dispatch")
+            async def execute_turn(self, *args, **kwargs):
+                self.calls += 1
+                raise AssertionError("executor should not be reached when runtime verification fails pre-dispatch")
 
-    monkeypatch.setattr("orket.application.workflows.orchestrator.RuntimeVerifier", _RuntimeVerifier)
-    executor = _Executor()
+        monkeypatch.setattr("orket.application.services.orchestrator_support_services.RuntimeVerifier", _RuntimeVerifier)
+        executor = _Executor()
 
-    await orch._execute_issue_turn(
-        issue_data=SimpleNamespace(model_dump=lambda: issue.model_dump()),
-        epic=SimpleNamespace(parent_id=None, id="EPIC-1", name="Epic 1"),
-        team=TeamConfig(name="core", seats={"code_reviewer": SeatConfig(name="code_reviewer", roles=["code_reviewer"])}),
-        env=EnvironmentConfig(name="dev", model="test-model"),
-        run_id="run-guard",
-        active_build="build-1",
-        model_selection=prepared_model_selection(SimpleNamespace(
-            select_model=lambda _inputs: "test-model",
-            select_dialect=lambda _selected_model: "json",
-        )),
-        executor=executor,
-        toolbox=SimpleNamespace(),
-    )
+        await orch._execute_issue_turn(
+            issue_data=SimpleNamespace(model_dump=lambda: issue.model_dump()),
+            epic=SimpleNamespace(parent_id=None, id="EPIC-1", name="Epic 1"),
+            team=TeamConfig(name="core", seats={"code_reviewer": SeatConfig(name="code_reviewer", roles=["code_reviewer"])}),
+            env=EnvironmentConfig(name="dev", model="test-model"),
+            run_id="run-guard",
+            active_build="build-1",
+            model_selection=prepared_model_selection(SimpleNamespace(
+                select_model=lambda _inputs: "test-model",
+                select_dialect=lambda _selected_model: "json",
+            )),
+            executor=executor,
+            toolbox=SimpleNamespace(),
+        )
 
-    assert executor.calls == 0
-    updated_issue = await cards.get_by_id("REV-1")
-    assert updated_issue is not None
-    assert updated_issue.status == CardStatus.READY
-    run_id = scheduler_run_id_for_transition(
-        session_id="run-guard",
-        issue_id="REV-1",
-        current_status=CardStatus.CODE_REVIEW,
-        target_status=CardStatus.READY,
-        reason="runtime_guard_retry_scheduled",
-        metadata={"run_id": "run-guard", "retry_count": 1},
-    )
-    await _assert_scheduler_truth(
-        orch=orch,
-        run_id=run_id,
-        expected_issue_id="REV-1",
-        expected_result="failed",
-        expected_run_state=RunState.FAILED_TERMINAL,
-    )
+        assert executor.calls == 0
+        updated_issue = await cards.get_by_id("REV-1")
+        assert updated_issue is not None
+        assert updated_issue.status == CardStatus.READY
+        run_id = scheduler_run_id_for_transition(
+            session_id="run-guard",
+            issue_id="REV-1",
+            current_status=CardStatus.CODE_REVIEW,
+            target_status=CardStatus.READY,
+            reason="runtime_guard_retry_scheduled",
+            metadata={"run_id": "run-guard", "retry_count": 1},
+        )
+        await _assert_scheduler_truth(
+            orch=orch,
+            run_id=run_id,
+            expected_issue_id="REV-1",
+            expected_result="failed",
+            expected_run_state=RunState.FAILED_TERMINAL,
+        )
 
 
 @pytest.mark.asyncio
 async def test_team_replan_creation_publishes_child_workload_composition_truth(tmp_path: Path) -> None:
-    cards = AsyncCardRepository(tmp_path / "cards.sqlite3")
-    trigger = IssueConfig(
-        id="REQ-1",
-        summary="Requirements changed",
-        seat="requirements_analyst",
-        status=CardStatus.READY,
-        build_id="build-1",
-        session_id="run-abc1",
-        params={"replan_requested": True},
-    )
-    await cards.save(trigger.model_dump())
-    orch = _build_orchestrator(tmp_path, cards)
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        cards = AsyncCardRepository(tmp_path / "cards.sqlite3")
+        trigger = IssueConfig(
+            id="REQ-1",
+            summary="Requirements changed",
+            seat="requirements_analyst",
+            status=CardStatus.READY,
+            build_id="build-1",
+            session_id="run-abc1",
+            params={"replan_requested": True},
+        )
+        await cards.save(trigger.model_dump())
+        orch = _build_orchestrator(tmp_path, cards)
 
-    backlog = [trigger]
-    team = TeamConfig(name="core", seats={"architect": SeatConfig(name="architect", roles=["architect"])})
-    scheduled = await orch._maybe_schedule_team_replan(backlog, "run-abc1", "build-1", team)
+        backlog = [trigger]
+        team = TeamConfig(name="core", seats={"architect": SeatConfig(name="architect", roles=["architect"])})
+        scheduled = await orch.team_replan.maybe_schedule(backlog, 'run-abc1', 'build-1', team, request_transition=lambda **fields: orch._request_issue_transition(**fields), cards=lambda: orch.async_cards, select_team=lambda current_epic, current_team: orch._resolve_small_project_team_policy(current_epic, current_team), child_publication=lambda: getattr(orch, 'scheduler_control_plane', None), emit=lambda event, fields: log_event(event, fields, orch.workspace))
 
-    assert scheduled is True
-    created_issue = await cards.get_by_id("REPLAN-RUN-AB-1")
-    assert created_issue is not None
-    assert created_issue.status == CardStatus.READY
-    run_id = child_workload_run_id_for_issue_creation(
-        session_id="run-abc1",
-        child_issue_id="REPLAN-RUN-AB-1",
-        relationship_class="team_replan",
-        metadata={
-            "active_build": "build-1",
-            "seat_name": "coder",
-            "trigger_issue_ids": ["REQ-1"],
-            "replan_count": 1,
-        },
-    )
-    await _assert_scheduler_truth(
-        orch=orch,
-        run_id=run_id,
-        expected_issue_id="REPLAN-RUN-AB-1",
-        expected_result="success",
-        expected_run_state=RunState.COMPLETED,
-    )
-    steps = await orch.control_plane_execution_repository.list_step_records(attempt_id=f"{run_id}:attempt:0001")
-    assert steps[0].step_kind == "create_child_issue"
-    assert "issue:REQ-1" in steps[0].resources_touched
+        assert scheduled is True
+        created_issue = await cards.get_by_id("REPLAN-RUN-AB-1")
+        assert created_issue is not None
+        assert created_issue.status == CardStatus.READY
+        run_id = child_workload_run_id_for_issue_creation(
+            session_id="run-abc1",
+            child_issue_id="REPLAN-RUN-AB-1",
+            relationship_class="team_replan",
+            metadata={
+                "active_build": "build-1",
+                "seat_name": "coder",
+                "trigger_issue_ids": ["REQ-1"],
+                "replan_count": 1,
+            },
+        )
+        await _assert_scheduler_truth(
+            orch=orch,
+            run_id=run_id,
+            expected_issue_id="REPLAN-RUN-AB-1",
+            expected_result="success",
+            expected_run_state=RunState.COMPLETED,
+        )
+        steps = await orch.control_plane_execution_repository.list_step_records(attempt_id=f"{run_id}:attempt:0001")
+        assert steps[0].step_kind == "create_child_issue"
+        assert "issue:REQ-1" in steps[0].resources_touched

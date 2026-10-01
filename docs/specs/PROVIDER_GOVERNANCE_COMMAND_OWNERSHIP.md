@@ -49,3 +49,12 @@ failed leaders, finite timeout, cancellation and repeated cancellation, independ
 observed stopped effects, preserved output/parse/refusal behavior, and installed
 artifact binding. Actual Ollama acceptance remains a separate unmet live obligation.
 No Linux clock repair, full D/E/CAP completion or lane retirement follows from this scope.
+
+
+The `model_stream_v1` workload captures its request value and provider settings
+before target discovery, then supplies the same captured process environment and
+directory to this resolver. It reuses that environment for API-key, inference-timeout
+and turn-timeout selection after discovery. This caller-input correction does not
+extend catalog ownership claims to the separate streaming provider clients,
+generator cleanup or outward waiters. Scope and proof limits:
+`docs/architecture/CONTRACT_DELTA_MODEL_STREAM_INPUTS_D_2026-09-28.md`.

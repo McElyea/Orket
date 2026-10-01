@@ -14,11 +14,14 @@ import pytest
 
 from orket.application.services.tool_gate_service import ToolGate
 from orket.application.workflows.turn_executor import TurnExecutor
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.core.domain.state_machine import StateMachine
+from orket.logging import bind_logging, prepare_logging
 from orket.naming import sanitize_name
 from orket.schema import IssueConfig, RoleConfig
 from tests.helpers.turn_artifacts import artifact_test_utc_now, execute_executor_dispatch_fixture
+from tests.integration.test_turn_execution_ownership import execute_prepared_turn
 
 _A = "agent_output/a.txt"
 _B = "agent_output/b.txt"
@@ -137,7 +140,7 @@ async def test_dispatch_failure_trace_uses_captured_turn(tmp_path, monkeypatch) 
     monkeypatch.setattr(executor.tool_dispatcher, "execute_tools", record_dispatch)
     monkeypatch.setattr(turn_failure_traces, "render_memory_trace_publication", record_memory_trace)
     state = _hold_submitted_path(monkeypatch, a_path)
-    operation = asyncio.create_task(executor.execute_turn(
+    operation = asyncio.create_task(execute_prepared_turn(root, executor.execute_turn,
         IssueConfig(id="ISSUE-PROTOCOL-FAILURE", summary="Failure", seat="developer", status="in_progress"),
         RoleConfig(id="DEV", summary="developer", description="Build", tools=["read_file", "write_file"]),
         _Model(), toolbox, _context(),
@@ -202,12 +205,11 @@ async def test_dispatch_cancellation_publishes_completed_original_sink(tmp_path)
         "protocol_governed_enabled": True,
     }
     executor = TurnExecutor(StateMachine(), ToolGate(organization=None, workspace_root=root), workspace=root, utc_now=artifact_test_utc_now)
-    task = asyncio.create_task(
-        execute_executor_dispatch_fixture(executor,
-            turn=turn, toolbox=toolbox, context=context,
-            on_turn_captured=adopted.append,
-        )
-    )
+    async def _prepared_dispatch():
+        with bind_logging(await prepare_logging(LoggingInputs(root))):
+            return await execute_executor_dispatch_fixture(executor, turn=turn, toolbox=toolbox, context=context, on_turn_captured=adopted.append)
+
+    task = asyncio.create_task(_prepared_dispatch())
     primary_error: BaseException | None = None
     try:
         await asyncio.wait_for(toolbox.entered.wait(), 5)

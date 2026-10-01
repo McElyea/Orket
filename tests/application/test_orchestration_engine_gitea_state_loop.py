@@ -3,13 +3,14 @@ from __future__ import annotations
 import pytest
 
 from orket.orchestration.engine import OrchestrationEngine
+from tests.helpers.logging_fixture_owner import prepared_fixture_owner
 
 pytestmark = pytest.mark.unit
 
 
 @pytest.mark.asyncio
-async def test_engine_delegates_run_gitea_state_loop_to_pipeline():
-    engine = object.__new__(OrchestrationEngine)
+async def test_engine_delegates_run_gitea_state_loop_to_pipeline(tmp_path):
+    engine = await prepared_fixture_owner(OrchestrationEngine, tmp_path)
     captured = {}
 
     class _FakePipeline:

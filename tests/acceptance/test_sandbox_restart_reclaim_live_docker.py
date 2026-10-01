@@ -1,4 +1,4 @@
-# Layer: end-to-end
+# Layer: integration; live Docker posture is separate.
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ from orket.core.domain.sandbox_lifecycle import SandboxState, TerminalReason
 from orket.services.sandbox_orchestrator import SandboxOrchestrator
 from tests.acceptance._sandbox_live_ports import patch_orchestrator_port_allocator
 
-pytestmark = [pytest.mark.end_to_end, pytest.mark.skipif(
+pytestmark = [pytest.mark.integration, pytest.mark.skipif(
     os.getenv("ORKET_RUN_SANDBOX_ACCEPTANCE") != "1",
     reason="Set ORKET_RUN_SANDBOX_ACCEPTANCE=1 to run live sandbox acceptance tests.",
 )]

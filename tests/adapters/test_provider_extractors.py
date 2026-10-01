@@ -2,17 +2,20 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+import pytest
+
 from orket.adapters.llm.provider_extractors import OllamaExtractor, OpenAIExtractor, extractor_for_provider
 
 
+@pytest.mark.unit
 def test_provider_extractor_registry_routes_lmstudio_to_openai_shape() -> None:
     """Layer: unit. Verifies OpenAI-compatible providers use the OpenAI extractor."""
     assert isinstance(extractor_for_provider("lmstudio"), OpenAIExtractor)
     assert isinstance(extractor_for_provider("openai_compat"), OpenAIExtractor)
 
-# Layer: contract
+@pytest.mark.contract
 def test_ollama_extractor_normalizes_object_tool_calls() -> None:
-    """Layer: unit. Verifies Ollama object-style tool calls normalize to OpenAI-compatible shape."""
+    """Layer: contract. Verifies Ollama object-style tool calls normalize to OpenAI-compatible shape."""
     extractor = OllamaExtractor()
     tool_call = SimpleNamespace(
         function=SimpleNamespace(
@@ -36,8 +39,9 @@ def test_ollama_extractor_normalizes_object_tool_calls() -> None:
     assert extractor.extract_timings(payload, latency_ms=25) == (None, None, 10.0)
 
 
+@pytest.mark.contract
 def test_ollama_extractor_accepts_chat_response_objects() -> None:
-    """Layer: unit. Verifies Ollama SDK ChatResponse-style objects are normalized."""
+    """Layer: contract. Verifies Ollama SDK ChatResponse-style objects are normalized."""
     extractor = OllamaExtractor()
     payload = SimpleNamespace(
         message=SimpleNamespace(content='{"tool":"write_file","args":{"path":"out.txt","content":"ok"}}'),

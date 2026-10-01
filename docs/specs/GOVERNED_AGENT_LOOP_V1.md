@@ -1,6 +1,6 @@
 # Governed Agent Loop V1
 
-Last updated: 2026-09-20
+Last updated: 2026-09-28
 Status: Active durable contract; core 0.6.0 acceptance released; llama.cpp feature integration added in source
 Owner: Orket Core
 Accepted requirements source: `docs/projects/archive/governed-agent-loop/GAL09062026-REQUIREMENTS/GOVERNED_AGENT_LOOP_REQUIREMENTS_DEFINITION_PLAN.md`
@@ -463,6 +463,27 @@ Inspection replays recorded continuation decisions only. An existing run with
 zero iteration snapshots reports `status=no_decisions`, never a successful
 match, only when its independent step inventory is also empty and intact. An
 unknown run is absent; missing or unreadable storage is never created by replay.
+
+Wake claim validation and replay evidence observation bind the selected database
+path with the existing file-root capture policy before their first await. Normal
+relative paths bind to that invocation root; drive-relative paths refuse under
+that policy. Native resolution, existence observation, read-only connection
+acquisition, queries and connection close remain in one existing shared I/O owner.
+Repeated caller cancellation or timeout waits for this attempt to settle, then
+discards its successful result. An uncaught read failure keeps its original
+identity and takes precedence over interruption. Replay's existing database/read
+exception-to-diagnostic conversion remains inside the attempt; cancellation does
+not publish that diagnostic result as success. Preflight failures remain outside
+that conversion. Application request owners retain their own outer cancellation
+and transport policy.
+
+Wake validation still reads committed WAL state without acquiring the renewal
+repository's Python lock. Replay still uses one read-only transaction. Neither
+observation initializes schema, creates a missing database, changes a wake or
+repairs replay evidence. A retained read is not an atomic filesystem/database
+snapshot, proof of external effects, or permission to renew/reuse a stale fence.
+Migration and proof limits:
+`docs/architecture/CONTRACT_DELTA_GOVERNED_READ_OWNERSHIP_D_2026-09-28.md`.
 
 The `governed_agent_replay.v2` API/CLI response has
 `scope=recorded_continuation_decisions`. Its `expected_count` comes from canonical

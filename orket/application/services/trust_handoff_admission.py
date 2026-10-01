@@ -1,13 +1,15 @@
 from __future__ import annotations
 
-import asyncio
+from functools import partial
 from pathlib import Path
 from typing import Any
 
+from orket.adapters.execution.owned_io import run_owned_thread
 from orket.adapters.storage.outward_run_event_store import OutwardRunEventStore
 from orket.adapters.storage.outward_run_store import OutwardRunStore
 from orket.adapters.storage.outward_store_transaction import OutwardStoreUnitOfWork
 from orket.application.services.outward_terminal_service import publish_outward_terminal
+from orket.application.services.process_input_service import absolute_process_path, capture_process_context
 from orket.application.services.trust_handoff_contract import failure_class
 from orket.application.services.trust_handoff_verifier import (
     TrustHandoffVerificationContext,
@@ -46,7 +48,10 @@ class TrustHandoffAdmissionService:
             expected_source_agent_id=str(acceptance.get("expected_source_agent_id") or ""),
             expected_target_agent_id=run.run_id,
         )
-        report = await asyncio.to_thread(verify_trust_handoff_package, package_path, context=context)
+        directory, _environment = capture_process_context(environment={})
+        verification_path = absolute_process_path(package_path, directory)
+        report = await run_owned_thread(partial(verify_trust_handoff_package, verification_path, context=context),
+                                        label="trust-handoff-verification")
         if report.get("result") != "accepted":
             return await self._reject(run, report, package_path), False
         await self._append_once(

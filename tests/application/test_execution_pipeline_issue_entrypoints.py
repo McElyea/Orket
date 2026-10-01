@@ -5,16 +5,17 @@ from types import SimpleNamespace
 
 import pytest
 
-import orket.runtime.execution_pipeline as execution_pipeline_module
+from orket.runtime.execution import execution_pipeline_card_dispatch, execution_pipeline_resume
 from orket.runtime.execution_pipeline import ExecutionPipeline
+from tests.helpers.logging_fixture_owner import prepared_fixture_owner
 from tests.helpers.runtime_result import published_result
 
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_run_card_routes_atomic_issue_via_normalized_dispatcher() -> None:
+async def test_run_card_routes_atomic_issue_via_normalized_dispatcher(tmp_path) -> None:
     """Layer: unit. Verifies the canonical card surface dispatches through one normalized resolver."""
-    pipeline = object.__new__(ExecutionPipeline)
+    pipeline = await prepared_fixture_owner(ExecutionPipeline, tmp_path)
     pipeline._initialized = True
     seen: dict[str, object] = {}
 
@@ -174,7 +175,7 @@ async def test_issue_dispatch_keeps_cards_epic_workload_path(monkeypatch: pytest
         return [{"epic": epic_name}]
 
     pipeline._run_epic_entry = _run_epic_entry  # type: ignore[method-assign]
-    monkeypatch.setattr(execution_pipeline_module, "log_event", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(execution_pipeline_card_dispatch, "log_event", lambda *_args, **_kwargs: None)
 
     result = await ExecutionPipeline._run_issue_entry(
         pipeline,
@@ -214,7 +215,7 @@ async def test_issue_dispatch_ignores_forwarded_target_issue_id(monkeypatch: pyt
         return [{"epic": epic_name}]
 
     pipeline._run_epic_entry = _run_epic_entry  # type: ignore[method-assign]
-    monkeypatch.setattr(execution_pipeline_module, "log_event", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(execution_pipeline_card_dispatch, "log_event", lambda *_args, **_kwargs: None)
 
     result = await ExecutionPipeline._run_issue_entry(
         pipeline,
@@ -300,7 +301,7 @@ async def test_epic_collection_entry_returns_collection_shaped_payload(monkeypat
     pipeline.execution_runtime_node = _RuntimeNode()
     pipeline.pipeline_wiring_service = _PipelineWiringService()
     pipeline.bug_fix_manager = _BugFixManager()
-    monkeypatch.setattr(execution_pipeline_module, "log_event", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(execution_pipeline_resume, "log_event", lambda *_args, **_kwargs: None)
 
     result = await ExecutionPipeline._run_epic_collection_entry(
         pipeline,

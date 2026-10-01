@@ -5,6 +5,7 @@ from httpx import ASGITransport, AsyncClient
 
 import orket.state as state_module
 from orket.interfaces import api as api_module
+from orket.interfaces.api_invocation import schedule_api_invocation_task
 
 
 class _FakeTarget:
@@ -37,7 +38,8 @@ async def test_scheduled_task_is_removed_after_completion(fresh_runtime_state, a
 
     target = _FakeTarget()
     invocation = {"method_name": "run", "args": []}
-    await api_module._schedule_async_invocation_task(target, invocation, "run", session_id)
+    await schedule_api_invocation_task(target, invocation, "run", session_id,
+                                       runtime_getter=api_module._runtime_context)
 
     task = await state_module.runtime_state.get_task(session_id)
     assert task is not None

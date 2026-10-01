@@ -47,7 +47,7 @@ def test_ledger_cli_exports_summarizes_and_verifies_offline(monkeypatch, capsys,
                 return httpx.Response(200, json={"result": "valid", "path": path}, request=request)
             return httpx.Response(200, json={"schema_version": "ledger_export.v1", "path": path}, request=request)
 
-    monkeypatch.setattr(cli_module.httpx, "Client", _FakeClient)
+    monkeypatch.setattr(httpx, "Client", _FakeClient)
 
     assert cli_module.main(["ledger", "export", "run-1", "--types", "proposals,decisions", "--out", str(export_path)]) == 0
     _ = json.loads(capsys.readouterr().out)

@@ -10,6 +10,7 @@ from orket.schema import IssueVerification, VerificationScenario
 from tests.helpers.turn_artifacts import artifact_test_utc_now
 
 
+@pytest.mark.unit
 def test_fixture_verifier_mark_all_failed() -> None:
     verifier = FixtureVerifier()
     verification = IssueVerification(
@@ -40,12 +41,14 @@ async def test_sandbox_verifier_rejects_non_endpoint_scenarios() -> None:
     assert verification.scenarios[0].status == "fail"
 
 
+@pytest.mark.unit
 def test_orchestration_config_prefers_env(monkeypatch) -> None:
     monkeypatch.setenv("ORKET_STATE_BACKEND_MODE", "sqlite")
     cfg = OrchestrationConfig(org=None)
     assert cfg.resolve_state_backend_mode() == "local"
 
 
+@pytest.mark.unit
 def test_kernel_gateway_facade_delegates_calls() -> None:
     class _Gateway:
         def __init__(self) -> None:

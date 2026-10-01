@@ -4,30 +4,17 @@ from collections.abc import Callable, Iterable
 from typing import Any
 
 from orket.application.services.runtime_policy_inputs import ArchitecturePolicySnapshot, RuntimePolicySnapshot
-from orket.runtime.determinism_controls import (
-    build_determinism_controls,
-)
-from orket.runtime.determinism_controls import (
-    resolve_clock_artifact_ref as resolve_protocol_clock_artifact_ref,
-)
-from orket.runtime.determinism_controls import (
-    resolve_clock_mode as resolve_protocol_clock_mode,
-)
-from orket.runtime.determinism_controls import (
-    resolve_env_allowlist as resolve_protocol_env_allowlist,
-)
-from orket.runtime.determinism_controls import (
-    resolve_locale as resolve_protocol_locale,
-)
-from orket.runtime.determinism_controls import (
-    resolve_network_allowlist as resolve_protocol_network_allowlist,
-)
-from orket.runtime.determinism_controls import (
-    resolve_network_mode as resolve_protocol_network_mode,
-)
-from orket.runtime.determinism_controls import (
-    resolve_timezone as resolve_protocol_timezone,
-)
+from orket.runtime.policy import determinism_controls as _determinism_controls
+
+# Preserve the existing consumer-local callable bindings.
+build_determinism_controls = _determinism_controls.build_determinism_controls
+resolve_protocol_clock_artifact_ref = _determinism_controls.resolve_clock_artifact_ref
+resolve_protocol_clock_mode = _determinism_controls.resolve_clock_mode
+resolve_protocol_env_allowlist = _determinism_controls.resolve_env_allowlist
+resolve_protocol_locale = _determinism_controls.resolve_locale
+resolve_protocol_network_allowlist = _determinism_controls.resolve_network_allowlist
+resolve_protocol_network_mode = _determinism_controls.resolve_network_mode
+resolve_protocol_timezone = _determinism_controls.resolve_timezone
 
 ARCHITECTURE_MODE_OPTIONS: list[dict[str, str]] = [
     {"value": "force_monolith", "label": "Monolith (Forced)"},

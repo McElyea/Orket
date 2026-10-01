@@ -21,5 +21,6 @@ __all__ = [
     'run_ledger_projection',
     'run_start_artifacts',
     'run_start_contract_artifacts',
+    'run_start_schema_payloads',
     'workspace_snapshot'
 ]

@@ -5,6 +5,10 @@ import asyncio
 import pytest
 
 from orket.adapters.tools.runtime import ToolRuntimeExecutor
+from orket.core.contracts.logging_inputs import LoggingInputs
+from orket.logging import bind_logging, prepare_logging
+
+pytestmark = pytest.mark.unit
 
 
 @pytest.mark.asyncio
@@ -15,13 +19,15 @@ async def test_tool_runtime_executor_times_out_tool_call(tmp_path):
         await asyncio.sleep(0.05)
         return {"ok": True}
 
-    result = await ToolRuntimeExecutor().invoke(
-        _slow_tool,
-        {},
-        context={"tool_name": "slow_tool"},
-        tool_timeout_seconds=0.001,
-        workspace=tmp_path,
-    )
+    prepared = await prepare_logging(LoggingInputs(tmp_path))
+    with bind_logging(prepared):
+        result = await ToolRuntimeExecutor().invoke(
+            _slow_tool,
+            {},
+            context={"tool_name": "slow_tool"},
+            tool_timeout_seconds=0.001,
+            workspace=tmp_path,
+        )
 
     assert result == {"ok": False, "error": "tool_timeout", "tool": "slow_tool"}
 

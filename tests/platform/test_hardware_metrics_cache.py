@@ -1,7 +1,11 @@
 import threading
 import types
 
+import pytest
+
 import orket.hardware as hardware
+
+pytestmark = pytest.mark.unit
 
 
 def test_metrics_snapshot_uses_vram_cache(monkeypatch):

@@ -1,6 +1,6 @@
 # Card Completion Acceptance Contract
 
-Last updated: 2026-09-23
+Last updated: 2026-09-28
 Status: Active contract; builtin completion passes scoped BT-3 acceptance
 Owner: Orket Core
 
@@ -430,7 +430,10 @@ environment is supplied; this service supplies the sanitized environment.
    objective success. This additive migration has only run on isolated proof data.
 6. `CardWorkspaceMutationService` owns supported file writes while holding the
    same database writer guard. Cancellation, including repeated cancellation,
-   drains the operation and releases the transaction before propagating. ToolBox
+   drains the operation and releases the transaction before propagating. A successful
+   drain propagates cancellation; an actual settled operation or guard failure takes
+   precedence. Shared supporting diagnostics settle in a native worker and cannot
+   replace that failure. ToolBox
    file writing/directory creation and the other builtin writers listed below are
    wired; direct standalone file adapters, custom strategies and out-of-band host
    mutation are not covered by that integration. Retained receipts describe exact
@@ -578,6 +581,15 @@ environment is supplied; this service supplies the sanitized environment.
    Publication exceptions propagate as publication failures; they do not invoke
    failed-workload finalization or downgrade an already accepted control-plane
    outcome. The original error remains diagnosable.
+5. Required `session_end`, `success_recorded` and `orchestrator_epic_complete`
+   native log attempts stay owned through repeated caller cancellation or timeout.
+   Successful settlement then propagates cancellation; a native publication
+   failure takes precedence. The journal phase advances only after the attempt
+   succeeds. Earlier verified store effects and even an appended log can survive
+   failed acknowledgement. Matching reentry can repeat these diagnostics while
+   finishing publication without redispatching accepted work. This is neither
+   atomic log delivery nor an exactly-once event guarantee. Explicit logging
+   preparation and broader logging-input capture remain separate D obligations.
 
 ## Retained workload termination
 
@@ -825,3 +837,31 @@ covered, together with direct application transitions and persistence bypasses.
 Only the admitted sufficient case may persist successful completion. Provider-backed
 proof must identify its actual provider; deterministic model fixtures remain
 integration proof of the exercised runtime components.
+
+## Card metadata and epic journal I/O ownership
+
+Card completion admission/evaluation captures the selected workspace and mutable
+card observation before native metadata resolution. Cancellation or timeout waits
+for admitted resolution to settle before later completion publication may proceed.
+The read-only receipt operation captures its database and completion authority and
+retains resolution, SQLite reading/closure and retained evidence inspection; it
+does not initialize a missing store. `CardAcceptanceService.capture_scope` captures
+its root, definition and runtime inputs before yielding and owns artifact capture
+for both verification and final status authorization. Existing capture diagnostics
+still produce insufficient evidence; interruption cannot become completion authority.
+
+Epic admission captures request/export inputs, the selected repository and workspace
+before resolution. The publication repository binds its database path and retains
+parent creation, connection admission, schema preparation, commit and rollback/close
+using the shared I/O owner. It does not own arbitrary native work supplied inside a
+caller's transaction body. A body failure remains selected through later cleanup
+cancellation; an actual cleanup failure remains reportable. A native cleanup
+`CancelledError` remains the original failure instead of being suppressed as a
+caller interruption. Native cleanup failure supersedes a prior body error and
+retains that error as context. With no prior body/admission failure, caller
+interruption of successful cleanup still prevents success.
+Directory/schema effects and a commit already admitted before interruption may
+remain after return. These lifetime guarantees do not roll back physical effects,
+release an uncertain active
+admission, mint recovery authority or permit automatic retry. Existing admission,
+fencing and completion-evidence rules still apply.

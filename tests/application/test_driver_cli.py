@@ -1,11 +1,15 @@
 import json
+from functools import partial
 from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
 
+from orket.adapters.execution.owned_io import run_owned_thread
+from orket.adapters.observability.logging_context import prepare_logging_native
 from orket.adapters.storage.async_file_tools import AsyncFileTools
 from orket.application.services.reforger_service import ReforgerService
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.driver import OrketDriver
 
 
@@ -16,6 +20,7 @@ def _build_driver(tmp_path: Path) -> OrketDriver:
         (core / folder).mkdir(parents=True, exist_ok=True)
 
     driver = OrketDriver.__new__(OrketDriver)
+    driver.logging_context = prepare_logging_native(LoggingInputs(tmp_path))
     driver.model_root = model_root
     driver.fs = AsyncFileTools(tmp_path)
     driver.skill = None
@@ -78,7 +83,7 @@ def _seed_textmystery_inputs(root: Path) -> None:
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_cli_list_departments(tmp_path: Path):
-    driver = _build_driver(tmp_path)
+    driver = await run_owned_thread(partial(_build_driver, tmp_path), label="driver-cli-fixture-construction")
     response = await driver.process_request("/list departments")
     assert "Departments" in response
     assert "core" in response
@@ -87,7 +92,7 @@ async def test_cli_list_departments(tmp_path: Path):
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_cli_create_and_show_team(tmp_path: Path):
-    driver = _build_driver(tmp_path)
+    driver = await run_owned_thread(partial(_build_driver, tmp_path), label="driver-cli-fixture-construction")
     create = await driver.process_request("/create team platform_ops core")
     assert "Created team 'platform_ops'" in create
 
@@ -102,7 +107,7 @@ async def test_cli_create_and_show_team(tmp_path: Path):
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_cli_create_environment_and_list(tmp_path: Path):
-    driver = _build_driver(tmp_path)
+    driver = await run_owned_thread(partial(_build_driver, tmp_path), label="driver-cli-fixture-construction")
     create = await driver.process_request("/create environment staging core")
     assert "Created environment 'staging'" in create
 
@@ -113,7 +118,7 @@ async def test_cli_create_environment_and_list(tmp_path: Path):
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_cli_add_card_and_list_cards(tmp_path: Path):
-    driver = _build_driver(tmp_path)
+    driver = await run_owned_thread(partial(_build_driver, tmp_path), label="driver-cli-fixture-construction")
     await driver.process_request("/create epic payments_upgrade core")
     epic_path = tmp_path / "model" / "core" / "epics" / "payments_upgrade.json"
     created_epic = json.loads(epic_path.read_text(encoding="utf-8"))
@@ -135,7 +140,7 @@ async def test_cli_add_card_and_list_cards(tmp_path: Path):
 @pytest.mark.asyncio
 async def test_cli_list_cards_surfaces_legacy_epic_child_key(tmp_path: Path):
     """Layer: contract. Verifies list/add operations do not silently normalize legacy epic shape on read."""
-    driver = _build_driver(tmp_path)
+    driver = await run_owned_thread(partial(_build_driver, tmp_path), label="driver-cli-fixture-construction")
     epic_path = tmp_path / "model" / "core" / "epics" / "legacy_epic.json"
     epic_path.write_text(
         json.dumps(
@@ -160,7 +165,7 @@ async def test_cli_list_cards_surfaces_legacy_epic_child_key(tmp_path: Path):
 @pytest.mark.asyncio
 async def test_cli_add_card_migrates_legacy_epic_child_key_to_issues(tmp_path: Path):
     """Layer: integration. Verifies write paths normalize touched legacy epic payloads to `issues`."""
-    driver = _build_driver(tmp_path)
+    driver = await run_owned_thread(partial(_build_driver, tmp_path), label="driver-cli-fixture-construction")
     epic_path = tmp_path / "model" / "core" / "epics" / "legacy_epic.json"
     epic_path.write_text(
         json.dumps(
@@ -187,7 +192,7 @@ async def test_cli_add_card_migrates_legacy_epic_child_key_to_issues(tmp_path: P
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_cli_reforge_inspect_and_run(tmp_path: Path):
-    driver = _build_driver(tmp_path)
+    driver = await run_owned_thread(partial(_build_driver, tmp_path), label="driver-cli-fixture-construction")
     _seed_textmystery_inputs(tmp_path)
     inspect = await driver.process_request(
         f"/reforge inspect --route textmystery_v1 --in {tmp_path.as_posix()} --mode truth_only --scenario-pack truth_only_v0"
@@ -210,7 +215,7 @@ async def test_cli_reforge_inspect_and_run(tmp_path: Path):
 @pytest.mark.contract
 @pytest.mark.asyncio
 async def test_cli_reforge_run_block_lists_missing_details(tmp_path: Path):
-    driver = _build_driver(tmp_path)
+    driver = await run_owned_thread(partial(_build_driver, tmp_path), label="driver-cli-fixture-construction")
     _seed_textmystery_inputs(tmp_path)
     # Remove scenario pack so suite_ready=false.
     scenario = tmp_path / "reforge" / "scenario_packs" / "truth_only_v0.json"
@@ -232,7 +237,7 @@ async def test_cli_reforge_run_block_lists_missing_details(tmp_path: Path):
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_cli_reforge_run_force_includes_force_fields(tmp_path: Path):
-    driver = _build_driver(tmp_path)
+    driver = await run_owned_thread(partial(_build_driver, tmp_path), label="driver-cli-fixture-construction")
     _seed_textmystery_inputs(tmp_path)
     scenario = tmp_path / "reforge" / "scenario_packs" / "truth_only_v0.json"
     scenario.unlink()

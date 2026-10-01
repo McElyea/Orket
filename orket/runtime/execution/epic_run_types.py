@@ -6,7 +6,7 @@ from typing import Any, Protocol
 
 from orket.core.contracts import WorkloadContractV1
 from orket.core.contracts.epic_publication import EpicRunAdmission
-from orket.runtime.workload_shell import SharedWorkloadShell
+from orket.runtime.execution.workload_shell import SharedWorkloadShell
 
 
 class SessionsRepository(Protocol):

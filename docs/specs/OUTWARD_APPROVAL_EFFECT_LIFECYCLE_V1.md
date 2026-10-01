@@ -1,6 +1,6 @@
 # Outward Approval and Effect Lifecycle V1
 
-Last updated: 2026-09-12
+Last updated: 2026-09-28
 Status: Active implementation contract; complete enforcement remains the BT-1 gate
 Owner: Orket Core
 
@@ -214,6 +214,48 @@ or retry a governed connector. Both providers may finish; only the current
 attempt can publish an approval, whose own effect still requires authorization.
 
 ## Acceptance
+
+### Native initialization and transaction ownership
+
+The concrete outward run, approval and event stores capture each initializer's
+database path against the invocation directory before awaiting work. Existing
+per-store locks serialize initialization; their success cache belongs to the
+captured path and is set only after migrations, commit and connection closure.
+Cancellation and deadlines retain an admitted initializer through its complete
+native attempt. A failed acknowledgement remains a failure even if migrations
+committed. Run/approval initialization retains parent-directory creation; event
+initialization retains its existing missing-parent refusal.
+
+The outward unit of work captures its three store references and paths together,
+resolves their agreement through the shared native owner, and refuses mismatched
+databases before initialization. Those resolved paths govern initialization,
+the transaction connection and its concrete child repositories. Public borrowed
+store operations retain their existing delegates. A supplied connection is the
+caller's schema and transaction authority: these operations do not initialize
+the store object's unrelated current path, commit or close the borrowed
+connection. A selected connection without its required schema fails normally;
+raw callers prepare that schema explicitly before borrowing it.
+
+Acquisition, transaction preparation, commit and rollback/close each retain the
+existing shared I/O owner. The application body remains in the caller task;
+entering a transaction does not shield arbitrary application work or detached
+workers. Interruption stops further body admission after the current owned
+resource phase settles. A completed interrupted commit can leave all admission
+rows durable; interruption is not success or evidence that effects are absent.
+Existing admission/recovery rules govern reentry. Successful cleanup preserves
+the original body/admission failure despite repeated cancellation. Actual
+rollback or close failure supersedes that failure, with its exception context,
+and close is attempted even when rollback fails. A native `CancelledError` is
+still a cleanup failure; it cannot be mistaken for a later caller interruption
+and suppressed. Deadline wrappers retain their normal exception relationship.
+
+This is concrete store path binding and resource settlement, not historical
+inode binding, arbitrary store-subclass compatibility, standalone CRUD/writer
+lifetime completion, nested payload capture or a broader recovery contract.
+Migration and proof scope:
+`docs/architecture/CONTRACT_DELTA_OUTWARD_STORE_LIFETIME_D_2026-09-28.md`.
+
+### Behavioral acceptance
 
 BT-1 acceptance requires authenticated separate-connection/process decision and
 dispatch races; old approval retries through restart; argument/policy/scope/

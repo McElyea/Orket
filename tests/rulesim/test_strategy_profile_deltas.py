@@ -3,7 +3,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from orket.rulesim.workload import run_rulesim_v0_sync
+
+pytestmark = pytest.mark.integration
 
 
 def _summary_for(strategy: str, params: dict, tmp_path: Path, suffix: str) -> dict:

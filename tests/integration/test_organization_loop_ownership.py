@@ -82,7 +82,7 @@ async def test_organization_runtime_factory_is_owned(test_root, workspace, db_pa
     monkeypatch.chdir(test_root)
     owner = await asyncio.to_thread(loop_module.OrganizationLoop)
     state, construct = held_runtime_factory(test_root, workspace, db_path)
-    monkeypatch.setattr(loop_module, 'ExecutionPipeline', construct)
+    monkeypatch.setattr(loop_module.ExecutionPipeline, '__init__', construct)
     monkeypatch.setattr(owner, '_find_next_critical_card', lambda: {'id': 'ISSUE-1', 'dept': 'core'})
 
     async def invoke():

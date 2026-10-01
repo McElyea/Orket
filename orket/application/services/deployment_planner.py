@@ -6,6 +6,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from orket.adapters.execution.owned_io import run_owned_io
+from orket.adapters.storage.async_file_tools import AsyncFileTools, capture_file_roots
+
 
 @dataclass(frozen=True)
 class DeploymentSpec:
@@ -93,7 +96,7 @@ class DeploymentPlanner:
     def __init__(
         self,
         workspace_root: Path,
-        file_tools: Any,
+        file_tools: AsyncFileTools,
         organization: Any = None,
         project_surface_profile: str | None = None,
         architecture_pattern: str | None = None,
@@ -106,6 +109,11 @@ class DeploymentPlanner:
 
     async def ensure(self) -> dict[str, Any]:
         spec = self._resolve_spec()
+        root, = capture_file_roots([self.workspace_root])
+        captured = DeploymentPlanner(root, self.file_tools.capture())
+        return await run_owned_io(lambda: captured._ensure(spec), label="workspace-deployment", preserve_failure=True)
+
+    async def _ensure(self, spec: DeploymentSpec) -> dict[str, Any]:
         created_files = await self._ensure_files(spec.required_files)
         await self._validate_required_files(spec.required_files)
         return {

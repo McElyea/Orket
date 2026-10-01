@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from orket.kernel.v1 import (
     admit_proposal,
     authorize_tool_call,
@@ -14,6 +16,8 @@ from orket.kernel.v1 import (
     run_experiment,
     start_run,
 )
+
+pytestmark = pytest.mark.contract
 
 
 def test_kernel_v1_api_exports_are_callable() -> None:

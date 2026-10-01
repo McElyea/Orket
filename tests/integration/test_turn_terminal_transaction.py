@@ -14,8 +14,10 @@ from orket.application.services.tool_gate_service import ToolGate
 from orket.application.services.turn_tool_control_plane_resource_lifecycle import lease_id_for_run
 from orket.application.services.turn_tool_control_plane_service import build_turn_tool_control_plane_service
 from orket.application.workflows.turn_executor import TurnExecutor
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain import AttemptState, LeaseStatus, RunState
 from orket.core.domain.state_machine import StateMachine
+from orket.logging import bind_logging, prepare_logging
 from tests.helpers.turn_artifacts import artifact_test_utc_now
 from tests.integration.test_governed_agent_terminal_history import damage_terminal_history, logical_state
 from tests.integration.test_turn_executor_control_plane import _context, _issue, _Model, _role, _Toolbox
@@ -74,7 +76,8 @@ async def test_turn_terminal_records_and_lease_release_commit_together(tmp_path,
     toolbox = ObservedToolbox(tmp_path)
     executor = TurnExecutor(StateMachine(), ToolGate(organization=None, workspace_root=tmp_path),
                             workspace=tmp_path, control_plane_service=control, utc_now=artifact_test_utc_now)
-    await executor.execute_turn(_issue(), _role(), _Model(), toolbox, _context(protocol_governed_enabled=protocol))
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        await executor.execute_turn(_issue(), _role(), _Model(), toolbox, _context(protocol_governed_enabled=protocol))
     run_id = 'turn-tool-run:run-1:ISSUE-1:developer:0001'
     run = await control.execution_repository.get_run_record(run_id=run_id)
     attempt = await control.execution_repository.get_attempt_record(attempt_id=run.current_attempt_id)
@@ -150,7 +153,8 @@ async def test_turn_closeout_refuses_conflicting_terminal_history(tmp_path, monk
     control = build_turn_tool_control_plane_service(tmp_path / 'control_plane.sqlite3')
     executor = TurnExecutor(StateMachine(), ToolGate(organization=None, workspace_root=tmp_path),
                             workspace=tmp_path, control_plane_service=control, utc_now=artifact_test_utc_now)
-    await executor.execute_turn(_issue(), _role(), _Model(), ObservedToolbox(tmp_path), _context())
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        await executor.execute_turn(_issue(), _role(), _Model(), ObservedToolbox(tmp_path), _context())
     run_id = 'turn-tool-run:run-1:ISSUE-1:developer:0001'
     run = await control.execution_repository.get_run_record(run_id=run_id)
     attempt = await control.execution_repository.get_attempt_record(attempt_id=run.current_attempt_id)

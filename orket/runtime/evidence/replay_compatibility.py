@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from orket.runtime.workspace_snapshot import capture_workspace_state_snapshot
+from orket.runtime.evidence.workspace_snapshot import capture_workspace_state_snapshot
 
 REPLAY_COMPATIBILITY_REQUIRED_FIELDS = (
     "tool_registry_version",

@@ -5,6 +5,8 @@ import pytest
 
 from orket.adapters.storage.sqlite_migrations import SQLiteMigration, SQLiteMigrationRunner
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.asyncio
 async def test_sqlite_migration_runner_records_and_skips_applied_versions(tmp_path) -> None:

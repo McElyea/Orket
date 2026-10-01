@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 
 def _load_json(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
@@ -45,6 +47,7 @@ def _validate_prompt_metadata(metadata: dict, path: Path) -> list[str]:
     return errors
 
 
+@pytest.mark.contract
 def test_core_team_role_links_are_valid() -> None:
     root = Path("model") / "core"
     roles_dir = root / "roles"
@@ -75,6 +78,7 @@ def test_core_team_role_links_are_valid() -> None:
     assert not errors, "Invalid team->role links:\n" + "\n".join(errors)
 
 
+@pytest.mark.contract
 def test_core_epic_team_and_seat_links_are_valid() -> None:
     root = Path("model") / "core"
     teams_dir = root / "teams"
@@ -121,6 +125,7 @@ def test_core_epic_team_and_seat_links_are_valid() -> None:
     assert not errors, "Invalid epic->team/seat links:\n" + "\n".join(errors)
 
 
+@pytest.mark.contract
 def test_core_role_prompt_metadata_contract() -> None:
     roles_dir = Path("model") / "core" / "roles"
     errors: list[str] = []
@@ -137,6 +142,7 @@ def test_core_role_prompt_metadata_contract() -> None:
     assert not errors, "Invalid role prompt metadata:\n" + "\n".join(errors)
 
 
+@pytest.mark.contract
 def test_core_dialect_prompt_metadata_contract() -> None:
     dialects_dir = Path("model") / "core" / "dialects"
     errors: list[str] = []
@@ -153,6 +159,7 @@ def test_core_dialect_prompt_metadata_contract() -> None:
     assert not errors, "Invalid dialect prompt metadata:\n" + "\n".join(errors)
 
 
+@pytest.mark.contract
 def test_core_standard_team_supports_canonical_pipeline_roles_and_seats() -> None:
     root = Path("model") / "core"
     roles_dir = root / "roles"
@@ -186,6 +193,7 @@ def test_core_standard_team_supports_canonical_pipeline_roles_and_seats() -> Non
     assert not seat_role_errors, "\n".join(seat_role_errors)
 
 
+@pytest.mark.unit
 def test_fixture_acceptance_is_marked_secondary_to_canonical_flow() -> None:
     live_acceptance = Path("tests") / "live" / "test_system_acceptance_pipeline.py"
     fixture_acceptance = Path("tests") / "integration" / "test_system_acceptance_flow.py"

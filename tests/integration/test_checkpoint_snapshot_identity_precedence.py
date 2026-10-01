@@ -6,6 +6,8 @@ from pathlib import Path
 import pytest
 
 from orket.application.workflows.turn_checkpoint_snapshot import checkpoint_snapshot_integrity_ref
+from orket.core.contracts.logging_inputs import LoggingInputs
+from orket.logging import bind_logging, prepare_logging
 from tests.helpers.turn_control_plane_clock import deterministic_turn_clock as deterministic_turn_clock
 from tests.integration.test_turn_executor_control_plane_evidence import (
     _attempt_id,
@@ -32,7 +34,8 @@ async def test_snapshot_integrity_refusal_precedes_namespace_identity_validation
     if reentry == "completed":
         control_plane, executor = _executor(tmp_path)
         model, toolbox = _Model(), _Toolbox()
-        seeded_result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
+        with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+            seeded_result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
     else:
         control_plane, executor, _run, _attempt, _checkpoint, _args = await _seed_checkpoint_only(tmp_path)
         model, toolbox = _Model(), _Toolbox()
@@ -43,9 +46,10 @@ async def test_snapshot_integrity_refusal_precedes_namespace_identity_validation
     snapshot = await _observe_snapshot_namespace(tmp_path, "issue:OTHER")
     model_calls_before, tool_calls_before = model.calls, toolbox.calls
 
-    result = await executor.execute_turn(
-        _issue(), _role(), model, toolbox, _context(resume_mode=reentry == "resume")
-    )
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(
+            _issue(), _role(), model, toolbox, _context(resume_mode=reentry == "resume")
+        )
     checkpoint_after = await control_plane.publication.repository.get_checkpoint(
         checkpoint_id=f"turn-tool-checkpoint:{_attempt_id()}"
     )

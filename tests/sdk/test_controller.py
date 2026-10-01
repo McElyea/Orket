@@ -12,6 +12,8 @@ from orket_extension_sdk import (
     ControllerRunSummary,
 )
 
+pytestmark = pytest.mark.contract
+
 
 def test_controller_timeout_values_normalize_to_integer_seconds() -> None:
     child = ControllerChildCall(target_workload="child.alpha", timeout_seconds=3.01)

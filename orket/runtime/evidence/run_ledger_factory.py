@@ -31,6 +31,7 @@ def build_run_ledger_repository(
 
     return AsyncDualModeLedgerRepository(
         sqlite_repo=sqlite_repo,
+        workspace_root=workspace_root,
         protocol_repo=protocol_repo,
         telemetry_sink=telemetry_sink,
         primary_mode=primary_mode,

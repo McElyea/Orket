@@ -1,6 +1,6 @@
 # API Runtime Lifecycle
 
-Last updated: 2026-09-27
+Last updated: 2026-09-28
 Status: Active
 
 `orket.application.services.api_runtime_container.ApiRuntimeContainer` owns the
@@ -36,15 +36,29 @@ pre-loop bootstrap so a spawned worker can later import `server:app` inside its
 event loop. Current normal-start/reload observations and platform limitations are
 recorded in the canonical plan; scoped checkpoint proof is not whole-lane acceptance.
 
+Native graph preparation first prepares logging from the captured application
+root/environment. `ApiRuntimeContainer.logging_context` retains that value.
+Construction, initialization, admitted request execution and cleanup bind it in
+their actual operation tasks. The inherited request owner still controls admission,
+cancellation and settlement. A refused request's later ASGI unavailable response
+uses the restored transport caller context; admitted sends run in the application
+request context. API preparation/lifespan yields carry no ContextVar token into a
+borrower's exit task. The shared daemon remains process-owned, and application
+shutdown retains the existing handoff frontier without stopping that writer.
+Direct container fixtures/embeddings supply an explicitly prepared value. Contract:
+`docs/specs/LOG_WRITE_SETTLEMENT.md`.
+
 The canonical reload launcher retains Uvicorn's selected file watcher and spawned
 worker. Its supervisor requests shutdown through a process-shared event and joins
 the worker before replacement. The worker waits for startup before requesting
 normal server shutdown; repeated console signals request the same cooperative
 close instead of escalating to a lifespan-skipping exit. Parent shutdown retains
 the worker and listener cleanup. The dedicated worker retains cooperative signal
-handlers after the server loop returns, through native process finalization.
-Additional handled signals cannot bypass pending finalizers; a nonzero finalizer exit
-still makes the launcher fail. This adds no hard-stop deadline: startup or cleanup
+handlers throughout the server loop. After that loop settles, it ignores handled
+signals natively through multiprocessing and interpreter finalization. CPython
+resets callable Python handlers during interpreter teardown; native ignore survives
+that reset. The parent still joins the worker, and a nonzero finalizer exit still
+makes the launcher fail. This adds no hard-stop deadline: startup or cleanup
 that never settles can hold the supervisor. The finalization correction has current
 Windows source console-signal proof; fresh installed and Linux finalization proof
 remain open. Earlier installed Windows/Linux Python 3.11/3.12 observations pass
@@ -170,6 +184,18 @@ retain ownership through cancellation and elapsed caller timeout; shutdown waits
 for admitted observations, and worker errors remain failures. This adds no OS
 containment, forced worker termination or shutdown deadline. Migration:
 `docs/architecture/CONTRACT_DELTA_API_AUTHORITY_INPUTS_CD_2026-09-17.md`.
+
+Model-assignment, provider-status and health-view role discovery, and team
+topology/catalog reads use that same application query service and workspace
+reader. The reader captures the model root before dispatch and retains one native
+observation through globbing, read/decode and file closure. Cancellation, elapsed
+caller timeout and application close wait for that observation to settle. Native
+errors already tolerated by discovery (`OSError` and `JSONDecodeError`) still
+skip that file; other errors retain their existing failure semantics. Role-filter
+order, team sorting, catalog precedence and filename fallback remain unchanged.
+A nonempty normalized role filter bypasses discovery. These reads add no atomic
+snapshot, path-containment guarantee, thread termination or shutdown deadline.
+Migration and evidence: `docs/architecture/CONTRACT_DELTA_API_CATALOG_OWNERSHIP_D_2026-09-28.md`.
 
 ## Admission and completion
 

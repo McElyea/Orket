@@ -1,7 +1,7 @@
 # Outward Ledger Retained Storage V2
 
-Last updated: 2026-09-12
-Status: Active implementation contract; native/copy behavioral acceptance passed on the recorded Windows/Linux matrix
+Last updated: 2026-09-28
+Status: Active implementation contract; historical BT-2 matrix and scoped Windows D read controls pass; fresh installed proof pending
 Owner: Orket Core
 
 The architectural-truth plan's BT-2 slice owns acceptance. The contract delta is
@@ -80,6 +80,34 @@ independent event count, commitment count, retained head and all event pages.
 It neither initializes schema nor creates a missing database. Keyset traversal
 uses append sequence; the default page size is 1,000. A concurrent append belongs
 to a later snapshot and cannot silently extend the current traversal.
+
+Each admitted observation captures its selected database path and page size
+before native work. Capture constructs the concrete reader from its standard
+path/page-size/borrowed-connection values, using the existing constructor limits;
+it does not clone arbitrary subclass state or bind custom instance hooks.
+Application export/verification captures both store paths and
+the selected reader before its owned path-agreement check. The existing file-root
+policy binds ordinary relative paths at this boundary and refuses drive-relative
+paths. Native path resolution remains off the event loop. The shared I/O owner
+retains standalone resolution, connection acquisition, queries and close through
+repeated cancellation or timeout. A successful snapshot after interruption is
+discarded; uncaught operation failure takes precedence. Existing storage/record
+error categories, causes and application invalid-result envelopes remain intact.
+
+Direct `read_in_transaction` and `read` with a supplied connection retain their
+query attempt through interruption. They neither close nor commit/roll back that
+borrowed connection; its caller retains transaction and resource authority. An
+unused reader path does not become an admission requirement for these borrowed
+operations. This is one existing read owner, not a new transaction or retry.
+
+`verify_run` captures supplied Mapping entries before awaiting its snapshot.
+Valid anchors contain only the existing scalar fields; capture does not make
+non-mapping pair sequences valid, reinterpret invalid values, or move anchor
+validation ahead of local-integrity observation. These rules cover each snapshot
+attempt; PII audit append and the later response snapshot remain separate effects.
+No filesystem/database atomicity or forced native termination is promised.
+Migration and current ownership proof limits:
+`docs/architecture/CONTRACT_DELTA_OUTWARD_LEDGER_READ_D_2026-09-28.md`.
 
 Verification rejects missing/uncommitted rows, gaps, identity/hash/chain changes,
 count/head disagreement and malformed stored records. It checks the original v1
@@ -218,7 +246,9 @@ back an interrupted transaction; the command does not overwrite or resume it.
 Native integrity, copied migration, interruption/restart and actual resource
 boundaries pass the recorded installed-wheel Windows/Linux Python 3.11/3.12
 envelope. The canonical architectural-truth plan records its requirement audit
-and retained evidence. This does not establish authenticity, capacity, untested
+and retained evidence. That historical matrix does not verify the current D read
+ownership correction; the dated ownership delta records its passing Windows
+source closing and remaining installed proof. This does not establish authenticity, capacity, untested
 hosts/providers, core release approval or additional workload/formal admission.
 Rollback stops dispatch/export, retaining original databases, copies, anchors,
 journals and receipts. It cannot restore old hash-repair behavior or re-execute an

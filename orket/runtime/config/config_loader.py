@@ -48,7 +48,10 @@ class ConfigLoader:
         self.organization = organization
         self._environment = dict(environment) if environment is not None else None
         self._user_settings = json.dumps(user_settings, allow_nan=False) if user_settings is not None else None
-        self.decision_nodes = decision_nodes or build_decision_node_registry(environment=self._environment)
+        self.decision_nodes = decision_nodes or build_decision_node_registry(
+            environment=self._environment,
+            user_settings=json.loads(self._user_settings) if self._user_settings is not None else None,
+        )
         self.loader_strategy_node = self.decision_nodes.resolve_loader_strategy(self.organization)
         self.file_tools = AsyncFileTools(self.root)
 

@@ -1,7 +1,7 @@
 # Settings input ownership
 
 Owner: Orket Core
-Last updated: 2026-09-25
+Last updated: 2026-09-28
 Status: Active contract
 
 ## Inputs and selection
@@ -29,6 +29,26 @@ original location. Filesystem aliases and external path replacement are not an
 OS containment or hostile-editor boundary.
 
 ## Runtime snapshots and synchronous admission
+
+Direct pipeline construction supplies its selected `RuntimeConstructionInputs`
+settings to its decision registry and the separate sandbox/orchestrator registries
+composed through `PipelineWiringService`. Explicit empty settings are authoritative;
+the caller's bound snapshot cannot replace them. The registry builder accepts
+`user_settings` and retains environment precedence, retired-setting refusals and
+organization policy. Omission retains the existing bootstrap settings reader.
+Orchestrator detaches a supplied settings mapping at construction before forwarding
+it at the existing registry-selection point.
+
+This handoff does not rotate the caller context, merge registry instances or read
+omitted preferences. Standalone `OrketRuntimeContext.from_env` also forwards
+settings from supplied construction inputs when creating its registry.
+`ConfigLoader` forwards its already serialized settings snapshot; later caller
+mutation cannot replace it. Omitted settings retain the bootstrap reader and
+supplied registries retain their precedence. Custom loader factories remain
+responsible for their contracts; distinct registries are not forced to merge.
+Native context construction and synchronous loader methods keep their loop-thread
+refusals. ConfigLoader organization loading retains its existing context behavior.
+Migration: `docs/architecture/CONTRACT_DELTA_REGISTRY_SETTINGS_D_2026-09-28.md`.
 
 `set_runtime_settings_context` serializes supplied nested JSON objects before
 binding either snapshot. Getters deserialize detached dictionaries. Child tasks

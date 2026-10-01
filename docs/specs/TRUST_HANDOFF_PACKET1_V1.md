@@ -1,6 +1,6 @@
 # Trust Handoff Packet 1 V1
 
-Last updated: 2026-05-04
+Last updated: 2026-09-28
 Status: Active durable contract
 Owner: Orket Core
 
@@ -162,6 +162,36 @@ When `handoff_required=true` and any required field is absent, B must fail close
 4. no `run_started`, `turn_started`, model invocation, tool invocation, memory write, or commitment event.
 
 On success, B emits `trust_handoff_verified` before `run_started`.
+
+## Native verification ownership
+
+The synchronous verifier is a native boundary. Direct event-loop calls refuse
+with `E_TRUST_HANDOFF_VERIFICATION_REQUIRES_NATIVE_CONTEXT` before package I/O;
+the offline verifier and corruption CLIs retain their synchronous behavior.
+Async handoff admission uses the shared owned native worker for the complete
+verification attempt, including path resolution, metadata/discovery, file reads,
+closure and report construction. Repeated cancellation and deadlines do not
+release that worker early. An uncaught native failure takes precedence over
+caller interruption. Existing caught manifest-read/parse failures still produce
+their original rejection report; no new catch changes the verification order.
+
+Admission binds a relative package path lexically against its invocation directory
+before dispatch, using the existing process-path policy. Windows drive-relative
+paths refuse with `E_PROCESS_DRIVE_RELATIVE_PATH_UNSUPPORTED`. Verification scope,
+source and target identities remain frozen scalar values selected before the
+await. Ledger payloads retain the original declared package-path spelling.
+
+Interrupted verification publishes neither trust_handoff_verified nor
+trust_handoff_rejected, even if its settled native report accepts or rejects.
+The outward executor may already have committed the shared run and attempt to
+EXECUTING before verification; that partial authority remains, without final
+truth, run_started, model/tool execution or a handoff completion receipt. Native
+read settlement is not rollback or authority to infer admission after interruption.
+
+This ownership boundary does not make multiple filesystem observations atomic,
+copy package bytes at admission, or strengthen the existing resolved-reference
+containment against concurrent/hostile filesystem changes. Package integrity,
+first-failure vocabulary, authority limits and read-only verifier behavior remain.
 
 ## Ledger Events
 

@@ -91,7 +91,7 @@ Build Companion frontend (optional when editing UI source):
 3. `npm --prefix src/companion_app/frontend run build`
 
 Run local web app:
-1. Start Orket host API (`python -m orket.interfaces.api` or your standard host launch path).
+1. Start Orket host API from the host repository (`python server.py`).
 2. Set environment:
    - `COMPANION_HOST_BASE_URL` (default `http://127.0.0.1:8082`)
    - `COMPANION_API_KEY` or `ORKET_API_KEY` (one is required; gateway fails closed when neither is set)

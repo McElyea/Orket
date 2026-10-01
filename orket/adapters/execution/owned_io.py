@@ -3,17 +3,18 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable, Coroutine, Generator
 from functools import partial
 from typing import TypeVar
 
 IOResult = TypeVar("IOResult")
+OwnedCoroutine = Coroutine[object, None, IOResult] | Generator[object, None, IOResult]
 logger = logging.getLogger(__name__)
 side_effecting = True  # Owns asynchronous I/O and worker admission.
 
 
 async def run_owned_io(
-    operation: Callable[[], Awaitable[IOResult]], *, label: str, preserve_failure: bool = False,
+    operation: Callable[[], OwnedCoroutine[IOResult]], *, label: str, preserve_failure: bool = False,
     cancel_on_interrupt: bool = False,
 ) -> IOResult:
     warn = logger.warning
@@ -30,9 +31,46 @@ async def run_owned_io(
     return result
 
 
-async def _settle_owned_io(operation, *, cancel_on_interrupt=False):
+class _FatalContainedCoroutine(Coroutine[object, None, IOResult | BaseException]):
+    """Keep Task's coroutine-driving protocol while settling its two fatal failures."""
+
+    def __init__(self, operation: OwnedCoroutine[IOResult]) -> None:
+        self._operation = operation
+
+    def __await__(self) -> Generator[object, None, IOResult | BaseException]:
+        return self
+
+    def __iter__(self) -> Generator[object, None, IOResult | BaseException]:
+        return self
+
+    def __next__(self) -> object:
+        return self.send(None)
+
+    def send(self, value: None) -> object:
+        try:
+            return self._operation.send(value)
+        except (KeyboardInterrupt, SystemExit) as failure:
+            raise StopIteration(failure) from None
+
+    # Keep exact argument forwarding; this overloaded protocol boundary remains untyped.
+    def throw(self, *args):
+        try:
+            return self._operation.throw(*args)
+        except (KeyboardInterrupt, SystemExit) as failure:
+            raise StopIteration(failure) from None
+
+    def close(self) -> None:
+        return self._operation.close()
+
+
+async def _settle_owned_io(
+    operation: Callable[[], OwnedCoroutine[IOResult]], *, cancel_on_interrupt: bool = False,
+) -> tuple[IOResult | BaseException, asyncio.CancelledError | None]:
     """The single admission/settlement loop shared by operations and their finalizers."""
-    task = asyncio.create_task(operation())
+    candidate: OwnedCoroutine[IOResult | BaseException] = operation()
+    if asyncio.iscoroutine(candidate):
+        candidate = _FatalContainedCoroutine(candidate)
+    task = asyncio.create_task(candidate)
     joined = asyncio.gather(task, return_exceptions=True)
     cancelled: asyncio.CancelledError | None = None
     while True:
@@ -77,6 +115,27 @@ async def run_owned_diagnostic(operation: Callable[[], object], *, primary: Base
 async def run_owned_thread(operation: Callable[[], IOResult], *, label: str) -> IOResult:
     """Drain a synchronous capability; a worker failure takes precedence over cancellation."""
     return await run_owned_io(lambda: asyncio.to_thread(operation), label=label, preserve_failure=True)
+
+
+async def finish_owned_io(operation: Callable[[], OwnedCoroutine[IOResult]]) -> IOResult:
+    """Settle an async finalizer after its caller has already selected an outcome.
+
+    Discard later caller cancellation while retaining any native failure,
+    including the native operation's own CancelledError, for caller policy.
+    """
+    result, _cancelled = await _settle_owned_io(operation)
+    if isinstance(result, BaseException):
+        raise result
+    return result
+
+
+async def finish_owned_thread(operation: Callable[[], IOResult]) -> IOResult:
+    """Settle a native finalizer after its caller has already selected an outcome.
+
+    Later caller cancellation does not replace that outcome. A native failure,
+    including its own CancelledError, remains exact for the caller's policy.
+    """
+    return await finish_owned_io(lambda: asyncio.to_thread(operation))
 
 
 def require_sync_context(*, code: str) -> None:

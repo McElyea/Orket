@@ -11,6 +11,8 @@ from orket.marshaller.rejection_codes import FLAKE_DETECTED, FORBIDDEN_PATH, LIN
 from orket.marshaller.replay import replay_run
 from orket.marshaller.runner import MarshallerRunner
 
+pytestmark = pytest.mark.integration
+
 
 def _git(repo: Path, *args: str, strip: bool = True) -> str:
     completed = subprocess.run(

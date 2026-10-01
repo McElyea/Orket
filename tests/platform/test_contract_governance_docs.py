@@ -2,6 +2,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
 
 def test_contract_delta_template_contains_required_sections() -> None:
     path = Path("docs/architecture/CONTRACT_DELTA_TEMPLATE.md")

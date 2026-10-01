@@ -65,6 +65,7 @@ def _event_payloads(events: list[Any], event_type: ProviderEventType) -> list[di
     return [event.payload for event in events if event.event_type == event_type]
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_openai_compat_stream_zero_deltas_emits_synthetic_token(
     monkeypatch: pytest.MonkeyPatch,
@@ -105,6 +106,7 @@ async def test_openai_compat_stream_zero_deltas_emits_synthetic_token(
     assert fallback_calls[0]["stream"] is False
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_openai_compat_non_stream_uses_completion_text(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("ORKET_MODEL_STREAM_OPENAI_USE_STREAM", "false")
@@ -128,6 +130,7 @@ async def test_openai_compat_non_stream_uses_completion_text(monkeypatch: pytest
     assert "synthetic" not in token_payloads[0]
 
 
+@pytest.mark.unit
 def test_openai_compat_extract_delta_supports_reasoning_and_text() -> None:
     reasoning_chunk = {"choices": [{"delta": {"reasoning_content": "thinking"}}]}
     text_chunk = {"choices": [{"delta": {"text": "answer"}}]}

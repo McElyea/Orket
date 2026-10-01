@@ -1,7 +1,7 @@
 # Connector invocation timing
 
 Status: Active contract
-Last updated: 2026-09-22
+Last updated: 2026-09-28
 Owner: Orket Core
 
 ## Authority and measurement
@@ -68,6 +68,13 @@ exception leaves its caller, including repeated cancellation or caller timeout.
 Expected telemetry failures are diagnosed without replacing that original exception.
 If the diagnostic sink also fails, a non-secret note on the original exception
 identifies both failure types; the primary outcome and its identity remain intact.
+Unexpected append or fallback-handler failure, including native cancellation,
+SystemExit and KeyboardInterrupt, retains that same primary and adds the fixed
+`E_OWNED_DIAGNOSTIC_FAILED` marker through the shared diagnostic owner. Notes use
+the base exception method; supported ordinary exception state and existing
+cause/context/prior notes remain. The expected-failure fallback keeps its detailed
+non-secret note. Migration and proof limits:
+`docs/architecture/CONTRACT_DELTA_SUPPORTING_DIAGNOSTIC_POLICY_D_2026-09-28.md`.
 This path no longer uses the optional lossy queue. Other producers retain their
 existing delivery contracts. A blocked native sink keeps this finalizer pending.
 

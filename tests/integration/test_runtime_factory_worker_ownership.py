@@ -20,11 +20,11 @@ pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 def held_runtime_factory(test_root, workspace, db_path):
     state = SimpleNamespace(entered=threading.Event(), release=threading.Event(), finished=threading.Event(),
                             owners=[], files=[], dispatched=False, dispatch_release=asyncio.Event())
-    original = pipeline_module.ExecutionPipeline
+    original = pipeline_module.ExecutionPipeline.__init__
 
-    def construct(*args, **kwargs):
+    def construct(owner, *args, **kwargs):
         kwargs.update(config_root=test_root, db_path=db_path)
-        owner = original(*args, **kwargs)
+        original(owner, *args, **kwargs)
         state.owners.append(owner)
 
         async def forbidden_dispatch(*_args, **_kwargs):
@@ -40,7 +40,6 @@ def held_runtime_factory(test_root, workspace, db_path):
                 assert state.release.wait(5), 'Native factory release deadline'
         finally:
             state.finished.set()
-        return owner
 
     return state, construct
 
@@ -50,14 +49,14 @@ def held_runtime_factory(test_root, workspace, db_path):
 async def test_runtime_factory_worker_is_owned(test_root, workspace, db_path, monkeypatch, record_property, route, interrupt):
     await asyncio.to_thread(_write_epic_assets, test_root, 'publication_epic')
     state, construct = held_runtime_factory(test_root, workspace, db_path)
-    monkeypatch.setattr(pipeline_module, 'ExecutionPipeline', construct)
+    monkeypatch.setattr(pipeline_module.ExecutionPipeline, '__init__', construct)
 
     async def invoke():
         async with asyncio.timeout(.05 if interrupt == 'timeout' else 5):
             if route == 'public':
                 return await pipeline_module.orchestrate_card('publication_epic', workspace,
                     session_id='factory-session', build_id='factory-build')
-            return await execute_collection_member(create=construct, creation={'workspace': workspace},
+            return await execute_collection_member(create=pipeline_module.ExecutionPipeline, creation={'workspace': workspace},
                 target='publication_epic', session_id='factory-session', build_id='factory-build', execution={})
 
     timer = threading.Timer(.8, state.release.set)

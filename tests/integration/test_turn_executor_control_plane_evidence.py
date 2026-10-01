@@ -13,6 +13,7 @@ from orket.application.services.turn_tool_control_plane_service import build_tur
 from orket.application.workflows.turn_checkpoint_snapshot import checkpoint_snapshot_integrity_ref
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.core.contracts import StepRecord
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.contracts.protocol_hashing import build_step_id, derive_operation_id
 from orket.core.domain import (
     AttemptState,
@@ -26,6 +27,7 @@ from orket.core.domain import (
 from orket.core.domain.control_plane_effect_journal import create_effect_journal_entry
 from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.core.domain.state_machine import StateMachine
+from orket.logging import bind_logging, prepare_logging
 from orket.schema import CardStatus, IssueConfig, RoleConfig
 from tests.helpers.step_journal_opening import remove_journal
 from tests.helpers.turn_artifacts import artifact_destination, artifact_test_utc_now, write_checkpoint_fixture
@@ -233,11 +235,10 @@ async def test_completed_governed_reentry_requires_effect_journal_truth(tmp_path
     control_plane, executor, _step, _tool_args = await _seed_completed_run_without_effect(tmp_path)
     model = _Model()
     toolbox = _Toolbox()
-
     before = await logical_state(control_plane.execution_repository.db_path)
-    result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
     assert await logical_state(control_plane.execution_repository.db_path) == before
-
     assert result.success is False
     assert result.error is not None
     assert "is missing matching effect journal" in result.error
@@ -265,11 +266,10 @@ async def test_completed_governed_reentry_requires_effect_alignment_with_step_tr
     await control_plane.publication.repository.append_effect_journal_entry(run_id=_run_id(), entry=effect)
     model = _Model()
     toolbox = _Toolbox()
-
     before = await logical_state(control_plane.execution_repository.db_path)
-    result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
     assert await logical_state(control_plane.execution_repository.db_path) == before
-
     assert step.output_ref == f"turn-tool-result:{operation_id}"
     assert result.success is False
     assert result.error is not None
@@ -284,8 +284,8 @@ async def test_completed_governed_reentry_rejects_unexpected_operation_artifacts
     control_plane, executor = _executor(tmp_path)
     model = _Model()
     toolbox = _Toolbox()
-
-    first = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        first = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
     executor.artifact_writer.persist_operation_result(
         destination=artifact_destination(executor.artifact_writer, session_id="run-1",
             issue_id="ISSUE-1", role_name="developer", turn_index=1),
@@ -294,8 +294,8 @@ async def test_completed_governed_reentry_rejects_unexpected_operation_artifacts
         tool_args={"path": "agent_output/extra.txt", "content": "extra"},
         result={"ok": True, "tool": "write_file", "touched_paths": ["agent_output/extra.txt"]},
     )
-
-    second = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        second = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
 
     assert first.success is True
     assert second.success is False
@@ -319,8 +319,8 @@ async def test_resume_mode_rejects_orphan_operation_artifacts_before_model(tmp_p
     )
     model = _Model()
     toolbox = _Toolbox()
-
-    result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context(resume_mode=True))
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context(resume_mode=True))
     run = await control_plane.execution_repository.get_run_record(run_id=_run_id())
     attempt = await control_plane.execution_repository.get_attempt_record(attempt_id=_attempt_id())
     truth = await control_plane.publication.repository.get_final_truth(run_id=_run_id())
@@ -344,20 +344,20 @@ async def test_completed_governed_reentry_requires_snapshot_identity_alignment(t
     control_plane, executor = _executor(tmp_path)
     model = _Model()
     toolbox = _Toolbox()
-
-    first = await executor.execute_turn(
-        _issue(), _role(), model, toolbox, _context(namespace_scope="issue:OTHER")
-    )
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        first = await executor.execute_turn(
+            _issue(), _role(), model, toolbox, _context(namespace_scope="issue:OTHER")
+        )
     checkpoint = await control_plane.publication.repository.get_checkpoint(
         checkpoint_id=f"turn-tool-checkpoint:{_attempt_id()}"
     )
     snapshot = await _observe_snapshot_namespace(tmp_path)
-    second = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        second = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
     checkpoint_after = await control_plane.publication.repository.get_checkpoint(
         checkpoint_id=f"turn-tool-checkpoint:{_attempt_id()}"
     )
     retained = await _observe_snapshot_namespace(tmp_path)
-
     assert first.success is True
     assert checkpoint is not None
     assert checkpoint_after == checkpoint
@@ -380,8 +380,8 @@ async def test_resume_mode_requires_snapshot_identity_alignment(tmp_path: Path) 
     snapshot = await _observe_snapshot_namespace(tmp_path)
     model = _Model()
     toolbox = _Toolbox()
-
-    result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context(resume_mode=True))
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context(resume_mode=True))
     checkpoint_after = await control_plane.publication.repository.get_checkpoint(
         checkpoint_id=checkpoint.checkpoint_id
     )

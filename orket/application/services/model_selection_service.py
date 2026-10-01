@@ -8,11 +8,14 @@ from copy import deepcopy
 from dataclasses import dataclass, replace
 from functools import partial
 from math import isfinite
+from pathlib import Path
 from types import MappingProxyType
 from typing import Any
 
 from orket.adapters.execution.owned_io import run_owned_thread
+from orket.adapters.storage.async_file_tools import capture_file_roots
 from orket.adapters.storage.model_score_reader import read_model_scores
+from orket.application.services.process_input_service import absolute_process_path
 from orket.core.contracts.model_selection import (
     ModelCompliancePolicy,
     ModelScoreObservation,
@@ -99,6 +102,8 @@ class ModelSelectionService:
         self, organization: Any = None, preferences: dict[str, Any] | None = None,
         user_settings: dict[str, Any] | None = None, *, strategy: Any = None,
     ) -> PreparedModelSelection:
+        # Bind relative reports to this preparation, before settings or executor waits.
+        invocation_root, = capture_file_roots([Path()])
         # Borrowed nested dictionaries are captured before the first await.
         rules = deepcopy(getattr(organization, "process_rules", None) or {})
         captured_preferences = deepcopy(preferences) if preferences is not None else None
@@ -112,6 +117,7 @@ class ModelSelectionService:
         policy, report_path = _compliance(captured_settings, rules)
         observation = ModelScoreObservation()
         if report_path:
+            report_path = str(absolute_process_path(report_path, invocation_root))
             observation = await run_owned_thread(partial(read_model_scores, report_path), label="model-selection-scores")
             if observation.status != "observed":
                 LOGGER.warning("Model selection score report %s: %s (%s)",

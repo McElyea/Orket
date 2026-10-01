@@ -3,7 +3,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from orket.application.services.tool_parser import ToolParser
+
+pytestmark = pytest.mark.contract
 
 
 def _load_json(path: Path):

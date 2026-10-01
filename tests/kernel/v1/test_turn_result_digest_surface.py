@@ -2,8 +2,12 @@ from __future__ import annotations
 
 from copy import deepcopy
 
+import pytest
+
 from orket.kernel.v1.canonical import compute_turn_result_digest
 from orket.kernel.v1.validator import execute_turn_v1
+
+pytestmark = pytest.mark.contract
 
 
 def _sample_turn_result() -> dict:

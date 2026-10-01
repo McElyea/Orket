@@ -16,8 +16,10 @@ pytestmark = pytest.mark.integration
 
 @pytest.mark.parametrize("stop", ["shutdown", "reload"])
 @pytest.mark.parametrize("failure", [False, True])
-def test_reload_signals_retain_worker_through_process_finalization(tmp_path, stop, failure, record_property):
-    values, port = environment(tmp_path, controlled=True, RELOAD_TEST_FINALIZER="fail" if failure else "ok")
+@pytest.mark.parametrize("stage", ["process", "interpreter"])
+def test_reload_signals_retain_worker_through_process_finalization(tmp_path, stop, failure, stage, record_property):
+    values, port = environment(tmp_path, controlled=True, RELOAD_TEST_FINALIZER="fail" if failure else "ok",
+                               RELOAD_TEST_FINALIZER_STAGE=stage)
     with owned_server(tmp_path, [], values) as process, httpx.Client(
         base_url=f"http://127.0.0.1:{port}", timeout=1, trust_env=False,
     ) as client:
@@ -29,17 +31,20 @@ def test_reload_signals_retain_worker_through_process_finalization(tmp_path, sto
                 trigger_reload(tmp_path, 1)
             else:
                 signal_server(process, tmp_path / "server.py")
-            until(lambda: (tmp_path / f"{worker_pid}-process-finalization-held").exists())
+            marker = tmp_path / f"{worker_pid}-{stage}-finalization-held"
+            until(marker.exists)
+            if stage == "interpreter":
+                assert marker.read_text() == "interpreter-finalizing; python-signal-handler-cleared"
             assert (tmp_path / f"{worker_pid}-closed").exists()
             for _ in range(2):
                 signal_server(process, tmp_path / "server.py")
                 time.sleep(0.15)
                 assert process.poll() is None and worker.is_running()
-                assert not (tmp_path / f"{worker_pid}-process-finalization-done").exists()
+                assert not (tmp_path / f"{worker_pid}-{stage}-finalization-done").exists()
         finally:
             (tmp_path / "release-finalizer").touch()
         assert process.wait(timeout=15) == (1 if failure else 0)
-        assert (tmp_path / f"{worker_pid}-process-finalization-done").exists()
+        assert (tmp_path / f"{worker_pid}-{stage}-finalization-done").exists()
         assert not worker.is_running()
         record_property("retained_worker_identity", str(identity))
     log = (tmp_path / "server.log").read_text(encoding="utf-8")

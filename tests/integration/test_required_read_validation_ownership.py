@@ -25,6 +25,7 @@ from orket.core.domain.state_machine import StateMachine
 from orket.schema import IssueConfig, RoleConfig
 from tests.helpers.kernel_state_probe import interrupt_owned, responsive_sqlite
 from tests.helpers.turn_artifacts import artifact_test_utc_now
+from tests.integration.test_turn_execution_ownership import execute_prepared_turn
 
 _A = "agent_output/a.txt"
 _B = "agent_output/b.txt"
@@ -194,7 +195,7 @@ async def test_composed_validation_executes_captured_turn(tmp_path, monkeypatch,
     monkeypatch.setattr(executor.response_parser, "parse_response", record_parse)
     state = _hold_validation_resolve(monkeypatch, a_path, model)
     operation = asyncio.create_task(
-        executor.execute_turn(IssueConfig(id="ISSUE-READ", summary="Read", seat="developer", status="in_progress"),
+        execute_prepared_turn(root, executor.execute_turn, IssueConfig(id="ISSUE-READ", summary="Read", seat="developer", status="in_progress"),
                               role, model, toolbox, context)
     )
     primary_error: BaseException | None = None
@@ -241,7 +242,7 @@ async def test_corrective_reuses_initial_observation_and_retry_observes_fresh_st
     toolbox, executor, context = _Toolbox(root), _executor(root), _context(_A)
     state = _hold_validation_resolve(monkeypatch, a_path, model)
     operation = asyncio.create_task(
-        executor.execute_turn(IssueConfig(id="ISSUE-READ", summary="Read", seat="developer", status="in_progress"),
+        execute_prepared_turn(root, executor.execute_turn, IssueConfig(id="ISSUE-READ", summary="Read", seat="developer", status="in_progress"),
                               _role(), model, toolbox, context)
     )
     primary_error: BaseException | None = None
@@ -291,7 +292,7 @@ async def test_validation_late_native_failure_settles_before_return(
         return collect(*args)
 
     monkeypatch.setattr(executor.contract_validator, "collect_contract_violations", record_validation)
-    task = asyncio.create_task(executor.execute_turn(
+    task = asyncio.create_task(execute_prepared_turn(root, executor.execute_turn,
         IssueConfig(id="ISSUE-READ", summary="Read", seat="developer", status="in_progress"),
         _role(), model, toolbox, _context(_A),
     ))

@@ -1,6 +1,6 @@
 # Control-plane terminal authority
 
-Last updated: 2026-09-25
+Last updated: 2026-09-28
 Status: Active contract; historical-consistency implementation acceptance remains scoped in the architectural-truth plan.
 
 ## Common record contract
@@ -91,6 +91,17 @@ after commit. Other exceptions and cancellation roll back these writes while
 preserving earlier physical effects and evidence. Scoped source, installed and
 native acceptance passes in the architectural-truth plan. This does not fence work
 outside that transaction or reconcile already partial historical stores.
+
+Turn checkpoint resume also validates the retained identity chain before returning
+continuation authority. The requested run must own both the resumed attempt and
+the source attempt. The recovery decision must name that run and source attempt;
+the checkpoint parent must name the same source attempt. Same-attempt recovery
+uses the resumed attempt as its source; replacement recovery uses the preceding
+attempt linked to the recovery decision. Missing or contradictory bindings refuse
+with `TurnToolCheckpointRecoveryError` without repairing retained history.
+Existing acceptance, resume-target and snapshot checks still apply. This is the
+turn workload's attempt-parent contract; it does not restrict other workload
+checkpoint-parent forms or establish artifact replay from metadata-only evidence.
 
 ## Orchestrator issue-dispatch closeout
 

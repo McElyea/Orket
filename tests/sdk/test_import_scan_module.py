@@ -2,11 +2,15 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from orket_extension_sdk.import_scan import scan_extension_imports
+
+pytestmark = pytest.mark.integration
 
 
 def test_import_scan_reports_internal_orket_imports(tmp_path: Path) -> None:
-    """Layer: contract. Verifies static import scan blocks `orket.*` internal imports."""
+    """Layer: integration. Verifies static import scan blocks `orket.*` internal imports."""
     source_dir = tmp_path / "src"
     source_dir.mkdir(parents=True, exist_ok=True)
     (source_dir / "workload.py").write_text(
@@ -29,7 +33,7 @@ def test_import_scan_reports_internal_orket_imports(tmp_path: Path) -> None:
 
 
 def test_import_scan_ignores_local_virtualenv_trees(tmp_path: Path) -> None:
-    """Layer: contract. Verifies static import scan ignores local virtualenv trees under the extension root."""
+    """Layer: integration. Verifies static import scan ignores local virtualenv trees under the extension root."""
     source_dir = tmp_path / "src"
     source_dir.mkdir(parents=True, exist_ok=True)
     (source_dir / "workload.py").write_text(

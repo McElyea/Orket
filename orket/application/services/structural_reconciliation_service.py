@@ -7,6 +7,7 @@ from pathlib import Path
 
 from orket.adapters.execution.owned_io import run_owned_io, run_owned_thread
 from orket.adapters.storage.async_executor_service import run_coroutine_blocking
+from orket.adapters.storage.async_file_tools import capture_file_roots
 from orket.adapters.storage.structural_board_store import StructuralBoardStore
 from orket.core.domain.reconciler import ReconciliationPlan
 from orket.core.domain.reconciler import StructuralReconciler as ReconciliationPolicy
@@ -28,19 +29,21 @@ class StructuralReconciler:
         return run_coroutine_blocking(self.reconcile())
 
     async def reconcile(self) -> ReconciliationPlan:
-        return await run_owned_io(self._reconcile, label="structural-reconciliation", preserve_failure=True)
+        selected_root, selected_workspace = self.root_path, self.workspace
+        root, workspace = capture_file_roots([
+            Path() if selected_root is None else selected_root,
+            Path() if selected_workspace is None else selected_workspace,
+        ])
+        return await run_owned_io(partial(self._reconcile, root, workspace,
+            default_root=selected_root is None, default_workspace=selected_workspace is None),
+            label="structural-reconciliation", preserve_failure=True)
 
-    async def _reconcile(self) -> ReconciliationPlan:
-        root = (
-            self.root_path
-            if self.root_path is not None
-            else await run_owned_thread(default_model_root, label="structural-model-root")
-        )
-        workspace = (
-            self.workspace
-            if self.workspace is not None
-            else await run_owned_thread(default_workspace_root, label="structural-workspace")
-        )
+    async def _reconcile(self, root: Path, workspace: Path, *, default_root: bool,
+                         default_workspace: bool) -> ReconciliationPlan:
+        if default_root:
+            root = await run_owned_thread(partial(default_model_root, root), label="structural-model-root")
+        if default_workspace:
+            workspace = await run_owned_thread(partial(default_workspace_root, workspace), label="structural-workspace")
         await self._event("reconciler_start", {"root_path": str(root)}, workspace)
         store = StructuralBoardStore(root)
         plan = ReconciliationPolicy.plan(await store.snapshot())

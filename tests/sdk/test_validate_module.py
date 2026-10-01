@@ -2,7 +2,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from orket_extension_sdk.validate import validate_extension
+
+pytestmark = pytest.mark.integration
 
 
 def _write_extension(
@@ -33,7 +37,7 @@ def _write_extension(
 
 
 def test_validate_extension_unknown_capability_warns_by_default(tmp_path: Path) -> None:
-    """Layer: contract. Verifies capability vocab enforcement stays warning-only outside strict mode."""
+    """Layer: integration. Verifies capability vocab enforcement stays warning-only outside strict mode."""
     _write_extension(
         tmp_path,
         module_source="def run(ctx, payload):\n    return payload\n",
@@ -69,7 +73,7 @@ def test_validate_extension_with_import_scan_blocks_internal_imports(tmp_path: P
 
 
 def test_validate_extension_resolves_src_layout_entrypoints(tmp_path: Path) -> None:
-    """Layer: contract. Verifies entrypoint module resolution supports `src/` package layout."""
+    """Layer: integration. Verifies entrypoint module resolution supports `src/` package layout."""
     src_pkg = tmp_path / "src" / "demo_pkg"
     src_pkg.mkdir(parents=True, exist_ok=True)
     (src_pkg / "__init__.py").write_text("", encoding="utf-8")
@@ -121,7 +125,7 @@ def test_validate_extension_rejects_unsupported_manifest_version(tmp_path: Path)
 
 # Layer: integration
 def test_validate_extension_accepts_matching_agent_manifest_contract(tmp_path: Path) -> None:
-    """Layer: contract. Strict author validation recognizes the additive agent-v0 contract."""
+    """Layer: integration. Strict author validation recognizes the additive agent-v0 contract."""
     (tmp_path / "demo_workload.py").write_text(
         "async def run(ctx, payload):\n    return payload\n", encoding="utf-8"
     )

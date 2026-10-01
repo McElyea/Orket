@@ -1,4 +1,4 @@
-# Layer: end-to-end
+# Layer: end_to_end
 
 from __future__ import annotations
 
@@ -24,6 +24,7 @@ pytestmark = pytest.mark.skipif(
 )
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_live_terminal_evidence_export_and_sweeper_cleanup(tmp_path, monkeypatch) -> None:
     if shutil.which("docker-compose") is None or shutil.which("docker") is None:

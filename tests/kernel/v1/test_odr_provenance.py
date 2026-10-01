@@ -6,7 +6,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
 
+
+@pytest.mark.integration
 def test_generate_odr_provenance_no_probes(tmp_path: Path) -> None:
     input_dir = tmp_path / "odr"
     input_dir.mkdir(parents=True, exist_ok=True)
@@ -50,6 +53,7 @@ def test_generate_odr_provenance_no_probes(tmp_path: Path) -> None:
     assert row["runtime"]["orket_git_commit"] is None
 
 
+@pytest.mark.unit
 def test_normalize_ollama_version_returns_machine_parseable_value() -> None:
     module_path = Path("scripts/odr/generate_odr_provenance.py")
     spec = importlib.util.spec_from_file_location("odr_provenance_module_test", module_path)

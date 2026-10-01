@@ -14,6 +14,8 @@ from typing import Any, TypeVar
 
 import aiosqlite
 
+from orket.adapters.execution.owned_io import run_owned_io
+from orket.adapters.storage.async_file_tools import capture_file_roots
 from orket.core.contracts.card_completion_commit import (
     CardCompletionAuthority,
     CardCompletionContext,
@@ -211,7 +213,17 @@ class AsyncCardRepository(CardRepository):
         await self._execute(_op, row_factory=True, commit=True)
 
     async def read_completion_receipt(self, card_id: str) -> CardCompletionReceipt | None:
-        path = await asyncio.to_thread(Path(self.db_path).resolve)
+        db_path, = capture_file_roots([Path(self.db_path)])
+        authority = self._completion_authority
+        return await run_owned_io(lambda: self._inspect_completion_receipt(db_path, authority, card_id),
+                                  label="card-completion-receipt-read", preserve_failure=True)
+
+    @staticmethod
+    async def _inspect_completion_receipt(
+        db_path: Path, authority: CardCompletionAuthority | None, card_id: str,
+    ) -> CardCompletionReceipt | None:
+        # The public read owner retains metadata, SQLite read/close and evidence inspection.
+        path = await asyncio.to_thread(db_path.resolve)
         try:
             async with aiosqlite.connect(path.as_uri() + "?mode=ro", uri=True) as conn:
                 conn.row_factory = aiosqlite.Row
@@ -220,9 +232,9 @@ class AsyncCardRepository(CardRepository):
             if snapshot is None:
                 return None
             record, receipt = snapshot
-            if self._completion_authority is None:
+            if authority is None:
                 raise CardCompletionRejected("E_CARD_COMPLETION_AUTHORITY_MISSING")
-            decision = await self._completion_authority.inspect_completion_receipt(record=record, receipt=receipt)
+            decision = await authority.inspect_completion_receipt(record=record, receipt=receipt)
             if not decision.sufficient:
                 raise CardCompletionRejected("E_CARD_COMPLETION_RECEIPT_EVIDENCE_UNVERIFIABLE", decision)
             return receipt

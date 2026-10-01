@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from orket.adapters.execution.owned_io import run_owned_thread
+from orket.adapters.storage.async_file_tools import capture_file_roots
 from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.core.policies.tool_gate import FileWriteFacts
 from orket.core.policies.tool_gate import ToolGate as ToolGatePolicy
@@ -49,22 +50,27 @@ class ToolGate:
         }
         facts = None
         if tool_name == "write_file" and captured_args.get("path"):
-            facts = await run_owned_thread(
-                partial(self._file_write_facts, captured_args, captured_context),
-                label="tool-gate-file-validation",
-            )
+            try:
+                workspace, = capture_file_roots([self.workspace_root])
+            except (OSError, ValueError, TypeError) as exc:
+                facts = FileWriteFacts("", "", f"Invalid file path: {exc}")
+            else:
+                facts = await run_owned_thread(
+                    partial(self._file_write_facts, captured_args, captured_context, workspace),
+                    label="tool-gate-file-validation",
+                )
         if tool_name == "update_issue_status" and self.org and getattr(self.org, "bypass_governance", False):
             logger.warning("Ignoring bypass_governance during tool gate transition validation.")
         return self._policy.validate(tool_name, captured_args, captured_context, captured_roles, file_facts=facts)
 
-    def _file_write_facts(self, args: dict[str, Any], context: dict[str, Any]) -> FileWriteFacts:
+    def _file_write_facts(self, args: dict[str, Any], context: dict[str, Any], workspace: Path) -> FileWriteFacts:
         """Invoked only by the owned worker; resolution and AST work stay off the event loop."""
         file_path = args["path"]
         try:
             full_path = Path(file_path)
             if not full_path.is_absolute():
-                full_path = self.workspace_root / full_path
-            root, resolved = self.workspace_root.resolve(), full_path.resolve()
+                full_path = workspace / full_path
+            root, resolved = workspace.resolve(), full_path.resolve()
             if not resolved.is_relative_to(root):
                 return FileWriteFacts("", "", f"Security violation: Cannot write outside workspace ({file_path})")
             if bool(context.get("idesign_enabled", False)):
@@ -75,7 +81,7 @@ class ToolGate:
                     tool_calls=[ToolCall(tool="write_file", args=args)],
                     timestamp=datetime.min.replace(tzinfo=UTC),
                 )
-                violations = self.idesign_validator.validate_turn(turn, self.workspace_root)
+                violations = self.idesign_validator.validate_turn(turn, workspace)
                 if violations:
                     violation = violations[0]
                     return FileWriteFacts(

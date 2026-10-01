@@ -26,7 +26,8 @@ async def _stop_child(child) -> None:
 
 
 def _approval_service(engine):
-    service = engine._pipeline._build_epic_run_orchestrator().approval_pauses
+    owner, service = engine._pipeline._build_epic_run_components()
+    assert owner.approval_pauses is service
     assert service is not None
     return service
 

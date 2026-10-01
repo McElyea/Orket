@@ -11,6 +11,7 @@ import pytest
 
 from orket.application.middleware import MiddlewareOutcome
 from orket.application.workflows.turn_artifact_writer import validate_operation_record
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain import (
     AttemptState,
     ClosureBasisClassification,
@@ -19,6 +20,7 @@ from orket.core.domain import (
     SideEffectBoundaryClass,
 )
 from orket.core.domain.execution import ExecutionTurn, ToolCall, ToolCallErrorClass
+from orket.logging import bind_logging, prepare_logging
 from tests.helpers.cached_result_middleware import (
     compose_legacy_cached_result_leaf,
     observe_cached_result_load_leaf,
@@ -104,17 +106,15 @@ async def _dispatch(
         content="",
         tool_calls=[ToolCall(tool=selected["tool"], args=deepcopy(selected["args"]))],
     )
-    operation = execute_executor_dispatch_fixture(
-        case.executor,
-        turn=turn,
-        toolbox=case.toolbox,
-        context={
-            **context(resume=resume),
-            "protocol_governed_enabled": protocol_enabled,
-        },
-        issue=case.issue,
-    )
-    outcome = (await asyncio.gather(operation, return_exceptions=True))[0]
+    async def operation():
+        with bind_logging(await prepare_logging(LoggingInputs(case.workspace))):
+            return await execute_executor_dispatch_fixture(
+                case.executor, turn=turn, toolbox=case.toolbox,
+                context={**context(resume=resume), "protocol_governed_enabled": protocol_enabled},
+                issue=case.issue,
+            )
+
+    outcome = (await asyncio.gather(operation(), return_exceptions=True))[0]
     return turn, outcome
 
 
@@ -328,14 +328,15 @@ async def test_embedded_replay_refuses_changed_middleware_result_without_authori
     before_state = await control_plane_state(case)
     before_files = await immutable_physical(case)
 
-    result = await case.executor.execute_turn(
-        case.issue,
-        case.role,
-        case.model,
-        case.toolbox,
-        context(replay=True),
-        system_prompt="SYSTEM",
-    )
+    with bind_logging(await prepare_logging(LoggingInputs(case.workspace))):
+        result = await case.executor.execute_turn(
+            case.issue,
+            case.role,
+            case.model,
+            case.toolbox,
+            context(replay=True),
+            system_prompt="SYSTEM",
+        )
     after_state = await control_plane_state(case)
     after_files = await immutable_physical(case)
 

@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, ClassVar
 
+from orket.adapters.observability.logging_context import PreparedLogging, bind_logging
 from orket.application.interactions.commands import InteractionCommands
 from orket.application.services.api_event_service import ApiEventService
 from orket.application.services.application_runtime_lifetime import (
@@ -32,6 +33,7 @@ class ApiRuntimeContainer(ApplicationRuntimeLifetime):
     runtime_state: Any
     api_runtime_host: Any
     engine: Any
+    logging_context: PreparedLogging
     events: ApiEventService = field(init=False)
     authentication: Any | None = None
     system_queries: Any | None = None
@@ -68,6 +70,11 @@ class ApiRuntimeContainer(ApplicationRuntimeLifetime):
         """Own the request's selected policy service while its native reads settle."""
         owner = RuntimePolicyInputService(environment=environment, invocation_root=invocation_root)
         return await owner.observe_runtime()
+
+    async def run_request(self, invoke: Callable[[], Awaitable[None]]) -> None:
+        """Admit the operation with this application's selection; restore the request caller."""
+        with bind_logging(self.logging_context):
+            await super().run_request(invoke)
 
     async def _close_final_resource(self) -> None:
         await close_owned_resource(self.engine)

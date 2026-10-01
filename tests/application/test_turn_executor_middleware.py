@@ -9,9 +9,11 @@ from orket.application.services.tool_gate_service import ToolGate
 from orket.application.services.turn_tool_control_plane_service import build_turn_tool_control_plane_service
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.application.workflows.turn_read_context import RequiredReadObservation
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain import AttemptState, RunState
 from orket.core.domain.state_machine import StateMachine
 from orket.exceptions import ModelConnectionError
+from orket.logging import bind_logging, prepare_logging
 from orket.schema import CardStatus, IssueConfig, RoleConfig
 from tests.helpers.turn_artifacts import artifact_test_utc_now, prepare_executor_message_fixture
 from tests.helpers.turn_control_plane_clock import deterministic_turn_clock as deterministic_turn_clock
@@ -107,7 +109,8 @@ async def test_turn_executor_middleware_hook_order(tmp_path):
      utc_now=artifact_test_utc_now)
     model = _Model(['{"tool": "write_file", "args": {"path": "out.txt", "content": "ok"}}'])
     toolbox = _ToolBox()
-    result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
     assert result.success is True
     assert hook_order == ["before_prompt", "after_model", "before_tool:write_file", "after_tool:write_file"]
 
@@ -135,7 +138,8 @@ async def test_turn_executor_isolates_broken_before_prompt_interceptor(tmp_path)
      utc_now=artifact_test_utc_now)
     model = _Model(['{"tool": "write_file", "args": {"path": "out.txt", "content": "ok"}}'])
     toolbox = _ToolBox()
-    result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
     assert result.success is True
     assert hook_order == ["healthy_before_prompt", "healthy_after_model"]
     assert toolbox.calls == [("write_file", {"path": "out.txt", "content": "ok"})]
@@ -155,7 +159,8 @@ async def test_turn_executor_middleware_short_circuit_before_tool(tmp_path):
      utc_now=artifact_test_utc_now)
     model = _Model(['{"tool": "write_file", "args": {"path": "out.txt", "content": "ok"}}'])
     toolbox = _ToolBox()
-    result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
     assert result.success is False
     assert "blocked by middleware" in (result.error or "")
 
@@ -177,7 +182,8 @@ async def test_turn_executor_mandatory_before_tool_crash_blocks_execution(tmp_pa
      utc_now=artifact_test_utc_now)
     model = _Model(['{"tool": "write_file", "args": {"path": "out.txt", "content": "ok"}}'])
     toolbox = _ToolBox()
-    result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
     assert result.success is False
     assert "interceptor_crash" in (result.error or "")
     assert toolbox.calls == []
@@ -201,7 +207,8 @@ async def test_turn_executor_partial_parse_failure_blocks_without_recovery_tool(
         ]
     )
     toolbox = _ToolBox()
-    result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
     assert result.success is False
     assert result.turn is not None
     assert result.turn.partial_parse_failure is True
@@ -228,7 +235,8 @@ async def test_turn_executor_calls_on_turn_failure_hook(tmp_path):
         middleware=TurnLifecycleInterceptors([_Hooks()]),
      utc_now=artifact_test_utc_now)
     toolbox = _ToolBox()
-    result = await executor.execute_turn(_issue(), _role(), _FailingModel(), toolbox, _context())
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), _role(), _FailingModel(), toolbox, _context())
     assert result.success is False
     assert hit["called"] is True
 
@@ -253,7 +261,8 @@ async def test_turn_executor_on_turn_failure_continues_after_broken_hook(tmp_pat
         workspace=Path(tmp_path),
         middleware=TurnLifecycleInterceptors([_BrokenHooks(), _HealthyHooks()]),
      utc_now=artifact_test_utc_now)
-    result = await executor.execute_turn(_issue(), _role(), _FailingModel(), _ToolBox(), _context())
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), _role(), _FailingModel(), _ToolBox(), _context())
     assert result.success is False
     assert hit["called"] is True
 
@@ -268,7 +277,8 @@ async def test_turn_executor_non_progress_fails_after_one_reprompt(tmp_path):
      utc_now=artifact_test_utc_now)
     model = _Model(["No-op", "Still no-op"])
     toolbox = _ToolBox()
-    result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
     assert result.success is False
     assert model.calls == 2
     assert "Deterministic failure" in (result.error or "")
@@ -289,7 +299,8 @@ async def test_turn_executor_non_progress_recovery_after_reprompt(tmp_path):
         ]
     )
     toolbox = _ToolBox()
-    result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
     assert result.success is True
     assert model.calls == 2
     assert len(toolbox.calls) == 1
@@ -320,7 +331,8 @@ async def test_turn_executor_retries_transient_model_failure(tmp_path):
     context = _context()
     context["max_turn_retries"] = 1
     context["turn_retry_backoff_seconds"] = 0
-    result = await executor.execute_turn(_issue(), _role(), model, toolbox, context)
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), _role(), model, toolbox, context)
     assert result.success is True
     assert model.calls == 2
     assert toolbox.calls == [("write_file", {"path": "out.txt", "content": "ok"})]
@@ -345,7 +357,8 @@ async def test_turn_executor_blocks_after_model_retry_exhaustion(tmp_path):
     context = _context()
     context["max_turn_retries"] = 1
     context["turn_retry_backoff_seconds"] = 0
-    result = await executor.execute_turn(_issue(), _role(), model, _ToolBox(), context)
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), _role(), model, _ToolBox(), context)
     assert result.success is False
     assert result.should_retry is False
     assert model.calls == 2
@@ -376,13 +389,14 @@ async def test_turn_executor_context_only_tool_call_is_non_progress(tmp_path):
     context = _context()
     context["role"] = "requirements_analyst"
     context["roles"] = ["requirements_analyst"]
-    result = await executor.execute_turn(
-        _issue(),
-        role,
-        model,
-        toolbox,
-        context,
-    )
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(
+            _issue(),
+            role,
+            model,
+            toolbox,
+            context,
+        )
     assert result.success is False
     assert model.calls == 2
     assert "Deterministic failure" in (result.error or "")
@@ -414,13 +428,14 @@ async def test_turn_executor_enforces_required_status_after_reprompt(tmp_path):
     context["roles"] = ["requirements_analyst"]
     context["required_action_tools"] = ["write_file", "update_issue_status"]
     context["required_statuses"] = ["code_review"]
-    result = await executor.execute_turn(
-        _issue(),
-        role,
-        model,
-        toolbox,
-        context,
-    )
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(
+            _issue(),
+            role,
+            model,
+            toolbox,
+            context,
+        )
     assert result.success is True
     assert model.calls == 2
     assert len(toolbox.calls) == 2
@@ -453,13 +468,14 @@ async def test_turn_executor_blocked_requires_wait_reason(tmp_path):
     context["roles"] = ["integrity_guard"]
     context["required_action_tools"] = ["update_issue_status"]
     context["required_statuses"] = ["done", "blocked"]
-    result = await executor.execute_turn(
-        _issue(status=CardStatus.AWAITING_GUARD_REVIEW),
-        role,
-        model,
-        toolbox,
-        context,
-    )
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(
+            _issue(status=CardStatus.AWAITING_GUARD_REVIEW),
+            role,
+            model,
+            toolbox,
+            context,
+        )
     assert result.success is False
     assert model.calls == 2
     assert len(toolbox.calls) == 0
@@ -484,9 +500,8 @@ async def test_turn_executor_blocks_approval_required_tool_and_persists_request(
     context["approval_required_tools"] = ["write_file"]
     context["create_pending_gate_request"] = _request_writer
     context["stage_gate_mode"] = "approval_required"
-
-    result = await executor.execute_turn(_issue(), _role(), model, toolbox, context)
-
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), _role(), model, toolbox, context)
     assert result.success is False
     assert result.should_retry is True
     assert "Approval required for tool 'write_file'" in (result.error or "")
@@ -507,11 +522,9 @@ async def test_turn_executor_write_file_approval_resume_continues_same_governed_
      utc_now=artifact_test_utc_now)
     model = _Model(['{"tool": "write_file", "args": {"path": "out.txt", "content": "ok"}}'])
     toolbox = _ToolBox()
-
     class _PendingRepo:
         def __init__(self) -> None:
             self.rows: list[dict[str, object]] = []
-
         async def create_request(self, **kwargs):
             request_id = f"REQ-{len(self.rows) + 1}"
             self.rows.append(
@@ -529,7 +542,6 @@ async def test_turn_executor_write_file_approval_resume_continues_same_governed_
                 }
             )
             return request_id
-
         async def list_requests(self, *, session_id=None, status=None, limit=100):
             rows = list(self.rows)
             if session_id:
@@ -537,7 +549,6 @@ async def test_turn_executor_write_file_approval_resume_continues_same_governed_
             if status:
                 rows = [row for row in rows if row["status"] == status]
             return rows[: max(1, int(limit))]
-
         async def resolve_request(self, *, request_id: str, status: str, resolution=None) -> None:
             for row in self.rows:
                 if row["request_id"] == request_id:
@@ -545,9 +556,7 @@ async def test_turn_executor_write_file_approval_resume_continues_same_governed_
                     row["resolution_json"] = dict(resolution or {})
                     return
             raise RuntimeError("request not found")
-
     repo = _PendingRepo()
-
     async def _request_writer(*, destination, tool_name, tool_args):
         return await repo.create_request(
             session_id="sess-1",
@@ -564,7 +573,6 @@ async def test_turn_executor_write_file_approval_resume_continues_same_governed_
                 "control_plane_target_ref": "turn-tool-run:sess-1:ISSUE-1:developer:0001",
             },
         )
-
     async def _approved_lookup(*, destination, tool_name, tool_args):
         rows = await repo.list_requests(session_id="sess-1", status="approved", limit=100)
         for row in rows:
@@ -577,23 +585,20 @@ async def test_turn_executor_write_file_approval_resume_continues_same_governed_
                 continue
             return str(row["request_id"])
         return None
-
     first_context = _context()
     first_context["approval_required_tools"] = ["write_file"]
     first_context["create_pending_gate_request"] = _request_writer
     first_context["resolve_granted_tool_approval"] = _approved_lookup
     first_context["stage_gate_mode"] = "approval_required"
     first_context["run_namespace_scope"] = "issue:ISSUE-1"
-
-    first = await executor.execute_turn(_issue(), _role(), model, toolbox, first_context)
-
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        first = await executor.execute_turn(_issue(), _role(), model, toolbox, first_context)
     run_id = "turn-tool-run:sess-1:ISSUE-1:developer:0001"
     run = await control_plane.execution_repository.get_run_record(run_id=run_id)
     attempt = None if run is None else await control_plane.execution_repository.get_attempt_record(
         attempt_id=str(run.current_attempt_id or "")
     )
     truth = await control_plane.publication.repository.get_final_truth(run_id=run_id)
-
     assert first.success is False
     assert "Approval required for tool 'write_file'" in (first.error or "")
     assert model.calls == 1
@@ -604,13 +609,11 @@ async def test_turn_executor_write_file_approval_resume_continues_same_governed_
     assert run.lifecycle_state is RunState.EXECUTING
     assert attempt.attempt_state is AttemptState.EXECUTING
     assert truth is None
-
     await repo.resolve_request(
         request_id=str(repo.rows[0]["request_id"]),
         status="approved",
         resolution={"decision": "approve"},
     )
-
     second_context = _context()
     second_context["approval_required_tools"] = ["write_file"]
     second_context["create_pending_gate_request"] = _request_writer
@@ -618,15 +621,13 @@ async def test_turn_executor_write_file_approval_resume_continues_same_governed_
     second_context["stage_gate_mode"] = "approval_required"
     second_context["run_namespace_scope"] = "issue:ISSUE-1"
     second_context["resume_mode"] = True
-
-    second = await executor.execute_turn(_issue(), _role(), model, toolbox, second_context)
-
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        second = await executor.execute_turn(_issue(), _role(), model, toolbox, second_context)
     run = await control_plane.execution_repository.get_run_record(run_id=run_id)
     attempt = None if run is None else await control_plane.execution_repository.get_attempt_record(
         attempt_id=str(run.current_attempt_id or "")
     )
     truth = await control_plane.publication.repository.get_final_truth(run_id=run_id)
-
     assert second.success is True
     assert model.calls == 1
     assert toolbox.calls == [("write_file", {"path": "out.txt", "content": "ok"})]
@@ -659,11 +660,9 @@ async def test_turn_executor_create_issue_approval_resume_continues_same_governe
         description="Build code",
         tools=["create_issue"],
     )
-
     class _PendingRepo:
         def __init__(self) -> None:
             self.rows: list[dict[str, object]] = []
-
         async def create_request(self, **kwargs):
             request_id = f"REQ-{len(self.rows) + 1}"
             self.rows.append(
@@ -681,7 +680,6 @@ async def test_turn_executor_create_issue_approval_resume_continues_same_governe
                 }
             )
             return request_id
-
         async def list_requests(self, *, session_id=None, status=None, limit=100):
             rows = list(self.rows)
             if session_id:
@@ -737,7 +735,8 @@ async def test_turn_executor_create_issue_approval_resume_continues_same_governe
     first_context["stage_gate_mode"] = "approval_required"
     first_context["run_namespace_scope"] = "issue:ISSUE-1"
 
-    first = await executor.execute_turn(_issue(), role, model, toolbox, first_context)
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        first = await executor.execute_turn(_issue(), role, model, toolbox, first_context)
 
     run_id = "turn-tool-run:sess-1:ISSUE-1:developer:0001"
     run = await control_plane.execution_repository.get_run_record(run_id=run_id)
@@ -771,7 +770,8 @@ async def test_turn_executor_create_issue_approval_resume_continues_same_governe
     second_context["run_namespace_scope"] = "issue:ISSUE-1"
     second_context["resume_mode"] = True
 
-    second = await executor.execute_turn(_issue(), role, model, toolbox, second_context)
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        second = await executor.execute_turn(_issue(), role, model, toolbox, second_context)
 
     run = await control_plane.execution_repository.get_run_record(run_id=run_id)
     attempt = None if run is None else await control_plane.execution_repository.get_attempt_record(
@@ -822,14 +822,14 @@ async def test_turn_executor_guard_rejection_payload_contract_recovers_after_rep
     context["required_action_tools"] = ["update_issue_status"]
     context["required_statuses"] = ["done", "blocked"]
     context["stage_gate_mode"] = "review_required"
-
-    result = await executor.execute_turn(
-        _issue(status=CardStatus.AWAITING_GUARD_REVIEW),
-        role,
-        model,
-        toolbox,
-        context,
-    )
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(
+            _issue(status=CardStatus.AWAITING_GUARD_REVIEW),
+            role,
+            model,
+            toolbox,
+            context,
+        )
     assert result.success is True
     assert model.calls == 2
     assert len(toolbox.calls) == 1
@@ -863,14 +863,14 @@ async def test_turn_executor_guard_rejection_payload_contract_fails_after_reprom
     context["required_action_tools"] = ["update_issue_status"]
     context["required_statuses"] = ["done", "blocked"]
     context["stage_gate_mode"] = "review_required"
-
-    result = await executor.execute_turn(
-        _guard_issue(),
-        role,
-        model,
-        toolbox,
-        context,
-    )
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(
+            _guard_issue(),
+            role,
+            model,
+            toolbox,
+            context,
+        )
     assert result.success is False
     assert model.calls == 2
     assert len(toolbox.calls) == 0
@@ -904,14 +904,14 @@ async def test_turn_executor_guard_payload_reprompt_still_enforces_progress_cont
     context["required_action_tools"] = ["update_issue_status"]
     context["required_statuses"] = ["done", "blocked"]
     context["stage_gate_mode"] = "review_required"
-
-    result = await executor.execute_turn(
-        _guard_issue(),
-        role,
-        model,
-        toolbox,
-        context,
-    )
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(
+            _guard_issue(),
+            role,
+            model,
+            toolbox,
+            context,
+        )
     assert result.success is False
     assert model.calls == 2
     assert len(toolbox.calls) == 0
@@ -977,14 +977,14 @@ async def test_turn_executor_guard_dependency_block_rejected_when_dependencies_r
         "dependency_statuses": {"ARC-1": "done"},
         "unresolved_dependencies": [],
     }
-
-    result = await executor.execute_turn(
-        _guard_issue(),
-        role,
-        model,
-        toolbox,
-        context,
-    )
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(
+            _guard_issue(),
+            role,
+            model,
+            toolbox,
+            context,
+        )
     assert result.success is False
     assert model.calls == 2
     assert len(toolbox.calls) == 0
@@ -1072,14 +1072,14 @@ async def test_turn_executor_write_path_contract_recovers_after_reprompt(tmp_pat
     context["required_action_tools"] = ["write_file", "update_issue_status"]
     context["required_statuses"] = ["code_review"]
     context["required_write_paths"] = ["agent_output/main.py"]
-
-    result = await executor.execute_turn(
-        _issue(),
-        role,
-        model,
-        toolbox,
-        context,
-    )
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(
+            _issue(),
+            role,
+            model,
+            toolbox,
+            context,
+        )
     assert result.success is True
     assert model.calls == 2
     assert toolbox.calls[0][1]["path"] == "agent_output/main.py"
@@ -1116,14 +1116,14 @@ async def test_turn_executor_read_path_contract_recovers_after_reprompt(tmp_path
     context["required_action_tools"] = ["read_file", "update_issue_status"]
     context["required_statuses"] = ["code_review"]
     context["required_read_paths"] = ["agent_output/main.py"]
-
-    result = await executor.execute_turn(
-        _issue(),
-        role,
-        model,
-        toolbox,
-        context,
-    )
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(
+            _issue(),
+            role,
+            model,
+            toolbox,
+            context,
+        )
     assert result.success is True
     assert model.calls == 2
     assert len(toolbox.calls) == 2
@@ -1157,14 +1157,14 @@ async def test_turn_executor_missing_required_read_paths_are_preflighted(tmp_pat
     context["required_action_tools"] = ["read_file", "update_issue_status"]
     context["required_statuses"] = ["code_review"]
     context["required_read_paths"] = ["agent_output/requirements.txt", "agent_output/main.py"]
-
-    result = await executor.execute_turn(
-        _issue(),
-        role,
-        model,
-        toolbox,
-        context,
-    )
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(
+            _issue(),
+            role,
+            model,
+            toolbox,
+            context,
+        )
     assert result.success is True
     assert model.calls == 1
     assert len(toolbox.calls) == 2
@@ -1205,14 +1205,14 @@ async def test_turn_executor_hallucination_scope_contract_recovers_after_repromp
         "provided_context": [],
         "declared_interfaces": ["read_file", "update_issue_status"],
     }
-
-    result = await executor.execute_turn(
-        _issue(),
-        role,
-        model,
-        toolbox,
-        context,
-    )
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(
+            _issue(),
+            role,
+            model,
+            toolbox,
+            context,
+        )
     assert result.success is True
     assert model.calls == 2
     assert len(toolbox.calls) == 2
@@ -1252,8 +1252,8 @@ async def test_turn_executor_hallucination_scope_contract_fails_after_reprompt(t
         "provided_context": [],
         "declared_interfaces": ["read_file", "update_issue_status"],
     }
-
-    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), role, model, toolbox, context)
     assert result.success is False
     assert model.calls == 2
     assert len(toolbox.calls) == 0
@@ -1292,8 +1292,8 @@ async def test_turn_executor_hallucination_strict_grounding_ignores_non_json_res
         "declared_interfaces": ["update_issue_status"],
         "strict_grounding": True,
     }
-
-    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), role, model, toolbox, context)
     assert result.success is True
     assert model.calls == 1
     assert len(toolbox.calls) == 1
@@ -1332,8 +1332,8 @@ async def test_turn_executor_hallucination_strict_grounding_ignores_json_payload
         "declared_interfaces": ["write_file", "update_issue_status"],
         "strict_grounding": True,
     }
-
-    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), role, model, toolbox, context)
     assert result.success is True
     assert model.calls == 1
     assert len(toolbox.calls) == 2
@@ -1373,8 +1373,8 @@ async def test_turn_executor_hallucination_contradiction_detects_forbidden_phras
         "declared_interfaces": ["update_issue_status"],
         "forbidden_phrases": ["no tests were run"],
     }
-
-    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), role, model, toolbox, context)
     assert result.success is False
     assert model.calls == 2
     assert len(toolbox.calls) == 0
@@ -1416,8 +1416,8 @@ async def test_turn_executor_hallucination_context_partition_enforces_active_con
         "archived_context": [],
         "declared_interfaces": ["get_issue_context", "update_issue_status"],
     }
-
-    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), role, model, toolbox, context)
     assert result.success is False
     assert model.calls == 2
     assert len(toolbox.calls) == 0
@@ -1458,8 +1458,8 @@ async def test_turn_executor_hallucination_context_budget_exceeded_fails_after_r
         "declared_interfaces": ["update_issue_status"],
         "max_active_context_items": 2,
     }
-
-    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), role, model, toolbox, context)
     assert result.success is False
     assert model.calls == 2
     assert len(toolbox.calls) == 0
@@ -1499,8 +1499,8 @@ async def test_turn_executor_hallucination_context_budget_within_limit_succeeds(
         "declared_interfaces": ["update_issue_status"],
         "max_active_context_items": 2,
     }
-
-    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), role, model, toolbox, context)
     assert result.success is True
     assert model.calls == 1
     assert len(toolbox.calls) == 1
@@ -1568,8 +1568,8 @@ async def test_turn_executor_security_scope_rejects_path_traversal(tmp_path):
         "declared_interfaces": ["read_file", "update_issue_status"],
         "enforce_path_hardening": True,
     }
-
-    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), role, model, toolbox, context)
     assert result.success is False
     assert model.calls == 2
     assert len(toolbox.calls) == 0
@@ -1610,8 +1610,8 @@ async def test_turn_executor_security_scope_recovers_after_reprompt(tmp_path):
         "declared_interfaces": ["read_file", "update_issue_status"],
         "enforce_path_hardening": True,
     }
-
-    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), role, model, toolbox, context)
     assert result.success is True
     assert model.calls == 2
     assert len(toolbox.calls) == 2
@@ -1650,8 +1650,8 @@ async def test_turn_executor_consistency_scope_rejects_extra_prose(tmp_path):
         "declared_interfaces": ["update_issue_status"],
         "consistency_tool_calls_only": True,
     }
-
-    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), role, model, toolbox, context)
     assert result.success is False
     assert model.calls == 2
     assert len(toolbox.calls) == 0
@@ -1690,8 +1690,8 @@ async def test_turn_executor_consistency_scope_recovers_after_reprompt(tmp_path)
         "declared_interfaces": ["update_issue_status"],
         "consistency_tool_calls_only": True,
     }
-
-    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), role, model, toolbox, context)
     assert result.success is True
     assert model.calls == 2
     assert len(toolbox.calls) == 1
@@ -1729,8 +1729,8 @@ async def test_turn_executor_consistency_scope_allows_markdown_json_fences(tmp_p
         "declared_interfaces": ["update_issue_status"],
         "consistency_tool_calls_only": True,
     }
-
-    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), role, model, toolbox, context)
     assert result.success is True
     assert model.calls == 1
     assert len(toolbox.calls) == 1
@@ -1768,8 +1768,8 @@ async def test_turn_executor_consistency_scope_allows_json_array_envelope(tmp_pa
         "declared_interfaces": ["update_issue_status"],
         "consistency_tool_calls_only": True,
     }
-
-    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), role, model, toolbox, context)
     assert result.success is True
     assert model.calls == 1
     assert len(toolbox.calls) == 1
@@ -1808,8 +1808,8 @@ async def test_turn_executor_consistency_scope_allows_comma_separated_objects(tm
         "declared_interfaces": ["write_file", "update_issue_status"],
         "consistency_tool_calls_only": True,
     }
-
-    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), role, model, toolbox, context)
     assert result.success is True
     assert model.calls == 1
     assert len(toolbox.calls) == 2
@@ -1848,8 +1848,8 @@ async def test_turn_executor_architecture_contract_recovers_after_reprompt(tmp_p
     context["architecture_mode"] = "architect_decides"
     context["architecture_decision_path"] = "agent_output/design.txt"
     context["architecture_allowed_patterns"] = ["monolith", "microservices"]
-
-    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), role, model, toolbox, context)
     assert result.success is True
     assert model.calls == 2
     assert len(toolbox.calls) == 2
@@ -1888,8 +1888,8 @@ async def test_turn_executor_architecture_contract_enforces_forced_pattern(tmp_p
     context["architecture_decision_path"] = "agent_output/design.txt"
     context["architecture_allowed_patterns"] = ["monolith", "microservices"]
     context["architecture_forced_pattern"] = "microservices"
-
-    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), role, model, toolbox, context)
     assert result.success is False
     assert model.calls == 2
     assert "architecture decision contract not met" in (result.error or "")
@@ -1929,8 +1929,8 @@ async def test_turn_executor_architecture_contract_enforces_forced_frontend_fram
     context["architecture_allowed_patterns"] = ["monolith", "microservices"]
     context["frontend_framework_allowed"] = ["vue", "react", "angular"]
     context["frontend_framework_forced"] = "angular"
-
-    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), role, model, toolbox, context)
     assert result.success is False
     assert model.calls == 2
     assert "architecture decision contract not met" in (result.error or "")
@@ -1975,8 +1975,8 @@ async def test_turn_executor_architecture_contract_allows_relaxed_json_like_cont
         "declared_interfaces": ["write_file", "update_issue_status"],
         "consistency_tool_calls_only": True,
     }
-
-    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), role, model, toolbox, context)
     assert result.success is True
     assert model.calls == 1
     assert len(toolbox.calls) == 2
@@ -2016,8 +2016,8 @@ async def test_turn_executor_autofills_required_status_tool_call(tmp_path):
     context["architecture_forced_pattern"] = "monolith"
     context["frontend_framework_allowed"] = ["vue"]
     context["frontend_framework_forced"] = "vue"
-
-    result = await executor.execute_turn(_issue(), role, model, toolbox, context)
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), role, model, toolbox, context)
     assert result.success is True
     assert model.calls == 1
     assert len(toolbox.calls) == 2
@@ -2062,7 +2062,7 @@ async def test_turn_executor_does_not_autofill_done_from_legacy_runtime_success(
         "agent_output/verification/runtime_verification.json",
     ]
     context["runtime_verifier_ok"] = True
-
-    result = await executor.execute_turn(_guard_issue(), role, model, toolbox, context)
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_guard_issue(), role, model, toolbox, context)
     assert result.success is False
     assert all(call[0] != "update_issue_status" for call in toolbox.calls)

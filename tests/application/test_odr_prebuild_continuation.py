@@ -8,7 +8,9 @@ import pytest
 from orket.application.services.runtime_policy_inputs import ArchitecturePolicySnapshot
 from orket.application.workflows.orchestrator import Orchestrator
 from orket.application.workflows.turn_executor import TurnResult
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain.execution import ExecutionTurn
+from orket.logging import bind_logging, prepare_logging
 from orket.schema import CardStatus, DialectConfig, IssueConfig
 from tests.helpers.card_dispatch import install_dispatch_snapshot_stub
 from tests.helpers.model_selection import prepared_model_selection
@@ -181,7 +183,7 @@ async def test_execute_issue_turn_continues_after_valid_max_rounds_odr_prebuild(
         kwargs["issue"].params["odr_result"] = dict(odr_result)
         return odr_result
 
-    monkeypatch.setattr("orket.application.workflows.orchestrator.PromptCompiler.compile", lambda skill, dialect, **kwargs: "SYSTEM")
+    monkeypatch.setattr("orket.application.services.prompt_compiler.PromptCompiler.compile", lambda skill, dialect, **kwargs: "SYSTEM")
     monkeypatch.setattr(
         "orket.application.services.orchestrator_turn_preparation_service.run_cards_odr_prebuild",
         _fake_odr_prebuild,
@@ -193,17 +195,18 @@ async def test_execute_issue_turn_continues_after_valid_max_rounds_odr_prebuild(
     orch._trigger_sandbox = _noop
     orch._request_issue_transition = AsyncSpy(return_value=None)
 
-    await orch._execute_issue_turn(
-        issue_data=issue_data,
-        epic=epic,
-        team=team,
-        env=env,
-        run_id="run-1",
-        active_build="build-1",
-        model_selection=prepared_model_selection(_PromptStrategy()),
-        executor=_Executor(),
-        toolbox=SimpleNamespace(),
-    )
+    with bind_logging(await prepare_logging(LoggingInputs(orch.workspace))):
+        await orch._execute_issue_turn(
+            issue_data=issue_data,
+            epic=epic,
+            team=team,
+            env=env,
+            run_id="run-1",
+            active_build="build-1",
+            model_selection=prepared_model_selection(_PromptStrategy()),
+            executor=_Executor(),
+            toolbox=SimpleNamespace(),
+        )
 
     assert captured["context"]["odr_active"] is True
     assert captured["context"]["odr_stop_reason"] == "MAX_ROUNDS"
@@ -327,7 +330,7 @@ async def test_execute_issue_turn_uses_configured_odr_auditor_model(
         kwargs["issue"].params["odr_result"] = dict(odr_result)
         return odr_result
 
-    monkeypatch.setattr("orket.application.workflows.orchestrator.PromptCompiler.compile", lambda skill, dialect, **kwargs: "SYSTEM")
+    monkeypatch.setattr("orket.application.services.prompt_compiler.PromptCompiler.compile", lambda skill, dialect, **kwargs: "SYSTEM")
     monkeypatch.setattr(
         "orket.application.services.orchestrator_turn_preparation_service.run_cards_odr_prebuild",
         _fake_odr_prebuild,
@@ -340,17 +343,18 @@ async def test_execute_issue_turn_uses_configured_odr_auditor_model(
     orch._trigger_sandbox = _noop
     orch._request_issue_transition = AsyncSpy(return_value=None)
 
-    await orch._execute_issue_turn(
-        issue_data=issue_data,
-        epic=epic,
-        team=team,
-        env=env,
-        run_id="run-1",
-        active_build="build-1",
-        model_selection=prepared_model_selection(_PromptStrategy()),
-        executor=_Executor(),
-        toolbox=SimpleNamespace(),
-    )
+    with bind_logging(await prepare_logging(LoggingInputs(orch.workspace))):
+        await orch._execute_issue_turn(
+            issue_data=issue_data,
+            epic=epic,
+            team=team,
+            env=env,
+            run_id="run-1",
+            active_build="build-1",
+            model_selection=prepared_model_selection(_PromptStrategy()),
+            executor=_Executor(),
+            toolbox=SimpleNamespace(),
+        )
 
     model_client = captured["model_client"]
     auditor_client = captured["auditor_client"]

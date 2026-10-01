@@ -6,6 +6,11 @@ from pathlib import Path
 from typing import Any
 
 from orket.adapters.execution.owned_io import require_sync_context
+from orket.adapters.observability.logging_context import (
+    bind_logging,
+    prepare_logging_native,
+    select_logging_inputs,
+)
 from orket.adapters.storage.async_card_repository import AsyncCardRepository
 from orket.adapters.storage.async_repositories import (
     AsyncSessionRepository,
@@ -24,24 +29,24 @@ from orket.application.services.gitea_artifact_exporter_factory import create_gi
 from orket.application.services.runtime_construction_inputs import RuntimeConstructionInputs
 from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.application.services.runtime_resource_cleanup import close_runtime_resources
-from orket.application.services.runtime_result_lifetime import open_configured_runtime, open_runtime_owner
+from orket.application.services.runtime_result_lifetime import open_configured_runtime
 from orket.application.workflows.turn_artifact_writer import TurnArtifactWriter
 from orket.core.contracts.eos_calendar import EosSprintBaseline
 from orket.logging import log_event
 from orket.orchestration.orchestration_config import OrchestrationConfig, process_rule_value
 from orket.runtime.config_loader import ConfigLoader
-from orket.runtime.epic_run_orchestrator import EpicRunOrchestrator
-from orket.runtime.epic_run_types import EpicRunCallbacks
+from orket.runtime.execution.epic_run_orchestrator import EpicRunOrchestrator
+from orket.runtime.execution.epic_run_types import EpicRunCallbacks
+from orket.runtime.execution.execution_pipeline_artifact_provenance import ExecutionPipelineArtifactProvenanceMixin
+from orket.runtime.execution.execution_pipeline_card_dispatch import ExecutionPipelineCardDispatchMixin
+from orket.runtime.execution.execution_pipeline_ledger_events import ExecutionPipelineLedgerEventsMixin
+from orket.runtime.execution.execution_pipeline_resume import ExecutionPipelineResumeMixin
+from orket.runtime.execution.execution_pipeline_run_summary import ExecutionPipelineRunSummaryMixin
+from orket.runtime.execution.execution_pipeline_runtime_artifacts import ExecutionPipelineRuntimeArtifactsMixin
 from orket.runtime.execution.pipeline_wiring_service import PipelineWiringService
-from orket.runtime.execution_pipeline_artifact_provenance import ExecutionPipelineArtifactProvenanceMixin
-from orket.runtime.execution_pipeline_card_dispatch import ExecutionPipelineCardDispatchMixin
-from orket.runtime.execution_pipeline_ledger_events import ExecutionPipelineLedgerEventsMixin
-from orket.runtime.execution_pipeline_resume import ExecutionPipelineResumeMixin
-from orket.runtime.execution_pipeline_run_summary import ExecutionPipelineRunSummaryMixin
-from orket.runtime.execution_pipeline_runtime_artifacts import ExecutionPipelineRuntimeArtifactsMixin
+from orket.runtime.execution.workload_shell import SharedWorkloadShell
 from orket.runtime.run_ledger_factory import build_run_ledger_repository
 from orket.runtime.runtime_context import OrketRuntimeContext
-from orket.runtime.workload_shell import SharedWorkloadShell
 from orket.settings import load_user_settings
 
 
@@ -74,6 +79,7 @@ class ExecutionPipeline(
         runtime_inputs: RuntimeInputService | None = None,
         pipeline_wiring_service: PipelineWiringService | None = None,
         construction_inputs: RuntimeConstructionInputs | None = None,
+        logging_context=None,
     ):
         require_sync_context(code="E_RUNTIME_CONSTRUCTION_REQUIRES_ASYNC_OWNER")
         from orket.orchestration.notes import NoteStore
@@ -82,120 +88,125 @@ class ExecutionPipeline(
         inputs = context_inputs or construction_inputs or RuntimeConstructionInputs.capture(capture_preferences=False)
         if runtime_context is not None and runtime_context.construction_inputs is None:
             runtime_context.construction_inputs = inputs
-        runtime_nodes = decision_nodes or (runtime_context.decision_nodes if runtime_context is not None
-            else build_decision_node_registry(environment=inputs.environment))
-        self.runtime_context = runtime_context or OrketRuntimeContext.from_env(
-            workspace_root=workspace,
-            department=department,
-            db_path=db_path,
-            config_root=config_root,
-            cards_repo=cards_repo,
-            sessions_repo=sessions_repo,
-            snapshots_repo=snapshots_repo,
-            success_repo=success_repo,
-            run_ledger_repo=run_ledger_repo,
-            decision_nodes=runtime_nodes,
-            config_loader_factory=ConfigLoader,
-            config_loader_kwargs={"decision_nodes": runtime_nodes},
-            run_ledger_factory=build_run_ledger_repository,
-            telemetry_sink=self._emit_run_ledger_telemetry,
-            construction_inputs=inputs,
-        )
-        self.workspace = self.runtime_context.workspace_root
-        self.department = self.runtime_context.department
-        self.decision_nodes = self.runtime_context.decision_nodes
-        self.config_root = self.runtime_context.config_root
-        self.loader = self.runtime_context.loader
-        self.db_path = self.runtime_context.db_path
-        self.org = self.runtime_context.org
-        self.orchestration_config = self.runtime_context.orchestration_config
-        self.user_settings = dict(self.runtime_context.user_settings)
-        self.state_backend_mode = self.runtime_context.state_backend_mode
-        self.run_ledger_mode = self.runtime_context.run_ledger_mode
-        self.gitea_state_pilot_enabled = self.runtime_context.gitea_state_pilot_enabled
-        self.runtime_inputs = runtime_inputs or RuntimeInputService()
-        self.execution_runtime_node = self.decision_nodes.resolve_execution_runtime(self.org)
-        self.pipeline_wiring_service = pipeline_wiring_service or PipelineWiringService(self.runtime_context.construction_inputs)
+        self.logging_context = logging_context or prepare_logging_native(
+            select_logging_inputs(inputs.invocation_root, inputs.environment))
+        with bind_logging(self.logging_context):
+            runtime_nodes = decision_nodes or (runtime_context.decision_nodes if runtime_context is not None
+                else build_decision_node_registry(environment=inputs.environment, user_settings=inputs.user_settings()))
+            self.runtime_context = runtime_context or OrketRuntimeContext.from_env(
+                workspace_root=workspace,
+                department=department,
+                db_path=db_path,
+                config_root=config_root,
+                cards_repo=cards_repo,
+                sessions_repo=sessions_repo,
+                snapshots_repo=snapshots_repo,
+                success_repo=success_repo,
+                run_ledger_repo=run_ledger_repo,
+                decision_nodes=runtime_nodes,
+                config_loader_factory=ConfigLoader,
+                config_loader_kwargs={"decision_nodes": runtime_nodes},
+                run_ledger_factory=build_run_ledger_repository,
+                telemetry_sink=self._emit_run_ledger_telemetry,
+                construction_inputs=inputs,
+            )
+            self.workspace = self.runtime_context.workspace_root
+            self.department = self.runtime_context.department
+            self.decision_nodes = self.runtime_context.decision_nodes
+            self.config_root = self.runtime_context.config_root
+            self.loader = self.runtime_context.loader
+            self.db_path = self.runtime_context.db_path
+            self.org = self.runtime_context.org
+            self.orchestration_config = self.runtime_context.orchestration_config
+            self.user_settings = dict(self.runtime_context.user_settings)
+            self.state_backend_mode = self.runtime_context.state_backend_mode
+            self.run_ledger_mode = self.runtime_context.run_ledger_mode
+            self.gitea_state_pilot_enabled = self.runtime_context.gitea_state_pilot_enabled
+            self.runtime_inputs = runtime_inputs or RuntimeInputService()
+            self.execution_runtime_node = self.decision_nodes.resolve_execution_runtime(self.org)
+            self.pipeline_wiring_service = pipeline_wiring_service or PipelineWiringService(self.runtime_context.construction_inputs)
 
-        self.async_cards = self.runtime_context.cards_repo
-        self.sessions = self.runtime_context.sessions_repo
-        self.snapshots = self.runtime_context.snapshots_repo
-        self.success = self.runtime_context.success_repo
-        self.run_ledger = self.runtime_context.run_ledger
-        self.artifact_exporter = create_gitea_artifact_exporter(self.workspace,
-            environment=inputs.environment, invocation_root=inputs.invocation_root)
+            self.async_cards = self.runtime_context.cards_repo
+            self.sessions = self.runtime_context.sessions_repo
+            self.snapshots = self.runtime_context.snapshots_repo
+            self.success = self.runtime_context.success_repo
+            self.run_ledger = self.runtime_context.run_ledger
+            self.artifact_exporter = create_gitea_artifact_exporter(self.workspace,
+                environment=inputs.environment, invocation_root=inputs.invocation_root)
 
-        self.notes = NoteStore()
-        self.transcript: list[dict[str, Any]] = []
-        self.sandbox_orchestrator = self.pipeline_wiring_service.create_sandbox_orchestrator(
-            workspace=self.workspace,
-            organization=self.org,
-            construction_inputs=self.runtime_context.construction_inputs,
-        )
-        self.webhook_db = self.pipeline_wiring_service.create_webhook_database(
-            construction_inputs=self.runtime_context.construction_inputs)
-        self.bug_fix_manager = self.pipeline_wiring_service.create_bug_fix_manager(
-            organization=self.org,
-            webhook_db=self.webhook_db,
-            workspace=self.workspace,
-            now_utc=self.runtime_inputs.utc_now,
-        )
-        self.orchestrator = self.pipeline_wiring_service.create_orchestrator(
-            workspace=self.workspace,
-            async_cards=self.async_cards,
-            snapshots=self.snapshots,
-            org=self.org,
-            config_root=self.config_root,
-            db_path=self.db_path,
-            loader=self.loader,
-            sandbox_orchestrator=self.sandbox_orchestrator,
-            card_completion=self.runtime_context.card_completion,
-            turn_clock=self.runtime_inputs.utc_now,
-            control_plane_clock=self.runtime_inputs.utc_now_iso,
-            construction_inputs=self.runtime_context.construction_inputs,
-        )
-        self.orchestrator.run_ledger = self.run_ledger
-        self.cards_epic_control_plane = CardsEpicControlPlaneService(
-            utc_now=self.runtime_inputs.utc_now_iso,
-            transactions=SQLiteControlPlaneTransactions(self.orchestrator.control_plane_execution_repository.db_path),
-            execution_repository=self.orchestrator.control_plane_execution_repository,
-            publication=self.orchestrator.control_plane_publication,
-        )
-        self.epic_publication = EpicPublicationService(
-            repository=SQLiteEpicPublicationRepository(self.db_path), cards=self.async_cards,
-            sessions=self.sessions, snapshots=self.snapshots, success=self.success, ledger=self.run_ledger,
-            control_plane=self.cards_epic_control_plane,
-            scope={"workspace": str(self.workspace), "runtime_db": str(self.db_path),
-                   "run_ledger_mode": self.run_ledger_mode},
-            storage_binding=self.runtime_context.storage_binding,
-        )
-        self.workload_shell = SharedWorkloadShell()
-        self._initialize_lock = asyncio.Lock()
-        self._initialized = False
-        self._closed = False
+            self.notes = NoteStore()
+            self.transcript: list[dict[str, Any]] = []
+            self.sandbox_orchestrator = self.pipeline_wiring_service.create_sandbox_orchestrator(
+                workspace=self.workspace,
+                organization=self.org,
+                construction_inputs=self.runtime_context.construction_inputs,
+            )
+            self.webhook_db = self.pipeline_wiring_service.create_webhook_database(
+                construction_inputs=self.runtime_context.construction_inputs)
+            self.bug_fix_manager = self.pipeline_wiring_service.create_bug_fix_manager(
+                organization=self.org,
+                webhook_db=self.webhook_db,
+                workspace=self.workspace,
+                now_utc=self.runtime_inputs.utc_now,
+            )
+            self.orchestrator = self.pipeline_wiring_service.create_orchestrator(
+                workspace=self.workspace,
+                async_cards=self.async_cards,
+                snapshots=self.snapshots,
+                org=self.org,
+                config_root=self.config_root,
+                db_path=self.db_path,
+                loader=self.loader,
+                sandbox_orchestrator=self.sandbox_orchestrator,
+                card_completion=self.runtime_context.card_completion,
+                turn_clock=self.runtime_inputs.utc_now,
+                control_plane_clock=self.runtime_inputs.utc_now_iso,
+                construction_inputs=self.runtime_context.construction_inputs,
+            )
+            self.orchestrator.run_ledger = self.run_ledger
+            self.cards_epic_control_plane = CardsEpicControlPlaneService(
+                utc_now=self.runtime_inputs.utc_now_iso,
+                transactions=SQLiteControlPlaneTransactions(self.orchestrator.control_plane_execution_repository.db_path),
+                execution_repository=self.orchestrator.control_plane_execution_repository,
+                publication=self.orchestrator.control_plane_publication,
+            )
+            self.epic_publication = EpicPublicationService(
+                repository=SQLiteEpicPublicationRepository(self.db_path), cards=self.async_cards,
+                sessions=self.sessions, snapshots=self.snapshots, success=self.success, ledger=self.run_ledger,
+                control_plane=self.cards_epic_control_plane,
+                scope={"workspace": str(self.workspace), "runtime_db": str(self.db_path),
+                       "run_ledger_mode": self.run_ledger_mode},
+                storage_binding=self.runtime_context.storage_binding,
+            )
+            self.workload_shell = SharedWorkloadShell()
+            self._initialize_lock = asyncio.Lock()
+            self._initialized = False
+            self._closed = False
 
     @classmethod
     def open(cls, workspace: Path, **options):
         return open_configured_runtime(cls, workspace, label="pipeline-construction", **options)
 
     async def initialize(self) -> None:
-        if self._initialized:
-            return
-        async with self._initialize_lock:
+        with bind_logging(self.logging_context):
             if self._initialized:
                 return
-            await self.runtime_context.initialize()
-            self._initialized = True
+            async with self._initialize_lock:
+                if self._initialized:
+                    return
+                await self.runtime_context.initialize()
+                self._initialized = True
 
     async def close(self) -> None:
-        if self._closed:
-            return
-        await close_runtime_resources((
-            self.sandbox_orchestrator,
-            self.webhook_db,
-            self.runtime_context,
-        ), label="pipeline-cleanup")
-        self._closed = True
+        with bind_logging(self.logging_context):
+            if self._closed:
+                return
+            await close_runtime_resources((
+                self.sandbox_orchestrator,
+                self.webhook_db,
+                self.runtime_context,
+            ), label="pipeline-cleanup")
+            self._closed = True
 
     def _process_rules_value(self, key: str) -> str:
         return str(process_rule_value(self.org, key, "") or "").strip()
@@ -221,14 +232,15 @@ class ExecutionPipeline(
         )
 
     async def _emit_run_ledger_telemetry(self, payload: dict[str, Any]) -> None:
-        log_event(
-            "run_ledger_telemetry",
-            {
-                "run_ledger_mode": self.run_ledger_mode,
-                **dict(payload or {}),
-            },
-            workspace=self.workspace,
-        )
+        with bind_logging(self.logging_context):
+            log_event(
+                "run_ledger_telemetry",
+                {
+                    "run_ledger_mode": self.run_ledger_mode,
+                    **dict(payload or {}),
+                },
+                workspace=self.workspace,
+            )
 
     def _resolve_gitea_state_pilot_enabled(self) -> bool:
         user_settings = getattr(self, "user_settings", None)
@@ -237,23 +249,25 @@ class ExecutionPipeline(
             user_settings = loaded if isinstance(loaded, dict) else {}
         return OrchestrationConfig(self.org).resolve_gitea_state_pilot_enabled(user_settings=user_settings)
 
-    def _build_epic_run_orchestrator(self) -> EpicRunOrchestrator:
+    def _build_epic_run_components(self) -> tuple[EpicRunOrchestrator, EpicApprovalPauseService]:
         inputs = self.runtime_context.construction_inputs
         environment = dict(inputs.environment)
         build_packet1_facts = partial(self._build_packet1_facts, construction_inputs=inputs)
         materialize_run_summary = partial(
             self._materialize_run_summary, construction_inputs=inputs,
         )
-        return EpicRunOrchestrator(
-            eos_calendar=EosSprintBaseline.from_environment(environment),
-            calendar_timezone_name=(environment.get("ORKET_TIMEZONE") or "UTC").strip(),
-            approval_pauses=EpicApprovalPauseService(
-                transactions=self.cards_epic_control_plane.transactions,
-                locks=EpicContinuationLocks(self.epic_publication.repository.db_path),
-                artifact_writer=TurnArtifactWriter(self.workspace), now=self.runtime_inputs.utc_now_iso,
-                repository=self.epic_publication.repository, pending_gates=self.orchestrator.pending_gates,
-                ledger=self.run_ledger, execution_repository=self.cards_epic_control_plane.execution_repository,
-                publication=self.cards_epic_control_plane.publication),
+        build_owner = EpicRunOrchestrator
+        calendar = EosSprintBaseline.from_environment(environment)
+        timezone_name = (environment.get("ORKET_TIMEZONE") or "UTC").strip()
+        approval_pauses = EpicApprovalPauseService(
+            transactions=self.cards_epic_control_plane.transactions,
+            locks=EpicContinuationLocks(self.epic_publication.repository.db_path),
+            artifact_writer=TurnArtifactWriter(self.workspace), now=self.runtime_inputs.utc_now_iso,
+            repository=self.epic_publication.repository, pending_gates=self.orchestrator.pending_gates,
+            ledger=self.run_ledger, execution_repository=self.cards_epic_control_plane.execution_repository,
+            publication=self.cards_epic_control_plane.publication)
+        owner = build_owner(
+            eos_calendar=calendar, calendar_timezone_name=timezone_name, approval_pauses=approval_pauses,
             preparation=EpicPreparationService(
                 prepare_export=self.artifact_exporter.prepare_export, reconcile_export=self._reconcile_run_artifacts,
                 publication=self.epic_publication, materialize_receipts=self._materialize_protocol_receipts,
@@ -289,11 +303,12 @@ class ExecutionPipeline(
                 set_transcript=lambda transcript: setattr(self, "transcript", transcript),
             ),
         )
+        return owner, approval_pauses
 
     async def resume_epic_approval(self, *, session_id: str, approval_id: str, finished_child: bool = False):
         await self.initialize()
-        owner = self._build_epic_run_orchestrator()
-        pause = await owner.approval_pauses.request_for(session_id, approval_id, allow_absent=finished_child)
+        _, approval_pauses = self._build_epic_run_components()
+        pause = await approval_pauses.request_for(session_id, approval_id, allow_absent=finished_child)
         if pause is None:
             return None  # An already-final child without an epic pause has no continuation to perform.
         request = pause.request
@@ -304,10 +319,8 @@ class ExecutionPipeline(
 async def orchestrate_card(
     card_id: str, workspace: Path, *, construction_inputs: RuntimeConstructionInputs | None = None, **kwargs: Any,
 ) -> Any:
-    inputs = construction_inputs if construction_inputs is not None else await RuntimeConstructionInputs.capture_async()
-    construct = partial(ExecutionPipeline, inputs.invocation_root / workspace, kwargs.pop("department", "core"),
-                        construction_inputs=inputs)
-    async with open_runtime_owner(construct, label="public-runtime-construction") as pipeline:
+    async with ExecutionPipeline.open(workspace, department=kwargs.pop("department", "core"),
+                                       construction_inputs=construction_inputs) as pipeline:
         return await pipeline.run_card(card_id, **kwargs)
 
 

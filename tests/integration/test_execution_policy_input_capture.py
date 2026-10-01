@@ -56,7 +56,7 @@ async def test_epic_identity_is_captured_before_held_asset_read(tmp_path,monkeyp
     pipeline=await pipeline_at(tmp_path)
     policy=Policy()
     pipeline.execution_runtime_node=policy
-    owner=pipeline._build_epic_run_orchestrator()
+    owner=pipeline._build_epic_run_components()[0]
     entered,release=hold_asset(pipeline.loader,monkeypatch)
     operation=asyncio.create_task(owner._load_setup(epic_name='publication_epic',build_id=None,session_id=None,
         target_issue_id=None,model_override=''))
@@ -104,7 +104,7 @@ async def test_epic_strategy_receives_sanitized_value_without_callable(tmp_path)
             return 'build-'+sanitized
     pipeline.execution_runtime_node=ScalarOnly()
     try:
-        result=await pipeline._build_epic_run_orchestrator()._load_setup(epic_name='publication_epic',build_id=None,
+        result=await pipeline._build_epic_run_components()[0]._load_setup(epic_name='publication_epic',build_id=None,
             session_id='admitted-session',target_issue_id=None,model_override='')
         assert result.build_id=='build-publication_epic'
     finally:
@@ -131,7 +131,7 @@ async def test_invalid_identity_refuses_before_asset_read_or_publication(tmp_pat
             if collection:
                 await pipeline._run_epic_collection_entry('empty', session_id='refused-session')
             else:
-                await pipeline._build_epic_run_orchestrator()._load_setup(epic_name='publication_epic', build_id=None,
+                await pipeline._build_epic_run_components()[0]._load_setup(epic_name='publication_epic', build_id=None,
                     session_id='refused-session', target_issue_id=None, model_override='')
         assert reads == []
         assert await pipeline.sessions.get_session('refused-session') is None

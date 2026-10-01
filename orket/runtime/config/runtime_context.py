@@ -102,7 +102,10 @@ class OrketRuntimeContext:
         from orket.application.services.runtime_store_binding_service import RuntimeStoreBindingService
 
         environment = construction_inputs.environment if construction_inputs is not None else None
-        runtime_nodes = decision_nodes if decision_nodes is not None else build_decision_node_registry(environment=environment)
+        runtime_nodes = decision_nodes if decision_nodes is not None else build_decision_node_registry(
+            environment=environment,
+            user_settings=construction_inputs.user_settings() if construction_inputs is not None else None,
+        )
         resolved_workspace = Path(workspace_root).resolve()
         resolved_db_path = (resolve_runtime_db_path(db_path, invocation_root=construction_inputs.invocation_root,
             environment=environment) if construction_inputs is not None else resolve_runtime_db_path(db_path))

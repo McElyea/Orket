@@ -10,6 +10,7 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
+from orket.adapters.observability.logging_context import PreparedLogging, native_logging_inputs
 from orket.adapters.storage.async_file_tools import capture_file_roots
 from orket.agents import agent as agent_module
 from orket.agents.agent import Agent
@@ -26,7 +27,7 @@ from orket.core.domain.execution import ExecutionTurn, ToolCall, ToolCallErrorCl
 from orket.core.domain.state_machine import StateMachine
 from orket.extensions.contracts import RunAction
 from orket.extensions.runtime import ExtensionEngineAdapter, RunContext
-from orket.logging import LOG_WRITER_TERMINATED_ERROR, settle_log_write_frontier
+from orket.logging import LOG_WRITER_TERMINATED_ERROR, bind_logging, prepare_logging_native, settle_log_write_frontier
 from orket.runtime.execution.execution_pipeline_card_dispatch import ExecutionPipelineCardDispatchMixin
 from orket.schema import CardStatus, IssueConfig, RoleConfig
 from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
@@ -93,8 +94,9 @@ class _Model:
 
 
 class _RunCardHarness(ExecutionPipelineCardDispatchMixin):
-    def __init__(self, workspace_root: Path, tool_gate: ToolGate, tool_args: dict[str, Any]) -> None:
+    def __init__(self, workspace_root: Path, tool_gate: ToolGate, tool_args: dict[str, Any], logging_context: PreparedLogging) -> None:
         self.workspace = workspace_root
+        self.logging_context = logging_context
         self._tool_gate = tool_gate
         self._tool_args = dict(tool_args)
         self.toolbox = _WritingToolbox(workspace_root)
@@ -246,7 +248,7 @@ def _row(
     }
 
 
-async def _collect_rows(project_root: Path) -> list[dict[str, Any]]:
+async def _collect_rows(project_root: Path, logging_context: PreparedLogging) -> list[dict[str, Any]]:
     workspace_root = project_root / "workspace"
     workspace_root.mkdir(parents=True, exist_ok=True)
     deny_gate = _DenyAllToolGate(workspace_root)
@@ -287,7 +289,7 @@ async def _collect_rows(project_root: Path) -> list[dict[str, Any]]:
     except RuntimeError:
         direct_dispatch_result = "blocked"
 
-    run_card_harness = _RunCardHarness(workspace_root=workspace_root, tool_gate=deny_gate, tool_args=tool_args)
+    run_card_harness = _RunCardHarness(workspace_root=workspace_root, tool_gate=deny_gate, tool_args=tool_args, logging_context=logging_context)
     run_card_payload = await run_card_harness.run_card("ISSUE-1")
     run_card_result = (
         "blocked"
@@ -314,7 +316,7 @@ async def _collect_rows(project_root: Path) -> list[dict[str, Any]]:
     original_engine = extension_runtime_module.OrchestrationEngine
     extension_runtime_module.OrchestrationEngine = _EngineProxy
     try:
-        extension_harness = _RunCardHarness(workspace_root=workspace_root, tool_gate=deny_gate, tool_args=tool_args)
+        extension_harness = _RunCardHarness(workspace_root=workspace_root, tool_gate=deny_gate, tool_args=tool_args, logging_context=logging_context)
         try:
             async with ExtensionEngineAdapter.open(RunContext(workspace=workspace_root, department="core")) as adapter:
                 await adapter.execute_action(RunAction(op="run_issue", target="ISSUE-9", params={"session_id": "sess-1"}))
@@ -468,7 +470,8 @@ def main(argv: list[str] | None = None) -> int:
     primary: BaseException | None = None
     with tempfile.TemporaryDirectory(prefix="orket-tool-gate-audit-") as temp_dir:
         try:
-            rows = asyncio.run(_collect_rows(Path(temp_dir).resolve()))
+            with bind_logging(prepare_logging_native(native_logging_inputs())) as logging_context:
+                rows = asyncio.run(_collect_rows(Path(temp_dir).resolve(), logging_context))
         except BaseException as exc:
             primary = exc
             raise

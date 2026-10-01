@@ -14,6 +14,8 @@ from orket.adapters.storage.epic_publication_repository import SQLiteEpicPublica
 from orket.application.services.epic_preparation_service import EpicPreparationService
 from orket.application.services.epic_publication_service import EpicPublicationService
 from orket.application.services.runtime_input_service import RuntimeInputService
+from orket.core.contracts.logging_inputs import LoggingInputs
+from orket.logging import bind_logging, prepare_logging
 from orket.runtime.epic_run_orchestrator import EpicRunOrchestrator
 from orket.runtime.epic_run_types import EpicRunCallbacks
 
@@ -267,7 +269,9 @@ async def test_epic_run_orchestrator_rejects_unvalidated_collaborator_truth(tmp_
         ),
     )
 
-    result = await epic_runner.run("epic-orchestrator", session_id="sess-epic-runner")
+    prepared = await prepare_logging(LoggingInputs(tmp_path))
+    with bind_logging(prepared):
+        result = await epic_runner.run("epic-orchestrator", session_id="sess-epic-runner")
 
     assert result.observation == "unresolved" and not result.succeeded
     assert "ValidationError" in result.reason and result.final_truth is None

@@ -1,12 +1,14 @@
 """Reserve shared standard-epic resources before initialization or dispatch."""
 from __future__ import annotations
 
-import asyncio
 import os
 from collections.abc import Callable
+from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
+from orket.adapters.execution.owned_io import run_owned_thread
+from orket.adapters.storage.async_file_tools import capture_file_roots
 from orket.core.contracts.epic_publication import (
     EpicAdmissionRecovery,
     EpicAdmissionRecoveryRequest,
@@ -23,13 +25,16 @@ class EpicAdmissionService:
         self.repository, self.owner_id, self.now = repository, owner_id, now
 
     async def claim(self, session_id: str, request: dict[str, Any], export_binding: dict[str, Any]) -> EpicRunAdmission:
-        workspace = await asyncio.to_thread(Path(request["scope"]["workspace"]).resolve)
+        request, export_binding = deepcopy(request), deepcopy(export_binding)
+        repository, owner_id, now = self.repository, self.owner_id, self.now
+        workspace_root, = capture_file_roots([Path(request["scope"]["workspace"])])
+        workspace = await run_owned_thread(workspace_root.resolve, label="epic-admission-workspace")
         resources = sorted({"workspace:" + os.path.normcase(str(workspace)), "build:" + request["build_id"],
                             *("card:" + issue["id"] for issue in request["epic"]["issues"])})
-        record = EpicRunAdmission(session_id=session_id, owner_id=self.owner_id(), request=request,
-                                  export_binding=export_binding, resources=resources, admitted_at=self.now())
+        record = EpicRunAdmission(session_id=session_id, owner_id=owner_id(), request=request,
+                                  export_binding=export_binding, resources=resources, admitted_at=now())
         record = EpicRunAdmission.model_validate_json(record.model_dump_json())
-        async with self.repository.transaction(session_id) as transaction:
+        async with repository.transaction(session_id) as transaction:
             prior = await transaction.get_admission()
             if prior is not None:
                 if prior.request != request or prior.export_binding != export_binding:

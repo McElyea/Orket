@@ -7,7 +7,9 @@ import pytest
 
 from orket.application.services.tool_gate_service import ToolGate
 from orket.application.workflows.turn_executor import TurnExecutor
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain.state_machine import StateMachine
+from orket.logging import bind_logging, prepare_logging
 from orket.schema import CardStatus, IssueConfig, RoleConfig
 from tests.helpers.turn_artifacts import artifact_test_utc_now, prepare_executor_message_fixture
 
@@ -121,14 +123,15 @@ async def test_execute_turn_writes_prompt_provenance_artifacts(tmp_path):
             "context_profile": "default",
         },
     }
-    result = await executor.execute_turn(
-        issue=issue,
-        role=role,
-        model_client=_ModelClient(),
-        toolbox=_Toolbox(),
-        context=context,
-        system_prompt="SYSTEM",
-    )
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(
+            issue=issue,
+            role=role,
+            model_client=_ModelClient(),
+            toolbox=_Toolbox(),
+            context=context,
+            system_prompt="SYSTEM",
+        )
     assert result.success is True
     out_dir = Path(tmp_path) / "observability" / "sess-1" / "issue-1" / "000_developer"
     layers = json.loads((out_dir / "prompt_layers.json").read_text(encoding="utf-8"))
@@ -153,11 +156,9 @@ async def test_execute_turn_reprompt_overwrites_response_artifacts_with_accepted
         description="Builds code",
         tools=["write_file", "update_issue_status"],
     )
-
     class _ModelClient:
         def __init__(self) -> None:
             self.calls = 0
-
         async def complete(self, messages):
             _ = messages
             self.calls += 1
@@ -171,11 +172,9 @@ async def test_execute_turn_reprompt_overwrites_response_artifacts_with_accepted
                 '\n{"tool":"update_issue_status","args":{"status":"code_review"}}',
                 raw={"response_id": "second"},
             )
-
     class _Toolbox:
         async def execute(self, tool_name, args, context=None):
             return {"ok": True, "tool": tool_name, "args": args}
-
     context = {
         "session_id": "sess-reprompt",
         "turn_index": 1,
@@ -193,14 +192,15 @@ async def test_execute_turn_reprompt_overwrites_response_artifacts_with_accepted
         "history": [],
     }
 
-    result = await executor.execute_turn(
-        issue=issue,
-        role=role,
-        model_client=_ModelClient(),
-        toolbox=_Toolbox(),
-        context=context,
-        system_prompt="SYSTEM",
-    )
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(
+            issue=issue,
+            role=role,
+            model_client=_ModelClient(),
+            toolbox=_Toolbox(),
+            context=context,
+            system_prompt="SYSTEM",
+        )
 
     assert result.success is True
     out_dir = Path(tmp_path) / "observability" / "sess-reprompt" / "issue-1" / "001_developer"
@@ -223,7 +223,6 @@ async def test_execute_turn_writes_prompt_budget_and_structure_artifacts(tmp_pat
     role = RoleConfig(id="DEV", summary="developer", description="Builds code", tools=["write_file"])
     policy_path = Path(tmp_path) / "core" / "policies" / "prompt_budget.yaml"
     _write_prompt_budget_policy(policy_path, max_tokens=5000)
-
     class _ModelClient:
         async def count_tokens(self, messages):
             total_chars = sum(len(str((row or {}).get("content") or "")) for row in messages if isinstance(row, dict))
@@ -259,14 +258,15 @@ async def test_execute_turn_writes_prompt_budget_and_structure_artifacts(tmp_pat
         "prompt_budget_policy_path": str(policy_path),
     }
 
-    result = await executor.execute_turn(
-        issue=issue,
-        role=role,
-        model_client=_ModelClient(),
-        toolbox=_Toolbox(),
-        context=context,
-        system_prompt="SYSTEM",
-    )
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(
+            issue=issue,
+            role=role,
+            model_client=_ModelClient(),
+            toolbox=_Toolbox(),
+            context=context,
+            system_prompt="SYSTEM",
+        )
 
     assert result.success is True
     out_dir = Path(tmp_path) / "observability" / "sess-2" / "issue-1" / "001_developer"
@@ -290,7 +290,6 @@ async def test_execute_turn_fails_closed_when_prompt_budget_exceeded(tmp_path):
     policy_path = Path(tmp_path) / "core" / "policies" / "prompt_budget.yaml"
     _write_prompt_budget_policy(policy_path, max_tokens=10)
     call_count = {"value": 0}
-
     class _ModelClient:
         async def complete(self, messages):
             call_count["value"] += 1
@@ -323,14 +322,15 @@ async def test_execute_turn_fails_closed_when_prompt_budget_exceeded(tmp_path):
         "prompt_budget_policy_path": str(policy_path),
     }
 
-    result = await executor.execute_turn(
-        issue=issue,
-        role=role,
-        model_client=_ModelClient(),
-        toolbox=_Toolbox(),
-        context=context,
-        system_prompt="SYSTEM",
-    )
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(
+            issue=issue,
+            role=role,
+            model_client=_ModelClient(),
+            toolbox=_Toolbox(),
+            context=context,
+            system_prompt="SYSTEM",
+        )
 
     assert result.success is False
     assert "E_PROMPT_BUDGET_EXCEEDED" in str(result.error or "")
@@ -341,7 +341,6 @@ async def test_execute_turn_fails_closed_when_prompt_budget_exceeded(tmp_path):
 @pytest.mark.asyncio
 async def test_execute_turn_rejects_ready_turn_context(tmp_path):
     """Layer: contract. Verifies execute_turn requires an active turn status instead of READY."""
-
     executor = TurnExecutor(
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
@@ -366,23 +365,24 @@ async def test_execute_turn_rejects_ready_turn_context(tmp_path):
             return {"ok": True}
 
     model = _ModelClient()
-    result = await executor.execute_turn(
-        issue=issue,
-        role=role,
-        model_client=model,
-        toolbox=_Toolbox(),
-        context={
-            "session_id": "sess-ready",
-            "turn_index": 0,
-            "issue_id": "ISSUE-1",
-            "role": "developer",
-            "roles": ["developer"],
-            "current_status": "ready",
-            "selected_model": "dummy-model",
-            "history": [],
-        },
-        system_prompt="SYSTEM",
-    )
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(
+            issue=issue,
+            role=role,
+            model_client=model,
+            toolbox=_Toolbox(),
+            context={
+                "session_id": "sess-ready",
+                "turn_index": 0,
+                "issue_id": "ISSUE-1",
+                "role": "developer",
+                "roles": ["developer"],
+                "current_status": "ready",
+                "selected_model": "dummy-model",
+                "history": [],
+            },
+            system_prompt="SYSTEM",
+        )
 
     assert result.success is False
     assert "cannot execute turn from context status ready" in str(result.error or "")
@@ -393,7 +393,6 @@ async def test_execute_turn_rejects_ready_turn_context(tmp_path):
 @pytest.mark.asyncio
 async def test_execute_turn_rejects_status_context_mismatch(tmp_path):
     """Layer: contract. Verifies execute_turn fails fast when issue.status and context.current_status diverge."""
-
     executor = TurnExecutor(
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
@@ -418,23 +417,24 @@ async def test_execute_turn_rejects_status_context_mismatch(tmp_path):
             return {"ok": True}
 
     model = _ModelClient()
-    result = await executor.execute_turn(
-        issue=issue,
-        role=role,
-        model_client=model,
-        toolbox=_Toolbox(),
-        context={
-            "session_id": "sess-mismatch",
-            "turn_index": 0,
-            "issue_id": "ISSUE-1",
-            "role": "developer",
-            "roles": ["developer"],
-            "current_status": "code_review",
-            "selected_model": "dummy-model",
-            "history": [],
-        },
-        system_prompt="SYSTEM",
-    )
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(
+            issue=issue,
+            role=role,
+            model_client=model,
+            toolbox=_Toolbox(),
+            context={
+                "session_id": "sess-mismatch",
+                "turn_index": 0,
+                "issue_id": "ISSUE-1",
+                "role": "developer",
+                "roles": ["developer"],
+                "current_status": "code_review",
+                "selected_model": "dummy-model",
+                "history": [],
+            },
+            system_prompt="SYSTEM",
+        )
 
     assert result.success is False
     assert "status/context mismatch" in str(result.error or "")

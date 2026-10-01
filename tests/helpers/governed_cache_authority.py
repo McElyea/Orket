@@ -16,8 +16,10 @@ from orket.application.services.turn_tool_control_plane_resource_lifecycle impor
     publish_resource_snapshot,
 )
 from orket.core.contracts import AttemptRecord
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain import LeaseStatus
 from orket.core.domain.execution import ExecutionTurn, ToolCall
+from orket.logging import bind_logging, prepare_logging
 from tests.helpers.operation_binding import (
     ATTEMPT_ID,
     ISSUE,
@@ -122,13 +124,14 @@ def _turn() -> ExecutionTurn:
 
 
 async def _dispatch(case, turn: ExecutionTurn) -> ExecutionTurn:  # type: ignore[no-untyped-def]
-    return await execute_executor_dispatch_fixture(
-        case.executor,
-        turn=turn,
-        toolbox=case.toolbox,
-        context=context(),
-        issue=case.issue,
-    )
+    with bind_logging(await prepare_logging(LoggingInputs(case.workspace))):
+        return await execute_executor_dispatch_fixture(
+            case.executor,
+            turn=turn,
+            toolbox=case.toolbox,
+            context=context(),
+            issue=case.issue,
+        )
 
 
 def start_held_dispatch(case, monkeypatch, target: Path) -> SimpleNamespace:  # type: ignore[no-untyped-def]

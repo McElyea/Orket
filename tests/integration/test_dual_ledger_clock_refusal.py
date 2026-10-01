@@ -23,7 +23,7 @@ async def test_backward_protocol_time_retains_partial_effects_and_recovers_witho
 
     protocol = AsyncProtocolRunLedgerRepository(tmp_path / "protocol", timestamp_factory=clock)
     sqlite = AsyncRunLedgerRepository(tmp_path / "runtime.db")
-    repo = AsyncDualModeLedgerRepository(sqlite_repo=sqlite, protocol_repo=protocol, primary_mode=primary,
+    repo = AsyncDualModeLedgerRepository(workspace_root=tmp_path, sqlite_repo=sqlite, protocol_repo=protocol, primary_mode=primary,
                                        telemetry_sink=lambda row: telemetry.append(dict(row)))
     await repo.start_run(session_id="clock-run", run_type="test", run_name="Clock", department="core", build_id="build")
     if primary == "protocol":

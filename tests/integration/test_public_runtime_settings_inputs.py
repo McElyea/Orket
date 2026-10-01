@@ -21,20 +21,19 @@ async def test_public_runtime_preserves_independent_preference_bootstrap(
     await asyncio.to_thread(preference_path.write_text, json.dumps({'theme': 'selected'}), encoding='utf-8')
     set_preferences_file(preference_path)
     set_runtime_settings_context(user_settings={}, user_preferences={'theme': 'selected'} if preferences == 'bound' else None)
-    factory, owners = pipeline_module.ExecutionPipeline, []
+    initialize, owners = pipeline_module.ExecutionPipeline.__init__, []
 
-    def construct(*args, **kwargs):
+    def construct(owner, *args, **kwargs):
         kwargs.update(config_root=test_root, db_path=db_path)
-        owner = factory(*args, **kwargs)
+        initialize(owner, *args, **kwargs)
         owners.append(owner)
 
         async def workload(**_kwargs):
             await accept_publication_card(owner, owner.workspace)
 
         owner.orchestrator.execute_epic = workload
-        return owner
 
-    monkeypatch.setattr(pipeline_module, 'ExecutionPipeline', construct)
+    monkeypatch.setattr(pipeline_module.ExecutionPipeline, '__init__', construct)
     try:
         result = await pipeline_module.orchestrate_card('publication_epic', workspace,
             session_id='preference-context', build_id='preference-build')

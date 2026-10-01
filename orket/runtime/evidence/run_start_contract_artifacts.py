@@ -4,119 +4,114 @@ from collections.abc import Callable
 from typing import Any
 
 from orket.core.contracts.result_error_invariants import result_error_invariant_contract_snapshot
-from orket.runtime.artifact_provenance_block_policy import artifact_provenance_block_policy_snapshot
-from orket.runtime.canonical_examples_library import canonical_examples_library_snapshot
-from orket.runtime.capability_fallback_hierarchy import capability_fallback_hierarchy_snapshot
-from orket.runtime.clock_time_authority_policy import clock_time_authority_policy_snapshot
-from orket.runtime.cold_start_truth_test_contract import cold_start_truth_test_contract_snapshot
-from orket.runtime.conformance_governance_contract import conformance_governance_contract_snapshot
-from orket.runtime.decision_record_operating_principles_contract import (
-    decision_record_operating_principles_contract_snapshot,
+from orket.runtime.config import model_profile_bios, provider_truth_table
+from orket.runtime.evidence.artifact_provenance_block_policy import artifact_provenance_block_policy_snapshot
+from orket.runtime.evidence.evidence_package_generator_contract import evidence_package_generator_contract_snapshot
+from orket.runtime.evidence.failure_replay_harness_contract import failure_replay_harness_contract_snapshot
+from orket.runtime.evidence.run_start_schema_payloads import (
+    _capability_manifest_schema_payload,
+    _ledger_event_schema_payload,
 )
-from orket.runtime.degradation_first_ui_standard import degradation_first_ui_standard_snapshot
-from orket.runtime.demo_production_labeling_policy import demo_production_labeling_policy_snapshot
-from orket.runtime.evidence_package_generator_contract import evidence_package_generator_contract_snapshot
-from orket.runtime.execution_readiness_rubric import execution_readiness_rubric_snapshot
-from orket.runtime.failure_replay_harness_contract import failure_replay_harness_contract_snapshot
-from orket.runtime.feature_flag_expiration_policy import feature_flag_expiration_policy_snapshot
-from orket.runtime.human_correction_capture_policy import human_correction_capture_policy_snapshot
-from orket.runtime.idempotency_discipline_policy import idempotency_discipline_policy_snapshot
-from orket.runtime.interface_freeze_windows import interface_freeze_windows_snapshot
-from orket.runtime.interrupt_semantics_policy import interrupt_semantics_policy_snapshot
-from orket.runtime.local_remote_route_policy import local_remote_route_policy_snapshot
-from orket.runtime.long_session_soak_test_contract import long_session_soak_test_contract_snapshot
-from orket.runtime.model_profile_bios import model_profile_bios_snapshot
-from orket.runtime.naming_discipline_policy import naming_discipline_policy_snapshot
-from orket.runtime.narration_effect_audit_policy import narration_effect_audit_policy_snapshot
-from orket.runtime.non_fatal_error_budget import non_fatal_error_budget_snapshot
-from orket.runtime.observability_redaction_test_contract import observability_redaction_test_contract_snapshot
-from orket.runtime.operator_override_logging_policy import operator_override_logging_policy_snapshot
-from orket.runtime.persistence_corruption_test_contract import persistence_corruption_test_contract_snapshot
-from orket.runtime.promotion_rollback_criteria import promotion_rollback_criteria_snapshot
-from orket.runtime.provider_quarantine_policy_contract import provider_quarantine_policy_contract_snapshot
-from orket.runtime.provider_truth_table import provider_truth_table_snapshot
-from orket.runtime.release_confidence_scorecard import release_confidence_scorecard_snapshot
-from orket.runtime.resource_pressure_simulation_lane import resource_pressure_simulation_lane_snapshot
-from orket.runtime.retry_classification_policy import (
-    retry_classification_policy_snapshot,
-    validate_retry_classification_policy,
+from orket.runtime.policy import (
+    canonical_examples_library,
+    capability_fallback_hierarchy,
+    clock_time_authority_policy,
+    cold_start_truth_test_contract,
+    conformance_governance_contract,
+    decision_record_operating_principles_contract,
+    degradation_first_ui_standard,
+    demo_production_labeling_policy,
+    execution_readiness_rubric,
+    feature_flag_expiration_policy,
+    human_correction_capture_policy,
+    idempotency_discipline_policy,
+    interface_freeze_windows,
+    interrupt_semantics_policy,
+    local_remote_route_policy,
+    long_session_soak_test_contract,
+    naming_discipline_policy,
+    narration_effect_audit_policy,
+    non_fatal_error_budget,
+    observability_redaction_test_contract,
+    operator_override_logging_policy,
+    persistence_corruption_test_contract,
+    promotion_rollback_criteria,
+    provider_quarantine_policy_contract,
+    resource_pressure_simulation_lane,
+    run_phase_contract,
+    runtime_boundary_audit_checklist,
+    runtime_config_ownership_map,
+    runtime_truth_contracts,
+    runtime_truth_drift_checker,
+    safe_default_catalog,
+    sampling_discipline_guide,
+    timeout_streaming_contracts,
+    ui_lane_security_boundary_test_contract,
+    unknown_input_policy,
 )
-from orket.runtime.run_phase_contract import run_phase_contract_snapshot
-from orket.runtime.runtime_boundary_audit_checklist import runtime_boundary_audit_checklist_snapshot
-from orket.runtime.runtime_config_ownership_map import runtime_config_ownership_map_snapshot
-from orket.runtime.runtime_invariant_registry import runtime_invariant_registry_snapshot
-from orket.runtime.runtime_truth_contracts import (
-    degradation_taxonomy_snapshot,
-    fail_behavior_registry_snapshot,
-    runtime_status_vocabulary_snapshot,
-)
-from orket.runtime.runtime_truth_drift_checker import runtime_truth_contract_drift_report
-from orket.runtime.runtime_truth_trace_ids import runtime_truth_trace_ids_snapshot
-from orket.runtime.safe_default_catalog import safe_default_catalog_snapshot
-from orket.runtime.sampling_discipline_guide import sampling_discipline_guide_snapshot
-from orket.runtime.source_attribution_policy import (
-    source_attribution_policy_snapshot,
-    validate_source_attribution_policy,
-)
-from orket.runtime.state_transition_registry import state_transition_registry_snapshot
-from orket.runtime.timeout_streaming_contracts import (
-    streaming_semantics_snapshot,
-    timeout_semantics_snapshot,
-)
-from orket.runtime.trust_language_review_policy import (
-    trust_language_review_policy_snapshot,
-    validate_trust_language_review_policy,
-)
-from orket.runtime.ui_lane_security_boundary_test_contract import ui_lane_security_boundary_test_contract_snapshot
-from orket.runtime.unknown_input_policy import unknown_input_policy_snapshot
-from orket.runtime.workspace_hygiene_rules import (
-    validate_workspace_hygiene_rules,
-    workspace_hygiene_rules_snapshot,
-)
+from orket.runtime.policy import retry_classification_policy as _retry_classification_policy
+from orket.runtime.policy import source_attribution_policy as _source_attribution_policy
+from orket.runtime.policy import trust_language_review_policy as _trust_language_review_policy
+from orket.runtime.policy import workspace_hygiene_rules as _workspace_hygiene_rules
+from orket.runtime.registry import runtime_invariant_registry, runtime_truth_trace_ids, state_transition_registry
+from orket.runtime.summary import release_confidence_scorecard
+
+# Capture callables at import time, preserving consumer-local monkeypatch targets.
+canonical_examples_library_snapshot = canonical_examples_library.canonical_examples_library_snapshot
+capability_fallback_hierarchy_snapshot = capability_fallback_hierarchy.capability_fallback_hierarchy_snapshot
+clock_time_authority_policy_snapshot = clock_time_authority_policy.clock_time_authority_policy_snapshot
+cold_start_truth_test_contract_snapshot = cold_start_truth_test_contract.cold_start_truth_test_contract_snapshot
+conformance_governance_contract_snapshot = conformance_governance_contract.conformance_governance_contract_snapshot
+decision_record_operating_principles_contract_snapshot = decision_record_operating_principles_contract.decision_record_operating_principles_contract_snapshot
+degradation_first_ui_standard_snapshot = degradation_first_ui_standard.degradation_first_ui_standard_snapshot
+demo_production_labeling_policy_snapshot = demo_production_labeling_policy.demo_production_labeling_policy_snapshot
+execution_readiness_rubric_snapshot = execution_readiness_rubric.execution_readiness_rubric_snapshot
+feature_flag_expiration_policy_snapshot = feature_flag_expiration_policy.feature_flag_expiration_policy_snapshot
+human_correction_capture_policy_snapshot = human_correction_capture_policy.human_correction_capture_policy_snapshot
+idempotency_discipline_policy_snapshot = idempotency_discipline_policy.idempotency_discipline_policy_snapshot
+interface_freeze_windows_snapshot = interface_freeze_windows.interface_freeze_windows_snapshot
+interrupt_semantics_policy_snapshot = interrupt_semantics_policy.interrupt_semantics_policy_snapshot
+local_remote_route_policy_snapshot = local_remote_route_policy.local_remote_route_policy_snapshot
+long_session_soak_test_contract_snapshot = long_session_soak_test_contract.long_session_soak_test_contract_snapshot
+model_profile_bios_snapshot = model_profile_bios.model_profile_bios_snapshot
+naming_discipline_policy_snapshot = naming_discipline_policy.naming_discipline_policy_snapshot
+narration_effect_audit_policy_snapshot = narration_effect_audit_policy.narration_effect_audit_policy_snapshot
+non_fatal_error_budget_snapshot = non_fatal_error_budget.non_fatal_error_budget_snapshot
+observability_redaction_test_contract_snapshot = observability_redaction_test_contract.observability_redaction_test_contract_snapshot
+operator_override_logging_policy_snapshot = operator_override_logging_policy.operator_override_logging_policy_snapshot
+persistence_corruption_test_contract_snapshot = persistence_corruption_test_contract.persistence_corruption_test_contract_snapshot
+promotion_rollback_criteria_snapshot = promotion_rollback_criteria.promotion_rollback_criteria_snapshot
+provider_quarantine_policy_contract_snapshot = provider_quarantine_policy_contract.provider_quarantine_policy_contract_snapshot
+provider_truth_table_snapshot = provider_truth_table.provider_truth_table_snapshot
+release_confidence_scorecard_snapshot = release_confidence_scorecard.release_confidence_scorecard_snapshot
+resource_pressure_simulation_lane_snapshot = resource_pressure_simulation_lane.resource_pressure_simulation_lane_snapshot
+run_phase_contract_snapshot = run_phase_contract.run_phase_contract_snapshot
+runtime_boundary_audit_checklist_snapshot = runtime_boundary_audit_checklist.runtime_boundary_audit_checklist_snapshot
+runtime_config_ownership_map_snapshot = runtime_config_ownership_map.runtime_config_ownership_map_snapshot
+runtime_invariant_registry_snapshot = runtime_invariant_registry.runtime_invariant_registry_snapshot
+degradation_taxonomy_snapshot = runtime_truth_contracts.degradation_taxonomy_snapshot
+fail_behavior_registry_snapshot = runtime_truth_contracts.fail_behavior_registry_snapshot
+runtime_status_vocabulary_snapshot = runtime_truth_contracts.runtime_status_vocabulary_snapshot
+runtime_truth_contract_drift_report = runtime_truth_drift_checker.runtime_truth_contract_drift_report
+runtime_truth_trace_ids_snapshot = runtime_truth_trace_ids.runtime_truth_trace_ids_snapshot
+safe_default_catalog_snapshot = safe_default_catalog.safe_default_catalog_snapshot
+sampling_discipline_guide_snapshot = sampling_discipline_guide.sampling_discipline_guide_snapshot
+state_transition_registry_snapshot = state_transition_registry.state_transition_registry_snapshot
+streaming_semantics_snapshot = timeout_streaming_contracts.streaming_semantics_snapshot
+timeout_semantics_snapshot = timeout_streaming_contracts.timeout_semantics_snapshot
+ui_lane_security_boundary_test_contract_snapshot = ui_lane_security_boundary_test_contract.ui_lane_security_boundary_test_contract_snapshot
+unknown_input_policy_snapshot = unknown_input_policy.unknown_input_policy_snapshot
+retry_classification_policy_snapshot = _retry_classification_policy.retry_classification_policy_snapshot
+validate_retry_classification_policy = _retry_classification_policy.validate_retry_classification_policy
+source_attribution_policy_snapshot = _source_attribution_policy.source_attribution_policy_snapshot
+validate_source_attribution_policy = _source_attribution_policy.validate_source_attribution_policy
+trust_language_review_policy_snapshot = _trust_language_review_policy.trust_language_review_policy_snapshot
+validate_trust_language_review_policy = _trust_language_review_policy.validate_trust_language_review_policy
+validate_workspace_hygiene_rules = _workspace_hygiene_rules.validate_workspace_hygiene_rules
+workspace_hygiene_rules_snapshot = _workspace_hygiene_rules.workspace_hygiene_rules_snapshot
 
 ContractSnapshotFactory = Callable[[], dict[str, Any]]
 ContractSnapshotDef = tuple[str, str, ContractSnapshotFactory, str]
-
-
-def _ledger_event_schema_payload() -> dict[str, Any]:
-    return {
-        "ledger_schema_version": "1.0",
-        "event_type": "tool_call|tool_result|run_started|run_finalized",
-        "required_fields": [
-            "ledger_schema_version",
-            "event_type",
-            "timestamp",
-            "tool_name",
-            "run_id",
-            "sequence_number",
-        ],
-        "required_on_tool_result": [
-            "call_sequence_number",
-            "tool_call_hash",
-        ],
-        "required_on_artifact_reference": [
-            "artifact_hash",
-        ],
-    }
-
-
-def _capability_manifest_schema_payload() -> dict[str, Any]:
-    return {
-        "schema_version": "1.0",
-        "type": "object",
-        "required": [
-            "run_id",
-            "capabilities_allowed",
-            "capabilities_used",
-            "run_determinism_class",
-        ],
-        "properties": {
-            "run_id": {"type": "string", "min_length": 1},
-            "capabilities_allowed": {"type": "array", "items": {"type": "string"}},
-            "capabilities_used": {"type": "array", "items": {"type": "string"}},
-            "run_determinism_class": {"type": "string", "enum": ["pure", "workspace", "external"]},
-        },
-    }
 
 
 def _checked_runtime_truth_contract_drift_report() -> dict[str, Any]:

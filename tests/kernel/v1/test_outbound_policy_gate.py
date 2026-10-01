@@ -24,8 +24,9 @@ def _enable_nervous_system(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("ORKET_ENABLE_NERVOUS_SYSTEM", "true")
 
 
+@pytest.mark.contract
 def test_outbound_policy_gate_scrubs_configured_paths_and_pii() -> None:
-    """Layer: unit. Verifies outbound payload redaction is path-configurable and pattern-based."""
+    """Layer: contract. Verifies outbound payload redaction is path-configurable and pattern-based."""
     scrubbed, report = apply_outbound_policy_gate(
         {
             "profile": {"email": "dev@example.com", "name": "Dev"},
@@ -41,6 +42,7 @@ def test_outbound_policy_gate_scrubs_configured_paths_and_pii() -> None:
     assert report["redaction_count"] == 3
 
 
+@pytest.mark.unit
 def test_outbound_policy_gate_is_deterministic_and_does_not_mutate_input() -> None:
     """Layer: unit. Verifies Phase 6 gate purity for repeated calls and original payload preservation."""
     gate = OutboundPolicyGate(
@@ -66,11 +68,12 @@ def test_outbound_policy_gate_is_deterministic_and_does_not_mutate_input() -> No
     assert "drop" not in first
 
 
+@pytest.mark.integration
 def test_outbound_policy_gate_loads_file_and_environment_config(
     tmp_path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Layer: unit. Verifies Phase 6 supports config-file and environment policy configuration."""
+    """Layer: integration. Verifies Phase 6 supports config-file and environment policy configuration."""
     config_path = tmp_path / "outbound_policy.json"
     config_path.write_text(
         json.dumps({"pii_field_paths": ["profile.name"], "forbidden_patterns": ["FILESECRET"]}),
@@ -90,6 +93,7 @@ def test_outbound_policy_gate_loads_file_and_environment_config(
     assert set(report["redacted_paths"]) == {"note", "profile.email", "profile.name"}
 
 
+@pytest.mark.contract
 def test_outbound_policy_gate_redacts_ledger_export_as_partial_view() -> None:
     """Layer: contract. Verifies redacted ledger payload bytes are not represented as a full ledger."""
     event = LedgerEvent(
@@ -144,6 +148,7 @@ def test_outbound_policy_gate_redacts_ledger_export_as_partial_view() -> None:
     assert report["ledger_redacted_event_positions"] == [1]
 
 
+@pytest.mark.contract
 def test_projection_pack_runs_outbound_policy_gate_before_digesting() -> None:
     """Layer: contract. Verifies projection packs do not expose raw PII fields on the outbound surface."""
     response = projection_pack_v1(

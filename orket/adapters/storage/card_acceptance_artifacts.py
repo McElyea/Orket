@@ -6,7 +6,10 @@ import hashlib
 import json
 import os
 from dataclasses import dataclass
+from functools import partial
 from pathlib import Path
+
+from orket.adapters.execution.owned_io import run_owned_thread
 
 MAX_ARTIFACT_BYTES = 1_048_576
 MAX_SNAPSHOT_BYTES = 8_388_608
@@ -29,7 +32,7 @@ class CardAcceptanceArtifacts:
     side_effecting = True
 
     async def capture(self, root: Path, paths: tuple[str, ...]) -> tuple[CapturedCardArtifact, ...]:
-        return await asyncio.to_thread(_capture, root, paths)
+        return await run_owned_thread(partial(_capture, root, tuple(paths)), label="card-artifact-capture")
 
     async def materialize(self, root: Path, artifacts: tuple[CapturedCardArtifact, ...]) -> None:
         await asyncio.to_thread(_materialize, root, artifacts)

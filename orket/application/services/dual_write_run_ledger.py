@@ -25,7 +25,7 @@ TelemetrySink = Callable[[dict[str, Any]], Awaitable[None] | None]
 class AsyncDualModeLedgerRepository:
     """SQLite primary permits explicit degraded mirroring; protocol primary refuses it."""
 
-    def __init__(self, *, sqlite_repo, protocol_repo, telemetry_sink: TelemetrySink | None = None,
+    def __init__(self, *, sqlite_repo, protocol_repo, workspace_root: str | Path, telemetry_sink: TelemetrySink | None = None,
                  primary_mode: str = "sqlite", protocol_root=None):
         root = protocol_root if protocol_root is not None else getattr(protocol_repo, "root", None)
         if root is None or getattr(sqlite_repo, "db_path", None) is None:
@@ -37,7 +37,10 @@ class AsyncDualModeLedgerRepository:
         self._store = DualWriteIntentStore(sqlite_path=sqlite_repo.db_path, protocol_root=root)
         self._intent_path = self._store.path
         self._lock = asyncio.Lock()
-        self._telemetry = DualWriteTelemetry(telemetry_sink)
+        workspace = Path(workspace_root)
+        if not workspace.is_absolute():
+            raise DualWriteLedgerError("BINDING_REQUIRED:absolute_telemetry_workspace")
+        self._telemetry = DualWriteTelemetry(telemetry_sink, workspace=workspace)
 
     @property
     def sink_failure_count(self):

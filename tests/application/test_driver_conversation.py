@@ -6,12 +6,13 @@ import pytest
 
 from orket.driver import OrketDriver
 from orket.exceptions import ModelConnectionError
+from tests.helpers.logging_fixture_owner import prepared_fixture_owner
 
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_process_request_conversation_short_circuits_model_call():
-    driver = OrketDriver.__new__(OrketDriver)
+async def test_process_request_conversation_short_circuits_model_call(tmp_path):
+    driver = await prepared_fixture_owner(OrketDriver, tmp_path)
     driver.model_root = Path("model")
     driver.skill = None
     driver.dialect = None
@@ -33,8 +34,8 @@ async def test_process_request_conversation_short_circuits_model_call():
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_execute_plan_converse_response():
-    driver = OrketDriver.__new__(OrketDriver)
+async def test_execute_plan_converse_response(tmp_path):
+    driver = await prepared_fixture_owner(OrketDriver, tmp_path)
     result = await driver.execute_plan(
         {"action": "converse", "response": "I can chat with you.", "reasoning": "conversation"}
     )
@@ -43,8 +44,8 @@ async def test_execute_plan_converse_response():
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_execute_plan_unknown_action_does_not_emit_structural_fallback():
-    driver = OrketDriver.__new__(OrketDriver)
+async def test_execute_plan_unknown_action_does_not_emit_structural_fallback(tmp_path):
+    driver = await prepared_fixture_owner(OrketDriver, tmp_path)
     result = await driver.execute_plan({"action": "unknown_action", "reasoning": "none"})
     assert "No structural action taken." not in result
     assert "Strategic Insight:" not in result
@@ -52,9 +53,9 @@ async def test_execute_plan_unknown_action_does_not_emit_structural_fallback():
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_execute_plan_assign_team_missing_fields_uses_fallback_labels(monkeypatch):
+async def test_execute_plan_assign_team_missing_fields_uses_fallback_labels(tmp_path, monkeypatch):
     """Layer: unit. Verifies assign_team payload parsing fallback labels."""
-    driver = OrketDriver.__new__(OrketDriver)
+    driver = await prepared_fixture_owner(OrketDriver, tmp_path)
     events = []
     def _capture(event_name, payload, _workspace, role=None):
         events.append((event_name, payload, role))
@@ -69,9 +70,9 @@ async def test_execute_plan_assign_team_missing_fields_uses_fallback_labels(monk
 
 @pytest.mark.contract
 @pytest.mark.asyncio
-async def test_execute_plan_assign_team_contract_is_suggestion_only(monkeypatch):
+async def test_execute_plan_assign_team_contract_is_suggestion_only(tmp_path, monkeypatch):
     """Layer: contract. Verifies assign_team response and telemetry semantics."""
-    driver = OrketDriver.__new__(OrketDriver)
+    driver = await prepared_fixture_owner(OrketDriver, tmp_path)
     events = []
     def _capture(event_name, payload, _workspace, role=None):
         events.append((event_name, payload, role))
@@ -104,8 +105,8 @@ def test_should_route_to_conversation_detects_structural_intent():
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_process_request_answers_basic_math_without_structural_action():
-    driver = OrketDriver.__new__(OrketDriver)
+async def test_process_request_answers_basic_math_without_structural_action(tmp_path):
+    driver = await prepared_fixture_owner(OrketDriver, tmp_path)
     driver.model_root = Path("model")
     driver.skill = None
     driver.dialect = None
@@ -116,8 +117,8 @@ async def test_process_request_answers_basic_math_without_structural_action():
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_process_request_handles_cool_as_conversation():
-    driver = OrketDriver.__new__(OrketDriver)
+async def test_process_request_handles_cool_as_conversation(tmp_path):
+    driver = await prepared_fixture_owner(OrketDriver, tmp_path)
     driver.model_root = Path("model")
     driver.skill = None
     driver.dialect = None
@@ -130,7 +131,7 @@ async def test_process_request_handles_cool_as_conversation():
 @pytest.mark.asyncio
 async def test_process_request_capabilities_question_returns_help(tmp_path):
     """Layer: contract. Verifies capabilities output states the exact supported action surface."""
-    driver = OrketDriver.__new__(OrketDriver)
+    driver = await prepared_fixture_owner(OrketDriver, tmp_path)
     driver.model_root = tmp_path / "model"
     driver.skill = None
     driver.dialect = None
@@ -152,8 +153,8 @@ async def test_process_request_capabilities_question_returns_help(tmp_path):
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_process_request_anything_else_not_generic_fallback():
-    driver = OrketDriver.__new__(OrketDriver)
+async def test_process_request_anything_else_not_generic_fallback(tmp_path):
+    driver = await prepared_fixture_owner(OrketDriver, tmp_path)
     driver.model_root = Path("model")
     driver.skill = None
     driver.dialect = None
@@ -166,8 +167,8 @@ async def test_process_request_anything_else_not_generic_fallback():
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_process_request_general_conversation_uses_model_reply():
-    driver = OrketDriver.__new__(OrketDriver)
+async def test_process_request_general_conversation_uses_model_reply(tmp_path):
+    driver = await prepared_fixture_owner(OrketDriver, tmp_path)
     driver.model_root = Path("model")
     driver.skill = None
     driver.dialect = None
@@ -215,8 +216,8 @@ async def test_conversation_model_reply_logs_provider_failures(monkeypatch):
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_process_request_about_application_question():
-    driver = OrketDriver.__new__(OrketDriver)
+async def test_process_request_about_application_question(tmp_path):
+    driver = await prepared_fixture_owner(OrketDriver, tmp_path)
     driver.model_root = Path("model")
     driver.skill = None
     driver.dialect = None
@@ -230,8 +231,8 @@ async def test_process_request_about_application_question():
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_process_request_can_you_converse_question():
-    driver = OrketDriver.__new__(OrketDriver)
+async def test_process_request_can_you_converse_question(tmp_path):
+    driver = await prepared_fixture_owner(OrketDriver, tmp_path)
     driver.model_root = Path("model")
     driver.skill = None
     driver.dialect = None
@@ -245,8 +246,8 @@ async def test_process_request_can_you_converse_question():
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_process_request_can_you_really_converse_question():
-    driver = OrketDriver.__new__(OrketDriver)
+async def test_process_request_can_you_really_converse_question(tmp_path):
+    driver = await prepared_fixture_owner(OrketDriver, tmp_path)
     driver.model_root = Path("model")
     driver.skill = None
     driver.dialect = None
@@ -260,8 +261,8 @@ async def test_process_request_can_you_really_converse_question():
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_process_request_plain_text_with_apostrophe_not_cli_error():
-    driver = OrketDriver.__new__(OrketDriver)
+async def test_process_request_plain_text_with_apostrophe_not_cli_error(tmp_path):
+    driver = await prepared_fixture_owner(OrketDriver, tmp_path)
     driver.model_root = Path("model")
     driver.skill = None
     driver.dialect = None
@@ -275,8 +276,8 @@ async def test_process_request_plain_text_with_apostrophe_not_cli_error():
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_process_request_what_question_not_generic_fallback():
-    driver = OrketDriver.__new__(OrketDriver)
+async def test_process_request_what_question_not_generic_fallback(tmp_path):
+    driver = await prepared_fixture_owner(OrketDriver, tmp_path)
     driver.model_root = Path("model")
     driver.skill = None
     driver.dialect = None
@@ -291,7 +292,7 @@ async def test_process_request_what_question_not_generic_fallback():
 @pytest.mark.asyncio
 @pytest.mark.contract
 async def test_process_request_blocks_implicit_structural_action_from_model(tmp_path):
-    driver = OrketDriver.__new__(OrketDriver)
+    driver = await prepared_fixture_owner(OrketDriver, tmp_path)
     driver.project_root, driver.model_root = tmp_path, tmp_path / "model"
     driver._environment = {}
     await asyncio.to_thread(driver.model_root.mkdir)
@@ -315,7 +316,7 @@ async def test_process_request_blocks_implicit_structural_action_from_model(tmp_
 @pytest.mark.contract
 async def test_process_request_assign_team_reports_suggestion_only(tmp_path):
     """Verifies a controlled model response keeps assign_team non-mutating."""
-    driver = OrketDriver.__new__(OrketDriver)
+    driver = await prepared_fixture_owner(OrketDriver, tmp_path)
     driver.project_root, driver.model_root = tmp_path, tmp_path / "model"
     driver._environment = {}
     await asyncio.to_thread(driver.model_root.mkdir)
@@ -341,9 +342,9 @@ async def test_process_request_assign_team_reports_suggestion_only(tmp_path):
 
 @pytest.mark.contract
 @pytest.mark.asyncio
-async def test_process_request_reforge_bare_and_slash_forms_match_usage_contract():
+async def test_process_request_reforge_bare_and_slash_forms_match_usage_contract(tmp_path):
     """Layer: contract. Verifies CLI recognizer supports bare and slash reforge forms."""
-    driver = OrketDriver.__new__(OrketDriver)
+    driver = await prepared_fixture_owner(OrketDriver, tmp_path)
     driver.model_root = Path("model")
     driver.skill = None
     driver.dialect = None
@@ -361,7 +362,7 @@ async def test_process_request_reforge_bare_and_slash_forms_match_usage_contract
 @pytest.mark.asyncio
 async def test_process_request_capabilities_reports_degraded_config_status(tmp_path):
     """Layer: contract. Verifies operator-visible degradation status in capabilities output."""
-    driver = OrketDriver.__new__(OrketDriver)
+    driver = await prepared_fixture_owner(OrketDriver, tmp_path)
     driver.model_root = tmp_path / "model"
     driver.skill = None
     driver.dialect = None
@@ -378,9 +379,9 @@ async def test_process_request_capabilities_reports_degraded_config_status(tmp_p
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_execute_plan_structural_error_omits_strategic_insight():
+async def test_execute_plan_structural_error_omits_strategic_insight(tmp_path):
     """Layer: unit. Verifies structural failure text is returned plainly without success-flavored strategic narration."""
-    driver = OrketDriver.__new__(OrketDriver)
+    driver = await prepared_fixture_owner(OrketDriver, tmp_path)
 
     async def _fake_structural_change(_self, _plan):
         return "Error: epic not found"

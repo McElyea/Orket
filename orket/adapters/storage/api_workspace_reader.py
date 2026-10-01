@@ -4,8 +4,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from functools import partial
 from pathlib import Path
+from typing import Any
 
 from orket.adapters.execution.owned_io import run_owned_thread
+from orket.adapters.storage.api_model_catalog import read_active_roles, read_team_topology
 
 side_effecting = True
 
@@ -28,6 +30,14 @@ class ApiWorkspaceReader:
 
     async def member_metrics_workspace(self, session_id: str) -> Path:
         return await run_owned_thread(partial(self._member_metrics_workspace, session_id), label="api-metrics-workspace")
+
+    async def active_roles(self) -> list[str]:
+        read = partial(read_active_roles, self.project_root / "model")
+        return await run_owned_thread(read, label="api-active-role-observation")
+
+    async def team_topology(self) -> list[dict[str, Any]]:
+        read = partial(read_team_topology, self.project_root / "model")
+        return await run_owned_thread(read, label="api-team-topology-observation")
 
     def _directory(self, path: str) -> tuple[DirectoryEntry, ...] | None:
         """Runs only inside the retained file worker."""

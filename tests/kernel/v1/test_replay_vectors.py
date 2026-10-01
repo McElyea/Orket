@@ -3,7 +3,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from orket.kernel.v1.validator import compare_runs_v1
+
+pytestmark = pytest.mark.contract
 
 
 def test_replay_vectors_compare_runs_contract_surface() -> None:

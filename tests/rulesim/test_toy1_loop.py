@@ -3,9 +3,13 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from orket.rulesim.workload import run_rulesim_v0_sync
 
 from .conftest import base_config
+
+pytestmark = pytest.mark.integration
 
 
 def test_loop_detects_cycle_with_entry_step_zero(tmp_path: Path) -> None:

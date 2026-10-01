@@ -2,7 +2,13 @@
 from __future__ import annotations
 
 from orket.application.services.control_plane_publication_service import ControlPlanePublicationService
-from orket.core.contracts import AttemptRecord, CheckpointAcceptanceRecord, CheckpointRecord, RunRecord
+from orket.core.contracts import (
+    AttemptRecord,
+    CheckpointAcceptanceRecord,
+    CheckpointRecord,
+    RecoveryDecisionRecord,
+    RunRecord,
+)
 from orket.core.domain import AttemptState, CheckpointAcceptanceOutcome, CheckpointResumabilityClass, RunState
 
 
@@ -62,3 +68,16 @@ def validate_checkpoint_recovery_inputs(
             "resume_mode requires checkpoint acceptance that matches checkpoint resumability"
         )
     return checkpoint.resumability_class, acceptance
+
+
+def validate_checkpoint_resume_identity(
+    *, run_id: str, resumed_attempt: AttemptRecord, source_attempt: AttemptRecord,
+    decision: RecoveryDecisionRecord, checkpoint: CheckpointRecord,
+) -> None:
+    """Bind turn-specific retained lineage without repairing or reauthorizing it."""
+    if (resumed_attempt.run_id != run_id or source_attempt.run_id != run_id or decision.run_id != run_id
+            or decision.failed_attempt_id != source_attempt.attempt_id
+            or checkpoint.parent_ref != source_attempt.attempt_id):
+        raise TurnToolCheckpointRecoveryError(
+            f"resumed governed attempt {resumed_attempt.attempt_id} does not match retained checkpoint identity lineage"
+        )

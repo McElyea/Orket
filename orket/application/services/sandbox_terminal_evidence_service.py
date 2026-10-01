@@ -7,6 +7,8 @@ from pathlib import Path
 
 import aiofiles
 
+from orket.adapters.execution.owned_io import run_owned_io
+from orket.adapters.storage.async_file_tools import capture_file_roots
 from orket.core.domain.sandbox_lifecycle import TerminalReason
 from orket.runtime_paths import resolve_sandbox_terminal_evidence_root
 
@@ -37,9 +39,10 @@ class SandboxTerminalEvidenceService:
             "created_at": created_at,
             "payload": payload,
         }
-        await asyncio.to_thread(path.parent.mkdir, parents=True, exist_ok=True)
-        async with aiofiles.open(path, "w", encoding="utf-8") as handle:
-            await handle.write(json.dumps(document, indent=2, sort_keys=True))
+        content = json.dumps(document, indent=2, sort_keys=True)
+        destination, = capture_file_roots([path])
+        await run_owned_io(lambda: _publish_terminal_evidence(destination, content),
+                           label="sandbox-terminal-evidence", preserve_failure=True)
         return str(path)
 
     def _evidence_path(
@@ -63,3 +66,9 @@ class SandboxTerminalEvidenceService:
             ).encode("utf-8")
         ).hexdigest()
         return self.evidence_root / sandbox_id / f"{terminal_reason.value}-{digest[:16]}.json"
+
+
+async def _publish_terminal_evidence(path: Path, content: str) -> None:
+    await asyncio.to_thread(path.parent.mkdir, parents=True, exist_ok=True)
+    async with aiofiles.open(path, "w", encoding="utf-8") as handle:
+        await handle.write(content)

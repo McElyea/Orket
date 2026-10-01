@@ -9,6 +9,8 @@ from pathlib import Path
 import pytest
 
 from orket.adapters.storage.async_file_tools import AsyncFileTools
+from orket.core.contracts.logging_inputs import LoggingInputs
+from orket.logging import bind_logging, prepare_logging
 from tests.helpers.operation_binding import (
     ARGS,
     before_after,
@@ -30,14 +32,15 @@ def _record(record_property, **payload):  # type: ignore[no-untyped-def]
 
 
 async def _reenter(case):  # type: ignore[no-untyped-def]
-    return await case.executor.execute_turn(
-        case.issue,
-        case.role,
-        case.model,
-        case.toolbox,
-        context(),
-        system_prompt="SYSTEM",
-    )
+    with bind_logging(await prepare_logging(LoggingInputs(case.workspace))):
+        return await case.executor.execute_turn(
+            case.issue,
+            case.role,
+            case.model,
+            case.toolbox,
+            context(),
+            system_prompt="SYSTEM",
+        )
 
 
 @pytest.mark.parametrize(

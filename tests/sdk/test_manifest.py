@@ -8,6 +8,7 @@ from pydantic import ValidationError
 from orket_extension_sdk.manifest import WorkloadManifest, load_manifest
 
 
+@pytest.mark.integration
 def test_load_manifest_json(tmp_path: Path) -> None:
     manifest_path = tmp_path / "extension.json"
     manifest_path.write_text(
@@ -20,6 +21,7 @@ def test_load_manifest_json(tmp_path: Path) -> None:
     assert manifest.workloads[0].workload_id == "w1"
 
 
+@pytest.mark.integration
 def test_load_manifest_yaml(tmp_path: Path) -> None:
     manifest_path = tmp_path / "extension.yaml"
     manifest_path.write_text(
@@ -47,11 +49,13 @@ config_sections:
     assert manifest.allowed_stdlib_modules == ["json", "pathlib"]
 
 
+@pytest.mark.integration
 def test_load_manifest_missing_file(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="E_SDK_MANIFEST_NOT_FOUND"):
         load_manifest(tmp_path / "missing.json")
 
 
+@pytest.mark.integration
 def test_load_manifest_schema_error(tmp_path: Path) -> None:
     manifest_path = tmp_path / "extension.json"
     manifest_path.write_text('{"manifest_version":"v0"}')
@@ -60,6 +64,7 @@ def test_load_manifest_schema_error(tmp_path: Path) -> None:
         load_manifest(manifest_path)
 
 
+@pytest.mark.integration
 def test_load_manifest_rejects_unsupported_manifest_version(tmp_path: Path) -> None:
     manifest_path = tmp_path / "extension.yaml"
     manifest_path.write_text(
@@ -77,7 +82,7 @@ workloads:
     with pytest.raises(ValueError, match="E_SDK_MANIFEST_VERSION_UNSUPPORTED"):
         load_manifest(manifest_path)
 
-# Layer: contract
+@pytest.mark.contract
 def test_agent_manifest_requires_explicit_contracts_capability_and_features() -> None:
     """Layer: contract. Matching agent declarations are additive within manifest v0."""
     workload = WorkloadManifest.model_validate(
@@ -101,6 +106,7 @@ def test_agent_manifest_requires_explicit_contracts_capability_and_features() ->
     assert workload.agent is not None
     assert workload.agent.contract_version == "governed_agent_loop.v1"
 
+@pytest.mark.contract
 @pytest.mark.parametrize(
     ("mutation", "error_code"),
     [
@@ -142,6 +148,7 @@ def test_agent_manifest_fails_closed_on_incomplete_or_unknown_contract(
         WorkloadManifest.model_validate(payload)
 
 
+@pytest.mark.contract
 def test_existing_generic_manifest_shape_remains_valid() -> None:
     """Layer: contract. Existing non-agent declarations preserve their manifest-v0 behavior."""
     workload = WorkloadManifest.model_validate(
@@ -157,6 +164,7 @@ def test_existing_generic_manifest_shape_remains_valid() -> None:
     assert workload.agent is None
 
 
+@pytest.mark.contract
 @pytest.mark.parametrize(
     "marker",
     [
@@ -178,7 +186,7 @@ def test_generic_manifest_rejects_every_agent_discriminator(marker: dict[str, ob
     with pytest.raises(ValidationError, match="E_SDK_AGENT_"):
         WorkloadManifest.model_validate(payload)
 
-# Layer: contract
+@pytest.mark.contract
 def test_agent_manifest_rejects_duplicate_roles() -> None:
     payload = {
         "workload_id": "governed-agent-loop",

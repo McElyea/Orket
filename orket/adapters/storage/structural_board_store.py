@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import os
 import tempfile
+from functools import partial
 from pathlib import Path
 
 from orket.adapters.execution.owned_io import run_owned_thread
+from orket.adapters.storage.async_file_tools import capture_file_roots
 from orket.core.domain.reconciler import ReconciliationWrite, StructuralAsset
 
 side_effecting = True
@@ -16,17 +18,19 @@ class StructuralBoardStore:
     side_effecting = True
 
     def __init__(self, root: Path) -> None:
-        self.root = Path(root)
+        self.root, = capture_file_roots([root])
 
     async def snapshot(self) -> tuple[StructuralAsset, ...]:
-        return await run_owned_thread(self._snapshot_sync, label="structural-board-snapshot")
+        root, = capture_file_roots([self.root])
+        return await run_owned_thread(partial(self._snapshot_sync, root), label="structural-board-snapshot")
 
     async def apply(self, update: ReconciliationWrite) -> None:
-        await run_owned_thread(lambda: self._apply_sync(update), label="structural-board-write")
+        root, = capture_file_roots([self.root])
+        await run_owned_thread(partial(self._apply_sync, root, update), label="structural-board-write")
 
-    def _snapshot_sync(self) -> tuple[StructuralAsset, ...]:
+    def _snapshot_sync(self, selected_root: Path) -> tuple[StructuralAsset, ...]:
         """Only invoked in the owned worker; traversal and reads never occupy the event loop."""
-        root = self.root.resolve(strict=True)
+        root = selected_root.resolve(strict=True)
         assets = []
         for department in sorted(root.iterdir()):
             if not department.is_dir():
@@ -45,9 +49,9 @@ class StructuralBoardStore:
                     assets.append(StructuralAsset(department.name, kind, path.stem, path.read_text(encoding="utf-8")))
         return tuple(assets)
 
-    def _apply_sync(self, update: ReconciliationWrite) -> None:
+    def _apply_sync(self, selected_root: Path, update: ReconciliationWrite) -> None:
         """An owned worker compares the snapshot, replaces one target and verifies its bytes."""
-        root = self.root.resolve(strict=True)
+        root = selected_root.resolve(strict=True)
         path = (root / update.relative_path).resolve(strict=True)
         if not path.is_relative_to(root):
             raise ValueError("Structural update is outside the model root")

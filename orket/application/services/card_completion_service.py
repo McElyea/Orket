@@ -1,12 +1,13 @@
 """Application authority for declared card acceptance and final evidence review."""
 from __future__ import annotations
 
-import asyncio
 from dataclasses import dataclass
 from pathlib import Path
 
 from pydantic import TypeAdapter
 
+from orket.adapters.execution.owned_io import run_owned_thread
+from orket.adapters.storage.async_file_tools import capture_file_roots
 from orket.application.services.card_acceptance_evaluation import build_card_acceptance_plan
 from orket.application.services.card_acceptance_service import CardAcceptanceService
 from orket.core.contracts.card_acceptance_inputs import CardAcceptanceDefinition
@@ -45,13 +46,15 @@ class CardCompletionService:
     async def begin_attempt(
         self, cards: CardRepository, *, card_id: str, run_id: str, attempt_id: str,
     ) -> CardCompletionContext | None:
+        workspace_root, = capture_file_roots([self.workspace_root])
         record = await cards.get_by_id(card_id)
         if record is None:
             raise CardCompletionRejected("E_CARD_COMPLETION_CARD_MISSING")
+        record = record.model_copy(deep=True)
         definition = declared_card_acceptance(record)
         if definition is None:
             return None
-        root = await asyncio.to_thread(self.workspace_root.resolve)
+        root = await run_owned_thread(workspace_root.resolve, label="card-completion-workspace")
         context = CardCompletionContext(
             card_id=record.id, run_id=run_id, attempt_id=attempt_id, generation=record.completion_generation + 1,
             workspace_root=str(root), definition_digest=definition.digest,
@@ -67,11 +70,13 @@ class CardCompletionService:
             return CardCompletionEvaluation(None, evaluate_card_completion(
                 plan=None, scope=None, snapshot=CompletionEvidenceSnapshot(),
             ))
+        workspace_root, = capture_file_roots([self.workspace_root])
+        acceptance = self.acceptance
         record = await cards.get_by_id(context.card_id)
         if record is None:
             raise CardCompletionRejected("E_CARD_COMPLETION_CARD_MISSING")
-        definition = await self._current_definition(record, context)
-        evaluated = await self.acceptance.verify(
+        definition = await self._current_definition(record, context, workspace_root=workspace_root)
+        evaluated = await acceptance.verify(
             workspace_root=Path(context.workspace_root), definition=definition, card_id=context.card_id,
             run_id=context.run_id, attempt_id=context.attempt_id, workload_inputs_json=context.verification_inputs_json,
         )
@@ -80,10 +85,11 @@ class CardCompletionService:
         return CardCompletionEvaluation(request, evaluated.decision)
 
     async def _current_definition(
-        self, record: IssueRecord, context: CardCompletionContext,
+        self, record: IssueRecord, context: CardCompletionContext, *, workspace_root: Path,
     ) -> CardAcceptanceDefinition:
+        record = record.model_copy(deep=True)
         definition = declared_card_acceptance(record)
-        root = await asyncio.to_thread(self.workspace_root.resolve)
+        root = await run_owned_thread(workspace_root.resolve, label="card-completion-workspace")
         if (definition is None or definition.digest != context.definition_digest
                 or str(root) != context.workspace_root or record.id != context.card_id
                 or record.completion_context != context or record.completion_generation != context.generation
@@ -94,10 +100,12 @@ class CardCompletionService:
     async def authorize_completion(
         self, *, record: IssueRecord, context: CardCompletionContext, request: CardCompletionRequest,
     ) -> CardCompletionDecision:
-        definition = await self._current_definition(record, context)
+        workspace_root, = capture_file_roots([self.workspace_root])
+        acceptance = self.acceptance
+        definition = await self._current_definition(record, context, workspace_root=workspace_root)
         if request.context_digest != context.digest:
             raise CardCompletionRejected("E_CARD_COMPLETION_CONTEXT_STALE")
-        capture = await self.acceptance.capture_scope(
+        capture = await acceptance.capture_scope(
             workspace_root=Path(context.workspace_root), definition=definition, card_id=context.card_id,
             run_id=context.run_id, attempt_id=context.attempt_id, workload_inputs_json=context.verification_inputs_json,
         )
@@ -106,12 +114,14 @@ class CardCompletionService:
                 plan=build_card_acceptance_plan(definition), scope=capture.scope,
                 snapshot=CompletionEvidenceSnapshot(diagnostics=capture.diagnostics),
             )
-        return await self.acceptance.inspect(request.evidence_digest, definition=definition, scope=capture.scope)
+        return await acceptance.inspect(request.evidence_digest, definition=definition, scope=capture.scope)
 
     async def inspect_completion_receipt(
         self, *, record: IssueRecord, receipt: CardCompletionReceipt,
     ) -> CardCompletionDecision:
-        definition = await self._current_definition(record, receipt.context)
-        return await self.acceptance.inspect(
+        workspace_root, = capture_file_roots([self.workspace_root])
+        acceptance = self.acceptance
+        definition = await self._current_definition(record, receipt.context, workspace_root=workspace_root)
+        return await acceptance.inspect(
             receipt.request.evidence_digest, definition=definition, scope=receipt.decision.scope,
         )

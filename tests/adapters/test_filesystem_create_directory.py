@@ -6,6 +6,7 @@ from orket.adapters.storage.async_file_tools import AsyncFileTools
 from orket.adapters.tools.families.filesystem import FileSystemTools
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_async_file_tools_create_directory_stays_inside_workspace(tmp_path) -> None:
     """Layer: integration. Verifies create_directory uses the real workspace path boundary."""
@@ -17,9 +18,10 @@ async def test_async_file_tools_create_directory_stays_inside_workspace(tmp_path
     assert created.endswith("new-dir")
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_filesystem_tool_create_directory_rejects_path_escape(tmp_path) -> None:
-    """Layer: unit. Verifies create_directory shares file-tool path containment behavior."""
+    """Layer: contract. Verifies create_directory shares file-tool path containment behavior."""
     tools = FileSystemTools(tmp_path, [])
 
     result = await tools.create_directory({"path": "../escape"})

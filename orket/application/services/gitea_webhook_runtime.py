@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
-from collections.abc import Mapping
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import replace
 from functools import partial
 from pathlib import Path
@@ -14,6 +14,7 @@ from typing import Any, ClassVar
 from pydantic import ValidationError
 
 from orket.adapters.execution.owned_io import require_sync_context, run_owned_io, run_owned_thread
+from orket.adapters.observability.logging_context import bind_logging, prepare_logging_native, select_logging_inputs
 from orket.adapters.vcs.gitea_webhook_client import build_webhook_http_client, validate_gitea_url
 from orket.adapters.vcs.gitea_webhook_event import normalize_gitea_review
 from orket.adapters.vcs.webhook_db import WebhookDatabase
@@ -28,6 +29,7 @@ from orket.application.services.runtime_result_lifetime import create_runtime_ow
 from orket.application.services.webhook_configuration import WebhookConfiguration, capture_webhook_configuration
 from orket.application.services.webhook_ingress_policy import WebhookIngressPolicy
 from orket.core.contracts.gitea_webhook import PullRequestDispatchWebhookPayload, webhook_payload_validation_error
+from orket.core.contracts.log_event_inputs import capture_log_event_inputs
 from orket.core.contracts.provider_http import CapturedHttpClientPort
 from orket.core.domain.sandbox import SandboxRegistry
 from orket.logging import log_event
@@ -63,6 +65,8 @@ class GiteaWebhookHandler(ApplicationRuntimeLifetime):
             require_config=False,
         )
         self.workspace = self.configuration.project_root
+        self.logging_context = prepare_logging_native(select_logging_inputs(
+            self.configuration.invocation_root, self.configuration.environment))
         self.runtime_inputs = runtime_inputs or RuntimeInputService()
         self.ingress = WebhookIngressPolicy(self.configuration, monotonic=self.runtime_inputs.monotonic_seconds)
         self.gitea_url = validate_gitea_url(gitea_url, allow_insecure=allow_insecure)
@@ -104,7 +108,9 @@ class GiteaWebhookHandler(ApplicationRuntimeLifetime):
             owner=self._http_client_owner, label="Webhook HTTP construction")
 
     async def _log_event(self, name: str, payload: dict[str, Any]) -> None:
-        await run_owned_thread(lambda: log_event(name, payload, self.workspace), label="webhook-event-publication")
+        workspace = self.workspace
+        name, captured = capture_log_event_inputs(name, payload)
+        await run_owned_thread(partial(log_event, name, captured, workspace), label="webhook-event-publication")
 
     async def _handle_pr_review(self, payload: dict[str, Any]) -> dict[str, Any]:
         return await self.review.handle_pr_review(payload)
@@ -141,19 +147,26 @@ class GiteaWebhookHandler(ApplicationRuntimeLifetime):
     ) -> None:
         await self.close()
 
+    async def run_request(self, invoke: Callable[[], Awaitable[None]]) -> None:
+        """Admit the operation with this application's selection; restore the request caller."""
+        with bind_logging(self.logging_context):
+            await super().run_request(invoke)
+
     async def _close_final_resource(self) -> None:
-        await self._http_client_owner.close(self.client)
+        with bind_logging(self.logging_context):
+            await self._http_client_owner.close(self.client)
 
     async def handle_webhook(self, event_type: str, payload: dict[str, Any]) -> dict[str, Any]:
-        captured = json.loads(json.dumps(payload, allow_nan=False))
-        result: dict[str, Any] = {}
+        with bind_logging(self.logging_context):
+            captured = json.loads(json.dumps(payload, allow_nan=False))
+            result: dict[str, Any] = {}
 
-        async def invoke() -> None:
-            nonlocal result
-            result = await self._dispatch(event_type, captured)
+            async def invoke() -> None:
+                nonlocal result
+                result = await self._dispatch(event_type, captured)
 
-        await self.run_request(invoke)
-        return result
+            await self.run_request(invoke)
+            return result
 
     async def _dispatch(self, event_type: str, payload: dict[str, Any]) -> dict[str, Any]:
         if not self.gitea_password:
@@ -189,6 +202,7 @@ class GiteaWebhookHandler(ApplicationRuntimeLifetime):
                 config_root=self.workspace,
                 db_path=self._review_db_path,
                 runtime_inputs=self.runtime_inputs,
+                logging_context=self.logging_context,
             )
             created.append(engine)
             return engine

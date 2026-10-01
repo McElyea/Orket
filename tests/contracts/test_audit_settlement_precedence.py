@@ -6,6 +6,7 @@ from typing import Any
 
 import pytest
 
+from orket.adapters.observability.logging_context import PreparedLogging
 from scripts.security import build_tool_gate_audit as audit_module
 
 pytestmark = pytest.mark.contract
@@ -42,7 +43,7 @@ def _install_case(
     primary: BaseException,
     settlement: BaseException,
 ) -> None:
-    async def collect(temp_root: Path) -> list[dict[str, Any]]:
+    async def collect(temp_root: Path, logging_context: PreparedLogging) -> list[dict[str, Any]]:
         state["temp_root"] = temp_root
         raise primary
 

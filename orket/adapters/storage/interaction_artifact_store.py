@@ -48,8 +48,8 @@ class InteractionArtifactStore:
                 if target.read_bytes() != content:
                     raise ValueError("E_INTERACTION_ARTIFACT_CONFLICT")
                 return target
-            descriptor, temporary = tempfile.mkstemp(prefix=name + ".", suffix=".tmp", dir=directory)
-            temporary = Path(temporary)
+            descriptor, temporary_name = tempfile.mkstemp(prefix=name + ".", suffix=".tmp", dir=directory)
+            temporary = Path(temporary_name)
             try:
                 with os.fdopen(descriptor, "wb") as handle:
                     if handle.write(content) != len(content):

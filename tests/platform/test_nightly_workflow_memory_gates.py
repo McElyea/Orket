@@ -2,9 +2,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
 
 def test_nightly_workflow_enforces_memory_determinism_contract_gates() -> None:
-    """Layer: contract. Verifies the nightly memory comparator step is labeled as an identity smoke check, not runtime enforcement."""
+    """Layer: unit. Verifies the nightly memory comparator step is labeled as an identity smoke check, not runtime enforcement."""
     workflow_path = Path(".gitea/workflows/nightly-benchmark.yml")
     text = workflow_path.read_text(encoding="utf-8")
 

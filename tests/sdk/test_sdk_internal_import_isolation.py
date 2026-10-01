@@ -3,6 +3,10 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
 
 def _assert_not_internal_orket_import(module_path: Path) -> None:
     tree = ast.parse(module_path.read_text(encoding="utf-8-sig"), filename=str(module_path))
@@ -24,7 +28,7 @@ def _assert_not_internal_orket_import(module_path: Path) -> None:
 
 
 def test_sdk_has_no_internal_orket_imports() -> None:
-    """Layer: contract. Verifies SDK package authority is isolated from internal `orket.*` imports."""
+    """Layer: unit. Verifies SDK package authority is isolated from internal `orket.*` imports."""
     sdk_root = Path(__file__).resolve().parents[2] / "orket_extension_sdk"
     for module_path in sorted(sdk_root.rglob("*.py")):
         if "__pycache__" in module_path.parts:

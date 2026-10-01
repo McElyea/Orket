@@ -4,6 +4,7 @@ from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Any, TypeVar
 
+from orket.adapters.observability.logging_context import PreparedLogging
 from orket.adapters.storage.outward_approval_store import OutwardApprovalStore
 from orket.adapters.storage.outward_run_event_store import OutwardRunEventStore
 from orket.adapters.storage.outward_run_store import OutwardRunStore
@@ -42,6 +43,7 @@ def build_api_runtime_container(
     runtime_inputs: RuntimeInputService | None = None,
     construction_inputs: RuntimeConstructionInputs,
     own_resource: Callable[[Any], None],
+    logging_context: PreparedLogging,
 ) -> ApiRuntimeContainer:
     """Build the complete application-owned runtime graph for one API app."""
     root = Path(project_root).resolve()
@@ -73,6 +75,7 @@ def build_api_runtime_container(
         runtime_state=runtime_state,
         api_runtime_host=runtime_host,
         engine=engine,
+        logging_context=logging_context,
         authentication=authentication,
         system_queries=ApiSystemQueryService(root, environment=authentication.environment,
                                             runtime_inputs=runtime_host.runtime_inputs),

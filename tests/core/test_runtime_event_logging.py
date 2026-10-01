@@ -12,6 +12,8 @@ import pytest
 
 import orket.logging as logging_module
 from orket.adapters.observability import log_publication as logging_owner
+from orket.adapters.observability.logging_context import prepare_logging_native
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.logging import get_member_metrics, log_event
 
 FRONTIER_WAIT_SECONDS = 5
@@ -152,7 +154,7 @@ def test_log_write_queue_drops_when_full_without_blocking_event_loop(tmp_path: P
     """Layer: unit. Verifies async-reachable log writes use bounded lossy backpressure."""
     monkeypatch.setattr(logging_owner, "_log_write_queue", queue.Queue(maxsize=1))
     monkeypatch.setattr(logging_owner, "_dropped_log_entries", 0)
-    monkeypatch.setattr(logging_owner, "_start_log_writer", lambda: None)
+    monkeypatch.setattr(logging_owner, "require_prepared_logging", lambda: None)
     monkeypatch.setattr(logging_owner, "_running_on_event_loop", lambda: True)
 
     log_path = tmp_path / "orket.log"
@@ -183,6 +185,7 @@ def test_log_write_frontier_excludes_later_unrelated_append(tmp_path: Path, monk
     """Layer: integration. A captured FIFO frontier settles prior appends without waiting for later work."""
     settle = getattr(logging_module, "settle_log_write_frontier", None)
     assert callable(settle), "The native logging owner must expose settle_log_write_frontier"
+    prepare_logging_native(LoggingInputs(tmp_path))
     logging_owner._log_write_queue.join()
     first = tmp_path / "first.log"
     later = tmp_path / "later.log"

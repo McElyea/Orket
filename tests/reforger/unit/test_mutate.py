@@ -3,8 +3,12 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from orket.reforger.optimizer.mutate import MutateOptimizer
 from orket.reforger.packs import resolve_pack, write_resolved_pack
+
+pytestmark = pytest.mark.integration
 
 
 def _seed_pack(base: Path) -> Path:

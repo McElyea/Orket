@@ -2,12 +2,14 @@ from __future__ import annotations
 
 from typing import Any
 
-from orket.runtime.run_ledger_projection import (
-    project_run_ledger_artifacts,
-    project_run_ledger_record,
-    project_run_ledger_summary,
-)
-from orket.runtime.run_summary import validate_run_summary_payload
+from orket.runtime.evidence import run_ledger_projection as _run_ledger_projection
+from orket.runtime.summary import run_summary as _run_summary
+
+# Preserve the existing consumer-local callable bindings.
+project_run_ledger_artifacts = _run_ledger_projection.project_run_ledger_artifacts
+project_run_ledger_record = _run_ledger_projection.project_run_ledger_record
+project_run_ledger_summary = _run_ledger_projection.project_run_ledger_summary
+validate_run_summary_payload = _run_summary.validate_run_summary_payload
 
 
 def validated_run_ledger_summary(summary_payload: Any) -> dict[str, Any]:

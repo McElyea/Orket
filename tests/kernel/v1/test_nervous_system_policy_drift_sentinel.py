@@ -3,11 +3,15 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from orket.kernel.v1.nervous_system_policy_snapshot import (
     CANONICALIZER,
     DIGEST_ALGORITHM,
     build_policy_digest_snapshot,
 )
+
+pytestmark = pytest.mark.contract
 
 SNAPSHOT_PATH = Path("tests/fixtures/nervous_system_policy_digest_snapshot.json")
 

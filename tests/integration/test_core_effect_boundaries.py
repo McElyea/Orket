@@ -110,11 +110,11 @@ async def test_reconciliation_drains_cancelled_write_and_keeps_loop_responsive(m
     started, release = threading.Event(), threading.Event()
     original = StructuralBoardStore._apply_sync
 
-    def held_write(store, update):
+    def held_write(store, root, update):
         started.set()
         if not release.wait(4):
             raise TimeoutError("fixture write was not released")
-        original(store, update)
+        original(store, root, update)
 
     monkeypatch.setattr(StructuralBoardStore, "_apply_sync", held_write)
     task = asyncio.create_task(reconciliation.StructuralReconciler(model_root, tmp_path / "workspace").reconcile())

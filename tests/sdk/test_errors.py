@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+import pytest
+
 from orket.exceptions import AgentConfigurationError as CoreAgentConfigurationError
 from orket_extension_sdk import AgentConfigurationError as SDKAgentConfigurationError
+
+pytestmark = pytest.mark.contract
 
 
 def test_core_agent_configuration_error_is_sdk_catchable() -> None:

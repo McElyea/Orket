@@ -13,7 +13,9 @@ from orket.adapters.tools.runtime import ToolRuntimeExecutor
 from orket.application.services.card_workspace_mutation_service import CardWorkspaceMutationService
 from orket.application.services.toolbox import ToolBox
 from orket.core.contracts.card_completion_commit import CardCompletionRejected
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain.records import IssueRecord
+from orket.logging import bind_logging, prepare_logging
 from orket.schema import CardStatus
 from tests.helpers.card_completion import completion_components, completion_definition, write_completion_source
 
@@ -92,11 +94,13 @@ async def test_sync_tool_write_retains_guard_until_thread_finishes(tmp_path, sto
         destination.write_bytes(b"print('{}')\n")
         return {"ok": True}
 
-    mutation = asyncio.create_task(ToolRuntimeExecutor().invoke(
-        delayed_write, {}, workspace=service.workspace_root,
-        tool_timeout_seconds=10 if stop == "cancel" else 0.05,
-        mutation_authority=CardWorkspaceMutationService(repo),
-    ))
+    prepared = await prepare_logging(LoggingInputs(service.workspace_root))
+    with bind_logging(prepared):
+        mutation = asyncio.create_task(ToolRuntimeExecutor().invoke(
+            delayed_write, {}, workspace=service.workspace_root,
+            tool_timeout_seconds=10 if stop == "cancel" else 0.05,
+            mutation_authority=CardWorkspaceMutationService(repo),
+        ))
     await asyncio.wait_for(started.wait(), timeout=5)
     if stop == "timeout_then_cancel":
         await asyncio.sleep(0.1)

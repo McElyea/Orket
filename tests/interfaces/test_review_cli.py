@@ -297,7 +297,7 @@ def test_review_diff_cli_returns_structured_error_on_result_manifest_control_pla
                 "step_kind": "review_run_start",
             },
         )
-    monkeypatch.setattr("orket.interfaces.orket_bundle_cli.ReviewRunService.run_diff", _fake_run_diff)
+    monkeypatch.setattr("orket.application.review.run_service.ReviewRunService.run_diff", _fake_run_diff)
     code = main(
         [
             "review",
@@ -340,7 +340,7 @@ def test_review_diff_cli_returns_structured_error_on_result_manifest_missing_run
             },
         )
 
-    monkeypatch.setattr("orket.interfaces.orket_bundle_cli.ReviewRunService.run_diff", _fake_run_diff)
+    monkeypatch.setattr("orket.application.review.run_service.ReviewRunService.run_diff", _fake_run_diff)
 
     code = main(
         [
@@ -431,7 +431,7 @@ def test_review_diff_cli_returns_structured_error_on_orphaned_control_plane_proj
             control_plane=control_plane,
         )
 
-    monkeypatch.setattr("orket.interfaces.orket_bundle_cli.ReviewRunService.run_diff", _fake_run_diff)
+    monkeypatch.setattr("orket.application.review.run_service.ReviewRunService.run_diff", _fake_run_diff)
 
     code = main(
         [
@@ -479,7 +479,7 @@ def test_review_diff_cli_returns_structured_error_on_orphaned_manifest_control_p
             },
         )
 
-    monkeypatch.setattr("orket.interfaces.orket_bundle_cli.ReviewRunService.run_diff", _fake_run_diff)
+    monkeypatch.setattr("orket.application.review.run_service.ReviewRunService.run_diff", _fake_run_diff)
 
     code = main(
         [

@@ -1,13 +1,21 @@
 # Architectural Truth
 
 Date: 2026-07-29
-Last updated: 2026-09-20
+Last updated: 2026-09-30
 Status: Active project registry
 Owner: Orket Core
 
 Current gate: scoped BT-1 through BT-5 are accepted. C/D dependency enforcement,
 core purity, explicit inputs and async safety are next, followed by E1/E2 and the
 gated capability obligations. The whole lane remains active.
+
+The latest **0.6.115** checkpoint preserves interrupted September 28 WIP and
+finishes the applied guarded-mutation CI/documentation handoff. Six unapplied
+proposal bundles are archived as historical work. The checkpoint retains open
+typing, full-suite/coverage and installed/platform acceptance; it does not close
+the lane or activate proposed capabilities. Exact disposition and verification:
+[September 30 checkpoint](../archive/architectural-truth/AT09302026-WIP-CHECKPOINT/CHECKPOINT.md).
+The entries below describe earlier checkpoints and their historical evidence.
 
 The 0.6.39 checkpoint captures API construction inputs and owns graph preparation
 inside lifespan; canonical reload drains each worker and preserves startup/

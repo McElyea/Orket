@@ -14,17 +14,17 @@ from orket.core.contracts.repositories import CardRepository
 from orket.core.contracts.runtime_execution_result import RuntimeExecutionResult
 from orket.core.domain.records import IssueRecord
 from orket.logging import log_event
-from orket.runtime.epic_run_support import (
+from orket.runtime.execution.epic_run_support import (
     WORKFLOW_TERMINAL_STATUSES,
     await_infrastructure,
     build_execution_artifacts,
     build_legacy_transcript,
 )
-from orket.runtime.epic_run_types import (
+from orket.runtime.execution.epic_run_types import (
     EpicRunCallbacks,
     EpicRunContext,
 )
-from orket.runtime.phase_c_runtime_truth import (
+from orket.runtime.execution.phase_c_runtime_truth import (
     collect_source_attribution_facts,
     resolve_source_attribution_gate_failure_reason,
 )

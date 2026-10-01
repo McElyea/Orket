@@ -33,7 +33,7 @@ class DriverResourceStore:
         return payload
 
     def inventory(self) -> dict:
-        inventory = {"departments": {}}
+        inventory: dict[str, dict[str, dict[str, list[str]]]] = {"departments": {}}
         for dept_dir in self.root.iterdir():
             if dept_dir.is_dir():
                 inventory["departments"][dept_dir.name] = {

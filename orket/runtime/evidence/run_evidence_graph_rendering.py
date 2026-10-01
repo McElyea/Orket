@@ -8,7 +8,7 @@ from typing import Any
 
 import aiofiles
 
-from orket.runtime.run_evidence_graph import validate_run_evidence_graph_payload
+from orket.runtime.evidence.run_evidence_graph import validate_run_evidence_graph_payload
 
 _VIEW_TITLES = {
     "full_lineage": "Full Lineage",

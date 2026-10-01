@@ -1,12 +1,12 @@
 """Finish retained epic publication without executing work or resetting cards."""
 from __future__ import annotations
 
-import asyncio
 import json
 from functools import partial
 from pathlib import Path
 from typing import Any
 
+from orket.adapters.execution.owned_io import run_owned_thread
 from orket.application.services.card_completion_outcome_service import inspect_build_completion
 from orket.application.services.epic_admission_service import EpicAdmissionService
 from orket.application.services.epic_approval_recovery_service import validate_approval_recovery_artifacts
@@ -138,7 +138,8 @@ class EpicPublicationService:
             raise ValueError("E_EPIC_PUBLICATION_SESSION_UNCONFIRMED")
         payload = {"run_id": plan.session_id, "status": plan.ledger["status"]}
         payload.update({key: plan.ledger[key] for key in ("failure_reason", "failure_class") if plan.ledger.get(key) is not None})
-        await asyncio.to_thread(log_event, "session_end", payload, workspace=Path(self.scope["workspace"]))
+        await run_owned_thread(partial(log_event, "session_end", payload, workspace=Path(self.scope["workspace"])),
+                               label="epic-session-end-publication")
 
     async def _publish_snapshot(self, plan: EpicPublicationPlan, snapshots: Any) -> None:
         if plan.snapshot is None:
@@ -160,12 +161,13 @@ class EpicPublicationService:
         row = await self.success.get(plan.session_id)
         if row is None or not all(row.get(key) == value for key, value in expected.items()):
             raise ValueError("E_EPIC_PUBLICATION_SUCCESS_UNCONFIRMED")
-        await asyncio.to_thread(log_event, "success_recorded", {"run_id": plan.session_id, "type": "EPIC_COMPLETED"},
-                                workspace=Path(self.scope["workspace"]))
+        await run_owned_thread(partial(log_event, "success_recorded",
+            {"run_id": plan.session_id, "type": "EPIC_COMPLETED"}, workspace=Path(self.scope["workspace"])),
+            label="epic-success-publication")
         await self._verify_published(plan, snapshots)
-        await asyncio.to_thread(log_event, "orchestrator_epic_complete",
-                                {"run_id": plan.session_id, "epic": plan.snapshot["epic"]["name"]},
-                                workspace=Path(self.scope["workspace"]))
+        await run_owned_thread(partial(log_event, "orchestrator_epic_complete",
+            {"run_id": plan.session_id, "epic": plan.snapshot["epic"]["name"]}, workspace=Path(self.scope["workspace"])),
+            label="epic-complete-publication")
 
     async def _verify_published(self, plan: EpicPublicationPlan, snapshots: Any) -> None:
         checks = [self._ledger_matches(plan, await self.ledger.get_run(plan.session_id)),

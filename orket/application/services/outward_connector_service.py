@@ -4,7 +4,6 @@ import asyncio
 import logging
 import sys
 from collections.abc import Callable
-from contextlib import suppress
 from copy import copy, deepcopy
 from dataclasses import asdict
 from pathlib import Path
@@ -14,7 +13,7 @@ from urllib.parse import urlparse
 from jsonschema import Draft202012Validator
 from jsonschema.exceptions import ValidationError as JsonSchemaValidationError
 
-from orket.adapters.execution.owned_io import run_owned_thread
+from orket.adapters.execution.owned_io import run_owned_diagnostic, run_owned_thread
 from orket.adapters.storage.async_file_tools import capture_file_roots
 from orket.adapters.storage.bound_filesystem import BOUND_FILESYSTEM_TOOLS
 from orket.adapters.tools.builtin_connectors import BuiltInConnectorExecutor
@@ -245,10 +244,9 @@ class OutwardConnectorService:
 
         # Only entered from invoke's exceptional finally. The worker is joined;
         # let that original connector exception propagate after this finalizer.
-        with suppress(asyncio.CancelledError):
-            await run_owned_thread(publish, label="connector-interruption-log")
+        await run_owned_diagnostic(publish, primary=primary)
         for diagnostic in diagnostics:
-            primary.add_note(diagnostic)
+            BaseException.add_note(primary, diagnostic)
 
     def _require_metadata(self, connector_name: str) -> BuiltInConnectorMetadata:
         metadata = self.connector_registry.get(connector_name)

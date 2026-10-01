@@ -43,8 +43,9 @@ def _event_chain(event_types: list[str]) -> list[dict]:
     return events
 
 
+@pytest.mark.contract
 def test_event_hash_uses_canonical_json_without_event_hash() -> None:
-    """Layer: unit. Proves quickstart event hashes are deterministic over canonical event content."""
+    """Layer: contract. Proves quickstart event hashes are deterministic over canonical event content."""
     event = build_event(
         run_id="run-ledger-test",
         sequence=1,
@@ -61,6 +62,7 @@ def test_event_hash_uses_canonical_json_without_event_hash() -> None:
     assert compute_event_hash(with_changed_hash) == event["event_hash"]
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_ledger_writer_persists_valid_hash_chain(tmp_path: Path) -> None:
     """Layer: integration. Proves the JSONL writer emits a verifiable linked ledger on disk."""
@@ -85,6 +87,7 @@ async def test_ledger_writer_persists_valid_hash_chain(tmp_path: Path) -> None:
     assert events[2]["previous_event_hash"] == events[1]["event_hash"]
 
 
+@pytest.mark.contract
 def test_verifier_rejects_tampered_event_content() -> None:
     """Layer: contract. Proves changed event content invalidates the stored event hash."""
     events = _event_chain(["run_started", "tool_call_proposed", "run_finished"])
@@ -96,6 +99,7 @@ def test_verifier_rejects_tampered_event_content() -> None:
     assert "event[1].event_hash mismatch" in result.errors
 
 
+@pytest.mark.contract
 def test_verifier_rejects_reordered_events() -> None:
     """Layer: contract. Proves event ordering is part of the verified chain."""
     events = _event_chain(["run_started", "tool_call_proposed", "approval_requested"])
@@ -107,6 +111,7 @@ def test_verifier_rejects_reordered_events() -> None:
     assert any("sequence" in error or "previous_event_hash" in error for error in result.errors)
 
 
+@pytest.mark.contract
 def test_verifier_rejects_previous_hash_and_event_hash_tamper() -> None:
     """Layer: contract. Proves direct hash-field changes invalidate the ledger."""
     previous_hash_events = _event_chain(["run_started", "tool_call_proposed", "run_finished"])
@@ -128,8 +133,9 @@ def test_verifier_rejects_previous_hash_and_event_hash_tamper() -> None:
     assert "event[2].previous_event_hash must equal the prior event_hash" in event_hash_result.errors
 
 
+@pytest.mark.end_to_end
 def test_verify_ledger_cli_reports_success_and_tamper_failure(tmp_path: Path, capsys) -> None:
-    """Layer: end-to-end. Proves the module verifier exits zero for valid JSONL and nonzero after tamper."""
+    """Layer: end_to_end. Proves the module verifier exits zero for valid JSONL and nonzero after tamper."""
     ledger_path = tmp_path / "ledger.jsonl"
     events = _event_chain(["run_started", "tool_call_proposed", "run_finished"])
     ledger_path.write_text("\n".join(canonical_json(event) for event in events) + "\n", encoding="utf-8")

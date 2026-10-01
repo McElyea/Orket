@@ -1,3 +1,8 @@
+import pytest
+
+pytestmark = pytest.mark.unit
+
+
 def test_kernel_v1_scaffold_exists() -> None:
     import importlib
 

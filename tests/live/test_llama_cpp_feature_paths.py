@@ -1,4 +1,4 @@
-# Layer: end-to-end
+# Layers are declared per test; live llama.cpp posture is separate.
 from __future__ import annotations
 
 import asyncio
@@ -21,7 +21,7 @@ from scripts.odr.run_odr_7b_baseline import _resolve_role_provider as baseline_p
 from scripts.odr.run_odr_single_vs_coordinated import _resolve_role_base_url as comparison_base_url
 from scripts.odr.run_odr_single_vs_coordinated import _resolve_role_provider as comparison_provider
 
-pytestmark = [pytest.mark.end_to_end, pytest.mark.skipif(
+pytestmark = [pytest.mark.skipif(
     os.getenv("ORKET_RUN_LIVE_AGENT_LLAMA_CPP") != "1", reason="requires live llama.cpp")]
 
 
@@ -31,6 +31,7 @@ def default_provider_environment(monkeypatch):
         monkeypatch.delenv(key, raising=False)
 
 
+@pytest.mark.end_to_end
 @pytest.mark.asyncio
 async def test_llama_cpp_builtin_stream_reaches_committed_terminal_state(tmp_path, monkeypatch) -> None:
     """Layer: end-to-end. Real SSE generation crosses workload validation, events and commit."""
@@ -58,10 +59,11 @@ async def test_llama_cpp_builtin_stream_reaches_committed_terminal_state(tmp_pat
     assert events[-1].payload["commit_outcome"] == "ok"
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 @pytest.mark.parametrize("resolve,select", [(baseline_base_url, baseline_provider), (comparison_base_url, comparison_provider)])
 async def test_llama_cpp_odr_transient_generation(resolve, select, monkeypatch) -> None:
-    """Layer: end-to-end. Each ODR entrypoint's endpoint resolution reaches real inference."""
+    """Layer: integration. Private ODR selectors feed actual transient provider generation."""
     monkeypatch.setenv("ORKET_DISABLE_SANDBOX", "1")
     response, latency, release = await complete_with_transient_provider(
         model=os.environ["ORKET_GOVERNED_AGENT_MODEL"], messages=[{"role": "user", "content": "Reply with OK."}],
@@ -73,9 +75,10 @@ async def test_llama_cpp_odr_transient_generation(resolve, select, monkeypatch) 
     assert release["unload_attempted"] is False
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_default_extension_catalog_generation_and_discovery(tmp_path) -> None:
-    """Layer: end-to-end. Omitted provider/model settings reach the real default GGUF."""
+    """Layer: integration. Direct extension-service discovery and generation use the real default GGUF."""
     service = ExtensionRuntimeService(project_root=tmp_path)
     catalog = await service.list_models(extension_id="orket.companion")
     assert catalog["requested_provider"] == "llama_cpp"

@@ -51,7 +51,7 @@ def intent_matches_row(intent: dict, row: dict | None) -> bool:
     if row.get("session_id") != intent["session_id"]:
         return False
     if intent["operation"] == "start_run":
-        fields = ("run_type", "run_name", "department", "build_id")
+        fields: tuple[str, ...] = ("run_type", "run_name", "department", "build_id")
     else:
         fields = ("status", "failure_class", "failure_reason")
     if any(row.get(name) != kwargs.get(name) for name in fields):

@@ -115,6 +115,7 @@ def test_fastapi_vue_mongo_compose():
     print("\nâœ… FastAPI + Vue + MongoDB compose generation test passed")
 
 
+@pytest.mark.unit
 def test_port_allocation():
     """Test that port allocator prevents conflicts."""
     allocator = SandboxRegistry().port_allocator

@@ -5,11 +5,13 @@ import json
 import math
 import sys
 from dataclasses import dataclass
+from functools import partial
 from typing import Any
 
-from orket.adapters.execution.owned_io import run_owned_thread
+from orket.adapters.execution.owned_io import finish_owned_thread, run_owned_thread
 from orket.adapters.storage.sdk_workload_exchange import SdkWorkloadExchange
 from orket.application.services.command_process_supervisor import CommandProcessCancelled, CommandProcessSupervisor
+from orket.core.contracts.log_event_inputs import capture_log_event_inputs
 from orket.core.contracts.owned_command import OwnedCommandResult
 from orket.logging import log_event
 from orket_extension_sdk.result import WorkloadResult
@@ -70,9 +72,12 @@ class _SdkProcessOwner:
         self.phase = "prepare"
 
     async def run(self, request_bytes, timeout_seconds):
+        completed = False
         try:
             await run_owned_thread(lambda: self.exchange.prepare(request_bytes), label="sdk-exchange-prepare")
-            return await self._execute(timeout_seconds)
+            result = await self._execute(timeout_seconds)
+            completed = True
+            return result
         except CommandProcessCancelled as exc:
             self.lifetime = exc.lifetime
             if not self.lifetime.cleanup_confirmed:
@@ -97,22 +102,43 @@ class _SdkProcessOwner:
             raise await self._uncertain(self.phase) from exc
         finally:
             if not self.retain:
-                try:
-                    await run_owned_thread(self.exchange.remove, label="sdk-exchange-remove")
-                except (OSError, RuntimeError) as exc:
-                    raise await self._uncertain("exchange-remove") from exc
+                await self._remove_exchange(preserve_failure=not completed)
+
+    async def _remove_exchange(self, *, preserve_failure):
+        operation = self.exchange.remove
+        native_failure: BaseException | None = None
+
+        def remove():
+            nonlocal native_failure
+            try:
+                return operation()
+            except BaseException as exc:  # Retain the actual removal failure, including native cancellation.
+                native_failure = exc
+                raise
+
+        try:
+            if preserve_failure:
+                await finish_owned_thread(remove)
+            else:
+                await run_owned_thread(remove, label="sdk-exchange-remove")
+        except BaseException as exc:  # Failed removal cannot authorize SDK terminal publication.
+            if native_failure is None and isinstance(exc, asyncio.CancelledError):
+                raise  # A successful body still exposes caller-only interruption after removal.
+            raise await self._uncertain("exchange-remove") from exc
 
     async def _uncertain(self, phase):
         self.retain = True
         error = SdkSubprocessExecutionUncertain(phase, self.lifetime, self.exchange)
-        observation = {"phase": phase, "exchange_path": str(self.exchange.root) if self.exchange.root else None,
-                       "process_lifetime": self.lifetime.lifetime() if self.lifetime else None}
+        workspace = self.workspace
         try:
-            await run_owned_thread(lambda: log_event("sdk_workload_process_uncertain", observation, self.workspace),
+            name, observation = capture_log_event_inputs("sdk_workload_process_uncertain", {
+                "phase": phase, "exchange_path": str(self.exchange.root) if self.exchange.root else None,
+                "process_lifetime": self.lifetime.lifetime() if self.lifetime else None})
+            await run_owned_thread(partial(log_event, name, observation, workspace),
                                    label="sdk-uncertainty-observation")
-        except (Exception, asyncio.CancelledError) as exc:
-            # Diagnostic publication is a final supervision boundary. Its failure
-            # must not turn unknown execution into ordinary failure/cancellation.
+        except BaseException as exc:  # Final diagnostic supervision retains even native fatal refusal.
+            # The shared native owner settles before this policy retains the exact
+            # secondary failure; diagnostics cannot replace selected uncertainty.
             error.add_note(f"Uncertainty diagnostic failed: {type(exc).__name__}")
             error.diagnostic_error = exc
         return error
@@ -128,14 +154,34 @@ class _SdkProcessOwner:
         )
         self.phase = "lifetime-observation"
         lifetime = self.lifetime
-        await run_owned_thread(lambda: log_event("sdk_workload_process_observed", lifetime.lifetime(),
-                                                self.workspace), label="sdk-lifetime-observation")
+        await self._publish_lifetime(lifetime)
         if lifetime.reason != "completed" or not lifetime.cleanup_confirmed or not lifetime.capture_complete:
             raise await self._uncertain("native-" + lifetime.reason)
         self.phase = "result-read"
         raw = await run_owned_thread(exchange.read_result, label="sdk-exchange-read")
         self.phase = "result-adoption"
         return _adopt_result(raw, lifetime)
+
+    async def _publish_lifetime(self, lifetime):
+        workspace = self.workspace
+        name, observation = capture_log_event_inputs("sdk_workload_process_observed", lifetime.lifetime())
+        operation = partial(log_event, name, observation, workspace)
+        native_failure: BaseException | None = None
+
+        def publish():
+            nonlocal native_failure
+            try:
+                return operation()
+            except BaseException as exc:  # Observe this publication's native failure, including native cancellation.
+                native_failure = exc
+                raise
+
+        try:
+            await run_owned_thread(publish, label="sdk-lifetime-observation")
+        except BaseException as exc:  # Required observation failure cannot discard an unadopted SDK result.
+            if native_failure is None and isinstance(exc, asyncio.CancelledError):
+                raise  # Without a native publication failure, keep the existing confirmed cancellation policy.
+            raise await self._uncertain("lifetime-observation") from exc
 
 
 def _request_bytes(extension, workload, sdk_ctx, input_payload, authorization_envelope, audit_case, extra_capabilities):

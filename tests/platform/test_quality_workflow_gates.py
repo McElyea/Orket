@@ -9,7 +9,7 @@ import yaml
 pytestmark = pytest.mark.unit
 
 
-def _job_command_gaps(jobs, required_commands):
+def _job_command_gaps(jobs, required_commands, *, exact=False):
     """Observe explicit argv per job; text in another job/comment/echo is no gate."""
     gaps = []
     for name in ("architecture_gates", "quality"):
@@ -29,7 +29,7 @@ def _job_command_gaps(jobs, required_commands):
                 present = any((cmd[:3] == ["python", "-m", "pytest"] or cmd[:1] == ["pytest"])
                               and set(tokens).issubset(cmd) for cmd in commands)
             else:
-                present = any(cmd[:len(tokens)] == tokens for cmd in commands)
+                present = any((cmd == tokens if exact else cmd[:len(tokens)] == tokens) for cmd in commands)
             if not present:
                 gaps.append((name, required))
     return gaps
@@ -87,6 +87,7 @@ def test_quality_workflow_enforces_architecture_and_volatility_gates() -> None:
 
     # The quick gate job and the full quality job should both run these checks.
     duplicated_in_both_jobs = [
+        "tests/integration/test_tool_runtime_ownership.py tests/integration/test_guarded_mutation_ownership.py tests/integration/test_application_root_inputs.py tests/integration/test_epic_execution_phase_ownership.py",
         "tests/integration/test_extension_capability_api_lifetime.py tests/integration/test_extension_generation_options_api.py tests/integration/test_piper_process_lifetime.py tests/integration/test_interaction_cancel_ownership.py tests/integration/test_operator_completion_views.py",
         "tests/integration/test_api_construction_ownership.py tests/integration/test_api_construction_inputs.py tests/integration/test_api_preparation_interruption.py tests/integration/test_api_server_bootstrap.py tests/integration/test_api_server_reload.py",
         "tests/integration/test_workload_publication_ownership.py tests/integration/test_workload_publication_inputs.py tests/integration/test_legacy_publication_ownership.py tests/integration/test_workload_policy_inputs.py tests/integration/test_workload_reproducibility_inputs.py tests/runtime/test_workload_policy.py tests/integration/test_extension_installation_ownership.py tests/integration/test_extension_catalog_publication.py tests/integration/test_extension_manager_preflight.py tests/integration/test_extension_git_lifetime.py tests/runtime/test_extension_source_policy.py tests/contracts/test_extension_cli_ownership.py tests/contracts/test_extension_git_cancellation.py tests/integration/test_sandbox_deploy_publication_recovery.py tests/rulesim/test_interruption_reproducibility.py",
@@ -140,3 +141,53 @@ def test_job_selection_requires_real_pytest_argv_in_each_job(case):
         jobs["quality"]["steps"] = [{"run": "python -m pytest tests/first.py && echo tests/second.py"}]
     gaps = _job_command_gaps(jobs, ["tests/first.py tests/second.py"])
     assert gaps == ([] if case == "extra-selector" else [("quality", "tests/first.py tests/second.py")])
+
+
+TRUTHFUL_CHECKER_COMMANDS = (
+    "python scripts/governance/enforce_test_taxonomy.py --strict",
+    "python scripts/governance/check_noop_critical_paths.py",
+    "python scripts/governance/check_current_authority.py",
+)
+
+
+def test_quality_runs_native_checkers_in_both_truthful_checker_steps() -> None:
+    """Layer: unit. Exact declared argv does not prove hosted execution or findings."""
+    jobs = yaml.safe_load(Path(".gitea/workflows/quality.yml").read_text(encoding="utf-8"))["jobs"]
+    selected = {}
+    for name in ("architecture_gates", "quality"):
+        steps = [step for step in jobs[name]["steps"] if step.get("name") == "Enforce truthful quality checker observations"]
+        assert len(steps) == 1, f"{name}: expected one truthful-checker step"
+        assert "if" not in steps[0], f"{name}: truthful-checker step must not be conditional"
+        assert not steps[0].get("continue-on-error"), f"{name}: truthful-checker failures must fail the job"
+        assert steps[0].get("env", {}).get("ORKET_DISABLE_SANDBOX") == "1"
+        selected[name] = {"steps": steps}
+    assert not _job_command_gaps(selected, TRUTHFUL_CHECKER_COMMANDS, exact=True)
+    assert not _job_command_gaps(selected, [
+        "tests/scripts/test_enforce_test_taxonomy.py",
+        "tests/scripts/test_check_noop_critical_paths.py",
+        "tests/platform/test_quality_workflow_gates.py",
+        "tests/scripts/test_current_authority_source.py",
+        "tests/platform/test_current_authority_map.py",
+        "tests/platform/test_remediation_authority_docs.py",
+    ])
+
+
+@pytest.mark.parametrize("command", TRUTHFUL_CHECKER_COMMANDS)
+@pytest.mark.parametrize("case", ["exact", "wrong-job", "comment", "echo", "compound", "root-override", "inline-option"])
+def test_native_checker_gate_requires_exact_argv_in_each_job(command, case):
+    """Layer: unit. Adverse declarations cannot impersonate the default-root command."""
+    observed = {
+        "exact": command,
+        "wrong-job": "",
+        "comment": "# " + command,
+        "echo": "echo '" + command + "'",
+        "compound": command + " || true",
+        "root-override": command + " --root tests/one.py",
+        "inline-option": command.replace(" --strict", "") + " # --strict --root tests/one.py",
+    }[case]
+    jobs = {name: {"steps": [{"run": command}]} for name in ("architecture_gates", "quality")}
+    jobs["quality"]["steps"] = [{"run": observed}]
+    # A comment after an already-complete no-op command does not change its argv.
+    accepted = case == "exact" or (case == "inline-option" and "--strict" not in command)
+    expected = [] if accepted else [("quality", command)]
+    assert _job_command_gaps(jobs, [command], exact=True) == expected

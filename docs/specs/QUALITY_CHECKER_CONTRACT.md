@@ -2,7 +2,7 @@
 
 Status: Active
 Owner: Orket Core
-Last updated: 2026-09-27
+Last updated: 2026-09-28
 
 ## Scope and source selection
 
@@ -95,9 +95,25 @@ Nested router factories and their route functions retain their measured spans.
 The complete inventories support later no-growth and shrinking-baseline comparison;
 collecting them alone does not establish that a refactor reduced debt.
 
-Run both checker regression modules, the taxonomy-summary regression, the native
-checker commands, and canonical `ruff check orket tests`. Migrate classification
+Both `architecture_gates` and `quality` run the checker regression modules,
+taxonomy-summary regression and workflow argv guard in their truthful-checker
+step, followed by these commands with their canonical default roots:
+
+```text
+python scripts/governance/enforce_test_taxonomy.py --strict
+python scripts/governance/check_noop_critical_paths.py
+python scripts/governance/check_current_authority.py
+```
+
+Those steps must not be conditional or allow failure. The structural argv guard
+checks each named step separately and rejects narrowed roots, missing strict
+mode and same-line compound syntax in inspected commands. It does not interpret
+shell flow or establish hosted failure propagation.
+The authority checker and its contract/native controls follow
+`CURRENT_AUTHORITY_SOURCE_CONTRACT.md`; source parity grants no current runtime
+proof. Both jobs retain its consumer and adverse tests in the same step.
+Run canonical `ruff check orket tests` as well. Migrate classification
 by reviewing test behavior; do not add blanket directory labels or weaken coverage
-thresholds to obtain green. Repository-wide missing/conflicting layers remain real
-gate debt after the checker is repaired. Structural checker success is separate
+thresholds to obtain green. Any remaining missing/conflicting layers fail the strict
+gate after checker repair. Structural checker success is separate
 from runtime proof, full-suite coverage and hosted Quality acceptance.

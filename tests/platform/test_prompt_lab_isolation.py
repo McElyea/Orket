@@ -2,6 +2,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
 
 def test_runtime_does_not_import_prompt_lab_scripts() -> None:
     root = Path("orket")

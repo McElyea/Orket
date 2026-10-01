@@ -15,6 +15,8 @@ from typing import Any
 
 import aiosqlite
 
+from orket.adapters.execution.owned_io import run_owned_io
+from orket.adapters.storage.async_file_tools import capture_file_roots
 from orket.adapters.storage.card_acceptance_artifacts import (
     CapturedCardArtifact,
     CardAcceptanceArtifacts,
@@ -110,6 +112,9 @@ class CardAcceptanceService:
         self, *, workspace_root: Path, definition: CardAcceptanceDefinition, card_id: str, run_id: str, attempt_id: str,
         workload_inputs_json: str,
     ) -> CardAcceptanceCapture:
+        workspace_root, = capture_file_roots([workspace_root])
+        definition = definition.model_copy(deep=True)
+        artifacts = self.artifacts
         environment = sanitized_agent_environment() if isinstance(definition, PythonCliAcceptance) else {}
         runtime = ({"executable": sys.executable, "version": sys.version, "environment": environment}
                    if isinstance(definition, PythonCliAcceptance) else {"verifier": "card_artifact_verifier.v1"})
@@ -117,18 +122,21 @@ class CardAcceptanceService:
             "schema_version": "card_acceptance_inputs.v1", "workload_inputs": json.loads(normalized_json_text(workload_inputs_json)),
             "runtime": runtime,
         }))
-        diagnostics: list[str] = []
-        captured: tuple[CapturedCardArtifact, ...] = ()
-        try:
-            captured = await self.artifacts.capture(workspace_root, definition.artifact_paths)
-        except (ValueError, OSError, RuntimeError) as exc:
-            diagnostics.append(f"artifact_capture_failed:{type(exc).__name__}:{exc}")
-        scope = CompletionScope(
-            card_id=card_id, run_id=run_id, attempt_id=attempt_id, workload_id=definition.workload_id,
-            input_digest=hashlib.sha256(inputs_json.encode("utf-8")).hexdigest(),
-            artifact_manifest_digest=artifact_manifest_digest(captured),
-        )
-        return CardAcceptanceCapture(inputs_json, environment, scope, captured, tuple(diagnostics))
+        async def capture() -> CardAcceptanceCapture:
+            diagnostics: list[str] = []
+            captured: tuple[CapturedCardArtifact, ...] = ()
+            try:
+                captured = await artifacts.capture(workspace_root, definition.artifact_paths)
+            except (ValueError, OSError, RuntimeError) as exc:
+                diagnostics.append(f"artifact_capture_failed:{type(exc).__name__}:{exc}")
+            scope = CompletionScope(
+                card_id=card_id, run_id=run_id, attempt_id=attempt_id, workload_id=definition.workload_id,
+                input_digest=hashlib.sha256(inputs_json.encode("utf-8")).hexdigest(),
+                artifact_manifest_digest=artifact_manifest_digest(captured),
+            )
+            return CardAcceptanceCapture(inputs_json, environment, scope, captured, tuple(diagnostics))
+
+        return await run_owned_io(capture, label="card-acceptance-scope", preserve_failure=True)
 
     async def _verify(
         self, workspace_root: Path, definition: CardAcceptanceDefinition, card_id: str, run_id: str, attempt_id: str,

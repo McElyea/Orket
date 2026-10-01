@@ -10,7 +10,7 @@ from orket.adapters.execution.openclaw_jsonl_adapter import OpenClawJsonlSubproc
 from orket.application.services.command_process_supervisor import CommandProcessSupervisor
 
 
-# Layer: integration
+# Layer: unit
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_challenge_corpus_adapter_serves_corpus_cases() -> None:
@@ -37,21 +37,21 @@ async def test_challenge_corpus_adapter_serves_corpus_cases() -> None:
     assert responses[1]["token_request"]["tool_name"] == "demo.credentialed_echo"
 
 
-# Layer: unit
+@pytest.mark.unit
 def test_challenge_corpus_adapter_select_case_id_returns_empty_on_empty_corpus() -> None:
     module = _load_challenge_corpus_adapter_module()
 
     assert module._select_case_id({}, []) == ""
 
 
-# Layer: unit
+@pytest.mark.unit
 def test_challenge_corpus_adapter_select_case_id_errors_when_multiple_cases_need_explicit_id() -> None:
     module = _load_challenge_corpus_adapter_module()
 
     assert module._select_case_id({}, ["case-a", "case-b"]) == ""
 
 
-# Layer: unit
+@pytest.mark.unit
 def test_challenge_corpus_adapter_select_case_id_auto_selects_single_case_with_warning(caplog) -> None:
     module = _load_challenge_corpus_adapter_module()
 

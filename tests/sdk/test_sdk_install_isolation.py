@@ -6,6 +6,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 
 def test_sdk_import_does_not_load_internal_orket_modules(tmp_path: Path) -> None:
     """Layer: integration. Verifies importing SDK contracts does not transitively import internal `orket.*` modules."""

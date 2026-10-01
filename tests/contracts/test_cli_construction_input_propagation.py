@@ -8,6 +8,7 @@ from types import SimpleNamespace
 import pytest
 
 import orket.interfaces.cli as cli
+from orket.application.services import cli_application_context
 from orket.application.services.runtime_construction_inputs import RuntimeConstructionInputs
 from orket.application.services.runtime_result_lifetime import open_async_runtime_owner
 from tests.interfaces.test_cli_startup_semantics import _cli_args
@@ -58,7 +59,7 @@ def _install_common(monkeypatch, selected, observed):
         pytest.fail("CLI cannot recapture after startup")
 
     monkeypatch.setattr(cli, "run_startup_checks", startup)
-    monkeypatch.setattr(cli, "prepare_extension_manager", manager)
+    monkeypatch.setattr(cli_application_context, "prepare_extension_manager", manager)
     monkeypatch.setattr(cli, "_resolve_path", resolve)
     monkeypatch.setattr(cli, "emit_runtime_manifest", manifest)
     monkeypatch.setattr(cli, "OrchestrationEngine", _EngineProbe)

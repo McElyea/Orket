@@ -3,7 +3,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from orket.reforger.eval.runner import AdapterEvalHarness, FakeModelAdapter, FakeModelFixture
+
+pytestmark = pytest.mark.integration
 
 
 def _seed_pack(pack: Path) -> None:

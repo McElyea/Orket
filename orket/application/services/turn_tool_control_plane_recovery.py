@@ -6,6 +6,7 @@ from orket.application.services.turn_tool_checkpoint_authority import (
     TurnToolReconciliationClosed,
     resolve_checkpoint_recovery_authority,
     validate_checkpoint_recovery_inputs,
+    validate_checkpoint_resume_identity,
 )
 from orket.application.services.turn_tool_control_plane_closeout import close_reconciliation_required_resume_mode
 from orket.application.services.turn_tool_control_plane_reconciliation import publish_resume_reconciliation
@@ -207,7 +208,6 @@ async def fail_closed_on_orphan_operation_artifacts_for_resume_mode(
 
 
 
-
 async def load_checkpoint_resume_lineage(
     *,
     execution_repository: ControlPlaneExecutionRepository,
@@ -236,10 +236,6 @@ async def load_checkpoint_resume_lineage(
             raise TurnToolCheckpointRecoveryError(
                 f"resumed governed attempt {resumed_attempt.attempt_id} is missing accepted same-attempt checkpoint lineage"
             )
-        if checkpoint.parent_ref != resumed_attempt.attempt_id:
-            raise TurnToolCheckpointRecoveryError(
-                f"resumed governed attempt {resumed_attempt.attempt_id} does not match checkpoint parent lineage"
-            )
         decision_id = _same_attempt_resume_decision_id(
             run_id=run_id,
             attempt_ordinal=resumed_attempt.attempt_ordinal,
@@ -261,6 +257,8 @@ async def load_checkpoint_resume_lineage(
             raise TurnToolCheckpointRecoveryError(
                 f"resumed governed attempt {resumed_attempt.attempt_id} does not align with checkpoint lineage"
             )
+        validate_checkpoint_resume_identity(run_id=run_id, resumed_attempt=resumed_attempt,
+            source_attempt=resumed_attempt, decision=recovery_decision, checkpoint=checkpoint)
         return recovery_decision, checkpoint, checkpoint_acceptance
     if resumed_attempt.attempt_ordinal < 2:
         raise TurnToolCheckpointRecoveryError(
@@ -312,6 +310,8 @@ async def load_checkpoint_resume_lineage(
         raise TurnToolCheckpointRecoveryError(
             f"resumed governed attempt {resumed_attempt.attempt_id} does not match checkpoint snapshot lineage"
         )
+    validate_checkpoint_resume_identity(run_id=run_id, resumed_attempt=resumed_attempt,
+        source_attempt=prior_attempt, decision=recovery_decision, checkpoint=recovery_checkpoint)
     return recovery_decision, recovery_checkpoint, checkpoint_acceptance
 
 

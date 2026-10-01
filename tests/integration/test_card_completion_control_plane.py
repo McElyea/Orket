@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import json
 import sqlite3
+from contextlib import nullcontext
 
 import pytest
 
@@ -13,8 +14,10 @@ from orket.application.services.toolbox import ToolBox
 from orket.application.services.turn_tool_control_plane_service import build_turn_tool_control_plane_service
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.application.workflows.turn_message_builder import MessageBuilder
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain.records import IssueRecord
 from orket.core.domain.state_machine import StateMachine
+from orket.logging import bind_logging, prepare_logging
 from orket.schema import CardStatus, IssueConfig, RoleConfig
 from tests.helpers.card_completion import completion_components, completion_definition, write_completion_source
 from tests.helpers.turn_artifacts import artifact_test_utc_now, prepare_message_fixture
@@ -85,7 +88,8 @@ def _store_snapshot(paths):
 async def test_completed_card_reentry_requires_retained_receipt_without_rerunning_tools(tmp_path, protocol, change):
     repo, service, toolbox, plane, executor, issue, role, context = await _runtime(tmp_path, protocol)
     model = CompletionModel()
-    first = await executor.execute_turn(issue, role, model, toolbox, context)
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        first = await executor.execute_turn(issue, role, model, toolbox, context)
     assert first.success, first.error or first.violations
     assert (await repo.get_by_id("card")).status == CardStatus.DONE
     truth = await plane.publication.repository.get_final_truth(run_id="turn-tool-run:session:card:integrity_guard:0001")
@@ -100,7 +104,8 @@ async def test_completed_card_reentry_requires_retained_receipt_without_rerunnin
         await asyncio.to_thread(service.acceptance.evidence_store.db_path.unlink)
     paths = [tmp_path / "cards.db", service.acceptance.evidence_store.db_path, tmp_path / "control_plane.db"]
     before = await asyncio.to_thread(_store_snapshot, paths)
-    second = await executor.execute_turn(issue, role, model, toolbox, context)
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))) if change == "none" else nullcontext():
+        second = await executor.execute_turn(issue, role, model, toolbox, context)
     assert model.calls == 1 and toolbox.calls == 1
     if change == "none":
         assert second.success and second.turn.note == "control_plane_completed_replay"
@@ -116,7 +121,8 @@ async def test_completed_card_reentry_requires_retained_receipt_without_rerunnin
 async def test_completion_reopened_before_turn_publication_cannot_publish_success(tmp_path, protocol):
     repo, _, toolbox, plane, executor, issue, role, context = await _runtime(tmp_path, protocol)
     toolbox.reopen_after_write = True
-    result = await executor.execute_turn(issue, role, CompletionModel(), toolbox, context)
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(issue, role, CompletionModel(), toolbox, context)
     assert not result.success
     assert any("E_CARD_COMPLETION_RESULT_UNVERIFIED" in violation for violation in result.violations)
     assert (await repo.get_by_id("card")).status == CardStatus.CODE_REVIEW

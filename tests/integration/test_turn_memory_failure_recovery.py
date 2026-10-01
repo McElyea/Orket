@@ -20,7 +20,9 @@ from orket.application.services.turn_tool_control_plane_service import (
     build_turn_tool_control_plane_service,
 )
 from orket.application.workflows.turn_executor import TurnExecutor, TurnResult
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain.state_machine import StateMachine
+from orket.logging import bind_logging, prepare_logging
 from orket.schema import CardStatus, IssueConfig, RoleConfig
 from tests.helpers.kernel_state_probe import responsive_sqlite
 from tests.helpers.turn_artifacts import artifact_test_utc_now
@@ -179,7 +181,8 @@ async def _drive(
 
     async def operation():
         async with asyncio.timeout(5), deadline:
-            return await executor.execute_turn(_issue(), _role(), model, toolbox, context, "SYSTEM")
+            with bind_logging(await prepare_logging(LoggingInputs(executor.workspace))):
+                return await executor.execute_turn(_issue(), _role(), model, toolbox, context, "SYSTEM")
 
     task = asyncio.create_task(operation())
     try:
@@ -205,7 +208,8 @@ async def _drive(
 
 
 async def _seed_replay(executor, model, toolbox, paths) -> None:
-    first = await executor.execute_turn(_issue(), _role(), model, toolbox, _context(), "SYSTEM")
+    with bind_logging(await prepare_logging(LoggingInputs(executor.workspace))):
+        first = await executor.execute_turn(_issue(), _role(), model, toolbox, _context(), "SYSTEM")
     assert first.success is True
     await _remove([paths["memory"], paths["retrieval"]])
 

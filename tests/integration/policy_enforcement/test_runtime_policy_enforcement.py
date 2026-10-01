@@ -13,7 +13,9 @@ from orket.application.middleware import TurnLifecycleInterceptors
 from orket.application.services.tool_gate_service import ToolGate
 from orket.application.workflows.turn_artifact_writer import TurnArtifactWriter
 from orket.application.workflows.turn_tool_dispatcher import ToolDispatcher
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain.execution import ExecutionTurn, ToolCall
+from orket.logging import bind_logging, prepare_logging
 from orket.runtime.execution_pipeline import ExecutionPipeline
 from orket.runtime.source_attribution_policy import (
     source_attribution_policy_snapshot,
@@ -275,7 +277,7 @@ async def test_tool_gate_violation_blocks_before_tool_execution(tmp_path: Path) 
         tool_calls=[ToolCall(tool="write_file", args={"path": "../escape.txt", "content": "x"})],
     )
 
-    with pytest.raises(RuntimeError, match="outside workspace"):
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))), pytest.raises(RuntimeError, match="outside workspace"):
         await execute_dispatch_fixture(dispatcher, writer=TurnArtifactWriter(dispatcher.workspace),
             turn=turn,
             toolbox=toolbox,

@@ -3,7 +3,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from orket.rulesim.workload import run_rulesim_v0_sync
+
+pytestmark = pytest.mark.integration
 
 
 def test_probe_override_illegal_policy_inherits_rest_of_config(tmp_path: Path) -> None:

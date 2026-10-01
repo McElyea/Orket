@@ -11,8 +11,8 @@ from orket.runtime.contract_bootstrap import (
     load_runtime_contract_snapshots,
     write_runtime_contract_snapshots,
 )
-from orket.runtime.run_start_contract_artifacts import CONTRACT_SNAPSHOT_DEFS
-from orket.runtime.workspace_snapshot import capture_workspace_state_snapshot
+from orket.runtime.evidence.run_start_contract_artifacts import CONTRACT_SNAPSHOT_DEFS
+from orket.runtime.evidence.workspace_snapshot import capture_workspace_state_snapshot
 from orket.utils import sanitize_name
 
 _DETERMINISM_RANK = {

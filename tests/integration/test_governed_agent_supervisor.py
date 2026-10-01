@@ -9,6 +9,7 @@ from typing import Any
 
 import pytest
 
+from orket.adapters.observability.logging_context import bind_logging, prepare_logging
 from orket.adapters.storage.async_governed_agent_wake_repository import (
     AsyncGovernedAgentWakeRepository,
 )
@@ -22,6 +23,7 @@ from orket.core.contracts.governed_agent_wake_records import (
     GovernedAgentWakeRecord,
     GovernedAgentWakeRequest,
 )
+from orket.core.contracts.logging_inputs import LoggingInputs
 
 pytestmark = pytest.mark.integration
 
@@ -297,22 +299,26 @@ async def test_application_runtime_container_owns_supervisor_task_and_teardown(t
             self.closed = True
 
     engine = Engine()
+    prepared = await prepare_logging(LoggingInputs(tmp_path))
     container = ApiRuntimeContainer(
         project_root=tmp_path,
         api_runtime_node=object(),
         runtime_state=object(),
         api_runtime_host=object(),
         engine=engine,
+        logging_context=prepared,
     )
-    container.register_owned_resource(supervisor)
-    supervisor.start(container)
-    await asyncio.wait_for(dispatcher.entered.wait(), timeout=1)
+    # Direct embedding binds the existing owner; it does not own another writer.
+    with bind_logging(prepared):
+        container.register_owned_resource(supervisor)
+        supervisor.start(container)
+        await asyncio.wait_for(dispatcher.entered.wait(), timeout=1)
 
-    await container.close()
-    retained = await repository.get_wake(wake_id="wake-1")
+        await container.close()
+        retained = await repository.get_wake(wake_id="wake-1")
 
-    assert container.closed is True
-    assert container.active_background_task_count == 0
-    assert supervisor.running is False
-    assert engine.closed is True
-    assert retained is not None and retained.state == "recovery_required"
+        assert container.closed is True
+        assert container.active_background_task_count == 0
+        assert supervisor.running is False
+        assert engine.closed is True
+        assert retained is not None and retained.state == "recovery_required"

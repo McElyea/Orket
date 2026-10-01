@@ -1,6 +1,6 @@
 # Orket Architecture (Target State)
 
-Last updated: 2026-09-27
+Last updated: 2026-09-28
 
 Legacy Kernel capability evaluation uses a package-owned default and one validated
 immutable policy observation. Application capture owns the read-only adapter;
@@ -32,6 +32,61 @@ run time. The concrete refusal and partial-effect limits live in
 
 ## Implementation Status
 
+Trust handoff admission captures its package path and retains complete native
+verification through interruption; direct synchronous verification refuses loop
+entry. Existing package integrity/rejection rules and declared event paths stay
+authoritative. Interrupted verification leaves earlier shared EXECUTING admission
+without later handoff or terminal publication. Both Quality jobs retain real
+package, native interruption, path and CLI controls under
+`docs/specs/TRUST_HANDOFF_PACKET1_V1.md`.
+
+Model preparation captures its invocation directory before settings and score
+waits. Relative score reports use that root; Windows drive-relative paths refuse.
+Every preparation requires observable CWD, including absent/absolute reports.
+Existing advisory selection, byte provenance and native ownership remain under
+`docs/architecture/CONTRACT_DELTA_MODEL_SCORE_ROOT_D_2026-09-28.md`.
+Both Quality selections retain the root controls with existing model policy guards.
+
+Gitea reconciliation/coordinator owners and coroutine SDK children prepare and
+bind optional logging in the actual operation task. Direct async embeddings
+retain the same requirement. Required dual-ledger and webhook events capture
+supported values and their selected workspace before worker admission. Direct
+dual-ledger constructors supply an absolute workspace; custom sinks keep their
+borrowed-input contract. Native SDK lifetime-publication failure, including fatal
+or cancellation failure, retains typed uncertainty and the unadopted exchange.
+Caller-only interruption after successful publication retains its existing policy.
+
+Native exchange-removal failure also selects typed uncertainty with its exact
+cause, including cancellation/fatal failures. Successful removal preserves an
+already-selected body error against later caller interruption; successful-body
+interruption keeps its prior policy. Deletion may have partly or completely
+applied, so the retained reference does not promise intact exchange bytes.
+Contracts: `docs/specs/LOG_WRITE_SETTLEMENT.md`
+and `docs/specs/SDK_WORKLOAD_PROCESS_LIFETIME.md`.
+
+Pipeline and standalone runtime-context/ConfigLoader registry construction pass
+their captured settings explicitly. Selection does not rebind caller context or
+silently load omitted preferences; supplied registries keep precedence. Contract: `docs/specs/SETTINGS_INPUT_OWNERSHIP.md`.
+
+
+`CURRENT_AUTHORITY.md` is the bounded generated view of
+`docs/architecture/current_authority.json`. It routes to canonical owners and
+preserves explicit claim ceilings; it is not an execution journal. Exact previous
+bytes remain linked as history. Source/command checks are structural and current
+runtime proof remains unavailable under `docs/specs/CURRENT_AUTHORITY_SOURCE_CONTRACT.md`.
+
+Required epic completion log attempts use the existing owned native I/O service.
+Caller interruption waits for settlement; native publication failure prevents
+journal progress even when prior store effects or the append already occurred.
+Matching reentry retains accepted work. Contract and migration:
+`docs/specs/CARD_COMPLETION_ACCEPTANCE_CONTRACT.md` and
+`docs/architecture/CONTRACT_DELTA_EPIC_LOG_OWNERSHIP_D_2026-09-28.md`.
+
+The dedicated API reload worker retains cooperative signal handling while serving
+and native signal-ignore handlers after loop settlement through interpreter exit.
+The parent joins that worker and preserves nonzero finalizer failures under
+`docs/specs/API_RUNTIME_LIFECYCLE.md`.
+
 Sandbox event publication and replay capture invocation values and retain the
 existing I/O owner through persistence and file cleanup. Native nonblocking locks
 coordinate cooperating append/replay callers; busy fallback refuses publication.
@@ -50,7 +105,7 @@ Contract and current proof limits: `docs/specs/RUNTIME_FAILURE_DIAGNOSTICS.md`.
 Optional event publication captures supported built-in inputs before admission
 to the existing bounded writer. Native stages retain independent main/artifact
 capacity and API token ownership; fatal failures refuse append settlement. This
-does not close lifecycle preparation or required-producer migration.
+does not close every direct consumer or required-producer migration.
 Contract: `docs/specs/LOG_WRITE_SETTLEMENT.md`.
 
 Quality observations use actual pytest item markers and Git-visible source
@@ -235,6 +290,11 @@ not accepted as target-architecture conformance.
    2. The observability identity model below is target-state and must be versioned during migration.
 8. Transitional runtime specifics:
    1. Durable-path defaults and `ReviewRun` v0 notes remain active current-state authority (documented in this file under sections 20 and 24).
+9. Runtime module layout compatibility:
+   1. Implementation modules live under `orket/runtime/config/`, `evidence/`, `execution/`, `policy/`, `registry/` and `summary/`, with explicit package `__all__` surfaces. The old flat `orket.runtime.<module>` imports remain one-release compatibility aliases. This includes the provider-runtime-target alias; the exact removal version remains unassigned. New direct cross-domain imports use package public surfaces, guarded by `tests/runtime/test_runtime_subpackage_boundaries.py`. Moving this retained obligation out of the authority journal does not close its compatibility window.
+   2. Same-domain consumers may import canonical peer modules directly while retaining their existing local symbol bindings. Explicit legacy imports still resolve to those modules; incidental eager population of flat aliases in `sys.modules` is not guaranteed by importing another consumer. The evidence-graph migration preserves captured-symbol monkeypatch behavior and package surfaces; scoped proof lives in the architectural-truth plan.
+10. Logging composition:
+   1. Canonical owners prepare captured `LoggingInputs` through the existing native I/O owner and bind their `PreparedLogging` for actual operations. Direct async embeddings prepare and bind explicitly; missing preparation refuses before optional publication. The process-global writer remains process-owned, with one selected queue capacity and no application-local stop/restart protocol. Borrowed runtime lifetimes do not lend ContextVar tokens across yields. Contract: `docs/specs/LOG_WRITE_SETTLEMENT.md`.
 
 ## 1. Purpose
 
@@ -339,7 +399,44 @@ Application services own publication, traversal, storage and AST/iDesign workers
 adapters receive validation authority through a core protocol. Migration and
 current proof limits are in
 `docs/architecture/CONTRACT_DELTA_CORE_EFFECT_BOUNDARIES_D_2026-09-14.md`.
+Failure publication additionally captures lexical workspace, scalar identity and
+rendered content before admission yields; the existing owner retains report close
+and required saved-event publication. Contract: `docs/specs/FAILURE_REPORT_PUBLICATION.md`.
 This is not whole-core purity or C/D acceptance.
+
+
+ToolRuntimeExecutor's unguarded invocation retains the shared I/O owner through
+native tool settlement and async cleanup. Timeout/cancellation do not imply no
+effects; native failures retain their selected precedence. The guarded algorithm
+has separate unresolved failure/diagnostic debt. Contract:
+`docs/specs/SHARED_IO_CANCELLATION.md`.
+
+ToolGate captures its validation workspace before the worker wait. Structural
+reconciliation captures model and event-workspace roots together, using the
+existing project-path defaults; StructuralBoardStore binds relative roots at
+construction and supplies selected roots to each native operation. Per-target
+comparison and partial-adoption semantics remain. This is lexical input capture,
+not filesystem-handle confinement. Delta:
+`docs/architecture/CONTRACT_DELTA_APPLICATION_ROOT_INPUTS_D_2026-09-28.md`.
+
+Epic operations compose the focused `orchestrator_epic_workflow` team preflight
+and dispatch phases. The selected loop node, current input observations and
+late-selected effect owners retain their original phases. Approval entries are
+consumed only after semaphore admission; stopping the loop grants no accepted
+completion authority. Delta:
+`docs/architecture/CONTRACT_DELTA_ORCHESTRATOR_EPIC_EXECUTION_E2_2026-09-28.md`.
+
+Turn ops similarly retains issue/dependency admission and phase-selected service
+composition. `orchestrator_turn_workflow` orders review, preparation and outcome
+handling while original services own effects and close behavior. Delta:
+`docs/architecture/CONTRACT_DELTA_ORCHESTRATOR_TURN_PHASES_E2_2026-09-28.md`.
+
+The model-stream builtin captures its nested request and provider environment
+before discovery. Canonical provider-target acceptance refuses nonempty BLOCKED
+observations before provider construction; event and commit schemas remain.
+Input/admission proof does not establish stream/client cleanup. Deltas:
+`docs/architecture/CONTRACT_DELTA_MODEL_STREAM_INPUTS_D_2026-09-28.md` and
+`docs/architecture/CONTRACT_DELTA_MODEL_STREAM_ADMISSION_D_2026-09-28.md`.
 
 Sandbox HTTP verification follows the same boundary: core captures explicit
 scenario/target/time values and compares observations; application owns HTTP
@@ -531,6 +628,12 @@ needed report once; validation, values and metadata share the result. Operator p
 changes remain visible to the next request. Native observation refuses event-loop
 entry, while async observation retains workers through interruption. Orchestrator
 composition supplies the required architecture snapshot and captured mode environment.
+Focused orchestrator policy functions consume values at existing phase/callback
+boundaries. The coordinator owns actual card transitions, ordered publication and
+public verification; support construction uses canonical classes without retrying
+internal type errors with reduced inputs. Remaining epic/turn/replan decomposition
+stays open under the architectural-truth plan. Scoped migration:
+`docs/architecture/CONTRACT_DELTA_ORCHESTRATOR_POLICY_E2_2026-09-28.md`.
 This does not make multiple reports an atomic filesystem transaction or complete D.
 See `docs/specs/RUNTIME_ARCHITECTURE_POLICY_INPUTS.md` and
 `docs/architecture/CONTRACT_DELTA_RUNTIME_ARCHITECTURE_POLICY_INPUTS_D_2026-09-22.md`.
@@ -868,6 +971,15 @@ to application command services. Submission captures immutable options and owns
 catalog/request preparation and provider cleanup through interruption. Public
 arguments and result schemas are unchanged; migration and limits are in
 `docs/architecture/CONTRACT_DELTA_AGENT_COMMANDS_C_2026-09-16.md`.
+
+The bundle CLI keeps its public `main` and SDK validators in
+`orket/interfaces/orket_bundle_cli.py`. Ordered parser declarations, rendering,
+review dispatch and outward command handlers each have one interface module.
+Review preparation, execution and output retain their distinct error boundaries;
+the installed command root still owns runtime dispatch. Module extraction adds
+no application policy or native-operation lifetime guarantee. Private helper
+migration and scoped parity evidence:
+`docs/architecture/CONTRACT_DELTA_BUNDLE_CLI_E2_2026-09-28.md`.
 
 ### `adapters`
 

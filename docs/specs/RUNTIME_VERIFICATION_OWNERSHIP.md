@@ -77,6 +77,24 @@ append may already exist when failure is reported. Lifetime-event retention and
 command/container cleanup authority remain unchanged; events are not durable
 recovery authority. Captured roots and fields apply to all these observations.
 
+The command and fixture lifetime finalizers use the existing shared I/O owner
+after the resource owner settles. Later caller cancellation cannot replace the
+selected outcome; native publication failures retain their original identity,
+including native cancellation and fatal failures. The command supervisor keeps
+its existing expected-error-to-cause mapping; the fixture keeps its original
+publication-failure precedence. Security publication retains the distinct normal
+operation policy above. Contract and scoped proof:
+`../architecture/CONTRACT_DELTA_REQUIRED_FINALIZERS_D_2026-09-28.md`.
+
+The command and fixture lifetime finalizers use the existing shared I/O owner
+after the resource owner settles. Later caller cancellation cannot replace the
+selected outcome; native publication failures retain their original identity,
+including native cancellation and fatal failures. The command supervisor keeps
+its existing expected-error-to-cause mapping; the fixture keeps its original
+publication-failure precedence. Security publication retains the distinct normal
+operation policy above. Contract and scoped proof:
+`../architecture/CONTRACT_DELTA_REQUIRED_FINALIZERS_D_2026-09-28.md`.
+
 Both fixture and sandbox HTTP services require an explicit `utc_now` callable.
 Each invocation samples once, requires an aware datetime and normalizes it to UTC;
 naive/non-datetime values refuse with `E_VERIFICATION_TIME_REQUIRES_AWARE_DATETIME`.

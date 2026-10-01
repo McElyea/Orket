@@ -9,6 +9,8 @@ from typing import Any
 
 import pytest
 
+from orket.adapters.observability.logging_context import bind_logging, prepare_logging
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.logging import (
     event_subscriber_count,
     log_event,
@@ -119,153 +121,161 @@ async def test_async_optional_log_keeps_sqlite_responsive_during_first_path_stag
     record_property: Any,
     stage: str,
 ) -> None:
-    event = f"logging_opening_path_{stage}"
-    workspace = tmp_path / f"workspace_{stage}"
-    state = hold_path_stage(monkeypatch, workspace, stage)
+    prepared = await prepare_logging(LoggingInputs(tmp_path))
+    with bind_logging(prepared):
+        event = f"logging_opening_path_{stage}"
+        workspace = tmp_path / f"workspace_{stage}"
+        state = hold_path_stage(monkeypatch, workspace, stage)
 
-    observation = await observe_log_call(
-        log=log_event,
-        event=event,
-        payload={"stage": stage},
-        workspace=workspace,
-        state=state,
-    )
+        observation = await observe_log_call(
+            log=log_event,
+            event=event,
+            payload={"stage": stage},
+            workspace=workspace,
+            state=state,
+        )
 
-    _record_observation(record_property, f"{stage}_observation", observation, state)
-    _assert_common(observation, state, event)
-    _assert_responsive(observation, state)
+        _record_observation(record_property, f"{stage}_observation", observation, state)
+        _assert_common(observation, state, event)
+        _assert_responsive(observation, state)
 
 
 async def test_async_optional_log_keeps_sqlite_responsive_during_standard_handler(
     tmp_path: Path,
     record_property: Any,
 ) -> None:
-    event = "logging_opening_standard_handler"
-    workspace = tmp_path / "handler_workspace"
-    state = HoldState()
-    handler = HeldStandardHandler(state, event)
-    logger = logging.getLogger("orket")
-    logger.addHandler(handler)
-    try:
-        observation = await observe_log_call(
-            log=log_event,
-            event=event,
-            payload={"sink": "standard_handler"},
-            workspace=workspace,
-            state=state,
-        )
-    finally:
-        state.release.set()
-        logger.removeHandler(handler)
-        handler.close()
+    prepared = await prepare_logging(LoggingInputs(tmp_path))
+    with bind_logging(prepared):
+        event = "logging_opening_standard_handler"
+        workspace = tmp_path / "handler_workspace"
+        state = HoldState()
+        handler = HeldStandardHandler(state, event)
+        logger = logging.getLogger("orket")
+        logger.addHandler(handler)
+        try:
+            observation = await observe_log_call(
+                log=log_event,
+                event=event,
+                payload={"sink": "standard_handler"},
+                workspace=workspace,
+                state=state,
+            )
+        finally:
+            state.release.set()
+            logger.removeHandler(handler)
+            handler.close()
 
-    _record_observation(record_property, "handler_observation", observation, state)
-    _assert_common(observation, state, event)
-    _assert_responsive(observation, state)
+        _record_observation(record_property, "handler_observation", observation, state)
+        _assert_common(observation, state, event)
+        _assert_responsive(observation, state)
 
 
 async def test_async_optional_log_keeps_sqlite_responsive_during_subscriber(
     tmp_path: Path,
     record_property: Any,
 ) -> None:
-    event = "logging_opening_subscriber"
-    workspace = tmp_path / "subscriber_workspace"
-    state = HoldState()
-    subscriber = held_subscriber(state, event)
-    baseline = event_subscriber_count()
-    subscribe_to_events(subscriber)
-    try:
-        observation = await observe_log_call(
-            log=log_event,
-            event=event,
-            payload={"sink": "subscriber"},
-            workspace=workspace,
-            state=state,
-        )
-    finally:
-        state.release.set()
-        unsubscribe_from_events(subscriber)
-    restored_count = event_subscriber_count()
+    prepared = await prepare_logging(LoggingInputs(tmp_path))
+    with bind_logging(prepared):
+        event = "logging_opening_subscriber"
+        workspace = tmp_path / "subscriber_workspace"
+        state = HoldState()
+        subscriber = held_subscriber(state, event)
+        baseline = event_subscriber_count()
+        subscribe_to_events(subscriber)
+        try:
+            observation = await observe_log_call(
+                log=log_event,
+                event=event,
+                payload={"sink": "subscriber"},
+                workspace=workspace,
+                state=state,
+            )
+        finally:
+            state.release.set()
+            unsubscribe_from_events(subscriber)
+        restored_count = event_subscriber_count()
 
-    _record_observation(
-        record_property,
-        "subscriber_observation",
-        observation,
-        state,
-        {"subscriber_records": state.records, "restored_count": restored_count},
-    )
-    _assert_common(observation, state, event)
-    assert len(state.records) == 1
-    assert restored_count == baseline
-    _assert_responsive(observation, state)
+        _record_observation(
+            record_property,
+            "subscriber_observation",
+            observation,
+            state,
+            {"subscriber_records": state.records, "restored_count": restored_count},
+        )
+        _assert_common(observation, state, event)
+        assert len(state.records) == 1
+        assert restored_count == baseline
+        _assert_responsive(observation, state)
 
 
 async def test_async_optional_log_captures_nested_payload_before_held_processing(
     tmp_path: Path,
     record_property: Any,
 ) -> None:
-    event = "logging_opening_nested_capture"
-    workspace = tmp_path / "nested_workspace"
-    payload = {"nested": {"values": ["captured"]}}
-    state = HoldState()
-    handler = HeldStandardHandler(state, event)
-    subscriber_records: list[dict[str, Any]] = []
-    subscriber_observed = threading.Event()
-    mutated = threading.Event()
-    subscriber = _nested_subscriber(event, subscriber_records, subscriber_observed)
-    logger = logging.getLogger("orket")
-    mutator = threading.Thread(
-        target=partial(_mutate_nested, state, payload, mutated),
-        name="orket-logging-opening-mutator",
-        daemon=False,
-    )
-    logger.addHandler(handler)
-    subscribe_to_events(subscriber)
-    subscriber_finished = False
-    try:
-        await start_fixture_thread(mutator, label="logging-opening-mutator")
-        observation = await observe_log_call(
-            log=log_event,
-            event=event,
-            payload=payload,
-            workspace=workspace,
-            state=state,
+    prepared = await prepare_logging(LoggingInputs(tmp_path))
+    with bind_logging(prepared):
+        event = "logging_opening_nested_capture"
+        workspace = tmp_path / "nested_workspace"
+        payload = {"nested": {"values": ["captured"]}}
+        state = HoldState()
+        handler = HeldStandardHandler(state, event)
+        subscriber_records: list[dict[str, Any]] = []
+        subscriber_observed = threading.Event()
+        mutated = threading.Event()
+        subscriber = _nested_subscriber(event, subscriber_records, subscriber_observed)
+        logger = logging.getLogger("orket")
+        mutator = threading.Thread(
+            target=partial(_mutate_nested, state, payload, mutated),
+            name="orket-logging-opening-mutator",
+            daemon=False,
         )
-        subscriber_finished = await wait_for_fixture_event(
-            subscriber_observed,
-            label="logging-opening-subscriber-observed",
-        )
-    finally:
-        state.release.set()
+        logger.addHandler(handler)
+        subscribe_to_events(subscriber)
+        subscriber_finished = False
         try:
-            unsubscribe_from_events(subscriber)
-            logger.removeHandler(handler)
-            handler.close()
+            await start_fixture_thread(mutator, label="logging-opening-mutator")
+            observation = await observe_log_call(
+                log=log_event,
+                event=event,
+                payload=payload,
+                workspace=workspace,
+                state=state,
+            )
+            subscriber_finished = await wait_for_fixture_event(
+                subscriber_observed,
+                label="logging-opening-subscriber-observed",
+            )
         finally:
-            await join_fixture_thread(mutator, label="logging-opening-mutator")
+            state.release.set()
+            try:
+                unsubscribe_from_events(subscriber)
+                logger.removeHandler(handler)
+                handler.close()
+            finally:
+                await join_fixture_thread(mutator, label="logging-opening-mutator")
 
-    _record_observation(
-        record_property,
-        "nested_capture_observation",
-        observation,
-        state,
-        {
-            "source_payload": payload,
-            "subscriber_records": subscriber_records,
-            "mutator_finished": not mutator.is_alive(),
-            "mutated": mutated.is_set(),
-            "subscriber_finished": subscriber_finished,
-        },
-    )
-    _assert_common(observation, state, event)
-    assert mutated.is_set()
-    assert not mutator.is_alive()
-    assert subscriber_finished
-    assert payload["nested"]["values"] == ["captured", "late"]
-    assert observation.records[0]["data"]["nested"]["values"] == ["captured"]
-    assert len(subscriber_records) == 1
-    assert subscriber_records[0]["data"]["nested"]["values"] == ["captured"]
-    _assert_responsive(observation, state)
+        _record_observation(
+            record_property,
+            "nested_capture_observation",
+            observation,
+            state,
+            {
+                "source_payload": payload,
+                "subscriber_records": subscriber_records,
+                "mutator_finished": not mutator.is_alive(),
+                "mutated": mutated.is_set(),
+                "subscriber_finished": subscriber_finished,
+            },
+        )
+        _assert_common(observation, state, event)
+        assert mutated.is_set()
+        assert not mutator.is_alive()
+        assert subscriber_finished
+        assert payload["nested"]["values"] == ["captured", "late"]
+        assert observation.records[0]["data"]["nested"]["values"] == ["captured"]
+        assert len(subscriber_records) == 1
+        assert subscriber_records[0]["data"]["nested"]["values"] == ["captured"]
+        _assert_responsive(observation, state)
 
 
 async def test_native_log_remains_inline_and_captures_before_return(

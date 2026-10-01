@@ -1,0 +1,3139 @@
+# CURRENT_AUTHORITY.md
+
+Last updated: 2026-09-28
+
+The frozen September 28 source run has 10,632 passes, 93 skips and no test
+failures, but the canonical Quality command exits 1: measured branch-mode
+coverage is 86.7044%, below the unchanged 89-percent floor. All 5,484 frozen
+Git-visible inputs match after execution. This is a failed coverage gate,
+not release acceptance. The frozen Windows installed selection records 230 passes
+and one skip on Python 3.11; Python 3.12 records 227 passes, three timeout-test
+failures and one skip. Its failures expose a fixture assumption about the outer
+timeout exception; the public typed cancellation and retained publication remain
+the contract. Corrected-fixture acceptance is pending. Linux
+reentry remains blocked by observed clock steps. Exact evidence and limits are
+recorded in the active architectural-truth plan.
+
+The subsequent API decomposition preserves 129 effective route registrations and
+the complete OpenAPI schema by structural comparison. Catalog observations now
+retain the native owner; the opening controls reproduced 12 ownership failures.
+Required native worker fatal exceptions now settle at their public caller.
+Outward model and sandbox terminal evidence retain their complete admitted I/O
+attempt and captured inputs under
+`docs/specs/EVIDENCE_ARTIFACT_PUBLICATION_OWNERSHIP.md`. The combined closing
+selection passes 512 cases on Windows Python 3.11 with all 5,509 inputs unchanged,
+including the earlier ownership failures and existing API/publication/cleanup
+guards. These later edits are outside the frozen full-suite and installed-wheel
+proof above; broader platform, provider and coverage acceptance remains open.
+
+The candidate after 0.6.114 retains required epic completion log writes through
+interruption; 56 scoped Windows source publication/recovery controls pass.
+Reload-worker signals switch from cooperative handling to native ignore after
+the serving loop settles, preserving parent joins and nonzero finalizer exits;
+16 native reload/finalization controls pass. Contracts:
+`docs/specs/CARD_COMPLETION_ACCEPTANCE_CONTRACT.md` and
+`docs/specs/API_RUNTIME_LIFECYCLE.md`.
+The final 494 missing test layers have canonical markers. Strict collection
+passes with no missing/conflicting labels or collection errors; this establishes
+classification only. Fresh full-suite coverage and installed/platform acceptance
+remain separate gates, with current evidence in the architectural-truth plan.
+
+Quality now selects its branch configuration explicitly:
+`pytest tests/ --cov=orket --cov-config=pyproject.toml --cov-fail-under=89`.
+Native coverage controls distinguish parent/child configuration loss from
+application coverage; the full-suite gate remains open. API request policy
+service construction belongs to `ApiRuntimeContainer`, using the router's
+per-request captured inputs and the existing native observation owner. Contracts:
+`docs/specs/QUALITY_CHECKER_CONTRACT.md` and
+`docs/specs/RUNTIME_ARCHITECTURE_POLICY_INPUTS.md`. Scoped checkpoint proof and
+remaining failures are recorded in the architectural-truth plan.
+The 0.6.114 source checkpoint passes 116 scoped cases on Windows Python 3.11.
+Fresh structural collection observes 10,703 cases, 494 missing layers and no
+conflicts or collection errors; strict taxonomy still fails. Full coverage,
+fresh installed/platform acceptance and the remaining lane are not established.
+
+The 0.6.113 branch checkpoint captures fixture-verification inputs and the
+selected turn clock, retains required security publication through interruption,
+and captures HTTP factory/timeout ports before observation. Direct verifier
+constructors require aware `utc_now`. Copied-source and current-source controls
+and guards each pass 211 distinct cases on Windows Python 3.11; installed and broader D
+acceptance remain separate obligations. Contract:
+`docs/specs/RUNTIME_VERIFICATION_OWNERSHIP.md`.
+
+The baseline's v2 size inventory now uses Git-visible sources and retains complete
+oversized lists with qualified nested-function context. Its 400/70-line thresholds
+and inclusive spans are unchanged. Counts are structural debt observations, not
+runtime defect counts. Contract: `docs/specs/QUALITY_CHECKER_CONTRACT.md`.
+The refreshed development baseline collects 10,693 cases with 496 missing layers
+and no conflicts or collection errors. It reports successful collection and
+`release_ready=false`. Exact comparison confirms 643 existing marker migrations
+and 55 added cases. The full diagnostic records 10,585 passes, 15 failures and
+93 skips; mixed statement/branch coverage data prevents report generation.
+The authority-date mismatch is corrected after that frozen run; its targeted
+structural guard now passes.
+Remaining failures, coverage and whole-lane acceptance stay open in the plan.
+
+The 0.6.112 checkpoint retains cooperative signal handling in the dedicated API
+reload worker through native process finalization. Its four reproduced late-signal
+failures and eight existing reload cases pass on Windows source Python 3.11 with
+Uvicorn 0.54.0; failed finalizers still fail the launcher. Thirty-three calendar,
+mock-policy and script-fixture cases also pass. Contract:
+`docs/specs/API_RUNTIME_LIFECYCLE.md`. Another 225 application classifications have
+reviewed test-body parity. Canonical collection observes 10,638 cases with 1,139
+missing layers and no conflicts or collection errors; strict taxonomy still fails.
+Current publication evidence lives in the architectural-truth plan. Full-suite
+coverage, fresh installed/platform acceptance
+and remaining C/D/E/CAP work remain open; this is a branch checkpoint.
+
+The 0.6.108 checkpoint captures sandbox event values before identity generation
+and publication. Existing I/O owners retain primary/fallback and replay work;
+append and replay share nonblocking native ownership. Busy fallback refuses,
+legacy sentinels require explicit maintenance, and partial effects remain visible.
+Contract: `docs/specs/SANDBOX_EVENT_PUBLICATION_OWNERSHIP.md`.
+
+API startup captures and owns the complete authentication validation call before
+engine initialization. Required handlers execute in the native worker, retaining
+failure precedence and production/staging refusal. Other logging preparation and
+required producers remain open. Contract: `docs/specs/API_RUNTIME_LIFECYCLE.md`.
+
+E1 has marked 1,742 reviewed existing cases across the 0.6.108 and 0.6.109
+checkpoints, and repairs governance, driver and pipeline fixtures.
+The ownership scanner recognizes captured bindings
+without changing its exact caller map. Fifty-two enum declarations retain existing
+diagnostic and JSON behavior under declaration-local Ruff exceptions, with explicit
+member, reexport and serialization controls. The published 0.6.108 cohort has 686
+passing cases in source and installed Windows Python 3.11/3.12, with package parity,
+real CLI paths and strict tool-audit payload readback. That checkpoint also passes
+Ruff, dependency and critical no-op checks. The 0.6.109 checkpoint adds 901
+reviewed markers: runtime collection includes 709 cases, 43 application contract
+cases execute successfully, and a further 302-case scoped collection preserves
+all 270 newly reviewed classifications and 32 existing ones. These collections
+do not establish execution of those test bodies. Fresh global collection confirms
+all 901 reviewed classifications: 10,606 cases, 1,908 still missing layers, no
+conflicts or collection errors. Strict taxonomy still fails; Ruff and independent
+test-body parity pass. Current checkpoint installation, full coverage, hosted
+Quality, Linux application proof and
+whole-lane acceptance remain open. The architectural-truth plan records exact
+source bindings and proof limits.
+Contract: `docs/specs/PUBLIC_ENUM_REPRESENTATION_CONTRACT.md`.
+
+The 0.6.111 checkpoint adds 543 reviewed application classifications across 69
+modules with test-body and existing-marker parity. Canonical collection confirms
+10,634 items, 1,365 missing layers and zero conflicts/collection errors; strict
+taxonomy still fails. The 28 additional items versus .109 are the already marked
+diagnostic controls in .110. The final fixture successor passes 31 affected cases
+(27 integration, four contract), including all shared sandbox-log helper callers.
+Two deliberately blocked-loop controls fail the unchanged 0.5-second bound.
+The preceding broader diagnostic stopped after 10 failures, 5,730 passes and 42
+skips. Seven helper regressions are corrected by the scoped successor; server
+reload, calendar-input and mock-policy failures remain open. No coverage report
+was produced despite the retained 89-percent threshold. Complete suite, installed,
+platform and whole-lane acceptance remain open.
+
+The 0.6.110 checkpoint corrects the reproduced supporting-diagnostic failures in
+the shared I/O, API preparation/application lifetime and runtime cleanup owners.
+Native diagnostic attempts remain owned through interruption; handler/executor
+failure preserves the selected primary and adds only a fixed failure note.
+Managed background failure closes admission before diagnostic settlement and
+retains that settlement in its existing task. Custom handlers on these paths
+must support native worker invocation. Copied-source and current-source controls
+and guards each pass 94 cases. The wider suite diagnostic stops at five failures
+after 3,681 passes and 29 skips; installed and full-suite acceptance remain open. Contract:
+`docs/specs/RUNTIME_FAILURE_DIAGNOSTICS.md`. Required producers, explicit logging
+preparation and broader D acceptance remain open.
+
+The 0.6.107 checkpoint corrects the five retained optional logging openings. Its
+combined 385-case cohort passes in source and installed Windows Python 3.11/3.12,
+including diagnostic-append, overflow and layer controls. Event-loop callers detach supported built-in values
+and admit native stages to the existing bounded writer. Independent drops,
+registration tokens and fatal-writer refusal remain. Relative-root observation,
+lazy startup, preparation and required-producer migration are still open D work.
+Contract: `docs/specs/LOG_WRITE_SETTLEMENT.md`.
+
+Repaired taxonomy v2 classifies actual pytest items rather than nearby prose.
+Missing and conflicting layers and collection failures are explicit; strict
+acceptance still requires their removal. The repaired no-op gate passes its
+Git-visible inventory. Checker regression success does not establish runtime,
+full-suite, coverage or hosted Quality acceptance.
+Contract: `docs/specs/QUALITY_CHECKER_CONTRACT.md`.
+
+The checkpoint gives sandbox cleanup authorization and decision receipts one
+shared compose-path availability observation. Its native metadata operation stays
+owned through repeated cancellation; direct decision builders receive the boolean.
+Six reached opening failures now pass alongside 26 existing source guards using
+real files/SQLite and fixture Docker responses. This is not Docker acceptance.
+Contract: `docs/specs/SANDBOX_CLEANUP_OBSERVATION.md`.
+
+Review preflight captures the orchestrator's selected clock, samples support time
+after verification and supplies explicit note identity/creation time. Notes no
+longer read host time implicitly. Real-engine source controls use a declared model
+fixture and the selected synthetic clock; live inference is outside that proof.
+Contract: `docs/specs/EPIC_RUNTIME_TIME_INPUTS.md`.
+
+Runtime verification captures its selected root, environment and nested command
+and evidence inputs per invocation. Existing native owners retain metadata,
+syntax reads and support-artifact record/latest/index work through interruption;
+the command supervisor binds cancellation logging to that same selected root.
+Worker failure during cancellation cannot become a result that admits later
+commands. Publication can retain a partial prefix and remains support evidence.
+Contract: `docs/specs/RUNTIME_VERIFICATION_OWNERSHIP.md`.
+
+The user-requested 0.6.106 branch checkpoint preserves the implemented corrections
+and their open acceptance obligations. Fresh Windows Python 3.11 source proof on
+September 27 passes the 96 API handoff/logging guards; the separate optional logging
+opening still has five failures and one native pass. Changed-file Ruff, dependency
+policy, docs hygiene and version alignment pass; full `orket tests` Ruff retains
+88 findings. Full successor source/installed, Linux application and broader D/E/CAP
+acceptance remain open. A commit or version tag is not completion of those gates.
+
+The logging candidate now holds its existing queue, daemon, failure, drop,
+directory and subscriber state together in
+`orket/adapters/observability/log_publication.py`; `orket/logging.py` remains the
+public facade. The extraction's 84 source guards pass, with four initial fixture
+failures retained. A subsequent candidate change captures subscriber registrations
+before native stages and drains each API registration through its already-issued
+handoff tokens. Four source opening cases reached premature close and lost queue
+attempts; the corrected 96-case selection passes in fresh source and installed
+Windows Python 3.11/3.12, including failed-stage token settlement and all 84
+extraction guards. Physical readback, 977 origins per installed cell, exact package
+parity and owner settlement pass. Both intervening harness failures are retained.
+The five optional logging defects,
+preparation and required-producer migration remain open. Installed and full
+successor proof remain required for the full candidate. Contracts: `docs/specs/LOG_WRITE_SETTLEMENT.md`
+and `docs/architecture/CONTRACT_DELTA_API_LOG_HANDOFF_D_2026-09-25.md`.
+
+Complete asynchronous runtime-input capture uses one retained native operation
+for root/environment selection, independent settings/preference collection,
+serialization and immutable construction. Default selection occurs when that
+worker executes; explicit objects retain their earlier selection. Bound values,
+including empty objects, remain authoritative. Existing settings migration and
+native failure/cancellation ownership remain with their current owners.
+Contracts: `docs/specs/SETTINGS_INPUT_OWNERSHIP.md` and
+`docs/architecture/CONTRACT_DELTA_RUNTIME_CAPTURE_OWNER_D_2026-09-25.md`.
+This is the 0.6.106 branch checkpoint; the plan records retained opening and
+closing observations. Canonical CLI/API/driver/child/legacy propagation now uses
+the same selected object; its selected 120-case source closing passed. The fresh
+395-module source campaign passed all 3,770 cases. Installed acceptance remains
+open after 55 Git-backed failures in the full Windows Python 3.11 cohort; the
+full Python 3.12 cohort was not run. The separate extension correction below
+has narrower source and installed proof.
+Published 0.6.105 is the retained baseline. Startup refresh, child precedence,
+exclusive selectors, default timing and existing close/error ownership are in
+`docs/architecture/CONTRACT_DELTA_ROUTE_INPUT_PROPAGATION_D_2026-09-25.md`.
+
+Extension Git reference resolution and detached checkout now select `.git` and
+`.` relative to the same captured checkout working directory. The 200- and
+217-character source installation controls pass after retaining the original
+longer-path failure. No checkout or catalog location changes. The 60-case affected
+cohort passes fresh source and both installed Windows Python 3.11/3.12 cells,
+including all 36 earlier extension failures. The canonical plan binds physical
+readback and preserves the separate 19 Gitea failures. Full successor acceptance
+remains required; the Gitea correction has the separate scoped proof below.
+Contract:
+`docs/architecture/CONTRACT_DELTA_EXTENSION_GIT_CHECKOUT_CONTEXT_D_2026-09-25.md`.
+
+The Gitea candidate retains its canonical repository and objects while supplying
+existing Windows native names when bootstrap/configuration paths require them.
+Name observation runs through the existing native owner; unusable names refuse
+before Git admission. Command inputs are captured before that await, and the
+original cwd, supervisor and budgets remain. All 71 affected cases pass in fresh
+source and installed Windows Python 3.11/3.12, including the four boundaries,
+native lifetime/admission controls and all 19 earlier installed failure identities.
+The canonical plan binds physical objects, SQLite, package and owner observations.
+Remote Gitea, Linux and complete .106 acceptance are not established by this cohort.
+Contract: `docs/architecture/CONTRACT_DELTA_GITEA_NATIVE_PATH_CONTEXT_D_2026-09-25.md`.
+
+The selected llama.cpp text-template read uses the existing native I/O owner
+through repeated cancellation and native failure. Interrupted reads settle before
+HTTP admission; render identity, token accounting and provider selection remain.
+Contract: `docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md`; migration:
+`docs/architecture/CONTRACT_DELTA_LLAMA_TEMPLATE_READ_OWNERSHIP_D_2026-09-25.md`.
+The plan separates local file-lifetime proof from actual provider acceptance.
+
+The existing governed-turn state gate requires every resolved current-attempt
+tool step to have an effect journal matching run, attempt and step before ordinary
+execution, terminal publication or success reuse. Explicit accepted-checkpoint
+resume retains blocked reconciliation for orphan-step uncertainty; it cannot
+continue execution or synthesize journals. Unresolved
+dispatch still refuses first; explicit or inferred counts cannot bypass the
+correspondence check. Existing repositories, transactions and resource owners
+remain authoritative. Journal-only same-attempt evidence retains its post-effect
+floor, and distinct step/operation identifiers remain valid. Contract:
+`docs/specs/CONTROL_PLANE_TERMINAL_AUTHORITY.md`; migration:
+`docs/architecture/CONTRACT_DELTA_STEP_JOURNAL_CORRESPONDENCE_D_2026-09-25.md`.
+The first full .106 source run retained 3,745 passes and four failures. Corrected
+reconciliation admission and historical fixtures passed 156 focused source cases,
+including embedded replay. The successor full source campaign passed all 3,770
+cases; its first installed Windows cell retained 3,715 passes and 55 failures.
+Those failures concern Git initialization/reference resolution, not an accepted
+installed result. The plan retains all earlier observations and ended environments.
+
+The shared I/O owner retains the original operation cancellation after settlement
+and the first caller cancellation through repeated interruption. Factory timing,
+coroutine admission, optional one-time child interruption and existing failure
+precedence remain. Contract: `docs/specs/SHARED_IO_CANCELLATION.md`; migration:
+`docs/architecture/CONTRACT_DELTA_SHARED_CANCELLATION_D_2026-09-25.md`.
+The five focused and 85 consumer source cases and the successor full source
+campaign passed; installed CPython 3.11/3.12 candidate acceptance remains required.
+
+SDK manifest/catalog conversion shares one null-only optional-contract normalizer;
+SDK listing no longer invents a legacy register default. Non-null values, explicit
+callables, legacy styles, agent validation and digest formats retain their
+authorities. Contract: `docs/specs/EXTENSION_CATALOG_REPRESENTATION.md`; migration:
+`docs/architecture/CONTRACT_DELTA_EXTENSION_CATALOG_REPRESENTATION_D_2026-09-25.md`.
+The three-field opening and 36-case source closing are retained. A separate
+14-case opening reached loss of valid explicit generic references. The writer
+now preserves each nonempty SDK reference after strict agent discrimination.
+The 37-case focused source closing and 73-case cohort with both null and explicit
+real Git install/restart profiles passed. Full source and installed acceptance
+remain open.
+Both canonical Quality jobs include the affected construction, cancellation and
+catalog modules in `Enforce construction, cancellation and catalog ownership`.
+This selection is CI configuration, not an observed CI or installed pass.
+
+Packet-1 start and closeout callbacks share the construction-input object selected
+when the epic owner is built. Operation-record consumers share strict identity,
+canonical argument and local result-digest validation; present-invalid files refuse
+instead of authorizing redispatch. Governed cache hits use the captured service and
+existing execution gate plus current-attempt step/effect/call authority. Those
+repository observations remain separate reads, not one atomic snapshot.
+Cached middleware must preserve the selected canonical arguments/result and valid
+reuse leaves operation bytes intact. Governed nonprotocol calls also consult the
+strict operation slot before legacy fallback. A cached determinism violation
+refuses before result substitution or publication; live result adaptation remains.
+Terminal failure uses retained
+same-attempt journal evidence even when the current invocation executed no steps;
+unresolved dispatch and public checkpoint/reconciliation gates remain required.
+Completed replay, pre-effect resume and approval continuation check full checkpoint
+integrity before consuming its tool plan. Embedded turn replay retains fresh model
+proposal construction; the separate recorded-run CLI replay retains its no-model
+contract. Migration and exact limits:
+`docs/architecture/CONTRACT_DELTA_TURN_INPUT_REPLAY_AUTHORITY_D_2026-09-24.md`.
+The architectural-truth plan owns retained failed/passing observations and
+source/package acceptance and publication status. Local result/digest consistency
+does not prove independent content authenticity; existing recovery prefixes,
+per-call effects and finalization remain. Wider D/E/CAP acceptance stays open.
+
+The native tool-gate audit settles prior accepted optional append attempts before
+temporary workspace release, including the required engine-close failure path.
+The boundary uses the existing queue and daemon, refuses running-loop callers and
+surfaces retained writer death without restart. A pending marker consumes one
+bounded slot; settlement proves completed attempts, not durable log delivery.
+If this audit's primary failure and the exact writer-termination error coincide,
+the primary remains outward with its existing graph and a non-secret diagnostic
+note. Unknown settlement errors retain normal precedence; fatal refusal does not
+prove completion of stranded appends.
+Contract: `docs/specs/LOG_WRITE_SETTLEMENT.md`; migration:
+`docs/architecture/CONTRACT_DELTA_LOG_WRITE_SETTLEMENT_D_2026-09-24.md`.
+The plan owns retained opening/closing evidence and full source/installed
+acceptance status. Broader logging capture, preparation and API lifecycle remain open.
+
+Session checkpoints use the selected clock, capture snapshot path and nested JSON
+before lock admission, and retain the snapshot repository selected at publication
+or recovery entry. Selected epic closeout observations and summary publication use
+the existing native I/O owner through interruption. The migration and proof limits
+are in `docs/architecture/CONTRACT_DELTA_EPIC_CLOSEOUT_OWNERSHIP_D_2026-09-23.md`.
+The architectural-truth plan and checkpoint receipts own acceptance/publication
+status, both matched opening phases and retained/latest Linux clock observations. This
+implementation contract does not establish wider D/E/CAP or full-coverage proof.
+
+Guard-rejection pending requests sample the pipeline-selected clock once after
+gate-policy resolution and retain the publisher object selected before the row
+await. Row and hold share the timestamp. A selected absent publisher remains absent;
+a malformed present publisher or later failure propagates after the durable row.
+Contract: `docs/specs/EPIC_RUNTIME_TIME_INPUTS.md`; migration and proof limits:
+`docs/architecture/CONTRACT_DELTA_GUARD_REQUEST_INPUTS_D_2026-09-23.md`.
+
+Turn artifacts require one captured destination and the existing writer. Response,
+parser, prompt-budget, checkpoint and memory publication retain admitted native
+work through interruption. Invocation bindings retain the selected dispatcher,
+control-plane service and namespace across owner admission; the pipeline-selected
+clock reaches parser, checkpoint and tool-approval publication. Internal callers
+must supply the explicit destination, binding and clock inputs specified in
+`docs/specs/TURN_ARTIFACT_PUBLICATION_CONTRACT.md` and
+`docs/architecture/CONTRACT_DELTA_TURN_ARTIFACT_PUBLICATION_D_2026-09-23.md`.
+The architectural-truth plan owns checkpoint acceptance/publication status,
+retained failed and passing observations, and claim ceilings. These implementation
+contracts do not establish whole-lane, actual-provider, Linux or full-coverage proof.
+
+Gitea state/webhook HTTP composition uses captured network policy and one native
+resource owner. Async callers use owned factories; native constructors refuse
+entry on the event loop. Both Gitea CLI paths retain adapters through cleanup,
+and coordinator summaries use the shared diff ledger at the existing output path.
+Authorization, retries, URL admission, finite deadlines and webhook failure envelopes
+remain authoritative. Contract: `docs/specs/GITEA_HTTP_CLIENT_OWNERSHIP.md`;
+migration: `docs/architecture/CONTRACT_DELTA_GITEA_HTTP_INPUTS_D_2026-09-22.md`.
+Retry operations snapshot borrowed nested request values. Lease acquisition and
+renewal use a body-size limit compiled from the captured construction environment.
+Raw native embeddings supply that integer; recreate adapters to change policy.
+Request-input migration: `docs/architecture/CONTRACT_DELTA_GITEA_REQUEST_INPUTS_D_2026-09-22.md`.
+
+Artifact-export and builtin HTTP use the application short-request owner for captured
+network inputs, native construction and complete resource cleanup. Exporters retain
+construction configuration; builtin HTTP observes configuration per request. Raw
+embeddings supply the request port; async exporter construction retains the native
+factory. Contract: `docs/specs/SHORT_HTTP_REQUEST_OWNERSHIP.md`; migration:
+`docs/architecture/CONTRACT_DELTA_SHORT_HTTP_OWNERSHIP_D_2026-09-22.md`.
+
+Artifact export captures restricted Git inputs with its construction context,
+copies nested payload arguments before dispatch and retains native payload/cache
+work through interruption. Application composition supplies the shared command
+supervisor; Git keeps its 60s deadline, bounded capture and private failures.
+Descendant cleanup precedes command success; uncertainty cannot authorize export.
+Raw exporter/Git embeddings supply the command port. Contract and migration:
+`docs/specs/GITEA_ARTIFACT_EXPORT_CONTRACT.md` and
+`docs/architecture/CONTRACT_DELTA_GITEA_EXPORT_OWNERSHIP_D_2026-09-22.md`.
+
+Artifact-export Git commands enable long paths before the subcommand, including
+initialization, then retain the repository-local setting. The same command owner,
+captured inputs, deadlines, output limits and private failures remain authoritative.
+The architectural-truth plan owns the failed native campaign, reached source
+regression and fresh matrix/publication status. Migration and limits:
+`docs/architecture/CONTRACT_DELTA_GITEA_GIT_BOOTSTRAP_D_2026-09-25.md`.
+
+Interrupted connector telemetry captures its invocation root and retains one
+native publication attempt through directory work, writes and logging sinks.
+Repeated cancellation and supporting-log failures preserve the original connector
+exception. A failed diagnostic sink adds a non-secret note to that exception.
+Timing retains its invocation scope; logs grant no effect or recovery authority.
+Other log producers keep their current contracts. Migration and scope:
+`docs/specs/CONNECTOR_INVOCATION_TIMING.md` and
+`docs/architecture/CONTRACT_DELTA_CONNECTOR_LOGGING_D_2026-09-22.md`.
+
+Shared required-read metadata uses explicit application observations and the
+existing PathResolver/native owners. Each response attempt shares one observation
+with corrective rendering; retries and per-tool preflight observe afresh. Governed
+preloads, legacy file classification and exists-only context availability retain
+their distinct semantics. Execution uses captured admitted commands and preserves
+the original result sinks. Packet-1 intended provider/profile comes from the existing
+runtime construction snapshot; actual telemetry keeps its precedence. Native
+automatic pipeline capture excludes unused preferences; supplied full inputs and
+existing async factories retain full capture. Omitted preference access refuses
+explicitly under `docs/specs/SETTINGS_INPUT_OWNERSHIP.md`. Contracts:
+`docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md` and
+`docs/specs/TRUTHFUL_RUNTIME_PACKET1_CONTRACT.md`; migration and proof limits:
+`docs/architecture/CONTRACT_DELTA_REQUIRED_INPUT_OWNERSHIP_D_2026-09-22.md`.
+
+Turn-message preparation captures its workspace and prompt-consumed values before
+awaiting native work; unrelated execution resources remain untouched. Existing
+native/file owners retain path admission, metadata, reads, closure and missing-input
+log production through interruption. Required reads use the existing governed
+PathResolver policy. Compaction writes to the two originally captured output sinks.
+Contract and migration: `docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md`
+and `docs/architecture/CONTRACT_DELTA_MESSAGE_READ_OWNERSHIP_D_2026-09-22.md`.
+
+Packet-2 collection captures its workspace, normalized policy and detached
+provenance before receipt discovery. The existing native owner retains protocol
+and legacy discovery/read/close and contained-file audit through interruption.
+Protocol-file precedence, sorting, operation identity and tolerant parsing remain;
+verified narration audit still means successful receipt plus contained existing
+file, not semantic content. Migration and limits:
+`docs/specs/TRUTHFUL_RUNTIME_NARRATION_EFFECT_AUDIT_CONTRACT.md` and
+`docs/architecture/CONTRACT_DELTA_PACKET2_OWNERSHIP_D_2026-09-22.md`.
+
+Terraform artifact publication captures its workspace and nested payloads; shared
+file capabilities own metadata and writes through interruption. Source-attribution
+observation captures its receipt path and derived policy/provenance, then owns
+existence/read/decode/close as one native operation. Non-object JSON has no claim
+or source evidence and cannot verify synthesis. Existing missing/invalid receipt
+classifications and partial artifact effects remain explicit. Contracts and migration:
+`docs/specs/TERRAFORM_PLAN_REVIEWER_V1.md`,
+`docs/specs/TRUTHFUL_RUNTIME_SOURCE_ATTRIBUTION_CONTRACT.md` and
+`docs/architecture/CONTRACT_DELTA_DIRECT_METADATA_D_2026-09-22.md`.
+
+SDK workload parents validate configured capability identifiers before dispatch without
+constructing unused providers. The native child owns default model clients through
+construction, authorization, execution and cleanup; a cleanup failure cannot publish
+success. Configured borrowed providers retain caller ownership.
+
+Card preparation retains primary and ODR-auditor cleanup as owned operations so
+repeated cancellation cannot interrupt adoption of a completed provider close.
+
+Inference clients reuse captured catalog proxy, trust and key-log policy. The native
+provider factory refuses event-loop entry; async callers use owned construction and
+retain partial or unadopted clients through cleanup. Captured Ollama authentication
+overrides the SDK's ambient request header. Provider preparation shares the captured
+lexical directory. Backend redirects, deadlines, retries, admission and response
+lineage remain authoritative. Contract: `docs/specs/PROVIDER_INFERENCE_CLIENT_OWNERSHIP.md`;
+migration: `docs/architecture/CONTRACT_DELTA_PROVIDER_INFERENCE_INPUTS_D_2026-09-22.md`.
+
+Provider HTTP catalogs use captured proxy, certificate and optional TLS key-log
+inputs with verified TLS and disabled redirects. Native client construction and
+all acquired resources remain owned through interruption and cleanup failure.
+Explicit empty mappings have no ambient or OS proxy-registry fallback. Non-finite
+HTTP budgets and unsupported NO_PROXY CIDR fail explicitly. TLS-library internals
+and wider async reachability remain separate obligations. Contract:
+`docs/specs/PROVIDER_HTTP_CATALOG_INPUTS.md`; migration:
+`docs/architecture/CONTRACT_DELTA_PROVIDER_HTTP_INPUTS_D_2026-09-22.md`.
+
+Provider listing and resolution capture environment and lexical cwd before awaiting
+work, and pass them through CLI loading and relative GGUF discovery. The shared
+command runner freezes borrowed inputs before transport scheduling; its private
+supervisor receives that context too. Drive-relative paths are refused. This does
+not freeze executable/filesystem contents or establish inference. Contract delta:
+`docs/architecture/CONTRACT_DELTA_PROVIDER_PROCESS_INPUTS_D_2026-09-22.md`.
+
+OpenClaw JSONL composition requires the application-owned `JsonlCommandRunner`.
+The existing OS supervisor owns sequential request/response exchange, finite write,
+response, close and exit deadlines, concurrent stream capture and descendant cleanup.
+Inputs are captured before dispatch. Accepted response prefixes remain available on
+ordinary protocol failure; incomplete capture or uncertain cleanup refuses normal
+output. Batch command behavior and OS backends remain authoritative. Contract:
+`docs/specs/OPENCLAW_PROCESS_OWNERSHIP.md`; migration:
+`docs/architecture/CONTRACT_DELTA_OPENCLAW_PROCESS_D_2026-09-22.md`.
+
+Worker synchronous HTTP, sleep and random-delay entry requires native execution.
+Async callers retain it through `run_owned_thread`. Each claimed-work invocation
+joins its renewal owner on every exit; renewal failure reaches the caller before
+completion, with concurrent work failure chained. The client remains borrowed and
+must have finite request bounds. Coordinator lease and hedged-result authority is
+unchanged; accepted effects are not rolled back by cancellation. Contract:
+`docs/specs/WORKER_RENEWAL_OWNERSHIP.md` and migration:
+`docs/architecture/CONTRACT_DELTA_WORKER_RENEWAL_D_2026-09-22.md`.
+
+Provider CLI inventory and Packet 1 governance commands use the existing OS command
+supervisor with captured arguments, directory and environment. Leader exit is not
+completion until descendants settle. Incomplete output or uncertain cleanup refuses;
+inventory parsing, observed model loads and alias ownership remain authoritative.
+Native workers retain their admitted deadlines through waiter interruption. Packet 1
+commands default to 300 seconds; the existing 4 MiB output bound applies to both paths.
+Process cleanup is not daemon-effect rollback or actual-model acceptance. Migration:
+`docs/specs/PROVIDER_GOVERNANCE_COMMAND_OWNERSHIP.md` and
+`docs/architecture/CONTRACT_DELTA_PROVIDER_GOVERNANCE_COMMANDS_D_2026-09-22.md`.
+
+Runtime architecture evaluators require immutable policy snapshots. Settings capture
+current environment/root and each needed readiness report once per request, preserving
+operator changes between requests. Owned workers retain async reads through interruption;
+native observation refuses event-loop entry. Orchestrator composition supplies one
+architecture snapshot shared by mode resolution and allowed-pattern context. Existing
+readiness normalizers, aliases and settings-write conflicts remain authoritative.
+Migration and scoped limits: `docs/specs/RUNTIME_ARCHITECTURE_POLICY_INPUTS.md` and
+`docs/architecture/CONTRACT_DELTA_RUNTIME_ARCHITECTURE_POLICY_INPUTS_D_2026-09-22.md`.
+
+Legacy Kernel capability evaluation uses a package-owned default and one validated
+immutable policy observation. Application capture owns the read-only adapter;
+missing/malformed/native I/O errors refuse instead of becoming an empty policy.
+Requests detach before reads; typed inputs permit deterministic evaluation.
+Default logical source is `policy://orket/kernel/v1/default`; caller-declared
+context overrides remain advisory and do not establish broker authorization.
+Migration, async ownership and exact scope:
+`docs/specs/KERNEL_CAPABILITY_POLICY_INPUTS.md` and
+`docs/architecture/CONTRACT_DELTA_KERNEL_CAPABILITY_POLICY_D_2026-09-21.md`.
+
+This file is the current canonical authority snapshot for high-impact runtime and governance paths.
+
+Core package-data declarations include the existing permission example/schema
+and ODR artifact schema. Shipping these resources does not admit them as runtime
+authorization or completion-verifier authority. Distribution parity and scope:
+`docs/architecture/CONTRACT_DELTA_PACKAGE_DATA_C_2026-09-21.md`.
+
+Controller runtime hooks capture policy and invocation roots before dispatch.
+Dispatch prepares its own manager through the retained application worker;
+disabled controllers do not construct one. Direct dispatchers require an explicit
+manager. CLI preparation also captures environment/cwd before worker scheduling.
+Migration, partial directory effects and remaining synchronous construction scope:
+`docs/architecture/CONTRACT_DELTA_CONTROLLER_CONSTRUCTION_D_2026-09-19.md`.
+
+Extension installation admits a distinct checkout before locked, verified catalog
+publication; failed upgrades retain prior installations. Native Git commands and
+catalog/preflight workers remain owned through interruption. Manager inputs and
+policy are captured before preflight, and controller SDK admission uses that same
+catalog observation. Async installation migration, native ownership paths and
+remaining construction/publication limits:
+`docs/architecture/CONTRACT_DELTA_EXTENSION_INSTALL_D_2026-09-19.md`.
+The v0.6.105 candidate enables invocation-scoped Git long paths before each
+extension subcommand, including clone. Checkout placement, captured operation
+environment, 120s/30s deadlines, native ownership and private failures are unchanged.
+Contract delta and proof limits:
+`docs/architecture/CONTRACT_DELTA_EXTENSION_GIT_LONGPATH_D_2026-09-25.md`.
+
+Owned ACTIVE sandbox health retries publish any missing deployment effect before
+returning success, after lease/resource publication with one captured timestamp.
+Existing lease monotonicity guards remain active. Recovery and partial-effect limits:
+`docs/architecture/CONTRACT_DELTA_SANDBOX_DEPLOY_RECOVERY_D_2026-09-19.md`.
+
+Sandbox core values require an explicit creation timestamp. Application creation
+captures it through `RuntimeInputService` before preflight awaits; later
+orchestrator clock observations keep their existing second precision. Migration
+and remaining lifecycle input scope:
+`docs/architecture/CONTRACT_DELTA_SANDBOX_CREATION_INPUTS_D_2026-09-20.md`.
+
+Standard sandbox commands capture process inputs and share the existing OS
+command owner. Their finite default is 300 seconds; log reads retain ten seconds.
+Incomplete execution retains reconciliation rather than a completion receipt.
+Constructor/input migration, cancellation and daemon-effect limits:
+`docs/architecture/CONTRACT_DELTA_SANDBOX_COMMAND_OWNERSHIP_D_2026-09-21.md`.
+
+Memory services capture nested metadata, lexical database roots and explicit UTC
+observations. Side-effecting repositories own native effects; profile policy,
+publication and readback share one writer transaction. Namespaced facts require
+explicit correction, and stale unchanged-value metadata is refused. Admitted
+writes may commit before cancellation returns. Classifiers/renderers require
+timezone-aware `observed_at`. Migration, legacy parity and ownership limits:
+`docs/architecture/CONTRACT_DELTA_MEMORY_STATE_D_2026-09-21.md`.
+
+Kernel credential application boundaries capture key, UTC time, cryptographic
+identity and owned JSON inputs. Default consumption observes UTC time after
+lock acquisition so validation/contention waits cannot extend expiry.
+Pure credential decisions consume immutable
+observations; issuance binds an accepted admission and exact approval identity
+under the runtime lock. Duplicate token/identity hashes cannot reset replay.
+Low-level effects require typed inputs and explicit invalidation time. Event
+failure can leave a record transition; global Kernel state remains in memory.
+Migration, synchronous ownership and partial-effect limits:
+`docs/architecture/CONTRACT_DELTA_KERNEL_CREDENTIAL_INPUTS_D_2026-09-21.md`.
+
+Kernel public JSON owns request, state and observation values separately.
+Credential issuance and serialized commit share one pure exact-identity
+authorization rule; successful same-key commits reuse retained publication. Application
+async mutation and approval paths own native workers plus required SQLite
+publication through interruption. Each invocation captures immutable operator
+environment before worker admission and shares it with nested workers.
+Partial effects can survive publication failure or cancellation; Kernel maps
+are still process-local, without durable transactions or restart recovery.
+Contract, scoped proof and migration: `docs/architecture/CONTRACT_DELTA_KERNEL_STATE_OWNERSHIP_D_2026-09-21.md`.
+
+Each standard engine now owns an explicit volatile Kernel runtime: its state,
+native lock and clock/credential-identity ports belong to that engine. Independent
+applications do not share Kernel authority even with equal session identifiers.
+The existing application lifetime supervisor retains admitted Kernel publication
+before engine resources close; new admission refuses during or after close.
+Direct embeddings explicitly bind and close `KernelRuntime`; unbound calls
+refuse. Immutable event-time observations replace low-level ambient clock reads.
+No default global maps, reset hook or proxy fallback selects a runtime. Selected
+credential consumption time is still sampled after native lock acquisition.
+Volatile state, partial failure and trusted-Python limits remain; this is not
+durable recovery, hostile-code isolation or per-user authorization.
+Migration and proof scope: `docs/architecture/CONTRACT_DELTA_KERNEL_RUNTIME_OWNER_D_2026-09-21.md`.
+
+Kernel owners bind selected run-identity ports and immutable lexical roots.
+Standard engines supply their project root; returned start handles carry absolute
+workspace paths. Native invocation and publication retain admitted roots before
+worker scheduling. Requests detach before native locks or identity callbacks wait.
+Pure typed start has no ambient identity/root observation; implicit start requires
+an active native owner. This does not provide path confinement, durable run
+admission, uniqueness enforcement or rollback. Migration and proof scope:
+`docs/specs/KERNEL_RUN_INPUTS.md` and
+`docs/architecture/CONTRACT_DELTA_KERNEL_RUN_INPUTS_D_2026-09-22.md`.
+
+Local Kernel state captures roots and immutable triplet bytes before effects.
+A shared classified filesystem adapter executes native operations; direct calls
+on a running event loop refuse. Missing/empty staging preserves committed data
+and advances only the ledger. Deletion requires an explicit staged tombstone.
+Invalid observed index/ledger state and cleanup failures remain visible; unresolved
+candidate/backup directories require recovery. Directory publication is not a
+crash-atomic transaction and failures are not rollback. Migration and exact scope:
+`docs/specs/KERNEL_STATE_EFFECTS.md` and
+`docs/architecture/CONTRACT_DELTA_KERNEL_STATE_EFFECTS_D_2026-09-22.md`.
+
+Outbound policy normalization and immutable values live in core contracts.
+Application capture binds environment and selected file observations before API
+admission; projections capture once before observation callbacks. Explicit policy
+evaluation does not consult ambient environment. Gate mappings are detached;
+policy-file reads require owned native execution through a read-only adapter.
+Invalid file/pattern observations fail visibly and acquired resources close.
+Reconfiguration requires a new app. Existing redaction and ledger disclosure
+rules remain; regex worst-case bounds and complete PII detection are not claimed.
+See `docs/specs/OUTBOUND_POLICY_INPUTS.md` and
+`docs/architecture/CONTRACT_DELTA_OUTBOUND_POLICY_INPUTS_D_2026-09-22.md`.
+
+Synchronous coroutine entrypoints require native owned execution. Standalone calls
+close their loop and executor; persistent resources use explicit serialized owners
+with fresh caller context. SDK model generation and HTTP cleanup share one owner;
+close stops admission, drains work and preserves cleanup failures. The shared
+daemon loop is removed. SDK memory, Piper, review and provider inventory have native
+guards; inventory retains its existing export names with one canonical bridge.
+Use owned workers from async callers and close resource owners. Contract and limits:
+`docs/specs/SYNC_COROUTINE_OWNERSHIP.md` and
+`docs/architecture/CONTRACT_DELTA_SYNC_COROUTINE_OWNERSHIP_D_2026-09-22.md`.
+
+ProductFlow commands own engine construction/execution/cleanup; witness campaigns
+collect on one loop before publishing results. Their controlled fixtures use the
+current seat input and exact-output card acceptance. Witness resource history binds
+to the checkpoint's dependent lease, refusing absent history; verifiers stay intact.
+Replay audit observes artifacts without constructing a runtime, retains native
+workers through interruption and owns default provider cleanup. Direct artifact
+diagnostics on an event loop refuse before I/O. Contract and limits:
+`docs/specs/SCRIPT_RUNTIME_OWNERSHIP.md` and
+`docs/architecture/CONTRACT_DELTA_SCRIPT_RUNTIME_OWNERSHIP_D_2026-09-22.md`.
+
+The three truthful-runtime governance proof recorders now own acquired engines
+through async construction, execution and cleanup before native command return.
+They refuse active-loop entry before process effects. Packet 1 restores environment
+overrides even if alias cleanup fails, preserves pre-existing aliases and surfaces
+failed removal of its own alias. This does not establish Ollama live acceptance or
+cross-process alias fencing. See the script ownership contract and
+`docs/architecture/CONTRACT_DELTA_GOVERNANCE_RUNTIME_OWNERSHIP_D_2026-09-22.md`.
+
+The native dependency gate now validates one explicit literal module effect bound
+for every policy-classified adapter, including packages and legacy locations.
+Existing class declarations cannot weaken that bound. Decision-adapter entries
+must be present, read-only and free of observed paths to effectful/unclassified
+adapters. The admission list remains empty. Read-only does not imply deterministic
+purity or permission to acquire missing decision context. Contract and limits:
+`docs/specs/ADAPTER_EFFECT_CLASSIFICATION.md` and
+`docs/architecture/CONTRACT_DELTA_ADAPTER_EFFECT_CLASSIFICATION_D_2026-09-22.md`.
+
+The runtime CLI captures engine inputs after startup and owns engine construction
+through interruption. Board/replay reads, manifest output and native path
+resolution retain their workers; a completed untransferred engine is closed.
+Argument declarations remain one authority in `orket/interfaces/cli_arguments.py`.
+CLI inspection contract (subsequent API and driver contracts are specified below):
+`docs/architecture/CONTRACT_DELTA_CLI_RUNTIME_OWNERSHIP_D_2026-09-21.md`.
+
+API run queries own log, token, replay-list and graph observation workers;
+targeted replay shares the CLI's owned inspection service. Pure record projections
+preserve response semantics and diagnostic meaning. Captured roots constrain
+resolved log/artifact paths; invalid paths map to HTTP 400. This is bounded path
+checking, not hostile-race containment or CAP-2 isolation. Contract and limits:
+`docs/architecture/CONTRACT_DELTA_API_RUN_OBSERVATION_D_2026-09-21.md`.
+
+Legacy extension actions capture plan/bootstrap inputs and use an owned engine
+context that closes before returning. Direct synchronous adapter construction
+refuses an event-loop thread; interrupted workloads without confirmed terminal
+evidence retain their existing unresolved control-plane state. Migration and scope:
+`docs/architecture/CONTRACT_DELTA_LEGACY_ACTION_ENGINE_D_2026-09-21.md`.
+
+Synchronous ConfigLoader methods refuse event-loop calls and close unstarted
+coroutines. Async engine/pipeline embeddings use their `.open(...)` contexts
+for captured bootstrap/path inputs, worker construction and required cleanup.
+Direct engine, pipeline and runtime-context construction is pre-loop/worker
+only. Existing action/result authority is retained. Migration and limits:
+`docs/architecture/CONTRACT_DELTA_CONFIG_SYNC_BRIDGE_D_2026-09-21.md`.
+
+Runtime cleanup attempts every declared resource after an earlier close failure.
+Synchronous close ports use owned workers; admitted cleanup remains owned
+through repeated cancellation. Multiple failures remain visible in exception
+groups, and failed cleanup cannot set the engine/pipeline closed flag. Port
+migration, failure handling and proof limits:
+`docs/architecture/CONTRACT_DELTA_RUNTIME_RESOURCE_CLEANUP_D_2026-09-21.md`.
+
+Async file operations own native path/file work through interruption and capture
+standard path/reference values and serialized write content. Filesystem tools
+retain the admitted mutation authority and existing path locks; authorized
+connector dispatch keeps its bound-filesystem authority. Migration, native
+current-directory observation and containment limits:
+`docs/architecture/CONTRACT_DELTA_ASYNC_FILE_OPERATIONS_D_2026-09-21.md`.
+
+Outward authorization observation owns its native worker and captures standard
+metadata, arguments, roots and allowlist values before waiting. Binding retains
+its run/argument inputs; dispatch rechecks argument drift after observation.
+Canonical target naming, migration and bounded snapshot/ownership limits:
+`docs/architecture/CONTRACT_DELTA_AUTHORIZATION_INPUTS_D_2026-09-21.md`.
+
+Approval submission captures caller argument values before transaction acquisition
+and direct transaction storage waits. Run policy, numbering and submission time
+remain sampled inside the acquired transaction. Contract and migration:
+`docs/architecture/CONTRACT_DELTA_APPROVAL_SUBMISSION_INPUTS_D_2026-09-21.md`.
+
+Sandbox log requests capture invocation inputs before owned pipeline construction,
+retain native reads through interruption and close each ephemeral pipeline before
+return. Nonzero log-command exits are visible failures; the ten-second command
+timeout is unchanged. Direct sync log reads refuse an event-loop thread. Contract,
+async embedding migration and remaining ownership limits:
+`docs/architecture/CONTRACT_DELTA_API_SANDBOX_LOGS_D_2026-09-21.md`.
+
+Driver async creation captures root, environment and settings before owned
+construction; direct synchronous construction refuses an event-loop thread.
+API chat and interactive CLI use shared runtime owners. Console reads settle
+before interrupted return; normal EOF cannot erase pending cancellation.
+Provider close gates CLI exits and remains owned through repeated interruption.
+Contract, embedding migration and blocking-input limit:
+`docs/architecture/CONTRACT_DELTA_DRIVER_LIFETIME_D_2026-09-21.md`.
+
+Driver model-context preparation captures project/model roots and environment
+before owned configuration and inventory work. Interruption retains native reads;
+worker failures and missing roots remain visible before provider dispatch.
+Constructor and request config loaders consume the same captured environment,
+including explicit empty inputs. Contract and remaining constructor/CLI scope:
+`docs/architecture/CONTRACT_DELTA_DRIVER_INVENTORY_D_2026-09-21.md`.
+
+Organization-loop async creation captures settings, root and environment before
+owned configuration loading. Scans and card construction remain owned through
+interruption; required cleanup gates caller completion. The canonical CLI loop
+uses that factory. Discovery uses the captured project root and orders normalized
+numeric priority after critical-path weight. Contract:
+`docs/specs/RUNTIME_EXECUTION_RESULT_CONTRACT.md`.
+
+The public orchestration helper and collection-member supervisor own runtime
+construction and close through interruption. Prepared child factories retain
+selected parent inputs; runtime composition passes its snapshot to subordinate
+factories. Async runtime settings capture honors bound settings/preferences
+independently and owns selected persistence reads. Direct synchronous constructors
+remain separate work. Contracts: `docs/specs/RUNTIME_EXECUTION_RESULT_CONTRACT.md`
+and `docs/specs/SETTINGS_INPUT_OWNERSHIP.md`.
+
+Agent configuration and turn preparation's sync-only asset loading use owned
+workers. Cancellation and timeout retain the admitted work through settlement;
+worker failure remains visible. Available async asset loaders are invoked once,
+and their TypeError is not retried through another loader. Synchronous public
+configuration bridges remain separate work: `docs/specs/REMAINING_RUNTIME_INPUTS.md`.
+
+Async kernel invocations retain request targets and operator values before
+calling the kernel or awaiting publication. Direct control-plane publishers also
+capture request, response and ledger JSON before their first await, preventing
+borrowed mutations from changing snapshots or terminal claims. Stable JSON and
+existing durability/transaction limits remain: `docs/specs/KERNEL_PUBLICATION_INPUTS.md`.
+
+Kernel proposal admission selects immutable operator enablement/resolver flags
+before request validation or hashing. Trusted Python callers may supply the typed
+input; request and HTTP payload fields cannot supply it. Default calls observe
+the current environment per invocation. Existing decision, approval, digest and
+in-memory ledger limits remain: `docs/specs/KERNEL_POLICY_INPUTS.md`.
+
+Gitea loop owners capture environment, limit rules and roots before awaits;
+pipeline entry also supplies its selected clocks and control-plane database.
+Construction, summary I/O and acquired HTTP clients remain owned through
+interruption. Claim-failure publication uses the selected UTC provider; reservation
+rollback refuses reversed observations without clamping. Explicit remote lease
+timestamps and unresolved runtime authority remain retained. Contract and limits:
+`docs/specs/GITEA_LOOP_INPUTS_AND_LIFETIME.md`.
+
+Cards, manual-review and trusted extension owners retain their selected UTC
+callable through transaction-scoped publication. Pipeline and extension-manager
+clocks reach those owners; terminal retries retain published timestamps, and
+clock failure cannot fabricate final success. Defaults retain host UTC behavior.
+Contract and limits: `docs/specs/CONTROL_PLANE_TERMINAL_AUTHORITY.md`.
+
+Agent construction captures model-family configuration; journal publication uses
+the selected clock or captured caller timestamp. Epic setup calculates one sprint
+from its selected time, immutable baseline and captured configured timezone
+before asset reads. Timezone lookup has an owned worker; v0.6.53 corrects the
+v0.6.52 host-timezone regression. Contracts and scope limits:
+`docs/specs/REMAINING_RUNTIME_INPUTS.md`.
+
+Execution setup and collection entry capture session/build identifiers before
+asset reads. Custom build selectors receive a sanitized string value; selected
+identities must be nonempty plain strings. Existing durable admission and child
+authority remain governed by `docs/specs/EXECUTION_IDENTITY_INPUTS.md`.
+
+API strategies receive immutable metrics, explorer, preview, archive and error
+facts. Application captures invocation recommendations before intervening awaits
+and refuses archive response claims that contradict observed results. Earlier
+archive commits remain durable on later refusal. Input migration and boundaries:
+`docs/specs/API_STRATEGY_INPUTS.md`.
+
+Sandbox policy input ownership, strict recommendation admission and partial-effect
+limits live in `docs/specs/SANDBOX_POLICY_INPUTS.md`. Creation captures its selected
+policy and fresh secrets before preflight; strategies receive immutable port and
+compose facts. Early refusal releases its allocation; later refusal retains
+existing durable reconciliation evidence.
+
+Application retains SDK and legacy artifact/provenance workers through interruption,
+captures caller inputs before awaiting and preserves confirmed execution outcomes
+when later projection publication fails. Storage verifies each published JSON file;
+interaction lifecycle completion stays with the interaction owner. Contract and
+publication/concurrency limits: `docs/architecture/CONTRACT_DELTA_WORKLOAD_PUBLICATION_D_2026-09-19.md`.
+Application also captures one immutable workload policy per invocation for
+admission, artifact limits, result identity and provenance redaction. Captured
+fields, Git observation ownership and remaining input scope:
+`docs/architecture/CONTRACT_DELTA_WORKLOAD_POLICY_D_2026-09-19.md`.
+
+SDK subprocesses now enter the shared native lifetime supervisor. Application
+retains private exchange workers through cancellation, adopts results only after
+confirmed native cleanup and preserves unresolved control-plane records on missing
+or uncertain child observations. Direct calls use the existing 900-second child
+default with an explicit finite host override. Contract and remaining limits:
+`docs/specs/SDK_WORKLOAD_PROCESS_LIFETIME.md`. Scoped source and installed proof
+is recorded in the canonical plan; hostile containment and recovery are not expanded.
+Controller schema authority is packaged under `orket/runtime/config/assets/contracts/`;
+each validation owns its selected read and captures nested event inputs. Migration:
+`docs/architecture/CONTRACT_DELTA_CONTROLLER_SCHEMA_CD_2026-09-19.md`.
+
+Epic bootstrap retains its filesystem worker through interruption. Initial artifact
+publication retries native Windows access/sharing refusals within a two-second
+budget, verifies directory identity and preserves incomplete staging on exhaustion.
+Publication may complete before cancellation; ledger startup remains a later step.
+Contract, diagnostics and limits:
+`docs/architecture/CONTRACT_DELTA_RUN_START_PUBLICATION_D_2026-09-19.md`.
+
+Application owns prompt asset commands, validated interactive setup, captured
+vision command inputs and operator runtime interpretation. Core owns prompt
+metadata transitions over a supplied date. Prompt/setup/image publication uses
+owned workers and verified file bytes; failed acknowledgement can leave effects.
+The setup module entrypoint is `python -m orket.interfaces.setup_cli`.
+Migration, native ownership locations and verification limits:
+`docs/architecture/CONTRACT_DELTA_COMMAND_AUTHORITY_CD_2026-09-19.md`.
+
+Application interaction services own admission, workload adoption, cancellation,
+finalization and session close. Captured inputs and per-session transition ownership
+prevent interrupted calls from stranding turns or returning unobserved commit
+receipts. Storage verifies immutable commit/trace artifacts; API workloads belong
+to the application lifetime. Core owns stream/context values. Migration, response
+vocabulary and remaining failure limits:
+`docs/architecture/CONTRACT_DELTA_INTERACTION_LIFECYCLE_CD_2026-09-19.md`.
+
+Application crash publication captures the selected absolute diagnostic workspace
+and supplied clock. Native append/rotation ownership and closed-file readback
+precede a saved-path claim; cancellation retains the worker through lock release.
+Runtime CLI startup captures its invocation root, preserves fatal exit status and
+reports diagnostic failure without hiding the original error. Migration and limits:
+`docs/architecture/CONTRACT_DELTA_CLI_CRASH_CD_2026-09-19.md`.
+
+Application project-vendor composition captures supplied settings and explicit
+project/database locations. Local catalog workers and runtime-card operations
+retain ownership through interruption; missing cards and unverified status writes
+cannot return success. Unsupported vendor selections are refused. Migration,
+catalog identity rules and observation limits:
+`docs/architecture/CONTRACT_DELTA_PROJECT_VENDOR_CD_2026-09-19.md`.
+
+Driver resource commands and model-proposed structural writes enter application
+services that capture inputs, retain workers and share native model-file admission.
+Application `ReforgerService` owns asynchronous compiler tools, retained route-input
+snapshots and verified output publication; workspace-root and overlapping outputs
+are refused. Migration, native lock locations and non-transactional failure limits:
+`docs/architecture/CONTRACT_DELTA_DRIVER_COMMANDS_CD_2026-09-19.md`.
+
+Interaction cancellation is admitted by application `InteractionCancellationService`.
+The selected session bounds the target lookup; accepted operator actions follow
+observed interruption and stream publication, with captured actor and clock.
+Admitted work remains owned through interruption and audit publication. Missing
+or foreign targets return 404; idle or terminal targets return 409. State, stream
+and SQLite remain separate effects; audit failure does not undo interruption.
+Migration and recovery limits:
+`docs/architecture/CONTRACT_DELTA_INTERACTION_CANCEL_CD_2026-09-19.md`.
+
+API hardware observations and event publication run in application-owned workers
+retained through request interruption and shutdown. Events capture the selected
+root and nested payload before dispatch. API event capture now admits exact
+built-in names and finite JSON-compatible payloads through the pure shared
+`log_event_inputs` contract, without caller-loop `deepcopy` or custom hooks.
+Unsupported values refuse before worker/handler/file/subscriber effects;
+optional logging remains a separate obligation; subscriber drain now follows
+`docs/architecture/CONTRACT_DELTA_API_LOG_HANDOFF_D_2026-09-25.md`. Capture migration:
+`docs/architecture/CONTRACT_DELTA_API_EVENT_INPUT_CAPTURE_D_2026-09-25.md`.
+The 51-case affected selection passes fresh source and installed Windows
+Python 3.11/3.12 with physical readback; broader logging and full .106 acceptance
+remain open. A fresh 240-second Linux clock observation failed to obtain 60
+synchronized quiet seconds; the plan retains its exact samples and blocker.
+Extension model catalogs capture provider
+settings per application and use the admitted identity in failure responses.
+Migration and remaining observation limits:
+`docs/architecture/CONTRACT_DELTA_API_OBSERVATIONS_CD_2026-09-19.md`.
+
+Bundle commands enter application `BundleService`; the side-effecting storage
+adapter retains archive/file workers through cancellation. Packing checks admitted
+manifest agreement and required members, verifies a temporary archive, replaces
+and verifies the destination before success. Core manifest validation consumes
+supplied payloads. Offline ledger verification and CLI connector registry
+composition also enter application. Migration and interruption/publication limits:
+`docs/architecture/CONTRACT_DELTA_BUNDLE_AUTHORITY_CD_2026-09-18.md`.
+
+Core `ExecutionTurn` requires an explicit keyword timestamp or explicit `None`.
+`Agent` captures its application-supplied clock before awaiting; stored-turn replay
+and pre-effect resume preserve missing original response times as `None`.
+Migration and limits:
+`docs/architecture/CONTRACT_DELTA_TURN_TIME_D_2026-09-18.md`.
+
+Protocol CLI and HTTP inspection delegate to application-owned query services.
+Captured options and requested identities precede owned path/file workers; API
+request teardown retains replay and parity work through cancellation. HTTP query
+operands and discovered session directories stay within the selected workspace,
+while explicit CLI file operands retain operator authority. Replay comparisons
+require events on both sides and report their limited observed-state scope;
+campaigns preserve that result for the baseline. Contract and migration authority:
+`docs/specs/PROTOCOL_QUERY_LIFETIME.md` and
+`docs/architecture/CONTRACT_DELTA_PROTOCOL_QUERIES_CD_2026-09-18.md`.
+
+Settings persistence is application-owned through `UserSettingsService` and
+captured per-operation locations. Runtime settings snapshots retain serialized
+values; exported dictionaries are detached. Synchronous cold reads require
+pre-loop bootstrap; asynchronous persistence reads remain distinct from bound
+runtime snapshots. Migration, native writer admission, interruption and input
+rotation limits live in `docs/specs/SETTINGS_INPUT_OWNERSHIP.md`.
+
+The standalone coordinator uses an explicit application factory, captured
+project/environment/time inputs and per-owner serialized transition lifetime.
+Admitted store and control-plane work settles before cancellation or close returns.
+Unexpected transition failures close admission with 503 and remain visible at
+shutdown; memory and SQLite are not one transaction. Startup, result capture and
+limits live in `docs/specs/COORDINATOR_RUNTIME_LIFECYCLE.md` and
+`docs/architecture/CONTRACT_DELTA_COORDINATOR_AUTHORITY_CD_2026-09-18.md`.
+
+Flow authoring uses captured definitions and application-host clock/identity inputs.
+Storage refuses create collisions and applies expected-revision guards in the
+SQLite update. Admitted operations retain commit/cleanup lifetime through repeated
+cancellation; an interrupted request may have committed. The router delegates
+storage composition and bounded run admission to application. Save, interruption
+and migration authority is `docs/specs/FLOW_AUTHORING_SURFACE_V1.md` and
+`docs/architecture/CONTRACT_DELTA_FLOW_AUTHORITY_CD_2026-09-18.md`.
+
+Sandbox HTTP verification belongs to `SandboxVerificationService` in application.
+Core captures immutable target/scenario values and interprets observations; the
+execution adapter owns the HTTP client. Exact falsy/null comparison, cancellation,
+admission and migration semantics live in `docs/specs/SANDBOX_HTTP_VERIFICATION.md`.
+The fixture subprocess payload has one definition in
+`orket/adapters/execution/fixture_runner.py`. These support probes do not confer
+card-completion authority or hostile-code containment. Current candidate proof
+and unresolved C/D obligations remain in the architectural-truth plan.
+
+SDK memory policy/scope coordination lives in
+`orket/application/services/sdk_memory_provider.py`. Its synchronous write entry
+captures nested request metadata before the existing bridge accepts it. The SDK
+wire types and database/policy authorities remain unchanged; migration and limits
+are in `docs/architecture/CONTRACT_DELTA_SDK_MEMORY_OWNER_CD_2026-09-18.md`.
+
+Shared SQLite WAL connection admission verifies the native journal mode and owns
+a five-second busy-family retry budget before yielding a connection. Failed
+bootstrap connections close before retry. Admitted connections keep the 5,000ms
+native busy timeout; caller statements and commits are never replayed. The same
+contract delta records this adapter boundary and its failure/lifetime limits.
+
+It is intentionally narrow:
+1. Agent behavior rules remain in `AGENTS.md`.
+2. Contributor workflow rules remain in `docs/CONTRIBUTOR.md`.
+3. This file tracks what is authoritative right now.
+4. ControlPlane implementation sequencing and project closeout history remain archived under `docs/projects/archive/ControlPlane/`, while the durable governed workload start-path matrix now lives at `docs/specs/CONTROL_PLANE_GOVERNED_START_PATH_MATRIX.md`; this file should name the live authority seams, not reproduce slice-by-slice closeout detail.
+
+The ControlPlane project closeout completed on 2026-04-09 and is archived at `docs/projects/archive/ControlPlane/CP04092026-PROJECT-CLOSEOUT/`. Durable ControlPlane contract authority now lives under `docs/specs/` via `docs/specs/CONTROL_PLANE_PACKET_V1_INDEX.md`, the durable governed workload start-path matrix now lives at `docs/specs/CONTROL_PLANE_GOVERNED_START_PATH_MATRIX.md`, and no non-archive `docs/projects/ControlPlane/` folder remains. Future ControlPlane implementation work must reopen explicitly through `docs/ROADMAP.md`.
+
+This file does not define:
+1. all supported features,
+2. all experimental surfaces,
+3. all repository conventions.
+
+It defines only the currently authoritative paths that agents and contributors must treat as canonical unless explicitly directed otherwise.
+The source wrapper `python main.py [runtime arguments]` remains supported through
+`0.6.x`, and runtime `--rock` remains a hidden compatibility alias to the named
+card runtime. Neither is part of the canonical runtime path list below; removal
+requires an explicit `0.7.0` contract delta.
+
+## Current Canonical Paths
+
+`ProviderPreparationService` in
+`orket/application/services/provider_preparation_service.py` owns captured local
+provider preparation settings. The application factory injects the core
+`ProviderPreparationPort`; the adapter requires an admitted target bound to the
+same provider, model request and endpoint before inference. Client type and mock
+transport no longer suppress preparation. Pure endpoint normalization lives in
+`orket/core/contracts/provider_runtime.py`; the Ollama client receives an explicit
+captured/default host. Migration and remaining lifetime/native CLI limits:
+`docs/architecture/CONTRACT_DELTA_PROVIDER_PREPARATION_CD_2026-09-18.md`.
+
+`orket/application/workflows/turn_tool_result_persistence.py` owns protocol and
+ordinary result publication inputs. It captures nested values before awaiting and
+retains each admitted file worker through cancellation, preserving worker errors.
+The enclosing governed turn keeps its native owner until that work settles.
+Files and control-plane publication remain separate effects; interruption can leave
+artifacts with unresolved dispatch authority. Migration and limits:
+`docs/architecture/CONTRACT_DELTA_TOOL_RESULT_WORKERS_D_2026-09-17.md`.
+
+`LocalPromptingService` in `orket/application/services/local_prompting_service.py`
+owns prompt policy. `create_local_model_provider` captures environment and injects
+that authority through the core `LocalPromptingPort`; raw provider construction
+requires the port. The SDK model owner lives in
+`orket/application/services/sdk_llm_provider.py`. Request messages and nested context
+are copied before provider preparation can await. The registry worker is retained
+through cancellation; parsing and provenance use the same observed bytes, with no
+shared mutable registry cache. Policy values are immutable; transport and telemetry
+exports are detached. The packaged registry location and profile semantics are
+unchanged. Migration and remaining scope:
+`docs/architecture/CONTRACT_DELTA_PROMPT_POLICY_CD_2026-09-17.md`.
+
+`ModelSelectionService` captures selection environment and caller configuration,
+owns settings/score preparation, and returns immutable decisions. Prompt strategies
+receive `ModelSelectionInput`; application applies advisory compliance policy.
+Configured score reports retain status and a digest of the observed bytes.
+Preview coordination lives in `orket/application/services/preview_service.py`;
+the API host owns asynchronous preview/driver bootstrap and request-driver cleanup.
+Retired imports, default-settings scope and current verification limits:
+`docs/architecture/CONTRACT_DELTA_MODEL_SELECTION_CD_2026-09-17.md`.
+
+Decision-node registry construction lives in
+`orket/application/services/decision_node_registry.py` and captures selection settings
+once. Tool strategies return immutable tuples of known names; application composition
+alone binds executable tools through `orket.application.services.toolbox.ToolBox`. `ModelClientFactory` owns provider/client construction
+over captured settings. Loop limits consume `LoopPolicyInputs`; `ConfigLoader` applies
+captured organization overrides without a strategy mutation callback. Migration,
+retired configuration and remaining prompt/settings/async limitations are in
+`docs/architecture/CONTRACT_DELTA_DECISION_INPUTS_CD_2026-09-17.md`.
+
+Planner, router and evaluator admission is application-owned in `decision_context_service`.
+Strategies receive frozen core value contracts; planner recommendations map back
+to inspected records, and routers/evaluators receive no borrowed issue/team/result
+objects. Evaluator handlers capture inputs and node selection before their first
+await and validate/copy primitive recommendations. Default order, failure policies
+and accepted-dependency checks remain authoritative.
+Custom-node migration and trusted-code limits: `docs/specs/DISPATCH_DECISION_INPUTS.md`.
+
+Loop admission is application-owned in `loop_decision_service` and the turn-context
+builder. Backlogs use immutable card values; seat policies receive captured facts
+and resolved path tuples, guard validators receive immutable review values, and
+role selection receives the tuple captured before turn transition awaits. Strategy
+errors are observed once, without old-signature retries. Typed recommendations
+remain advisory to application transition and accepted-completion authority.
+Migration: `docs/architecture/CONTRACT_DELTA_LOOP_INPUTS_D_2026-09-20.md`.
+
+API authentication and security configuration are application-owned in
+`ApiAuthenticationService`; each app captures its key, profile/mode, bypass,
+startup checks and CORS settings at construction. HTTP and both WebSocket routes
+share that authority. `ApiSystemQueryService` owns explorer containment, rooted
+board/metrics observations and the captured EOS calendar/timezone over the app's
+runtime clock. Pure calendar calculation lives in `orket/core/contracts/eos_calendar.py`.
+Migration and scoped lifetime limits:
+`docs/architecture/CONTRACT_DELTA_API_AUTHORITY_INPUTS_CD_2026-09-17.md`.
+The corrected full selected source suite, four installed gates and fresh llama.cpp
+regressions pass. Whole-plan acceptance and historical failures remain open; see the canonical plan.
+
+Extension scaffolding consumes generated, package-owned archives through
+`orket/application/services/extension_scaffold_service.py`; it does not search for
+repository templates beside site-packages. Canonical authoring sources, generated
+archive parity, ownership and installed proof limits are in
+`docs/architecture/CONTRACT_DELTA_EXTENSION_SCAFFOLD_PACKAGING_D_2026-09-17.md`.
+
+Governed-agent invocation/broker ports and wake/schedule/webhook records are
+canonical in `orket/core/contracts/`. Concrete guard invocation and manual wake
+command ownership remain application services. Internal import migration and
+unchanged public command/schema contracts are recorded in
+`docs/architecture/CONTRACT_DELTA_AGENT_CONTRACTS_C_2026-09-16.md`.
+
+Bug-fix phase values require explicit time. The application-owned manager at
+`orket/application/services/bug_fix_phase_manager.py` receives the pipeline clock
+and workspace, verifies configured persistence before events, and drains admitted
+effects through cancellation. The core/deprecated manager export is retired;
+migration and limits are in
+`docs/architecture/CONTRACT_DELTA_BUG_FIX_PHASE_D_2026-09-16.md`.
+
+Architectural-truth scoped BT-1 through BT-5 acceptance is recorded in
+`docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md`.
+BT-5's current five-requirement disposition binds the sealed complete family
+audit at `.tmp/bt5-family-composed-clock/gate/audit.json`: 2,321 identical cases in
+source and four installed Windows/Linux Python 3.11/3.12 environments, retained
+same-artifact actual llama.cpp/Gitea proof and fresh installed historical-state
+proof. Family owners, public paths and limits live in
+`docs/specs/CONTROL_PLANE_GOVERNED_START_PATH_MATRIX.md`. C/D are next; quality,
+capability, full-suite, hosted-CI, release and whole-lane acceptance remain open.
+Earlier checkpoint-specific acceptance notes below retain their historical scope.
+
+Failure reporting now separates explicit-time core values from application-owned
+artifact publication. Structural reconciliation likewise separates immutable
+plans from application-owned traversal, writes and adoption events; invalid
+snapshots fail explicitly. Current migration and verification scope are in
+`docs/architecture/CONTRACT_DELTA_CORE_EFFECT_BOUNDARIES_D_2026-09-14.md`.
+ToolGate's application implementation gathers file facts in an owned worker and
+invokes pure core policy; adapters receive the async gate contract explicitly.
+These D changes and scoped issue-clock propagation pass the source and four-cell
+installed envelope in the canonical plan. The retained failed store and host
+journal corroborate reversed host time; no lease or terminal invariant is relaxed.
+Issue-dispatch clock input
+now comes explicitly from execution-pipeline composition, as specified in
+`docs/specs/CONTROL_PLANE_TERMINAL_AUTHORITY.md`. Wider C/D obligations and host-clock
+stability remain outside this acceptance.
+
+The 0.6.12 local checkpoint also supplies that control-plane clock to scheduler
+transition/child publication and activation-failure cleanup. The prior wiring
+covered issue dispatch alone. Reversed inputs still fail without a fabricated
+release; scheduler closeout does not yet share issue dispatch's atomic transaction.
+Scope and migration: `docs/architecture/CONTRACT_DELTA_SCHEDULER_CLOCK_D_2026-09-17.md`.
+
+Dependency authority now uses v2 of
+`model/core/contracts/dependency_direction_policy.json`; the canonical command is
+`python scripts/governance/check_dependency_direction.py`. Checker, graph export
+and baseline share Git-visible, encoding-aware import analysis and a separate
+allowed-edge verdict. The legacy-budget switches retire with their workflow
+callers. `docs/architecture/dependency_graph_snapshot.md` is generated evidence,
+not a second policy. Version 0.6.43 recognizes argument-preserving importer
+installation and validated absolute external names only through inspected bodies,
+unambiguous bindings and bounded local flow. Recognized routes remain explicit in
+reports; unknown routes, forbidden edges and authority cycles remain failures.
+Extension lookup requires plain strings and retains source/root/origin admission.
+The policy has no new exception or analysis-error waiver. Contracts:
+`docs/architecture/CONTRACT_DELTA_DEPENDENCY_POLICY_C_2026-09-14.md` and
+`docs/architecture/CONTRACT_DELTA_DYNAMIC_IMPORT_ANALYSIS_C_2026-09-20.md`.
+Current proof and remaining C/D/E/CAP acceptance are in the canonical plan.
+
+`orket/project_paths.py` selects the invocation project for discovery, driver and
+structural reconciliation; configuration passes that root to `ConfigLoader`.
+Contract: `docs/specs/RUNTIME_PROJECT_ROOTS.md`. Scheduled wake admission requires
+the declared `tzdata` dependency on hosts without a system IANA database.
+`docs/specs/RUNTIME_STORE_BINDING.md` owns the single absolute runtime path,
+sibling control-plane store and explicit offline historical relative-scope
+migration. Migration preserves request/native-lock identities, checks source
+ownership and cannot merge unrelated histories or grant effect approval.
+
+The 0.6.40 direct extension construction boundary refuses synchronous manager
+and control-plane construction on a running event-loop thread before native path
+or directory effects. Async callers await application preparation, which captures
+relative locations before retaining the worker. Control-plane composition lives
+in `orket/application/services/extension_workload_composition.py`; its synchronous
+builder also binds relative database paths at construction so later cwd changes
+cannot redirect storage. The storage and terminal authorities remain unchanged.
+Migration and interruption limits:
+`docs/architecture/CONTRACT_DELTA_DIRECT_EXTENSION_CONSTRUCTION_D_2026-09-20.md`.
+This scoped boundary does not close broader C/D reachability or E/CAP acceptance.
+
+The 0.6.41 governed submission boundary captures an absolute invocation root and
+environment before its first await, binds submission and database locations to
+that root, and passes captured inputs through owned preparation. Shared governed
+provider preparation copies role-model and environment inputs before inventory
+awaits and uses them for all target and client construction. File contents and
+the full wake-dispatch lifetime are outside this capture contract. Existing
+admission, quarantine, leases, terminal truth and cleanup retain authority.
+Contract: `docs/architecture/CONTRACT_DELTA_GOVERNED_SUBMISSION_CAPTURE_D_2026-09-20.md`.
+
+The 0.6.42 wake boundary uses the existing SDK frozen values for validated ingress
+JSON and dispatch request/continuation inputs. Dispatcher construction captures
+provider configuration and environment; API composition forwards its earlier
+environment snapshot. Wake and direct-provider cleanup retain their owners through
+interruption and attempt remaining client closes after an earlier failure. This
+extends the .41 capture scope to the named wake boundaries without replacing wake
+fences, transactions, wire payloads or terminal authority. Contract and migration:
+`docs/architecture/CONTRACT_DELTA_GOVERNED_WAKE_OWNERSHIP_D_2026-09-20.md`.
+
+The 0.6.39 API construction transition captures cwd, environment, settings
+and preferences in the synchronous factory, then acquires the graph in a
+lifespan-owned worker. Runtime services require lifespan entry; HTTP/WebSocket
+admission additionally requires successful initialization. Failed or interrupted
+preparation retains its worker and acquired-resource cleanup. The canonical server
+binds both settings snapshots before its event loop, including spawned workers'
+later `server:app` imports. Contract and remaining verification disposition:
+`docs/architecture/CONTRACT_DELTA_API_CONSTRUCTION_D_2026-09-19.md` and the canonical
+architectural-truth plan. Canonical reload now requests cooperative worker shutdown
+through a process-shared event and joins that worker before replacement. Native
+Windows source reload and failure paths passed with Uvicorn 0.52.4 and 0.27.0.
+Fresh source passes 1,001 selected cases. Installed Windows Python 3.11/3.12
+pass all 1,001; Linux 3.11 passes 1,000 with one native Windows junction skip.
+That checkpoint's Linux 3.12 attempts retain observed 20-second WSL clock jumps:
+both have 999 passes, one failure and one platform skip. Package
+origins, CLI flows and live reload/cleanup pass; four-cell acceptance remains
+open. Its clock preflight also failed. The plan records a later successful passive
+clock observation; fresh Linux application acceptance remains required. Earlier
+failures remain retained. StatReload is exercised; optional watcher backends and every
+intermediate Uvicorn version are not established. This is scoped checkpoint
+proof; the full-suite, coverage and hosted Quality limits remain in the plan.
+
+API application teardown authority lives in `docs/specs/API_RUNTIME_LIFECYCLE.md`
+and `orket/application/services/api_runtime_container.py`. Application service
+`api_startup_service.py` retains initialization as an admitted invocation, owns
+log subscription cleanup and starts the broadcaster with captured inputs and
+retained failure observation. Its security posture reports effective anonymous
+access. Admission stops when
+close starts; concurrent and cancelled callers await one teardown. `closed`
+requires successful active-request and registered-owner cleanup, and failed teardown
+remains failed on reentry. The container tracks its own per-task cancellation
+request across disconnect and shutdown; an internal timeout's cancellation count
+cannot substitute for it or cause duplicate owner cancellation during cleanup.
+Pure ASGI transport in
+`orket/interfaces/api_app_context_middleware.py` owns HTTP/WebSocket invocation
+lifetime, including streaming and awaited connectors, through the container.
+Stopped admission returns HTTP 503 or WebSocket close; an already started HTTP
+response may be truncated. This is local lifecycle truth, separate from durable
+effect outcome, unregistered detached work, arbitrary threads or abrupt host death.
+
+Generic synchronous extension capability calls and availability probes retain their
+workers through `orket/adapters/execution/owned_io.py:run_owned_thread`.
+Cancellation and elapsed asyncio deadlines await worker settlement; failures take
+precedence over cancellation, subject to existing API error mappings. This includes
+builtin model-client cleanup, but does not add generic speech-provider close/termination
+protocols. Builtin host Piper uses the directly awaited shared native supervisor,
+with a finite command deadline, bounded PCM capture and retained native lifetime
+observations. Its synchronous SDK method bridges to that same implementation.
+Piper selects explicit canonical voice IDs without unknown-ID fallback, derives
+the PCM rate from validated model metadata, and passes a private config snapshot
+whose digest accompanies the API response. Relative assets use the owning
+workspace; configured rates are optional expectations. The generic null voice
+backend reports unavailable consistently. Authorities:
+`docs/specs/API_RUNTIME_LIFECYCLE.md` and `docs/specs/PIPER_RUNTIME_CONTRACT.md`;
+arbitrary model-weight/schema validity and provider-resource obligations remain active.
+
+Prompt comparison defaults are tracked in
+`scripts/prompt_lab/prompt_promotion_thresholds.json`, resolved beside
+`scripts/prompt_lab/compare_candidates.py`. An unreadable `--thresholds` override
+fails before comparison rather than omitting guard criteria. Command authority:
+`scripts/prompt_lab/README.md`.
+
+Benchmark scored-report schema v2 uses nullable latency averages and versioned
+coverage from `scripts/benchmarks/benchmark_latency.py`. Missing/partial durations
+cannot contribute zeros; trends/dashboard preserve historical numbers as
+unverified and display unavailable timing explicitly. Authority:
+`docs/specs/BENCHMARK_LATENCY_SUMMARY.md`. The raw harness requires an explicit
+runner template, positive run count and nonempty validated task selection before
+execution. Prototype selector schema `selector.prototype.v2` rejects unavailable
+latency and invalid thresholds, retains candidate rejection reasons and labels
+input metrics `reported_unverified`. Both JSON writers retain rerun history.
+Broader raw-runner lifetime and capacity conformance remain active.
+
+Repository file inventories for governance tests and review copies use
+`scripts/common/git_inventory.py`. The optional review-copy command is
+`python -m scripts.governance.export_review_packet`, with stable default output
+`Agents/review/project_review_packet.txt`. It reports filtered/partial scope and
+fails on Git discovery errors. The ignored local exporter is not a test dependency;
+workflow and output limits are documented in `docs/CONTRIBUTOR.md`.
+
+Local provider development and live-test selection policy is authoritative in
+[`docs/CONTRIBUTOR.md`](docs/CONTRIBUTOR.md#local-provider-development-and-testing):
+llama.cpp first, LM Studio second, Ollama third, with llama.cpp preferred for
+future provider-backed live testing. Governed-agent submission, API wakes,
+continuation, and effect resume share the application-owned
+`orket/application/services/governed_agent_model_provider.py` composition.
+All provider-neutral entrypoints default to llama.cpp through
+`orket/runtime/config/defaults.py`, including the base adapter, model discovery,
+extension catalog/generation, streaming, ODR, and proof tooling. The shared model
+is `orcarouter_qwen3.8-27b-uncensored-q4_k_l`. Explicit provider/model settings
+override defaults; unavailable llama.cpp never triggers an Ollama fallback.
+CLI `--model` defaults to llama.cpp; `--provider` selects an explicit backend.
+The OpenAI-compatible completion adapter accepts the explicit
+`ORKET_LLM_OPENAI_RESPONSE_FORMAT=json_object` override. This requests a JSON
+object from the selected provider; llama.cpp receives the explicit object schema
+`{"type":"object"}` inside `response_format`. This documented request form is
+enforced on the observed host where bare JSON-object mode returns fenced text.
+Runtime parsing and acceptance remain required.
+Legacy API Ollama model variables require an explicit Ollama provider setting.
+The exact Qwen3.8 source profile now requires the packaged text ChatML override,
+native render verification and native token-budget checks. The verified local
+adapter authority is `orket/adapters/llm/llama_cpp_render_verification.py`, with
+shared LP-02 normalization in `orket/adapters/llm/prompt_canonicalization.py`. The
+server is `b10809-5266f24da`, running with caching enabled; operator setup and
+rollback limits are in `docs/RUNBOOK.md`. Template/repair/replay authority delta:
+`docs/architecture/CONTRACT_DELTA_QWEN38_PROMOTION_2026-09-11.md`.
+Current default-selection delta:
+`docs/architecture/CONTRACT_DELTA_LLAMA_CPP_DEFAULTS_2026-09-11.md`.
+The API uses `ORKET_GOVERNED_AGENT_PROVIDER`, `ORKET_GOVERNED_AGENT_MODEL`, and
+`ORKET_GOVERNED_AGENT_BASE_URL`. Existing explicit Ollama configuration remains
+supported. Exact admitted targets are pinned through inference; blocked targets
+never enter the client cache. API startup awaits wake-store initialization before
+the supervisor and ingress can compete for SQLite WAL initialization. Delta:
+`docs/architecture/CONTRACT_DELTA_LLAMA_CPP_FEATURE_INTEGRATION_2026-09-10.md`.
+Live integration proof: `scripts/proof/run_llama_cpp_integration.py`, with stable
+output `benchmarks/results/providers/llama_cpp_integration.json`.
+
+SDK release automation uses `.gitea/workflows/sdk-package-release.yml` and an
+explicit repository-root `dist/` for build, smoke install, and wheelhouse copy,
+as defined in `docs/requirements/sdk/VERSIONING.md`.
+
+Governed-agent staged input authority is the application-owned
+`governed_agent_context_plan.py`: CLI `--continuation-inputs` and the optional
+wake dispatch `continuation_inputs` field bind later batches to the run
+configuration without exposing them in the initial child request. Verifier v2
+validates partial report contents before effects, records progress projections,
+and binds success to a persisted iteration result. Progress thresholds derive
+from durable decisions; policy stops publish unsuccessful final truth. Delta:
+`docs/architecture/CONTRACT_DELTA_GOVERNED_AGENT_ACCEPTANCE_2026-09-09.md`.
+
+Governed-agent replay authority is `governed_agent_replay_service.py`, using the
+core replay-evidence port and `governed_agent_replay_store.py` for one read-only
+SQLite snapshot. `governed_agent_replay.v2` compares the independent step inventory
+against retained decisions and exposes expected/snapshot/compared/matched counts,
+scope and diagnostics. Missing history or unsealed inputs cannot report matched;
+new decisions persist their input digest atomically, and historical inputs remain
+unsealed. Replay never initializes storage or reruns models/tools and does not
+verify external effects, objective satisfaction, or full execution. Its complete
+comparison claim is relative to the retained control-plane inventory. Contract:
+`docs/specs/GOVERNED_AGENT_LOOP_V1.md`; delta:
+`docs/architecture/CONTRACT_DELTA_GOVERNED_AGENT_REPLAY_BT3_2026-09-12.md`.
+
+Extension entrypoint loading shares selected-origin admission in
+`orket/adapters/execution/extension_modules.py`. Legacy/direct SDK loaders and
+both child entrypoints verify package parents and the selected module before
+adoption. Conflicting cached roots refuse explicitly; Python's same-root cache
+and trusted-code posture remain. Legacy registration and SDK source-validation
+workers retain interruption ownership. Migration and exact limits:
+`docs/architecture/CONTRACT_DELTA_EXTENSION_ORIGINS_CD_2026-09-19.md`.
+
+`sdk_workload_subprocess.py` bounds import-hook origin inspection with thread-local
+reentry state. POSIX Python 3.12 `Path` construction can import `ntpath` internally;
+that inspection must not recursively invoke itself. The state resets before
+extension loading and does not bypass another thread's declared-stdlib/host-module
+checks. This does not establish hostile-code OS containment.
+Scoped SD-02 replay/import acceptance passes against the repaired wheel on
+Windows/Linux Python 3.11/3.12 and through live llama.cpp; BT-3 card completion
+and the rest of the architectural-truth plan remain active.
+
+Card completion acceptance has core types in `orket/core/contracts/card_completion.py`
+and a pure comparison in `orket/core/policies/card_completion.py`, governed by
+`docs/specs/CARD_COMPLETION_ACCEPTANCE_CONTRACT.md`. Application-owned
+`card_acceptance_service.py` now checks explicitly declared Python CLI JSON cases
+or bounded text/JSON artifact criteria against captured bytes and retained SQLite
+evidence, with scope and policy bindings. `card_completion_service.py` supplies an application authority
+for final SQLite writes: a typed evidence request, persisted attempt generation,
+current card inputs and freshly captured artifacts must match retained acceptance.
+Card schema v2 retains immutable completion receipts and rejects unsupported new
+`done`/`guard_approved` writes, including ordinary saves. Legacy terminal rows
+remain historical, with no invented acceptance. Explicit card tools forward only
+trusted-context evidence requests; synthesis no longer uses `runtime_verifier_ok`.
+Both card prompt formats now project the typed acceptance decision and its
+references; support checks cannot instruct guards to choose successful completion.
+Governed blocked reviews carry typed diagnostics in the status call's
+`args.guard_review`, preserving the single envelope and empty content. Shared
+extraction supplies pre-dispatch validation and post-dispatch guard events;
+malformed metadata and multiple blocked decisions fail before dispatch.
+Normal tool-result cache reuse cannot bypass a successful completion review.
+The standard runtime context composes this service and its default repository;
+each dispatched card turn receives the persisted attempt binding and evaluated
+acceptance. Evidence defaults to `<runtime-db-filename>.card_acceptance.sqlite3`
+beside the card database (normally
+`.orket/durable/db/orket_persistence.db.card_acceptance.sqlite3`). An injected
+repository retains its own authority configuration; an unconfigured repository
+still rejects completion. No production database has been migrated.
+ToolBox file/directory writes and the builtin vision, academy and Reforger writers
+share the completion writer guard and drain before releasing it after cancellation
+or timeout. Completion results expose a receipt digest; ordinary final turn
+publication and completed-turn replay require current card binding and readable
+retained acceptance. Inspection uses read-only storage and does not rerun commands.
+Compact prompts retain the acceptance decision, validated criteria definition,
+tool names and call shape. Project context, patches and acceptance have bounded
+sections and are not repeated during compaction. The application supplies the
+legacy verifier-enable setting to both prompt formats; disabled verifier commands
+are omitted, and explicit commands replace the inferred no-argument app command.
+Disabled legacy verification also removes its inferred support-file read, while
+explicit turn-contract reads remain honored. Declared acceptance remains enforced.
+The standard runtime accepts declared criteria from the selected trusted
+operator/application card configuration. Model structural assets and builtin
+`create_issue` arguments reject nested `completion_acceptance` members before
+storage with `E_CARD_ACCEPTANCE_MODEL_DEFINITION_FORBIDDEN`. Model-created cards
+without admitted criteria remain unevaluated. This check does not establish
+historical config authorship or contain privileged/custom host writers; trusted
+programmatic callers remain responsible for independently admitted requirements.
+The reason-gated system retry exception now also permits
+`awaiting_guard_review -> ready`. It preserves the evaluator's retry policy while
+retaining failed dispatch truth and invalidating the prior completion binding.
+Ordinary model status requests and terminal-card reopen requests cannot use this
+exception. Retry exhaustion remains blocked; later completion requires fresh
+acceptance. A requeued card is eligible for later dispatch, not proof of automatic
+resume or absence of prior tool effects.
+Artifact checks use non-executing versioned verifiers
+and `card_acceptance_package.v2`; existing CLI v1 serialization remains unchanged.
+The canonical tiny summation assets declare the literal requirement, selected
+design fields, three actual CLI cases, and optional source-attribution content.
+Requirements/design/attribution stages use their own artifact profiles and review
+paths. These bounded criteria do not establish broader workload quality or CAP-1 closure.
+Native `RuntimeVerifier` commands now use application-owned process supervision
+through `CommandProcessSupervisor`, with Windows Job Objects or a Linux
+subreaper established before command execution. Receipts expose observed lifetime
+and cleanup uncertainty; failed commands stop later command admission. Authority:
+`docs/specs/VERIFICATION_PROCESS_LIFETIME_CONTRACT.md`; delta:
+`docs/architecture/CONTRACT_DELTA_VERIFICATION_LIFETIME_BT4_2026-09-13.md`.
+The outward `run_command` connector shares this owner through the core
+`CommandRunner` port. Results retain `owned_command.v1` lifetime and raw captured
+byte counts; each stream is capped at 4 MiB. Cancellation or uncertain cleanup
+retains dispatch intent without a completed receipt. API reentry cannot silently
+repeat that command. This is process lifetime evidence, not reversal of effects
+or hostile-code containment. Delta:
+`docs/architecture/CONTRACT_DELTA_OUTWARD_COMMAND_LIFETIME_BT4_2026-09-13.md`.
+`Orchestrator.verify_issue` now uses `FixtureVerificationService` directly. Native
+fixtures share that supervisor; Docker fixtures bind name/owner and immutable ID,
+inspect terminal state, and require confirmed removal before publication. Nullable
+`VerificationResult.process_lifetime` retains the observation. Cancellation and
+unconfirmed cleanup do not publish a new fixture result. Synchronous fixture
+entrypoints refuse execution under removal ticket `BT4-FIXTURE-SYNC-RETIRE`.
+Fixture delta: `docs/architecture/CONTRACT_DELTA_FIXTURE_LIFETIME_BT4_2026-09-13.md`.
+Broader shutdown ownership and interrupted Docker creation recovery after host
+death remain BT-4 work. Named card/epic execution now returns typed application
+observations under `docs/specs/RUNTIME_EXECUTION_RESULT_CONTRACT.md`. Publication
+revalidates retained run/final truth and required effects before returning success;
+failed completion, approval waits, unfinished work and unresolved effects cannot
+be promoted by a normal coroutine return. Cancellation carries its observation
+without inventing a cancelled durable run or releasing uncertain admission.
+`--card`, `--epic` and legacy `--rock` consume the same result: verified success
+exits 0, other outcomes 1, interruption 130. Typed cancellation prints its retained
+run observation and evidence references after engine cleanup while keeping exit
+130, including collection interruption. Success output also follows required engine
+cleanup. Collections retain ordered member outcomes and stop on non-success;
+member session/build IDs append `-member-<1-based index>` to the group IDs.
+The canonical plan retains the original installed llama.cpp false-zero examples
+and the cutover's current verification status. This is unreleased worktree behavior.
+Legacy empirical verification remains support evidence; preparation preserves its
+persisted observations without promoting a passing fixture to card acceptance.
+Build completion inspection now captures the full card inventory and retained
+receipts under one application-owned writer guard, using the canonical card port.
+Every admitted card must be present, and every observed card must have accepted
+`done`/`guard_approved` state. Empty, canceled, archived, missing, legacy receiptless
+and evidence-unreadable work cannot authorize session `done`. Run artifacts retain
+`card_completion_outcome.v1`; existing source-attribution gates remain in force.
+The loop emits `orchestrator_epic_stopped`; `orchestrator_epic_complete` follows
+accepted control-plane and ledger finalization. Inspection proves a retained
+snapshot, not permanent workspace currency or atomic publication across stores.
+Dependency scheduling now uses application-owned `card_dependency_service` and
+the same retained receipt check as build finalization. Prerequisites must belong
+to the current build and have accepted `done`/`guard_approved` evidence; archived,
+legacy receiptless and evidence-unreadable statuses do not unlock work. The
+adapter's status-only readiness selector is removed. Strategies select among
+copies of admitted cards; unknown/duplicate selections fail and returned payload
+edits cannot replace the inspected records. Targeted dispatch follows the same
+boundary. Before turn effects, the application rechecks dependency inputs,
+lifecycle and prerequisite acceptance. Context carries accepted digests and
+rejections; stalled-loop diagnostics expose dependency rejection reasons. These
+guards are released before inference and do not imply permanent artifact currency.
+The operator execution graph uses application-owned `execution_graph_service`
+and the same dependency inspection. Session inventory and receipt reads share
+one writer guard. Node lifecycle is separate from retained completion acceptance;
+receipt digests and rejection reasons expose the decision. Accepted same-build
+prerequisites outside the displayed session can resolve dependencies. Graph
+ordering and handoff edges are observational. Snapshot writes use the application
+workspace mutation guard after inspection; they are not atomic with the read.
+Contract: `docs/specs/CARD_COMPLETION_ACCEPTANCE_CONTRACT.md` and
+`docs/API_FRONTEND_CONTRACT.md`.
+Card/run operator views use `operator_completion_service` for guarded receipt
+inspection and completed-card filtering. Typed card details serialize lifecycle
+enum values as JSON. Run verification requires a published completion outcome
+matching current sufficient build inspection; source attribution remains separate.
+Missing evidence, new receipts, reopening and missing/substituted outcomes revoke
+verification on read without rewriting history. Contract:
+`docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md`. Multi-store publication atomicity
+remains outside this read-side guarantee.
+Epic closeout now uses the explicit `ControlPlaneTransaction` port and
+`SQLiteControlPlaneTransactions` on the existing control-plane database. Attempt,
+step/effect, final truth and run state commit together; matching reentry validates
+retained closeout references and journal integrity without rewriting evidence.
+Session completion and success-ledger publication follow control-plane/run-ledger
+finalization. Publication exceptions propagate without failed-workload reclassification.
+`EpicWorkloadOutcomeService` retains workload return/failure, transcript, effective
+configuration and original inputs before completion inspection. Matching reentry
+resumes finalization from that record; a started invocation with no retained
+outcome remains unresolved with `E_EPIC_WORKLOAD_OUTCOME_UNCERTAIN` before card reset or redispatch.
+Accepted cards alone cannot prove the missing workload return. Retained failures
+remain failures. `EpicPreparationService` retains inputs before closeout, receipts, summary and
+export, then atomically promotes completed preparation to the ready plan consumed
+by `EpicPublicationService`. Both retain progress through
+`SQLiteEpicPublicationRepository` in
+`<runtime_db>.epic-publications.sqlite3`. Matching same-session standard runtime
+reentry finishes pending local preparation and ledger/session/snapshot/success
+publication before any card reset or workload dispatch. Retained acceptance,
+request binding and existing effects
+are rechecked, including full epic/team/environment definitions and build identity.
+Enabled Gitea export now retains an exact local Git commit before remote dispatch.
+Automatic lost-result recovery confirms that commit, subtree and manifest through remote
+reads and finishes publication without another push. Unconfirmed attempts remain
+`E_EPIC_EXPORT_OUTCOME_UNCERTAIN`; receipt, summary-write and export failures propagate.
+New export claims also retain `epic_export_dispatch.v1` atomically with the intent
+marker. Canonical Python `run_card(..., export_recovery=...)` can explicitly replace
+that export owner using the original session/request, intent and owner evidence.
+It confirms remote delivery first; when unconfirmed, only the newly granted local
+caller may retry the exact retained Git commit under the journal writer. A paused
+old caller is fenced. Matching recovery requests never grant another dispatch.
+Workload/admission/acceptance records and intent remain unchanged; publication
+validates the settled owner reference and commit/tree receipt. Older unmarked
+preparations remain confirmation-only. This operation is mutually exclusive with
+pre-initialization admission recovery and approval recovery. It provides no remote takeover endpoint,
+force-push, workload rerun or arbitrary remote-hook idempotence guarantee.
+A fresh execution uses a new session ID after conflicting reservations release.
+`EpicAdmissionService` now claims the session and workspace/build/card resources
+in the selected publication journal before initialization or card reset. Concurrent
+entries sharing those resources reject before writes. Claims have no expiry and
+remain active after interruption; verified complete publication releases them.
+Admission v2 marks initialization atomically before session/card/control-plane
+writes. The canonical Python `run_card(..., admission_recovery=...)` can explicitly
+replace an owner only before that marker, using the original request and retained
+owner/generation/digest. The transaction retains the bound recovery request and
+canonical operator action; a paused old owner then fails its initialization fence.
+Identical retries reuse the replacement and cannot initialize twice. Admission v1
+is rejected without backfilling a marker or changing its retained digests.
+Run artifacts bind the admission digest/owner, and damaged or prematurely released
+admission evidence rejects further preparation/publication. This gate coordinates
+standard entries using one journal; separate journals and arbitrary writers are
+not fenced. Source native process and live llama.cpp
+recovery pass at these retained-input boundaries. Disposable localhost Gitea 1.25.4
+and combined llama.cpp/Gitea source acceptance pass, including owned teardown.
+New standard epic approval claims additionally bind a native continuation lock
+beside the publication journal. Canonical Python `run_card(...,
+approval_recovery=...)` admits one explicit continuation of the original claimed
+pause after acquiring that same lock. Active holders, changed lock identity,
+unmarked older claims, stale/conflicting requests and insufficient original
+checkpoint evidence refuse recovery. Approved children must all remain pre-effect;
+completed children, retained steps/effects and orphan operation artifacts cannot
+gain this grant. Denial follows the existing stop path. The journal retains the
+request and canonical operator action in append-only history without rewriting
+the original pause, admission or child identities. Identical requests observe
+their disposition without dispatching again; another interrupted grant needs a
+new request bound to the current history head. Outcome/publication references
+must match retained recovery history. Continuation ownership lasts through
+durable outcome or next-pause retention; that caller releases it before export.
+Other callers can independently finalize an already retained outcome. The
+operation is mutually exclusive with admission/export recovery and has no CLI or
+remote endpoint. Current proof and limitations are recorded in the architectural-
+truth plan; native locks establish cooperating local exclusion, not remote-effect
+termination or authority across different journals.
+Unknown post-initialization workload owner recovery, atomicity across all stores,
+arbitrary custom writers and cross-installation relocation remain unverified; see
+`docs/specs/CARD_COMPLETION_ACCEPTANCE_CONTRACT.md`.
+Export binding, intent schema and immutable commit receipts:
+`docs/specs/GITEA_ARTIFACT_EXPORT_CONTRACT.md`. Preparation v1 is not silently
+upgraded to the new v2 intent contract.
+The declared increment CLI has passed standard runtime live llama.cpp completion
+from source. The canonical four-card summation workload now passes source live
+llama.cpp execution with explicit object-schema output, real acceptance checks
+and matching card/build receipts. Earlier fenced-output and wrong-stage read
+failures remain recorded in the architectural-truth plan. Installed card flows
+exposed CWD-relative registry, budget and invariant-document defaults.
+Their canonical files now live under `orket/runtime/config/assets/`, selected
+through `orket.runtime.config.contract_assets` and included in distributions.
+Explicit loader paths remain supported and fail closed on invalid input; CWD
+files are not implicit overrides. The invariant contract is package-owned;
+`docs/specs/RUNTIME_INVARIANTS.md` indexes it. Whole SR-07 remains open for the full
+acceptance envelope, remaining outcome consumers, custom writers
+and multi-store publication proof. Installed verification is recorded in the
+architectural-truth plan; packaging inspection alone is not execution proof.
+
+`runtime_verifier_capture.py` records loss-aware stdout/stderr metadata. The shared
+verifier rejects JSON acceptance over clipped or invalid UTF-8 stdout, retains
+actual argv and preserves string argument boundaries. The new acceptance service
+uses the existing sanitized child environment; the verifier's default environment
+is unchanged for callers that omit an explicit environment. The acceptance
+contract above owns these additive receipt fields and failure classifications.
+
+Run pause/stop authority is `governed_agent_run_control_service.py` with atomic
+operator-action/iteration-decision preconditions in the existing SQLite store.
+Shared terminal validation and transactions govern bounded-loop, effect-denial
+and cancellation closeout. Denial includes approval CAS, operator actions,
+reservation release and checkpoint rejection. Cancellation retains intent before
+child-stop observation, then commits truth/run/attempt together; retry preserves
+unknown child state. Bounded-loop stop requires its bound operator action.
+Composition refuses differing configured loop stores. Inspection/replay validate
+one retained snapshot; reentry validates before work. Replay keeps its truth-row
+byte limit and wake fence reads avoid the renewal writer's lock.
+
+Common immutable run admission captures one input across lock waits; kernel
+admission refuses missing historical scope. Cards admission commits snapshots,
+parent/attempt, start step/effect and checkpoint acceptance together. Explicit
+run/attempt/step revisions refuse stale and ABA writes. Missing old revisions read
+as zero without backfill; Boolean revisions cannot impersonate integer revisions.
+Applications retain the returned revised records. Kernel pre-effect abandonment
+keeps its evidence in the bound recovery decision.
+
+Turn finalization/preflight, issue-dispatch terminal/resource publication and
+recovery use their existing transaction owners. Reversed timestamps or interrupted
+writes cannot publish partial terminal success. `turn_tool_recovery_transaction.py`
+checks captured run/attempt/checkpoint authority; unsupported historical partial
+recovery is refused. Governed turns hold a native local owner before model work.
+`turn_tool_step_publication.py` records dispatch admission before toolbox entry
+and atomically publishes observed step/effect records. Unknown dispatch outcomes
+refuse continuation and closure while preserving uncertainty and leases.
+Native lock release does not establish remote-effect termination.
+
+New turn configuration snapshots and immutable digests bind
+`dispatch_contract: turn_tool.dispatch_intent.v1`. Missing, unsupported or unbound
+unfinished history refuses model/tool reentry, recovery, admission repair and
+terminal/approval closure without backfill. Coherent completed histories retain
+their verified reuse path. SDK, legacy and manual review also use transactional
+closeout and reject inconsistent retained evidence. Contract:
+`docs/specs/CONTROL_PLANE_TERMINAL_AUTHORITY.md`.
+
+Gitea closeout drains renewal before selecting one remote finalization and commits
+terminal/resource records through one SQLite transaction. Its execution and lease
+writers consume explicit UTC inputs; backward lease time refuses publication.
+`docs/specs/EPIC_RUNTIME_TIME_INPUTS.md` owns explicit bootstrap time inputs;
+negative-duration summaries remain degraded. Other production clock/input debt is
+still D work. Selected positive regression fixtures use explicit shared native
+or turn/issue time, with independent adverse-time controls. Underlying host-clock
+cause and stock-clock acceptance are not established by those fixtures.
+
+`docs/specs/ODR_PROVIDER_ADMISSION.md` owns ODR's versioned provider selection,
+shared discovery, child role receipts, kernel prompt reuse and HTTP client lifetime.
+It does not admit independent requirement-quality verification, restart or general
+native descendant supervision. Current family acceptance and retained original
+counterexamples are bound by the BT-5 disposition in the canonical plan.
+Earlier physical effects and dispatch admission remain outside terminal closeout.
+
+Approval denial now uses the existing atomic turn-closeout owner in both immediate
+decision and retained epic-pause continuation. Its terminal shortcut validates the
+common run/attempt/truth join and released resource authority under one transaction.
+The operator decision remains independently retained when child closure fails.
+Contract: `docs/specs/CONTROL_PLANE_TERMINAL_AUTHORITY.md`; scoped family/migration
+acceptance and unsupported recovery cases are recorded in the canonical plan.
+Resume reuses checkpoint and recovery authority. Objective memory is a bounded
+projection of prior verified iteration results through
+`governed_agent_memory_service.py`; other scopes and profile writes remain
+unadmitted. Approved effect retries without a journal are observation-only;
+pending-status compare-and-set prevents competing approval writes.
+Installed acceptance is produced by
+`scripts/proof/run_governed_agent_acceptance.py` at the stable local result path
+`benchmarks/results/governed_agent/acceptance.json`, with rerun diff-ledger history.
+It records artifact hashes, installed versions, source-base commit, dirty
+candidate posture, model inventory and durable per-case evidence.
+The user accepted the proof and operator experience on 2026-09-10 and
+authorized minor releases: core 0.6.0, SDK 0.6.0, external 0.2.0. The external
+release source and local distribution destination are
+`C:/Source/OrketExtensions/GoverenedAgentLoop`; the old hyphenated-root copy
+has historical development status only. Release proof and artifact authority:
+`docs/releases/0.6.0/PROOF_REPORT.md`. The completed lane history is archived
+under `docs/projects/archive/governed-agent-loop/GAL09102026-IMPLEMENTATION-CLOSEOUT/`.
+Release surface proof is produced by `scripts/proof/run_governed_agent_release_surfaces.py`
+at `benchmarks/results/releases/0.6.0/surfaces.json`; release evidence snapshots
+and package checksums are retained in that same release directory by
+`scripts/proof/collect_governed_agent_release.py`.
+Built legacy/current compatibility and namespace-owner upgrade evidence is
+produced by `scripts/proof/run_governed_agent_compatibility.py` at
+`benchmarks/results/governed_agent/compatibility.json`. SDK release
+compatibility and wheel-upgrade order are governed by
+`docs/requirements/sdk/VERSIONING.md`; historical bundling hosts do not acquire
+standalone SDK compatibility merely by overlaying a wheel.
+
+Core 0.6.8 is the latest local captured-provider preparation checkpoint. Its
+current source regression passes 1,310 selected cases; the four-cell installed gate passes.
+Eight actual installed llama.cpp cases and a separate seven-case mixed feature/
+pipeline envelope pass. The latter's actual live workload ends in `terminal_failure`
+(`card_completion_unverified:COD-1,REV-1`); only its truthful-reporting assertion passes.
+Full changed-file Ruff remains red (226 findings);
+historical clock/resume investigations and full-plan acceptance remain open.
+No GitHub push is performed during work hours.
+Pure identity/target values are canonical in `orket/core/contracts/provider_runtime.py`.
+Application preparation captures supplied settings, retains admitted inventory/load
+workers and requires an observed loaded model before reporting load success.
+Client construction captures its provider settings; nested target evidence is immutable.
+Migration and limits: `docs/architecture/CONTRACT_DELTA_PROVIDER_INPUTS_CD_2026-09-17.md`.
+
+The preceding core 0.6.7 local protocol graph publication checkpoint is retained. Source and
+both Windows installed environments pass 1,213 selected cases; Linux 3.11 has
+1,211 passes/two resume failures and Linux 3.12 has 1,212 passes/one resume failure.
+All 18 graph cases pass in each cell, and eight separate actual installed llama.cpp
+cases pass with observed teardown. Broader installed acceptance remains false.
+No GitHub push is performed during work hours.
+Pure graph values now live in `orket/core/contracts/run_graph.py`; storage owns
+file replay and verified publication after terminal ledger append. Migration and
+post-append failure observations are specified in
+`docs/architecture/CONTRACT_DELTA_PROTOCOL_GRAPH_CD_2026-09-17.md`.
+
+The preceding core 0.6.6 architectural-truth local checkpoint is paired with
+SDK 0.7.0a1. Source and four installed proof unions cover 1,201 selected cases
+through retained full runs plus 28-case explicit-clock fixture follow-ups on the
+unchanged wheel. Eight actual installed llama.cpp cases pass with verified teardown.
+The failed Linux 3.11 full-run timestamp observation is retained; host-clock
+stability and prior 0.6.5 Linux deadline failures remain open. This ownership repair
+does not explain those prior failures. Checkpoints remain local without GitHub publication.
+The canonical remediation plan records scoped acceptance and remaining gates;
+this version/tag does not establish whole-lane completion or release readiness.
+Governed-agent CLI coordination now belongs to application command services;
+submission owns preparation and provider cleanup through interruption. Contract:
+`docs/architecture/CONTRACT_DELTA_AGENT_COMMANDS_C_2026-09-16.md`.
+Protocol hashing, invocation contracts and error/result vocabulary now live in
+core. Storage owns first-operation commits, native local contention/refusal and
+verified persistence. Protocol workers remain owned through interruption and
+capture nested inputs before awaiting. Migration, ownership-file retention and
+multi-file/hostile-writer limits are recorded in
+`docs/architecture/CONTRACT_DELTA_PROTOCOL_LEDGER_CD_2026-09-17.md`.
+Dual-ledger lifecycle coordination now lives in application services. Bound
+schema-2 journals, verified backend observations and retained admission ownership
+replace parent-directory journals and acknowledgement-only recovery. The governed
+child's dedicated stdin thread reads its raw descriptor so workload failure does
+not hold Python's buffered-input lock during interpreter shutdown. Migration
+and the candidate proof ceiling are recorded in
+`docs/architecture/CONTRACT_DELTA_DUAL_LEDGER_CD_2026-09-17.md`.
+Governed child admission, launch and cleanup now retain one application owner
+through cancellation. Pending and duplicate invocations cannot invent stopped-child
+confirmation; invokers refuse foreign event-loop use. Candidate contract and limits:
+`docs/architecture/CONTRACT_DELTA_AGENT_INVOCATION_LIFETIME_D_2026-09-17.md`.
+
+Historical core 0.6.2 released the llama.cpp defaults and exact Qwen3.8 promotion with
+SDK 0.6.0 and reference extension 0.2.0. Release verification and operator
+migration are recorded in `docs/releases/0.6.2/PROOF_REPORT.md`. The dated
+September 11 candidate reports preserve pre-release artifact identities.
+
+The canonical local prompt profile registry is package-owned at
+`orket/runtime/config/local_prompt_profiles.json`. The default loader resolves
+it beside its module, independently of the caller's directory; explicit
+runtime-context and environment registry overrides retain precedence. There
+is no second registry at `model/core/contracts/local_prompt_profiles.json`.
+Migration and proof gates are recorded in
+`docs/architecture/CONTRACT_DELTA_PACKAGED_PROMPT_REGISTRY_2026-09-08.md`.
+
+Governed continuous-agent durable contract authority is
+`docs/specs/GOVERNED_AGENT_LOOP_V1.md`, with accepted implementation history at
+`docs/projects/archive/governed-agent-loop/GAL09102026-IMPLEMENTATION-CLOSEOUT/GOVERNED_CONTINUOUS_AGENT_IMPLEMENTATION_PLAN.md`
+and the accepted initial delta at
+`docs/architecture/CONTRACT_DELTA_GOVERNED_AGENT_LOOP_V1_2026-09-06.md`. The
+contract composes the existing control-plane, extension, approval, checkpoint,
+effect-journal, trust-handoff, and local-provider authorities. Bounded Slices
+0-5, the Slice 6A durable wake/claim substrate, the Slice 6B API-owned
+production composition, the Slice 6C manual-wake CLI, the Slice 6D durable wake
+controls, the Slice 6E live Ollama supervisor proof, the Slice 6F durable
+scheduled-wake evaluation path, the Slice 6G HMAC webhook ingress path, and the
+Slice 6H wake-fenced effect resolution/resume path are implemented.
+Core 0.6.0 and SDK 0.6.0 are separate distributions. Core contains no SDK
+namespace entries. The reference extension 0.2.0 source distribution retains
+the manifest, public-SDK workload, tests and release verifier required for
+operator intake. Matched wheel installation, strict validation and live
+single/multi-model, API supervision, approval/denial and process-loss recovery
+are release gates recorded in the release proof report.
+Contract bindings
+are packaged at
+`orket_extension_sdk/schemas/governed_agent_loop_v1.json`, with shared semantic
+validation, immutable models, framed IPC, child proxies, and fixtures in SDK
+`0.6.0`. The host advertises `governed_agent_loop.v1` and
+`agent_stdio_ipc.v1` for the dedicated governed-agent catalog path. All raw agent
+discriminators require the strict typed declaration across author validation,
+install, catalog reload, and generic invocation; the generic executor still
+returns `E_AGENT_RUNTIME_NOT_ADMITTED` before run artifacts. Child configuration
+cannot materialize the broker marker or the host-bound `read_file`/`write_file`
+effect proposal capabilities. The admitted path owns a
+durable SQLite repository, application governor, real child process, real host
+broker, two sequential fenced iterations, verifier-backed `FinalTruthRecord`,
+and read-only inspect/replay plus durable cancellation. Submit selects either
+the `deterministic_fixture_not_live_model` path or exact installed Ollama model
+identities with `live_local_model` posture. Live single-model and fixed
+planner/actor/critic proofs record requested/resolved model identity, measured
+usage, latency, finish, and truncation. The issue-scoped application effect path
+composes host observation, pending approval, operator action, reservation,
+existing tool gate/filesystem adapter, effect journal, checkpoint acceptance,
+denial closure, reconciliation, and explicit resume. Slice 6A adds one durable
+SQLite queue for manual/API/recovery provenance, idempotent enqueue, CAS claims,
+lease renewal, capacity backpressure, cancellation, monotonic fencing,
+fail-closed expired-claim recovery, a bounded event-driven supervisor with a
+dispatcher claim guard, application-container task/resource teardown, and wake
+state in existing-run inspection. Slice 6B adds authenticated API wake admission,
+new-run and existing-run dispatch through the same catalog-resolved bounded
+loop and broker, explicit provider-capacity claims, active claim renewal,
+per-operation wake guards around broker/result authority, full per-app lifespan
+ownership, and one composed inspection view for wake, run, attempt, iteration,
+role/model receipt, budget, effect, approval, checkpoint, operator action,
+continuation, and final truth. Slice 6C adds `orket agent wake enqueue`, `list`,
+and `inspect`; manual and API ingress reuse one application validation service,
+and the manual command persists work without owning dispatch. Slice 6D adds
+authenticated API and CLI wake cancellation/recovery with atomic canonical
+operator actions and wake-transition receipts, epoch/fence preconditions,
+evidence-gated uncertainty clearance, and action history in wake and run
+inspection. Slice 6E proves that the API-owned
+supervisor can carry a durable wake through two bounded iterations using exact
+installed planner/actor/critic Ollama targets and publish verifier-backed final
+truth before clean lifespan teardown. Slice 6F adds authenticated durable
+schedule evaluation with IANA timezone and explicit DST fold, bounded misfire
+grace, `skip` or `fire_once` missed policy, latest-only coalescing, atomic
+evaluation-receipt/wake publication, exact replay, and schedule truth in wake
+and run inspection. Slice 6G adds API-key plus issuer/key-bound HMAC-SHA256
+authentication, a canonical timestamp replay window, atomic durable
+delivery-receipt/wake publication, exact retry and contradiction handling, and
+webhook truth in wake and run inspection. Continuous
+dispatch remains disabled unless
+`ORKET_GOVERNED_AGENT_SUPERVISOR_ENABLED=1`; the host also owns provider/model,
+database, capacity, lease, renewal, and idle-wait configuration. Slice 6H
+prepares accepted issue-scoped read/write proposals beneath the claimed wake,
+resolves writes through the authenticated operator endpoint, accepts a
+full-coverage aggregate checkpoint, and queues a request-digest-bound resume;
+the run becomes executing only after that wake is claimed and revalidated.
+Non-issue effects and silent model substitution remain unadmitted.
+
+The implementation review delta is
+`docs/architecture/CONTRACT_DELTA_GOVERNED_AGENT_LOOP_REVIEW_2026-09-06.md`.
+The implemented Slice 0 binding delta is
+`docs/architecture/CONTRACT_DELTA_GOVERNED_AGENT_LOOP_SLICE_0_2026-09-07.md`.
+Agent admission requires the selected `agent_stdio_ipc.v1` framed-stdio host
+capability broker, `agent.iteration.v1` manifest capability and invocation
+handshake, and fenced iteration ownership. V1 admits
+operator-trusted extension code; Python import guards are not OS containment.
+These constraints are implemented on the dedicated deterministic and live
+Ollama paths. The Slices 3-5 boundary is recorded in
+`docs/architecture/CONTRACT_DELTA_GOVERNED_AGENT_LOOP_SLICES_3_5_2026-09-07.md`.
+The Slice 6A substrate boundary is recorded in
+`docs/architecture/CONTRACT_DELTA_GOVERNED_AGENT_LOOP_SLICE_6A_2026-09-07.md`.
+The Slice 6B production-composition boundary is recorded in
+`docs/architecture/CONTRACT_DELTA_GOVERNED_AGENT_LOOP_SLICE_6B_2026-09-07.md`.
+The Slice 6C manual-wake boundary is recorded in
+`docs/architecture/CONTRACT_DELTA_GOVERNED_AGENT_LOOP_SLICE_6C_2026-09-07.md`.
+The Slice 6D wake-control boundary is recorded in
+`docs/architecture/CONTRACT_DELTA_GOVERNED_AGENT_LOOP_SLICE_6D_2026-09-07.md`.
+The Slice 6F scheduled-wake boundary is recorded in
+`docs/architecture/CONTRACT_DELTA_GOVERNED_AGENT_LOOP_SLICE_6F_2026-09-07.md`.
+The Slice 6G webhook-wake boundary is recorded in
+`docs/architecture/CONTRACT_DELTA_GOVERNED_AGENT_LOOP_SLICE_6G_2026-09-07.md`.
+The Slice 6H wake-driven effect boundary is recorded in
+`docs/architecture/CONTRACT_DELTA_GOVERNED_AGENT_LOOP_SLICE_6H_2026-09-07.md`.
+
+Apophenia external extension durable contract: `docs/specs/APOPHENIA_EXTERNAL_EXTENSION_CONTRACT.md`; implementation remains outside Orket core at `C:\Source\Orket-Extensions\Apophenia`, and Orket stays a generic host runtime for Apophenia through generic extension runtime endpoints.
+
+llama.cpp first-slice local provider implementation is closed and archived at `docs/projects/archive/local-provider-compatibility/2026-05-19-LLAMA-CPP-FIRST-SLICE-CLOSEOUT/`, including the archived implementation plan, requirements, operator source-build note, source verification artifact, and closeout report; durable contract authority remains in `docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md`, with the contract delta record at `docs/architecture/CONTRACT_DELTA_LLAMA_CPP_FIRST_SLICE_2026-05-18.md`. Structural support now exists for the `llama_cpp` provider token, bounded GGUF inventory, profile resolution, OpenAI-compatible chat invocation, request-shape telemetry, preflight, and conformance harness paths. Live first-slice proof passed on 2026-05-19 for the operator-managed `qwen3.6-27b-q4_k_m` GGUF path, and the September feature integration above adds governed-agent, streaming, and ODR coverage for the exact Qwen3.8 profile. The exact Qwen3.8 text/JSON-wrapper profile is now promoted on b10809-5266f24da with the packaged override and full final conformance evidence in `docs/architecture/LLAMA_CPP_QWEN38_PROMOTION_VERIFICATION_2026-09-11.md`; the original Qwen3.6 and other profiles remain unpromoted.
+
+1. Install/bootstrap: `python -m pip install -e "./orket_extension_sdk[testing]" -e ".[dev]"`
+2. Default runtime: `orket runtime`
+3. Named card runtime: `orket runtime --card <card_id>`
+4. API runtime: `python server.py`
+   - Governed-action quickstart demo: `python -m orket.quickstart.governed_action_demo` or `orket-quickstart`; scripted operator decisions use `--decision approve|deny`, and unavailable interactive input exits `2` with `E_QUICKSTART_INPUT_REQUIRED`
+   - Governed-run deterministic demo: `orket demo governed-run` uses an installed package-owned default scenario; custom scenario command: `orket run scenario examples/governed-run/scenario.yaml`; inspection and replay: `orket inspect .runs/<run_id>` and `orket replay .runs/<run_id>`
+   - Governed-agent submit: use the common arguments in `docs/RUNBOOK.md`, then exactly one of `--deterministic-fixture`, `--model <exact-model>` (llama.cpp by default), or `--ollama-model <exact-model>` (explicit Ollama); `--provider` selects another supported provider with `--model`. Fixed role overrides are `--planner-model`, `--actor-model`, and `--critic-model`; inspection/replay: `orket agent inspect|replay <run_id> --db <sqlite_path>`; cancellation: `orket agent cancel <run_id> --db <sqlite_path> --action-id <id> --actor-ref <ref> --timestamp-utc <timestamp> --reason <reason> --cancellation-epoch <n>`
+   - Governed-agent API wake and inspection: `POST /v1/agent-wakes`, `GET /v1/agent-wakes[/<wake_id>]`, `POST|GET /v1/agent-schedules/<schedule_id>/evaluations`, `POST /v1/agent-webhooks/<issuer_ref>/deliveries/<delivery_id>`, `GET /v1/agent-webhooks/<issuer_ref>/deliveries`, `POST /v1/agent-runs/<run_id>/effects/<approval_id>/resolve`, `POST /v1/agent-runs/<run_id>/effects/resume`, `GET /v1/agent-runs/<run_id>`, `GET /v1/agent-runs/<run_id>/replay`, and `GET /v1/agent-runtime/status`; continuous processing, effect-resume timing, and webhook signing configuration are documented in `docs/RUNBOOK.md`
+5. Canonical test command: `python -m pytest -q`
+6. Active docs index: `docs/README.md`
+7. Active roadmap: `docs/ROADMAP.md`
+8. Active contributor workflow: `docs/CONTRIBUTOR.md`
+9. Long-lived specs root: `docs/specs/`
+   - Draft specs under `docs/specs/` are non-authoritative until their `Status:` is `Active durable contract` and the current active lane or current authority snapshot names them as accepted authority.
+10. Staged artifact candidate index: `benchmarks/staging/index.json`
+11. Published artifact index: `benchmarks/published/index.json`
+12. Canonical provider runtime target selection implementation: `orket/runtime/config/provider_runtime_target.py`; `orket/runtime/provider_runtime_target.py` is a one-release compatibility alias.
+13. Core release/versioning policy: `docs/specs/CORE_RELEASE_VERSIONING_POLICY.md`
+14. Core release gate checklist: `docs/specs/CORE_RELEASE_GATE_CHECKLIST.md`
+15. Core release proof report template: `docs/specs/CORE_RELEASE_PROOF_REPORT.md`
+16. Core release proof report storage: `docs/releases/<version>/PROOF_REPORT.md`
+17. Core release evidence storage: `benchmarks/results/releases/<version>/`
+18. Core release automation workflow: `.gitea/workflows/core-release-policy.yml`
+19. Core release automation script: `scripts/governance/check_core_release_policy.py`
+20. Core release prep script for release-only worktrees: `scripts/governance/prepare_core_release.py`
+21. Canonical core release tag rule: every post-`0.4.0` versioned commit on pushed `main` must carry the matching annotated `v<major>.<minor>.<patch>` tag on that exact commit.
+22. Pytest sandbox fail-closed fixture: `tests/conftest.py`
+23. Determinism claim/gate policy: `docs/specs/ORKET_DETERMINISM_GATE_POLICY.md`; ODR, local-model, and prompt-refinement lanes must not claim `text_deterministic` unless byte-level identity is proven on the named compare scope, and missing variance data blocks product-facing determinism claims.
+24. Canonical runtime event artifact path: `agent_output/observability/runtime_events.jsonl`
+   - Trust handoff Packet 1 durable contract: `docs/specs/TRUST_HANDOFF_PACKET1_V1.md`
+25. Terraform plan reviewer durable spec: `docs/specs/TERRAFORM_PLAN_REVIEWER_V1.md`
+26. Terraform plan reviewer live smoke output path: `.orket/durable/observability/terraform_plan_review_live_smoke.json`
+27. Canonical external extension package, publish, and validation authority now live in `docs/specs/SUPERVISOR_RUNTIME_EXTENSION_PACKAGE_SURFACE_V1.md`, `docs/specs/SUPERVISOR_RUNTIME_EXTENSION_PUBLISH_SURFACE_V1.md`, and `docs/specs/SUPERVISOR_RUNTIME_EXTENSION_VALIDATION_V1.md`; Packet 1 admits one external extension repo rooted at `pyproject.toml`, one manifest at the extension root, `src/`, `tests/`, and `scripts/`, keeps `project.version` aligned with manifest `extension_version`, requires explicit SDK bootstrap through `ORKET_SDK_INSTALL_SPEC`, requires the host CLI `orket` or an explicit `ORKET_HOST_INSTALL_SPEC`, keeps the canonical host-validation path fixed at `orket ext validate <extension_root> --strict --json`, scopes host import scanning to `src/` when that tree exists, admits only `manifest_version: v0`, preserves manifest-declared `config_sections`, preserves manifest-declared `allowed_stdlib_modules`, makes SDK workload loading and subprocess execution reject undeclared standard-library imports while the existing internal Orket import block remains active, keeps legacy workload stdlib allowlist enforcement compatibility-scoped to manifests that declare a non-empty list, now hardens one authoritative published artifact family as the source distribution `dist/<normalized_project_name>-<version>.tar.gz`, uses `v<extension_version>` as the canonical release tag, requires the authoritative source distribution to preserve the root manifest plus `src/`, `tests/`, and `scripts/`, uses `./scripts/build-release.sh` / `./scripts/build-release.ps1` plus `./scripts/verify-release.sh v<extension_version>` / `./scripts/verify-release.ps1 v<extension_version>` as the canonical maintainer build-and-verify path, uses `.gitea/workflows/release.yml` as the canonical tagged automation path that preserves the source distribution artifact, and requires operator intake to extract that tagged source distribution and return to `orket ext validate <extracted_root> --strict --json`; publish or validation success remains admissibility evidence only and does not grant runtime authority
+28. Canonical control-plane durable store path: `.orket/durable/db/control_plane_records.sqlite3` via `orket/runtime_paths.py`; the same store now durably persists first-class `ResolvedPolicySnapshot` and `ResolvedConfigurationSnapshot` objects for top-level cards epic invocation admission, manual review-run admission, sandbox execution initialization, governed kernel-action admission, governed turn-tool admission, default orchestrator issue dispatch admission, scheduler-owned namespace mutation admission, Gitea state-worker claimed-run admission, and extension workload execution admission via `orket/application/services/control_plane_snapshot_publication.py`, `orket/application/services/cards_epic_control_plane_service.py`, `orket/application/services/review_run_control_plane_service.py`, `orket/application/review/run_service.py`, `orket/application/services/sandbox_control_plane_execution_service.py`, `orket/application/services/kernel_action_control_plane_service.py`, `orket/application/services/turn_tool_control_plane_service.py`, `orket/application/services/orchestrator_issue_control_plane_service.py`, `orket/application/services/orchestrator_scheduler_control_plane_mutation.py`, `orket/application/services/gitea_state_control_plane_execution_service.py`, and `orket/application/services/extension_workload_control_plane_service.py`; manual review deterministic-decision and model-assisted-critique artifacts plus extension workload provenance now also mark `execution_state_authority=control_plane_records`, `lane_output_execution_state_authoritative=false`, and carry canonical control-plane refs when that durable publication exists, so lane JSON no longer looks like standalone execution-state authority, and review replay, answer-key scoring, and consistency extraction now consume shared validated review-bundle payload or artifact loaders, including truncation-bounds snapshot inputs, instead of validating bundle markers and then rereading snapshot or lane JSON ad hoc
+28. Canonical governed turn-tool path defaults to `issue:<issue_id>` namespace scope and must fail closed on broader scope declarations, now publishes a first-class namespace `ReservationRecord` on governed admission, explicitly promotes that reservation to an active `LeaseRecord` on execution start with fail-closed activation rollback that invalidates unpromoted reservation truth and releases any just-published active execution lease when promotion fails, mirrors that namespace authority through shared `ResourceRecord` snapshots on activation, closeout release, and activation rollback, and now fails closed when existing executing or completed governed runs try to continue or reuse success while the latest namespace `ResourceRecord` no longer agrees with the active or completed lease authority, carries those reservation/lease refs as checkpoint-acceptance dependencies on the pre-effect `resume_same_attempt` checkpoint boundary for each new governed attempt, now also records the canonical governed run, attempt, step, reservation, lease, and namespace-resource ids directly inside governed turn-tool protocol receipt invocation manifests when that durable authority exists, protocol run-graph reconstruction now preserves those canonical control-plane refs on reconstructed governed tool-call nodes when manifest evidence exists, receipt-derived artifact provenance entries plus packet-1 provenance, packet-2 source-attribution, narration/effect-audit, and idempotency summaries now preserve canonical governed run, attempt, and step ids when authoritative receipt-manifest provenance exists for the generated artifact or narrated effect, those legacy run-summary packet-1, packet-2, and artifact-provenance blocks now also self-identify as `projection_only` with explicit fact-backed `projection_source` markers and fail closed if that framing drifts instead of reading like native effect authority, and legacy protocol receipt materialization into run-ledger `tool_call` / `operation_result` rows now marks those rows `projection_only` with explicit `observability.protocol_receipts.log` source plus projected effect-journal refs for governed turn-tool results instead of letting receipt replay look like native effect authority, publishes terminal `terminate_run` recovery decisions for pre-effect blocked and post-effect failed governed execution with checkpoint or effect preconditions and blocked continuation actions, makes preflight terminal closeout fail closed by materializing an initial attempt when missing, abandoning any existing non-terminal current attempt with explicit `pre_effect_failure` taxonomy plus terminal recovery-decision authority before run terminal state publication, and releasing promoted execution authority when that closeout occurs after execution start, and on `resume_mode` now performs supervisor-owned checkpoint-backed same-attempt recovery for unfinished pre-effect runs on the current attempt; that safe pre-effect path consumes the accepted checkpoint snapshot before prompt or model work and continues on the current attempt instead of bootstrapping attempt 2, fails closed if immutable checkpoint snapshot identity drifts from the current run or namespace request, closes immediately into reconciliation-closed terminal truth if durable operation artifacts already exist without matching step/effect authority, while the recovery and replay helpers still consume older `resume_new_attempt_from_checkpoint` governed lineage truthfully when those records already exist, versioned unfinished attempts with observed post-effect evidence publish explicit reconciliation records plus `require_reconciliation_then_decide` recovery authority and then close immediately into terminal `reconciliation_closed` truth with a second reconciliation-rationalized `terminate_run` decision, and already-dirty same-attempt or replacement-attempt resumes now fail closed before model invocation instead of being treated as clean retries; completed successful governed turn re-entry still requires accepted checkpoint authority, an immutable checkpoint snapshot artifact, matching snapshot identity, aligned durable step plus effect plus operation truth, no unexpected operation artifacts, and matching durable namespace resource-versus-lease authority before reusing artifacts ahead of prompt or model execution and ahead of checkpoint artifact rewrite rather than rerunning the model and only reusing finalized truth later, and governed runs already in terminal or recovery-blocked states now fail closed before model invocation and before checkpoint artifact rewrite instead of drifting into new tool execution via `orket/application/workflows/turn_tool_dispatcher_support.py`, `orket/runtime/registry/tool_invocation_contracts.py`, `orket/application/workflows/turn_tool_dispatcher_protocol.py`, `orket/application/workflows/turn_executor_control_plane_evidence.py`, `orket/application/workflows/turn_executor_completed_replay.py`, `orket/application/workflows/turn_executor_resume_replay.py`, `orket/application/workflows/turn_executor_model_flow.py`, `orket/application/workflows/turn_executor_model_artifacts.py`, `orket/application/workflows/turn_executor_control_plane.py`, `orket/application/services/turn_tool_control_plane_service.py`, `orket/application/services/turn_tool_control_plane_state_gate.py`, `orket/application/services/turn_tool_control_plane_resource_lifecycle.py`, `orket/application/services/control_plane_resource_authority_checks.py`, `orket/application/services/turn_tool_control_plane_recovery.py`, `orket/application/services/turn_tool_control_plane_reconciliation.py`, `orket/application/services/turn_tool_control_plane_closeout.py`, `orket/runtime/execution_pipeline.py`, `orket/runtime/phase_c_runtime_truth.py`, `orket/runtime/protocol_receipt_materializer.py`, `orket/runtime/run_graph_reconstruction.py`, `orket/runtime/run_summary.py`, `orket/runtime/run_summary_artifact_provenance.py`, and `orket/runtime/run_summary_packet2.py`
+29. Canonical Gitea state worker path now publishes one lease-backed control-plane run per claimed card and lease epoch, a durable resolved policy snapshot plus resolved configuration snapshot for that claimed-run admission, a first-class claim reservation before the initial claim mutation, explicit reservation-to-lease linkage on the claimed lease, promotion of that reservation only after the `ready -> in_progress` claim transition succeeds with fail-closed promotion rollback that invalidates unpromoted reservation truth and releases just-published active lease authority when promotion fails, shared `ResourceRecord` history on claim, renew, expiry, release, claim-failure uncertainty, and promotion rollback, now fails closed before backend renew when the latest shared active resource snapshot no longer agrees with the active lease authority, allows lease-only embeddings to re-publish expiry/release when their resource snapshot drifted; complete terminal reuse instead validates the retained run/attempt/truth and resource join without repair, a pre-effect `resume_forbidden` checkpoint from the claimed-card observation, worker-owned claim/finalize steps, effect-journal entries for observed state transitions, terminal recovery decisions on failure including blocked closeout for active control-plane resource drift, and pre-effect claim-failure closeout with reservation invalidation, `lease_uncertain`, a reconciliation record, and reconciliation-closed final truth when the initial claim transition fails via `orket/application/services/gitea_state_control_plane_execution_service.py`, `orket/application/services/gitea_state_control_plane_checkpoint_service.py`, `orket/application/services/gitea_state_control_plane_claim_failure_service.py`, `orket/application/services/gitea_state_control_plane_lease_service.py`, `orket/application/services/gitea_state_control_plane_reservation_service.py`, `orket/application/services/gitea_state_worker.py`, and `orket/application/services/control_plane_resource_authority_checks.py`
+30. Canonical approval-gated admission paths now publish a first-class `operator_hold_reservation` on request creation or admission, resolve that reservation on approval decision, and publish first-class guard-review operator commands on the pending-gate surface for supported non-tool resolutions; the active SupervisorRuntime approval-checkpoint contract requires four shipped bounded approve-to-continue slices only: governed kernel `NEEDS_APPROVAL` on the default `session:<session_id>` namespace scope, plus governed turn-tool `write_file`, `create_directory`, and `create_issue` approval-required continuation on the default `issue:<issue_id>` namespace scope using the existing `tool_approval` plus `approval_required_tool:<tool_name>` request shape and the already-selected `control_plane_target_ref`. Packet 1 still admits `approve` and `deny` only, while optional `notes` and `edited_proposal` payload members remain bounded operator metadata and do not create a general resume authority. Governed kernel `NEEDS_APPROVAL` admit now publishes that approval-hold reservation from the async orchestration-engine path before response shaping instead of leaving that reservation seam router-local, while the bounded turn-tool `write_file`, `create_directory`, and `create_issue` slices now fail-close on target or namespace drift, keep checkpoint authority runtime-owned, require the accepted pre-effect same-attempt checkpoint for approval continuation, and terminal-stop that same governed turn-tool run on denial. The 2026-09-13 BT-3 candidate repairs standard epic approval continuation: an unfinished pause retains the original request, admission and parent/child identities, and resolved decisions consume one journal claim before reentry. Restart approval/denial and concurrent decision/continuation pass composed and installed acceptance; a real llama.cpp four-card write-file flow completes after restart. Engine, epic and turn composition now select the same control-plane file; absolute custom/default runtime DB layouts have scoped proof. Relative runtime paths now freeze at composition and select the same sibling control-plane authority; historical relative scopes require the explicit offline migration in `docs/specs/RUNTIME_STORE_BINDING.md`. Existing terminal failures and previously split custom/global histories are preserved without automatic repair or migration. A claimed unfinished pause requires explicit recovery; the existing pre-effect checkpoint ceiling remains. The full BT-3 gate remains open; no broader tool family or manual resume API is admitted. Approval list and detail views continue to surface the latest reservation and approval-surface operator-command summary, plus `control_plane_target_ref`, the latest target-side run and attempt summary when durable execution truth exists including namespace scope, admission decision receipt, policy snapshot id, configuration snapshot id, creation timestamp, and attempt count, the latest target-side resource summary for supported governed target runs now including default orchestrator issue-dispatch runs plus scheduler-owned namespace mutation and child-workload composition runs alongside governed turn-tool and kernel-action runs, the latest target-side step summary including namespace scope, capability used, output ref, resources touched, and receipt refs, the latest target-side checkpoint summary including creation timestamp, invalidation and dependency detail, policy digest, integrity verification ref, required reobservation class, acceptance decision timestamp, acceptance supervisor authority, evaluated policy digest, dependent effect or reservation or lease refs, and rejection reasons, the latest target-side effect-journal summary including step id, publication sequence, intended target, observed result ref, authorization-basis ref, publication timestamp, integrity verification ref, prior-entry linkage, contradiction or supersession refs, entry digest, and uncertainty, the latest target-side operator action summary including `input_class`, `command_class`, `risk_acceptance_scope`, `attestation_scope`, `attestation_payload`, `precondition_basis_ref`, receipt refs, affected transition refs, and affected resource refs, approval-resolution operator actions for supported governed turn-tool, kernel-action, orchestrator issue-dispatch, and scheduler-owned namespace mutation/child-workload targets now also carrying the canonical shared target `resource_id` in those `affected_resource_refs` when durable execution truth exists, the latest target-side reservation summary including reservation kind, reservation invalidation basis, supervisor authority, and promotion linkage, and the latest target-side final-truth summary including fuller classifications, authoritative result ref, and authority sources when the approval payload names a governed target or when authoritative approval-reservation truth names that governed target on the kernel approval path; that Packet 1 operator inspection surface now also fails closed on unsupported legacy approval lifecycle statuses and on payload-versus-reservation or operator-action projection drift instead of normalizing contradictory approval truth via `orket/application/services/tool_approval_control_plane_reservation_service.py`, `orket/application/services/kernel_action_pending_approval_reservation.py`, `orket/application/services/tool_approval_control_plane_operator_service.py`, `orket/application/services/control_plane_target_resource_refs.py`, `orket/application/services/pending_gate_control_plane_operator_service.py`, `orket/application/services/governed_turn_tool_approval_continuation_service.py`, `orket/application/workflows/orchestrator_ops.py`, `orket/interfaces/routers/kernel.py`, `orket/interfaces/routers/approvals.py`, `orket/orchestration/engine.py`, `orket/orchestration/engine_approvals.py`, `orket/orchestration/approval_control_plane_read_model.py`, and `orket/application/workflows/orchestrator.py`
+31. The standalone coordinator API uses `create_coordinator_app(...)` with `orket/application/services/coordinator_runtime_service.py` owning transitions and `orket/application/services/coordinator_read_service.py` owning projections, and publishes first-class non-hedged `ReservationRecord` truth for claim admission, explicitly promotes those reservations to lease authority on successful claim with fail-closed promotion rollback that invalidates unpromoted reservation truth, releases just-published active lease authority when promotion fails, and now mirrors that rollback through the same shared `ResourceRecord` seam, publishes `LeaseRecord` expiry on the open-cards observation path in addition to claim, renew, expiry-before-reclaim, and release transitions, mirrors those same transitions through shared `ResourceRecord` snapshots, now fails closed when renew, expiry, or release would continue while the latest shared coordinator `ResourceRecord` no longer agrees with the active lease authority, preflights stale-expiry publication and active lease/resource authority before open-cards listing plus claim/renew/complete/fail store mutation so coordinator ownership does not change after detected drift, and exposes the latest reservation, lease, and resource summary on list, claim, renew, complete, and fail responses including reservation kind, reservation basis, reservation supervisor authority, promotion rule, lease resource id, lease expiry basis, lease cleanup eligibility rule, granted timestamp, publication timestamp, last confirmed observation, and resource current state via `orket/interfaces/coordinator_api.py`, `orket/application/services/coordinator_control_plane_reservation_service.py`, and `orket/application/services/coordinator_control_plane_lease_service.py`
+32. Canonical sandbox operator views now surface the latest reconciliation summary when durable control-plane truth exists, including `control_plane_reconciliation_id`, `control_plane_divergence_class`, and `control_plane_safe_continuation_class`, alongside run, attempt, reservation, lease, latest resource id/kind/state/orphan classification, checkpoint, effect-journal including latest intended target, observed result ref, authorization-basis ref, integrity verification ref, and uncertainty classification, latest operator-action split summary including `input_class`, `command_class`, `risk_acceptance_scope`, `attestation_scope`, `attestation_payload`, `precondition_basis_ref`, receipt refs, and affected transition/resource refs, and fuller final-truth classifications including result, closure basis, terminality basis, evidence sufficiency, residual uncertainty, degradation, authoritative result ref, and authority sources via `orket/application/services/sandbox_lifecycle_view_service.py`
+33. Canonical governed kernel-action replay and audit views now surface the latest reservation summary for the run when durable control-plane truth exists, including operator-hold reservations created by approval-required admission and run-owned concurrency reservations created by governed admission with promoted run-owned execution reservations taking precedence over stale terminal hold records, the latest execution-lease summary when present, the latest resource summary when present, current attempt failure boundary plus taxonomy and recovery-decision/action summary when present, the latest step summary including namespace scope, resources touched, and receipt refs, the latest operator action including `input_class`, `command_class`, `risk_acceptance_scope`, `attestation_scope`, `attestation_payload`, `precondition_basis_ref`, receipt refs, and affected transition/resource refs, and fuller final-truth classifications including evidence sufficiency, residual uncertainty, degradation, terminality basis, authoritative result ref, and authority sources via `orket/application/services/kernel_action_control_plane_view_service.py` and `orket/interfaces/routers/kernel.py`
+34. Canonical default orchestrator issue-dispatch now publishes one first-class control-plane run and attempt per `session_id + issue_id + seat + turn_index`, a concurrency `ReservationRecord` and promoted `LeaseRecord` for the issue dispatch slot, a shared issue-dispatch-slot `ResourceRecord` on activation, closeout release, and fail-closed dispatch-start rollback, fail-closed dispatch-start authority rollback that invalidates an unpromoted reservation and releases any just-published active lease when reservation-to-lease promotion fails, fail-closed reused-run rejection when dispatch run ids collide with still-active lifecycle truth or with non-terminal attempt drift under terminal run truth, fail-closed namespace-scope drift rejection on reused closed runs and active closeout paths, fail-closed reused-run reservation or lease drift rejection when closed dispatch runs still carry active resource authority or lack promoted-to-lease lineage, fail-closed active-closeout rejection when dispatch runs no longer carry promoted reservation plus active lease authority, fail-closed resource-drift rejection when the latest shared issue-dispatch-slot `ResourceRecord` no longer agrees with the active or closed dispatch lease, a dispatch `StepRecord` plus `EffectJournalEntryRecord` on turn start, a closeout `StepRecord` plus `EffectJournalEntryRecord` for both transition-based and observation-only closeouts, terminal `FinalTruthRecord` plus lease release on later authoritative issue transitions or on successful observed-status closeout when no later issue transition occurs, terminal `RecoveryDecisionRecord` authority for failed or blocked closeouts, and fail-closed closeout rejection when an active dispatch reservation points at terminal attempt drift via `orket/application/services/control_plane_resource_authority_checks.py`, `orket/application/services/orchestrator_issue_control_plane_service.py`, `orket/application/services/orchestrator_issue_control_plane_support.py`, `orket/application/workflows/orchestrator.py`, and `orket/application/workflows/orchestrator_ops.py`
+35. Canonical default orchestrator scheduler-owned issue mutation now publishes explicit issue-scoped namespace authority when no active issue-dispatch run exists: dependency-block propagation, pre-dispatch retry or terminal transitions such as runtime-guard or ODR stop paths, missing-seat transitions, execution-pipeline resume requeue of stalled in-progress/code-review/awaiting-guard issues, targeted execution-pipeline issue-resume requeue, and other scheduler-owned issue status mutations now publish one first-class control-plane run and attempt, a namespace `ReservationRecord` plus promoted `LeaseRecord`, shared issue-scoped `ResourceRecord` snapshots on activation, closeout release, and fail-closed namespace-activation rollback, fail-closed namespace-activation rollback that invalidates unpromoted reservations and releases just-published active namespace leases when promotion fails, fail-closed non-terminal reused-run rejection when scheduler mutation run ids collide with still-active lifecycle truth or with non-terminal attempt drift under terminal run truth, fail-closed namespace-scope drift rejection for reused closed mutation runs, fail-closed reused-run reservation or lease drift rejection when closed scheduler mutation runs still carry active resource authority or lack promoted-to-lease lineage, fail-closed resource-drift rejection when the latest shared issue-scoped `ResourceRecord` no longer agrees with the closed namespace lease, a scheduler mutation `StepRecord`, an `EffectJournalEntryRecord`, terminal `FinalTruthRecord`, and terminal `RecoveryDecisionRecord` authority for failed or blocked closeouts; team-replan child issue creation now publishes the same namespace reservation, lease, resource, step, effect, and final-truth family for the child workload-composition mutation via `orket/application/services/control_plane_resource_authority_checks.py`, `orket/application/services/orchestrator_scheduler_control_plane_service.py`, `orket/application/services/orchestrator_scheduler_control_plane_mutation.py`, `orket/application/services/orchestrator_issue_control_plane_support.py`, `orket/application/workflows/orchestrator.py`, `orket/application/workflows/orchestrator_ops.py`, and `orket/runtime/execution_pipeline.py`
+
+36. Canonical control-plane recovery taxonomy resolution now derives `failure_plane` and `failure_classification` from both canonical enum tokens and sanctioned legacy basis aliases before persisting `RecoveryDecisionRecord`, and carries those same canonical fields onto failed or interrupted attempt updates where recovery decisions are published via `orket/core/domain/control_plane_recovery.py`, `orket/application/services/sandbox_control_plane_execution_service.py`, `orket/application/services/turn_tool_control_plane_closeout.py`, and `orket/application/services/gitea_state_control_plane_claim_failure_service.py`
+37. Canonical governed kernel-action failure handling now publishes explicit terminal recovery authority for both observed and pre-effect commit failures: observed-execution policy-rejected or error outcomes mark failed attempts with `post_effect_observed` taxonomy and publish terminal `RecoveryDecisionRecord` authority, while non-observed pre-effect policy-rejected or error outcomes keep attempts `abandoned` with `pre_effect_failure` taxonomy and publish terminal `RecoveryDecisionRecord` authority before terminal final-truth closeout via `orket/application/services/kernel_action_control_plane_service.py` and `orket/application/services/kernel_action_control_plane_failure.py`
+38. Canonical governed kernel-action lifecycle now publishes a first-class admission `ReservationRecord` per run, promotes that reservation to an active execution `LeaseRecord` on commit-time execution start only when execution truth is committed or observed with fail-closed activation rollback that invalidates unpromoted reservations and releases just-published active execution leases when promotion fails, mirrors that execution authority through shared `ResourceRecord` snapshots on activation, terminal release, and activation rollback, now fails closed when existing run consistency is re-entered while a durable execution lease exists but the matching `ResourceRecord` no longer agrees with it, enforces an explicit default `session:<session_id>` namespace scope on governed kernel runs with fail-closed rejection of broader proposal/request namespace-scope declarations, now records commit-step namespace scope truth and uses that run namespace for kernel-action reservation or lease target scope publication when present, keeps pre-effect terminal policy rejection without observed execution on reservation-only authority (no execution lease promotion), fails closed on unsupported commit status tokens before publishing execution truth, releases execution lease authority on terminal commit closeout, releases unpromoted admission reservations on terminal session-end cancellation and pre-effect terminal closeout, fail-closed terminalizes any non-terminal current attempt as `abandoned` before run cancellation on session-end closure, now publishes optional authenticated run-scoped `operator_attestation` truth on kernel session-end when explicitly requested with bounded scope and payload (without collapsing it into command or risk-acceptance records), with both kernel session-end cancel and bounded attestation now carrying the canonical execution-scope `resource_id` in durable `affected_resource_refs`, governed kernel `NEEDS_APPROVAL` admit now publishes its approval-hold reservation from an application-owned async engine seam before response shaping, and the shared kernel-action control-plane view now owns the async engine admit/commit/end-session response projection contract instead of leaving the full ref set router-local, so authenticated kernel responses and direct async engine responses both return control-plane response references after durable publication (`control_plane_run_id`, `control_plane_attempt_id`, `control_plane_attempt_state`, `control_plane_step_id`, plus reservation and lease and resource and final-truth refs when present, plus recovery decision/action refs and latest operator-action id when present) via `orket/interfaces/routers/kernel.py`, `orket/orchestration/engine.py`, `orket/application/services/kernel_action_pending_approval_reservation.py`, `orket/application/services/kernel_action_control_plane_service.py`, `orket/application/services/kernel_action_control_plane_operator_service.py`, `orket/application/services/kernel_action_control_plane_resource_lifecycle.py`, `orket/application/services/kernel_action_control_plane_view_service.py`, `orket/application/services/control_plane_resource_authority_checks.py`, `orket/application/services/kernel_action_control_plane_support.py`, and `orket/application/services/kernel_action_control_plane_outcome.py`
+39. Canonical control-plane contract model authority now fails closed on unsupported `contract_version` for first-class records, keeping enum-backed packet-v2 nouns and record families pinned to `control_plane.contract.v1`, with explicit contract-proof coverage for run, reservation, and final-truth record families plus matrix-proof coverage that all first-class record models pin to one contract-version default via `orket/core/contracts/control_plane_models.py`, `orket/core/domain/control_plane_enums.py`, `tests/contracts/test_control_plane_contract_schema.py`, and `tests/contracts/test_control_plane_contract_version_matrix.py`
+40. Canonical sandbox create-record failure handling now fail-closes any partial allocation authority publication by releasing just-published active `LeaseRecord` truth linked to the create-path reservation, publishing a matching shared `ResourceRecord` closeout when durable lifecycle authority never finished initializing, and invalidating the still-unpromoted allocation `ReservationRecord` before surfacing create failure, preventing create-path lease, resource, or reservation drift when lifecycle record creation fails after lease publication via `orket/services/sandbox_orchestrator.py`, `orket/application/services/sandbox_control_plane_resource_service.py`, `orket/application/services/sandbox_runtime_lifecycle_service.py`, and `orket/application/services/sandbox_control_plane_reservation_service.py`
+41. Canonical authenticated session halt (`/v1/sessions/{session_id}/halt`) now publishes a durable session-scoped `OperatorActionRecord` command (`cancel_run`) with the authenticated non-secret actor fingerprint and explicit accepted-cancel versus no-active-task result classification on the default API-to-engine path via `orket/interfaces/api.py`, `orket/orchestration/engine.py`, and `orket/orchestration/engine_services.py`
+42. Canonical authenticated interaction cancel (`/v1/interactions/{session_id}/cancel`) now publishes durable interaction-scoped `OperatorActionRecord` `cancel_run` commands (session-scope or turn-scope targeting) with authenticated non-secret actor fingerprints on the default API interaction-control path via `orket/interfaces/routers/sessions.py` and `orket/interfaces/api.py`
+43. Canonical top-level cards epic execution now publishes one invocation-scoped control-plane `RunRecord`, one initial `AttemptRecord`, one supervisor-owned pre-effect `resume_forbidden` checkpoint and acceptance, one invocation-start `StepRecord`, and invocation-scoped `EffectJournalEntryRecord` publication for the start plus wait/closeout lifecycle edges per `run_epic(...)` call, with durable policy/config snapshots derived from the canonical cards workload contract, terminal completed/failed closeout publishing `FinalTruthRecord` authority from the closeout result ref, and terminal or waiting lifecycle transitions reflected back into run-ledger artifacts plus an additive `run_summary.json` `control_plane` projection that reads those durable records instead of inventing separate cards-epic run truth, now surfacing projected `checkpoint_id`, `checkpoint_resumability_class`, `checkpoint_acceptance_id`, and `checkpoint_acceptance_outcome`, and that legacy summary block now explicitly self-identifies as `projection_only` with source `control_plane_records` and fails closed if that framing drifts, if lower-level projected control-plane ids survive without the parent ids they depend on, if a projected cards run drops core run metadata while still carrying `run_id`, if projected attempt ids survive without attempt state or a positive attempt ordinal, if projected attempt state or ordinal survives after projected `attempt_id` drops, if projected `current_attempt_id` survives after projected `attempt_id` drops, if projected `current_attempt_id` drifts from projected `attempt_id` when both are present, if projected attempt ids drift outside the projected run lineage, or if projected step ids drift outside the projected run lineage, survive without `step_kind`, or keep projected `step_kind` after projected `step_id` drops via `orket/application/services/cards_epic_control_plane_service.py`, `orket/runtime/execution_pipeline.py`, `orket/runtime/run_summary.py`, and `orket/runtime/run_summary_control_plane.py`
+44. Canonical manual review-run execution now publishes one first-class control-plane `RunRecord`, one initial `AttemptRecord`, one supervisor-owned pre-effect `resume_forbidden` checkpoint and acceptance, one `review_run_start` `StepRecord`, one terminal `review_run_closeout` `StepRecord`, `EffectJournalEntryRecord` publication for both steps, and terminal `FinalTruthRecord` authority from the closeout result ref per review invocation, with durable policy/config snapshots derived from the canonical review-run workload contract and surfaced back through `run_manifest.json` plus review result and CLI `control_plane` summary projection fields that read from those durable records, now explicitly self-identify as `projection_only` with source `control_plane_records`, include checkpoint id/resumability/acceptance projection when available, and fail closed if that framing drifts, if projected run or attempt or step refs drift from the enclosing review result run identity and manifest control-plane refs, if lower-level projected attempt or step refs survive after parent run or attempt refs drop, if projected attempt state or ordinal survives after projected `attempt_id` drops, if projected `step_kind` survives after projected `step_id` drops, if projected attempt or step refs drift outside the projected run lineage, if the embedded manifest drops control-plane refs still carried by the returned summary, or if that returned summary keeps projected run, attempt, or step ids while dropping projected run metadata, attempt state or ordinal, or step kind; the embedded review-result `manifest` surface now also validates those persisted execution-authority markers before leaving the process and fails closed if they drift, if it omits those returned control-plane refs, if its attempt or step refs drift outside the declared `control_plane_run_id` lineage, or if top-level review-run identity is empty, while `orket review diff`, `orket review pr`, and `orket review files` now surface that serialization failure as structured `E_REVIEW_RUN_FAILED` output instead of an uncaught exception; fresh review manifests plus persisted deterministic-decision and model-assisted-critique artifacts now also declare `execution_state_authority=control_plane_records`, mark lane outputs non-authoritative for execution state, carry canonical review-run run/attempt/step refs, require non-empty manifest and lane-payload `run_id`, reject fresh manifest or lane-payload `control_plane_run_id` that drifts from the artifact `run_id`, reject fresh manifest or lane attempt or step refs that drift outside the declared `control_plane_run_id` lineage, require lane-payload `control_plane_run_id` / `control_plane_attempt_id` / `control_plane_step_id` whenever the manifest declares them, reject lower-level manifest or lane control-plane refs that survive after parent run or attempt refs drop, and fail closed if those execution-authority markers drift; `orket review replay --run-dir`, direct `orket review replay --snapshot ... --policy ...` when those files target canonical bundle artifacts from the same run directory, the review answer-key scoring path, the review consistency-signature path, and the persisted `check_1000_consistency.py` validator now also validate persisted review-bundle authority markers plus required manifest and lane-payload `run_id`, required lane-payload `control_plane_*` refs when the manifest declares them, lower-level manifest or lane control-plane refs that survive without parent run or attempt refs, manifest or lane attempt or step refs that drift outside the declared `control_plane_run_id` lineage, and persisted manifest and lane-payload run or control-plane refs before treating bundle artifacts as trustworthy evidence and fail closed if those markers or refs drift, with replay, scoring, and consistency now consuming shared validated review-bundle payload or artifact loaders instead of validating markers and then rereading lane JSON or replay inputs ad hoc, review answer-key scoring now also emits explicitly versioned `reviewrun_answer_key_score_v1` reports with required top-level `run_id` plus fixture/snapshot/policy provenance fields, required nested deterministic/model-assisted score blocks whose aggregate totals must stay aligned with the per-issue rows they summarize, explicit model reasoning/fix weights needed to prove reasoning and fix subtotals against those same rows, required per-issue row shape, and disabled model blocks that cannot carry derived model activity, and workload-side code-review probe score consumers now fail closed if that score-report contract drifts at the nested block, aggregate, issue-row, or top-level provenance level instead of trusting ad hoc dict shape, workload-side code-review probe bundles that reuse that shared scoring seam now also emit aligned bundle-local `run_id` values on deterministic and model-assisted lane payloads, failing closed before artifact persistence when that bundle-local `run_id` is empty so the same validation rejects missing or drifted bundle run identity instead of silently accepting lane-local omissions, the review consistency report producer now also validates its own report contract before write through the shared consistency-report validator so drifted `contract_version` or other malformed contract framing never persists as review-local JSON while truthful failed outcomes can still persist as failed reports, and the persisted `check_1000_consistency.py` validator now also fails closed before trusting report JSON when `contract_version` drifts, when those default, strict, replay, or baseline report `run_id` values are empty, when required nested baseline/default/strict/replay signature digests, deterministic finding-row code/severity/message/path/span/details shape, deterministic-lane version, executed-check lists, or truncation framing drift, or when scenario-local `truncation_check` digests, byte counts, or boolean flags drift instead of trusting shallow `ok` or counter fields alone; API run-detail/session-status views, governance dashboard seed metrics, protocol/sqlite run-ledger parity consumers, protocol/sqlite run-ledger parity-campaign rows, protocol rollout evidence bundle summaries, protocol enforce-window signoff payloads, protocol enforce-window capture manifests, and protocol cutover-readiness summaries now also consume one shared validated run-ledger projection family, while the SQLite run-ledger adapter preserves malformed persisted `summary_json` or `artifact_json` payloads long enough for that seam to detect them, and rollout/signoff/cutover now also share one protocol invalid-projection detail helper instead of carrying divergent local parsers, so malformed surfaces fail closed instead of leaking raw payloads, disappearing inside the adapter, being normalized into false-green parity, or being collapsed into generic parity-campaign mismatch counts inside campaign rows, rollout summaries, signoff gates, capture manifests, or cutover-readiness outputs; human CLI output now also surfaces durable review run/attempt/step refs and start-step kind from that same control-plane summary instead of collapsing the surface to state-only text, so deterministic/model-assisted lane outputs do not masquerade as standalone run or attempt or step truth via `orket/application/services/review_run_control_plane_service.py`, `orket/application/review/control_plane_projection.py`, `orket/application/review/bundle_validation.py`, `orket/application/review/run_service.py`, `orket/application/review/models.py`, `orket/application/services/run_ledger_summary_projection.py`, `orket/runtime/run_ledger_projection.py`, `orket/runtime/run_ledger_parity.py`, `orket/runtime/protocol_ledger_parity_campaign.py`, `orket/adapters/storage/async_repositories.py`, `orket/interfaces/orket_bundle_cli.py`, `scripts/reviewrun/score_answer_key.py`, `scripts/reviewrun/score_answer_key_contract.py`, `scripts/reviewrun/run_1000_consistency.py`, `scripts/reviewrun/check_1000_consistency.py`, `scripts/workloads/code_review_probe.py`, `scripts/workloads/code_review_probe_support.py`, `scripts/workloads/code_review_probe_reporting.py`, `scripts/protocol/parity_projection_support.py`, `scripts/protocol/publish_protocol_rollout_artifacts.py`, `scripts/protocol/record_protocol_enforce_window_signoff.py`, `scripts/protocol/run_protocol_enforce_window_capture.py`, and `scripts/protocol/check_protocol_enforce_cutover_readiness.py`
+45. Canonical `run_start_artifacts` bootstrap evidence remains immutable and session-scoped, and fresh `run_identity.json` payloads now explicitly mark that surface as `identity_scope=session_bootstrap`, `projection_source=session_bootstrap_artifacts`, and `projection_only=true`; bootstrap reuse plus legacy run-summary builders, finalize helpers, reconstruction, and summary-contract validators now also fail closed if that framing drifts or if `run_identity.run_id` mismatches the enclosing summary `run_id`, and finalize-time bootstrap validation now degrades cleanly instead of aborting closeout while excluding transient invalid bootstrap identity from degraded summary output, so session-bootstrap evidence does not masquerade as invocation-scoped control-plane run authority via `orket/runtime/run_start_artifacts.py`, `orket/runtime/run_summary.py`, and `orket/runtime/execution_pipeline.py`
+46. Canonical `retry_classification_policy` now explicitly declares `projection_only=true` with `projection_source=retry_classification_rules` plus `attempt_history_authoritative=false`, run-start contract capture now validates that framing before persisting `retry_classification_policy.json`, the retry-policy checker now normalizes malformed report output into a fail-closed error report before diff-ledger write, rejects report payloads whose embedded snapshot is not itself a valid retry-policy snapshot, falls back to the canonical retry-policy snapshot when malformed producer output omits or drifts that embedded snapshot, and the runtime-truth acceptance gate now validates both the retry-policy report contract and the persisted run-level `retry_classification_policy.json` artifact before trusting top-level `ok`, `signal_count`, or mere file presence while preserving explicit fail-closed error detail from validated retry-policy reports instead of collapsing them into generic false state, making that runtime contract snapshot classification guidance only instead of hidden attempt-history authority via `orket/runtime/retry_classification_policy.py`, `orket/runtime/run_start_contract_artifacts.py`, `scripts/governance/check_retry_classification_policy.py`, and `scripts/governance/run_runtime_truth_acceptance_gate.py`
+47. Canonical sandbox lifecycle now publishes first-class shared `ResourceRecord` snapshots on create, create-accepted, active health verification, renew, reacquire, reconciliation, terminal, and cleaned transitions, authenticated sandbox cancel now records a durable operator command carrying the canonical shared sandbox `resource_id` in `affected_resource_refs`, and sandbox operator views now read the latest resource id, kind, current state, and orphan classification from that durable store while also surfacing those latest operator-action affected transition/resource refs via `orket/application/services/sandbox_control_plane_operator_service.py`, `orket/application/services/sandbox_control_plane_resource_service.py`, `orket/application/services/sandbox_runtime_lifecycle_service.py`, `orket/application/services/sandbox_lifecycle_reconciliation_service.py`, `orket/application/services/sandbox_terminal_outcome_service.py`, `orket/application/services/sandbox_runtime_cleanup_service.py`, `orket/application/services/sandbox_lifecycle_view_service.py`, `orket/application/services/control_plane_publication_service.py`, and `orket/adapters/storage/async_control_plane_record_repository.py`
+48. Canonical script-side legacy `run_summary.json` consumers now fail closed before trusting malformed projection framing through one shared validated run-summary loader: shared probe/workload helpers, MAR audit completeness and compare surfaces, and training-data extraction all consume that loader and reject summary payloads whose projection-backed blocks drift away from explicit projection semantics via `scripts/common/run_summary_support.py`, `scripts/probes/probe_support.py`, `scripts/audit/audit_support.py`, `scripts/audit/compare_two_runs.py`, and `scripts/training/extract_training_data.py`
+49. Canonical governance live-proof recorders for truthful runtime packet-1, packet-2 repair, and artifact provenance now also consume that same shared validated run-summary loader before reading legacy summary blocks during proof recording, and fail closed instead of silently trusting malformed packet or artifact-provenance projection semantics via `scripts/common/run_summary_support.py`, `scripts/governance/record_truthful_runtime_packet1_live_proof.py`, `scripts/governance/record_truthful_runtime_packet2_repair_live_proof.py`, and `scripts/governance/record_truthful_runtime_artifact_provenance_live_proof.py`
+50. Canonical live truthful-runtime proof readers now also consume that same shared validated run-summary loader before trusting packet-1, packet-2, or artifact-provenance summary blocks during end-to-end verification, and fail closed instead of silently trusting malformed projection semantics via `scripts/common/run_summary_support.py`, `tests/live/run_summary_support.py`, `tests/live/test_truthful_runtime_phase_c_completion_live.py`, `tests/live/test_truthful_runtime_phase_e_completion_live.py`, `tests/live/test_truthful_runtime_packet1_live.py`, `tests/live/test_truthful_runtime_artifact_provenance_live.py`, and `tests/live/test_system_acceptance_pipeline.py`
+51. Canonical governance dashboard seed metrics now validate persisted `run_ledger.summary_json` payloads against the authoritative run-summary contract and sanitize persisted `run_ledger.artifact_json` through the shared validated run-ledger projection seam before deriving session-status or degrade signals, so malformed legacy summary or artifact rows register as invalid-payload signals instead of silently shaping fallback/degrade heuristics via `scripts/governance/build_runtime_truth_dashboard_seed.py` and `orket/application/services/run_ledger_summary_projection.py`
+52. Canonical API run-detail and session-status read surfaces now validate persisted `run_ledger.summary_json` payloads against the authoritative run-summary contract before exposing summary blocks, and run detail now also sanitizes the nested `run_ledger.summary_json` projection, so malformed legacy summary payloads fail closed to empty summary projections instead of silently shaping API-visible run state via `orket/application/services/run_ledger_summary_projection.py` and `orket/interfaces/api.py`
+53. Canonical API run-detail and session-status read surfaces now also sanitize persisted `run_ledger.artifact_json` through the same validated run-ledger projection seam, so malformed legacy artifact payloads fail closed to empty artifact projections instead of leaking raw invalid run-ledger artifact state through API-visible run surfaces via `orket/application/services/run_ledger_summary_projection.py` and `orket/interfaces/api.py`
+54. Canonical live-acceptance pattern reporting now validates persisted `live_acceptance_runs.metrics_json` and `live_acceptance_runs.db_summary_json` row payloads before deriving counters or issue-status totals, and records explicit invalid-payload signals instead of silently flattening malformed rows into empty state via `scripts/acceptance/report_live_acceptance_patterns.py`
+55. Canonical extension workload execution now publishes one first-class control-plane run and initial attempt per legacy or SDK workload invocation, a start step plus start effect, a supervisor-owned pre-effect `resume_forbidden` checkpoint and acceptance, terminal closeout step/effect publication, and terminal final truth through `orket/application/services/extension_workload_control_plane_service.py` and `orket/extensions/workload_executor.py`, while the shipped SDK capability-authorization first slice now also publishes one effect-journal-backed capability step per `model.generate`, `memory.query`, `memory.write`, `speech.transcribe`, `tts.speak`, `audio.play`, `speech.play_clip`, or `voice.turn_control` call inside that extension workload run and extension workload provenance plus returned `ExtensionRunResult` payloads now self-identify as `projection_only` execution-state views sourced from `control_plane_records`; the SDK extension memory provider on that first-slice path now also scopes stored profile/session rows by extension id so the governed first-slice memory lane no longer shares un-namespaced profile or session storage across extensions, and the canonical capability audit artifact now includes voice/audio/turn-control allow and deny rows alongside the existing memory/model cases via `orket/extensions/workload_executor_support.py`, `orket/extensions/workload_artifacts.py`, `orket/extensions/artifact_provenance.py`, `orket/extensions/models.py`, `orket/application/services/sdk_memory_provider.py`, `orket/services/extension_memory_namespace.py`, `scripts/extensions/build_extension_capability_audit.py`, `tests/scripts/test_build_extension_capability_audit.py`, `tests/runtime/test_extension_manager.py`, `tests/runtime/test_extension_capability_authorization.py`, and `tests/runtime/test_extension_components.py`
+56. Canonical controller child result surfaces now preserve one stable `control_plane_projection` artifact ref when the child `ExtensionRunResult` carries control-plane summary framing, and controller observability events now require `projection_source=controller_runtime_facts` plus `projection_only=true`, so operator-facing controller projections and noncanonical controller observability stay explicit runtime-fact projections instead of reading like standalone execution authority via `orket/extensions/controller_dispatcher.py`, `orket/extensions/controller_observability.py`, `schemas/controller_observability_v1.json`, `tests/runtime/test_controller_dispatcher.py`, `tests/runtime/test_controller_observability.py`, and `tests/runtime/test_controller_replay_parity.py`
+55. Canonical microservices unlock gating now fails closed when the live-acceptance report is missing or malformed on `run_count`, `session_status_counts`, `pattern_counters`, or `invalid_payload_signals`, or reports any non-zero invalid source-row signals, instead of allowing stale or malformed live-report payloads to produce false-green unlock decisions via `orket/application/services/microservices_acceptance_reports.py` and `scripts/acceptance/check_microservices_unlock.py`
+56. Canonical monolith variant matrix summaries now preserve normalized live-acceptance `invalid_payload_signals`, and both monolith readiness plus matrix-stability gates now fail closed when those matrix summary counts are missing, malformed, or non-zero instead of trusting rate-only matrix summaries derived from malformed live-report rows via `scripts/acceptance/run_monolith_variant_matrix.py`, `scripts/acceptance/check_monolith_readiness_gate.py`, and `scripts/acceptance/check_microservices_unlock.py`
+57. Canonical architecture pilot matrix comparison now preserves side-specific invalid-payload totals, detailed per-architecture invalid-payload maps, and failures from the underlying pilot summaries, and microservices pilot stability now fails closed when that persisted comparison detail is missing, malformed, non-zero, or internally inconsistent with its own per-architecture invalid-payload maps instead of trusting architecture delta summaries or stored totals alone via `scripts/acceptance/run_architecture_pilot_matrix.py`, `scripts/acceptance/check_microservices_pilot_stability.py`, and `orket/application/services/microservices_acceptance_reports.py`
+58. Canonical runtime-policy pilot-stability reads now fail closed on malformed persisted pilot-stability artifacts and require the saved report to match the checker's structural contract instead of trusting a bare `stable` flag via `orket/application/services/runtime_policy.py` and `tests/interfaces/test_api.py`
+59. Canonical microservices pilot decision now fails closed on malformed persisted unlock artifacts and requires the saved unlock report to match the checker's structural contract instead of trusting a bare `unlocked` flag via `scripts/acceptance/decide_microservices_pilot.py`
+60. Canonical runtime-policy microservices unlock reads now fail closed on malformed persisted unlock artifacts, reuse the same structural unlock-report validator as microservices pilot decision, and default to the canonical acceptance artifact paths instead of stale pre-acceptance output paths via `orket/application/services/microservices_acceptance_reports.py`, `orket/application/services/runtime_policy.py`, and `tests/interfaces/test_api.py`
+61. Canonical runtime-policy pilot-stability reads now also fail closed on internally inconsistent persisted pilot-stability artifacts, with the shared acceptance-report validator rejecting drift between `stable`, `failures`, `checks`, and `artifact_count` instead of trusting top-level fields alone via `orket/application/services/microservices_acceptance_reports.py`, `orket/application/services/runtime_policy.py`, `tests/application/test_microservices_acceptance_reports.py`, and `tests/interfaces/test_api.py`
+62. Canonical runtime-policy microservices unlock reads and microservices pilot decision now also fail closed on internally inconsistent persisted unlock artifacts, with the shared acceptance-report validator rejecting drift between top-level `unlocked` or `failures` and per-criterion `ok` or `failures` detail instead of trusting top-level unlock state alone via `orket/application/services/microservices_acceptance_reports.py`, `tests/application/test_microservices_acceptance_reports.py`, `tests/application/test_microservices_pilot_decision.py`, and `tests/interfaces/test_api.py`
+63. Canonical run-evidence graph operator path: `python scripts/observability/emit_run_evidence_graph.py --run-id <run_id>`
+64. Canonical run-evidence graph artifact family: `runs/<session_id>/run_evidence_graph.json`, `runs/<session_id>/run_evidence_graph.mmd`, and `runs/<session_id>/run_evidence_graph.html` emitted by `scripts/observability/emit_run_evidence_graph.py`
+65. Canonical Prompt Reforger Phase 0 generic service authority now lives in `docs/specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md`, `orket/reforger/service_contracts.py`, `orket/reforger/proof_slices.py`, and `orket/reforger/service.py`; the frozen structural proof artifacts for the bounded LocalClaw-style textmystery slice now live at `benchmarks/staging/General/reforger_service_run_phase0-baseline-run-0001.json`, `benchmarks/staging/General/reforger_service_run_phase0-baseline-run-0001_scoreboard.json`, `benchmarks/staging/General/reforger_service_run_phase0-adapt-run-0007.json`, and `benchmarks/staging/General/reforger_service_run_phase0-adapt-run-0007_scoreboard.json`, and both service-run artifacts explicitly record `proof_type=structural` with blocked live-runtime bookkeeping instead of claiming live-proof success
+66. Canonical Prompt Reforger Gemma tool-use lane authority now lives in `docs/projects/PromptReforgerToolCompatibility/PROMPT_REFORGER_GEMMA_TOOL_USE_IMPLEMENTATION_PLAN.md`, `docs/projects/PromptReforgerToolCompatibility/GEMMA_TOOL_USE_CHALLENGE_CORPUS_V1.json`, `docs/projects/PromptReforgerToolCompatibility/FUNCTIONGEMMA_TOOL_CALL_JUDGE_PROTOCOL.md`, `scripts/prompt_lab/run_prompt_reforger_gemma_tool_use_inventory.py`, `scripts/prompt_lab/run_functiongemma_tool_call_judge.py`, `scripts/prompt_lab/run_prompt_reforger_gemma_tool_use_cycle.py`, and `scripts/prompt_lab/run_prompt_reforger_guide_model_comparison.py`; the live checkpoint artifacts now live at `benchmarks/staging/General/prompt_reforger_gemma_tool_use_inventory.json`, `benchmarks/staging/General/prompt_reforger_gemma_tool_use_judge.json`, `benchmarks/staging/General/prompt_reforger_gemma_tool_use_cycle.json`, and `benchmarks/staging/General/prompt_reforger_guide_model_comparison.json`, the judge path now runs through the admitted `emit_judgment` native-tool contract with truthful LM Studio fallback when Ollama `functiongemma:latest` stays all-inconclusive, the new guide-model comparison surface keeps the Gemma target lane fixed and ranks guide models from generated prompt-candidate scoreboards rather than outer challenge pass/fail, and the lane is currently paused only because `gemma-3-4b-it-qat` did not clear the frozen portability corpus
+65. Canonical run-evidence graph contract spec: `docs/specs/RUN_EVIDENCE_GRAPH_V1.md`; admitted view tokens are `full_lineage`, `failure_path`, `authority`, `decision`, `resource_authority_path`, and `closure_path`, while the default operator emission without `--view` remains `full_lineage`, `failure_path`, `resource_authority_path`, and `closure_path`
+66. Canonical host-owned session continuity boundary keeps `session_id` as the continuity identifier across `POST /v1/interactions/sessions`, `POST /v1/interactions/{session_id}/turns`, `GET /v1/sessions/{session_id}`, `GET /v1/sessions/{session_id}/status`, `GET /v1/sessions/{session_id}/replay`, and `GET /v1/sessions/{session_id}/snapshot`; the admitted interaction-session path now uses one canonical inspection-only Packet 1 session-context envelope `context_version=packet1_session_context_v1` with ordered provider lineage of host continuity, host-validated turn request, and host-resolved extension-manifest `required_capabilities` metadata when present, and `GET /v1/sessions/{session_id}/snapshot` now exposes that latest session-context lineage while `GET /v1/sessions/{session_id}/replay` without targeted selectors now returns the interaction-turn timeline view; bounded Packet 1 context-provider inputs remain limited to `session_params`, `input_config`, `turn_params`, `workload_id`, `department`, `workspace`, and host-resolved extension-manifest `required_capabilities` on extension turn paths; targeted replay with `issue_id` plus `turn_index` remains run-session-only and fails closed on interaction sessions; authenticated `POST /v1/sessions/{session_id}/halt` and `POST /v1/interactions/{session_id}/cancel` remain the only admitted cleanup-adjacent operator commands on this lane and do not imply deletion or workspace cleanup; protocol replay, replay-compare, replay-campaign, ledger-parity, and ledger-parity-campaign surfaces under `orket/interfaces/routers/protocol_queries.py` remain inspection-only reconstruction or comparison views and fail closed on workspace-containment drift via `docs/specs/SUPERVISOR_RUNTIME_SESSION_BOUNDARY_V1.md`, `orket/interfaces/routers/sessions.py`, `orket/interfaces/api.py`, `orket/streaming/manager.py`, `orket/streaming/session_context.py`, `tests/interfaces/test_api_interactions.py`, `tests/interfaces/test_sessions_router_protocol_replay.py`, `tests/streaming/test_manager.py`, and `tests/interfaces/test_api.py`
+67. Canonical Companion boundary is now BFF-owned: Companion product routes live only in the external Companion gateway under `/api/*`, Orket core no longer mounts Companion-named host routes, and the gateway reaches the host only through `/v1/extensions/{extension_id}/runtime/*` using the same `ORKET_API_KEY` posture as other core routes via `docs/specs/COMPANION_UI_MVP_CONTRACT.md`, `docs/API_FRONTEND_CONTRACT.md`, `orket/interfaces/routers/extension_runtime.py`, and `docs/templates/external_extension/src/companion_app/server.py`
+68. Canonical governed local-model tool-turn prompt shape now compacts at source in `orket/application/workflows/turn_message_builder.py` through shared `orket/runtime/compact_turn_packet.py`, producing one minimal model-facing `system` prompt plus one bounded `TURN PACKET` `user` prompt and eliminating the old stacked block labels such as `Execution Context JSON`, `Artifact Contract JSON`, `Artifact Semantic Contract`, `Scenario Truth Contract`, `Turn Success Contract`, `Write Path Contract`, `Read Path Contract`, `Hallucination Verification Scope`, `Guard Decision Contract`, `Guard Rejection Contract`, and `Protocol Response Contract`; the LM Studio Gemma 4 OpenAI-compatible lane preserves the native `system` role, reuses that shared compact packet, collapses any remaining adjacent governed `user` prompt blocks into one merged `user` turn only as a safety net if upstream legacy messages still arrive, records outbound request-shape telemetry as `openai_request_message_count`, `openai_request_role_sequence`, and `openai_request_role_counts` in model raw artifacts, records compacted-packet telemetry through `local_prompting_warnings`, keeps bounded native declared-path `read_file` and `write_file` schemas on admitted turns with `reasoning_effort=none`, falls back guard/native declared-path `read_file` exposure from explicit turn requirements to artifact-contract review or required read surfaces plus verification-scope active or provided context when those explicit lists are empty, applies a tighter deterministic effective context cap on Gemma multi-write tool turns, and treats recorded provider telemetry `openai_native_tool_names` as the authoritative native-tool allowlist for parser-side undeclared or exact-duplicate call filtering before execution via `docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md`, `docs/architecture/CONTRACT_DELTA_GEMMA_OPENAI_MESSAGE_SHAPE_2026-04-03.md`, `docs/architecture/CONTRACT_DELTA_GEMMA_OPENAI_TOOL_TURN_CONFORMANCE_2026-04-03.md`, `docs/architecture/CONTRACT_DELTA_GEMMA_OPENAI_COMPACT_TURN_PACKET_2026-04-04.md`, `orket/application/workflows/turn_message_builder.py`, `orket/runtime/compact_turn_packet.py`, `orket/application/services/local_prompting_service.py`, `orket/adapters/llm/local_model_provider.py`, `orket/adapters/llm/openai_native_tools.py`, and `orket/application/workflows/turn_response_parser.py`
+69. Canonical local-model coding challenge benchmark harness path is `python scripts/benchmarks/run_local_model_coding_challenge.py --provider <provider> --model <model_id> --epic challenge_workflow_runtime`, and its stable staged report path is `benchmarks/staging/General/local_model_coding_challenge_report.json`; reruns append `diff_ledger` history instead of creating timestamp-only report files
+70. Canonical ProductFlow governed `write_file` proof authority now lives in `docs/specs/PRODUCTFLOW_OPERATOR_REVIEW_PACKAGE_V1.md` and `docs/specs/PRODUCTFLOW_GOVERNED_RUN_WALKTHROUGH_V1.md`; the canonical commands are `ORKET_DISABLE_SANDBOX=1 python scripts/productflow/run_governed_write_file_flow.py`, `python scripts/productflow/build_operator_review_package.py --run-id <run_id>`, and `python scripts/productflow/run_replay_review.py --run-id <run_id>`, the stable proof artifact family lives at `benchmarks/results/productflow/governed_write_file_live_run.json`, `runs/<session_id>/productflow_review_index.json`, `benchmarks/results/productflow/operator_review_proof.json`, and `benchmarks/results/productflow/replay_review.json`, ProductFlow `run_id` resolution now fails closed unless exactly one approval row carries `control_plane_target_ref == <run_id>` for the bounded `approval_required_tool:write_file` seam and the matching `runs/<session_id>/run_summary.json` validates, operator review proof is expected to succeed on that same governed run, and replay review is expected to report a same-run truthful blocker with `replay_ready=false`, `stability_status=not_evaluable`, and explicit `missing_evidence` rather than a stable replay claim via `scripts/productflow/run_governed_write_file_flow.py`, `scripts/productflow/build_operator_review_package.py`, `scripts/productflow/run_replay_review.py`, `scripts/productflow/productflow_support.py`, `scripts/observability/emit_run_evidence_graph.py`, `docs/specs/PRODUCTFLOW_OPERATOR_REVIEW_PACKAGE_V1.md`, and `docs/specs/PRODUCTFLOW_GOVERNED_RUN_WALKTHROUGH_V1.md`
+71. Canonical Trusted Run Witness v1 proof authority now lives in `docs/specs/TRUSTED_RUN_WITNESS_V1.md`, `docs/specs/TRUSTED_RUN_INVARIANTS_V1.md`, `docs/specs/CONTROL_PLANE_WITNESS_SUBSTRATE_V1.md`, `docs/specs/OFFLINE_TRUSTED_RUN_VERIFIER_V1.md`, `docs/specs/FIRST_USEFUL_WORKFLOW_SLICE_V1.md`, `docs/specs/TRUST_REASON_AND_EXTERNAL_ADOPTION_V1.md`, `docs/specs/GOVERNED_CHANGE_PACKET_TRUSTED_KERNEL_V1.md`, `docs/specs/GOVERNED_CHANGE_PACKET_V1.md`, `docs/specs/GOVERNED_CHANGE_PACKET_STANDALONE_VERIFIER_V1.md`, and `docs/specs/TRUSTED_TERRAFORM_PLAN_DECISION_V1.md`; admitted compare scopes are ProductFlow governed `write_file` as `trusted_run_productflow_write_file_v1`, the First Useful Workflow Slice as `trusted_repo_config_change_v1`, and Terraform plan decision as `trusted_terraform_plan_decision_v1`, all using operator surface `trusted_run_witness_report.v1`, invariant model surface `trusted_run_invariant_model.v1`, substrate model surface `control_plane_witness_substrate.v1`, witness bundle schema `trusted_run.witness_bundle.v1`, canonical offline claim command `python scripts/proof/verify_offline_trusted_run_claim.py --input <evidence_path>`, and canonical proof-foundation command `python scripts/proof/verify_trusted_run_proof_foundation.py`; ProductFlow keeps canonical campaign output `benchmarks/results/proof/trusted_run_witness_verification.json`, offline output `benchmarks/results/proof/offline_trusted_run_verifier.json`, and proof-foundation output `benchmarks/results/proof/trusted_run_proof_foundation.json`; the useful workflow slice uses `ORKET_DISABLE_SANDBOX=1 python scripts/proof/run_trusted_repo_change.py`, `ORKET_DISABLE_SANDBOX=1 python scripts/proof/run_trusted_repo_change_campaign.py`, live output `benchmarks/results/proof/trusted_repo_change_live_run.json`, validator output `benchmarks/results/proof/trusted_repo_change_validator.json`, campaign output `benchmarks/results/proof/trusted_repo_change_witness_verification.json`, offline output `benchmarks/results/proof/trusted_repo_change_offline_verifier.json`, witness bundle root `workspace/trusted_repo_change/runs/<session_id>/trusted_run_witness_bundle.json`, governed packet command `ORKET_DISABLE_SANDBOX=1 python scripts/proof/run_governed_repo_change_packet.py`, governed packet verifier command `python scripts/proof/verify_governed_change_packet.py --input benchmarks/results/proof/governed_repo_change_packet.json --output benchmarks/results/proof/governed_repo_change_packet_verifier.json`, trusted-kernel model command `python scripts/proof/verify_governed_change_packet_trusted_kernel.py --output benchmarks/results/proof/governed_change_packet_trusted_kernel_model.json`, governed packet output `benchmarks/results/proof/governed_repo_change_packet.json`, governed packet verifier output `benchmarks/results/proof/governed_repo_change_packet_verifier.json`, trusted-kernel model output `benchmarks/results/proof/governed_change_packet_trusted_kernel_model.json`, and staged adversarial benchmark candidate `benchmarks/staging/General/governed_repo_change_packet_adversarial_benchmark_2026-04-19.json`; the Terraform plan decision slice uses `ORKET_DISABLE_SANDBOX=1 python scripts/proof/run_trusted_terraform_plan_decision.py`, `ORKET_DISABLE_SANDBOX=1 python scripts/proof/run_trusted_terraform_plan_decision_campaign.py`, provider-backed governed proof command `python scripts/proof/run_trusted_terraform_plan_decision_runtime_smoke.py --output benchmarks/results/proof/trusted_terraform_plan_decision_live_runtime.json`, no-spend live setup preflight `python scripts/proof/check_trusted_terraform_live_setup_preflight.py`, publication readiness gate `python scripts/proof/check_trusted_terraform_publication_readiness.py`, publication gate sequence `python scripts/proof/run_trusted_terraform_plan_decision_publication_gate.py`, live output `benchmarks/results/proof/trusted_terraform_plan_decision_live_run.json`, provider-backed governed proof output `benchmarks/results/proof/trusted_terraform_plan_decision_live_runtime.json`, live setup preflight output `benchmarks/results/proof/trusted_terraform_plan_decision_live_setup_preflight.json`, publication readiness output `benchmarks/results/proof/trusted_terraform_plan_decision_publication_readiness.json`, publication gate output `benchmarks/results/proof/trusted_terraform_plan_decision_publication_gate.json`, validator output `benchmarks/results/proof/trusted_terraform_plan_decision_validator.json`, campaign output `benchmarks/results/proof/trusted_terraform_plan_decision_witness_verification.json`, offline output `benchmarks/results/proof/trusted_terraform_plan_decision_offline_verifier.json`, and witness bundle root `workspace/trusted_terraform_plan_decision/runs/<session_id>/trusted_run_witness_bundle.json`; `TRI-INV-031` and all admitted witness verifier surfaces now derive `side_effect_free_verification` from the structural proof-foundation artifact rather than from an asserted constant; `trusted_terraform_plan_decision_v1` is now admitted internally under `docs/specs/TRUSTED_TERRAFORM_PLAN_DECISION_V1.md` and `docs/guides/TRUSTED_TERRAFORM_PLAN_DECISION_SCOPE_GUIDE.md`, but it is not yet externally publishable and not yet part of the current public trust slice because successful provider-backed governed-proof evidence is not yet admitted public evidence and the publication readiness/gate commands must fail closed until that evidence exists; a single bundle remains `non_deterministic_lab_only`, while a campaign may claim `verdict_deterministic` only when at least two equivalent runs verify with stable contract-verdict signature, stable invariant-model signature, stable substrate signature, stable must-catch outcomes, and for `trusted_repo_config_change_v1` plus `trusted_terraform_plan_decision_v1` a stable validator signature; public proof-backed trust wording remains governed by `docs/specs/TRUST_REASON_AND_EXTERNAL_ADOPTION_V1.md`, currently applies only to `trusted_repo_config_change_v1`, must stop at `verdict_deterministic`, and must explicitly say replay and text determinism are not yet proven and that the slice is proof-only and fixture-bounded; the offline verifier may only preserve or downgrade claims from existing evidence via `scripts/proof/trusted_run_witness_contract.py`, `scripts/proof/trusted_run_invariant_model.py`, `scripts/proof/control_plane_witness_substrate.py`, `scripts/proof/offline_trusted_run_verifier.py`, `scripts/proof/trusted_run_proof_foundation.py`, `scripts/proof/trusted_run_non_interference.py`, `scripts/proof/trusted_run_witness_support.py`, `scripts/proof/trusted_scope_family_support.py`, `scripts/proof/trusted_scope_family_claims.py`, `scripts/proof/trusted_scope_family_common.py`, `scripts/proof/trusted_repo_change_contract.py`, `scripts/proof/trusted_repo_change_verifier.py`, `scripts/proof/trusted_repo_change_workflow.py`, `scripts/proof/trusted_repo_change_offline.py`, `scripts/proof/governed_change_packet_contract.py`, `scripts/proof/governed_change_packet_trusted_kernel.py`, `scripts/proof/governed_change_packet_workflow.py`, `scripts/proof/governed_change_packet_verifier.py`, `scripts/proof/run_governed_repo_change_packet.py`, `scripts/proof/verify_governed_change_packet.py`, `scripts/proof/verify_governed_change_packet_trusted_kernel.py`, `scripts/proof/run_governed_change_packet_adversarial_benchmark.py`, `scripts/proof/trusted_terraform_plan_decision_contract.py`, `scripts/proof/trusted_terraform_plan_decision_verifier.py`, `scripts/proof/trusted_terraform_plan_decision_workflow.py`, `scripts/proof/trusted_terraform_plan_decision_bundle_support.py`, `scripts/proof/trusted_terraform_plan_decision_offline.py`, `scripts/proof/terraform_plan_review_live_support.py`, `scripts/proof/build_trusted_run_witness_bundle.py`, `scripts/proof/verify_trusted_run_witness_bundle.py`, `scripts/proof/verify_offline_trusted_run_claim.py`, `scripts/proof/verify_trusted_run_proof_foundation.py`, `scripts/proof/run_trusted_run_witness_campaign.py`, `scripts/proof/run_trusted_repo_change.py`, `scripts/proof/run_trusted_repo_change_campaign.py`, `scripts/proof/run_trusted_terraform_plan_decision.py`, `scripts/proof/run_trusted_terraform_plan_decision_campaign.py`, `scripts/proof/run_trusted_terraform_plan_decision_runtime_smoke.py`, `scripts/proof/check_trusted_terraform_live_setup_preflight.py`, `scripts/proof/check_trusted_terraform_publication_readiness.py`, and `scripts/proof/run_trusted_terraform_plan_decision_publication_gate.py`
+Trusted Terraform live setup packet addition: `python scripts/proof/prepare_trusted_terraform_live_setup_packet.py` is the canonical no-spend setup packet generator for the provider-backed governed-proof attempt. It writes `benchmarks/results/proof/trusted_terraform_plan_decision_live_setup_packet.json` and local ignored packet files under `workspace/trusted_terraform_live_setup/`, executes zero provider calls, writes no credential values, defaults the advisory summary model id to the portable Nova inference-profile id `us.amazon.nova-lite-v1:0`, and does not constitute publication evidence.
+Trusted Terraform Bedrock summary-model admission: `scripts/proof/terraform_plan_review_live_support.py` now admits direct `anthropic.*` model ids plus Anthropic inference-profile ids (`us.anthropic.*`, `global.anthropic.*`, or matching inference-profile ARNs) through Bedrock `InvokeModel`, direct `amazon.nova-*` model ids plus Nova inference-profile ids (`us.amazon.nova-*`, `global.amazon.nova-*`, or matching inference-profile ARNs) through Bedrock `Converse`, and Writer Palmyra X4 direct model id `writer.palmyra-x4-v1:0` plus US geo inference id `us.writer.palmyra-x4-v1:0` through Bedrock `Converse` for the bounded advisory summary seam; no-spend preflight and setup-packet readiness must fail closed on unsupported model ids before provider calls are attempted.
+
+Trust Kernel and Portable Conformance completed lane authority is archived under `docs/projects/archive/trust-kernel-conformance/TKC04232026-LANE-CLOSEOUT/`. Workstream 1 finite-model implementation lives in `scripts/proof/finite_trust_kernel_model.py` with contract and structural tests in `tests/scripts/test_finite_trust_kernel_model.py`; Workstream 2 portable conformance implementation lives in `scripts/proof/run_trust_conformance_pack.py` with integration tests in `tests/scripts/test_trust_conformance_pack.py` and evaluator guide `docs/guides/TRUST_KERNEL_CONFORMANCE_PACK_GUIDE.md`. The finite-model signature and conformance summary are claim-supporting only and do not replace witness, validator, offline verifier, or packet verifier authority. The durable contracts are `docs/specs/FINITE_TRUST_KERNEL_MODEL_V1.md` and `docs/specs/PORTABLE_TRUST_CONFORMANCE_PACK_V1.md`; the completed lane adopted only finite trust-kernel model and portable conformance pack workstreams over existing admitted evidence, did not admit a new workflow compare scope, keeps `trusted_repo_manifest_change_v1` deferred as the preferred future non-AWS candidate, and did not upgrade replay-deterministic or text-deterministic claims.
+
+72. Canonical API runtime ownership lives in `orket/application/services/api_runtime_container.py::ApiRuntimeContainer`, with construction centralized in `orket/application/services/api_runtime_composition.py` and one container attached to each FastAPI instance as `app.state.api_runtime_context`. Every `orket/interfaces/api.py::create_api_app(...)` call returns a distinct app with a distinct project root, decision node, runtime state/event queue, runtime host, engine, outbound-policy snapshot, stream bus, interaction manager, extension owners/catalog, outward stores/services, and tracked background-task set, plus an app-container-held model-selector factory. HTTP, websocket, and lifespan execution resolve through the active ASGI app; lifespan teardown cancels tracked tasks and closes the app-owned engine idempotently. Importing `orket.interfaces.api` constructs no FastAPI app or mutable runtime owner, and that module exports no compatibility `app` or owner aliases. Production startup uses `orket.interfaces.runtime_entrypoints.create_api_app(...)` and retains its returned app. Architectural-truth B2 is complete and `AT-EX-002` is removed; broader interface transport/facade extraction remains tracked by `AT-EX-003`.
+73. Canonical engine control-plane composition now builds through `orket/orchestration/engine_services.py::build_engine_control_plane_services(...)`, async kernel control-plane publication and response augmentation now live in `orket/orchestration/engine_kernel_async_service.py::KernelAsyncControlPlaneService`, the default orchestrator issue-dispatch lifecycle truth remains owned by `orket/application/services/orchestrator_issue_control_plane_service.py` rather than `orket/orchestration/engine.py`, and engine-targeted replay is now explicitly diagnostics-only through `OrchestrationEngine.replay_turn_diagnostics(...)` while `replay_turn(...)` remains only as a compatibility wrapper over the same artifact-backed diagnostics surface; the touched API and CLI replay entrypoints now call `replay_turn_diagnostics(...)` explicitly
+74. Canonical runtime-verification support artifacts now use `agent_output/verification/runtime_verification.json` as the latest support-only verifier record, `agent_output/verification/runtime_verification_index.json` as the stable history index, and `agent_output/verification/runtime_verifier_records/<run_id>/<issue_id>/turn_<turn_index>_retry_<retry_count>.json` as the preserved per-record family; those artifacts must record `artifact_role=support_verification_evidence`, `artifact_authority=support_only`, `authored_output=false`, `overall_evidence_class`, and `evidence_summary` over `syntax_only`, `command_execution`, `behavioral_verification`, and `not_evaluated` together with run, issue, turn, and retry provenance, and runtime-summary or MAR paths must not promote the verifier artifact to the primary authored output by default
+75. Canonical Tool Execution Gate authority now lives in `docs/specs/TOOL_EXECUTION_GATE_V1.md`; the shipped first slice closes the supported `run_card(...) -> TurnExecutor -> ToolDispatcher` path plus normalized extension actions that re-enter `run_card(...)`, requires construction-time `tool_gate` authority on that supported path, keeps direct `ToolDispatcher.execute_tools(...)`, direct `ToolBox.execute(...)`, and direct card-family method invocation inventory-only internal seams, keeps direct `Agent.run(...)` as retained legacy compatibility that now fail-closes before any direct tool call when `tool_gate` or effect-journal authority is missing, keeps SDK capability registry invocation out of scope under `docs/specs/EXTENSION_CAPABILITY_AUTHORIZATION_V1.md`, and fixes the canonical audit command and stable output path at `python scripts/security/build_tool_gate_audit.py --strict` and `benchmarks/results/security/tool_gate_audit.json`
+76. Canonical Card Viewer/Runner operator surface now lives in `docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md`; the first truthful operator slice reads through `GET /v1/cards/view`, `GET /v1/cards/{card_id}/view`, `GET /v1/runs/view`, `GET /v1/runs/{session_id}/view`, `GET /v1/system/provider-status`, and `GET /v1/system/health-view`, uses `POST /v1/system/run-active` as the canonical run/rerun action, admits lifecycle categories `prebuild_blocked`, `artifact_run_failed`, `artifact_run_completed_unverified`, `artifact_run_verified`, and `degraded_completed`, and admits card filter buckets `open`, `running`, `blocked`, `review`, `terminal_failure`, and `completed` via `docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md`, `docs/API_FRONTEND_CONTRACT.md`, `orket/interfaces/operator_view_models.py`, `orket/interfaces/operator_view_support.py`, `orket/interfaces/routers/cards.py`, `orket/interfaces/routers/runs.py`, `orket/interfaces/routers/system.py`, and `orket/interfaces/api.py`
+77. Canonical Card Authoring surface now lives in `docs/specs/CARD_AUTHORING_SURFACE_V1.md`; the current shipped host slice admits `POST /v1/cards`, `PUT /v1/cards/{card_id}`, and `POST /v1/cards/validate`, mints canonical host `card_id` plus card authoring `revision_id`, persists host authoring payload and revision markers on the canonical card surface, upserts issue-target authored cards into the bounded runtime projection `config/epics/orket_ui_authored_cards.json` for canonical run-card resolution, and fail-closes stale saves with `409 revision_conflict` via `docs/specs/CARD_AUTHORING_SURFACE_V1.md`, `docs/API_FRONTEND_CONTRACT.md`, `orket/interfaces/routers/card_authoring.py`, `orket/application/services/card_authoring_service.py`, `orket/application/services/card_authoring_runtime_projection_service.py`, and `orket/interfaces/api.py`
+78. Canonical Flow Authoring surface now lives in `docs/specs/FLOW_AUTHORING_SURFACE_V1.md`; the current shipped host slice admits `GET /v1/flows`, `GET /v1/flows/{flow_id}`, `POST /v1/flows`, `PUT /v1/flows/{flow_id}`, `POST /v1/flows/validate`, and bounded `POST /v1/flows/{flow_id}/runs`, persists flow truth at `.orket/durable/db/orket_ui_flows.sqlite3` via `orket/application/services/flow_runtime_service.py::build_flow_authoring_service`, admits neutral node kinds `start`, `card`, `branch`, `merge`, and `final`, composes with the authored-card runtime projection for current run-card resolution, bounds current run initiation to exactly one `card` node that resolves to the canonical `issue` runtime target, and treats `200` plus returned `session_id` as authoritative acceptance only while downstream run completion remains governed by the existing runtime policy via `docs/specs/FLOW_AUTHORING_SURFACE_V1.md`, `docs/API_FRONTEND_CONTRACT.md`, `orket/interfaces/routers/flows.py`, `orket/application/services/flow_authoring_service.py`, `orket/adapters/storage/async_flow_repository.py`, `orket/application/services/flow_runtime_service.py`, and `orket/interfaces/api.py`
+79. Canonical API startup security and CORS posture now live in `orket/runtime/config/startup_checks.py`, `orket/runtime/config/cors_config.py`, `orket/interfaces/api.py`, `docs/SECURITY.md`, and `docs/API_FRONTEND_CONTRACT.md`; flat `orket/runtime/startup_checks.py` and `orket/runtime/cors_config.py` remain compatibility aliases only. Non-local startup fails closed when `ORKET_ENCRYPTION_KEY`, `SESSION_SECRET`, `GITEA_WEBHOOK_SECRET`, or `ORKET_API_KEY` is missing or still set to a documented placeholder, `X-API-Key` validation uses timing-safe comparison, `ORKET_GITEA_ALLOW_INSECURE=true` with an HTTPS `GITEA_URL` emits a startup warning, and browser CORS defaults to `allow_origins=[]` unless `ORKET_ALLOWED_ORIGINS` supplies an explicit origin allowlist.
+80. Canonical kernel outbound projection policy now lives in `orket/kernel/v1/outbound_policy_gate.py`, `orket/kernel/v1/nervous_system_runtime.py`, `docs/SECURITY.md`, and `docs/API_FRONTEND_CONTRACT.md`; projection packs scrub configured paths, sensitive-key leaves, email-like values, and built-in leak patterns before digesting and returning `policy_context` or `tool_context_summary`, and report redaction counts plus redacted paths under `policy_summary.outbound_policy_gate`.
+81. Prompt Reforger generic service portability claims now live in `docs/specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md`; `gemma-3-4b-it-qat` and other sub-7B targets are `unsupported` for product portability claims until exact corpus evidence clears, and lower corpus bars must be named as narrower tiers rather than described as clearing the frozen 5-slice portability corpus.
+82. SDK versioning and core compatibility authority now lives in `docs/requirements/sdk/VERSIONING.md` and `orket_extension_sdk/README.md`; SDK SemVer is independent from core engine versioning, and SDK `0.Y.Z` is compatible with Orket core `0.Y.*` through `0.(Y+2).*` unless a release note explicitly narrows that window.
+83. Architectural Truth Slice A command behavior is governed by `docs/architecture/CONTRACT_DELTA_ARCHITECTURAL_TRUTH_SLICE_A_2026-07-29.md`: the runtime boundary propagates handled fatal outcomes as nonzero process exits, synchronous first-run persistence runs outside the active event loop and precedes success narration, `orket-quickstart` exposes help plus explicit `--decision approve|deny` input and a structured exit-2 EOF refusal, and `orket demo governed-run` resolves its default scenario from installed `orket.quickstart` package data rather than the caller's working directory. The rerunnable current-state inventory is `docs/projects/architectural-truth/architectural_truth_baseline.json`, and accountable exception metadata is `docs/projects/architectural-truth/ARCHITECTURE_EXCEPTION_REGISTER.json`.
+84. Architectural Truth command-root authority is governed by `docs/architecture/CONTRACT_DELTA_ARCHITECTURAL_TRUTH_COMMAND_ROOT_2026-07-30.md`: the installed `orket` console script targets `orket.cli:main` as the one canonical command root, `orket runtime` owns the default card runtime, `orket runtime --card <card_id>` owns named-card invocation, and runtime arguments are forwarded into the existing card parser without a duplicate option implementation. `python main.py [runtime arguments]` is a source-wrapper compatibility surface through `0.6.x`; it is eligible for removal only in `0.7.0` after an explicit contract delta and continued installed-root proof. Completion evidence is `docs/projects/architectural-truth/COMMAND_ROOT_PROOF_2026-07-30.md`.
+
+## Machine-Readable Authority Map (v1)
+
+```json
+{
+  "version": 1,
+  "last_updated": "2026-09-28",
+  "authority": {
+    "dependency_authority": {
+      "primary": "pyproject.toml",
+      "install_command": "python -m pip install -e \"./orket_extension_sdk[testing]\" -e \".[dev]\"",
+      "sources": [
+        "pyproject.toml",
+        "docs/CONTRIBUTOR.md",
+        "README.md"
+      ]
+    },
+    "install_bootstrap": {
+      "commands": [
+        "python -m pip install --upgrade pip",
+        "python -m pip install -e \"./orket_extension_sdk[testing]\" -e \".[dev]\""
+      ],
+      "sources": [
+        "docs/CONTRIBUTOR.md",
+        "README.md"
+      ]
+    },
+    "runtime_entrypoints": {
+      "cli_console_entrypoint": "orket.cli:main",
+      "cli_default": "orket runtime",
+      "interactive_setup": "python -m orket.interfaces.setup_cli",
+      "prompt_commands": "python -m orket.interfaces.prompts_cli --root <project> ...",
+      "cli_named_card": "orket runtime --card <card_id>",
+      "cli_source_wrapper_compatibility": "python main.py [runtime arguments]",
+      "cli_source_wrapper_compatibility_status": "supported_through_0.6.x_removal_requires_explicit_0.7.0_contract_delta",
+      "cli_legacy_named_rock_alias": "orket runtime --rock <rock_name>",
+      "cli_source_wrapper_legacy_rock_alias": "python main.py --rock <rock_name>",
+      "cli_legacy_named_rock_alias_status": "hidden_compatibility_alias_to_run_card",
+      "api": "python server.py",
+      "quickstart_governed_action_demo": "python -m orket.quickstart.governed_action_demo",
+      "quickstart_console_script": "orket-quickstart",
+      "quickstart_scripted_decision": "orket-quickstart --decision approve|deny",
+      "quickstart_eof_exit": "2:E_QUICKSTART_INPUT_REQUIRED",
+      "governed_run_demo": "orket demo governed-run",
+      "governed_run_default_scenario_authority": "orket.quickstart/governed_run_scenario.yaml",
+      "governed_run_scenario": "orket run scenario examples/governed-run/scenario.yaml",
+      "governed_run_inspect": "orket inspect .runs/<run_id>",
+      "governed_run_replay": "orket replay .runs/<run_id>",
+      "governed_run_evidence_bundle": ".runs/<run_id>/",
+      "governed_agent_fixture_submit": "orket agent submit <workload_id> --db <sqlite_path> --catalog <catalog_json> --request <request_json> --creation-timestamp-utc <timestamp> --decision-timestamp-utc <timestamp> --decision-timestamp-utc <timestamp> --next-lease-expires-at-utc <timestamp> --deterministic-fixture",
+      "governed_agent_llama_cpp_submit": "orket agent submit <workload_id> --db <sqlite_path> --catalog <catalog_json> --request <request_json> --creation-timestamp-utc <timestamp> --decision-timestamp-utc <timestamp> --decision-timestamp-utc <timestamp> --next-lease-expires-at-utc <timestamp> --model <exact_model>",
+      "governed_agent_ollama_submit": "orket agent submit <workload_id> --db <sqlite_path> --catalog <catalog_json> --request <request_json> --creation-timestamp-utc <timestamp> --decision-timestamp-utc <timestamp> --decision-timestamp-utc <timestamp> --next-lease-expires-at-utc <timestamp> --ollama-model <exact_model> [--planner-model <exact_model> --actor-model <exact_model> --critic-model <exact_model>]",
+      "governed_agent_inspect": "orket agent inspect <run_id> --db <sqlite_path>",
+      "governed_agent_replay": "orket agent replay <run_id> --db <sqlite_path>",
+      "governed_agent_cancel": "orket agent cancel <run_id> --db <sqlite_path> --action-id <id> --actor-ref <ref> --timestamp-utc <timestamp> --reason <reason> --cancellation-epoch <n>",
+      "governed_agent_proof_postures": ["deterministic_fixture_not_live_model", "live_local_model"],
+      "sources": [
+        "pyproject.toml",
+        "examples/governed-run/README.md",
+        "docs/architecture/CONTRACT_DELTA_ARCHITECTURAL_TRUTH_SLICE_A_2026-07-29.md",
+        "docs/architecture/CONTRACT_DELTA_ARCHITECTURAL_TRUTH_COMMAND_ROOT_2026-07-30.md",
+        "docs/architecture/CONTRACT_DELTA_GOVERNED_AGENT_LOOP_SLICES_1_2_2026-09-07.md",
+        "docs/architecture/CONTRACT_DELTA_GOVERNED_AGENT_LOOP_SLICES_3_5_2026-09-07.md",
+        "docs/CONTRIBUTOR.md",
+        "docs/RUNBOOK.md",
+        "README.md"
+      ]
+    },
+    "canonical_test_command": {
+      "command": "python -m pytest -q",
+      "lane_reference": "docs/TESTING_POLICY.md",
+      "sources": [
+        "docs/CONTRIBUTOR.md",
+        "docs/RUNBOOK.md",
+        "docs/TESTING_POLICY.md"
+      ]
+    },
+    "verification_policy": {
+      "agent_policy": "AGENTS.md",
+      "contributor_policy": "docs/CONTRIBUTOR.md",
+      "local_provider_development_priority": ["llama_cpp", "lmstudio", "ollama"],
+      "preferred_live_test_provider": "llama_cpp",
+      "default_local_provider": "llama_cpp",
+      "testing_policy": "docs/TESTING_POLICY.md",
+      "pytest_sandbox_default_policy": "tests/conftest.py",
+      "sources": [
+        "AGENTS.md",
+        "docs/CONTRIBUTOR.md",
+        "docs/TESTING_POLICY.md",
+        "tests/conftest.py"
+      ]
+    },
+    "active_spec_index": {
+      "root_docs_index": "docs/README.md",
+      "specs_root": "docs/specs/",
+      "active_roadmap_source": "docs/ROADMAP.md",
+      "process_source": "docs/CONTRIBUTOR.md",
+      "core_runtime_contract_sources": [
+        "docs/specs/REMAINING_RUNTIME_INPUTS.md",
+        "docs/specs/EXECUTION_IDENTITY_INPUTS.md",
+        "docs/specs/API_STRATEGY_INPUTS.md",
+        "docs/specs/SANDBOX_POLICY_INPUTS.md",
+        "docs/specs/CORE_RUNTIME_STABILITY_REQUIREMENTS.md",
+        "docs/specs/CORE_TOOL_RINGS_COMPATIBILITY_REQUIREMENTS.md",
+        "docs/specs/RUNTIME_INVARIANTS.md",
+        "docs/specs/TOOL_CONTRACT_TEMPLATE.md",
+        "docs/specs/TRUTHFUL_RUNTIME_PACKET1_CONTRACT.md",
+        "docs/specs/TRUTHFUL_RUNTIME_REPAIR_LEDGER_CONTRACT.md",
+        "docs/specs/TRUTHFUL_RUNTIME_ARTIFACT_PROVENANCE_CONTRACT.md",
+        "docs/specs/TRUTHFUL_RUNTIME_NARRATION_EFFECT_AUDIT_CONTRACT.md",
+        "docs/specs/TRUTHFUL_RUNTIME_SOURCE_ATTRIBUTION_CONTRACT.md",
+        "docs/specs/TRUTHFUL_RUNTIME_MEMORY_TRUST_CONTRACT.md",
+        "docs/specs/TRUTHFUL_RUNTIME_CONFORMANCE_GOVERNANCE_CONTRACT.md"
+      ],
+      "offline_capability_matrix_source": "docs/specs/OFFLINE_CAPABILITY_MATRIX.md",
+      "protocol_governed_contract_sources": [
+        "docs/specs/PROTOCOL_GOVERNED_RUNTIME_CONTRACT.md",
+        "docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md",
+        "docs/specs/PROTOCOL_DETERMINISM_CONTROL_SURFACE.md",
+        "docs/specs/PROTOCOL_ERROR_CODE_REGISTRY.md",
+        "docs/specs/PROTOCOL_REPLAY_CAMPAIGN_SCHEMA.md",
+        "docs/specs/PROTOCOL_LEDGER_PARITY_CAMPAIGN_SCHEMA.md"
+      ],
+      "supervisor_runtime_contract_sources": [
+        "docs/specs/SUPERVISOR_RUNTIME_APPROVAL_CHECKPOINT_V1.md",
+        "docs/specs/SUPERVISOR_RUNTIME_SESSION_BOUNDARY_V1.md",
+        "docs/specs/SUPERVISOR_RUNTIME_OPERATOR_APPROVAL_SURFACE_V1.md",
+        "docs/specs/SUPERVISOR_RUNTIME_EXTENSION_VALIDATION_V1.md",
+        "docs/specs/SUPERVISOR_RUNTIME_EXTENSION_PACKAGE_SURFACE_V1.md",
+        "docs/specs/SUPERVISOR_RUNTIME_EXTENSION_PUBLISH_SURFACE_V1.md"
+      ],
+        "operating_principles_source": "docs/specs/ORKET_OPERATING_PRINCIPLES.md",
+        "determinism_gate_policy_source": "docs/specs/ORKET_DETERMINISM_GATE_POLICY.md",
+        "card_viewer_runner_surface_contract_source": "docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md",
+        "card_authoring_surface_contract_source": "docs/specs/CARD_AUTHORING_SURFACE_V1.md",
+        "flow_authoring_surface_contract_source": "docs/specs/FLOW_AUTHORING_SURFACE_V1.md",
+        "apophenia_external_extension_contract_source": "docs/specs/APOPHENIA_EXTERNAL_EXTENSION_CONTRACT.md",
+        "terraform_plan_reviewer_v1_contract_source": "docs/specs/TERRAFORM_PLAN_REVIEWER_V1.md",
+        "local_prompting_contract_source": "docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md",
+        "run_evidence_graph_contract_source": "docs/specs/RUN_EVIDENCE_GRAPH_V1.md",
+        "sources": [
+          "docs/README.md",
+          "docs/ROADMAP.md",
+          "docs/CONTRIBUTOR.md",
+          "docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md",
+          "docs/specs/CARD_AUTHORING_SURFACE_V1.md",
+          "docs/specs/FLOW_AUTHORING_SURFACE_V1.md",
+          "docs/specs/APOPHENIA_EXTERNAL_EXTENSION_CONTRACT.md"
+        ]
+      },
+      "card_viewer_runner_surface": {
+        "contract_source": "docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md",
+        "cards_list_route": "GET /v1/cards/view",
+        "card_detail_route": "GET /v1/cards/{card_id}/view",
+        "runs_list_route": "GET /v1/runs/view",
+        "run_detail_route": "GET /v1/runs/{session_id}/view",
+        "provider_status_route": "GET /v1/system/provider-status",
+        "system_health_route": "GET /v1/system/health-view",
+        "run_action_route": "POST /v1/system/run-active",
+        "lifecycle_categories": [
+          "prebuild_blocked",
+          "artifact_run_failed",
+          "artifact_run_completed_unverified",
+          "artifact_run_verified",
+          "degraded_completed"
+        ],
+        "card_filter_tokens": [
+          "open",
+          "running",
+          "blocked",
+          "review",
+          "terminal_failure",
+          "completed"
+        ],
+        "sources": [
+          "CURRENT_AUTHORITY.md",
+          "docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md",
+          "docs/API_FRONTEND_CONTRACT.md",
+          "orket/interfaces/operator_view_models.py",
+          "orket/interfaces/operator_view_support.py",
+          "orket/interfaces/routers/cards.py",
+          "orket/interfaces/routers/runs.py",
+          "orket/interfaces/routers/system.py",
+          "orket/interfaces/api.py"
+        ]
+      },
+      "card_authoring_surface": {
+        "contract_source": "docs/specs/CARD_AUTHORING_SURFACE_V1.md",
+        "create_route": "POST /v1/cards",
+        "update_route": "PUT /v1/cards/{card_id}",
+        "validate_route": "POST /v1/cards/validate",
+        "request_wrapper": "draft",
+        "stale_save_guard": "expected_revision_id",
+        "host_persistence_shape": "IssueRecord.params.authoring_payload + authoring_revision_id + authoring_saved_at",
+        "runtime_projection_epic_id": "orket_ui_authored_cards",
+        "runtime_projection_path": "config/epics/orket_ui_authored_cards.json",
+        "runtime_projection_runtime_target": "issue",
+        "not_found_status_code": 404,
+        "conflict_status_code": 409,
+        "sources": [
+          "CURRENT_AUTHORITY.md",
+          "docs/specs/CARD_AUTHORING_SURFACE_V1.md",
+          "docs/API_FRONTEND_CONTRACT.md",
+          "orket/interfaces/routers/card_authoring.py",
+          "orket/application/services/card_authoring_service.py",
+          "orket/application/services/card_authoring_runtime_projection_service.py",
+          "orket/interfaces/api.py"
+        ]
+      },
+      "flow_authoring_surface": {
+        "contract_source": "docs/specs/FLOW_AUTHORING_SURFACE_V1.md",
+        "list_route": "GET /v1/flows",
+        "detail_route": "GET /v1/flows/{flow_id}",
+        "create_route": "POST /v1/flows",
+        "update_route": "PUT /v1/flows/{flow_id}",
+        "validate_route": "POST /v1/flows/validate",
+        "run_route": "POST /v1/flows/{flow_id}/runs",
+        "stale_save_guard": "atomic_sql_expected_revision_id",
+        "create_collision": "409_flow_id_conflict_preserves_existing",
+        "interruption": "admitted_storage_drains_commit_and_cleanup_outcome_requires_inspection",
+        "storage_path": ".orket/durable/db/orket_ui_flows.sqlite3",
+        "storage_resolver": "orket/application/services/flow_runtime_service.py::build_flow_authoring_service",
+        "run_card_resolution_support": "config/epics/orket_ui_authored_cards.json via card authoring runtime projection",
+        "admitted_node_kinds": [
+          "start",
+          "card",
+          "branch",
+          "merge",
+          "final"
+        ],
+        "bounded_run_slice": [
+          "exactly_one_card_node",
+          "branch_and_merge_forbidden_on_run_initiation",
+          "assigned_card_present_on_host_card_surface",
+          "assigned_card_resolves_on_canonical_run_card_surface",
+          "assigned_card_resolves_to_issue_runtime_target"
+        ],
+        "run_success_scope": "accepted_session_id_only",
+        "downstream_completion_authority": "existing_runtime_policy_after_handoff",
+        "sources": [
+          "CURRENT_AUTHORITY.md",
+          "docs/specs/FLOW_AUTHORING_SURFACE_V1.md",
+          "docs/API_FRONTEND_CONTRACT.md",
+          "orket/interfaces/routers/flows.py",
+          "orket/application/services/flow_authoring_service.py",
+          "orket/adapters/storage/async_flow_repository.py",
+          "orket/application/services/flow_runtime_service.py",
+          "orket/interfaces/api.py"
+        ]
+      },
+      "supervisor_runtime_session_boundary": {
+        "continuity_identifier": "session_id",
+        "session_start_route": "POST /v1/interactions/sessions",
+      "turn_attachment_route": "POST /v1/interactions/{session_id}/turns",
+      "inspection_routes": [
+        "GET /v1/sessions/{session_id}",
+        "GET /v1/sessions/{session_id}/status",
+        "GET /v1/sessions/{session_id}/replay",
+        "GET /v1/sessions/{session_id}/snapshot"
+      ],
+      "cleanup_adjacent_routes": [
+        "POST /v1/sessions/{session_id}/halt",
+        "POST /v1/interactions/{session_id}/cancel"
+      ],
+      "protocol_inspection_routes": [
+        "GET /v1/protocol/runs/{run_id}/replay",
+        "GET /v1/protocol/replay/compare",
+        "GET /v1/protocol/replay/campaign",
+        "GET /v1/protocol/runs/{run_id}/ledger-parity",
+        "GET /v1/protocol/ledger-parity/campaign"
+      ],
+      "bounded_context_inputs": [
+        "session_params",
+        "input_config",
+        "turn_params",
+        "workload_id",
+        "department",
+        "workspace",
+        "required_capabilities"
+      ],
+      "context_version": "packet1_session_context_v1",
+      "provider_order": [
+        "host_continuity",
+        "turn_request",
+        "extension_manifest_required_capabilities"
+      ],
+      "interaction_snapshot_surface": {
+        "route": "GET /v1/sessions/{session_id}/snapshot",
+        "fields": [
+          "context_version",
+          "provider_lineage",
+          "latest_context_envelope"
+        ],
+        "authority": "inspection_only"
+      },
+      "interaction_replay_timeline_surface": {
+        "route": "GET /v1/sessions/{session_id}/replay",
+        "mode": "timeline_without_issue_id_or_turn_index",
+        "authority": "inspection_only"
+      },
+      "interaction_targeted_replay_rule": "fail_closed_run_session_only",
+      "workspace_containment_rule": "fail_closed",
+      "replay_authority": "inspection_only",
+      "sources": [
+        "CURRENT_AUTHORITY.md",
+        "docs/specs/SUPERVISOR_RUNTIME_SESSION_BOUNDARY_V1.md",
+        "orket/interfaces/routers/sessions.py",
+        "orket/interfaces/api.py",
+        "orket/streaming/manager.py",
+        "orket/streaming/session_context.py",
+        "tests/interfaces/test_api_interactions.py",
+        "tests/streaming/test_manager.py",
+        "tests/interfaces/test_sessions_router_protocol_replay.py",
+        "tests/interfaces/test_api.py"
+      ]
+    },
+    "api_runtime_ownership": {
+      "authoritative_owner": "app.state.api_runtime_context",
+      "factory": "orket/interfaces/api.py::create_api_app",
+      "factory_identity": "new_fastapi_instance_per_call",
+      "runtime_container": "orket/application/services/api_runtime_container.py::ApiRuntimeContainer",
+      "context_contract_module": "orket/interfaces/api_runtime_context.py",
+      "transport_module": "orket/interfaces/api.py",
+      "request_owner_resolution": "active_asgi_app",
+      "teardown": "cancel_tracked_tasks_then_idempotent_engine_close",
+      "compatibility_scope": "module_default_app_only",
+      "compatibility_aliases": [
+        "api_runtime_node",
+        "runtime_state",
+        "engine",
+        "api_runtime_host",
+        "stream_bus",
+        "interaction_manager",
+        "extension_manager",
+        "extension_runtime_service"
+      ],
+      "env_sensitive_lazy_owners": [
+        "stream_bus",
+        "interaction_manager"
+      ],
+      "sources": [
+        "CURRENT_AUTHORITY.md",
+        "docs/architecture/CONTRACT_DELTA_ARCHITECTURAL_TRUTH_API_INSTANCES_B1_2026-07-30.md",
+        "docs/projects/architectural-truth/API_INSTANCE_B1_PROOF_2026-07-30.md",
+        "orket/application/services/api_runtime_container.py",
+        "orket/interfaces/api.py",
+        "orket/interfaces/api_runtime_context.py",
+        "tests/interfaces/test_api_composition_isolation.py",
+        "tests/interfaces/conftest.py"
+      ]
+    },
+    "engine_control_plane_composition": {
+      "composition_builder": "orket/orchestration/engine_services.py::build_engine_control_plane_services",
+      "async_kernel_control_plane_service": "orket/orchestration/engine_kernel_async_service.py::KernelAsyncControlPlaneService",
+      "canonical_replay_surface": "orket/orchestration/engine.py::replay_turn_diagnostics",
+      "compatibility_replay_surface": "orket/orchestration/engine.py::replay_turn",
+      "replay_authority_class": "artifact_observability_only",
+      "issue_dispatch_truth_owner": "orket/application/services/orchestrator_issue_control_plane_service.py",
+      "sources": [
+        "CURRENT_AUTHORITY.md",
+        "orket/orchestration/engine.py",
+        "orket/orchestration/engine_services.py",
+        "orket/orchestration/engine_kernel_async_service.py",
+        "orket/application/services/orchestrator_issue_control_plane_service.py",
+        "orket/interfaces/api.py",
+        "orket/interfaces/cli.py",
+        "tests/application/test_engine_refactor.py",
+        "tests/application/test_orchestration_engine_kernel_async.py",
+        "tests/application/test_orchestrator_issue_control_plane_service.py",
+        "tests/integration/test_orchestrator_issue_control_plane.py"
+      ]
+    },
+    "tool_execution_gate_surface": {
+      "contract_source": "docs/specs/TOOL_EXECUTION_GATE_V1.md",
+      "supported_path": [
+        "orket/runtime/execution/execution_pipeline_card_dispatch.py::ExecutionPipelineCardDispatchMixin.run_card",
+        "orket/application/workflows/turn_executor.py::TurnExecutor.execute_turn",
+        "orket/application/workflows/turn_tool_dispatcher.py::ToolDispatcher.execute_tools"
+      ],
+      "normalized_primary_path": "orket/extensions/runtime.py::ExtensionEngineAdapter.execute_action",
+      "construction_time_gate_requirement": true,
+      "legacy_fail_closed_surface": "orket/agents/agent.py::Agent.run",
+      "legacy_fail_closed_rule": "block_before_any_direct_tool_call_without_tool_gate",
+      "internal_only_inventory": [
+        "orket/application/workflows/turn_tool_dispatcher.py::ToolDispatcher.execute_tools",
+        "orket/tools.py::ToolBox.execute",
+        "orket/runtime/execution/execution_pipeline_card_dispatch.py::ExecutionPipelineCardDispatchMixin._run_issue_entry"
+      ],
+      "out_of_scope_lane": "docs/specs/EXTENSION_CAPABILITY_AUTHORIZATION_V1.md",
+      "audit_operator_path": "python scripts/security/build_tool_gate_audit.py --strict",
+      "audit_output_path": "benchmarks/results/security/tool_gate_audit.json",
+      "sources": [
+        "CURRENT_AUTHORITY.md",
+        "docs/specs/TOOL_EXECUTION_GATE_V1.md",
+        "docs/architecture/event_taxonomy.md",
+        "scripts/security/build_tool_gate_audit.py",
+        "tests/application/test_tool_gate_enforcement_closure.py",
+        "tests/scripts/test_build_tool_gate_audit.py"
+      ]
+    },
+    "runtime_verification_support_artifacts": {
+      "latest_path": "agent_output/verification/runtime_verification.json",
+      "history_index_path": "agent_output/verification/runtime_verification_index.json",
+      "history_records_root": "agent_output/verification/runtime_verifier_records/",
+      "artifact_role": "support_verification_evidence",
+      "artifact_authority": "support_only",
+      "authored_output": false,
+      "required_evidence_classes": [
+        "syntax_only",
+        "command_execution",
+        "behavioral_verification",
+        "not_evaluated"
+      ],
+      "primary_output_promotion_rule": "forbidden_by_default",
+      "sources": [
+        "CURRENT_AUTHORITY.md",
+        "docs/specs/MINIMUM_AUDITABLE_RECORD_V1.md",
+        "orket/application/services/runtime_verifier.py",
+        "orket/application/services/runtime_verification_artifact_service.py",
+        "orket/runtime/summary/run_summary.py",
+        "scripts/audit/audit_support.py",
+        "tests/application/test_runtime_verifier_service.py",
+        "tests/live/test_system_acceptance_pipeline.py"
+      ]
+    },
+    "companion_bff_boundary": {
+      "product_route_owner": "external_companion_bff",
+      "gateway_route_family": "/api/*",
+      "host_route_family": "/v1/extensions/{extension_id}/runtime/*",
+      "legacy_companion_host_routes_present": false,
+      "host_auth_source": "ORKET_API_KEY",
+      "gateway_host_credential_envs": [
+        "COMPANION_API_KEY",
+        "ORKET_API_KEY"
+      ],
+      "sources": [
+        "CURRENT_AUTHORITY.md",
+        "docs/specs/COMPANION_UI_MVP_CONTRACT.md",
+        "docs/API_FRONTEND_CONTRACT.md",
+        "orket/interfaces/routers/extension_runtime.py",
+        "docs/templates/external_extension/src/companion_app/server.py"
+      ]
+    },
+    "canonical_script_output_locations": {
+      "qwen38_runtime_readiness_operator_path": "python scripts/proof/run_qwen38_runtime_readiness.py",
+      "qwen38_runtime_readiness_output_path": "benchmarks/results/protocol/local_prompting/qwen38_promotion/runtime_readiness.json",
+      "qwen38_repair_readiness_operator_path": "python scripts/proof/run_qwen38_repair_readiness.py",
+      "qwen38_repair_readiness_output_path": "benchmarks/results/protocol/local_prompting/qwen38_promotion/repair_readiness.json",
+      "llama_cpp_integration_operator_path": "python scripts/proof/run_llama_cpp_integration.py --model <exact-model> --extension-root <extension-root>",
+      "llama_cpp_integration_output_path": "benchmarks/results/providers/llama_cpp_integration.json",
+      "staged_artifacts_index": "benchmarks/staging/index.json",
+      "staged_artifacts_readme": "benchmarks/staging/README.md",
+      "published_artifacts_index": "benchmarks/published/index.json",
+      "published_artifacts_readme": "benchmarks/published/README.md",
+      "runtime_event_artifact_path": "agent_output/observability/runtime_events.jsonl",
+      "run_evidence_graph_operator_path": "python scripts/observability/emit_run_evidence_graph.py --run-id <run_id>",
+      "run_evidence_graph_json_path": "runs/<session_id>/run_evidence_graph.json",
+      "run_evidence_graph_mermaid_path": "runs/<session_id>/run_evidence_graph.mmd",
+      "run_evidence_graph_rendered_path": "runs/<session_id>/run_evidence_graph.html",
+      "productflow_live_operator_path": "ORKET_DISABLE_SANDBOX=1 python scripts/productflow/run_governed_write_file_flow.py",
+      "productflow_review_operator_path": "python scripts/productflow/build_operator_review_package.py --run-id <run_id>",
+      "productflow_replay_operator_path": "python scripts/productflow/run_replay_review.py --run-id <run_id>",
+      "productflow_live_proof_output_path": "benchmarks/results/productflow/governed_write_file_live_run.json",
+      "productflow_review_index_path": "runs/<session_id>/productflow_review_index.json",
+      "productflow_operator_review_proof_output_path": "benchmarks/results/productflow/operator_review_proof.json",
+      "productflow_replay_review_output_path": "benchmarks/results/productflow/replay_review.json",
+      "trusted_run_witness_campaign_operator_path": "ORKET_DISABLE_SANDBOX=1 python scripts/proof/run_trusted_run_witness_campaign.py",
+      "trusted_run_witness_builder_operator_path": "python scripts/proof/build_trusted_run_witness_bundle.py --run-id <run_id>",
+      "trusted_run_witness_verifier_operator_path": "python scripts/proof/verify_trusted_run_witness_bundle.py --bundle <bundle_path>",
+      "offline_trusted_run_verifier_operator_path": "python scripts/proof/verify_offline_trusted_run_claim.py --input <evidence_path>",
+      "trusted_run_witness_bundle_path": "runs/<session_id>/trusted_run_witness_bundle.json",
+      "trusted_run_witness_verification_output_path": "benchmarks/results/proof/trusted_run_witness_verification.json",
+      "offline_trusted_run_verifier_output_path": "benchmarks/results/proof/offline_trusted_run_verifier.json",
+      "trusted_repo_change_operator_path": "ORKET_DISABLE_SANDBOX=1 python scripts/proof/run_trusted_repo_change.py",
+      "trusted_repo_change_campaign_operator_path": "ORKET_DISABLE_SANDBOX=1 python scripts/proof/run_trusted_repo_change_campaign.py",
+      "trusted_repo_change_live_run_output_path": "benchmarks/results/proof/trusted_repo_change_live_run.json",
+      "trusted_repo_change_validator_output_path": "benchmarks/results/proof/trusted_repo_change_validator.json",
+      "trusted_repo_change_witness_verification_output_path": "benchmarks/results/proof/trusted_repo_change_witness_verification.json",
+      "trusted_repo_change_offline_verifier_output_path": "benchmarks/results/proof/trusted_repo_change_offline_verifier.json",
+      "trusted_repo_change_bundle_path": "workspace/trusted_repo_change/runs/<session_id>/trusted_run_witness_bundle.json",
+      "run_evidence_graph_default_views": [
+        "full_lineage",
+        "failure_path",
+        "resource_authority_path",
+        "closure_path"
+      ],
+      "run_evidence_graph_admitted_view_tokens": [
+        "full_lineage",
+        "failure_path",
+        "authority",
+        "decision",
+        "resource_authority_path",
+        "closure_path"
+      ],
+      "terraform_plan_review_live_smoke_output_path": ".orket/durable/observability/terraform_plan_review_live_smoke.json",
+      "local_model_coding_challenge_operator_path": "python scripts/benchmarks/run_local_model_coding_challenge.py --provider <provider> --model <model_id> --epic challenge_workflow_runtime",
+      "local_model_coding_challenge_output_path": "benchmarks/staging/General/local_model_coding_challenge_report.json",
+      "tool_gate_audit_operator_path": "python scripts/security/build_tool_gate_audit.py --strict",
+      "tool_gate_audit_output_path": "benchmarks/results/security/tool_gate_audit.json",
+      "prompt_reforger_gemma_inventory_operator_path": "python scripts/prompt_lab/run_prompt_reforger_gemma_tool_use_inventory.py",
+      "prompt_reforger_gemma_inventory_output_path": "benchmarks/staging/General/prompt_reforger_gemma_tool_use_inventory.json",
+      "prompt_reforger_gemma_score_operator_path": "python scripts/prompt_lab/score_prompt_reforger_gemma_tool_use_corpus.py --run-summary <run_summary> --observability-root <observability_root>",
+      "prompt_reforger_gemma_score_output_path": "benchmarks/staging/General/prompt_reforger_gemma_tool_use_score.json",
+      "prompt_reforger_gemma_judge_operator_path": "python scripts/prompt_lab/run_functiongemma_tool_call_judge.py --score-report <score_report> --inventory benchmarks/staging/General/prompt_reforger_gemma_tool_use_inventory.json",
+      "prompt_reforger_gemma_judge_output_path": "benchmarks/staging/General/prompt_reforger_gemma_tool_use_judge.json",
+      "prompt_reforger_gemma_cycle_operator_path": "python scripts/prompt_lab/run_prompt_reforger_gemma_tool_use_cycle.py --targets both --runs 1",
+      "prompt_reforger_gemma_cycle_output_path": "benchmarks/staging/General/prompt_reforger_gemma_tool_use_cycle.json",
+      "artifact_review_policy": "docs/process/PUBLISHED_ARTIFACTS_POLICY.md",
+      "sources": [
+        "CURRENT_AUTHORITY.md",
+        "docs/CONTRIBUTOR.md",
+        "docs/projects/PromptReforgerToolCompatibility/PROMPT_REFORGER_GEMMA_TOOL_USE_IMPLEMENTATION_PLAN.md",
+        "docs/specs/RUN_EVIDENCE_GRAPH_V1.md",
+        "docs/specs/TOOL_EXECUTION_GATE_V1.md",
+        "docs/architecture/event_taxonomy.md",
+        "docs/process/PUBLISHED_ARTIFACTS_POLICY.md",
+        "scripts/observability/emit_run_evidence_graph.py",
+        "scripts/security/build_tool_gate_audit.py",
+        "scripts/prompt_lab/run_prompt_reforger_gemma_tool_use_inventory.py",
+        "scripts/prompt_lab/run_functiongemma_tool_call_judge.py",
+        "scripts/prompt_lab/run_prompt_reforger_gemma_tool_use_cycle.py",
+        "scripts/prompt_lab/README.md",
+        "docs/specs/TERRAFORM_PLAN_REVIEWER_V1.md",
+        "docs/specs/TRUSTED_RUN_WITNESS_V1.md",
+        "docs/specs/TRUSTED_RUN_INVARIANTS_V1.md",
+        "docs/specs/CONTROL_PLANE_WITNESS_SUBSTRATE_V1.md",
+        "docs/specs/OFFLINE_TRUSTED_RUN_VERIFIER_V1.md",
+        "docs/specs/FIRST_USEFUL_WORKFLOW_SLICE_V1.md",
+        "scripts/proof/trusted_run_invariant_model.py",
+        "scripts/proof/control_plane_witness_substrate.py",
+        "scripts/proof/offline_trusted_run_verifier.py",
+        "scripts/proof/verify_offline_trusted_run_claim.py",
+        "scripts/proof/run_trusted_run_witness_campaign.py",
+        "scripts/proof/trusted_repo_change_contract.py",
+        "scripts/proof/trusted_repo_change_verifier.py",
+        "scripts/proof/trusted_repo_change_workflow.py",
+        "scripts/proof/trusted_repo_change_offline.py",
+        "scripts/proof/run_trusted_repo_change.py",
+        "scripts/proof/run_trusted_repo_change_campaign.py"
+      ]
+    },
+    "productflow_governed_write_file_review_surface": {
+      "live_operator_path": "ORKET_DISABLE_SANDBOX=1 python scripts/productflow/run_governed_write_file_flow.py",
+      "review_operator_path": "python scripts/productflow/build_operator_review_package.py --run-id <run_id>",
+      "replay_operator_path": "python scripts/productflow/run_replay_review.py --run-id <run_id>",
+      "stable_artifacts": [
+        "benchmarks/results/productflow/governed_write_file_live_run.json",
+        "runs/<session_id>/productflow_review_index.json",
+        "runs/<session_id>/run_evidence_graph.json",
+        "runs/<session_id>/run_evidence_graph.mmd",
+        "runs/<session_id>/run_evidence_graph.html",
+        "benchmarks/results/productflow/operator_review_proof.json",
+        "benchmarks/results/productflow/replay_review.json"
+      ],
+      "resolver_witness": "unique approval.control_plane_target_ref == run_id for approval_required_tool:write_file + validated runs/<session_id>/run_summary.json",
+      "run_summary_identity_note": "For the canonical ProductFlow fixture, run_summary.run_id is the session_id and run_summary.control_plane.run_id is the cards-epic run id; neither replaces the governed turn-tool run_id.",
+      "review_package_expected_result": "success",
+      "replay_surface_expected_result": "same-run truthful blocker",
+      "replay_ready": false,
+      "stability_status": "not_evaluable",
+      "claim_tier": "non_deterministic_lab_only",
+      "sources": [
+        "CURRENT_AUTHORITY.md",
+        "docs/specs/PRODUCTFLOW_OPERATOR_REVIEW_PACKAGE_V1.md",
+        "docs/specs/PRODUCTFLOW_GOVERNED_RUN_WALKTHROUGH_V1.md",
+        "scripts/productflow/productflow_support.py",
+        "scripts/productflow/run_governed_write_file_flow.py",
+        "scripts/productflow/build_operator_review_package.py",
+        "scripts/productflow/run_replay_review.py",
+        "scripts/observability/emit_run_evidence_graph.py"
+      ]
+    },
+    "trusted_run_witness_v1": {
+      "spec": "docs/specs/TRUSTED_RUN_WITNESS_V1.md",
+      "invariant_spec": "docs/specs/TRUSTED_RUN_INVARIANTS_V1.md",
+      "substrate_spec": "docs/specs/CONTROL_PLANE_WITNESS_SUBSTRATE_V1.md",
+      "offline_verifier_spec": "docs/specs/OFFLINE_TRUSTED_RUN_VERIFIER_V1.md",
+      "useful_workflow_spec": "docs/specs/FIRST_USEFUL_WORKFLOW_SLICE_V1.md",
+      "trust_reason_spec": "docs/specs/TRUST_REASON_AND_EXTERNAL_ADOPTION_V1.md",
+      "governed_change_packet_kernel_spec": "docs/specs/GOVERNED_CHANGE_PACKET_TRUSTED_KERNEL_V1.md",
+      "governed_change_packet_spec": "docs/specs/GOVERNED_CHANGE_PACKET_V1.md",
+      "governed_change_packet_standalone_verifier_spec": "docs/specs/GOVERNED_CHANGE_PACKET_STANDALONE_VERIFIER_V1.md",
+      "terraform_plan_decision_scope_spec": "docs/specs/TRUSTED_TERRAFORM_PLAN_DECISION_V1.md",
+      "governed_repo_change_packet_guide": "docs/guides/GOVERNED_REPO_CHANGE_PACKET_GUIDE.md",
+      "terraform_plan_decision_scope_guide": "docs/guides/TRUSTED_TERRAFORM_PLAN_DECISION_SCOPE_GUIDE.md",
+      "scope_admission_standard_spec": "docs/specs/TRUSTED_CHANGE_SCOPE_ADMISSION_STANDARD_V1.md",
+      "scope_catalog_spec": "docs/specs/TRUSTED_CHANGE_SCOPE_CATALOG_V1.md",
+      "compare_scope": "trusted_run_productflow_write_file_v1",
+      "admitted_compare_scopes": [
+        "trusted_run_productflow_write_file_v1",
+        "trusted_repo_config_change_v1",
+        "trusted_terraform_plan_decision_v1"
+      ],
+      "current_public_trust_slice_compare_scope": "trusted_repo_config_change_v1",
+      "terraform_plan_decision_publication_status": "internal_admitted_only_not_public",
+      "terraform_plan_decision_publication_blocker": "successful provider-backed governed-proof evidence is not yet admitted public evidence; current admitted campaign evidence still comes from the bounded local harness over Terraform reviewer v1",
+      "terraform_plan_decision_runtime_smoke_operator_path": "python scripts/reviewrun/run_terraform_plan_review_live_smoke.py --out benchmarks/results/proof/terraform_plan_review_live_smoke.json",
+      "terraform_plan_decision_governed_runtime_operator_path": "python scripts/proof/run_trusted_terraform_plan_decision_runtime_smoke.py --output benchmarks/results/proof/trusted_terraform_plan_decision_live_runtime.json",
+      "terraform_plan_decision_live_setup_packet_operator_path": "python scripts/proof/prepare_trusted_terraform_live_setup_packet.py",
+      "terraform_plan_decision_live_setup_packet_output_path": "benchmarks/results/proof/trusted_terraform_plan_decision_live_setup_packet.json",
+      "terraform_plan_decision_live_setup_packet_root": "workspace/trusted_terraform_live_setup/",
+      "terraform_plan_decision_live_setup_preflight_operator_path": "python scripts/proof/check_trusted_terraform_live_setup_preflight.py",
+      "terraform_plan_decision_live_setup_preflight_output_path": "benchmarks/results/proof/trusted_terraform_plan_decision_live_setup_preflight.json",
+      "terraform_plan_decision_publication_readiness_operator_path": "python scripts/proof/check_trusted_terraform_publication_readiness.py",
+      "terraform_plan_decision_publication_readiness_output_path": "benchmarks/results/proof/trusted_terraform_plan_decision_publication_readiness.json",
+      "terraform_plan_decision_publication_gate_operator_path": "python scripts/proof/run_trusted_terraform_plan_decision_publication_gate.py",
+      "terraform_plan_decision_publication_gate_output_path": "benchmarks/results/proof/trusted_terraform_plan_decision_publication_gate.json",
+      "operator_surface": "trusted_run_witness_report.v1",
+      "offline_verifier_schema": "offline_trusted_run_verifier.v1",
+      "proof_foundation_schema": "trusted_run_proof_foundation.v1",
+      "contract_verdict_surface": "trusted_run_contract_verdict.v1",
+      "invariant_model_surface": "trusted_run_invariant_model.v1",
+      "substrate_model_surface": "control_plane_witness_substrate.v1",
+      "witness_bundle_schema": "trusted_run.witness_bundle.v1",
+      "bundle_path": "runs/<session_id>/trusted_run_witness_bundle.json",
+      "verification_output_path": "benchmarks/results/proof/trusted_run_witness_verification.json",
+      "offline_verifier_output_path": "benchmarks/results/proof/offline_trusted_run_verifier.json",
+      "proof_foundation_output_path": "benchmarks/results/proof/trusted_run_proof_foundation.json",
+      "campaign_operator_path": "ORKET_DISABLE_SANDBOX=1 python scripts/proof/run_trusted_run_witness_campaign.py",
+      "offline_verifier_operator_path": "python scripts/proof/verify_offline_trusted_run_claim.py --input <evidence_path>",
+      "proof_foundation_operator_path": "python scripts/proof/verify_trusted_run_proof_foundation.py",
+      "validator_backed_scope_family_helper": "scripts/proof/trusted_scope_family_support.py",
+      "validator_backed_scope_family_support_modules": [
+        "scripts/proof/trusted_scope_family_support.py",
+        "scripts/proof/trusted_scope_family_claims.py",
+        "scripts/proof/trusted_scope_family_common.py"
+      ],
+      "trusted_repo_change": {
+        "compare_scope": "trusted_repo_config_change_v1",
+        "contract_verdict_surface": "trusted_repo_change_contract_verdict.v1",
+        "validator_surface": "trusted_repo_config_validator.v1",
+        "workflow_operator_path": "ORKET_DISABLE_SANDBOX=1 python scripts/proof/run_trusted_repo_change.py",
+        "campaign_operator_path": "ORKET_DISABLE_SANDBOX=1 python scripts/proof/run_trusted_repo_change_campaign.py",
+        "governed_packet_operator_path": "ORKET_DISABLE_SANDBOX=1 python scripts/proof/run_governed_repo_change_packet.py",
+        "governed_packet_verifier_operator_path": "python scripts/proof/verify_governed_change_packet.py --input benchmarks/results/proof/governed_repo_change_packet.json --output benchmarks/results/proof/governed_repo_change_packet_verifier.json",
+        "governed_packet_trusted_kernel_operator_path": "python scripts/proof/verify_governed_change_packet_trusted_kernel.py --output benchmarks/results/proof/governed_change_packet_trusted_kernel_model.json",
+        "live_run_output_path": "benchmarks/results/proof/trusted_repo_change_live_run.json",
+        "validator_output_path": "benchmarks/results/proof/trusted_repo_change_validator.json",
+        "verification_output_path": "benchmarks/results/proof/trusted_repo_change_witness_verification.json",
+        "offline_verifier_output_path": "benchmarks/results/proof/trusted_repo_change_offline_verifier.json",
+        "bundle_path": "workspace/trusted_repo_change/runs/<session_id>/trusted_run_witness_bundle.json",
+        "governed_packet_output_path": "benchmarks/results/proof/governed_repo_change_packet.json",
+        "governed_packet_verifier_output_path": "benchmarks/results/proof/governed_repo_change_packet_verifier.json",
+        "governed_packet_trusted_kernel_output_path": "benchmarks/results/proof/governed_change_packet_trusted_kernel_model.json",
+        "governed_packet_adversarial_benchmark_candidate": "benchmarks/staging/General/governed_repo_change_packet_adversarial_benchmark_2026-04-19.json"
+      },
+      "trusted_terraform_plan_decision": {
+        "compare_scope": "trusted_terraform_plan_decision_v1",
+        "contract_verdict_surface": "trusted_terraform_plan_decision_contract_verdict.v1",
+        "validator_surface": "trusted_terraform_plan_decision_validator.v1",
+        "workflow_operator_path": "ORKET_DISABLE_SANDBOX=1 python scripts/proof/run_trusted_terraform_plan_decision.py",
+        "campaign_operator_path": "ORKET_DISABLE_SANDBOX=1 python scripts/proof/run_trusted_terraform_plan_decision_campaign.py",
+        "governed_runtime_operator_path": "python scripts/proof/run_trusted_terraform_plan_decision_runtime_smoke.py --output benchmarks/results/proof/trusted_terraform_plan_decision_live_runtime.json",
+        "live_setup_packet_operator_path": "python scripts/proof/prepare_trusted_terraform_live_setup_packet.py",
+        "live_setup_preflight_operator_path": "python scripts/proof/check_trusted_terraform_live_setup_preflight.py",
+        "publication_readiness_operator_path": "python scripts/proof/check_trusted_terraform_publication_readiness.py",
+        "publication_gate_operator_path": "python scripts/proof/run_trusted_terraform_plan_decision_publication_gate.py",
+        "live_run_output_path": "benchmarks/results/proof/trusted_terraform_plan_decision_live_run.json",
+        "governed_runtime_output_path": "benchmarks/results/proof/trusted_terraform_plan_decision_live_runtime.json",
+        "live_setup_packet_output_path": "benchmarks/results/proof/trusted_terraform_plan_decision_live_setup_packet.json",
+        "live_setup_packet_root": "workspace/trusted_terraform_live_setup/",
+        "live_setup_preflight_output_path": "benchmarks/results/proof/trusted_terraform_plan_decision_live_setup_preflight.json",
+        "publication_readiness_output_path": "benchmarks/results/proof/trusted_terraform_plan_decision_publication_readiness.json",
+        "publication_gate_output_path": "benchmarks/results/proof/trusted_terraform_plan_decision_publication_gate.json",
+        "validator_output_path": "benchmarks/results/proof/trusted_terraform_plan_decision_validator.json",
+        "verification_output_path": "benchmarks/results/proof/trusted_terraform_plan_decision_witness_verification.json",
+        "offline_verifier_output_path": "benchmarks/results/proof/trusted_terraform_plan_decision_offline_verifier.json",
+        "bundle_path": "workspace/trusted_terraform_plan_decision/runs/<session_id>/trusted_run_witness_bundle.json",
+        "runtime_smoke_operator_path": "python scripts/reviewrun/run_terraform_plan_review_live_smoke.py --out benchmarks/results/proof/terraform_plan_review_live_smoke.json"
+      },
+      "single_run_claim_tier": "non_deterministic_lab_only",
+      "campaign_target_claim_tier": "verdict_deterministic",
+      "sources": [
+        "CURRENT_AUTHORITY.md",
+        "docs/specs/TRUSTED_RUN_WITNESS_V1.md",
+        "docs/specs/TRUSTED_RUN_INVARIANTS_V1.md",
+        "docs/specs/CONTROL_PLANE_WITNESS_SUBSTRATE_V1.md",
+        "docs/specs/OFFLINE_TRUSTED_RUN_VERIFIER_V1.md",
+        "docs/specs/FIRST_USEFUL_WORKFLOW_SLICE_V1.md",
+        "docs/specs/TRUST_REASON_AND_EXTERNAL_ADOPTION_V1.md",
+        "docs/specs/GOVERNED_CHANGE_PACKET_TRUSTED_KERNEL_V1.md",
+        "docs/specs/GOVERNED_CHANGE_PACKET_V1.md",
+        "docs/specs/GOVERNED_CHANGE_PACKET_STANDALONE_VERIFIER_V1.md",
+        "docs/specs/TRUSTED_TERRAFORM_PLAN_DECISION_V1.md",
+        "docs/specs/TRUSTED_CHANGE_SCOPE_ADMISSION_STANDARD_V1.md",
+        "docs/specs/TRUSTED_CHANGE_SCOPE_CATALOG_V1.md",
+        "docs/guides/GOVERNED_REPO_CHANGE_PACKET_GUIDE.md",
+        "docs/guides/TRUSTED_TERRAFORM_PLAN_DECISION_SCOPE_GUIDE.md",
+        "scripts/proof/trusted_run_invariant_model.py",
+        "scripts/proof/control_plane_witness_substrate.py",
+        "scripts/proof/trusted_run_witness_contract.py",
+        "scripts/proof/offline_trusted_run_verifier.py",
+        "scripts/proof/trusted_run_proof_foundation.py",
+        "scripts/proof/trusted_run_non_interference.py",
+        "scripts/proof/trusted_run_witness_support.py",
+        "scripts/proof/trusted_scope_family_support.py",
+        "scripts/proof/trusted_scope_family_claims.py",
+        "scripts/proof/trusted_scope_family_common.py",
+        "scripts/proof/trusted_repo_change_contract.py",
+        "scripts/proof/trusted_repo_change_verifier.py",
+        "scripts/proof/trusted_repo_change_workflow.py",
+        "scripts/proof/trusted_repo_change_offline.py",
+        "scripts/proof/governed_change_packet_contract.py",
+        "scripts/proof/governed_change_packet_trusted_kernel.py",
+        "scripts/proof/governed_change_packet_workflow.py",
+        "scripts/proof/governed_change_packet_verifier.py",
+        "scripts/proof/run_governed_repo_change_packet.py",
+        "scripts/proof/verify_governed_change_packet.py",
+        "scripts/proof/verify_governed_change_packet_trusted_kernel.py",
+        "scripts/proof/run_governed_change_packet_adversarial_benchmark.py",
+        "scripts/proof/trusted_terraform_plan_decision_contract.py",
+        "scripts/proof/trusted_terraform_plan_decision_verifier.py",
+        "scripts/proof/trusted_terraform_plan_decision_workflow.py",
+        "scripts/proof/trusted_terraform_plan_decision_bundle_support.py",
+        "scripts/proof/trusted_terraform_plan_decision_offline.py",
+        "scripts/proof/terraform_plan_review_live_support.py",
+        "scripts/proof/build_trusted_run_witness_bundle.py",
+        "scripts/proof/verify_trusted_run_witness_bundle.py",
+        "scripts/proof/verify_offline_trusted_run_claim.py",
+        "scripts/proof/verify_trusted_run_proof_foundation.py",
+        "scripts/proof/run_trusted_run_witness_campaign.py",
+        "scripts/proof/run_trusted_repo_change.py",
+        "scripts/proof/run_trusted_repo_change_campaign.py",
+        "scripts/proof/run_trusted_terraform_plan_decision.py",
+        "scripts/proof/run_trusted_terraform_plan_decision_campaign.py",
+        "scripts/proof/run_trusted_terraform_plan_decision_runtime_smoke.py",
+        "scripts/proof/prepare_trusted_terraform_live_setup_packet.py",
+        "scripts/proof/check_trusted_terraform_live_setup_preflight.py",
+        "scripts/proof/check_trusted_terraform_publication_readiness.py",
+        "scripts/proof/run_trusted_terraform_plan_decision_publication_gate.py",
+        "scripts/reviewrun/run_terraform_plan_review_live_smoke.py"
+      ]
+    },
+    "control_plane_storage": {
+      "default_db_path": ".orket/durable/db/control_plane_records.sqlite3",
+      "resolver": "orket/runtime_paths.py::resolve_control_plane_db_path",
+      "runtime_consumers": [
+        "orket/services/sandbox_orchestrator.py",
+        "orket/orchestration/engine.py",
+        "orket/application/workflows/orchestrator_ops.py",
+        "orket/runtime/execution_pipeline.py",
+        "orket/interfaces/coordinator_api.py"
+      ],
+      "runtime_published_record_families": [
+        "resolved_policy_snapshot",
+        "resolved_configuration_snapshot",
+        "reservation_record",
+        "run_record",
+        "attempt_record",
+        "step_record",
+        "effect_journal_entry_record",
+        "checkpoint_record",
+        "checkpoint_acceptance_record",
+        "recovery_decision_record",
+        "operator_action_record",
+        "final_truth_record",
+        "reconciliation_record",
+        "lease_record",
+        "resource_record"
+      ],
+      "sources": [
+        "CURRENT_AUTHORITY.md",
+        "orket/runtime_paths.py",
+        "orket/services/sandbox_orchestrator.py",
+        "orket/orchestration/engine.py",
+        "orket/orchestration/engine_approvals.py",
+        "orket/application/workflows/orchestrator_ops.py",
+        "orket/application/workflows/turn_executor.py",
+        "orket/application/workflows/turn_executor_control_plane.py",
+        "orket/application/workflows/turn_executor_control_plane_evidence.py",
+        "orket/application/workflows/turn_executor_model_artifacts.py",
+        "orket/application/workflows/turn_executor_model_flow.py",
+        "orket/runtime/registry/tool_invocation_contracts.py",
+        "orket/application/workflows/turn_tool_dispatcher.py",
+        "orket/application/workflows/turn_tool_dispatcher_control_plane.py",
+        "orket/application/workflows/turn_tool_dispatcher_protocol.py",
+        "orket/application/workflows/turn_tool_dispatcher_support.py",
+        "orket/application/services/cards_epic_control_plane_service.py",
+        "orket/application/services/control_plane_publication_service.py",
+        "orket/application/services/control_plane_snapshot_publication.py",
+        "orket/application/services/coordinator_control_plane_lease_service.py",
+        "orket/application/services/coordinator_control_plane_reservation_service.py",
+        "orket/application/services/gitea_state_control_plane_checkpoint_service.py",
+        "orket/application/services/gitea_state_control_plane_claim_failure_service.py",
+        "orket/application/services/gitea_state_control_plane_execution_service.py",
+        "orket/application/services/gitea_state_control_plane_lease_service.py",
+        "orket/application/services/gitea_state_control_plane_reservation_service.py",
+        "orket/application/services/gitea_state_worker.py",
+        "orket/application/services/kernel_action_control_plane_failure.py",
+        "orket/application/services/kernel_action_control_plane_outcome.py",
+        "orket/application/services/kernel_action_control_plane_resource_lifecycle.py",
+        "orket/application/services/kernel_action_control_plane_service.py",
+        "orket/application/services/kernel_action_control_plane_operator_service.py",
+        "orket/application/services/kernel_action_pending_approval_reservation.py",
+        "orket/application/services/kernel_action_control_plane_view_service.py",
+        "orket/application/services/orchestrator_issue_control_plane_service.py",
+        "orket/application/services/orchestrator_issue_control_plane_support.py",
+        "orket/application/services/orchestrator_scheduler_control_plane_service.py",
+        "orket/application/services/orchestrator_scheduler_control_plane_mutation.py",
+        "orket/application/services/pending_gate_control_plane_operator_service.py",
+        "orket/application/services/review_run_control_plane_service.py",
+        "orket/application/services/sandbox_control_plane_checkpoint_service.py",
+        "orket/application/services/sandbox_control_plane_execution_service.py",
+        "orket/application/services/sandbox_control_plane_effect_service.py",
+        "orket/application/services/sandbox_control_plane_operator_service.py",
+        "orket/application/services/sandbox_control_plane_reservation_service.py",
+        "orket/application/services/sandbox_control_plane_lease_service.py",
+        "orket/application/services/skill_adapter.py",
+        "orket/application/services/tool_approval_control_plane_operator_service.py",
+        "orket/application/services/tool_approval_control_plane_reservation_service.py",
+        "orket/application/services/turn_tool_control_plane_closeout.py",
+        "orket/application/services/turn_tool_control_plane_factory.py",
+        "orket/application/services/turn_tool_control_plane_resource_lifecycle.py",
+        "orket/application/services/turn_tool_control_plane_recovery.py",
+        "orket/application/services/turn_tool_control_plane_reconciliation.py",
+        "orket/application/services/turn_tool_control_plane_service.py",
+        "orket/application/services/turn_tool_control_plane_state_gate.py",
+        "orket/application/services/turn_tool_control_plane_support.py",
+        "orket/interfaces/api.py",
+        "orket/interfaces/routers/sessions.py",
+        "orket/interfaces/routers/approvals.py",
+        "orket/interfaces/coordinator_api.py",
+        "orket/interfaces/routers/kernel.py",
+        "orket/kernel/v1/nervous_system_runtime.py",
+        "orket/application/review/run_service.py",
+        "orket/runtime/execution_pipeline.py",
+        "orket/runtime/tool_invocation_policy_contract.py",
+        "orket/runtime/protocol_error_codes.py",
+        "orket/application/services/sandbox_lifecycle_view_service.py",
+        "orket/adapters/storage/async_control_plane_record_repository.py",
+        "orket/adapters/storage/async_control_plane_execution_repository.py",
+        "orket/core/contracts/control_plane_models.py",
+        "orket/core/domain/control_plane_enums.py",
+        "docs/projects/archive/ControlPlane/CP03262026-LANE-CLOSEOUT/13_CONTROL_PLANE_IMPLEMENTATION_PLAN.md"
+      ]
+    },
+    "control_plane_workload_authority": {
+      "canonical_catalog": "orket/application/services/control_plane_workload_catalog.py",
+      "external_authority_seam": "orket/application/services/control_plane_workload_catalog.py::resolve_control_plane_workload",
+      "matrix_gate_doc": "docs/specs/CONTROL_PLANE_GOVERNED_START_PATH_MATRIX.md",
+      "authority_inputs": [
+        "catalog_workload",
+        "workload_contract_v1",
+        "extension_manifest_workload"
+      ],
+      "internal_helpers_not_authority": [
+        "orket/application/services/control_plane_workload_catalog.py::build_cards_workload_contract"
+      ],
+      "compatibility_adapters": [],
+      "status": "partial",
+      "governance_tests": [
+        "tests/application/test_control_plane_workload_authority_governance.py",
+        "tests/runtime/test_cards_workload_adapter.py"
+      ],
+      "note": "Only resolve_control_plane_workload(...) is an externally blessed workload-authority seam. The governed start-path matrix in the durable matrix companion is a closure gate, so governance fails if a non-test module consumes workload authority from the catalog without explicit matrix coverage, if touched catalog-resolved publishers reintroduce local workload_id/workload_version aliases, if non-CLI runtime callsites drift back onto run_epic(...), run_issue(...), or run_rock(...) compatibility wrappers, if public wrappers stop collapsing to run_card(...), if the canonical run_card(...) dispatcher starts minting workload authority directly instead of routing into internal entrypoints, or if governed turn-tool runtime entrypoints drift away from the exact adapter-only routing helpers in orket/application/workflows/turn_executor_control_plane.py and orket/application/workflows/turn_tool_dispatcher_control_plane.py that invoke TurnToolControlPlaneService without minting workload authority locally. The canonical public runtime execution surface is run_card(...); run_issue(...), run_epic(...), and run_rock(...) survive only as thin convenience wrappers, with the legacy CLI --rock alias kept hidden and routed directly to run_card(...) as compatibility-only CLI input. Cards, ODR, and extension workload execution resolve through the catalog seam, the cards, ODR, and extension start paths use catalog-local helper resolution instead of assembling WorkloadAuthorityInput(...) in runtime entrypoints, controller dispatch checks extension child eligibility through the manager-owned boolean probes has_manifest_entry(...) and uses_sdk_contract(...) instead of resolving private manifest-entry tuples directly, and internal rock routing remains routing-only debt through the generic epic-collection path.",
+      "sources": [
+        "CURRENT_AUTHORITY.md",
+        "orket/application/services/control_plane_workload_catalog.py",
+        "orket/application/services/kernel_action_control_plane_service.py",
+        "orket/application/services/review_run_control_plane_service.py",
+        "orket/application/services/turn_tool_control_plane_service.py",
+        "orket/application/workflows/turn_executor_control_plane.py",
+        "orket/application/workflows/turn_tool_dispatcher_control_plane.py",
+        "orket/application/services/orchestrator_issue_control_plane_service.py",
+        "orket/application/services/orchestrator_scheduler_control_plane_service.py",
+        "orket/application/services/orchestrator_scheduler_control_plane_mutation.py",
+        "orket/application/services/gitea_state_control_plane_execution_service.py",
+        "orket/extensions/manager.py",
+        "orket/extensions/artifact_provenance.py",
+        "orket/runtime/execution_pipeline.py",
+        "orket/runtime/epic_run_orchestrator.py",
+        "scripts/odr/run_arbiter.py",
+        "tests/application/test_control_plane_workload_authority_governance.py",
+        "docs/specs/CONTROL_PLANE_GOVERNED_START_PATH_MATRIX.md"
+      ]
+    },
+    "governed_turn_tool_namespace_policy": {
+      "default_namespace_scope": "issue:<issue_id>",
+      "policy_enforcer": "orket/application/workflows/turn_tool_dispatcher_support.py::tool_policy_violation",
+      "manifest_contract": "orket/runtime/registry/tool_invocation_contracts.py::build_tool_invocation_manifest",
+      "binding_source": "orket/application/services/skill_adapter.py",
+      "sources": [
+        "CURRENT_AUTHORITY.md",
+        "orket/application/workflows/turn_tool_dispatcher.py",
+        "orket/application/workflows/turn_tool_dispatcher_protocol.py",
+        "orket/application/workflows/turn_tool_dispatcher_support.py",
+        "orket/runtime/registry/tool_invocation_contracts.py",
+        "orket/application/workflows/turn_executor_control_plane.py",
+        "orket/application/services/skill_adapter.py",
+        "orket/application/services/turn_tool_control_plane_service.py",
+        "orket/runtime/tool_invocation_policy_contract.py",
+        "orket/runtime/protocol_error_codes.py"
+      ]
+    },
+    "gitea_state_worker_control_plane_execution": {
+      "default_run_shape": "one lease-backed run per claimed card and lease epoch",
+      "checkpoint_mode": "pre-effect claimed-card checkpoint with resume_forbidden semantics",
+      "claim_reservation_mode": "publish active claim reservation after backend lease acquire, link claimed lease to that reservation, and promote the reservation only after the ready_to_in_progress claim transition succeeds",
+      "claim_failure_mode": "pre-effect blocked closeout with failed claim step, reservation invalidation, terminate_run recovery decision, lease_uncertain publication, claim-scope reconciliation record, and reconciliation_closed final truth",
+      "execution_service": "orket/application/services/gitea_state_control_plane_execution_service.py",
+      "checkpoint_service": "orket/application/services/gitea_state_control_plane_checkpoint_service.py",
+      "claim_failure_service": "orket/application/services/gitea_state_control_plane_claim_failure_service.py",
+      "worker_runtime": "orket/application/services/gitea_state_worker.py",
+      "pipeline_entrypoint": "orket/runtime/execution_pipeline.py::run_gitea_state_loop",
+      "loop_runner": "orket/runtime/gitea_state_loop.py::run_gitea_state_loop",
+      "published_record_families": [
+        "run_record",
+        "attempt_record",
+        "reservation_record",
+        "checkpoint_record",
+        "checkpoint_acceptance_record",
+        "step_record",
+        "effect_journal_entry_record",
+        "recovery_decision_record",
+        "final_truth_record",
+        "lease_record",
+        "resource_record"
+      ],
+      "sources": [
+        "CURRENT_AUTHORITY.md",
+        "orket/application/services/gitea_state_control_plane_checkpoint_service.py",
+        "orket/application/services/gitea_state_control_plane_claim_failure_service.py",
+        "orket/application/services/gitea_state_control_plane_execution_service.py",
+        "orket/application/services/gitea_state_control_plane_lease_service.py",
+        "orket/application/services/gitea_state_control_plane_reservation_service.py",
+        "orket/application/services/gitea_state_worker.py",
+        "orket/runtime/execution_pipeline.py",
+        "orket/runtime/gitea_state_loop.py"
+      ]
+    },
+    "core_release_versioning": {
+      "primary": "docs/specs/CORE_RELEASE_VERSIONING_POLICY.md",
+      "release_gate_checklist": "docs/specs/CORE_RELEASE_GATE_CHECKLIST.md",
+      "release_proof_template": "docs/specs/CORE_RELEASE_PROOF_REPORT.md",
+      "release_proof_reports_root": "docs/releases/",
+      "release_evidence_root": "benchmarks/results/releases/",
+      "automation_workflow": ".gitea/workflows/core-release-policy.yml",
+      "automation_script": "scripts/governance/check_core_release_policy.py",
+      "release_prep_script": "scripts/governance/prepare_core_release.py",
+      "main_commit_tags_required": true,
+      "tag_format": "v<major>.<minor>.<patch>",
+      "core_version_source": "pyproject.toml",
+      "changelog_source": "CHANGELOG.md",
+      "workflow_source": "docs/CONTRIBUTOR.md",
+      "sdk_versioning_source": "docs/requirements/sdk/VERSIONING.md",
+      "sdk_compatibility_window": "SDK 0.Y.Z is compatible with Orket core 0.Y.* through 0.(Y+2).* unless release notes explicitly narrow the window",
+      "sources": [
+        "CURRENT_AUTHORITY.md",
+        ".gitea/workflows/core-release-policy.yml",
+        "scripts/governance/check_core_release_policy.py",
+        "scripts/governance/prepare_core_release.py",
+        "docs/specs/CORE_RELEASE_VERSIONING_POLICY.md",
+        "docs/specs/CORE_RELEASE_GATE_CHECKLIST.md",
+        "docs/specs/CORE_RELEASE_PROOF_REPORT.md",
+        "docs/requirements/sdk/VERSIONING.md",
+        "docs/CONTRIBUTOR.md",
+        "CHANGELOG.md",
+        "pyproject.toml"
+      ]
+    },
+    "model_provider_runtime_selection": {
+      "primary": "orket/runtime/config/provider_runtime_target.py",
+      "compatibility_alias": "orket/runtime/provider_runtime_target.py",
+      "runtime_consumers": [
+        "orket/adapters/llm/local_model_provider.py",
+        "orket/workloads/model_stream_v1.py"
+      ],
+      "verification_consumers": [
+        "scripts/providers/check_model_provider_preflight.py",
+        "scripts/providers/list_real_provider_models.py"
+      ],
+      "sources": [
+        "CURRENT_AUTHORITY.md",
+        "docs/CONTRIBUTOR.md",
+        "scripts/README.md"
+      ]
+    }
+  }
+}
+```
+
+## Runtime Behavior Notes
+
+BT-5 outward shared authority has scoped source/installed acceptance;
+card/common-family conformance remains open. `docs/specs/OUTWARD_RUN_AUTHORITY.md`
+owns catalog admission, immutable run/attempt snapshots, evidence-derived shared
+final truth and its status/summary projection. Denial and expiry close in the
+decision transaction. `python -m orket.interfaces.outward_authority_cli` explicitly
+adopts reviewed generation-one history with stopped-owner attestation and an
+expected retained-run digest; it preserves protocol rows, bindings, model/effect
+owners and fences. The shared snapshots identify current-input adoption rather
+than original-submission authenticity. Generation-zero quarantine remains.
+Source and installed Windows/Linux Python 3.11/3.12 proof cover copied old-wheel
+terminal and unfinished histories, explicit recovery and continuation. Native
+migration interruption/restart passes with the ledger reader on the owning writer
+transaction. Actual installed llama.cpp success, denial, expiry and policy rejection
+also agree with shared final truth. The canonical plan records the current artifacts,
+retained evidence and limits; this does not establish whole-family conformance.
+
+Outward approval decisions use the application-owned SQLite transaction in `outward_approval_service.py` and `outward_store_transaction.py`: proposal, run projection and event commit together; the clock is sampled after the writer lock and pending decisions expire at `now >= expires_at`. New proposals retain immutable complete bindings. `outward_effect_service.py` owns one durable claim/intent per proposal, dispatches only its bound arguments, reuses the control-plane effect journal, and atomically publishes a saved receipt with events/run progression. Stale retries cannot select another turn's call. Bound filesystem operations pass the retained target to `orket/adapters/storage/bound_filesystem.py`, using Windows handles or POSIX descriptor-relative operations instead of re-resolving the model path for I/O. The owning thread finishes before cancellation releases its handles, including repeated cancellation and elapsed connector deadlines. `outward_connector_service.py` uses an `asyncio.timeout` scope in the owning task, avoiding a Python 3.11 cancellation escape through an outer `wait_for` task. A timeout receipt does not imply no filesystem effect and cannot authorize redispatch. In-flight or unobserved dispatch returns conflict; saved receipts can publish after restart without execution. Legacy generation-0 runs refuse submission reentry, direct start and denial continuation without reconstructing events or changing their retained status. Unbound pending proposals remain historical through reads and expiry sweeps; attempted new decisions require a binding. Legacy unbound rows cannot dispatch; populated legacy stores require an offline copied upgrade using `python -m scripts.governance.migrate_outward_approvals`. Authenticated effect inspection and explicit pre-intent recovery use `/v1/approvals/{id}/effect` and `/effect/recover`. Recovery compares the observed owner/fence, increments the fence and commits shared recovery/operator records with the claim; a stale worker cannot publish intent. Intent without observation cannot be replaced. The scoped BT-1 behavioral acceptance gate passes on the recorded installed-wheel Windows/Linux Python 3.11/3.12 matrix; it is not a generic exactly-once guarantee. Legacy quarantine is the selected migration disposition, and old-run reconciliation/replacement remains unsupported. Run start and next-turn effect publication create durable ready model admission atomically. `outward_model_admission_service.py` permits one producer per admission and retains its result before atomic proposal publication. Public run reentry can resume ready or observed admission without replaying an effect; claimed admission is unresolved and cannot be automatically reassigned. Explicit `/v1/runs/{id}/model-admission/recover` retains that attempt and admits a ready replacement under the next fence with shared recovery/operator records. Normal run reentry invokes the replacement. Attempt-specific evidence paths and fenced observation prevent a late old response from replacing accepted evidence; provider execution/cost uncertainty remains. Extraction artifact digests remain immutable through proposal publication. The outward planner explicitly requests profile-selected tool transport; shared native-tool request construction consumes the already resolved profile mode, retaining native schemas for native profiles and using JSON wrappers for the admitted llama.cpp profile. Explicit native callers retain unsupported-provider refusal. Contract: `docs/specs/OUTWARD_APPROVAL_EFFECT_LIFECYCLE_V1.md`; proof and limitations: the canonical architectural-truth plan.
+
+Turn tool-call recovery is fail-closed when truncated recovery is partial: `ToolParser` records `recovery_complete=false`, `ResponseParser` and the legacy `Agent` path emit `tool_recovery_partial`, mark the turn with `partial_parse_failure=True` and `ToolCallErrorClass.PARSE_PARTIAL`, and do not execute recovered, skipped, or hardcoded recovery tool calls.
+
+Truncated tool-call recovery consults `orket/adapters/tools/registry.py::DEFAULT_TOOL_REGISTRY` for recoverable tool argument schemas. The default registry only enables recovery for `read_file`, `write_file`, and `update_issue_status`; additional tools require explicit recoverable registration instead of parser code changes.
+
+Tool execution through `ToolRuntimeExecutor` has a default per-tool timeout of 60 seconds, with runtime context overrides flowing through `tool_timeout_seconds`, skill `tool_runtime_limits.max_execution_time`, or organization-derived `max_tool_execution_time`.
+
+Async-reachable structured log writes use a bounded queue sized by `ORKET_LOG_QUEUE_MAX` with default `10000`; when the queue is full, Orket drops the log record, increments `dropped_log_entry_count()`, and emits sparse stdlib-only `log_write_queue_full` warnings instead of blocking the event loop or recursing through `log_event`.
+
+Native cleanup uses `settle_log_write_frontier()` under
+`docs/specs/LOG_WRITE_SETTLEMENT.md`. It covers append attempts before marker
+admission on that same optional queue, keeps later writes outside the cutoff and
+refuses a dead writer without replacement. The audit CLI settles before temporary
+owner exit and preserves its own primary failure for the exact known secondary
+under that contract. No durable-delivery or global-shutdown guarantee is added.
+
+Runtime log-level resolution in `orket/utils.py` is call-time via `get_current_level()` with `reset_current_level_cache()` for test isolation; there is no import-time `CURRENT_LEVEL` authority.
+
+Agent model-family resolution uses `orket/agents/model_family_registry.py`, defaulting to DeepSeek/Llama/Phi/Qwen pattern mappings and accepting operator extension through `ORKET_MODEL_FAMILY_PATTERNS`; unrecognized models fall back to `generic` and emit `model_family_unrecognized`.
+
+Legacy `Agent.run()` retains an opt-in `ControlPlaneAuthorityService` journal seam, but direct tool execution now fails closed unless effect-journal authority is configured and the required run context is present; with `journal`, successful and failed tool executions publish `EffectJournalEntryRecord` payloads using `ToolCallErrorClass` and context-provided run authority, and journal publication failures are not silently swallowed.
+
+The canonical supported runtime tool-execution gate story currently centers on the `run_card(...)` family collapsing into `TurnExecutor` and the governed `ToolDispatcher.execute_tools(...)` seam. On that path, pre-execution admission is composed inside the dispatcher from `ToolGate.validate(...)`, dispatcher policy checks in `orket/application/workflows/turn_tool_dispatcher_support.py::tool_policy_violation(...)`, and bounded approval gating; direct `ToolDispatcher` use is internal-only.
+
+Legacy `Agent.run()` direct tool execution remains noncanonical compatibility debt rather than a co-equal supported runtime gate surface because it still bypasses the canonical governed dispatcher even though it now fail-closes without both `tool_gate` and effect-journal authority.
+
+Extension engine actions that normalize onto `run_card(...)` inherit that canonical governed runtime path, while SDK capability registry invocations inside extension workloads remain a separate authorization lane from the canonical tool-dispatch story even though the shipped first slice now publishes those capability calls into the extension workload control-plane run/effect boundary.
+
+`EnvironmentConfig` rejects unknown keys without warning effects. Direct construction raises Pydantic extra-field validation errors; authoritative environment loading retains `E_ENVIRONMENT_CONFIG_UNKNOWN_KEYS:<keys>` before model work. Card and verification-scenario IDs are required core inputs. Authored asset loading and prompt role admission obtain missing IDs through the application schema input service and `RuntimeInputService`; accepted stored values are revalidated without inventing historical identities. Contract: `docs/specs/SCHEMA_INPUT_OWNERSHIP.md`.
+
+Session transcripts are schema-bound through `TranscriptTurn` / `ToolCallRecord` at `orket/session.py`; legacy dict rows are defensively migrated on `Session` construction and serialized back as versioned transcript turns.
+
+`OpenClawJsonlSubprocessAdapter.run_requests()` returns `PartialAdapterResult`, preserving `responses`, `completed_count`, and `failed_at` on subprocess failure so callers can avoid unsafe full replay of already-completed adapter requests.
+
+Runtime implementation modules are physically grouped under bounded `orket/runtime/config/`, `orket/runtime/evidence/`, `orket/runtime/execution/`, `orket/runtime/policy/`, `orket/runtime/registry/`, and `orket/runtime/summary/` subpackages with explicit package `__all__` surfaces. The old flat `orket.runtime.<module>` imports are one-release alias shims that preserve compatibility while resolving to the migrated implementation modules; new direct cross-domain imports must go through package public surfaces and are guarded by `tests/runtime/test_runtime_subpackage_boundaries.py`.
+
+The canonical API runtime entrypoint `python server.py` bootstraps environment values from the repo-root `.env` before FastAPI app construction. This preserves the normal `load_env()` precedence rule: explicit process environment variables remain authoritative over `.env` values.
+
+Initial outward admission uses the same `OutwardStoreUnitOfWork` as approval:
+namespace ownership is checked under the SQLite writer lock, and run, initial
+event and ledger head commit together. Same-ID retries preserve the retained
+submission; missing historical admission events refuse reentry without backfill.
+`docs/specs/OUTWARD_RUN_ADMISSION.md` owns this boundary. Catalog workload and
+shared terminal-truth migration remain BT-5 work.
+
+Outward-facing pipeline Phase 0 API foundation keeps `GET /health` unauthenticated and minimal with `{ "status": "ok" }`, adds `X-Orket-Version` to `/v1/*` HTTP responses, and routes the representative `/v1/version` payload through the outbound policy gate before serialization.
+
+Outward-facing pipeline Phase 0 event persistence lives in `orket/adapters/storage/outward_run_event_store.py` with the `LedgerEvent` model in `orket/core/domain/outward_run_events.py`; it stores synthetic and future outward pipeline `run_events` rows on WAL-enabled SQLite without claiming legacy event migration or Phase 4 ledger export semantics.
+
+Outward-facing pipeline Phase 1 work submission is application-owned by `orket/application/services/outward_run_service.py`, persisted through `orket/adapters/storage/outward_run_store.py`, exposed through `POST /v1/runs`, outward-aware `GET /v1/runs`, outward-aware `GET /v1/runs/{run_id}`, and the API-client-only `orket run submit/status/list` commands in `orket/interfaces/orket_bundle_cli.py`. Accepted submissions are idempotent on `run_id`, remain queued until later execution phases, and write one initial `run_submitted` row to the outward `run_events` ledger.
+
+Outward-facing pipeline Phase 2 approval and execution is application-owned by `orket/application/services/outward_approval_service.py`, `orket/application/services/outward_run_execution_service.py`, the model-call bridge in `orket/application/services/outward_model_tool_call_service.py`, and sanitized model evidence writing in `orket/application/services/outward_model_observability.py`, persisted through `orket/adapters/storage/outward_approval_store.py`, exposed through outward-aware `GET /v1/approvals`, `GET /v1/approvals/{approval_id}`, `POST /v1/approvals/{approval_id}/approve`, `POST /v1/approvals/{approval_id}/deny`, compatibility `POST /v1/approvals/{approval_id}/decision`, and the API-client-only `orket approvals list/review/approve/deny/watch` commands in `orket/interfaces/orket_bundle_cli.py`. `POST /v1/runs` keeps ordinary submissions queued, but when `task.acceptance_contract.governed_tool_call` is present it starts the explicit outward execution slice for one governed tool gate, and when `task.acceptance_contract.governed_tool_sequence` is present it executes an ordered one-model-call-per-turn sequence. Each step validates the acceptance-contract tool as a registered approval-required governed tool, invokes the configured model provider with task description/instruction, governed connector schemas, and prior governed tool results when present, extracts and validates the model-produced governed tool call, records sanitized model invocation evidence under `workspace/<sanitized_namespace>/runs/<run_id>/model_invocation.json`, turn-specific `model_invocation_turn_<n>.json`, `model_prompt_redacted_turn_<n>.json`, `model_response_redacted_turn_<n>.json`, and `proposal_extraction_turn_<n>.json`, creates the approval proposal from the model-produced call, pauses before the approval-required connector effect, and applies the stored model-produced effect only after approval. `proposal_made` anchors the model evidence with model invocation, prompt, response, proposal-extraction, provider/model, tool name, and tool args hashes. Approval decisions are idempotent; human denial is terminal-completed without invoking the connector effect; timeout remains terminal; and policy containment rejects out-of-scope model-produced proposals before human approval with `proposal_policy_rejected`. Approval/execution events write `proposal_pending_approval`, `proposal_approved`, `proposal_denied`, `proposal_expired`, `proposal_policy_rejected`, `tool_invoked`, `commitment_recorded`, `turn_completed`, and terminal run rows to the outward `run_events` ledger.
+
+Trust handoff Packet 1 admission is governed by `docs/specs/TRUST_HANDOFF_PACKET1_V1.md`. When `task.acceptance_contract.handoff_required=true`, `orket/application/services/trust_handoff_admission.py` verifies the host-managed envelope package through `orket/application/services/trust_handoff_verifier.py` at the `run_submitted` to `run_started` boundary before any model, turn, tool, memory, or commitment path can execute. Successful admission emits `trust_handoff_verified` before `run_started`; failed or incomplete admission emits `trust_handoff_rejected` and terminal `run_completed` with `outcome=handoff_rejected`, and does not create `run_started`, `turn_started`, model proposal, tool, memory, or commitment events. The Packet 1 proof entrypoints are `python scripts/proof/emit_trust_handoff_envelope.py --source-run-id <id> --target-agent-id <id> --scope-id <id> --out benchmarks/results/proof/trust_handoff_envelope_package.v1`, `python scripts/proof/verify_trust_handoff_envelope.py --package benchmarks/results/proof/trust_handoff_envelope_package.v1 --out benchmarks/results/proof/trust_handoff_verifier_report.json`, and `python scripts/proof/run_trust_handoff_corruption_suite.py --base benchmarks/results/proof/trust_handoff_envelope_package.v1 --out benchmarks/results/proof/trust_handoff_corruption_report.json`; stable proof artifacts live under `benchmarks/results/proof/`.
+
+Outward-facing pipeline Phase 3 inspection is application-owned by `orket/application/services/outward_run_inspection_service.py`, reads persisted outward run records and `run_events`, and is exposed through `GET /v1/runs/{run_id}/events`, `GET /v1/runs/{run_id}/summary`, polling-backed `GET /v1/runs/{run_id}/events/stream`, and the API-client-only `orket run events/summary/watch` commands in `orket/interfaces/orket_bundle_cli.py`. These surfaces are read-only, route operator-visible payloads through the outbound policy gate, and do not mutate run state, event count, proposal state, or ledger authority. The v1 event stream is process-local HTTP polling over persisted `run_events` and closes when the outward run is terminal; durable pub/sub remains deferred.
+
+Outward-facing pipeline Phase 4 ledger export is governed by `docs/specs/LEDGER_EXPORT_V1.md`. Runtime export orchestration is application-owned by `orket/application/services/outward_ledger_service.py`, with pure hash and offline verification rules in `orket/core/domain/outward_ledger.py`. The API exposes `GET /v1/runs/{run_id}/ledger` and `GET /v1/runs/{run_id}/ledger/verify`; the CLI exposes API-backed `orket ledger export`, offline `orket ledger verify`, and API-backed `orket ledger summary`. Full exports preserve policy-safe outward `run_events.payload` bytes and verify as `valid`; filtered exports are `partial_view` payloads with canonical `ledger_hash`, disclosed event positions, and omitted-span hash anchors. Explicit live `include_pii=true` exports append `ledger_export_requested` before serialization and classify it under the `audit` event group. Legacy artifacts are not promoted into canonical outward ledger events.
+
+BT-2 native retained-storage authority is `docs/specs/OUTWARD_LEDGER_STORAGE_V2.md`. Event append now atomically records canonical event hashes, per-run append sequence, v2 chain and retained head/count through `outward_ledger_append_store.py`; native event guards reject old inserts, replacements and hash-repair writes. `outward_ledger_snapshot_store.py` verifies all pages under one read-only SQLite snapshot, with independent counts/head and explicit resource limits. The application derives unchanged v1 export order/hashes in memory; `_ensure_hashes` and `update_hashes` are removed. Filtered views retain omission anchors. PII audit IDs use serialized append sequence and the authenticated actor. `orket/interfaces/routers/outward_ledger.py` owns ledger transport, including authenticated `POST /v1/runs/{run_id}/ledger/verify` with an external prefix anchor. Live retained integrity/completeness, offline export self-consistency and authenticity are separate claims. Explicit copied legacy migration is implemented by `python -m scripts.governance.migrate_outward_ledger`: it requires stopped-writer acknowledgement and new backup/destination paths, retains a complete SQLite backup including committed WAL data, validates available v1 hashes without changing original cells, requires `--allow-unsealed` for missing cells, and verifies all imported commitments before one atomic commit. Imported origin references bind the backup digest; existing v2 anchors remain unchanged. The default stable report is `benchmarks/staging/outward_ledger_migration.json`; failed or interrupted copies remain unverified and retries require new paths. The command never activates its candidate, promotes generation-0 histories, grants execution permission or establishes historical authenticity. The canonical plan records accepted native/copy BT-2 proof across the installed-wheel Windows/Linux Python 3.11/3.12 matrix, plus live installed llama.cpp and authenticated TCP/API evidence. Untested hosts/providers, capacity, core release and broader workload admission remain outside that acceptance.
+
+Outward-facing pipeline evidence graph support lives in `scripts/observability/emit_run_evidence_graph.py`. When a legacy `runs/<session_id>/` lineage cannot be located, the script resolves the outward pipeline run directly from the outward SQLite store, reads outward run records, run events, approval proposal records, tool invocation events, summary, and ledger references, then writes an outward-only graph under `workspace/<sanitized_namespace>/runs/<run_id>/run_evidence_graph.json` plus `run_evidence_graph.svg`. This outward graph path is not a ProductFlow or legacy session graph substitute.
+
+Outward-facing pipeline Phase 5 connector hardening keeps built-in connector metadata authority at `orket/adapters/tools/registry.py::DEFAULT_BUILTIN_CONNECTOR_REGISTRY`, with stable connector names and the admitted risk vocabulary `read`, `write`, `destructive`, `network`, and `command`. Application-owned invocation lives in `orket/application/services/outward_connector_service.py`; adapter-owned effects live in `orket/adapters/tools/builtin_connectors.py`. The connector path validates args against registry schemas before invocation, rejects workspace path traversal before file effects, requires exact-host HTTP allowlisting through `ORKET_CONNECTOR_HTTP_ALLOWLIST`, enforces runtime timeout as `outcome: timeout`, and emits the shared connector ledger event field shape `connector_name`, `args_hash`, `result_summary`, `duration_ms`, `timing`, and `outcome`. The local CLI harness is `orket connectors list/show/test`; third-party discovery, connector versioning, marketplace/distribution tooling, and multi-connector orchestration remain deferred.
+
+`docs/specs/CONNECTOR_INVOCATION_TIMING.md` owns the timing contract. Connector
+duration uses injected monotonic nanoseconds with `invocation_timing.v1`
+provenance and `awaited_connector_invocation` scope; unavailable is null and
+fractions are preserved. `BuiltInConnectorExecutor` filesystem dispatch uses the shared adapter
+`owned_io.run_owned_io` drain for direct calls; retained outward bindings use it
+through `BoundFilesystemExecutor`. Cancellation/timeout waits for settled I/O,
+including repeated cancellation. It does not force-stop threads or undo writes.
+Default timing is an observation through
+`RuntimeInputService.monotonic_ns`, not deterministic input. Interrupted attempts
+emit supporting workspace telemetry while preserving unresolved effect state;
+publication recovery reuses the original receipt. New normalized logging
+envelopes use v2; historical v1 data, receipt hashes and sealed fixtures remain
+unchanged. Acceptance reports count both versions explicitly. This does not close
+command descendant ownership or establish capacity; unrelated timing producers
+and summary defaults still require audit.
+
+Governed turn-tool dispatcher receipts now use `protocol_receipt.v2` with nullable
+`validator_duration_ms` and explicit `validator_timing` provenance. Valid context
+input is `reported` from `runtime_context`; absent/invalid input is `unavailable`,
+never fabricated zero. The runtime does not currently measure validator duration.
+The contract is `docs/specs/PROTOCOL_GOVERNED_RUNTIME_CONTRACT.md`, with typed timing
+in `orket/core/contracts/protocol_receipt_timing.py`. Generic writer v1 defaults,
+historical receipt bytes and replay behavior remain as documented there.
+The scoped governed-agent migration now emits `agent_model_use_receipt.v2`
+with nullable integer latency and explicit reported/unavailable posture, and
+requires its host feature for new declarations. SDK `0.7.0a1` and the remediation
+host are a development pair; the published 0.6.0/0.6.2 packages retain their old
+pins. Canonical v1 receipts remain historical reads. Incomplete/invalid token
+metadata uses the existing unknown-usage/null-count/max-budget charge contract.
+The child ready handshake must advertise v2 support before model reservation.
+Matched core/SDK/reference artifacts pass the scoped Windows/Linux Python
+3.11/3.12 matrix; the native installed CLI completes two external iterations
+against llama.cpp with six reported-latency receipts matching durable final truth.
+This is scoped migration proof, not whole BT-4 or release acceptance. The root dev
+extra declares setuptools for the existing in-process package-build test.
+Authority: `docs/specs/GOVERNED_AGENT_LOOP_V1.md` and
+`docs/requirements/sdk/VERSIONING.md`.
+
+The scoped BT-4 provider timing repair retains unavailable backend
+prompt, generation and total durations under `model_provider_timing.v1`, keeping
+client elapsed time separate. Turn projections disclose legacy-unverified timing;
+live-card benchmark timing/throughput requires complete reported turn coverage.
+Generic SDK/API generation uses nullable `model_generate_response.v1` latency and
+explicit posture. The frozen source selection and four installed Windows/Linux
+Python 3.11/3.12 cells pass 332 checks each. Native installed llama.cpp CLI proof
+matches retained backend phases and benchmark aggregates, preserving absent total
+duration as null; startup remains degraded by structural reconciliation. An
+authenticated TCP API request returns the versioned response and measured client
+latency, then closes the application and owned process. Initial proof-worker
+startup failures remain recorded. No independent backend timing, capacity or whole
+BT-4 acceptance is claimed. The subsequent generic generation lifetime repair
+drains its synchronous worker and client cleanup through repeated cancellation,
+passes builtin override selection explicitly, and registers the default model
+client for application teardown. Injected clients remain embedding-owned.
+Worker/cleanup failure remains observable and prevents a clean shutdown claim.
+This does not terminate remote inference or provide a deadline for stuck threads.
+Builtin request-option forwarding is repaired by the subsequent candidate:
+per-call limits narrow profile ceilings, temperature reaches the shared policy,
+and exact stop strings are retained. Unresolved admitted profiles preserve explicit
+options and reject malformed values. Authority: `docs/specs/MODEL_GENERATION_OPTIONS.md`.
+Wider capability ownership and other runtime-context producers remain BT-4/BT-5/C/D work.
+Custom profile stop lists share the same core exact-string validation, retaining
+whitespace and rejecting invalid elements before binding. The final request-option
+envelope passes 440 source checks and 440 per installed
+Windows/Linux Python cell. Live installed llama.cpp reaches a requested 32-token
+limit with length termination and passes the paired exact-sentinel stop control.
+Captured transport payloads retain temperature and stop bytes; this does not
+independently certify temperature's statistical effect or other live providers.
+The lifetime envelope passes 372 source checks and 372 in each installed
+Windows/Linux Python 3.11/3.12 cell. Live installed llama.cpp proves normal default
+and override HTTP responses, then retained in-flight generation through shutdown:
+HTTP 503, both clients closed on their bridge loop, zero active requests and
+confirmed native process cleanup. Contract: `docs/specs/API_RUNTIME_LIFECYCLE.md`.
+Contract: `docs/specs/MODEL_PROVIDER_TIMING.md`; exact proof and limits are in the
+canonical architectural-truth plan.
+
+Outward-facing pipeline Phase 6 outbound policy gate hardening is owned by `orket/kernel/v1/outbound_policy_gate.py` and remains the single operator-visible serialization gate called by API surfaces before response serialization. The gate supports configured PII field paths, forbidden regex patterns, allowed output fields by event/surface type, environment configuration through `ORKET_OUTBOUND_POLICY_PII_FIELD_PATHS`, `ORKET_OUTBOUND_POLICY_FORBIDDEN_PATTERNS`, and `ORKET_OUTBOUND_POLICY_ALLOWED_OUTPUT_FIELDS`, plus optional JSON config file loading through `ORKET_OUTBOUND_POLICY_CONFIG_PATH` at API app creation. Filtering is deterministic, does not mutate input payloads, and preserves ledger truth: if configured redaction would alter stored `ledger_export.v1` event payload bytes from a full export, the response is converted to `partial_view` with omitted-span anchors instead of claiming full canonical completeness.
+
+Outward-facing single-turn proof kernel authority is active for `outward_run_write_file_approved_v1`, `outward_run_write_file_denied_v1`, and `outward_run_write_file_policy_rejected_v1` through `docs/specs/OUTWARD_RUN_WITNESS_V1.md`, `docs/specs/OUTWARD_RUN_INVARIANTS_V1.md`, `docs/specs/OUTWARD_RUN_CLAIM_TIERS_V1.md`, and `docs/specs/OUTWARD_RUN_ASSURANCE_CASE_SCHEMA_V1.md`; the completed approved boundary is archived at `docs/projects/archive/outward-run-proof-kernel/2026-05-02-OUTWARD-RUN-PROOF-KERNEL-CLOSEOUT/`, the completed denial extension is archived at `docs/projects/archive/outward-run-proof-kernel-extensions/2026-05-02-DENIAL-FIXTURE-CLOSEOUT/`, and the completed policy-rejection extension is archived at `docs/projects/archive/outward-run-proof-kernel-extensions/2026-05-02-POLICY-REJECTION-FIXTURE-CLOSEOUT/`. The package producer is `python scripts/proof/emit_outward_run_witness_package.py --run-id <run_id> --scope <scope> --output <package>` for admitted scopes. Approved package verification is `python scripts/proof/verify_outward_run_witness_package.py --package <package> --scope outward_run_write_file_approved_v1 --output benchmarks/results/proof/outward_run_witness_report.json`; denial package verification is `python scripts/proof/verify_outward_run_witness_package.py --package tests/proof_fixtures/outward_run/base_denied_package --scope outward_run_write_file_denied_v1 --output benchmarks/results/proof/outward_run_denied_witness_report.json`; policy-rejection package verification is `python scripts/proof/verify_outward_run_witness_package.py --package tests/proof_fixtures/outward_run/base_policy_rejected_package --scope outward_run_write_file_policy_rejected_v1 --output benchmarks/results/proof/outward_run_policy_rejected_witness_report.json`. The committed artifact validator applies to approved packages only: `python scripts/proof/validate_outward_write_file_committed.py --package <package> --output benchmarks/results/proof/outward_write_file_validation.json`. The corruption suite now consumes approved, denial, and policy-rejection bases through `python scripts/proof/run_outward_run_corruption_suite.py --base <approved-package> --denial-base <denied-package> --policy-rejected-base <policy-rejected-package> --output benchmarks/results/proof/outward_run_corruption_report.json`; ORP-CORR-030 and the denial side of ORP-CORR-068 are active over the denial base, and ORP-CORR-031 is active over the policy-rejection base. The non-fixture approved proof chain is `ORKET_DISABLE_SANDBOX=1 python scripts/proof/run_outward_write_file_approved_proof.py`; the denial proof chain is `ORKET_DISABLE_SANDBOX=1 python scripts/proof/run_outward_write_file_denied_proof.py`; the policy-rejection proof chain is `ORKET_DISABLE_SANDBOX=1 python scripts/proof/run_outward_write_file_policy_rejected_proof.py`. Active proof artifacts live under `benchmarks/results/proof/`, including `outward_run_witness_package.v1/`, `outward_run_witness_report.json`, `outward_write_file_validation.json`, `outward_run_denied_witness_report.json`, `outward_run_policy_rejected_witness_report.json`, and `outward_run_corruption_report.json`; frozen fixtures live at `tests/proof_fixtures/outward_run/base_approved_package/`, `tests/proof_fixtures/outward_run/base_denied_package/`, and `tests/proof_fixtures/outward_run/base_policy_rejected_package/`. Out-of-scope, multi-turn, ODR, and posture-widening work remains future-hold at `docs/projects/future/outward-run-proof-kernel-extensions/OUTWARD_RUN_PROOF_KERNEL_EXTENSIONS.md`. This authority assigns at most `outward_lab_only` for a single package and does not widen public trust wording.
+
+The NorthstarRefocus outward-facing pipeline execution lane is closed and archived at `docs/projects/archive/NorthstarRefocus/2026-04-25-OUTWARD-PIPELINE-CLOSEOUT/`. Active runtime/operator authority remains in the code, `docs/API_FRONTEND_CONTRACT.md`, `docs/RUNBOOK.md`, `docs/SECURITY.md`, `docs/specs/LEDGER_EXPORT_V1.md`, and this current authority snapshot.
+
+SDK extension workloads run in a child interpreter through `orket/extensions/sdk_workload_runner.py` and `orket/extensions/sdk_workload_subprocess.py`. SDK workload loading statically rejects undeclared standard-library imports, and subprocess execution installs both a manifest-declared stdlib `sys.meta_path` finder and scoped `__import__` guard so dynamic undeclared imports fail before extension code can reuse already-loaded host modules. Legacy workloads retain compatibility behavior: internal Orket imports remain blocked, and stdlib allowlist enforcement applies only when the legacy manifest declares allowed modules.
+
+The shipped SDK capability-authorization first slice is host-owned through `host_authorized_capability_registry_v1` at `orket/extensions/workload_executor.py`, `orket/extensions/sdk_capability_authorization.py`, `orket/extensions/workload_artifacts.py`, `orket/extensions/sdk_capability_runtime.py`, `orket/extensions/sdk_workload_runner.py`, and `orket/extensions/sdk_workload_subprocess.py`; the parent now emits a host-issued authorization envelope, the child revalidates that envelope before workload code executes, the governed runtime seam fail-closes `model.generate`, `memory.query`, `memory.write`, `speech.transcribe`, `tts.speak`, `audio.play`, `speech.play_clip`, and `voice.turn_control` with distinct `undeclared_use`, `denied`, `admitted_unavailable`, and `authorization_drift` truth while preserving `declared_capabilities`, `admitted_capabilities`, `instantiated_capabilities`, and `used_capabilities` distinctly in provenance and the canonical audit artifact at `benchmarks/results/extensions/extension_capability_audit.json` generated by `python scripts/extensions/build_extension_capability_audit.py --strict`, and extension workload execution now publishes one first-class control-plane run/attempt/start-step, a supervisor-owned pre-effect `resume_forbidden` checkpoint, one effect-journal-backed step per first-slice capability call, terminal closeout step/effect publication, and terminal final truth for both legacy and SDK workload runs while SDK memory providers namespace stored profile/session rows per extension id on that first-slice path.
+
+Factory-built agents from `orket/agents/agent_factory.py` fail closed to the union of tools declared by the seat's configured roles. Seats without roles or with missing role configs raise `AgentConfigurationError` and emit error events instead of inheriting the full toolbox.
+
+SQLite/Gitea card-state reconciliation is inspection-only and halt-and-alert by default: `StateReconciliationService` compares requested card ids across `AsyncCardRepository` and `GiteaStateAdapter.fetch_card_snapshot`, emits `state_reconciliation_conflict` on divergence, and the on-demand `scripts/gitea/reconcile_state_backends.py` command writes stable diff-ledger JSON at `benchmarks/results/gitea/state_reconciliation.json`.
+
+iDesign source-category enforcement defaults to `iDesignValidator.ALLOWED_CATEGORIES`, but `OrganizationConfig.allowed_idesign_categories` can replace that category set for organization-scoped `ToolGate` validation.
+
+`BaseCardConfig.priority` is now authoritative as a `float`; legacy persisted string priorities are accepted only through the Pydantic construction boundary where `convert_priority` migrates `High`/`Medium`/`Low` and numeric strings, while unknown strings fail validation and must be cleaned before persistence.
+
+Synchronous settings bridge calls that would cross an active event loop fail with `SettingsBridgeError`, not `AssertionError`.
+
+The deprecated `orket.orket` compatibility shim has been removed; canonical runtime imports use `orket.runtime` directly. Extension isolation may still block the historical `orket.orket` import name as an internal host surface, but it is not a runtime API.
+
+Gitea webhook PR review/opened/merged handling validates consumed payload fields through Pydantic boundary models and returns `status=error`, `error=webhook_payload_validation_failed` on invalid payloads instead of propagating nested-key access errors.
+
+Gitea webhook authenticated API calls require `https://` `GITEA_URL` by default. Plaintext `http://` is admitted only when `ORKET_GITEA_ALLOW_INSECURE=true` or `allow_insecure=True` is explicitly set for local development, and that degraded transport posture emits `gitea_webhook_insecure_url_allowed`.
+
+Standalone Gitea webhook applications own captured configuration, request/review lifetime and HTTP cleanup through application services. There is no module-default app or handler proxy. Native bare HMAC digests and the previously admitted prefixed form are accepted. Native Gitea review vocabulary is translated explicitly, and delivery IDs survive ingress. Startup, migration and limits live in `docs/specs/WEBHOOK_RUNTIME_LIFECYCLE.md`.
+
+JWT access tokens issued through `orket/services/auth_service.py` now default to a 60-minute lifetime unless `ORKET_AUTH_TOKEN_EXPIRE_MINUTES` overrides it, include a `jti` claim on every token, and verify revocation against the SQLite token blocklist at `.orket/durable/db/auth_token_blocklist.sqlite3` resolved through `orket/runtime_paths.py`.
+
+Gitea webhook sandbox handling accepts an injected `SandboxOrchestrator` and explicit `lifecycle_db_path`; default construction routes sandbox state through the repository-backed `SandboxOrchestrator.lifecycle_repository` rather than treating the handler-local `SandboxRegistry` as durable authority.
+
+Gitea webhook review-cycle state now uses a workspace-derived durable DB path at `.orket/durable/db/webhook.db`, records webhook delivery ids as idempotency keys when present, skips duplicate PR review deliveries before side effects, escalates at `MAX_PR_REVIEW_CYCLES=3`, and auto-rejects at the following cycle.
+
+Manual review deterministic defaults treat broad `TODO|FIXME` forbidden-pattern matches as `info` severity and keep `password\s*=` at `high`; operators can override the resolved policy if they want TODO/FIXME matches to block PRs.
+
+Project memory retrieval now uses SQLite FTS5-backed search with SQL-level filtering and BM25 ordering, while `MemoryStore.remember()` deduplicates exact repeated content by SHA-256 content hash before insert so the project-memory surface no longer over-fetches recent rows or accumulate duplicate entries for the same content.
+
+Interaction streaming now admits per-turn `stream_budget` overrides on the shared `StreamBus`, gives `model_stream_v1` a default best-effort budget of 2048 token deltas when no explicit override is supplied, and bounds retained `_turn_states` bookkeeping through TTL/LRU eviction instead of leaving per-turn stream state unbounded.
+
+Interaction session ownership is now explicitly split: `orket/state.py` keeps transport/runtime coordination only (event broadcast queue, websocket fanout, classic runtime task tracking, and interaction-session surface presence), while `orket/streaming/manager.py` remains the sole authority for interaction session and turn state; the API wires those surfaces together through explicit interaction-session start/close registration hooks.
+
+Webhook health reports `rate_limit_scope=per_application_per_process`, `webhook_rate_limit_per_minute` and `worker_count_hint`. Limits are captured independently per app; the worker hint neither starts workers nor establishes a shared limit. Closing or failed background owners refuse new HTTP requests with 503. Review dedupe is intake evidence, not atomic remote completion or replay protection.
+
+Review-bundle replay validation now raises `ReviewBundleError` carrying explicit `error_code` and `field` metadata instead of untyped string-only `ValueError` failures, and the CLI replay surface preserves those structured bundle error codes in replay failure output.
+
+Streaming turn state is purged after authoritative commit publication while preserving already-queued terminal subscriber events; subscriber queues are bounded by the configured best-effort plus bounded producer budgets, duplicate `COMMIT_FINAL` publication fails closed, and best-effort producer budget exhaustion emits one `STREAM_TRUNCATED` advisory event carrying dropped sequence ranges.
+
+LPJ-C32 append-only run-ledger framing remains `uint32_be payload_len | payload_bytes | uint32_be crc32c(payload_bytes)` with Castagnoli CRC-32C as specified in `docs/specs/PROTOCOL_GOVERNED_RUNTIME_CONTRACT.md`; runtime checksum calculation uses the declared `google-crc32c` dependency instead of a local hand-rolled table, and IEEE `binascii.crc32` is intentionally not compatible with existing ledger frames.
+
+Dual-write run-ledger recovery exposes `AsyncDualModeLedgerRepository.initialize()`
+through the application coordinator. Initialization and subsequent invocations
+recheck the bound durable journal under native admission ownership. The former
+`_recovery_run_once` cache is removed: another cooperating owner can publish
+pending work after an instance initializes. Recovery verifies actual backend
+content before clearing intent, and repeated checks do not replay verified effects.
+Migration and remaining proof gates are recorded in
+`docs/architecture/CONTRACT_DELTA_DUAL_LEDGER_CD_2026-09-17.md`.
+
+`ExecutionPipeline` now keeps construction, state-mode helpers, the epic-orchestrator builder, and module entrypoints in `orket/runtime/execution/execution_pipeline.py`; public card dispatch, compatibility wrappers, Gitea loop entry wrapping, resume/collection helpers, run-summary materialization, runtime artifact collection, artifact provenance, and ledger/protocol event helpers live in `orket/runtime/execution/execution_pipeline_card_dispatch.py`, `orket/runtime/execution/execution_pipeline_resume.py`, `orket/runtime/execution/execution_pipeline_run_summary.py`, `orket/runtime/execution/execution_pipeline_runtime_artifacts.py`, `orket/runtime/execution/execution_pipeline_artifact_provenance.py`, and `orket/runtime/execution/execution_pipeline_ledger_events.py`, with flat `orket/runtime/*.py` paths preserved only as compatibility aliases.
+
+## Drift Rule
+
+If any command, path, or source in this file changes, the corresponding source documents and implementation entrypoints must be updated in the same change unless the user explicitly directs otherwise.

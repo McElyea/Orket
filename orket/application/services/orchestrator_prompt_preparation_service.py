@@ -8,8 +8,11 @@ from typing import Any
 from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.application.services.skill_adapter import synthesize_role_tool_profile_bindings
 from orket.core.domain.guard_rule_catalog import resolve_runtime_guard_rule_ids
-from orket.runtime.truthful_memory_policy import render_reference_context_rows
+from orket.runtime.policy import truthful_memory_policy as _truthful_memory_policy
 from orket.schema import DialectConfig, SkillConfig
+
+# Preserve the existing consumer-local callable bindings.
+render_reference_context_rows = _truthful_memory_policy.render_reference_context_rows
 
 
 class OrchestratorPromptPreparationService:

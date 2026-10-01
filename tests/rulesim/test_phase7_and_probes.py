@@ -86,6 +86,7 @@ class _AlwaysFirstStrategy:
         return legal_actions[0]
 
 
+@pytest.mark.contract
 def test_timeout_reason_fires_at_max_steps() -> None:
     config = parse_run_config(
         {
@@ -107,6 +108,7 @@ def test_timeout_reason_fires_at_max_steps() -> None:
     assert episode.step_index == 3
 
 
+@pytest.mark.contract
 def test_skip_agent_single_occurrence_semantics() -> None:
     config = parse_run_config(
         {
@@ -132,6 +134,7 @@ def test_skip_agent_single_occurrence_semantics() -> None:
     assert [row["step_index"] for row in episode.trace] == [0, 2, 3]
 
 
+@pytest.mark.contract
 def test_skip_self_applies_to_next_turn_only() -> None:
     config = parse_run_config(
         {
@@ -153,6 +156,7 @@ def test_skip_self_applies_to_next_turn_only() -> None:
     assert [row["step_index"] for row in episode.trace] == [0, 2]
 
 
+@pytest.mark.contract
 def test_non_serializable_state_raises_configuration_error_with_path() -> None:
     config = parse_run_config(
         {
@@ -174,6 +178,7 @@ def test_non_serializable_state_raises_configuration_error_with_path() -> None:
     assert 'state["bad"]' in str(exc.value)
 
 
+@pytest.mark.integration
 def test_probe_variant_override_merges_and_writes_probe_artifacts(tmp_path: Path) -> None:
     result = run_rulesim_v0_sync(
         input_config={

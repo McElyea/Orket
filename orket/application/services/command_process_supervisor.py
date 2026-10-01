@@ -3,10 +3,12 @@ from __future__ import annotations
 
 import asyncio
 import math
+from functools import partial
 from pathlib import Path
 
 from orket.adapters.execution.owned_command_limits import jsonl_request_frames
 from orket.adapters.execution.owned_command_process import execute_owned_command
+from orket.adapters.execution.owned_io import finish_owned_thread
 from orket.application.services.process_input_service import capture_process_context
 from orket.core.contracts.owned_command import OwnedCommandResult
 from orket.logging import log_event
@@ -21,15 +23,7 @@ class CommandProcessCancelled(asyncio.CancelledError):
 
 
 async def _record_cancellation(result, workspace, event_type):
-    publication = asyncio.create_task(asyncio.to_thread(
-        log_event, event_type, result.lifetime(), workspace))
-    while True:
-        try:
-            await asyncio.shield(publication)
-            return
-        except asyncio.CancelledError:
-            if publication.cancelled():
-                raise
+    await finish_owned_thread(partial(log_event, event_type, result.lifetime(), workspace))
 
 
 class CommandProcessSupervisor:

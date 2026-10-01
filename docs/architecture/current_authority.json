@@ -1,0 +1,328 @@
+{
+  "schema_version": "current_authority.v1",
+  "updated_on": "2026-09-28",
+  "history": {
+    "path": "docs/architecture/history/CURRENT_AUTHORITY_PRE_MANIFEST_2026-09-28.md",
+    "sha256": "ba47889a8b7dc9f76e462ceecf460500b2220e2767eda92e7ee68bb59dca07a9"
+  },
+  "records": [
+    {
+      "id": "command.install",
+      "kind": "command",
+      "label": "SDK and core development install",
+      "source": "README.md",
+      "command": "python -m pip install -e \"./orket_extension_sdk[testing]\" -e \".[dev]\"",
+      "proof": "proof.current"
+    },
+    {
+      "id": "command.runtime",
+      "kind": "command",
+      "label": "Default runtime",
+      "source": "docs/CONTRIBUTOR.md",
+      "command": "orket runtime",
+      "proof": "proof.current"
+    },
+    {
+      "id": "command.card",
+      "kind": "command",
+      "label": "Named card",
+      "source": "docs/CONTRIBUTOR.md",
+      "command": "orket runtime --card <card_id>",
+      "proof": "proof.current"
+    },
+    {
+      "id": "command.api",
+      "kind": "command",
+      "label": "API server",
+      "source": "docs/CONTRIBUTOR.md",
+      "command": "python server.py",
+      "proof": "proof.current"
+    },
+    {
+      "id": "command.pytest",
+      "kind": "command",
+      "label": "Default tests",
+      "source": "docs/CONTRIBUTOR.md",
+      "command": "python -m pytest -q",
+      "proof": "proof.current"
+    },
+    {
+      "id": "command.quality",
+      "kind": "command",
+      "label": "Quality coverage",
+      "source": "docs/CONTRIBUTOR.md",
+      "command": "pytest tests/ --cov=orket --cov-config=pyproject.toml --cov-fail-under=89",
+      "proof": "proof.current"
+    },
+    {
+      "id": "command.ruff",
+      "kind": "command",
+      "label": "Canonical Ruff",
+      "source": ".gitea/workflows/quality.yml",
+      "command": "ruff check orket tests",
+      "proof": "proof.current"
+    },
+    {
+      "id": "command.taxonomy",
+      "kind": "command",
+      "label": "Strict taxonomy",
+      "source": "docs/CONTRIBUTOR.md",
+      "command": "python scripts/governance/enforce_test_taxonomy.py --strict",
+      "proof": "proof.current"
+    },
+    {
+      "id": "command.dependency",
+      "kind": "command",
+      "label": "Dependency direction",
+      "source": "docs/CONTRIBUTOR.md",
+      "command": "python scripts/governance/check_dependency_direction.py",
+      "proof": "proof.current"
+    },
+    {
+      "id": "command.docs",
+      "kind": "command",
+      "label": "Project docs hygiene",
+      "source": "docs/CONTRIBUTOR.md",
+      "command": "python scripts/governance/check_docs_project_hygiene.py",
+      "proof": "proof.current"
+    },
+    {
+      "id": "reference.architecture",
+      "kind": "reference",
+      "label": "Normative architecture",
+      "source": "docs/ARCHITECTURE.md",
+      "role": "architecture"
+    },
+    {
+      "id": "reference.dependency",
+      "kind": "reference",
+      "label": "Executable dependency policy",
+      "source": "model/core/contracts/dependency_direction_policy.json",
+      "role": "dependency_policy"
+    },
+    {
+      "id": "reference.start_paths",
+      "kind": "reference",
+      "label": "Governed start-path authority",
+      "source": "docs/specs/CONTROL_PLANE_GOVERNED_START_PATH_MATRIX.md",
+      "role": "start_paths"
+    },
+    {
+      "id": "reference.contracts",
+      "kind": "reference",
+      "label": "Canonical contract and document index",
+      "source": "docs/README.md",
+      "role": "contracts_index"
+    },
+    {
+      "id": "reference.workflow",
+      "kind": "reference",
+      "label": "Contributor workflow",
+      "source": "docs/CONTRIBUTOR.md",
+      "role": "workflow"
+    },
+    {
+      "id": "reference.durable",
+      "kind": "reference",
+      "label": "Durable paths and retained stores",
+      "source": "docs/ARCHITECTURE.md",
+      "role": "durable_paths"
+    },
+    {
+      "id": "reference.outputs",
+      "kind": "reference",
+      "label": "Canonical script owners and output locations",
+      "source": "scripts/README.md",
+      "role": "script_outputs"
+    },
+    {
+      "id": "reference.security",
+      "kind": "reference",
+      "label": "Security and trust boundary",
+      "source": "docs/SECURITY.md",
+      "role": "security"
+    },
+    {
+      "id": "reference.plan",
+      "kind": "reference",
+      "label": "Active obligations and bounded proof records",
+      "source": "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
+      "role": "active_plan"
+    },
+    {
+      "id": "reference.exceptions",
+      "kind": "reference",
+      "label": "Transitional exception obligations",
+      "source": "docs/projects/architectural-truth/ARCHITECTURE_EXCEPTION_REGISTER.json",
+      "role": "exception_register"
+    },
+    {
+      "id": "owners.turn",
+      "kind": "owners",
+      "label": "Governed turn tools",
+      "source": "docs/specs/TOOL_EXECUTION_GATE_V1.md",
+      "executor": "orket/application/workflows/turn_tool_dispatcher.py#ToolDispatcher",
+      "authorization": "orket/application/services/tool_gate_service.py#ToolGate",
+      "effect": "orket/application/services/toolbox.py#ToolBox",
+      "terminal": "orket/application/services/turn_tool_control_plane_service.py#TurnToolControlPlaneService",
+      "ceiling": "Each tool retains its admitted contract; model completion statements are not effect or terminal authority."
+    },
+    {
+      "id": "owners.card",
+      "kind": "owners",
+      "label": "Card execution and completion",
+      "source": "docs/specs/CARD_COMPLETION_ACCEPTANCE_CONTRACT.md",
+      "executor": "orket/application/workflows/orchestrator.py#Orchestrator",
+      "authorization": "orket/application/services/cards_epic_control_plane_service.py#CardsEpicControlPlaneService",
+      "effect": "orket/adapters/storage/async_card_repository.py#AsyncCardRepository",
+      "terminal": "orket/application/services/card_completion_service.py#CardCompletionService",
+      "ceiling": "Declared acceptance and current governed start-path contracts bound completion; storage success alone does not prove the requested workload."
+    },
+    {
+      "id": "contract.api",
+      "kind": "contract",
+      "label": "API construction and lifetime",
+      "source": "docs/specs/API_RUNTIME_LIFECYCLE.md",
+      "scope": "Captured factory inputs, lifespan acquisition, request admission and cleanup."
+    },
+    {
+      "id": "contract.runtime",
+      "kind": "contract",
+      "label": "Runtime result and lifecycle",
+      "source": "docs/specs/RUNTIME_EXECUTION_RESULT_CONTRACT.md",
+      "scope": "Application results and owned runtime lifecycle."
+    },
+    {
+      "id": "contract.sdk",
+      "kind": "contract",
+      "label": "Trusted workload process lifetime",
+      "source": "docs/specs/SDK_WORKLOAD_PROCESS_LIFETIME.md",
+      "scope": "Trusted extension process lifetime; not hostile-code containment."
+    },
+    {
+      "id": "contract.settings",
+      "kind": "contract",
+      "label": "Settings and preference inputs",
+      "source": "docs/specs/SETTINGS_INPUT_OWNERSHIP.md",
+      "scope": "Bound configuration, persistence and migration."
+    },
+    {
+      "id": "contract.terminal",
+      "kind": "contract",
+      "label": "Control-plane terminal authority",
+      "source": "docs/specs/CONTROL_PLANE_TERMINAL_AUTHORITY.md",
+      "scope": "Verified terminal publication and explicit uncertainty."
+    },
+    {
+      "id": "contract.roots",
+      "kind": "contract",
+      "label": "Runtime project roots",
+      "source": "docs/specs/RUNTIME_PROJECT_ROOTS.md",
+      "scope": "Invocation project selection and package-owned immutable assets."
+    },
+    {
+      "id": "contract.stores",
+      "kind": "contract",
+      "label": "Runtime store binding",
+      "source": "docs/specs/RUNTIME_STORE_BINDING.md",
+      "scope": "Durable store locations bind once; historical migration stays explicit."
+    },
+    {
+      "id": "contract.quality",
+      "kind": "contract",
+      "label": "Quality checker and coverage contract",
+      "source": "docs/specs/QUALITY_CHECKER_CONTRACT.md",
+      "scope": "Actual pytest markers, native checker limits and unchanged 89-percent coverage floor."
+    },
+    {
+      "id": "contract.logging",
+      "kind": "contract",
+      "label": "Logging preparation and settlement",
+      "source": "docs/specs/LOG_WRITE_SETTLEMENT.md",
+      "scope": "Explicit native preparation, operation-local bindings, process-owned writer and bounded optional publication/frontier."
+    },
+    {
+      "id": "compatibility.main",
+      "kind": "compatibility",
+      "label": "Source wrapper and hidden rock alias",
+      "source": "docs/projects/architectural-truth/ARCHITECTURE_EXCEPTION_REGISTER.json",
+      "condition": "Installed-root proof remains green and an explicit 0.7.0 contract delta removes python main.py plus the hidden source-wrapper --rock alias.",
+      "expires_on": null,
+      "ceiling": "No removal is inferred from a version number or this index."
+    },
+    {
+      "id": "compatibility.replay",
+      "kind": "compatibility",
+      "label": "Replay diagnostics alias",
+      "source": "docs/projects/architectural-truth/ARCHITECTURE_EXCEPTION_REGISTER.json",
+      "condition": "All supported callers use replay_turn_diagnostics() and the compatibility window is explicitly closed.",
+      "expires_on": null,
+      "ceiling": "Artifact-backed diagnostics do not gain replay-verdict authority."
+    },
+    {
+      "id": "compatibility.verification",
+      "kind": "compatibility",
+      "label": "Latest verification support artifact",
+      "source": "docs/projects/architectural-truth/ARCHITECTURE_EXCEPTION_REGISTER.json",
+      "condition": "All supported consumers use the canonical verification index and per-record artifacts.",
+      "expires_on": null,
+      "ceiling": "Latest-path support artifacts do not establish authored-output authority."
+    },
+    {
+      "id": "compatibility.runtime_aliases",
+      "kind": "compatibility",
+      "label": "Flat runtime module aliases; removal version unassigned",
+      "source": "docs/ARCHITECTURE.md",
+      "condition": "The old flat `orket.runtime.<module>` imports remain one-release compatibility aliases.",
+      "expires_on": null,
+      "ceiling": "Exact removal version is unassigned. Keep this debt visible; do not infer expiry or create another shim."
+    },
+    {
+      "id": "ceiling.cap",
+      "kind": "ceiling",
+      "label": "Capability expansion remains proposed",
+      "source": "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
+      "scope": "CAP-1/2/3",
+      "posture": "proposed",
+      "statement": "Broader objective families, hostile-code containment and performance/cost claims require their own accepted gates."
+    },
+    {
+      "id": "ceiling.extensions",
+      "kind": "ceiling",
+      "label": "Trusted Python extensions",
+      "source": "docs/specs/SDK_WORKLOAD_PROCESS_LIFETIME.md",
+      "scope": "extension trust",
+      "posture": "trusted_only",
+      "statement": "Process lifetime supervision does not establish OS containment of hostile extension code."
+    },
+    {
+      "id": "ceiling.evidence",
+      "kind": "ceiling",
+      "label": "Evidence graph projections",
+      "source": "docs/specs/RUN_EVIDENCE_GRAPH_V1.md",
+      "scope": "evidence graph",
+      "posture": "support_only",
+      "statement": "Projection and rendering do not acquire executor, approval, effect or terminal authority; canonical view tokens remain in the graph contract."
+    },
+    {
+      "id": "proof.current",
+      "kind": "proof",
+      "label": "Current execution acceptance",
+      "source": "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
+      "state": "unavailable",
+      "observed_on": null,
+      "scope": "current runtime and command execution",
+      "ceiling": "This index does not ingest portable runtime receipts. Source binding and marker classification are structural; recorded scoped results remain in the plan."
+    },
+    {
+      "id": "proof.platforms",
+      "kind": "proof",
+      "label": "Installed, platform, provider and hosted acceptance",
+      "source": "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
+      "state": "unavailable",
+      "observed_on": null,
+      "scope": "current installed/platform/provider/hosted acceptance",
+      "ceiling": "No current installed, cross-platform, actual provider or hosted Quality proof is granted by this index."
+    }
+  ]
+}

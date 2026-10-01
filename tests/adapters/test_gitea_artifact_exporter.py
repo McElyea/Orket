@@ -12,7 +12,7 @@ from orket.application.services.gitea_artifact_exporter_factory import create_gi
 
 
 @pytest.mark.unit
-# Layer: unit
+# Layer: contract
 def test_build_repo_url_does_not_embed_credentials(tmp_path: Path) -> None:
     exporter = create_gitea_artifact_exporter(workspace=tmp_path)
 
@@ -73,6 +73,7 @@ def test_export_binding_rejects_credential_bearing_target(monkeypatch, tmp_path)
         create_gitea_artifact_exporter(tmp_path)
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 @pytest.mark.parametrize("setting,value", [("ORKET_GITEA_ARTIFACT_BRANCH", "--upload-pack=bad"),
                                          ("ORKET_GITEA_ARTIFACT_PATH_PREFIX", "../outside"),

@@ -238,7 +238,9 @@ def _process_rules(organization: Any) -> Mapping[str, Any]:
     return rules
 
 
-def build_decision_node_registry(*, environment: Mapping[str, str] | None = None) -> DecisionNodeRegistry:
+def build_decision_node_registry(
+    *, environment: Mapping[str, str] | None = None, user_settings: Mapping[str, Any] | None = None,
+) -> DecisionNodeRegistry:
     """Composition boundary: capture settings once; strategies never observe this source."""
     import os
 
@@ -247,7 +249,7 @@ def build_decision_node_registry(*, environment: Mapping[str, str] | None = None
     captured = dict(os.environ if environment is None else environment)
     if captured.get("ORKET_MODEL_CLIENT_NODE"):
         raise ValueError("ORKET_MODEL_CLIENT_NODE is retired; configure an application model-client factory.")
-    stored = load_user_settings()
+    stored = dict(user_settings) if user_settings is not None else load_user_settings()
     if stored.get("ORKET_MODEL_CLIENT_NODE"):
         raise ValueError("ORKET_MODEL_CLIENT_NODE is retired; configure an application model-client factory.")
     names = (

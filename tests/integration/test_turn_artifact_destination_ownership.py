@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import json
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, nullcontext
 from datetime import datetime
 from functools import partial
 from pathlib import Path
@@ -21,7 +21,9 @@ from orket.application.services.turn_tool_control_plane_service import build_tur
 from orket.application.workflows.turn_approval_publication import create_pending_tool_approval_request
 from orket.application.workflows.turn_artifact_writer import TurnArtifactWriter
 from orket.application.workflows.turn_executor import TurnExecutor
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain.state_machine import StateMachine
+from orket.logging import bind_logging, prepare_logging
 from orket.schema import CardStatus, IssueConfig, RoleConfig
 from tests.helpers.kernel_state_probe import responsive_sqlite
 from tests.helpers.turn_control_plane_clock import deterministic_turn_clock as deterministic_turn_clock
@@ -176,9 +178,15 @@ def _turn_dir(case) -> Path:
 
 
 @asynccontextmanager
-async def _turn_task(case):
-    task = asyncio.create_task(case.executor.execute_turn(
-        case.issue, case.role, case.model, case.toolbox, case.context, system_prompt="SYSTEM"))
+async def _turn_task(case, *, logging_required: bool):
+    async def operation():
+        scope = (bind_logging(await prepare_logging(LoggingInputs(case.root)))
+                 if logging_required else nullcontext())
+        with scope:
+            return await case.executor.execute_turn(
+                case.issue, case.role, case.model, case.toolbox, case.context, system_prompt="SYSTEM")
+
+    task = asyncio.create_task(operation())
     primary_error = None
     try:
         yield task
@@ -282,7 +290,7 @@ async def test_composed_turn_keeps_one_destination_across_identity_mutation(
     tmp_path, monkeypatch, record_property, deterministic_turn_clock, held_model, compact,
 ) -> None:
     case = _case(tmp_path, monkeypatch, deterministic_turn_clock, held_model=held_model, compact=compact)
-    async with _turn_task(case) as task:
+    async with _turn_task(case, logging_required=True) as task:
         await asyncio.wait_for(case.owner.entered.wait(), 5)
         assert case.owner.keys == [_RUN_A]
         await responsive_sqlite(tmp_path / "owner-responsive.sqlite3",
@@ -321,7 +329,7 @@ async def test_approval_request_and_hold_keep_captured_destination(
         stage_gate_mode="approval_required", run_namespace_scope="issue:ISSUE-A")
     case.context["create_pending_gate_request"] = partial(create_pending_tool_approval_request,
         approval_owner, issue_status="in_progress", gate_mode="approval_required")
-    async with _turn_task(case) as task:
+    async with _turn_task(case, logging_required=True) as task:
         await asyncio.wait_for(case.owner.entered.wait(), 5)
         await responsive_sqlite(tmp_path / "approval-responsive.sqlite3", record_property)
         _mutate(case, tmp_path, "B")
@@ -354,7 +362,7 @@ async def test_repeated_cancellation_before_owner_admission_has_no_effects(
     tmp_path, monkeypatch, record_property, deterministic_turn_clock,
 ) -> None:
     case = _case(tmp_path, monkeypatch, deterministic_turn_clock, held_model=False)
-    async with _turn_task(case) as task:
+    async with _turn_task(case, logging_required=False) as task:
         await asyncio.wait_for(case.owner.entered.wait(), 5)
         assert case.owner.keys == [_RUN_A]
         await responsive_sqlite(tmp_path / "cancel-responsive.sqlite3", record_property)

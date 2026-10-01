@@ -2,6 +2,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
 
 def test_quant_sweep_full_workflow_enforces_policy_gates() -> None:
     workflow = Path(".gitea/workflows/quant-sweep-full-selfhosted.yml").read_text(encoding="utf-8")

@@ -10,6 +10,8 @@ from orket.core.domain.records import IssueRecord
 from orket.schema import CardStatus
 from tests.helpers.card_completion import complete_existing_card
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 async def repo(db_path):
@@ -119,7 +121,7 @@ async def test_concurrency_stress(repo):
 
 @pytest.mark.asyncio
 async def test_read_operations_do_not_wait_on_write_lock(repo):
-    """Layer: unit. Verifies reads are not serialized behind the repository write lock."""
+    """Layer: integration. Verifies reads are not serialized behind the repository write lock."""
     await repo.save(IssueRecord(id="READ-LOCK", summary="Readable while write lock held", seat="standard"))
 
     async with repo._write_lock:

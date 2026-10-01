@@ -1,4 +1,4 @@
-# Layer: end-to-end
+# Layer: integration
 
 from __future__ import annotations
 
@@ -10,6 +10,8 @@ from orket.adapters.storage.command_runner import CommandResult
 from orket.core.domain.sandbox import SandboxRegistry, TechStack
 from orket.core.domain.sandbox_lifecycle import CleanupState, SandboxState, TerminalReason
 from orket.services.sandbox_orchestrator import SandboxOrchestrator
+
+pytestmark = pytest.mark.integration
 
 
 class RaceCommandRunner:

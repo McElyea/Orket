@@ -3,6 +3,10 @@
 import ast
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 LOW_VOL_ROOTS = [
     PROJECT_ROOT / "orket" / "core" / "domain",

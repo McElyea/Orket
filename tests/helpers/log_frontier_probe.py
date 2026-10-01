@@ -13,6 +13,7 @@ import psutil
 
 import orket.logging as logging_module
 from orket.adapters.observability import log_publication as logging_owner
+from orket.adapters.observability.logging_context import prepare_logging_native, select_logging_inputs
 from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
 
 __test__ = False
@@ -358,6 +359,8 @@ def main(argv: list[str] | None = None) -> int:
     }
     if scenario not in handlers:
         raise SystemExit(f"unknown scenario: {scenario}")
+    if scenario not in {"unprepared-reuse", "loop-refusal"}:
+        prepare_logging_native(select_logging_inputs(root, dict(os.environ)))
     persisted = write_payload_with_diff_ledger(root / "probe-report.json", handlers[scenario](root))
     print(json.dumps(persisted, sort_keys=True))
     return 0

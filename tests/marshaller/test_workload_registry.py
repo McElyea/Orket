@@ -59,10 +59,12 @@ def _make_patch(repo: Path, new_content: str) -> str:
     return patch
 
 
+@pytest.mark.unit
 def test_marshaller_workload_is_builtin() -> None:
     assert is_builtin_workload("marshaller_v0")
 
 
+@pytest.mark.contract
 def test_validate_marshaller_workload_start_rejects_missing_paths() -> None:
     with pytest.raises(ValueError, match="run_request_path"):
         validate_builtin_workload_start(

@@ -4,6 +4,8 @@ import pytest
 
 from orket.streaming import StreamLawChecker, StreamLawViolation
 
+pytestmark = pytest.mark.contract
+
 
 def _event(*, seq: int, event_type: str, payload: dict):
     return {

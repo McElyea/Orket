@@ -284,7 +284,9 @@ def _swap_events(ledger: dict[str, Any], first: str, second: str) -> dict[str, A
     events = list(copied.get("events") or [])
     first_index = next(index for index, event in enumerate(events) if event.get("event_type") == first)
     second_index = next(index for index, event in enumerate(events) if event.get("event_type") == second)
-    events[first_index], events[second_index] = events[second_index], events[first_index]
+    # Keep canonical ledger slots intact so this isolates semantic approval order.
+    for field in ("event_type", "agent_id", "payload"):
+        events[first_index][field], events[second_index][field] = events[second_index][field], events[first_index][field]
     copied["events"] = events
     return _rehash_ledger(copied)
 

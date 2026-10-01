@@ -26,6 +26,7 @@ def _seed_pack(
     (pack_dir / "constraints.yaml").write_text(constraints_text, encoding="utf-8")
 
 
+@pytest.mark.integration
 def test_inheritance_merge_is_deterministic(tmp_path: Path) -> None:
     root = tmp_path / "packs"
     _seed_pack(root / "base", pack_id="base", system_text="BASE")
@@ -37,6 +38,7 @@ def test_inheritance_merge_is_deterministic(tmp_path: Path) -> None:
     assert first.inheritance_chain == second.inheritance_chain
 
 
+@pytest.mark.integration
 def test_missing_required_files_returns_deterministic_error_code(tmp_path: Path) -> None:
     broken = tmp_path / "broken"
     broken.mkdir(parents=True, exist_ok=True)
@@ -47,6 +49,7 @@ def test_missing_required_files_returns_deterministic_error_code(tmp_path: Path)
     assert exc.value.code == "E_PACK_REQUIRED_MISSING"
 
 
+@pytest.mark.unit
 def test_resolved_pack_digest_is_stable(tmp_path: Path) -> None:
     root = tmp_path / "packs"
     _seed_pack(root / "base", pack_id="base", system_text="BASE")

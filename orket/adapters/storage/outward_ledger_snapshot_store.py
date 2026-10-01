@@ -6,6 +6,8 @@ from pathlib import Path
 
 import aiosqlite
 
+from orket.adapters.execution.owned_io import run_owned_io
+from orket.adapters.storage.async_file_tools import capture_file_roots
 from orket.adapters.storage.outward_ledger_append_store import read_append_head
 from orket.adapters.storage.outward_run_event_store import event_from_row
 from orket.adapters.storage.outward_run_store import run_record_from_row
@@ -36,9 +38,21 @@ class OutwardLedgerSnapshotStore:
         self.db_path, self.page_size = Path(db_path), page_size
         self.connection = connection
 
+    def capture(self) -> OutwardLedgerSnapshotStore:
+        """Capture standard reader values; an explicitly supplied connection stays borrowed."""
+        path, page_size, connection = self.db_path, self.page_size, self.connection
+        if connection is None:
+            path, = capture_file_roots([path])
+        return OutwardLedgerSnapshotStore(path, page_size=page_size, connection=connection)
+
     async def read(self, run_id: str) -> RetainedLedgerSnapshot:
-        if self.connection is not None:
-            return await self.read_in_transaction(self.connection, run_id)
+        captured = self.capture()
+        if captured.connection is not None:
+            return await captured.read_in_transaction(captured.connection, run_id)
+        return await run_owned_io(lambda: captured._read(run_id),
+                                  label="outward-ledger-snapshot-read", preserve_failure=True)
+
+    async def _read(self, run_id: str) -> RetainedLedgerSnapshot:
         uri = await asyncio.to_thread(lambda: self.db_path.resolve().as_uri() + "?mode=ro")
         try:
             async with aiosqlite.connect(uri, uri=True, timeout=5.0) as connection:
@@ -56,6 +70,11 @@ class OutwardLedgerSnapshotStore:
             raise OutwardLedgerIntegrityError(f"E_OUTWARD_LEDGER_RECORD_INVALID: {exc}") from exc
 
     async def read_in_transaction(self, connection: aiosqlite.Connection, run_id: str) -> RetainedLedgerSnapshot:
+        captured = OutwardLedgerSnapshotStore(self.db_path, page_size=self.page_size, connection=connection)
+        return await run_owned_io(lambda: captured._read_in_transaction(connection, run_id),
+                                  label="outward-ledger-borrowed-read", preserve_failure=True)
+
+    async def _read_in_transaction(self, connection: aiosqlite.Connection, run_id: str) -> RetainedLedgerSnapshot:
         if not connection.in_transaction:
             raise OutwardLedgerIntegrityError("E_OUTWARD_LEDGER_SNAPSHOT_TRANSACTION_REQUIRED")
         connection.row_factory = aiosqlite.Row

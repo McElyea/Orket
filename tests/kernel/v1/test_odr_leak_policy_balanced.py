@@ -32,6 +32,7 @@ def _auditor_valid(text: str) -> str:
     )
 
 
+@pytest.mark.contract
 def test_balanced_mode_does_not_hard_fail_on_weak_tokens_only() -> None:
     result = detect_code_leak(
         architect_raw=_architect_valid("Store data locally."),
@@ -43,6 +44,7 @@ def test_balanced_mode_does_not_hard_fail_on_weak_tokens_only() -> None:
     assert any(warn.startswith("WARN_LEAK_WEAK_TOKEN:") for warn in result.warnings)
 
 
+@pytest.mark.contract
 def test_strict_mode_keeps_legacy_keyword_hard_fail() -> None:
     result = detect_code_leak(
         architect_raw=_architect_valid("Store data locally."),
@@ -53,6 +55,7 @@ def test_strict_mode_keeps_legacy_keyword_hard_fail() -> None:
     assert result.matches_hard
 
 
+@pytest.mark.contract
 def test_balanced_mode_hard_fails_on_anchored_python_def() -> None:
     result = detect_code_leak(
         architect_raw=_architect_valid("Store data locally."),
@@ -63,6 +66,7 @@ def test_balanced_mode_hard_fails_on_anchored_python_def() -> None:
     assert "CODE" in result.classes
 
 
+@pytest.mark.contract
 def test_balanced_mode_tooling_without_cli_context_is_warning_only() -> None:
     result = detect_code_leak(
         architect_raw=_architect_valid("Store data locally."),
@@ -73,6 +77,7 @@ def test_balanced_mode_tooling_without_cli_context_is_warning_only() -> None:
     assert any(item["detector"] == "tooling_without_context" for item in result.matches_weak)
 
 
+@pytest.mark.contract
 def test_balanced_mode_tooling_with_cli_context_is_hard_fail() -> None:
     result = detect_code_leak(
         architect_raw=_architect_valid("Store data locally."),
@@ -83,6 +88,7 @@ def test_balanced_mode_tooling_with_cli_context_is_hard_fail() -> None:
     assert "TOOLING" in result.classes
 
 
+@pytest.mark.contract
 def test_balanced_mode_fallback_requires_structural_signal() -> None:
     result = detect_code_leak(
         architect_raw=_architect_valid("Store data locally."),
@@ -92,6 +98,7 @@ def test_balanced_mode_fallback_requires_structural_signal() -> None:
     assert result.hard_leak is False
 
 
+@pytest.mark.contract
 def test_balanced_mode_fallback_triggers_with_structural_combo() -> None:
     pseudo = (
         "{\n"
@@ -108,6 +115,7 @@ def test_balanced_mode_fallback_triggers_with_structural_combo() -> None:
     assert "CODE" in result.classes
 
 
+@pytest.mark.contract
 def test_balanced_mode_fence_detection_requires_exact_three_backtick_close() -> None:
     bad_close = "```python\nprint('x')\n````"
     result = detect_code_leak(
@@ -127,6 +135,7 @@ def test_balanced_mode_fence_detection_requires_exact_three_backtick_close() -> 
     assert "FENCE" in result2.classes
 
 
+@pytest.mark.unit
 def test_context_snippet_is_bounded_and_normalized() -> None:
     long_text = ("x" * 150) + "\n interface " + ("y" * 150)
     result = detect_code_leak(
@@ -141,6 +150,7 @@ def test_context_snippet_is_bounded_and_normalized() -> None:
     assert snippet == snippet.strip()
 
 
+@pytest.mark.contract
 def test_run_round_propagates_hard_leak_fields() -> None:
     cfg = ReactorConfig(leak_gate_mode="balanced_v1")
     state = ReactorState()
@@ -152,6 +162,7 @@ def test_run_round_propagates_hard_leak_fields() -> None:
     assert isinstance(row.get("code_leak_matches_hard"), list) and row["code_leak_matches_hard"]
 
 
+@pytest.mark.contract
 def test_run_round_code_leak_precedence_over_shape_violation() -> None:
     cfg = ReactorConfig(leak_gate_mode="balanced_v1")
     state = ReactorState()
@@ -164,6 +175,7 @@ def test_run_round_code_leak_precedence_over_shape_violation() -> None:
     assert state.stop_reason == "CODE_LEAK"
 
 
+@pytest.mark.contract
 @pytest.mark.parametrize(
     "snippet,expected_class",
     [

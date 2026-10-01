@@ -2,8 +2,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from orket.application.services.canonical_role_templates import CANONICAL_PIPELINE_ROLES
 from orket.application.services.prompt_linter import lint_prompt_file
+
+pytestmark = pytest.mark.contract
 
 
 def test_canonical_role_assets_match_template_contract() -> None:

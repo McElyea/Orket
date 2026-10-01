@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from orket.core.domain import ClosureBasisClassification
-from orket.runtime.run_evidence_graph_projection_support import (
+from orket.runtime.evidence.run_evidence_graph_projection_support import (
     TERMINAL_RUN_STATES,
     PrimaryLineageContext,
     blocked_payload,

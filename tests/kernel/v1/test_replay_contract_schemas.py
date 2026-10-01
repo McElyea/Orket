@@ -4,7 +4,10 @@ import json
 from copy import deepcopy
 from pathlib import Path
 
+import pytest
 from jsonschema import Draft202012Validator
+
+pytestmark = pytest.mark.contract
 
 CONTRACTS_ROOT = Path("docs/projects/archive/OS-Stale-2026-02-28/contracts")
 

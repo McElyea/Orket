@@ -9,7 +9,9 @@ import pytest
 from orket.rulesim.contracts import TerminalResult, TransitionResult
 from orket.rulesim.workload import run_rulesim_v0_sync
 
-# Layer: integration. Controlled contract violations through the actual RuleSim workload.
+pytestmark = pytest.mark.contract
+
+# Layer: contract. Controlled contract violations through the actual RuleSim workload.
 
 class _BaseRuleSystem:
     def initial_state(self, seed: int, scenario: dict[str, Any], ruleset: dict[str, Any], agents: list[str]) -> dict[str, Any]:

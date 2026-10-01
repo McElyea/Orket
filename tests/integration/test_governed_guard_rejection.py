@@ -9,8 +9,10 @@ from orket.application.services.card_completion_turn_service import prepare_card
 from orket.application.services.tool_gate_service import ToolGate
 from orket.application.services.toolbox import ToolBox
 from orket.application.workflows.turn_executor import TurnExecutor
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain.records import IssueRecord
 from orket.core.domain.state_machine import StateMachine
+from orket.logging import bind_logging, prepare_logging
 from orket.schema import CardStatus, IssueConfig, RoleConfig
 from tests.helpers.card_completion import completion_components
 from tests.helpers.turn_artifacts import artifact_test_utc_now
@@ -61,8 +63,9 @@ async def test_governed_guard_rejection_persists_blocked_with_no_completion_rece
     gate = ToolGate(organization=None, workspace_root=workspace)
     toolbox = ToolBox(None, str(workspace), [], db_path=repo.db_path, cards_repo=repo, tool_gate=gate)
     role = RoleConfig(id='guard', summary='integrity_guard', description='Review acceptance', tools=['update_issue_status'])
-    result = await TurnExecutor(StateMachine(), gate, workspace, utc_now=artifact_test_utc_now).execute_turn(
-        IssueConfig.model_validate(record.model_dump()), role, GuardModel(case), toolbox, context, system_prompt=system_prompt)
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await TurnExecutor(StateMachine(), gate, workspace, utc_now=artifact_test_utc_now).execute_turn(
+            IssueConfig.model_validate(record.model_dump()), role, GuardModel(case), toolbox, context, system_prompt=system_prompt)
     stored = await repo.get_by_id(record.id)
     if case == 'valid':
         assert result.success, result.error

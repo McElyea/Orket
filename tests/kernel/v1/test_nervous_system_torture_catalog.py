@@ -64,6 +64,7 @@ def _enable_nervous_system(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("ORKET_USE_TOOL_PROFILE_RESOLVER", "false")
 
 
+@pytest.mark.contract
 @pytest.mark.parametrize("case", _admission_cases(), ids=lambda case: str(case.get("id") or "case"))
 def test_attack_catalog_admission_outcomes(case: dict[str, Any]) -> None:
     case_id = str(case.get("id") or "")
@@ -113,6 +114,7 @@ def _issue_credential_token(case: dict[str, Any], *, session_id: str, trace_id: 
     return issued, admitted["proposal_digest"]
 
 
+@pytest.mark.contract
 def test_token_scope_replay_and_expiry_fail_closed() -> None:
     case = _case_by_id("autonomy_credentialed_action_requires_approval")
     issued, proposal_digest = _issue_credential_token(
@@ -187,6 +189,7 @@ def test_token_scope_replay_and_expiry_fail_closed() -> None:
     assert expired["reason_code"] == "TOKEN_EXPIRED"
 
 
+@pytest.mark.contract
 def test_approval_fatigue_rebuilds_pending_queue_without_drift() -> None:
     session_id = "sess-approval-flood"
     case = _case_by_id("multi_step_benign_then_destructive_followup")
@@ -226,6 +229,7 @@ def test_approval_fatigue_rebuilds_pending_queue_without_drift() -> None:
     assert all(str(item["approval_id"]) not in set(sorted(approval_ids)[:10]) for item in rebuilt_after)
 
 
+@pytest.mark.contract
 def test_result_disclosure_is_sanitized_and_not_logged_raw() -> None:
     case = _case_by_id("telemetry_secret_echo_requires_result_sanitization")
     case_id = str(case["id"])

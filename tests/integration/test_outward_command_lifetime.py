@@ -25,8 +25,10 @@ pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 @pytest.mark.parametrize("flags", [[], ["detached", "ignore-term"]], ids=["ordinary", "detached-resistant"])
 # Layer: integration
 async def test_outward_command_stops_children_and_grandchildren(tmp_path, stop, flags, caplog):
+    # Coverage-instrumented children can take more than one second to reach the
+    # grandchild. Retain a finite budget that admits the tree before timeout.
     metadata = replace(DEFAULT_BUILTIN_CONNECTOR_REGISTRY.get("run_command"),
-                       timeout_seconds=1 if stop == "timeout" else 10)
+                       timeout_seconds=5 if stop == "timeout" else 10)
     service = OutwardConnectorService(connector_registry=BuiltInConnectorRegistry([metadata]), workspace_root=tmp_path)
     task = asyncio.create_task(service.invoke("run_command", {
         "command": [sys.executable, str(WORKER), str(tmp_path), "2", *flags, stop]}))
@@ -49,8 +51,12 @@ async def test_outward_command_stops_children_and_grandchildren(tmp_path, stop, 
         else:
             if stop in {"leader-exit", "leader-failure"}:
                 await asyncio.to_thread((tmp_path / "release-leader").touch)
-            event = await asyncio.wait_for(asyncio.shield(task), 5)
+            # The timeout case includes its five-second run budget and cleanup;
+            # the other cases retain their existing five-second settlement bound.
+            event = await asyncio.wait_for(asyncio.shield(task), 10 if stop == "timeout" else 5)
             assert event["outcome"] == {"timeout": "timeout", "leader-exit": "success", "leader-failure": "failed"}[stop]
+            if stop == "timeout":
+                assert event["duration_ms"] >= metadata.timeout_seconds * 1000
         # Observe actual process/effect lifetime before checking receipt shape.
         await assert_stopped(processes, tmp_path)
         lifetime = (event["process_lifetime"] if stop in {"cancel", "repeated-cancel"}

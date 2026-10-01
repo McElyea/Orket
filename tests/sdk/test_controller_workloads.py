@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-# Layer: unit
+# Layer: contract
 from pathlib import Path
 from typing import Any
 
@@ -16,6 +16,8 @@ from orket_extension_sdk.workloads.controller import (
     ControllerWorkloadRuntime,
     canonical_observability_projection,
 )
+
+pytestmark = pytest.mark.contract
 
 
 def _build_context(tmp_path: Path) -> WorkloadContext:
@@ -37,7 +39,7 @@ def _build_context(tmp_path: Path) -> WorkloadContext:
 
 @pytest.mark.asyncio
 async def test_controller_workload_runner_success_path(tmp_path: Path) -> None:
-    """Layer: unit."""
+    """Layer: contract."""
     ctx = _build_context(tmp_path)
     dispatch_calls: list[dict[str, Any]] = []
 
@@ -115,7 +117,7 @@ async def test_controller_workload_runner_success_path(tmp_path: Path) -> None:
 
 @pytest.mark.asyncio
 async def test_controller_workload_runner_blocks_when_policy_disables(tmp_path: Path) -> None:
-    """Layer: unit."""
+    """Layer: contract."""
     ctx = _build_context(tmp_path)
     dispatch_called = False
 
@@ -174,7 +176,7 @@ async def test_controller_workload_runner_blocks_when_policy_disables(tmp_path: 
 
 @pytest.mark.asyncio
 async def test_controller_workload_runner_fail_closed_on_observability_error(tmp_path: Path) -> None:
-    """Layer: unit."""
+    """Layer: contract."""
     ctx = _build_context(tmp_path)
 
     async def dispatch(
@@ -227,7 +229,7 @@ async def test_controller_workload_runner_fail_closed_on_observability_error(tmp
 
 
 def test_canonical_observability_projection_requires_run_id() -> None:
-    """Layer: unit."""
+    """Layer: contract."""
     with pytest.raises(ValueError, match="controller.observability_event_invalid"):
         canonical_observability_projection(
             [

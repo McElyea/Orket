@@ -5,6 +5,7 @@ import pytest
 from orket_extension_sdk.testing import DeterminismHarness, FakeCapabilities, GoldenArtifact, sha256_digest
 
 
+@pytest.mark.contract
 def test_golden_artifact_digest_stable_for_key_order() -> None:
     a = GoldenArtifact(name="x", payload={"b": 2, "a": 1})
     b = GoldenArtifact(name="x", payload={"a": 1, "b": 2})
@@ -12,6 +13,7 @@ def test_golden_artifact_digest_stable_for_key_order() -> None:
     assert a.digest_sha256 == b.digest_sha256
 
 
+@pytest.mark.unit
 def test_fake_capabilities_registers_sorted() -> None:
     registry = FakeCapabilities.from_mapping({"b": 2, "a": 1})
 
@@ -19,6 +21,7 @@ def test_fake_capabilities_registers_sorted() -> None:
     assert registry.get("b") == 2
 
 
+@pytest.mark.unit
 def test_determinism_harness_passes_repeatable_output() -> None:
     harness = DeterminismHarness()
 
@@ -27,6 +30,7 @@ def test_determinism_harness_passes_repeatable_output() -> None:
     assert digest == sha256_digest({"x": [1, 2, 3]})
 
 
+@pytest.mark.unit
 def test_determinism_harness_fails_non_repeatable_output() -> None:
     harness = DeterminismHarness()
     state = {"n": 0}

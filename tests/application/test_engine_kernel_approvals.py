@@ -12,10 +12,10 @@ pytestmark = pytest.mark.unit
 
 @pytest.mark.asyncio
 # Layer: unit
-async def test_engine_approvals_use_nervous_system_runtime_when_enabled(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_engine_approvals_use_nervous_system_runtime_when_enabled(tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("ORKET_ENABLE_NERVOUS_SYSTEM", "true")
     monkeypatch.setenv("ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS", "true")
-    engine = _make_engine()
+    engine = await _make_engine(tmp_path)
     await run_owned_thread(
         partial(
             engine.kernel_gateway.admit_proposal,

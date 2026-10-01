@@ -21,6 +21,7 @@ class _Provider:
         return {"enabled": True}
 
 
+@pytest.mark.unit
 def test_registry_register_and_get() -> None:
     registry = CapabilityRegistry()
     registry.register("fs.read", object())
@@ -29,6 +30,7 @@ def test_registry_register_and_get() -> None:
     assert registry.get("fs.read") is not None
 
 
+@pytest.mark.contract
 def test_registry_duplicate_rejected() -> None:
     registry = CapabilityRegistry()
     registry.register("fs.read", object())
@@ -37,6 +39,7 @@ def test_registry_duplicate_rejected() -> None:
         registry.register("fs.read", object())
 
 
+@pytest.mark.unit
 def test_registry_preflight_sorted_unique() -> None:
     registry = CapabilityRegistry()
     registry.register("a", object())
@@ -46,6 +49,7 @@ def test_registry_preflight_sorted_unique() -> None:
     assert missing == ["b", "z"]
 
 
+@pytest.mark.unit
 def test_registry_register_provider() -> None:
     registry = CapabilityRegistry()
     registry.register_provider(_Provider())
@@ -53,18 +57,21 @@ def test_registry_register_provider() -> None:
     assert registry.has("trace.emit") is True
 
 
+@pytest.mark.contract
 def test_validate_capabilities_warns_by_default() -> None:
     errors, warnings = validate_capabilities(["unknown.cap"], strict=False)
     assert errors == []
     assert warnings == ["E_SDK_CAPABILITY_UNKNOWN: unknown.cap"]
 
 
+@pytest.mark.contract
 def test_validate_capabilities_errors_in_strict_mode() -> None:
     errors, warnings = validate_capabilities(["unknown.cap"], strict=True)
     assert warnings == []
     assert errors == ["E_SDK_CAPABILITY_UNKNOWN: unknown.cap"]
 
 
+@pytest.mark.contract
 def test_agent_iteration_protocol_marker_is_known_in_strict_mode() -> None:
     """Layer: contract. The marker negotiates a protocol and does not self-admit an effect."""
     errors, warnings = validate_capabilities(["agent.iteration.v1"], strict=True)
@@ -73,6 +80,7 @@ def test_agent_iteration_protocol_marker_is_known_in_strict_mode() -> None:
     assert warnings == []
 
 
+@pytest.mark.contract
 def test_governed_agent_effect_proposal_capabilities_are_known() -> None:
     """Layer: contract. Effect names are declarable but remain host-bound proposals."""
     errors, warnings = validate_capabilities(["read_file", "write_file"], strict=True)
@@ -81,6 +89,7 @@ def test_governed_agent_effect_proposal_capabilities_are_known() -> None:
     assert warnings == []
 
 
+@pytest.mark.contract
 def test_registry_typed_accessors() -> None:
     registry = CapabilityRegistry()
     registry.register("tts.speak", NullTTSProvider())
@@ -117,14 +126,16 @@ def test_registry_typed_accessors() -> None:
     assert voice_result.ok is False
 
 
+@pytest.mark.contract
 def test_generate_request_default_and_low_token_warning() -> None:
-    """Layer: unit. Verifies SDK LLM requests default to non-truncating output budgets."""
+    """Layer: contract. Verifies SDK LLM requests default to non-truncating output budgets."""
     assert GenerateRequest(system_prompt="system", user_message="hello").max_tokens == 2048
 
     with pytest.warns(RuntimeWarning, match="below 256"):
         GenerateRequest(system_prompt="system", user_message="hello", max_tokens=128)
 
 
+@pytest.mark.contract
 def test_preflight_rejects_invalid_typed_provider() -> None:
     registry = CapabilityRegistry()
     registry.register("tts.speak", object())

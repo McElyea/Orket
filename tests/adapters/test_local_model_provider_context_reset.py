@@ -7,6 +7,8 @@ import pytest
 
 from tests.helpers.provider_preparation import create_test_model_provider_async
 
+pytestmark = pytest.mark.contract
+
 
 @pytest.mark.asyncio
 async def test_openai_compat_context_reset_status_tracks_epoch_rotation(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -428,12 +428,12 @@ def test_runtime_policy_options(monkeypatch):
     assert data["gitea_state_pilot_enabled"]["default"] is False
 
 
-def test_model_assignments_endpoint_returns_selector_decisions(monkeypatch):
-    monkeypatch.setenv("ORKET_API_KEY", "test-key")
-    monkeypatch.setattr(api_module, "_discover_active_roles", lambda _root: ["coder", "reviewer"])
-    monkeypatch.setattr(api_module._get_engine(client.app), "org", object())
+def test_model_assignments_endpoint_returns_selector_decisions(monkeypatch, tmp_path):
+    from tests.helpers.model_selection import ModelSelectionFixture, seed_model_role_catalog
 
-    from tests.helpers.model_selection import ModelSelectionFixture
+    monkeypatch.setenv("ORKET_API_KEY", "test-key")
+    seed_model_role_catalog(monkeypatch, api_module._runtime_context(client.app).system_queries.reader, tmp_path, ["coder", "reviewer"])
+    monkeypatch.setattr(api_module._get_engine(client.app), "org", object())
 
     fixture = ModelSelectionFixture(
         preferences={"models": {"coder": "qwen2.5-coder:14b", "reviewer": "llama3.1:8b"}},

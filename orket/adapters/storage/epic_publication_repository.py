@@ -1,14 +1,16 @@
 """Serialize publication progress separately from the stores it publishes into."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
+from contextlib import AsyncExitStack, asynccontextmanager
+from functools import partial
 from pathlib import Path
 from typing import Literal, TypeVar
 
 import aiosqlite
 
+from orket.adapters.execution.owned_io import finish_owned_io, run_owned_io, run_owned_thread
+from orket.adapters.storage.async_file_tools import capture_file_roots
 from orket.adapters.storage.epic_approval_pause_store import EpicApprovalPauseStore
 from orket.adapters.storage.epic_export_dispatch_store import EpicExportDispatchStore
 from orket.adapters.storage.sqlite_connection import connect_sqlite_wal
@@ -128,30 +130,56 @@ class SQLiteEpicPublicationRepository:
 
     @asynccontextmanager
     async def transaction(self, session_id: str) -> AsyncIterator[SQLiteEpicPublicationTransaction]:
-        await asyncio.to_thread(self.db_path.parent.mkdir, parents=True, exist_ok=True)
-        async with connect_sqlite_wal(self.db_path) as connection:
-            await connection.execute("CREATE TABLE IF NOT EXISTS epic_publications ("
-                                     "session_id TEXT PRIMARY KEY, payload TEXT NOT NULL, digest TEXT NOT NULL)")
-            await connection.execute("CREATE TABLE IF NOT EXISTS epic_preparations ("
-                                     "session_id TEXT PRIMARY KEY, payload TEXT NOT NULL, digest TEXT NOT NULL)")
-            await connection.execute("CREATE TABLE IF NOT EXISTS epic_workload_outcomes ("
-                                     "session_id TEXT PRIMARY KEY, payload TEXT NOT NULL, digest TEXT NOT NULL)")
-            await connection.execute("CREATE TABLE IF NOT EXISTS epic_run_admissions ("
-                                     "session_id TEXT PRIMARY KEY, payload TEXT NOT NULL, digest TEXT NOT NULL)")
-            await connection.commit()
-            await connection.execute("BEGIN IMMEDIATE")
-            await connection.execute("CREATE TABLE IF NOT EXISTS epic_approval_pauses ("
-                                     "session_id TEXT NOT NULL, sequence INTEGER NOT NULL, payload TEXT NOT NULL, "
-                                     "digest TEXT NOT NULL, PRIMARY KEY(session_id, sequence))")
-            await connection.execute("CREATE TABLE IF NOT EXISTS epic_export_dispatches ("
-                                     "session_id TEXT PRIMARY KEY, payload TEXT NOT NULL, digest TEXT NOT NULL)")
-            await connection.execute("CREATE TABLE IF NOT EXISTS epic_approval_recoveries ("
-                                     "session_id TEXT NOT NULL, sequence INTEGER NOT NULL, ordinal INTEGER NOT NULL, "
-                                     "request_id TEXT NOT NULL, payload TEXT NOT NULL, digest TEXT NOT NULL, "
-                                     "PRIMARY KEY(session_id, sequence, ordinal), UNIQUE(session_id, request_id))")
-            try:
-                yield SQLiteEpicPublicationTransaction(connection, session_id)
-                await connection.commit()
-            finally:
-                if connection.in_transaction:
-                    await connection.rollback()
+        db_path, = capture_file_roots([self.db_path])
+        await run_owned_thread(partial(db_path.parent.mkdir, parents=True, exist_ok=True),
+                               label="epic-publication-parent")
+        stack = AsyncExitStack()
+        connection: aiosqlite.Connection | None = None
+        failure: BaseException | None = None
+        try:
+            opened_connection = await run_owned_io(lambda: stack.enter_async_context(connect_sqlite_wal(db_path)),
+                label="epic-publication-open", preserve_failure=True)
+            connection = opened_connection
+            await run_owned_io(lambda: self._prepare(opened_connection), label="epic-publication-prepare", preserve_failure=True)
+            yield SQLiteEpicPublicationTransaction(opened_connection, session_id)
+            await run_owned_io(opened_connection.commit, label="epic-publication-commit", preserve_failure=True)
+        except BaseException as error:  # Resource owner: preserve the selected body/admission failure through cleanup.
+            failure = error
+            raise
+        finally:
+            if failure is None:
+                await run_owned_io(lambda: self._close(connection, stack),
+                                   label="epic-publication-close", preserve_failure=True)
+            else:
+                # Native cleanup cancellation is a failure, not later caller interruption.
+                await finish_owned_io(lambda: self._close(connection, stack))
+
+    @staticmethod
+    async def _prepare(connection: aiosqlite.Connection) -> None:
+        await connection.execute("CREATE TABLE IF NOT EXISTS epic_publications ("
+                                 "session_id TEXT PRIMARY KEY, payload TEXT NOT NULL, digest TEXT NOT NULL)")
+        await connection.execute("CREATE TABLE IF NOT EXISTS epic_preparations ("
+                                 "session_id TEXT PRIMARY KEY, payload TEXT NOT NULL, digest TEXT NOT NULL)")
+        await connection.execute("CREATE TABLE IF NOT EXISTS epic_workload_outcomes ("
+                                 "session_id TEXT PRIMARY KEY, payload TEXT NOT NULL, digest TEXT NOT NULL)")
+        await connection.execute("CREATE TABLE IF NOT EXISTS epic_run_admissions ("
+                                 "session_id TEXT PRIMARY KEY, payload TEXT NOT NULL, digest TEXT NOT NULL)")
+        await connection.commit()
+        await connection.execute("BEGIN IMMEDIATE")
+        await connection.execute("CREATE TABLE IF NOT EXISTS epic_approval_pauses ("
+                                 "session_id TEXT NOT NULL, sequence INTEGER NOT NULL, payload TEXT NOT NULL, "
+                                 "digest TEXT NOT NULL, PRIMARY KEY(session_id, sequence))")
+        await connection.execute("CREATE TABLE IF NOT EXISTS epic_export_dispatches ("
+                                 "session_id TEXT PRIMARY KEY, payload TEXT NOT NULL, digest TEXT NOT NULL)")
+        await connection.execute("CREATE TABLE IF NOT EXISTS epic_approval_recoveries ("
+                                 "session_id TEXT NOT NULL, sequence INTEGER NOT NULL, ordinal INTEGER NOT NULL, "
+                                 "request_id TEXT NOT NULL, payload TEXT NOT NULL, digest TEXT NOT NULL, "
+                                 "PRIMARY KEY(session_id, sequence, ordinal), UNIQUE(session_id, request_id))")
+
+    @staticmethod
+    async def _close(connection: aiosqlite.Connection | None, stack: AsyncExitStack) -> None:
+        try:
+            if connection is not None and connection.in_transaction:
+                await connection.rollback()
+        finally:
+            await stack.aclose()

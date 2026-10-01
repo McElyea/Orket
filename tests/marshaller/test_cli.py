@@ -50,6 +50,7 @@ def _write_json(path: Path, payload: dict) -> Path:
     return path
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_execute_marshaller_from_files_runs_and_replays(tmp_path: Path) -> None:
     repo, head = _init_repo(tmp_path)
@@ -96,6 +97,7 @@ async def test_execute_marshaller_from_files_runs_and_replays(tmp_path: Path) ->
     assert result["replay_result"]["equivalence_key_match"] is True
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_execute_marshaller_from_files_can_promote(tmp_path: Path) -> None:
     repo, head = _init_repo(tmp_path)
@@ -148,10 +150,12 @@ async def test_execute_marshaller_from_files_can_promote(tmp_path: Path) -> None
     assert result["promotion"]["commit_sha"]
 
 
+@pytest.mark.unit
 def test_default_run_id_has_prefix() -> None:
     assert default_run_id().startswith("marshaller-")
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_list_and_inspect_marshaller_runs(tmp_path: Path) -> None:
     repo, head = _init_repo(tmp_path)

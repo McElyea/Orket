@@ -17,8 +17,6 @@ from tests.helpers.runtime_result import published_result
 from tests.live.run_summary_support import read_validated_run_summary
 from tests.turn_prompt_utils import extract_turn_prompt_context
 
-pytestmark = pytest.mark.end_to_end
-
 
 def _safe_console(text: str) -> str:
     return text.encode("ascii", errors="backslashreplace").decode("ascii")
@@ -190,18 +188,28 @@ class MultiRoleAcceptanceProvider:
 
 
 def _patch_dummy_model(monkeypatch, provider):
+    clients = []
+
     def fake_init(self, *args, **kwargs):
         self.model = "dummy"
         self.timeout = 300
+        self._closed = False
+        clients.append(self)
+
+    async def fake_close(self):
+        self._closed = True
 
     monkeypatch.setattr(LocalModelProvider, "__init__", fake_init)
     monkeypatch.setattr(LocalModelProvider, "complete", provider.complete)
+    monkeypatch.setattr(LocalModelProvider, "close", fake_close)
+    return clients
 
 
 def _write_core_assets(root, epic_id: str, environment_model: str = "dummy"):
     write_core_acceptance_assets(root, epic_id=epic_id, environment_model=environment_model)
 
 
+@pytest.mark.end_to_end
 @pytest.mark.asyncio
 # Layer: integration
 async def test_system_acceptance_role_pipeline_with_guard(tmp_path, monkeypatch):
@@ -213,7 +221,7 @@ async def test_system_acceptance_role_pipeline_with_guard(tmp_path, monkeypatch)
     db_path = str(root / "acceptance_pipeline.db")
 
     _write_core_assets(root, epic_id="acceptance_pipeline")
-    _patch_dummy_model(monkeypatch, MultiRoleAcceptanceProvider())
+    clients = _patch_dummy_model(monkeypatch, MultiRoleAcceptanceProvider())
 
     async with OrchestrationEngine.open(workspace, department="core", db_path=db_path, config_root=root) as engine:
         try:
@@ -248,8 +256,10 @@ async def test_system_acceptance_role_pipeline_with_guard(tmp_path, monkeypatch)
                 assert metadata.get("selection_policy")
         finally:
             await engine.close()
+    assert clients and all(client._closed for client in clients)
 
 
+@pytest.mark.end_to_end
 @pytest.mark.asyncio
 async def test_system_acceptance_role_pipeline_with_guard_live_reports_truthfully(tmp_path, monkeypatch):
     """Layer: end-to-end. Verifies the live provider path records a truthful success or failure outcome without fake providers."""
@@ -343,6 +353,7 @@ async def test_system_acceptance_role_pipeline_with_guard_live_reports_truthfull
         print(f"[live] run_root={run_root}")
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 # Layer: contract
 async def test_webhook_opened_event_triggers_issue_code_review(monkeypatch, tmp_path):

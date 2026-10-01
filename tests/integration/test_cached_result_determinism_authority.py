@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from contextlib import nullcontext
 from pathlib import Path
 from typing import Any
 
@@ -14,6 +15,7 @@ from orket.application.services.turn_tool_control_plane_support import (
     tool_call_ref,
 )
 from orket.application.workflows.turn_executor import ToolValidationError
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.contracts.protocol_error_codes import (
     E_DETERMINISM_VIOLATION_PREFIX,
     format_protocol_error,
@@ -21,6 +23,7 @@ from orket.core.contracts.protocol_error_codes import (
 from orket.core.contracts.tool_invocation_contracts import compute_tool_call_hash
 from orket.core.domain import AttemptState, ClosureBasisClassification, ResultClass, RunState, SideEffectBoundaryClass
 from orket.core.domain.execution import ExecutionTurn, ToolCall
+from orket.logging import bind_logging, prepare_logging
 from tests.helpers.operation_binding import (
     ARGS,
     ATTEMPT_ID,
@@ -67,13 +70,16 @@ async def _attempt(case, *, replay: bool = False):  # type: ignore[no-untyped-de
         tool_calls=[ToolCall(tool="write_file", args=dict(ARGS))],
     )
     try:
-        await execute_executor_dispatch_fixture(
-            case.executor,
-            turn=turn,
-            toolbox=case.toolbox,
-            context=_context(replay=replay),
-            issue=case.issue,
-        )
+        scope = (nullcontext() if replay else
+                 bind_logging(await prepare_logging(LoggingInputs(case.workspace))))
+        with scope:
+            await execute_executor_dispatch_fixture(
+                case.executor,
+                turn=turn,
+                toolbox=case.toolbox,
+                context=_context(replay=replay),
+                issue=case.issue,
+            )
     except (ToolValidationError, TurnToolControlPlaneError, RuntimeError, ValueError) as error:
         return turn, error
     return turn, None

@@ -6,6 +6,8 @@ import pytest
 
 from orket.reforger.modes import ModeValidationError, load_mode
 
+pytestmark = pytest.mark.integration
+
 
 def _write_mode(path: Path, *, hard: str = "  - never fabricate\n", soft: str = "  - be concise\n") -> None:
     path.write_text(

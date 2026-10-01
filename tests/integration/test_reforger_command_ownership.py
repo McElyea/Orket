@@ -7,6 +7,8 @@ import pytest
 
 from orket.application.services.reforger_service import ReforgerService
 from orket.application.services.toolbox import ToolBox
+from orket.core.contracts.logging_inputs import LoggingInputs
+from orket.logging import bind_logging, prepare_logging
 from orket.reforger.routes import TextMysteryPersonaRouteV0
 from tests.integration.test_reforger_tools_family import _seed_textmystery_inputs
 
@@ -39,13 +41,15 @@ async def test_reforger_tool_retains_worker_after_interruption(tmp_path, monkeyp
         "route_id": "textmystery_v1", "input_dir": str(tmp_path), "mode": "truth_only",
     }
     if entrypoint == "toolbox":
-        operation = tools.execute("reforger_inspect", args,
-                                  context={"tool_timeout_seconds": 0.05 if stop == "timeout" else 20})
+        prepared = await prepare_logging(LoggingInputs(tmp_path))
+        with bind_logging(prepared):
+            request = asyncio.create_task(tools.execute("reforger_inspect", args,
+                context={"tool_timeout_seconds": 0.05 if stop == "timeout" else 20}))
     else:
         operation = ReforgerService(workspace, (tmp_path,)).inspect(args)
         if stop == "timeout":
             operation = asyncio.wait_for(operation, 0.05)
-    request = asyncio.create_task(operation)
+        request = asyncio.create_task(operation)
     try:
         assert await asyncio.to_thread(entered.wait, 3)
         await asyncio.wait_for(asyncio.sleep(0), RESPONSIVENESS_SECONDS)

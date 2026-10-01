@@ -7,6 +7,8 @@ import pytest
 
 from tests.live.run_summary_support import read_validated_run_summary
 
+pytestmark = pytest.mark.contract
+
 
 def _write_json(path: Path, payload: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -14,7 +16,7 @@ def _write_json(path: Path, payload: dict) -> None:
 
 
 def test_read_validated_run_summary_accepts_projection_markers(tmp_path: Path) -> None:
-    """Layer: unit. Validated live-proof helpers should accept correctly framed projection-backed summaries."""
+    """Layer: contract. Validated live-proof helpers should accept correctly framed projection-backed summaries."""
     path = tmp_path / "run_summary.json"
     _write_json(
         path,
@@ -38,7 +40,7 @@ def test_read_validated_run_summary_accepts_projection_markers(tmp_path: Path) -
 
 
 def test_read_validated_run_summary_rejects_drifted_projection_markers(tmp_path: Path) -> None:
-    """Layer: unit. Validated live-proof helpers should fail closed on malformed projection framing."""
+    """Layer: contract. Validated live-proof helpers should fail closed on malformed projection framing."""
     path = tmp_path / "run_summary.json"
     _write_json(
         path,
@@ -61,7 +63,7 @@ def test_read_validated_run_summary_rejects_drifted_projection_markers(tmp_path:
 
 
 def test_read_validated_run_summary_rejects_degraded_payload(tmp_path: Path) -> None:
-    """Layer: unit. Live-proof helpers should fail closed on degraded summaries."""
+    """Layer: contract. Live-proof helpers should fail closed on degraded summaries."""
     path = tmp_path / "run_summary.json"
     _write_json(
         path,

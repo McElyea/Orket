@@ -3,6 +3,12 @@ from pathlib import Path
 from typing import Any
 
 from orket.adapters.execution.owned_io import require_sync_context
+from orket.adapters.observability.logging_context import (
+    bind_logging,
+    native_logging_inputs,
+    prepare_logging_native,
+    select_logging_inputs,
+)
 from orket.adapters.storage.async_card_repository import AsyncCardRepository
 from orket.adapters.storage.async_repositories import (
     AsyncSessionRepository,
@@ -56,6 +62,7 @@ class OrchestrationEngine:
         runtime_bootstrap_service: Any | None = None,
         runtime_inputs: RuntimeInputService | None = None,
         construction_inputs: RuntimeConstructionInputs | None = None,
+        logging_context=None,
     ) -> None:
         require_sync_context(code="E_RUNTIME_CONSTRUCTION_REQUIRES_ASYNC_OWNER")
         if construction_inputs is not None:
@@ -66,89 +73,96 @@ class OrchestrationEngine:
         self.runtime_inputs = runtime_inputs or RuntimeInputService()
         if construction_inputs is None:
             self.runtime_bootstrap_service.bootstrap_environment()
-        self.runtime_context = OrketRuntimeContext.from_env(
-            workspace_root=workspace_root,
-            department=department,
-            db_path=db_path,
-            config_root=config_root,
-            cards_repo=cards_repo,
-            sessions_repo=sessions_repo,
-            snapshots_repo=snapshots_repo,
-            success_repo=success_repo,
-            run_ledger_repo=run_ledger_repo,
-            decision_nodes=self.decision_nodes,
-            config_loader_factory=ConfigLoader,
-            config_loader_kwargs={"decision_nodes": self.decision_nodes},
-            config_root_resolver=self.runtime_bootstrap_service.resolve_config_root,
-            run_ledger_factory=build_run_ledger_repository,
-            telemetry_sink=self._emit_run_ledger_telemetry,
-            construction_inputs=construction_inputs,
-        )
-        self.workspace_root = self.runtime_context.workspace_root
-        self.department = self.runtime_context.department
-        self.db_path = self.runtime_context.db_path
-        self.config_root = self.runtime_context.config_root
-        self.loader = self.runtime_context.loader
-        self.org = self.runtime_context.org
-        self.orchestration_config = self.runtime_context.orchestration_config
-        self.state_backend_mode = self.runtime_context.state_backend_mode
-        self.run_ledger_mode = self.runtime_context.run_ledger_mode
-        self.gitea_state_pilot_enabled = self.runtime_context.gitea_state_pilot_enabled
-        self.cards = self.runtime_context.cards_repo
-        self.sessions = self.runtime_context.sessions_repo
-        self.snapshots = self.runtime_context.snapshots_repo
-        self.success = self.runtime_context.success_repo
-        self.run_ledger = self.runtime_context.run_ledger
-        control_plane_services = build_engine_control_plane_services(db_path=self.db_path)
-        self.pending_gates = control_plane_services.pending_gates
-        self.control_plane_repository = control_plane_services.control_plane_repository
-        self.control_plane_execution_repository = control_plane_services.control_plane_execution_repository
-        self.control_plane_publication = control_plane_services.control_plane_publication
-        self.control_plane_transactions = control_plane_services.control_plane_transactions
-        self.tool_approval_control_plane_operator = control_plane_services.tool_approval_control_plane_operator
-        self.kernel_action_control_plane = control_plane_services.kernel_action_control_plane
-        self.kernel_action_control_plane_operator = control_plane_services.kernel_action_control_plane_operator
-        self.kernel_action_control_plane_view = control_plane_services.kernel_action_control_plane_view
-        self.kernel_gateway = kernel_gateway or KernelV1Gateway(runtime_inputs=self.runtime_inputs, invocation_root=self.config_root)
-        self.kernel_runtime_lifetime = KernelRuntimeLifetime(self.kernel_gateway.runtime)
-        self._pipeline = ExecutionPipeline(
-            self.workspace_root,
-            self.department,
-            runtime_context=self.runtime_context,
-            runtime_inputs=self.runtime_inputs,
-        )
-        self.sandbox_manager = SandboxManager(getattr(self._pipeline, "sandbox_orchestrator", None))
-        self.session_controller = SessionController(self.workspace_root)
-        self.card_archiver = CardArchiver(self.cards)
-        self.kernel_gateway_facade = KernelGatewayFacade(self.kernel_gateway)
-        self.replay_diagnostics = ReplayDiagnosticsService(self.workspace_root)
-        self.kernel_async_control_plane = build_kernel_async_control_plane(self)
-        self._initialize_lock = asyncio.Lock()
-        self._initialized = False
-        self._closed = False
+        self.logging_context = logging_context or prepare_logging_native(
+            select_logging_inputs(construction_inputs.invocation_root, construction_inputs.environment)
+            if construction_inputs is not None else native_logging_inputs())
+        with bind_logging(self.logging_context):
+            self.runtime_context = OrketRuntimeContext.from_env(
+                workspace_root=workspace_root,
+                department=department,
+                db_path=db_path,
+                config_root=config_root,
+                cards_repo=cards_repo,
+                sessions_repo=sessions_repo,
+                snapshots_repo=snapshots_repo,
+                success_repo=success_repo,
+                run_ledger_repo=run_ledger_repo,
+                decision_nodes=self.decision_nodes,
+                config_loader_factory=ConfigLoader,
+                config_loader_kwargs={"decision_nodes": self.decision_nodes},
+                config_root_resolver=self.runtime_bootstrap_service.resolve_config_root,
+                run_ledger_factory=build_run_ledger_repository,
+                telemetry_sink=self._emit_run_ledger_telemetry,
+                construction_inputs=construction_inputs,
+            )
+            self.workspace_root = self.runtime_context.workspace_root
+            self.department = self.runtime_context.department
+            self.db_path = self.runtime_context.db_path
+            self.config_root = self.runtime_context.config_root
+            self.loader = self.runtime_context.loader
+            self.org = self.runtime_context.org
+            self.orchestration_config = self.runtime_context.orchestration_config
+            self.state_backend_mode = self.runtime_context.state_backend_mode
+            self.run_ledger_mode = self.runtime_context.run_ledger_mode
+            self.gitea_state_pilot_enabled = self.runtime_context.gitea_state_pilot_enabled
+            self.cards = self.runtime_context.cards_repo
+            self.sessions = self.runtime_context.sessions_repo
+            self.snapshots = self.runtime_context.snapshots_repo
+            self.success = self.runtime_context.success_repo
+            self.run_ledger = self.runtime_context.run_ledger
+            control_plane_services = build_engine_control_plane_services(db_path=self.db_path)
+            self.pending_gates = control_plane_services.pending_gates
+            self.control_plane_repository = control_plane_services.control_plane_repository
+            self.control_plane_execution_repository = control_plane_services.control_plane_execution_repository
+            self.control_plane_publication = control_plane_services.control_plane_publication
+            self.control_plane_transactions = control_plane_services.control_plane_transactions
+            self.tool_approval_control_plane_operator = control_plane_services.tool_approval_control_plane_operator
+            self.kernel_action_control_plane = control_plane_services.kernel_action_control_plane
+            self.kernel_action_control_plane_operator = control_plane_services.kernel_action_control_plane_operator
+            self.kernel_action_control_plane_view = control_plane_services.kernel_action_control_plane_view
+            self.kernel_gateway = kernel_gateway or KernelV1Gateway(runtime_inputs=self.runtime_inputs, invocation_root=self.config_root)
+            self.kernel_runtime_lifetime = KernelRuntimeLifetime(self.kernel_gateway.runtime)
+            self._pipeline = ExecutionPipeline(
+                self.workspace_root,
+                self.department,
+                runtime_context=self.runtime_context, logging_context=self.logging_context,
+                runtime_inputs=self.runtime_inputs,
+            )
+            self.sandbox_manager = SandboxManager(getattr(self._pipeline, "sandbox_orchestrator", None))
+            self.session_controller = SessionController(self.workspace_root)
+            self.card_archiver = CardArchiver(self.cards)
+            self.kernel_gateway_facade = KernelGatewayFacade(self.kernel_gateway)
+            self.replay_diagnostics = ReplayDiagnosticsService(self.workspace_root)
+            self.kernel_async_control_plane = build_kernel_async_control_plane(self)
+            self._initialize_lock = asyncio.Lock()
+            self._initialized = False
+            self._closed = False
 
     @classmethod
     def open(cls, workspace_root: Path, **options):
         return open_configured_runtime(cls, workspace_root, label="engine-construction", **options)
 
     async def initialize(self) -> None:
-        if self._initialized:
-            return
-        async with self._initialize_lock:
+        with bind_logging(self.logging_context):
             if self._initialized:
                 return
-            await self.runtime_context.initialize()
-            await self._pipeline.initialize()
-            self._initialized = True
+            async with self._initialize_lock:
+                if self._initialized:
+                    return
+                await self.runtime_context.initialize()
+                await self._pipeline.initialize()
+                self._initialized = True
 
     async def close(self) -> None:
-        if self._closed:
-            return
-        await close_runtime_resources((self.kernel_runtime_lifetime, self._pipeline, self.runtime_context), label="engine-cleanup")
-        self._closed = True
+        with bind_logging(self.logging_context):
+            if self._closed:
+                return
+            await close_runtime_resources((self.kernel_runtime_lifetime, self._pipeline, self.runtime_context), label="engine-cleanup")
+            self._closed = True
 
     async def _emit_run_ledger_telemetry(self, payload: dict[str, Any]) -> None:
-        log_event("run_ledger_telemetry", {"run_ledger_mode": self.run_ledger_mode, **dict(payload or {})}, workspace=self.workspace_root)
+        with bind_logging(self.logging_context):
+            log_event("run_ledger_telemetry", {"run_ledger_mode": self.run_ledger_mode, **dict(payload or {})}, workspace=self.workspace_root)
 
     async def run_card(
         self,
@@ -161,15 +175,10 @@ class OrchestrationEngine:
         admission_recovery: dict[str, Any] | None = None, export_recovery: dict[str, Any] | None = None, approval_recovery: dict[str, Any] | None = None,
     ) -> RuntimeResult:
         """Canonical public runtime entrypoint for epic, rock, and issue execution."""
-        return await self._pipeline.run_card(
-            card_id,
-            build_id=build_id,
-            session_id=session_id,
-            driver_steered=driver_steered,
-            target_issue_id=target_issue_id,
-            model_override=model_override,
-            admission_recovery=admission_recovery, export_recovery=export_recovery, approval_recovery=approval_recovery,
-        )
+        return await self._pipeline.run_card(card_id, build_id=build_id, session_id=session_id,
+            driver_steered=driver_steered, target_issue_id=target_issue_id, model_override=model_override,
+            admission_recovery=admission_recovery, export_recovery=export_recovery,
+            approval_recovery=approval_recovery)
 
     async def run_epic(
         self,
@@ -181,14 +190,8 @@ class OrchestrationEngine:
         model_override: str | None = None,
     ) -> RuntimeResult:
         """Compatibility wrapper over the canonical run_card surface."""
-        return await self.run_card(
-            epic_id,
-            build_id=build_id,
-            session_id=session_id,
-            driver_steered=driver_steered,
-            target_issue_id=target_issue_id,
-            model_override=model_override,
-        )
+        return await self.run_card(epic_id, build_id=build_id, session_id=session_id, driver_steered=driver_steered,
+            target_issue_id=target_issue_id, model_override=model_override)
 
     async def run_issue(
         self,
@@ -199,13 +202,8 @@ class OrchestrationEngine:
         model_override: str | None = None,
     ) -> RuntimeResult:
         """Compatibility wrapper over the canonical run_card surface."""
-        return await self.run_card(
-            issue_id,
-            build_id=build_id,
-            session_id=session_id,
-            driver_steered=driver_steered,
-            model_override=model_override,
-        )
+        return await self.run_card(issue_id, build_id=build_id, session_id=session_id, driver_steered=driver_steered,
+            model_override=model_override)
 
     async def resolve_run_card_target(self, card_id: str) -> tuple[str, str | None]:
         """Expose canonical runtime-target resolution for preflight callers."""
@@ -221,13 +219,8 @@ class OrchestrationEngine:
         model_override: str | None = None,
     ) -> RuntimeResult:
         """Legacy compatibility wrapper over the canonical run_card surface."""
-        return await self.run_card(
-            rock_name,
-            build_id=build_id,
-            session_id=session_id,
-            driver_steered=driver_steered,
-            model_override=model_override,
-        )
+        return await self.run_card(rock_name, build_id=build_id, session_id=session_id,
+            driver_steered=driver_steered, model_override=model_override)
 
     async def run_gitea_state_loop(
         self,
@@ -242,17 +235,18 @@ class OrchestrationEngine:
         idle_sleep_seconds: float = 0.0,
         summary_out: str | Path | None = None,
     ) -> dict[str, Any]:
-        return await self._pipeline.run_gitea_state_loop(
-            worker_id=worker_id,
-            fetch_limit=fetch_limit,
-            lease_seconds=lease_seconds,
-            renew_interval_seconds=renew_interval_seconds,
-            max_iterations=max_iterations,
-            max_idle_streak=max_idle_streak,
-            max_duration_seconds=max_duration_seconds,
-            idle_sleep_seconds=idle_sleep_seconds,
-            summary_out=summary_out,
-        )
+        with bind_logging(self.logging_context):
+            return await self._pipeline.run_gitea_state_loop(
+                worker_id=worker_id,
+                fetch_limit=fetch_limit,
+                lease_seconds=lease_seconds,
+                renew_interval_seconds=renew_interval_seconds,
+                max_iterations=max_iterations,
+                max_idle_streak=max_idle_streak,
+                max_duration_seconds=max_duration_seconds,
+                idle_sleep_seconds=idle_sleep_seconds,
+                summary_out=summary_out,
+            )
 
     def get_board(self) -> dict[str, Any]:
         from orket.board import get_board_hierarchy
@@ -265,27 +259,29 @@ class OrchestrationEngine:
 
     async def stop_sandbox(self, sandbox_id: str, *, operator_actor_ref: str | None = None) -> None:
         """Stops and deletes a sandbox."""
-        await self.sandbox_manager.stop(sandbox_id, operator_actor_ref=operator_actor_ref)
+        with bind_logging(self.logging_context):
+            await self.sandbox_manager.stop(sandbox_id, operator_actor_ref=operator_actor_ref)
 
     async def halt_session(self, session_id: str, *, operator_actor_ref: str | None = None) -> None:
         """Halts an active session by signaling the runtime state."""
-        cancelled_active_task = await self.session_controller.halt(session_id)
-        if operator_actor_ref:
-            timestamp = self.runtime_inputs.utc_now_iso()
-            target_ref = f"session:{session_id}"
-            await self.control_plane_publication.publish_operator_action(
-                action_id=f"session-operator-action:{session_id}:halt:{timestamp}",
-                actor_ref=operator_actor_ref,
-                input_class=OperatorInputClass.COMMAND,
-                target_ref=target_ref,
-                timestamp=timestamp,
-                precondition_basis_ref=f"{target_ref}:halt",
-                result="accepted_cancel" if cancelled_active_task else "accepted_no_active_runtime_task",
-                command_class=OperatorCommandClass.CANCEL_RUN,
-                affected_transition_refs=[f"{target_ref}:runtime_task:{'cancelled' if cancelled_active_task else 'none'}"],
-                affected_resource_refs=[target_ref],
-                receipt_refs=[f"runtime-task:{session_id}"],
-            )
+        with bind_logging(self.logging_context):
+            cancelled_active_task = await self.session_controller.halt(session_id)
+            if operator_actor_ref:
+                timestamp = self.runtime_inputs.utc_now_iso()
+                target_ref = f"session:{session_id}"
+                await self.control_plane_publication.publish_operator_action(
+                    action_id=f"session-operator-action:{session_id}:halt:{timestamp}",
+                    actor_ref=operator_actor_ref,
+                    input_class=OperatorInputClass.COMMAND,
+                    target_ref=target_ref,
+                    timestamp=timestamp,
+                    precondition_basis_ref=f"{target_ref}:halt",
+                    result="accepted_cancel" if cancelled_active_task else "accepted_no_active_runtime_task",
+                    command_class=OperatorCommandClass.CANCEL_RUN,
+                    affected_transition_refs=[f"{target_ref}:runtime_task:{'cancelled' if cancelled_active_task else 'none'}"],
+                    affected_resource_refs=[target_ref],
+                    receipt_refs=[f"runtime-task:{session_id}"],
+                )
 
     async def list_approvals(
         self,

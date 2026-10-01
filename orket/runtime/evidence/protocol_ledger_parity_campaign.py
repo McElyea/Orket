@@ -10,7 +10,7 @@ from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLed
 from orket.adapters.storage.async_repositories import AsyncRunLedgerRepository
 from orket.adapters.storage.sqlite_connection import connect_sqlite_wal
 from orket.application.services.protocol_query_scope import resolve_protocol_run_root
-from orket.runtime.run_ledger_parity import compare_run_ledger_rows
+from orket.runtime.evidence.run_ledger_parity import compare_run_ledger_rows
 
 
 def _normalize_session_ids(values: list[str]) -> list[str]:

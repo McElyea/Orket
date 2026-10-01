@@ -12,6 +12,8 @@ from orket.adapters.storage.gitea_state_models import (
     parse_event_comment,
 )
 
+pytestmark = pytest.mark.contract
+
 
 def test_encode_decode_snapshot_round_trip():
     snapshot = CardSnapshot(

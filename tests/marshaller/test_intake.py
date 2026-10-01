@@ -1,3 +1,5 @@
+import pytest
+
 from orket.marshaller.intake import (
     BINARY_DELTA_DENIED,
     FORBIDDEN_PATH,
@@ -8,6 +10,8 @@ from orket.marshaller.intake import (
     evaluate_patch_proposal,
     validate_patch_proposal_payload,
 )
+
+pytestmark = pytest.mark.contract
 
 
 def _base_payload() -> dict:

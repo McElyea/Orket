@@ -79,7 +79,7 @@ class GiteaExportGit:
     async def command(self, *arguments: str, allowed: tuple[int, ...] = (0,)) -> tuple[int, str]:
         repo_dir, environment, runner = self.repo_dir, dict(self.environment), self._command_runner
         try:
-            repository_arguments = ()
+            repository_arguments: tuple[str, ...] = ()
             if needs_native_repository_paths(repo_dir):
                 repository_arguments, common = await run_owned_thread(
                     partial(native_repository_arguments, repo_dir, initialize=arguments[0] == "init"),

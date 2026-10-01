@@ -21,7 +21,7 @@ async def calendar_owner(root, environment, stamp, monkeypatch):
     pipeline = await pipeline_at(root)
     pipeline.runtime_context.construction_inputs = RuntimeConstructionInputs(root, environment, '{}', '{}')
     monkeypatch.setattr(pipeline.runtime_inputs, 'utc_now', lambda: datetime.fromisoformat(stamp))
-    return pipeline, pipeline._build_epic_run_orchestrator()
+    return pipeline, pipeline._build_epic_run_components()[0]
 
 
 async def setup_for(owner):
@@ -72,7 +72,7 @@ async def test_pipeline_without_explicit_snapshot_captures_environment_at_constr
         assert pipeline.runtime_context.construction_inputs.environment['ORKET_TIMEZONE'] == 'MST'
         monkeypatch.setenv('ORKET_TIMEZONE', 'UTC')
         monkeypatch.setattr(pipeline.runtime_inputs, 'utc_now', lambda: datetime.fromisoformat('2026-07-06T06:30:00+00:00'))
-        owner = pipeline._build_epic_run_orchestrator()
+        owner = pipeline._build_epic_run_components()[0]
         await owner._ensure_session_and_cards(await setup_for(owner))
         assert (await pipeline.async_cards.get_by_id('ISSUE-1')).sprint == 'Q3 S1'
     finally:

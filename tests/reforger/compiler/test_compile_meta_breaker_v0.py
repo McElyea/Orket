@@ -3,8 +3,12 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from orket.reforger.compiler import run_compile_pipeline
 from orket.reforger.routes.meta_breaker_v0 import MetaBreakerRouteV0
+
+pytestmark = pytest.mark.integration
 
 
 def _seed_meta_breaker_inputs(root: Path) -> None:

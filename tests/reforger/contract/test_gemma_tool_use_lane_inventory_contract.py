@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import pytest
+
 from scripts.prompt_lab import run_prompt_reforger_gemma_tool_use_inventory as script
+
+pytestmark = pytest.mark.contract
 
 
 def test_inventory_targets_freeze_admitted_gemma_lane_models() -> None:

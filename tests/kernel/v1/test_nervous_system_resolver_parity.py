@@ -29,6 +29,7 @@ def _admit(monkeypatch: pytest.MonkeyPatch, *, session_id: str, trace_id: str, p
     )
 
 
+@pytest.mark.contract
 @pytest.mark.parametrize(
     ("payload", "expected_decision", "expected_reasons"),
     [
@@ -90,6 +91,7 @@ def test_resolver_mode_matches_pre_resolved_flag_mode(
     assert resolved["admission_decision"]["reason_codes"] == expected_reasons
 
 
+@pytest.mark.contract
 def test_fail_closed_when_pre_resolved_flags_disabled_and_resolver_off(monkeypatch: pytest.MonkeyPatch) -> None:
     admitted = _admit(
         monkeypatch,
@@ -103,6 +105,7 @@ def test_fail_closed_when_pre_resolved_flags_disabled_and_resolver_off(monkeypat
     assert admitted["admission_decision"]["reason_codes"] == ["UNKNOWN_TOOL_PROFILE"]
 
 
+@pytest.mark.contract
 def test_resolver_mode_is_default_when_env_is_unset(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS", raising=False)
     monkeypatch.delenv("ORKET_USE_TOOL_PROFILE_RESOLVER", raising=False)

@@ -1,4 +1,4 @@
-# Layer: unit and contract
+# Layer: contract and contract
 
 from __future__ import annotations
 
@@ -15,6 +15,8 @@ from orket.application.services.governed_agent_broker_service import (
 from orket.application.services.governed_agent_model_provider import GovernedAgentLocalModelProvider
 from orket_extension_sdk import AgentModelCallRequest
 from orket_extension_sdk.agent_fixtures import agent_model_call_request
+
+pytestmark = pytest.mark.contract
 
 
 class _FakeLocalModelProvider:
@@ -45,7 +47,7 @@ def _profile() -> GovernedAgentResolvedModelProfile:
 
 @pytest.mark.asyncio
 async def test_adapter_records_measured_json_observation_and_host_limits() -> None:
-    """Layer: unit. The Ollama adapter preserves usage and applies issued generation limits."""
+    """Layer: contract. The Ollama adapter preserves usage and applies issued generation limits."""
 
     fake = _FakeLocalModelProvider(
         ModelResponse(

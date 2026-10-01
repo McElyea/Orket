@@ -215,15 +215,15 @@ async def test_cards_and_runs_operator_views_project_truthful_outcomes(monkeypat
 
 
 @pytest.mark.contract
-def test_system_operator_views_surface_provider_and_health_status(monkeypatch, test_client) -> None:
+def test_system_operator_views_surface_provider_and_health_status(monkeypatch, test_client, tmp_path) -> None:
     """Layer: contract. Verifies provider and system health operator views expose degraded-first status on the API."""
     monkeypatch.setenv("ORKET_API_KEY", "test-key")
 
-    from tests.helpers.model_selection import ModelSelectionFixture
+    from tests.helpers.model_selection import ModelSelectionFixture, seed_model_role_catalog
 
     fixture = ModelSelectionFixture(environment={"ORKET_MODEL_CODER": "coder-selected"},
         user_settings={"model_compliance_policy": {"blocked_models": ["coder-selected"], "fallback_model": "coder-fallback"}})
-    monkeypatch.setattr(api_module, "_discover_active_roles", lambda _root: ["coder"])
+    seed_model_role_catalog(monkeypatch, api_module._runtime_context().system_queries.reader, tmp_path, ["coder"])
     monkeypatch.setattr(api_module._runtime_context(), "model_selection", fixture)
 
     client = test_client

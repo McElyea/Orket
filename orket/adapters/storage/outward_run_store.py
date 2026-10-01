@@ -7,6 +7,8 @@ from typing import Any
 
 import aiosqlite
 
+from orket.adapters.execution.owned_io import run_owned_io
+from orket.adapters.storage.async_file_tools import capture_file_roots
 from orket.adapters.storage.sqlite_connection import connect_sqlite_wal, sqlite_connection_scope
 from orket.adapters.storage.sqlite_migrations import SQLiteMigration, SQLiteMigrationRunner
 from orket.core.domain.outward_runs import OutwardRunRecord
@@ -56,18 +58,25 @@ class OutwardRunStore:
     def __init__(self, db_path: str | Path) -> None:
         self.db_path = Path(db_path)
         self._init_lock = asyncio.Lock()
-        self._initialized = False
+        self._initialized_path: Path | None = None
 
     async def ensure_initialized(self) -> None:
+        db_path, = capture_file_roots([self.db_path])
+        await self._ensure_initialized_at(db_path)
+
+    async def _ensure_initialized_at(self, db_path: Path) -> None:
         async with self._init_lock:
-            if self._initialized:
+            if self._initialized_path == db_path:
                 return
-            await asyncio.to_thread(self.db_path.parent.mkdir, parents=True, exist_ok=True)
-            async with connect_sqlite_wal(self.db_path) as conn:
-                await conn.execute("BEGIN IMMEDIATE")
-                await SQLiteMigrationRunner(namespace="outward_runs").apply(conn, _MIGRATIONS)
-                await conn.commit()
-            self._initialized = True
+            await run_owned_io(lambda: self._initialize_at(db_path), label="outward-run-initialize", preserve_failure=True)
+
+    async def _initialize_at(self, db_path: Path) -> None:
+        await asyncio.to_thread(db_path.parent.mkdir, parents=True, exist_ok=True)
+        async with connect_sqlite_wal(db_path) as conn:
+            await conn.execute("BEGIN IMMEDIATE")
+            await SQLiteMigrationRunner(namespace="outward_runs").apply(conn, _MIGRATIONS)
+            await conn.commit()
+        self._initialized_path = db_path
 
     async def create(
         self,
@@ -75,7 +84,8 @@ class OutwardRunStore:
         *,
         connection: aiosqlite.Connection | None = None,
     ) -> OutwardRunRecord:
-        await self.ensure_initialized()
+        if connection is None:
+            await self.ensure_initialized()
         async with sqlite_connection_scope(self.db_path, connection) as conn:
             await conn.execute(
                 """
@@ -95,7 +105,8 @@ class OutwardRunStore:
         *,
         connection: aiosqlite.Connection | None = None,
     ) -> OutwardRunRecord:
-        await self.ensure_initialized()
+        if connection is None:
+            await self.ensure_initialized()
         async with sqlite_connection_scope(self.db_path, connection) as conn:
             await conn.execute(
                 """
@@ -138,7 +149,8 @@ class OutwardRunStore:
         *,
         connection: aiosqlite.Connection | None = None,
     ) -> OutwardRunRecord | None:
-        await self.ensure_initialized()
+        if connection is None:
+            await self.ensure_initialized()
         async with sqlite_connection_scope(self.db_path, connection) as conn:
             conn.row_factory = aiosqlite.Row
             cursor = await conn.execute("SELECT * FROM outward_runs WHERE run_id = ?", (run_id,))
@@ -151,7 +163,8 @@ class OutwardRunStore:
         *,
         connection: aiosqlite.Connection | None = None,
     ) -> OutwardRunRecord | None:
-        await self.ensure_initialized()
+        if connection is None:
+            await self.ensure_initialized()
         async with sqlite_connection_scope(self.db_path, connection) as conn:
             conn.row_factory = aiosqlite.Row
             cursor = await conn.execute(

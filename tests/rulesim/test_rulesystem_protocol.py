@@ -7,8 +7,9 @@ from orket.rulesim.toys import TOY_RULESYSTEMS, build_toy_rulesystem
 from orket.rulesim.toys.loop import LoopRuleSystem, LoopState
 
 
+@pytest.mark.contract
 def test_toy_rulesystem_registration_enforces_protocol(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Layer: unit. Verifies malformed toy registrations fail before runtime execution."""
+    """Layer: contract. Verifies malformed toy registrations fail before runtime execution."""
 
     class MalformedRuleSystem:
         def initial_state(self, seed, scenario, ruleset, agents):  # type: ignore[no-untyped-def]
@@ -20,6 +21,7 @@ def test_toy_rulesystem_registration_enforces_protocol(monkeypatch: pytest.Monke
         build_toy_rulesystem("malformed")
 
 
+@pytest.mark.unit
 def test_golden_determinism_is_loop_rulesystem_alias() -> None:
     """Layer: unit. Verifies golden determinism is a registry alias, not a behaviorless subclass."""
     rulesystem = build_toy_rulesystem("golden_determinism")
@@ -28,16 +30,18 @@ def test_golden_determinism_is_loop_rulesystem_alias() -> None:
     assert isinstance(rulesystem, RuleSystem)
 
 
+@pytest.mark.contract
 def test_toy_action_kind_rejects_non_string_values() -> None:
-    """Layer: unit. Verifies toy RuleSystems reject non-string action.kind instead of coercing it."""
+    """Layer: contract. Verifies toy RuleSystems reject non-string action.kind instead of coercing it."""
     rulesystem = build_toy_rulesystem("loop")
 
     with pytest.raises(TypeError, match="action.kind"):
         rulesystem.serialize_action({"kind": 7})
 
 
+@pytest.mark.contract
 def test_loop_rulesystem_uses_typed_immutable_state() -> None:
-    """Layer: unit. Verifies toy state advances by replacement instead of mutating a dict."""
+    """Layer: contract. Verifies toy state advances by replacement instead of mutating a dict."""
     rulesystem = build_toy_rulesystem("loop")
 
     state = rulesystem.initial_state(seed=1, scenario={}, ruleset={}, agents=["agent_0"])

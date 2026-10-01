@@ -12,6 +12,7 @@ from orket.adapters.storage.api_workspace_reader import ApiWorkspaceReader
 from orket.application.services.api_policy_input_service import admit_api_bool, order_explorer_items
 from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.board import get_board_hierarchy_async
+from orket.core.contracts.api_role_catalog import parse_roles_filter
 from orket.core.contracts.eos_calendar import EosSprintBaseline
 from orket.hardware import get_metrics_snapshot
 from orket.time_utils import configured_timezone
@@ -52,3 +53,10 @@ class ApiSystemQueryService:
 
     async def system_board(self, department: str) -> Any:
         return await get_board_hierarchy_async(department, project_root=self.reader.project_root)
+
+    async def model_roles(self, roles: str | None) -> tuple[list[str], list[str]]:
+        role_filter = parse_roles_filter(roles)
+        return role_filter, role_filter or await self.reader.active_roles()
+
+    async def team_topology(self) -> list[dict[str, Any]]:
+        return await self.reader.team_topology()

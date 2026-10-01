@@ -9,7 +9,9 @@ from orket.application.services import governed_agent_model_provider as governed
 from orket.application.services import model_client_factory as clients
 from orket.application.services.model_selection_service import ModelSelectionService
 from orket.application.services.orchestrator_prompt_preparation_service import OrchestratorPromptPreparationService
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.decision_nodes.builtins import DefaultRouterNode
+from orket.logging import bind_logging, prepare_logging
 from orket.schema import CardStatus, EnvironmentConfig
 from orket_extension_sdk import AgentIterationRequest
 from tests.helpers.kernel_state_probe import responsive_sqlite
@@ -128,8 +130,12 @@ async def test_card_preparation_retains_provider_until_handoff(tmp_path, monkeyp
         orchestrator.model_clients = clients.ModelClientFactory({'ORKET_LLM_PROVIDER': 'openai_compat',
             'ORKET_LLM_OPENAI_BASE_URL': server[0] + '/v1', 'ORKET_LOCAL_PROMPTING_MODE': 'shadow',
             'ORKET_PROVIDER_RUNTIME_AUTO_SELECT_MODEL': 'false', 'ORKET_PROVIDER_RUNTIME_AUTO_LOAD_LOCAL_MODEL': 'false'})
-        task = asyncio.create_task(orchestrator._execute_issue_turn(issue, SimpleNamespace(params={}), team,
-            EnvironmentConfig(name='test', model=MODEL), 'run', 'build', selection, None, None))
+        async def invoke_turn():
+            with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+                return await orchestrator._execute_issue_turn(issue, SimpleNamespace(params={}), team,
+                    EnvironmentConfig(name='test', model=MODEL), 'run', 'build', selection, None, None)
+
+        task = asyncio.create_task(invoke_turn())
         try:
             if stage == 'native':
                 assert await asyncio.to_thread(entered.wait, 5)
@@ -222,8 +228,12 @@ async def test_card_preparation_retains_successful_close_through_repeated_cancel
         orchestrator.model_clients = clients.ModelClientFactory({'ORKET_LLM_PROVIDER': 'openai_compat',
             'ORKET_LLM_OPENAI_BASE_URL': server[0] + '/v1', 'ORKET_LOCAL_PROMPTING_MODE': 'shadow',
             'ORKET_PROVIDER_RUNTIME_AUTO_SELECT_MODEL': 'false', 'ORKET_PROVIDER_RUNTIME_AUTO_LOAD_LOCAL_MODEL': 'false'})
-        task = asyncio.create_task(orchestrator._execute_issue_turn(issue, SimpleNamespace(params={}), team,
-            EnvironmentConfig(name='test', model=MODEL), 'run', 'build', selection, None, None))
+        async def invoke_turn():
+            with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+                return await orchestrator._execute_issue_turn(issue, SimpleNamespace(params={}), team,
+                    EnvironmentConfig(name='test', model=MODEL), 'run', 'build', selection, None, None)
+
+        task = asyncio.create_task(invoke_turn())
         try:
             await asyncio.wait_for(prompt_entered.wait(), 5)
             assert len(created) == 1 and (await observe_completion(created[0])).content == 'observed'

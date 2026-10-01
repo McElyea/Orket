@@ -3,6 +3,8 @@ from pydantic import ValidationError
 
 from orket.marshaller.contracts import RunRequest
 
+pytestmark = pytest.mark.contract
+
 
 def _base_run_request_payload() -> dict:
     return {

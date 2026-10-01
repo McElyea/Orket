@@ -17,11 +17,11 @@ pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 
 def cleanup_factory(test_root, db_path, fail):
     state = SimpleNamespace(entered=asyncio.Event(), release=asyncio.Event(), closed=False, owner=None, result=None)
-    original = pipeline_module.ExecutionPipeline
+    original = pipeline_module.ExecutionPipeline.__init__
 
-    def construct(*args, **kwargs):
+    def construct(owner, *args, **kwargs):
         kwargs.update(config_root=test_root, db_path=db_path)
-        owner = original(*args, **kwargs)
+        original(owner, *args, **kwargs)
         state.owner = owner
         original_close, original_run = owner.close, owner.run_card
 
@@ -46,7 +46,6 @@ def cleanup_factory(test_root, db_path, fail):
                 state.closed = True
 
         owner.orchestrator.execute_epic, owner.run_card, owner.close = workload, run_card, close
-        return owner
 
     return state, construct
 
@@ -57,7 +56,7 @@ async def test_public_runtime_joins_cleanup_before_reporting_interruption(
 ):
     await asyncio.to_thread(_write_epic_assets, test_root, 'publication_epic')
     state, construct = cleanup_factory(test_root, db_path, fail)
-    monkeypatch.setattr(pipeline_module, 'ExecutionPipeline', construct)
+    monkeypatch.setattr(pipeline_module.ExecutionPipeline, '__init__', construct)
     task = asyncio.create_task(pipeline_module.orchestrate_card('publication_epic', workspace,
         session_id='owned-close', build_id='owned-build'))
     try:

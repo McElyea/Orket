@@ -5,9 +5,14 @@ from typing import TYPE_CHECKING, Any
 
 from orket.core.contracts.runtime_execution_result import RuntimeCollectionResult, RuntimeExecutionResult
 from orket.exceptions import CardNotFound
-from orket.logging import log_event
+from orket.logging import bind_logging, log_event
 from orket.runtime.gitea_state_loop import GiteaStateLoopRunner
 from orket.runtime.settings import resolve_str
+
+if TYPE_CHECKING:
+    from orket.adapters.observability.logging_context import PreparedLogging
+    from orket.application.services.epic_approval_pause_service import EpicApprovalPauseService
+    from orket.runtime.execution.epic_run_orchestrator import EpicRunOrchestrator
 
 
 class ExecutionPipelineCardDispatchMixin:
@@ -16,6 +21,7 @@ class ExecutionPipelineCardDispatchMixin:
         workspace: Path
         state_backend_mode: str
         org: Any
+        logging_context: PreparedLogging
 
         async def initialize(self) -> None: ...
 
@@ -30,7 +36,7 @@ class ExecutionPipelineCardDispatchMixin:
             model_override: str | None = None,
         ) -> RuntimeCollectionResult: ...
 
-        def _build_epic_run_orchestrator(self) -> Any: ...
+        def _build_epic_run_components(self) -> tuple[EpicRunOrchestrator, EpicApprovalPauseService]: ...
 
     async def run_card(
         self,
@@ -45,41 +51,42 @@ class ExecutionPipelineCardDispatchMixin:
         export_recovery: dict[str, Any] | None = None, approval_recovery: dict[str, Any] | None = None,
     ) -> RuntimeExecutionResult | RuntimeCollectionResult:
         """Canonical public runtime dispatcher over normalized card facts."""
-        await self.initialize()
-        target_kind, parent_epic_name = await self._resolve_run_card_target(card_id)
-        if admission_recovery is not None and target_kind != "epic":
-            raise ValueError("E_EPIC_ADMISSION_RECOVERY_EPIC_REQUIRED")
-        if export_recovery is not None and target_kind != "epic":
-            raise ValueError("E_EPIC_EXPORT_RECOVERY_EPIC_REQUIRED")
-        if approval_recovery is not None and target_kind != "epic":
-            raise ValueError("E_EPIC_APPROVAL_RECOVERY_EPIC_REQUIRED")
-        if target_kind == "epic":
-            return await self._run_epic_entry(
+        with bind_logging(self.logging_context):
+            await self.initialize()
+            target_kind, parent_epic_name = await self._resolve_run_card_target(card_id)
+            if admission_recovery is not None and target_kind != "epic":
+                raise ValueError("E_EPIC_ADMISSION_RECOVERY_EPIC_REQUIRED")
+            if export_recovery is not None and target_kind != "epic":
+                raise ValueError("E_EPIC_EXPORT_RECOVERY_EPIC_REQUIRED")
+            if approval_recovery is not None and target_kind != "epic":
+                raise ValueError("E_EPIC_APPROVAL_RECOVERY_EPIC_REQUIRED")
+            if target_kind == "epic":
+                return await self._run_epic_entry(
+                    card_id,
+                    build_id=build_id,
+                    session_id=session_id,
+                    driver_steered=driver_steered,
+                    target_issue_id=target_issue_id,
+                    model_override=model_override,
+                    admission_recovery=admission_recovery, export_recovery=export_recovery, approval_recovery=approval_recovery,
+                )
+            if target_kind == "epic_collection":
+                return await self._run_epic_collection_entry(
+                    card_id,
+                    build_id=build_id,
+                    session_id=session_id,
+                    driver_steered=driver_steered,
+                    model_override=model_override,
+                )
+            return await self._run_issue_entry(
                 card_id,
                 build_id=build_id,
                 session_id=session_id,
                 driver_steered=driver_steered,
+                parent_epic_name=parent_epic_name,
                 target_issue_id=target_issue_id,
                 model_override=model_override,
-                admission_recovery=admission_recovery, export_recovery=export_recovery, approval_recovery=approval_recovery,
             )
-        if target_kind == "epic_collection":
-            return await self._run_epic_collection_entry(
-                card_id,
-                build_id=build_id,
-                session_id=session_id,
-                driver_steered=driver_steered,
-                model_override=model_override,
-            )
-        return await self._run_issue_entry(
-            card_id,
-            build_id=build_id,
-            session_id=session_id,
-            driver_steered=driver_steered,
-            parent_epic_name=parent_epic_name,
-            target_issue_id=target_issue_id,
-            model_override=model_override,
-        )
 
     async def _resolve_run_card_target(self, card_id: str) -> tuple[str, str | None]:
         """Resolve one normalized runtime target kind from explicit asset facts."""
@@ -174,26 +181,27 @@ class ExecutionPipelineCardDispatchMixin:
         idle_sleep_seconds: float = 0.0,
         summary_out: str | Path | None = None,
     ) -> dict[str, Any]:
-        runner = GiteaStateLoopRunner(
-            state_backend_mode=self.state_backend_mode,
-            organization=getattr(self, "org", None),
-            run_card=self.run_card,
-            runtime_inputs=self.runtime_inputs,
-            construction_inputs=self.runtime_context.construction_inputs,
-            control_plane_db_path=Path(self.orchestrator.control_plane_execution_repository.db_path),
-        )
-        await self.initialize()
-        return await runner.run(
-            worker_id=worker_id,
-            fetch_limit=fetch_limit,
-            lease_seconds=lease_seconds,
-            renew_interval_seconds=renew_interval_seconds,
-            max_iterations=max_iterations,
-            max_idle_streak=max_idle_streak,
-            max_duration_seconds=max_duration_seconds,
-            idle_sleep_seconds=idle_sleep_seconds,
-            summary_out=summary_out,
-        )
+        with bind_logging(self.logging_context):
+            runner = GiteaStateLoopRunner(
+                state_backend_mode=self.state_backend_mode,
+                organization=getattr(self, "org", None),
+                run_card=self.run_card,
+                runtime_inputs=self.runtime_inputs,
+                construction_inputs=self.runtime_context.construction_inputs,
+                control_plane_db_path=Path(self.orchestrator.control_plane_execution_repository.db_path),
+            )
+            await self.initialize()
+            return await runner.run(
+                worker_id=worker_id,
+                fetch_limit=fetch_limit,
+                lease_seconds=lease_seconds,
+                renew_interval_seconds=renew_interval_seconds,
+                max_iterations=max_iterations,
+                max_idle_streak=max_idle_streak,
+                max_duration_seconds=max_duration_seconds,
+                idle_sleep_seconds=idle_sleep_seconds,
+                summary_out=summary_out,
+            )
 
     def _resolve_idesign_mode(self) -> str:
         raw = resolve_str(
@@ -245,7 +253,8 @@ class ExecutionPipelineCardDispatchMixin:
         admission_recovery: dict[str, Any] | None = None,
         export_recovery: dict[str, Any] | None = None, approval_recovery: dict[str, Any] | None = None,
     ) -> RuntimeExecutionResult | RuntimeCollectionResult:
-        result = await self._build_epic_run_orchestrator().run(
+        owner, _ = self._build_epic_run_components()
+        result = await owner.run(
             epic_name,
             build_id=build_id,
             session_id=session_id,

@@ -1,5 +1,4 @@
 # Layer: unit
-
 from __future__ import annotations
 
 from types import SimpleNamespace
@@ -43,6 +42,7 @@ from tests.helpers.control_plane_unit_transaction import (
 from tests.helpers.control_plane_unit_transaction import (
     unit_control_plane_transactions,
 )
+from tests.helpers.logging_fixture_owner import prepared_fixture_owner
 from tests.helpers.runtime_result import published_result
 
 pytestmark = pytest.mark.unit
@@ -111,8 +111,8 @@ def _guard_review_row() -> dict[str, object]:
     }
 
 
-def _make_engine(*, rows: list[dict[str, object]] | None = None) -> OrchestrationEngine:
-    engine = object.__new__(OrchestrationEngine)
+async def _make_engine(root, *, rows: list[dict[str, object]] | None = None) -> OrchestrationEngine:
+    engine = await prepared_fixture_owner(OrchestrationEngine, root)
     engine._initialized = True  # This unit fixture supplies already-composed in-memory approval owners.
     engine.kernel_gateway = KernelV1Gateway()
     engine.kernel_runtime_lifetime = KernelRuntimeLifetime(engine.kernel_gateway.runtime)
@@ -266,8 +266,8 @@ async def _seed_guard_review_reservation(engine: OrchestrationEngine, request_id
 
 
 @pytest.mark.asyncio
-async def test_engine_list_approvals_normalizes_rows() -> None:
-    engine = _make_engine()
+async def test_engine_list_approvals_normalizes_rows(tmp_path) -> None:
+    engine = await _make_engine(tmp_path)
     await _seed_tool_approval_reservation(engine)
     await _seed_target_run_execution(engine)
     await _seed_target_resource(engine)
@@ -392,15 +392,15 @@ async def test_engine_list_approvals_normalizes_rows() -> None:
 
 
 @pytest.mark.asyncio
-async def test_engine_get_approval_returns_none_when_missing() -> None:
-    engine = _make_engine()
+async def test_engine_get_approval_returns_none_when_missing(tmp_path) -> None:
+    engine = await _make_engine(tmp_path)
     assert await engine.get_approval("missing") is None
 
 
 @pytest.mark.asyncio
 # Layer: unit
-async def test_engine_approval_retains_operator_intent_when_terminal_continuation_is_refused() -> None:
-    engine = _make_engine()
+async def test_engine_approval_retains_operator_intent_when_terminal_continuation_is_refused(tmp_path) -> None:
+    engine = await _make_engine(tmp_path)
     await _seed_tool_approval_reservation(engine)
     await _seed_target_run_execution(engine)
     await _seed_target_resource(engine)
@@ -504,8 +504,8 @@ async def test_engine_approval_retains_operator_intent_when_terminal_continuatio
 
 @pytest.mark.asyncio
 # Layer: unit
-async def test_engine_decide_approval_continues_write_file_slice_on_same_session_issue() -> None:
-    engine = _make_engine()
+async def test_engine_decide_approval_continues_write_file_slice_on_same_session_issue(tmp_path) -> None:
+    engine = await _make_engine(tmp_path)
     await _seed_tool_approval_reservation(engine)
     await _seed_target_run_execution(engine)
     calls: list[dict[str, object]] = []
@@ -527,9 +527,9 @@ async def test_engine_decide_approval_continues_write_file_slice_on_same_session
 
 @pytest.mark.asyncio
 # Layer: unit
-async def test_engine_decide_approval_continues_create_issue_slice_on_same_session_issue() -> None:
+async def test_engine_decide_approval_continues_create_issue_slice_on_same_session_issue(tmp_path) -> None:
     """Layer: unit."""
-    engine = _make_engine(rows=[_tool_approval_row("create_issue")])
+    engine = await _make_engine(tmp_path, rows=[_tool_approval_row("create_issue")])
     await _seed_tool_approval_reservation(engine, tool_name="create_issue")
     await _seed_target_run_execution(engine)
     calls: list[dict[str, object]] = []
@@ -552,13 +552,13 @@ async def test_engine_decide_approval_continues_create_issue_slice_on_same_sessi
 
 @pytest.mark.asyncio
 # Layer: unit
-async def test_engine_decide_approval_write_file_continuation_fails_closed_on_target_ref_drift() -> None:
+async def test_engine_decide_approval_write_file_continuation_fails_closed_on_target_ref_drift(tmp_path) -> None:
     row = _tool_approval_row()
     row["payload_json"] = {
         **dict(row["payload_json"]),
         "control_plane_target_ref": "turn-tool-run:sess-1:ISS-1:coder:9999",
     }
-    engine = _make_engine(rows=[row])
+    engine = await _make_engine(tmp_path, rows=[row])
     await _seed_tool_approval_reservation(engine)
     engine._pipeline = object()
 
@@ -576,8 +576,8 @@ async def test_engine_decide_approval_write_file_continuation_fails_closed_on_ta
 
 @pytest.mark.asyncio
 # Layer: unit
-async def test_engine_decide_approval_write_file_continuation_fails_closed_on_namespace_drift() -> None:
-    engine = _make_engine()
+async def test_engine_decide_approval_write_file_continuation_fails_closed_on_namespace_drift(tmp_path) -> None:
+    engine = await _make_engine(tmp_path)
     await _seed_tool_approval_reservation(engine)
     await _seed_target_run_execution(engine, namespace="issue:OTHER")
     engine._pipeline = object()
@@ -595,8 +595,8 @@ async def test_engine_decide_approval_write_file_continuation_fails_closed_on_na
 
 
 @pytest.mark.asyncio
-async def test_engine_decide_approval_rejects_non_packet1_decision_token() -> None:
-    engine = _make_engine()
+async def test_engine_decide_approval_rejects_non_packet1_decision_token(tmp_path) -> None:
+    engine = await _make_engine(tmp_path)
     await _seed_tool_approval_reservation(engine)
 
     with pytest.raises(ValueError, match="approve, deny"):
@@ -612,8 +612,8 @@ async def test_engine_decide_approval_rejects_non_packet1_decision_token() -> No
 
 
 @pytest.mark.asyncio
-async def test_engine_decide_approval_conflict_after_resolution_raises() -> None:
-    engine = _make_engine()
+async def test_engine_decide_approval_conflict_after_resolution_raises(tmp_path) -> None:
+    engine = await _make_engine(tmp_path)
     await _seed_tool_approval_reservation(engine)
     await engine.decide_approval(approval_id="apr-1", decision="approve")
     with pytest.raises(RuntimeError):
@@ -622,8 +622,8 @@ async def test_engine_decide_approval_conflict_after_resolution_raises() -> None
 
 @pytest.mark.asyncio
 # Layer: unit
-async def test_engine_denial_retains_operator_command_when_terminal_continuation_is_refused() -> None:
-    engine = _make_engine()
+async def test_engine_denial_retains_operator_command_when_terminal_continuation_is_refused(tmp_path) -> None:
+    engine = await _make_engine(tmp_path)
     await _seed_tool_approval_reservation(engine)
     await _seed_target_run_execution(engine)
     await _seed_target_resource(engine)
@@ -714,8 +714,8 @@ async def test_engine_denial_retains_operator_command_when_terminal_continuation
 
 
 @pytest.mark.asyncio
-async def test_engine_decide_approval_denial_closes_open_write_file_governed_run() -> None:
-    engine = _make_engine()
+async def test_engine_decide_approval_denial_closes_open_write_file_governed_run(tmp_path) -> None:
+    engine = await _make_engine(tmp_path)
     await _seed_tool_approval_reservation(engine)
     await _seed_target_run_execution(engine)
 
@@ -744,9 +744,9 @@ async def test_engine_decide_approval_denial_closes_open_write_file_governed_run
 
 
 @pytest.mark.asyncio
-async def test_engine_decide_approval_denial_closes_open_create_issue_governed_run() -> None:
+async def test_engine_decide_approval_denial_closes_open_create_issue_governed_run(tmp_path) -> None:
     """Layer: unit."""
-    engine = _make_engine(rows=[_tool_approval_row("create_issue")])
+    engine = await _make_engine(tmp_path, rows=[_tool_approval_row("create_issue")])
     await _seed_tool_approval_reservation(engine, tool_name="create_issue")
     await _seed_target_run_execution(engine)
 
@@ -775,8 +775,8 @@ async def test_engine_decide_approval_denial_closes_open_create_issue_governed_r
 
 
 @pytest.mark.asyncio
-async def test_engine_decide_approval_resolves_guard_review_hold_without_tool_operator_action() -> None:
-    engine = _make_engine(rows=[_guard_review_row()])
+async def test_engine_decide_approval_resolves_guard_review_hold_without_tool_operator_action(tmp_path) -> None:
+    engine = await _make_engine(tmp_path, rows=[_guard_review_row()])
     await _seed_guard_review_reservation(engine)
 
     result = await engine.decide_approval(

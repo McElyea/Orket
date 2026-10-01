@@ -3,13 +3,16 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import os
+from collections.abc import Mapping
 from typing import Any
 
 from orket.application.interactions.context import InteractionContext
+from orket.application.services.process_input_service import capture_process_context
 from orket.core.contracts.interaction_stream import CommitIntent, StreamEventType
-from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_MODEL, PROVIDER_CHOICES
-from orket.runtime.config.defaults import configured_provider
+from orket.core.contracts.provider_preparation import ProviderPreparationRequest, require_prepared_target
+from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_MODEL, PROVIDER_CHOICES, provider_from_environment
 from orket.runtime.config.provider_runtime_target import (
+    default_base_url,
     resolve_bool_env,
     resolve_float_env,
     resolve_int_env,
@@ -26,58 +29,64 @@ from orket.streaming.model_provider import (
 )
 
 
-def _provider_mode() -> str:
-    return str(os.getenv("ORKET_MODEL_STREAM_PROVIDER", "stub") or "stub").strip().lower()
+def _provider_mode(environment: Mapping[str, str]) -> str:
+    return str(environment.get("ORKET_MODEL_STREAM_PROVIDER", "stub") or "stub").strip().lower()
 
 
-def _real_model_id(input_config: dict[str, Any], turn_params: dict[str, Any]) -> str:
+def _real_model_id(input_config: dict[str, Any], turn_params: dict[str, Any], environment: Mapping[str, str]) -> str:
     return str(
         input_config.get("model_id")
         or turn_params.get("model_id")
-        or os.getenv("ORKET_MODEL_STREAM_REAL_MODEL_ID", DEFAULT_LOCAL_MODEL)
+        or environment.get("ORKET_MODEL_STREAM_REAL_MODEL_ID", DEFAULT_LOCAL_MODEL)
     ).strip()
 
 
-def _real_provider_name() -> str:
-    return configured_provider("ORKET_MODEL_STREAM_REAL_PROVIDER", "ORKET_LLM_PROVIDER", "ORKET_MODEL_PROVIDER")
+def _real_provider_name(environment: Mapping[str, str]) -> str:
+    return provider_from_environment(environment, "ORKET_MODEL_STREAM_REAL_PROVIDER", "ORKET_LLM_PROVIDER", "ORKET_MODEL_PROVIDER")
 
 
-def _openai_base_url() -> str:
-    return str(os.getenv("ORKET_MODEL_STREAM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")).strip()
+def _openai_base_url(environment: Mapping[str, str]) -> str:
+    return str(environment.get("ORKET_MODEL_STREAM_OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")).strip()
 
 
-def _real_timeout_s() -> float:
-    return resolve_float_env("ORKET_MODEL_STREAM_REAL_TIMEOUT_S", default=20.0)
+def _real_timeout_s(environment: Mapping[str, str]) -> float:
+    return resolve_float_env("ORKET_MODEL_STREAM_REAL_TIMEOUT_S", default=20.0, environment=environment)
 
 
-async def _build_real_provider(*, input_config: dict[str, Any], turn_params: dict[str, Any]) -> ModelStreamProvider:
-    requested_provider = _real_provider_name()
+async def _build_real_provider(*, input_config: dict[str, Any], turn_params: dict[str, Any],
+                               environment: Mapping[str, str]) -> ModelStreamProvider:
+    cwd, environment = capture_process_context(environment=environment)
+    requested_provider = _real_provider_name(environment)
+    timeout_s = _real_timeout_s(environment)
+    requested_model = _real_model_id(input_config, turn_params, environment)
+    requested_base_url = _openai_base_url(environment) if requested_provider in {"openai_compat", "lmstudio"} else None
     target = await resolve_provider_runtime_target(
         provider=requested_provider,
-        requested_model=_real_model_id(input_config, turn_params),
-        base_url=_openai_base_url() if requested_provider in {"openai_compat", "lmstudio"} else None,
-        timeout_s=_real_timeout_s(),
+        requested_model=requested_model,
+        base_url=requested_base_url,
+        timeout_s=timeout_s,
         auto_select_model=resolve_bool_env(
             "ORKET_PROVIDER_RUNTIME_AUTO_SELECT_MODEL",
             "ORKET_MODEL_STREAM_AUTO_SELECT_MODEL",
-            default=True,
+            default=True, environment=environment,
         ),
         auto_load_local_model=resolve_bool_env(
             "ORKET_PROVIDER_RUNTIME_AUTO_LOAD_LOCAL_MODEL",
             "ORKET_MODEL_STREAM_AUTO_LOAD_LOCAL_MODEL",
-            default=True,
+            default=True, environment=environment,
         ),
         model_load_timeout_s=resolve_float_env(
             "ORKET_PROVIDER_RUNTIME_MODEL_LOAD_TIMEOUT_SEC",
             "ORKET_MODEL_STREAM_MODEL_LOAD_TIMEOUT_SEC",
-            default=180.0,
+            default=180.0, environment=environment,
         ),
         model_ttl_sec=resolve_int_env(
             "ORKET_PROVIDER_RUNTIME_MODEL_TTL_SEC",
             "ORKET_MODEL_STREAM_MODEL_TTL_SEC",
-            default=600,
+            default=600, environment=environment,
         ),
-        api_key=str(os.getenv("ORKET_MODEL_STREAM_OPENAI_API_KEY", "")).strip() or None,
+        api_key=str(environment.get("ORKET_MODEL_STREAM_OPENAI_API_KEY", "")).strip() or None,
+        environment=environment, cwd=cwd,
     )
     if not str(target.model_id or "").strip():
         available = ", ".join(target.available_models[:12]) or "(no models discovered)"
@@ -86,20 +95,26 @@ async def _build_real_provider(*, input_config: dict[str, Any], turn_params: dic
             f"provider={target.requested_provider} requested_model={target.requested_model or '(unset)'} "
             f"resolution_mode={target.resolution_mode} available={available}"
         )
-    timeout_s = _real_timeout_s()
+    request = ProviderPreparationRequest(
+        provider=requested_provider, requested_model=requested_model,
+        base_url=requested_base_url or default_base_url(requested_provider, environment=environment),
+        timeout_s=timeout_s, api_key=str(environment.get("ORKET_MODEL_STREAM_OPENAI_API_KEY", "")).strip(),
+    )
+    require_prepared_target(request, target)
     if target.canonical_provider == "ollama":
         return OllamaModelStreamProvider(model_id=target.model_id, base_url=target.base_url, timeout_s=timeout_s)
     return OpenAICompatModelStreamProvider(
         model_id=target.model_id,
         base_url=target.base_url,
         provider_name=target.requested_provider,
-        api_key=str(os.getenv("ORKET_MODEL_STREAM_OPENAI_API_KEY", "")).strip() or None,
+        api_key=str(environment.get("ORKET_MODEL_STREAM_OPENAI_API_KEY", "")).strip() or None,
         timeout_s=timeout_s,
     )
 
 
 def _build_provider(*, input_config: dict[str, Any], turn_params: dict[str, Any]) -> ModelStreamProvider:
-    mode = _provider_mode()
+    environment = dict(os.environ)
+    mode = _provider_mode(environment)
     if mode == "stub":
         return StubModelStreamProvider()
     if mode == "real":
@@ -109,12 +124,13 @@ def _build_provider(*, input_config: dict[str, Any], turn_params: dict[str, Any]
 
 def validate_model_stream_v1_start(*, input_config: dict[str, Any], turn_params: dict[str, Any]) -> None:
     # Build-time validation is used by the API for fail-fast diagnostics before turn execution.
-    mode = _provider_mode()
+    environment = dict(os.environ)
+    mode = _provider_mode(environment)
     if mode == "stub":
         return
     if mode != "real":
         raise ValueError(f"Unsupported ORKET_MODEL_STREAM_PROVIDER='{mode}'. Expected: stub|real.")
-    provider_name = _real_provider_name()
+    provider_name = _real_provider_name(environment)
     if provider_name not in PROVIDER_CHOICES:
         raise ValueError(
             f"Unsupported ORKET_MODEL_STREAM_REAL_PROVIDER='{provider_name}'. Expected: llama_cpp|lmstudio|ollama|openai_compat."
@@ -135,18 +151,30 @@ def _event_mapping(event: ProviderEvent) -> tuple[StreamEventType | None, dict[s
     return (None, payload)
 
 
+def _turn_timeout_s(environment: Mapping[str, str]) -> float:
+    turn_timeout_raw = str(environment.get("ORKET_MODEL_STREAM_TURN_TIMEOUT_S", "12")).strip()
+    try:
+        turn_timeout_s = max(1.0, float(turn_timeout_raw))
+    except ValueError:
+        turn_timeout_s = 12.0
+
+    return turn_timeout_s
+
+
 async def run_model_stream_v1(
     *,
     input_config: dict[str, Any],
     turn_params: dict[str, Any],
     interaction_context: InteractionContext,
 ) -> dict[str, int]:
+    environment = dict(os.environ)
+    req = ProviderTurnRequest(input_config=input_config, turn_params=turn_params).model_copy(deep=True)
+    turn_timeout_s = _turn_timeout_s(environment)
     provider = (
         StubModelStreamProvider()
-        if _provider_mode() == "stub"
-        else await _build_real_provider(input_config=input_config, turn_params=turn_params)
+        if _provider_mode(environment) == "stub"
+        else await _build_real_provider(input_config=req.input_config, turn_params=req.turn_params, environment=environment)
     )
-    req = ProviderTurnRequest(input_config=input_config, turn_params=turn_params)
     provider_turn_id: str | None = None
     stop_reason = ""
     provider_error = ""
@@ -173,12 +201,6 @@ async def run_model_stream_v1(
                 await provider.cancel(provider_turn_id)
                 break
             await interaction_context.emit_event(stream_mapping, payload)
-
-    turn_timeout_raw = str(os.getenv("ORKET_MODEL_STREAM_TURN_TIMEOUT_S", "12")).strip()
-    try:
-        turn_timeout_s = max(1.0, float(turn_timeout_raw))
-    except ValueError:
-        turn_timeout_s = 12.0
 
     cancel_task = asyncio.create_task(_cancel_watch())
     try:

@@ -45,7 +45,8 @@ class BuildCompletionSnapshot:
 async def inspect_build_completion(
     *, cards: CardRepository, build_id: str, expected_card_ids: tuple[str, ...],
 ) -> BuildCompletionSnapshot:
-    accepted, unverified = [], []
+    accepted: list[tuple[str, str]] = []
+    unverified: list[tuple[str, str]] = []
     # Read the complete inventory and all receipt bindings while supported card
     # writers are excluded. Individually valid reads need not form a valid build snapshot.
     async with cards.completion_write_guard():

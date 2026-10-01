@@ -15,6 +15,11 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from orket.adapters.execution.owned_io import run_owned_thread
+from orket.adapters.observability.logging_context import (
+    bind_logging,
+    prepare_logging,
+    select_logging_inputs,
+)
 from orket.adapters.storage.async_card_repository import AsyncCardRepository
 from orket.application.services.gitea_state_adapter_factory import create_gitea_state_adapter
 from orket.application.services.gitea_state_pilot import collect_gitea_state_pilot_inputs
@@ -51,13 +56,14 @@ async def _run(card_ids: list[str]) -> dict[str, Any]:
     card_ids = list(card_ids)
     inputs = collect_gitea_state_pilot_inputs(environment=environment)
     construct = partial(_build_gitea_adapter, inputs, environment=environment, directory=directory)
-    async with open_runtime_owner(construct, label="gitea-reconciliation-adapter") as adapter:
-        database = await run_owned_thread(partial(resolve_runtime_db_path, invocation_root=directory,
-            environment=environment), label="gitea-reconciliation-database")
-        service = StateReconciliationService(
-            sqlite_cards=AsyncCardRepository(database), gitea_cards=adapter, workspace=PROJECT_ROOT,
-        )
-        return await service.reconcile(card_ids)
+    with bind_logging(await prepare_logging(select_logging_inputs(directory, environment))):
+        async with open_runtime_owner(construct, label="gitea-reconciliation-adapter") as adapter:
+            database = await run_owned_thread(partial(resolve_runtime_db_path, invocation_root=directory,
+                environment=environment), label="gitea-reconciliation-database")
+            service = StateReconciliationService(
+                sqlite_cards=AsyncCardRepository(database), gitea_cards=adapter, workspace=PROJECT_ROOT,
+            )
+            return await service.reconcile(card_ids)
 
 
 def main() -> int:

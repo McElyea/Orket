@@ -13,8 +13,10 @@ from orket.application.services.turn_tool_control_plane_service import build_tur
 from orket.application.services.turn_tool_control_plane_support import digest
 from orket.application.services.turn_tool_recovery_transaction import recover_pre_effect_attempt_atomic
 from orket.application.workflows.turn_executor import TurnExecutor
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.core.domain.state_machine import StateMachine
+from orket.logging import bind_logging, prepare_logging
 from tests.helpers.turn_artifacts import artifact_test_utc_now, write_checkpoint_fixture
 from tests.helpers.turn_control_plane_clock import deterministic_turn_clock as deterministic_turn_clock
 from tests.integration.test_governed_agent_terminal_history import logical_state
@@ -105,7 +107,8 @@ async def test_turn_refuses_unbound_dispatch_contract_before_model_and_tool(tmp_
     executor = TurnExecutor(StateMachine(), ToolGate(organization=None, workspace_root=tmp_path),
                             workspace=tmp_path, control_plane_service=control, utc_now=artifact_test_utc_now)
     model, tool = _Model(), _Toolbox()
-    result = await executor.execute_turn(_issue(), _role(), model, tool, _context(resume_mode=resume_mode))
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), _role(), model, tool, _context(resume_mode=resume_mode))
     assert not result.success and REFUSAL in result.error
     assert model.calls == tool.calls == 0
     assert await logical_state(control.execution_repository.db_path) == before
@@ -144,7 +147,8 @@ async def test_completed_unversioned_turn_reads_without_repair_or_dispatch(tmp_p
             await AsyncFileTools(tmp_path).write_file(args['path'], args['content'])
             return await super().execute(tool_name, args, context)
 
-    first = await executor.execute_turn(_issue(), _role(), _Model(), PhysicalTool(), _context())
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        first = await executor.execute_turn(_issue(), _role(), _Model(), PhysicalTool(), _context())
     assert first.success and (tmp_path / 'agent_output/out.txt').read_text() == 'ok'
     run_id = 'turn-tool-run:run-1:ISSUE-1:developer:0001'
     run, _ = await change_declaration(control, run_id, 'unversioned')
@@ -153,7 +157,8 @@ async def test_completed_unversioned_turn_reads_without_repair_or_dispatch(tmp_p
             record=run.model_copy(update={'final_truth_record_id': 'wrong-truth-reference'}))
     before = await logical_state(control.execution_repository.db_path)
     model, tool = _Model(), PhysicalTool()
-    result = await executor.execute_turn(_issue(), _role(), model, tool, _context(resume_mode=True))
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), _role(), model, tool, _context(resume_mode=True))
     assert result.success is not corrupt_reference
     assert model.calls == tool.calls == 0
     assert await logical_state(control.execution_repository.db_path) == before

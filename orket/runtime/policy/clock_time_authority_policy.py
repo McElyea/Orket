@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from orket.runtime.determinism_controls import (
+from orket.runtime.policy.determinism_controls import (
     CLOCK_MODE_VALUES,
     DEFAULT_CLOCK_MODE,
     DEFAULT_LOCALE,

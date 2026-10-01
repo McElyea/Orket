@@ -15,6 +15,7 @@ from orket.adapters.observability.log_publication import (
     settle_event_subscription,
     subscribe_to_event_handoffs,
 )
+from orket.adapters.observability.logging_context import bind_logging
 from orket.application.services.api_runtime_container import ApiRuntimeContainer
 
 LOGGER = logging.getLogger(__name__)
@@ -78,7 +79,9 @@ async def api_runtime_lifespan(
     try:
         # Initialization uses the same admitted-invocation lifetime as requests;
         # close cancels and drains it before releasing any initialized resources.
-        await owner.run_request(initialize)
+        with bind_logging(owner.logging_context):
+            await owner.run_request(initialize)
         yield
     finally:
-        await owner.close()
+        with bind_logging(owner.logging_context):
+            await owner.close()

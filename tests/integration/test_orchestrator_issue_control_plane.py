@@ -17,8 +17,10 @@ from orket.application.services.tool_gate_service import ToolGate
 from orket.application.services.turn_tool_control_plane_service import build_turn_tool_control_plane_service
 from orket.application.workflows.orchestrator import Orchestrator
 from orket.application.workflows.turn_executor import TurnExecutor
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain import AttemptState, CapabilityClass, LeaseStatus, ReservationKind, ReservationStatus, RunState
 from orket.core.domain.state_machine import StateMachine
+from orket.logging import bind_logging, prepare_logging
 from orket.schema import (
     CardStatus,
     DialectConfig,
@@ -177,20 +179,21 @@ async def test_orchestrator_issue_turn_publishes_issue_dispatch_and_non_protocol
     team = TeamConfig(name="core", seats={"developer": SeatConfig(name="developer", roles=["developer"])})
     env = EnvironmentConfig(name="dev", model="test-model")
 
-    await orch._execute_issue_turn(
-        issue_data=issue,
-        epic=epic,
-        team=team,
-        env=env,
-        run_id="run-1",
-        active_build="build-1",
-        model_selection=prepared_model_selection(SimpleNamespace(
-            select_model=lambda _inputs: "test-model",
-            select_dialect=lambda _selected_model: "json",
-        )),
-        executor=executor,
-        toolbox=toolbox,
-    )
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        await orch._execute_issue_turn(
+            issue_data=issue,
+            epic=epic,
+            team=team,
+            env=env,
+            run_id="run-1",
+            active_build="build-1",
+            model_selection=prepared_model_selection(SimpleNamespace(
+                select_model=lambda _inputs: "test-model",
+                select_dialect=lambda _selected_model: "json",
+            )),
+            executor=executor,
+            toolbox=toolbox,
+        )
 
     issue_run_id = run_id_for_dispatch(
         session_id="run-1",

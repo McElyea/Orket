@@ -4,7 +4,11 @@ import base64
 import json
 from pathlib import Path
 
+import pytest
+
 from orket.kernel.v1.canonical import canonical_json_bytes, structural_digest
+
+pytestmark = pytest.mark.contract
 
 
 def _classify_raw_bytes(raw: bytes) -> str | None:

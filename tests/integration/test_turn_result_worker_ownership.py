@@ -6,7 +6,7 @@ import pytest
 from orket.adapters.storage.async_file_tools import AsyncFileTools
 from tests.helpers.tool_result_persistence import enter, held_worker
 from tests.helpers.turn_control_plane_clock import deterministic_turn_clock as deterministic_turn_clock
-from tests.integration.test_turn_execution_ownership import ObservedToolbox, executor
+from tests.integration.test_turn_execution_ownership import ObservedToolbox, execute_prepared_turn, executor
 from tests.integration.test_turn_executor_control_plane import _context, _issue, _Model, _role
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio, pytest.mark.usefixtures("deterministic_turn_clock")]
@@ -22,7 +22,7 @@ async def test_cancelled_turn_holds_native_owner_through_result_file_worker(tmp_
     callback = ("persist_operation_result" if stage == "operation" else
                 "append_protocol_receipt" if protocol else "persist_tool_result")
     async with held_worker(first.tool_dispatcher, callback) as (entered, release, finished):
-        task = asyncio.create_task(first.execute_turn(_issue(), _role(), _Model(), tools,
+        task = asyncio.create_task(execute_prepared_turn(tmp_path, first.execute_turn, _issue(), _role(), _Model(), tools,
                                    _context(protocol_governed_enabled=protocol)))
         try:
             await enter(entered)
@@ -30,7 +30,7 @@ async def test_cancelled_turn_holds_native_owner_through_result_file_worker(tmp_
                 task.cancel()
                 await asyncio.sleep(0.01)
             escaped = task.done()
-            contender = await asyncio.wait_for(second.execute_turn(_issue(), _role(), contender_model,
+            contender = await asyncio.wait_for(execute_prepared_turn(tmp_path, second.execute_turn, _issue(), _role(), contender_model,
                 contender_tools, _context(protocol_governed_enabled=protocol, resume_mode=True)), timeout=5)
             assert not finished.is_set()
         finally:
@@ -44,7 +44,7 @@ async def test_cancelled_turn_holds_native_owner_through_result_file_worker(tmp_
     assert await files.read_file("agent_output/out.txt") == "ok"
     assert await files.read_file("observations/first.txt") == "write completed"
     assert not await asyncio.to_thread((tmp_path / "observations/contender.txt").exists)
-    later = await second.execute_turn(_issue(), _role(), contender_model, contender_tools,
+    later = await execute_prepared_turn(tmp_path, second.execute_turn, _issue(), _role(), contender_model, contender_tools,
                                      _context(protocol_governed_enabled=protocol, resume_mode=True))
     assert not later.success and "dispatch outcome unknown" in later.error
     assert contender_tools.calls == contender_model.calls == 0

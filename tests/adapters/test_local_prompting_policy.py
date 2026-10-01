@@ -14,6 +14,7 @@ from orket.application.services.local_prompting_service import (
 _QWEN_INTRO_DENYLIST = ["sure", "here is", "here's", "i will", "i'll", "thinking process:", "let me"]
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_resolve_local_prompting_policy_selects_matching_profile_for_ollama_qwen(tmp_path, monkeypatch) -> None:
     """Layer: integration. The async provider path loads its packaged registry outside a checkout."""
@@ -36,12 +37,13 @@ async def test_resolve_local_prompting_policy_selects_matching_profile_for_ollam
     assert result.lmstudio_session_id == ""
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 @pytest.mark.parametrize("override_source", ["context", "environment"])
 async def test_missing_explicit_registry_does_not_fall_back_to_packaged_default(
     tmp_path, monkeypatch, override_source
 ) -> None:
-    """Layer: contract. A missing explicit registry fails closed, even with a valid packaged default."""
+    """Layer: integration. A missing explicit registry fails closed, even with a valid packaged default."""
     context = {"protocol_governed_enabled": True}
     missing = str(tmp_path / "missing.json")
     if override_source == "context":
@@ -57,6 +59,7 @@ async def test_missing_explicit_registry_does_not_fall_back_to_packaged_default(
         )
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_governed_runtime_limits_cap_generation_without_widening_profile() -> None:
     """Layer: contract. Host-issued generation limits narrow the selected local profile."""
@@ -80,6 +83,7 @@ async def test_governed_runtime_limits_cap_generation_without_widening_profile()
     assert result.ollama_options_overrides()["num_predict"] == 96
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_resolve_local_prompting_policy_applies_user_injection_for_deepseek_profile() -> None:
     result = await resolve_local_prompting_policy(
@@ -96,6 +100,7 @@ async def test_resolve_local_prompting_policy_applies_user_injection_for_deepsee
     assert "[SYSTEM_INSTRUCTION_BEGIN]" in result.messages[0]["content"]
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_resolve_local_prompting_policy_fails_closed_for_strict_missing_profile() -> None:
     with pytest.raises(ValueError, match=E_LOCAL_PROMPT_PROFILE_REQUIRED):
@@ -107,6 +112,7 @@ async def test_resolve_local_prompting_policy_fails_closed_for_strict_missing_pr
         )
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_resolve_local_prompting_policy_shadow_mode_allows_unresolved_profile() -> None:
     result = await resolve_local_prompting_policy(
@@ -120,6 +126,7 @@ async def test_resolve_local_prompting_policy_shadow_mode_allows_unresolved_prof
     assert result.warnings
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_resolve_local_prompting_policy_rejects_forbidden_role_on_tool_path() -> None:
     with pytest.raises(ValueError, match=E_LOCAL_PROMPT_ROLE_FORBIDDEN):
@@ -134,6 +141,7 @@ async def test_resolve_local_prompting_policy_rejects_forbidden_role_on_tool_pat
         )
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_resolve_local_prompting_policy_uses_tool_call_bundle_when_required_tools_exist_without_protocol_governance() -> None:
     """Layer: contract. Verifies required tool turns stay on deterministic tool_call sampling without protocol mode."""
@@ -156,6 +164,7 @@ async def test_resolve_local_prompting_policy_uses_tool_call_bundle_when_require
     assert result.intro_phrase_denylist == tuple(_QWEN_INTRO_DENYLIST)
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_resolve_local_prompting_policy_lmstudio_fixed_session_injects_payload_override() -> None:
     result = await resolve_local_prompting_policy(
@@ -174,6 +183,7 @@ async def test_resolve_local_prompting_policy_lmstudio_fixed_session_injects_pay
     assert overrides["session_id"] == "session-fixed-001"
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_resolve_local_prompting_policy_lmstudio_context_session_uses_runtime_session_id() -> None:
     result = await resolve_local_prompting_policy(
@@ -193,6 +203,7 @@ async def test_resolve_local_prompting_policy_lmstudio_context_session_uses_runt
     assert telemetry["lmstudio_session_id_present"] is True
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_resolve_local_prompting_policy_selects_gemma_profile_for_openai_compat_tool_turns() -> None:
     """Layer: contract. Verifies strict LM Studio Gemma tool turns fail closed on a real profile, not fallback drift."""
@@ -215,6 +226,7 @@ async def test_resolve_local_prompting_policy_selects_gemma_profile_for_openai_c
     assert result.intro_phrase_denylist == ()
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_resolve_local_prompting_policy_collapses_adjacent_user_blocks_for_gemma() -> None:
     result = await resolve_local_prompting_policy(
@@ -242,6 +254,7 @@ async def test_resolve_local_prompting_policy_collapses_adjacent_user_blocks_for
     assert "message_packet_compacted:gemma_tool_turn_v1:4->2" in result.warnings
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_resolve_local_prompting_policy_trims_gemma_before_collapsing_user_blocks() -> None:
     result = await resolve_local_prompting_policy(
@@ -268,6 +281,7 @@ async def test_resolve_local_prompting_policy_trims_gemma_before_collapsing_user
     assert "message_packet_compacted:gemma_tool_turn_v1:5->2" in result.warnings
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_resolve_local_prompting_policy_caps_gemma_multi_write_turns_more_aggressively() -> None:
     messages = [
@@ -313,6 +327,7 @@ async def test_resolve_local_prompting_policy_caps_gemma_multi_write_turns_more_
     assert "message_packet_compacted:gemma_tool_turn_v1:5->2" in multi_write.warnings
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_resolve_local_prompting_policy_adds_qwen_no_think_hint_for_openai_compat_non_reasoning() -> None:
     result = await resolve_local_prompting_policy(
@@ -329,6 +344,7 @@ async def test_resolve_local_prompting_policy_adds_qwen_no_think_hint_for_openai
     assert "reasoning_suppression:qwen_no_think_prompt_hint" in result.warnings
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_resolve_local_prompting_policy_drops_prior_transcript_before_other_trimmed_context() -> None:
     messages = [
@@ -355,6 +371,7 @@ async def test_resolve_local_prompting_policy_drops_prior_transcript_before_othe
     assert any(message["content"].startswith("Execution Context JSON:\n") for message in result.messages)
 
 
+@pytest.mark.unit
 def test_local_prompting_bool_parse_warns_on_unrecognized_token() -> None:
     """Layer: unit. Verifies local prompting boolean parsing fails closed and emits an explicit warning on invalid tokens."""
     with warnings.catch_warnings(record=True) as caught:

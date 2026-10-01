@@ -2,7 +2,11 @@ from __future__ import annotations
 
 import json
 
+import pytest
+
 from orket.kernel.v1.validator import compare_runs_v1, replay_run_v1
+
+pytestmark = pytest.mark.contract
 
 
 def test_compare_runs_v1_is_stable_over_100_iterations() -> None:

@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from orket.exceptions import OrketInfrastructureError
-from orket.runtime.epic_run_types import EpicRunCallbacks, EpicRunContext
+from orket.runtime.execution.epic_run_types import EpicRunCallbacks, EpicRunContext
 from orket.schema import CardStatus
 
 WORKFLOW_TERMINAL_STATUSES = {

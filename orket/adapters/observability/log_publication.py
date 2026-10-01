@@ -12,6 +12,9 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
+from orket.adapters.execution.owned_io import require_sync_context
+from orket.core.contracts.logging_inputs import DEFAULT_LOG_QUEUE_MAX, LOG_QUEUE_MAX_ENV, log_queue_capacity
+
 side_effecting = True
 
 _logger = logging.getLogger("orket")
@@ -23,17 +26,7 @@ _LOG_LEVELS = {
 }
 _prepared_log_dirs: set[Path] = set()
 _prepared_log_dirs_lock = threading.Lock()
-LOG_QUEUE_MAX_ENV = "ORKET_LOG_QUEUE_MAX"
-DEFAULT_LOG_QUEUE_MAX = 10_000
 LOG_WRITER_TERMINATED_ERROR = "E_LOG_WRITER_TERMINATED: log writer stopped before the requested frontier"
-
-
-def _resolve_log_queue_max() -> int:
-    try:
-        configured = int(str(os.getenv(LOG_QUEUE_MAX_ENV, "")).strip())
-    except ValueError:
-        return DEFAULT_LOG_QUEUE_MAX
-    return configured if configured > 0 else DEFAULT_LOG_QUEUE_MAX
 
 
 class _LogWriteFrontier:
@@ -73,7 +66,9 @@ class OptionalPublication:
 
 
 _LogWriteItem = tuple[Path, str] | _LogWriteFrontier | tuple[OptionalPublication, int]
-_log_write_queue: queue.Queue[_LogWriteItem] = queue.Queue(maxsize=_resolve_log_queue_max())
+_log_write_queue: queue.Queue[_LogWriteItem] = queue.Queue(maxsize=DEFAULT_LOG_QUEUE_MAX)
+_log_queue_configured = False
+_log_prepared = False
 _log_writer_lock = threading.Lock()
 _log_writer_state = threading.Condition()
 _log_writer_thread: threading.Thread | None = None
@@ -105,19 +100,43 @@ def _require_log_writer_alive() -> None:
     raise RuntimeError(LOG_WRITER_TERMINATED_ERROR) from _log_writer_failure
 
 
-def _start_log_writer() -> None:
-    global _log_writer_thread
+def prepare_log_writer(queue_max: int) -> None:
+    """Configure the existing empty queue and start its sole writer natively."""
+    global _log_writer_thread, _log_queue_configured, _log_prepared
+    require_sync_context(code="E_LOGGING_PREPARATION_REQUIRES_NATIVE_CONTEXT")
+    if type(queue_max) is not int or queue_max <= 0:
+        raise ValueError("E_LOGGING_PREPARATION_INPUT_UNSUPPORTED")
     with _log_writer_lock:
+        if _log_queue_configured and _log_write_queue.maxsize != queue_max:
+            raise RuntimeError("E_LOGGING_QUEUE_CONFIGURATION_CONFLICT")
+        if not _log_queue_configured:
+            with _log_write_queue.mutex:
+                if _log_write_queue.unfinished_tasks:
+                    raise RuntimeError("E_LOGGING_PREPARATION_UNOWNED_QUEUE_ITEMS")
+                _log_write_queue.maxsize = queue_max
+                _log_queue_configured = True
         if _log_writer_thread is not None:
+            _require_log_writer_alive()
             return
         thread = threading.Thread(target=_log_writer_loop, name="orket-log-writer", daemon=True)
         with _log_writer_state:
             _log_writer_thread = thread
         try:
             thread.start()
-        except RuntimeError as exc:  # preserve process interrupts while recording thread-start failure
+        except BaseException as exc:  # Native startup supervisor retains even an interrupted actual start.
             _record_log_writer_failure(exc)
-            _require_log_writer_alive()
+            if isinstance(exc, RuntimeError):
+                _require_log_writer_alive()
+            raise
+        _require_log_writer_alive()
+        _log_prepared = True
+
+
+def require_prepared_logging(queue_max: int | None = None) -> None:
+    if not _log_prepared:
+        raise RuntimeError("E_LOGGING_PREPARATION_REQUIRED")
+    if queue_max is not None and queue_max != _log_write_queue.maxsize:
+        raise RuntimeError("E_LOGGING_QUEUE_CONFIGURATION_CONFLICT")
 
 
 def _log_writer_loop() -> None:
@@ -151,7 +170,7 @@ def settle_log_write_frontier() -> None:
     """Block natively until prior accepted optional appends have settled."""
     if _running_on_event_loop():
         raise RuntimeError("E_LOG_WRITE_FRONTIER_REQUIRES_NATIVE_CONTEXT: settlement blocks the calling thread")
-    _start_log_writer()
+    prepare_log_writer(_log_write_queue.maxsize if _log_queue_configured else log_queue_capacity(os.getenv(LOG_QUEUE_MAX_ENV, "")))
     frontier = _LogWriteFrontier()
     with _log_writer_state:
         while True:
@@ -206,7 +225,7 @@ def _emit_pending_drop_warning() -> None:
 def admit_optional_publication(batch: OptionalPublication) -> None:
     """Nonblocking per-file admission on the existing FIFO and writer."""
     global _dropped_log_entries, _pending_drop_warning
-    _start_log_writer()
+    require_prepared_logging()
     with _log_writer_state:
         if _log_writer_failure is None:
             batch.deliveries = capture_event_deliveries()
@@ -251,7 +270,7 @@ def _running_on_event_loop() -> bool:
 def _append_json_record(path: Path, payload: dict[str, Any]) -> None:
     line = json.dumps(payload, ensure_ascii=False, default=str) + "\n"
     if _running_on_event_loop():
-        _start_log_writer()
+        require_prepared_logging()
         try:
             _log_write_queue.put_nowait((path, line))
         except queue.Full:

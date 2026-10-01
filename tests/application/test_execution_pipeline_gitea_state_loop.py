@@ -9,13 +9,14 @@ import pytest
 
 from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.runtime.execution_pipeline import ExecutionPipeline
+from tests.helpers.logging_fixture_owner import prepared_fixture_owner
 from tests.helpers.runtime_result import published_result
 
 pytestmark = pytest.mark.contract
 
 
-def _pipeline(tmp_path, mode):
-    pipeline = object.__new__(ExecutionPipeline)
+async def _pipeline(tmp_path, mode):
+    pipeline = await prepared_fixture_owner(ExecutionPipeline, tmp_path)
     pipeline._initialized = True
     pipeline.state_backend_mode = mode
     pipeline.org = SimpleNamespace(process_rules={})
@@ -28,7 +29,7 @@ def _pipeline(tmp_path, mode):
 
 @pytest.mark.asyncio
 async def test_run_gitea_state_loop_requires_gitea_mode(tmp_path):
-    pipeline = _pipeline(tmp_path, "local")
+    pipeline = await _pipeline(tmp_path, "local")
 
     with pytest.raises(ValueError, match="state_backend_mode='gitea'"):
         await pipeline.run_gitea_state_loop(worker_id="worker-1")
@@ -38,7 +39,7 @@ async def test_run_gitea_state_loop_requires_gitea_mode(tmp_path):
 # Layer: contract
 async def test_run_gitea_state_loop_wires_adapter_worker_and_coordinator(monkeypatch, tmp_path):
     """Layer: contract. Verifies selected ports and canonical card dispatch through controlled collaborators."""
-    pipeline = _pipeline(tmp_path, "gitea")
+    pipeline = await _pipeline(tmp_path, "gitea")
     called_cards = []
 
     async def _run_card(card_id: str, **_kwargs):

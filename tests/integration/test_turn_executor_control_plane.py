@@ -17,6 +17,7 @@ from orket.application.services.turn_tool_control_plane_service import build_tur
 from orket.application.services.turn_tool_recovery_transaction import recover_pre_effect_attempt_atomic
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.core.contracts import StepRecord
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain import (
     CapabilityClass,
     CheckpointAcceptanceOutcome,
@@ -33,6 +34,7 @@ from orket.core.domain import (
 )
 from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.core.domain.state_machine import StateMachine
+from orket.logging import bind_logging, prepare_logging
 from orket.schema import CardStatus, IssueConfig, RoleConfig
 from tests.helpers import turn_artifacts
 from tests.helpers.turn_artifacts import artifact_destination, artifact_test_utc_now, write_checkpoint_fixture
@@ -104,9 +106,8 @@ async def test_turn_executor_publishes_control_plane_run_attempt_step_effect_and
         workspace=Path(tmp_path), control_plane_service=control_plane,
      utc_now=artifact_test_utc_now)
     toolbox = _Toolbox()
-
-    result = await executor.execute_turn(_issue(), _role(), _Model(), toolbox, _context())
-
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), _role(), _Model(), toolbox, _context())
     run_id = "turn-tool-run:run-1:ISSUE-1:developer:0001"
     attempt_id = f"{run_id}:attempt:0001"
     run = await control_plane.execution_repository.get_run_record(run_id=run_id)
@@ -134,7 +135,6 @@ async def test_turn_executor_publishes_control_plane_run_attempt_step_effect_and
         for line in (turn_dir / "protocol_receipts.log").read_text(encoding="utf-8").splitlines()
         if line.strip()
     ]
-
     assert result.success is True
     assert toolbox.calls == 1
     assert run is not None
@@ -195,8 +195,8 @@ async def test_turn_executor_publishes_control_plane_for_non_protocol_tool_execu
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
         workspace=Path(tmp_path), control_plane_service=control_plane,
      utc_now=artifact_test_utc_now)
-
-    await executor.execute_turn(_issue(), _role(), _Model(), _Toolbox(), _context(protocol_governed_enabled=False))
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        await executor.execute_turn(_issue(), _role(), _Model(), _Toolbox(), _context(protocol_governed_enabled=False))
 
     run_id = "turn-tool-run:run-1:ISSUE-1:developer:0001"
     attempt_id = f"{run_id}:attempt:0001"
@@ -265,14 +265,14 @@ async def test_turn_executor_resume_mode_reuses_control_plane_checkpoint_and_eff
      utc_now=artifact_test_utc_now)
     model = _Model()
     toolbox = _Toolbox()
-
-    first = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        first = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
     turn_dir = Path(tmp_path) / "observability" / "run-1" / "issue-1" / "001_developer"
     snapshot_files_before = sorted(turn_dir.glob("control_plane_checkpoint_snapshot_*.json"))
     snapshot_payload = json.loads(snapshot_files_before[0].read_text(encoding="utf-8"))
-    second = await executor.execute_turn(_issue(), _role(), model, toolbox, _context(resume_mode=True))
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        second = await executor.execute_turn(_issue(), _role(), model, toolbox, _context(resume_mode=True))
     snapshot_files_after = sorted(turn_dir.glob("control_plane_checkpoint_snapshot_*.json"))
-
     run_id = "turn-tool-run:run-1:ISSUE-1:developer:0001"
     attempt_id = f"{run_id}:attempt:0001"
     attempts = await control_plane.execution_repository.list_attempt_records(run_id=run_id)
@@ -315,13 +315,13 @@ async def test_turn_executor_completed_governed_reentry_reuses_artifacts_before_
      utc_now=artifact_test_utc_now)
     model = _Model()
     toolbox = _Toolbox()
-
-    first = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        first = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
     turn_dir = Path(tmp_path) / "observability" / "run-1" / "issue-1" / "001_developer"
     snapshot_files_before = sorted(turn_dir.glob("control_plane_checkpoint_snapshot_*.json"))
-    second = await executor.execute_turn(_issue(), _role(), model, toolbox, _context(resume_mode=False))
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        second = await executor.execute_turn(_issue(), _role(), model, toolbox, _context(resume_mode=False))
     snapshot_files_after = sorted(turn_dir.glob("control_plane_checkpoint_snapshot_*.json"))
-
     run_id = "turn-tool-run:run-1:ISSUE-1:developer:0001"
     attempts = await control_plane.execution_repository.list_attempt_records(run_id=run_id)
     effects = await control_plane.publication.repository.list_effect_journal_entries(run_id=run_id)
@@ -351,13 +351,13 @@ async def test_turn_executor_completed_governed_reentry_requires_snapshot_artifa
      utc_now=artifact_test_utc_now)
     model = _Model()
     toolbox = _Toolbox()
-
-    first = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        first = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
     turn_dir = Path(tmp_path) / "observability" / "run-1" / "issue-1" / "001_developer"
     snapshot_path = sorted(turn_dir.glob("control_plane_checkpoint_snapshot_*.json"))[0]
     snapshot_path.unlink()
-
-    second = await executor.execute_turn(_issue(), _role(), model, toolbox, _context(resume_mode=True))
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        second = await executor.execute_turn(_issue(), _role(), model, toolbox, _context(resume_mode=True))
 
     assert first.success is True
     assert second.success is False
@@ -378,13 +378,13 @@ async def test_turn_executor_completed_governed_reentry_requires_checkpoint_plan
      utc_now=artifact_test_utc_now)
     model = _Model()
     toolbox = _Toolbox()
-
-    first = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        first = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
     snapshot_path, snapshot_before = await turn_artifacts.rewrite_checkpoint_plan_operation_fixture(
         executor, _issue(), _role(), _context(), {"path": "agent_output/other.txt", "content": "wrong"},
     )
-
-    second = await executor.execute_turn(_issue(), _role(), model, toolbox, _context(resume_mode=False))
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        second = await executor.execute_turn(_issue(), _role(), model, toolbox, _context(resume_mode=False))
 
     assert first.success is True
     assert second.success is False
@@ -413,7 +413,6 @@ async def test_turn_executor_resume_mode_recovers_pre_effect_unfinished_attempt_
         content="",
         tool_calls=[ToolCall(tool="write_file", args=tool_args)],
     )
-
     await write_checkpoint_fixture(
         executor=executor,
         turn=pre_effect_turn,
@@ -426,7 +425,8 @@ async def test_turn_executor_resume_mode_recovers_pre_effect_unfinished_attempt_
     turn_dir = Path(tmp_path) / "observability" / "run-1" / "issue-1" / "001_developer"
     first_snapshot_path = sorted(turn_dir.glob("control_plane_checkpoint_snapshot_*.json"))[0]
     first_snapshot_payload = json.loads(first_snapshot_path.read_text(encoding="utf-8"))
-    result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context(resume_mode=True))
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context(resume_mode=True))
     snapshot_files_after = sorted(turn_dir.glob("control_plane_checkpoint_snapshot_*.json"))
 
     run_id = "turn-tool-run:run-1:ISSUE-1:developer:0001"
@@ -486,7 +486,6 @@ async def test_turn_executor_resume_mode_rejects_post_effect_unfinished_attempt(
         content="",
         tool_calls=[ToolCall(tool="write_file", args=tool_args)],
     )
-
     await write_checkpoint_fixture(
         executor=executor,
         turn=pre_effect_turn,
@@ -509,7 +508,8 @@ async def test_turn_executor_resume_mode_rejects_post_effect_unfinished_attempt(
     )
 
     toolbox = _Toolbox()
-    result = await executor.execute_turn(_issue(), _role(), _Model(), toolbox, _context(resume_mode=True))
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), _role(), _Model(), toolbox, _context(resume_mode=True))
     run = await control_plane.execution_repository.get_run_record(run_id=run_id)
     attempts = await control_plane.execution_repository.list_attempt_records(run_id=run_id)
     truth = await control_plane.publication.repository.get_final_truth(run_id=run_id)
@@ -568,7 +568,6 @@ async def test_turn_executor_resume_mode_rejects_post_effect_truth_on_resumed_at
         content="",
         tool_calls=[ToolCall(tool="write_file", args=tool_args)],
     )
-
     await write_checkpoint_fixture(
         executor=executor,
         turn=pre_effect_turn,
@@ -604,7 +603,8 @@ async def test_turn_executor_resume_mode_rejects_post_effect_truth_on_resumed_at
 
     model = _Model()
     toolbox = _Toolbox()
-    result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context(resume_mode=True))
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context(resume_mode=True))
     run = await control_plane.execution_repository.get_run_record(run_id=run_id)
     attempts = await control_plane.execution_repository.list_attempt_records(run_id=run_id)
     truth = await control_plane.publication.repository.get_final_truth(run_id=run_id)
@@ -641,7 +641,6 @@ async def test_turn_executor_resume_mode_rejects_step_only_truth_on_resumed_atte
         content="",
         tool_calls=[ToolCall(tool="write_file", args=tool_args)],
     )
-
     await write_checkpoint_fixture(
         executor=executor,
         turn=pre_effect_turn,
@@ -681,7 +680,8 @@ async def test_turn_executor_resume_mode_rejects_step_only_truth_on_resumed_atte
 
     model = _Model()
     toolbox = _Toolbox()
-    result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context(resume_mode=True))
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context(resume_mode=True))
     run = await control_plane.execution_repository.get_run_record(run_id=run_id)
     attempts = await control_plane.execution_repository.list_attempt_records(run_id=run_id)
     truth = await control_plane.publication.repository.get_final_truth(run_id=run_id)

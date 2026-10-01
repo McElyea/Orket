@@ -3,14 +3,14 @@ from __future__ import annotations
 from typing import Any
 
 from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_PROVIDER, effective_provider
-from orket.runtime.determinism_controls import (
+from orket.runtime.policy.determinism_controls import (
     DEFAULT_CLOCK_MODE,
     DEFAULT_LOCALE,
     DEFAULT_NETWORK_MODE,
     DEFAULT_TIMEZONE,
 )
-from orket.runtime.deterministic_mode_contract import resolve_deterministic_mode_flag
-from orket.runtime.unknown_input_policy import unknown_input_policy_snapshot
+from orket.runtime.policy.deterministic_mode_contract import resolve_deterministic_mode_flag
+from orket.runtime.policy.unknown_input_policy import unknown_input_policy_snapshot
 
 
 def safe_default_catalog_snapshot() -> dict[str, Any]:

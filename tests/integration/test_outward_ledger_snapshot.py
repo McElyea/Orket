@@ -29,16 +29,17 @@ async def test_export_snapshot_excludes_append_committed_between_pages(tmp_path,
     service = await seed_ledger(db_path, 3)
     service.snapshot_store = OutwardLedgerSnapshotStore(db_path, page_size=2)
     reached, release = asyncio.Event(), asyncio.Event()
-    original = service.snapshot_store._read_page
+    original = aiosqlite.Cursor.fetchall
 
-    async def pause(connection, run_id, after):
-        rows = await original(connection, run_id, after)
-        if after == 0:
+    async def pause(cursor):
+        rows = await original(cursor)
+        columns = {column[0] for column in cursor.description or ()}
+        if rows and "committed_chain_hash" in columns and not reached.is_set():
             reached.set()
             await asyncio.wait_for(release.wait(), timeout=10)
         return rows
 
-    monkeypatch.setattr(service.snapshot_store, "_read_page", pause)
+    monkeypatch.setattr(aiosqlite.Cursor, "fetchall", pause)
     export_task = asyncio.create_task(service.export("bt2"))
     try:
         await asyncio.wait_for(reached.wait(), timeout=10)

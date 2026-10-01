@@ -15,7 +15,9 @@ from orket.application.services.tool_gate_service import ToolGate
 from orket.application.workflows.turn_artifact_writer import TurnArtifactWriter
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.application.workflows.turn_prompt_publication import prepare_prompt_and_write_artifacts
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain.state_machine import StateMachine
+from orket.logging import bind_logging, prepare_logging
 from orket.schema import CardStatus, IssueConfig, RoleConfig
 from tests.helpers.kernel_state_probe import responsive_sqlite
 from tests.helpers.turn_artifacts import artifact_destination, artifact_test_utc_now
@@ -76,11 +78,12 @@ async def _unexpected_failure(*_args, **_kwargs) -> None:
 
 async def _publish_prompt(destination, messages, context, deadline):
     async with asyncio.timeout(5), deadline:
-        return await prepare_prompt_and_write_artifacts(
-            destination=destination, model_client=object(), context=context, messages=messages,
-            turn_trace_id="prompt-trace", emit_failure=_unexpected_failure,
-            turn_result_failed=lambda *_args, **_kwargs: pytest.fail("unexpected failed result"),
-        )
+        with bind_logging(await prepare_logging(LoggingInputs(destination.workspace))):
+            return await prepare_prompt_and_write_artifacts(
+                destination=destination, model_client=object(), context=context, messages=messages,
+                turn_trace_id="prompt-trace", emit_failure=_unexpected_failure,
+                turn_result_failed=lambda *_args, **_kwargs: pytest.fail("unexpected failed result"),
+            )
 
 
 async def _interrupt(task, deadline, stop: str) -> None:
@@ -229,9 +232,11 @@ async def test_composed_turn_shares_captured_prompt_with_model_and_corrective_ba
     state = _hold_write(monkeypatch, messages_path)
     model = _CorrectiveModel()
     toolbox = _FileToolbox(tmp_path)
-    task = asyncio.create_task(executor.execute_turn(
-        issue, role, model, toolbox, context, system_prompt="SYSTEM",
-    ))
+    async def _prepared_turn():
+        with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+            return await executor.execute_turn(issue, role, model, toolbox, context, system_prompt='SYSTEM')
+
+    task = asyncio.create_task(_prepared_turn())
     primary_error = None
     try:
         assert await asyncio.to_thread(state.entered.wait, 5)

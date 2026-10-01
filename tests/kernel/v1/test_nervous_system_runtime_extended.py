@@ -32,6 +32,7 @@ def _base_request(*, session_id: str, trace_id: str) -> dict[str, str]:
     }
 
 
+@pytest.mark.contract
 def test_admit_needs_approval_creates_pending_approval_and_event() -> None:
     admitted = admit_proposal_v1(
         {
@@ -44,14 +45,13 @@ def test_admit_needs_approval_creates_pending_approval_and_event() -> None:
     )
     approval_id = admitted.get("approval_id")
     assert isinstance(approval_id, str) and approval_id
-
     items = list_approvals_v1(status="PENDING", session_id="sess-approval-a", request_id=None, limit=50)
     assert any(item["approval_id"] == approval_id for item in items)
-
     events = get_session_ledger_events_v1("sess-approval-a")
     assert any(event.get("event_type") == "approval.requested" for event in events)
 
 
+@pytest.mark.contract
 def test_approval_decision_idempotent_and_conflict_behavior() -> None:
     admitted = admit_proposal_v1(
         {
@@ -63,18 +63,16 @@ def test_approval_decision_idempotent_and_conflict_behavior() -> None:
         }
     )
     approval_id = str(admitted["approval_id"])
-
     first = decide_approval_v1(approval_id=approval_id, decision="approve", edited_proposal=None, notes="ok")
     assert first["status"] == "resolved"
     assert first["approval"]["status"] == "APPROVED"
-
     second = decide_approval_v1(approval_id=approval_id, decision="approve", edited_proposal=None, notes="ok")
     assert second["status"] == "idempotent"
-
     with pytest.raises(RuntimeError):
         decide_approval_v1(approval_id=approval_id, decision="deny", edited_proposal=None, notes=None)
 
 
+@pytest.mark.contract
 def test_approval_decision_rejects_non_packet1_lifecycle_tokens() -> None:
     admitted = admit_proposal_v1(
         {
@@ -85,7 +83,6 @@ def test_approval_decision_rejects_non_packet1_lifecycle_tokens() -> None:
             },
         }
     )
-
     for decision in ("edit", "expire"):
         with pytest.raises(ValueError, match="approve, deny"):
             decide_approval_v1(
@@ -94,10 +91,8 @@ def test_approval_decision_rejects_non_packet1_lifecycle_tokens() -> None:
                 edited_proposal={"target": "local/path.txt"},
                 notes="narrow scope",
             )
-
     items = list_approvals_v1(status="PENDING", session_id="sess-approval-c", request_id=None, limit=50)
     assert any(item["approval_id"] == admitted["approval_id"] for item in items)
-
     commit = commit_proposal_v1(
         {
             **_base_request(session_id="sess-approval-c", trace_id="trace-approval-c"),
@@ -110,6 +105,7 @@ def test_approval_decision_rejects_non_packet1_lifecycle_tokens() -> None:
     assert commit["status"] == "REJECTED_APPROVAL_MISSING"
 
 
+@pytest.mark.contract
 def test_rebuild_pending_approvals_replays_ledger_as_source_of_truth() -> None:
     admitted = admit_proposal_v1(
         {
@@ -121,17 +117,16 @@ def test_rebuild_pending_approvals_replays_ledger_as_source_of_truth() -> None:
         }
     )
     approval_id = str(admitted["approval_id"])
-
     current_kernel_runtime().pending_approvals_cache["sess-approval-d"] = []
     rebuilt = rebuild_pending_approvals_v1("sess-approval-d")
     assert len(rebuilt) == 1
     assert rebuilt[0]["approval_id"] == approval_id
-
     decide_approval_v1(approval_id=approval_id, decision="approve", edited_proposal=None, notes=None)
     rebuilt_after = rebuild_pending_approvals_v1("sess-approval-d")
     assert rebuilt_after == []
 
 
+@pytest.mark.contract
 def test_issue_and_consume_token_enforces_binding_and_replay_rules() -> None:
     admitted = admit_proposal_v1(
         {
@@ -139,7 +134,6 @@ def test_issue_and_consume_token_enforces_binding_and_replay_rules() -> None:
             "proposal": {"proposal_type": "action.tool_call", "payload": {}},
         }
     )
-
     issued = issue_credential_token_v1(
         {
             **_base_request(session_id="sess-token-a", trace_id="trace-token-a"),
@@ -177,6 +171,7 @@ def test_issue_and_consume_token_enforces_binding_and_replay_rules() -> None:
     assert replay["reason_code"] == "TOKEN_REPLAY"
 
 
+@pytest.mark.contract
 def test_issue_token_requires_approved_gate_for_needs_approval_admission() -> None:
     admitted = admit_proposal_v1(
         {
@@ -220,6 +215,7 @@ def test_issue_token_requires_approved_gate_for_needs_approval_admission() -> No
     assert isinstance(issued["token_id_hash"], str) and issued["token_id_hash"]
 
 
+@pytest.mark.contract
 def test_token_replay_reason_code_drives_rejected_policy_commit() -> None:
     admitted = admit_proposal_v1(
         {
@@ -287,6 +283,7 @@ def test_token_replay_reason_code_drives_rejected_policy_commit() -> None:
     assert len(used_events) == 1
 
 
+@pytest.mark.contract
 def test_end_session_invalidates_active_tokens() -> None:
     admitted = admit_proposal_v1(
         {
@@ -321,6 +318,7 @@ def test_end_session_invalidates_active_tokens() -> None:
     assert post_end["reason_code"] == "TOKEN_INVALID"
 
 
+@pytest.mark.contract
 def test_admission_rejects_exfil_leak_and_emits_incident() -> None:
     admitted = admit_proposal_v1(
         {
@@ -343,6 +341,7 @@ def test_admission_rejects_exfil_leak_and_emits_incident() -> None:
     assert incident_events[-1]["body"]["stage"] == "admission"
 
 
+@pytest.mark.contract
 def test_commit_blocks_leaky_result_when_configured() -> None:
     admitted = admit_proposal_v1(
         {
@@ -364,6 +363,7 @@ def test_commit_blocks_leaky_result_when_configured() -> None:
     assert committed["status"] == "REJECTED_POLICY"
 
 
+@pytest.mark.contract
 def test_commit_sanitizes_leaky_result_when_not_blocking() -> None:
     admitted = admit_proposal_v1(
         {

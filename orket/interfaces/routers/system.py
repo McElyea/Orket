@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any, cast
@@ -38,9 +37,6 @@ def build_system_router(
     now_local: Callable[[], Any],
     events_getter: Callable[[], Any],
     model_selection_getter: Callable[[], Any],
-    parse_roles_filter: Callable[[str | None], list[str]],
-    discover_active_roles: Callable[[Path], list[str]],
-    discover_team_topology: Callable[[Path], list[dict[str, Any]]],
     invoke_async_method: Callable[[object, dict[str, Any], str], Any],
     schedule_async_invocation_task: Callable[[object, dict[str, Any], str, str], Any],
     engine_getter: Callable[[], Any],
@@ -134,10 +130,8 @@ def build_system_router(
 
     @router.get("/system/model-assignments")
     async def get_model_assignments(roles: str | None = None) -> dict[str, Any]:
-        project_root = project_root_getter()
         engine = engine_getter()
-        role_filter = parse_roles_filter(roles)
-        active_roles = role_filter or await asyncio.to_thread(discover_active_roles, project_root / "model")
+        role_filter, active_roles = await system_queries_getter().model_roles(roles)
         selector = await model_selection_getter().prepare(engine.org)
 
         items: list[dict[str, Any]] = []
@@ -182,8 +176,7 @@ def build_system_router(
 
     @router.get("/system/teams")
     async def get_system_teams(department: str | None = None) -> dict[str, Any]:
-        project_root = project_root_getter()
-        topology = await asyncio.to_thread(discover_team_topology, project_root / "model")
+        topology = await system_queries_getter().team_topology()
         if department:
             dept = str(department).strip().lower()
             topology = [item for item in topology if str(item.get("department") or "").strip().lower() == dept]

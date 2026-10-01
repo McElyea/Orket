@@ -10,8 +10,10 @@ from orket.application.services.runtime_verifier import RuntimeVerifier
 from orket.application.services.tool_gate_service import ToolGate
 from orket.application.services.toolbox import ToolBox
 from orket.application.workflows.turn_executor import TurnExecutor
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain.records import IssueRecord
 from orket.core.domain.state_machine import StateMachine
+from orket.logging import bind_logging, prepare_logging
 from orket.schema import CardStatus, IssueConfig, RoleConfig
 from tests.helpers.card_completion import completion_components, completion_definition, write_completion_source
 from tests.helpers.turn_artifacts import artifact_test_utc_now
@@ -59,8 +61,9 @@ async def test_turn_completion_requires_declared_behavior_through_final_persiste
     toolbox = ToolBox(None, str(workspace), [], db_path=repo.db_path, cards_repo=repo, tool_gate=gate)
     executor = TurnExecutor(StateMachine(), gate, workspace, utc_now=artifact_test_utc_now)
     role = RoleConfig(id="GUARD", summary="integrity_guard", description="Review declared acceptance", tools=["update_issue_status"])
-    result = await executor.execute_turn(IssueConfig.model_validate(record.model_dump()), role,
-                                         CompletionModel(explicit), toolbox, context)
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(IssueConfig.model_validate(record.model_dump()), role,
+                                             CompletionModel(explicit), toolbox, context)
     stored = await repo.get_by_id(record.id)
     if case == "accepted":
         assert result.success and stored.status == CardStatus.DONE
@@ -71,8 +74,9 @@ async def test_turn_completion_requires_declared_behavior_through_final_persiste
         next_context = await service.begin_attempt(repo, card_id=record.id, run_id="next-run", attempt_id="next-attempt")
         rejected = await service.evaluate_attempt(repo, next_context)
         context.update(card_completion_request=rejected.request, card_completion_decision=rejected.decision, resume_mode=True)
-        resumed = await executor.execute_turn(IssueConfig.model_validate(record.model_dump()), role,
-                                              CompletionModel(True), toolbox, context)
+        with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+            resumed = await executor.execute_turn(IssueConfig.model_validate(record.model_dump()), role,
+                                                  CompletionModel(True), toolbox, context)
         assert not resumed.success and (await repo.get_by_id(record.id)).status == CardStatus.CODE_REVIEW
     else:
         assert not result.success and stored.status == CardStatus.CODE_REVIEW

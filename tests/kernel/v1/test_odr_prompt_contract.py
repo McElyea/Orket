@@ -1,4 +1,8 @@
+import pytest
+
 from orket.kernel.v1.odr.prompt_contract import build_architect_messages, build_auditor_messages
+
+pytestmark = pytest.mark.contract
 
 
 def test_build_architect_messages_appends_extra_rules() -> None:

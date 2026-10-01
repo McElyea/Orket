@@ -2,9 +2,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from orket.reforger.eval.base import EvalResult, FailingCase
 from orket.reforger.report.diff import write_best_vs_baseline_diff
 from orket.reforger.report.summary import write_summary
+
+pytestmark = pytest.mark.integration
 
 
 def _eval(score: float, hard: int, soft: int, cases: list[tuple[str, float, bool]], root: Path) -> EvalResult:

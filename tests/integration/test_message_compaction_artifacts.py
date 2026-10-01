@@ -16,7 +16,9 @@ import pytest
 from orket.adapters.storage.async_file_tools import AsyncFileTools
 from orket.application.services.tool_gate_service import ToolGate
 from orket.application.workflows.turn_executor import TurnExecutor
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain.state_machine import StateMachine
+from orket.logging import bind_logging, prepare_logging
 from orket.schema import CardStatus, IssueConfig, RoleConfig
 from tests.helpers.turn_artifacts import artifact_test_utc_now
 
@@ -79,9 +81,10 @@ async def test_compaction_outputs_survive_turn_artifact_publication(tmp_path: Pa
     issue = IssueConfig(id="ISSUE-ARTIFACT", summary="Read admitted source", status=CardStatus.IN_PROGRESS)
     role = RoleConfig(id="reviewer", name="reviewer", description="Review source", tools=["read_file", "write_file"])
 
-    result = await executor.execute_turn(
-        issue=issue, role=role, model_client=model, toolbox=toolbox, context=context, system_prompt="Review the source.",
-    )
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(
+            issue=issue, role=role, model_client=model, toolbox=toolbox, context=context, system_prompt="Review the source.",
+        )
 
     assert result.success is True
     assert toolbox.observed == ["Retained source content.\n"]

@@ -9,7 +9,9 @@ import pytest
 from orket.application.middleware import MiddlewareOutcome, TurnLifecycleInterceptors
 from orket.application.services.tool_gate_service import ToolGate
 from orket.application.workflows.turn_executor import TurnExecutor
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain.state_machine import StateMachine
+from orket.logging import bind_logging, prepare_logging
 from orket.schema import CardStatus, IssueConfig, RoleConfig
 from tests.helpers.turn_artifacts import artifact_test_utc_now
 
@@ -26,7 +28,6 @@ async def test_turn_executor_emits_memory_trace_artifacts_when_visibility_mode_p
      utc_now=artifact_test_utc_now)
     issue = IssueConfig(id="ISSUE-1", summary="Implement feature", status=CardStatus.IN_PROGRESS)
     role = RoleConfig(id="DEV", summary="developer", description="Builds code", tools=["write_file"])
-
     class _ModelClient:
         async def complete(self, _messages):
             return SimpleNamespace(
@@ -73,14 +74,15 @@ async def test_turn_executor_emits_memory_trace_artifacts_when_visibility_mode_p
         ],
     }
 
-    result = await executor.execute_turn(
-        issue=issue,
-        role=role,
-        model_client=_ModelClient(),
-        toolbox=_Toolbox(),
-        context=context,
-        system_prompt="SYSTEM",
-    )
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(
+            issue=issue,
+            role=role,
+            model_client=_ModelClient(),
+            toolbox=_Toolbox(),
+            context=context,
+            system_prompt="SYSTEM",
+        )
     assert result.success is True
 
     out_dir = Path(tmp_path) / "observability" / "sess-memory" / "issue-1" / "000_developer"
@@ -201,14 +203,15 @@ async def test_turn_executor_emits_memory_trace_artifacts_for_runtime_exception(
         "policy_set_id": "policyset-1",
     }
 
-    result = await executor.execute_turn(
-        issue=issue,
-        role=role,
-        model_client=_FailingModelClient(),
-        toolbox=_Toolbox(),
-        context=context,
-        system_prompt="SYSTEM",
-    )
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(
+            issue=issue,
+            role=role,
+            model_client=_FailingModelClient(),
+            toolbox=_Toolbox(),
+            context=context,
+            system_prompt="SYSTEM",
+        )
     assert result.success is False
 
     out_dir = Path(tmp_path) / "observability" / "sess-memory-exception" / "issue-1" / "000_developer"

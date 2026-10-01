@@ -3,6 +3,10 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.contract
+
 
 def test_bootstrap_corpus_freezes_bounded_challenge_slices() -> None:
     """Layer: contract. Verifies the bounded Gemma bootstrap corpus stays fixed to the admitted challenge slices and metrics."""

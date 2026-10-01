@@ -11,7 +11,7 @@ from collections.abc import Mapping
 from copy import deepcopy
 from datetime import date
 from pathlib import Path, PurePosixPath
-from typing import Any
+from typing import Any, Literal, TypedDict
 from urllib import parse
 
 import httpx
@@ -36,6 +36,20 @@ def _safe_slug(value: str, fallback: str = "value") -> str:
     return normalized if normalized and normalized not in {".", ".."} else fallback
 
 
+class _ExportBinding(TypedDict):
+    enabled: bool
+    workspace: str
+    gitea_url: str
+    owner: str
+    repo_name: str
+    branch: str
+    prefix: str
+    private_repo: bool
+    cache_root: str
+    author_name: str
+    author_email: str
+
+
 class GiteaArtifactExporter:
     """Prepare exact commits, execute admitted pushes and reconcile through reads."""
 
@@ -51,7 +65,7 @@ class GiteaArtifactExporter:
         self.workspace = (root / workspace).resolve()
         self._username = observed.get("GITEA_ADMIN_USER", "").strip()
         self._password = observed.get("GITEA_ADMIN_PASSWORD", "").strip()
-        self._binding = {
+        self._binding: _ExportBinding = {
             "enabled": _env_enabled("ORKET_GITEA_ARTIFACT_EXPORT", "0", environment=observed),
             "workspace": str(self.workspace),
             "gitea_url": observed.get("GITEA_URL", "").strip(),
@@ -131,7 +145,8 @@ class GiteaArtifactExporter:
             raise ValueError("E_GITEA_EXPORT_TARGET")
         if not self._username or not self._password:
             raise ValueError("E_GITEA_EXPORT_CREDENTIALS_MISSING")
-        for field in ("owner", "repo_name", "branch"):
+        component_fields: tuple[Literal["owner", "repo_name", "branch"], ...] = ("owner", "repo_name", "branch")
+        for field in component_fields:
             token = self._binding[field]
             pattern = r"[A-Za-z0-9][A-Za-z0-9._/-]*" if field == "branch" else r"[A-Za-z0-9][A-Za-z0-9._-]*"
             if not re.fullmatch(pattern, token) or ".." in token or token.endswith(("/", ".", ".lock")):
@@ -139,8 +154,9 @@ class GiteaArtifactExporter:
         prefix = self._binding["prefix"]
         if not prefix or "\\" in prefix or ":" in prefix or any(part in {".", ".."} for part in prefix.split("/")):
             raise ValueError("E_GITEA_EXPORT_PREFIX")
-        for field in ("author_name", "author_email"):
-            if not self._binding[field] or re.search(r"[\r\n<>]", self._binding[field]):
+        author_fields: tuple[Literal["author_name", "author_email"], ...] = ("author_name", "author_email")
+        for author_field in author_fields:
+            if not self._binding[author_field] or re.search(r"[\r\n<>]", self._binding[author_field]):
                 raise ValueError("E_GITEA_EXPORT_AUTHOR")
 
     def _validate_intent(self, intent: GiteaExportIntent | None) -> GiteaExportIntent:

@@ -1,4 +1,4 @@
-# Layer: end-to-end
+# Layers are declared per test for the exercised boundary.
 
 from __future__ import annotations
 
@@ -68,6 +68,7 @@ async def _docker_rows(*cmd: str) -> list[dict[str, object]]:
     return rows
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_live_orphan_discovery_classifies_verified_and_unverified_projects(tmp_path) -> None:
     if shutil.which("docker-compose") is None or shutil.which("docker") is None:
@@ -124,6 +125,7 @@ async def test_live_orphan_discovery_classifies_verified_and_unverified_projects
         await _compose_down(unverified_dir, unverified_project)
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_live_verified_orphan_is_cleaned_by_fallback_sweeper_without_compose_path(tmp_path) -> None:
     if shutil.which("docker-compose") is None or shutil.which("docker") is None:

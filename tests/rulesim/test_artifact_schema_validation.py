@@ -4,8 +4,11 @@ import json
 from pathlib import Path
 
 import jsonschema
+import pytest
 
 from orket.rulesim.workload import run_rulesim_v0_sync
+
+pytestmark = pytest.mark.integration
 
 _TERMINAL_REASONS = {"win", "draw", "cycle_detected", "deadlock", "timeout", "invalid_action"}
 

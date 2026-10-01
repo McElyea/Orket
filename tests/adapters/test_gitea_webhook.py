@@ -7,6 +7,7 @@ import pytest
 from orket.adapters.vcs.webhook_db import WebhookDatabase
 from orket.application.services.gitea_webhook_runtime import GiteaWebhookHandler
 from orket.core.domain.sandbox import SandboxRegistry
+from orket.logging import bind_logging
 from tests.helpers.runtime_result import published_result
 
 pytestmark = pytest.mark.contract
@@ -440,9 +441,8 @@ async def test_pr_merged_closes_cycle_and_skips_sandbox_deployment_with_explicit
     handler.db = WebhookDatabase(db_path=db_path)
     await handler.client.aclose()
     handler.client = _FakeClient()
-
-    await handler.db.increment_pr_cycle("org/repo", 11)
-
+    with bind_logging(handler.logging_context):
+        await handler.db.increment_pr_cycle("org/repo", 11)
     async def _raise_if_called(**_kwargs):
         raise AssertionError("sandbox creation should be skipped for merged webhook events")
 
@@ -477,7 +477,7 @@ async def test_pr_merged_closes_cycle_and_skips_sandbox_deployment_with_explicit
 
 @pytest.mark.asyncio
 async def test_pr_merged_skip_does_not_attempt_sandbox_creation(monkeypatch, tmp_path):
-    """Layer: integration. Verifies merged PR handling explicitly skips unsupported sandbox deployment instead of attempting a failing deploy."""
+    """Layer: contract. Verifies merged PR handling explicitly skips unsupported sandbox deployment instead of attempting a failing deploy."""
     monkeypatch.setenv("GITEA_ADMIN_PASSWORD", "test-pass")
     db_path = tmp_path / "merged_failure.db"
 
@@ -485,8 +485,8 @@ async def test_pr_merged_skip_does_not_attempt_sandbox_creation(monkeypatch, tmp
     handler.db = WebhookDatabase(db_path=db_path)
     await handler.client.aclose()
     handler.client = _FakeClient()
-
-    await handler.db.increment_pr_cycle("org/repo", 12)
+    with bind_logging(handler.logging_context):
+        await handler.db.increment_pr_cycle("org/repo", 12)
 
     async def _raise_create_sandbox(**_kwargs):
         raise AssertionError("sandbox creation should not be attempted")

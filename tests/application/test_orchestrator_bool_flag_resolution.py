@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-from types import SimpleNamespace
-
 import pytest
 
-from orket.application.workflows.orchestrator import Orchestrator
+from orket.application.services import orchestrator_runtime_policy as orchestrator_policy
 
 pytestmark = pytest.mark.unit
 
@@ -12,16 +10,14 @@ pytestmark = pytest.mark.unit
 def test_runtime_verifier_disable_flag_honors_explicit_false_env(monkeypatch) -> None:
     """Layer: unit. Verifies explicit false environment values override truthy org defaults."""
     monkeypatch.setenv("ORKET_DISABLE_RUNTIME_VERIFIER", "false")
-    orch = Orchestrator.__new__(Orchestrator)
-    orch.org = SimpleNamespace(process_rules={"disable_runtime_verifier": True})
+    process_rules = {"disable_runtime_verifier": True}
 
-    assert orch._is_runtime_verifier_disabled() is False
+    assert orchestrator_policy.select_bool_flag('ORKET_DISABLE_RUNTIME_VERIFIER', 'disable_runtime_verifier', process_rules=process_rules) is False
 
 
 def test_runtime_verifier_disable_flag_honors_explicit_true_env(monkeypatch) -> None:
     """Layer: unit. Verifies explicit true environment values override false org defaults."""
     monkeypatch.setenv("ORKET_DISABLE_RUNTIME_VERIFIER", "true")
-    orch = Orchestrator.__new__(Orchestrator)
-    orch.org = SimpleNamespace(process_rules={"disable_runtime_verifier": False})
+    process_rules = {"disable_runtime_verifier": False}
 
-    assert orch._is_runtime_verifier_disabled() is True
+    assert orchestrator_policy.select_bool_flag('ORKET_DISABLE_RUNTIME_VERIFIER', 'disable_runtime_verifier', process_rules=process_rules) is True

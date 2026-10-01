@@ -11,7 +11,9 @@ from orket.adapters.storage.async_control_plane_execution_repository import (
 from orket.application.services.tool_gate_service import ToolGate
 from orket.application.services.turn_tool_control_plane_service import build_turn_tool_control_plane_service
 from orket.application.workflows.turn_executor import TurnExecutor
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain.state_machine import StateMachine
+from orket.logging import bind_logging, prepare_logging
 from tests.helpers.governed_agent_clock import elapsed_agent_clock as elapsed_agent_clock
 from tests.helpers.outward_authorization import boundary as boundary
 from tests.helpers.turn_artifacts import artifact_test_utc_now
@@ -82,7 +84,8 @@ async def test_physical_turn_closeout_refuses_original_dispatch_state(tmp_path, 
     toolbox, model = ObservingPhysicalToolbox(tmp_path, observer), _Model()
     executor = TurnExecutor(StateMachine(), ToolGate(organization=None, workspace_root=tmp_path),
                             workspace=tmp_path, control_plane_service=control, utc_now=artifact_test_utc_now)
-    result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context())
     assert result.success and toolbox.calls == model.calls == 1
     assert await asyncio.to_thread((tmp_path / "agent_output/out.txt").read_text, encoding="utf-8") == "ok"
     for kind, stale in toolbox.observed.items():

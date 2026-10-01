@@ -5,12 +5,15 @@ import hashlib
 import json
 import re
 from collections.abc import Mapping
+from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 import aiofiles
 
+from orket.adapters.execution.owned_io import run_owned_io
+from orket.adapters.storage.async_file_tools import capture_file_roots
 from orket.application.services.outward_model_redaction import redact_prompt_messages, redact_value
 from orket.core.domain.outward_runs import OutwardRunRecord
 
@@ -41,64 +44,47 @@ async def write_model_evidence(
     pii_fields: tuple[str, ...],
     evidence_scope: str | None = None,
 ) -> OutwardModelEvidence:
-    directory = await asyncio.to_thread(_evidence_dir, workspace_root=workspace_root, namespace=run.namespace, run_id=run.run_id, evidence_scope=evidence_scope)
-    turn = int(run.current_turn or 1)
-    refs = await asyncio.to_thread(_evidence_refs, workspace_root=workspace_root, directory=directory, turn=turn)
-    prompt_payload = {
-        "schema_version": "outward_model_prompt_redacted.v1",
-        "run_id": run.run_id,
-        "namespace": run.namespace,
-        "turn_number": turn,
-        "messages": redact_prompt_messages(messages, pii_fields),
-        "runtime_context": _redact(_runtime_context_payload(runtime_context)),
+    root, = capture_file_roots([workspace_root])
+    namespace, run_id, turn = run.namespace, run.run_id, int(run.current_turn or 1)
+    payloads = {
+        "model_prompt_redacted": {
+            "schema_version": "outward_model_prompt_redacted.v1", "run_id": run_id,
+            "namespace": namespace, "turn_number": turn,
+            "messages": redact_prompt_messages(messages, pii_fields),
+            "runtime_context": _redact(_runtime_context_payload(runtime_context)),
+        },
+        "model_response_redacted": _model_response_payload(
+            run=run, response=response, tool_call=tool_call, pii_fields=pii_fields),
+        "proposal_extraction": _proposal_extraction_payload(
+            run=run, response=response, tool_call=tool_call, pii_fields=pii_fields, proposal_id=None,
+            acceptance_result="extracted_pending_proposal" if tool_call is not None else "not_extracted"),
+        "model_invocation": _model_invocation_payload(
+            run=run, result=result, response=response, tool_call=tool_call,
+            error_type=error_type, refs={"invocation": ""}),
     }
-    response_payload = _model_response_payload(
-        run=run,
-        response=response,
-        tool_call=tool_call,
-        pii_fields=pii_fields,
+    # Detach nested rendered values before admitting any native work.
+    captured = deepcopy(payloads)
+    return await run_owned_io(
+        lambda: _publish_model_evidence(root, namespace, run_id, turn, evidence_scope, captured),
+        label="outward-model-evidence-publication", preserve_failure=True,
     )
-    invocation_payload = _model_invocation_payload(
-        run=run,
-        result=result,
-        response=response,
-        tool_call=tool_call,
-        error_type=error_type,
-        refs=refs,
-    )
-    extraction_payload = _proposal_extraction_payload(
-        run=run,
-        response=response,
-        tool_call=tool_call,
-        pii_fields=pii_fields,
-        proposal_id=None,
-        acceptance_result="extracted_pending_proposal" if tool_call is not None else "not_extracted",
-    )
-    await _persist_model_evidence(directory, turn, legacy_layout=evidence_scope is None, payloads={
-        "model_prompt_redacted": prompt_payload, "model_response_redacted": response_payload,
-        "proposal_extraction": extraction_payload, "model_invocation": invocation_payload,
-    })
-    invocation_hash = await _file_sha256(directory / _turn_filename("model_invocation", turn))
-    prompt_hash = await _file_sha256(directory / _turn_filename("model_prompt_redacted", turn))
-    response_hash = await _file_sha256(directory / _turn_filename("model_response_redacted", turn))
-    extraction_hash = await _file_sha256(directory / _turn_filename("proposal_extraction", turn))
-    evidence = dict(invocation_payload)
-    evidence.update(
-        {
-            "model_invocation_sha256": invocation_hash,
-            "model_prompt_redacted_sha256": prompt_hash,
-            "model_response_redacted_sha256": response_hash,
-            "proposal_extraction_sha256": extraction_hash,
-            "model_prompt_ref": refs["prompt"],
-            "model_response_ref": refs["response"],
-            "proposal_extraction_ref": refs["proposal_extraction"],
-        }
-    )
-    return OutwardModelEvidence(
-        model_invocation=evidence,
-        directory=directory,
-        proposal_extraction_ref=refs["proposal_extraction"],
-    )
+
+
+async def _publish_model_evidence(root, namespace, run_id, turn, evidence_scope, payloads):
+    directory = await asyncio.to_thread(
+        _evidence_dir, workspace_root=root, namespace=namespace, run_id=run_id, evidence_scope=evidence_scope)
+    refs = await asyncio.to_thread(_evidence_refs, workspace_root=root, directory=directory, turn=turn)
+    payloads["model_invocation"]["model_invocation_ref"] = refs["invocation"]
+    await _persist_model_evidence(directory, turn, legacy_layout=evidence_scope is None, payloads=payloads)
+    evidence = dict(payloads["model_invocation"])
+    for stem, key in (("model_invocation", "model_invocation_sha256"),
+                      ("model_prompt_redacted", "model_prompt_redacted_sha256"),
+                      ("model_response_redacted", "model_response_redacted_sha256"),
+                      ("proposal_extraction", "proposal_extraction_sha256")):
+        evidence[key] = await _file_sha256(directory / _turn_filename(stem, turn))
+    evidence.update(model_prompt_ref=refs["prompt"], model_response_ref=refs["response"],
+                    proposal_extraction_ref=refs["proposal_extraction"])
+    return OutwardModelEvidence(evidence, directory, refs["proposal_extraction"])
 
 
 async def _persist_model_evidence(directory: Path, turn: int, *, legacy_layout: bool, payloads: dict[str, dict]) -> None:
@@ -113,15 +99,21 @@ async def _persist_model_evidence(directory: Path, turn: int, *, legacy_layout: 
 
 
 async def verify_model_evidence(*, workspace_root: Path, evidence: dict[str, Any]) -> None:
-    root = await asyncio.to_thread(workspace_root.resolve)
+    root, = capture_file_roots([workspace_root])
     references = (
         ("model_invocation_ref", "model_invocation_sha256"),
         ("model_prompt_ref", "model_prompt_redacted_sha256"),
         ("model_response_ref", "model_response_redacted_sha256"),
         ("proposal_extraction_ref", "proposal_extraction_sha256"),
     )
-    for ref_key, digest_key in references:
-        ref, digest = evidence.get(ref_key), evidence.get(digest_key)
+    captured = tuple((evidence.get(ref), evidence.get(digest)) for ref, digest in references)
+    await run_owned_io(lambda: _verify_model_evidence(root, captured),
+                       label="outward-model-evidence-verification", preserve_failure=True)
+
+
+async def _verify_model_evidence(workspace_root: Path, references: tuple) -> None:
+    root = await asyncio.to_thread(workspace_root.resolve)
+    for ref, digest in references:
         if not isinstance(ref, str) or not ref or not isinstance(digest, str) or not digest:
             raise OutwardModelObservabilityError("E_OUTWARD_MODEL_EVIDENCE_REQUIRED")
         path = await asyncio.to_thread((root / ref).resolve)

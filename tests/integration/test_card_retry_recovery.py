@@ -12,8 +12,10 @@ from orket.application.services.orchestrator_issue_control_plane_support import 
 from orket.application.services.runtime_policy_inputs import ArchitecturePolicySnapshot
 from orket.application.workflows.orchestrator import Orchestrator
 from orket.core.contracts.card_completion_commit import CardCompletionRejected
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain import CompletionClassification
 from orket.exceptions import CatastrophicFailure, ExecutionFailed
+from orket.logging import bind_logging, prepare_logging
 from orket.schema import CardStatus, IssueConfig
 from tests.helpers.turn_artifacts import artifact_test_utc_now
 from tests.integration.test_card_completion_control_plane import _runtime
@@ -59,39 +61,41 @@ async def failed_read_runtime(tmp_path, protocol, status, max_retries):
 @pytest.mark.parametrize("status", [CardStatus.IN_PROGRESS, CardStatus.CODE_REVIEW, CardStatus.AWAITING_GUARD_REVIEW])
 # Layer: integration
 async def test_failed_tool_requeues_without_completion_or_stale_attempt_reuse(tmp_path, protocol, status):
-    orch, repo, context, issue, result = await failed_read_runtime(tmp_path, protocol, status, 3)
-    old_context, old_request = context["card_completion_context"], context["card_completion_request"]
-    assert old_request is not None
-    with pytest.raises(ExecutionFailed, match="Orchestration Turn Failed \\(Retry 1/3\\)"):
-        await orch._handle_failure(issue, result, "session", ["integrity_guard"], turn_index=1)
-    stored = await repo.get_by_id(issue.id)
-    assert stored.status == CardStatus.READY and stored.retry_count == 1
-    assert stored.completion_context is None and stored.completion_ref is None
-    assert stored.completion_generation > old_context.generation
-    with pytest.raises(CardCompletionRejected):
-        await repo.update_status(issue.id, CardStatus.DONE, completion_request=old_request)
-    run_id = run_id_for_dispatch(session_id="session", issue_id=issue.id, seat_name="integrity_guard", turn_index=1)
-    truth = await orch.control_plane_repository.get_final_truth(run_id=run_id)
-    assert truth.result_class.value == "failed" and truth.completion_classification == CompletionClassification.UNSATISFIED
-    await orch._request_issue_transition(issue=IssueConfig.model_validate(stored.model_dump()),
-                                         target_status=CardStatus.IN_PROGRESS, reason="turn_dispatch", assignee="coder",
-                                         metadata={"run_id": "session", "turn_index": 2}, roles=["coder"])
-    new_context = await orch.card_completion.begin_attempt(repo, card_id=issue.id, run_id="retry-run", attempt_id="retry-2")
-    assert new_context.generation > old_context.generation and new_context.digest != old_context.digest
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        orch, repo, context, issue, result = await failed_read_runtime(tmp_path, protocol, status, 3)
+        old_context, old_request = context["card_completion_context"], context["card_completion_request"]
+        assert old_request is not None
+        with pytest.raises(ExecutionFailed, match="Orchestration Turn Failed \\(Retry 1/3\\)"):
+            await orch._handle_failure(issue, result, "session", ["integrity_guard"], turn_index=1)
+        stored = await repo.get_by_id(issue.id)
+        assert stored.status == CardStatus.READY and stored.retry_count == 1
+        assert stored.completion_context is None and stored.completion_ref is None
+        assert stored.completion_generation > old_context.generation
+        with pytest.raises(CardCompletionRejected):
+            await repo.update_status(issue.id, CardStatus.DONE, completion_request=old_request)
+        run_id = run_id_for_dispatch(session_id="session", issue_id=issue.id, seat_name="integrity_guard", turn_index=1)
+        truth = await orch.control_plane_repository.get_final_truth(run_id=run_id)
+        assert truth.result_class.value == "failed" and truth.completion_classification == CompletionClassification.UNSATISFIED
+        await orch._request_issue_transition(issue=IssueConfig.model_validate(stored.model_dump()),
+                                             target_status=CardStatus.IN_PROGRESS, reason="turn_dispatch", assignee="coder",
+                                             metadata={"run_id": "session", "turn_index": 2}, roles=["coder"])
+        new_context = await orch.card_completion.begin_attempt(repo, card_id=issue.id, run_id="retry-run", attempt_id="retry-2")
+        assert new_context.generation > old_context.generation and new_context.digest != old_context.digest
 
 
 @pytest.mark.asyncio
 # Layer: integration
 async def test_exhausted_guard_retry_blocks_and_retains_failed_truth(tmp_path, fresh_runtime_state):
-    orch, repo, _, issue, result = await failed_read_runtime(tmp_path, True, CardStatus.AWAITING_GUARD_REVIEW, 0)
-    with pytest.raises(CatastrophicFailure, match="MAX RETRIES EXCEEDED"):
-        await orch._handle_failure(issue, result, "session", ["integrity_guard"], turn_index=1)
-    stored = await repo.get_by_id(issue.id)
-    assert stored.status == CardStatus.BLOCKED and stored.retry_count == 1
-    assert await repo.read_completion_receipt(issue.id) is None
-    run_id = run_id_for_dispatch(session_id="session", issue_id=issue.id, seat_name="integrity_guard", turn_index=1)
-    truth = await orch.control_plane_repository.get_final_truth(run_id=run_id)
-    assert truth.result_class.value == "blocked" and truth.completion_classification == CompletionClassification.UNSATISFIED
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        orch, repo, _, issue, result = await failed_read_runtime(tmp_path, True, CardStatus.AWAITING_GUARD_REVIEW, 0)
+        with pytest.raises(CatastrophicFailure, match="MAX RETRIES EXCEEDED"):
+            await orch._handle_failure(issue, result, "session", ["integrity_guard"], turn_index=1)
+        stored = await repo.get_by_id(issue.id)
+        assert stored.status == CardStatus.BLOCKED and stored.retry_count == 1
+        assert await repo.read_completion_receipt(issue.id) is None
+        run_id = run_id_for_dispatch(session_id="session", issue_id=issue.id, seat_name="integrity_guard", turn_index=1)
+        truth = await orch.control_plane_repository.get_final_truth(run_id=run_id)
+        assert truth.result_class.value == "blocked" and truth.completion_classification == CompletionClassification.UNSATISFIED
 
 
 @pytest.mark.asyncio

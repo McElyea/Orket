@@ -1,7 +1,6 @@
 """Public log routing and metrics over the single native publication owner."""
 import contextlib
 import json
-import os
 from pathlib import Path
 from typing import Any, TypedDict
 
@@ -33,12 +32,37 @@ from orket.adapters.observability.log_publication import (
 from orket.adapters.observability.log_publication import (
     unsubscribe_from_events as unsubscribe_from_events,
 )
-from orket.adapters.storage.async_file_tools import capture_file_roots
+from orket.adapters.observability.logging_context import (
+    bind_logging as bind_logging,
+)
+from orket.adapters.observability.logging_context import (
+    native_logging_inputs,
+    selected_logging,
+)
+from orket.adapters.observability.logging_context import (
+    prepare_logging as prepare_logging,
+)
+from orket.adapters.observability.logging_context import (
+    prepare_logging_native as prepare_logging_native,
+)
 from orket.core.contracts.log_event_inputs import LOG_EVENT_INPUT_ERROR, capture_log_event_inputs
+from orket.core.contracts.logging_inputs import (
+    MISSING_WORKSPACE_ERROR_CODE as MISSING_WORKSPACE_ERROR_CODE,
+)
+from orket.core.contracts.logging_inputs import (
+    MISSING_WORKSPACE_MODE_ENV as MISSING_WORKSPACE_MODE_ENV,
+)
+from orket.core.contracts.logging_inputs import (
+    MISSING_WORKSPACE_MODE_FAIL_FAST as MISSING_WORKSPACE_MODE_FAIL_FAST,
+)
+from orket.core.contracts.logging_inputs import (
+    MISSING_WORKSPACE_MODE_LEGACY as MISSING_WORKSPACE_MODE_LEGACY,
+)
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.runtime_event import RUNTIME_EVENT_ARTIFACT_EVENTS, _build_runtime_event
 from orket.core.runtime_event import RUNTIME_EVENT_SCHEMA_VERSION as RUNTIME_EVENT_SCHEMA_VERSION
 from orket.naming import sanitize_name
-from orket.time_utils import configured_timezone_name, now_local
+from orket.time_utils import now_local
 
 side_effecting = True
 
@@ -48,43 +72,6 @@ class _MemberMetrics(TypedDict):
     lines_written: int
     last_action: str
     detail: str
-
-
-MISSING_WORKSPACE_MODE_ENV = "ORKET_LOGGING_MISSING_CONTEXT_MODE"
-
-
-MISSING_WORKSPACE_MODE_LEGACY = "legacy_default"
-
-
-MISSING_WORKSPACE_MODE_FAIL_FAST = "fail_fast"
-
-
-MISSING_WORKSPACE_ERROR_CODE = "E_LOG_WORKSPACE_REQUIRED"
-
-
-def _resolve_missing_workspace_mode() -> str:
-    raw = str(os.getenv(MISSING_WORKSPACE_MODE_ENV, "")).strip().lower()
-    if raw == MISSING_WORKSPACE_MODE_FAIL_FAST:
-        return MISSING_WORKSPACE_MODE_FAIL_FAST
-    return MISSING_WORKSPACE_MODE_LEGACY
-
-
-def _resolve_workspace(workspace: Path | None) -> tuple[Path, dict[str, Any]]:
-    if workspace is not None:
-        return workspace, {}
-    mode = _resolve_missing_workspace_mode()
-    if mode == MISSING_WORKSPACE_MODE_FAIL_FAST:
-        raise RuntimeError(
-            f"{MISSING_WORKSPACE_ERROR_CODE}: log_event requires workspace when "
-            f"{MISSING_WORKSPACE_MODE_ENV}={MISSING_WORKSPACE_MODE_FAIL_FAST}"
-        )
-    return (
-        Path("workspace/default"),
-        {
-            "logging_context_mode": MISSING_WORKSPACE_MODE_LEGACY,
-            "logging_context_marker": "workspace_default_fallback",
-        },
-    )
 
 
 def _log_path(workspace: Path, role: str | None = None) -> Path:
@@ -143,7 +130,9 @@ def log_event(
         return log_event(actual_event, actual_data, role=component, level=level)
     if data is None:
         data = {}
-    workspace, context_marker = _resolve_workspace(workspace)
+    prepared = selected_logging(required=False)
+    inputs = prepared.inputs if prepared is not None else native_logging_inputs()
+    workspace, context_marker = inputs.workspace(Path(workspace) if isinstance(workspace, Path) else workspace)
     level_name = publication._resolve_level_name(kwargs.pop("level", None))
 
     # Merge extra kwargs into data for observability
@@ -151,8 +140,8 @@ def log_event(
     if context_marker:
         full_data.update(context_marker)
     role_name = role or full_data.get("role") or "system"
-    record, runtime_event = _build_log_record(event, full_data, role_name, level_name)
-    _publish_record(workspace, record, runtime_event)
+    record, runtime_event = _build_log_record(event, full_data, role_name, level_name, inputs.timezone_name)
+    _publish_record(workspace, record, runtime_event, timezone_name=inputs.timezone_name)
 
 
 def _build_log_record(event: str, full_data: dict[str, Any], role_name: Any, level_name: str,
@@ -168,8 +157,8 @@ def _build_log_record(event: str, full_data: dict[str, Any], role_name: Any, lev
     return record, runtime_event
 
 
-def _enqueue_optional_event(event: str, data: Any, workspace: Any, role: Any, options: dict[str, Any]) -> None:
-    """Detach built-in inputs before any deferred stage can observe caller mutation."""
+def _capture_event(event: str, data: Any, workspace: Any, role: Any, options: dict[str, Any],
+                   inputs: LoggingInputs) -> tuple:
     if type(event) is not str:
         raise TypeError(LOG_EVENT_INPUT_ERROR)
     if event in publication._LOG_LEVELS and type(data) is str and not options:
@@ -184,19 +173,27 @@ def _enqueue_optional_event(event: str, data: Any, workspace: Any, role: Any, op
         "data": {} if data is None else data, "options": options})
     if type(captured["data"]) is not dict:
         raise TypeError(LOG_EVENT_INPUT_ERROR)
-    workspace, marker = _resolve_workspace(workspace)
-    workspace, = capture_file_roots([workspace])
+    workspace, marker = inputs.workspace(workspace)
     level = captured["options"].pop("level", None)
     values = {**captured["data"], **captured["options"]}
     values.update(marker)
     role_name = role or values.get("role") or "system"
-    native = _OptionalEvent(event, values, workspace, role_name, level, configured_timezone_name())
+    return event, values, workspace, role_name, level, inputs.timezone_name
+
+
+def _enqueue_optional_event(event: str, data: Any, workspace: Any, role: Any, options: dict[str, Any]) -> None:
+    prepared = selected_logging()
+    captured = _capture_event(event, data, workspace, role, options, prepared.inputs)
+    event, values, workspace, _role, _level, _timezone = captured
+    native = _OptionalEvent(*captured)
     operations = [(workspace / "orket.log", native.main)]
     if event.strip() in RUNTIME_EVENT_ARTIFACT_EVENTS and values.get("session_id"):
         operations.append((workspace / "agent_output/observability/runtime_events.jsonl", native.artifact))
     batch = publication.OptionalPublication(operations, native.complete)
     native.batch = batch
     publication.admit_optional_publication(batch)
+
+
 
 
 class _OptionalEvent:
@@ -233,7 +230,8 @@ class _OptionalEvent:
                             timezone_name=self.timezone_name, optional_append=True)
 
 
-def _publish_record(workspace: Path, record: dict[str, Any], runtime_event: dict[str, Any]) -> None:
+def _publish_record(workspace: Path, record: dict[str, Any], runtime_event: dict[str, Any], *,
+                    timezone_name: str | None = None) -> None:
     deliveries = publication.capture_event_deliveries()
     try:
         publication._emit_stdlib_record(record["level"], record["event"], record)
@@ -241,7 +239,7 @@ def _publish_record(workspace: Path, record: dict[str, Any], runtime_event: dict
         publication._append_json_record(log_file, record)
         with contextlib.suppress(RuntimeError, ValueError, TypeError, OSError):
             _append_runtime_event_artifact(workspace, runtime_event)
-        _notify_subscribers(log_file, record, deliveries)
+        _notify_subscribers(log_file, record, deliveries, timezone_name=timezone_name)
     finally:
         for delivery in deliveries:
             delivery.release_untransferred()

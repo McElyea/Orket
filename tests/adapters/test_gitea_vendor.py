@@ -5,6 +5,8 @@ import pytest
 import orket.vendors.gitea as gitea_module
 from orket.vendors.gitea import GiteaVendor
 
+pytestmark = pytest.mark.contract
+
 
 class _FakeResponse:
     def __init__(self, payload):

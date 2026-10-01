@@ -38,7 +38,7 @@ async def test_async_dual_write_run_ledger_writes_both_backends_and_reports_clea
     sqlite_repo = AsyncRunLedgerRepository(tmp_path / "runtime.db")
     protocol_repo = AsyncProtocolRunLedgerRepository(tmp_path / "workspace", timestamp_factory=ProtocolLedgerClock().utc_now_iso)
     telemetry: list[dict[str, Any]] = []
-    dual_repo = AsyncDualModeLedgerRepository(
+    dual_repo = AsyncDualModeLedgerRepository(workspace_root=tmp_path / "workspace",
         sqlite_repo=sqlite_repo,
         protocol_repo=protocol_repo,
         telemetry_sink=lambda payload: telemetry.append(dict(payload)),
@@ -123,7 +123,7 @@ class _FailingProtocolRepository:
 async def test_async_dual_write_run_ledger_degrades_on_protocol_error_and_keeps_sqlite_authoritative(tmp_path: Path) -> None:
     sqlite_repo = AsyncRunLedgerRepository(tmp_path / "runtime.db")
     telemetry: list[dict[str, Any]] = []
-    dual_repo = AsyncDualModeLedgerRepository(
+    dual_repo = AsyncDualModeLedgerRepository(workspace_root=tmp_path / "workspace",
         sqlite_repo=sqlite_repo,
         protocol_repo=_FailingProtocolRepository(),
         protocol_root=tmp_path / "workspace",
@@ -156,7 +156,7 @@ async def test_async_dual_write_run_ledger_degrades_on_protocol_error_and_keeps_
 async def test_async_dual_write_run_ledger_supports_protocol_primary_reads(tmp_path: Path) -> None:
     sqlite_repo = AsyncRunLedgerRepository(tmp_path / "runtime.db")
     protocol_repo = AsyncProtocolRunLedgerRepository(tmp_path / "workspace", timestamp_factory=ProtocolLedgerClock().utc_now_iso)
-    dual_repo = AsyncDualModeLedgerRepository(
+    dual_repo = AsyncDualModeLedgerRepository(workspace_root=tmp_path / "workspace",
         sqlite_repo=sqlite_repo,
         protocol_repo=protocol_repo,
         primary_mode="protocol",
@@ -193,7 +193,7 @@ async def test_async_dual_write_run_ledger_logs_sink_failures_without_interrupti
     def _broken_sink(_payload: dict[str, Any]) -> None:
         raise RuntimeError("forced telemetry sink failure")
     monkeypatch.setattr("orket.application.services.dual_write_telemetry.log_event", _capture_log)
-    dual_repo = AsyncDualModeLedgerRepository(
+    dual_repo = AsyncDualModeLedgerRepository(workspace_root=tmp_path / "workspace",
         sqlite_repo=sqlite_repo,
         protocol_repo=protocol_repo,
         telemetry_sink=_broken_sink,
@@ -240,7 +240,7 @@ class _BrokenProtocolRepository:
 async def test_async_dual_write_run_ledger_propagates_structural_protocol_misconfiguration(tmp_path: Path) -> None:
     """Layer: unit. Verifies broken protocol repo wiring fails closed instead of being swallowed as transient I/O drift."""
     sqlite_repo = AsyncRunLedgerRepository(tmp_path / "runtime.db")
-    dual_repo = AsyncDualModeLedgerRepository(
+    dual_repo = AsyncDualModeLedgerRepository(workspace_root=tmp_path / "workspace",
         sqlite_repo=sqlite_repo,
         protocol_repo=_BrokenProtocolRepository(),
         protocol_root=tmp_path / "workspace",
@@ -270,7 +270,7 @@ async def test_async_dual_write_run_ledger_distinguishes_parity_check_crash_from
         raise RuntimeError("forced parity crash")
 
     monkeypatch.setattr("orket.application.services.dual_write_telemetry.compare_run_ledger_rows", _boom)
-    dual_repo = AsyncDualModeLedgerRepository(
+    dual_repo = AsyncDualModeLedgerRepository(workspace_root=tmp_path / "workspace",
         sqlite_repo=sqlite_repo,
         protocol_repo=protocol_repo,
         telemetry_sink=lambda payload: telemetry.append(dict(payload)),
@@ -320,7 +320,7 @@ async def test_async_dual_write_run_ledger_recovers_pending_start_intent_before_
     tmp_path: Path,
 ) -> None:
     sqlite_repo = AsyncRunLedgerRepository(tmp_path / "runtime.db")
-    broken_repo = AsyncDualModeLedgerRepository(
+    broken_repo = AsyncDualModeLedgerRepository(workspace_root=tmp_path / "workspace",
         sqlite_repo=sqlite_repo,
         protocol_repo=_FailingProtocolRepository(),
         protocol_root=tmp_path / "workspace",
@@ -334,7 +334,7 @@ async def test_async_dual_write_run_ledger_recovers_pending_start_intent_before_
         build_id="build-1",
     )
 
-    recovered_repo = AsyncDualModeLedgerRepository(
+    recovered_repo = AsyncDualModeLedgerRepository(workspace_root=tmp_path / "workspace",
         sqlite_repo=AsyncRunLedgerRepository(tmp_path / "runtime.db"),
         protocol_repo=AsyncProtocolRunLedgerRepository(tmp_path / "workspace", timestamp_factory=ProtocolLedgerClock().utc_now_iso),
     )
@@ -364,7 +364,7 @@ async def test_async_dual_write_run_ledger_recovers_pending_finalize_intent_befo
 ) -> None:
     sqlite_repo = AsyncRunLedgerRepository(tmp_path / "runtime.db")
     working_protocol_repo = AsyncProtocolRunLedgerRepository(tmp_path / "workspace", timestamp_factory=ProtocolLedgerClock().utc_now_iso)
-    broken_repo = AsyncDualModeLedgerRepository(
+    broken_repo = AsyncDualModeLedgerRepository(workspace_root=tmp_path / "workspace",
         sqlite_repo=sqlite_repo,
         protocol_repo=_FinalizeFailingProtocolRepository(working_protocol_repo),
     )
@@ -383,7 +383,7 @@ async def test_async_dual_write_run_ledger_recovers_pending_finalize_intent_befo
         failure_reason="forced finalize recovery",
     )
 
-    recovered_repo = AsyncDualModeLedgerRepository(
+    recovered_repo = AsyncDualModeLedgerRepository(workspace_root=tmp_path / "workspace",
         sqlite_repo=AsyncRunLedgerRepository(tmp_path / "runtime.db"),
         protocol_repo=AsyncProtocolRunLedgerRepository(tmp_path / "workspace", timestamp_factory=ProtocolLedgerClock().utc_now_iso),
     )
@@ -414,7 +414,7 @@ async def test_async_dual_write_run_ledger_rechecks_recovery_without_duplicate_e
     tmp_path: Path,
 ) -> None:
     """Layer: integration. Rechecking durable intent does not replay an acknowledged start."""
-    broken_repo = AsyncDualModeLedgerRepository(
+    broken_repo = AsyncDualModeLedgerRepository(workspace_root=tmp_path / "workspace",
         sqlite_repo=AsyncRunLedgerRepository(tmp_path / "runtime.db"),
         protocol_repo=_FailingProtocolRepository(),
         protocol_root=tmp_path / "workspace",
@@ -427,7 +427,7 @@ async def test_async_dual_write_run_ledger_rechecks_recovery_without_duplicate_e
         build_id="build-1",
     )
 
-    recovered_repo = AsyncDualModeLedgerRepository(
+    recovered_repo = AsyncDualModeLedgerRepository(workspace_root=tmp_path / "workspace",
         sqlite_repo=AsyncRunLedgerRepository(tmp_path / "runtime.db"),
         protocol_repo=AsyncProtocolRunLedgerRepository(tmp_path / "workspace", timestamp_factory=ProtocolLedgerClock().utc_now_iso),
     )

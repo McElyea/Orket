@@ -1,0 +1,408 @@
+{
+  "scope": "interrupted WIP branch checkpoint; not whole-lane or release acceptance",
+  "date": "2026-09-30",
+  "branch": "codex/architectural-truth-bt0",
+  "version": "0.6.115",
+  "base": "8f97e0d4252e776093ef4920b04891659a2ba55a",
+  "overall_result": "partial success",
+  "focused_source": {
+    "path": "primary",
+    "result": "success",
+    "proof": "executed declared source tests; per-case layers and fixtures bound by input hashes",
+    "exit_code": 0,
+    "input_count": 5647,
+    "changed_inputs": [],
+    "counts": {
+      "pass": 163,
+      "failure": 0,
+      "skip": 0
+    },
+    "evidence_sha256": {
+      ".tmp/goal-20260928-closeout-20260930-guarded-v1-inputs.json": "f4c42f321c08470fa7c5f3e52137b538509882fdb2fa963457e6b2674dd857ec",
+      ".tmp/goal-20260928-closeout-20260930-guarded-v1.xml": "013aba85631c8973b4ecd835fb96a45e4c7ffdd1163649a5d5262af755901293",
+      ".tmp/goal-20260928-closeout-20260930-guarded-v1.log": "8c9e87387435ef9ec992940f445c44fea8f71e9a97ca28ab83fdf37d53c05d8c"
+    }
+  },
+  "final_product_test_automation_equality": {
+    "checked_paths": 3565,
+    "changed": [],
+    "input_manifest": ".tmp/goal-20260928-closeout-20260930-guarded-v1-inputs.json",
+    "proof": "structural byte equality after documentation closeout"
+  },
+  "wheel": {
+    "path": ".tmp/closeout-20260930/wheels/orket-0.6.115-py3-none-any.whl",
+    "sha256": "55d04010424cc8ff15c09e7107e4f7fee399b166dd90ecfd854962cf54d0dde8",
+    "source_equal_members": 1233
+  },
+  "rejected_initial_wheel": {
+    "sha256": "62b8a18a352eda93f24a5e8d496951079e4a696f46b6c25dc38f2da3d01de91e",
+    "reason": "32 obsolete package modules from the pre-existing build directory; zero mismatched existing files",
+    "correction": "rebuild from a byte-identical clean copy of Git-visible packaging inputs, reinstall and repeat installed smoke"
+  },
+  "installed_smoke": {
+    "proof": "live bounded installed public deterministic flows; no model inference",
+    "path": "primary",
+    "result": "success",
+    "cwd": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-wip-closeout-20260930-c3s_1by5",
+    "origins": {
+      "version": "0.6.115",
+      "orket": "C:\\Source\\Orket-architectural-truth\\.tmp\\closeout-20260930-env\\Lib\\site-packages\\orket\\__init__.py",
+      "sdk": "C:\\Source\\Orket-architectural-truth\\.tmp\\closeout-20260930-env\\Lib\\site-packages\\orket_extension_sdk\\__init__.py"
+    },
+    "commands": [
+      {
+        "name": "installed-origins",
+        "argv": [
+          "C:\\Source\\Orket-architectural-truth\\.tmp\\closeout-20260930-env\\Scripts\\python.exe",
+          "-I",
+          "-c",
+          "import json,orket,orket_extension_sdk,importlib.metadata as m; print(json.dumps({'version':m.version('orket'),'orket':orket.__file__,'sdk':orket_extension_sdk.__file__}))"
+        ],
+        "exit_code": 0,
+        "log_sha256": "1ab190525186c3c62d930808aef061627df0292f5b498bf3ed9dd3896d003c26"
+      },
+      {
+        "name": "installed-cli-help",
+        "argv": [
+          "C:\\Source\\Orket-architectural-truth\\.tmp\\closeout-20260930-env\\Scripts\\orket.exe",
+          "--help"
+        ],
+        "exit_code": 0,
+        "log_sha256": "29e226980b5b8f20a7d56b7872366959698f9321833ab007b3f99a1142b51a75"
+      },
+      {
+        "name": "installed-runtime-help",
+        "argv": [
+          "C:\\Source\\Orket-architectural-truth\\.tmp\\closeout-20260930-env\\Scripts\\orket.exe",
+          "runtime",
+          "--help"
+        ],
+        "exit_code": 0,
+        "log_sha256": "0e63929c65446a5cbbb32036179ea2e4824bb9dfad38e6fbd2b468c6bc4afdee"
+      },
+      {
+        "name": "installed-governed-run",
+        "argv": [
+          "C:\\Source\\Orket-architectural-truth\\.tmp\\closeout-20260930-env\\Scripts\\orket.exe",
+          "demo",
+          "governed-run",
+          "--workspace",
+          "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-wip-closeout-20260930-c3s_1by5\\governed-run",
+          "--json"
+        ],
+        "exit_code": 0,
+        "log_sha256": "5bbe0aa1c46fc697a1fe97d3de0c1d09ef1bafbd2c77898b4e939dfa98dfe531"
+      },
+      {
+        "name": "installed-quickstart-approve",
+        "argv": [
+          "C:\\Source\\Orket-architectural-truth\\.tmp\\closeout-20260930-env\\Scripts\\orket-quickstart.exe",
+          "--decision",
+          "approve",
+          "--workspace",
+          "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-wip-closeout-20260930-c3s_1by5\\approve"
+        ],
+        "exit_code": 0,
+        "log_sha256": "faf2f5515abc2e1136c05b0e3488db7d34d6f6eb89794204d9a7908ee8347055"
+      },
+      {
+        "name": "installed-verify-approve",
+        "argv": [
+          "C:\\Source\\Orket-architectural-truth\\.tmp\\closeout-20260930-env\\Scripts\\python.exe",
+          "-I",
+          "-m",
+          "orket.quickstart.verify_ledger",
+          "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-wip-closeout-20260930-c3s_1by5\\approve\\.orket\\quickstart\\runs\\quickstart-81429bea97c0\\ledger.jsonl"
+        ],
+        "exit_code": 0,
+        "log_sha256": "ee01abe3ca3dd6cadc0ec335d6bc93955268bf745282f57a6c12dc064b551e62"
+      },
+      {
+        "name": "installed-quickstart-deny",
+        "argv": [
+          "C:\\Source\\Orket-architectural-truth\\.tmp\\closeout-20260930-env\\Scripts\\orket-quickstart.exe",
+          "--decision",
+          "deny",
+          "--workspace",
+          "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-wip-closeout-20260930-c3s_1by5\\deny"
+        ],
+        "exit_code": 0,
+        "log_sha256": "b19fcba480263f285dc8214f12902eb1e809bafb6dd57b77f57c7eda544d5a4d"
+      },
+      {
+        "name": "installed-verify-deny",
+        "argv": [
+          "C:\\Source\\Orket-architectural-truth\\.tmp\\closeout-20260930-env\\Scripts\\python.exe",
+          "-I",
+          "-m",
+          "orket.quickstart.verify_ledger",
+          "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-wip-closeout-20260930-c3s_1by5\\deny\\.orket\\quickstart\\runs\\quickstart-5174bb3705ee\\ledger.jsonl"
+        ],
+        "exit_code": 0,
+        "log_sha256": "e3cae8a92070fc741d7165ce2839eed0923d7316b3faa5e3787c929354a5bc22"
+      }
+    ],
+    "effects": {
+      "approve": {
+        "output_exists": true,
+        "ledger_sha256": "8872a042b96878e144abedc3fa3a275099824e7db9d1d6d171a02a4290dc0072"
+      },
+      "deny": {
+        "output_exists": false,
+        "ledger_sha256": "0cb5c20d983ff27893b2412f8b60f48d57232fda7fa039e00dc751540bd8ebd4"
+      }
+    },
+    "governed_run_artifacts": {
+      "evidence": "4e573fdb2769813c52765cf3f94aea2ec3b2260c2e9b951973264c77300ae927",
+      "transcript": "3f822154fdb32a9057a99914d4285f3e1bd0eefd81cc0144bd07b300da1d1133",
+      "replay": "4c6d6cec3a9bb2cff6f20a2c3680f787359a1855430ddb29be99e05dfdefda83",
+      "summary": "60f2ca16c3ac02d0de5d86d750afefdc3bf7e0e6845e74b2b0be99e3e4344cf3"
+    },
+    "wheel_sha256": "55d04010424cc8ff15c09e7107e4f7fee399b166dd90ecfd854962cf54d0dde8",
+    "limits": "Windows Python 3.11 only; help is admission proof, not runtime execution; guarded-mutation installed suite and hosted CI are unverified",
+    "diff_ledger": [
+      {
+        "run_at_utc": "2026-10-01T02:27:57.064937Z",
+        "changed": true,
+        "before_digest": null,
+        "after_digest": "sha256:a6fb3f8a0afc84387686687eafd1f402786ffc990ad70682168a3f2612351ef8",
+        "diff": {
+          "initial_write": true,
+          "added_paths": 0,
+          "removed_paths": 0,
+          "changed_paths": 0,
+          "paths_total_previous": 0,
+          "paths_total_current": 172,
+          "paths_total_reference": 172,
+          "churn_paths": 172,
+          "churn_ratio": 1.0,
+          "sample_paths": []
+        }
+      },
+      {
+        "run_at_utc": "2026-10-01T02:32:43.860483Z",
+        "changed": true,
+        "before_digest": "sha256:a6fb3f8a0afc84387686687eafd1f402786ffc990ad70682168a3f2612351ef8",
+        "after_digest": "sha256:b423f11ff0eb2a49b840533276ff330ae0423e7815f18600dfb262a507365826",
+        "diff": {
+          "added_paths": 1,
+          "removed_paths": 0,
+          "changed_paths": 12,
+          "initial_write": false,
+          "paths_total_previous": 172,
+          "paths_total_current": 174,
+          "paths_total_reference": 174,
+          "churn_paths": 13,
+          "churn_ratio": 0.074713,
+          "sample_paths": [
+            "$.wheel_sha256",
+            "$.commands[3].argv[4]",
+            "$.commands[4].argv[4]",
+            "$.commands[4].log_sha256",
+            "$.commands[5].argv[4]",
+            "$.commands[5].log_sha256",
+            "$.commands[6].argv[4]",
+            "$.commands[6].log_sha256",
+            "$.commands[7].argv[4]",
+            "$.commands[7].log_sha256",
+            "$.cwd",
+            "$.effects.approve.ledger_sha256",
+            "$.effects.deny.ledger_sha256"
+          ]
+        }
+      }
+    ]
+  },
+  "structural_gates": {
+    "ruff": "pass",
+    "dependency_direction": "pass",
+    "strict_taxonomy": "pass",
+    "critical_noop": "pass",
+    "authority_consistency": "pass",
+    "docs_hygiene": "pass",
+    "version_changelog_alignment": "pass",
+    "current_runtime_proof_established": false,
+    "mypy": {
+      "result": "failure",
+      "errors": 415,
+      "files_with_errors": 170,
+      "sources": 1213
+    }
+  },
+  "broad_diagnostic": {
+    "result": "operator-stopped incomplete diagnostic after observed failures",
+    "last_reported_progress_percent": 38,
+    "exit_code": 4294967295,
+    "input_count": 5644,
+    "changed_inputs": [],
+    "finalized_case_counts": null,
+    "fresh_full_coverage": null,
+    "process_tree": "eight identified pytest processes terminated; their absence verified; not product-cleanup acceptance",
+    "separate_reproduction": "test_sandbox_cleanup_claim_race.py: one failure, E_LOGGING_PREPARATION_REQUIRED",
+    "limits": "zero parsed XML cases in the local receipt mean no finalized XML; no unexecuted result is inferred"
+  },
+  "historical_coverage": {
+    "percent": 86.70441630134762,
+    "floor": 89,
+    "current_proof": false
+  },
+  "not_verified": [
+    "fresh full suite and coverage",
+    "installed guarded-mutation matrix",
+    "Windows Python 3.12",
+    "Linux",
+    "actual model inference",
+    "hosted Gitea CI",
+    "whole-lane acceptance"
+  ],
+  "local_evidence_sha256": {
+    ".tmp/closeout-20260930-final-ruff.log": "af352a86840ad0af3d37ea0d9197f868363a6dac6b1c2ef5d2722f6b41d2d9af",
+    ".tmp/closeout-20260930-mypy.log": "5fa37897798e6c13f15d25e218298e0a942df2696cecc09bbc23a02af59d2633",
+    ".tmp/closeout-20260930-dependency.log": "c42b47f4d447d06a46b9bb78db4dd25d09b76578a2d8f61594efa33f6387e3a5",
+    ".tmp/closeout-20260930-noop.log": "42d19101fb6b86721111fc4b936062c05c9f0eb3ee855f7ae702d70f5d9fed7e",
+    ".tmp/closeout-20260930-taxonomy.log": "9d1df44a565122d5ac7d182cb18f5aa9dfe1d071ca80c7640cb47fcecec69a60",
+    ".tmp/closeout-20260930-final-authority.log": "fa8049d71282ae97b81491d329c07148eaa0a59645a977a2a9206e5474764486",
+    ".tmp/closeout-20260930-final-hygiene.log": "5a47d7c74f3da6fed3721cce8d4ca631d227a6c940bcd94eddc8a68715fb02b6",
+    ".tmp/closeout-20260930-release-alignment.log": "fc7b5c9e305d8fcef6174bb996dc2e2f6411b6f86742bcfffc85f51151b88ace",
+    ".tmp/closeout-20260930-build.log": "ab38472cda0d3c3420da4c852cf832d29148061bf811ca9d794208b99f3bc066",
+    ".tmp/closeout-20260930-build-pip.log": "15d20f5463398eabd90b5e423b2e1b6ca1b6a3e67d8a2c4474e75bc322e7a8c0",
+    ".tmp/closeout-20260930-build-clean.log": "2fd707f233fc01d5ff5e635bec43200646f80fcad1f3dd6a56836797a2af2ed2",
+    ".tmp/closeout-20260930-record-warnings.log": "3f71984f6a043454c0dceb2540824d1f7c0ffe3bf042cef05713be9567857936",
+    ".tmp/closeout-20260930-install-final.log": "35968876d4a432e85ff5571d89a3ad2f6b1899a2e0d8b2b004d6bd36fd55840d",
+    ".tmp/closeout-20260930-pip-check.log": "6326999b2d47daff6338070efad9139a62dd802f33019eab621859ade33fc907",
+    ".tmp/closeout-20260930/stopped-full-run-processes.txt": "1d24738ab5d8cf24883e939ada44cc8b947ec9be3b107553fdd2481199c00978",
+    ".tmp/closeout-20260930-first-failure.log": "0a03d7346dbad4b8daae36ab5d9e8cafa1eeb1958b82be7ab346355d6ffab248",
+    ".tmp/goal-20260928-closeout-20260930-guarded-v1-inputs.json": "f4c42f321c08470fa7c5f3e52137b538509882fdb2fa963457e6b2674dd857ec",
+    ".tmp/goal-20260928-closeout-20260930-guarded-v1-readback.json": "a8cfe4896191abd002a298a1db8e6be3de10ce7aeac3bc7e81a8ec9f243c8940",
+    ".tmp/goal-20260928-closeout-20260930-guarded-v1.log": "8c9e87387435ef9ec992940f445c44fea8f71e9a97ca28ab83fdf37d53c05d8c",
+    ".tmp/goal-20260928-closeout-20260930-full-v1-inputs.json": "bc0bf48884a4b21d1b1dfbc33e429b86cc3b0bce7a7a40491818ecad64487c42",
+    ".tmp/goal-20260928-closeout-20260930-full-v1-readback.json": "aae55b19fafdab240ff94137f6faf44c517a8df21400c1ef707db17c060cc30f",
+    ".tmp/goal-20260928-closeout-20260930-full-v1.log": "8d3c520b5daaf84338912d4b3d9bb7fbc42bc1a855302040e3a2b045f9df02b7"
+  },
+  "raw_evidence_storage": "local ignored .tmp paths; raw logs/manifests not included in Git",
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-10-01T02:32:59.514602Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:96986659195e6ac31e5ea480df0ea05e928452abcb52b558546e452e6a655884",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 435,
+        "paths_total_reference": 435,
+        "churn_paths": 435,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    },
+    {
+      "run_at_utc": "2026-10-01T02:33:45.905325Z",
+      "changed": false,
+      "before_digest": "sha256:96986659195e6ac31e5ea480df0ea05e928452abcb52b558546e452e6a655884",
+      "after_digest": "sha256:96986659195e6ac31e5ea480df0ea05e928452abcb52b558546e452e6a655884",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "initial_write": false,
+        "paths_total_previous": 435,
+        "paths_total_current": 435,
+        "paths_total_reference": 435,
+        "churn_paths": 0,
+        "churn_ratio": 0.0,
+        "sample_paths": []
+      }
+    },
+    {
+      "run_at_utc": "2026-10-01T02:34:48.611382Z",
+      "changed": true,
+      "before_digest": "sha256:96986659195e6ac31e5ea480df0ea05e928452abcb52b558546e452e6a655884",
+      "after_digest": "sha256:ff2f12453dac7d864d8a549dd913eeb35c5b4b43af3c1fb71d3e284963e8bbb8",
+      "diff": {
+        "added_paths": 2,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "initial_write": false,
+        "paths_total_previous": 435,
+        "paths_total_current": 619,
+        "paths_total_reference": 619,
+        "churn_paths": 2,
+        "churn_ratio": 0.003231,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.staged_working_copy_equality"
+        ]
+      }
+    }
+  ],
+  "staged_working_copy_equality": {
+    "paths_checked": 540,
+    "line_ending_only_differences": [
+      "docs/architecture/CONTRACT_DELTA_EPIC_CLEANUP_CANCELLATION_D_2026-09-28.md",
+      "docs/architecture/CONTRACT_DELTA_EPIC_COMPONENT_COMPOSITION_E1_2026-09-28.md",
+      "docs/architecture/CONTRACT_DELTA_FAILURE_REPORT_CAPTURE_D_2026-09-28.md",
+      "docs/architecture/CONTRACT_DELTA_ORCHESTRATOR_SCHEDULER_E2_2026-09-28.md",
+      "docs/architecture/CONTRACT_DELTA_OUTWARD_STORE_LIFETIME_D_2026-09-28.md",
+      "docs/architecture/CONTRACT_DELTA_REQUIRED_FINALIZERS_D_2026-09-28.md",
+      "docs/architecture/CONTRACT_DELTA_SUPPORTING_DIAGNOSTIC_POLICY_D_2026-09-28.md",
+      "docs/architecture/current_authority.json",
+      "docs/projects/architectural-truth/ARCHITECTURE_EXCEPTION_REGISTER.json",
+      "docs/projects/archive/architectural-truth/AT09302026-WIP-CHECKPOINT/CHECKPOINT.md",
+      "docs/projects/archive/architectural-truth/AT09302026-WIP-CHECKPOINT/FILES.txt",
+      "docs/projects/archive/architectural-truth/AT09302026-WIP-CHECKPOINT/VERIFICATION.json",
+      "docs/projects/archive/architectural-truth/AT09302026-WIP-CHECKPOINT/proposal-inventory.json",
+      "docs/specs/CONNECTOR_INVOCATION_TIMING.md",
+      "docs/specs/CONTROL_PLANE_TERMINAL_AUTHORITY.md",
+      "docs/specs/OUTWARD_APPROVAL_EFFECT_LIFECYCLE_V1.md",
+      "orket/adapters/storage/async_card_repository.py",
+      "orket/adapters/storage/card_acceptance_artifacts.py",
+      "orket/adapters/storage/epic_publication_repository.py",
+      "orket/application/services/card_acceptance_service.py",
+      "orket/application/services/card_completion_service.py",
+      "orket/application/services/epic_admission_service.py",
+      "orket/application/services/turn_tool_checkpoint_authority.py",
+      "orket/application/services/turn_tool_control_plane_recovery.py",
+      "orket/interfaces/api_settings.py",
+      "orket/runtime/evidence/run_evidence_graph_projection.py",
+      "orket/runtime/evidence/run_evidence_graph_projection_collect.py",
+      "orket/runtime/evidence/run_evidence_graph_projection_supplemental.py",
+      "orket/runtime/evidence/run_evidence_graph_projection_support.py",
+      "orket/runtime/evidence/run_evidence_graph_rendering.py",
+      "orket/runtime/execution/epic_run_finalize.py",
+      "orket/runtime/execution/epic_run_orchestrator.py",
+      "orket/runtime/execution/epic_run_support.py",
+      "orket/runtime/execution/epic_run_types.py",
+      "orket/runtime/execution/execution_pipeline_card_dispatch.py",
+      "orket/runtime/policy/clock_time_authority_policy.py",
+      "orket/runtime/policy/runtime_truth_drift_checker.py",
+      "orket/runtime/policy/safe_default_catalog.py",
+      "scripts/security/build_tool_gate_audit.py",
+      "tests/application/test_execution_pipeline_issue_entrypoints.py",
+      "tests/application/test_tool_gate_enforcement_closure.py",
+      "tests/contracts/test_audit_settlement_precedence.py",
+      "tests/helpers/guarded_mutation_diagnostic.py",
+      "tests/integration/test_epic_artifact_destination_ownership.py",
+      "tests/integration/test_epic_calendar_timezone_inputs.py",
+      "tests/integration/test_execution_policy_input_capture.py",
+      "tests/integration/test_guarded_mutation_ownership.py",
+      "tests/integration/test_protocol_path_ownership_failure_trace.py",
+      "tests/integration/test_reforger_command_ownership.py",
+      "tests/integration/test_remaining_runtime_input_capture.py",
+      "tests/integration/test_required_read_validation_ownership.py",
+      "tests/integration/test_runtime_factory_worker_ownership.py",
+      "tests/integration/test_standalone_registry_settings_capture.py",
+      "tests/integration/test_turn_artifact_destination_ownership.py",
+      "tests/integration/test_turn_memory_failure_recovery.py",
+      "tests/integration/test_turn_prompt_publication_ownership.py",
+      "tests/interfaces/test_cli_protocol_parity_campaign.py",
+      "tests/interfaces/test_cli_protocol_replay.py",
+      "tests/runtime/test_epic_run_orchestrator.py"
+    ],
+    "other_differences": [],
+    "proof": "structural normalized byte comparison, not runtime acceptance"
+  }
+}

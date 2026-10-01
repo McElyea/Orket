@@ -9,6 +9,8 @@ import pytest
 
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
 
+pytestmark = pytest.mark.integration
+
 
 def _manifest(run_id: str, tool_name: str) -> dict[str, str]:
     return {

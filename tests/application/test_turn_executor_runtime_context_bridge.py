@@ -12,7 +12,9 @@ from orket.adapters.llm.local_model_provider import LocalModelProvider
 from orket.application.services.tool_gate_service import ToolGate
 from orket.application.workflows.turn_executor import TurnExecutor
 from orket.application.workflows.turn_executor_runtime import invoke_model_complete
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain.state_machine import StateMachine
+from orket.logging import bind_logging, prepare_logging
 from orket.schema import CardStatus, IssueConfig, RoleConfig
 from tests.helpers.provider_preparation import create_test_model_provider_async
 from tests.helpers.turn_artifacts import artifact_test_utc_now
@@ -161,14 +163,15 @@ async def test_turn_executor_bridges_runtime_context_through_wrapped_model_clien
         "required_statuses": [],
     }
 
-    result = await executor.execute_turn(
-        issue=issue,
-        role=role,
-        model_client=model_client,
-        toolbox=_Toolbox(),
-        context=context,
-        system_prompt="SYSTEM",
-    )
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(
+            issue=issue,
+            role=role,
+            model_client=model_client,
+            toolbox=_Toolbox(),
+            context=context,
+            system_prompt="SYSTEM",
+        )
     await provider.close()
 
     assert result.success is False

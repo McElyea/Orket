@@ -12,6 +12,7 @@ from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.application.workflows import orchestrator_ops
 from orket.application.workflows.turn_artifact_destination import TurnArtifactDestination
 from orket.application.workflows.turn_executor import TurnExecutor
+from orket.logging import bind_logging
 from orket.runtime.execution.execution_pipeline import ExecutionPipeline
 from orket.schema import CardStatus, IssueConfig, RoleConfig
 from tests.application.test_execution_pipeline_cards_epic_control_plane import _write_epic_assets
@@ -136,30 +137,31 @@ async def test_pipeline_selected_clock_reaches_real_parser_and_context_approval(
     async with ExecutionPipeline.open(
         workspace=workspace, config_root=test_root, db_path=db_path, runtime_inputs=clock,
     ) as pipeline:
-        executor = await _capture_production_executor(pipeline, monkeypatch)
-        assert getattr(pipeline.orchestrator.turn_clock, "__self__", None) is clock
-        issue = IssueConfig(id="CLOCK-ISSUE", summary="Observe the selected clock",
-                            seat="developer", status=CardStatus.IN_PROGRESS)
-        role = RoleConfig(id="CLOCK-ROLE", summary="developer", description="Build code",
-                          tools=["write_file"])
-        context = await _turn_context(pipeline.orchestrator, issue)
-        required_write_paths = tuple(
-            str(path) for path in context.get("required_write_paths", []) if str(path)
-        )
-        assert required_write_paths
-        clock.observations.clear()
-        toolbox = _ControlledToolbox()
-        result = await executor.execute_turn(
-            issue, role, _ControlledModel(required_write_paths), toolbox, context)
-        assert result.success and result.turn is not None
-        assert toolbox.paths == list(required_write_paths)
-        assert toolbox.statuses == list(context["required_statuses"])
-        assert len(clock.observations) == 2 and result.turn.timestamp == clock.observations[0]
-        turn_dir = workspace / "observability/clock-session/clock-issue/001_developer"
-        artifacts = ("model_response.txt", "model_response_raw.json", "tool_parser_diagnostics.json")
-        assert all(await asyncio.gather(*(asyncio.to_thread((turn_dir / name).is_file) for name in artifacts)))
-        checkpoint = json.loads(await asyncio.to_thread(
-            (turn_dir / "checkpoint.json").read_text, encoding="utf-8"))
-        assert checkpoint["captured_at"] == clock.observations[1].isoformat()
-        await _assert_approval_clock(pipeline, executor, context, clock)
-        assert len(clock.observations) == 3
+        with bind_logging(pipeline.logging_context):
+            executor = await _capture_production_executor(pipeline, monkeypatch)
+            assert getattr(pipeline.orchestrator.turn_clock, "__self__", None) is clock
+            issue = IssueConfig(id="CLOCK-ISSUE", summary="Observe the selected clock",
+                                seat="developer", status=CardStatus.IN_PROGRESS)
+            role = RoleConfig(id="CLOCK-ROLE", summary="developer", description="Build code",
+                              tools=["write_file"])
+            context = await _turn_context(pipeline.orchestrator, issue)
+            required_write_paths = tuple(
+                str(path) for path in context.get("required_write_paths", []) if str(path)
+            )
+            assert required_write_paths
+            clock.observations.clear()
+            toolbox = _ControlledToolbox()
+            result = await executor.execute_turn(
+                issue, role, _ControlledModel(required_write_paths), toolbox, context)
+            assert result.success and result.turn is not None
+            assert toolbox.paths == list(required_write_paths)
+            assert toolbox.statuses == list(context["required_statuses"])
+            assert len(clock.observations) == 2 and result.turn.timestamp == clock.observations[0]
+            turn_dir = workspace / "observability/clock-session/clock-issue/001_developer"
+            artifacts = ("model_response.txt", "model_response_raw.json", "tool_parser_diagnostics.json")
+            assert all(await asyncio.gather(*(asyncio.to_thread((turn_dir / name).is_file) for name in artifacts)))
+            checkpoint = json.loads(await asyncio.to_thread(
+                (turn_dir / "checkpoint.json").read_text, encoding="utf-8"))
+            assert checkpoint["captured_at"] == clock.observations[1].isoformat()
+            await _assert_approval_clock(pipeline, executor, context, clock)
+            assert len(clock.observations) == 3

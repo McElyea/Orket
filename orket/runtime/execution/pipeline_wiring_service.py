@@ -38,7 +38,7 @@ class PipelineWiringService:
         return SandboxOrchestrator(workspace, organization=organization, environment=inputs.environment,
             terminal_evidence_root=durable_root(invocation_root=inputs.invocation_root,
                                                environment=inputs.environment) / "sandbox_terminal_evidence",
-            decision_nodes=build_decision_node_registry(environment=inputs.environment),
+            decision_nodes=build_decision_node_registry(environment=inputs.environment, user_settings=inputs.user_settings()),
             lifecycle_db_path=resolve_sandbox_lifecycle_db_path(invocation_root=inputs.invocation_root,
                                                                environment=inputs.environment),
             control_plane_db_path=str(resolve_control_plane_db_path(invocation_root=inputs.invocation_root,
@@ -101,6 +101,7 @@ class PipelineWiringService:
             control_plane_clock=control_plane_clock,
             turn_clock=turn_clock,
             environment=environment,
+            user_settings=inputs.user_settings() if inputs is not None else None,
         )
 
     async def prepare_sub_pipeline(self, *, parent_pipeline: Any, epic_workspace: Any, department: str) -> Callable[[], Any]:

@@ -69,3 +69,11 @@ The affected source gate passes; three installed cells pass, while Linux 3.11
 retains one issue-closeout lease-clock refusal. Its cause remains unestablished.
 The canonical plan records current evidence and limits; remaining core effects
 and the wider C/D/E/capability gates remain open.
+
+
+Subsequent root-input correction (2026-09-28): the application ToolGate and
+structural reconciliation/store boundaries bind relative roots before their
+owned invocation waits. This later bounded correction does not rewrite the
+historical execution evidence above or claim wider D closure. Its exact root
+selection, refusal and proof limits are recorded in
+`docs/architecture/CONTRACT_DELTA_APPLICATION_ROOT_INPUTS_D_2026-09-28.md`.

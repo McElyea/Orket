@@ -3,7 +3,11 @@ from __future__ import annotations
 from copy import deepcopy
 from pathlib import Path
 
+import pytest
+
 from scripts.replay.replay_comparator import compare_payload
+
+pytestmark = pytest.mark.contract
 
 CONTRACTS_ROOT = Path("docs/projects/archive/OS-Stale-2026-02-28/contracts")
 

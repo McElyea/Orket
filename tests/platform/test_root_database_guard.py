@@ -6,6 +6,8 @@ from pathlib import Path
 
 import pytest
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.parametrize("relative", ["control_plane_records.sqlite3", "nested/control_plane_records.sqlite3"])
 def test_database_guard_blocks_root_even_when_caller_swallows_error(tmp_path, relative):

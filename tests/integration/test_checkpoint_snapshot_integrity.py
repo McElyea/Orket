@@ -17,9 +17,11 @@ from orket.application.services.turn_tool_control_plane_recovery import _same_at
 from orket.application.services.turn_tool_control_plane_service import build_turn_tool_control_plane_service
 from orket.application.workflows.turn_artifact_writer import TurnArtifactWriter
 from orket.application.workflows.turn_executor import TurnExecutor
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain import AttemptState, RecoveryActionClass, RunState
 from orket.core.domain.execution import ExecutionTurn, ToolCall
 from orket.core.domain.state_machine import StateMachine
+from orket.logging import bind_logging, prepare_logging
 from tests.helpers.turn_artifacts import artifact_destination, artifact_test_utc_now, write_checkpoint_fixture
 from tests.helpers.turn_control_plane_clock import deterministic_turn_clock as deterministic_turn_clock
 from tests.integration.test_epic_approval_continuation import approval_engine
@@ -111,7 +113,8 @@ async def test_pre_effect_resume_binds_checkpoint_content(tmp_path, record_prope
     snapshot = await asyncio.to_thread(_observe_snapshot, directory, mode)
     before = await _child_state(service, run_id)
     model, toolbox = _Model(), _PhysicalToolbox(tmp_path)
-    result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context(resume_mode=True))
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), _role(), model, toolbox, _context(resume_mode=True))
     after = await _child_state(service, run_id)
     output = await asyncio.to_thread(_file_observation, tmp_path / "agent_output/out.txt")
     retained = await asyncio.to_thread(_file_observation, directory / snapshot["name"])

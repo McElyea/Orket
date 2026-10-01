@@ -64,15 +64,71 @@
    - `python scripts/governance/sync_published_index.py --check`
 12. Commit staged artifacts, `benchmarks/staging/index.json`, and `benchmarks/staging/README.md` together. Commit published artifacts, `benchmarks/published/index.json`, and `benchmarks/published/README.md` together.
 
+## Current Authority Maintenance
+
+`docs/architecture/current_authority.json` is the bounded authored index;
+`CURRENT_AUTHORITY.md` is its generated view. Canonical contracts, implementation,
+the dependency policy and start-path matrix remain the owners of their rules.
+Update affected sources and current records together, then run
+`python scripts/governance/render_current_authority.py` and
+`python scripts/governance/check_current_authority.py`. Use
+`python scripts/governance/render_current_authority.py --check` for a read-only
+generated-view comparison. Do not append execution history to the manifest/view;
+retain scoped proof and outstanding work in their canonical plan or release record.
+
+Both Quality truthful-checker steps run the native authority checker and its
+contract/native controls. It checks documented argv and declared entrypoints,
+source admission, compatibility conditions and exact generated equality. It does
+not execute product commands or establish semantic agreement between prose rules.
+Current runtime proof remains explicitly unavailable: requesting
+`python scripts/governance/check_current_authority.py --require-current-proof`
+must refuse. Contract: `docs/specs/CURRENT_AUTHORITY_SOURCE_CONTRACT.md`.
+
 ## Canonical Commands
+
+Model-stream builtin calls capture request/provider inputs before discovery and
+apply canonical target admission before inference construction. Both Quality jobs
+retain real local catalog, blocked-target refusal and input-mutation controls.
+Keep turn phase controls with the existing preparation/provider/approval guards
+when changing orchestrator composition. Contracts and limits:
+`docs/architecture/CONTRACT_DELTA_MODEL_STREAM_INPUTS_D_2026-09-28.md`,
+`docs/architecture/CONTRACT_DELTA_MODEL_STREAM_ADMISSION_D_2026-09-28.md`, and
+`docs/architecture/CONTRACT_DELTA_ORCHESTRATOR_TURN_PHASES_E2_2026-09-28.md`.
+
+
+Tool invocation uses the shared I/O owner through synchronous native work and
+async cleanup. The timeout requests interruption; effects and cleanup may finish
+later. Both Quality jobs retain isolated tool failure/value/deadline controls and
+existing workspace-guard checks. Both jobs also retain guarded native-failure,
+SQLite exclusion, cleanup-precedence and authority-admission controls in
+`tests/integration/test_guarded_mutation_ownership.py`. Preserve the guarded
+route's separate proof limits under `docs/specs/SHARED_IO_CANCELLATION.md`.
+
+Application file validation and reconciliation capture invocation roots before
+owned waits; direct stores bind their construction root. Both Quality jobs retain
+real two-tree, CWD/attribute rotation, refusal and partial-adoption controls under
+`docs/architecture/CONTRACT_DELTA_APPLICATION_ROOT_INPUTS_D_2026-09-28.md`.
+Epic extraction must preserve phase-selected owners and approval consumption after
+semaphore admission; retain the public phase controls with existing scheduler,
+approval and recovery guards under `docs/specs/RUNTIME_ARCHITECTURE_POLICY_INPUTS.md`.
+
+Turn checkpoint continuation must bind its requested run, resumed/source attempts,
+recovery decision and accepted checkpoint. Preserve actual retained-state refusal
+and no-repair controls, plus turn recovery and approval-continuation guards, in
+both Quality jobs. Metadata lineage does not prove artifact replay or effects.
+Contract: `docs/specs/CONTROL_PLANE_TERMINAL_AUTHORITY.md`.
 
 Test-layer authority is exactly one distinct canonical pytest marker per collected
 item: `unit`, `contract`, `integration` or `end_to_end`. Prose and directories do
 not classify tests. The v2 taxonomy checker retains missing/conflicting items and
 collection failures; strict acceptance requires zero of each. Both taxonomy and
 critical no-op checks use the shared Git-visible inventory, including nonignored
-untracked files. Run their regression tests and preserve the canonical Ruff and
-coverage gates. Contract: `docs/specs/QUALITY_CHECKER_CONTRACT.md`.
+untracked files. Both `architecture_gates` and `quality` run their regression
+tests plus `python scripts/governance/enforce_test_taxonomy.py --strict` and
+`python scripts/governance/check_noop_critical_paths.py` in the truthful-checker
+step, without narrowed roots or optional failure. Preserve its exact-argv guard
+and the canonical Ruff and coverage gates.
+Contract: `docs/specs/QUALITY_CHECKER_CONTRACT.md`.
 The Quality coverage command is `pytest tests/ --cov=orket --cov-config=pyproject.toml --cov-fail-under=89`.
 Keep the explicit configuration path so native children launched from other
 directories retain the authored branch measurement. The 89-percent floor remains.
@@ -83,11 +139,27 @@ Turn-tool ownership controls recognize explicit service and captured-binding
 imports; both Quality selections retain the exact caller map and adverse scan
 controls. These are bounded structural observations, not general alias analysis.
 
-Optional loop logging captures supported built-in inputs and admits independent
-main/artifact stages to the existing bounded writer. Return is admission only.
-Both Quality selections retain capture, overflow, fatal-writer and API handoff
-controls. Explicit preparation and required-producer migration remain separate
-under `docs/specs/LOG_WRITE_SETTLEMENT.md`.
+Optional loop logging requires an explicitly prepared application binding, captures
+supported built-in inputs and admits independent main/artifact stages to the
+existing bounded writer. Canonical owners perform preparation; direct async
+embeddings await `prepare_logging(LoggingInputs(...))` and enter `bind_logging(...)`
+in the operation's task. Borrowed runtime lifespan yields carry no binding token.
+Return is admission only. Both Quality selections retain preparation, native
+startup failure, task-context, capture, overflow, fatal-writer and API handoff
+controls. The single daemon remains process-owned; the separately inventoried
+required-producer migration stays open under `docs/specs/LOG_WRITE_SETTLEMENT.md`.
+
+Required epic completion logs retain the existing native I/O owner through
+interruption. Keep the real append, retained-store and recovery controls in both
+Quality selections. A failed acknowledgement can leave store and log effects;
+the publication journal remains the progress authority. Contract:
+`docs/specs/CARD_COMPLETION_ACCEPTANCE_CONTRACT.md`.
+
+Card metadata, receipt inspection, final artifact authorization and epic journal
+transactions retain admitted native work through caller interruption. Both Quality
+jobs retain the native ownership controls with card completion, epic admission
+and publication recovery cases. A settled interrupted commit can be durable;
+inspect retained state and use existing recovery authority before retrying.
 
 Sandbox event publication captures supported built-in values before event identity
 and persistence. Append and replay share native ownership; preserve busy refusal,
@@ -102,6 +174,28 @@ and executor-refusal controls with existing I/O and API lifecycle/cleanup guards
 Preserve primary/cancellation identity, remaining close attempts and tracked
 background failure ownership under `docs/specs/RUNTIME_FAILURE_DIAGNOSTICS.md`.
 Affected custom standard handlers must support native worker invocation.
+
+Required native workers retain `SystemExit` and `KeyboardInterrupt` until the
+public caller observes their original failure, including through enclosing shared
+I/O owners. Both Quality selections retain the isolated API event and nested-owner
+controls, coroutine admission/refusal controls and existing cancellation/diagnostic
+guards. Custom task factories observe the admitted coroutine adapter; arbitrary
+custom/eager task-factory compatibility is not established. Contract:
+`docs/specs/SHARED_IO_CANCELLATION.md`.
+
+Shared I/O factories declare `OwnedCoroutine[T]`, matching their existing Task
+admission. Preserve interpreter-observed generator refusal and caller ownership
+of rejected work when changing annotations; the exact variadic throw forwarding
+remains unchecked. Typing success does not replace native settlement controls.
+
+System role/team catalog reads run through the application query service and
+existing native worker owner. Preserve tolerant parsing, response ordering and
+request/shutdown settlement. Outward model and sandbox terminal evidence retain
+one complete admitted publication/read attempt through interruption; partial
+files do not acquire completion authority. Both Quality jobs retain these controls
+and the active outward HTTP event-stream lifecycle case. Contracts:
+`docs/specs/API_RUNTIME_LIFECYCLE.md` and
+`docs/specs/EVIDENCE_ARTIFACT_PUBLICATION_OWNERSHIP.md`.
 
 Public enum representation controls run in both Quality selections; declaration-local
 exceptions preserve the bounded scope in `docs/specs/PUBLIC_ENUM_REPRESENTATION_CONTRACT.md`.
@@ -267,6 +361,13 @@ readiness criteria, response schemas and conditional settings-write conflicts in
 Run the runtime-policy input/request/lifetime controls in both Quality jobs when
 changing this boundary. Contract: `docs/specs/RUNTIME_ARCHITECTURE_POLICY_INPUTS.md`.
 
+Orchestrator support construction calls canonical implementations once; internal
+type errors cannot trigger reduced-input retries. Both Quality jobs retain those
+constructor controls with public verification and ordered card/control-plane
+transition guards. Policy/constructor tests target their actual owners after the
+facade helper/export retirement; full execution and provider lifetime proof remain
+separate from structural decomposition.
+
 Extension scaffold authoring sources live in `docs/templates/external_extension/`
 and `docs/templates/governed_agent_external/`. After changing them, run
 `python scripts/governance/sync_extension_templates.py --write` followed by
@@ -353,7 +454,10 @@ it has no forced-stop deadline. Worker startup or cleanup failure remains a
 launcher failure. Both Quality jobs include the construction, server and
 affected caller regressions. Retain the native process-finalization signal controls
 alongside the server reload cases: cooperative worker handlers remain installed
-until process exit, and a failed finalizer must still fail the launcher.
+through the serving loop, then native signal-ignore handlers remain through
+interpreter teardown. The parent still joins the worker, and a failed finalizer
+must fail the launcher. Retain both multiprocessing and interpreter-finalization
+signal controls.
 Scoped source/installed proof and the remaining
 repository-wide verification limits remain in the architectural-truth plan.
 
@@ -386,6 +490,33 @@ close failures after attempting remaining clients. Internal value consumers migr
 to the existing SDK frozen values; public wake wire fields stay unchanged. Both
 Quality jobs retain these regressions. Contract:
 `docs/architecture/CONTRACT_DELTA_GOVERNED_WAKE_OWNERSHIP_D_2026-09-20.md`.
+
+Wake claim validation and replay evidence reads retain native metadata, read-only
+SQLite acquisition, queries and closure through interruption. Both Quality jobs
+keep these controls with supervisor shutdown, stale-fence, replay-integrity and
+public command/API guards. Successful read settlement grants no recovery or
+external-effect authority. Contract: `docs/specs/GOVERNED_AGENT_LOOP_V1.md`.
+
+Outward ledger observation captures database/reader/anchor inputs and retains
+native preflight, read-only queries and close. Both Quality jobs retain interruption,
+paging, concurrent append, integrity and borrowed-transaction controls. A borrowed
+reader does not own its caller's commit, rollback or connection closure. Contract:
+`docs/specs/OUTWARD_LEDGER_STORAGE_V2.md`.
+
+Outward initializers and transaction resource phases use captured paths and the
+existing native owner. Borrowed connections supply their own prepared schema;
+interrupted commit may remain durable. Required command/fixture lifetime finalizers
+settle after the caller outcome is selected, retaining native failures rather than
+confusing them with later caller interruption. Both Quality jobs retain native
+identity/effect controls and existing admission/recovery/process guards. Contracts:
+`docs/specs/OUTWARD_APPROVAL_EFFECT_LIFECYCLE_V1.md` and
+`docs/specs/SHARED_IO_CANCELLATION.md`.
+
+Canonical scaffold, dependency and deployment setup retain complete admitted
+stages, including metadata, remaining files and validation. Both Quality jobs
+retain their native hold/input controls and original service/epic guards. Earlier
+files remain after later failure; interrupted success does not admit the next
+stage. Contract: `docs/specs/RUNTIME_ARCHITECTURE_POLICY_INPUTS.md`.
 
 Bootstrap synchronous settings before starting an event loop, or explicitly bind
 `set_runtime_settings_context(...)` for synchronous runtime consumers. Async
@@ -481,6 +612,64 @@ Compatibility-only source wrapper:
 `python main.py [runtime arguments]` remains supported through `0.6.x`. The hidden
 `--rock <rock_name>` alias remains accepted by that wrapper and `orket runtime`, but
 new callers must use `--card`; removal requires an explicit `0.7.0` contract delta.
+
+Failure report publication captures its selected root, immutable scalar identity
+and rendered content before yielding. Both Quality jobs retain native capture,
+file/log settlement, partial publication and refusal controls under
+`docs/specs/FAILURE_REPORT_PUBLICATION.md`.
+
+Connector supporting diagnostics preserve the primary through unexpected native
+failures; SDK uncertainty retains its exact secondary and typed note. Both Quality
+selections retain the isolated native controls and existing lifetime/manager guards.
+Do not replace the SDK secondary protocol with the generic diagnostic marker.
+Contract delta: `docs/architecture/CONTRACT_DELTA_SUPPORTING_DIAGNOSTIC_POLICY_D_2026-09-28.md`.
+
+Epic cleanup distinguishes actual native cancellation from later caller interruption.
+Preserve native rollback/close identity controls in both card/journal selections.
+Pipeline composition returns the exact required approval service with its owner;
+both public factory selections retain constructor-order and service-identity controls.
+Team replan ownership keeps phase-selected effect ports and one count map; both
+orchestrator selections retain real partial-effect/count/owner-rebinding controls.
+Migration details live in the dated epic composition and scheduler contract deltas.
+
+Gitea reconciliation/coordinator owners and coroutine SDK children prepare and
+bind optional logging in the actual operation task. Direct async embeddings
+retain the same requirement. Required dual-ledger and webhook events capture
+supported values and their selected workspace before worker admission. Direct
+dual-ledger constructors supply an absolute workspace; custom sinks keep their
+borrowed-input contract. Native SDK lifetime-publication failure, including fatal
+or cancellation failure, retains typed uncertainty and the unadopted exchange.
+Caller-only interruption after successful publication retains its existing policy.
+
+Native exchange-removal failure also selects typed uncertainty with its exact
+cause, including cancellation/fatal failures. Successful removal preserves an
+already-selected body error against later caller interruption; successful-body
+interruption keeps its prior policy. Deletion may have partly or completely
+applied, so the retained reference does not promise intact exchange bytes.
+Both Quality selections retain actual-child, loopback HTTP, SQLite, capture,
+native failure and startup controls. Contracts: `docs/specs/LOG_WRITE_SETTLEMENT.md`
+and `docs/specs/SDK_WORKLOAD_PROCESS_LIFETIME.md`.
+
+Pipeline and standalone runtime-context/ConfigLoader registry construction pass
+their captured settings explicitly. Selection does not rebind caller context or
+silently load omitted preferences; supplied registries keep precedence. Both
+Quality selections retain selection/refusal and real construction guards under
+`docs/specs/SETTINGS_INPUT_OWNERSHIP.md`.
+
+Trust handoff admission captures its package path and retains complete native
+verification through interruption; direct synchronous verification refuses loop
+entry. Existing package integrity/rejection rules and declared event paths stay
+authoritative. Interrupted verification leaves earlier shared EXECUTING admission
+without later handoff or terminal publication. Both Quality jobs retain real
+package, native interruption, path and CLI controls under
+`docs/specs/TRUST_HANDOFF_PACKET1_V1.md`.
+
+Model preparation captures its invocation directory before settings and score
+waits. Relative score reports use that root; Windows drive-relative paths refuse.
+Every preparation requires observable CWD, including absent/absolute reports.
+Existing advisory selection, byte provenance and native ownership remain under
+`docs/architecture/CONTRACT_DELTA_MODEL_SCORE_ROOT_D_2026-09-28.md`.
+Both Quality selections retain the root controls with existing model policy guards.
 
 ## Release and Versioning
 

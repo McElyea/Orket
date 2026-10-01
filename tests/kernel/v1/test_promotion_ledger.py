@@ -4,8 +4,12 @@ import json
 import tempfile
 from pathlib import Path
 
+import pytest
+
 from orket.kernel.v1.state.lsi import LocalSovereignIndex
 from orket.kernel.v1.state.promotion import REPAIR_ACKNOWLEDGEMENT, promote_turn, repair_run_ledger
+
+pytestmark = pytest.mark.integration
 
 
 def test_run_ledger_written_and_advanced_on_promotion() -> None:

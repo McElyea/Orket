@@ -25,7 +25,7 @@ def ui_lane_security_boundary_test_contract_snapshot() -> dict[str, Any]:
             },
             {
                 "check_id": "session_workspace_escape_blocked",
-                "surface": "orket.interfaces.api.list_logs",
+                "surface": "orket.interfaces.routers.logs.LogEndpoints.list_logs",
                 "expected_behavior": "session_id path escape raises HTTP 400",
             },
             {

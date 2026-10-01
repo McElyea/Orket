@@ -2,6 +2,15 @@
 
 This folder contains command entrypoints and shared script modules.
 
+The bounded authority index is authored in `docs/architecture/current_authority.json`.
+Generate its view with `python scripts/governance/render_current_authority.py`;
+`--check` compares without writing. Validate sources and generated equality with
+`python scripts/governance/check_current_authority.py`. The stable report is
+`benchmarks/results/governance/current_authority_check.json`, with the shared diff
+ledger. A structural pass grants no current execution proof; `--require-current-proof`
+refuses while runtime receipt adapters remain unavailable. Source contract:
+`docs/specs/CURRENT_AUTHORITY_SOURCE_CONTRACT.md`.
+
 ## Layout
 
 - `acceptance/`, `benchmarks/`, `context/`, `explorer/`, `extensions/`

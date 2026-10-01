@@ -42,6 +42,7 @@ def policy_paths(tmp_path):
     }
 
 
+@pytest.mark.contract
 @pytest.mark.parametrize(
     "path_key,expected",
     [
@@ -65,6 +66,7 @@ def test_can_read_by_scope(policy_paths, path_key, expected):
     assert policy_paths["policy"].can_read(str(candidate)) is expected
 
 
+@pytest.mark.contract
 @pytest.mark.parametrize(
     "path_key,expected",
     [
@@ -80,16 +82,19 @@ def test_can_write_by_scope(policy_paths, path_key, expected):
     assert policy_paths["policy"].can_write(str(candidate)) is expected
 
 
+@pytest.mark.contract
 def test_launch_dir_readable_via_domain_scope():
     policy = create_session_policy(str(Path.cwd()))
     assert policy.can_read(str(Path.cwd())) is True
 
 
+@pytest.mark.contract
 def test_launch_dir_not_writable():
     policy = create_session_policy(str(Path.cwd()))
     assert policy.can_write(str(Path.cwd())) is False
 
 
+@pytest.mark.contract
 def test_add_workspace_allows_new_write(policy_paths):
     policy = policy_paths["policy"]
     new_workspace = policy_paths["work_domain"] / "workspace2"
@@ -100,6 +105,7 @@ def test_add_workspace_allows_new_write(policy_paths):
     assert policy.can_write(str(new_workspace / "new.txt")) is True
 
 
+@pytest.mark.unit
 def test_add_workspace_is_idempotent(policy_paths):
     policy = policy_paths["policy"]
     original_len = len(policy.workspaces)
@@ -111,6 +117,7 @@ def test_add_workspace_is_idempotent(policy_paths):
     assert len(policy.workspaces) == original_len
 
 
+@pytest.mark.contract
 def test_create_session_policy_default_scopes(tmp_path):
     policy = create_session_policy(str(tmp_path / "workspace"), [str(tmp_path / "refs")])
 
@@ -118,6 +125,7 @@ def test_create_session_policy_default_scopes(tmp_path):
     assert policy.write_scope == ["workspace"]
 
 
+@pytest.mark.contract
 def test_create_session_policy_reference_is_read_only(tmp_path):
     workspace = tmp_path / "workspace"
     refs = tmp_path / "refs"
@@ -130,6 +138,7 @@ def test_create_session_policy_reference_is_read_only(tmp_path):
     assert policy.can_write(str(refs / "doc.md")) is False
 
 
+@pytest.mark.contract
 def test_create_session_policy_workspace_writable(tmp_path):
     workspace = tmp_path / "workspace"
     workspace.mkdir()
@@ -140,6 +149,7 @@ def test_create_session_policy_workspace_writable(tmp_path):
     assert policy.can_write(str(workspace / "a.txt")) is True
 
 
+@pytest.mark.contract
 def test_create_session_policy_domain_readable_not_writable(tmp_path):
     workspace = tmp_path / "workspace"
     workspace.mkdir()
@@ -151,6 +161,7 @@ def test_create_session_policy_domain_readable_not_writable(tmp_path):
     assert policy.can_write(str(domain_candidate)) is False
 
 
+@pytest.mark.contract
 def test_policy_with_restricted_read_scope(tmp_path):
     work_domain = tmp_path / "domain"
     workspace = work_domain / "workspace"
@@ -174,6 +185,7 @@ def test_policy_with_restricted_read_scope(tmp_path):
     assert policy.can_read(str(reference / "nope.txt")) is False
 
 
+@pytest.mark.contract
 def test_launch_dir_not_readable_when_domain_scope_excluded(tmp_path):
     workspace = tmp_path / "workspace"
     workspace.mkdir()
@@ -193,6 +205,7 @@ def test_launch_dir_not_readable_when_domain_scope_excluded(tmp_path):
     assert policy.can_read(str(Path.cwd())) is False
 
 
+@pytest.mark.contract
 def test_policy_with_domain_write_scope(tmp_path):
     work_domain = tmp_path / "domain"
     workspace = work_domain / "workspace"

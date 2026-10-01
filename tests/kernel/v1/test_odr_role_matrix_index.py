@@ -5,6 +5,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 
 def test_generate_odr_role_matrix_index(tmp_path: Path) -> None:
     input_dir = tmp_path / "odr"

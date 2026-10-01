@@ -3,7 +3,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from orket.reforger.runbundle import deterministic_run_stamp, prepare_run_dirs, write_manifest
+
+pytestmark = pytest.mark.integration
 
 
 def test_runbundle_required_files_and_manifest_stability(tmp_path: Path) -> None:

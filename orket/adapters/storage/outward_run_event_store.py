@@ -9,6 +9,8 @@ from typing import Any
 
 import aiosqlite
 
+from orket.adapters.execution.owned_io import run_owned_io
+from orket.adapters.storage.async_file_tools import capture_file_roots
 from orket.adapters.storage.outward_ledger_append_store import (
     LEDGER_APPEND_MIGRATION,
     OutwardEventAppend,
@@ -53,22 +55,30 @@ class OutwardRunEventStore:
     def __init__(self, db_path: str | Path) -> None:
         self.db_path = Path(db_path)
         self._init_lock = asyncio.Lock()
-        self._initialized = False
+        self._initialized_path: Path | None = None
 
     async def ensure_initialized(self) -> None:
+        db_path, = capture_file_roots([self.db_path])
+        await self._ensure_initialized_at(db_path)
+
+    async def _ensure_initialized_at(self, db_path: Path) -> None:
         async with self._init_lock:
-            if self._initialized:
+            if self._initialized_path == db_path:
                 return
-            async with connect_sqlite_wal(self.db_path) as conn:
-                await conn.execute("BEGIN IMMEDIATE")
-                await SQLiteMigrationRunner(namespace="outward_run_events").apply(conn, _MIGRATIONS)
-                await conn.commit()
-            self._initialized = True
+            await run_owned_io(lambda: self._initialize_at(db_path), label="outward-event-initialize", preserve_failure=True)
+
+    async def _initialize_at(self, db_path: Path) -> None:
+        async with connect_sqlite_wal(db_path) as conn:
+            await conn.execute("BEGIN IMMEDIATE")
+            await SQLiteMigrationRunner(namespace="outward_run_events").apply(conn, _MIGRATIONS)
+            await conn.commit()
+        self._initialized_path = db_path
 
     async def append(
         self, event: LedgerEvent, *, connection: aiosqlite.Connection | None = None,
     ) -> LedgerEvent:
-        await self.ensure_initialized()
+        if connection is None:
+            await self.ensure_initialized()
         async with sqlite_connection_scope(self.db_path, connection) as conn:
             if not conn.in_transaction:
                 await conn.execute("BEGIN IMMEDIATE")
@@ -90,7 +100,8 @@ class OutwardRunEventStore:
     async def get(
         self, event_id: str, *, connection: aiosqlite.Connection | None = None,
     ) -> LedgerEvent | None:
-        await self.ensure_initialized()
+        if connection is None:
+            await self.ensure_initialized()
         async with sqlite_connection_scope(self.db_path, connection) as conn:
             conn.row_factory = aiosqlite.Row
             cursor = await conn.execute("SELECT * FROM run_events WHERE event_id = ?", (event_id,))

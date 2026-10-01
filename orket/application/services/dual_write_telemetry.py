@@ -1,20 +1,28 @@
 """Application-owned observation of mirrored ledger outcomes."""
 import inspect
 import logging
+from functools import partial
+from pathlib import Path
 
 from orket.adapters.execution.owned_io import run_owned_thread
+from orket.core.contracts.log_event_inputs import LOG_EVENT_INPUT_ERROR, capture_log_event_inputs
 from orket.logging import log_event
 from orket.runtime.run_ledger_parity import compare_run_ledger_rows
 
 
 class DualWriteTelemetry:
-    def __init__(self, sink):
+    def __init__(self, sink, *, workspace: Path):
         self.sink, self.failure_count = sink, 0
+        self.workspace = workspace
 
     async def emit(self, payload):
+        workspace = self.workspace
         try:
             if self.sink is None:
-                await run_owned_thread(lambda: log_event(payload["kind"], payload, role="system"),
+                if type(payload) is not dict:
+                    raise TypeError(LOG_EVENT_INPUT_ERROR)
+                event, captured = capture_log_event_inputs(payload["kind"], payload)
+                await run_owned_thread(partial(log_event, event, captured, workspace=workspace, role="system"),
                                        label="dual-ledger-telemetry")
             else:
                 # Sync sinks may perform I/O. A returned awaitable still runs on the owning loop.
@@ -25,7 +33,8 @@ class DualWriteTelemetry:
             self.failure_count += 1
             diagnostic = {"component": "run_ledger_dual_write", "error_type": type(exc).__name__, "error": str(exc)}
             try:
-                await run_owned_thread(lambda: log_event("telemetry_sink_error", diagnostic, role="system"),
+                event, captured = capture_log_event_inputs("telemetry_sink_error", diagnostic)
+                await run_owned_thread(partial(log_event, event, captured, workspace=workspace, role="system"),
                                        label="dual-ledger-telemetry-error")
             except (RuntimeError, ValueError, TypeError, OSError, AttributeError) as diagnostic_error:
                 failure = (type(diagnostic_error), diagnostic_error, diagnostic_error.__traceback__)

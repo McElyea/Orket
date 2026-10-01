@@ -1,10 +1,14 @@
 ﻿import re
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
 
 def test_runtime_print_usage_is_whitelisted():
     """
-    Layer: contract. Static output-boundary check; not runtime execution proof.
+    Layer: unit. Static output-boundary check; not runtime execution proof.
     Guardrail: runtime/library modules should use structured logging.
     `print()` is only allowed in explicitly interactive/intentional files.
     """
@@ -24,6 +28,8 @@ def test_runtime_print_usage_is_whitelisted():
         "orket/cli.py",
         "orket/interfaces/governed_agent_cli.py",
         "orket/interfaces/orket_bundle_cli.py",
+        "orket/interfaces/bundle_outward_cli.py",
+        "orket/interfaces/bundle_cli_output.py",
         "orket/interfaces/outward_authority_cli.py",
         "orket/interfaces/prompts_cli.py",
         "orket/interfaces/runtime_store_cli.py",

@@ -19,8 +19,8 @@ def provider_proxy_mounts(environment: Mapping[str, str]) -> tuple[tuple[str, st
     bypass = [host.strip() for host in proxies.get("no", "").split(",") if host.strip()]
     if "*" in bypass:
         return ()
-    mounts = {f"{scheme}://": value if "://" in value else f"http://{value}"
-              for scheme in ("http", "https", "all") if (value := proxies.get(scheme))}
+    mounts: dict[str, str | None] = {f"{scheme}://": proxy_url if "://" in proxy_url else f"http://{proxy_url}"
+              for scheme in ("http", "https", "all") if (proxy_url := proxies.get(scheme))}
     for host in bypass:
         if "://" in host:
             pattern = host

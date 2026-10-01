@@ -2,13 +2,13 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable
 from datetime import datetime
 from functools import partial
 from pathlib import Path
 from typing import Any, TypeVar
 
-from orket.adapters.execution.owned_io import run_owned_io, run_owned_thread
+from orket.adapters.execution.owned_io import OwnedCoroutine, run_owned_io, run_owned_thread
 from orket.core.domain.bug_fix_phase import BugDiscoveryMetrics, BugFixPhase, BugFixPhaseStatus
 from orket.logging import log_event
 
@@ -33,7 +33,7 @@ class BugFixPhaseManager:
         self.active_phases: dict[str, BugFixPhase] = {}
         self._lock = asyncio.Lock()
 
-    async def _execute(self, operation: Callable[[], Awaitable[Result]]) -> Result:
+    async def _execute(self, operation: Callable[[], OwnedCoroutine[Result]]) -> Result:
         # Waiting for ownership is cancellable. Once admitted, persistence and its event drain together.
         async with self._lock:
             return await run_owned_io(operation, label="bug-fix-phase-transition", preserve_failure=True)

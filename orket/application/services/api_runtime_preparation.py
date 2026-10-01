@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from orket.adapters.execution.owned_io import run_owned_diagnostic, run_owned_io, run_owned_thread
+from orket.adapters.observability.logging_context import bind_logging, prepare_logging_native, select_logging_inputs
 from orket.application.services.api_runtime_composition import build_api_runtime_container
 from orket.application.services.api_runtime_container import ApiRuntimeContainer
 from orket.application.services.application_runtime_lifetime import close_owned_resource
@@ -43,11 +44,16 @@ class ApiRuntimePreparation:
         self._started = True
         acquired: list[Any] = []
         completed: list[ApiRuntimeContainer] = []
+        logging_inputs = select_logging_inputs(self.inputs.invocation_root, self.inputs.environment)
+        logging_contexts = []
 
         def construct() -> PreparedApiRuntime:
             self.inputs.bind_settings()
-            container = build_api_runtime_container(self.project_root, runtime_inputs=self.runtime_inputs,
-                construction_inputs=self.inputs, own_resource=acquired.append)
+            logging_context = prepare_logging_native(logging_inputs)
+            logging_contexts.append(logging_context)
+            with bind_logging(logging_context):
+                container = build_api_runtime_container(self.project_root, runtime_inputs=self.runtime_inputs,
+                    construction_inputs=self.inputs, own_resource=acquired.append, logging_context=logging_context)
             # Capture the completed owner before another preparation step can fail.
             completed.append(container)
             policy = capture_api_outbound_policy(container.project_root, self.inputs.environment)
@@ -55,7 +61,9 @@ class ApiRuntimePreparation:
 
         async def cleanup() -> None:
             owners = [completed[0]] if completed else list(reversed(acquired))
-            await _close_acquired(owners, diagnose)
+            if logging_contexts:
+                with bind_logging(logging_contexts[0]):
+                    await _close_acquired(owners, diagnose)
 
         failure: BaseException | None = None
         try:

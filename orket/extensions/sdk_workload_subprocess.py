@@ -14,6 +14,12 @@ from pathlib import Path
 from typing import Any
 
 from orket.adapters.execution.extension_modules import load_extension_module
+from orket.adapters.observability.logging_context import (
+    PreparedLogging,
+    bind_logging,
+    native_logging_inputs,
+    prepare_logging_native,
+)
 from orket.extensions.import_guard import ExtensionImportGuard
 from orket.extensions.sdk_capability_authorization import (
     FIRST_SLICE_CAPABILITIES,
@@ -158,7 +164,7 @@ def _run_owned_request(request: dict[str, Any], resources: ExitStack) -> dict[st
         run_callable = _resolve_run_callable(target, entrypoint)
         result = run_callable(sdk_context, dict(request.get("input_payload", {})))
         if inspect.isawaitable(result):
-            result = asyncio.run(result)
+            result = _run_coroutine(result)
         if not isinstance(result, WorkloadResult):
             raise ValueError("E_SDK_WORKLOAD_RESULT_INVALID")
     except Exception as exc:
@@ -173,6 +179,22 @@ def _run_owned_request(request: dict[str, Any], resources: ExitStack) -> dict[st
         "workload_result": result.model_dump(mode="json"),
         "capability_report": tracker.build_report(),
     }
+
+
+def _run_coroutine(workload: Any) -> Any:
+    if not asyncio.iscoroutine(workload):
+        return asyncio.run(workload)  # Preserve asyncio's existing non-coroutine refusal.
+    try:
+        prepared = prepare_logging_native(native_logging_inputs())
+    except BaseException:
+        workload.close()  # Preparation failed before the coroutine was admitted.
+        raise
+    return asyncio.run(_await_prepared_workload(workload, prepared))
+
+
+async def _await_prepared_workload(workload: Any, prepared: PreparedLogging) -> Any:
+    with bind_logging(prepared):
+        return await workload
 
 
 def _resolve_run_callable(target: Any, entrypoint: str) -> Any:

@@ -11,7 +11,9 @@ from orket import utils
 from orket.adapters.storage.async_file_tools import AsyncFileTools
 from orket.agents.agent import Agent
 from orket.application.services.control_plane_authority_service import ControlPlaneAuthorityService
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain import ResidualUncertaintyClassification
+from orket.logging import bind_logging, prepare_logging
 from orket.runtime.config.config_loader import ConfigLoader
 from tests.integration.test_execution_policy_input_capture import hold_asset, pipeline_at
 
@@ -87,7 +89,8 @@ async def test_effect_journal_uses_selected_clock_after_actual_file_write(tmp_pa
         return value
 
     files, agent = await journal_agent(tmp_path, clock)
-    turn=await agent.run({'description':'write'}, {'issue_id':'PROBE','run_id':'probe-run'},tmp_path)
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        turn=await agent.run({'description':'write'}, {'issue_id':'PROBE','run_id':'probe-run'},tmp_path)
     assert await files.read_file('result.txt')=='observed'
     entry=turn.raw['effect_journal_entries'][0]
     assert entry['publication_timestamp']==(observed+timedelta(seconds=1)).isoformat()
@@ -101,7 +104,7 @@ async def test_epic_sprint_is_captured_before_asset_reads_and_sqlite_writes(tmp_
     utils._eos_sprint_base_settings.cache_clear()
     pipeline=await pipeline_at(tmp_path)
     monkeypatch.setattr(pipeline.runtime_inputs,'utc_now',lambda:datetime(2026,2,2,12,tzinfo=UTC))
-    owner=pipeline._build_epic_run_orchestrator()
+    owner=pipeline._build_epic_run_components()[0]
     entered,release=hold_asset(pipeline.loader,monkeypatch)
     operation=asyncio.create_task(owner._load_setup(epic_name='publication_epic',build_id='sprint-build',
         session_id='sprint-session',target_issue_id=None,model_override=''))
@@ -137,7 +140,11 @@ async def test_journal_timestamp_override_is_retained_through_provider_wait(tmp_
 
     files, agent = await journal_agent(tmp_path, clock, HeldProvider())
     context = {'run_id': 'retained-run', 'journal_publication_timestamp': observed.isoformat()}
-    operation = asyncio.create_task(agent.run({'description': 'write'}, context, tmp_path))
+    async def invoke_agent():
+        with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+            return await agent.run({'description': 'write'}, context, tmp_path)
+
+    operation = asyncio.create_task(invoke_agent())
     try:
         await asyncio.wait_for(entered.wait(), 5)
         context['journal_publication_timestamp'] = datetime.max.replace(tzinfo=UTC).isoformat()

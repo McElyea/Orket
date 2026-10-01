@@ -2,9 +2,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
 
 def test_core_release_policy_handles_zero_push_base_sha() -> None:
-    """Layer: contract. Verifies direct-push commit policy has a bounded first-push base fallback."""
+    """Layer: unit. Verifies direct-push commit policy has a bounded first-push base fallback."""
     workflow_text = Path(".gitea/workflows/core-release-policy.yml").read_text(encoding="utf-8")
 
     assert 'BASE_SHA="${{ github.event.before }}"' in workflow_text

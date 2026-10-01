@@ -1,13 +1,13 @@
 {
   "schema_version": "architectural_truth.exception_register.v1",
   "owner": "Orket Core",
-  "last_reviewed": "2026-09-21",
+  "last_reviewed": "2026-09-28",
   "exceptions": [
     {
       "id": "AT-EX-001",
       "area": "dependency-policy-model",
       "status": "active_unaccepted_ship_risk",
-      "reason": "Scoped canonical C policy passes with six explicitly resolved dynamic routes, zero forbidden static pairs and no cross-layer cycles. Whole-repository conformance remains unaccepted; complete adapter/effect classification and later lane acceptance are still required.",
+      "reason": "Scoped canonical dependency policy passes with six explicitly resolved dynamic routes, zero forbidden pairs and no authority cycles. Adapter declaration enforcement is implemented with an empty admission list; a declaration is not transitive semantic effect proof. Remaining reachability/input ownership and whole C/D acceptance remain unaccepted.",
       "removal_condition": "One ratified manifest defines allowed layers and edges, and the checker fails every unexpected edge unless an exact governed exception exists.",
       "evidence": "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md#c-one-enforceable-dependency-model"
     },
@@ -15,15 +15,15 @@
       "id": "AT-EX-003",
       "area": "interface-composition-authority",
       "status": "active_unaccepted_ship_risk",
-      "reason": "Interface modules construct adapters, decision nodes, orchestration services, and mutable runtime owners.",
+      "reason": "The API facade is now 254 lines with application-owned composition, focused routers and unchanged 129 route/OpenAPI registrations; its 512-case source closing selection passes. The bundle CLI root is 262 lines with focused parser/output/review/outward modules, 113-case source parity and scoped fresh Windows wheel parity. Remaining interface hot spots and whole-family composition acceptance stay open; extraction alone is not ownership proof.",
       "removal_condition": "Application-owned composition roots inject facades into transport-only routers, with no runtime owners constructed in interface modules.",
-      "evidence": "docs/projects/future/BRUTAL_CODE_REVIEW_ARCHITECTURAL_TRUTH_2026-07-29.md#sr-03--the-interface-layer-is-a-composition-and-side-effect-ownership-layer"
+      "evidence": "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md"
     },
     {
       "id": "AT-EX-004",
       "area": "core-purity",
       "status": "active_unaccepted_ship_risk",
-      "reason": "D1 separates failure values, reconciliation plans and ToolGate facts from application effects. Remaining core clock/effect/import and explicit-input debt keeps the area unaccepted.",
+      "reason": "The source-bound audit of 128 canonical core files and six decision modules identifies no direct filesystem/process/HTTP/environment/clock/UUID/random effects. Two governed legacy domain modules retain import-time warnings and alias registration. Named D1 separations and application root controls pass at their recorded scopes. General transitive purity, arbitrary callbacks and whole D acceptance remain unproved; removed core defaults are not current defects.",
       "removal_condition": "The core import/effect inventory is allowlist-clean and deterministic core calls consume all nondeterminism as explicit inputs.",
       "evidence": "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md#d1-coreeffect-separation-and-current-proof-2026-09-14"
     },
@@ -31,9 +31,9 @@
       "id": "AT-EX-005",
       "area": "async-reachable-sync-io",
       "status": "active_unaccepted_ship_risk",
-      "reason": "Extension install Git commands, catalog publication, preflight and API/controller preparation have retained ownership. Direct manager/control-plane construction now refuses running event loops; relative storage paths bind before preparation. Complete reachability, remaining submission/provider inputs and other request/CLI synchronous I/O remain active D debt.",
+      "reason": "Scoped card/admission/replay, required logging, SDK cleanup, outward evidence and unguarded tool operations now retain their native owners in source controls. Remaining guarded tool failure/diagnostic ownership, streaming provider, marshaller and separately inventoried storage/application paths keep D acceptance open. Passing selected controls does not establish whole async reachability or installed acceptance.",
       "removal_condition": "Reachability-aware static inventory and live responsiveness/cancellation tests pass with only explicit standalone-script exemptions.",
-      "evidence": "docs/projects/future/BRUTAL_CODE_REVIEW_ARCHITECTURAL_TRUTH_2026-07-29.md#sr-05--async-reachable-code-still-performs-synchronous-io"
+      "evidence": "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md"
     },
     {
       "id": "AT-EX-006",
@@ -47,7 +47,7 @@
       "id": "AT-EX-007",
       "area": "decision-node-explicit-inputs",
       "status": "active_transition",
-      "reason": "API authority and observed system inputs, registry selection settings and loop limits now use application capture. Tool bindings and model-client construction belong to application services. Model recommendations now use frozen values with application-owned settings/score preparation. Local prompt policy now captures settings and request values in application, binds one registry read and owns worker lifetime. Covered planning/routing strategies consume frozen inputs with application-owned record inspection and recommendation validation (planner/router .46, evaluator .47 and loop-policy .48). Global settings authority, other legacy input boundaries and complete adapter-effect classification remain open.",
+      "reason": "Built-in decision families consume explicit captured facts; shared registry construction now receives selected settings, model-score preparation binds its invocation root, and ToolGate/reconciliation capture selected roots before waits. Persistent settings ownership and adapter declarations are implemented. Remaining application/provider input boundaries and transitive reachability proof keep whole D acceptance open; no remaining canonical decision-body ambient lookup was identified by the bounded source audit.",
       "removal_condition": "All decision nodes receive immutable resolved configuration and have no environment or runtime-state reach-through.",
       "evidence": "docs/ARCHITECTURE.md#known-current-exceptions"
     },
@@ -55,7 +55,7 @@
       "id": "AT-EX-008",
       "area": "runtime-clock-inputs",
       "status": "active_transition",
-      "reason": "Covered Kernel action transitions now receive immutable observations through explicit runtime owners and selected clock/credential-identity ports. Other application/core clock, validator policy/cache/UUID and effect-input boundaries remain open.",
+      "reason": "Covered kernel, turn, validation and transition clocks are explicit selected inputs; canonical core clock/UUID defaults have been removed. The bounded core/decision audit is structurally clean. Remaining runtime/application input observations and whole transitive clock ownership still need final source/installed acceptance; this is not proof for arbitrary callbacks or plugins.",
       "removal_condition": "Every deterministic transition receives clock values through explicit runtime inputs.",
       "evidence": "docs/ARCHITECTURE.md#known-current-exceptions"
     },
@@ -95,33 +95,33 @@
       "id": "AT-EX-013",
       "area": "test-taxonomy-enforcement",
       "status": "active_self_deception_debt",
-      "reason": "The checker vocabulary omits end_to_end, relies on nearby prose, and leaves most tests unlabeled.",
+      "reason": "The checker uses canonical pytest markers including end_to_end and strict collection has reached zero missing/conflicting layers and errors. Both Quality jobs now invoke the strict native gate. Public-surface claims received a bounded manual audit and 13 corrections; marker presence does not enforce semantic public-entrypoint or actual-provider proof, so this obligation remains open.",
       "removal_condition": "Pytest markers are canonical, strict taxonomy reports zero missing tests, and public-surface requirements are enforced.",
-      "evidence": "docs/projects/future/BRUTAL_CODE_REVIEW_ARCHITECTURAL_TRUTH_2026-07-29.md#sd-03--test-taxonomy-is-declared-partially-imitated-and-not-enforced"
+      "evidence": "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md"
     },
     {
       "id": "AT-EX-014",
       "area": "noop-checker-type-only-noise",
-      "status": "active_self_deception_debt",
-      "reason": "The critical-path no-op checker reports type-only ellipsis signatures as runtime no-ops.",
+      "status": "resolved",
+      "reason": "Resolved for the canonical critical-path scope: type-only/Protocol/abstract exemptions and executable-no-op adverse controls pass; the native default-root gate reports zero findings or parse errors across 703 files. Both Quality jobs invoke it. This is bounded structural proof, not absence of arbitrary behavioral no-ops.",
       "removal_condition": "The checker excludes type-only declarations and has regression tests with zero known false positives.",
-      "evidence": "docs/projects/future/BRUTAL_CODE_REVIEW_ARCHITECTURAL_TRUTH_2026-07-29.md#sd-05--quality-gates-are-red-or-noisy-while-selected-architecture-tests-remain-green"
+      "evidence": "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md"
     },
     {
       "id": "AT-EX-015",
       "area": "ruff-backlog",
-      "status": "active_self_deception_debt",
-      "reason": "The repository lint gate is red, so selected green checks do not constitute a release-ready quality envelope.",
+      "status": "resolved",
+      "reason": "Resolved at the September 28 candidate: canonical Ruff over orket/tests passes without a new category suppression. The independent full-suite coverage floor still fails; lint success does not grant release readiness.",
       "removal_condition": "Ruff passes over the canonical governed scope without suppressing categories to clear the count.",
-      "evidence": "docs/projects/future/BRUTAL_CODE_REVIEW_ARCHITECTURAL_TRUTH_2026-07-29.md#sd-05--quality-gates-are-red-or-noisy-while-selected-architecture-tests-remain-green"
+      "evidence": "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md"
     },
     {
       "id": "AT-EX-016",
       "area": "authority-snapshot-maintainability",
-      "status": "active_self_deception_debt",
-      "reason": "CURRENT_AUTHORITY.md mixes live authority with an append-only implementation history.",
+      "status": "resolved",
+      "reason": "Resolved as a bounded structural authority cutover: the initial 39-record manifest generated an 89-line view, with 325,283 pre-cutover bytes retained and hash-bound as linked history. Actual-root equality and unavailable-proof refusal pass; source/consumer/adverse controls pass in the 278-case selection. No portable runtime-proof freshness or general semantic contradiction validator is claimed; current proof is explicitly unavailable.",
       "removal_condition": "A small validated manifest is canonical and generates a bounded human snapshot and historical closeout records.",
-      "evidence": "docs/projects/future/BRUTAL_CODE_REVIEW_ARCHITECTURAL_TRUTH_2026-07-29.md#sd-04--current_authoritymd-is-an-append-only-change-log-presented-as-a-narrow-snapshot"
+      "evidence": "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md"
     }
   ]
 }

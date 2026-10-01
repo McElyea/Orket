@@ -11,7 +11,7 @@ from orket.application.services.api_runtime_host_service import ApiRuntimeHostSe
 from orket.application.services.api_system_query_service import ApiSystemQueryService
 from orket.application.services.runtime_input_service import RuntimeInputService
 from orket.decision_nodes.api_runtime_strategy_node import DefaultApiRuntimeStrategyNode
-from orket.interfaces.api import _invoke_async_method
+from orket.interfaces.api_invocation import invoke_api_method
 from orket.interfaces.routers.system import RunAssetRequest, build_system_router
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
@@ -21,7 +21,7 @@ def endpoint(path, root, node, host, **overrides):
     # Unused route dependencies stay absent; this fixture only admits the named route.
     dependencies = {name: None for name in inspect.signature(build_system_router).parameters}
     dependencies.update(project_root_getter=lambda: root, api_runtime_node_getter=lambda: node,
-        runtime_host_getter=lambda: host, invoke_async_method=_invoke_async_method, **overrides)
+        runtime_host_getter=lambda: host, invoke_async_method=invoke_api_method, **overrides)
     router = build_system_router(**dependencies)
     return next(route.endpoint for route in router.routes if route.path == path)
 
@@ -91,7 +91,7 @@ async def test_run_invocation_survives_held_event_before_real_file_dispatch(tmp_
             entered.set()
             await release.wait()
     async def dispatch(target, invocation, prefix, session_id):
-        await _invoke_async_method(target, invocation, prefix)
+        await invoke_api_method(target, invocation, prefix)
     host = ApiRuntimeHostService(tmp_path, environment={"ORKET_DISABLE_SANDBOX": "1"})
     run = endpoint("/system/run-active", tmp_path, Retained(), host, engine_getter=lambda: fs,
         events_getter=Events, schedule_async_invocation_task=dispatch)

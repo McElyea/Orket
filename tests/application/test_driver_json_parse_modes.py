@@ -6,6 +6,7 @@ from types import SimpleNamespace
 import pytest
 
 from orket.driver import OrketDriver
+from tests.helpers.logging_fixture_owner import prepared_fixture_owner
 from tests.helpers.model_selection import prepared_model_selection
 
 
@@ -109,7 +110,7 @@ def test_parse_model_plan_strict_mode_rejects_wrapped_json(monkeypatch):
 @pytest.mark.contract
 async def test_process_request_strict_mode_rejects_non_json_envelope_output(tmp_path):
     """Verifies strict mode through the driver with controlled model output."""
-    driver = OrketDriver.__new__(OrketDriver)
+    driver = await prepared_fixture_owner(OrketDriver, tmp_path)
     driver.project_root, driver.model_root = tmp_path, tmp_path / "model"
     driver._environment = {}
     await asyncio.to_thread(driver.model_root.mkdir)
@@ -139,7 +140,7 @@ async def test_process_request_compatibility_mode_surfaces_degraded_parse(monkey
         events.append((event_name, payload))
 
     monkeypatch.setattr("orket.driver.log_event", _capture)
-    driver = OrketDriver.__new__(OrketDriver)
+    driver = await prepared_fixture_owner(OrketDriver, tmp_path)
     driver.project_root, driver.model_root = tmp_path, tmp_path / "model"
     driver._environment = {}
     await asyncio.to_thread(driver.model_root.mkdir)

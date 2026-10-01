@@ -1,7 +1,7 @@
 # Architectural Truth Remediation Plan
 
 Date: 2026-07-29
-Last updated: 2026-09-27
+Last updated: 2026-09-30
 Status: Active implementation plan; scoped BT-1 through BT-5 accepted; C/D is the next ordered gate
 Roadmap state: Priority Now
 Owner: Orket Core
@@ -22,7 +22,10 @@ the lane's single canonical execution plan.
 
 The user activated the original lane on 2026-07-29, requested this expanded
 plan on 2026-09-11, and then requested implementation in a separate worktree.
-The subsequent complete-plan objective authorizes continued implementation.
+The earlier complete-plan objective authorized continued implementation. The
+September 30 request is limited to preserving and closing interrupted WIP on the
+existing branch. Its [checkpoint](../archive/architectural-truth/AT09302026-WIP-CHECKPOINT/CHECKPOINT.md)
+retains the remaining gates and does not activate proposed capabilities.
 The outward approval/effect lifecycle is settled in
 `docs/specs/OUTWARD_APPROVAL_EFFECT_LIFECYCLE_V1.md`; its scoped BT-1 acceptance is
 recorded below. Other unimplemented schemas, migrations, exit mappings and capability
@@ -12224,6 +12227,156 @@ Optional after required gates: extra tuning, workload/connector families,
 visualization and platform coverage, each with bounded acceptance. Agent-proposed
 shareable benchmarks stay in `benchmarks/staging/` until approved; follow contributor
 index synchronization. Existing local proof result paths retain their authority.
+
+## Proposed capability acceptance decisions: 2026-09-28
+
+**PROPOSED: awaiting user acceptance; no new capability is admitted.** These
+concrete choices refine CAP-1/2/3 in this existing plan. The complete-plan request
+authorizes preparation and architecture repairs; new family contracts, containment
+targets and operating thresholds still require acceptance under this plan.
+The decisions may be accepted or revised independently. After acceptance, extract
+durable terms into the existing authorities named in the contract map, preserving
+one workload catalog and completion-verifier owner. Current host/provider
+availability and campaign results are not presumed.
+
+### What existing acceptance already settles
+
+The [accepted requirements history](docs/projects/archive/governed-agent-loop/GAL09062026-REQUIREMENTS/GOVERNED_AGENT_LOOP_REQUIREMENTS_DEFINITION_PLAN.md) and active [governed-loop contract](docs/specs/GOVERNED_AGENT_LOOP_V1.md) already settle one objective/run, sequential iterations, host-owned completion decisions, fixed advisory model roles, explicit capabilities/budgets, retained evidence and checkpoint-backed recovery. A checkpoint alone cannot authorize resume. Reviewed extension code remains trusted; subprocess ownership is not hostile containment. These decisions need no renewed approval.
+
+The final provider-neutral proof target is already llama.cpp. The active contract names `orcarouter_qwen3.8-27b-uncensored-q4_k_l` / `llama_cpp.qwen3.8.chatml.v1`; its current availability, actual identity, context limits and hardware still require campaign preflight. Do not silently substitute another model. CAP-1 already requires two non-ticket families, installed/API proof and an independent wrong-output refusal. CAP-3 already requires zero observed false success and unauthorized/duplicate effects in its finite accepted corpus.
+
+No separate accepted CAP family definition, hostile-extension threat model or workload-specific capacity thresholds were found in the reviewed active specs and architectural-truth requirements. The decisions below remain real choices.
+
+### Decision 1: accept these two trusted families and their boundaries
+
+| Proposed family | Bounded objective | Independent acceptance and refusal |
+|---|---|---|
+| Record normalization | At most 200 source inventory records / 32 KiB, staged in at most two batches. Produce canonical JSON with `record_id`, `category`, integer `quantity`, stable ordering and source attribution. Exact proposed field/range/normalization and duplicate/provenance rules are in [Workload terms](#proposed-cap-1-workload-terms); acceptance would fix that schema. | Recompute from immutable source records; compare every normalized row and aggregate. Identical duplicates follow the declared rule; conflicting duplicate IDs refuse. Reject omitted/invented rows, altered quantities, unsupported schemas and missing/stale source digests. |
+| Evidence report | At most eight supplied build/test/scan evidence records / 64 KiB total. Produce a bounded Markdown report and claim manifest covering outcome, artifacts, checks and unresolved/missing observations. No ticket inputs or code execution. [Workload terms](#proposed-cap-1-workload-terms) fixes the proposed source/check schema, claim fields, rendering and byte limits. | Derive allowed factual claims and required sections directly from source records. Check citations, artifact digests, completeness and agreement between rendered report and claim manifest. Missing observations remain unavailable. Reject invented passes, omitted failures, stale evidence and unsupported free-form claims; this does not verify arbitrary prose or source authenticity. |
+
+These family definitions, bounds and examples remain **PROPOSED**. The complete field/range/normalization, immutable binding, verifier, artifact and rejected-variant terms are in [proposed workload terms](#proposed-cap-1-workload-terms). A verified evidence report means faithful reporting of supplied observations; it does not mean the reported project passed or that source observations were independently rerun.
+
+Only reviewed workload code and data-only inputs are admitted. Outputs are artifacts in the owned workspace, published through existing authorized effects. No arbitrary shell, dependency installation, generated-code execution or external publishing is included. Repository repair is a later family; it is not silently counted here.
+
+Reuse [the workload authority seam](orket/application/services/control_plane_workload_catalog.py), extension catalog admission and the existing `GovernedAgentCompletionVerifier` port in [the loop service](orket/application/services/governed_agent_loop_service.py). Bind selection to workload/version, immutable sources/artifacts, policy and verifier/configuration digests. The [current composition](orket/application/services/governed_agent_execution_composition.py) hardcodes `SecondIterationDeterministicVerifier`; catalog registration alone does not supply generic verification. Replace that composition decision through the existing owner, retain ticket regression support, and refuse unsupported objective/verifier combinations. Do not repurpose the cards/ODR-only `workload.contract.v1` enum or create another catalog.
+
+For each family, required acceptance includes correct and plausible-wrong outputs, absent/stale evidence, staged inputs, bounded memory, approval/denial, restart, budget/policy/no-progress stop, cancellation and uncertain publication with explicit recovery. Run installed CLI and API paths with real selected llama.cpp receipts; model assertions never establish completion.
+
+**Proposed concurrency boundary:** initially one active run per workspace. Admit at most two independent governed runs only after separate namespaces/reservations, cancellation/joined verification and deliberate same-target conflict controls pass. Conflicting publications serialize or refuse. Iterations within each run remain sequential; parallel child agents stay outside this acceptance. This concurrency choice requires acceptance and proof, not reinterpretation of the existing single-loop contract.
+
+### Decision 2: retain trusted-only admission; target one containment configuration
+
+**Recommend rootless Docker Engine with Linux containers on native Ubuntu 24.04 LTS, x86_64, cgroup v2 and systemd.** Docker supports this OS; rootless mode runs daemon and containers without host root privileges. This is an available backend technology, **not a claim that an operational qualifying host is presently available**. [Docker Ubuntu support](https://docs.docker.com/engine/install/ubuntu/), [rootless mode](https://docs.docker.com/engine/security/rootless/).
+
+Threat model proposal: malicious extension code may try host/credential access, unauthorized network or broker calls, cross-workspace access, process escape and resource exhaustion. Trust the patched host kernel/runtime, operator and reviewed digest-pinned base image; exclude kernel/runtime zero-day resistance, hardware side channels and a malicious host administrator. Package review, dependency/image digest pinning and patch responsibility remain operator-owned.
+
+Proposed restrictions: dedicated unprivileged identity; no daemon socket, device, credential or host-home mounts; only immutable read-only admitted inputs; bounded ephemeral writable storage; network disabled; host broker over validated stdio only; no added capabilities, no privilege escalation, enforced seccomp; CPU/memory/PID/storage/output limits; bounded host-validated artifact egress. No Windows, Docker Desktop, remote daemon or cloud equivalence is inferred.
+
+Reuse [FixtureContainerOwner](orket/application/services/fixture_container_owner.py) and [FixtureDockerAdapter](orket/adapters/execution/fixture_docker.py) where their identity/cleanup contracts apply. The current fixture adapter already requests network-none, read-only root/input mounts and memory/CPU limits, but lacks this complete policy and is not a governed-agent containment admission path. Extending that genuine boundary and broker integration is required; relabeling it is insufficient. Rootless resource flags can be ignored without required cgroups/controllers, so admission must verify actual enforcement and refuse unavailable controls. [Docker resource-limit prerequisites](https://docs.docker.com/engine/security/rootless/tips/).
+
+Keep untrusted admission refused until actual host-effect, egress, exhaustion, descendant, cancellation and same-path teardown controls pass on the named configuration. Lost cleanup confirmation retains uncertainty. If no qualifying host is available, record that exact observed blocker and retain trusted-only CAP-2 disposition; do not call hostile containment complete. Existing subprocess/fixture proofs do not satisfy this gate. Paused cloud and formal-proof lanes remain paused.
+
+### Decision 3: accept or revise these prospective operating targets
+
+These are **proposed product targets, not observed performance or accepted thresholds**. Freeze the exact hardware, model/profile, corpus, package/policy/verifier digests and limits before execution. Confirm each request fits the selected profile; total-run budgets never enlarge its per-call context limit. If the target machine cannot support this proposal, revise it explicitly before acceptance campaigns rather than moving targets after failures.
+
+| Initial target at concurrency 1 | Record normalization | Evidence report |
+|---|---:|---:|
+| Verified healthy completion | >=95 of 100 runs | >=95 of 100 runs |
+| Healthy active-time p95 / hard run deadline | <=120 s / 180 s | <=240 s / 360 s |
+| Sustained verified throughput | >=0.5 runs/min | >=0.25 runs/min |
+| Maximum iterations / model calls per run | 4 / 12 | 6 / 18 |
+| Charged input / output token budget per run | 32,000 / 8,000 | 64,000 / 16,000 |
+| Final retained artifact bytes | <=32 KiB | <=32 KiB |
+
+Use 50 fixed healthy cases per family through both installed CLI and API (100 runs). Declare corpus variation before execution. Add separate adverse controls for wrong output, stale/absent evidence, restart, policy/budget stop, cancellation and uncertain effects; require every declared safety/recovery outcome, not a 95% allowance. Require zero false success and unauthorized/duplicate effects across all cases. Ten controlled restarts per family must preserve identity and achieve the declared completion/refusal after explicit recovery, without duplicate effects.
+
+Proposed shared limits: host/extension working-set peak <=1 GiB excluding the separately measured model server; warmed host working-set increase <=64 MiB between the first and last ten runs of the 100-run series; no retained run-owned child/container/task/lease after confirmed closure. This finite observation is not an unlimited soak claim. Record unresolved boundaries separately; deliberate uncertainty must reach an operator-visible recoverable disposition. Missing provider tokens/cost/timing remain unavailable, not zero.
+
+Measure p50/p95, all outcomes, wall time including queue/approval waits, active time, actual token/cost posture, throughput and resource use. The latency targets exclude deliberate provider faults and operator wait; their full durations remain reported. Test concurrency 1 then 2, plus bounded cancellation, competing scopes, approvals and long-ledger stress. Do not admit beyond the proven operating limit. Publish the saturated refusal/queue posture and rerun correctness after any optimization. Shared benchmark proposals remain in `benchmarks/staging/` until approved.
+
+
+### Proposed CAP-1 workload terms
+
+#### Shared binding and artifact rules
+
+Both are objective families beneath the existing `governed-agent-loop` authority. Proposed family keys are `inventory-normalization.v1` and `evidence-report.v1`. Exact version/key matching is required; no natural-language objective inference, fixture fallback, or unknown-family admission. The existing catalog/extension owner selects reviewed code and the host completion-verifier port; ticket-report support stays explicit.
+
+- Admission retains the existing run/workload/extension version, objective and acceptance references, policy/configuration digests, namespace/approved targets, model profile and budgets. Its acceptance payload additionally binds the family key, the complete ordered source manifest, verifier ID/version and installed verifier artifact digest, and the exact normalization/rendering rules below. These are proposed additions to existing materialized values, not a parallel continuation or effect object.
+- A JSON source entry has exactly `id`, `reference`, `bytes`, `sha256`, `json_digest`, `release_ordinal`; an opaque artifact entry has those same fields except `json_digest`. `reference` is a nonempty host-issued string of at most 256 characters, resolved only by the existing admission/materialization owner. `bytes` is an integer other than boolean, bounded by the family total (and artifact limit); digest strings are `sha256:` followed by exactly 64 lowercase hex digits. `release_ordinal` is integer 1 or 2, belongs to the admitted continuation plan, and never exceeds the run iteration budget. Every record's referenced artifacts must be released no later than that record. The host obtains bytes from admitted immutable materialization; a model-supplied hash is only a claim. References are confined to the run's declared namespace. Logical short IDs never serve as filesystem paths.
+- `input_digest` means `sha256:` plus the SDK canonical digest of the complete source manifest value, excluding any self-digest field. JSON materialization continues to use the existing SDK canonical JSON contract. Raw-byte bindings separately detect byte replacement; they are not substituted for that wire digest. A retained expected digest is required; recomputing a new baseline from changed input is forbidden.
+- JSON is strict UTF-8 with no BOM, duplicate object keys, NaN/Infinity, unknown keys, implicit string/number coercion or silent truncation. All keys described below are required. Only the inventory quantity union explicitly permits numeric strings. Source whitespace/key ordering may vary; pinned raw bytes must still match. Output JSON uses SDK canonical JSON bytes followed by one LF. Its raw artifact digest includes that LF.
+- All source slots and their staged release ordinals are fixed at admission. A second batch can arrive only through the existing host continuation-input plan. Final satisfaction requires every declared slot to have been released and independently verified. Missing future inputs cannot become empty inputs. Partial verified progress may continue within budget; it never authorizes terminal completion or final output publication.
+- Final files are fixed names beneath the run's host-selected output namespace. Contents cannot select another path or external URL. Use existing effect approval, reservation and publication owners; conflicts serialize or refuse. Bind the verification result to the exact resulting file bytes and retained effect receipt. Changed, missing or uncertain published artifacts prevent sufficient final acceptance. No multi-file atomicity is claimed: a partial report publication remains recoverable uncertainty under existing authority.
+- Proposed family artifact budgets below count final user artifacts, not retained control-plane history/model receipts. Existing separate limits still bound history, diagnostics and per-call context. No arbitrary shell, package installation, generated-code execution, source authenticity claim, external publishing, or repository-repair objective is admitted.
+
+#### Family A — inventory normalization
+
+**Input envelope:** a source manifest with exactly `schema_version="inventory-sources.v1"`, `dataset_id`, and `batches`. `dataset_id` is an exact ASCII token `[a-z0-9][a-z0-9_-]{0,31}`. `batches` has one or two ordered entries, fixed IDs `b0` then `b1`; each entry binds a host JSON materialization whose top-level value is an array. The manifest includes the shared byte/digest/reference bindings and release ordinal per batch. There are 0-200 input rows total and at most 32,768 source bytes including manifest and batch payloads. Empty batches and an empty dataset are valid; an undeclared or missing batch is not.
+
+Each input row has exactly these fields:
+
+| Field | Input rule | Canonical value |
+| --- | --- | --- |
+| `record_id` | String, at most 64 ASCII characters before normalization. Remove only leading/trailing ASCII space, tab, CR and LF; uppercase ASCII letters. Result must match `[A-Z0-9][A-Z0-9_-]{0,31}`. | The normalized ID; no internal whitespace removal, Unicode case folding, punctuation repair or inferred ID. |
+| `category` | String, at most 32 ASCII characters. Apply the same four-character edge trim and lowercase ASCII letters. Exact result is `component`, `consumable` or `equipment`. | That exact enum value. Plurals, synonyms and new categories refuse. |
+| `quantity` | JSON integer other than boolean, 0-1,000,000 inclusive; or ASCII string at most 16 characters whose four-character edge-trimmed value matches `[0-9]{1,7}` and converts within the same range. | JSON integer. Leading zeroes in strings are permitted. Reject negatives, `+`, decimals/exponents, Unicode digits, separators, null and booleans. |
+
+An identical duplicate is two rows with the same normalized ID, category and quantity. Emit it once, without adding its quantity, and retain all source locations. A repeated normalized ID with any different normalized category or quantity refuses the dataset before final effects. A source location is the pair `[batch_index,row_index]` of zero-based integers; no row may disappear from provenance or be used twice. Input normalization never changes the retained source bytes.
+
+**Output:** one `inventory.json`, at most 32,768 bytes, with exactly:
+
+| Field | Exact meaning |
+| --- | --- |
+| `schema_version` | `inventory-normalization.v1` |
+| `dataset_id`, `input_digest` | Exact admitted dataset ID and manifest digest |
+| `records` | 0-200 objects with exactly `record_id`, `category`, `quantity`, `source_rows`; canonical values above. Records sorted by ASCII ID. `source_rows` is the nonempty lexicographically sorted list of every matching source location. |
+| `totals` | Exactly `input_rows`, `output_records`, `duplicate_rows`, `quantity`, `by_category`. Counts are integers; first three 0-200, `duplicate_rows=input_rows-output_records`; quantity sums deduplicated rows, 0-200,000,000. `by_category` contains all three category keys, each exactly `{records,quantity}`, including zeros. |
+
+The host verifier re-normalizes each admitted source row, computes duplicates/provenance and totals independently of the producer, then requires exact canonical output equality and actual artifact/effect bindings. It may share the authoritative declarative schema/canonical serializer; it must not import or invoke the producer's transformation as its answer oracle. Retain separately authored examples and mutation controls so a duplicated algorithm defect is not the only oracle.
+
+Required wrong-output/refusal controls include: altered quantity with consistent-but-wrong totals; omitted/invented row; collapsed conflicting ID; duplicate counted twice; wrong source location; unsupported enum/schema; boolean/nonnumeric quantity; non-ASCII ID; missing second batch; source replacement; digest from another dataset; oversized artifact. Healthy controls cover empty input, zero and maximum quantity, edge trimming/case, leading zeroes, identical duplicates across batches, and all categories. Correct partial output before the final declared batch remains incomplete.
+
+#### Family B — supplied evidence report
+
+The objective is to produce a complete faithful report of **supplied observations**, not rerun or certify their underlying build/test/scan. A verified report can faithfully describe failure or unavailable checks. It must never translate report-generation success into a successful software, security or deployment outcome.
+
+**Input envelope:** source manifest exactly `schema_version="evidence-sources.v1"`, `execution_id`, `records`, `artifacts`. `execution_id` uses the exact lowercase ASCII token rule above (1-32 characters). Evidence, check and artifact IDs use `[a-z0-9][a-z0-9_-]{0,15}` (1-16 characters); no trimming/case repair. There are 1-8 evidence records, 0-8 referenced artifacts, and at most 65,536 total source bytes including manifest, records and artifact bytes. Each artifact is at most 8,192 bytes, addressed only by its unique admitted ID, exact size, digest and host reference. Artifacts are opaque data; do not unpack, execute, interpolate as Markdown/HTML, follow links, or infer additional claims from them. Admission can stage records in one or two fixed groups through the existing continuation plan; all references and digests remain fixed from admission.
+
+Each supplied evidence record has exactly:
+
+| Field | Rule |
+| --- | --- |
+| `schema_version` | `supplied-evidence.v1` |
+| `execution_id` | Must equal the manifest's exact admitted execution ID |
+| `evidence_id` | Unique declared record ID; 1-16 ASCII characters |
+| `kind` | Exactly `build`, `test` or `scan` |
+| `checks` | 1-8 objects, each exactly `check_id`, `status`, `artifact_refs`; IDs unique within the evidence record, matching the 1-16-character token rule. `status` is exactly `passed`, `failed`, `skipped` or `unavailable`. `artifact_refs` is a sorted unique list of 0-2 declared artifact IDs. |
+
+Manifest records and artifacts are sorted by ID and have the shared reference/length/digest bindings. Require exact record-set equality, all artifact references resolvable, and every declared artifact referenced by at least one check. Reusing an artifact across checks is allowed. A source's `unavailable` status is explicit data and may have no artifact. A required record or referenced artifact whose bytes are missing is missing evidence and prevents report completion; it must not be silently converted to an `unavailable` source record. This contract covers only the supplied check set; it does not prove that the producer ran all checks a project ought to require.
+
+**Output:** exactly `claims.json` plus `report.md`, combined at most 32,768 bytes. `claims.json` is at most 20,480 bytes and `report.md` at most 12,288 bytes. No extra file or free-form factual claim is accepted. `claims.json` has exactly:
+
+| Field | Exact meaning |
+| --- | --- |
+| `schema_version` | `evidence-report.v1` |
+| `execution_id`, `input_digest` | Exact admitted values |
+| `claims` | One object for every source check (1-64), sorted by `(evidence_id,check_id)`, containing exactly `evidence_id`, `check_id`, `kind`, `status`, `artifact_refs`; copied only from bound source values. |
+| `sources` | All records in sorted ID order, each exactly `evidence_id`, `source_digest` (bound raw byte SHA-256 with `sha256:` prefix). |
+| `artifacts` | All referenced artifacts in sorted ID order, each exactly `artifact_id`, `bytes`, `sha256`; byte size/digest observed against admitted bytes. |
+| `summary` | Exactly `evidence_records`, `checks`, `counts`, `reported_outcome`. Counts contain all four status keys with integer values 0-64. Outcome is `failed` if any check failed; otherwise `unavailable` if any is unavailable; otherwise `passed` if any passed; otherwise `skipped`. This is explicitly the aggregate of reported observations. |
+
+`report.md` is the deterministic rendering of those verified fields, UTF-8 with LF and one terminal LF. Its format is fixed: heading `# Evidence report: <execution_id>`; the exact sentence `This report summarizes supplied observations; it does not rerun or independently certify them.`; `#### Summary` with reported outcome and all four counts; `#### Checks` table with Evidence, Check, Kind, Reported status and Artifact IDs; `#### Sources` table with Evidence and SHA-256; `#### Artifacts` table with Artifact, Bytes and SHA-256; `#### Unresolved observations` listing every failed/skipped/unavailable pair and its status, or `None reported.`. Use the sorted order above, literal ASCII fields, comma-separated artifact IDs or `none`, and no embedded links/HTML. The accepted implementation schema/renderer must fix exact separators/blank lines; those presentation bytes are an implementation detail subject to golden parity, not an additional product choice. No explanatory prose, severity inference or remediation recommendation is admitted in this first family.
+
+The verifier derives every claim, count, source/artifact binding and required row from original admitted inputs, then checks the complete claim manifest and rendering. Checking report-versus-claims agreement alone is insufficient. Publication additionally binds both actual files. Model critic agreement, exit code, valid Markdown and matching producer-generated hashes cannot establish correctness. There is no wall-clock freshness heuristic: stale means mismatch against this admitted execution/input/artifact/configuration basis; an old correctly bound record is not represented as a newly run observation.
+
+Required wrong-output/refusal controls include: plausible invented pass; omitted failure/skipped/unavailable check; changed kind; correct report paired with altered claims; correct claims paired with altered report; one missing file; foreign execution ID; source/artifact substitution; omitted/unreferenced artifact; duplicate check/object key; missing expected source; unsupported schema; markup/URL injection; over-limit bytes. Healthy controls include all-passed, mixed failures/skips, and explicit unavailable records. Correctly reporting unavailable observations is report success only; inventing available evidence is false success.
+
+#### Shared acceptance campaign and decisions that remain open
+
+Both families must pass installed CLI and authenticated API execution with the exact selected llama.cpp identity and retained receipts; offline fixture success is not substituted. Reuse existing stages, bounded objective memory, approvals/denial, budgets, checkpoints and explicit recovery. Exercise partial inputs, no-progress/policy stop, cancellation, restart and uncertain publication. Content verification precedes effect authorization; final artifact verification follows known publication. Wrong output remains refused even when the model recommends completion. A changed verifier, policy, source or target cannot resume a checkpoint under the old acceptance binding.
+
+The 50 healthy cases per family, exercised through both surfaces (100 runs), safety corpus, ten restarts, budgets/latency/resources and concurrency proposal remain exactly **PROPOSED** in Decisions 1 and 3. Schema boundary cases and mutation controls above must be declared before measurement; they are not observations already made. The user must still accept or revise these families and limits, the separately proposed CAP-2 configuration/threat model, and the operating targets. The actual corpus bytes, software/image versions and hardware/model inventory are pinned during campaign preparation; no unavailable machine is presumed.
 
 ## Contract, migration and exception closure map
 
@@ -27583,3 +27736,1100 @@ no new dependency, decision, timing, side-effect, event-schema or replay authori
 AC-04 remains partial for that existing root observation; the active D workstream
 owns remediation. Exact files and branch/tag publication are bound by the commit
 diff and `.tmp/goal-20260927-publication-v114/receipt.json`.
+
+
+### Continued D/E1 repairs and bounded E2 extraction: 2026-09-28
+
+The user renewed the complete-plan goal on the existing worktree and branch.
+The candidate starts from published 0.6.114. No main checkout, merge, release
+version, commit or tag is changed by this continuation.
+
+All 494 remaining missing test layers receive reviewed canonical markers across
+120 modules. Full AST, assertion, import binding and nonlayer-marker comparisons
+preserve test bodies and existing classifications. Strict actual pytest collection
+then passes: 10,707 items, zero missing/conflicting layers or collection errors.
+Four added reload cases account for the increase from the 10,703-case opening.
+The subsequent 18 epic log cases are explicitly integration marked and require
+fresh final collection. Fifty-six taxonomy/no-op/baseline regressions pass;
+canonical Ruff and the native critical no-op scan pass at that checkpoint.
+Classification is structural proof, not execution of those migrated test bodies.
+Exact migration files and readback are `.tmp/goal-20260928-taxonomy/`.
+
+Three retained full-suite failures are fixture defects. The supplied-provider role
+pipeline reproduced a missing `_http_client_owner` during real provider cleanup:
+the fixture replaced construction but retained incompatible production cleanup.
+It now supplies and checks fixture cleanup; the unchanged public completion and
+support-evidence assertions pass. Its module reports two passes and one opt-in
+provider skip. Both outward timeout cases reproduce under branch coverage:
+three-process readiness takes 3.366/1.937 seconds under instrumentation versus
+0.244/0.261 seconds without it. Their one-second budget killed startup. The
+fixture now uses the verifier twin's five-second deadline, retains actual PID,
+heartbeat, cleanup and cancellation assertions, and checks elapsed timeout.
+Twenty-one related cases pass under coverage instrumentation; this scoped run's
+zero coverage floor does not establish the canonical 89-percent gate.
+
+The server failure is a product defect. A controlled actual interpreter-finalizing
+GC hook reproduces Windows worker exit 3221225786 after CPython clears callable
+signal handlers. Native SIG_IGN after the serving loop settles survives that
+teardown. The parent still joins and rejects nonzero finalizer exits. Sixteen
+real TCP/reload/lifecycle/process/interpreter controls pass on Windows Python
+3.11.14/Uvicorn 0.54.0. Earlier invalid GC-hook preparations are retained as failed
+setup experiments, not opening proof. Contract and correction are in
+`docs/specs/API_RUNTIME_LIFECYCLE.md` and the existing reload-finalization delta.
+
+Three required epic-completion logs used bare to_thread and could outlive caller
+interruption. New public pipeline controls hold actual native append after real
+SQLite store readback, then cancel, time out or fail append acknowledgement.
+The opening reports 11 failures and seven passes. The existing owned native-I/O
+service now retains these writes; ordinary native failure wins over cancellation,
+and journal progress waits for successful settlement. The 18 controls plus 38
+publication/recovery/owned-I/O guards pass. Required reentry preserves accepted
+work and reaches phase 4 without redispatch; partial store and log effects remain
+explicit. Independent review corrected failure-path fixture cleanup and contract
+metadata. Both Quality selections retain the new controls. Contract delta:
+`docs/architecture/CONTRACT_DELTA_EPIC_LOG_OWNERSHIP_D_2026-09-28.md`.
+
+The first bounded E2 extraction moves pure API settings representation into
+`orket/interfaces/api_settings.py`. The same 135 ASGI/settings/persistence/lifetime
+cases pass before and after. Schema/order, 180 parser observations, eight complete
+snapshots and public function inventory match exactly. The canonical size collector
+observes api.py shrinking from 1,341 to 1,110 lines; the new module has 256 lines
+and a 44-line maximum function. Global oversized counts remain 49 files and 195
+functions. No broader decomposition or D input claim follows; the unchanged request
+Path.cwd observation remains D debt.
+
+The prior ignored E2 authority candidate is rejected for direct cutover: its
+342-KiB authored catalog is not the required small current manifest, its displayed
+command validator admits a missing-server command, and its .113 source overlay
+is stale. It remains preserved scratch. A bounded replacement is preparation only.
+
+Scoped proof above is live Windows source native/ASGI/file/SQLite within supplied
+workload/provider fixtures, path primary, result success; classification, source
+parity, size and governance checks are structural. Full-suite coverage, fresh
+installed/platform, actual provider/Docker, complete D/E/CAP and whole-lane
+acceptance remain open. The current candidate next runs the complete source suite
+with explicit pyproject coverage configuration and the unchanged 89-percent gate.
+The active lane remains on Priority Now; no retirement is inferred.
+
+### Frozen source coverage failure and installed preparation: 2026-09-28
+
+The complete frozen source run finished on Windows Python 3.11.14 with 10,632
+passes, 93 skips, no test failures and two warnings in 4,488.10 seconds. Its
+actual process exit is 1 because branch-mode coverage is 86.7044163%, below the
+unchanged 89-percent Quality floor. Statement coverage alone is 90.317086%; it
+does not satisfy this combined statement/branch gate. The explicit pyproject
+configuration now produces a valid combined report, rather than the earlier
+mixed statement/branch-data error.
+
+The command retained `ORKET_DISABLE_SANDBOX=1`, isolated TEMP/TMP and coverage
+data, and ran `pytest tests/ --cov=orket --cov-config=pyproject.toml
+--cov-fail-under=89` with terminal/JSON coverage and legacy JUnit reports. All
+5,484 Git-visible input hashes match after execution. The 10,725 JUnit identities
+include all 231 cases selected for the next installed campaign. Proof is live
+Windows source execution with each test's declared fixture boundary; path primary,
+result failure for the complete Quality command. No skipped provider/Docker path,
+hosted job, installed package or Linux runtime success is inferred.
+
+Local evidence is preserved at `.tmp/goal-20260928-full.log`,
+`.tmp/goal-20260928-full.xml`, `.tmp/goal-20260928-full-coverage.json`,
+`.tmp/goal-20260928-full-inputs.json` and
+`.tmp/goal-20260928-full-readback.json`. The readback SHA-256 is
+`0da60edf4b5302d6a31e85a8842c60bcfee63cd75a10b3e1877707ccb9c402eb`;
+it binds the reports, unchanged inputs, selected identities and absent proof.
+The measured debt is 7,390 statements and 5,712 branch opportunities. A coverage
+review must distinguish genuinely untested behavior from isolated native workers
+whose existing real tests do not enter coverage instrumentation. No threshold,
+exclusion or native isolation policy is weakened to obtain green.
+
+Before later source edits, the same frozen inputs were copied and used to build
+the 0.6.114 core wheel/sdist and 0.7.0a1 SDK wheel. All 1,187 core Python files
+match the frozen source in both core archives. Fresh Windows Python 3.11.14 and
+3.12.2 environments pass dependency consistency checks; all 1,207 core and 31 SDK
+namespace files match their installed wheels. Setup and byte/origin readback are
+preparation, not runtime proof. The 231-case installed campaign is in progress,
+using a separate harness with no core/SDK source tree; its final observations
+remain pending.
+
+The fresh passive Linux clock preflight remains blocked. Existing WSL Ubuntu
+24.04/Python 3.11.16 observed 4,786 samples over 240.003278 seconds, clock-step
+extremes of -8.021639/+8.036142 seconds and a final quiet window of only 16.941707
+seconds against the required 60 seconds. All 48 synchronization queries reported
+yes; that status does not override the measured jumps. The observer, WSL command
+and Linux process were reaped without emergency cleanup. Evidence lives under
+`.tmp/goal-20260928-linux-clock/`. Path blocked, result environment blocker;
+this is live clock observation only, with Linux application acceptance unrun.
+
+The frozen source gate predates the subsequent public-surface marker corrections
+and new native-fatal opening tests. Those changes cannot inherit its exact-input
+acceptance. Full coverage, remaining D ownership, ordered E2 decomposition,
+platform/provider acceptance and CAP work remain active.
+
+
+## Installed selection and ownership counterexamples: 2026-09-28
+
+The frozen 0.6.114 Windows wheel selection completed on the same 231 identities
+present in the source run. Python 3.11.14 records 230 passed, one skip, exit 0;
+Python 3.12.2 records 227 passed, three failed, one skip, exit 1. Both retain
+1,207 core and 31 SDK installed namespace files byte-identical to their wheels,
+1,010 loaded modules exclusively from site-packages, noneditable origins and
+unchanged distributions and harness. The core wheel SHA-256 is
+`5b6ade1aa27b475dcf10f540e82ac294beb97ddd2cb9ee5af361a935ede4e776`.
+These are live selected local installed paths with declared fixtures; they do
+not prove actual-provider, Docker, Linux, hosted CI or installed full coverage.
+Original logs, XML, origin receipts and readbacks remain immutable under
+`.tmp/goal-20260928-installed-{py311,py312}-acceptance*` and their environment roots.
+
+All three Python 3.12 failures are the successful-append timeout variants of
+`test_epic_publication_log_ownership.py`. Inspection of each selected interpreter's
+stdlib shows that 3.11 wraps the public `RuntimeExecutionCancelled` as the exact
+cause of `TimeoutError`, while 3.12 passes this cancellation subclass directly.
+The product contract promises typed cancellation with retained observations, not
+a uniform outer timeout wrapper. The corrected fixture captures the exact public
+exception, verifies its original cancellation cause, deadline delivery, non-success
+result and actual retained admission/publication/final-truth records. It preserves
+all 18 case identities and publication/recovery/closure assertions. Source 3.11
+executes 18 passed in 26.71s, exit 0; all 5,504 inputs remain unchanged. Evidence:
+`.tmp/goal-20260928-epic-timeout-v2-{inputs,readback}.json`, `.log` and `.xml`.
+Corrected-fixture installed acceptance is pending; the failed original is retained.
+
+The six-module unchanged-product ownership/Quality opening records 99 cases:
+56 failed and 43 passed, with all 5,491 inputs unchanged. Six native-fatal child
+cases, 12 API catalog lifetime cases, 24 outward model evidence cases and 13
+sandbox terminal cases fail; the Quality guard also detects four missing native
+checker commands across its two jobs. The actual outward HTTP stream case passes.
+Opening evidence: `.tmp/goal-20260928-remediation-opening-{inputs,readback}.json`,
+`.log` and `.xml`. The partial-publication test fails at held-worker ownership
+before its exclusive-create refusal assertions; it is a valid ownership failure.
+
+One passing sandbox timeout case did not prove deadline delivery before release.
+The fixture now observes `task.cancelling() == 1` while the native operation remains
+held and checks a responsive sibling SQLite operation before settlement. All 14
+selected timeout variants now reproduce early settlement on unchanged product,
+exit 1 in 1.03s, with 5,504 inputs unchanged. Original opening results are retained.
+Revised evidence: `.tmp/goal-20260928-evidence-timeout-opening-v2-{inputs,readback}.json`,
+`.log` and `.xml`. This correction does not turn the initial lucky schedule into proof.
+
+Subsequent candidate edits apply the shared native-fatal owner, real taxonomy/no-op
+commands in both Quality jobs, API facade extraction and catalog lifetime repair.
+The API facade is 254 lines. Structural before/after observation preserves all 129
+effective registrations and complete OpenAPI schema; canonical observation digest
+is `f7c3db23fb9b7ad09810428a16c8d67245f6c8bb94b1628844635e378c03df2c`.
+An initial probe setup failure incorrectly assumed every FastAPI route had `path`;
+the corrected observer uses the installed FastAPI route-context traversal and
+retains explicit refusal controls. This observation executes registration, not
+requests or lifecycle acceptance. Closing behavioral proof is still pending.
+
+The 13 public-surface marker corrections across eight test modules reflect actual
+entrypoints; direct service tests no longer claim end-to-end proof. Their body and
+non-layer AST remain unchanged. The 87-definition manual audit is not a collected
+case count or a machine-verified proof ceiling. Existing Docker inventory, AWS
+setup, extension-close and companion-thread cleanup gaps remain separate debt.
+The template README now names canonical `python server.py`; packaged templates
+were regenerated and exact source/archive comparison passes.
+
+Remaining blockers or drift: canonical coverage remains 86.7044% below 89%; current
+candidate closing/installed proof, the clock-blocked Linux matrix, remaining C/D,
+ordered E2 extraction and unaccepted CAP requirements remain open. No version,
+commit, tag, provider switch, compatibility extension or main-checkout edit occurred.
+
+
+### Ownership/API closing and recovery opening: 2026-09-28
+
+The combined source closing selection executes **512 passed**, no failures or
+skips, one upstream Starlette/httpx deprecation warning, exit 0 in 227.69s. All
+5,509 Git-visible inputs remain unchanged. It includes all 99 original opening
+identities (with the disclosed timeout fixture correction), the 18 corrected epic
+publication controls, the 31 API parity modules and existing diagnostic, resource,
+publication/recovery, model-owner and sandbox terminal guards. Evidence:
+`.tmp/goal-20260928-remediation-closing-v1-{inputs,readback}.json`, `.log`, `.xml`.
+The six fatal-child cases now retain failure identity and finish without emergency
+kill; catalog reads, complete evidence attempts and public active event-stream
+cleanup pass their independent observations. This is live local integration and
+public-surface fixture proof where declared, mixed with structural/unit controls;
+it does not turn every selected test into live provider or deployment acceptance.
+
+The separate retained-recovery opening executes **25 passed, three failed**,
+exit 1 in 4.30s, with the same 5,509 inputs unchanged. Two expected-refusal probes
+show `load_checkpoint_resume_lineage` accepts a recovery decision whose failed
+attempt belongs to another run, in both same-attempt and replacement modes. This
+is a real reader-level relational validation gap, not proof of an unauthorized
+end-to-end effect. Actual caller/snapshot checks retain their independent scope.
+The third failure is a fixture setup error: `save_attempt_record` correctly rejects
+changing an immutable starting snapshot before the loader is called. Preserve that
+repository protection and correct the explicit retained-damage fixture separately.
+Evidence: `.tmp/goal-20260928-recovery-opening-v1-{inputs,readback}.json`, `.log`,
+`.xml`. Product identity correction and closing proof remain pending.
+
+
+### Bounded authority cutover and retained recovery acceptance: 2026-09-28
+
+The active authority journal is replaced by the 39-record authored manifest at
+`docs/architecture/current_authority.json` and its deterministic 89-line view.
+The manifest is 12,174 bytes; the view is 9,793 bytes. Exact final pre-cutover
+history is 325,283 bytes at
+`docs/architecture/history/CURRENT_AUTHORITY_PRE_MANIFEST_2026-09-28.md`, SHA-256
+`ba47889a8b7dc9f76e462ceecf460500b2220e2767eda92e7ee68bb59dca07a9`.
+Its current flat-runtime alias obligation first moved to ARCHITECTURE; the index
+retains the full family and unassigned removal version, not only its provider alias.
+Canonical contracts/indexes keep their definitions. This does not archive the
+active remediation lane or convert proposed capability requirements into authority.
+
+Native render, exact comparison and source check pass. The explicit
+`--require-current-proof` request returns exit 1 with structural validity true and
+current proof false; the subsequent ordinary check remains structurally valid.
+The canonical report uses the shared diff ledger at
+`benchmarks/results/governance/current_authority_check.json`. All current runtime
+proof remains unavailable in this index. Command observations bind documented argv
+to real declared entrypoints but do not execute parsers/product commands. Typed
+scope/date/expiry/claim checks do not infer natural-language contradictions or
+provide a portable receipt freshness/origin validator. These limits are contractual.
+
+The corrected retained-recovery opening records 29 passes and five failures on
+34 cases, with 5,519 inputs unchanged. Both foreign decision-run variants, both
+foreign failed-parent variants and replacement checkpoint-parent mismatch return
+lineage instead of refusing. The two-file correction adds one pure validator in
+the existing authority module; the oversized recovery file/function do not grow.
+The durable terminal-authority contract and dated delta describe the new refusal
+without authorizing repair or changing other workload checkpoint-parent forms.
+
+Combined closing executes **278 passed**, one upstream deprecation warning,
+exit 0 in 121.02s, with all 5,520 inputs unchanged. This includes all 34 recovery
+cases, actual turn/approval/migration caller guards, authority contract/native
+controls and checker/workflow regressions. Evidence:
+`.tmp/goal-20260928-authority-recovery-closing-v1-{inputs,readback}.json`, `.log`,
+`.xml`. The new identity controls are real retained SQLite reader evidence;
+metadata-only checkpoints still do not establish artifact replay or effects.
+
+The same 5,520 source inputs also pass canonical Ruff, dependency direction,
+critical no-op analysis, strict taxonomy and docs project hygiene. Strict actual
+collection is 10,902 cases: 4,322 contract, 112 end-to-end, 5,649 integration and
+819 unit; no missing/invalid layers or collection errors. No-op analysis scans
+703 files with zero findings/errors. Dependency analysis observes 1,197 files,
+4,019 edges and six resolved dynamic routes, with zero violations, authority
+cycles, unknown modules, analysis errors or adapter-effect violations. Evidence:
+`.tmp/goal-20260928-native-quality-readback.json` and its five bound gate logs.
+Initial readback needed BOM-aware PowerShell-log decoding; logs and gate executions
+were not rewritten or repeated to conceal that reader setup error.
+AT-EX-014/015/016 are resolved at these bounded acceptance scopes. AT-EX-013 remains
+open for semantic public-surface enforcement beyond marker presence and the manual
+audit. Remaining full coverage, platform/hosted acceptance and later D/E/CAP work
+remain open; the canonical floor is still 89, with last full measurement 86.7044%.
+
+The separate frozen-wheel v2 campaign closes the Python 3.12 fixture assumption:
+both Python 3.11 and 3.12 record **230 passed, one provider opt-in skip**, exit 0,
+in 186.97s and 218.64s. All 231 identities match; 2,346 support files and all 4,956
+original package/harness/report files remain unchanged. Each cell retains 1,010
+installed-only module origins. Both validate six typed-cancellation observations:
+3.11 has three direct and three TimeoutError-cause envelopes; 3.12 has six direct
+envelopes. Evidence: `.tmp/goal-20260928-installed-{py311,py312}-v2-acceptance-readback.json`
+and corresponding inputs/origins/XML/log. This verifies original frozen product
+wheels plus the revised fixture, not the newer API/evidence/checkpoint source.
+Original failure receipts remain intact; neither actual-provider nor Linux proof
+is inferred from the corrected fixture.
+
+
+### Bundle CLI decomposition acceptance: 2026-09-28
+
+The ordered E2 bundle extraction reduces the root from 1,017 to 262 lines. Four
+focused interface modules own parser declarations (322), output (131), review
+dispatch (143), and outward handlers (220). Public main/SDK validators and actual
+installed/module entrypoints remain. No private-helper aliases, proxy, copied
+renderer, application policy or additional native owner is introduced. Four
+existing consumers migrate their actual patch/import owners; their 43 definitions
+and assertions remain after explicit ownership normalization. The dated delta is
+`docs/architecture/CONTRACT_DELTA_BUNDLE_CLI_E2_2026-09-28.md`.
+
+The 24-selector unchanged-source opening and closing each pass **113 cases**,
+including 13 public-main output-boundary contract controls. Before is 27.54s with
+5,521 unchanged inputs; after is 28.33s with 5,526 unchanged inputs. Each records
+one upstream Starlette/httpx deprecation warning. Evidence:
+`.tmp/goal-20260928-bundle-{before,after}-v1-{inputs,readback}.json`, XML and logs.
+Supplied review/HTTP/model fixtures keep their declared proof limits.
+
+Executed parser observations match exactly: 45 argument vectors, eight safe
+public-main error/version calls and 63 recursive parser nodes including complete
+help/action declarations. Each actual CLI smoke completes six scaffold/API/refactor
+commands using real temporary Git/files and the declared successful verification
+command fixture. All smoke results match after normalizing only the distinct
+scaffold output directory; both roots are confirmed removed. Full raw observations,
+source hashes and the exact normalization are retained under
+`.tmp/e2-bundle-cli-candidate-20260928/`, including `source-parity.json`. The parser
+and source smoke flows each retain unchanged before/after input inventories.
+
+Fresh noneditable Windows Python 3.11.14 wheels built independently from those
+two source snapshots each pass **24 console/module process observations and
+three native tests** (6.99s before, 7.02s after). The latter pack/inspect from a
+foreign working directory, execute the packaged governed demo and verify an
+offline ledger. Raw CLI stdout/stderr hashes and exits match exactly. All children
+reach terminal state and are reaped. The package-free harness, installed bytes,
+pinned dependencies and historical campaigns remain unchanged. There are 719
+checked installed origins before and 723 after; namespace differences are exactly
+the five reviewed CLI modules. Core wheel hashes are
+`1754f97e6accad792efc9418ebf4b0236aafe51140dbf976d7d2389e66021163`
+and `edc786ebf43219c97ddb803d6bead90c37db687219adf4475f3932b3f93f2832`.
+Readbacks are `.tmp/e2-bundle-cli-campaign-20260928/{before,after}/readback.json`,
+SHA-256 `a89c62645897f023a6ca584b54ee76339abe5c18c332dc7a99a35aa450a6340b`
+and `21049f1df8fe48a98461e86f1de01f381438afc76e930169b3547287615f43eb`.
+
+Observed bundle path: primary; scoped result: success. Console runtime help emits
+the pre-existing structural-reconciliation warning in both wheels, so that
+subpath remains degraded even though help returns zero. Exact parity does not
+establish healthy reconciliation. The direct bundle-module runtime help remains
+refused with exit 2. These controls do not establish Python 3.12/Linux, actual
+provider, Docker, hosted Quality or full-suite acceptance for the new candidate.
+Canonical Ruff and dependency checks pass (1,201 files, 4,029 edges, six resolved
+dynamic routes, no violations/errors); current authority is structurally valid
+with current runtime proof still explicitly unavailable.
+
+Remaining blockers or drift: nested fatal ownership is a separate newly prepared
+opening; card/epic and logging preparation remain unapplied candidates. Logging
+review found a proposed ContextVar token spanning a borrowed async-context yield,
+which could be closed by another task; that draft must be corrected before
+application. Further D ownership, orchestrator/turn/collector decomposition,
+86.7044%-versus-89% full coverage, the clock-blocked Linux matrix and later
+capability requirements/acceptance remain open. No release version, commit, tag,
+provider switch or primary-checkout edit occurred.
+
+
+### Nested fatal settlement and logging-preparation opening: 2026-09-28
+
+The shared native owner could return its exact fatal failure into an enclosing
+unguarded operation Task, allowing asyncio to abort the loop before the outer
+public caller settled. The unchanged-product opening executes **12 failed,
+22 passed** in 10.83s, with 5,530 inputs unchanged. All twelve nested SystemExit/
+KeyboardInterrupt children exit through their fatal status and are reaped without
+emergency kill. Coroutine admission/protocol and real closed-executor controls
+pass. Evidence: `.tmp/goal-20260928-nested-fatal-opening-v1-*`.
+
+One explicit coroutine-protocol adapter now contains those two failures at the
+existing shared Task admission. It preserves synchronous factory timing, native
+admission/refusal, send/throw behavior, first-cancellation selection and the single
+settlement loop. The redundant leaf-only conversion is removed. No new owner,
+retry, timeout, rollback or effect authority is added. Custom task factories see
+the adapter, so concrete-coroutine identity/introspection and eager-factory
+compatibility remain outside the acceptance claim. The active shared-I/O contract,
+dated nested delta and both Quality diagnostic selections reflect the correction.
+
+The initial source closing passes 119 cases on Python 3.11.14; Python 3.12.2
+passes 113 and fails six test assumptions at its direct Task admission call.
+Unlike 3.11, that interpreter refuses both generator forms before execution.
+The fixture now compares actual direct admission with shared-owner admission,
+including exact refusal arguments, unstarted state and caller-owned close. All
+case identities remain; no product version branch, skip or fallback was added.
+Original reports remain immutable. Corrected closing executes **119 passed** on
+both versions, in 27.75s and 33.76s, with all 5,531 inputs unchanged in each run.
+All twelve nested native cases retain failure/cause/context identity, partial
+SQLite effects, closure and a healthy subsequent operation. Readbacks/logs/XML:
+`.tmp/goal-20260928-nested-fatal-closing-{v2,py312-v2}-*`; comparison:
+`.tmp/goal-20260928-nested-fatal-parity.json`. All 4,956 historical installed
+package/harness/report bindings remain unchanged. Both cells import current
+source: this is live local source proof, path primary, result success; fresh
+installed-wheel, Linux and eager/custom-factory acceptance remain absent.
+
+Logging preparation remains unapplied. Its four opening cases use the existing
+public logging/frontier paths and the retained native child under the Windows Job
+command owner. Result: **two failed, two passed** in 8.11s, with 5,531 source inputs
+and all three scratch driver/test/probe inputs unchanged. Cold writer start and
+relative-path capture execute on the loop, block the sibling SQLite observation
+and prevent its held-period acknowledgement. Both explicit native counterparts
+remain responsive. All four write one actual record, settle their native hold,
+join the fixture observer, retain the expected source origin and report no runtime
+setup errors. All twelve transport/supervisor/command process identities are
+independently absent after completed owner cleanup. Evidence:
+`.tmp/goal-20260928-logging-preparation-opening-v2-*` and
+`.tmp/goal-20260928-logging-preparation-opening-support.json`. This is a live local
+primary-path failure with successful native controls, not a repaired logging claim.
+
+Remaining work includes correcting the scratch logging candidate's borrowed-yield
+context binding, migrating explicit direct callers, running its real owner guards,
+and retaining the separately inventoried 19 required-producer obligations. Card/
+epic, wake/replay and later D groups, substantive orchestrator decomposition and
+the previously recorded coverage/platform/capability gates remain open.
+
+The subsequent native gate set binds 5,531 unchanged inputs. Ruff, dependency,
+no-op, strict taxonomy, authority, docs hygiene and diff checks pass. Taxonomy
+collects 10,949 items (4,356 contract, 112 end-to-end, 5,662 integration, 819 unit),
+with no missing/invalid layers or collection errors. No-op analysis covers 707
+files with no findings/errors. Dependency observations remain 1,201 files,
+4,029 edges and six resolved dynamic routes with no violations/errors. The
+canonical Mypy invocation, `python -m mypy orket/ --ignore-missing-imports`, fails
+with **700 errors in 200 files** on Windows. Baseline and platform-specific
+attribution are not yet established; these errors are not dismissed as pre-existing
+or reported as runtime failures. Evidence:
+`.tmp/goal-20260928-post-bundle-native-{inputs,readback}.json` and eight gate logs.
+Overall gate result is partial success, with typing and the independently measured
+coverage floor still preventing Quality acceptance.
+
+
+### Card/epic native ownership acceptance and typing comparison: 2026-09-28
+
+The six reviewed product paths now reuse the shared I/O owner for card metadata,
+receipt observation, final artifact authorization, epic request capture and journal
+admission/finalization. Root added explicit types to the new receipt/preparation/
+closure helpers and optional resource/failure locals; no alternate lifetime owner
+or recovery authority was introduced. Contract and migration:
+`docs/architecture/CONTRACT_DELTA_CARD_EPIC_IO_D_2026-09-28.md` and
+`docs/specs/CARD_COMPLETION_ACCEPTANCE_CONTRACT.md`. Both Quality selections retain
+the new ownership modules with card/epic acceptance and recovery controls; the
+contributor guide documents retained-state inspection after interruption.
+
+The first unchanged-product opening was **24 failed, 4 passed**. Sixteen card
+failures were invalid fixture setup, not product counterexamples: both artifact
+paths needed `agent_output/accepted.txt`. Correcting only those two paths produced
+**21 failed, 7 passed** in 3.16s; all 5,534 Git-visible inputs remained unchanged.
+The original and revised reports remain separate (`card-epic-opening-v1/v2`).
+The reviewed product plus typed helpers then passed **287 tests** in 237.65s,
+exit 0, with all 5,535 inputs unchanged and one upstream Starlette/httpx warning.
+All 28 revised opening identities remain. Existing public turn/completion,
+control-plane, publication/recovery and approval-continuation paths are included.
+Ruff passes. Proof: live local native/files/SQLite/restart integration plus declared
+contract and structural checks; path primary, result success. No provider, Docker,
+installed or Linux acceptance is implied. Python 3.12.2 also passes all 28 new
+source cases in 3.79s (5,537 unchanged inputs, one upstream warning). Product bytes
+and those case identities match the 3.11 closing; 4,956 historical installed
+bindings remain intact. `.tmp/goal-20260928-card-epic-parity.json` records that
+comparison; the historical interpreter imported current source in this run.
+
+Evidence prefix: `.tmp/goal-20260928-card-epic-closing-v1-`; the sibling log/XML,
+inputs/readback JSON bind the exact tested bytes. Original candidate/application
+receipts remain in `.tmp/d-card-epic-ownership-20260928/`; the application explicitly
+records the prior nested-fatal owner correction and fixture-path amendment.
+Remaining D work, full-suite coverage and quality/platform gates stay open.
+
+The independent typing comparison in `.tmp/e1-mypy-review-20260928/REVIEW.md`
+checked the preserved pre-bundle package snapshot and the post-bundle/nested-owner
+source under the same current Mypy 2.3.1 environment/config/stubs. Both return
+**700 errors in 200 files** on native Windows; both return **705 in 203 files**
+with the Linux static target on Windows. Of the native diagnostics, 699 retain
+path/message/code; one existing optional `params` assignment moved with the
+outward CLI handler. This is absence of new *reported* errors for that source
+delta, not a passing baseline or a real Linux run. The untyped coroutine adapter
+remains partly unchecked. There are 288 flat-runtime-alias diagnostics across 49
+consumers referring to 100 aliases; remaining value/port/return/platform errors
+remain real quality debt. Original frozen inputs and 1,233/1,237 selected typing
+inputs stayed unchanged. Later card/epic changes are outside that comparison.
+
+
+### Governed wake/replay native read acceptance: 2026-09-28
+
+Two reader owners now retain the complete captured metadata/read-only SQLite/read/
+close operation through the shared I/O owner. Original SQL/read/error bodies retain
+AST parity; WAL fence lock avoidance, no-create/no-repair rules and bounded replay
+diagnostics remain. Existing lexical capture refuses drive-relative paths explicitly.
+Contract and migration: `docs/specs/GOVERNED_AGENT_LOOP_V1.md` and
+`docs/architecture/CONTRACT_DELTA_GOVERNED_READ_OWNERSHIP_D_2026-09-28.md`.
+
+Opening v1: 25 failed, 9 passed in 6.01s. One expectation omitted the existing
+`terminal_authority_conflict` diagnostic on unreadable replay; correcting only
+that test produced v2 **24 failed, 10 passed** in 4.91s. Both retained 5,537
+unchanged inputs. The revised failures comprise 22 observed lifetime/path-capture
+failures and two intentional new drive-relative refusal requirements. The latter
+are contract narrowing, not an assertion that the old refusal already existed.
+Post-correction **179 passed** in 105.04s, exit 0, all 5,538 inputs unchanged;
+one upstream Starlette/httpx deprecation warning in each run. Scoped Ruff passes.
+Both Quality selections and Contributor retain the required controls.
+
+Proof is live local native/files/SQLite and actual public supervisor/replay/API/CLI
+paths with declared fixture dispatch/provider limits, plus structural/contract
+controls. Path primary, result success. Failed-opening fixture connection recovery
+is distinct from product closure assertions, which execute before fallback cleanup.
+The later Python 3.12.2 source run passes all 34 new cases in 4.97s, with 5,539
+unchanged inputs and one upstream warning. Both reader files and focused identities
+match the 3.11 run. Installed packages, Linux, live provider and full D/E
+acceptance remain unproved by this selection. Wake mutation/CLI input and other
+remaining ownership rows remain open; no external-effect replay claim is added.
+Evidence prefixes: `.tmp/goal-20260928-governed-read-opening-v1-`, `-v2-`, and
+`.tmp/goal-20260928-governed-read-closing-v1-`; original draft/application receipts
+remain in `.tmp/d-wake-replay-ownership-20260928/`.
+
+### Orchestrator policy and shared-owner typing acceptance: 2026-09-28
+
+The reviewed policy/transition extraction reduces `orchestrator_ops.py` from
+1,586 to 947 lines and removes 26 policy facade forwarders. Four focused services
+own pure prompt/protocol/runtime policy and issue transitions; the 365-line
+coordinator retains actual public verification/publication composition. Runtime
+state stays with its existing owner. Original settings/organization observation
+order and provider cleanup remain. Four obsolete constructor TypeError retries
+are removed. Root corrected new settings imports to the canonical config package.
+Contract: `CONTRACT_DELTA_ORCHESTRATOR_POLICY_E2_2026-09-28.md` in architecture.
+
+Constructor opening: **4 failed, 8 passed**; existing-source baseline: **227
+passed**; closing: **268 passed** in 78.64s. All input inventories are unchanged
+during their runs. The comparison retains 226 existing identities, explicitly
+retires one obsolete facade-member assertion, and adds 12 constructor/30 workflow
+controls. Public engine/card execution uses supplied providers and real local
+tools/files/checkpoints; it does not establish external provider behavior.
+Evidence: `.tmp/goal-20260928-orchestrator-policy-{before,after}-v1-*` and
+`.tmp/goal-20260928-orchestrator-policy-parity.json`. Large execute/replan/turn
+operations remain open; the smaller coordinator alone does not complete E2.
+
+Shared I/O's five-file declaration correction preserves Task admission and exact
+variadic throw forwarding. Isolated Mypy removes two diagnostics (700 -> 698)
+with no additions, and current source passes **158 tests** on Windows Python
+3.11.14/3.12.2 in 48.78s/58.04s. Five product hashes and every identity match;
+5,545/5,547 inputs stay unchanged, with one upstream warning each. Contract:
+`docs/architecture/CONTRACT_DELTA_OWNED_IO_TYPING_E1_2026-09-28.md`.
+Recent wake/typing/ledger comparison and all 4,956 historical installed bindings
+are retained in `.tmp/goal-20260928-recent-ownership-parity.json`. These cells use
+current source, not newly installed wheels. Custom/eager task factories remain open.
+
+The intervening native gate campaign passes Ruff, dependency, no-op, strict taxonomy,
+docs hygiene, authority and diff checks on 5,545 unchanged inputs. Taxonomy reports
+11,022 items: 4,368 contract, 112 end-to-end, 5,724 integration, 818 unit, no missing
+or invalid layers. Dependency checks 1,205 files/4,068 edges/six dynamic routes,
+without violations or errors. Mypy still fails at 692 errors in 198 files. One
+newly exposed verifier parameter annotation was then corrected to its implemented
+`Mapping[str, str]` input contract; it already copied that mapping at construction.
+Evidence: `.tmp/goal-20260928-post-ownership-policy-native-*`. This was structural/
+collection proof, path primary, result partial success; coverage remains failing.
+
+### Ledger read and evidence import acceptance: 2026-09-28
+
+Ledger observations now capture standard reader/database/anchor values and retain
+native preflight, standalone read/close and borrowed queries. Concrete reader
+capture replaces the rejected self-copy draft. The sole private paging fixture
+holds actual cursor acknowledgement; its concurrent-writer assertions remain.
+Opening: **31 failed, 15 passed**, including nine existing snapshot passes. Closing:
+**159 passed** on Python 3.11; **46 passed** on 3.12. All inputs stay unchanged.
+A captured-list/resolved-tuple local name correction removes two introduced typing
+diagnostics; its final source passes **57** focused tests. Both Quality jobs retain
+the controls. Contract, detailed attribution and evidence prefixes:
+`docs/architecture/CONTRACT_DELTA_OUTWARD_LEDGER_READ_D_2026-09-28.md`.
+Proof is live local files/SQLite/process/API with declared contract limits, path
+primary, result success. Initializers, UOW, PII audit, installed and Linux remain open.
+
+Five evidence-domain modules now import canonical peers directly: nine import
+sources change, preserving all 32 local bindings and all function bodies. Legacy
+aliases and package surfaces remain unchanged; incidental eager alias cache
+population is not promised. Three fresh-process import orders verify module/object
+identity and captured-binding patch behavior. All **26** existing projection/
+rendering/graph-emission cases pass before and after, plus five verifier-input
+cases after the Mapping annotation correction. No new shim, Any or suppression
+is introduced. Evidence: `.tmp/e1-runtime-alias-review-20260928/` and
+`.tmp/goal-20260928-evidence-alias-{before,closing}-v1-*`.
+
+Native current-source Mypy after the local-name correction reports **652 errors
+in 193 files**, 1,205 sources, 5,547 unchanged Git-visible inputs. Forty diagnostics
+disappear relative to the 692 observation; the intermediate two new ledger local
+diagnostics are corrected. The original 654-error run remains retained alongside
+`runtime-and-typing-v2.json` and its distinct log. Typing and 89-percent coverage
+are still genuine blockers; these scoped changes do not make Quality green.
+
+### Logging preparation implementation: 2026-09-28
+
+The combined reviewed draft now prepares the existing process-global writer through
+native ownership and requires operation-local prepared bindings for optional loop
+publication. It includes the borrowed-yield token correction, application-owned
+request binding and same-task CLI setup. Refused ASGI sends observe the restored
+caller context. No new queue, restart or app-local writer teardown is introduced.
+Forty-nine product/test/helper paths are applied after exact baseline checks;
+`.tmp/d-logging-combined-20260928/` retains assembly/application receipts and the
+explicit rebase to the accepted shared owner. Original drafts remain immutable.
+Contracts, Contributor, architecture, both Quality selections and the generated
+40-record authority view are updated together. Contract and pending closing:
+`docs/architecture/CONTRACT_DELTA_LOGGING_PREPARATION_D_2026-09-28.md`.
+The earlier two-failure/two-pass public opening remains the observed counterexample.
+Current runtime closing, nineteen required producer migrations, workspace/UOW
+ownership, further decomposition/typing, full coverage and platform gates remain open.
+
+
+### Logging integration, workspace stages and policy imports: 2026-09-28
+
+The audit's unchanged-product opening fails both existing actual-flow controls
+with missing logging preparation. Its native entry now prepares/binds before
+async collection and passes the selected value to direct harnesses; this adds an
+earlier startup failure boundary while retaining final frontier/cleanup precedence.
+Reviewed direct-consumer fixes preserve assertions and real ownership. The combined
+59-selector run is **603 passed, 2 failed** in 198.28s, with 5,562 unchanged inputs.
+All previous 41 failures and audit controls pass. Root corrected the one remaining
+organization fixture hook consumer; its two failures plus nine native guards then
+pass (**11**, 1.77s). The original partial campaign is retained, not relabeled.
+Contract/proof: `docs/architecture/CONTRACT_DELTA_LOGGING_PREPARATION_D_2026-09-28.md`.
+
+Three canonical workspace setup services now retain their complete admitted
+stages through the existing native/file owner. Opening: **60 failures**, including
+33 abandoned native operations, 18 incomplete remaining stages, six redirected
+input/output cases and three new drive-relative refusal requirements. Closing
+passes all 60 new controls on Windows Python 3.11/3.12; the broader original
+146/35 run exposed those direct logging consumers. After migration, all workspace
+and orchestrator cases pass in the combined run. Both Quality jobs retain the
+nine workspace selectors. Partial files, stage failure and captured standard
+inputs remain explicit in `CONTRACT_DELTA_WORKSPACE_SETUP_D_2026-09-28.md`.
+
+Three policy-domain modules now use canonical peers for 43 import sources and
+58 bindings. Bodies/names and public aliases remain; Ruff changes checker import
+ordering, so cold-start ordering parity is not claimed. Existing **38** cases
+pass before/after (5.67s/5.61s, 5,562 unchanged inputs), and three fresh-process
+orders preserve all 58 object/consumer patch bindings. Current native Mypy reports
+**594 errors in 191 files**, 1,208 sources. It still fails. Evidence:
+`.tmp/e1-policy-alias-review-20260928/runtime-and-typing.json` and
+`.tmp/goal-20260928-policy-alias-{before,closing}-v1-*`.
+
+These are scoped current-source observations, path primary, with live local
+native/files/SQLite/process proof and separately declared structural/unit controls.
+New installed packages, Linux, full coverage, remaining D/E and CAP acceptance
+stay open. The 89-percent coverage floor is unchanged.
+
+
+### Required finalizers and outward store source closing: 2026-09-28
+
+Logging/workspace closes all **605** cases on current-source Python 3.12.2 in
+216.87s (5,569 unchanged inputs), with one upstream warning. The same identities
+and all 1,228 product files match the earlier 3.11 campaign and its corrected
+11-case rerun. All 4,956 historical installed bindings remain unchanged;
+`.tmp/goal-20260928-logging-workspace-parity.json` retains the comparison.
+
+Corrected required-finalizer opening reports **10 failed, 10 passed**; its V1
+launcher-PID fixture failures remain separate. All 80 actual descendant identities
+are absent before held native acknowledgement. Two native cancellation identity/
+cause guards and eight fatal exits reproduce the raw-Task loop gap. Two existing
+finalizers now share the existing settlement algorithm through additive async/
+thread finalizer entries; existing caller failure policies remain distinct.
+
+Outward-store opening reports **102 failed, 20 passed**. Four concrete stores now
+capture paths, retain complete initialization/cache/lock ownership and retain UOW
+resource phases. Borrowed delegates require selected schema without initializing
+unrelated paths. Body execution remains in the caller task. Native cleanup
+cancellation remains exact, with its original body failure context where selected.
+One opening context-only assertion is a newly declared causal requirement.
+
+The combined 38-selector closing passes **452** cases, all 5,570 inputs
+unchanged, including all 122 store controls, 20 finalizer controls and existing
+native/public admission/recovery/process guards. Contracts, Contributor and both
+Quality jobs retain this scope. Detailed proof/limits:
+`docs/architecture/CONTRACT_DELTA_REQUIRED_FINALIZERS_D_2026-09-28.md` and
+`docs/architecture/CONTRACT_DELTA_OUTWARD_STORE_LIFETIME_D_2026-09-28.md`.
+
+Proof is live local source plus declared structural/contract controls, path primary,
+result success. These changes do not close all 19 producer input ports, standalone
+CRUD/writers, remaining D/E, coverage, installed/platform or CAP gates. The same
+native-cancellation catch in epic journal cleanup has a separate reviewed opening
+candidate; it remains pending until its actual opening/closing is observed.
+
+
+### Captured failure reports, supporting diagnostics and epic composition: 2026-09-28
+
+The expanded caller baseline is **502 passed, 2 failed across 45 selectors; 5,584 inputs unchanged. The two additional direct Agent logging callers were repaired before product changes; all seven cases in that module then passed**. It repairs six logging consumers
+without changing their assertions: explicit bindings in the actual caller task,
+existing pipeline binding reuse and the real constructor/open seam. The original
+427-pass/19-failure observation remains partial. No logging refusal is disabled.
+
+After scheduler extraction, canonical epic imports and explicit owner/service
+composition, the combined closing is **697 passed across 63 selectors; 5,586 Git-visible inputs unchanged**. It includes all baseline
+identities plus required finalizers, failure-report/core-value guards, both new
+supporting-diagnostic families and existing SDK/connector lifetime/control-plane
+coverage. Proof is live local files/SQLite/processes/public application routes with
+declared fixture limits, plus structural/import parity; path primary, result success.
+No live provider, installed current wheel, Linux or full-suite acceptance is implied.
+
+- Epic cleanup opening 6 failed/12 passed; all 18 pass. Actual native rollback/close
+  cancellation after a failed body now remains observable. Existing recovery
+  authority and durable partial effects remain. The UOW annotation-only correction
+  retains reversed AST equivalence and all 122 runtime controls pass.
+- Failure-report opening 3 failed/31 passed; all 34 pass after binding root/identity/
+  rendered values before the first await. Scalar freeze/nested rendering were
+  existing guards, not new bugs. Native logging input capture remains separate.
+- Outward diagnostic V1's 16 timeouts were a supplied Handler.release collision,
+  not product evidence. V2 preserves every assertion and yields 9 fail/7 pass;
+  one failure is the supplied note-hook guard. SDK yields 6 fail/10 pass. All 32 now
+  pass; generic outward markers and exact SDK secondary attachment stay distinct.
+- Scheduling moves one count owner and ordered effects into 86/189-line modules;
+  ops 947 to 728 and coordinator 365 to 358. Existing epic execution 202 to 213 remains
+  debt. Six forwarders are retired, with original effect-owner lookup phases and
+  persistent partial effects. No E2 or ambient-policy completion is claimed.
+- Pipeline composition returns the same constructed required approval service
+  with its owner. Seven public construction controls pass before/after. Twelve
+  fresh import processes/66 epic observations and three/27 pipeline observations
+  pass before/after; canonical types still need the fresh full gate result.
+
+Evidence: `.tmp/goal-20260928-epic-scheduler-composition-before-v2-*`,
+`.tmp/goal-20260928-agent-logging-baseline-repair-v1-*`,
+`.tmp/goal-20260928-epic-scheduler-composition-closing-v3-*`,
+`.tmp/goal-20260928-diagnostic-composition-opening-v2-*` and the bound application/
+import receipts under the named candidate directories. Durable contracts are
+`FAILURE_REPORT_PUBLICATION.md`, `CONNECTOR_INVOCATION_TIMING.md`,
+`SDK_WORKLOAD_PROCESS_LIFETIME.md`, `RUNTIME_ARCHITECTURE_POLICY_INPUTS.md` and
+`CARD_COMPLETION_ACCEPTANCE_CONTRACT.md`; same-day deltas retain migration/proof limits.
+Both Quality jobs now include every new selected module, and Contributor agrees.
+
+Remaining: required-producer input contracts; earlier SDK lifetime-observed fatal
+policy; standalone storage writers and other actual async reachability; type and
+coverage debt, ordered dispatcher/message/truth decomposition; current installation/
+platform proof; accepted CAP contracts and final capability acceptance. These scoped
+changes do not retire the lane or reopen paused cloud/provider work. No commit,
+push or version bump occurred.
+
+
+Subsequent Windows Python 3.12 **source** closing: **271 passed** across 12
+selectors in 112.36s; all 5,586 Git-visible inputs were unchanged and equal to
+the 697-case Python 3.11 closing snapshot. All 259 shared case identities pass;
+the additional native-owner controls retain their own scope. This includes all
+122 outward store, 20 finalizer, 18 epic cleanup, 34 failure-report, 32 supporting
+diagnostic and seven component-construction controls. Evidence:
+`.tmp/goal-20260928-new-ownership-source-py312-v1-*` and
+`.tmp/goal-20260928-composition-ownership-parity.json`. All 4,956 historical
+installed bindings remain unchanged. Reusing that environment's interpreter
+with current source is not fresh installed-wheel acceptance. Linux, current
+installed and broader quality/capability gates remain separate.
+
+
+Fresh native gates on the integrated candidate retained **5,589 unchanged inputs**.
+Canonical Ruff, strict taxonomy, critical no-op, dependency direction, project
+hygiene, current-authority structure and diff checks pass. Taxonomy collected
+**11,409** items: 4,368 contract, 112 end-to-end, 6,111 integration, 818 unit;
+zero missing/conflicting layers or collection errors. Marker classification is
+not semantic end-to-end or provider acceptance. Dependency analysis reports
+1,210 files, 4,131 edges and six resolved dynamic routes, with no violations,
+analysis errors, unknown modules, adapter violations or authority cycles.
+
+Canonical Mypy remains **failure: 561 errors in 189 files / 1,210 sources**.
+Compared with the retained 594-error observation, 33 diagnostics were removed
+and none added; the UOW annotation correction introduces no remaining diagnostic.
+This is partial quality success, not a green E1 envelope. Current runtime-authority
+proof remains explicitly unavailable. Evidence:
+`.tmp/goal-20260928-post-composition-native-*` and
+`.tmp/goal-20260928-composition-mypy-comparison.json`. The earlier full coverage
+failure remains open; no coverage floor, test layer or exception was relaxed.
+
+
+### Required event inputs and construction composition: 2026-09-28
+
+The expanded Windows Python 3.11 source closing passes **464 cases** in 207.12s,
+with **5,605 unchanged Git-visible inputs**. It includes the earlier 410 passing
+cases plus 15 actual-child SDK observed-publication and 14 standalone registry
+controls and existing construction guards. Proof is live local files, SQLite,
+native children and loopback HTTP with declared supplied-model/contract limits;
+path primary, result success. Both Quality jobs now retain all seven new modules.
+
+- Gitea CLI operation owners prepare/bind logging before HTTP construction. The
+  8-fail/1-pass opening and corrected stdout/diff-ledger fixture remain recorded;
+  all nine new controls and existing lifecycle controls pass.
+- SDK coroutine children prepare logging and close unadmitted coroutines after
+  startup failure. Corrected V3 opening is 6 failed/4 passed; all ten pass. The
+  original unpublished-returncode fixture failures are not product evidence.
+- Dual-ledger and webhook required events capture supported values/workspace
+  before native admission. Openings were 11 failed/1 passed and 11 failed/2 passed;
+  all 25 pass. Direct ledger constructors now require absolute workspace input.
+  Strict built-in event capture retains webhook required-publication 500 behavior
+  for projected non-finite JSON, with committed deduplication effects possible.
+- Pipeline and standalone context/ConfigLoader registries consume their selected
+  settings. Corrected pipeline opening is 6 failed/2 passed; standalone opening
+  9 failed/5 passed. All 22 pass with independent registry identities, unchanged
+  caller snapshots and lazy storage. Earlier eager-schema fixture assumptions and
+  a class-replacing public-factory fixture are corrected, without relaxed assertions.
+- SDK required observed-publication failures now preserve typed uncertainty,
+  exact native cause and the unadopted exchange. Opening is 8 failed/7 passed;
+  all 15 pass, including native fatal/cancellation outcomes and caller-only guards.
+  Supporting uncertainty keeps its existing exact secondary protocol.
+- Three direct native turn consumers now prepare/bind in their actual task;
+  the three representative opening failures and all 34 closing ownership/guard
+  cases are retained. This does not close other direct logging consumers.
+
+Evidence: `.tmp/goal-20260928-input-composition-closing-v3-*` and
+`.tmp/goal-20260928-captured-inputs-closing-v4-*`. Dated Gitea CLI, SDK child,
+ledger/webhook, registry settings and SDK observed-publication contract deltas
+retain exact opening attribution, migration and partial-effect limits. Earlier
+failed campaigns remain failed observations; they are not overwritten.
+
+Remaining: other required producers/direct logging callers, SDK exchange-removal
+failure policy, actual async reachability and storage writers, remaining D1/D2
+audit closure and E2 decomposition, canonical typing/coverage debt, fresh installed
+and Linux proof, and accepted CAP contracts/capability acceptance. The lane remains
+active; no commit, push, version bump or paused-provider expansion occurred.
+
+
+### Trust handoff, score roots and direct logging consumers: 2026-09-28
+
+Current-source Windows Python 3.11 closing passes **330 tests** in 56.20s;
+**5,612 Git-visible inputs unchanged**. It closes the reviewed trust-handoff owner
+and model-score root corrections, the terminal/native/cached direct logging
+consumer batches, six local typing files and their existing behavioral guards.
+Proof is live local native/files/SQLite/CLI with supplied-model/transport limits
+and separately declared contract/structural checks, path primary, result success.
+
+- Trust handoff opening is 23 failed/4 passed: 22 owner/root/native-admission
+  counterexamples and one independent corruption-generator defect. The existing
+  native owner now retains package verification; the original path remains in
+  ledger events and earlier shared EXECUTING state stays retained on interruption.
+  All 27 controls pass. The generator now swaps semantic event fields inside
+  canonical ledger positions. Its actual CLI passes all 23 corruptions plus
+  report conformance, and all nine existing offline ledger controls pass. Neither
+  the verifier nor exact rejection expectations were relaxed.
+- Model-score opening is 10 failed/4 passed. Preparation now anchors reports at
+  its entry directory before default settings/worker waits. Observable CWD and
+  Windows drive-relative refusal are explicit admission changes. All 14 controls
+  pass with existing policy, provenance and public response guards. The existing
+  model-selection contract's stale global-cache wording now points to current
+  settings ownership; historical proof remains historical.
+- Terminal replay opening fails all 26; five native/composed groups fail 27 with
+  one passing nonlogging guard; cached-dispatch opening fails 11. All 103 complete
+  group/context cases pass after operation-local preparation. All original
+  assertions remain; exact lower-level and replay exclusions stay unprepared.
+  Ordinary broad TurnExecutor/control-plane callers are not declared migrated.
+- Local annotations/names in four files pass 62 existing controls; private Gitea
+  binding/tuple types pass 37 existing controls, including native Git/files.
+  No new Any/cast/ignore or public port change is added. Whole-module normalized
+  AST parity is structural evidence, not a substitute for those real-path checks.
+
+Evidence: `.tmp/goal-20260928-trust-score-consumers-{opening,closing}-v1-*`,
+`.tmp/goal-20260928-cached-dispatch-opening-v1-*`, bound candidate/application
+receipts, and the dated trust-handoff/model-score/logging contract records.
+Both Quality jobs retain all new controls; Contributor and architecture agree.
+
+Fresh native gates retain the same **5,612 unchanged inputs**. Strict taxonomy
+collects **11,531 items** (4,368 contract, 112 end-to-end, 6,233 integration,
+818 unit), with zero missing/conflicting layers or collection errors. No-op,
+dependency direction, project hygiene, authority structure and diff checks pass.
+Dependency observation: 1,210 files, 4,140 edges, six resolved dynamic routes;
+zero violations, unknown modules, analysis/adapter errors or authority cycles.
+Marker presence remains structural classification, not public/provider acceptance.
+
+Canonical Mypy still fails: **525 errors in 184 files / 1,210 sources**. Exactly
+36 diagnostics disappear from the retained 561 baseline and none are added:
+eight local-variable corrections, 27 private Gitea corrections and one SDK child
+composition diagnostic. Native Ruff initially identifies three test import-order
+issues. The subsequent exact-import/nonimport-AST-preserving correction keeps all
+three file lengths unchanged and canonical Ruff passes. Initial gate failure is
+retained. Evidence: `.tmp/goal-20260928-post-inputs-native-*`,
+`.tmp/goal-20260928-inputs-mypy-comparison.json` and
+`.tmp/goal-20260928-import-order-correction.json`.
+
+Remaining blockers or drift: native script's two pre-existing unused imports;
+other actual async/input/storage owners and direct logging callers; remaining
+D closure, type debt, 89-percent coverage and ordered E2 decomposition; fresh
+installed/Linux/provider proof; accepted CAP contracts and capability acceptance.
+This is partial quality success. Runtime-authority proof remains unavailable.
+No commit, push, version bump, new capability admission or lane retirement occurs.
+
+
+Subsequent Windows Python 3.12.2 **source** closing passes **435 cases** in
+134.24s, with all **5,612 Git-visible inputs unchanged** and one upstream warning.
+Every case identity also passed in the named 330/464-case Python 3.11 campaigns.
+Product/script bytes match the 330-case snapshot; intervening changes are the
+recorded documentation and three AST-preserving test import corrections. The
+earlier 464-case snapshot has its separately recorded product differences.
+Evidence: `.tmp/goal-20260928-captured-inputs-source-py312-v1-*` and
+`.tmp/goal-20260928-captured-inputs-source-parity.json`. Reusing the historical
+installed environment's interpreter with current source is not fresh installed
+acceptance. Linux, installed packages, actual providers and whole-lane gates remain.
+
+
+### SDK exchange-removal closing: 2026-09-28
+
+The 22-case opening produces **16 failures and six passes**; the corrected
+Windows Python 3.11 source closing passes **176 tests** in 238.87s, with
+**5,616 unchanged Git-visible inputs**. Real child/native deletion, process readback,
+Git-installed public manager and retained SQLite controls establish this bounded
+local cleanup policy (path primary, result success). Native removal failure uses
+typed uncertainty with the original cause, while successful cleanup preserves an
+already-selected body failure against later caller cancellation. Partial or complete
+deletion can precede failure; retention cannot restore bytes. Existing successful-body
+interruption and exact supporting diagnostic policies remain authoritative.
+Spec and dated delta: `docs/specs/SDK_WORKLOAD_PROCESS_LIFETIME.md` and
+`docs/architecture/CONTRACT_DELTA_SDK_EXCHANGE_REMOVAL_D_2026-09-28.md`.
+Evidence: `.tmp/goal-20260928-sdk-removal-{opening,closing}-v1-*`.
+Both Quality selections now include all 22 new controls. The source closing also
+supplies pre-change behavior for the separate run-start captured-import pilot.
+The remaining D/E, direct logging consumer, typing/coverage, fresh installed/Linux,
+provider and CAP obligations stay open. Concrete CAP proposals above await user
+acceptance; preparation is neither runtime admission nor capability proof.
+
+
+### Captured policy imports and control-plane logging consumers: 2026-09-28
+
+The run-start artifact consumer now uses three canonical evidence imports and
+four public policy-module imports, capturing the same eight local functions
+before original definitions/table construction. The original factories, validation,
+publication and table AST remain unchanged; the file shrinks 473 to 471 lines.
+No package export, compatibility alias, Any/cast/ignore or private cross-domain
+import is added. Import interleaving/cache population is not claimed identical.
+Three fresh owned children pass before and after for canonical consumer, legacy
+consumer and canonical policy entry. Actual module/callable identity, later source
+patch isolation, local consumer patch reachability, call order and four actual
+policy payloads agree. Six existing artifact/policy modules pass in the 176-case
+pre-change selection; all **81** post-change artifact/policy/workflow checks pass.
+Proof includes real artifact I/O and executed binding controls, not model inference.
+
+Fresh native gates retain **5,616 unchanged Git-visible inputs**. Canonical Ruff,
+dependency direction, strict taxonomy, critical no-op, project hygiene, authority
+structure and diff checks pass. Taxonomy: **11,553** items (4,368 contract, 112
+end-to-end, 6,255 integration, 818 unit), zero missing/conflicting layers or errors.
+Dependency observation: 1,210 sources, 4,144 edges, six resolved dynamic routes,
+zero violations/unknowns/analysis errors/adapter errors/authority cycles.
+Mypy still fails: **510 errors in 184 files / 1,210 sources**, exactly 15 removed
+from the 525 baseline and none added. Source import typing is not whole E1 success.
+Evidence: `.tmp/goal-20260928-sdk-imports-native-*`, corresponding Mypy comparison,
+`.tmp/goal-20260928-captured-imports-closing-v1-*` and captured-import parity receipt.
+
+Four direct TurnExecutor control-plane consumer modules now prepare/bind logging
+in the executing test task. Opening: **38 failed, five passed** in 5.40s; closing:
+**43 passed** in 7.61s, one upstream warning, 5,616 unchanged inputs. All 336
+original assertions remain; the five direct lower-level controls stay unbound.
+Live local SQLite/terminal file and supplied model/tool integration proof is scoped
+to these paths (primary, success). No global fixture/fake logger, optional drain,
+provider acceptance or completion-authority change is introduced. Evidence:
+`.tmp/goal-20260928-turn-control-logging-{opening,closing}-v1-*` and application receipt.
+Other ordinary consumers, D/E, 89-percent coverage, fresh installed/Linux/provider
+acceptance and proposed CAP requirements remain open. Runtime-authority proof
+remains unavailable; no version bump, commit, push or whole-lane closeout occurs.
+
+
+### Tool lifetime, root selection, caller migration and epic phases: 2026-09-28
+
+The unguarded ToolRuntime correction passes all **99** tool/guard controls,
+including 22 isolated native/async cases. Its opening observed **17 failures and
+82 passes**. The closing is a successful named subset of a failed combined
+335-case campaign: three new epic fixtures called the keyword-only facade
+positionally, hiding failure behind wait timeouts. That original report remains
+**332 passed, three failed**, with 5,621 unchanged inputs. Corrected keyword calls
+and task-versus-event failure observation retain every original assertion; all
+three corrected epic cases pass on unchanged product before extraction.
+
+Three application logging consumer modules pass **60** cases; their representative
+opening had **19 preparation failures and one pass**. Seven same-domain runtime
+artifact import consumers retain all function bodies and captured local bindings.
+Two fresh owned cold import orders pass before and after, including actual ledger
+projection through source/local patch controls; all **193** existing artifact,
+replay, summary and CLI/API controls pass before and after. The combined 303-case
+campaign records **260 passes and 43 failures**, 5,625 unchanged inputs: the 43 are
+17 root-input opening failures and 26 remaining caller preparation failures.
+
+Root opening physically reproduces writes in the later project and split default
+write/event destinations. ToolGate now captures its workspace before waiting;
+reconciliation captures model/workspace roots together through existing defaults;
+the direct store binds construction and per-operation roots. Drive-relative
+refusal, actual governed writes, partial adoption, operator-byte drift and
+repeated cancellation retain their stated policies. The remaining twelve caller
+modules add only explicit local preparation/binding, preserving 178 assertions
+and genuine lower-level/pre-log exclusions. This completes the reviewed bounded
+direct TurnExecutor caller inventory, not arbitrary dynamic logger reachability.
+
+The epic extraction keeps composition in ops and moves team preflight/dispatch
+phases into the focused 151-line workflow. Ops decreases **728 to 577** lines;
+execute_epic decreases **213 to 66**. Current inputs and phase-selected effects,
+late turn selection and approval consumption after the semaphore remain. The
+closing passes **389 cases** in 238.66s, one upstream warning, **5,628 unchanged
+inputs**: 18 new root controls, 90 remaining caller cases, 236 epic cases and 45
+additional core/application/board/CLI guards. Actual local file, SQLite, event,
+owned-process and supplied-turn/provider behavior is live bounded proof (primary,
+success), distinct from inference or fresh installed/platform acceptance.
+
+Both Quality jobs retain the new tool, root and epic controls. Deltas:
+`docs/architecture/CONTRACT_DELTA_TOOL_RUNTIME_OWNERSHIP_D_2026-09-28.md`,
+`docs/architecture/CONTRACT_DELTA_APPLICATION_ROOT_INPUTS_D_2026-09-28.md`, and
+`docs/architecture/CONTRACT_DELTA_ORCHESTRATOR_EPIC_EXECUTION_E2_2026-09-28.md`.
+Exact sources and failed/successful cases remain bound by the named root campaign
+receipts under `.tmp/goal-20260928-*`, plus the application and cold-child receipts.
+
+Remaining blockers or drift: guarded tool failure/diagnostic ownership, provider
+stream/input paths and other inventoried D owners, remaining ops/turn and ordered
+E2 hotspots, canonical Mypy/coverage and applicable Quality/platform/installed
+acceptance stay open. CAP decisions remain proposed pending the user's answers.
+No new provider, containment, release or whole-lane acceptance is claimed.
+
+
+### Native gate refresh after epic/root corrections: 2026-09-28
+
+The same 5,628 Git-visible inputs remain unchanged through the native quality
+campaign. Canonical Ruff, strict taxonomy, critical no-op, dependency direction,
+docs hygiene, current-authority structure and diff checks pass. Mypy remains red:
+**493 errors in 180 files / 1,211 sources**, exactly **17 removed, zero added**
+against 510. The seven artifact import consumers account for this bounded reduction;
+new root/tool/epic code adds no diagnostic. This is structural proof, not runtime.
+
+Taxonomy: **11,596** collected cases (4,368 contract, 112 end-to-end, 6,298
+integration, 818 unit), zero missing/conflicting layers or collection errors.
+No-op: 715 files, zero findings/parse errors. Dependency: 1,211 sources, 4,157
+edges, six resolved dynamic routes, zero violations/unknowns/analysis errors,
+adapter errors or authority cycles. The authority checker explicitly retains
+unavailable current runtime proof. Full coverage remains the earlier failing
+86.7044163 percent against the unchanged 89-percent floor.
+
+The exception register's D reasons now distinguish the bounded clean canonical
+core/decision inventory from remaining application/transitive obligations. All
+136 audited core/decision/legacy sources are rebound: 133 hashes still agree;
+three previously applied local typing changes were re-reviewed for unchanged
+effect/input behavior. The three root-level core modules are admitted by the
+existing dependency policy. Governed legacy
+warning/alias effects remain explicit. No exception is newly closed, no effect
+system or whole D purity is claimed, and historical proof ceilings remain.
+
+Evidence: `.tmp/goal-20260928-tool-roots-epic-native-*`, corresponding Mypy
+comparison, and `.tmp/goal-20260928-d-exception-readback.json`. These observations
+do not supply source Python 3.12, fresh installed/Linux/provider, whole Quality,
+CAP or release acceptance. The lane stays active with no version bump or publish.
+
+### Model-stream input/admission and turn phases: 2026-09-28
+
+The opening records nine failures and seven passes (19.16s, 5,634 unchanged
+Git-visible inputs). Five reproduce late request/environment/deadline reads;
+four actual resolver observations retain nonempty BLOCKED models yet reach the
+local completion endpoint and successful workload intent. Input capture now
+precedes discovery, and the existing canonical admission validator rejects those
+blocked observations before provider construction. The original empty-model
+ValueError remains; newly rejected nonempty targets raise ModelConnectionError.
+Two turn phase controls pass on unchanged product before extraction.
+
+Turn ops shrinks 577 to 478 lines and its turn function 167 to 67; all ops
+functions now meet 70 lines, while the module remains oversized. The focused
+73-line workflow retains phase-selected constructor and late final-close lookup,
+prepared-value normalization, stops, real card/control-plane/checkpoint effects
+and original provider/cleanup authority. It receives typed callbacks, not a
+coordinator proxy. Original statement/signature AST parity is structural proof;
+the actual controlled-dispatch/file/SQLite tests supply bounded execution proof.
+
+The combined closing passes **364** tests in 221.01s on Windows Python 3.11,
+one upstream warning, **5,638 unchanged inputs**. The fresh Windows Python 3.12.2
+source selection passes **94** cases in 57.89s on those same inputs, including
+all fourteen model-stream controls, two turn phase controls and 22 tool controls.
+Path primary, result success; actual model inference and installed proof absent.
+Both Quality jobs retain the new controls. The three dated model-stream/turn
+deltas and runtime policy-input spec record authority, scope and remaining limits.
+
+The earlier Python 3.12 source campaign stays **805 passed, one failed** in
+389.23s with 5,628 unchanged inputs. Its failure was the tool fixture's assumed
+external-waiter abandonment. The corrected fixture keeps every product ownership
+assertion and observes Python 3.11 abandonment versus Python 3.12 retention;
+all 22 cases pass in both closing campaigns. This is a fixture correction, not
+a reclassification of the failed 806-case campaign.
+
+Evidence: `.tmp/goal-20260928-model-turn-{opening,tool-closing}-v1-*`,
+`.tmp/goal-20260928-model-turn-tool-source-py312-v1-*`, physical opening readback,
+tool waiter V2 receipt and exact application receipts. Remaining guarded tool,
+stream lifetime/transport, other D owners, E1 typing/coverage, E2 decomposition,
+fresh installed/Linux/provider and CAP acceptance remain open. CAP proposals
+still await the user's answers. No version bump, commit, push or lane closeout.
+
+### Interrupted WIP checkpoint: 2026-09-30
+
+The user requested closeout of interrupted work on `codex/architectural-truth-bt0`.
+Core **0.6.115** preserves the 369 modified and 163 new files found at handoff,
+including the applied guarded-mutation ownership correction and three-file
+application import correction. Both Quality jobs now include the 32 guarded
+mutation cases; the existing workflow guard and contributor instructions retain
+that selection. The guarded contract delta now records its actual historical
+opening and closing proof. No additional product implementation was added during
+this closeout. Six prepared-only proposal bundles are preserved without application.
+
+Fresh Windows Python 3.11 source verification passes **163 cases**, zero failures
+or skips, in 83.25 seconds with **5,647 unchanged test-time inputs**. A fresh
+0.6.115 wheel installs consistently; outside-checkout public deterministic demo
+and quickstart approve/deny flows pass with actual files and verified ledgers.
+This is bounded live local proof, primary/success, plus structural workflow checks.
+It does not supply the installed guarded-mutation or full platform/provider matrix.
+
+Ruff, dependency direction, strict taxonomy, no-op, authority structure and docs
+hygiene pass. Mypy remains failing at **415 errors in 170 files / 1,213 sources**.
+The full-suite/coverage diagnostic was deliberately stopped at 38-percent reported
+progress after observing failures, with all 5,644 inputs unchanged. There is no
+finalized full-suite XML or fresh complete-suite coverage. A separate failing
+direct sandbox caller reproduces `E_LOGGING_PREPARATION_REQUIRED`; other observed
+failures are not all diagnosed. The prior 86.7044163-percent result remains
+historical, below the unchanged 89-percent floor. Neither run is relabeled green.
+
+Exact disposition, evidence hashes, unapplied proposals and touched paths:
+[September 30 checkpoint](../archive/architectural-truth/AT09302026-WIP-CHECKPOINT/CHECKPOINT.md).
+Remaining D/E, logging-consumer, typing, full-suite/coverage and applicable
+installed/platform/provider/hosted Quality obligations remain open. CAP proposals
+are not activated. This closes the interrupted branch handoff, not the whole lane;
+the roadmap entry and canonical plan remain active.

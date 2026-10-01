@@ -8,6 +8,8 @@ from typing import Any
 
 import pytest
 
+from orket.core.contracts.logging_inputs import LoggingInputs
+from orket.logging import bind_logging, prepare_logging
 from tests.helpers.operation_binding import (
     ARGS,
     ControlledModel,
@@ -43,9 +45,10 @@ async def test_embedded_replay_consults_completed_success_and_reuses_recorded_op
     local_before = await local_prefix(case)
 
     async def replay():
-        return await case.executor.execute_turn(
-            case.issue, case.role, case.model, case.toolbox, context(replay=True), system_prompt="SYSTEM"
-        )
+        with bind_logging(await prepare_logging(LoggingInputs(case.workspace))):
+            return await case.executor.execute_turn(
+                case.issue, case.role, case.model, case.toolbox, context(replay=True), system_prompt="SYSTEM"
+            )
 
     result, before_state, after_state, before_files, after_files = await before_after(case, replay)
     local_after = await local_prefix(case)
@@ -75,9 +78,10 @@ async def test_embedded_replay_refuses_failed_terminal_before_model_or_toolbox(
     local_before = await local_prefix(case)
 
     async def replay():
-        return await case.executor.execute_turn(
-            case.issue, case.role, replay_model, replay_toolbox, context(replay=True), system_prompt="SYSTEM"
-        )
+        with bind_logging(await prepare_logging(LoggingInputs(case.workspace))):
+            return await case.executor.execute_turn(
+                case.issue, case.role, replay_model, replay_toolbox, context(replay=True), system_prompt="SYSTEM"
+            )
 
     result, before_state, after_state, before_files, after_files = await before_after(case, replay)
     local_after = await local_prefix(case)
@@ -120,9 +124,10 @@ async def test_embedded_replay_refuses_same_slot_operation_with_changed_call(
     local_before = await local_prefix(case)
 
     async def replay():
-        return await case.executor.execute_turn(
-            case.issue, case.role, case.model, case.toolbox, context(replay=True), system_prompt="SYSTEM"
-        )
+        with bind_logging(await prepare_logging(LoggingInputs(case.workspace))):
+            return await case.executor.execute_turn(
+                case.issue, case.role, case.model, case.toolbox, context(replay=True), system_prompt="SYSTEM"
+            )
 
     result, before_state, after_state, before_files, after_files = await before_after(case, replay)
     local_after = await local_prefix(case)
@@ -172,9 +177,10 @@ async def test_embedded_replay_refuses_missing_or_present_invalid_operation_reco
     local_before = await local_prefix(case)
 
     async def replay():
-        return await case.executor.execute_turn(
-            case.issue, case.role, case.model, case.toolbox, context(replay=True), system_prompt="SYSTEM"
-        )
+        with bind_logging(await prepare_logging(LoggingInputs(case.workspace))):
+            return await case.executor.execute_turn(
+                case.issue, case.role, case.model, case.toolbox, context(replay=True), system_prompt="SYSTEM"
+            )
 
     result, before_state, after_state, before_files, after_files = await before_after(case, replay)
     local_after = await local_prefix(case)
@@ -200,9 +206,10 @@ async def test_embedded_replay_distinguishes_bool_from_int_arguments(
     reentries, owner_calls = observe_reentry_and_forbid_owner(case, monkeypatch)
 
     async def replay():
-        return await case.executor.execute_turn(
-            case.issue, case.role, case.model, case.toolbox, context(replay=True), system_prompt="SYSTEM"
-        )
+        with bind_logging(await prepare_logging(LoggingInputs(case.workspace))):
+            return await case.executor.execute_turn(
+                case.issue, case.role, case.model, case.toolbox, context(replay=True), system_prompt="SYSTEM"
+            )
 
     result, before_state, after_state, before_files, after_files = await before_after(case, replay)
     _property(record_property, stored_args=stored_args, proposed_args=proposed_args,

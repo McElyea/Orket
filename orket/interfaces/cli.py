@@ -3,11 +3,13 @@ import asyncio
 import io
 import json
 import sys
+from contextlib import AsyncExitStack
 from functools import partial
 from pathlib import Path
 from typing import Any
 
-from orket.application.services.extension_catalog_commands import list_installed_extensions, prepare_extension_manager
+from orket.application.services.cli_application_context import open_cli_application
+from orket.application.services.extension_catalog_commands import list_installed_extensions
 from orket.application.services.protocol_command_service import ProtocolCommand, execute_protocol_command
 from orket.application.services.runtime_console_service import read_console_line
 from orket.application.services.runtime_construction_inputs import RuntimeConstructionInputs
@@ -113,13 +115,12 @@ def _emit_startup_status(startup_status: dict[str, str] | None) -> None:
 
 async def _prepare_cli_runtime(
     argv: list[str] | None, prog: str | None,
-) -> tuple[argparse.Namespace, ExtensionManager, RuntimeConstructionInputs]:
+) -> tuple[argparse.Namespace, RuntimeConstructionInputs]:
     status, inputs = await run_startup_checks(perform_first_run_setup)
     inputs.bind_settings()
     _emit_startup_status(status)
     args = parse_args() if argv is None and prog is None else parse_args(argv, prog=prog)
-    manager = await prepare_extension_manager(construction_inputs=inputs)
-    return args, manager, inputs
+    return args, inputs
 
 
 def _protocol_request(
@@ -145,201 +146,204 @@ async def run_cli(argv: list[str] | None = None, *, prog: str | None = None) -> 
         sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
         sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
-    engine = None
-    try:
-        args, extension_manager, construction_inputs = await _prepare_cli_runtime(argv, prog)
+    async with AsyncExitStack() as application_scope:
+        engine = None
+        try:
+            args, construction_inputs = await _prepare_cli_runtime(argv, prog)
+            extension_manager = await application_scope.enter_async_context(
+                open_cli_application(construction_inputs))
 
-        if args.command == "extensions":
-            if args.subcommand == "list":
-                await _print_extensions_list(extension_manager)
+            if args.command == "extensions":
+                if args.subcommand == "list":
+                    await _print_extensions_list(extension_manager)
+                    return 0
+                if args.subcommand == "install":
+                    await _install_extension(args, extension_manager)
+                    return 0
+                raise ValueError(
+                    "Supported extensions commands: 'orket runtime extensions list' and "
+                    "'orket runtime extensions install <repo> [--ref <ref>]'."
+                )
+
+            if args.command == "run":
+                await _run_extension_workload(
+                    args, extension_manager, invocation_root=construction_inputs.invocation_root)
                 return 0
-            if args.subcommand == "install":
-                await _install_extension(args, extension_manager)
-                return 0
-            raise ValueError(
-                "Supported extensions commands: 'orket runtime extensions list' and "
-                "'orket runtime extensions install <repo> [--ref <ref>]'."
-            )
 
-        if args.command == "run":
-            await _run_extension_workload(
-                args, extension_manager, invocation_root=construction_inputs.invocation_root)
-            return 0
+            if args.command == "marshaller":
+                from orket.marshaller.cli import (
+                    default_run_id,
+                    execute_marshaller_from_files,
+                    inspect_marshaller_attempt,
+                    list_marshaller_runs,
+                )
 
-        if args.command == "marshaller":
-            from orket.marshaller.cli import (
-                default_run_id,
-                execute_marshaller_from_files,
-                inspect_marshaller_attempt,
-                list_marshaller_runs,
-            )
-
-            workspace_root = await _resolve_path(
-                invocation_root=construction_inputs.invocation_root)
-            if args.subcommand == "list":
-                result = await list_marshaller_runs(workspace_root, limit=max(1, int(args.marshaller_list_limit)))
-                print(json.dumps(result, indent=2, ensure_ascii=False))
-                return 0
-            if args.subcommand == "inspect":
-                run_id = str(args.target or "").strip()
-                if not run_id:
-                    raise ValueError(
-                        "marshaller inspect requires target run_id "
-                        "(e.g. 'orket runtime marshaller inspect <run_id>')."
+                workspace_root = await _resolve_path(
+                    invocation_root=construction_inputs.invocation_root)
+                if args.subcommand == "list":
+                    result = await list_marshaller_runs(workspace_root, limit=max(1, int(args.marshaller_list_limit)))
+                    print(json.dumps(result, indent=2, ensure_ascii=False))
+                    return 0
+                if args.subcommand == "inspect":
+                    run_id = str(args.target or "").strip()
+                    if not run_id:
+                        raise ValueError(
+                            "marshaller inspect requires target run_id "
+                            "(e.g. 'orket runtime marshaller inspect <run_id>')."
+                        )
+                    inspect_result = await inspect_marshaller_attempt(
+                        workspace_root,
+                        run_id=run_id,
+                        attempt_index=args.marshaller_inspect_attempt,
                     )
-                inspect_result = await inspect_marshaller_attempt(
-                    workspace_root,
-                    run_id=run_id,
-                    attempt_index=args.marshaller_inspect_attempt,
+                    print(json.dumps(inspect_result, indent=2, ensure_ascii=False))
+                    return 0
+
+                request_raw = str(args.marshaller_request or "").strip()
+                if not request_raw:
+                    raise ValueError("marshaller command requires --marshaller-request <path>.")
+                if not args.marshaller_proposal:
+                    raise ValueError("marshaller command requires at least one --marshaller-proposal <path>.")
+                proposal_paths = [
+                    await _resolve_path(str(item), invocation_root=construction_inputs.invocation_root)
+                    for item in args.marshaller_proposal
+                ]
+                execution_result = await execute_marshaller_from_files(
+                    workspace_root=workspace_root,
+                    run_request_path=await _resolve_path(
+                        request_raw, invocation_root=construction_inputs.invocation_root),
+                    proposal_paths=proposal_paths,
+                    run_id=str(args.marshaller_run_id or default_run_id()).strip(),
+                    allowed_paths=list(args.marshaller_allow_path or []),
+                    promote=bool(args.marshaller_promote),
+                    actor_id=args.marshaller_actor_id,
+                    actor_source=str(args.marshaller_actor_source or "cli"),
+                    branch=str(args.marshaller_branch or "main"),
                 )
-                print(json.dumps(inspect_result, indent=2, ensure_ascii=False))
+                print(json.dumps(execution_result, indent=2, ensure_ascii=False))
                 return 0
 
-            request_raw = str(args.marshaller_request or "").strip()
-            if not request_raw:
-                raise ValueError("marshaller command requires --marshaller-request <path>.")
-            if not args.marshaller_proposal:
-                raise ValueError("marshaller command requires at least one --marshaller-proposal <path>.")
-            proposal_paths = [
-                await _resolve_path(str(item), invocation_root=construction_inputs.invocation_root)
-                for item in args.marshaller_proposal
-            ]
-            execution_result = await execute_marshaller_from_files(
-                workspace_root=workspace_root,
-                run_request_path=await _resolve_path(
-                    request_raw, invocation_root=construction_inputs.invocation_root),
-                proposal_paths=proposal_paths,
-                run_id=str(args.marshaller_run_id or default_run_id()).strip(),
-                allowed_paths=list(args.marshaller_allow_path or []),
-                promote=bool(args.marshaller_promote),
-                actor_id=args.marshaller_actor_id,
-                actor_source=str(args.marshaller_actor_source or "cli"),
-                branch=str(args.marshaller_branch or "main"),
-            )
-            print(json.dumps(execution_result, indent=2, ensure_ascii=False))
-            return 0
+            if args.command == "protocol":
+                protocol_workspace = await _resolve_path(
+                    args.workspace, invocation_root=construction_inputs.invocation_root)
+                protocol_result = await execute_protocol_command(
+                    _protocol_request(args, protocol_workspace, construction_inputs))
+                print(json.dumps(protocol_result.payload, indent=2, ensure_ascii=False))
+                if protocol_result.strict_failure:
+                    raise ValueError(protocol_result.strict_failure)
+                return 0
 
-        if args.command == "protocol":
-            protocol_workspace = await _resolve_path(
-                args.workspace, invocation_root=construction_inputs.invocation_root)
-            result = await execute_protocol_command(
-                _protocol_request(args, protocol_workspace, construction_inputs))
-            print(json.dumps(result.payload, indent=2, ensure_ascii=False))
-            if result.strict_failure:
-                raise ValueError(result.strict_failure)
-            return 0
+            workspace = await _resolve_path(args.workspace, invocation_root=construction_inputs.invocation_root)
+            engine = await create_runtime_owner(
+                partial(OrchestrationEngine, workspace, args.department, construction_inputs=construction_inputs),
+                label="runtime-cli-construction")
 
-        workspace = await _resolve_path(args.workspace, invocation_root=construction_inputs.invocation_root)
-        engine = await create_runtime_owner(
-            partial(OrchestrationEngine, workspace, args.department, construction_inputs=construction_inputs),
-            label="runtime-cli-construction")
+            if args.board:
+                print_board(await read_runtime_board(engine))
+                return 0
 
-        if args.board:
-            print_board(await read_runtime_board(engine))
-            return 0
+            if args.loop:
+                from orket.organization_loop import OrganizationLoop
 
-        if args.loop:
-            from orket.organization_loop import OrganizationLoop
+                await (await OrganizationLoop.create(
+                    construction_inputs=construction_inputs)).run_forever()
+                return 0
 
-            await (await OrganizationLoop.create(
-                construction_inputs=construction_inputs)).run_forever()
-            return 0
+            if args.archive_card or args.archive_build or args.archive_related:
+                archived_ids: list[str] = []
+                missing_ids: list[str] = []
+                archived_count = 0
+                if args.archive_card:
+                    archive_result = await engine.archive_cards(args.archive_card, archived_by="cli", reason=args.archive_reason)
+                    archived_ids.extend(archive_result.get("archived", []))
+                    missing_ids.extend(archive_result.get("missing", []))
+                if args.archive_build:
+                    archived_count += await engine.archive_build(
+                        args.archive_build, archived_by="cli", reason=args.archive_reason
+                    )
+                if args.archive_related:
+                    related_archive_result = await engine.archive_related_cards(
+                        args.archive_related, archived_by="cli", reason=args.archive_reason
+                    )
+                    archived_ids.extend(related_archive_result.get("archived", []))
+                    missing_ids.extend(related_archive_result.get("missing", []))
 
-        if args.archive_card or args.archive_build or args.archive_related:
-            archived_ids: list[str] = []
-            missing_ids: list[str] = []
-            archived_count = 0
-            if args.archive_card:
-                archive_result = await engine.archive_cards(args.archive_card, archived_by="cli", reason=args.archive_reason)
-                archived_ids.extend(archive_result.get("archived", []))
-                missing_ids.extend(archive_result.get("missing", []))
-            if args.archive_build:
-                archived_count += await engine.archive_build(
-                    args.archive_build, archived_by="cli", reason=args.archive_reason
+                archived_ids = sorted(set(archived_ids))
+                missing_ids = sorted(set(missing_ids))
+                archived_count += len(archived_ids)
+                print(f"Archived {archived_count} card(s).")
+                if archived_ids:
+                    print(f"Archived IDs: {', '.join(archived_ids)}")
+                if missing_ids:
+                    print(f"Missing IDs: {', '.join(missing_ids)}")
+                return 0
+
+            if args.replay_turn:
+                parts = args.replay_turn.split(":")
+                if len(parts) not in {3, 4}:
+                    raise ValueError("--replay-turn format must be <session_id>:<issue_id>:<turn_index>[:role]")
+                session_id, issue_id, turn_index = parts[0], parts[1], int(parts[2])
+                role = parts[3] if len(parts) == 4 else None
+                replay = await read_runtime_replay(engine,
+                    session_id=session_id,
+                    issue_id=issue_id,
+                    turn_index=turn_index,
+                    role=role,
                 )
-            if args.archive_related:
-                related_archive_result = await engine.archive_related_cards(
-                    args.archive_related, archived_by="cli", reason=args.archive_reason
-                )
-                archived_ids.extend(related_archive_result.get("archived", []))
-                missing_ids.extend(related_archive_result.get("missing", []))
+                print(json.dumps(replay, indent=2, ensure_ascii=False))
+                return 0
 
-            archived_ids = sorted(set(archived_ids))
-            missing_ids = sorted(set(missing_ids))
-            archived_count += len(archived_ids)
-            print(f"Archived {archived_count} card(s).")
-            if archived_ids:
-                print(f"Archived IDs: {', '.join(archived_ids)}")
-            if missing_ids:
-                print(f"Missing IDs: {', '.join(missing_ids)}")
-            return 0
+            await emit_runtime_manifest(print_orket_manifest, args.department)
 
-        if args.replay_turn:
-            parts = args.replay_turn.split(":")
-            if len(parts) not in {3, 4}:
-                raise ValueError("--replay-turn format must be <session_id>:<issue_id>:<turn_index>[:role]")
-            session_id, issue_id, turn_index = parts[0], parts[1], int(parts[2])
-            role = parts[3] if len(parts) == 4 else None
-            replay = await read_runtime_replay(engine,
-                session_id=session_id,
-                issue_id=issue_id,
-                turn_index=turn_index,
-                role=role,
+            if args.rock or args.card:
+                target = args.rock or args.card
+                print(f"Running Orket Card: {target}")
+                result = await engine.run_card(target, build_id=args.build_id,
+                    driver_steered=args.driver_steered, model_override=args.model)
+                return await _finish_named_run(engine, result)
+
+            if not args.epic:
+                # Interactive Driver Mode
+                from orket.driver import OrketDriver
+
+                print(f"\n{'=' * 60}\n ORKET DRIVER (Interactive)\n{'=' * 60}")
+                construct = partial(
+                    OrketDriver.create, model=args.model,
+                    project_root=construction_inputs.invocation_root,
+                    construction_inputs=construction_inputs)
+                async with open_async_runtime_owner(construct) as driver:
+                    while True:
+                        user_input = await read_console_line("Driver> ")
+                        if user_input is None or user_input.lower() in ["exit", "quit", "q"]:
+                            break
+                        if not user_input:
+                            continue
+                        print("Thinking...", end="", flush=True)
+                        response = await driver.process_request(user_input)
+                        print(f"\r{response}\n")
+                return 0
+
+            print(f"Running Orket Epic: {args.epic}")
+            result = await engine.run_epic(
+                args.epic,
+                build_id=args.build_id,
+                driver_steered=args.driver_steered,
+                target_issue_id=args.resume,
+                model_override=args.model,
             )
-            print(json.dumps(replay, indent=2, ensure_ascii=False))
-            return 0
-
-        await emit_runtime_manifest(print_orket_manifest, args.department)
-
-        if args.rock or args.card:
-            target = args.rock or args.card
-            print(f"Running Orket Card: {target}")
-            result = await engine.run_card(target, build_id=args.build_id,
-                driver_steered=args.driver_steered, model_override=args.model)
             return await _finish_named_run(engine, result)
 
-        if not args.epic:
-            # Interactive Driver Mode
-            from orket.driver import OrketDriver
+        except RuntimeExecutionCancelled as exc:
+            return await _finish_named_run(engine, exc.result, cancelled=True)
+        except (KeyboardInterrupt, asyncio.CancelledError):
+            print("\n[HALT] Interrupted by user.")
+            return 130
+        except (RuntimeError, ValueError, OSError, TypeError) as e:
+            import traceback
 
-            print(f"\n{'=' * 60}\n ORKET DRIVER (Interactive)\n{'=' * 60}")
-            construct = partial(
-                OrketDriver.create, model=args.model,
-                project_root=construction_inputs.invocation_root,
-                construction_inputs=construction_inputs)
-            async with open_async_runtime_owner(construct) as driver:
-                while True:
-                    user_input = await read_console_line("Driver> ")
-                    if user_input is None or user_input.lower() in ["exit", "quit", "q"]:
-                        break
-                    if not user_input:
-                        continue
-                    print("Thinking...", end="", flush=True)
-                    response = await driver.process_request(user_input)
-                    print(f"\r{response}\n")
-            return 0
-
-        print(f"Running Orket Epic: {args.epic}")
-        result = await engine.run_epic(
-            args.epic,
-            build_id=args.build_id,
-            driver_steered=args.driver_steered,
-            target_issue_id=args.resume,
-            model_override=args.model,
-        )
-        return await _finish_named_run(engine, result)
-
-    except RuntimeExecutionCancelled as exc:
-        return await _finish_named_run(engine, exc.result, cancelled=True)
-    except (KeyboardInterrupt, asyncio.CancelledError):
-        print("\n[HALT] Interrupted by user.")
-        return 130
-    except (RuntimeError, ValueError, OSError, TypeError) as e:
-        import traceback
-
-        traceback.print_exc()
-        print(f"\n[FATAL] {e}")
-        return 1
-    finally:
-        if engine is not None and await close_runtime_owner(engine):
-            raise asyncio.CancelledError("Runtime cleanup completed after caller cancellation")
+            traceback.print_exc()
+            print(f"\n[FATAL] {e}")
+            return 1
+        finally:
+            if engine is not None and await close_runtime_owner(engine):
+                raise asyncio.CancelledError("Runtime cleanup completed after caller cancellation")

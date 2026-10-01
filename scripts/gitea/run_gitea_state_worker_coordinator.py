@@ -17,6 +17,11 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+from orket.adapters.observability.logging_context import (
+    bind_logging,
+    prepare_logging,
+    select_logging_inputs,
+)
 from orket.application.services.gitea_state_adapter_factory import create_gitea_state_adapter
 from orket.application.services.gitea_state_pilot import (
     collect_gitea_state_pilot_inputs,
@@ -116,26 +121,27 @@ async def _run_loop(args: argparse.Namespace) -> dict[str, Any]:
         repo=_required_env("ORKET_GITEA_REPO", environment),
     )
     worker_id = _resolve_worker_id(args.worker_id)
-    async with open_runtime_owner(construct, label="gitea-coordinator-adapter") as adapter:
-        worker = GiteaStateWorker(
-            adapter=adapter,
-            worker_id=worker_id,
-            lease_seconds=args.lease_seconds,
-            renew_interval_seconds=args.renew_interval_seconds,
-        )
-        coordinator = GiteaStateWorkerCoordinator(
-            worker=worker,
-            fetch_limit=args.fetch_limit,
-            max_iterations=max_iterations,
-            max_idle_streak=max_idle_streak,
-            max_duration_seconds=max_duration_seconds,
-            idle_sleep_seconds=args.idle_sleep_seconds,
-        )
+    with bind_logging(await prepare_logging(select_logging_inputs(directory, environment))):
+        async with open_runtime_owner(construct, label="gitea-coordinator-adapter") as adapter:
+            worker = GiteaStateWorker(
+                adapter=adapter,
+                worker_id=worker_id,
+                lease_seconds=args.lease_seconds,
+                renew_interval_seconds=args.renew_interval_seconds,
+            )
+            coordinator = GiteaStateWorkerCoordinator(
+                worker=worker,
+                fetch_limit=args.fetch_limit,
+                max_iterations=max_iterations,
+                max_idle_streak=max_idle_streak,
+                max_duration_seconds=max_duration_seconds,
+                idle_sleep_seconds=args.idle_sleep_seconds,
+            )
 
-        async def _work_fn(_card: dict[str, Any]) -> dict[str, Any]:
-            return {"result": "ok"}
+            async def _work_fn(_card: dict[str, Any]) -> dict[str, Any]:
+                return {"result": "ok"}
 
-        summary = await coordinator.run(work_fn=_work_fn)
+            summary = await coordinator.run(work_fn=_work_fn)
     return {
         "timestamp_utc": datetime.now(UTC).isoformat(),
         "worker_id": worker_id,

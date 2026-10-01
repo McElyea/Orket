@@ -82,6 +82,7 @@ def _seed_scenario_pack(path: Path, *, mode: str = "truth_only") -> None:
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
 
+@pytest.mark.integration
 def test_roundtrip_idempotence_by_canonical_digest(tmp_path: Path) -> None:
     src = tmp_path / "src"
     _seed_textmystery_inputs(src)
@@ -93,6 +94,7 @@ def test_roundtrip_idempotence_by_canonical_digest(tmp_path: Path) -> None:
     assert route.canonical_json(blob1) == route.canonical_json(blob2)
 
 
+@pytest.mark.integration
 def test_compile_pipeline_is_deterministic(tmp_path: Path) -> None:
     src = tmp_path / "src"
     out = tmp_path / "out"
@@ -133,6 +135,7 @@ def test_compile_pipeline_is_deterministic(tmp_path: Path) -> None:
     assert snapshot["outputs_manifest"] == _json(out / "artifacts" / "outputs_manifest.json")
 
 
+@pytest.mark.integration
 def test_inspector_catches_reference_integrity_error(tmp_path: Path) -> None:
     src = tmp_path / "src"
     out = tmp_path / "out"
@@ -155,6 +158,7 @@ def test_inspector_catches_reference_integrity_error(tmp_path: Path) -> None:
     assert "unknown archetype" in route_plan["errors"][0]
 
 
+@pytest.mark.contract
 def test_patch_safety_rejects_outside_surface() -> None:
     blob = {
         "version": "persona_blob.v0",
@@ -166,6 +170,7 @@ def test_patch_safety_rejects_outside_surface() -> None:
         apply_patch_ops(blob, [{"op": "replace", "path": "/version", "value": "x"}])
 
 
+@pytest.mark.integration
 def test_scenario_pack_mode_mismatch_fails(tmp_path: Path) -> None:
     src = tmp_path / "src"
     out = tmp_path / "out"

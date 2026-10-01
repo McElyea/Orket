@@ -29,6 +29,7 @@ def _enable_nervous_system(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("ORKET_ALLOW_PRE_RESOLVED_POLICY_FLAGS", "true")
 
 
+@pytest.mark.contract
 def test_projection_pack_uses_genesis_when_session_has_no_head() -> None:
     response = projection_pack_v1(
         {
@@ -44,6 +45,7 @@ def test_projection_pack_uses_genesis_when_session_has_no_head() -> None:
     assert isinstance(response["event_digest"], str) and len(response["event_digest"]) == 64
 
 
+@pytest.mark.contract
 def test_admit_proposal_orders_reason_codes_deterministically() -> None:
     response = admit_proposal_v1(
         {
@@ -66,6 +68,7 @@ def test_admit_proposal_orders_reason_codes_deterministically() -> None:
     ]
 
 
+@pytest.mark.contract
 def test_admit_proposal_marks_exfil_from_tool_profile_flag() -> None:
     response = admit_proposal_v1(
         {
@@ -80,6 +83,7 @@ def test_admit_proposal_marks_exfil_from_tool_profile_flag() -> None:
     assert response["admission_decision"]["reason_codes"] == ["APPROVAL_REQUIRED_EXFIL"]
 
 
+@pytest.mark.contract
 def test_admit_proposal_marks_exfil_from_non_local_target() -> None:
     response = admit_proposal_v1(
         {
@@ -94,6 +98,7 @@ def test_admit_proposal_marks_exfil_from_non_local_target() -> None:
     assert response["admission_decision"]["reason_codes"] == ["APPROVAL_REQUIRED_EXFIL"]
 
 
+@pytest.mark.contract
 def test_admit_proposal_does_not_mark_local_path_as_exfil() -> None:
     response = admit_proposal_v1(
         {
@@ -108,6 +113,7 @@ def test_admit_proposal_does_not_mark_local_path_as_exfil() -> None:
     assert response["admission_decision"]["reason_codes"] == []
 
 
+@pytest.mark.contract
 def test_commit_rejects_without_prior_admission() -> None:
     response = commit_proposal_v1(
         {
@@ -120,6 +126,7 @@ def test_commit_rejects_without_prior_admission() -> None:
     assert response["status"] == "REJECTED_PRECONDITION"
 
 
+@pytest.mark.contract
 def test_commit_enforces_approval_id_for_needs_approval_decision() -> None:
     admitted = admit_proposal_v1(
         {
@@ -142,6 +149,7 @@ def test_commit_enforces_approval_id_for_needs_approval_decision() -> None:
     assert response["status"] == "REJECTED_APPROVAL_MISSING"
 
 
+@pytest.mark.contract
 def test_commit_rejects_when_admission_exists_only_in_different_session() -> None:
     admitted = admit_proposal_v1(
         {
@@ -160,6 +168,7 @@ def test_commit_rejects_when_admission_exists_only_in_different_session() -> Non
     assert response["status"] == "REJECTED_PRECONDITION"
 
 
+@pytest.mark.contract
 def test_commit_is_idempotent_for_identical_tuple() -> None:
     admitted = admit_proposal_v1(
         {
@@ -179,6 +188,7 @@ def test_commit_is_idempotent_for_identical_tuple() -> None:
     assert second == first
 
 
+@pytest.mark.contract
 def test_commit_idempotency_cache_is_scoped_to_session_and_trace() -> None:
     admitted_a = admit_proposal_v1(
         {
@@ -222,6 +232,7 @@ def test_commit_idempotency_cache_is_scoped_to_session_and_trace() -> None:
     assert "commit.recorded" in event_types_b
 
 
+@pytest.mark.contract
 def test_commit_with_digest_only_does_not_narrate_execution() -> None:
     admitted = admit_proposal_v1(
         {
@@ -249,6 +260,7 @@ def test_commit_with_digest_only_does_not_narrate_execution() -> None:
     assert "action.result_validated" not in event_types
 
 
+@pytest.mark.contract
 def test_commit_with_execution_payload_emits_executed_and_validated_events() -> None:
     admitted = admit_proposal_v1(
         {
@@ -275,6 +287,7 @@ def test_commit_with_execution_payload_emits_executed_and_validated_events() -> 
     assert "action.result_validated" in event_types
 
 
+@pytest.mark.contract
 def test_end_session_emits_ended_status_and_event_digest() -> None:
     response = end_session_v1(
         {
@@ -286,6 +299,7 @@ def test_end_session_emits_ended_status_and_event_digest() -> None:
     assert isinstance(response["event_digest"], str) and len(response["event_digest"]) == 64
 
 
+@pytest.mark.contract
 def test_projection_pack_fails_when_feature_flag_disabled(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("ORKET_ENABLE_NERVOUS_SYSTEM", raising=False)
     with pytest.raises(ValueError):

@@ -4,8 +4,12 @@ import json
 import tempfile
 from pathlib import Path
 
+import pytest
+
 from orket.kernel.v1.state.lsi import LocalSovereignIndex
 from orket.kernel.v1.state.promotion import promote_turn
+
+pytestmark = pytest.mark.integration
 
 
 def _write_tombstone(root: Path, run_id: str, turn_id: str, stem: str, payload: dict) -> Path:

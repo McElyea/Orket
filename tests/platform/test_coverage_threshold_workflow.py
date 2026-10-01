@@ -2,9 +2,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
 
 def test_coverage_threshold_workflow_enforces_project_coverage_gate() -> None:
-    """Layer: contract. Verifies coverage threshold enforcement is explicit CI behavior."""
+    """Layer: unit. Verifies coverage threshold enforcement is explicit CI behavior."""
     workflow = Path(".gitea/workflows/coverage-threshold.yml").read_text(encoding="utf-8")
     pyproject = Path("pyproject.toml").read_text(encoding="utf-8")
 

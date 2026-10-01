@@ -4,8 +4,12 @@ import json
 import subprocess
 from pathlib import Path
 
+import pytest
 
-# Layer: contract
+pytestmark = pytest.mark.integration
+
+
+# Layer: integration
 def test_ring_import_boundary_script_passes_on_repo(tmp_path: Path) -> None:
     out_path = tmp_path / "ring_import_boundary_check.json"
     result = subprocess.run(
@@ -26,7 +30,7 @@ def test_ring_import_boundary_script_passes_on_repo(tmp_path: Path) -> None:
     assert payload["violation_count"] == 0
 
 
-# Layer: contract
+# Layer: integration
 def test_ring_import_boundary_script_detects_forbidden_import(tmp_path: Path) -> None:
     root = tmp_path / "repo"
     compat_dir = root / "compatibility"

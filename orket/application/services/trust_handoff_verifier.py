@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from orket.adapters.execution.owned_io import require_sync_context
 from orket.application.services.trust_handoff_contract import (
     ADMITTED_SOURCE_WITNESS_SCOPES,
     BUNDLE_PATH,
@@ -102,6 +103,7 @@ def verify_trust_handoff_package(
     *,
     context: TrustHandoffVerificationContext | None = None,
 ) -> dict[str, Any]:
+    require_sync_context(code="E_TRUST_HANDOFF_VERIFICATION_REQUIRES_NATIVE_CONTEXT")
     state = _State()
     context = context or TrustHandoffVerificationContext()
     try:

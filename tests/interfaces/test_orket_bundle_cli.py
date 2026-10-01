@@ -12,10 +12,8 @@ import pytest
 import orket.cli as entrypoint_module
 import orket.interfaces.orket_bundle_cli as cli_module
 from orket.application.services.bundle_service import BundleService
-from orket.interfaces.orket_bundle_cli import (
-    ERROR_SDK_COMMAND_REQUIRED,
-    main,
-)
+from orket.interfaces.bundle_outward_cli import ERROR_CONNECTOR_FAILED
+from orket.interfaces.orket_bundle_cli import ERROR_SDK_COMMAND_REQUIRED, main
 
 
 def _fixture_payload(name: str) -> dict:
@@ -251,7 +249,7 @@ def test_run_submit_cli_uses_api_and_prints_response(monkeypatch, capsys) -> Non
             return httpx.Response(200, json={"run_id": "run-cli", "status": "queued"}, request=request)
     monkeypatch.setenv("ORKET_API_URL", "http://127.0.0.1:9999")
     monkeypatch.setenv("ORKET_API_KEY", "secret")
-    monkeypatch.setattr(cli_module.httpx, "Client", _FakeClient)
+    monkeypatch.setattr(httpx, "Client", _FakeClient)
     code = cli_module.main(["run", "submit", "--description", "Demo", "--instruction", "Do it"])
     payload = json.loads(capsys.readouterr().out)
 
@@ -290,7 +288,7 @@ def test_run_status_cli_prints_api_payload(monkeypatch, capsys) -> None:
                 request=request,
             )
 
-    monkeypatch.setattr(cli_module.httpx, "Client", _FakeClient)
+    monkeypatch.setattr(httpx, "Client", _FakeClient)
 
     code = cli_module.main(["run", "status", "run-cli"])
     payload = json.loads(capsys.readouterr().out)
@@ -319,7 +317,7 @@ def test_run_list_cli_sends_status_filter(monkeypatch, capsys) -> None:
             request = httpx.Request(method, f"http://127.0.0.1:8082{path}")
             return httpx.Response(200, json={"items": [], "count": 0}, request=request)
 
-    monkeypatch.setattr(cli_module.httpx, "Client", _FakeClient)
+    monkeypatch.setattr(httpx, "Client", _FakeClient)
 
     code = cli_module.main(["run", "list", "--status", "queued"])
     payload = json.loads(capsys.readouterr().out)
@@ -352,7 +350,7 @@ def test_approvals_cli_delegates_list_review_and_decisions(monkeypatch, capsys) 
             request = httpx.Request(method, f"http://127.0.0.1:8082{path}")
             return httpx.Response(200, json={"ok": True, "path": path}, request=request)
 
-    monkeypatch.setattr(cli_module.httpx, "Client", _FakeClient)
+    monkeypatch.setattr(httpx, "Client", _FakeClient)
 
     assert cli_module.main(["approvals", "list"]) == 0
     _ = json.loads(capsys.readouterr().out)
@@ -416,7 +414,7 @@ def test_run_inspection_cli_delegates_events_summary_and_watch(monkeypatch, caps
             request = httpx.Request(method, f"http://127.0.0.1:8082{path}")
             return httpx.Response(200, json={"ok": True, "path": path}, request=request)
 
-    monkeypatch.setattr(cli_module.httpx, "Client", _FakeClient)
+    monkeypatch.setattr(httpx, "Client", _FakeClient)
 
     assert cli_module.main(["run", "events", "run-1", "--types", "tool_invoked", "--from-turn", "1"]) == 0
     _ = json.loads(capsys.readouterr().out)
@@ -498,6 +496,6 @@ def test_connectors_cli_rejects_invalid_args_before_harness_invocation(tmp_path:
     payload = json.loads(capsys.readouterr().out)
 
     assert code == 1
-    assert payload["code"] == cli_module.ERROR_CONNECTOR_FAILED
+    assert payload["code"] == ERROR_CONNECTOR_FAILED
     assert payload["errors"] == [{"field": "content", "reason": "required"}]
     assert (tmp_path / "missing-content.txt").exists() is False

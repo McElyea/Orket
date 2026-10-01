@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from orket.kernel.v1.nervous_system_contract import (
     COMMIT_STATUSES_V1,
     GENESIS_STATE_DIGEST,
@@ -9,6 +11,8 @@ from orket.kernel.v1.nervous_system_contract import (
     ordered_reason_codes_v1,
     tool_profile_digest,
 )
+
+pytestmark = pytest.mark.contract
 
 
 def test_genesis_state_digest_is_locked_zero_hash() -> None:

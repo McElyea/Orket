@@ -5,12 +5,13 @@ from types import SimpleNamespace
 import pytest
 
 from orket.driver import OrketDriver
+from tests.helpers.logging_fixture_owner import prepared_fixture_owner
 
 pytestmark = pytest.mark.unit
 
 
-def _driver(root: Path) -> OrketDriver:
-    driver = OrketDriver.__new__(OrketDriver)
+async def _driver(root: Path) -> OrketDriver:
+    driver = await prepared_fixture_owner(OrketDriver, root)
     driver.model_root = root / "model"
     driver.workspace_root = root / "workspace"
     driver.skill = None
@@ -21,7 +22,7 @@ def _driver(root: Path) -> OrketDriver:
 
 @pytest.mark.asyncio
 async def test_operator_canary_conversation_flow(tmp_path):
-    driver = _driver(tmp_path)
+    driver = await _driver(tmp_path)
 
     hello = await driver.process_request("hello")
     assert "chat normally" in hello.lower()
@@ -35,7 +36,7 @@ async def test_operator_canary_conversation_flow(tmp_path):
 
 @pytest.mark.asyncio
 async def test_operator_canary_capability_flow(tmp_path):
-    driver = _driver(tmp_path)
+    driver = await _driver(tmp_path)
     response = await driver.process_request("What can you do in this environment?")
 
     assert "Operator CLI is available." in response

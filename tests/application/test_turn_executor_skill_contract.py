@@ -6,7 +6,9 @@ import pytest
 
 from orket.application.services.tool_gate_service import ToolGate
 from orket.application.workflows.turn_executor import TurnExecutor
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain.state_machine import StateMachine
+from orket.logging import bind_logging, prepare_logging
 from orket.schema import CardStatus, IssueConfig, RoleConfig
 from tests.helpers.turn_artifacts import artifact_test_utc_now
 
@@ -69,7 +71,8 @@ async def test_turn_executor_rejects_undeclared_skill_entrypoint_tool(tmp_path: 
         }
     }
 
-    result = await executor.execute_turn(_issue(), _role(), _Model(), _ToolBox(), context)
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), _role(), _Model(), _ToolBox(), context)
     assert result.success is False
     assert any("undeclared entrypoint/tool 'write_file'" in item for item in (result.violations or []))
 
@@ -93,7 +96,8 @@ async def test_turn_executor_rejects_tool_when_required_permission_missing(tmp_p
     }
     context["granted_permissions"] = {"filesystem": ["read"]}
 
-    result = await executor.execute_turn(_issue(), _role(), _Model(), _ToolBox(), context)
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), _role(), _Model(), _ToolBox(), context)
     assert result.success is False
     assert any("missing required permissions" in item for item in (result.violations or []))
 
@@ -119,7 +123,8 @@ async def test_turn_executor_rejects_tool_when_runtime_limits_exceed_allowed_cap
         }
     }
 
-    result = await executor.execute_turn(_issue(), _role(), _Model(), _ToolBox(), context)
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), _role(), _Model(), _ToolBox(), context)
     assert result.success is False
     assert any("runtime limits exceeded" in item for item in (result.violations or []))
 
@@ -146,7 +151,8 @@ async def test_turn_executor_passes_skill_runtime_binding_context_to_toolbox(tmp
         }
     }
 
-    result = await executor.execute_turn(_issue(), _role(), _Model(), toolbox, context)
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        result = await executor.execute_turn(_issue(), _role(), _Model(), toolbox, context)
     assert result.success is True
     assert toolbox.last_context is not None
     assert toolbox.last_context["skill_entrypoint_id"] == "write-main"

@@ -4,6 +4,8 @@ import pytest
 
 from orket.adapters.tools.families import FileSystemTools
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.asyncio
 async def test_write_file_uses_path_lock_for_parallel_writes(tmp_path):

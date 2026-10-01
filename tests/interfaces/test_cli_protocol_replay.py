@@ -5,6 +5,7 @@ from types import SimpleNamespace
 
 import pytest
 
+import orket.application.services.extension_catalog_commands as extension_commands_module
 import orket.interfaces.cli as cli_module
 from orket.adapters.storage.async_repositories import AsyncRunLedgerRepository
 from orket.adapters.storage.protocol_append_only_ledger import AppendOnlyRunLedger
@@ -170,7 +171,7 @@ async def test_cli_protocol_replay_prints_summary(monkeypatch, tmp_path: Path, c
     workspace = tmp_path / "workspace" / "default"
     _write_run(workspace, "run-a", status="incomplete", ok=True)
     _bypass_startup_for_protocol_path_test(monkeypatch)
-    monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
+    monkeypatch.setattr(extension_commands_module, "ExtensionManager", _DummyExtensionManager)
     monkeypatch.setattr(cli_module.sys, "platform", "linux")
     monkeypatch.setattr(
         cli_module,
@@ -195,7 +196,7 @@ async def test_cli_protocol_replay_requires_run_id_target(monkeypatch, tmp_path:
     workspace = tmp_path / "workspace" / "default"
     workspace.mkdir(parents=True, exist_ok=True)
     _bypass_startup_for_protocol_path_test(monkeypatch)
-    monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
+    monkeypatch.setattr(extension_commands_module, "ExtensionManager", _DummyExtensionManager)
     monkeypatch.setattr(cli_module.sys, "platform", "linux")
     monkeypatch.setattr(
         cli_module,
@@ -220,7 +221,7 @@ async def test_cli_protocol_compare_strict_reports_mismatch(monkeypatch, tmp_pat
     _write_run(workspace, "run-a", status="incomplete", ok=True)
     _write_run(workspace, "run-b", status="failed", ok=False)
     _bypass_startup_for_protocol_path_test(monkeypatch)
-    monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
+    monkeypatch.setattr(extension_commands_module, "ExtensionManager", _DummyExtensionManager)
     monkeypatch.setattr(cli_module.sys, "platform", "linux")
     monkeypatch.setattr(
         cli_module,
@@ -249,7 +250,7 @@ async def test_cli_protocol_parity_prints_parity_result(monkeypatch, tmp_path: P
     _write_run(workspace, "run-a", status="incomplete", ok=True)
     await _write_sqlite_run(sqlite_db, "run-a", status="incomplete")
     _bypass_startup_for_protocol_path_test(monkeypatch)
-    monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
+    monkeypatch.setattr(extension_commands_module, "ExtensionManager", _DummyExtensionManager)
     monkeypatch.setattr(cli_module.sys, "platform", "linux")
     monkeypatch.setattr(
         cli_module,
@@ -276,7 +277,7 @@ async def test_cli_protocol_parity_strict_reports_mismatch(monkeypatch, tmp_path
     _write_run(workspace, "run-a", status="failed", ok=False)
     await _write_sqlite_run(sqlite_db, "run-a", status="incomplete")
     _bypass_startup_for_protocol_path_test(monkeypatch)
-    monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
+    monkeypatch.setattr(extension_commands_module, "ExtensionManager", _DummyExtensionManager)
     monkeypatch.setattr(cli_module.sys, "platform", "linux")
     monkeypatch.setattr(
         cli_module,
@@ -305,7 +306,7 @@ async def test_cli_protocol_parity_missing_sqlite_reports_error(monkeypatch, tmp
 
     missing_db = workspace / "missing.db"
     _bypass_startup_for_protocol_path_test(monkeypatch)
-    monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
+    monkeypatch.setattr(extension_commands_module, "ExtensionManager", _DummyExtensionManager)
     monkeypatch.setattr(cli_module.sys, "platform", "linux")
     monkeypatch.setattr(
         cli_module,
@@ -333,7 +334,7 @@ async def test_cli_protocol_campaign_prints_match_summary(monkeypatch, tmp_path:
     _write_campaign_run(workspace, "run-b", session_id="sess-campaign", status="incomplete", ok=True)
 
     _bypass_startup_for_protocol_path_test(monkeypatch)
-    monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
+    monkeypatch.setattr(extension_commands_module, "ExtensionManager", _DummyExtensionManager)
     monkeypatch.setattr(cli_module.sys, "platform", "linux")
     monkeypatch.setattr(
         cli_module,
@@ -361,7 +362,7 @@ async def test_cli_protocol_campaign_strict_reports_mismatch(monkeypatch, tmp_pa
     _write_campaign_run(workspace, "run-b", session_id="sess-campaign", status="failed", ok=False)
 
     _bypass_startup_for_protocol_path_test(monkeypatch)
-    monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
+    monkeypatch.setattr(extension_commands_module, "ExtensionManager", _DummyExtensionManager)
     monkeypatch.setattr(cli_module.sys, "platform", "linux")
     monkeypatch.setattr(
         cli_module,
@@ -391,7 +392,7 @@ async def test_cli_protocol_campaign_supports_explicit_run_id_filter(monkeypatch
     _write_campaign_run(workspace, "run-c", session_id="sess-campaign", status="failed", ok=False)
 
     _bypass_startup_for_protocol_path_test(monkeypatch)
-    monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
+    monkeypatch.setattr(extension_commands_module, "ExtensionManager", _DummyExtensionManager)
     monkeypatch.setattr(cli_module.sys, "platform", "linux")
     monkeypatch.setattr(
         cli_module,
@@ -422,7 +423,7 @@ async def test_cli_protocol_campaign_uses_explicit_runs_root(monkeypatch, tmp_pa
     _write_campaign_run(custom_root, "run-b", session_id="sess-campaign", status="incomplete", ok=True)
 
     _bypass_startup_for_protocol_path_test(monkeypatch)
-    monkeypatch.setattr(cli_module, "ExtensionManager", _DummyExtensionManager)
+    monkeypatch.setattr(extension_commands_module, "ExtensionManager", _DummyExtensionManager)
     monkeypatch.setattr(cli_module.sys, "platform", "linux")
     monkeypatch.setattr(
         cli_module,

@@ -6,13 +6,14 @@ import json
 import math
 import os
 import sys
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from datetime import datetime
+from functools import partial
 from pathlib import Path
 from uuid import UUID
 
 from orket.adapters.execution.fixture_runner import RUNNER_CODE
-from orket.adapters.execution.owned_io import run_owned_thread
+from orket.adapters.execution.owned_io import finish_owned_thread, run_owned_thread
 from orket.application.services.command_process_supervisor import (
     CommandProcessCancelled,
     CommandProcessSupervisor,
@@ -36,18 +37,11 @@ class FixtureVerificationUncertain(OrketInfrastructureError):
 
 
 async def _record_lifetime(workspace: Path, event: str, lifetime: dict) -> None:
-    publication = asyncio.create_task(asyncio.to_thread(log_event, event, lifetime, workspace))
-    while True:
-        try:
-            await asyncio.shield(publication)
-            return
-        except asyncio.CancelledError:
-            if publication.cancelled():
-                raise
+    await finish_owned_thread(partial(log_event, event, lifetime, workspace))
 
 
 class FixtureVerificationService:
-    def __init__(self, workspace: Path, *, utc_now: Callable[[], datetime], environment: dict | None = None,
+    def __init__(self, workspace: Path, *, utc_now: Callable[[], datetime], environment: Mapping[str, str] | None = None,
                  runtime_inputs: RuntimeInputService | None = None):
         self.workspace = workspace
         self.utc_now = utc_now

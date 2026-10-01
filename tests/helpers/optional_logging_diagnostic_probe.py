@@ -14,6 +14,8 @@ import psutil
 
 from orket import logging as logging_api
 from orket.adapters.observability import log_publication as owner
+from orket.adapters.observability.logging_context import bind_logging, prepare_logging_native
+from orket.core.contracts.logging_inputs import LoggingInputs
 from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
 
 __test__ = False
@@ -48,8 +50,9 @@ def _install_refusals(kind: str, failure: BaseException, attempts: list[str]):
     return original_append, original_clock, handler
 
 
-async def _optional(root: Path, event: str) -> None:
-    logging_api.log_event(event, {}, workspace=root)
+async def _optional(root: Path, event: str, prepared) -> None:
+    with bind_logging(prepared):
+        logging_api.log_event(event, {}, workspace=root)
 
 
 def _settle(failure: BaseException) -> dict:
@@ -63,6 +66,7 @@ def _settle(failure: BaseException) -> dict:
 
 def observe(root: Path, kind: str) -> dict:
     owner.settle_log_write_frontier()
+    prepared = prepare_logging_native(LoggingInputs(root))
     failure = (ValueError if kind == "append-valueerror" else OSError)("diagnostic refusal fixture")
     attempts, delivered, thread_errors = [], [], []
     original_append, original_clock, handler = _install_refusals(kind, failure, attempts)
@@ -85,12 +89,12 @@ def observe(root: Path, kind: str) -> dict:
             if kind == "native-oserror":
                 logging_api.log_event("diagnostic_probe", {}, workspace=root)
             else:
-                asyncio.run(_optional(root, "diagnostic_probe"))
+                asyncio.run(_optional(root, "diagnostic_probe", prepared))
         except OSError as exc:
             outward = {"result": "failure", "type": type(exc).__name__, "identity": exc is failure}
         frontier = _settle(failure)
         if frontier["result"] == "success" and kind != "native-oserror":
-            asyncio.run(_optional(root, "later_optional"))
+            asyncio.run(_optional(root, "later_optional", prepared))
             later_frontier = _settle(failure)
         else:
             later_frontier = None

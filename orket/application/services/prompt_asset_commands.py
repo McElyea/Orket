@@ -1,6 +1,7 @@
 """Prompt policy and resolution inside the service's retained, guarded worker."""
 from __future__ import annotations
 
+import builtins
 from datetime import date
 from typing import Any
 
@@ -16,7 +17,7 @@ class PromptAssetCommands:
     def __init__(self, store: PromptAssetStore, as_of: date):
         self.store, self.as_of = store, as_of
 
-    def list(self, *, kind: str = "all", status: str = "") -> list[dict[str, Any]]:
+    def list(self, *, kind: str = "all", status: str = "") -> builtins.list[dict[str, Any]]:
         rows = []
         for selected in ("role", "dialect") if kind == "all" else (kind,):
             for path in self.store.paths(selected):
@@ -65,7 +66,7 @@ class PromptAssetCommands:
             self.store.write(path, payload)
         return {"path": str(path), "apply_changes": bool(apply_changes), **result}
 
-    def stale(self, *, max_candidate_age_days: int = 14) -> list[dict[str, Any]]:
+    def stale(self, *, max_candidate_age_days: int = 14) -> builtins.list[dict[str, Any]]:
         rows = []
         for row in self.list(status="candidate"):
             try:
@@ -77,7 +78,7 @@ class PromptAssetCommands:
                              "reason": "updated_at_missing_or_invalid" if age is None else "candidate_age_exceeded"})
         return rows
 
-    def enforce_sla(self, *, max_candidate_age_days: int = 14, renew_ids: list[str] | None = None,
+    def enforce_sla(self, *, max_candidate_age_days: int = 14, renew_ids: builtins.list[str] | None = None,
                     apply_changes: bool = False) -> dict[str, Any]:
         renew = {str(value).strip() for value in (renew_ids or []) if str(value).strip()}
         stale = self.stale(max_candidate_age_days=max_candidate_age_days)

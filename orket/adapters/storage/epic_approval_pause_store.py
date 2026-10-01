@@ -60,7 +60,9 @@ class EpicApprovalPauseStore:
 
     async def recoveries(self) -> list[EpicApprovalRecovery]:
         await self.latest()  # Recovery cannot conceal a gap in the original pause history.
-        records, heads, request_ids = [], {}, set()
+        records: list[EpicApprovalRecovery] = []
+        heads: dict[int, EpicApprovalRecovery] = {}
+        request_ids: set[str] = set()
         async with self.connection.execute(
             "SELECT sequence, ordinal, request_id, payload, digest FROM epic_approval_recoveries "
             "WHERE session_id = ? ORDER BY sequence, ordinal", (self.session_id,),

@@ -2,6 +2,8 @@ import pytest
 
 from orket.adapters.storage.async_pending_gate_repository import AsyncPendingGateRepository
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.asyncio
 async def test_pending_gate_request_create_list_and_resolve(db_path):

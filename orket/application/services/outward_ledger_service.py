@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-import asyncio
 from collections import Counter
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
+from orket.adapters.execution.owned_io import run_owned_thread
+from orket.adapters.storage.async_file_tools import capture_file_roots
 from orket.adapters.storage.outward_ledger_file_store import OutwardLedgerFileStore
 from orket.adapters.storage.outward_ledger_snapshot_store import OutwardLedgerSnapshotStore
 from orket.adapters.storage.outward_run_event_store import OutwardRunEventStore
@@ -87,6 +88,8 @@ class OutwardLedgerService:
     async def verify_run(
         self, run_id: str, *, external_anchor: Mapping[str, Any] | None = None,
     ) -> dict[str, Any]:
+        if isinstance(external_anchor, Mapping):
+            external_anchor = dict(external_anchor)
         try:
             snapshot = await self._snapshot(run_id)
         except OutwardLedgerIntegrityError as exc:
@@ -119,10 +122,13 @@ class OutwardLedgerService:
         clean_run_id = str(run_id or "").strip()
         if not clean_run_id:
             raise OutwardLedgerValidationError("run_id is required")
-        paths = await asyncio.to_thread(lambda: (self.run_store.db_path.resolve(), self.event_store.db_path.resolve()))
+        selected_paths = capture_file_roots([self.run_store.db_path, self.event_store.db_path])
+        reader = self.snapshot_store.capture()
+        paths = await run_owned_thread(lambda: tuple(path.resolve() for path in selected_paths),
+                                       label="outward-ledger-store-paths")
         if paths[0] != paths[1]:
             raise OutwardLedgerValidationError("E_OUTWARD_TRANSACTION_DATABASE_MISMATCH")
-        return await self.snapshot_store.read(clean_run_id)
+        return await reader.read(clean_run_id)
 
     async def _record_export_requested(
         self,

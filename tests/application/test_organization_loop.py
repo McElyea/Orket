@@ -6,15 +6,16 @@ import pytest
 
 import orket.organization_loop as organization_loop_module
 from orket.application.services.runtime_construction_inputs import RuntimeConstructionInputs
+from tests.helpers.logging_fixture_owner import prepared_fixture_owner
 from tests.helpers.runtime_result import published_result
 
 
 @pytest.mark.asyncio
 @pytest.mark.unit
 # Layer: unit
-async def test_run_forever_yields_after_fast_card_execution(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_run_forever_yields_after_fast_card_execution(tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Layer: unit. Verifies the organization loop yields after a fast card path instead of hot-spinning."""
-    loop = organization_loop_module.OrganizationLoop.__new__(organization_loop_module.OrganizationLoop)
+    loop = await prepared_fixture_owner(organization_loop_module.OrganizationLoop, tmp_path)
     loop.running = False
     loop.org = None
     loop.org_path = Path("model/organization.json")

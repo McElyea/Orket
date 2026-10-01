@@ -5,6 +5,17 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.115] - 2026-09-30
+
+### Changed
+- Checkpoint interrupted architectural-truth work on `codex/architectural-truth-bt0`: explicit logging preparation and caller migrations, native I/O ownership, captured runtime inputs, checkpoint lineage, focused module extraction, canonical imports, test classification and the generated authority view.
+- Finish the applied guarded-mutation repair's CI and contract handoff. Preserve six unapplied proposal bundles without admitting them as runtime behavior or expanding the project.
+- This is a partial branch checkpoint. Mypy remains failing; the fresh full-suite diagnostic was stopped after observing failures, so fresh complete-suite coverage is unavailable. Scoped verification and exact remaining limits are recorded in `docs/projects/archive/architectural-truth/AT09302026-WIP-CHECKPOINT/CHECKPOINT.md`.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+- Direct async logging consumers must prepare `LoggingInputs` and bind the prepared value in the operation task; constructor-bypassing embeddings must supply their explicit inputs. See `docs/architecture/CONTRACT_DELTA_LOGGING_PREPARATION_D_2026-09-28.md` and the other retained September 28 contract deltas. No fallback conceals missing preparation.
+
 ## [0.6.114] - 2026-09-27
 
 ### Fixed

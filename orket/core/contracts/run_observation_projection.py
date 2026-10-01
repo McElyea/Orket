@@ -29,7 +29,7 @@ def _deduplicated(records: Iterable[dict[str, Any]], *, replay: bool) -> Iterato
     seen: set[tuple[Any, ...]] = set()
     for record in records:
         data = record.get("data") or {}
-        signature = (record.get("timestamp"), record.get("event"), str(data.get("turn_trace_id") or ""),
+        signature: tuple[object, ...] = (record.get("timestamp"), record.get("event"), str(data.get("turn_trace_id") or ""),
                      str(record.get("role") or ""), str(data.get("issue_id") or ""))
         if replay:
             signature += (str(data.get("turn_index") or ""),)

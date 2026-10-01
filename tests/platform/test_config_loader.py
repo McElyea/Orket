@@ -1,7 +1,11 @@
 ﻿import json
 
+import pytest
+
 from orket.runtime import ConfigLoader
 from orket.schema import EpicConfig
+
+pytestmark = pytest.mark.integration
 
 
 def test_load_organization(tmp_path):

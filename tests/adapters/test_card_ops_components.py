@@ -9,6 +9,7 @@ from orket.adapters.storage.card_archive_ops import CardArchiveOps
 from orket.adapters.storage.card_migrations import CardMigrations
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_card_migrations_creates_issues_table(tmp_path: Path) -> None:
     db_path = tmp_path / "cards.db"
@@ -20,6 +21,7 @@ async def test_card_migrations_creates_issues_table(tmp_path: Path) -> None:
         assert row is not None
 
 
+@pytest.mark.contract
 @pytest.mark.asyncio
 async def test_card_archive_ops_archive_cards_batches_results() -> None:
     calls: list[str] = []

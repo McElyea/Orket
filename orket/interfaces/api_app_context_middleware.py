@@ -32,5 +32,4 @@ class ApiAppContextMiddleware:
             await unavailable(scope, send, detail="API runtime is not ready.")
             return
         await run_owned_asgi(
-            context, self._app, scope, receive, send, unavailable_detail="API runtime is closing.", version_header=True
-        )
+            context, self._app, scope, receive, send, unavailable_detail="API runtime is closing.", version_header=True)

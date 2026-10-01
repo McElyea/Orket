@@ -9,6 +9,8 @@ from orket.application.services.local_model_factory import (
     create_local_model_provider_async,
 )
 
+pytestmark = pytest.mark.integration
+
 
 def _live_enabled() -> bool:
     return os.getenv("ORKET_LIVE_ROLE_TESTS", "").strip().lower() in {"1", "true", "yes"}

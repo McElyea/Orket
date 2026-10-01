@@ -7,7 +7,7 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any
 
-from orket.adapters.execution.owned_io import run_owned_io, run_owned_thread
+from orket.adapters.execution.owned_io import OwnedCoroutine, run_owned_io, run_owned_thread
 from orket.application.services.cards_odr_stage import run_cards_odr_prebuild
 from orket.application.services.decision_context_service import recommend_routing_seat
 from orket.application.services.loop_decision_service import admit_policy_names
@@ -79,7 +79,7 @@ class OrchestratorTurnPreparationService:
         resolve_prompt_version_exact: Callable[[], str],
         resolve_prompt_patch: Callable[[], str],
         resolve_prompt_patch_label: Callable[[], str],
-        close_provider_transport: Callable[[Any], Awaitable[None]],
+        close_provider_transport: Callable[[Any], OwnedCoroutine[None]],
         should_suppress_reference_context_for_cards_runtime: Callable[[dict[str, Any] | None], bool],
     ) -> None:
         self.workspace_root = workspace_root

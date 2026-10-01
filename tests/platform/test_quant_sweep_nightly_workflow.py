@@ -2,9 +2,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
 
 def test_quant_sweep_nightly_workflow_is_truthful_dry_run_contract() -> None:
-    """Layer: contract. Verifies the nightly quant workflow is labeled as a dry-run artifact lane, not a fake KPI gate."""
+    """Layer: unit. Verifies the nightly quant workflow is labeled as a dry-run artifact lane, not a fake KPI gate."""
     workflow_path = Path(".gitea/workflows/quant-sweep-nightly.yml")
     text = workflow_path.read_text(encoding="utf-8")
 

@@ -6,6 +6,8 @@ import re
 import tempfile
 from pathlib import Path
 
+import pytest
+
 from orket.kernel.v1.state.lsi import LocalSovereignIndex
 from orket.kernel.v1.state.promotion import promote_turn
 
@@ -45,6 +47,7 @@ def _extract_event_codes(events: list[str]) -> set[str]:
     return found
 
 
+@pytest.mark.contract
 def test_registry_integrity_and_ordering() -> None:
     codes = _registry_codes()
     assert codes == sorted(codes), "Violation: Registry codes must be sorted deterministically."
@@ -53,12 +56,14 @@ def test_registry_integrity_and_ordering() -> None:
     assert not bad, f"Violation: Invalid code token(s) in registry: {bad}"
 
 
+@pytest.mark.unit
 def test_registry_digest_is_deterministic() -> None:
     digest_a = _registry_digest()
     digest_b = _registry_digest()
     assert digest_a == digest_b, "Violation: Registry wrapper digest must be deterministic."
 
 
+@pytest.mark.integration
 def test_emitted_issue_and_event_codes_are_registered() -> None:
     codes = set(_registry_codes())
     emitted_codes: set[str] = set()

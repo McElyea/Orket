@@ -7,7 +7,7 @@ from typing import Any
 
 
 def request_sampling_options(context: Mapping[str, Any]) -> dict[str, Any]:
-    options = {}
+    options: dict[str, int | float] = {}
     maximum = context.get("local_prompt_max_output_tokens")
     if maximum is not None:
         if not isinstance(maximum, int) or isinstance(maximum, bool) or maximum < 1:

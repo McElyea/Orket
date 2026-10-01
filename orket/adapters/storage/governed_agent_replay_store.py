@@ -7,6 +7,8 @@ from typing import Any
 
 import aiosqlite
 
+from orket.adapters.execution.owned_io import run_owned_io
+from orket.adapters.storage.async_file_tools import capture_file_roots
 from orket.adapters.storage.control_plane_final_truth_store import FinalTruthReadLimitError, read_final_truth
 from orket.core.contracts import AttemptRecord, RunRecord, StepRecord
 from orket.core.contracts.governed_agent_replay import GovernedAgentReplayEvidence
@@ -31,21 +33,29 @@ class GovernedAgentReplayStore:
         self._path = Path(db_path)
 
     async def read_replay_evidence(self, *, run_id: str) -> GovernedAgentReplayEvidence:
-        path = await asyncio.to_thread(self._path.resolve)
-        if not await asyncio.to_thread(path.exists):
-            return GovernedAgentReplayEvidence()
-        try:
-            async with aiosqlite.connect(path.as_uri() + "?mode=ro", uri=True) as conn:
-                conn.row_factory = aiosqlite.Row
-                await conn.execute("PRAGMA query_only = ON")
-                await conn.execute("BEGIN")
-                return await _read_evidence(conn, run_id)
-        except ReplayEvidenceError as exc:
-            return GovernedAgentReplayEvidence(diagnostics=(str(exc),))
-        except FinalTruthReadLimitError:
-            return GovernedAgentReplayEvidence(diagnostics=("replay_evidence_resource_limit",))
-        except (aiosqlite.DatabaseError, OSError, ValueError, TypeError, KeyError) as exc:
-            return GovernedAgentReplayEvidence(diagnostics=(f"evidence_unreadable:{type(exc).__name__}",))
+        path, = capture_file_roots([self._path])
+        return await run_owned_io(
+            lambda: _read_replay_evidence_at(path, run_id),
+            label="governed-agent-replay-read", preserve_failure=True,
+        )
+
+
+async def _read_replay_evidence_at(path: Path, run_id: str) -> GovernedAgentReplayEvidence:
+    path = await asyncio.to_thread(path.resolve)
+    if not await asyncio.to_thread(path.exists):
+        return GovernedAgentReplayEvidence()
+    try:
+        async with aiosqlite.connect(path.as_uri() + "?mode=ro", uri=True) as conn:
+            conn.row_factory = aiosqlite.Row
+            await conn.execute("PRAGMA query_only = ON")
+            await conn.execute("BEGIN")
+            return await _read_evidence(conn, run_id)
+    except ReplayEvidenceError as exc:
+        return GovernedAgentReplayEvidence(diagnostics=(str(exc),))
+    except FinalTruthReadLimitError:
+        return GovernedAgentReplayEvidence(diagnostics=("replay_evidence_resource_limit",))
+    except (aiosqlite.DatabaseError, OSError, ValueError, TypeError, KeyError) as exc:
+        return GovernedAgentReplayEvidence(diagnostics=(f"evidence_unreadable:{type(exc).__name__}",))
 
 
 async def _rows(conn: aiosqlite.Connection, sql: str, parameters: tuple = ()) -> list[aiosqlite.Row]:

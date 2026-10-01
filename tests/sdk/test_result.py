@@ -1,8 +1,11 @@
 ﻿from __future__ import annotations
 
+import pytest
 from pydantic import ValidationError
 
 from orket_extension_sdk.result import Issue, WorkloadResult
+
+pytestmark = pytest.mark.contract
 
 
 def test_issue_severity_is_validated() -> None:

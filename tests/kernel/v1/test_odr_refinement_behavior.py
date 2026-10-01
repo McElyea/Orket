@@ -21,6 +21,8 @@ from orket.kernel.v1.odr.refinement import (
     unresolved_issue_count,
 )
 
+pytestmark = pytest.mark.contract
+
 FIXTURE_ROOT = Path(__file__).parent / "vectors" / "odr" / "refinement"
 
 

@@ -7,7 +7,9 @@ import pytest
 
 from orket.application.services.tool_gate_service import ToolGate
 from orket.application.workflows.turn_executor import TurnExecutor
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.domain.state_machine import StateMachine
+from orket.logging import bind_logging, prepare_logging
 from orket.schema import CardStatus, IssueConfig, RoleConfig
 from tests.helpers.turn_artifacts import artifact_test_utc_now
 
@@ -64,11 +66,13 @@ async def test_turn_executor_checkpoint_and_resume_tool_replay(tmp_path):
     model = _Model()
     toolbox = _ToolBox()
 
-    first = await executor.execute_turn(_issue(), _role(), model, toolbox, _context(resume_mode=False))
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        first = await executor.execute_turn(_issue(), _role(), model, toolbox, _context(resume_mode=False))
     assert first.success is True
     assert toolbox.calls == 1
 
-    second = await executor.execute_turn(_issue(), _role(), model, toolbox, _context(resume_mode=True))
+    with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
+        second = await executor.execute_turn(_issue(), _role(), model, toolbox, _context(resume_mode=True))
     assert second.success is True
     assert toolbox.calls == 1
 

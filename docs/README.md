@@ -90,6 +90,11 @@ This index is the canonical map for markdown docs under `docs/`, excluding `docs
 63. `docs/specs/TRUSTED_CHANGE_SCOPE_CATALOG_V1.md`
 64. `docs/specs/FINITE_TRUST_KERNEL_MODEL_V1.md`
 65. `docs/specs/PORTABLE_TRUST_CONFORMANCE_PACK_V1.md`
+66. `docs/specs/API_RUNTIME_LIFECYCLE.md`
+67. `docs/specs/SHARED_IO_CANCELLATION.md`
+68. `docs/specs/EVIDENCE_ARTIFACT_PUBLICATION_OWNERSHIP.md`
+69. `docs/specs/QUALITY_CHECKER_CONTRACT.md`
+70. `docs/specs/CURRENT_AUTHORITY_SOURCE_CONTRACT.md`
 
 ## Process
 1. `docs/process/PR_REVIEW_POLICY.md`

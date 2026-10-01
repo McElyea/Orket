@@ -5,8 +5,10 @@ import asyncio
 
 import pytest
 
+from orket.adapters.observability.logging_context import PreparedLogging
 from orket.application.services.api_runtime_container import ApiRuntimeContainer
 from orket.application.services.command_process_supervisor import CommandProcessCancelled
+from orket.core.contracts.logging_inputs import LoggingInputs
 from orket.core.contracts.owned_command import CommandExecutionUncertain, OwnedCommandResult
 
 pytestmark = [pytest.mark.contract, pytest.mark.asyncio]
@@ -26,7 +28,8 @@ class Resource:
 
 
 def container(tmp_path, engine):
-    return ApiRuntimeContainer(tmp_path, None, None, None, engine)
+    # Synthetic teardown ports do not invoke logging; this typed field is not preparation proof.
+    return ApiRuntimeContainer(tmp_path, None, None, None, engine, PreparedLogging(LoggingInputs(tmp_path)))
 
 
 @pytest.mark.parametrize("error", [OSError("close failed"), asyncio.CancelledError("owner interrupted")])

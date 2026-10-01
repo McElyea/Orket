@@ -43,3 +43,11 @@ movement's cause. The canonical plan retains the original failure and revised co
 - Version bump type: Patch checkpoint destined for main, with a local annotated tag after verification.
 - Effective version/date: 0.6.15 local checkpoint, 2026-09-18.
 - Downstream impact: Internal port/import migration. Complete CLI executable/process environment capture, concurrent first-preparation ownership, shared-client request lifetime/shutdown and remaining provider settings remain active C/D work. Controlled HTTP responses are not model-quality proof; no new provider promotion or hostile-code boundary is claimed.
+
+
+The later `model_stream_v1` admission correction applies this same canonical
+target acceptance to the streaming workload before inference construction.
+Nonempty BLOCKED targets cannot bypass preparation through that distinct caller;
+the original empty-model ValueError remains, while newly refused nonempty targets
+use ModelConnectionError. Exact scope and proof limits:
+`docs/architecture/CONTRACT_DELTA_MODEL_STREAM_ADMISSION_D_2026-09-28.md`.

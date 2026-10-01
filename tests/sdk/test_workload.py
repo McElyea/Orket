@@ -8,6 +8,8 @@ from orket_extension_sdk.capabilities import CapabilityRegistry
 from orket_extension_sdk.result import WorkloadResult
 from orket_extension_sdk.workload import WorkloadContext, run_workload
 
+pytestmark = pytest.mark.contract
+
 
 class _GoodWorkload:
     def run(self, ctx: WorkloadContext, payload: dict[str, object]) -> WorkloadResult:
