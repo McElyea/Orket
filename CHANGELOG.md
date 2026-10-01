@@ -5,6 +5,16 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.122] - 2026-10-01
+
+### Changed
+- Finish the three frozen ATG-05 E2 hotspots: move orchestrator context construction, dispatcher checks/results and message formatting/read stages into concrete responsibility modules. Preserve public interfaces, prompt order, phase-selected effects, captured inputs and native cleanup semantics.
+- The named roots are 397, 187 and 81 lines, with every new/extracted function within 70 lines. Retain real phase/effect/read/replay controls in both Quality jobs and extend the prompt-input guard to all extracted renderers.
+- This is a scoped checkpoint; canonical typing, the unchanged 89-percent coverage gate and installed/platform/provider/hosted acceptance remain open.
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
 ## [0.6.121] - 2026-10-01
 
 ### Fixed

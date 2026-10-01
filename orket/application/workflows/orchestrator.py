@@ -45,7 +45,7 @@ from orket.runtime_paths import control_plane_db_for_runtime
 from orket.schema import CardStatus, EnvironmentConfig, EpicConfig, IssueConfig, TeamConfig
 from orket.time_utils import utc_now_iso
 
-from . import orchestrator_ops
+from . import orchestrator_ops, orchestrator_turn_context_composition
 from .turn_approval_publication import create_pending_tool_approval_request
 
 
@@ -192,7 +192,7 @@ class Orchestrator:
         )
 
     def _history_context(self, *args: Any, **kwargs: Any) -> Any:
-        return orchestrator_ops._history_context(self, *args, **kwargs)
+        return orchestrator_turn_context_composition._history_context(self, *args, **kwargs)
 
     async def _execute_issue_turn(self, *args: Any, **kwargs: Any) -> Any:
         return await orchestrator_ops._execute_issue_turn(self, *args, **kwargs)
@@ -207,7 +207,7 @@ class Orchestrator:
         return await create_pending_tool_approval_request(self, *args, **kwargs)
 
     async def _build_turn_context(self, *args: Any, **kwargs: Any) -> Any:
-        return await orchestrator_ops._build_turn_context(self, *args, **kwargs)
+        return await orchestrator_turn_context_composition._build_turn_context(self, *args, **kwargs)
 
     async def _build_dependency_context(self, *args: Any, **kwargs: Any) -> Any:
         return await orchestrator_ops._build_dependency_context(self, *args, **kwargs)

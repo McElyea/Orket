@@ -379,7 +379,19 @@
     "No adverse marshaller subprocess cleanup proof",
     "No whole-lane acceptance or main merge"
   ],
-  "publication": "pending annotated v0.6.121 checkpoint",
+  "publication": {
+    "commit": "9b2e91d9d02c68e0d0da9e7a30804cf89ee17390",
+    "version": "0.6.121",
+    "tag_object": "b2e9b71e6811c80a7ab85779cbbc7860cb967eab",
+    "remote_refs": {
+      "refs/heads/codex/architectural-truth-bt0": "9b2e91d9d02c68e0d0da9e7a30804cf89ee17390",
+      "refs/tags/v0.6.121": "b2e9b71e6811c80a7ab85779cbbc7860cb967eab",
+      "refs/tags/v0.6.121^{}": "9b2e91d9d02c68e0d0da9e7a30804cf89ee17390"
+    },
+    "clean_worktree": true,
+    "path": "primary",
+    "result": "success"
+  },
   "exact_files_touched": [
     ".gitea/workflows/quality.yml",
     "CHANGELOG.md",
@@ -473,6 +485,27 @@
           "$.source_sha256.orket/application/services/governed_agent_wake_commands.py",
           "$.source_sha256.orket/marshaller/replay.py",
           "$.source_sha256.orket/quickstart/ledger.py"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-01T14:08:10.243193Z",
+      "changed": true,
+      "before_digest": "sha256:38edc119b1813e79f0ffb8e197e3fab8c809588d829c6d5d10c3fdd021f18aea",
+      "after_digest": "sha256:04475ceff9ca9740d8c0cb5a821aed2d8edf5669caf0f666ec61108250d78570",
+      "diff": {
+        "added_paths": 1,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 740,
+        "paths_total_current": 827,
+        "paths_total_reference": 827,
+        "churn_paths": 2,
+        "churn_ratio": 0.002418,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.publication"
         ]
       }
     }

@@ -2976,7 +2976,14 @@
       "path": "orket/application/workflows/orchestrator_ops.py",
       "lines": 478,
       "oversized_functions": [],
-      "batch": "ATG-05-B01"
+      "batch": "ATG-05-B01",
+      "closing": {
+        "lines": 397,
+        "max_function_lines": 67,
+        "sha256": "d7af01deee012271fd84d91d10e870b05bacd2f130136c6ddcee15f0ec2c3678"
+      },
+      "status": "source exit passed; publication pending",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG05/VERIFICATION.json"
     },
     {
       "path": "orket/application/workflows/turn_tool_dispatcher.py",
@@ -2987,7 +2994,14 @@
           "lines": 519
         }
       ],
-      "batch": "ATG-05-B02"
+      "batch": "ATG-05-B02",
+      "closing": {
+        "lines": 187,
+        "max_function_lines": 69,
+        "sha256": "35f7baa4e84757c3a84b0dfab776b89151dc1b06dbcc429b36d3032c4177ad86"
+      },
+      "status": "source exit passed; publication pending",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG05/VERIFICATION.json"
     },
     {
       "path": "orket/application/workflows/turn_message_builder.py",
@@ -2998,7 +3012,14 @@
           "lines": 458
         }
       ],
-      "batch": "ATG-05-B03"
+      "batch": "ATG-05-B03",
+      "closing": {
+        "lines": 81,
+        "max_function_lines": 48,
+        "sha256": "da5927284475ea8b2e8f38f3c1edbb711ba2ad75dc389225321d0291a546a530"
+      },
+      "status": "source exit passed; publication pending",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG05/VERIFICATION.json"
     }
   ],
   "typing_diagnostics": {
@@ -5209,7 +5230,7 @@
       "goal": "ATG-04",
       "owner": "Orket Core",
       "title": "Governed demo public async lifetime",
-      "status": "source exit passed; publication pending",
+      "status": "complete",
       "paths": [
         "orket/application/services/governed_run_demo_service.py"
       ],
@@ -5240,14 +5261,16 @@
       "closing_sha256": {
         "orket/application/services/governed_run_demo_service.py": "790dcacbe4ce9e0bcb710455ccf68dae163183ef17827d6e668db91438d77426"
       },
-      "final_selection": "634 passed on final-source; changed B05/B09 application boundaries reverified by 168 passing cases"
+      "final_selection": "634 passed on final-source; changed B05/B09 application boundaries reverified by 168 passing cases",
+      "checkpoint": "9b2e91d9d02c68e0d0da9e7a30804cf89ee17390",
+      "tag": "v0.6.121"
     },
     {
       "id": "ATG-04-B02",
       "goal": "ATG-04",
       "owner": "Orket Core",
       "title": "Marshaller artifact and ledger lifetime",
-      "status": "source exit passed; publication pending",
+      "status": "complete",
       "paths": [
         "orket/marshaller/artifacts.py",
         "orket/marshaller/ledger.py"
@@ -5275,14 +5298,16 @@
         "orket/marshaller/artifacts.py": "807cbbc86eae46499a1b9254aee5c05d368684bf615d3cf1b237e45574d2d09f",
         "orket/marshaller/ledger.py": "b4958420aad7140d715bc1ada75ab5cced12a7925c16ac5aa347136d728d1c1d"
       },
-      "final_selection": "634 passed on final-source; changed B05/B09 application boundaries reverified by 168 passing cases"
+      "final_selection": "634 passed on final-source; changed B05/B09 application boundaries reverified by 168 passing cases",
+      "checkpoint": "9b2e91d9d02c68e0d0da9e7a30804cf89ee17390",
+      "tag": "v0.6.121"
     },
     {
       "id": "ATG-04-B03",
       "goal": "ATG-04",
       "owner": "Orket Core",
       "title": "Marshaller inspection/replay/promotion inputs and reads",
-      "status": "source exit passed; publication pending",
+      "status": "complete",
       "paths": [
         "orket/marshaller/cli.py",
         "orket/marshaller/replay.py",
@@ -5319,14 +5344,16 @@
         "orket/marshaller/replay.py": "60366b50a1a725ad1b86a53263d7852016ba614e46edc55a24a3ab04a039ed4b",
         "orket/marshaller/promotion.py": "ae0fbf9c2b43ef9c241ea68bdc684564b3d5cce1786bb0ff85c5daae3819cf4a"
       },
-      "final_selection": "634 passed on final-source; changed B05/B09 application boundaries reverified by 168 passing cases"
+      "final_selection": "634 passed on final-source; changed B05/B09 application boundaries reverified by 168 passing cases",
+      "checkpoint": "9b2e91d9d02c68e0d0da9e7a30804cf89ee17390",
+      "tag": "v0.6.121"
     },
     {
       "id": "ATG-04-B04",
       "goal": "ATG-04",
       "owner": "Orket Core",
       "title": "Marshaller attempt and workload ownership",
-      "status": "source exit passed; publication pending",
+      "status": "complete",
       "paths": [
         "orket/marshaller/attempt_runtime.py",
         "orket/workloads/marshaller_v0.py"
@@ -5359,14 +5386,16 @@
         "orket/marshaller/attempt_runtime.py": "ea18acca538c634cb9739c25275caa622bfc36c265e8c3b7633147357da49cc0",
         "orket/workloads/marshaller_v0.py": "bd6cb82869202b3318b0faf871c4cdc6d6c1ca2a822fbaa751e99fe7fcdbc026"
       },
-      "final_selection": "634 passed on final-source; changed B05/B09 application boundaries reverified by 168 passing cases"
+      "final_selection": "634 passed on final-source; changed B05/B09 application boundaries reverified by 168 passing cases",
+      "checkpoint": "9b2e91d9d02c68e0d0da9e7a30804cf89ee17390",
+      "tag": "v0.6.121"
     },
     {
       "id": "ATG-04-B05",
       "goal": "ATG-04",
       "owner": "Orket Core",
       "title": "Quickstart ledger and output lifetime",
-      "status": "source exit passed; publication pending",
+      "status": "complete",
       "paths": [
         "orket/quickstart/ledger.py",
         "orket/quickstart/governed_action_demo.py"
@@ -5400,14 +5429,16 @@
       "directly_required_paths": [
         "orket/application/services/quickstart_io_service.py"
       ],
-      "final_selection": "634 passed on final-source; changed B05/B09 application boundaries reverified by 168 passing cases"
+      "final_selection": "634 passed on final-source; changed B05/B09 application boundaries reverified by 168 passing cases",
+      "checkpoint": "9b2e91d9d02c68e0d0da9e7a30804cf89ee17390",
+      "tag": "v0.6.121"
     },
     {
       "id": "ATG-04-B06",
       "goal": "ATG-04",
       "owner": "Orket Core",
       "title": "Outward policy-validation worker",
-      "status": "source exit passed; publication pending",
+      "status": "complete",
       "paths": [
         "orket/application/services/outward_model_admission_service.py"
       ],
@@ -5433,14 +5464,16 @@
       "closing_sha256": {
         "orket/application/services/outward_model_admission_service.py": "e6d5e1cc93de55f8b0f7e145f1e7419bae335be13b4c701c01b53e45447390a4"
       },
-      "final_selection": "634 passed on final-source; changed B05/B09 application boundaries reverified by 168 passing cases"
+      "final_selection": "634 passed on final-source; changed B05/B09 application boundaries reverified by 168 passing cases",
+      "checkpoint": "9b2e91d9d02c68e0d0da9e7a30804cf89ee17390",
+      "tag": "v0.6.121"
     },
     {
       "id": "ATG-04-B07",
       "goal": "ATG-04",
       "owner": "Orket Core",
       "title": "Explicit offline migration and copy lifetime",
-      "status": "source exit passed; publication pending",
+      "status": "complete",
       "paths": [
         "orket/application/services/outward_authority_migration_service.py",
         "orket/adapters/storage/sqlite_backup.py"
@@ -5470,14 +5503,16 @@
         "orket/application/services/outward_authority_migration_service.py": "433782b28e312f682d398d2da6f483f881d1660d6225e39cb15650c69ffa42c2",
         "orket/adapters/storage/sqlite_backup.py": "01a9ae21c3f3ce3195245e71103b3b4058c47974872f054eb1843475b744cb8f"
       },
-      "final_selection": "634 passed on final-source; changed B05/B09 application boundaries reverified by 168 passing cases"
+      "final_selection": "634 passed on final-source; changed B05/B09 application boundaries reverified by 168 passing cases",
+      "checkpoint": "9b2e91d9d02c68e0d0da9e7a30804cf89ee17390",
+      "tag": "v0.6.121"
     },
     {
       "id": "ATG-04-B08",
       "goal": "ATG-04",
       "owner": "Orket Core",
       "title": "Support-only evidence graph native lifetime",
-      "status": "source exit passed; publication pending",
+      "status": "complete",
       "paths": [
         "orket/runtime/evidence/run_evidence_graph.py",
         "orket/runtime/evidence/run_evidence_graph_projection.py",
@@ -5512,14 +5547,16 @@
         "orket/runtime/evidence/run_evidence_graph_projection_supplemental.py": "97e3d848bc2d30470432637d7f654386c061585abff78d6d721f30a567855cf6",
         "orket/runtime/evidence/run_evidence_graph_rendering.py": "a7f0d79193fe543aba9b1a67757580caa63a1bfd505179b38bb313b49b5d44c7"
       },
-      "final_selection": "634 passed on final-source; changed B05/B09 application boundaries reverified by 168 passing cases"
+      "final_selection": "634 passed on final-source; changed B05/B09 application boundaries reverified by 168 passing cases",
+      "checkpoint": "9b2e91d9d02c68e0d0da9e7a30804cf89ee17390",
+      "tag": "v0.6.121"
     },
     {
       "id": "ATG-04-B09",
       "goal": "ATG-04",
       "owner": "Orket Core",
       "title": "Manual wake request capture and read lifetime",
-      "status": "source exit passed; publication pending",
+      "status": "complete",
       "paths": [
         "orket/interfaces/governed_agent_wake_cli.py"
       ],
@@ -5551,14 +5588,16 @@
       "directly_required_paths": [
         "orket/application/services/governed_agent_wake_commands.py"
       ],
-      "final_selection": "634 passed on final-source; changed B05/B09 application boundaries reverified by 168 passing cases"
+      "final_selection": "634 passed on final-source; changed B05/B09 application boundaries reverified by 168 passing cases",
+      "checkpoint": "9b2e91d9d02c68e0d0da9e7a30804cf89ee17390",
+      "tag": "v0.6.121"
     },
     {
       "id": "ATG-05-B01",
       "goal": "ATG-05",
       "owner": "Orket Core",
       "title": "Existing hotspot: orchestrator_ops",
-      "status": "pending",
+      "status": "source exit passed; publication pending",
       "paths": [
         "orket/application/workflows/orchestrator_ops.py"
       ],
@@ -5569,20 +5608,57 @@
         "docs/ARCHITECTURE.md"
       ],
       "recorded_obligation": "ATG-05 named roots only",
-      "opening": "missing proof; reproduce before repair",
+      "opening": "105 passed; no behavior failure claimed, structural root 478 > 400",
       "completion_checks": [
         "Root <=400 lines and each function <=70, or specific correctness exception.",
         "New classes <=10 public methods; retain existing public interfaces, phase timing, input and effect owners.",
         "Real phase/effect/cleanup regression parity; no new proxy or copied authority."
       ],
-      "production_file_limit": 5
+      "production_file_limit": 5,
+      "opening_measurement": {
+        "sha256": "8c2b2430bc5e5f9b2ce38fce70f9ac1eb3d01aad39fa943f17a5d50b3fab3094",
+        "lines": 478,
+        "oversized_functions": {}
+      },
+      "scope_note": "Move existing _history_context and _build_turn_context composition into a concrete workflow module; update orchestrator direct calls. Three production files. Preserve original function bodies and phase-use timing; no forwarding compatibility shim.",
+      "directly_required_paths": [
+        "orket/application/workflows/orchestrator.py",
+        "orket/application/workflows/orchestrator_turn_context_composition.py"
+      ],
+      "extraction_parity": "Both moved function ASTs identical before/after; orchestrator methods call concrete new owner directly",
+      "closing": "105 passed; root 478 -> 397 lines; new context composition 90 lines; no function exceeds 70 in either",
+      "closing_sha256": {
+        "orket/application/workflows/orchestrator_ops.py": "d7af01deee012271fd84d91d10e870b05bacd2f130136c6ddcee15f0ec2c3678",
+        "orket/application/workflows/orchestrator.py": "aad779ef69da4e2042bc50544ca29c36bc887c91db808b6b40843a557c7af911",
+        "orket/application/workflows/orchestrator_turn_context_composition.py": "99da1e486443761166f0e63b5154dc58a538735e66b6a123d6a66142d5974ba3"
+      },
+      "closing_measurement": {
+        "orket/application/workflows/orchestrator_ops.py": {
+          "sha256": "d7af01deee012271fd84d91d10e870b05bacd2f130136c6ddcee15f0ec2c3678",
+          "lines": 397,
+          "oversized_functions": {}
+        },
+        "orket/application/workflows/orchestrator.py": {
+          "sha256": "aad779ef69da4e2042bc50544ca29c36bc887c91db808b6b40843a557c7af911",
+          "lines": 361,
+          "oversized_functions": {
+            "__init__": 73
+          }
+        },
+        "orket/application/workflows/orchestrator_turn_context_composition.py": {
+          "sha256": "99da1e486443761166f0e63b5154dc58a538735e66b6a123d6a66142d5974ba3",
+          "lines": 90,
+          "oversized_functions": {}
+        }
+      },
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG05/VERIFICATION.json"
     },
     {
       "id": "ATG-05-B02",
       "goal": "ATG-05",
       "owner": "Orket Core",
       "title": "Existing hotspot: turn_tool_dispatcher",
-      "status": "pending",
+      "status": "source exit passed; publication pending",
       "paths": [
         "orket/application/workflows/turn_tool_dispatcher.py"
       ],
@@ -5593,20 +5669,81 @@
         "docs/ARCHITECTURE.md"
       ],
       "recorded_obligation": "ATG-05 named roots only",
-      "opening": "missing proof; reproduce before repair",
+      "opening": "148 passed, one upstream warning; structural root 635 lines, function 519 lines",
       "completion_checks": [
         "Root <=400 lines and each function <=70, or specific correctness exception.",
         "New classes <=10 public methods; retain existing public interfaces, phase timing, input and effect owners.",
         "Real phase/effect/cleanup regression parity; no new proxy or copied authority."
       ],
-      "production_file_limit": 5
+      "production_file_limit": 5,
+      "opening_measurement": {
+        "sha256": "687e32386f443f1fa38f3a71031eab80e1041b4b54c6c3cb62c6f9e5ab9e2daa",
+        "lines": 635,
+        "oversized_functions": {
+          "_execute_tools_captured": 519
+        }
+      },
+      "scope_note": "Extract existing captured dispatch data, checks/approval and result effects into three responsibility modules. Keep ToolDispatcher as the loop owner; preserve live effect attribute lookup and captured input timing, exception boundaries and continue behavior. Four production files, no proxy, extra lifetime owner or policy change.",
+      "directly_required_paths": [
+        "orket/application/workflows/turn_tool_dispatch_context.py",
+        "orket/application/workflows/turn_tool_dispatch_checks.py",
+        "orket/application/workflows/turn_tool_dispatch_results.py"
+      ],
+      "candidate_measurement": {
+        "orket\\application\\workflows\\turn_tool_dispatcher.py": {
+          "lines": 187,
+          "oversized_functions": {}
+        },
+        "orket\\application\\workflows\\turn_tool_dispatch_context.py": {
+          "lines": 182,
+          "oversized_functions": {}
+        },
+        "orket\\application\\workflows\\turn_tool_dispatch_checks.py": {
+          "lines": 239,
+          "oversized_functions": {}
+        },
+        "orket\\application\\workflows\\turn_tool_dispatch_results.py": {
+          "lines": 247,
+          "oversized_functions": {}
+        }
+      },
+      "closing": "148 passed, one upstream warning; root 635 -> 187 lines; all extracted functions <=70. Import blank line and module docstrings adjusted afterward; final goal selection will bind those bytes.",
+      "closing_sha256": {
+        "orket/application/workflows/turn_tool_dispatcher.py": "35f7baa4e84757c3a84b0dfab776b89151dc1b06dbcc429b36d3032c4177ad86",
+        "orket/application/workflows/turn_tool_dispatch_context.py": "97a5b2d3311321c237b785a366db2face1f0c420341c5ef61134590dd49e7adb",
+        "orket/application/workflows/turn_tool_dispatch_checks.py": "500085e5794228697880ad7e3330cea2d2ad938dbc529fd23d274a9b161f8d53",
+        "orket/application/workflows/turn_tool_dispatch_results.py": "75d967bc7bb8c8abb6956211e0422f444df16ce092ab3d14de634b8c15fec73e"
+      },
+      "closing_measurement": {
+        "orket/application/workflows/turn_tool_dispatcher.py": {
+          "sha256": "35f7baa4e84757c3a84b0dfab776b89151dc1b06dbcc429b36d3032c4177ad86",
+          "lines": 187,
+          "oversized_functions": {}
+        },
+        "orket/application/workflows/turn_tool_dispatch_context.py": {
+          "sha256": "97a5b2d3311321c237b785a366db2face1f0c420341c5ef61134590dd49e7adb",
+          "lines": 183,
+          "oversized_functions": {}
+        },
+        "orket/application/workflows/turn_tool_dispatch_checks.py": {
+          "sha256": "500085e5794228697880ad7e3330cea2d2ad938dbc529fd23d274a9b161f8d53",
+          "lines": 240,
+          "oversized_functions": {}
+        },
+        "orket/application/workflows/turn_tool_dispatch_results.py": {
+          "sha256": "75d967bc7bb8c8abb6956211e0422f444df16ce092ab3d14de634b8c15fec73e",
+          "lines": 249,
+          "oversized_functions": {}
+        }
+      },
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG05/VERIFICATION.json"
     },
     {
       "id": "ATG-05-B03",
       "goal": "ATG-05",
       "owner": "Orket Core",
       "title": "Existing hotspot: turn_message_builder",
-      "status": "pending",
+      "status": "source exit passed; publication pending",
       "paths": [
         "orket/application/workflows/turn_message_builder.py"
       ],
@@ -5617,13 +5754,56 @@
         "docs/ARCHITECTURE.md"
       ],
       "recorded_obligation": "ATG-05 named roots only",
-      "opening": "missing proof; reproduce before repair",
+      "opening": "108 passed; structural root 490 lines, prepare_messages 458 lines",
       "completion_checks": [
         "Root <=400 lines and each function <=70, or specific correctness exception.",
         "New classes <=10 public methods; retain existing public interfaces, phase timing, input and effect owners.",
         "Real phase/effect/cleanup regression parity; no new proxy or copied authority."
       ],
-      "production_file_limit": 5
+      "production_file_limit": 5,
+      "opening_measurement": {
+        "sha256": "923d27742c59a6b979f3d9e1fd9adf48f571ecc1d928d6dfffedabe868d34bcd",
+        "lines": 490,
+        "oversized_functions": {
+          "prepare_messages": 458
+        }
+      },
+      "scope_note": "Extract existing pure contract/section formatting and required-read stages into three workflow modules. MessageBuilder retains capture, first read observation, stage order and final compaction; no new lifetime owner, prompt authority or proxy. Four production files.",
+      "directly_required_paths": [
+        "orket/application/workflows/turn_message_contracts.py",
+        "orket/application/workflows/turn_message_requirements.py",
+        "orket/application/workflows/turn_message_sections.py"
+      ],
+      "closing": "108 passed; same assertions and unchanged closing inputs; prompt inventory guard follows all extracted renderers",
+      "closing_measurement": {
+        "orket/application/workflows/turn_message_builder.py": {
+          "sha256": "da5927284475ea8b2e8f38f3c1edbb711ba2ad75dc389225321d0291a546a530",
+          "lines": 81,
+          "oversized_functions": {}
+        },
+        "orket/application/workflows/turn_message_contracts.py": {
+          "sha256": "926647cb80e4d5991b8cd4e5c2c98e76990a3756e8a1074a2dbcce9e0be647ae",
+          "lines": 143,
+          "oversized_functions": {}
+        },
+        "orket/application/workflows/turn_message_requirements.py": {
+          "sha256": "5e5b5158d86b742fca98613ffc0ff80b678e256febae5779a36a368fc02d0971",
+          "lines": 181,
+          "oversized_functions": {}
+        },
+        "orket/application/workflows/turn_message_sections.py": {
+          "sha256": "92253e52d4ea2eaa2225365c856d405c252456b3d23b519e36caba41f17893a1",
+          "lines": 157,
+          "oversized_functions": {}
+        }
+      },
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG05/VERIFICATION.json",
+      "closing_sha256": {
+        "orket/application/workflows/turn_message_builder.py": "da5927284475ea8b2e8f38f3c1edbb711ba2ad75dc389225321d0291a546a530",
+        "orket/application/workflows/turn_message_contracts.py": "926647cb80e4d5991b8cd4e5c2c98e76990a3756e8a1074a2dbcce9e0be647ae",
+        "orket/application/workflows/turn_message_requirements.py": "5e5b5158d86b742fca98613ffc0ff80b678e256febae5779a36a368fc02d0971",
+        "orket/application/workflows/turn_message_sections.py": "92253e52d4ea2eaa2225365c856d405c252456b3d23b519e36caba41f17893a1"
+      }
     },
     {
       "id": "ATG-06-B01",
@@ -7202,161 +7382,6 @@
   },
   "diff_ledger": [
     {
-      "run_at_utc": "2026-10-01T12:02:20.174311Z",
-      "changed": true,
-      "before_digest": null,
-      "after_digest": "sha256:39de812225069751a60ceb90548a2a64750cbee7c89318e3d9cecfef88452e19",
-      "diff": {
-        "initial_write": true,
-        "added_paths": 0,
-        "removed_paths": 0,
-        "changed_paths": 0,
-        "paths_total_previous": 0,
-        "paths_total_current": 9803,
-        "paths_total_reference": 9803,
-        "churn_paths": 9803,
-        "churn_ratio": 1.0,
-        "sample_paths": []
-      }
-    },
-    {
-      "run_at_utc": "2026-10-01T12:03:23.827231Z",
-      "changed": true,
-      "before_digest": "sha256:39de812225069751a60ceb90548a2a64750cbee7c89318e3d9cecfef88452e19",
-      "after_digest": "sha256:7ea51abaed06cb00ae31570f3958139484417fdcfa0181493a035d7c675fd2fe",
-      "diff": {
-        "added_paths": 5,
-        "removed_paths": 2,
-        "changed_paths": 4,
-        "initial_write": false,
-        "paths_total_previous": 9803,
-        "paths_total_current": 9810,
-        "paths_total_reference": 9810,
-        "churn_paths": 11,
-        "churn_ratio": 0.001121,
-        "sample_paths": [
-          "$.proof_reuse.reused_test_counts.tests/integration/test_optional_logging_capture.py",
-          "$.proof_reuse.reused_test_counts.tests/integration/test_api_event_input_capture.py",
-          "$.proof_reuse.reused_test_counts.tests/integration/test_api_observation_ownership.py",
-          "$.required_producers[3].proof_tests[0]",
-          "$.required_producers[3].proof_tests",
-          "$.required_producers[10].symbols[0]",
-          "$.required_producers[11].symbols[0]",
-          "$.required_producers[11].symbols[1]",
-          "$.source_sha256.tests/integration/test_optional_logging_capture.py",
-          "$.source_sha256.tests/integration/test_api_event_input_capture.py",
-          "$.source_sha256.tests/integration/test_api_observation_ownership.py"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-10-01T12:05:52.630857Z",
-      "changed": true,
-      "before_digest": "sha256:7ea51abaed06cb00ae31570f3958139484417fdcfa0181493a035d7c675fd2fe",
-      "after_digest": "sha256:c4344e85a267396f02dd3f9774bb97de0e94879105f63fd24ef583350a280730",
-      "diff": {
-        "added_paths": 3,
-        "removed_paths": 0,
-        "changed_paths": 7,
-        "initial_write": false,
-        "paths_total_previous": 9810,
-        "paths_total_current": 9816,
-        "paths_total_reference": 9816,
-        "churn_paths": 10,
-        "churn_ratio": 0.001019,
-        "sample_paths": [
-          "$.proof_reuse.changed_non_runtime_inputs[1]",
-          "$.proof_reuse.changed_non_runtime_inputs[2]",
-          "$.proof_reuse.changed_non_runtime_inputs[3]",
-          "$.proof_reuse.changed_non_runtime_inputs[4]",
-          "$.proof_reuse.changed_non_runtime_inputs[5]",
-          "$.proof_reuse.changed_non_runtime_inputs[6]",
-          "$.proof_reuse.changed_non_runtime_inputs",
-          "$.source_sha256.docs/ARCHITECTURE.md"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-10-01T12:25:32.784594Z",
-      "changed": true,
-      "before_digest": "sha256:c4344e85a267396f02dd3f9774bb97de0e94879105f63fd24ef583350a280730",
-      "after_digest": "sha256:37553d269c66cefef04f217e4a40aed809366ad9299d59af0e26681193bd4498",
-      "diff": {
-        "added_paths": 4,
-        "removed_paths": 0,
-        "changed_paths": 4,
-        "initial_write": false,
-        "paths_total_previous": 9816,
-        "paths_total_current": 9824,
-        "paths_total_reference": 9824,
-        "churn_paths": 8,
-        "churn_ratio": 0.000814,
-        "sample_paths": [
-          "$.batches[0].proof",
-          "$.batches[0].status",
-          "$.batches[1].boundary_note",
-          "$.batches[1].opening",
-          "$.batches[1].paths",
-          "$.batches[1].status",
-          "$.proof_reuse.changed_non_runtime_inputs[8]"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-10-01T12:33:17.610418Z",
-      "changed": true,
-      "before_digest": "sha256:37553d269c66cefef04f217e4a40aed809366ad9299d59af0e26681193bd4498",
-      "after_digest": "sha256:bf0e0cca9c8b3cd5875c3241ebad5a3c0233c285297bb221c70aa0b33825d9d6",
-      "diff": {
-        "added_paths": 1,
-        "removed_paths": 0,
-        "changed_paths": 2,
-        "initial_write": false,
-        "paths_total_previous": 9824,
-        "paths_total_current": 9826,
-        "paths_total_reference": 9826,
-        "churn_paths": 3,
-        "churn_ratio": 0.000305,
-        "sample_paths": [
-          "$.batches[1].boundary_note",
-          "$.batches[1].paths",
-          "$.proof_reuse.changed_non_runtime_inputs[8]"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-10-01T12:44:43.496677Z",
-      "changed": true,
-      "before_digest": "sha256:bf0e0cca9c8b3cd5875c3241ebad5a3c0233c285297bb221c70aa0b33825d9d6",
-      "after_digest": "sha256:bfdd5c9a528825612bf808a27c6d89d6a5387d273fecaebb55789007fd831f4e",
-      "diff": {
-        "added_paths": 6,
-        "removed_paths": 0,
-        "changed_paths": 7,
-        "initial_write": false,
-        "paths_total_previous": 9826,
-        "paths_total_current": 9846,
-        "paths_total_reference": 9846,
-        "churn_paths": 13,
-        "churn_ratio": 0.00132,
-        "sample_paths": [
-          "$.batches[0].closing_sha256",
-          "$.batches[0].proof",
-          "$.batches[0].status",
-          "$.batches[1].closing_sha256",
-          "$.batches[1].proof",
-          "$.batches[1].status",
-          "$.historical_row_dispositions[201].current_proof",
-          "$.historical_row_dispositions[201].disposition",
-          "$.historical_row_dispositions[202].current_proof",
-          "$.historical_row_dispositions[202].disposition",
-          "$.historical_row_dispositions[203].current_proof",
-          "$.historical_row_dispositions[203].disposition",
-          "$.proof_reuse.changed_non_runtime_inputs[8]"
-        ]
-      }
-    },
-    {
       "run_at_utc": "2026-10-01T12:45:55.421064Z",
       "changed": true,
       "before_digest": "sha256:bfdd5c9a528825612bf808a27c6d89d6a5387d273fecaebb55789007fd831f4e",
@@ -7908,6 +7933,231 @@
           "$.batches[8].closing_sha256.orket/marshaller/replay.py",
           "$.batches[10].closing_sha256.orket/quickstart/ledger.py",
           "$.batches[14].closing_sha256.orket/application/services/governed_agent_wake_commands.py"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-01T14:08:10.264213Z",
+      "changed": true,
+      "before_digest": "sha256:85b398b669d664ed5e2346610de3c753e429bfdf42fde22f53364b2bfbf86540",
+      "after_digest": "sha256:33d06155dc9f2ec8f5251c78a99168fcf317e7183219a5533f35f76417ee5b05",
+      "diff": {
+        "added_paths": 19,
+        "removed_paths": 0,
+        "changed_paths": 9,
+        "initial_write": false,
+        "paths_total_previous": 10287,
+        "paths_total_current": 11496,
+        "paths_total_reference": 11496,
+        "churn_paths": 28,
+        "churn_ratio": 0.002436,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.batches[6].checkpoint",
+          "$.batches[6].tag",
+          "$.batches[6].status",
+          "$.batches[7].checkpoint",
+          "$.batches[7].tag",
+          "$.batches[7].status",
+          "$.batches[8].checkpoint",
+          "$.batches[8].tag",
+          "$.batches[8].status",
+          "$.batches[9].checkpoint",
+          "$.batches[9].tag",
+          "$.batches[9].status",
+          "$.batches[10].checkpoint",
+          "$.batches[10].tag",
+          "$.batches[10].status",
+          "$.batches[11].checkpoint",
+          "$.batches[11].tag",
+          "$.batches[11].status",
+          "$.batches[12].checkpoint"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-01T14:08:43.492056Z",
+      "changed": true,
+      "before_digest": "sha256:a00155cef4c86a224d21f3cd1dd169403dda3b3e770360d4abc6be8d27442ebb",
+      "after_digest": "sha256:c724026ac3620e302dad3e22ea8b7dadd22d208ba69bacf76427cbcd8ab1c475",
+      "diff": {
+        "added_paths": 6,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 10323,
+        "paths_total_current": 11594,
+        "paths_total_reference": 11594,
+        "churn_paths": 7,
+        "churn_ratio": 0.000604,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.batches[15].directly_required_paths",
+          "$.batches[15].opening_measurement",
+          "$.batches[15].scope_note",
+          "$.batches[15].status",
+          "$.batches[16].opening_measurement",
+          "$.batches[17].opening_measurement"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-01T14:09:50.832154Z",
+      "changed": true,
+      "before_digest": "sha256:06ba56013da950e960bc04b2abf73a9df2ba7b1ee217415ab3d973010d900bec",
+      "after_digest": "sha256:704a55b0eec6f3fdeb2f53337725e5f73ef9acf75884826142a9923f87a25204",
+      "diff": {
+        "added_paths": 2,
+        "removed_paths": 0,
+        "changed_paths": 2,
+        "initial_write": false,
+        "paths_total_previous": 10352,
+        "paths_total_current": 11639,
+        "paths_total_reference": 11639,
+        "churn_paths": 4,
+        "churn_ratio": 0.000344,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.batches[15].extraction_parity",
+          "$.batches[15].opening",
+          "$.batches[15].status"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-01T14:11:39.513957Z",
+      "changed": true,
+      "before_digest": "sha256:78c7a431db7196c0c2b7d670f891527b5d4515413d4776eb3097661f6fe48956",
+      "after_digest": "sha256:8170e6162c2cc165e5c2f67c8e6c685905a6780b26cb469e8d1990e9ade6ee70",
+      "diff": {
+        "added_paths": 5,
+        "removed_paths": 0,
+        "changed_paths": 2,
+        "initial_write": false,
+        "paths_total_previous": 10354,
+        "paths_total_current": 11665,
+        "paths_total_reference": 11665,
+        "churn_paths": 7,
+        "churn_ratio": 0.0006,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.batches[15].closing",
+          "$.batches[15].closing_sha256",
+          "$.batches[15].status",
+          "$.batches[16].directly_required_paths",
+          "$.batches[16].scope_note",
+          "$.batches[16].status"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-01T14:15:11.538634Z",
+      "changed": true,
+      "before_digest": "sha256:78dbc7f22fd6b0c161b23a9e8d6539e17cb525326d560f1cf047e8900b9c6156",
+      "after_digest": "sha256:bebfc30be6a106aed8a1789037776238e6f8d678256c70f6941c55e40504f614",
+      "diff": {
+        "added_paths": 2,
+        "removed_paths": 0,
+        "changed_paths": 2,
+        "initial_write": false,
+        "paths_total_previous": 10372,
+        "paths_total_current": 11674,
+        "paths_total_reference": 11674,
+        "churn_paths": 4,
+        "churn_ratio": 0.000343,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.batches[16].candidate_measurement",
+          "$.batches[16].opening",
+          "$.batches[16].status"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-01T14:16:57.419118Z",
+      "changed": true,
+      "before_digest": "sha256:03df8ce40174408eee995e06afe3e0bef7b784ba1900dacb0f492651acfe22ff",
+      "after_digest": "sha256:b5737a181e7211c3653774bfa1a9e0bdedbb27b92a6d96d650fad40ba969ca8d",
+      "diff": {
+        "added_paths": 5,
+        "removed_paths": 0,
+        "changed_paths": 2,
+        "initial_write": false,
+        "paths_total_previous": 10389,
+        "paths_total_current": 11686,
+        "paths_total_reference": 11686,
+        "churn_paths": 7,
+        "churn_ratio": 0.000599,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.batches[16].closing",
+          "$.batches[16].closing_sha256",
+          "$.batches[16].status",
+          "$.batches[17].directly_required_paths",
+          "$.batches[17].scope_note",
+          "$.batches[17].status"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-01T14:21:38.152917Z",
+      "changed": true,
+      "before_digest": "sha256:840f64fbe1a62f43aba3cb9fa6fb9fb8337a6bb58229d57b494cb693cf65248e",
+      "after_digest": "sha256:114e583e8ecc9cf6b40a5a715c7688e9401fe687e30d3914b9b656d95a72bd2a",
+      "diff": {
+        "added_paths": 5,
+        "removed_paths": 0,
+        "changed_paths": 2,
+        "initial_write": false,
+        "paths_total_previous": 10409,
+        "paths_total_current": 11759,
+        "paths_total_reference": 11759,
+        "churn_paths": 7,
+        "churn_ratio": 0.000595,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.batches[15].closing_measurement",
+          "$.batches[16].closing_measurement",
+          "$.batches[17].closing",
+          "$.batches[17].closing_measurement",
+          "$.batches[17].opening",
+          "$.batches[17].status"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-01T14:26:08.369085Z",
+      "changed": true,
+      "before_digest": "sha256:1a87b7253663ca5ff14c75d4130580ed5b662950165e66b0a16c40a2c2c47be7",
+      "after_digest": "sha256:d097eb6935cd750d6d52b87b3a715fefb157082ae408042dbb8f2f5569be76a6",
+      "diff": {
+        "added_paths": 14,
+        "removed_paths": 0,
+        "changed_paths": 3,
+        "initial_write": false,
+        "paths_total_previous": 10482,
+        "paths_total_current": 11815,
+        "paths_total_reference": 11815,
+        "churn_paths": 17,
+        "churn_ratio": 0.001439,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.batches[15].proof",
+          "$.batches[15].status",
+          "$.batches[16].proof",
+          "$.batches[16].status",
+          "$.batches[17].closing_sha256",
+          "$.batches[17].proof",
+          "$.batches[17].status",
+          "$.hotspots[0].closing",
+          "$.hotspots[0].proof",
+          "$.hotspots[0].status",
+          "$.hotspots[1].closing",
+          "$.hotspots[1].proof",
+          "$.hotspots[1].status",
+          "$.hotspots[2].closing",
+          "$.hotspots[2].proof",
+          "$.hotspots[2].status"
         ]
       }
     }

@@ -11,7 +11,13 @@ from pathlib import Path
 import pytest
 
 from orket.application.services import card_completion_prompt
-from orket.application.workflows import turn_message_builder, turn_path_resolver
+from orket.application.workflows import (
+    turn_message_builder,
+    turn_message_contracts,
+    turn_message_requirements,
+    turn_message_sections,
+    turn_path_resolver,
+)
 from orket.application.workflows.turn_message_inputs import _PROMPT_CONTEXT_KEYS
 from orket.runtime.config import compact_turn_packet, turn_prompt_contracts
 
@@ -20,7 +26,8 @@ pytestmark = pytest.mark.contract
 
 def test_captured_keys_cover_declared_prompt_context_reads():
     observed = set()
-    for module in (turn_message_builder, turn_path_resolver, card_completion_prompt,
+    for module in (turn_message_builder, turn_message_contracts, turn_message_requirements,
+                   turn_message_sections, turn_path_resolver, card_completion_prompt,
                    compact_turn_packet, turn_prompt_contracts):
         tree = ast.parse(Path(module.__file__).read_text(encoding="utf-8"))
         for node in ast.walk(tree):

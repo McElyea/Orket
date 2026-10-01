@@ -118,6 +118,13 @@ Preserve captured
 paths, native failure precedence and partial bundles under
 `docs/specs/RUNTIME_EXECUTION_RESULT_CONTRACT.md`.
 
+Named orchestrator/dispatcher/message extractions retain both Quality selections'
+phase selection, actual turn effects, replay/receipt ownership, completion and
+native read controls. The prompt-input inventory follows every extracted renderer.
+Keep module/function limits and original capture/await order; structural size
+checks do not replace live phase proof. Delta:
+`docs/architecture/CONTRACT_DELTA_NAMED_HOTSPOTS_E2_2026-10-01.md`.
+
 ## Current Authority Maintenance
 
 `docs/architecture/current_authority.json` is the bounded authored index;

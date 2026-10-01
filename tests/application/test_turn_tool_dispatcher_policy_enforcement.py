@@ -373,7 +373,7 @@ async def test_tool_dispatcher_preflight_rejects_tool_invocation_boundary_violat
 # Layer: contract
 @pytest.mark.asyncio
 async def test_tool_dispatcher_records_determinism_violation_event(tmp_path: Path, monkeypatch) -> None:
-    from orket.application.workflows import turn_tool_dispatcher as dispatcher_module
+    from orket.application.workflows import turn_tool_dispatch_results as dispatcher_module
 
     events: list[dict[str, Any]] = []
 
@@ -431,7 +431,7 @@ async def test_tool_dispatcher_records_preflight_boundary_rejection_as_runtime_e
     tmp_path: Path,
     monkeypatch,
 ) -> None:
-    from orket.application.workflows import turn_tool_dispatcher as dispatcher_module
+    from orket.application.workflows import turn_tool_dispatch_checks as dispatcher_module
 
     events: list[dict[str, Any]] = []
 

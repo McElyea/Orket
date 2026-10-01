@@ -1,7 +1,7 @@
 # ATG-04 native operation and input ownership closeout
 
 Date: 2026-10-01 (America/Denver)
-Status: Source exit passed; annotated v0.6.121 publication pending
+Status: Complete; published `9b2e91d9` / annotated `v0.6.121`
 Owner: Orket Core
 
 ## What changed
@@ -41,6 +41,8 @@ docs hygiene, authority structure/generated equality and release policy pass.
 Quality selections contain the controls; no hosted execution is claimed.
 `VERIFICATION.json` binds source, command and log hashes and exact touched files.
 Full local receipts: `.tmp/atg04-proof.json`, `.tmp/atg04-structural.json`.
+Publication receipt `.tmp/atg04-publication.json` verifies matching remote branch,
+annotated/peeled tag and clean worktree. ATG-05 is next.
 
 The B06 initial closing selection had four test-observer errors: it counted the
 later approval validation as the held initial worker and assumed a failed run

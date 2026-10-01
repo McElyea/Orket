@@ -1,6 +1,6 @@
 # Orket Architecture (Target State)
 
-Last updated: 2026-09-28
+Last updated: 2026-10-01
 
 Legacy Kernel capability evaluation uses a package-owned default and one validated
 immutable policy observation. Application capture owns the read-only adapter;
@@ -432,6 +432,18 @@ Turn ops similarly retains issue/dependency admission and phase-selected service
 composition. `orchestrator_turn_workflow` orders review, preparation and outcome
 handling while original services own effects and close behavior. Delta:
 `docs/architecture/CONTRACT_DELTA_ORCHESTRATOR_TURN_PHASES_E2_2026-09-28.md`.
+
+The context/history composition now lives in `orchestrator_turn_context_composition`;
+the orchestrator invokes that concrete owner directly. `ToolDispatcher` retains
+its loop, exception boundary and completion verdict; `turn_tool_dispatch_context`
+holds invocation values/progress, `turn_tool_dispatch_checks` owns the existing
+check/approval sequence and `turn_tool_dispatch_results` owns result observation
+and publication. Those helpers select the same dispatcher effect attributes at
+their original use points. `MessageBuilder` retains capture, initial read observation,
+stage ordering and compaction; its contracts, sections and requirements modules
+render the same prompts and await the same read/missing-input operations. No new
+runtime lifetime, proxy or completion authority is introduced. Delta:
+`docs/architecture/CONTRACT_DELTA_NAMED_HOTSPOTS_E2_2026-10-01.md`.
 
 The model-stream builtin captures its nested request and provider environment
 before discovery. Canonical provider-target acceptance refuses nonempty BLOCKED

@@ -1,12 +1,12 @@
 # Architectural Truth: Executable Goal Queue
 
 Last updated: 2026-10-01 (America/Denver)
-Status: Active implementation; ATG-01/02/03 published, ATG-04 in progress
+Status: Active implementation; ATG-01/02/03/04 published, ATG-05 in progress
 Queue: ATG-v1 — ten fixed goals for the existing revamp
 Owner: Orket Core
 Worktree: `C:/Source/Orket-architectural-truth`
 Branch: `codex/architectural-truth-bt0`
-Next goal: **ATG-04**
+Next goal: **ATG-05**
 
 ## Purpose and authority
 
@@ -72,8 +72,8 @@ do not repeat the 73-minute suite solely to restate this starting point.
 | ATG-01 | Reconcile evidence and freeze the remaining worksets | Published `v0.6.117` inputs identified | complete: `20eaba3a` / `v0.6.118` |
 | ATG-02 | Settle model-stream iterator and client lifetime | ATG-01 | complete: `b6a54b3e` / `v0.6.119` |
 | ATG-03 | Finish already-inventoried required log producers | ATG-01 | complete: `5e878cc2` / `v0.6.120` |
-| ATG-04 | Close the other frozen D ownership/input defects | ATG-01; affected ATG-02/03 work | source exit passed; publication pending |
-| ATG-05 | Finish the three named E2 hotspots | ATG-01; affected D repairs | waiting |
+| ATG-04 | Close the other frozen D ownership/input defects | ATG-01; affected ATG-02/03 work | complete: `9b2e91d9` / `v0.6.121` |
+| ATG-05 | Finish the three named E2 hotspots | ATG-01; affected D repairs | source exit passed; publication pending |
 | ATG-06 | Clear canonical typing debt in bounded batches | ATG-02 through ATG-05 | waiting |
 | ATG-07 | Restore the unchanged 89% coverage gate | ATG-02 through ATG-06 | waiting |
 | ATG-08 | Verify fresh Windows packages and public paths | ATG-07 | waiting |
@@ -287,18 +287,17 @@ capability/compatibility obligations remain in the archive and active specs.
 
 ## Resume record
 
-- Current card/batch: ATG-04 / checkpoint publication. All nine frozen source
-  batches and final structural gates pass; tracked closeout binds the evidence.
-- Completed cards: 3 of 10. This is queue completion, not whole-project percentage.
-- Last verified checkpoint: `5e878cc2` / `v0.6.120`; annotated tag and branch
-  remote identities plus clean worktree verified in `.tmp/atg03-publication.json`.
-- Running commands: ATG-04 source-bound campaigns use `.tmp/atg04-proof.json` for
-  current process identity/status, command, source hashes and log/result paths.
-  Structural process identity is `.tmp/atg04-structural.json`.
-  Inspect those receipts before replacing any run. ATG-01/02/03 campaigns and the historical
-  full suite are finished; do not repeat them solely to restate their observations.
-- Next exact action: publish annotated v0.6.121, verify remote branch/tag and clean worktree,
-  then begin ATG-05-B01 on the three named E2 hotspots.
+- Current card/batch: ATG-05 / checkpoint publication. All three batches and final gates pass;
+  roots are 397/187/81 lines and all new/extracted functions meet 70.
+- Completed cards: 4 of 10. This is queue completion, not whole-project percentage.
+- Last verified checkpoint: `9b2e91d9` / `v0.6.121`; annotated tag and branch
+  remote identities plus clean worktree verified in `.tmp/atg04-publication.json`.
+- Running commands: none. ATG-05 source-bound runs retain argv/process/source/result
+  identity in `.tmp/atg05-proof.json`; structural runs use `.tmp/atg05-structural.json`.
+  Inspect those receipts before replacing a run. ATG-01/02/03/04 campaigns and the
+  historical full suite are finished; do not repeat them solely to restate results.
+- Next exact action: publish annotated v0.6.122, verify remote branch/tag and clean worktree,
+  then refresh canonical Mypy for ATG-06 with removed/remaining/introduced diagnostics.
 - Blockers: none for eligible local work. Typing/coverage remain red; the default
   llama.cpp catalog is unavailable, hosted Gitea access is unestablished, and
   current Linux clock/installed acceptance remains unverified for ATG-08/09.

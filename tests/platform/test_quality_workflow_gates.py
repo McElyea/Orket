@@ -87,6 +87,9 @@ def test_quality_workflow_enforces_architecture_and_volatility_gates() -> None:
 
     # The quick gate job and the full quality job should both run these checks.
     duplicated_in_both_jobs = [
+        "tests/integration/test_orchestrator_turn_phase_ownership.py tests/integration/test_turn_execution_ownership.py tests/integration/test_turn_dispatch_transaction.py tests/integration/test_card_completion_turn.py tests/integration/test_turn_replay_destination_ownership.py",
+        "tests/contracts/test_message_prompt_input_inventory.py",
+        "tests/contracts/test_turn_prompt_truth.py",
         "tests/integration/test_marshaller_attempt_ownership.py tests/marshaller/test_workload_registry.py",
         "tests/integration/test_marshaller_command_ownership.py tests/marshaller/test_cli.py",
         "tests/integration/test_marshaller_publication_ownership.py tests/marshaller/test_runner.py tests/marshaller/test_contracts.py",
