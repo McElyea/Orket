@@ -7,8 +7,8 @@ Owner: Orket Core
 The [executable goal queue](ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md) is the single
 canonical implementation plan and the file to target for continuing goal execution.
 It defines ten fixed goals, dependencies, starting and exit criteria, evidence
-requirements, exclusions and a resume record. **ATG-01 has frozen the finite
-worksets; its publication checkpoint precedes ATG-02.** Larger goals use bounded
+requirements, exclusions and a resume record. **ATG-01 is published as v0.6.118;
+ATG-02 is in progress.** Larger goals use bounded
 batches without replacing the user's objective. The [workset inventory](GOAL_WORKSETS.json)
 binds current sources, retained proof and pending batch IDs without creating a second plan.
 

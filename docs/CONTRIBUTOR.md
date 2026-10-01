@@ -125,6 +125,13 @@ when changing orchestrator composition. Contracts and limits:
 `docs/architecture/CONTRACT_DELTA_MODEL_STREAM_ADMISSION_D_2026-09-28.md`, and
 `docs/architecture/CONTRACT_DELTA_ORCHESTRATOR_TURN_PHASES_E2_2026-09-28.md`.
 
+Both Quality selections retain model-stream iterator, transport, input and failure
+controls. The builtin explicitly closes its admitted iterator before commit/return
+and retains native construction and cleanup through repeated interruption. Raw
+real stream adapters require the application HTTP lifetime port. A cleanup
+TimeoutError is not a turn-deadline verdict. Controlled HTTP is separate from
+actual-provider acceptance under `docs/specs/MODEL_STREAM_LIFETIME.md`.
+
 
 Tool invocation uses the shared I/O owner through synchronous native work and
 async cleanup. The timeout requests interruption; effects and cleanup may finish

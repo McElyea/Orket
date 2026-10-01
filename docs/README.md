@@ -95,6 +95,7 @@ This index is the canonical map for markdown docs under `docs/`, excluding `docs
 68. `docs/specs/EVIDENCE_ARTIFACT_PUBLICATION_OWNERSHIP.md`
 69. `docs/specs/QUALITY_CHECKER_CONTRACT.md`
 70. `docs/specs/CURRENT_AUTHORITY_SOURCE_CONTRACT.md`
+71. `docs/specs/MODEL_STREAM_LIFETIME.md`
 
 ## Process
 1. `docs/process/PR_REVIEW_POLICY.md`
@@ -188,6 +189,8 @@ This index is the canonical map for markdown docs under `docs/`, excluding `docs
 50. `docs/architecture/CONTRACT_DELTA_TRUSTED_TERRAFORM_LIVE_SETUP_PACKET_2026-04-19.md`
 51. `docs/architecture/CONTRACT_DELTA_GOVERNED_CHANGE_PACKET_V1_2026-04-19.md`
 52. `docs/architecture/CONTRACT_DELTA_EXTENSION_CAPABILITY_SLICE_AND_PROJECTION_SURFACES_2026-04-23.md`
+
+53. `docs/architecture/CONTRACT_DELTA_MODEL_STREAM_ITERATOR_D_2026-10-01.md`
 
 ## Releases
 1. `docs/releases/0.4.0/PROOF_REPORT.md`

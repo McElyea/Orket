@@ -2614,8 +2614,9 @@
       "original_call": "httpx.AsyncClient",
       "original_classification": "non_native_method",
       "recorded_reason": "Receiver tracing resolves this spelling as an application/string/async-client method, not native filesystem work. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-02-B02"
+      "disposition": "satisfied_scoped_boundary",
+      "batch": "ATG-02-B02",
+      "current_proof": "docs/projects/archive/architectural-truth/AT10012026-ATG02/VERIFICATION.json"
     },
     {
       "path": "orket/streaming/model_provider.py",
@@ -2624,8 +2625,9 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-02-B02"
+      "disposition": "satisfied_scoped_boundary",
+      "batch": "ATG-02-B02",
+      "current_proof": "docs/projects/archive/architectural-truth/AT10012026-ATG02/VERIFICATION.json"
     },
     {
       "path": "orket/streaming/model_provider.py",
@@ -2634,8 +2636,9 @@
       "original_call": "asyncio.to_thread",
       "original_classification": "unowned_native_lifetime",
       "recorded_reason": "Named route directly awaits executor-backed/native work without a retained settlement owner. See the bound part c report for receiver and call-chain evidence.",
-      "disposition": "pending_current_proof_or_repair",
-      "batch": "ATG-02-B02"
+      "disposition": "satisfied_scoped_boundary",
+      "batch": "ATG-02-B02",
+      "current_proof": "docs/projects/archive/architectural-truth/AT10012026-ATG02/VERIFICATION.json"
     },
     {
       "path": "orket/workloads/marshaller_v0.py",
@@ -4862,7 +4865,7 @@
       "goal": "ATG-02",
       "owner": "Orket Core",
       "title": "Workload iterator ownership",
-      "status": "pending",
+      "status": "source exit passed; publication pending",
       "paths": [
         "orket/workloads/model_stream_v1.py"
       ],
@@ -4881,16 +4884,23 @@
         "Retain every pending iterator advance and explicit iterator close; preserve original primary and cleanup failures.",
         "Preserve input/admission controls, stream events and commit semantics; borrowed provider ownership unchanged."
       ],
-      "production_file_limit": 5
+      "production_file_limit": 5,
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG02/VERIFICATION.json",
+      "closing_sha256": {
+        "orket/workloads/model_stream_v1.py": "5e2c2bbcc2022312213daff639883f66b5bed9896d01ba2fecbf792a948f280e"
+      }
     },
     {
       "id": "ATG-02-B02",
       "goal": "ATG-02",
       "owner": "Orket Core",
       "title": "Provider transport and client settlement",
-      "status": "pending",
+      "status": "source exit passed; publication pending",
       "paths": [
-        "orket/streaming/model_provider.py"
+        "orket/streaming/model_provider.py",
+        "orket/application/services/model_stream_http_service.py",
+        "orket/workloads/model_stream_v1.py",
+        "orket/core/contracts/provider_http.py"
       ],
       "symbols": [
         "OpenAICompatModelStreamProvider.start_turn",
@@ -4901,13 +4911,21 @@
         "docs/specs/PROVIDER_INFERENCE_CLIENT_OWNERSHIP.md"
       ],
       "recorded_obligation": "Recorded model_transport rows plus ATG-02 card; no archived candidate applied",
-      "opening": "missing proof; reproduce before repair",
+      "opening": "B02-context-transport-opening: 7 failed, 2 passed on unchanged production; preceding observer-only campaigns were insufficient at HTTPX context-exit ports and are not full counterexamples.",
       "completion_checks": [
         "Real local streaming/non-stream HTTP and zero-token fallback controls.",
         "Retain native construction, acquired responses/clients and closure through repeated interruption.",
         "Cleanup-failure controls and borrower ownership; no actual-model inference claim."
       ],
-      "production_file_limit": 5
+      "production_file_limit": 5,
+      "boundary_note": "The per-turn HTTP composition service reuses the existing captured HTTP builder and resource owner. The workload forwards already-captured inputs. Existing public provider classes remain authoritative; no borrowed provider close or new TLS/proxy policy. The native dependency gate rejected adapter-to-application imports. Add the explicit HTTP lifetime port to the existing contract module and inject it from workload composition, as required for raw inference adapters. No classification exemption.",
+      "proof": "docs/projects/archive/architectural-truth/AT10012026-ATG02/VERIFICATION.json",
+      "closing_sha256": {
+        "orket/streaming/model_provider.py": "7bae55f2e2ca862f2c8b12d6f81823a9a3bbdd0a8cf1d8fef1c900fd4d735123",
+        "orket/application/services/model_stream_http_service.py": "6f25762f0ab66a37dcbcc599029035b5e6c428c842567d3b0cb15a486cbbd739",
+        "orket/workloads/model_stream_v1.py": "5e2c2bbcc2022312213daff639883f66b5bed9896d01ba2fecbf792a948f280e",
+        "orket/core/contracts/provider_http.py": "a3c7602e97e6f2f15380ed1bd617fb5ad6c4b81196344e50b298a908a3a4182a"
+      }
     },
     {
       "id": "ATG-03-B01",
@@ -7006,6 +7024,124 @@
           "$.proof_reuse.changed_non_runtime_inputs",
           "$.source_sha256.docs/ARCHITECTURE.md"
         ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-01T12:25:32.784594Z",
+      "changed": true,
+      "before_digest": "sha256:c4344e85a267396f02dd3f9774bb97de0e94879105f63fd24ef583350a280730",
+      "after_digest": "sha256:37553d269c66cefef04f217e4a40aed809366ad9299d59af0e26681193bd4498",
+      "diff": {
+        "added_paths": 4,
+        "removed_paths": 0,
+        "changed_paths": 4,
+        "initial_write": false,
+        "paths_total_previous": 9816,
+        "paths_total_current": 9824,
+        "paths_total_reference": 9824,
+        "churn_paths": 8,
+        "churn_ratio": 0.000814,
+        "sample_paths": [
+          "$.batches[0].proof",
+          "$.batches[0].status",
+          "$.batches[1].boundary_note",
+          "$.batches[1].opening",
+          "$.batches[1].paths",
+          "$.batches[1].status",
+          "$.proof_reuse.changed_non_runtime_inputs[8]"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-01T12:33:17.610418Z",
+      "changed": true,
+      "before_digest": "sha256:37553d269c66cefef04f217e4a40aed809366ad9299d59af0e26681193bd4498",
+      "after_digest": "sha256:bf0e0cca9c8b3cd5875c3241ebad5a3c0233c285297bb221c70aa0b33825d9d6",
+      "diff": {
+        "added_paths": 1,
+        "removed_paths": 0,
+        "changed_paths": 2,
+        "initial_write": false,
+        "paths_total_previous": 9824,
+        "paths_total_current": 9826,
+        "paths_total_reference": 9826,
+        "churn_paths": 3,
+        "churn_ratio": 0.000305,
+        "sample_paths": [
+          "$.batches[1].boundary_note",
+          "$.batches[1].paths",
+          "$.proof_reuse.changed_non_runtime_inputs[8]"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-01T12:44:43.496677Z",
+      "changed": true,
+      "before_digest": "sha256:bf0e0cca9c8b3cd5875c3241ebad5a3c0233c285297bb221c70aa0b33825d9d6",
+      "after_digest": "sha256:bfdd5c9a528825612bf808a27c6d89d6a5387d273fecaebb55789007fd831f4e",
+      "diff": {
+        "added_paths": 6,
+        "removed_paths": 0,
+        "changed_paths": 7,
+        "initial_write": false,
+        "paths_total_previous": 9826,
+        "paths_total_current": 9846,
+        "paths_total_reference": 9846,
+        "churn_paths": 13,
+        "churn_ratio": 0.00132,
+        "sample_paths": [
+          "$.batches[0].closing_sha256",
+          "$.batches[0].proof",
+          "$.batches[0].status",
+          "$.batches[1].closing_sha256",
+          "$.batches[1].proof",
+          "$.batches[1].status",
+          "$.historical_row_dispositions[201].current_proof",
+          "$.historical_row_dispositions[201].disposition",
+          "$.historical_row_dispositions[202].current_proof",
+          "$.historical_row_dispositions[202].disposition",
+          "$.historical_row_dispositions[203].current_proof",
+          "$.historical_row_dispositions[203].disposition",
+          "$.proof_reuse.changed_non_runtime_inputs[8]"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-01T12:45:55.421064Z",
+      "changed": true,
+      "before_digest": "sha256:bfdd5c9a528825612bf808a27c6d89d6a5387d273fecaebb55789007fd831f4e",
+      "after_digest": "sha256:66c7556cb87fcb20df7e78ed05277d88fadcc37fd1b03eaaf1a3f9dfcf385b77",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 9846,
+        "paths_total_current": 9846,
+        "paths_total_reference": 9846,
+        "churn_paths": 1,
+        "churn_ratio": 0.000102,
+        "sample_paths": [
+          "$.proof_reuse.changed_non_runtime_inputs[8]"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-01T12:45:55.676899Z",
+      "changed": false,
+      "before_digest": "sha256:66c7556cb87fcb20df7e78ed05277d88fadcc37fd1b03eaaf1a3f9dfcf385b77",
+      "after_digest": "sha256:66c7556cb87fcb20df7e78ed05277d88fadcc37fd1b03eaaf1a3f9dfcf385b77",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "initial_write": false,
+        "paths_total_previous": 9846,
+        "paths_total_current": 9846,
+        "paths_total_reference": 9846,
+        "churn_paths": 0,
+        "churn_ratio": 0.0,
+        "sample_paths": []
       }
     }
   ]

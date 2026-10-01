@@ -1,11 +1,13 @@
 # ATG-01 evidence reconciliation
 
 Date: 2026-10-01 (America/Denver)
-Status: Evidence complete; branch publication required before card closure
+Status: Complete; branch publication verified
 Owner: Orket Core
 Candidate: `7d8daf386b40e3194b46da3e5431c6c3b4bcdb99` / `v0.6.117`, with the
 user's four queue-document edits and historical queue archive preserved.
-Checkpoint version: `0.6.118`; no runtime implementation change.
+Checkpoint: `20eaba3abe0c7a2e6400e12b9dc31222ff8a6052` / annotated `v0.6.118`;
+remote branch and peeled tag match, with a clean worktree observed after push.
+Receipt: `.tmp/atg01-publication.json`. No runtime implementation change.
 
 ## Changed
 

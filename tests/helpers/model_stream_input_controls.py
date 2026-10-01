@@ -6,6 +6,8 @@ import os
 import threading
 from copy import deepcopy
 
+import httpx
+
 from orket.streaming.model_provider import OpenAICompatModelStreamProvider
 from orket.workloads import model_stream_v1 as workload
 
@@ -43,8 +45,17 @@ def input_values(case):
 
 
 def install_observers(monkeypatch, state, case):
+    native_create = httpx.AsyncClient.__init__
+    state["native_clients"], state["native_threads"] = [], []
+
+    def native_constructed(client, *args, **options):
+        native_create(client, *args, **options)
+        state["native_clients"].append(client)
+        state["native_threads"].append(threading.get_ident())
+
+    monkeypatch.setattr(httpx.AsyncClient, "__init__", native_constructed)
     create, start = OpenAICompatModelStreamProvider.__init__, OpenAICompatModelStreamProvider.start_turn
-    post, resolve = OpenAICompatModelStreamProvider._post_chat_completion_sync, workload.resolve_provider_runtime_target
+    post, resolve = OpenAICompatModelStreamProvider._post_chat_completion, workload.resolve_provider_runtime_target
 
     def constructed(owner, **options):
         create(owner, **options)
@@ -55,10 +66,10 @@ def install_observers(monkeypatch, state, case):
         state["request"] = request.model_dump()
         return start(owner, request)
 
-    def posted(owner, headers, payload):
+    async def posted(owner, client, headers, payload):
         state["post_thread"] = threading.get_ident()
         try:
-            return post(owner, headers, payload)
+            return await post(owner, client, headers, payload)
         finally:
             state["post_finished"].set()
 
@@ -72,7 +83,7 @@ def install_observers(monkeypatch, state, case):
 
     monkeypatch.setattr(OpenAICompatModelStreamProvider, "__init__", constructed)
     monkeypatch.setattr(OpenAICompatModelStreamProvider, "start_turn", started)
-    monkeypatch.setattr(OpenAICompatModelStreamProvider, "_post_chat_completion_sync", posted)
+    monkeypatch.setattr(OpenAICompatModelStreamProvider, "_post_chat_completion", posted)
     monkeypatch.setattr(workload, "resolve_provider_runtime_target", resolved)
 
 

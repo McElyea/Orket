@@ -199,6 +199,13 @@ failure. EOF is a normal input result; pending cancellation still wins over
 normal EOF. Native failures remain visible. No forced thread stop or new input
 deadline is introduced. The driver does not close borrowed process stdin.
 
+## Model-stream workload lifetime
+
+Builtin model-stream execution closes its invocation iterator before publishing a
+commit or returning. Retained interruption and visible cleanup failure are defined
+in [Model-stream lifetime](MODEL_STREAM_LIFETIME.md). Transport/client evidence is
+tracked separately from the iterator boundary.
+
 ## Verification and limits
 
 Required proof includes actual successful and unsuccessful workloads through the

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
-import os
+import math
 import time
 import uuid
 from abc import ABC, abstractmethod
@@ -12,6 +12,9 @@ from typing import Any
 
 import httpx
 from pydantic import BaseModel, Field
+
+from orket.adapters.execution.owned_io import run_owned_io
+from orket.core.contracts.provider_http import ModelStreamHttpPort
 
 side_effecting = True
 
@@ -165,118 +168,86 @@ class StubModelStreamProvider(ModelStreamProvider):
             return self._canceled.setdefault(provider_turn_id, asyncio.Event())
 
 
+def _messages(req: ProviderTurnRequest) -> list:
+    messages = req.input_config.get("messages")
+    if isinstance(messages, list):
+        return messages
+    prompt = str(req.input_config.get("prompt") or req.input_config.get("input") or "").strip() or "Continue."
+    return [{"role": "user", "content": prompt}]
+
+
+def _initial_events(turn_id: str, model_id: str) -> list[ProviderEvent]:
+    return [ProviderEvent(provider_turn_id=turn_id, event_type=kind, payload=payload) for kind, payload in (
+        (ProviderEventType.SELECTED, {"model_id": model_id, "reason": "real_provider"}),
+        (ProviderEventType.LOADING, {"cold_start": False, "progress": 0.0}),
+        (ProviderEventType.READY, {"model_id": model_id, "warm_state": "unknown", "load_ms": 0}))]
+
+
+# Provider failures remain advisory ERROR events; cleanup runs outside this handler.
+_PROVIDER_ERRORS = (RuntimeError, ValueError, TypeError, KeyError, OSError, httpx.HTTPError)
+
+
+async def _real_turn(provider, req):
+    turn_id = f"provider-turn-{uuid.uuid4().hex[:12]}"
+    async with provider._lock:
+        provider._canceled[turn_id] = asyncio.Event()
+    try:
+        for event in _initial_events(turn_id, provider._model_id):
+            yield event
+        async with provider._http.open() as (client, resources):
+            tokens = provider._tokens(req, client, resources, turn_id)
+            try:
+                try:
+                    async for event in tokens:
+                        yield event
+                    yield ProviderEvent(provider_turn_id=turn_id, event_type=ProviderEventType.STOPPED,
+                        payload={"stop_reason": "canceled" if provider._canceled[turn_id].is_set() else "completed"})
+                except _PROVIDER_ERRORS as exc:
+                    yield ProviderEvent(provider_turn_id=turn_id, event_type=ProviderEventType.ERROR,
+                                        payload={"error": str(exc)})
+            finally:
+                await run_owned_io(tokens.aclose, label="model-stream-tokens", preserve_failure=True)
+    finally:
+        async with provider._lock:
+            provider._canceled.pop(turn_id, None)
+
+
 class OllamaModelStreamProvider(ModelStreamProvider):
-    def __init__(
-        self,
-        *,
-        model_id: str,
-        base_url: str | None = None,
-        timeout_s: float = 60.0,
-        stream_timeout_s: float | None = None,
-    ) -> None:
-        try:
-            import ollama
-        except ModuleNotFoundError as exc:  # pragma: no cover - environment-dependent
-            raise RuntimeError("Real model provider requires 'ollama' python package.") from exc
-        self._ollama = ollama
+    def __init__(self, *, model_id: str, base_url: str | None = None, timeout_s: float = 60.0,
+                 stream_timeout_s: float | None = None, http_client_owner: ModelStreamHttpPort) -> None:
         self._base_url = str(base_url or "").strip()
-        self._client = ollama.AsyncClient(host=self._base_url) if self._base_url else ollama.AsyncClient()
         self._model_id = model_id
         self._connect_timeout_s = max(1.0, float(timeout_s))
-        resolved_stream_timeout = stream_timeout_s if stream_timeout_s is not None else float(timeout_s) * 3.0
-        self._stream_timeout_s = max(1.0, float(resolved_stream_timeout))
+        budget = float(stream_timeout_s if stream_timeout_s is not None else float(timeout_s) * 3.0)
+        if not math.isfinite(budget):
+            raise ValueError("E_PROVIDER_HTTP_TIMEOUT_NOT_FINITE")
+        self._stream_timeout_s = max(1.0, budget)
+        self._http = http_client_owner
         self._canceled: dict[str, asyncio.Event] = {}
         self._lock = asyncio.Lock()
 
-    async def start_turn(self, req: ProviderTurnRequest) -> AsyncIterator[ProviderEvent]:
-        provider_turn_id = f"provider-turn-{uuid.uuid4().hex[:12]}"
-        async with self._lock:
-            self._canceled[provider_turn_id] = asyncio.Event()
-        try:
-            messages = req.input_config.get("messages")
-            if not isinstance(messages, list):
-                prompt = str(req.input_config.get("prompt") or req.input_config.get("input") or "").strip()
-                if not prompt:
-                    prompt = "Continue."
-                messages = [{"role": "user", "content": prompt}]
-            options: dict[str, Any] = {}
-            if "seed" in req.input_config:
-                options["seed"] = _int_value(req.input_config.get("seed"), 0)
-            if "temperature" in req.input_config:
-                temperature = _float_value(req.input_config.get("temperature"))
-                if temperature is not None:
-                    options["temperature"] = temperature
-            # Bound generation by default to keep stream scenarios deterministic and fast.
-            options["num_predict"] = _int_value(req.input_config.get("max_tokens"), 64, minimum=1)
-            yield ProviderEvent(
-                provider_turn_id=provider_turn_id,
-                event_type=ProviderEventType.SELECTED,
-                payload={"model_id": self._model_id, "reason": "real_provider"},
-            )
-            yield ProviderEvent(
-                provider_turn_id=provider_turn_id,
-                event_type=ProviderEventType.LOADING,
-                payload={"cold_start": False, "progress": 0.0},
-            )
-            yield ProviderEvent(
-                provider_turn_id=provider_turn_id,
-                event_type=ProviderEventType.READY,
-                payload={"model_id": self._model_id, "warm_state": "unknown", "load_ms": 0},
-            )
-            stream = await asyncio.wait_for(
-                self._client.chat(
-                    model=self._model_id,
-                    messages=messages,
-                    options=options,
-                    stream=True,
-                ),
-                timeout=self._connect_timeout_s,
-            )
-            index = 0
-            async with asyncio.timeout(self._stream_timeout_s):
-                async for chunk in stream:
-                    canceled = await self._is_canceled(provider_turn_id)
-                    if canceled.is_set():
-                        yield ProviderEvent(
-                            provider_turn_id=provider_turn_id,
-                            event_type=ProviderEventType.STOPPED,
-                            payload={"stop_reason": "canceled"},
-                        )
-                        return
-                    delta = self._extract_delta(chunk)
-                    if not delta:
-                        continue
-                    yield ProviderEvent(
-                        provider_turn_id=provider_turn_id,
-                        event_type=ProviderEventType.TOKEN_DELTA,
-                        payload={"delta": delta, "index": index},
-                    )
+    def start_turn(self, req: ProviderTurnRequest) -> AsyncIterator[ProviderEvent]:
+        return _real_turn(self, req)
+
+    async def _tokens(self, req, client, resources, turn_id):
+        options: dict[str, Any] = {"num_predict": _int_value(req.input_config.get("max_tokens"), 64, minimum=1)}
+        if "seed" in req.input_config:
+            options["seed"] = _int_value(req.input_config.get("seed"), 0)
+        if "temperature" in req.input_config and (temperature := _float_value(req.input_config["temperature"])) is not None:
+            options["temperature"] = temperature
+        async with asyncio.timeout(self._connect_timeout_s):
+            stream = await client.chat(model=self._model_id, messages=_messages(req), options=options, stream=True)
+            resources.retain(stream)
+        index = 0
+        async with asyncio.timeout(self._stream_timeout_s):
+            async for chunk in stream:
+                if self._canceled[turn_id].is_set():
+                    return
+                delta = self._extract_delta(chunk)
+                if delta:
+                    yield ProviderEvent(provider_turn_id=turn_id, event_type=ProviderEventType.TOKEN_DELTA,
+                                        payload={"delta": delta, "index": index})
                     index += 1
-            yield ProviderEvent(
-                provider_turn_id=provider_turn_id,
-                event_type=ProviderEventType.STOPPED,
-                payload={"stop_reason": "completed"},
-            )
-        except asyncio.CancelledError:
-            raise
-        except (
-            RuntimeError,
-            ValueError,
-            TypeError,
-            KeyError,
-            OSError,
-            TimeoutError,
-            json.JSONDecodeError,
-            httpx.HTTPError,
-        ) as exc:  # pragma: no cover - provider/runtime variability
-            yield ProviderEvent(
-                provider_turn_id=provider_turn_id,
-                event_type=ProviderEventType.ERROR,
-                payload={"error": str(exc)},
-            )
-        finally:
-            async with self._lock:
-                self._canceled.pop(provider_turn_id, None)
 
     async def cancel(self, provider_turn_id: str) -> None:
         canceled = await self._is_canceled(provider_turn_id)
@@ -312,189 +283,74 @@ class OllamaModelStreamProvider(ModelStreamProvider):
 
 
 class OpenAICompatModelStreamProvider(ModelStreamProvider):
-    def __init__(self, *, model_id: str, base_url: str, api_key: str | None = None, timeout_s: float = 60.0, provider_name: str = "openai_compat") -> None:
-        self._model_id = model_id
-        self._base_url = base_url.rstrip("/")
-        self._api_key = api_key or ""
-        self._provider_name = provider_name
+    def __init__(self, *, model_id: str, base_url: str, api_key: str | None = None, timeout_s: float = 60.0,
+                 provider_name: str = "openai_compat", http_client_owner: ModelStreamHttpPort) -> None:
+        self._model_id, self._base_url = model_id, base_url.rstrip("/")
+        self._api_key, self._provider_name = api_key or "", provider_name
         self._timeout_s = max(1.0, float(timeout_s))
+        self._http = http_client_owner
         self._canceled: dict[str, asyncio.Event] = {}
         self._lock = asyncio.Lock()
 
-    async def start_turn(self, req: ProviderTurnRequest) -> AsyncIterator[ProviderEvent]:
-        provider_turn_id = f"provider-turn-{uuid.uuid4().hex[:12]}"
-        async with self._lock:
-            self._canceled[provider_turn_id] = asyncio.Event()
-        try:
-            messages = req.input_config.get("messages")
-            if not isinstance(messages, list):
-                prompt = str(req.input_config.get("prompt") or req.input_config.get("input") or "").strip()
-                if not prompt:
-                    prompt = "Continue."
-                messages = [{"role": "user", "content": prompt}]
-            payload: dict[str, Any] = {
-                "model": self._model_id,
-                "messages": messages,
-                "max_tokens": _int_value(req.input_config.get("max_tokens"), 64, minimum=1),
-            }
-            local_max_tokens = int(payload["max_tokens"])
-            use_stream = str(os.getenv("ORKET_MODEL_STREAM_OPENAI_USE_STREAM", "false")).strip().lower() in {
-                "1",
-                "true",
-                "yes",
-                "on",
-            }
-            payload["stream"] = use_stream
-            if "temperature" in req.input_config:
-                temperature = _float_value(req.input_config.get("temperature"))
-                if temperature is not None:
-                    payload["temperature"] = temperature
-            headers = {"Content-Type": "application/json"}
-            if self._api_key:
-                headers["Authorization"] = f"Bearer {self._api_key}"
-            yield ProviderEvent(
-                provider_turn_id=provider_turn_id,
-                event_type=ProviderEventType.SELECTED,
-                payload={"model_id": self._model_id, "reason": "real_provider"},
-            )
-            yield ProviderEvent(
-                provider_turn_id=provider_turn_id,
-                event_type=ProviderEventType.LOADING,
-                payload={"cold_start": False, "progress": 0.0},
-            )
-            yield ProviderEvent(
-                provider_turn_id=provider_turn_id,
-                event_type=ProviderEventType.READY,
-                payload={"model_id": self._model_id, "warm_state": "unknown", "load_ms": 0},
-            )
-            index = 0
-            fallback_body: dict[str, Any] | None = None
-            canceled = await self._is_canceled(provider_turn_id)
-            if canceled.is_set():
-                yield ProviderEvent(
-                    provider_turn_id=provider_turn_id,
-                    event_type=ProviderEventType.STOPPED,
-                    payload={"stop_reason": "canceled"},
-                )
-                return
-            timeout = httpx.Timeout(
-                timeout=self._timeout_s,
-                connect=min(10.0, self._timeout_s),
-                read=min(10.0, self._timeout_s),
-                write=min(10.0, self._timeout_s),
-            )
-            if use_stream:
-                async with httpx.AsyncClient(base_url=self._base_url, timeout=timeout) as client:
-                    start_ts = time.monotonic()
-                    async with client.stream("POST", "/chat/completions", headers=headers, json=payload) as response:
-                        response.raise_for_status()
-                        async for line in response.aiter_lines():
-                            if (time.monotonic() - start_ts) >= self._timeout_s:
-                                raise TimeoutError(
-                                    f"openai_compat stream exceeded timeout ({self._timeout_s}s) before completion"
-                                )
-                            canceled = await self._is_canceled(provider_turn_id)
-                            if canceled.is_set():
-                                yield ProviderEvent(
-                                    provider_turn_id=provider_turn_id,
-                                    event_type=ProviderEventType.STOPPED,
-                                    payload={"stop_reason": "canceled"},
-                                )
-                                return
-                            if not line:
-                                continue
-                            raw = line.strip()
-                            if not raw.startswith("data:"):
-                                continue
-                            body = raw[5:].strip()
-                            if not body or body == "[DONE]":
-                                continue
-                            try:
-                                chunk = json.loads(body)
-                            except json.JSONDecodeError:
-                                continue
-                            delta = self._extract_delta(chunk)
-                            if not delta:
-                                continue
-                            yield ProviderEvent(
-                                provider_turn_id=provider_turn_id,
-                                event_type=ProviderEventType.TOKEN_DELTA,
-                                payload={"delta": delta, "index": index},
-                            )
-                            index += 1
-                            if index >= local_max_tokens:
-                                yield ProviderEvent(
-                                    provider_turn_id=provider_turn_id,
-                                    event_type=ProviderEventType.STOPPED,
-                                    payload={"stop_reason": "completed"},
-                                )
-                                return
-            else:
-                fallback_body = await asyncio.to_thread(
-                    self._post_chat_completion_sync,
-                    headers,
-                    payload,
-                )
-                completion_text = self._extract_non_stream_text(fallback_body)
-                if completion_text:
-                    yield ProviderEvent(
-                        provider_turn_id=provider_turn_id,
-                        event_type=ProviderEventType.TOKEN_DELTA,
-                        payload={"delta": completion_text, "index": index},
-                    )
-                    index += 1
-            if index == 0:
-                if fallback_body is None:
-                    fallback_payload = dict(payload)
-                    fallback_payload["stream"] = False
-                    fallback_body = await asyncio.to_thread(
-                        self._post_chat_completion_sync,
-                        headers,
-                        fallback_payload,
-                    )
-                completion_text = self._extract_non_stream_text(fallback_body)
-                completion_tokens = self._extract_completion_tokens(fallback_body)
-                if completion_text or completion_tokens > 0:
-                    token_payload: dict[str, Any] = {
-                        "delta": completion_text,
-                        "index": index,
-                    }
-                    if not completion_text:
-                        token_payload["synthetic"] = True
-                        token_payload["reason"] = "empty_content_with_completion_tokens"
-                        token_payload["completion_tokens"] = completion_tokens
-                    yield ProviderEvent(
-                        provider_turn_id=provider_turn_id,
-                        event_type=ProviderEventType.TOKEN_DELTA,
-                        payload=token_payload,
-                    )
-                    index += 1
+    def start_turn(self, req: ProviderTurnRequest) -> AsyncIterator[ProviderEvent]:
+        return _real_turn(self, req)
 
-            yield ProviderEvent(
-                provider_turn_id=provider_turn_id,
-                event_type=ProviderEventType.STOPPED,
-                payload={"stop_reason": "completed"},
-            )
-        except asyncio.CancelledError:
-            raise
-        except (
-            RuntimeError,
-            ValueError,
-            TypeError,
-            KeyError,
-            OSError,
-            TimeoutError,
-            json.JSONDecodeError,
-            httpx.HTTPError,
-        ) as exc:  # pragma: no cover - provider/runtime variability
-            yield ProviderEvent(
-                provider_turn_id=provider_turn_id,
-                event_type=ProviderEventType.ERROR,
-                payload={"error": str(exc)},
-            )
-        finally:
-            async with self._lock:
-                self._canceled.pop(provider_turn_id, None)
+    async def _tokens(self, req, client, resources, turn_id):
+        if self._canceled[turn_id].is_set():
+            return
+        payload = {"model": self._model_id, "messages": _messages(req),
+                   "max_tokens": _int_value(req.input_config.get("max_tokens"), 64, minimum=1),
+                   "stream": self._http.use_stream}
+        if "temperature" in req.input_config and (temperature := _float_value(req.input_config["temperature"])) is not None:
+            payload["temperature"] = temperature
+        headers = {"Content-Type": "application/json"}
+        if self._api_key:
+            headers["Authorization"] = f"Bearer {self._api_key}"
+        index = 0
+        if self._http.use_stream:
+            started = time.monotonic()
+            request = client.build_request("POST", "/chat/completions", headers=headers, json=payload)
+            response = await client.send(request, stream=True)
+            resources.retain(response)
+            response.raise_for_status()
+            lines = response.aiter_lines()
+            resources.retain(lines)
+            async for line in lines:
+                if time.monotonic() - started >= self._timeout_s:
+                    raise TimeoutError(f"openai_compat stream exceeded timeout ({self._timeout_s}s) before completion")
+                if self._canceled[turn_id].is_set():
+                    return
+                delta = self._line_delta(line)
+                if delta:
+                    yield ProviderEvent(provider_turn_id=turn_id, event_type=ProviderEventType.TOKEN_DELTA,
+                                        payload={"delta": delta, "index": index})
+                    index += 1
+                    if index >= payload["max_tokens"]:
+                        return
+        if index == 0:
+            payload["stream"] = False
+            body = await self._post_chat_completion(client, headers, payload)
+            text, count = self._extract_non_stream_text(body), self._extract_completion_tokens(body)
+            if text or count > 0:
+                token = {"delta": text, "index": index}
+                if not text:
+                    token.update(synthetic=True, reason="empty_content_with_completion_tokens", completion_tokens=count)
+                yield ProviderEvent(provider_turn_id=turn_id, event_type=ProviderEventType.TOKEN_DELTA, payload=token)
+
+    async def _post_chat_completion(self, client, headers, payload):
+        response = await client.post("/chat/completions", headers=headers, json=payload)
+        response.raise_for_status()
+        parsed = response.json()
+        return parsed if isinstance(parsed, dict) else {}
+
+    def _line_delta(self, line):
+        raw = line.strip()
+        if not raw.startswith("data:") or not (body := raw[5:].strip()) or body == "[DONE]":
+            return ""
+        try:
+            return self._extract_delta(json.loads(body))
+        except json.JSONDecodeError:
+            return ""
 
     async def cancel(self, provider_turn_id: str) -> None:
         canceled = await self._is_canceled(provider_turn_id)
@@ -559,16 +415,3 @@ class OpenAICompatModelStreamProvider(ModelStreamProvider):
         if isinstance(raw, int) and raw >= 0:
             return raw
         return 0
-
-    def _post_chat_completion_sync(self, headers: dict[str, str], payload: dict[str, Any]) -> dict[str, Any]:
-        timeout = httpx.Timeout(
-            timeout=self._timeout_s,
-            connect=min(10.0, self._timeout_s),
-            read=min(10.0, self._timeout_s),
-            write=min(10.0, self._timeout_s),
-        )
-        with httpx.Client(base_url=self._base_url, timeout=timeout) as client:
-            response = client.post("/chat/completions", headers=headers, json=payload)
-            response.raise_for_status()
-            parsed = response.json()
-            return parsed if isinstance(parsed, dict) else {}

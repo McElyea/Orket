@@ -5,6 +5,16 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.119] - 2026-10-01
+
+### Fixed
+- Retain builtin model-stream iteration, explicit iterator close, transport construction and cleanup through failure, timeout, repeated cancellation and API shutdown. Cleanup failure cannot publish successful finalization; native construction and close failures remain visible.
+- Use application-owned captured HTTP composition for streaming, non-streaming and zero-token fallback. Preserve target admission, network/authentication inputs and event/commit schemas. Raw real stream adapters now require `http_client_owner`; internal callers supply `ModelStreamHttpService` as documented in `docs/specs/MODEL_STREAM_LIFETIME.md`.
+- ATG-02 is a scoped source checkpoint. Typing, coverage, fresh installed/Linux/provider/hosted Quality gates and the rest of ATG-v1 remain open.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `required`
+
 ## [0.6.118] - 2026-10-01
 
 ### Changed

@@ -1,0 +1,365 @@
+{
+  "goal": "ATG-02",
+  "base_commit": "20eaba3abe0c7a2e6400e12b9dc31222ff8a6052",
+  "source_version": "0.6.119",
+  "proof": "live controlled HTTP and structural",
+  "path": "primary",
+  "result": "success",
+  "fallback": "zero-token fallback observed separately in final selection",
+  "source_sha256": {
+    ".gitea/workflows/quality.yml": "70ddcce905baf05486aeab5bbdbecee7378495ef3864464f0aa696666428360e",
+    "orket/application/services/model_stream_http_service.py": "6f25762f0ab66a37dcbcc599029035b5e6c428c842567d3b0cb15a486cbbd739",
+    "orket/core/contracts/provider_http.py": "a3c7602e97e6f2f15380ed1bd617fb5ad6c4b81196344e50b298a908a3a4182a",
+    "orket/streaming/model_provider.py": "7bae55f2e2ca862f2c8b12d6f81823a9a3bbdd0a8cf1d8fef1c900fd4d735123",
+    "orket/workloads/model_stream_v1.py": "5e2c2bbcc2022312213daff639883f66b5bed9896d01ba2fecbf792a948f280e",
+    "tests/helpers/model_stream_input_controls.py": "b88b565fefa13b514cb29bad306134ba805fc2b842c981803cdf5e51bbe3490a",
+    "tests/helpers/model_stream_input_worker.py": "38af06e975f69d8f92b93b2d598104659d3c18b07e0d2d60dce211c0f5a5dedc",
+    "tests/integration/test_model_stream_iterator_lifetime.py": "e3c0c0cc056b648b941155c71d8c94d31a4b2adeb940e802cdf24a9bc0385aff",
+    "tests/integration/test_model_stream_transport_failure.py": "3224994cabf9bd90b1f0cefb7882afa0f404575fb5c3c71a4335ae0d6e3c4ed5",
+    "tests/integration/test_model_stream_transport_inputs.py": "ac1d9922b2e8e91622356e2c16253d3959ec4aa2f151ba275884ce8c4f56c54f",
+    "tests/integration/test_model_stream_transport_lifetime.py": "c1b40789119bbe2de37625fb3b310ad5a9f2de709d246c8fd36d7bd7ea0cbbeb",
+    "tests/platform/test_quality_workflow_gates.py": "621b987b8c486fd1726ab5439e9da4de26bbc8be0dd23aef5d05d3c1070135cf",
+    "tests/streaming/test_model_provider_regressions.py": "8d0d2d4f832c78832cad81591399989012a6ff5a704286d663745567a4f60470",
+    "tests/streaming/test_openai_compat_model_provider.py": "ab53f12551042748739183f6d29e9b55157753cd34386f1449da8a145bd93c90",
+    "tests/streaming/test_stream_test_workload.py": "83138bce257f1382984ba914c20de84d212b4d54430a27db48d17fe43f9eff17"
+  },
+  "final_selection": {
+    "name": "B02-final-source-clean",
+    "argv": [
+      "C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Scripts\\python.exe",
+      "-m",
+      "pytest",
+      "-q",
+      "tests/integration/test_model_stream_workload_inputs.py",
+      "tests/integration/test_model_stream_target_admission.py",
+      "tests/integration/test_model_stream_iterator_lifetime.py",
+      "tests/integration/test_model_stream_transport_lifetime.py",
+      "tests/integration/test_model_stream_transport_inputs.py",
+      "tests/integration/test_model_stream_transport_failure.py",
+      "tests/streaming",
+      "tests/interfaces/test_api_interactions.py",
+      "tests/integration/test_api_interaction_lifetime.py",
+      "tests/platform/test_quality_workflow_gates.py",
+      "--tb=short",
+      "--junitxml=C:\\Source\\Orket-architectural-truth\\.tmp\\atg02-runs\\B02-final-source-clean.xml",
+      "-o",
+      "junit_family=legacy"
+    ],
+    "cwd": "C:\\Source\\Orket-architectural-truth",
+    "status": "finished",
+    "sandbox_disabled": true,
+    "log": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg02-runs\\B02-final-source-clean.log",
+    "xml": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg02-runs\\B02-final-source-clean.xml",
+    "owner_pid": 24028,
+    "started_at_unix": 1790858640.8941274,
+    "pid": 4152,
+    "exit_code": 0,
+    "changed_inputs": [],
+    "finished_at_unix": 1790858673.9259684,
+    "log_sha256": "1c1a7b389510a147bce90612a39360f4b73b245fc521ac9bb1ac17216b149c73"
+  },
+  "tests": {
+    "passed": 150,
+    "failed": 0,
+    "warnings": 1
+  },
+  "structural": [
+    {
+      "argv": [
+        "C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Scripts\\python.exe",
+        "-m",
+        "ruff",
+        "check",
+        "orket",
+        "tests"
+      ],
+      "pid": 18436,
+      "started_at_unix": 1790858421.8129206,
+      "log": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg02-structural-0.log",
+      "status": "finished",
+      "exit_code": 0,
+      "finished_at_unix": 1790858421.910133,
+      "log_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    {
+      "argv": [
+        "C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Scripts\\python.exe",
+        "scripts/governance/check_dependency_direction.py"
+      ],
+      "pid": 11452,
+      "started_at_unix": 1790858421.9456813,
+      "log": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg02-structural-1.log",
+      "status": "finished",
+      "exit_code": 0,
+      "finished_at_unix": 1790858440.5106013,
+      "log_sha256": "e319175143c0a91efcc67307678658309ffdd092e0f0b117550fb2caea67ba16"
+    },
+    {
+      "argv": [
+        "C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Scripts\\python.exe",
+        "scripts/governance/enforce_test_taxonomy.py",
+        "--strict"
+      ],
+      "pid": 20740,
+      "started_at_unix": 1790858440.5457628,
+      "log": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg02-structural-2.log",
+      "status": "finished",
+      "exit_code": 0,
+      "finished_at_unix": 1790858500.5680656,
+      "log_sha256": "703fef799e4364e07e5baa1eb89883a29c5080a549f2286917e69b558c4ee4f1"
+    },
+    {
+      "argv": [
+        "C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Scripts\\python.exe",
+        "scripts/governance/check_noop_critical_paths.py"
+      ],
+      "pid": 24444,
+      "started_at_unix": 1790858500.6046307,
+      "log": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg02-structural-3.log",
+      "status": "finished",
+      "exit_code": 0,
+      "finished_at_unix": 1790858502.519434,
+      "log_sha256": "e4e776559a55327c51c0205f872779b9b3699664809d86fdf18886d264877471"
+    },
+    {
+      "argv": [
+        "C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Scripts\\python.exe",
+        "scripts/governance/check_docs_project_hygiene.py"
+      ],
+      "pid": 30960,
+      "started_at_unix": 1790858502.5595138,
+      "log": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg02-structural-4.log",
+      "status": "finished",
+      "exit_code": 0,
+      "finished_at_unix": 1790858502.609067,
+      "log_sha256": "8d1bf1af779ff045b85d7cb11f0397a564628c421af4baca5d9668060f8a78cd"
+    },
+    {
+      "argv": [
+        "C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Scripts\\python.exe",
+        "scripts/governance/check_current_authority.py"
+      ],
+      "pid": 12812,
+      "started_at_unix": 1790858502.6431155,
+      "log": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg02-structural-5.log",
+      "status": "finished",
+      "exit_code": 0,
+      "finished_at_unix": 1790858504.1038878,
+      "log_sha256": "60da3e5f32e6a4562cf852361518ea7083286596650be4fe599ffa51b4597574"
+    },
+    {
+      "argv": [
+        "C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Scripts\\python.exe",
+        "scripts/governance/render_current_authority.py",
+        "--check"
+      ],
+      "pid": 37180,
+      "started_at_unix": 1790858504.136964,
+      "log": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg02-structural-6.log",
+      "status": "finished",
+      "exit_code": 0,
+      "finished_at_unix": 1790858505.5441666,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Scripts\\python.exe",
+        "scripts/governance/check_core_release_policy.py"
+      ],
+      "pid": 18984,
+      "started_at_unix": 1790858505.5741866,
+      "log": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg02-structural-7.log",
+      "status": "finished",
+      "exit_code": 0,
+      "finished_at_unix": 1790858505.6439683,
+      "log_sha256": "2679e4568af02f4e23201b689b5dadb73b41eb43412cbf9d7224a03969034dd8"
+    }
+  ],
+  "structural_inputs_unchanged": true,
+  "earlier_campaigns": [
+    {
+      "name": "B01-opening",
+      "exit_code": 1,
+      "changed_inputs": [],
+      "log_sha256": "6de8fd493655eab8d060581adcc85b88e9bad7d608356bf0d4d2771d52242298"
+    },
+    {
+      "name": "B01-closing",
+      "exit_code": 1,
+      "changed_inputs": [],
+      "log_sha256": "435c2461f664915d84a7c4518db7ae90d8fb798185f46760140895b5930866c5"
+    },
+    {
+      "name": "B01-closing-v2",
+      "exit_code": 0,
+      "changed_inputs": [],
+      "log_sha256": "12a093da31b061cf74f8aeaf9254c19856b74665e6a46c45e898e112345adc65"
+    },
+    {
+      "name": "B01-close-timeout-opening",
+      "exit_code": 1,
+      "changed_inputs": [],
+      "log_sha256": "020925c7d708de9358b75c4177b30143adbb7e2cf2d52c3b026b7ea5414df9fc"
+    },
+    {
+      "name": "B01-close-timeout-closing",
+      "exit_code": 0,
+      "changed_inputs": [],
+      "log_sha256": "8c9e1b8b57833548e82eebeb614c36793733ca349937ef3157d30e5026860a36"
+    },
+    {
+      "name": "B01-public-shutdown",
+      "exit_code": 0,
+      "changed_inputs": [],
+      "log_sha256": "7382b0d6503a6b3dcedffbc7b0641c19dc627fd459939f8a03e0417c8d5a4d5a"
+    },
+    {
+      "name": "B02-opening",
+      "exit_code": 1,
+      "changed_inputs": [],
+      "log_sha256": "cdfd42c9b277bfa926aa9d887a963d0dda0bb48f03997ca1302680ee9e6008c8"
+    },
+    {
+      "name": "B02-native-transport-opening",
+      "exit_code": 1,
+      "changed_inputs": [],
+      "log_sha256": "5744656ef743b88aa71a500d19e62d100dbd6e890dbaa6d5af8d00f61925c6b8"
+    },
+    {
+      "name": "B02-context-transport-opening",
+      "exit_code": 1,
+      "changed_inputs": [],
+      "log_sha256": "1a4a84b55fb956998e2d1964ebe224c9620eb77f9748ac995af8d825b43ad89a"
+    },
+    {
+      "name": "B02-transport-closing",
+      "exit_code": 0,
+      "changed_inputs": [],
+      "log_sha256": "d0aec39a8a148f0ed321f91e42a96946f319fc7c63fef5b112c2e009fc8bc79c"
+    },
+    {
+      "name": "B02-captured-regressions",
+      "exit_code": 1,
+      "changed_inputs": [],
+      "log_sha256": "640e7f5481442b33afc8b9207873ca06e70a347d05d1f182d31fe10e0cfa9530"
+    },
+    {
+      "name": "B02-input-construction",
+      "exit_code": 0,
+      "changed_inputs": [],
+      "log_sha256": "3c13d443735e3c0a163014794942da91989cce773a03f360a90938ae83e7deb0"
+    },
+    {
+      "name": "B02-midstream-failures",
+      "exit_code": 0,
+      "changed_inputs": [],
+      "log_sha256": "f26c2a4c01d5ade6f7d474125579af37d7c8c19dc15478c549febdca05f7d92a"
+    },
+    {
+      "name": "B02-final-source",
+      "exit_code": 0,
+      "changed_inputs": [],
+      "log_sha256": "a3baf94a02f194b64f3663bd6924179deeb6d0ab777f802ccc87778c0bc1b5bf"
+    }
+  ],
+  "limits": [
+    "No actual model inference",
+    "No fresh installed/platform/hosted acceptance",
+    "No current complete-suite/coverage or canonical Mypy rerun",
+    "No whole-lane acceptance or main merge"
+  ],
+  "publication": "Pending annotated v0.6.119, remote branch/tag identity and clean checkpoint; receipt .tmp/atg02-publication.json",
+  "exact_files_touched": [
+    ".gitea/workflows/quality.yml",
+    "CHANGELOG.md",
+    "CURRENT_AUTHORITY.md",
+    "docs/CONTRIBUTOR.md",
+    "docs/README.md",
+    "docs/architecture/CONTRACT_DELTA_MODEL_STREAM_ITERATOR_D_2026-10-01.md",
+    "docs/architecture/current_authority.json",
+    "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
+    "docs/projects/architectural-truth/GOAL_WORKSETS.json",
+    "docs/projects/architectural-truth/README.md",
+    "docs/projects/archive/architectural-truth/AT10012026-ATG01/CLOSEOUT.md",
+    "docs/projects/archive/architectural-truth/AT10012026-ATG01/VERIFICATION.json",
+    "docs/projects/archive/architectural-truth/AT10012026-ATG02/CLOSEOUT.md",
+    "docs/projects/archive/architectural-truth/AT10012026-ATG02/VERIFICATION.json",
+    "docs/specs/MODEL_STREAM_LIFETIME.md",
+    "docs/specs/PROVIDER_INFERENCE_CLIENT_OWNERSHIP.md",
+    "docs/specs/RUNTIME_EXECUTION_RESULT_CONTRACT.md",
+    "orket/application/services/model_stream_http_service.py",
+    "orket/core/contracts/provider_http.py",
+    "orket/streaming/model_provider.py",
+    "orket/workloads/model_stream_v1.py",
+    "pyproject.toml",
+    "tests/helpers/model_stream_input_controls.py",
+    "tests/helpers/model_stream_input_worker.py",
+    "tests/integration/test_model_stream_iterator_lifetime.py",
+    "tests/integration/test_model_stream_transport_failure.py",
+    "tests/integration/test_model_stream_transport_inputs.py",
+    "tests/integration/test_model_stream_transport_lifetime.py",
+    "tests/platform/test_quality_workflow_gates.py",
+    "tests/streaming/test_model_provider_regressions.py",
+    "tests/streaming/test_openai_compat_model_provider.py",
+    "tests/streaming/test_stream_test_workload.py"
+  ],
+  "structural_reuse": "After native structural checks, only the extra final CRLF was removed from model_provider.py; restoring it exactly reproduces the checked source hash. Final 150-case proof uses the cleaned source. Docs/queue/proof metadata were then updated; docs hygiene/authority/diff checks pass after those updates.",
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-10-01T12:44:43.484671Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:a52f948a4e28a57e29601fb7b289ce455332c5952d2a91a401cab28bca1333aa",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 479,
+        "paths_total_reference": 479,
+        "churn_paths": 479,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    },
+    {
+      "run_at_utc": "2026-10-01T12:45:55.659878Z",
+      "changed": false,
+      "before_digest": "sha256:a52f948a4e28a57e29601fb7b289ce455332c5952d2a91a401cab28bca1333aa",
+      "after_digest": "sha256:a52f948a4e28a57e29601fb7b289ce455332c5952d2a91a401cab28bca1333aa",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "initial_write": false,
+        "paths_total_previous": 479,
+        "paths_total_current": 479,
+        "paths_total_reference": 479,
+        "churn_paths": 0,
+        "churn_ratio": 0.0,
+        "sample_paths": []
+      }
+    },
+    {
+      "run_at_utc": "2026-10-01T12:46:29.224368Z",
+      "changed": true,
+      "before_digest": "sha256:a52f948a4e28a57e29601fb7b289ce455332c5952d2a91a401cab28bca1333aa",
+      "after_digest": "sha256:b3a66fb70f1a30ed96713c5358856d0135c4b599c2c970cde869cb05ee0d6584",
+      "diff": {
+        "added_paths": 1,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "initial_write": false,
+        "paths_total_previous": 479,
+        "paths_total_current": 481,
+        "paths_total_reference": 481,
+        "churn_paths": 1,
+        "churn_ratio": 0.002079,
+        "sample_paths": [
+          "$.structural_reuse"
+        ]
+      }
+    }
+  ]
+}

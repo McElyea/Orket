@@ -4,10 +4,15 @@ import asyncio
 import contextlib
 import os
 from collections.abc import Mapping
+from dataclasses import dataclass
+from functools import partial
 from typing import Any
 
+from orket.adapters.execution.owned_io import run_owned_io
 from orket.application.interactions.context import InteractionContext
+from orket.application.services.model_stream_http_service import ModelStreamHttpService
 from orket.application.services.process_input_service import capture_process_context
+from orket.application.services.runtime_resource_cleanup import close_runtime_resources
 from orket.core.contracts.interaction_stream import CommitIntent, StreamEventType
 from orket.core.contracts.provider_preparation import ProviderPreparationRequest, require_prepared_target
 from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_MODEL, PROVIDER_CHOICES, provider_from_environment
@@ -101,14 +106,17 @@ async def _build_real_provider(*, input_config: dict[str, Any], turn_params: dic
         timeout_s=timeout_s, api_key=str(environment.get("ORKET_MODEL_STREAM_OPENAI_API_KEY", "")).strip(),
     )
     require_prepared_target(request, target)
+    http = ModelStreamHttpService(backend=target.canonical_provider, base_url=target.base_url,
+        timeout_s=timeout_s, environment=environment, cwd=cwd)
     if target.canonical_provider == "ollama":
-        return OllamaModelStreamProvider(model_id=target.model_id, base_url=target.base_url, timeout_s=timeout_s)
+        return OllamaModelStreamProvider(model_id=target.model_id, base_url=target.base_url, timeout_s=timeout_s,
+                                         http_client_owner=http)
     return OpenAICompatModelStreamProvider(
         model_id=target.model_id,
         base_url=target.base_url,
         provider_name=target.requested_provider,
         api_key=str(environment.get("ORKET_MODEL_STREAM_OPENAI_API_KEY", "")).strip() or None,
-        timeout_s=timeout_s,
+        timeout_s=timeout_s, http_client_owner=http,
     )
 
 
@@ -161,11 +169,72 @@ def _turn_timeout_s(environment: Mapping[str, str]) -> float:
     return turn_timeout_s
 
 
+@dataclass
+class _ProviderTurnState:
+    provider_turn_id: str | None = None
+    stop_reason: str = ""
+    provider_error: str = ""
+    close_timeout: TimeoutError | None = None
+
+
+async def _cancel_watch(
+    provider: ModelStreamProvider, interaction_context: InteractionContext, state: _ProviderTurnState,
+) -> None:
+    await interaction_context.await_cancel()
+    if state.provider_turn_id:
+        await provider.cancel(state.provider_turn_id)
+
+
+async def _consume_provider(
+    provider: ModelStreamProvider, req: ProviderTurnRequest, interaction_context: InteractionContext,
+    state: _ProviderTurnState,
+) -> None:
+    iterator = provider.start_turn(req)
+    try:
+        async for provider_event in iterator:
+            state.provider_turn_id = provider_event.provider_turn_id
+            if provider_event.event_type == ProviderEventType.ERROR:
+                state.provider_error = str(provider_event.payload.get("error") or "provider_error")
+                break
+            if provider_event.event_type == ProviderEventType.STOPPED:
+                state.stop_reason = str(provider_event.payload.get("stop_reason") or "").strip().lower()
+                break
+            stream_mapping, payload = _event_mapping(provider_event)
+            if stream_mapping is None:
+                continue
+            if interaction_context.is_canceled():
+                await provider.cancel(state.provider_turn_id)
+                break
+            await interaction_context.emit_event(stream_mapping, payload)
+    finally:
+        try:
+            await close_runtime_resources((iterator,), label="model-stream-iterator")
+        except TimeoutError as failure:
+            state.close_timeout = failure
+            raise
+
+
+async def _run_provider(
+    provider: ModelStreamProvider, req: ProviderTurnRequest, interaction_context: InteractionContext,
+    state: _ProviderTurnState, turn_timeout_s: float,
+) -> None:
+    cancel_task = asyncio.create_task(_cancel_watch(provider, interaction_context, state))
+    try:
+        try:
+            async with asyncio.timeout(turn_timeout_s):
+                await _consume_provider(provider, req, interaction_context, state)
+        except TimeoutError as failure:
+            if failure is state.close_timeout:
+                raise
+            state.provider_error = f"provider_turn_timeout:{turn_timeout_s}s"
+    finally:
+        cancel_task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await cancel_task
+
+
 async def run_model_stream_v1(
-    *,
-    input_config: dict[str, Any],
-    turn_params: dict[str, Any],
-    interaction_context: InteractionContext,
+    *, input_config: dict[str, Any], turn_params: dict[str, Any], interaction_context: InteractionContext,
 ) -> dict[str, int]:
     environment = dict(os.environ)
     req = ProviderTurnRequest(input_config=input_config, turn_params=turn_params).model_copy(deep=True)
@@ -175,51 +244,16 @@ async def run_model_stream_v1(
         if _provider_mode(environment) == "stub"
         else await _build_real_provider(input_config=req.input_config, turn_params=req.turn_params, environment=environment)
     )
-    provider_turn_id: str | None = None
-    stop_reason = ""
-    provider_error = ""
-
-    async def _cancel_watch() -> None:
-        await interaction_context.await_cancel()
-        if provider_turn_id:
-            await provider.cancel(provider_turn_id)
-
-    async def _consume_provider() -> None:
-        nonlocal provider_turn_id, provider_error, stop_reason
-        async for provider_event in provider.start_turn(req):
-            provider_turn_id = provider_event.provider_turn_id
-            if provider_event.event_type == ProviderEventType.ERROR:
-                provider_error = str(provider_event.payload.get("error") or "provider_error")
-                break
-            if provider_event.event_type == ProviderEventType.STOPPED:
-                stop_reason = str(provider_event.payload.get("stop_reason") or "").strip().lower()
-                break
-            stream_mapping, payload = _event_mapping(provider_event)
-            if stream_mapping is None:
-                continue
-            if interaction_context.is_canceled():
-                await provider.cancel(provider_turn_id)
-                break
-            await interaction_context.emit_event(stream_mapping, payload)
-
-    cancel_task = asyncio.create_task(_cancel_watch())
-    try:
-        try:
-            await asyncio.wait_for(_consume_provider(), timeout=turn_timeout_s)
-        except TimeoutError:
-            provider_error = f"provider_turn_timeout:{turn_timeout_s}s"
-    finally:
-        cancel_task.cancel()
-        with contextlib.suppress(asyncio.CancelledError):
-            await cancel_task
-
-    if provider_error:
+    state = _ProviderTurnState()
+    await run_owned_io(partial(_run_provider, provider, req, interaction_context, state, turn_timeout_s),
+                       label="model-stream-turn", preserve_failure=True, cancel_on_interrupt=True)
+    if state.provider_error:
         await interaction_context.request_commit(
-            CommitIntent(type="decision", ref=f"fail_closed:provider_error:{provider_error}")
+            CommitIntent(type="decision", ref=f"fail_closed:provider_error:{state.provider_error}")
         )
         return {"post_finalize_wait_ms": 0, "request_cancel_turn": 1}
 
-    if stop_reason == "canceled" or interaction_context.is_canceled():
+    if state.stop_reason == "canceled" or interaction_context.is_canceled():
         return {"post_finalize_wait_ms": 0, "request_cancel_turn": 1}
 
     if interaction_context.is_canceled():

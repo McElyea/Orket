@@ -53,7 +53,13 @@
   "mypy_receipt": ".tmp/atg01-mypy-receipt.json",
   "full_suite_repeated": false,
   "checkpoint_version": "0.6.118",
-  "publication": "Pending; require annotated v0.6.118, matching remote branch and clean worktree before ATG-02. Retain final Git observation in .tmp/atg01-publication.json.",
+  "publication": {
+    "commit": "20eaba3abe0c7a2e6400e12b9dc31222ff8a6052",
+    "tag": "v0.6.118",
+    "remote_branch_and_peeled_tag_match": true,
+    "clean_worktree_observed": true,
+    "receipt": ".tmp/atg01-publication.json"
+  },
   "exact_files_touched": [
     "CHANGELOG.md",
     "docs/ARCHITECTURE.md",
@@ -89,6 +95,26 @@
         "churn_paths": 110,
         "churn_ratio": 1.0,
         "sample_paths": []
+      }
+    },
+    {
+      "run_at_utc": "2026-10-01T12:39:26.387366Z",
+      "changed": true,
+      "before_digest": "sha256:e7fd6ef8c990f58ce29dd589c94cf7ce02a178999d4e5d926eceeeaafe3e42f8",
+      "after_digest": "sha256:0ec4d328502326dc270dca6ede79ea592b1d4f410b2dedfe2cf2de5b0bf6790c",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 110,
+        "paths_total_current": 119,
+        "paths_total_reference": 119,
+        "churn_paths": 1,
+        "churn_ratio": 0.008403,
+        "sample_paths": [
+          "$.publication"
+        ]
       }
     }
   ]

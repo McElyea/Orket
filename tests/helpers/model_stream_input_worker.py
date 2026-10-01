@@ -66,7 +66,9 @@ def assert_result(case, result, state, expected, requests, alternate, headers, e
     assert requests[1][1]["model"] == "fixture" and requests[1][1]["stream"] is False
     assert state["request"] == expected and state["constructor"]["timeout_s"] == 8
     assert state["constructor"]["api_key_original"] and all(row["authorization"] == "Bearer fixture-original-key" for row in headers)
-    assert state["post_finished"].is_set() and state["post_thread"] != threading.get_ident()
+    assert state["post_finished"].is_set() and state["post_thread"] == threading.get_ident()
+    assert state["native_clients"] and all(client.is_closed for client in state["native_clients"])
+    assert all(thread != threading.get_ident() for thread in state["native_threads"])
     token_events = [event for event in events if event["event_type"] == "token_delta"]
     assert len(token_events) == 1 and token_events[0]["payload"]["delta"] == "original request"
     assert token_events[0]["payload"]["authoritative"] is False
@@ -101,8 +103,7 @@ async def observe(root, first, other, case, monkeypatch):
             mutate(monkeypatch, other, alternate[0], case, input_config, turn_params)
             state["release"].set()
             result = await asyncio.wait_for(active, 12)
-            # The unchanged source can abandon its raw native await on timeout;
-            # fixture teardown independently waits for the actual POST attempt.
+            # Observe completion independently of workload result adoption.
             if "post_thread" in state:
                 assert await asyncio.to_thread(state["post_finished"].wait, 5)
             events, artifact = await complete_interaction(manager, session_id, turn_id, queue, result, root)

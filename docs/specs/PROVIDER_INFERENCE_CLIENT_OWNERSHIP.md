@@ -62,3 +62,9 @@ Card preparation owns primary and ODR-auditor close operations to completion bef
 reporting caller cancellation. Physical HTTP closure alone must not leave a provider's
 successful close result unadopted. Reuse the existing owned-operation mechanism;
 preserve close failures and do not mark an interrupted provider close successful.
+
+Model-stream workloads use the same captured network policy and HTTP resource
+owner through the `ModelStreamHttpPort` supplied by application composition.
+Raw real stream adapters require this port; they no longer construct an implicit
+native client. Per-turn construction, iterator and client teardown, constructor
+migration and proof limits are specified in [Model-stream lifetime](MODEL_STREAM_LIFETIME.md).

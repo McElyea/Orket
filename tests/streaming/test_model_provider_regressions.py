@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import asyncio
-import sys
 from types import SimpleNamespace
 
+import ollama
 import pytest
 
+from orket.application.services.model_stream_http_service import ModelStreamHttpService
 from orket.streaming.model_provider import (
     OllamaModelStreamProvider,
     ProviderEventType,
@@ -38,7 +39,7 @@ async def test_ollama_model_provider_uses_longer_stream_timeout_than_connect_tim
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     class _FakeAsyncClient:
-        def __init__(self, host: str | None = None) -> None:
+        def __init__(self, host: str | None = None, **_options) -> None:
             self.host = host
 
         async def chat(self, *, model: str, messages: list[dict[str, str]], options: dict[str, object], stream: bool):
@@ -54,9 +55,10 @@ async def test_ollama_model_provider_uses_longer_stream_timeout_than_connect_tim
 
             return _stream()
 
-    monkeypatch.setitem(sys.modules, "ollama", SimpleNamespace(AsyncClient=_FakeAsyncClient))
+    monkeypatch.setattr(ollama, "AsyncClient", _FakeAsyncClient)
 
-    provider = OllamaModelStreamProvider(model_id="fake-model", timeout_s=1.0)
+    provider = OllamaModelStreamProvider(model_id="fake-model", timeout_s=1.0, http_client_owner=ModelStreamHttpService(
+        backend="ollama", base_url="http://fixture", timeout_s=1))
     events = [event async for event in provider.start_turn(ProviderTurnRequest(input_config={"prompt": "hi"}))]
 
     assert provider._connect_timeout_s == 1.0

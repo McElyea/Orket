@@ -1,12 +1,12 @@
 # Architectural Truth: Executable Goal Queue
 
 Last updated: 2026-10-01 (America/Denver)
-Status: Active implementation; ATG-01 evidence complete, checkpoint publication in progress
+Status: Active implementation; ATG-01 published, ATG-02 lifetime proof in progress
 Queue: ATG-v1 — ten fixed goals for the existing revamp
 Owner: Orket Core
 Worktree: `C:/Source/Orket-architectural-truth`
 Branch: `codex/architectural-truth-bt0`
-Next goal: **ATG-02**, after verifying the `v0.6.118` branch checkpoint
+Next goal: **ATG-02**
 
 ## Purpose and authority
 
@@ -69,8 +69,8 @@ do not repeat the 73-minute suite solely to restate this starting point.
 
 | ID | Goal | Starts after | Status |
 |---|---|---|---|
-| ATG-01 | Reconcile evidence and freeze the remaining worksets | Published `v0.6.117` inputs identified | evidence passed; publish `v0.6.118` |
-| ATG-02 | Settle model-stream iterator and client lifetime | ATG-01 | waiting |
+| ATG-01 | Reconcile evidence and freeze the remaining worksets | Published `v0.6.117` inputs identified | complete: `20eaba3a` / `v0.6.118` |
+| ATG-02 | Settle model-stream iterator and client lifetime | ATG-01 | source passed; v0.6.119 publication pending |
 | ATG-03 | Finish already-inventoried required log producers | ATG-01 | waiting |
 | ATG-04 | Close the other frozen D ownership/input defects | ATG-01; affected ATG-02/03 work | waiting |
 | ATG-05 | Finish the three named E2 hotspots | ATG-01; affected D repairs | waiting |
@@ -123,6 +123,11 @@ including repeated cancellation, mid-stream failure and cleanup failure. No owne
 task/client is abandoned; borrowed resources retain caller ownership. Applicable
 input/admission and public streaming regressions pass. Controlled HTTP is labeled
 as such; actual model inference remains ATG-09 proof.
+
+ATG-02 scoped source proof: [closeout](../archive/architectural-truth/AT10012026-ATG02/CLOSEOUT.md)
+and [receipt](../archive/architectural-truth/AT10012026-ATG02/VERIFICATION.json).
+The final selection passes 150 cases; native structural gates pass. Publication
+remains the card exit gate; later quality and installed/provider gates stay open.
 
 ### ATG-03 — Finish already-inventoried required log producers
 
@@ -273,14 +278,16 @@ new executable goal IDs without user authorization.
 
 ## Resume record
 
-- Current card/batch: ATG-01 / branch checkpoint publication.
-- Completed cards: 0 of 10. This is queue completion, not whole-project percentage.
-- Last verified product checkpoint: `7d8daf38` / `v0.6.117`.
-- Running commands: none. `.tmp/atg01-mypy-receipt.json` records the completed
-  canonical run, exit 1, with no changed inputs. Do not repeat it or the complete
-  fixture suite solely to restate these observations.
-- Next exact action: verify the `v0.6.118` annotated tag and branch checkpoint at
-  origin, then resume ATG-02-B01 with current-source iterator/cleanup counterexamples.
+- Current card/batch: ATG-02 / source exit passed; checkpoint publication pending.
+- Completed cards: 1 of 10. This is queue completion, not whole-project percentage.
+- Last verified checkpoint: `20eaba3a` / `v0.6.118`; annotated tag and branch
+  remote identities plus clean worktree verified in `.tmp/atg01-publication.json`.
+- Running commands: ATG-02 source-bound campaigns use `.tmp/atg02-proof.json` for
+  current process identity/status, command, source hashes and log/result paths.
+  Inspect that receipt before replacing any run. ATG-01 Mypy and the historical
+  full suite are finished; do not repeat them solely to restate their observations.
+- Next exact action: publish the verified v0.6.119 checkpoint, verify remote
+  identities and clean worktree, then begin ATG-03-B01 required producer capture.
 - Blockers: none for eligible local work. Typing/coverage remain red; the default
   llama.cpp catalog is unavailable, hosted Gitea access is unestablished, and
   current Linux clock/installed acceptance remains unverified for ATG-08/09.

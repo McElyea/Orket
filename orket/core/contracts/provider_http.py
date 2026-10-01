@@ -1,4 +1,5 @@
 """Immutable network inputs and ownership ports for captured HTTP clients."""
+from contextlib import AbstractAsyncContextManager
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Protocol
@@ -28,3 +29,13 @@ class CapturedHttpClientPort(Protocol):
 class HttpRequestPort(Protocol):
     async def request(self, method: str, url: str, *, timeout_s: float,
                       auth: tuple[str, str] | None = None, **options: Any) -> Any: ...
+
+
+class HttpResourceScope(Protocol):
+    def retain(self, resource: Any) -> None: ...
+
+
+class ModelStreamHttpPort(Protocol):
+    use_stream: bool
+
+    def open(self) -> AbstractAsyncContextManager[tuple[Any, HttpResourceScope]]: ...
