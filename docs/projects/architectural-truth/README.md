@@ -7,10 +7,13 @@ Owner: Orket Core
 The [executable goal queue](ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md) is the single
 canonical implementation plan and the file to target for continuing goal execution.
 It defines ten fixed goals, dependencies, starting and exit criteria, evidence
-requirements, exclusions and a resume record. **ATG-01/02/03/04/05/06/07 are published through v0.6.124;
-ATG-08 fresh Windows package proof passes; v0.6.125 publication is pending.** Larger goals use bounded
+requirements, exclusions and a resume record. **ATG-01 through ATG-08 are published
+through v0.6.125; ATG-09 is blocked on the current Linux clock and provider/hosted
+prerequisites.** Larger goals use bounded
 batches without replacing the user's objective. The [workset inventory](GOAL_WORKSETS.json)
 binds current sources, retained proof and pending batch IDs without creating a second plan.
+Version 0.6.126 is the metadata handoff requested after that preflight; installed
+Windows acceptance remains bound to 0.6.125 and later runtime gates remain open.
 
 The branch is `codex/architectural-truth-bt0` in
 `C:/Source/Orket-architectural-truth`. Published `v0.6.117` closes the eight fixture

@@ -1,12 +1,12 @@
 # Architectural Truth: Executable Goal Queue
 
 Last updated: 2026-10-01 (America/Denver)
-Status: Active implementation; ATG-01/02/03/04/05/06/07 published, ATG-08 proof passed, publication pending
+Status: Active implementation; ATG-01 through ATG-08 published, ATG-09 environment blocked
 Queue: ATG-v1 — ten fixed goals for the existing revamp
 Owner: Orket Core
 Worktree: `C:/Source/Orket-architectural-truth`
 Branch: `codex/architectural-truth-bt0`
-Next goal: **ATG-08**
+Next goal: **ATG-09**
 
 ## Purpose and authority
 
@@ -76,8 +76,8 @@ do not repeat the 73-minute suite solely to restate this starting point.
 | ATG-05 | Finish the three named E2 hotspots | ATG-01; affected D repairs | complete: `64b39cb9` / `v0.6.122` |
 | ATG-06 | Clear canonical typing debt in bounded batches | ATG-02 through ATG-05 | complete: `52b45773` / `v0.6.123` |
 | ATG-07 | Restore the unchanged 89% coverage gate | ATG-02 through ATG-06 | complete: `1e5ce56f` / `v0.6.124` |
-| ATG-08 | Verify fresh Windows packages and public paths | ATG-07 | proof passed; `v0.6.125` publication pending |
-| ATG-09 | Complete applicable Linux, provider and hosted Quality proof | ATG-08; required environments available | waiting |
+| ATG-08 | Verify fresh Windows packages and public paths | ATG-07 | complete: `b7ab34bb` / `v0.6.125` |
+| ATG-09 | Complete applicable Linux, provider and hosted Quality proof | ATG-08; required environments available | blocked: current Linux clock, llama.cpp and hosted Gitea prerequisites |
 | ATG-10 | Reconcile and publish the bounded revamp result | ATG-01 through ATG-09 | waiting |
 
 ## Goal cards
@@ -238,7 +238,8 @@ ATG-08 installed proof: [closeout](../archive/architectural-truth/AT10012026-ATG
 and [receipt](../archive/architectural-truth/AT10012026-ATG08/VERIFICATION.json).
 Fresh Windows Python 3.11.14 and 3.12.2 cells each pass 6,231 cases with zero failures
 and three unchanged Gitea opt-in skips. Exact case identity, installed package bytes,
-source and harness inputs remain unchanged. Publication is the remaining card exit.
+source and harness inputs remain unchanged. Atomic publication and clean readback
+are verified at `b7ab34bb` / `v0.6.125`.
 
 ### ATG-09 — Complete applicable Linux, provider and hosted Quality proof
 
@@ -299,31 +300,41 @@ counterexample and does not change parser/grounding behavior or add a new goal.
 
 ## Resume record
 
-- Current card/batch: ATG-08 / metadata closeout and v0.6.125 publication.
-  A01 fresh core/SDK builds and both installed Windows cells pass. The selection
-  binds 467 selectors, 627 test files and 6,234 cases to passing R07 source XML.
-  Each cell has 6,231 passes, zero failures and the same three explicit
-  localhost-Gitea acceptance skips. Thirty-four source-only controls remain separate.
-- Completed cards: 7 of 10. This is queue completion, not whole-project percentage.
-- Last verified checkpoint: `1e5ce56f` / `v0.6.124`. Atomic branch/tag push, remote
-  identities and clean worktree are verified in `.tmp/atg07-publication.json` and
-  the [ATG-07 closeout](../archive/architectural-truth/AT10012026-ATG07/CLOSEOUT.md).
-  Its full source run passes 12,964 tests, zero failures, 93 skips and 89.213132%
-  combined coverage, with all inputs unchanged. This source proof remains distinct
-  from installed acceptance.
-- Running commands: both Windows runs and their final readback are terminal success.
-  `.tmp/atg08-final-readback.json` binds build, preparation, acceptance, artifacts,
-  exact skips and all 5,737 unchanged Git-visible inputs. Raw process receipts remain
-  `.tmp/atg08-build.json`, `.tmp/atg08-cells.json` and `.tmp/atg08-windows-proof.json`.
-  Candidate 0.6.125 was built on the recorded v0.6.124 base plus frozen version/docs
-  bytes; base commit and actual snapshot identity are distinct. Only the finite
-  closeout metadata delta in `GOAL_WORKSETS.json` is now admitted.
-- Next exact action: metadata validation passes in `.tmp/atg08-closeout-checks.json`
-  (docs/authority/release checks and 17 version/release tests, unchanged inputs).
-  Commit/tag v0.6.125, atomically push the branch and tag, then verify remote identities and clean readback in
-  `.tmp/atg08-publication.json`. Continue ATG-09 without merging main.
-- Blockers/limits: later default llama.cpp catalog access is unavailable and hosted
-  Gitea access is unestablished. Fresh Linux acceptance is still unverified.
+- Current card/batch: ATG-09 / ATG09-P01 terminal environment blocker.
+  The unchanged passive Linux clock owner observes no qualifying quiet period in
+  240.031819 seconds, with wall-clock steps from -15.685221 to +16.556321 seconds.
+  NTP reports both `no` and `yes`; the required 60 synchronized quiet seconds and
+  10ms step limit remain unchanged. Existing WSL Python 3.11.16 and 3.12.3 execute;
+  those old environments are not candidate acceptance.
+- Completed cards: 8 of 10. This is queue completion, not whole-project percentage.
+- User direction: wrap the in-flight checkpoint, then pause the remaining ATG-v1
+  goal. Do not launch another acceptance run until the user resumes.
+- Metadata handoff version: `v0.6.126`, prepared at the user's request to wrap
+  in-flight changes. This adds no runtime acceptance. Its publication process/readback
+  is `.tmp/atg09-wrap-publication.json`; inspect that receipt and matching remote tag
+  on resume. The finite seven-file delta is in `GOAL_WORKSETS.json`.
+- Last verified runtime checkpoint: `b7ab34bb` / `v0.6.125`. Atomic branch/tag push, remote
+  identities and clean worktree are verified in `.tmp/atg08-publication.json` and
+  the [ATG-08 closeout](../archive/architectural-truth/AT10012026-ATG08/CLOSEOUT.md).
+  Windows Python 3.11.14 and 3.12.2 each pass 6,231 cases with zero failures and
+  three unchanged Gitea opt-in skips; package, harness and source bytes are unchanged.
+  The earlier complete source gate remains 12,964 passes, 93 skips and 89.213132%
+  combined coverage. Thirty-four source-only controls remain separate.
+- Running commands: none. `.tmp/atg09-linux-clock.json` retains the terminal native
+  report, exit 1, unchanged inputs and actual process identities; the native wrapper
+  and child are absent after return. `.tmp/atg09-readiness.json` retains read-only
+  provider/remote observations. `GOAL_WORKSETS.json` records their hashes and bounded
+  summaries. No clock settings changed and no fresh Linux acceptance cell launched.
+- Next exact action: obtain a stable existing Linux environment/clock, reachable
+  llama.cpp endpoint/model and existing hosted Gitea repository/runner access.
+  A new clock attempt requires an environment change; then freeze applicable Linux
+  installed cells and execute actual provider/hosted proof. Preserve all assertions,
+  deadlines and source-declared platform skips. No later goal is currently eligible.
+- Blockers/limits: the current Linux clock fails its retained prerequisite. The
+  default llama.cpp catalog at `http://127.0.0.1:8080/v1/models` refuses connections
+  (WinError 10061); no Gitea environment settings are present and origin is GitHub.
+  Earlier endpoint/model/runner and current stable-Linux input questions remain open.
+  Fresh Linux, actual llama.cpp and hosted Quality acceptance remain unverified.
   The earlier API timing outlier remains unexplained; its unchanged assertion passes
   in the final source run. Earlier failures and broader deferred findings stay retained.
 

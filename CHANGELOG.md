@@ -5,6 +5,15 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.126] - 2026-10-01
+
+### Changed
+- Retain the verified ATG-08 v0.6.125 publication and checkpoint ATG-09's current environment blockers. The passive Linux clock observation fails the unchanged 60-second synchronized-quiet requirement; the default llama.cpp catalog refuses connections and hosted Gitea access remains unestablished.
+- Wrap the in-flight queue and evidence metadata without new runtime behavior or another acceptance run. Eight of ten goals are complete; fresh Linux, actual llama.cpp and hosted Quality proof remain unverified. Installed Windows evidence remains bound to v0.6.125.
+- `compatibility_status`: `preserved`
+- `affected_audience`: `all`
+- `migration_requirement`: `none`
+
 ## [0.6.125] - 2026-10-01
 
 ### Changed

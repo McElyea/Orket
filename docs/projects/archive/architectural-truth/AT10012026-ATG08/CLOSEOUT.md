@@ -1,7 +1,7 @@
 # ATG-08: Fresh Windows packages and public paths
 
 Last updated: 2026-10-01 (America/Denver)
-Status: Installed proof passed; v0.6.125 publication pending
+Status: Complete; v0.6.125 publication verified
 Queue: ATG-v1 / ATG-08
 
 ## What changed
@@ -19,8 +19,11 @@ not claim that the preceding commit already contained the 0.6.125 snapshot.
 
 ## What was verified
 
-Observed path: **primary**. Observed result: **success** for installed proof.
-Publication remains a separate pending condition.
+Observed path: **primary**. Observed result: **success** for installed proof and
+publication. Commit `b7ab34bba7d76a146cf4782c8522681de22ac544` and annotated tag
+object `62dd5d79e43a67e5633a749534cfc0db8c445f79` were pushed atomically. Remote
+branch/tag/peeled identities and a clean worktree verified at publication; later
+ATG-09 metadata carries this readback. Main was not merged.
 
 | Cell | Actual Python | Passed | Failed | Skipped | Pytest time |
 |---|---|---:|---:|---:|---:|

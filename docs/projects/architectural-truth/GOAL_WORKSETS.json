@@ -10125,107 +10125,6 @@
   ],
   "diff_ledger": [
     {
-      "run_at_utc": "2026-10-01T17:43:55.555831Z",
-      "changed": true,
-      "before_digest": "sha256:8afe390f3e14d3acbbf76b887bb65986ef70ba44902b4c416de074b5844dd763",
-      "after_digest": "sha256:7746c4ccf9bf7fb5a0c1b516c0b989a093dd9687aef110f5e2e9d6ffa13b6ff4",
-      "diff": {
-        "added_paths": 4,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 14757,
-        "paths_total_current": 16108,
-        "paths_total_reference": 16108,
-        "churn_paths": 5,
-        "churn_ratio": 0.00031,
-        "sample_paths": [
-          "$.diff_ledger",
-          "$.coverage_worksets.batches[5].additional_historical_outcomes",
-          "$.coverage_worksets.batches[5].closing",
-          "$.coverage_worksets.batches[5].status",
-          "$.coverage_worksets.batches"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-10-01T17:46:22.432110Z",
-      "changed": true,
-      "before_digest": "sha256:9b6ceb5cc0183296f25d96b742ad128868e3ab9ad9d2b8dc5875d03e80289043",
-      "after_digest": "sha256:e822b8c1b0b93e6c6182675c810236e7338264f7a1eb8ea3b69525edf7dfcc54",
-      "diff": {
-        "added_paths": 4,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 14779,
-        "paths_total_current": 16129,
-        "paths_total_reference": 16129,
-        "churn_paths": 5,
-        "churn_ratio": 0.00031,
-        "sample_paths": [
-          "$.diff_ledger",
-          "$.coverage_worksets.full_campaign",
-          "$.coverage_worksets.batches[6].additional_historical_outcomes",
-          "$.coverage_worksets.batches[6].closing",
-          "$.coverage_worksets.batches[6].status"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-10-01T19:05:06.402760Z",
-      "changed": true,
-      "before_digest": "sha256:f2227076df16a516f88355ded0493c3fbfedc718c713c7f98bdcee8195de2c84",
-      "after_digest": "sha256:20ab836be173494414c26d820cdfe206b5f40f01743d77d51f6bc197761c36d7",
-      "diff": {
-        "added_paths": 7,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 14796,
-        "paths_total_current": 16660,
-        "paths_total_reference": 16660,
-        "churn_paths": 8,
-        "churn_ratio": 0.00048,
-        "sample_paths": [
-          "$.diff_ledger",
-          "$.coverage_worksets.reconciliation",
-          "$.coverage_worksets.full_campaign.counts",
-          "$.coverage_worksets.full_campaign.coverage_totals",
-          "$.coverage_worksets.full_campaign.elapsed_seconds",
-          "$.coverage_worksets.full_campaign.failure_paths",
-          "$.coverage_worksets.full_campaign.outcome_gap",
-          "$.coverage_worksets.full_campaign.status"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-10-01T19:07:38.413937Z",
-      "changed": true,
-      "before_digest": "sha256:7374b6666b5d9dfb337bcf9f6194139253933e714fb6ff191c38fe1ce9f3a434",
-      "after_digest": "sha256:85ab15f653ed506cbdd9b4afba02b6ba4c1caca263e1d0e7450c9dbd05104b58",
-      "diff": {
-        "added_paths": 6,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 15476,
-        "paths_total_current": 16809,
-        "paths_total_reference": 16809,
-        "churn_paths": 7,
-        "churn_ratio": 0.000416,
-        "sample_paths": [
-          "$.diff_ledger",
-          "$.coverage_worksets.reconciliation[0].closing",
-          "$.coverage_worksets.reconciliation[0].status",
-          "$.coverage_worksets.reconciliation[1].binding_note",
-          "$.coverage_worksets.reconciliation[2].binding_note",
-          "$.coverage_worksets.reconciliation[3].binding_note",
-          "$.coverage_worksets.reconciliation[4].binding_note"
-        ]
-      }
-    },
-    {
       "run_at_utc": "2026-10-01T19:08:50.374534Z",
       "changed": true,
       "before_digest": "sha256:abbb89255dcdfb6bcfa4395186491c53faa5096d961a6bd5c4d28d4ef4474533",
@@ -10898,6 +10797,109 @@
           "$.diff_ledger",
           "$.installed_worksets.closeout.validation_sha256",
           "$.installed_worksets.closeout.status"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-02T02:59:44.552069Z",
+      "changed": true,
+      "before_digest": "sha256:d93f6d2d5990e3bb2866c3199fb6799ae23ecb01c2a5539a1df6934475949e9f",
+      "after_digest": "sha256:4e85403d7c9d39e5585e767da1bfb682ca0a157ef202de5be7ccabe8e29666c3",
+      "diff": {
+        "added_paths": 3,
+        "removed_paths": 0,
+        "changed_paths": 4,
+        "initial_write": false,
+        "paths_total_previous": 19209,
+        "paths_total_current": 20668,
+        "paths_total_reference": 20668,
+        "churn_paths": 7,
+        "churn_ratio": 0.000339,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.platform_worksets",
+          "$.installed_worksets.closeout.publication",
+          "$.installed_worksets.closeout.publication_status",
+          "$.installed_worksets.closeout.status",
+          "$.installed_worksets.next_action",
+          "$.installed_worksets.status"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-02T03:06:58.071482Z",
+      "changed": true,
+      "before_digest": "sha256:c932e02afa4d976ecdfc9abe49a020eeb45da1825f919d5e14a3e170ac991b02",
+      "after_digest": "sha256:40b10c64713d25a82a23a0f512f59ea638b364e9f10371f7d5d9a7cab3250d9a",
+      "diff": {
+        "added_paths": 7,
+        "removed_paths": 0,
+        "changed_paths": 3,
+        "initial_write": false,
+        "paths_total_previous": 19383,
+        "paths_total_current": 20796,
+        "paths_total_reference": 20796,
+        "churn_paths": 10,
+        "churn_ratio": 0.000481,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.platform_worksets.acceptance_limits",
+          "$.platform_worksets.clock_process",
+          "$.platform_worksets.clock_result",
+          "$.platform_worksets.clock_source_binding",
+          "$.platform_worksets.proof_receipts_sha256",
+          "$.platform_worksets.readiness",
+          "$.platform_worksets.current_batch",
+          "$.platform_worksets.next_action",
+          "$.platform_worksets.status"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-02T03:09:03.792860Z",
+      "changed": true,
+      "before_digest": "sha256:f6af6bbf28f66866e1643f9b95f134aa273288f6d85f4f63fd1a4cdefa163bb0",
+      "after_digest": "sha256:79ad055aad134dea46208b9fe1f914c6e9bcbdc28d56b668a42ed5a6ddba0883",
+      "diff": {
+        "added_paths": 4,
+        "removed_paths": 0,
+        "changed_paths": 5,
+        "initial_write": false,
+        "paths_total_previous": 19507,
+        "paths_total_current": 20838,
+        "paths_total_reference": 20838,
+        "churn_paths": 9,
+        "churn_ratio": 0.000432,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.platform_worksets.wrap_checkpoint",
+          "$.platform_worksets.paths[0]",
+          "$.platform_worksets.paths[1]",
+          "$.platform_worksets.paths[2]",
+          "$.platform_worksets.paths[3]",
+          "$.platform_worksets.paths[4]",
+          "$.platform_worksets.paths"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-02T03:10:54.595993Z",
+      "changed": true,
+      "before_digest": "sha256:41319a33afa59390d665f2a8c734d40ada68e0eff633dda329097e76c4666e05",
+      "after_digest": "sha256:c246ae6f771128889d00ea67626df709245ec7056db1a63093b5d2869fb8608c",
+      "diff": {
+        "added_paths": 2,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "initial_write": false,
+        "paths_total_previous": 19539,
+        "paths_total_current": 20840,
+        "paths_total_reference": 20840,
+        "churn_paths": 2,
+        "churn_ratio": 9.6e-05,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.platform_worksets.wrap_checkpoint.user_direction"
         ]
       }
     }
@@ -12534,7 +12536,7 @@
   },
   "installed_worksets": {
     "goal": "ATG-08",
-    "status": "proof passed; publication pending",
+    "status": "complete",
     "source_selection_receipt": ".tmp/atg08-source-selection.json",
     "source_selection_sha256": "48cd4d99b145df97c3f2c0c41d048b1753b4d8afccaa80f9f9a9f3dba883a22d",
     "selection": [
@@ -13739,10 +13741,10 @@
     "windows_proof_receipt": ".tmp/atg08-windows-proof.json",
     "build_attempt": "A01",
     "freeze": "After build launch, keep every Git-visible input frozen through both Windows cell preparations and acceptance. Native proof runs are sequential; no borrowed site packages or product namespace in the harness.",
-    "next_action": "Validate the metadata-only closeout, commit/tag v0.6.125, atomically push and verify publication; then ATG-09.",
+    "next_action": "ATG-08 published; continue ATG-09 under platform_worksets.",
     "proof": "Both installed Windows cells pass native/contract controls and structural package checks; primary success.",
     "closeout": {
-      "status": "validated; publication pending",
+      "status": "complete",
       "paths": [
         "CHANGELOG.md",
         "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
@@ -13764,11 +13766,80 @@
       ],
       "proof_receipt": ".tmp/atg08-final-readback.json",
       "proof_receipt_sha256": "838ea5748f3ad95f2f05ef5c45ae0bfc273d90146bce98a515739e475cda10fe",
-      "publication_status": "pending",
+      "publication_status": "verified",
       "validation_receipt": ".tmp/atg08-closeout-checks.json",
       "publication_receipt": ".tmp/atg08-publication.json",
       "justification": "Only queue, release and archival evidence metadata; no runtime/test/config repair.",
-      "validation_sha256": "dcd0285f46fcd5061ac32ff8009fa49ed0e900e5616866ab8970522c1c96c533"
+      "validation_sha256": "dcd0285f46fcd5061ac32ff8009fa49ed0e900e5616866ab8970522c1c96c533",
+      "publication": {
+        "status": "finished",
+        "phase": "verified",
+        "version": "0.6.125",
+        "owner_pid": 4552,
+        "started_at_unix": 1790909671.427676,
+        "path": "primary",
+        "commands": [
+          {
+            "argv": [
+              "git",
+              "-c",
+              "core.safecrlf=false",
+              "commit",
+              "-m",
+              "Verify fresh Windows installed package acceptance"
+            ],
+            "status": "finished",
+            "started_at_unix": 1790909672.6481369,
+            "pid": 37308,
+            "exit_code": 0,
+            "finished_at_unix": 1790909672.8249395
+          },
+          {
+            "argv": [
+              "git",
+              "-c",
+              "core.safecrlf=false",
+              "tag",
+              "-a",
+              "v0.6.125",
+              "-m",
+              "ATG-08 Windows installed checkpoint v0.6.125"
+            ],
+            "status": "finished",
+            "started_at_unix": 1790909672.8992085,
+            "pid": 22596,
+            "exit_code": 0,
+            "finished_at_unix": 1790909672.9736304
+          },
+          {
+            "argv": [
+              "git",
+              "-c",
+              "core.safecrlf=false",
+              "push",
+              "--atomic",
+              "origin",
+              "HEAD:refs/heads/codex/architectural-truth-bt0",
+              "refs/tags/v0.6.125"
+            ],
+            "status": "finished",
+            "started_at_unix": 1790909673.1777573,
+            "pid": 2536,
+            "exit_code": 0,
+            "finished_at_unix": 1790909676.7724028
+          }
+        ],
+        "commit": "b7ab34bba7d76a146cf4782c8522681de22ac544",
+        "tag_object": "62dd5d79e43a67e5633a749534cfc0db8c445f79",
+        "result": "success",
+        "remote_refs": {
+          "refs/heads/codex/architectural-truth-bt0": "b7ab34bba7d76a146cf4782c8522681de22ac544",
+          "refs/tags/v0.6.125": "62dd5d79e43a67e5633a749534cfc0db8c445f79",
+          "refs/tags/v0.6.125^{}": "b7ab34bba7d76a146cf4782c8522681de22ac544"
+        },
+        "clean_worktree": true,
+        "finished_at_unix": 1790909678.5732822
+      }
     },
     "windows_cells": [
       {
@@ -13810,5 +13881,147 @@
         "changed_harness_inputs": []
       }
     ]
+  },
+  "platform_worksets": {
+    "goal": "ATG-09",
+    "status": "environment blocked",
+    "current_batch": "ATG09-P01 terminal; required runtime gates blocked",
+    "candidate_commit": "b7ab34bba7d76a146cf4782c8522681de22ac544",
+    "candidate_tag": "v0.6.125",
+    "paths": [
+      "CHANGELOG.md",
+      "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
+      "docs/projects/architectural-truth/GOAL_WORKSETS.json",
+      "docs/projects/architectural-truth/README.md",
+      "docs/projects/archive/architectural-truth/AT10012026-ATG08/CLOSEOUT.md",
+      "docs/projects/archive/architectural-truth/AT10012026-ATG08/VERIFICATION.json",
+      "pyproject.toml"
+    ],
+    "preflight_helper_sha256": {
+      ".tmp/d_reentry_clock_preflight.py": "f9af974826a7e06e9054d04d763e7130c9e51d8a2e9714cc4f836b1b04697682",
+      ".tmp/atg09_clock_native.py": "cad72fea83f6eb83a5a6eb27359be61ce47bb4a2304f6ee156e59d869c284bf8",
+      ".tmp/atg09_clock_preflight.py": "9334b3f2202b657190b22538649de6b81940d0c984892b96d72a5f574b469d30"
+    },
+    "clock_receipt": ".tmp/atg09-linux-clock.json",
+    "clock_criterion": {
+      "required_synchronized_quiet_seconds": 60,
+      "maximum_observation_seconds": 240,
+      "maximum_step_seconds": 0.01,
+      "outer_native_timeout_seconds": 280
+    },
+    "scope": "Existing Linux Python 3.11/3.12 installed selections, actual llama.cpp public flow with cleanup, and hosted Gitea Quality against the identified candidate. No provider switch or new infrastructure.",
+    "source_selection_receipt": ".tmp/atg08-source-selection.json",
+    "source_selection_sha256": "48cd4d99b145df97c3f2c0c41d048b1753b4d8afccaa80f9f9a9f3dba883a22d",
+    "windows_artifact_receipt": ".tmp/atg08-build.json",
+    "windows_artifact_receipt_sha256": "cb8dd5cafd6debc01eab9a54c68d2dc7c97d0ee385d12f150217e974951a2e4a",
+    "remaining": [
+      "Freeze fresh applicable Linux cells after current host-clock preflight; preserve source-defined platform skips and all assertions.",
+      "Actual llama.cpp endpoint/model readiness and changed public flow with cleanup.",
+      "Existing hosted Gitea repository/runner access and required Quality matrix."
+    ],
+    "external_prerequisites": "Earlier default llama.cpp connection refused; endpoint/model and hosted Gitea access remain unestablished. Prior asynchronous user question remains unanswered.",
+    "next_action": "Wait for a stable existing Linux host/clock, reachable llama.cpp endpoint/model, and existing hosted Gitea repository/runner access. Freeze a new clock attempt only after environment change; then applicable Linux cells and actual provider/hosted runs. ATG-10 remains ineligible.",
+    "probe_limits": "Interpreter version probes succeeded. The first combined shell command failed only its uv lookup due to quote stripping; no uv availability was established by that command.",
+    "clock_result": {
+      "path": "blocked",
+      "result": "environment blocker",
+      "proof": "live native clock preflight only; no application acceptance or clock changes",
+      "declared_max_seconds": 240,
+      "required_synchronized_quiet_seconds": 60,
+      "maximum_step_seconds": 0.01,
+      "elapsed_seconds": 240.03181946798577,
+      "quiet_seconds": 0,
+      "maximum_observed_step_seconds": 16.556320969,
+      "minimum_observed_step_seconds": -15.685221238
+    },
+    "clock_process": {
+      "windows_launcher_pid": 25152,
+      "native_identity": {
+        "pid": 393,
+        "parent_pid": 305,
+        "python": "3.11.16 (main, Sep  1 2026, 14:18:37) [Clang 22.1.3 ]",
+        "executable": "/home/jon/.cache/orket-architectural-truth/wheel-linux-py311/bin/python",
+        "base_prefix": "/home/jon/.local/share/uv/python/cpython-3.11.16-linux-x86_64-gnu",
+        "environment_core_version": "0.6.115",
+        "uv_path_lookup": null,
+        "existing_uv_paths": {
+          "/home/jon/.local/bin/uv": true,
+          "/usr/local/bin/uv": false,
+          "/usr/bin/uv": false
+        },
+        "proof": "Native clock interpreter identity only; this is an old environment, not installed candidate acceptance.",
+        "diff_ledger": [
+          {
+            "run_at_utc": "2026-10-02T03:00:09.332682Z",
+            "changed": true,
+            "before_digest": null,
+            "after_digest": "sha256:e8677e4647a8263faf9af211b7b5bcbf61d289bac79984a395aaac8d1a1830f9",
+            "diff": {
+              "initial_write": true,
+              "added_paths": 0,
+              "removed_paths": 0,
+              "changed_paths": 0,
+              "paths_total_previous": 0,
+              "paths_total_current": 23,
+              "paths_total_reference": 23,
+              "churn_paths": 23,
+              "churn_ratio": 1.0,
+              "sample_paths": []
+            }
+          }
+        ]
+      },
+      "exit_code": 1,
+      "native_terminal_report": true,
+      "linux_wrapper_and_child_absent_after_return": true
+    },
+    "clock_source_binding": {
+      "files": 5739,
+      "map_sha256": "163399f28571d3abbe5f345e648a30b75d4a1462f58f645d11cfafc1665dab37",
+      "changed_inputs": []
+    },
+    "readiness": {
+      "observed_at_unix": 1790910057.8876798,
+      "commit": "b7ab34bba7d76a146cf4782c8522681de22ac544",
+      "scope": "Read-only readiness; no inference, hosted job, app launch or provisioning.",
+      "llama_cpp": {
+        "endpoint": "http://127.0.0.1:8080/v1/models",
+        "result": "environment blocker",
+        "error_type": "URLError",
+        "error": "<urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+      },
+      "gitea_environment_names": [],
+      "remote_hosts": {
+        "origin": "github.com"
+      },
+      "hosted_quality": {
+        "result": "environment blocker",
+        "reason": "No Gitea repository/runner or authorization context has been supplied; existing remote host observations are retained without credentials."
+      },
+      "result": "environment blocker"
+    },
+    "proof_receipts_sha256": {
+      ".tmp/atg09-linux-clock.json": "43ff247a6650aac1cf6d451d349c7cb4a3a816ebc8fa8430cbbb5e6ea43a81f6",
+      ".tmp/atg09-readiness.json": "fda66b9cf8338b3415056dbef78e9430e5bd53005e134d35af45eac4bd4dfd0a"
+    },
+    "acceptance_limits": "No fresh Linux candidate install or runtime selection, actual provider inference or hosted Quality job has been executed. Native passive clock failure is live environment proof, not product failure or application acceptance.",
+    "wrap_checkpoint": {
+      "version": "0.6.126",
+      "scope": "Metadata-only handoff at user request; ATG-09 and ATG-10 remain incomplete.",
+      "paths": [
+        "CHANGELOG.md",
+        "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
+        "docs/projects/architectural-truth/GOAL_WORKSETS.json",
+        "docs/projects/architectural-truth/README.md",
+        "docs/projects/archive/architectural-truth/AT10012026-ATG08/CLOSEOUT.md",
+        "docs/projects/archive/architectural-truth/AT10012026-ATG08/VERIFICATION.json",
+        "pyproject.toml"
+      ],
+      "runtime_evidence_version": "0.6.125",
+      "checks_receipt": ".tmp/atg09-wrap-checks.json",
+      "publication_receipt": ".tmp/atg09-wrap-publication.json",
+      "next_action": "Resolve the recorded external prerequisites before another acceptance run.",
+      "user_direction": "Publish the in-flight checkpoint, then pause ATG-v1. No new acceptance run until the user resumes."
+    }
   }
 }

@@ -52606,7 +52606,7 @@
     ".tmp/atg08-closeout-checks.json": "dcd0285f46fcd5061ac32ff8009fa49ed0e900e5616866ab8970522c1c96c533"
   },
   "reader_sha256": "91906a39575bd82b70706b81fa938de69b2568a03f5fdb5c32b9e02219975f63",
-  "publication_status": "pending",
+  "publication_status": "verified",
   "proof_scope": "Installed Windows affected controls; individual live/contract/structural limits remain.",
   "diff_ledger": [
     {
@@ -52646,6 +52646,28 @@
           "$.closeout_validation",
           "$.diff_ledger",
           "$.raw_receipts_sha256..tmp/atg08-closeout-checks.json"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-02T02:59:44.670956Z",
+      "changed": true,
+      "before_digest": "sha256:245a6eef09c2f3bf17587fcfef96c6b1ac9399ea9fc89440525408b183fb3b50",
+      "after_digest": "sha256:2403eadcaffed97aacc0063159cb7a7e82b7307637dc868c934092fe5440337b",
+      "diff": {
+        "added_paths": 2,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 66943,
+        "paths_total_current": 67119,
+        "paths_total_reference": 67119,
+        "churn_paths": 3,
+        "churn_ratio": 4.5e-05,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.publication",
+          "$.publication_status"
         ]
       }
     }
@@ -52792,5 +52814,74 @@
         "map_sha256": "f9663bcc3058c3c4e103a3e44002c945399c0471a97baa115f720763ab937733"
       }
     }
-  ]
+  ],
+  "publication": {
+    "status": "finished",
+    "phase": "verified",
+    "version": "0.6.125",
+    "owner_pid": 4552,
+    "started_at_unix": 1790909671.427676,
+    "path": "primary",
+    "commands": [
+      {
+        "argv": [
+          "git",
+          "-c",
+          "core.safecrlf=false",
+          "commit",
+          "-m",
+          "Verify fresh Windows installed package acceptance"
+        ],
+        "status": "finished",
+        "started_at_unix": 1790909672.6481369,
+        "pid": 37308,
+        "exit_code": 0,
+        "finished_at_unix": 1790909672.8249395
+      },
+      {
+        "argv": [
+          "git",
+          "-c",
+          "core.safecrlf=false",
+          "tag",
+          "-a",
+          "v0.6.125",
+          "-m",
+          "ATG-08 Windows installed checkpoint v0.6.125"
+        ],
+        "status": "finished",
+        "started_at_unix": 1790909672.8992085,
+        "pid": 22596,
+        "exit_code": 0,
+        "finished_at_unix": 1790909672.9736304
+      },
+      {
+        "argv": [
+          "git",
+          "-c",
+          "core.safecrlf=false",
+          "push",
+          "--atomic",
+          "origin",
+          "HEAD:refs/heads/codex/architectural-truth-bt0",
+          "refs/tags/v0.6.125"
+        ],
+        "status": "finished",
+        "started_at_unix": 1790909673.1777573,
+        "pid": 2536,
+        "exit_code": 0,
+        "finished_at_unix": 1790909676.7724028
+      }
+    ],
+    "commit": "b7ab34bba7d76a146cf4782c8522681de22ac544",
+    "tag_object": "62dd5d79e43a67e5633a749534cfc0db8c445f79",
+    "result": "success",
+    "remote_refs": {
+      "refs/heads/codex/architectural-truth-bt0": "b7ab34bba7d76a146cf4782c8522681de22ac544",
+      "refs/tags/v0.6.125": "62dd5d79e43a67e5633a749534cfc0db8c445f79",
+      "refs/tags/v0.6.125^{}": "b7ab34bba7d76a146cf4782c8522681de22ac544"
+    },
+    "clean_worktree": true,
+    "finished_at_unix": 1790909678.5732822
+  }
 }
