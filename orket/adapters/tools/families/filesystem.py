@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import OrderedDict
-from pathlib import Path
+from pathlib import Path, PurePath
 from typing import Any
 
 from orket.adapters.tools.families.base import BaseTools
@@ -25,10 +25,12 @@ class FileSystemTools(BaseTools):
 
         self.async_fs = AsyncFileTools(workspace_root, references)
         self.mutation_authority = mutation_authority
-        self._path_locks: OrderedDict[str, asyncio.Lock] = OrderedDict()
+        self._path_locks: OrderedDict[PurePath, asyncio.Lock] = OrderedDict()
 
     def _get_path_lock(self, resolved_path: Path) -> asyncio.Lock:
-        key = str(resolved_path)
+        from orket.adapters.storage.async_file_tools import resolved_path_identity
+
+        key = resolved_path_identity(resolved_path)
         lock = self._path_locks.get(key)
         if lock is not None:
             self._path_locks.move_to_end(key)

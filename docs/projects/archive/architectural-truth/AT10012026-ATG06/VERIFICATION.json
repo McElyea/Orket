@@ -5,7 +5,7 @@
   "proof": "live scoped Windows/Linux source controls and structural typing",
   "path": "primary",
   "result": "success",
-  "publication_status": "pending",
+  "publication_status": "verified",
   "exact_files_touched": [
     ".gitea/workflows/quality.yml",
     "CHANGELOG.md",
@@ -5120,6 +5120,61 @@
           "$.batch_records[18].status"
         ]
       }
+    },
+    {
+      "run_at_utc": "2026-10-01T17:14:18.030248Z",
+      "changed": true,
+      "before_digest": "sha256:85e0353981cf2d25a921880834dcfc7a9b7cfdaaa28d008824eca4f4a529c625",
+      "after_digest": "sha256:b65971fc2a45e1340cc74d2dd74eaee8a0ce376fd8f1d1460ff299cd11d80738",
+      "diff": {
+        "added_paths": 2,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 8440,
+        "paths_total_current": 8589,
+        "paths_total_reference": 8589,
+        "churn_paths": 3,
+        "churn_ratio": 0.000349,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.publication",
+          "$.publication_status"
+        ]
+      }
     }
-  ]
+  ],
+  "publication": {
+    "commit": "52b45773c620bbeaed21b9eab58b85cf76ba4c96",
+    "version": "0.6.123",
+    "tag_object": "e09429533ddbd65cb8f5d25574540ab7dea15df1",
+    "remote_refs": {
+      "refs/heads/codex/architectural-truth-bt0": "52b45773c620bbeaed21b9eab58b85cf76ba4c96",
+      "refs/tags/v0.6.123": "e09429533ddbd65cb8f5d25574540ab7dea15df1",
+      "refs/tags/v0.6.123^{}": "52b45773c620bbeaed21b9eab58b85cf76ba4c96"
+    },
+    "clean_worktree": true,
+    "path": "primary",
+    "result": "success",
+    "diff_ledger": [
+      {
+        "run_at_utc": "2026-10-01T17:13:21.265466Z",
+        "changed": true,
+        "before_digest": null,
+        "after_digest": "sha256:5c5c7df0e6aac5d4174eaaf2673da9af2a80b990f9c2a65b4d2d50855db43bc7",
+        "diff": {
+          "initial_write": true,
+          "added_paths": 0,
+          "removed_paths": 0,
+          "changed_paths": 0,
+          "paths_total_previous": 0,
+          "paths_total_current": 19,
+          "paths_total_reference": 19,
+          "churn_paths": 19,
+          "churn_ratio": 1.0,
+          "sample_paths": []
+        }
+      }
+    ]
+  }
 }

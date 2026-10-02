@@ -1,12 +1,12 @@
 # Architectural Truth: Executable Goal Queue
 
 Last updated: 2026-10-01 (America/Denver)
-Status: Active implementation; ATG-01/02/03/04/05 published, ATG-06 in progress
+Status: Active implementation; ATG-01/02/03/04/05/06 published, ATG-07 in progress
 Queue: ATG-v1 — ten fixed goals for the existing revamp
 Owner: Orket Core
 Worktree: `C:/Source/Orket-architectural-truth`
 Branch: `codex/architectural-truth-bt0`
-Next goal: **ATG-06**
+Next goal: **ATG-07**
 
 ## Purpose and authority
 
@@ -74,8 +74,8 @@ do not repeat the 73-minute suite solely to restate this starting point.
 | ATG-03 | Finish already-inventoried required log producers | ATG-01 | complete: `5e878cc2` / `v0.6.120` |
 | ATG-04 | Close the other frozen D ownership/input defects | ATG-01; affected ATG-02/03 work | complete: `9b2e91d9` / `v0.6.121` |
 | ATG-05 | Finish the three named E2 hotspots | ATG-01; affected D repairs | complete: `64b39cb9` / `v0.6.122` |
-| ATG-06 | Clear canonical typing debt in bounded batches | ATG-02 through ATG-05 | publication pending; source/structural gates pass |
-| ATG-07 | Restore the unchanged 89% coverage gate | ATG-02 through ATG-06 | waiting |
+| ATG-06 | Clear canonical typing debt in bounded batches | ATG-02 through ATG-05 | complete: `52b45773` / `v0.6.123` |
+| ATG-07 | Restore the unchanged 89% coverage gate | ATG-02 through ATG-06 | source gate passed; v0.6.124 publication pending |
 | ATG-08 | Verify fresh Windows packages and public paths | ATG-07 | waiting |
 | ATG-09 | Complete applicable Linux, provider and hosted Quality proof | ATG-08; required environments available | waiting |
 | ATG-10 | Reconcile and publish the bounded revamp result | ATG-01 through ATG-09 | waiting |
@@ -285,26 +285,39 @@ B03/B04 native-file and healthy real Git controls do not prove adverse process c
 Do not expand this queue or its denominator without user authorization. Historical
 capability/compatibility obligations remain in the archive and active specs.
 
+Deferred finding (observed public contract failure, B17-closing): the existing
+ResponseParser residue normalization removes prose whitespace. The grounding
+check consequently misses `Maybe this...` after it becomes `Maybethis...`; a
+punctuation-separated marker remains detectable. This coverage batch retains the
+counterexample and does not change parser/grounding behavior or add a new goal.
+
 ## Resume record
 
-- Current card/batch: ATG-06 / structural and publication closeout.
-  All 49 batches and the canonical remainder pass. Canonical Mypy has zero errors
-  across 1,222 sources; the final affected selection passes 178 cases and the
-  Quality/API-owner selection passes 33. The [closeout draft](../archive/architectural-truth/AT10012026-ATG06/CLOSEOUT.md)
-  retains claim limits. All eight structural gates pass; publication remains pending.
-- Completed cards: 5 of 10. This is queue completion, not whole-project percentage.
-- Last verified checkpoint: `64b39cb9` / `v0.6.122`; annotated tag and branch
-  remote identities plus clean worktree verified in `.tmp/atg05-publication.json`.
-- Running commands: source-bound typing campaigns retain argv/process/input/result
-  identity in `.tmp/atg06-typing.json`; Windows tests use `.tmp/atg06-proof.json`,
-  Linux native source controls use `.tmp/atg06-linux.json`, and final
-  structural gates use `.tmp/atg06-structural.json`. Inspect receipts before replacing
-  any run. Earlier goals and the historical full suite are finished.
-- Next exact action: publish/verify the annotated v0.6.123 branch checkpoint,
-  then begin ATG-07 from the retained coverage evidence.
-- Blockers: none for eligible local work. Coverage remains red; the default
-  llama.cpp catalog is unavailable, hosted Gitea access is unestablished, and
-  current Linux clock/installed acceptance remains unverified for ATG-08/09.
+- Current card/batch: ATG-07 / v0.6.124 closeout and publication.
+  R07-worker-candidate passes **12,964 tests, zero failures, 93 skips**, with two
+  warnings and **89.213132% combined coverage**. All 13,057 XML cases match strict
+  collection; source fingerprints remained unchanged. All nine preflights pass.
+  Earlier red campaigns and scope limits are retained in the
+  [ATG-07 closeout](../archive/architectural-truth/AT10012026-ATG07/CLOSEOUT.md) and
+  [verification](../archive/architectural-truth/AT10012026-ATG07/VERIFICATION.json).
+- Completed cards: 6 of 10 until ATG-07 publication is verified. This is queue
+  completion, not whole-project percentage.
+- Last verified checkpoint: `52b45773` / `v0.6.123`; annotated tag and branch
+  remote identities plus clean worktree verified in `.tmp/atg06-publication.json`.
+- Running commands: none. All complete/scoped campaigns are terminal. Stable
+  full receipt: `.tmp/atg07-complete-campaign.json`; closing validation will use
+  `.tmp/atg07-closeout-checks.json`, and publication `.tmp/atg07-publication.json`.
+- Next exact action: verify the frozen metadata-only closeout changes, run affected
+  version/release/docs/authority checks, commit v0.6.124, create its annotated tag,
+  atomically push branch and tag, then verify remote identities and clean state.
+  Continue ATG-08 after publication. Its prepared selection binds 467 selectors,
+  627 test files and 6,234 cases to passing source XML; 34 source-only controls stay
+  separate. Three explicit localhost-Gitea acceptance skips remain unverified.
+- Blockers/limits: ATG-07 publication is pending. The earlier API timing outlier
+  remains unexplained; the unchanged final assertion passes at 0.136328 seconds.
+  Default llama.cpp catalog access is unavailable, hosted Gitea access is
+  unestablished, and fresh installed/Linux acceptance remains unverified.
+  ATG-08 scratch helpers are unexecuted preparation, not acceptance.
 
 ## Reusable goal prompt
 

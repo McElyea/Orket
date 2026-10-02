@@ -8,12 +8,12 @@ from typing import Any
 from orket.adapters.storage.run_start_publication import publish_run_start_directory
 from orket.runtime.evidence.run_start_contract_artifacts import CONTRACT_SNAPSHOT_DEFS
 from orket.runtime.evidence.workspace_snapshot import capture_workspace_state_snapshot
-from orket.runtime.registry.contract_bootstrap import (
-    RuntimeContractSnapshots,
-    load_runtime_contract_snapshots,
-    write_runtime_contract_snapshots,
-)
+from orket.runtime.registry import contract_bootstrap as _peer_contract_bootstrap
 from orket.utils import sanitize_name
+
+RuntimeContractSnapshots = _peer_contract_bootstrap.RuntimeContractSnapshots
+load_runtime_contract_snapshots = _peer_contract_bootstrap.load_runtime_contract_snapshots
+write_runtime_contract_snapshots = _peer_contract_bootstrap.write_runtime_contract_snapshots
 
 _DETERMINISM_RANK = {
     "pure": 0,

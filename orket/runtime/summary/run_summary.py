@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from orket.adapters.storage.async_file_tools import capture_file_roots
-from orket.runtime.evidence.run_start_artifacts import validate_run_identity_projection
+from orket.runtime.evidence import run_start_artifacts as _peer_run_start_artifacts
 from orket.runtime.summary.run_summary_artifact_provenance import (
     ARTIFACT_PROVENANCE_KEY,
     build_artifact_provenance_extension,
@@ -20,6 +20,8 @@ from orket.runtime.summary.run_summary_packet2 import (
     build_packet2_extension,
     normalize_packet2_facts,
 )
+
+validate_run_identity_projection = _peer_run_start_artifacts.validate_run_identity_projection
 
 _EXCLUDED_ARTIFACT_IDS = {"gitea_export", "run_summary", "run_summary_path"}
 _PACKET1_SCHEMA_VERSION = "1.0"

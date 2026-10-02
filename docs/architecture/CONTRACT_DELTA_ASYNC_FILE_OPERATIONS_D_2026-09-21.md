@@ -34,6 +34,21 @@ validation, existence/type checks and unlink in one worker. Authorized connector
 dispatch still selects the existing bound-filesystem executor before legacy paths;
 its authorization, evidence, deadline and result authority are unchanged.
 
+Windows identity correction (2026-10-01): native non-strict resolution can retain
+the extended-length namespace on a target while resolving its workspace with an
+ordinary drive spelling. Workspace/reference containment and filesystem-tool lock
+selection use one shared resolved-path identity, treating ordinary absolute Windows
+drive/UNC spellings and their extended namespace as equivalent. Containment still
+uses path-component comparisons; outside roots and read-only reference writes
+remain refused. The actual resolved path used for native I/O is preserved. Device
+namespace paths are not collapsed into ordinary drive paths, and POSIX identity
+remains case-sensitive. This adds no retry or authorization fallback.
+
+Native controls use actual local Windows namespace aliases, concurrent writes,
+reference reads/write refusal and outside/create effects. Pure UNC identity cases
+only establish value comparisons, not access to a live SMB filesystem. Retain these
+controls with the existing native lifetime/input controls in both Quality selections.
+
 Proof uses real files, SQLite requests, native path/open/directory ports and the
 actual card completion writer guard. Held-port responsiveness remains bounded at
 0.5 seconds, timeout starts 50ms after native admission, native release remains

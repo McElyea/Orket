@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from orket.runtime.registry.contract_schema import ContractRegistry
+from orket.runtime.registry import contract_schema as _peer_contract_schema
+
+ContractRegistry = _peer_contract_schema.ContractRegistry
 
 SPEC_DEBT_QUEUE_SCHEMA_VERSION = "1.0"
 

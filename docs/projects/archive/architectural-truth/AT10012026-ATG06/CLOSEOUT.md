@@ -1,7 +1,7 @@
 # ATG-06 canonical typing closeout
 
 Date: 2026-10-01 (America/Denver)
-Status: Source and structural proof passed; v0.6.123 publication pending
+Status: Complete; published `52b45773` / annotated `v0.6.123`
 Owner: Orket Core
 
 ## What changed
@@ -51,7 +51,9 @@ dependency direction (1,222 files, 4,276 edges, zero violations/cycles/errors),
 strict taxonomy (12,139 items, zero missing/conflicting labels), critical no-op,
 docs hygiene, authority structure, generated equality and release policy. No
 modified Python file grows above 400 lines; the one-field Orchestrator declaration
-remains below that limit. Publication is the only remaining ATG-06 exit action.
+remains below that limit. Publication passed: matching remote branch, annotated tag and peeled commit,
+plus a clean worktree, are retained in `.tmp/atg06-publication.json`.
+ATG-07 is the next eligible goal.
 
 ## What was not verified
 

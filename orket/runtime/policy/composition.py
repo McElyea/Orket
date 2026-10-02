@@ -4,11 +4,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from orket.runtime.registry.module_registry import (
-    ensure_capability_enabled,
-    ensure_module_enabled,
-    resolve_module_profile,
-)
+from orket.runtime.registry import module_registry as _peer_module_registry
+
+ensure_capability_enabled = _peer_module_registry.ensure_capability_enabled
+ensure_module_enabled = _peer_module_registry.ensure_module_enabled
+resolve_module_profile = _peer_module_registry.resolve_module_profile
 
 
 @dataclass(frozen=True)

@@ -34,9 +34,9 @@ from orket.application.workflows.turn_artifact_writer import TurnArtifactWriter
 from orket.core.contracts.eos_calendar import EosSprintBaseline
 from orket.logging import log_event
 from orket.orchestration.orchestration_config import OrchestrationConfig, process_rule_value
-from orket.runtime.config.config_loader import ConfigLoader
-from orket.runtime.config.runtime_context import OrketRuntimeContext
-from orket.runtime.evidence.run_ledger_factory import build_run_ledger_repository
+from orket.runtime.config import config_loader as _peer_config_loader
+from orket.runtime.config import runtime_context as _peer_runtime_context
+from orket.runtime.evidence import run_ledger_factory as _peer_run_ledger_factory
 from orket.runtime.execution.epic_run_orchestrator import EpicRunOrchestrator
 from orket.runtime.execution.epic_run_types import EpicRunCallbacks
 from orket.runtime.execution.execution_pipeline_artifact_provenance import ExecutionPipelineArtifactProvenanceMixin
@@ -48,6 +48,10 @@ from orket.runtime.execution.execution_pipeline_runtime_artifacts import Executi
 from orket.runtime.execution.pipeline_wiring_service import PipelineWiringService
 from orket.runtime.execution.workload_shell import SharedWorkloadShell
 from orket.settings import load_user_settings
+
+ConfigLoader = _peer_config_loader.ConfigLoader
+OrketRuntimeContext = _peer_runtime_context.OrketRuntimeContext
+build_run_ledger_repository = _peer_run_ledger_factory.build_run_ledger_repository
 
 
 class ExecutionPipeline(

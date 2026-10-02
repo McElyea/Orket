@@ -6,16 +6,20 @@ from typing import TYPE_CHECKING, Any
 from orket.core.contracts.runtime_execution_result import RuntimeCollectionResult, RuntimeExecutionResult
 from orket.exceptions import CardNotFound
 from orket.logging import bind_logging, log_event
-from orket.runtime.config.settings import resolve_str
+from orket.runtime.config import settings as _peer_settings
 from orket.runtime.execution.gitea_state_loop import GiteaStateLoopRunner
+
+resolve_str = _peer_settings.resolve_str
 
 if TYPE_CHECKING:
     from orket.adapters.observability.logging_context import PreparedLogging
     from orket.application.services.epic_approval_pause_service import EpicApprovalPauseService
     from orket.application.services.runtime_input_service import RuntimeInputService
     from orket.application.workflows.orchestrator import Orchestrator
-    from orket.runtime.config.runtime_context import OrketRuntimeContext
+    from orket.runtime.config import runtime_context as _peer_runtime_context
     from orket.runtime.execution.epic_run_orchestrator import EpicRunOrchestrator
+
+    OrketRuntimeContext = _peer_runtime_context.OrketRuntimeContext
 
 
 class ExecutionPipelineCardDispatchMixin:

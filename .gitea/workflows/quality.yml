@@ -340,7 +340,7 @@ jobs:
 
       - name: Enforce owned file operations and mutation inputs
         run: |
-          python -m pytest -q tests/integration/test_async_file_path_responsiveness.py tests/integration/test_async_file_native_lifetime.py tests/integration/test_async_directory_native_lifetime.py tests/integration/test_async_file_invocation_inputs.py tests/integration/test_file_tool_mutation_inputs.py tests/integration/test_async_file_compatibility.py
+          python -m pytest -q tests/integration/test_async_file_path_responsiveness.py tests/integration/test_async_file_native_lifetime.py tests/integration/test_async_directory_native_lifetime.py tests/integration/test_async_file_invocation_inputs.py tests/integration/test_file_tool_mutation_inputs.py tests/integration/test_async_file_compatibility.py tests/adapters/test_parallel_file_locking.py tests/contracts/test_file_path_identity.py
 
       - name: Enforce runtime resource cleanup
         run: |
@@ -931,7 +931,7 @@ jobs:
 
       - name: Enforce owned file operations and mutation inputs
         run: |
-          python -m pytest -q tests/integration/test_async_file_path_responsiveness.py tests/integration/test_async_file_native_lifetime.py tests/integration/test_async_directory_native_lifetime.py tests/integration/test_async_file_invocation_inputs.py tests/integration/test_file_tool_mutation_inputs.py tests/integration/test_async_file_compatibility.py
+          python -m pytest -q tests/integration/test_async_file_path_responsiveness.py tests/integration/test_async_file_native_lifetime.py tests/integration/test_async_directory_native_lifetime.py tests/integration/test_async_file_invocation_inputs.py tests/integration/test_file_tool_mutation_inputs.py tests/integration/test_async_file_compatibility.py tests/adapters/test_parallel_file_locking.py tests/contracts/test_file_path_identity.py
 
       - name: Enforce runtime resource cleanup
         run: |

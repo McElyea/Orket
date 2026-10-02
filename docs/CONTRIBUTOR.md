@@ -176,6 +176,11 @@ Application file validation and reconciliation capture invocation roots before
 owned waits; direct stores bind their construction root. Both Quality jobs retain
 real two-tree, CWD/attribute rotation, refusal and partial-adoption controls under
 `docs/architecture/CONTRACT_DELTA_APPLICATION_ROOT_INPUTS_D_2026-09-28.md`.
+Filesystem containment and lock selection share resolved-path identity for Windows
+namespace aliases while preserving native I/O paths and reference write refusals.
+Both Quality selections retain the native alias and pure identity controls with
+the existing file lifetime/input checks; UNC value checks are not live SMB proof.
+Contract: `docs/architecture/CONTRACT_DELTA_ASYNC_FILE_OPERATIONS_D_2026-09-21.md`.
 Epic extraction must preserve phase-selected owners and approval consumption after
 semaphore admission; retain the public phase controls with existing scheduler,
 approval and recovery guards under `docs/specs/RUNTIME_ARCHITECTURE_POLICY_INPUTS.md`.

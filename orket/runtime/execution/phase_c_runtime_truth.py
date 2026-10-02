@@ -11,8 +11,11 @@ from orket.runtime.execution.packet2_receipt_observation import (
     observe_packet2_receipts,
 )
 from orket.runtime.execution.source_attribution_receipt import observe_source_receipt
-from orket.runtime.policy.idempotency_discipline_policy import idempotency_discipline_policy_snapshot
-from orket.runtime.summary.run_summary_artifact_provenance import normalize_artifact_provenance_facts
+from orket.runtime.policy import idempotency_discipline_policy as _peer_idempotency_discipline_policy
+from orket.runtime.summary import run_summary_artifact_provenance as _peer_run_summary_artifact_provenance
+
+idempotency_discipline_policy_snapshot = _peer_idempotency_discipline_policy.idempotency_discipline_policy_snapshot
+normalize_artifact_provenance_facts = _peer_run_summary_artifact_provenance.normalize_artifact_provenance_facts
 
 SOURCE_ATTRIBUTION_RECEIPT_PATH = "agent_output/source_attribution_receipt.json"
 _SOURCE_ATTRIBUTION_REQUIRED_CLAIM_FIELDS = ("claim_id", "claim", "source_ids")

@@ -5,6 +5,16 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.124] - 2026-10-01
+
+### Fixed
+- Restore the unchanged 89-percent combined coverage gate: the complete Windows Python 3.11 source run passes 12,964 tests with zero failures, 93 retained skips and 89.213132% coverage. Retain 27 bounded coverage batches and seven reconciliation records, including earlier failures and proof limits.
+- Bind peer runtime imports to their concrete owners and share Windows resolved-path identity between containment and file locking. Preserve actual I/O paths, reference write refusals and existing runtime ownership; native namespace-alias controls and the corrected actual-worker process-death fixture pass.
+- Retain unchanged API responsiveness assertions with diagnostic timing segments. Fresh installed Windows/Linux, localhost Gitea acceptance, actual llama.cpp inference and hosted Quality remain unverified; this is an ATG-07 checkpoint, not whole-lane acceptance.
+- `compatibility_status`: `preserved`
+- `affected_audience`: `all`
+- `migration_requirement`: `none`
+
 ## [0.6.123] - 2026-10-01
 
 ### Fixed

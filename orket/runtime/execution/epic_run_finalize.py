@@ -28,7 +28,9 @@ from orket.runtime.execution.phase_c_runtime_truth import (
     collect_source_attribution_facts,
     resolve_source_attribution_gate_failure_reason,
 )
-from orket.runtime.registry.state_transition_registry import validate_state_token
+from orket.runtime.registry import state_transition_registry as _peer_state_transition_registry
+
+validate_state_token = _peer_state_transition_registry.validate_state_token
 
 
 @dataclass(frozen=True)

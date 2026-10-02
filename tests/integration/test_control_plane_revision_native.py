@@ -3,6 +3,7 @@ import asyncio
 import json
 import sys
 
+import psutil
 import pytest
 
 from orket.adapters.storage.async_control_plane_execution_repository import AsyncControlPlaneExecutionRepository
@@ -24,13 +25,29 @@ async def receive(process):
     return json.loads(line)
 
 
-async def reap(processes):
+def capture_worker(launcher_pid, worker_pid):
+    worker = psutil.Process(worker_pid)
+    assert worker.is_running()
+    assert worker.pid == launcher_pid or launcher_pid in {parent.pid for parent in worker.parents()}
+    return worker
+
+
+async def reap(processes, workers):
+    for worker in workers:
+        if await asyncio.to_thread(worker.is_running):
+            try:
+                await asyncio.to_thread(worker.kill)
+            except psutil.NoSuchProcess:
+                assert not await asyncio.to_thread(worker.is_running)
     for process in processes:
         if process.returncode is None:
             process.kill()
     for process in processes:
         await asyncio.wait_for(process.communicate(), timeout=30)
         assert process.returncode is not None
+    for worker in workers:
+        await asyncio.to_thread(worker.wait, 30)
+        assert not await asyncio.to_thread(worker.is_running)
 
 
 @pytest.mark.parametrize("kind", KINDS)
@@ -41,10 +58,13 @@ async def test_native_observers_cannot_both_advance_shared_revision(tmp_path, ki
     original = await save(repository, kind, initial(kind))
     updates = changed(original, kind).model_dump(mode="json")
     processes = []
+    workers = []
     try:
         for _ in range(2):
             processes.append(await start_worker(path, kind, "race"))
         observed = await asyncio.gather(*(receive(process) for process in processes))
+        for process, item in zip(processes, observed, strict=True):
+            workers.append(await asyncio.to_thread(capture_worker, process.pid, item["pid"]))
         assert len({item["pid"] for item in observed}) == 2
         assert all(item["record"] == original.model_dump(mode="json") for item in observed)
         # Both children have retained revision zero before either can write.
@@ -61,25 +81,36 @@ async def test_native_observers_cannot_both_advance_shared_revision(tmp_path, ki
         assert saved["state_revision"] == 1
         assert (await read(repository, kind)).model_dump(mode="json") == saved
     finally:
-        await reap(processes)
+        await reap(processes, workers)
 
 
 @pytest.mark.parametrize("kind", KINDS)
 # Layer: integration
-async def test_process_death_before_commit_preserves_revision_and_allows_next_writer(tmp_path, kind):
+async def test_process_death_before_commit_preserves_revision_and_allows_next_writer(tmp_path, kind, record_property):
     path = tmp_path / "control.sqlite3"
     repository = AsyncControlPlaneExecutionRepository(path)
     original = await save(repository, kind, initial(kind))
     process = await start_worker(path, kind, "interrupt")
+    workers = []
     try:
-        assert (await receive(process))["record"] == original.model_dump(mode="json")
+        observed = await receive(process)
+        worker = await asyncio.to_thread(capture_worker, process.pid, observed["pid"])
+        workers.append(worker)
+        record_property("launcher_pid", process.pid)
+        record_property("worker_pid", worker.pid)
+        record_property("worker_created", await asyncio.to_thread(worker.create_time))
+        assert observed["record"] == original.model_dump(mode="json")
         process.stdin.write((changed(original, kind).model_dump_json() + "\n").encode())
         await process.stdin.drain()
         assert await receive(process) == {"event": "uncommitted", "revision": 1}
-        process.kill()
+        # Windows venv launchers can have a different PID from the SQLite owner.
+        await asyncio.to_thread(worker.kill)
         _, stderr = await asyncio.wait_for(process.communicate(), timeout=30)
         assert process.returncode != 0, stderr
+        await asyncio.to_thread(worker.wait, 30)
+        assert not await asyncio.to_thread(worker.is_running)
+        record_property("worker_terminated_before_recovery", True)
         assert await read(repository, kind) == original
         assert (await save(repository, kind, changed(original, kind))).state_revision == 1
     finally:
-        await reap([process])
+        await reap([process], workers)

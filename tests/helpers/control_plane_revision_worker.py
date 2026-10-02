@@ -22,7 +22,7 @@ async def main():
     record = await getattr(repository, f"get_{kind}_record")(**{f"{kind}_id": kind})
     emit(event="observed", pid=os.getpid(), record=record.model_dump(mode="json"))
     updates = json.loads(await asyncio.to_thread(sys.stdin.readline))
-    incoming = record.model_copy(update=updates)
+    incoming = type(record).model_validate({**record.model_dump(mode="json"), **updates})
     if mode == "interrupt":
         async with SQLiteControlPlaneTransactions(path)() as transaction:
             saved = await getattr(transaction.execution, f"save_{kind}_record")(record=incoming)

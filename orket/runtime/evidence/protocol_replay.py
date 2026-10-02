@@ -13,8 +13,11 @@ from orket.runtime.evidence.replay_compatibility import (
     resolve_ledger_schema_version,
 )
 from orket.runtime.evidence.replay_drift_classifier import classify_replay_drift
-from orket.runtime.registry.contract_bootstrap import load_runtime_contract_snapshots
-from orket.runtime.registry.runtime_policy_versions import runtime_policy_versions_snapshot
+from orket.runtime.registry import contract_bootstrap as _peer_contract_bootstrap
+from orket.runtime.registry import runtime_policy_versions as _peer_runtime_policy_versions
+
+load_runtime_contract_snapshots = _peer_contract_bootstrap.load_runtime_contract_snapshots
+runtime_policy_versions_snapshot = _peer_runtime_policy_versions.runtime_policy_versions_snapshot
 
 
 def _sha256_file(path: Path) -> str:

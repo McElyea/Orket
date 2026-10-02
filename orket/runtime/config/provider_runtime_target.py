@@ -57,12 +57,13 @@ from orket.runtime.config.provider_runtime_inventory import (
 from orket.runtime.config.provider_runtime_inventory import (
     load_lmstudio_model_sync as _load_lmstudio_model_sync,
 )
-from orket.runtime.policy.provider_quarantine_policy import (
-    is_model_quarantined,
-    is_provider_quarantined,
-    resolve_provider_quarantine_policy,
-)
-from orket.runtime.policy.unknown_input_policy import validate_allowed_token
+from orket.runtime.policy import provider_quarantine_policy as _peer_provider_quarantine_policy
+from orket.runtime.policy import unknown_input_policy as _peer_unknown_input_policy
+
+is_model_quarantined = _peer_provider_quarantine_policy.is_model_quarantined
+is_provider_quarantined = _peer_provider_quarantine_policy.is_provider_quarantined
+resolve_provider_quarantine_policy = _peer_provider_quarantine_policy.resolve_provider_quarantine_policy
+validate_allowed_token = _peer_unknown_input_policy.validate_allowed_token
 
 ProviderRuntimeWarmupError = _ProviderRuntimeWarmupError
 _list_ollama_models_sync = _inventory_list_ollama_models_sync

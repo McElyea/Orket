@@ -61,13 +61,20 @@ async def exercise_owned_api_read(app, client, route, state, tmp_path, record_pr
                 if request.done():
                     pytest.fail(f"Request ended before native read: {await request}")
                 await asyncio.sleep(.001)
+        entered = time.perf_counter()
         if stop == "timeout":
             state.deadline.reschedule(asyncio.get_running_loop().time() + .05)
         async with aiosqlite.connect(tmp_path / "responsive.sqlite3") as connection:
+            connected = time.perf_counter()
             assert await (await connection.execute("SELECT 42")).fetchone() == (42,)
+            queried = time.perf_counter()
         elapsed = time.perf_counter() - started
         record_property("responsive_sqlite_seconds", elapsed)
-        assert elapsed < .5
+        timings = dict(admission=entered-started, connect=connected-entered,
+                       query=queried-connected, close=elapsed-(queried-started))
+        for segment, seconds in timings.items():
+            record_property(f"responsive_{segment}_seconds", seconds)
+        assert elapsed < .5, timings
         assert (await client.get("/v1/system/heartbeat")).status_code == 200
         closing = await _interrupt(app, request, stop)
         await asyncio.sleep(.08)

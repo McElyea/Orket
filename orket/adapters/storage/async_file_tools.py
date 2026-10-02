@@ -11,7 +11,7 @@ import os
 from collections.abc import Coroutine
 from copy import copy
 from functools import partial
-from pathlib import Path
+from pathlib import Path, PurePath, PureWindowsPath
 from typing import Any, Literal, TypeVar, cast, overload
 
 import aiofiles
@@ -22,6 +22,19 @@ from .async_executor_service import run_coroutine_blocking
 
 ResultT = TypeVar("ResultT")
 side_effecting = True
+
+
+def resolved_path_identity(path: PurePath) -> PurePath:
+    """Compare resolved paths consistently without rewriting their native I/O path."""
+    if not isinstance(path, PureWindowsPath) or not path.is_absolute():
+        return path
+    # Namespace spelling is normalized only for identity, never for native I/O.
+    drive = path.drive
+    if len(drive) == 2 and drive[1] == ":":
+        return PureWindowsPath("\\\\?\\" + str(path))
+    if drive.startswith("\\\\") and not drive.startswith(("\\\\?\\", "\\\\.\\")):
+        return PureWindowsPath("\\\\?\\UNC\\" + str(path)[2:])
+    return path
 
 
 def capture_file_roots(paths: list[Path]) -> list[Path]:
@@ -72,10 +85,11 @@ class AsyncFileTools:
 
         resolved = p.resolve(strict=False)
         workspace_resolved = self.workspace_root.resolve()
+        identity = resolved_path_identity(resolved)
 
         # Check if within workspace
         try:
-            is_in_workspace = resolved.is_relative_to(workspace_resolved)
+            is_in_workspace = identity.is_relative_to(resolved_path_identity(workspace_resolved))
         except ValueError:
             is_in_workspace = False
 
@@ -83,7 +97,7 @@ class AsyncFileTools:
         is_in_references = False
         for ref in self.references:
             try:
-                if resolved.is_relative_to(ref.resolve()):
+                if identity.is_relative_to(resolved_path_identity(ref.resolve())):
                     is_in_references = True
                     break
             except ValueError:
