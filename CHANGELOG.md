@@ -5,6 +5,15 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.128] - 2026-10-02
+
+### Changed
+- Record the authorized local environment repair: Windows Time synchronization and persistent service policy restore the unchanged Linux clock preflight, and the verified official llama.cpp b11146 build serves the existing default model with actual inference.
+- Retain exact package/configuration/process receipts and the discovered local Gitea repository's authenticated Actions requirement. This metadata checkpoint does not complete Linux installed, Orket provider or hosted Quality acceptance; eight of ten goals remain complete and accepted Windows runtime proof stays bound to v0.6.125.
+- `compatibility_status`: `preserved`
+- `affected_audience`: `all`
+- `migration_requirement`: `none`
+
 ## [0.6.127] - 2026-10-01
 
 ### Changed

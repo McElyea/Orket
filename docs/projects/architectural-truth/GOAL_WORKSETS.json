@@ -10125,53 +10125,6 @@
   ],
   "diff_ledger": [
     {
-      "run_at_utc": "2026-10-01T19:20:36.101060Z",
-      "changed": true,
-      "before_digest": "sha256:727a528daaef45cf2e4ada4d6bd3de1874daa51f8c4dd9c36b6f21a97b6e2ff9",
-      "after_digest": "sha256:8fb5d68147fb2c6238b506c8dd4802ac6e04906f345ee588cf9432129151627b",
-      "diff": {
-        "added_paths": 5,
-        "removed_paths": 0,
-        "changed_paths": 2,
-        "initial_write": false,
-        "paths_total_previous": 15618,
-        "paths_total_current": 16959,
-        "paths_total_reference": 16959,
-        "churn_paths": 7,
-        "churn_ratio": 0.000413,
-        "sample_paths": [
-          "$.diff_ledger",
-          "$.coverage_worksets.batches[7].additional_current_full_outcomes",
-          "$.coverage_worksets.batches[7].closing",
-          "$.coverage_worksets.batches[7].status",
-          "$.coverage_worksets.batches[8].additional_current_full_outcomes",
-          "$.coverage_worksets.batches[8].closing",
-          "$.coverage_worksets.batches[8].status"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-10-01T19:21:06.889152Z",
-      "changed": true,
-      "before_digest": "sha256:cecc7f9f87bbfb67cb392efef9f10dfcfd638d7e83b86fe4d32a5915b6847d67",
-      "after_digest": "sha256:8f8a55112fd25e99418baea2ad5e54b10341dc28f2883bdee6881afa35c86ad0",
-      "diff": {
-        "added_paths": 2,
-        "removed_paths": 0,
-        "changed_paths": 0,
-        "initial_write": false,
-        "paths_total_previous": 15626,
-        "paths_total_current": 16973,
-        "paths_total_reference": 16973,
-        "churn_paths": 2,
-        "churn_ratio": 0.000118,
-        "sample_paths": [
-          "$.diff_ledger",
-          "$.coverage_worksets.batches"
-        ]
-      }
-    },
-    {
       "run_at_utc": "2026-10-01T19:23:56.857130Z",
       "changed": true,
       "before_digest": "sha256:776b17f73376f02498b71ea92b1de0024b34e6c3c3b7dcf3d5802bf58a35406c",
@@ -10886,6 +10839,61 @@
           "$.platform_worksets.resume_reassessment.source_binding",
           "$.platform_worksets.resume_reassessment.next_action",
           "$.platform_worksets.resume_reassessment.status"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-02T22:43:50.506190Z",
+      "changed": true,
+      "before_digest": "sha256:df818feb1437e7a5287d46a9949cfa4e0476eaf49b8938be401a628caa47252c",
+      "after_digest": "sha256:ba5768cf2f247beada489bc99459192acb1503c52f6be743e6f88ed41b39b6ae",
+      "diff": {
+        "added_paths": 1,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "initial_write": false,
+        "paths_total_previous": 19687,
+        "paths_total_current": 19733,
+        "paths_total_reference": 19733,
+        "churn_paths": 1,
+        "churn_ratio": 5.1e-05,
+        "sample_paths": [
+          "$.platform_worksets.local_repair"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-02T22:48:13.426420Z",
+      "changed": true,
+      "before_digest": "sha256:ba5768cf2f247beada489bc99459192acb1503c52f6be743e6f88ed41b39b6ae",
+      "after_digest": "sha256:941bd7c6fbe9fec600e8dee361406669476245c55f169ac4055a2c86ad70bf35",
+      "diff": {
+        "added_paths": 10,
+        "removed_paths": 0,
+        "changed_paths": 6,
+        "initial_write": false,
+        "paths_total_previous": 19733,
+        "paths_total_current": 19818,
+        "paths_total_reference": 19818,
+        "churn_paths": 16,
+        "churn_ratio": 0.000807,
+        "sample_paths": [
+          "$.platform_worksets.current_batch",
+          "$.platform_worksets.external_prerequisites",
+          "$.platform_worksets.local_repair.checkpoint",
+          "$.platform_worksets.local_repair.clock_process",
+          "$.platform_worksets.local_repair.clock_receipt_sha256",
+          "$.platform_worksets.local_repair.clock_result",
+          "$.platform_worksets.local_repair.gitea",
+          "$.platform_worksets.local_repair.package_decision",
+          "$.platform_worksets.local_repair.path",
+          "$.platform_worksets.local_repair.result",
+          "$.platform_worksets.local_repair.source_binding",
+          "$.platform_worksets.local_repair.evidence_sha256..tmp/atg09-windows-time-before.reg",
+          "$.platform_worksets.local_repair.next_action",
+          "$.platform_worksets.local_repair.status",
+          "$.platform_worksets.next_action",
+          "$.platform_worksets.status"
         ]
       }
     }
@@ -13870,8 +13878,8 @@
   },
   "platform_worksets": {
     "goal": "ATG-09",
-    "status": "environment blocked",
-    "current_batch": "ATG09-P01 terminal; required runtime gates blocked",
+    "status": "in progress; local prerequisites restored, hosted authorization blocked",
+    "current_batch": "ATG09-P01 local prerequisite repair complete; required acceptance pending",
     "candidate_commit": "b7ab34bba7d76a146cf4782c8522681de22ac544",
     "candidate_tag": "v0.6.125",
     "paths": [
@@ -13905,8 +13913,8 @@
       "Actual llama.cpp endpoint/model readiness and changed public flow with cleanup.",
       "Existing hosted Gitea repository/runner access and required Quality matrix."
     ],
-    "external_prerequisites": "A02 changed-host clock also fails; localhost llama.cpp catalog and both recorded Pinokio control endpoints refuse connections; no hosted Gitea repository/runner context supplied. Specific Linux, endpoint/model and runner inputs requested during explicit resume.",
-    "next_action": "Require a corrected existing Linux clock/host with environment-change evidence before another clock attempt. Obtain reachable llama.cpp base URL/model and authorized existing hosted Gitea repository/runner; specific inputs requested. No later goal is eligible.",
+    "external_prerequisites": "Local clock and llama.cpp readiness now pass. Existing Gitea repository is reachable but Actions APIs return401; authenticated runner/job access is requested.",
+    "next_action": "Freeze and run the applicable Linux installed selections and actual Orket provider public-flow proof; obtain authenticated access to the existing Gitea Actions repository/runner. ATG-10 stays dependent.",
     "probe_limits": "Interpreter version probes succeeded. The first combined shell command failed only its uv lookup due to quote stripping; no uv availability was established by that command.",
     "clock_result": {
       "path": "blocked",
@@ -14099,6 +14107,87 @@
         "checks_receipt": ".tmp/atg09-resume-checks.json",
         "publication_receipt": ".tmp/atg09-resume-publication.json",
         "runtime_evidence_version": "0.6.125"
+      }
+    },
+    "local_repair": {
+      "status": "complete: local prerequisites verified",
+      "clock_attempt": "A03",
+      "authorized_on": "2026-10-02",
+      "user_direction": "Repair both local clock and llama.cpp blockers; identify/update necessary packages.",
+      "environment_change": "Windows Time started and resynchronized after UAC approval. Host offset against ntp.ubuntu.com fell from +18.113s to about +0.001s; Windows now reports Leap Indicator 0/stratum 5. Backed-up policy sets network availability triggers and adaptive client polling against existing time.windows.com. No Linux NTP setting or acceptance criterion changed.",
+      "clock_receipt": ".tmp/atg09-local-clock.json",
+      "helper_sha256": {
+        ".tmp/d_reentry_clock_preflight.py": "f9af974826a7e06e9054d04d763e7130c9e51d8a2e9714cc4f836b1b04697682",
+        ".tmp/atg09_local_clock.py": "38074a89cf85ac9640c62f9b79b952651693a915021a354ec527205e36f951a8"
+      },
+      "evidence_sha256": {
+        ".tmp/atg09-windows-time-repair.log": "e48b8deb9b4abf8c7cc5c09b7a8250adbbc5800853ea17b982d5644dff88bba7",
+        ".tmp/atg09-windows-time-policy.log": "b2ca6ed99ac641d7c949908ed80ffd3ab89e2f75b0e72e08bd614cb8cf26fbb6",
+        ".tmp/atg09-llama-update.json": "20697e077388113bed8f3abfc7497c648f6a43903f2bf58e73351c4b172971dd",
+        ".tmp/atg09-llama-repair-proof.json": "ef0f380c3e99a3e6556edb95da6589be7c1cdaa195008a528f9975503f667388",
+        ".tmp/atg09-windows-time-before.reg": "298b4f02428fdaaa192e034b0c936ec264b38db7284e945df1b5598d093a3e20"
+      },
+      "llama_cpp": {
+        "endpoint": "http://127.0.0.1:8080/v1",
+        "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "executable": "D:/llama.cpp-releases/b11146/llama-server.exe",
+        "build": "b11146 / 7fe450e19 / stable-linked v0.5.0",
+        "pid": 33276,
+        "launcher": "D:/llama.cpp-releases/Start-Orket-Llama.ps1",
+        "result": "success",
+        "proof": "Live health/catalog and exact-response model inference; Orket public flow remains separate."
+      },
+      "next_action": "Freeze and run the applicable Linux installed selections and actual Orket provider public-flow proof; obtain authenticated access to the existing Gitea Actions repository/runner. ATG-10 stays dependent.",
+      "path": "primary",
+      "result": "success",
+      "clock_result": {
+        "path": "primary",
+        "result": "success",
+        "elapsed_seconds": 60.00042675499935,
+        "quiet_seconds": 60.00042543900054,
+        "maximum_observed_step_seconds": 6.479e-06,
+        "minimum_observed_step_seconds": -0.002665138
+      },
+      "clock_receipt_sha256": "f7a2cdd0c0679a1f3b28a0895e5e388ec0070eeb540bb0a01c0e7b48777fdf87",
+      "clock_process": {
+        "owner_pid": 11152,
+        "launcher_pid": 7376,
+        "native_pid": 385,
+        "native_parent_pid": 296,
+        "exit_code": 0,
+        "windows_owner_and_launcher_absent": true,
+        "linux_clock_process_absent": true
+      },
+      "source_binding": {
+        "files": 5739,
+        "changed_inputs": []
+      },
+      "gitea": {
+        "endpoint": "http://localhost:3000",
+        "version": "1.25.4",
+        "repository": "Orket/Orket",
+        "repository_visibility": "public",
+        "actions_runs_http_status": 401,
+        "actions_runners_http_status": 401,
+        "container": "vibe-rail-gitea",
+        "proof": "Live service/repository observation only; authorized runner and workflow access remains unavailable."
+      },
+      "package_decision": "Update llama.cpp via verified official stable-linked b11146/CUDA12.4 archives beside old copies. Windows clock required service/policy repair, not another package. WSL 2.6.3 retained: 3.0.1 has an official moved-distro startup regression and Ubuntu resides on V:. No Pinokio or OS preview update needed for this repair.",
+      "checkpoint": {
+        "version": "0.6.128",
+        "base_commit": "0e2203862bb356f87726342e0503cd0216c6e395",
+        "paths": [
+          "CHANGELOG.md",
+          "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
+          "docs/projects/architectural-truth/GOAL_WORKSETS.json",
+          "docs/projects/architectural-truth/README.md",
+          "pyproject.toml"
+        ],
+        "checks_receipt": ".tmp/atg09-local-checks.json",
+        "publication_receipt": ".tmp/atg09-local-publication.json",
+        "directory": ".tmp/atg09-local-checkpoint",
+        "runtime_evidence_version": "0.6.125",
+        "scope": "Local environment repair/readiness checkpoint, not ATG-09 application acceptance."
       }
     }
   }

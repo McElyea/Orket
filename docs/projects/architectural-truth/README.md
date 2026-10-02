@@ -1,6 +1,6 @@
 # Architectural Truth
 
-Last updated: 2026-10-01 (America/Denver)
+Last updated: 2026-10-02 (America/Denver)
 Status: Active project registry
 Owner: Orket Core
 
@@ -8,15 +8,15 @@ The [executable goal queue](ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md) is the sing
 canonical implementation plan and the file to target for continuing goal execution.
 It defines ten fixed goals, dependencies, starting and exit criteria, evidence
 requirements, exclusions and a resume record. **ATG-01 through ATG-08 are published
-through v0.6.125; ATG-09 is blocked on the current Linux clock and provider/hosted
-prerequisites.** Larger goals use bounded
+through v0.6.125; ATG-09 local clock and llama.cpp prerequisites are now restored,
+with Linux/provider acceptance pending and hosted Gitea authorization required.** Larger goals use bounded
 batches without replacing the user's objective. The [workset inventory](GOAL_WORKSETS.json)
 binds current sources, retained proof and pending batch IDs without creating a second plan.
-Version 0.6.127 records the explicit resume, verified 0.6.126 publication and one
-changed-host clock attempt that also fails the unchanged prerequisite. Accepted
-Windows evidence survives hash/readback audit and remains bound to 0.6.125;
-specific Linux, llama.cpp and hosted Gitea inputs remain required. The canonical
-plan retains process receipts and exact next actions; ATG-10 remains dependent.
+Version 0.6.128 records the local repair and passing unchanged Linux clock gate,
+verified llama.cpp update and real model readiness. Accepted Windows application
+evidence remains bound to 0.6.125. The canonical plan retains exact process and
+configuration receipts and the next Linux/provider/hosted acceptance work.
+ATG-10 remains dependent.
 
 The branch is `codex/architectural-truth-bt0` in
 `C:/Source/Orket-architectural-truth`. Published `v0.6.117` closes the eight fixture
