@@ -7,8 +7,8 @@ Owner: Orket Core
 The [executable goal queue](ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md) is the single
 canonical implementation plan and the file to target for continuing goal execution.
 It defines ten fixed goals, dependencies, starting and exit criteria, evidence
-requirements, exclusions and a resume record. **ATG-01/02/03/04/05/06 are published through v0.6.123;
-ATG-07's source gate passes; its v0.6.124 publication is pending.** Larger goals use bounded
+requirements, exclusions and a resume record. **ATG-01/02/03/04/05/06/07 are published through v0.6.124;
+ATG-08 fresh Windows package proof passes; v0.6.125 publication is pending.** Larger goals use bounded
 batches without replacing the user's objective. The [workset inventory](GOAL_WORKSETS.json)
 binds current sources, retained proof and pending batch IDs without creating a second plan.
 
@@ -19,7 +19,10 @@ zero failures and 93 skips, with 87.035153% coverage against the unchanged 89% g
 The preserved baseline and proof limits are summarized in the queue. ATG-07's
 [closeout](../archive/architectural-truth/AT10012026-ATG07/CLOSEOUT.md) now records
 12,964 passes, zero failures, 93 skips and 89.213132% coverage with unchanged source
-inputs. Fresh installed/platform/provider/hosted proof remains open.
+inputs. ATG-08's [closeout](../archive/architectural-truth/AT10012026-ATG08/CLOSEOUT.md)
+records fresh Windows Python 3.11/3.12 installed selections: each has 6,231 passes,
+zero failures and three unchanged Gitea opt-in skips, with package and input identity
+preserved. Fresh Linux/provider/hosted proof remains open.
 
 The [history archive](../archive/architectural-truth/AT10012026-GOAL-QUEUE/README.md)
 preserves the former plan and registry without discarding their observations.

@@ -10125,78 +10125,6 @@
   ],
   "diff_ledger": [
     {
-      "run_at_utc": "2026-10-01T17:30:46.953289Z",
-      "changed": true,
-      "before_digest": "sha256:0c3e711cac8ba393ca05aa0c5b2f475746db9ff4f5a4fd2fe171a27e79bab8b7",
-      "after_digest": "sha256:f9a755829579e67e77f3eaf0ff8dc413ee8a34b8ba79827e8b7e1c8f0e7521bb",
-      "diff": {
-        "added_paths": 4,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 14688,
-        "paths_total_current": 16051,
-        "paths_total_reference": 16051,
-        "churn_paths": 5,
-        "churn_ratio": 0.000312,
-        "sample_paths": [
-          "$.diff_ledger",
-          "$.coverage_worksets.batches[2].additional_scoped_outcomes",
-          "$.coverage_worksets.batches[2].closing",
-          "$.coverage_worksets.batches[2].status",
-          "$.coverage_worksets.batches"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-10-01T17:32:54.934068Z",
-      "changed": true,
-      "before_digest": "sha256:20b8475fbd8e1e9df75520c05d93641094741ad609ebc4f9620f5bcb1f109b1f",
-      "after_digest": "sha256:e0c55049cbbe23d20343238ab154f50cb7df2d9dfa5330374c90596c304f83c6",
-      "diff": {
-        "added_paths": 4,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 14710,
-        "paths_total_current": 16065,
-        "paths_total_reference": 16065,
-        "churn_paths": 5,
-        "churn_ratio": 0.000311,
-        "sample_paths": [
-          "$.diff_ledger",
-          "$.coverage_worksets.batches[3].additional_historical_outcomes",
-          "$.coverage_worksets.batches[3].closing",
-          "$.coverage_worksets.batches[3].status",
-          "$.coverage_worksets.batches"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-10-01T17:37:38.353358Z",
-      "changed": true,
-      "before_digest": "sha256:d1f12798bf01d9da6ccf39a8c9b57e9190ca2867016531db5f5ac39cb7994b44",
-      "after_digest": "sha256:6c5318ace264824257c347a934b10b2affb01549492220c2511609818cf44964",
-      "diff": {
-        "added_paths": 4,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 14732,
-        "paths_total_current": 16080,
-        "paths_total_reference": 16080,
-        "churn_paths": 5,
-        "churn_ratio": 0.000311,
-        "sample_paths": [
-          "$.diff_ledger",
-          "$.coverage_worksets.batches[4].additional_historical_outcomes",
-          "$.coverage_worksets.batches[4].closing",
-          "$.coverage_worksets.batches[4].status",
-          "$.coverage_worksets.batches"
-        ]
-      }
-    },
-    {
       "run_at_utc": "2026-10-01T17:43:55.555831Z",
       "changed": true,
       "before_digest": "sha256:8afe390f3e14d3acbbf76b887bb65986ef70ba44902b4c416de074b5844dd763",
@@ -10885,6 +10813,93 @@
           "$.coverage_worksets.batches[17].status"
         ]
       }
+    },
+    {
+      "run_at_utc": "2026-10-02T01:33:05.860364Z",
+      "changed": true,
+      "before_digest": "sha256:d6661277f9d14a6f2061938025abd8240f9e4586f0463edf861578b2d62b15fc",
+      "after_digest": "sha256:6a02e068959d96982cda3cca8a2ff544cebdc2fdb8503d09eefba13ed07aad06",
+      "diff": {
+        "added_paths": 18,
+        "removed_paths": 0,
+        "changed_paths": 29,
+        "initial_write": false,
+        "paths_total_previous": 19000,
+        "paths_total_current": 20360,
+        "paths_total_reference": 20360,
+        "churn_paths": 47,
+        "churn_ratio": 0.002308,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.coverage_worksets.batches[0].status",
+          "$.coverage_worksets.batches[1].status",
+          "$.coverage_worksets.batches[2].status",
+          "$.coverage_worksets.batches[3].status",
+          "$.coverage_worksets.batches[4].status",
+          "$.coverage_worksets.batches[5].status",
+          "$.coverage_worksets.batches[6].status",
+          "$.coverage_worksets.batches[7].status",
+          "$.coverage_worksets.batches[8].status",
+          "$.coverage_worksets.batches[9].status",
+          "$.coverage_worksets.batches[10].status",
+          "$.coverage_worksets.batches[11].status",
+          "$.coverage_worksets.batches[12].status",
+          "$.coverage_worksets.batches[13].status",
+          "$.coverage_worksets.batches[14].status",
+          "$.coverage_worksets.batches[15].status",
+          "$.coverage_worksets.batches[16].status",
+          "$.coverage_worksets.batches[17].status",
+          "$.coverage_worksets.batches[18].status"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-02T02:49:04.944427Z",
+      "changed": true,
+      "before_digest": "sha256:05e31c6183d24c50bc054ec56694668b2c1c650c09a1f716ec8c6f0d2488b1c8",
+      "after_digest": "sha256:eb71e18930111845aec4048251e175887df4b312b79f22705fb622f23f13828f",
+      "diff": {
+        "added_paths": 3,
+        "removed_paths": 0,
+        "changed_paths": 4,
+        "initial_write": false,
+        "paths_total_previous": 19105,
+        "paths_total_current": 20492,
+        "paths_total_reference": 20492,
+        "churn_paths": 7,
+        "churn_ratio": 0.000342,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.installed_worksets.closeout",
+          "$.installed_worksets.windows_cells",
+          "$.installed_worksets.limits",
+          "$.installed_worksets.next_action",
+          "$.installed_worksets.proof",
+          "$.installed_worksets.status"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-02T02:53:07.277181Z",
+      "changed": true,
+      "before_digest": "sha256:ebf11d70de3a34ca916dec631bbca5ab9b14116177bf6105b33067d07ebc8ccb",
+      "after_digest": "sha256:8caae0056ccf2894bf19cebd43280a1b508b920b2800336f0d2d42f8258c2767",
+      "diff": {
+        "added_paths": 2,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 19207,
+        "paths_total_current": 20498,
+        "paths_total_reference": 20498,
+        "churn_paths": 3,
+        "churn_ratio": 0.000146,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.installed_worksets.closeout.validation_sha256",
+          "$.installed_worksets.closeout.status"
+        ]
+      }
     }
   ],
   "typing_canonical_reconciliation": {
@@ -10949,7 +10964,7 @@
     "batches": [
       {
         "id": "ATG-07-B01",
-        "status": "scoped proof and complete gate passed; publication pending",
+        "status": "complete: scoped/full proof passed and v0.6.124 published",
         "owners": [
           "orket/runtime/config/compact_turn_packet.py",
           "orket/streaming/law_checker.py"
@@ -10970,7 +10985,7 @@
       },
       {
         "id": "ATG-07-B02",
-        "status": "scoped proof and complete gate passed; publication pending",
+        "status": "complete: scoped/full proof passed and v0.6.124 published",
         "owners": [
           "orket/reforger/compiler.py",
           "orket/reforger/service_contracts.py"
@@ -10990,7 +11005,7 @@
       },
       {
         "id": "ATG-07-B03",
-        "status": "scoped proof and complete gate passed; publication pending",
+        "status": "complete: scoped/full proof passed and v0.6.124 published",
         "owners": [
           "orket/runtime/evidence/run_evidence_graph.py"
         ],
@@ -11007,7 +11022,7 @@
       },
       {
         "id": "ATG-07-B04",
-        "status": "scoped proof and complete gate passed; publication pending",
+        "status": "complete: scoped/full proof passed and v0.6.124 published",
         "owners": [
           "orket/reforger/cli.py"
         ],
@@ -11024,7 +11039,7 @@
       },
       {
         "id": "ATG-07-B05",
-        "status": "scoped proof and complete gate passed; publication pending",
+        "status": "complete: scoped/full proof passed and v0.6.124 published",
         "owners": [
           "orket/interfaces/api_generation.py"
         ],
@@ -11041,7 +11056,7 @@
       },
       {
         "id": "ATG-07-B06",
-        "status": "scoped proof and complete gate passed; publication pending",
+        "status": "complete: scoped/full proof passed and v0.6.124 published",
         "owners": [
           "orket/interfaces/refactor_transaction.py"
         ],
@@ -11061,7 +11076,7 @@
       },
       {
         "id": "ATG-07-B07",
-        "status": "scoped proof and complete gate passed; publication pending",
+        "status": "complete: scoped/full proof passed and v0.6.124 published",
         "owners": [
           "orket/application/workflows/turn_response_parser.py"
         ],
@@ -11078,7 +11093,7 @@
       },
       {
         "id": "ATG-07-B08",
-        "status": "scoped proof and complete gate passed; publication pending",
+        "status": "complete: scoped/full proof passed and v0.6.124 published",
         "owners": [
           "orket/kernel/v1/validator.py"
         ],
@@ -11096,7 +11111,7 @@
       },
       {
         "id": "ATG-07-B09",
-        "status": "scoped proof and complete gate passed; publication pending",
+        "status": "complete: scoped/full proof passed and v0.6.124 published",
         "owners": [
           "orket/runtime/config/local_prompt_profiles.py"
         ],
@@ -11114,7 +11129,7 @@
       },
       {
         "id": "ATG-07-B10",
-        "status": "scoped proof and complete gate passed; publication pending",
+        "status": "complete: scoped/full proof passed and v0.6.124 published",
         "owners": [
           "orket/application/services/microservices_acceptance_reports.py"
         ],
@@ -11132,7 +11147,7 @@
       },
       {
         "id": "ATG-07-B11",
-        "status": "scoped proof and complete gate passed; publication pending",
+        "status": "complete: scoped/full proof passed and v0.6.124 published",
         "owners": [
           "orket/kernel/v1/canonical.py"
         ],
@@ -11150,7 +11165,7 @@
       },
       {
         "id": "ATG-07-B12",
-        "status": "scoped proof and complete gate passed; publication pending",
+        "status": "complete: scoped/full proof passed and v0.6.124 published",
         "owners": [
           "orket/adapters/vcs/gitea_artifact_exporter.py"
         ],
@@ -11168,7 +11183,7 @@
       },
       {
         "id": "ATG-07-B13",
-        "status": "scoped proof and complete gate passed; publication pending",
+        "status": "complete: scoped/full proof passed and v0.6.124 published",
         "owners": [
           "orket/application/services/runtime_verifier.py"
         ],
@@ -11186,7 +11201,7 @@
       },
       {
         "id": "ATG-07-B14",
-        "status": "scoped proof and complete gate passed; publication pending",
+        "status": "complete: scoped/full proof passed and v0.6.124 published",
         "owners": [
           "orket/application/review/run_service.py",
           "orket/application/review/snapshot_loader.py"
@@ -11210,7 +11225,7 @@
       },
       {
         "id": "ATG-07-B15",
-        "status": "scoped proof and complete gate passed; publication pending",
+        "status": "complete: scoped/full proof passed and v0.6.124 published",
         "owners": [
           "orket/driver_support_conversation.py"
         ],
@@ -11228,7 +11243,7 @@
       },
       {
         "id": "ATG-07-B16",
-        "status": "scoped proof and complete gate passed; publication pending",
+        "status": "complete: scoped/full proof passed and v0.6.124 published",
         "owners": [
           "orket/core/domain/outward_ledger.py"
         ],
@@ -11246,7 +11261,7 @@
       },
       {
         "id": "ATG-07-B17",
-        "status": "scoped proof and complete gate passed; publication pending",
+        "status": "complete: scoped/full proof passed and v0.6.124 published",
         "owners": [
           "orket/application/workflows/turn_contract_rules.py"
         ],
@@ -11265,7 +11280,7 @@
       },
       {
         "id": "ATG-07-B18",
-        "status": "scoped proof and complete gate passed; publication pending",
+        "status": "complete: scoped/full proof passed and v0.6.124 published",
         "owners": [
           "orket/application/services/governed_agent_broker_service.py"
         ],
@@ -11283,7 +11298,7 @@
       },
       {
         "id": "ATG-07-B19",
-        "status": "scoped proof and complete gate passed; publication pending",
+        "status": "complete: scoped/full proof passed and v0.6.124 published",
         "owners": [
           "orket/adapters/llm/openai_compat_runtime.py"
         ],
@@ -11301,7 +11316,7 @@
       },
       {
         "id": "ATG-07-B20",
-        "status": "scoped proof and complete gate passed; publication pending",
+        "status": "complete: scoped/full proof passed and v0.6.124 published",
         "owners": [
           "orket/application/services/driver_resource_commands.py"
         ],
@@ -11319,7 +11334,7 @@
       },
       {
         "id": "ATG-07-B21",
-        "status": "scoped proof and complete gate passed; publication pending",
+        "status": "complete: scoped/full proof passed and v0.6.124 published",
         "owners": [
           "orket/interfaces/bundle_cli_output.py"
         ],
@@ -11337,7 +11352,7 @@
       },
       {
         "id": "ATG-07-B22",
-        "status": "scoped proof and complete gate passed; publication pending",
+        "status": "complete: scoped/full proof passed and v0.6.124 published",
         "owners": [
           "orket/runtime/registry/contract_bootstrap.py"
         ],
@@ -11355,7 +11370,7 @@
       },
       {
         "id": "ATG-07-B23",
-        "status": "scoped proof and complete gate passed; publication pending",
+        "status": "complete: scoped/full proof passed and v0.6.124 published",
         "owners": [
           "orket/runtime/policy/conformance_governance_contract.py"
         ],
@@ -11373,7 +11388,7 @@
       },
       {
         "id": "ATG-07-B24",
-        "status": "scoped proof and complete gate passed; publication pending",
+        "status": "complete: scoped/full proof passed and v0.6.124 published",
         "owners": [
           "orket/application/services/outward_model_tool_call_service.py"
         ],
@@ -11391,7 +11406,7 @@
       },
       {
         "id": "ATG-07-B25",
-        "status": "scoped proof and complete gate passed; publication pending",
+        "status": "complete: scoped/full proof passed and v0.6.124 published",
         "owners": [
           "orket/runtime/policy/retention_policy.py",
           "orket/runtime/policy/truthful_memory_policy.py",
@@ -11423,7 +11438,7 @@
       },
       {
         "id": "ATG-07-B26",
-        "status": "scoped proof and complete gate passed; publication pending",
+        "status": "complete: scoped/full proof passed and v0.6.124 published",
         "owners": [
           "orket/runtime/evidence/replay_drift_classifier.py",
           "orket/runtime/evidence/replay_compatibility.py",
@@ -11455,7 +11470,7 @@
       },
       {
         "id": "ATG-07-B27",
-        "status": "scoped proof and complete gate passed; publication pending",
+        "status": "complete: scoped/full proof passed and v0.6.124 published",
         "owners": [
           "orket/runtime/registry/module_registry.py",
           "orket/runtime/summary/run_summary_packet2.py",
@@ -12487,7 +12502,7 @@
       "warnings": 2
     },
     "closeout": {
-      "status": "frozen; source gate passed, publication pending",
+      "status": "complete: published and remote/clean identities verified",
       "version": "0.6.124",
       "paths": [
         "pyproject.toml",
@@ -12501,12 +12516,25 @@
       "archive": "docs/projects/archive/architectural-truth/AT10012026-ATG07/",
       "source_campaign": "R07-worker-candidate",
       "receipt": ".tmp/atg07-complete-campaign.json",
-      "obligation": "Archive complete and scoped proof including failures/limits; bind affected ATG-08 selection; patch version/changelog; verify only metadata differs from passing source; required release/docs/authority checks; commit, annotated matching tag, atomic push and remote/clean readback. No main merge or whole-lane retirement."
+      "obligation": "Archive complete and scoped proof including failures/limits; bind affected ATG-08 selection; patch version/changelog; verify only metadata differs from passing source; required release/docs/authority checks; commit, annotated matching tag, atomic push and remote/clean readback. No main merge or whole-lane retirement.",
+      "publication": {
+        "commit": "1e5ce56f8cd864bfd75bdcb8230dd1ccfa63e8ce",
+        "version": "0.6.124",
+        "tag_object": "53fc897c78d2a5c7d995027c23398b3c4f8c601c",
+        "remote_refs": {
+          "refs/heads/codex/architectural-truth-bt0": "1e5ce56f8cd864bfd75bdcb8230dd1ccfa63e8ce",
+          "refs/tags/v0.6.124": "53fc897c78d2a5c7d995027c23398b3c4f8c601c",
+          "refs/tags/v0.6.124^{}": "1e5ce56f8cd864bfd75bdcb8230dd1ccfa63e8ce"
+        },
+        "clean_worktree": true,
+        "path": "primary",
+        "result": "success"
+      }
     }
   },
   "installed_worksets": {
     "goal": "ATG-08",
-    "status": "source selection prepared; publication and installed metadata freeze pending",
+    "status": "proof passed; publication pending",
     "source_selection_receipt": ".tmp/atg08-source-selection.json",
     "source_selection_sha256": "48cd4d99b145df97c3f2c0c41d048b1753b4d8afccaa80f9f9a9f3dba883a22d",
     "selection": [
@@ -13662,6 +13690,125 @@
         ]
       }
     ],
-    "limits": "6234 cases bound to passing source XML; three explicit owned-localhost-Gitea acceptance cases skipped in the source run remain unverified, not accepted Gitea proof. Installed execution has not started. Preserve every selector; do not silently remove unavailable cases."
+    "limits": "Three Gitea opt-in skips remain unverified on each cell; 34 source-only controls remain separate. Linux/provider/hosted proof is pending.",
+    "version": "0.6.125",
+    "paths": [
+      "pyproject.toml",
+      "CHANGELOG.md",
+      "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
+      "docs/projects/architectural-truth/GOAL_WORKSETS.json",
+      "docs/projects/architectural-truth/README.md",
+      "docs/projects/archive/architectural-truth/AT10012026-ATG07/CLOSEOUT.md",
+      "docs/projects/archive/architectural-truth/AT10012026-ATG07/VERIFICATION.json"
+    ],
+    "base_commit": "1e5ce56f8cd864bfd75bdcb8230dd1ccfa63e8ce",
+    "preceding_publication": ".tmp/atg07-publication.json",
+    "prebuild_metadata_paths": [
+      "pyproject.toml",
+      "CHANGELOG.md",
+      "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
+      "docs/projects/architectural-truth/GOAL_WORKSETS.json",
+      "docs/projects/architectural-truth/README.md",
+      "docs/projects/archive/architectural-truth/AT10012026-ATG07/CLOSEOUT.md",
+      "docs/projects/archive/architectural-truth/AT10012026-ATG07/VERIFICATION.json"
+    ],
+    "source_proof_metadata_paths": [
+      "pyproject.toml",
+      "CHANGELOG.md",
+      "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
+      "docs/projects/architectural-truth/GOAL_WORKSETS.json",
+      "docs/projects/architectural-truth/README.md",
+      "docs/projects/archive/architectural-truth/AT10012026-ATG07/CLOSEOUT.md",
+      "docs/projects/archive/architectural-truth/AT10012026-ATG07/VERIFICATION.json"
+    ],
+    "source_pyproject_snapshot": ".tmp/atg07-prepublication-pyproject.toml",
+    "helper_sha256": {
+      ".tmp/atg08_build_candidate.py": "9d76580ed850a665f8566f30cd0c0a0ff2596d84441a635685374124ffdd6e4c",
+      ".tmp/atg08_prepare_cell.py": "17a17289d20d454475609531e4a286fdca06c0135e41400ae5a794616bb06ebf",
+      ".tmp/atg08_run_cell.py": "74b3942464c7acddee8437344b2351b286bb0a16ce7a3a856235b2b42d5ab7dd",
+      ".tmp/atg08_installed_origin.py": "8c29ca4770e88d60c17d0fdc6c85ea7548a571804c1153fa0578a21643256770",
+      ".tmp/atg08_origin_probe.py": "d4be24cacddc890b935afbbc94e69e1087fd0133f4ed733444b390d89f8e7479",
+      ".tmp/atg08_pytest_driver.py": "996e5f54fb645468f96868d48ad52c6b326bd27ee057ddd637a5e68fe21483ba"
+    },
+    "interpreters": {
+      "py311": "C:/Users/jonmc/AppData/Roaming/uv/python/cpython-3.11.14-windows-x86_64-none/python.exe",
+      "py312": "C:/Python312/python.exe"
+    },
+    "build_receipt": ".tmp/atg08-build.json",
+    "cell_preparation_receipt": ".tmp/atg08-cells.json",
+    "windows_proof_receipt": ".tmp/atg08-windows-proof.json",
+    "build_attempt": "A01",
+    "freeze": "After build launch, keep every Git-visible input frozen through both Windows cell preparations and acceptance. Native proof runs are sequential; no borrowed site packages or product namespace in the harness.",
+    "next_action": "Validate the metadata-only closeout, commit/tag v0.6.125, atomically push and verify publication; then ATG-09.",
+    "proof": "Both installed Windows cells pass native/contract controls and structural package checks; primary success.",
+    "closeout": {
+      "status": "validated; publication pending",
+      "paths": [
+        "CHANGELOG.md",
+        "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
+        "docs/projects/architectural-truth/GOAL_WORKSETS.json",
+        "docs/projects/architectural-truth/README.md",
+        "docs/projects/archive/architectural-truth/AT10012026-ATG07/CLOSEOUT.md",
+        "docs/projects/archive/architectural-truth/AT10012026-ATG07/VERIFICATION.json",
+        "docs/projects/archive/architectural-truth/AT10012026-ATG08/CLOSEOUT.md",
+        "docs/projects/archive/architectural-truth/AT10012026-ATG08/VERIFICATION.json",
+        "pyproject.toml"
+      ],
+      "postproof_paths": [
+        "CHANGELOG.md",
+        "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
+        "docs/projects/architectural-truth/GOAL_WORKSETS.json",
+        "docs/projects/architectural-truth/README.md",
+        "docs/projects/archive/architectural-truth/AT10012026-ATG08/CLOSEOUT.md",
+        "docs/projects/archive/architectural-truth/AT10012026-ATG08/VERIFICATION.json"
+      ],
+      "proof_receipt": ".tmp/atg08-final-readback.json",
+      "proof_receipt_sha256": "838ea5748f3ad95f2f05ef5c45ae0bfc273d90146bce98a515739e475cda10fe",
+      "publication_status": "pending",
+      "validation_receipt": ".tmp/atg08-closeout-checks.json",
+      "publication_receipt": ".tmp/atg08-publication.json",
+      "justification": "Only queue, release and archival evidence metadata; no runtime/test/config repair.",
+      "validation_sha256": "dcd0285f46fcd5061ac32ff8009fa49ed0e900e5616866ab8970522c1c96c533"
+    },
+    "windows_cells": [
+      {
+        "cell": "py311",
+        "attempt": "A01",
+        "counts": {
+          "passed": 6231,
+          "failed": 0,
+          "skipped": 3
+        },
+        "actual_interpreter": {
+          "python": "3.11.14 (main, Jan 14 2026, 19:28:21) [MSC v.1944 64 bit (AMD64)]",
+          "executable": "C:\\Users\\jonmc\\.cache\\orket-architectural-truth\\atg08-v0.6.125-win-py311-A01\\venv\\Scripts\\python.exe",
+          "prefix": "C:\\Users\\jonmc\\.cache\\orket-architectural-truth\\atg08-v0.6.125-win-py311-A01\\venv"
+        },
+        "result": "success",
+        "path": "primary",
+        "installed_bytes_unchanged": true,
+        "changed_inputs": [],
+        "changed_harness_inputs": []
+      },
+      {
+        "cell": "py312",
+        "attempt": "A01",
+        "counts": {
+          "passed": 6231,
+          "failed": 0,
+          "skipped": 3
+        },
+        "actual_interpreter": {
+          "python": "3.12.2 (tags/v3.12.2:6abddd9, Feb  6 2024, 21:26:36) [MSC v.1937 64 bit (AMD64)]",
+          "executable": "C:\\Users\\jonmc\\.cache\\orket-architectural-truth\\atg08-v0.6.125-win-py312-A01\\venv\\Scripts\\python.exe",
+          "prefix": "C:\\Users\\jonmc\\.cache\\orket-architectural-truth\\atg08-v0.6.125-win-py312-A01\\venv"
+        },
+        "result": "success",
+        "path": "primary",
+        "installed_bytes_unchanged": true,
+        "changed_inputs": [],
+        "changed_harness_inputs": []
+      }
+    ]
   }
 }

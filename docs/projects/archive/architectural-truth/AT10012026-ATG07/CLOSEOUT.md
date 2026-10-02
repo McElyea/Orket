@@ -1,8 +1,8 @@
 # ATG-07: Restore the unchanged coverage gate
 
 Date: 2026-10-01 (America/Denver)
-Status: Source gate passed; annotated checkpoint publication pending
-Checkpoint: v0.6.124 on codex/architectural-truth-bt0
+Status: Published; source gate and checkpoint verified
+Checkpoint: 1e5ce56f8cd864bfd75bdcb8230dd1ccfa63e8ce / v0.6.124 on codex/architectural-truth-bt0
 
 ## What changed
 
@@ -66,4 +66,6 @@ and complete results, skipped cases, warnings, native counterexamples and raw lo
 receipt hashes. Raw ignored artifacts are not guaranteed to exist in another checkout.
 Metadata-only closeout validation passes: version/release controls, docs hygiene,
 current/generated authority and whitespace checks. Their scoped result is retained
-in the verification receipt. Annotated checkpoint publication remains pending.
+in the verification receipt. The branch and annotated tag were pushed atomically; remote branch, tag object and
+peeled commit match. A clean worktree was verified before beginning ATG-08.
+The publication readback is carried into the following goal checkpoint.

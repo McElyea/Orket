@@ -5,6 +5,15 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.125] - 2026-10-01
+
+### Changed
+- Verify fresh core/SDK sdists and wheels with exact namespace membership and source bytes, then install outside the checkout on Windows Python 3.11.14 and 3.12.2. Each frozen affected selection passes 6,231 tests with zero failures and three retained Gitea opt-in skips; source, harness and installed package bytes remain unchanged.
+- Retain native CLI, API, demo/quickstart and cleanup evidence, the verified v0.6.124 publication, and explicit source-only and skipped-proof limits. Fresh Linux, actual llama.cpp and hosted Gitea Quality acceptance remain ATG-09 work; no new runtime behavior is introduced by this checkpoint.
+- `compatibility_status`: `preserved`
+- `affected_audience`: `all`
+- `migration_requirement`: `none`
+
 ## [0.6.124] - 2026-10-01
 
 ### Fixed

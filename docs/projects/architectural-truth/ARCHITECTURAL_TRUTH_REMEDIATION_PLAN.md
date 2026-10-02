@@ -1,12 +1,12 @@
 # Architectural Truth: Executable Goal Queue
 
 Last updated: 2026-10-01 (America/Denver)
-Status: Active implementation; ATG-01/02/03/04/05/06 published, ATG-07 in progress
+Status: Active implementation; ATG-01/02/03/04/05/06/07 published, ATG-08 proof passed, publication pending
 Queue: ATG-v1 — ten fixed goals for the existing revamp
 Owner: Orket Core
 Worktree: `C:/Source/Orket-architectural-truth`
 Branch: `codex/architectural-truth-bt0`
-Next goal: **ATG-07**
+Next goal: **ATG-08**
 
 ## Purpose and authority
 
@@ -75,8 +75,8 @@ do not repeat the 73-minute suite solely to restate this starting point.
 | ATG-04 | Close the other frozen D ownership/input defects | ATG-01; affected ATG-02/03 work | complete: `9b2e91d9` / `v0.6.121` |
 | ATG-05 | Finish the three named E2 hotspots | ATG-01; affected D repairs | complete: `64b39cb9` / `v0.6.122` |
 | ATG-06 | Clear canonical typing debt in bounded batches | ATG-02 through ATG-05 | complete: `52b45773` / `v0.6.123` |
-| ATG-07 | Restore the unchanged 89% coverage gate | ATG-02 through ATG-06 | source gate passed; v0.6.124 publication pending |
-| ATG-08 | Verify fresh Windows packages and public paths | ATG-07 | waiting |
+| ATG-07 | Restore the unchanged 89% coverage gate | ATG-02 through ATG-06 | complete: `1e5ce56f` / `v0.6.124` |
+| ATG-08 | Verify fresh Windows packages and public paths | ATG-07 | proof passed; `v0.6.125` publication pending |
 | ATG-09 | Complete applicable Linux, provider and hosted Quality proof | ATG-08; required environments available | waiting |
 | ATG-10 | Reconcile and publish the bounded revamp result | ATG-01 through ATG-09 | waiting |
 
@@ -234,6 +234,12 @@ public effects/refusals and cleanup evidence. Help/import checks are only struct
 proof. Any package/runtime repair invalidates affected earlier proof and receives
 a bounded regression rerun before this card closes.
 
+ATG-08 installed proof: [closeout](../archive/architectural-truth/AT10012026-ATG08/CLOSEOUT.md)
+and [receipt](../archive/architectural-truth/AT10012026-ATG08/VERIFICATION.json).
+Fresh Windows Python 3.11.14 and 3.12.2 cells each pass 6,231 cases with zero failures
+and three unchanged Gitea opt-in skips. Exact case identity, installed package bytes,
+source and harness inputs remain unchanged. Publication is the remaining card exit.
+
 ### ATG-09 — Complete applicable Linux, provider and hosted Quality proof
 
 **Start:** ATG-08 passes. Existing Linux Python 3.11/3.12 cells, llama.cpp
@@ -293,31 +299,33 @@ counterexample and does not change parser/grounding behavior or add a new goal.
 
 ## Resume record
 
-- Current card/batch: ATG-07 / v0.6.124 closeout and publication.
-  R07-worker-candidate passes **12,964 tests, zero failures, 93 skips**, with two
-  warnings and **89.213132% combined coverage**. All 13,057 XML cases match strict
-  collection; source fingerprints remained unchanged. All nine preflights pass.
-  Earlier red campaigns and scope limits are retained in the
-  [ATG-07 closeout](../archive/architectural-truth/AT10012026-ATG07/CLOSEOUT.md) and
-  [verification](../archive/architectural-truth/AT10012026-ATG07/VERIFICATION.json).
-- Completed cards: 6 of 10 until ATG-07 publication is verified. This is queue
-  completion, not whole-project percentage.
-- Last verified checkpoint: `52b45773` / `v0.6.123`; annotated tag and branch
-  remote identities plus clean worktree verified in `.tmp/atg06-publication.json`.
-- Running commands: none. All complete/scoped campaigns are terminal. Stable
-  full receipt: `.tmp/atg07-complete-campaign.json`; closing validation will use
-  `.tmp/atg07-closeout-checks.json`, and publication `.tmp/atg07-publication.json`.
-- Next exact action: verify the frozen metadata-only closeout changes, run affected
-  version/release/docs/authority checks, commit v0.6.124, create its annotated tag,
-  atomically push branch and tag, then verify remote identities and clean state.
-  Continue ATG-08 after publication. Its prepared selection binds 467 selectors,
-  627 test files and 6,234 cases to passing source XML; 34 source-only controls stay
-  separate. Three explicit localhost-Gitea acceptance skips remain unverified.
-- Blockers/limits: ATG-07 publication is pending. The earlier API timing outlier
-  remains unexplained; the unchanged final assertion passes at 0.136328 seconds.
-  Default llama.cpp catalog access is unavailable, hosted Gitea access is
-  unestablished, and fresh installed/Linux acceptance remains unverified.
-  ATG-08 scratch helpers are unexecuted preparation, not acceptance.
+- Current card/batch: ATG-08 / metadata closeout and v0.6.125 publication.
+  A01 fresh core/SDK builds and both installed Windows cells pass. The selection
+  binds 467 selectors, 627 test files and 6,234 cases to passing R07 source XML.
+  Each cell has 6,231 passes, zero failures and the same three explicit
+  localhost-Gitea acceptance skips. Thirty-four source-only controls remain separate.
+- Completed cards: 7 of 10. This is queue completion, not whole-project percentage.
+- Last verified checkpoint: `1e5ce56f` / `v0.6.124`. Atomic branch/tag push, remote
+  identities and clean worktree are verified in `.tmp/atg07-publication.json` and
+  the [ATG-07 closeout](../archive/architectural-truth/AT10012026-ATG07/CLOSEOUT.md).
+  Its full source run passes 12,964 tests, zero failures, 93 skips and 89.213132%
+  combined coverage, with all inputs unchanged. This source proof remains distinct
+  from installed acceptance.
+- Running commands: both Windows runs and their final readback are terminal success.
+  `.tmp/atg08-final-readback.json` binds build, preparation, acceptance, artifacts,
+  exact skips and all 5,737 unchanged Git-visible inputs. Raw process receipts remain
+  `.tmp/atg08-build.json`, `.tmp/atg08-cells.json` and `.tmp/atg08-windows-proof.json`.
+  Candidate 0.6.125 was built on the recorded v0.6.124 base plus frozen version/docs
+  bytes; base commit and actual snapshot identity are distinct. Only the finite
+  closeout metadata delta in `GOAL_WORKSETS.json` is now admitted.
+- Next exact action: metadata validation passes in `.tmp/atg08-closeout-checks.json`
+  (docs/authority/release checks and 17 version/release tests, unchanged inputs).
+  Commit/tag v0.6.125, atomically push the branch and tag, then verify remote identities and clean readback in
+  `.tmp/atg08-publication.json`. Continue ATG-09 without merging main.
+- Blockers/limits: later default llama.cpp catalog access is unavailable and hosted
+  Gitea access is unestablished. Fresh Linux acceptance is still unverified.
+  The earlier API timing outlier remains unexplained; its unchanged assertion passes
+  in the final source run. Earlier failures and broader deferred findings stay retained.
 
 ## Reusable goal prompt
 

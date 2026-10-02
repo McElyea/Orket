@@ -6,7 +6,7 @@
   "proof": "Complete Windows Python 3.11 source execution plus scoped native/contract/structural controls",
   "path": "primary",
   "result": "success",
-  "publication_status": "pending",
+  "publication_status": "verified",
   "exact_files_touched": [
     ".gitea/workflows/quality.yml",
     "CHANGELOG.md",
@@ -37605,6 +37605,41 @@
           "$.closeout_validation"
         ]
       }
+    },
+    {
+      "run_at_utc": "2026-10-02T01:33:05.916963Z",
+      "changed": true,
+      "before_digest": "sha256:f3ba811695c3878cf9de79ac34e79414e13344cf10ab6db1ed14efd7c0477794",
+      "after_digest": "sha256:c29ca30b7064153ee8c48551d1c7ccae3d00f09f9250564de518326f834658b6",
+      "diff": {
+        "added_paths": 2,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 49722,
+        "paths_total_current": 49803,
+        "paths_total_reference": 49803,
+        "churn_paths": 3,
+        "churn_ratio": 6e-05,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.publication",
+          "$.publication_status"
+        ]
+      }
     }
-  ]
+  ],
+  "publication": {
+    "commit": "1e5ce56f8cd864bfd75bdcb8230dd1ccfa63e8ce",
+    "version": "0.6.124",
+    "tag_object": "53fc897c78d2a5c7d995027c23398b3c4f8c601c",
+    "remote_refs": {
+      "refs/heads/codex/architectural-truth-bt0": "1e5ce56f8cd864bfd75bdcb8230dd1ccfa63e8ce",
+      "refs/tags/v0.6.124": "53fc897c78d2a5c7d995027c23398b3c4f8c601c",
+      "refs/tags/v0.6.124^{}": "1e5ce56f8cd864bfd75bdcb8230dd1ccfa63e8ce"
+    },
+    "clean_worktree": true,
+    "path": "primary",
+    "result": "success"
+  }
 }
