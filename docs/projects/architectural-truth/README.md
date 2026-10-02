@@ -12,8 +12,11 @@ through v0.6.125; ATG-09 is blocked on the current Linux clock and provider/host
 prerequisites.** Larger goals use bounded
 batches without replacing the user's objective. The [workset inventory](GOAL_WORKSETS.json)
 binds current sources, retained proof and pending batch IDs without creating a second plan.
-Version 0.6.126 is the metadata handoff requested after that preflight; installed
-Windows acceptance remains bound to 0.6.125 and later runtime gates remain open.
+Version 0.6.127 records the explicit resume, verified 0.6.126 publication and one
+changed-host clock attempt that also fails the unchanged prerequisite. Accepted
+Windows evidence survives hash/readback audit and remains bound to 0.6.125;
+specific Linux, llama.cpp and hosted Gitea inputs remain required. The canonical
+plan retains process receipts and exact next actions; ATG-10 remains dependent.
 
 The branch is `codex/architectural-truth-bt0` in
 `C:/Source/Orket-architectural-truth`. Published `v0.6.117` closes the eight fixture

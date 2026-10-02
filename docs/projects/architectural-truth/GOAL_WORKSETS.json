@@ -10125,71 +10125,6 @@
   ],
   "diff_ledger": [
     {
-      "run_at_utc": "2026-10-01T19:08:50.374534Z",
-      "changed": true,
-      "before_digest": "sha256:abbb89255dcdfb6bcfa4395186491c53faa5096d961a6bd5c4d28d4ef4474533",
-      "after_digest": "sha256:bc7869da49259c272eceacdc55b81bfdbf790e03640d997c2fef2ac9d13b7a2f",
-      "diff": {
-        "added_paths": 9,
-        "removed_paths": 0,
-        "changed_paths": 4,
-        "initial_write": false,
-        "paths_total_previous": 15486,
-        "paths_total_current": 16877,
-        "paths_total_reference": 16877,
-        "churn_paths": 13,
-        "churn_ratio": 0.00077,
-        "sample_paths": [
-          "$.diff_ledger",
-          "$.coverage_worksets.reconciliation[1].runtime_selection",
-          "$.coverage_worksets.reconciliation[1].typing_proof",
-          "$.coverage_worksets.reconciliation[1].status",
-          "$.coverage_worksets.reconciliation[2].runtime_selection",
-          "$.coverage_worksets.reconciliation[2].typing_proof",
-          "$.coverage_worksets.reconciliation[2].status",
-          "$.coverage_worksets.reconciliation[3].runtime_selection",
-          "$.coverage_worksets.reconciliation[3].typing_proof",
-          "$.coverage_worksets.reconciliation[3].status",
-          "$.coverage_worksets.reconciliation[4].runtime_selection",
-          "$.coverage_worksets.reconciliation[4].typing_proof",
-          "$.coverage_worksets.reconciliation[4].status"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-10-01T19:15:07.826111Z",
-      "changed": true,
-      "before_digest": "sha256:4dd4ae3cf24b670302ac33049a2bec88721bc3678c7d7ced076455f16cdbf8e9",
-      "after_digest": "sha256:effffec5f215528ed5fb2961a122c3f1ae54e55e92c1bf1e0f2eeb4c9c589aa3",
-      "diff": {
-        "added_paths": 11,
-        "removed_paths": 0,
-        "changed_paths": 4,
-        "initial_write": false,
-        "paths_total_previous": 15562,
-        "paths_total_current": 16941,
-        "paths_total_reference": 16941,
-        "churn_paths": 15,
-        "churn_ratio": 0.000885,
-        "sample_paths": [
-          "$.diff_ledger",
-          "$.coverage_worksets.batches",
-          "$.coverage_worksets.reconciliation[1].closing",
-          "$.coverage_worksets.reconciliation[1].dependency_proof",
-          "$.coverage_worksets.reconciliation[1].status",
-          "$.coverage_worksets.reconciliation[2].closing",
-          "$.coverage_worksets.reconciliation[2].dependency_proof",
-          "$.coverage_worksets.reconciliation[2].status",
-          "$.coverage_worksets.reconciliation[3].closing",
-          "$.coverage_worksets.reconciliation[3].dependency_proof",
-          "$.coverage_worksets.reconciliation[3].status",
-          "$.coverage_worksets.reconciliation[4].closing",
-          "$.coverage_worksets.reconciliation[4].dependency_proof",
-          "$.coverage_worksets.reconciliation[4].status"
-        ]
-      }
-    },
-    {
       "run_at_utc": "2026-10-01T19:20:36.101060Z",
       "changed": true,
       "before_digest": "sha256:727a528daaef45cf2e4ada4d6bd3de1874daa51f8c4dd9c36b6f21a97b6e2ff9",
@@ -10900,6 +10835,57 @@
         "sample_paths": [
           "$.diff_ledger",
           "$.platform_worksets.wrap_checkpoint.user_direction"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-02T05:23:55.165439Z",
+      "changed": true,
+      "before_digest": "sha256:1efd536da701ce04d9112c55600ae0c69cbae07abf8350985ac96cde5eaa3e3b",
+      "after_digest": "sha256:461de9c699a02a62fbd790079024957f24983915a7ed05a8cf14caeff54c4d3e",
+      "diff": {
+        "added_paths": 1,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "initial_write": false,
+        "paths_total_previous": 19541,
+        "paths_total_current": 19567,
+        "paths_total_reference": 19567,
+        "churn_paths": 1,
+        "churn_ratio": 5.1e-05,
+        "sample_paths": [
+          "$.platform_worksets.resume_reassessment"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-02T05:31:03.910912Z",
+      "changed": true,
+      "before_digest": "sha256:461de9c699a02a62fbd790079024957f24983915a7ed05a8cf14caeff54c4d3e",
+      "after_digest": "sha256:df818feb1437e7a5287d46a9949cfa4e0476eaf49b8938be401a628caa47252c",
+      "diff": {
+        "added_paths": 8,
+        "removed_paths": 0,
+        "changed_paths": 4,
+        "initial_write": false,
+        "paths_total_previous": 19567,
+        "paths_total_current": 19687,
+        "paths_total_reference": 19687,
+        "churn_paths": 12,
+        "churn_ratio": 0.00061,
+        "sample_paths": [
+          "$.platform_worksets.external_prerequisites",
+          "$.platform_worksets.next_action",
+          "$.platform_worksets.resume_reassessment.checkpoint",
+          "$.platform_worksets.resume_reassessment.clock_process",
+          "$.platform_worksets.resume_reassessment.clock_receipt_sha256",
+          "$.platform_worksets.resume_reassessment.clock_result",
+          "$.platform_worksets.resume_reassessment.evidence_audit",
+          "$.platform_worksets.resume_reassessment.path",
+          "$.platform_worksets.resume_reassessment.result",
+          "$.platform_worksets.resume_reassessment.source_binding",
+          "$.platform_worksets.resume_reassessment.next_action",
+          "$.platform_worksets.resume_reassessment.status"
         ]
       }
     }
@@ -13919,8 +13905,8 @@
       "Actual llama.cpp endpoint/model readiness and changed public flow with cleanup.",
       "Existing hosted Gitea repository/runner access and required Quality matrix."
     ],
-    "external_prerequisites": "Earlier default llama.cpp connection refused; endpoint/model and hosted Gitea access remain unestablished. Prior asynchronous user question remains unanswered.",
-    "next_action": "Wait for a stable existing Linux host/clock, reachable llama.cpp endpoint/model, and existing hosted Gitea repository/runner access. Freeze a new clock attempt only after environment change; then applicable Linux cells and actual provider/hosted runs. ATG-10 remains ineligible.",
+    "external_prerequisites": "A02 changed-host clock also fails; localhost llama.cpp catalog and both recorded Pinokio control endpoints refuse connections; no hosted Gitea repository/runner context supplied. Specific Linux, endpoint/model and runner inputs requested during explicit resume.",
+    "next_action": "Require a corrected existing Linux clock/host with environment-change evidence before another clock attempt. Obtain reachable llama.cpp base URL/model and authorized existing hosted Gitea repository/runner; specific inputs requested. No later goal is eligible.",
     "probe_limits": "Interpreter version probes succeeded. The first combined shell command failed only its uv lookup due to quote stripping; no uv availability was established by that command.",
     "clock_result": {
       "path": "blocked",
@@ -14022,6 +14008,98 @@
       "publication_receipt": ".tmp/atg09-wrap-publication.json",
       "next_action": "Resolve the recorded external prerequisites before another acceptance run.",
       "user_direction": "Publish the in-flight checkpoint, then pause ATG-v1. No new acceptance run until the user resumes."
+    },
+    "resume_reassessment": {
+      "status": "terminal environment blocker",
+      "batch": "ATG09-P01",
+      "clock_attempt": "A02",
+      "receipt": ".tmp/atg09-resume-clock.json",
+      "readiness_receipt": ".tmp/atg09-resume-readiness.json",
+      "readiness_sha256": "0b204dae5551af71668b8d571593edb534b0355f61cb6da33aea107b4c71dcf6",
+      "resume_checkpoint": "4eb224523ab74a5745e79ea7b81639b5bc67142a",
+      "environment_change": "Ubuntu-24.04 was stopped; current boot ed0ae1cc-8fd9-4899-9981-ea904318d24c has 197.34 seconds uptime and timesyncd PID 173 started 2026-10-01 23:21:53 MDT. Prior clock processes 305/393 are absent. Prior receipt retains older service PID 175 and earlier boot journal. New host startup admits one unchanged-criterion clock attempt.",
+      "helper_sha256": {
+        ".tmp/d_reentry_clock_preflight.py": "f9af974826a7e06e9054d04d763e7130c9e51d8a2e9714cc4f836b1b04697682",
+        ".tmp/atg09_resume_clock.py": "fbd2eeb2f91d210fbbcf95a05fb82c176fa9c1116007fa3dd0541c805352c974"
+      },
+      "user_direction": "Explicitly resumed ATG-v1; continue eligible goals. Missing llama.cpp endpoint/model and hosted Gitea inputs requested asynchronously; no provisioning or provider switch.",
+      "next_action": "Require a corrected existing Linux clock/host with environment-change evidence before another clock attempt. Obtain reachable llama.cpp base URL/model and authorized existing hosted Gitea repository/runner; specific inputs requested. No later goal is eligible.",
+      "path": "blocked",
+      "result": "environment blocker",
+      "clock_receipt_sha256": "1280f96fe7ed3b4251990dc8d17d77c942fc952cb8d52dd639467ee568219619",
+      "clock_result": {
+        "path": "blocked",
+        "result": "environment blocker",
+        "proof": "live native clock preflight only; no application acceptance or clock changes",
+        "elapsed_seconds": 240.03872148800002,
+        "quiet_seconds": 9.871977810999965,
+        "maximum_observed_step_seconds": 15.785514099,
+        "minimum_observed_step_seconds": -15.652922478
+      },
+      "clock_process": {
+        "owner_pid": 9472,
+        "windows_launcher_pid": 8240,
+        "native_identity": {
+          "pid": 437,
+          "parent_pid": 367,
+          "python": "3.11.16 (main, Sep  1 2026, 14:18:37) [Clang 22.1.3 ]",
+          "executable": "/home/jon/.cache/orket-architectural-truth/wheel-linux-py311/bin/python",
+          "base_prefix": "/home/jon/.local/share/uv/python/cpython-3.11.16-linux-x86_64-gnu",
+          "boot_id": "ed0ae1cc-8fd9-4899-9981-ea904318d24c",
+          "proof": "Native clock interpreter identity only; no candidate acceptance.",
+          "diff_ledger": [
+            {
+              "run_at_utc": "2026-10-02T05:24:36.005233Z",
+              "changed": true,
+              "before_digest": null,
+              "after_digest": "sha256:f1713becb591d6535b63ae8a7664d3fe37eecede292cb3dad9090dab88d630bc",
+              "diff": {
+                "initial_write": true,
+                "added_paths": 0,
+                "removed_paths": 0,
+                "changed_paths": 0,
+                "paths_total_previous": 0,
+                "paths_total_current": 14,
+                "paths_total_reference": 14,
+                "churn_paths": 14,
+                "churn_ratio": 1.0,
+                "sample_paths": []
+              }
+            }
+          ]
+        },
+        "exit_code": 1,
+        "native_terminal_report": true,
+        "windows_owner_and_launcher_absent_after_return": true,
+        "linux_wrapper_and_child_absent_after_return": true
+      },
+      "source_binding": {
+        "files": 5739,
+        "map_sha256": "7de8af6294fef8b7dc572481b39fd6818b97adcf9b98bf8d77b56be19f41d652",
+        "changed_inputs": []
+      },
+      "evidence_audit": {
+        "proof": "Structural/hash readback, not fresh runtime execution.",
+        "atg07": "63 touched-source hashes, 7 raw receipts, final log/XML/coverage match: 12964 passed, 93 skipped, 89.21313183949974%.",
+        "atg08": "627 selected test files, 6 helpers, receipts, 4 artifacts and both installed namespaces match (1242 core, 31 SDK files). Each cell retains 6231 passed, 3 skipped, zero failures.",
+        "runtime_evidence_version": "0.6.125",
+        "remaining_drift": "Historical source/harness maps label unrelated Companion PDF with mojibake; actual U+2011 filename content matches f86e5e21ea112acec5371bab9a93dd8720fec05cece527dc15b9eca9faa323b2. Preserve historical receipts; no runtime input drift observed."
+      },
+      "checkpoint": {
+        "version": "0.6.127",
+        "base_commit": "4eb224523ab74a5745e79ea7b81639b5bc67142a",
+        "scope": "Metadata-only resumption/readiness checkpoint; eight goals complete, ATG09/10 incomplete.",
+        "paths": [
+          "CHANGELOG.md",
+          "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
+          "docs/projects/architectural-truth/GOAL_WORKSETS.json",
+          "docs/projects/architectural-truth/README.md",
+          "pyproject.toml"
+        ],
+        "checks_receipt": ".tmp/atg09-resume-checks.json",
+        "publication_receipt": ".tmp/atg09-resume-publication.json",
+        "runtime_evidence_version": "0.6.125"
+      }
     }
   }
 }

@@ -300,43 +300,61 @@ counterexample and does not change parser/grounding behavior or add a new goal.
 
 ## Resume record
 
-- Current card/batch: ATG-09 / ATG09-P01 terminal environment blocker.
-  The unchanged passive Linux clock owner observes no qualifying quiet period in
-  240.031819 seconds, with wall-clock steps from -15.685221 to +16.556321 seconds.
-  NTP reports both `no` and `yes`; the required 60 synchronized quiet seconds and
-  10ms step limit remain unchanged. Existing WSL Python 3.11.16 and 3.12.3 execute;
-  those old environments are not candidate acceptance.
-- Completed cards: 8 of 10. This is queue completion, not whole-project percentage.
-- User direction: wrap the in-flight checkpoint, then pause the remaining ATG-v1
-  goal. Do not launch another acceptance run until the user resumes.
-- Metadata handoff version: `v0.6.126`, prepared at the user's request to wrap
-  in-flight changes. This adds no runtime acceptance. Its publication process/readback
-  is `.tmp/atg09-wrap-publication.json`; inspect that receipt and matching remote tag
-  on resume. The finite seven-file delta is in `GOAL_WORKSETS.json`.
-- Last verified runtime checkpoint: `b7ab34bb` / `v0.6.125`. Atomic branch/tag push, remote
-  identities and clean worktree are verified in `.tmp/atg08-publication.json` and
-  the [ATG-08 closeout](../archive/architectural-truth/AT10012026-ATG08/CLOSEOUT.md).
-  Windows Python 3.11.14 and 3.12.2 each pass 6,231 cases with zero failures and
-  three unchanged Gitea opt-in skips; package, harness and source bytes are unchanged.
-  The earlier complete source gate remains 12,964 passes, 93 skips and 89.213132%
-  combined coverage. Thirty-four source-only controls remain separate.
-- Running commands: none. `.tmp/atg09-linux-clock.json` retains the terminal native
-  report, exit 1, unchanged inputs and actual process identities; the native wrapper
-  and child are absent after return. `.tmp/atg09-readiness.json` retains read-only
-  provider/remote observations. `GOAL_WORKSETS.json` records their hashes and bounded
-  summaries. No clock settings changed and no fresh Linux acceptance cell launched.
-- Next exact action: obtain a stable existing Linux environment/clock, reachable
-  llama.cpp endpoint/model and existing hosted Gitea repository/runner access.
-  A new clock attempt requires an environment change; then freeze applicable Linux
-  installed cells and execute actual provider/hosted proof. Preserve all assertions,
-  deadlines and source-declared platform skips. No later goal is currently eligible.
-- Blockers/limits: the current Linux clock fails its retained prerequisite. The
-  default llama.cpp catalog at `http://127.0.0.1:8080/v1/models` refuses connections
-  (WinError 10061); no Gitea environment settings are present and origin is GitHub.
-  Earlier endpoint/model/runner and current stable-Linux input questions remain open.
-  Fresh Linux, actual llama.cpp and hosted Quality acceptance remain unverified.
-  The earlier API timing outlier remains unexplained; its unchanged assertion passes
-  in the final source run. Earlier failures and broader deferred findings stay retained.
+- Current card/batch: **ATG-09 / ATG09-P01**, terminal environment blocker.
+  Completed cards: **8 of 10**. ATG-10 remains dependent and no later goal is eligible.
+- User direction: explicitly resumed ATG-v1 on 2026-10-01; continue eligible work
+  without replacing the task. No infrastructure provisioning, provider switching,
+  assertion/deadline/skip changes or main merge is authorized.
+- Verified starting checkpoint: clean branch and remote annotated `v0.6.126`
+  match `4eb224523ab74a5745e79ea7b81639b5bc67142a`; its terminal publication receipt
+  is `.tmp/atg09-wrap-publication.json`. It contains metadata only.
+- Current metadata checkpoint: `v0.6.127`; the finite five-file delta, validation
+  receipt `.tmp/atg09-resume-checks.json` and publication/process receipt
+  `.tmp/atg09-resume-publication.json` are linked in
+  `GOAL_WORKSETS.json::platform_worksets.resume_reassessment.checkpoint`.
+  Inspect that receipt and remote tag for publication status. Runtime proof remains
+  bound to `b7ab34bb` / `v0.6.125`.
+- Reused evidence: a read-only audit matches ATG-07's 63 touched-source hashes,
+  seven receipts and final log/XML/coverage, and ATG-08's 627 selected test files,
+  six helpers, four package artifacts and both installed namespaces. The complete
+  source gate remains **12,964 passed, 93 skipped, 89.213132%** combined coverage.
+  Windows Python 3.11.14/3.12.2 each retain **6,231 passed, zero failed, three
+  unchanged Gitea opt-in skips**. Thirty-four source-only controls stay separate.
+  This hash/readback audit is structural; it adds no runtime acceptance.
+- Changed-host reassessment: `.tmp/atg09-resume-readiness.json` records Ubuntu
+  stopped before observation, current boot `ed0ae1cc-8fd9-4899-9981-ea904318d24c`,
+  197.34s uptime and newly started timesyncd PID 173. Prior A01 monotonic samples
+  were 90,431 to 90,671s; its native processes were absent. This environment change
+  admitted exactly one A02 attempt with the unchanged passive clock owner.
+- A02 outcome: **blocked / environment blocker**, live native clock proof only.
+  Over **240.038721s**, the final synchronized quiet interval is **9.871978s**;
+  observed steps range **-15.652922s to +15.785514s**. Required 60 synchronized
+  quiet seconds, 10ms maximum step, 240s observation and 280s outer timeout remain
+  unchanged. `.tmp/atg09-resume-clock.json` retains argv, environment posture,
+  source map, log/report hashes, exit 1 and unchanged inputs. Windows owner/launcher
+  PIDs 9472/8240 and Linux wrapper/child PIDs 367/437 are absent after return.
+  A01 and its receipt remain intact. No clock settings or acceptance cells changed.
+- Other prerequisites: the default llama.cpp catalog at
+  `http://127.0.0.1:8080/v1/models` still refuses connections (WinError 10061).
+  Pinokio managed-path/PATH resolution finds no usable pterm; its loopback and
+  configured `10.0.0.227:42000` control endpoints also refuse connections.
+  No Gitea environment or local dotenv configuration was found; origin is GitHub.
+  These are live readiness observations, not inference or hosted-job proof.
+- Running acceptance commands: none. Specific missing Linux, llama.cpp base URL/
+  model and existing Gitea repository/runner access inputs were requested.
+- Next exact action: obtain a corrected existing Linux clock/host and record its
+  environment change before another clock attempt; obtain the reachable llama.cpp
+  endpoint/model and authorized existing hosted Gitea repository/runner. Then freeze
+  applicable Linux Python 3.11/3.12 installed cells and actual provider/hosted runs
+  against an identified candidate. Do not loop on unchanged prerequisites.
+- Remaining blockers or drift: Linux candidate installs/runtime selections,
+  actual llama.cpp public inference/cleanup and hosted Quality remain unverified.
+  Historical source/harness maps encode an unrelated Companion PDF's filename
+  separator as U+00E2/U+20AC/U+2018 instead of its actual U+2011; content hash matches
+  `f86e5e21ea112acec5371bab9a93dd8720fec05cece527dc15b9eca9faa323b2`.
+  Preserve those receipts; this is path-label drift with no observed byte change.
+  The earlier API timing outlier remains unexplained; its unchanged assertion
+  passed the final source run. Broader deferred findings remain outside this queue.
 
 ## Reusable goal prompt
 

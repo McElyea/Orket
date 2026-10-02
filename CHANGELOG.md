@@ -5,6 +5,15 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.127] - 2026-10-01
+
+### Changed
+- Record the explicitly resumed ATG09-P01 prerequisite reassessment and verified v0.6.126 publication. A new Linux boot admits one unchanged-criterion clock attempt; it again fails, with 9.87 synchronized quiet seconds over 240.04 seconds and approximately 16-second wall-clock steps.
+- Preserve accepted v0.6.125 Windows runtime evidence after hash/readback audit, record the unrelated historical PDF path-label discrepancy, and retain exact missing Linux, llama.cpp and hosted Gitea inputs. This metadata checkpoint adds no application acceptance; eight of ten goals remain complete and ATG-10 stays dependent.
+- `compatibility_status`: `preserved`
+- `affected_audience`: `all`
+- `migration_requirement`: `none`
+
 ## [0.6.126] - 2026-10-01
 
 ### Changed
