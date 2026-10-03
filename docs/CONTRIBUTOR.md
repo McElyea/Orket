@@ -77,6 +77,15 @@ When the user targets a canonical plan for continuing goal execution:
 7. Refactoring does not authorize new product, platform, deployment or acceptance
    targets. Obtain explicit user direction before introducing any such target.
 
+The user's October 3 ATG-v1 scope amendment makes Windows the sole acceptance
+target for that queue. Follow its canonical plan for native Windows quality,
+installed/public-path and llama.cpp proof. Linux/WSL clock work, hosted runners
+and the complete cross-platform Gitea workflow are no longer ATG-v1 prerequisites.
+Existing workflow definitions and historical results remain intact; this change
+does not turn failed or absent hosted/Linux evidence into passing proof. Keep
+Windows assertions, deadlines, declared skips and the 89-percent floor unchanged.
+Verification-contract delta: `docs/architecture/CONTRACT_DELTA_WINDOWS_ACCEPTANCE_2026-10-03.md`.
+
 ## Repository Rules
 
 1. Keep runtime paths in `orket/` async-safe and governance mechanical.

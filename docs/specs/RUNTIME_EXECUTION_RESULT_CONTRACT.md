@@ -1,7 +1,7 @@
 # Runtime execution results
 
 Status: Active contract; scoped BT-4 combined acceptance recorded in the canonical plan
-Last updated: 2026-10-01
+Last updated: 2026-10-03
 Owner: Orket Core
 
 ## Authority and scope
@@ -211,11 +211,19 @@ tracked separately from the iterator boundary.
 Required proof includes actual successful and unsuccessful workloads through the
 public runtime and CLI; approval wait/denial; incomplete work; cancellation;
 publication/recovery interruption; collection outcomes; and installed execution
-outside the checkout on Windows/Linux Python 3.11/3.12. Compare CLI exit and
+outside the checkout on Windows Python 3.11/3.12. Windows is the current refactor
+acceptance target under the user's October 3 scope decision. Linux execution and
+hosted cross-platform CI are not prerequisites for that acceptance; retained Linux
+observations remain historical and do not grant supported-platform status.
+Compare CLI exit and
 narration against retained session, control-plane, publication and acceptance
 evidence. Use deterministic fixture models for boundaries and separate live
 llama.cpp success and unsuccessful flows. Mocked finalizer returns are contract
 tests and cannot establish runtime truth.
+
+The platform-proof amendment changes no runtime result, ownership or cleanup
+behavior. Its preserved gates and migration are recorded in
+`docs/architecture/CONTRACT_DELTA_WINDOWS_ACCEPTANCE_2026-10-03.md`.
 
 Command lifetime and connector timing retain their separate contract boundaries.
 Scoped BT-4 acceptance does not establish broader host-death, unregistered-worker

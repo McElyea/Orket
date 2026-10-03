@@ -16,7 +16,9 @@ The 0.6.39 construction transition is specified in
 ASGI factory captures inputs, lifespan owns runtime preparation, and requests are
 refused until initialization succeeds. Runtime services are not an eager factory
 result. The canonical architectural-truth plan records the verified source
-and installed observations, including the Linux 3.12 clock blocker.
+and installed observations under the current Windows-only acceptance scope.
+Historical Linux clock results are retained separately and no longer block the
+refactor. Verification scope: `docs/architecture/CONTRACT_DELTA_WINDOWS_ACCEPTANCE_2026-10-03.md`.
 
 Preparation captures invocation cwd, environment, user settings and preferences
 at the synchronous factory boundary. Bootstrap settings before the event loop or

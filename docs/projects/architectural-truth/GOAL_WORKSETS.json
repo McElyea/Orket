@@ -10125,32 +10125,6 @@
   ],
   "diff_ledger": [
     {
-      "run_at_utc": "2026-10-02T02:49:04.944427Z",
-      "changed": true,
-      "before_digest": "sha256:05e31c6183d24c50bc054ec56694668b2c1c650c09a1f716ec8c6f0d2488b1c8",
-      "after_digest": "sha256:eb71e18930111845aec4048251e175887df4b312b79f22705fb622f23f13828f",
-      "diff": {
-        "added_paths": 3,
-        "removed_paths": 0,
-        "changed_paths": 4,
-        "initial_write": false,
-        "paths_total_previous": 19105,
-        "paths_total_current": 20492,
-        "paths_total_reference": 20492,
-        "churn_paths": 7,
-        "churn_ratio": 0.000342,
-        "sample_paths": [
-          "$.diff_ledger",
-          "$.installed_worksets.closeout",
-          "$.installed_worksets.windows_cells",
-          "$.installed_worksets.limits",
-          "$.installed_worksets.next_action",
-          "$.installed_worksets.proof",
-          "$.installed_worksets.status"
-        ]
-      }
-    },
-    {
       "run_at_utc": "2026-10-02T02:53:07.277181Z",
       "changed": true,
       "before_digest": "sha256:ebf11d70de3a34ca916dec631bbca5ab9b14116177bf6105b33067d07ebc8ccb",
@@ -10936,6 +10910,45 @@
           "$.platform_worksets.two_day_completion_plan",
           "$.platform_worksets.external_prerequisites",
           "$.platform_worksets.next_action"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-03T19:17:22.375120Z",
+      "changed": true,
+      "before_digest": "sha256:c329ca35236c9671edd686ccff68351b238dc1329409576f0861efbe30332d91",
+      "after_digest": "sha256:27db43305acc050394e85f1fa87273b798b819b707bf84c6684c218bf869c687",
+      "diff": {
+        "added_paths": 11,
+        "removed_paths": 11,
+        "changed_paths": 16,
+        "initial_write": false,
+        "paths_total_previous": 21550,
+        "paths_total_current": 23071,
+        "paths_total_reference": 23071,
+        "churn_paths": 38,
+        "churn_ratio": 0.001647,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.platform_worksets.historical_scope_fields_before_windows_amendment",
+          "$.platform_worksets.windows_scope_revision",
+          "$.platform_worksets.acceptance_limits",
+          "$.platform_worksets.candidate_commit",
+          "$.platform_worksets.candidate_tag",
+          "$.platform_worksets.clock_criterion.maximum_observation_seconds",
+          "$.platform_worksets.clock_criterion.maximum_step_seconds",
+          "$.platform_worksets.clock_criterion.outer_native_timeout_seconds",
+          "$.platform_worksets.clock_criterion.required_synchronized_quiet_seconds",
+          "$.platform_worksets.clock_criterion.reason",
+          "$.platform_worksets.clock_criterion.required",
+          "$.platform_worksets.current_batch",
+          "$.platform_worksets.external_prerequisites",
+          "$.platform_worksets.next_action",
+          "$.platform_worksets.paths[1]",
+          "$.platform_worksets.paths[2]",
+          "$.platform_worksets.paths[3]",
+          "$.platform_worksets.paths[4]",
+          "$.platform_worksets.paths[5]"
         ]
       }
     }
@@ -13920,17 +13933,21 @@
   },
   "platform_worksets": {
     "goal": "ATG-09",
-    "status": "active: local scoped proof accepted; full hosted Quality incomplete",
-    "current_batch": "ATG09-P01 existing hosted Gitea runner prerequisite",
-    "candidate_commit": "b7ab34bba7d76a146cf4782c8522681de22ac544",
-    "candidate_tag": "v0.6.125",
+    "status": "active: Windows-only final quality proof pending; Linux/hosted blocker withdrawn by user",
+    "current_batch": "ATG09-P01 native Windows final quality",
+    "candidate_commit": "175e5d58bb7159888b1a82882401083432de9547",
+    "candidate_tag": "v0.6.141",
     "paths": [
       "CHANGELOG.md",
+      "docs/CONTRIBUTOR.md",
+      "docs/architecture/CONTRACT_DELTA_WINDOWS_ACCEPTANCE_2026-10-03.md",
       "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
       "docs/projects/architectural-truth/GOAL_WORKSETS.json",
       "docs/projects/architectural-truth/README.md",
-      "docs/projects/archive/architectural-truth/AT10012026-ATG08/CLOSEOUT.md",
-      "docs/projects/archive/architectural-truth/AT10012026-ATG08/VERIFICATION.json",
+      "docs/projects/archive/architectural-truth/AT10032026-WINDOWS-SCOPE/PLAN_BEFORE_WINDOWS_SCOPE.md",
+      "docs/projects/archive/architectural-truth/AT10032026-WINDOWS-SCOPE/README.md",
+      "docs/specs/API_RUNTIME_LIFECYCLE.md",
+      "docs/specs/RUNTIME_EXECUTION_RESULT_CONTRACT.md",
       "pyproject.toml"
     ],
     "preflight_helper_sha256": {
@@ -13940,21 +13957,20 @@
     },
     "clock_receipt": ".tmp/atg09-linux-clock.json",
     "clock_criterion": {
-      "required_synchronized_quiet_seconds": 60,
-      "maximum_observation_seconds": 240,
-      "maximum_step_seconds": 0.01,
-      "outer_native_timeout_seconds": 280
+      "required": false,
+      "reason": "Linux clock obligation withdrawn by explicit user scope correction; original thresholds preserved in historical_scope_fields_before_windows_amendment."
     },
-    "scope": "Existing Linux Python 3.11/3.12 installed selections, actual llama.cpp public flow with cleanup, and hosted Gitea Quality against the identified candidate. No provider switch or new infrastructure.",
+    "scope": "Native Windows Python3.11/3.12 installed/public paths, current native Windows full quality and actual llama.cpp library-flow proof. No Linux/WSL or hosted-runner requirement.",
     "source_selection_receipt": ".tmp/atg08-source-selection.json",
     "source_selection_sha256": "48cd4d99b145df97c3f2c0c41d048b1753b4d8afccaa80f9f9a9f3dba883a22d",
     "windows_artifact_receipt": ".tmp/atg08-build.json",
     "windows_artifact_receipt_sha256": "cb8dd5cafd6debc01eab9a54c68d2dc7c97d0ee385d12f150217e974951a2e4a",
     "remaining": [
-      "Complete all eleven existing hosted Gitea Quality jobs on the fixture-repaired candidate."
+      "Current native Windows full-suite zero-failure result with unchanged89%combinedcoverage after reload repair; retain canonical local checks.",
+      "Validate reuse or refresh affected Windows installed/public-path and llama.cpp evidence, then publish ATG-09 closeout."
     ],
-    "external_prerequisites": "The final infrastructure exception expired 2026-10-03T18:24:08Z; prior owners/registrations were removed. Two-day kickoff/reset time and an explicit existing-runner window are pending. No update or new infrastructure is implied.",
-    "next_action": "At the user kickoff, follow the canonical two-day plan: verify current candidate/evidence/access, bind an explicitly renewed existing-runner window, then complete the fixed eleven-job hosted Quality workflow and dependent ATG-10. Do not launch with expired helpers.",
+    "external_prerequisites": "No Linux/WSL/Gitea-runner prerequisite. Existing native Windows tooling and valid retained evidence are the execution path.",
+    "next_action": "At the user kickoff, bind source/process state and run current native Windows full quality/coverage with ORKET_DISABLE_SANDBOX=1. No hosted runner authorization or Linux attempt is needed.",
     "probe_limits": "Interpreter version probes succeeded. The first combined shell command failed only its uv lookup due to quote stripping; no uv availability was established by that command.",
     "clock_result": {
       "path": "blocked",
@@ -14039,7 +14055,7 @@
       ".tmp/atg09-linux-clock.json": "43ff247a6650aac1cf6d451d349c7cb4a3a816ebc8fa8430cbbb5e6ea43a81f6",
       ".tmp/atg09-readiness.json": "fda66b9cf8338b3415056dbef78e9430e5bd53005e134d35af45eac4bd4dfd0a"
     },
-    "acceptance_limits": "Scoped native Linux/Windows installed refresh and three public-library llama.cpp flows accepted at their recorded inputs. Docker-stopped Linux proof does not establish permanent coexistence stability. Full hosted Quality and fresh hosted89%coverage are incomplete; no Mac, APIprovider or whole-lane acceptance claim.",
+    "acceptance_limits": "Windows-only bounded refactor acceptance. Historical Linux/hosted outcomes are not rewritten. No Mac support, hosted green status or general current-runtime proof is granted.",
     "wrap_checkpoint": {
       "version": "0.6.126",
       "scope": "Metadata-only handoff at user request; ATG-09 and ATG-10 remain incomplete.",
@@ -15250,48 +15266,143 @@
     "historical_acceptance_limits": "No fresh Linux candidate install or runtime selection, actual provider inference or hosted Quality job has been executed. Native passive clock failure is live environment proof, not product failure or application acceptance.",
     "historical_external_prerequisites": "Gitea28 and private native tools available. Registrations14/15 removed after A06 failure. User explicitly granted two further hours through09:53:22UTC; runner admission stops09:48:22UTC.",
     "two_day_completion_plan": {
-      "status": "prepared: reset/kickoff and renewed runner window pending",
+      "status": "prepared: Windows-only; user reset/kickoff time pending",
       "canonical_section": "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md#two-day-completion-plan",
-      "prepared_on": "2026-10-03",
       "goal_order": [
         "ATG-09",
         "ATG-10"
       ],
-      "current_batch": "ATG09-P01",
       "completed_goals": 8,
       "total_goals": 10,
       "requested_maximum_hours": 48,
       "start_utc": null,
-      "runner_authorization_end_utc": null,
       "fallback_planning_end_utc": "2026-10-06T06:00:00Z",
       "fallback_end_is_verified_billing_time": false,
+      "runner_authorization_required": false,
       "execution_started": false,
-      "new_targets_authorized": false,
-      "scope": "Schedule the existing remaining queue; no package upgrades, provider changes, infrastructure expansion, paid credits or main merge.",
+      "new_targets_authorized": false
+    },
+    "historical_scope_fields_before_windows_amendment": {
+      "status": "active: local scoped proof accepted; full hosted Quality incomplete",
+      "current_batch": "ATG09-P01 existing hosted Gitea runner prerequisite",
+      "candidate_commit": "b7ab34bba7d76a146cf4782c8522681de22ac544",
+      "candidate_tag": "v0.6.125",
+      "paths": [
+        "CHANGELOG.md",
+        "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
+        "docs/projects/architectural-truth/GOAL_WORKSETS.json",
+        "docs/projects/architectural-truth/README.md",
+        "docs/projects/archive/architectural-truth/AT10012026-ATG08/CLOSEOUT.md",
+        "docs/projects/archive/architectural-truth/AT10012026-ATG08/VERIFICATION.json",
+        "pyproject.toml"
+      ],
+      "clock_criterion": {
+        "required_synchronized_quiet_seconds": 60,
+        "maximum_observation_seconds": 240,
+        "maximum_step_seconds": 0.01,
+        "outer_native_timeout_seconds": 280
+      },
+      "scope": "Existing Linux Python 3.11/3.12 installed selections, actual llama.cpp public flow with cleanup, and hosted Gitea Quality against the identified candidate. No provider switch or new infrastructure.",
+      "remaining": [
+        "Complete all eleven existing hosted Gitea Quality jobs on the fixture-repaired candidate."
+      ],
+      "external_prerequisites": "The final infrastructure exception expired 2026-10-03T18:24:08Z; prior owners/registrations were removed. Two-day kickoff/reset time and an explicit existing-runner window are pending. No update or new infrastructure is implied.",
+      "next_action": "At the user kickoff, follow the canonical two-day plan: verify current candidate/evidence/access, bind an explicitly renewed existing-runner window, then complete the fixed eleven-job hosted Quality workflow and dependent ATG-10. Do not launch with expired helpers.",
+      "acceptance_limits": "Scoped native Linux/Windows installed refresh and three public-library llama.cpp flows accepted at their recorded inputs. Docker-stopped Linux proof does not establish permanent coexistence stability. Full hosted Quality and fresh hosted89%coverage are incomplete; no Mac, APIprovider or whole-lane acceptance claim.",
+      "two_day_completion_plan": {
+        "status": "prepared: reset/kickoff and renewed runner window pending",
+        "canonical_section": "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md#two-day-completion-plan",
+        "prepared_on": "2026-10-03",
+        "goal_order": [
+          "ATG-09",
+          "ATG-10"
+        ],
+        "current_batch": "ATG09-P01",
+        "completed_goals": 8,
+        "total_goals": 10,
+        "requested_maximum_hours": 48,
+        "start_utc": null,
+        "runner_authorization_end_utc": null,
+        "fallback_planning_end_utc": "2026-10-06T06:00:00Z",
+        "fallback_end_is_verified_billing_time": false,
+        "execution_started": false,
+        "new_targets_authorized": false,
+        "scope": "Schedule the existing remaining queue; no package upgrades, provider changes, infrastructure expansion, paid credits or main merge.",
+        "receipt_sha256": {
+          ".tmp/atg09-fixture-case-publication.json": "a93a1a5a3060e7cf594cd9587459821a21b4cacec03111512764a64981fdbe83",
+          ".tmp/atg09-final-window-handoff.json": "5ccef9d3577acc41ebbbce1b0da968201d3ee78ac45313c38192621f09c5c7f3",
+          ".tmp/atg09-final-evidence-reuse.json": "a03cb084b002df613ea797028e675fb412604d7907f2082b8de656f618727afb",
+          ".tmp/atg09-final-linux-audit.json": "e631e5c692a1570847f75576f8e0548b3598d955b7aadc9e0e8c5c648a9f1864",
+          ".tmp/atg09-fixture-case-linux.json": "38be7cdd47b431de50a1ca88400f31f2ad194625fd4c40418600541fe7cb1a19",
+          ".tmp/atg09-fixture-case-windows.json": "a509c14dfa1b030f0396111674ebd781c2adcda057d82e5dd5ba4af8847730a2",
+          ".tmp/atg09-hosted-final-window-close.json": "6e85314a8e5971b262b007e46ddbe7aa81ea3cbc4b26c6b118270ca65e01804e"
+        },
+        "checkpoint": {
+          "version": "0.6.141",
+          "base_commit": "44840ff8f0383835f79667b86d718b24b6f2f92b",
+          "paths": [
+            "CHANGELOG.md",
+            "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
+            "docs/projects/architectural-truth/GOAL_WORKSETS.json",
+            "docs/projects/architectural-truth/README.md",
+            "pyproject.toml"
+          ],
+          "directory": ".tmp/atg-two-day-plan-checkpoint",
+          "checks_receipt": ".tmp/atg-two-day-plan-checks.json",
+          "publication_receipt": ".tmp/atg-two-day-plan-publication.json"
+        },
+        "proof": "Planning and structural checkpoint only; runtime and hosted acceptance do not change."
+      }
+    },
+    "windows_scope_revision": {
+      "status": "complete: user-directed scope amendment; Windows verification pending",
+      "date": "2026-10-03",
+      "user_direction": "Lets remove the blocker from the plan and stop trying to support linux if this is working in windows",
+      "authoritative_target": "Windows only for ATG-v1",
+      "archive_plan": "docs/projects/archive/architectural-truth/AT10032026-WINDOWS-SCOPE/PLAN_BEFORE_WINDOWS_SCOPE.md",
+      "archive_plan_sha256": "a09908e03eff66a74d548f3fbd9b2043864260a6dc61d3f7a0a03fd842285714",
+      "historical_observations_rule": "Other nested campaign/clock/hosted records retain historical evidence only; their retry instructions and expired windows cannot admit work under the amended card.",
+      "withdrawn_obligations": [
+        "Linux installed/platform cells",
+        "WSL/Linux clock qualification",
+        "Linux/hosted runner access",
+        "Full hosted Gitea Quality and Docker/Linux jobs"
+      ],
+      "remaining_invariants": [
+        "Canonical Windows source selection and89%combinedcoverage",
+        "Windows3.11/3.12 installed/public paths",
+        "Actual llama.cpp library-flow evidence",
+        "Existing assertions, deadlines and skip declarations",
+        "Separate ATG-09 and ATG-10 acceptance/publication"
+      ],
       "receipt_sha256": {
-        ".tmp/atg09-fixture-case-publication.json": "a93a1a5a3060e7cf594cd9587459821a21b4cacec03111512764a64981fdbe83",
-        ".tmp/atg09-final-window-handoff.json": "5ccef9d3577acc41ebbbce1b0da968201d3ee78ac45313c38192621f09c5c7f3",
-        ".tmp/atg09-final-evidence-reuse.json": "a03cb084b002df613ea797028e675fb412604d7907f2082b8de656f618727afb",
-        ".tmp/atg09-final-linux-audit.json": "e631e5c692a1570847f75576f8e0548b3598d955b7aadc9e0e8c5c648a9f1864",
-        ".tmp/atg09-fixture-case-linux.json": "38be7cdd47b431de50a1ca88400f31f2ad194625fd4c40418600541fe7cb1a19",
         ".tmp/atg09-fixture-case-windows.json": "a509c14dfa1b030f0396111674ebd781c2adcda057d82e5dd5ba4af8847730a2",
-        ".tmp/atg09-hosted-final-window-close.json": "6e85314a8e5971b262b007e46ddbe7aa81ea3cbc4b26c6b118270ca65e01804e"
+        ".tmp/atg09-final-evidence-reuse.json": "a03cb084b002df613ea797028e675fb412604d7907f2082b8de656f618727afb",
+        ".tmp/atg09-reload-repair-win-py311.json": "326ea6874c77858ed98009423191e51d1911d53fdb8642a8775acc5d9545c19b",
+        ".tmp/atg09-reload-repair-win-py312.json": "7f64d5a89e0c728da034d22d19ccbecee8ab98c532505a71b50d9cfc71aba324",
+        ".tmp/atg09_provider_result.json": "e8d6c2e02eff2e6ef471e990b8ddde5e1d6fd682db3918ef61421a34c2e77450",
+        ".tmp/atg-two-day-plan-publication.json": "a8128d3123fa8b8cf3544c0df14227b6caf75f4935432957baeb8edcf015e6f2"
       },
       "checkpoint": {
-        "version": "0.6.141",
-        "base_commit": "44840ff8f0383835f79667b86d718b24b6f2f92b",
+        "version": "0.6.142",
+        "base_commit": "175e5d58bb7159888b1a82882401083432de9547",
         "paths": [
           "CHANGELOG.md",
+          "docs/CONTRIBUTOR.md",
+          "docs/architecture/CONTRACT_DELTA_WINDOWS_ACCEPTANCE_2026-10-03.md",
           "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
           "docs/projects/architectural-truth/GOAL_WORKSETS.json",
           "docs/projects/architectural-truth/README.md",
+          "docs/projects/archive/architectural-truth/AT10032026-WINDOWS-SCOPE/PLAN_BEFORE_WINDOWS_SCOPE.md",
+          "docs/projects/archive/architectural-truth/AT10032026-WINDOWS-SCOPE/README.md",
+          "docs/specs/API_RUNTIME_LIFECYCLE.md",
+          "docs/specs/RUNTIME_EXECUTION_RESULT_CONTRACT.md",
           "pyproject.toml"
         ],
-        "directory": ".tmp/atg-two-day-plan-checkpoint",
-        "checks_receipt": ".tmp/atg-two-day-plan-checks.json",
-        "publication_receipt": ".tmp/atg-two-day-plan-publication.json"
-      },
-      "proof": "Planning and structural checkpoint only; runtime and hosted acceptance do not change."
+        "directory": ".tmp/atg-windows-scope-checkpoint",
+        "checks_receipt": ".tmp/atg-windows-scope-checks.json",
+        "publication_receipt": ".tmp/atg-windows-scope-publication.json"
+      }
     }
   }
 }

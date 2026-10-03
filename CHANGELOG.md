@@ -5,6 +5,16 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.142] - 2026-10-03
+
+### Changed
+- Apply the user's Windows-only refactor scope: remove Linux/WSL clock and hosted-runner prerequisites while retaining native Windows quality, installed/public-path and llama.cpp evidence requirements.
+- Preserve the prior plan and outcomes as history, align verification contracts and update the two-day schedule. Runtime behavior is unchanged; current full Windows coverage and ATG-09/10 closeout remain outstanding.
+- Operator and extension-author action: none; this changes the refactor acceptance scope, not runtime APIs or installed data.
+- `compatibility_status`: `preserved`
+- `affected_audience`: `all`
+- `migration_requirement`: `none`
+
 ## [0.6.141] - 2026-10-03
 
 ### Changed
