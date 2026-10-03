@@ -1,7 +1,7 @@
 # Log publication inputs and settlement
 
 Status: Active
-Last updated: 2026-10-01
+Last updated: 2026-10-03
 
 Owner: Orket Core. Public facade: `orket/logging.py`. The single process-global
 queue, writer, failure, drop, directory and subscriber state lives in
@@ -166,11 +166,13 @@ The event-specific wrapper delegates its graph walk to the single pure
 `core/contracts/value_capture.py` owner and supplies its unchanged stable error
 code. This extraction adds fixture admission as another caller without changing
 logging's root/event checks, admitted types, capture behavior or publication policy.
-This shared capture extraction is active for prospective checkpoint 0.6.113.
-Its copied-source and current-source event/fixture controls and pending installed
-acceptance are recorded in
-`../architecture/CONTRACT_DELTA_FIXTURE_INPUT_TIME_D_2026-09-27.md`; it adds no broader
-logging-preparation claim.
+This shared capture extraction shipped in checkpoint 0.6.113. Its original
+copied-source and event/fixture controls remain recorded in
+`../architecture/CONTRACT_DELTA_FIXTURE_INPUT_TIME_D_2026-09-27.md`. The accepted
+Windows source and installed/public-path scopes, including fixture input/adverse
+controls, are bound by
+`../projects/archive/architectural-truth/AT10032026-ATG09/VERIFICATION.json`.
+These observations add no broader logging-preparation guarantee.
 
 Main and applicable runtime-artifact attempts occupy independent bounded slots.
 A dropped main suppresses its handler and subscriber attempts; an independently

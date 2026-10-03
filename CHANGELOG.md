@@ -5,6 +5,17 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.144] - 2026-10-03
+
+### Changed
+- Reconcile the bounded Windows ATG-v1 result after verified ATG-09 publication: preserve all 67 finite batches, 207 historical row dispositions, three named hotspot closures and scoped evidence.
+- Archive the ATG-10 closeout, remove completed queue execution from Priority Now, correct stale exception/logging status wording and retain the active umbrella authority, compatibility obligations and broader proof limits.
+- Stability: metadata and proof-status reconciliation only; runtime, tests, dependency configuration and acceptance thresholds are unchanged. Ten-of-ten completion requires this checkpoint's verified publication.
+- Operator and extension-author action: none.
+- `compatibility_status`: `preserved`
+- `affected_audience`: `internal_only`
+- `migration_requirement`: `none`
+
 ## [0.6.143] - 2026-10-03
 
 ### Changed

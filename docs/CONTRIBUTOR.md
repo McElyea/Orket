@@ -238,8 +238,9 @@ embeddings await `prepare_logging(LoggingInputs(...))` and enter `bind_logging(.
 in the operation's task. Borrowed runtime lifespan yields carry no binding token.
 Return is admission only. Both Quality selections retain preparation, native
 startup failure, task-context, capture, overflow, fatal-writer and API handoff
-controls. The single daemon remains process-owned; the separately inventoried
-required-producer migration stays open under `docs/specs/LOG_WRITE_SETTLEMENT.md`.
+controls. The single daemon remains process-owned. ATG-03 closed the five
+frozen required-producer input sites; broader logging guarantees remain limited
+by `docs/specs/LOG_WRITE_SETTLEMENT.md`.
 Keep the public pipeline verification, database bootstrap and standalone provider retry controls in
 both Quality selections. These cover real local fixture/HTTP/logging behavior;
 controlled HTTP responses do not establish actual model inference or live Docker

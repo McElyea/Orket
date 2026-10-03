@@ -1,7 +1,7 @@
 {
   "schema_version": "architectural_truth.exception_register.v1",
   "owner": "Orket Core",
-  "last_reviewed": "2026-10-01",
+  "last_reviewed": "2026-10-03",
   "exceptions": [
     {
       "id": "AT-EX-001",
@@ -31,9 +31,9 @@
       "id": "AT-EX-005",
       "area": "async-reachable-sync-io",
       "status": "active_unaccepted_ship_risk",
-      "reason": "ATG-01 freezes the finite inventory. ATG-02 closes iterator/transport and ATG-03 the five required producer input sites. ATG-04 closes nine frozen native operation/input families with 634 combined source passes plus 168 affected boundary passes and the unchanged dependency gate. Broader D, deferred marshaller subprocess cancellation/descendant cleanup and later typing/coverage/installed/platform/provider/hosted gates remain unaccepted. These scoped closures do not accept whole D.",
+      "reason": "ATG-02 closes the frozen iterator/transport sites, ATG-03 the five required-producer inputs and ATG-04 nine native operation/input families. ATG-06 typing, ATG-09 current Windows source quality, Windows 3.11/3.12 installed/public paths and actual llama.cpp library-flow scopes are accepted. Broader D and deferred marshaller subprocess cancellation/descendant/environment ownership remain unaccepted. Linux/hosted acceptance is outside the amended queue, not established by these scoped closures.",
       "removal_condition": "Reachability-aware static inventory and live responsiveness/cancellation tests pass with only explicit standalone-script exemptions.",
-      "evidence": "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md"
+      "evidence": "docs/projects/archive/architectural-truth/AT10032026-ATG10/CLOSEOUT.md"
     },
     {
       "id": "AT-EX-006",
@@ -55,9 +55,9 @@
       "id": "AT-EX-008",
       "area": "runtime-clock-inputs",
       "status": "active_transition",
-      "reason": "Covered kernel, turn, validation and transition clocks are explicit selected inputs; canonical core clock/UUID defaults have been removed. The bounded core/decision audit is structurally clean. Remaining runtime/application input observations and whole transitive clock ownership still need final source/installed acceptance; this is not proof for arbitrary callbacks or plugins.",
+      "reason": "Covered kernel, turn, validation and transition clocks are explicit selected inputs; canonical core clock/UUID defaults have been removed. The bounded core/decision audit is structurally clean, and current Windows source plus scoped installed/public-path acceptance now pass. Whole transitive clock ownership and arbitrary callbacks/plugins remain unproved; scoped acceptance does not establish them.",
       "removal_condition": "Every deterministic transition receives clock values through explicit runtime inputs.",
-      "evidence": "docs/ARCHITECTURE.md#known-current-exceptions"
+      "evidence": "docs/projects/archive/architectural-truth/AT10032026-ATG10/CLOSEOUT.md"
     },
     {
       "id": "AT-EX-009",
@@ -103,17 +103,17 @@
       "id": "AT-EX-014",
       "area": "noop-checker-type-only-noise",
       "status": "resolved",
-      "reason": "Resolved for the canonical critical-path scope: type-only/Protocol/abstract exemptions and executable-no-op adverse controls pass; the native default-root gate reports zero findings or parse errors across 703 files. Both Quality jobs invoke it. This is bounded structural proof, not absence of arbitrary behavioral no-ops.",
+      "reason": "Resolved for the canonical critical-path scope: type-only/Protocol/abstract exemptions and executable-no-op adverse controls pass; the October 3 native default-root gate reports zero findings or parse errors across 726 files. Both Quality jobs invoke it. This is bounded structural proof, not absence of arbitrary behavioral no-ops.",
       "removal_condition": "The checker excludes type-only declarations and has regression tests with zero known false positives.",
-      "evidence": "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md"
+      "evidence": "docs/projects/archive/architectural-truth/AT10032026-ATG10/CLOSEOUT.md"
     },
     {
       "id": "AT-EX-015",
       "area": "ruff-backlog",
       "status": "resolved",
-      "reason": "Resolved at the September 28 candidate: canonical Ruff over orket/tests passes without a new category suppression. The independent full-suite coverage floor still fails; lint success does not grant release readiness.",
+      "reason": "Canonical Ruff over orket/tests passes without a new category suppression. ATG-09 current Windows source coverage is 89.21575503742372% against the unchanged 89% floor; the retained coverage merge warning and six pre-existing discovery omissions limit capture claims. The separate zero-hit omitted-file calculation also clears 89%. Lint/coverage success does not grant whole-product or minor-release readiness.",
       "removal_condition": "Ruff passes over the canonical governed scope without suppressing categories to clear the count.",
-      "evidence": "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md"
+      "evidence": "docs/projects/archive/architectural-truth/AT10032026-ATG10/CLOSEOUT.md"
     },
     {
       "id": "AT-EX-016",
@@ -142,6 +142,35 @@
         "churn_ratio": 0.00495,
         "sample_paths": [
           "$.exceptions[3].reason"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-03T23:35:03.769866Z",
+      "changed": true,
+      "before_digest": "sha256:36976aefb553607f80a6f80d881eda15be1bb81c0d016e18292d458c935e042a",
+      "after_digest": "sha256:95243d5a7b76cc113981c4720bfd5e1793a562afa905fa101782b65d860abfa8",
+      "diff": {
+        "added_paths": 1,
+        "removed_paths": 0,
+        "changed_paths": 9,
+        "initial_write": false,
+        "paths_total_previous": 202,
+        "paths_total_current": 234,
+        "paths_total_reference": 234,
+        "churn_paths": 10,
+        "churn_ratio": 0.042735,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.exceptions[3].evidence",
+          "$.exceptions[3].reason",
+          "$.exceptions[6].evidence",
+          "$.exceptions[6].reason",
+          "$.exceptions[12].evidence",
+          "$.exceptions[12].reason",
+          "$.exceptions[13].evidence",
+          "$.exceptions[13].reason",
+          "$.last_reviewed"
         ]
       }
     }

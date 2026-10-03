@@ -1,0 +1,740 @@
+{
+  "schema_version": "architectural_truth.atg10_windows_verification.v1",
+  "goal": "ATG-10",
+  "observed_path": "primary",
+  "observed_result": "success",
+  "proof": "Structural reconciliation of accepted live and structural evidence.",
+  "admitted_after_verified_atg09": {
+    "status": "finished",
+    "phase": "verified",
+    "observed_path": "primary",
+    "owner_pid": 37076,
+    "started_at_unix": 1791070300.2804947,
+    "version": "0.6.143",
+    "commands": [
+      {
+        "kind": "committed",
+        "argv": [
+          "git",
+          "-c",
+          "core.safecrlf=false",
+          "commit",
+          "-m",
+          "Accept current Windows quality and retained provider proof"
+        ],
+        "log": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg09-windows-closeout-publication\\committed.log",
+        "status": "finished",
+        "started_at_unix": 1791070301.435012,
+        "pid": 35728,
+        "exit_code": 0,
+        "finished_at_unix": 1791070301.5265226,
+        "log_sha256": "6ea1973dc7904657a4635a40392059ac8f08e56a7ffc6b6f93c783d9cf995c3c"
+      },
+      {
+        "kind": "tagged",
+        "argv": [
+          "git",
+          "tag",
+          "-a",
+          "v0.6.143",
+          "-m",
+          "ATG-09 Windows acceptance v0.6.143; ATG-10 reconciliation remains"
+        ],
+        "log": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg09-windows-closeout-publication\\tagged.log",
+        "status": "finished",
+        "started_at_unix": 1791070301.5585237,
+        "pid": 24652,
+        "exit_code": 0,
+        "finished_at_unix": 1791070301.5900264,
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "kind": "tag_checked",
+        "argv": [
+          "C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Scripts\\python.exe",
+          "scripts/governance/check_core_release_policy.py",
+          "--base-rev",
+          "a6b99e575682d9b721983381e75f80402c8018d2",
+          "--head-rev",
+          "HEAD",
+          "--require-commit-tags",
+          "--require-head-tag",
+          "--tag",
+          "v0.6.143"
+        ],
+        "log": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg09-windows-closeout-publication\\tag_checked.log",
+        "status": "finished",
+        "started_at_unix": 1791070301.619062,
+        "pid": 11388,
+        "exit_code": 0,
+        "finished_at_unix": 1791070302.048597,
+        "log_sha256": "2679e4568af02f4e23201b689b5dadb73b41eb43412cbf9d7224a03969034dd8"
+      },
+      {
+        "kind": "pushed",
+        "argv": [
+          "git",
+          "push",
+          "--atomic",
+          "origin",
+          "HEAD:refs/heads/codex/architectural-truth-bt0",
+          "refs/tags/v0.6.143"
+        ],
+        "log": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg09-windows-closeout-publication\\pushed.log",
+        "status": "finished",
+        "started_at_unix": 1791070302.0790963,
+        "pid": 38440,
+        "exit_code": 0,
+        "finished_at_unix": 1791070304.5152493,
+        "log_sha256": "e2197c34a24f58c98db9e50ee5940015c494950a7767cc134e78a68edf6b271c"
+      }
+    ],
+    "exact_files_touched": [
+      "CHANGELOG.md",
+      "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
+      "docs/projects/architectural-truth/GOAL_WORKSETS.json",
+      "docs/projects/architectural-truth/README.md",
+      "docs/projects/archive/architectural-truth/AT10032026-ATG09/CLOSEOUT.md",
+      "docs/projects/archive/architectural-truth/AT10032026-ATG09/VERIFICATION.json",
+      "pyproject.toml"
+    ],
+    "checks_sha256": "e8a13cbf95da961f9fd2f4750ccb38e351b37ed68487ec5ae018532df1415341",
+    "commit": "f05511206f676b894313e9e39669971de0382aa7",
+    "tag_object": "123fefd8131a2cadbeefbee31f55607217b1063d",
+    "result": "success",
+    "remote_refs": {
+      "refs/heads/codex/architectural-truth-bt0": "f05511206f676b894313e9e39669971de0382aa7",
+      "refs/tags/v0.6.143": "123fefd8131a2cadbeefbee31f55607217b1063d",
+      "refs/tags/v0.6.143^{}": "f05511206f676b894313e9e39669971de0382aa7"
+    },
+    "clean_worktree": true,
+    "finished_at_unix": 1791070306.1316695
+  },
+  "atg09_metadata_checks": {
+    "status": "finished",
+    "observed_path": "primary",
+    "started_at_unix": 1791070206.053562,
+    "owner_pid": 39956,
+    "version": "0.6.143",
+    "commands": [
+      {
+        "kind": "check-0",
+        "argv": [
+          "git",
+          "-c",
+          "core.safecrlf=false",
+          "diff",
+          "--check"
+        ],
+        "log": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg09-windows-closeout-checks\\check-0.log",
+        "status": "finished",
+        "started_at_unix": 1791070207.1453955,
+        "pid": 13248,
+        "exit_code": 0,
+        "finished_at_unix": 1791070207.2209,
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "kind": "check-1",
+        "argv": [
+          "C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Scripts\\python.exe",
+          "scripts/governance/check_docs_project_hygiene.py"
+        ],
+        "log": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg09-windows-closeout-checks\\check-1.log",
+        "status": "finished",
+        "started_at_unix": 1791070207.246904,
+        "pid": 17876,
+        "exit_code": 0,
+        "finished_at_unix": 1791070207.3279095,
+        "log_sha256": "8d1bf1af779ff045b85d7cb11f0397a564628c421af4baca5d9668060f8a78cd"
+      },
+      {
+        "kind": "check-2",
+        "argv": [
+          "C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Scripts\\python.exe",
+          "scripts/governance/check_current_authority.py"
+        ],
+        "log": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg09-windows-closeout-checks\\check-2.log",
+        "status": "finished",
+        "started_at_unix": 1791070207.3589156,
+        "pid": 17720,
+        "exit_code": 0,
+        "finished_at_unix": 1791070208.8741336,
+        "log_sha256": "60da3e5f32e6a4562cf852361518ea7083286596650be4fe599ffa51b4597574"
+      },
+      {
+        "kind": "check-3",
+        "argv": [
+          "C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Scripts\\python.exe",
+          "scripts/governance/render_current_authority.py",
+          "--check"
+        ],
+        "log": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg09-windows-closeout-checks\\check-3.log",
+        "status": "finished",
+        "started_at_unix": 1791070208.904645,
+        "pid": 33956,
+        "exit_code": 0,
+        "finished_at_unix": 1791070210.4033563,
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "kind": "check-4",
+        "argv": [
+          "C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Scripts\\python.exe",
+          "scripts/governance/check_install_surface_convergence.py"
+        ],
+        "log": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg09-windows-closeout-checks\\check-4.log",
+        "status": "finished",
+        "started_at_unix": 1791070210.4288597,
+        "pid": 35148,
+        "exit_code": 0,
+        "finished_at_unix": 1791070210.548704,
+        "log_sha256": "c0158433edf8a40ff2ef2a294c5e32b30489f1f873819da2ad9b83396551c14a"
+      },
+      {
+        "kind": "check-5",
+        "argv": [
+          "C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Scripts\\python.exe",
+          "scripts/governance/check_core_release_policy.py"
+        ],
+        "log": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg09-windows-closeout-checks\\check-5.log",
+        "status": "finished",
+        "started_at_unix": 1791070210.5777042,
+        "pid": 37856,
+        "exit_code": 0,
+        "finished_at_unix": 1791070210.6812289,
+        "log_sha256": "2679e4568af02f4e23201b689b5dadb73b41eb43412cbf9d7224a03969034dd8"
+      },
+      {
+        "kind": "check-6",
+        "argv": [
+          "C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Scripts\\python.exe",
+          "-m",
+          "pytest",
+          "-q",
+          "tests/application/test_orket_version_resolution.py",
+          "tests/scripts/test_check_core_release_policy.py",
+          "tests/scripts/test_prepare_core_release.py",
+          "tests/platform/test_core_release_policy_workflow.py",
+          "--junitxml=C:\\Source\\Orket-architectural-truth\\.tmp\\atg09-windows-closeout-checks\\pytest.xml",
+          "--basetemp=C:\\Source\\Orket-architectural-truth\\.tmp\\atg09-windows-closeout-checks\\pytest-temp",
+          "-o",
+          "junit_family=legacy"
+        ],
+        "log": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg09-windows-closeout-checks\\check-6.log",
+        "status": "finished",
+        "started_at_unix": 1791070210.7102292,
+        "pid": 39972,
+        "exit_code": 0,
+        "finished_at_unix": 1791070215.7674,
+        "log_sha256": "7a919dcfaeab2d5401c63cb06b56fdb4cd69f8cf511946e1ed67ee81525754e8"
+      }
+    ],
+    "exact_files_touched": [
+      "CHANGELOG.md",
+      "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
+      "docs/projects/architectural-truth/GOAL_WORKSETS.json",
+      "docs/projects/architectural-truth/README.md",
+      "docs/projects/archive/architectural-truth/AT10032026-ATG09/CLOSEOUT.md",
+      "docs/projects/archive/architectural-truth/AT10032026-ATG09/VERIFICATION.json",
+      "pyproject.toml"
+    ],
+    "base_commit": "a6b99e575682d9b721983381e75f80402c8018d2",
+    "proof": "Structural metadata/quality checks and scoped release controls.",
+    "result": "success",
+    "changed_inputs": [],
+    "finished_at_unix": 1791070216.84748
+  },
+  "finite_worksets": {
+    "batches": 67,
+    "by_goal": {
+      "ATG-02": 2,
+      "ATG-03": 4,
+      "ATG-04": 9,
+      "ATG-05": 3,
+      "ATG-06": 49
+    },
+    "historical_rows": 207,
+    "named_hotspots": 3,
+    "coverage_batches": 27,
+    "coverage_reconciliations": 7
+  },
+  "unchanged_predecessor_workset_digest": "116735435ca21e173c9506d324bc579ca0c3ae9ce00bdc8b0e834d496aec96b8",
+  "accepted_source_proof": {
+    "path": "docs/projects/archive/architectural-truth/AT10032026-ATG09/VERIFICATION.json",
+    "sha256": "8642cdb9e77644376adfc01ec981fcfbbf7acaf17986022c8d11b280d8bb3379",
+    "source_base": "a6b99e575682d9b721983381e75f80402c8018d2",
+    "counts": {
+      "passed": 12987,
+      "failed": 0,
+      "skipped": 93
+    },
+    "measured_combined_coverage": 89.21575503742372,
+    "unchanged_floor": 89,
+    "branch_measurement": true
+  },
+  "predecessor_closeouts": {
+    "ATG-01": "docs/projects/archive/architectural-truth/AT10012026-ATG01/CLOSEOUT.md",
+    "ATG-02": "docs/projects/archive/architectural-truth/AT10012026-ATG02/CLOSEOUT.md",
+    "ATG-03": "docs/projects/archive/architectural-truth/AT10012026-ATG03/CLOSEOUT.md",
+    "ATG-04": "docs/projects/archive/architectural-truth/AT10012026-ATG04/CLOSEOUT.md",
+    "ATG-05": "docs/projects/archive/architectural-truth/AT10012026-ATG05/CLOSEOUT.md",
+    "ATG-06": "docs/projects/archive/architectural-truth/AT10012026-ATG06/CLOSEOUT.md",
+    "ATG-07": "docs/projects/archive/architectural-truth/AT10012026-ATG07/CLOSEOUT.md",
+    "ATG-08": "docs/projects/archive/architectural-truth/AT10012026-ATG08/CLOSEOUT.md",
+    "ATG-09": "docs/projects/archive/architectural-truth/AT10032026-ATG09/CLOSEOUT.md"
+  },
+  "compatibility_obligations": [
+    "python main.py and hidden --rock through 0.6.x; explicit 0.7.0 removal delta required.",
+    "replay_turn() wraps replay_turn_diagnostics() until its supported callers and window are closed.",
+    "runtime_verification.json latest alias beside canonical indexed history remains.",
+    "Flat runtime compatibility aliases retain their existing contract; removal version remains unassigned.",
+    "Current observability event taxonomy, durable path specifics and ReviewRun v0 remain authoritative."
+  ],
+  "remaining_limits": [
+    "No whole C/D/E, arbitrary callback/plugin purity or hostile-code containment proof.",
+    "No Linux/Mac, hosted Quality, Docker sandbox acceptance, API/installed-provider or remote inference/server teardown proof.",
+    "Current-authority runtime proof remains unavailable; checks are structural.",
+    "One corrupt coverage child shard was excluded; six pre-existing namespace files remain unreported. Complete measurement capture is not claimed.",
+    "Deferred marshaller process ownership and ResponseParser whitespace/grounding residue findings remain.",
+    "No main merge, minor-release readiness, new capability or whole-lane retirement."
+  ],
+  "exact_files_touched": [
+    "pyproject.toml",
+    "CHANGELOG.md",
+    "docs/CONTRIBUTOR.md",
+    "docs/ROADMAP.md",
+    "docs/specs/LOG_WRITE_SETTLEMENT.md",
+    "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
+    "docs/projects/architectural-truth/GOAL_WORKSETS.json",
+    "docs/projects/architectural-truth/README.md",
+    "docs/projects/architectural-truth/ARCHITECTURE_EXCEPTION_REGISTER.json",
+    "docs/projects/archive/architectural-truth/AT10032026-ATG10/CLOSEOUT.md",
+    "docs/projects/archive/architectural-truth/AT10032026-ATG10/VERIFICATION.json"
+  ],
+  "postproof_delta": "Only release/evidence/roadmap metadata and scoped active-doc status corrections; runtime/tests/scripts/workflows/dependencies/coverage policy unchanged.",
+  "final_checks": {
+    "receipt": ".tmp/atg10-windows-closeout-checks.json",
+    "required_before_publication": true,
+    "commands": [
+      "git diff --check",
+      "check_docs_project_hygiene.py",
+      "check_current_authority.py",
+      "render_current_authority.py --check",
+      "check_install_surface_convergence.py",
+      "check_core_release_policy.py",
+      "Existing four-module 17-case release selection"
+    ]
+  },
+  "publication": {
+    "version": "0.6.144",
+    "matching_annotated_tag": "v0.6.144",
+    "receipt": ".tmp/atg10-windows-closeout-publication.json",
+    "required": true,
+    "completion_condition": "All final checks pass, atomic branch/tag push, exact remote identities, clean worktree; only then 10/10."
+  },
+  "authority": {
+    "plan": "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
+    "runtime_proof": "unavailable",
+    "umbrella_retired": false,
+    "next_implementation_authorized": false
+  },
+  "receipt_sha256": {
+    ".tmp/atg09-windows-closeout-publication.json": "d67d6fd253e66ba7aabfde968b4676eecfae7eecaf712e436ec40bea80d3679c",
+    ".tmp/atg09-windows-closeout-checks.json": "e8a13cbf95da961f9fd2f4750ccb38e351b37ed68487ec5ae018532df1415341",
+    ".tmp/atg10-windows-reconciliation-audit.json": "4a8296150ff30be18c33d8d2da272538ebf8ae157c7ab20c15795fe0c3895bc0",
+    ".tmp/atg10-windows-final-reuse-audit.json": "137a61b6fe7fcb6d95692bb448df40f4ecac747553e3125b3dc7491a87a8ad27"
+  },
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-10-03T23:35:03.785866Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:4f5c181f8abef0ce6874d8533d72fa0c1a5b5e58a26e46f0d26a22fd4bf092be",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 563,
+        "paths_total_reference": 563,
+        "churn_paths": 563,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    },
+    {
+      "run_at_utc": "2026-10-03T23:43:45.260205Z",
+      "changed": true,
+      "before_digest": "sha256:4f5c181f8abef0ce6874d8533d72fa0c1a5b5e58a26e46f0d26a22fd4bf092be",
+      "after_digest": "sha256:e1a1f64a13bef90bc98deb4cac017b30a99bb6f7b5ce284c1a083a1c9cd868f0",
+      "diff": {
+        "added_paths": 3,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "initial_write": false,
+        "paths_total_previous": 563,
+        "paths_total_current": 1088,
+        "paths_total_reference": 1088,
+        "churn_paths": 3,
+        "churn_ratio": 0.002757,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.final_input_reuse_audit",
+          "$.receipt_sha256..tmp/atg10-windows-final-reuse-audit.json"
+        ]
+      }
+    }
+  ],
+  "final_input_reuse_audit": {
+    "schema_version": "architectural_truth.atg10_windows_final_reuse_audit.v1",
+    "observed_path": "primary",
+    "observed_result": "success",
+    "proof": "structural",
+    "audit_at_utc": "2026-10-03T23:42:43.969378+00:00",
+    "repository": "C:\\Source\\Orket-architectural-truth",
+    "branch": "codex/architectural-truth-bt0",
+    "accepted_predecessor_commit": "f05511206f676b894313e9e39669971de0382aa7",
+    "accepted_predecessor_tag": "v0.6.143",
+    "current_head": "f05511206f676b894313e9e39669971de0382aa7",
+    "current_inventory_count": 5750,
+    "current_inventory_sha256": "fb13bdccb514415c51b460abd79d9d40baf8a0bdeccbaa6fb247e568b44d461a",
+    "freeze_comparisons": {
+      ".tmp/atg09-windows-quality.json": {
+        "receipt_sha256": "68a623bda40c54ebe27bc99bb4c7b2dc45a2428cc657a6728d4c2b90a3070216",
+        "frozen_inputs": 5746,
+        "current_inputs": 5750,
+        "unchanged_frozen_inputs": 5737,
+        "recorded_status": "finished",
+        "recorded_result": "success",
+        "recorded_changed_inputs": [],
+        "command_log_bindings": [
+          {
+            "kind": "complete-suite",
+            "exit_code": 0,
+            "log_sha256": "e39288a6b4dbbc93b7c9eb5c7cd10400f4686955e7b29d10c17d964cf402155f",
+            "matches": true
+          }
+        ],
+        "frozen_input_map_sha256": "0f6ff39cc7036ed9397811ef897a95711d51d059489f53ba73535771b791ec04",
+        "changed_path_count": 9,
+        "added_path_count": 4,
+        "removed_path_count": 0,
+        "delta_reference": "exact_current_delta_from_both_accepted_freezes"
+      },
+      ".tmp/atg09-windows-local-checks.json": {
+        "receipt_sha256": "417a72fc1be4cfad8c7c6cdc7f518a627b092b81cb6891891a12e17ea981b65a",
+        "frozen_inputs": 5746,
+        "current_inputs": 5750,
+        "unchanged_frozen_inputs": 5737,
+        "recorded_status": "finished",
+        "recorded_result": "success",
+        "recorded_changed_inputs": [],
+        "command_log_bindings": [
+          {
+            "kind": "check-0",
+            "exit_code": 0,
+            "log_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+            "matches": true
+          },
+          {
+            "kind": "check-1",
+            "exit_code": 0,
+            "log_sha256": "4fc6fdd24df2324e6357a11218c4cfa43dc45173c8c773b9ff90b05627c4f2e8",
+            "matches": true
+          },
+          {
+            "kind": "check-2",
+            "exit_code": 0,
+            "log_sha256": "dcf678a63ff29c7631a500290ce9356d501889a191aeb6db3abb17512f43edce",
+            "matches": true
+          },
+          {
+            "kind": "check-3",
+            "exit_code": 0,
+            "log_sha256": "b0be1d19bbed57e385217982c29aa737f95f7434b2a46f696ff7912325ef7398",
+            "matches": true
+          }
+        ],
+        "frozen_input_map_sha256": "0f6ff39cc7036ed9397811ef897a95711d51d059489f53ba73535771b791ec04",
+        "changed_path_count": 9,
+        "added_path_count": 4,
+        "removed_path_count": 0,
+        "delta_reference": "exact_current_delta_from_both_accepted_freezes"
+      }
+    },
+    "unchanged_runtime_test_script_workflow_configuration_inputs": {
+      "critical_prefix_input_count": 3704,
+      "changed_critical_paths": [],
+      "all_frozen_paths_outside_declared_metadata_unchanged": true,
+      "nonversion_pyproject": {
+        "prior_version": "0.6.143",
+        "current_version": "0.6.144",
+        "nonversion_toml_equal_to_v0_6_143": true,
+        "all_bytes_outside_version_line_equal_to_full_quality_freeze": true,
+        "frozen_version_line": "version = \"0.6.142\" followed by LF",
+        "current_version_line": "version = \"0.6.144\" followed by CRLF",
+        "version_line_restored_sha256": "4d4601b9667765048204677453d70b0f48b0b1d42fad3dbd9ee85779dde69dad",
+        "line_ending_note": "The release version line terminator changed with its value. All other frozen pyproject bytes are identical; Git-normalized v0.6.143 content differs only in project.version."
+      }
+    },
+    "predecessor_worksets": {
+      "preserved_predecessor_root_fields": {
+        "schema_version": true,
+        "queue": true,
+        "owner": true,
+        "frozen_on": true,
+        "candidate": true,
+        "source_version": true,
+        "freeze_rule": true,
+        "historical_sources": true,
+        "proof_reuse": true,
+        "typing": true,
+        "environment_prerequisites": true,
+        "historical_row_dispositions": true,
+        "required_producers": true,
+        "hotspots": true,
+        "typing_diagnostics": true,
+        "batches": true,
+        "source_sha256": true,
+        "typing_refresh": true,
+        "typing_refresh_diagnostics": true,
+        "typing_canonical_reconciliation": true,
+        "typing_closeout": true,
+        "coverage_worksets": true,
+        "installed_worksets": true
+      },
+      "preserved_predecessor_semantic_sha256": "fe3e1e5da6ec84443750f81b0cadf68c38de81214a9c89b18469811321aa2e69",
+      "batch_count": 67,
+      "batch_counts_by_goal": {
+        "ATG-02": 2,
+        "ATG-03": 4,
+        "ATG-04": 9,
+        "ATG-05": 3,
+        "ATG-06": 49
+      },
+      "historical_rows": 207,
+      "historical_dispositions": {
+        "not_an_open_defect_on_recorded_route": 16,
+        "satisfied_at_retained_scoped_boundary": 188,
+        "satisfied_scoped_boundary": 3
+      },
+      "named_hotspots": 3,
+      "coverage_batches": 27,
+      "coverage_reconciliations": 7,
+      "platform_progress_metadata_delta": [
+        {
+          "path": "/platform_worksets/current_batch",
+          "kind": "changed"
+        },
+        {
+          "path": "/platform_worksets/next_action",
+          "kind": "changed"
+        },
+        {
+          "path": "/platform_worksets/publication",
+          "kind": "added"
+        },
+        {
+          "path": "/platform_worksets/remaining",
+          "kind": "changed"
+        },
+        {
+          "path": "/platform_worksets/status",
+          "kind": "changed"
+        },
+        {
+          "path": "/platform_worksets/two_day_completion_plan/completed_goals",
+          "kind": "removed"
+        },
+        {
+          "path": "/platform_worksets/two_day_completion_plan/completed_goals_after_verified_v0_6_144",
+          "kind": "added"
+        },
+        {
+          "path": "/platform_worksets/two_day_completion_plan/completed_goals_before_final_publication",
+          "kind": "added"
+        },
+        {
+          "path": "/platform_worksets/two_day_completion_plan/current_batch",
+          "kind": "changed"
+        },
+        {
+          "path": "/platform_worksets/two_day_completion_plan/remaining_after_verified_v0_6_144",
+          "kind": "added"
+        },
+        {
+          "path": "/platform_worksets/two_day_completion_plan/status",
+          "kind": "changed"
+        },
+        {
+          "path": "/platform_worksets/windows_closeout/publication_verified",
+          "kind": "added"
+        }
+      ],
+      "new_root_metadata_fields": [
+        "history_interpretation",
+        "queue_closeout"
+      ],
+      "removed_root_fields": [],
+      "queue_closeout_conditional_completion": true,
+      "new_executable_goal": false,
+      "limit": "Field equality verifies retained inventories/evidence references and obligations structurally; it does not repeat their live proof."
+    },
+    "exception_obligations": {
+      "entries": 15,
+      "ids_area_status_removal_condition_unchanged": true,
+      "preserved_obligations_sha256": "c5b787a02a7d33d57bc0066255cc19b7ec34326594ef614ad3da868dcd87d01e",
+      "reason_evidence_changes": {
+        "AT-EX-005": [
+          "evidence",
+          "reason"
+        ],
+        "AT-EX-008": [
+          "evidence",
+          "reason"
+        ],
+        "AT-EX-014": [
+          "evidence",
+          "reason"
+        ],
+        "AT-EX-015": [
+          "evidence",
+          "reason"
+        ]
+      },
+      "old_review_date": "2026-10-01",
+      "current_review_date": "2026-10-03",
+      "remaining_obligations_retired": false
+    },
+    "fixed_ten_goal_ids_names_dependencies_unchanged": true,
+    "atg10_conditional_complete_after_final_checks_and_publication": true,
+    "accepted_source_verification_hash_binding": true,
+    "exact_current_delta_from_v0_6_143": [
+      {
+        "path": "CHANGELOG.md",
+        "sha256": "2b6483b4d4daab1021aa82e9d17b9333465b46fc6f509095c4ba8597aad1059d"
+      },
+      {
+        "path": "docs/CONTRIBUTOR.md",
+        "sha256": "74b06df4a11f46bf0c69ad592fc921580aa1e3df9607107cd182980817860d5a"
+      },
+      {
+        "path": "docs/ROADMAP.md",
+        "sha256": "9f1a97a033bd52c0c3de83b704c11528330207ef911d7e989f41db3802f1c030"
+      },
+      {
+        "path": "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
+        "sha256": "05d197fad8f09156196f907ce4a0790ee93e2174e14c792dcc336e0f3f580d4b"
+      },
+      {
+        "path": "docs/projects/architectural-truth/ARCHITECTURE_EXCEPTION_REGISTER.json",
+        "sha256": "545e1c575c733826b252a5b97430625fd87f92309d38a482296fe391dc3dd057"
+      },
+      {
+        "path": "docs/projects/architectural-truth/GOAL_WORKSETS.json",
+        "sha256": "50cd1a0f53640f13d089b377428f37e571ccd8b6760198b33943e24651f4f5c0"
+      },
+      {
+        "path": "docs/projects/architectural-truth/README.md",
+        "sha256": "1f8341846a1630dc18c85434e7d9e59e972fc0c43d3d736c0882a0924faebff0"
+      },
+      {
+        "path": "docs/projects/archive/architectural-truth/AT10032026-ATG10/CLOSEOUT.md",
+        "sha256": "306283d812e85dd28083eaa3a6294172501df0f4165346443dd8b14ff6f2391a"
+      },
+      {
+        "path": "docs/projects/archive/architectural-truth/AT10032026-ATG10/VERIFICATION.json",
+        "sha256": "77036077c90c7bf56be4921971eb30f89c63fc397627634ac0bd9b004a39e1a7"
+      },
+      {
+        "path": "docs/specs/LOG_WRITE_SETTLEMENT.md",
+        "sha256": "c70d31a0c2352d87b6096344ca9e9d5a6cdc273a6d064d18b41e712fd925bba2"
+      },
+      {
+        "path": "pyproject.toml",
+        "sha256": "346e0e6c5ba6692bb1c2e54f20f0e17192048836b25d90217f877703cdf040a1"
+      }
+    ],
+    "exact_files_touched_by_this_audit": [
+      ".tmp/atg10-windows-final-reuse-audit.json"
+    ],
+    "limits": [
+      "Read-only input reuse and metadata preservation proof; no source, installed/public-path, fixture or provider campaign was repeated.",
+      "Accepted live proof remains the ATG09 source run and previously audited retained installed/provider scopes; unchanged hashes do not expand those scopes.",
+      "The malformed child shard origin/content and six pre-existing unreported namespace files remain disclosed limits; measured 89.21575503742372% is separate from static zero-hit 89.06315642066937%.",
+      "This is a point-in-time pre-freeze audit. The primary may embed this audit in ATG10 verification and must freeze/check final metadata afterward.",
+      "No ATG10 final metadata/release check, atomic publication, remote identity or clean-worktree witness is certified by this audit. Completion remains conditional on those primary-owned actions."
+    ],
+    "issues": [],
+    "exact_current_delta_from_both_accepted_freezes": {
+      "changed": [
+        {
+          "path": "CHANGELOG.md",
+          "before_sha256": "9c6222226a1746167ebab4df953f3250e7bb926ddd1f8cafad3875a7454ef009",
+          "after_sha256": "2b6483b4d4daab1021aa82e9d17b9333465b46fc6f509095c4ba8597aad1059d"
+        },
+        {
+          "path": "docs/CONTRIBUTOR.md",
+          "before_sha256": "edf0fb08b449b6b825193020d20b17e136b02672e4e4baa425ecc8b45001d48d",
+          "after_sha256": "74b06df4a11f46bf0c69ad592fc921580aa1e3df9607107cd182980817860d5a"
+        },
+        {
+          "path": "docs/ROADMAP.md",
+          "before_sha256": "e6d715b77cea24716e14aeef1b089dbe5043e9f7f83a31dde3bce9f14c4134bf",
+          "after_sha256": "9f1a97a033bd52c0c3de83b704c11528330207ef911d7e989f41db3802f1c030"
+        },
+        {
+          "path": "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
+          "before_sha256": "1964cfcdf40b449e449ae9eb9d70183fdd3f8f376ca7eb823fc11d17fc727351",
+          "after_sha256": "05d197fad8f09156196f907ce4a0790ee93e2174e14c792dcc336e0f3f580d4b"
+        },
+        {
+          "path": "docs/projects/architectural-truth/ARCHITECTURE_EXCEPTION_REGISTER.json",
+          "before_sha256": "6424c95e367af464b82dda1b53fc2cf7ec7ca6977cea076931d473d59ccbceea",
+          "after_sha256": "545e1c575c733826b252a5b97430625fd87f92309d38a482296fe391dc3dd057"
+        },
+        {
+          "path": "docs/projects/architectural-truth/GOAL_WORKSETS.json",
+          "before_sha256": "4665a33b80076c21cfb3952dca8ad19a9cfe5a0a1b9618757f9864163f8ec109",
+          "after_sha256": "50cd1a0f53640f13d089b377428f37e571ccd8b6760198b33943e24651f4f5c0"
+        },
+        {
+          "path": "docs/projects/architectural-truth/README.md",
+          "before_sha256": "acdfe34e54a168d608cd798c25ef2be09f14486262438146044b62e8eeaf97c1",
+          "after_sha256": "1f8341846a1630dc18c85434e7d9e59e972fc0c43d3d736c0882a0924faebff0"
+        },
+        {
+          "path": "docs/specs/LOG_WRITE_SETTLEMENT.md",
+          "before_sha256": "e77568159d6aaa8c384997ed878e8ceaa978c0c202d3977870eb5866af32b127",
+          "after_sha256": "c70d31a0c2352d87b6096344ca9e9d5a6cdc273a6d064d18b41e712fd925bba2"
+        },
+        {
+          "path": "pyproject.toml",
+          "before_sha256": "4d4601b9667765048204677453d70b0f48b0b1d42fad3dbd9ee85779dde69dad",
+          "after_sha256": "346e0e6c5ba6692bb1c2e54f20f0e17192048836b25d90217f877703cdf040a1"
+        }
+      ],
+      "added": [
+        {
+          "path": "docs/projects/archive/architectural-truth/AT10032026-ATG09/CLOSEOUT.md",
+          "sha256": "f2de9dfa076101372574e55dddc8b059a43f10135146be509997cc81df206c01"
+        },
+        {
+          "path": "docs/projects/archive/architectural-truth/AT10032026-ATG09/VERIFICATION.json",
+          "sha256": "8642cdb9e77644376adfc01ec981fcfbbf7acaf17986022c8d11b280d8bb3379"
+        },
+        {
+          "path": "docs/projects/archive/architectural-truth/AT10032026-ATG10/CLOSEOUT.md",
+          "sha256": "306283d812e85dd28083eaa3a6294172501df0f4165346443dd8b14ff6f2391a"
+        },
+        {
+          "path": "docs/projects/archive/architectural-truth/AT10032026-ATG10/VERIFICATION.json",
+          "sha256": "77036077c90c7bf56be4921971eb30f89c63fc397627634ac0bd9b004a39e1a7"
+        }
+      ],
+      "removed": []
+    }
+  }
+}

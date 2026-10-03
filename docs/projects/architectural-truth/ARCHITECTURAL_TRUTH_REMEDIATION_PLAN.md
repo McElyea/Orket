@@ -1,12 +1,12 @@
 # Architectural Truth: Executable Goal Queue
 
 Last updated: 2026-10-03 (America/Denver)
-Status: Windows ATG-09 evidence accepted; v0.6.143 publication and ATG-10 remain
+Status: Active umbrella; bounded Windows ATG-v1 result reconciled for v0.6.144 publication
 Queue: ATG-v1 — ten goals; Windows-only scope amended by the user on 2026-10-03
 Owner: Orket Core
 Worktree: `C:/Source/Orket-architectural-truth`
 Branch: `codex/architectural-truth-bt0`
-Next goal: **ATG-10**, after verified ATG-09 publication
+Next goal: **None after verified ATG-10 v0.6.144 publication**
 
 ## Purpose and authority
 
@@ -51,7 +51,8 @@ The verification-contract amendment is recorded in
 - Preserve earlier successes, failures and missing evidence in the exact
   [pre-amendment plan](../archive/architectural-truth/AT10032026-WINDOWS-SCOPE/PLAN_BEFORE_WINDOWS_SCOPE.md)
   and the workset history. Only this plan's current card and resume record govern
-  execution. Eight goals remain complete; the amendment does not close ATG-09/10.
+  execution. At amendment time eight goals were complete; the amendment itself
+  did not close ATG-09/10. Their later accepted results are recorded below.
 
 ## Preserved starting point
 
@@ -103,16 +104,17 @@ do not repeat the 73-minute suite solely to restate this starting point.
 | ATG-06 | Clear canonical typing debt in bounded batches | ATG-02 through ATG-05 | complete: `52b45773` / `v0.6.123` |
 | ATG-07 | Restore the unchanged 89% coverage gate | ATG-02 through ATG-06 | complete: `1e5ce56f` / `v0.6.124` |
 | ATG-08 | Verify fresh Windows packages and public paths | ATG-07 | complete: `b7ab34bb` / `v0.6.125` |
-| ATG-09 | Complete Windows quality and provider proof | ATG-08 | Windows evidence accepted; completes with v0.6.143 publication |
-| ATG-10 | Reconcile and publish the bounded revamp result | ATG-01 through ATG-09 | ready after verified v0.6.143 publication |
+| ATG-09 | Complete Windows quality and provider proof | ATG-08 | complete: `f0551120` / `v0.6.143` |
+| ATG-10 | Reconcile and publish the bounded revamp result | ATG-01 through ATG-09 | reconciled; complete at verified `v0.6.144` publication |
 
 ## Goal cards
 
 ATG-01's [closeout](../archive/architectural-truth/AT10012026-ATG01/CLOSEOUT.md)
-and [frozen worksets](GOAL_WORKSETS.json) bind the current evidence and 67 pending
-batches across ATG-02 through ATG-06. These are inventory/evidence, not a second
-execution plan. The 207 historical async rows are reconciled individually;
-typing remains 415 diagnostics in 170 files. Later goals retain their fixed gates.
+and [frozen worksets](GOAL_WORKSETS.json) retain the original 67-batch inventory
+across ATG-02 through ATG-06 and its now-closed dispositions. The original 415
+typing diagnostics in 170 files are historical; canonical Mypy now passes. All 207
+historical async rows retain their scoped reconciliations. This inventory is not
+a second execution plan. The cards preserve the original acceptance contracts.
 
 ### ATG-01 — Reconcile evidence and freeze the remaining worksets
 
@@ -153,7 +155,8 @@ as such; actual model inference remains ATG-09 proof.
 ATG-02 scoped source proof: [closeout](../archive/architectural-truth/AT10012026-ATG02/CLOSEOUT.md)
 and [receipt](../archive/architectural-truth/AT10012026-ATG02/VERIFICATION.json).
 The final selection passes 150 cases; native structural gates and publication
-pass. Later quality and installed/provider gates stay open.
+pass. Later quality and installed/provider gates were open at that checkpoint;
+ATG-09 now supplies the accepted current Windows scopes.
 
 ### ATG-03 — Finish already-inventoried required log producers
 
@@ -174,7 +177,8 @@ closes by evidence, not by manufacturing replacement work.
 ATG-03 scoped source proof: [closeout](../archive/architectural-truth/AT10012026-ATG03/CLOSEOUT.md)
 and [receipt](../archive/architectural-truth/AT10012026-ATG03/VERIFICATION.json).
 All five frozen sites pass the 251-case combined selection and native structural
-gates. Annotated checkpoint publication passes; later queue gates remain open.
+gates. Annotated checkpoint publication passes; the later Windows gates are
+now accepted by ATG-09 at their stated scopes.
 
 ### ATG-04 — Close the other frozen D ownership/input defects
 
@@ -264,8 +268,10 @@ ATG-08 installed proof: [closeout](../archive/architectural-truth/AT10012026-ATG
 and [receipt](../archive/architectural-truth/AT10012026-ATG08/VERIFICATION.json).
 Fresh Windows Python 3.11.14 and 3.12.2 cells each pass 6,231 cases with zero failures
 and three unchanged Gitea opt-in skips. Exact case identity, installed package bytes,
-source and harness inputs remain unchanged. Atomic publication and clean readback
-are verified at `b7ab34bb` / `v0.6.125`.
+source and harness inputs were bound to that original checkpoint. Atomic
+publication and clean readback are verified at `b7ab34bb` / `v0.6.125`. ATG-09
+reconciles the later reload repair as 6,236 passes / 3 skips per interpreter;
+original and replacement cases are not added wholesale.
 
 ### ATG-09 — Complete Windows quality and provider proof
 
@@ -319,8 +325,8 @@ ATG-09 Windows proof: [closeout](../archive/architectural-truth/AT10032026-ATG09
 and [verification](../archive/architectural-truth/AT10032026-ATG09/VERIFICATION.json).
 The current full suite passes 12,987 cases with 93 unchanged skips and
 89.21575503742372% combined coverage. Local structural gates pass; retained
-installed/provider evidence is hash-bound and reusable. Publication closes
-this goal only when its matching v0.6.143 branch/tag readback succeeds.
+installed/provider evidence is hash-bound and reusable. The matching v0.6.143
+branch/tag readback and clean worktree succeeded; ATG-10 retains that exact witness.
 
 ### ATG-10 — Reconcile and publish the bounded revamp result
 
@@ -401,64 +407,83 @@ input, not a Linux/runner prerequisite.
 
 ## Resume record
 
-- Current card/batch: **ATG-09 acceptance/publication -> ATG-10**. Eight predecessor
-  goals are published. Verified `v0.6.143` publication makes **9 of 10 complete**;
-  ATG-10 starts immediately after that witness succeeds.
-- Source candidate: `a6b99e575682d9b721983381e75f80402c8018d2` / `v0.6.142`, plus
-  the prelaunch plan receipt link. The 5,746-input freeze stayed unchanged.
-  `.tmp/atg09-windows-quality.json` records the completed native Python 3.11.14
-  run: **12,987 passed, 0 failed, 93 skipped, 3 pytest warnings** plus one retained coverage merge warning, **89.21575503742372%**
-  combined statement/branch coverage. Owner/pytest processes settled; all 5,820
-  sampled descendant identities were absent at readback. Raw outputs remain in
-  `.tmp/atg09-windows-quality/A01/`; this is mixed-layer source execution, not
-  whole-product proof. Existing assertions, deadlines, skips and floor are intact.
-- Measurement limits: one malformed child coverage shard was discarded; no
-  execution from it is credited. Six pre-existing namespace files remain outside
-  default unexecuted-source discovery in both old and current reports. The
-  configured 1,216-file report selection is unchanged; complete capture of every
-  child or Git-visible file is not claimed. Exact paths, warning and shard hash
-  remain in `.tmp/atg09-windows-quality-audit.json` and the tracked verification.
-  Separate static confidence analysis adds all six omitted files (133 statements
-  and 38 branches) with zero execution credit: 89,040 / 99,974 = 89.06315642066937%,
-  still above 89%. This does not change or replace the observed coverage report.
-- `.tmp/atg09-windows-local-checks.json` records canonical Ruff, dependency,
-  strict taxonomy (13,080 items) and critical no-op success. Mypy remains valid
-  by the exact input audit in `.tmp/atg10-windows-reconciliation-audit.json`.
-  Structural gates do not execute general product behavior.
-- `.tmp/atg09-windows-resume-evidence-audit.json` binds reusable Windows 3.11/3.12
-  installed composites (**6,236 passes / 3 unchanged skips each**), the **119-case**
-  fixture proof and actual llama.cpp completion/interaction-cancellation/caller-
-  cancellation with original iterator/client/response/transport settlement.
-  Runtime/artifacts remain `v0.6.136`; fixture inputs remain `v0.6.140`. Packaging
-  differs only by version metadata. No installed/provider campaign was repeated.
-- ATG-09 tracked closeout: `../archive/architectural-truth/AT10032026-ATG09/`.
-  Final metadata/release validation: `.tmp/atg09-windows-closeout-checks.json`.
-  Publication witness: `.tmp/atg09-windows-closeout-publication.json`, matching
-  annotated `v0.6.143`, remote branch/tag identities and clean worktree. The
-  receipt is mutable until publication finishes; inspect it before any retry.
-- Next exact action: finish/verify the ATG-09 metadata checks and v0.6.143 atomic
-  branch/tag publication, then reconcile the finite worksets, exception register,
-  proof limits and roadmap under ATG-10; publish its separate patch checkpoint.
-  Reuse the accepted full suite while runtime/test/configuration inputs match.
-- Remaining blockers or drift: no Windows acceptance blocker is known. ATG-10
-  and its publication remain open. Broader transitive C/D/E findings, marshaller
-  process ownership, grounding residue normalization and compatibility windows
-  remain separate debt. General current-authority runtime proof stays unavailable.
-  Linux/Mac, hosted Quality, API/installed-provider and remote-server teardown
-  are not established; retired failed/absent evidence remains unchanged history.
-- This resumed session began 2026-10-03T21:45:57Z. The two-day planning cutoff is
-  2026-10-05T21:45:57Z, subject to an earlier verified downgrade time; no billing
-  timestamp is inferred. No Linux/WSL, runner or infrastructure work is admitted.
+- Current checkpoint: **ATG-10 / v0.6.144**. ATG-01 through ATG-09 are
+  complete; **10 of 10 complete only after verified v0.6.144 publication**.
+  No executable goal remains after that witness. This is the bounded Windows
+  queue result, not whole-lane retirement or whole-product conformance.
+- ATG-09 is accepted and published: commit
+  `f05511206f676b894313e9e39669971de0382aa7`, annotated `v0.6.143` object
+  `123fefd8131a2cadbeefbee31f55607217b1063d`. Atomic push, exact remote branch/tag
+  and peeled commit identities, and clean worktree were verified before ATG-10.
+  Its actual publication and seven final checks (including 17 release passes)
+  are retained in the [ATG-10 verification](../archive/architectural-truth/AT10032026-ATG10/VERIFICATION.json).
+- Current source proof is the native Windows Python 3.11.14 run bound to
+  `a6b99e575682d9b721983381e75f80402c8018d2` / v0.6.142 plus the prelaunch plan link:
+  **12,987 passed / 0 failed / 93 unchanged skips**, 3 pytest warnings and one
+  coverage merge warning; **89.21575503742372%** combined coverage at floor 89.
+  All 5,746 frozen inputs remained unchanged. Owner/pytest settled and all 5,820
+  sampled descendants were absent. Raw evidence: `.tmp/atg09-windows-quality.json`
+  and `.tmp/atg09-windows-quality/A01/`; tracked scope/hashes:
+  [ATG-09 verification](../archive/architectural-truth/AT10032026-ATG09/VERIFICATION.json).
+- Coverage limits: one malformed child shard was discarded; six pre-existing
+  namespace files remain outside default unexecuted-source discovery. The same
+  1,216 files appear in old/current reports. Separate static analysis adds all six
+  omitted files (133 statements + 38 branches) with zero hits:
+  **89,040 / 99,974 = 89.06315642066937%**. This does not replace measured proof or
+  establish complete child capture. The exact paths, hashes and warning remain
+  tracked in the ATG-09 audit. No exclusions, deadlines, assertions or skips changed.
+- Fresh Ruff, dependency, strict taxonomy (13,080 items) and critical no-op gates
+  pass. Canonical Mypy reuse is bound to unchanged relevant inputs. Windows 3.11/
+  3.12 installed composites retain **6,236 passes / 3 skips each**; source fixture
+  proof retains **119 passes / 0 skips**. Actual llama.cpp library completion,
+  interaction cancellation and caller cancellation retain original iterator/
+  response/client/transport settlement. Runtime/artifacts remain v0.6.136; fixture
+  proof remains v0.6.140. Only release/evidence/status metadata changed afterward.
+- Finite reconciliation: all **67** ATG-02/03/04/05/06 batches (**2/4/9/3/49**)
+  are closed; all **207** historical rows retain their original scoped dispositions
+  (16 not-open, 188 satisfied by retained scoped proof, 3 satisfied by scoped proof).
+  All three named hotspots, 27 coverage batches and seven coverage reconciliations
+  retain their accepted records. No denominator or new executable goal was added.
+- Closed C/D/E scope: canonical dependency/authority/checker and typing gates;
+  frozen model-stream, five required-producer and nine other ownership/input
+  families; the three named E2 roots; unchanged-floor Windows coverage; scoped
+  Windows packages/public paths and actual llama.cpp library flows. The
+  [bounded closeout](../archive/architectural-truth/AT10032026-ATG10/CLOSEOUT.md)
+  binds predecessor links, compatibility duties and limitations.
+- Compatibility stays binding: source `main.py`/hidden `--rock` through 0.6.x
+  until an explicit 0.7.0 delta; replay diagnostics wrapper; latest verification
+  artifact; flat runtime aliases with unassigned removal version; current event
+  taxonomy and ReviewRun/path specifics. No new shim or removal is authorized.
+- Remaining blockers or drift: no required Windows behavior gate is red.
+  General current-authority runtime proof stays unavailable. Broader transitive
+  C/D/E and callback/plugin claims, marshaller subprocess cancellation/descendant/
+  environment ownership and ResponseParser whitespace/grounding residue remain
+  debt. Linux/Mac, hosted Quality, API/installed-provider execution, live Docker
+  sandbox and remote inference/server teardown remain unverified. The selected
+  llama.cpp server is operator-owned; no provider switch or infrastructure action
+  occurred. Historical failed/missing outcomes remain unchanged.
+- Final validation/publication witnesses: `.tmp/atg10-windows-closeout-checks.json`
+  and `.tmp/atg10-windows-closeout-publication.json`. Completion requires all final
+  docs/authority/install/release checks and 17 existing release cases to pass,
+  matching annotated **v0.6.144**, atomic branch/tag push, exact remote identities
+  and a clean worktree. The matching tag identifies this checkpoint immutably;
+  a future branch may advance. Inspect the stable receipt before retrying any
+  interrupted publication. Current metadata is frozen during final validation.
+- Next exact action: verify those final witnesses. Once successful, stop this
+  queue; do not activate maintenance, deferred findings or new capabilities.
+  Reopen only for an explicit scoped user request. The umbrella remains active.
+- Session kickoff: 2026-10-03T21:45:57Z; planned cutoff: 2026-10-05T21:45:57Z
+  subject to any earlier verified downgrade time. No billing timestamp is inferred.
 
 ## Reusable goal prompt
 
 ```text
-Verify the ATG-09 v0.6.143 branch/tag publication in the canonical resume record,
-then complete ATG-10 in C:\Source\Orket-architectural-truth on
-codex/architectural-truth-bt0 without another task prompt. Reuse the accepted
-Windows source, installed and llama.cpp proof at matching inputs. Reconcile only
-the fixed queue, preserve broader debt/compatibility and publish the final bounded
-closeout separately. Do not run Linux/WSL/hosted campaigns or merge main.
+Verify the canonical final ATG-v1 resume record and matching v0.6.144 publication.
+If its atomic push, remote identities and clean-worktree witness succeeded, the
+bounded Windows queue is 10/10 and has no next executable goal. Preserve its
+broader limitations and compatibility duties; do not reopen work without an
+explicit scoped request. If publication was interrupted, inspect its exact stable
+receipt and current refs before resuming only that unfinished authorized action.
 ```
 
 ## Historical reference anchors
