@@ -5,6 +5,17 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.135] - 2026-10-03
+
+### Fixed
+- Give provider readiness logging tests private model inventory metadata so they retain real admission without depending on host model installations.
+- Keep hosted coverage data in its absolute ignored output directory while preserving the coverage command and normalization guard.
+- Produce the required hosted gate dashboard from actual command outcomes before its readiness audit; retain missing and failed evidence as failures.
+- Preserve prior hosted failures and passing native repair/sandbox proof; complete hosted Quality acceptance remains pending.
+- `compatibility_status`: `preserved`
+- `affected_audience`: `all`
+- `migration_requirement`: `none`
+
 ## [0.6.134] - 2026-10-03
 
 ### Fixed

@@ -63,6 +63,15 @@ async def test_standalone_provider_retry_keeps_real_logging(tmp_path, monkeypatc
     for key in ("ORKET_LLM_OPENAI_API_KEY", "ORKET_MODEL_STREAM_OPENAI_API_KEY",
                 "ORKET_LLM_LLAMA_CPP_API_KEY", "ORKET_LLAMA_CPP_API_KEY"):
         monkeypatch.setenv(key, "")
+    if caller.endswith("readiness"):
+        # Exercise real catalog admission independently of host model installations.
+        models = tmp_path / "models"
+        await asyncio.to_thread(models.mkdir)
+        await asyncio.to_thread(
+            (models / (model_for(caller) + ".gguf")).write_bytes,
+            b"admission inventory fixture; no model inference",
+        )
+        monkeypatch.setenv("ORKET_LLAMA_CPP_GGUF_MODEL_ROOT", str(models))
     later = tmp_path / "later"
     await asyncio.to_thread(later.mkdir)
     headers, posts = [], []

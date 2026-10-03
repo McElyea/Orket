@@ -13902,7 +13902,7 @@
   },
   "platform_worksets": {
     "goal": "ATG-09",
-    "status": "active: hosted prerequisite repair verified; complete Quality pending",
+    "status": "active: hosted portability prerequisites verified; full Quality pending",
     "current_batch": "ATG09-P01 existing hosted Gitea runner prerequisite",
     "candidate_commit": "b7ab34bba7d76a146cf4782c8522681de22ac544",
     "candidate_tag": "v0.6.125",
@@ -13935,8 +13935,8 @@
     "remaining": [
       "Existing hosted Gitea Ubuntu/Windows runners and required Quality jobs at the published fixture-repaired checkpoint."
     ],
-    "external_prerequisites": "Gitea28 access and prepared native Linux/Windows tools are available. Original temporary registrations were removed on time. User explicitly added two hours; re-register only these scoped runners, stop admission07:48:22UTC and finish cleanup07:53:22UTC.",
-    "next_action": "Publish v0.6.134, push this repaired committed candidate to existing Gitea PR1, cancel out-of-workset companion workflows, execute all11 Quality jobs as A06 with frozen source/helpers. Admission cutoff07:48:22UTC and cleanup07:53:22UTC remain fixed. Close ATG09 only on full live acceptance and cleanup, then ATG10.",
+    "external_prerequisites": "Gitea28 and private native tools available. Registrations14/15 removed after A06 failure. User explicitly granted two further hours through09:53:22UTC; runner admission stops09:48:22UTC.",
+    "next_action": "Publish v0.6.135, renew only existing scoped native runners under second user extension, push this candidate to existing Gitea PR1, execute all11 Quality jobs as A07 with frozen source/helpers. Admission09:48:22UTC, cleanup09:53:22UTC. Preserve original failures and reuse unchanged local proof. ATG10 remains dependent.",
     "probe_limits": "Interpreter version probes succeeded. The first combined shell command failed only its uv lookup due to quote stripping; no uv availability was established by that command.",
     "clock_result": {
       "path": "blocked",
@@ -14584,7 +14584,9 @@
       "A04": ".tmp/atg09-hosted-attempts/A04.json",
       "A04_result": "Five prior job results reused exactly. Architecture core gate:15failed1831passed1skipped, all failures at process-group cleanup under delayed orphan reaping. Sandboxcancelled, dependentskipped; no full Quality acceptance.",
       "A05": ".tmp/atg09-hosted-attempts/A05.json",
-      "A05_result": "Unchanged candidate core gate1846passed1skipped after native reaping repair; architecture and five later jobs deliberately cancelled after independently confirmed remaining Docker/fixture prerequisites. Not full hosted acceptance."
+      "A05_result": "Unchanged candidate core gate1846passed1skipped after native reaping repair; architecture and five later jobs deliberately cancelled after independently confirmed remaining Docker/fixture prerequisites. Not full hosted acceptance.",
+      "A06": ".tmp/atg09-hosted-attempts/A06.json",
+      "A06_result": "Five jobs pass; architecture logging gate4failed273passed1skipped because undeclared host GGUF inventory was absent. Core1846passed1skipped retained. Remaining jobs skipped/cancelled; all owners and registrations14/15 removed."
     },
     "hosted_window_checkpoint": {
       "status": "terminal environment blocker",
@@ -14755,6 +14757,111 @@
           "pyproject.toml"
         ]
       }
+    },
+    "hosted_ci_portability_repair": {
+      "status": "complete: local prerequisites verified",
+      "batch": "ATG09-P01",
+      "paths": [
+        ".gitea/workflows/quality.yml",
+        "tests/integration/test_script_provider_logging.py"
+      ],
+      "obligation": "Route coverage data into one absolute ignored CI output so the unchanged normalization guard sees no generated tracked-binary drift. Supply readiness logging cases with private portable GGUF inventory metadata before provider input capture, retaining real target admission and controlled HTTP behavior.",
+      "constraints": "Preserve exact coverage command/floor89, line-ending guard, all test assertions, deadlines, skips, provider selections and fixed queue. Inventory markers are metadata fixtures, not usable model weights or inference proof. Do not change production/provider code.",
+      "proof_scope": "Native Windows/Linux logging/catalog fixture proof and existing coverage controls; isolated coverage-output/normalization counterexample and repair. Native Docker sandbox and gate evidence flow pass separately. Full hosted Quality remains required.",
+      "infrastructure_deadline_utc": "2026-10-03T09:53:22Z",
+      "requested_extension": "Approved by explicit user instruction; see runner_second_extension.",
+      "cleanup_receipt": ".tmp/atg09-hosted-extended-window-close.json",
+      "extension_request": "Approved explicitly by user; second extension recorded in runner_second_extension.",
+      "clock_receipt": ".tmp/atg09-persistent-clock.json",
+      "clock_receipt_sha256": "d74c6af20637be269b1b16fac7ccad048931b52398559e3a7fb853a99c63ee6f",
+      "receipt_sha256": {
+        ".tmp/atg09-ci-portability-py311.json": "7321878acb09ed092705be0b022ea686fe3c6ac65ab137deb72a28d5f8534a54",
+        ".tmp/atg09-ci-portability-py312.json": "9278e4b10aeaf04a4486d43a143297fe20e428fe8c49d2f6bf4f3b8e0fce35e6",
+        ".tmp/atg09-ci-portability-linux.json": "3a3ad558da1f40cf0f5b476c111357879adf6f3f3278611ed294fa673eb20339",
+        ".tmp/atg09-coverage-output-probe.json": "15b5165b19def7dfd97675c3a97b601fab87b02ec5f6305638c49a5e973b2d02",
+        ".tmp/atg09-sandbox-preflight.json": "e31f1f957993e102fe3a09c813fe3d4da3bb7809c7bd8af9df16d2b1638a8962",
+        ".tmp/atg09-hosted-attempts/A06.json": "0c861f0e2dc5a9a86de1f3f078570de4ebd856e29a894b371f7e71ceea279c5b",
+        ".tmp/atg09-hosted-A06-audit.json": "a178f94cc2cee09518d52b12e18b8a8f471bf13afaa8d6dd454117e99191672b",
+        ".tmp/atg09-hosted-extended-window-close.json": "2fc9d9a3980a8456c82225d11ee0c0ab4c7ed4d96c61a1a79056024a87e9c629",
+        ".tmp/atg09-final-local-reuse-audit.json": "546f3588e05c64df5b5e6b5cf67b635bcc8279b6441163481957260d6b430685",
+        ".tmp/atg09-prerequisite-publication.json": "1720486826f69fdc515f6415ad6a38785d27d875065416e4db4a9c69473e6d7e",
+        ".tmp/atg09-gate-evidence-proof.json": "18590d6ff414d3c3ed8429d975c0daca62c20709ab6faa87dbc8acf70c2e6362",
+        ".tmp/atg09-quality-recorder-controls.json": "fbeb79f02fbf7d71258b8e1581386af211305aeee4e2e0c73daacc69720e664c",
+        ".tmp/atg09-runner-renewal.json": "8c87ac6d66b4f035ba819bd4bfaa2af91972d2d234ceb8aaf66194b886772122",
+        ".tmp/atg09-gate-evidence-attempts/A01.json": "125c9a11a9fb7d7a90d12580c0a3b000b88fc5345ce5eb67ea0e30a09178adb0",
+        ".tmp/atg09-gate-evidence-attempts/A02.json": "2a217a967560b9fd028fb269c4c6fd5165b8a44292cf479fdd981cf94e9c2804"
+      },
+      "checkpoint": {
+        "version": "0.6.135",
+        "base_commit": "cdc84c406494b9bb508cc254c9fe0b045476e867",
+        "directory": ".tmp/atg09-ci-portability-checkpoint",
+        "checks_receipt": ".tmp/atg09-ci-portability-checks.json",
+        "publication_receipt": ".tmp/atg09-ci-portability-publication.json",
+        "paths": [
+          ".gitea/workflows/quality.yml",
+          "CHANGELOG.md",
+          "docs/CONTRIBUTOR.md",
+          "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
+          "docs/projects/architectural-truth/GOAL_WORKSETS.json",
+          "docs/projects/architectural-truth/README.md",
+          "pyproject.toml",
+          "scripts/ci/record_quality_gate.py",
+          "tests/scripts/test_record_quality_gate.py",
+          "tests/integration/test_script_provider_logging.py"
+        ]
+      }
+    },
+    "sandbox_preflight": {
+      "status": "complete: primary / success; thirteen cases, no skips",
+      "scope": "First native preflight of the already-required sandbox_docker_acceptance flow; does not establish hosted job acceptance.",
+      "receipt": ".tmp/atg09-sandbox-preflight.json",
+      "helper": ".tmp/atg09-sandbox-preflight.py",
+      "test_command": "python -m pytest -q tests/acceptance/test_sandbox_orchestrator_live_docker.py tests/acceptance/test_sandbox_runtime_recovery_live_docker.py tests/acceptance/test_sandbox_orphan_reconciliation_live_docker.py tests/acceptance/test_sandbox_restart_reclaim_live_docker.py tests/acceptance/test_sandbox_terminal_evidence_cleanup_live_docker.py tests/acceptance/test_sandbox_cleanup_leak_gate.py tests/acceptance/test_sandbox_cleanup_claim_race.py tests/acceptance/test_sandbox_store_outage_fail_closed.py",
+      "leak_gate": "python scripts/ci/sandbox_leak_gate.py",
+      "environment": {
+        "ORKET_RUN_SANDBOX_ACCEPTANCE": "1",
+        "ORKET_DISABLE_SANDBOX": "1",
+        "ORKET_SANDBOX_LEAK_ALLOWLIST": ""
+      },
+      "authorization_deadline_utc": "2026-10-03T09:53:22Z",
+      "latest_test_stop_utc": "2026-10-03T07:58:22Z",
+      "process_ceiling_seconds": 720,
+      "cleanup": "Same-path native process settlement, exact test-owned Docker teardown, then live managed-resource absence. Preserve partial/failure outcomes and refuse full hosted claims.",
+      "inputs": "Frozen fresh tracked-source copy including declared CI portability repairs; no source or runner-helper edits during proof.",
+      "receipt_sha256": "e31f1f957993e102fe3a09c813fe3d4da3bb7809c7bd8af9df16d2b1638a8962",
+      "owners_settled": true
+    },
+    "runner_second_extension": {
+      "status": "authorized; inactive supervisor deadlines updated; registration pending",
+      "user_direction": "add 2 additional hours for the infra lift",
+      "authorization_deadline_utc": "2026-10-03T09:53:22Z",
+      "admission_cutoff_utc": "2026-10-03T09:48:22Z",
+      "scope": "Existing Gitea and temporary native runner prerequisite only; no main merge or provider switch. Test deadlines, clock thresholds, assertions and skips unchanged.",
+      "prior_cleanup_receipt": ".tmp/atg09-hosted-extended-window-close.json",
+      "renewal_receipt": ".tmp/atg09-runner-renewal.json",
+      "renewal_receipt_sha256": "8c87ac6d66b4f035ba819bd4bfaa2af91972d2d234ceb8aaf66194b886772122",
+      "registration_receipt": ".tmp/atg09-second-window-registration.json",
+      "cleanup_receipt": ".tmp/atg09-hosted-second-window-close.json",
+      "helper_archive": ".tmp/atg09-hosted-attempts/helpers-before-09-extension",
+      "next_hosted_campaign": "A07"
+    },
+    "hosted_gate_evidence_repair": {
+      "status": "complete: native prerequisite proof",
+      "batch": "ATG09-P01",
+      "paths": [
+        "scripts/ci/record_quality_gate.py",
+        "tests/scripts/test_record_quality_gate.py",
+        ".gitea/workflows/quality.yml",
+        "docs/CONTRIBUTOR.md"
+      ],
+      "obligation": "A fresh hosted checkout has no ignored TD03052026 hardening dashboard or evidence producer before the mandatory readiness audit. Record actual existing gate command outcomes and evidence within the job before that unchanged audit.",
+      "constraints": "Preserve all exact gate commands, assertions, --require-ready, floor89, deadlines and skips. Do not synthesize green states, reuse foreign or stale results, or grant G6/G7 proof from absent evidence. This repairs a required hosted prerequisite within the fixed queue.",
+      "proof": "Native missing-dashboard refusal, actual G1-G5 commands and unchanged readiness audit pass. Original harness retains46passes/3authored one-shot skips and its failed no-skip assertion. Exact3case opt-in followup passes; scopedRuff passes. Composite targeted proof, never a full hosted claim.",
+      "receipt": ".tmp/atg09-gate-evidence-proof.json",
+      "helper": ".tmp/atg09-gate-evidence-proof.py",
+      "process_limits": "At most300seconds per native command and600seconds for each owned proof phase after admission; observed phases finish within these limits. Initial source admission has no independent outer watchdog. Original test and CI limits remain unchanged.",
+      "receipt_sha256": "18590d6ff414d3c3ed8429d975c0daca62c20709ab6faa87dbc8acf70c2e6362",
+      "followup_helper": ".tmp/atg09-gate-evidence-followup.py"
     }
   }
 }

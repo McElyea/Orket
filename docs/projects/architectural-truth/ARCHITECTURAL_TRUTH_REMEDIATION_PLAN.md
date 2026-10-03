@@ -302,19 +302,21 @@ counterexample and does not change parser/grounding behavior or add a new goal.
 
 - Current card/batch: **ATG-09 / ATG09-P01**. **8 of 10 goals complete**.
   Available local installed/provider acceptance is complete; required hosted Gitea
-  Quality remains blocked. ATG-10 stays dependent. User authorized resumption and
+  Quality remains incomplete. ATG-10 stays dependent. User authorized resumption and
   repair/update of both existing local blockers. The later one-hour infrastructure
-  exception was extended by the user by **two additional hours**, ending
-  **2026-10-03 07:53:22 UTC**; runner admission stops **07:48:22 UTC**.
-  The original runners were already removed before renewal. No provider switch or main merge.
-- Checkpoint: **v0.6.134** repairs the hosted fixture output directories and
-  runtime image prerequisites. It is based on published v0.6.133 commit
-  `3d470e4be0da3664542e31281756a855371629a9`, annotated tag object
-  `0f8bd62a247ba67548b34cf6b28ef4792f135721`. Verify checks/publication receipts
-  `.tmp/atg09-prerequisite-checks.json` and `.tmp/atg09-prerequisite-publication.json`,
-  remote identities and clean worktree. A06 must execute the new committed workflow
-  and Docker candidate. Prior v0.6.131 hosted results remain historical evidence;
-  accepted v0.6.125 local runtime proof retains its recorded composite limits.
+  exception received two explicit two-hour extensions, most recently the user's
+  instruction "add 2 additional hours for the infra lift". The current deadline is
+  **2026-10-03 09:53:22 UTC**; runner admission stops **09:48:22 UTC**.
+  Registrations 14/15 were removed after A06; renewal is pending. No provider switch or main merge.
+- Checkpoint: **v0.6.135** repairs hosted logging fixture portability, coverage
+  output placement and production of the mandatory gate dashboard from actual
+  command outcomes. Base is published v0.6.134 commit
+  `cdc84c406494b9bb508cc254c9fe0b045476e867`, annotated tag object
+  `5de71aad015378e33cf1709663ab6464a93e8a51`. Verify
+  `.tmp/atg09-ci-portability-checks.json` and
+  `.tmp/atg09-ci-portability-publication.json`, remote identities and clean worktree.
+  A07 requires all eleven jobs on this new committed candidate. Accepted local
+  runtime proof remains bound to v0.6.125 and its recorded composite limits.
 - Local software: official llama.cpp **b11146 / 7fe450e19**, CUDA 12.4, is installed
   at `D:/llama.cpp-releases/b11146`; older copies remain. The existing GGUF serves
   `orcarouter_qwen3.8-27b-uncensored-q4_k_l` at `http://127.0.0.1:8080/v1`.
@@ -473,13 +475,57 @@ counterexample and does not change parser/grounding behavior or add a new goal.
   smoke bodies pass from absent directories. Initial Docker permission failure is
   preserved. Worksets bind `.tmp/atg09-prerequisite-docker.json`, its `-R02` and `-R03`
   receipt and `.tmp/atg09-prerequisite-smokes.json` without claiming full hosted proof.
-- Next exact action: publish this checkpoint and push the committed candidate to
-  existing Gitea PR 1. Execute all eleven required Quality jobs as **A06**, preserving
-  prior evidence and binding source/native helper hashes. Registrations **14/15**
-  currently exist with stopped daemons. Admission cutoff **07:48:22 UTC** and absolute
-  cleanup **07:53:22 UTC** remain unchanged. Reuse accepted local proof; close ATG-09
-  only after all eleven jobs pass and native/resource teardown is verified, then
-  continue dependent ATG-10. Do not merge PR 1 or change providers.
+- Hosted A06: v0.6.134, PR 1, run 475 passes the four OS/Python matrix jobs
+  and docs. Architecture passes its core step (**1,846 passed / one skip**) and
+  later fails logging preparation (**four failed / 273 passed / one skip**): four
+  readiness cases depend on an undeclared host GGUF inventory. All original logs,
+  failure assertions and source/helper freezes remain in
+  `.tmp/atg09-hosted-attempts/A06.json` and `.tmp/atg09-hosted-A06-audit.json`.
+  Remaining jobs were skipped/cancelled. Native owners settled and registrations
+  **14/15** plus their private registration files were removed; live Docker
+  resources were absent. `.tmp/atg09-hosted-extended-window-close.json` proves
+  cleanup before the preceding 07:53:22 UTC deadline.
+- Portability repair: the readiness fixtures now supply a private metadata-only
+  GGUF inventory before actual provider admission. They still use controlled HTTP;
+  these are not inference tests. Windows Python 3.11/3.12 each pass all 22 logging
+  cases; Windows 3.11 also passes 34 workflow/subprocess-coverage controls. Linux
+  3.11 passes 26 cases and 3.12 passes 22. All have zero failures/skips, absent host
+  inventory, unchanged frozen inputs and settled native owners. Receipts are
+  `.tmp/atg09-ci-portability-{py311,py312,linux}.json`. This logging file is outside
+  the 627-file installed selection; accepted installed proof is reused unchanged.
+- Coverage output now uses absolute ignored `.tmp/quality/.coverage`. The exact
+  command, branch configuration, floor 89 and normalization guard are preserved.
+  `.tmp/atg09-coverage-output-probe.json` records an actual isolated counterexample
+  (tracked binary dirtied) and correction (same measured lines, clean index).
+  That output-mechanics proof is not full product coverage acceptance.
+- Missing hosted gate input: a fresh checkout has no ignored TD03052026 dashboard.
+  The workflow now records actual existing G1-G5 command outcomes before the
+  unchanged readiness audit. Failed, absent or stale results cannot grant readiness;
+  G6/G7 remain unproven. `.tmp/atg09-gate-evidence-proof.json` retains native
+  command/result and exact workflow evidence. The initial copy preparation failed
+  before gates because native checkout materialized historical symlinks differently;
+  its receipt/helper remain under `.tmp/atg09-gate-evidence-attempts/`. The corrected
+  copy uses the frozen Windows byte representation. A02 then records 46 passing
+  controls and three existing one-shot skips; its harness fails the no-skip check.
+  A scoped followup uses the documented opt-in to pass exactly those three cases,
+  followed by Ruff. This is composite targeted proof; the original A02 failure is
+  preserved. Owned phases and commands finish within their recorded limits; initial
+  source admission has no independent outer watchdog. Full hosted acceptance is still required.
+- Native sandbox prerequisite: all eight authored files yield **13 passes, zero
+  failures/skips**, then the authored leak gate passes. Source/copy/helper bytes
+  remain unchanged, processes settle, and live readback finds no managed containers,
+  networks, volumes or sandbox projects. Gitea remains running. Receipt:
+  `.tmp/atg09-sandbox-preflight.json`. This is live prerequisite proof, not a hosted
+  job result. Its stable raw log and JUnit paths/hashes remain in the receipt.
+- Second renewal: the user explicitly added two further hours after A06 cleanup.
+  Existing runner tools may be renewed, with admission ending **09:48:22 UTC** and
+  absolute cleanup **09:53:22 UTC**. Preserve prior helpers before deadline changes.
+  All test/clock thresholds, deadlines, assertions and skip rules stay unchanged.
+- Next exact action: publish this checkpoint, renew only the scoped native runners
+  and push the candidate to existing Gitea PR 1. Execute all eleven required Quality
+  jobs as **A07**, with frozen source/helpers and retained original failures. Close
+  ATG-09 only after full acceptance and native/resource teardown, then continue
+  dependent ATG-10. Do not merge PR 1 or change providers.
 - Remaining blockers or drift: complete hosted Gitea Quality is absent; ATG-09/10 and whole
   campaign completion are not claimed. ATG-07's 12,964 passes / 93 skips / 89.213132%
   combined coverage remain bound to unchanged production inputs, with affected

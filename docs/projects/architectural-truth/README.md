@@ -9,12 +9,13 @@ canonical implementation plan and resume record for ten fixed goals. **Eight goa
 are complete; ATG-09 local installed/provider acceptance is complete, while required
 hosted Gitea Quality proof remains pending. ATG-10 remains dependent.**
 The [workset inventory](GOAL_WORKSETS.json) binds sources, receipts and frozen batches.
-Checkpoint v0.6.134 repairs hosted fixture directories and runtime Docker SDK,
-permissions and routine sandbox-disable prerequisites, with targeted live proof.
-A05 recovered the core boundary gate (1,846 passes, one skip), but full Quality
-remains pending A06. Scoped runners are authorized through 07:53:22 UTC. Prior
-runner teardown and failed attempts are retained. v0.6.131 repairs install
-convergence; v0.6.130 updates existing Gitea to 28.0.0. The v0.6.129
+Checkpoint v0.6.135 repairs hosted logging fixture portability, coverage output
+placement and mandatory gate evidence production, with bounded native proof.
+The native Docker lifecycle selection passes all 13 cases and its leak gate.
+A06 retains its four logging failures; full Quality remains pending A07.
+The user's second extension authorizes scoped infrastructure through 09:53:22 UTC.
+Earlier runners and their resources were removed. Gitea 28.0.0 remains running.
+The v0.6.129
 checkpoint repairs a reload-test marker publication race and records local acceptance: 64 scoped installed rechecks refresh affected Linux/Windows evidence,
 the persistent WSL clock repair passes its unchanged prerequisite, and actual
 llama.cpp public-library completion/cancellation proof passes. Runtime artifacts

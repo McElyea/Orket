@@ -475,18 +475,25 @@ jobs:
         run: |
           python -m pytest -q tests/interfaces/test_api_kernel_lifecycle.py
 
+      - name: Verify gate evidence recording
+        run: |
+          python -m pytest -q tests/scripts/test_record_quality_gate.py tests/scripts/test_check_td03052026_gate_audit.py
+
+      - name: Record install convergence gate evidence
+        run: |
+          python scripts/ci/record_quality_gate.py --gate G1 -- python scripts/governance/check_install_surface_convergence.py
+
       - name: Enforce launcher safety defaults
         run: |
-          python -m pytest -q tests/interfaces/test_server_launcher.py
+          python scripts/ci/record_quality_gate.py --gate G2 -- python -m pytest -q tests/interfaces/test_server_launcher.py
 
       - name: Enforce lifecycle subscriber non-duplication
         run: |
-          python -m pytest -q tests/interfaces/test_api_lifecycle_subscribers.py
+          python scripts/ci/record_quality_gate.py --gate G3 -- python -m pytest -q tests/interfaces/test_api_lifecycle_subscribers.py
 
       - name: Enforce provider close contract
         run: |
-          python -m pytest -q tests/application/test_orchestrator_epic.py -k closes_provider_per_turn_across_repeated_cycles
-          python -m pytest -q tests/adapters/test_local_model_provider_telemetry.py -k close_is_idempotent
+          python scripts/ci/record_quality_gate.py --gate G4 -- python -m pytest -q tests/application/test_orchestrator_epic.py -k closes_provider_per_turn_across_repeated_cycles --next python -m pytest -q tests/adapters/test_local_model_provider_telemetry.py -k close_is_idempotent
 
       - name: Enforce API composition isolation
         run: |
@@ -494,7 +501,7 @@ jobs:
 
       - name: Enforce workspace logging isolation
         run: |
-          python -m pytest -q tests/runtime/test_logging_isolation.py
+          python scripts/ci/record_quality_gate.py --gate G5 -- python -m pytest -q tests/runtime/test_logging_isolation.py
 
       - name: Enforce TD03052026 gate audit readiness
         run: |
@@ -651,7 +658,11 @@ jobs:
 
       - name: Run tests with coverage
         # Floor is set 5pts above the observed 83.94% baseline. See docs/internal/COVERAGE_DEBT.md.
-        run: pytest tests/ --cov=orket --cov-config=pyproject.toml --cov-fail-under=89
+        env:
+          COVERAGE_FILE: ${{ github.workspace }}/.tmp/quality/.coverage
+        run: |
+          mkdir -p .tmp/quality
+          pytest tests/ --cov=orket --cov-config=pyproject.toml --cov-fail-under=89
 
       - name: Ruff lint
         run: ruff check orket tests

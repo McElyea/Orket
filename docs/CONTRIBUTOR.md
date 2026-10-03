@@ -205,6 +205,14 @@ Contract: `docs/specs/QUALITY_CHECKER_CONTRACT.md`.
 The Quality coverage command is `pytest tests/ --cov=orket --cov-config=pyproject.toml --cov-fail-under=89`.
 Keep the explicit configuration path so native children launched from other
 directories retain the authored branch measurement. The 89-percent floor remains.
+Hosted coverage writes to the absolute ignored `.tmp/quality/.coverage` path so
+the unchanged normalization guard does not stage generated coverage data.
+Hosted architecture gates use `scripts/ci/record_quality_gate.py` to execute the
+existing G1-G5 commands and write current command results, logs and the required
+TD03052026 dashboard before its unchanged `--require-ready` audit. Missing, stale
+or failed evidence remains red; G6/G7 gain no proof from this recorder. Its native
+subprocess controls run before the recorded gates. Outputs stay under the stable
+`benchmarks/results/techdebt/td03052026/` root and use the rerun diff ledger.
 The architectural baseline's size collector uses that inventory too. Retain its
 complete oversized lists and nested-function context for no-growth comparisons;
 inclusive parent/child spans overlap and cannot be summed as independent defects.
