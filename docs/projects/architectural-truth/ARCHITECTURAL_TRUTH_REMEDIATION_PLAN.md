@@ -301,22 +301,20 @@ counterexample and does not change parser/grounding behavior or add a new goal.
 ## Resume record
 
 - Current card/batch: **ATG-09 / ATG09-P01**. **8 of 10 goals complete**.
-  Available local installed/provider acceptance is complete; required hosted Gitea
-  Quality remains incomplete. ATG-10 stays dependent. User authorized resumption and
+  Historical local acceptance remains bound to v0.6.125. The v0.6.136 reload
+  repair still needs both Linux refresh cells and full hosted Gitea Quality.
+  ATG-10 stays dependent. User authorized resumption and
   repair/update of both existing local blockers. The later one-hour infrastructure
   exception received two explicit two-hour extensions, most recently the user's
   instruction "add 2 additional hours for the infra lift". The current deadline is
   **2026-10-03 09:53:22 UTC**; runner admission stops **09:48:22 UTC**.
-  Registrations 14/15 were removed after A06; renewal is pending. No provider switch or main merge.
-- Checkpoint: **v0.6.135** repairs hosted logging fixture portability, coverage
-  output placement and production of the mandatory gate dashboard from actual
-  command outcomes. Base is published v0.6.134 commit
-  `cdc84c406494b9bb508cc254c9fe0b045476e867`, annotated tag object
-  `5de71aad015378e33cf1709663ab6464a93e8a51`. Verify
-  `.tmp/atg09-ci-portability-checks.json` and
-  `.tmp/atg09-ci-portability-publication.json`, remote identities and clean worktree.
-  A07 requires all eleven jobs on this new committed candidate. Accepted local
-  runtime proof remains bound to v0.6.125 and its recorded composite limits.
+  Registrations 16/17 and all A07 native owners are now removed after terminal failure. No provider switch or main merge.
+- Checkpoint: **v0.6.136** repairs demonstrated reload signal-lock reentry.
+  Published base is v0.6.135 commit `1ddbab57dda276aa07b60043076a0d14132d250f`,
+  annotated tag object `0aad4866b386828ab34d30dff46d831205f38540`.
+  Verify `.tmp/atg09-reload-checks.json`, `.tmp/atg09-reload-publication.json`,
+  branch/tag remote identities and clean worktree. This is a partial checkpoint;
+  ATG-09 and ATG-10 remain incomplete.
 - Local software: official llama.cpp **b11146 / 7fe450e19**, CUDA 12.4, is installed
   at `D:/llama.cpp-releases/b11146`; older copies remain. The existing GGUF serves
   `orcarouter_qwen3.8-27b-uncensored-q4_k_l` at `http://127.0.0.1:8080/v1`.
@@ -324,10 +322,11 @@ counterexample and does not change parser/grounding behavior or add a new goal.
   `D:/llama.cpp-releases/orket-server/`. Server PID 33276 is operator owned and was
   intentionally left running. Update/readiness receipts are `.tmp/atg09-llama-update.json`
   and `.tmp/atg09-llama-repair-proof.json`; inspect live process/health before reuse.
-- Clock repair: Windows Time was started and synchronized to its existing
+- Historical clock repair: Windows Time was started and synchronized to its existing
   `time.windows.com` source, with backed-up network-start/stop service policy.
   Ubuntu's duplicate `systemd-timesyncd` is now **disabled and inactive**, while
-  existing WSL PHC synchronization and genuine `NTPSynchronized=yes` remain.
+  existing WSL PHC synchronization was observed. R02's later synchronization
+  refusal remains a current blocker; earlier success is not a stability guarantee.
   `.tmp/atg09-clock-service-persistent.json` retains the exact change and reversal
   (`systemctl enable --now systemd-timesyncd.service` inside Ubuntu).
   Persistence through an actual Ubuntu restart is verified; Windows reboot and
@@ -521,20 +520,100 @@ counterexample and does not change parser/grounding behavior or add a new goal.
   Existing runner tools may be renewed, with admission ending **09:48:22 UTC** and
   absolute cleanup **09:53:22 UTC**. Preserve prior helpers before deadline changes.
   All test/clock thresholds, deadlines, assertions and skip rules stay unchanged.
-- Next exact action: publish this checkpoint, renew only the scoped native runners
-  and push the candidate to existing Gitea PR 1. Execute all eleven required Quality
-  jobs as **A07**, with frozen source/helpers and retained original failures. Close
-  ATG-09 only after full acceptance and native/resource teardown, then continue
-  dependent ATG-10. Do not merge PR 1 or change providers.
+- Hosted A07: published **v0.6.135 / 1ddbab57dda276aa07b60043076a0d14132d250f**,
+  PR 1 run **483**, passes the four platform jobs and docs. Architecture core records
+  **one failure / 1,845 passes / one skip**. The held-request reload returns HTTP 200
+  and publishes request-completed and closed markers; its worker logs completed
+  application shutdown, but the launcher exceeds the unchanged exit and teardown
+  waits and requires forced cleanup. No original hung-process stack was retained.
+  `.tmp/atg09-hosted-attempts/A07.json`, `A07-close.json`,
+  `.tmp/atg09-hosted-A07-audit.json` and `.tmp/atg09-A07-reload-evidence/receipt.json`
+  preserve original logs, fixture bytes, freeze checks and live cleanup. Four jobs
+  are dependency-skipped and sandbox is cancelled, never passed. Registrations16/17,
+  their private files and native owners are absent; owned Docker resources are absent.
+- Reload diagnostic: two actual signal-under-lock cases reproduce parent and worker
+  deadlocks, while two free-lock controls return. Exact stacks and complete owned
+  teardown are retained in `.tmp/atg09-A07-reload-evidence/signal-reentry-diagnostic.json`.
+  All four finish in 18.670363s; the activity bound is 23s plus canonical settlement,
+  with an observed 30s total limit and no independent hard outer watchdog. Relevant
+  native/source/helper bytes and the complete Git-visible map remain unchanged.
+- Reload repair v0.6.136: parent and worker handlers latch stop requests;
+  existing normal control flow consumes them without changing startup, join,
+  failure, finalization or forced-stop policy. Source native controls pass four
+  cases each on Windows/Linux Python3.11; canonical Mypy and scoped Ruff pass.
+  Fresh core sdist/wheel differ only in the runtime file and exact version metadata;
+  all member inventories and RECORD hashes pass independent audit. SDK artifacts
+  are reused unchanged. The initial build readback omitted a generated PKG-INFO
+  metadata path; its failure is retained, the comparator is corrected, and the
+  same artifacts pass without a repeated build.
+- Fresh installed R02: Windows Python 3.11 and 3.12 each pass all 21 cases, exact
+  installed origins/dependencies/native signal controls, source/helper freezes and
+  owned teardown. Linux 3.11 passes 21 tests but the final genuine clock bracket is
+  `NTPSynchronized=no`; its result remains an environment blocker. Linux 3.12 was
+  not launched. Later healthy readbacks and no observed 10 ms clock jump do not
+  convert the failed bracket into acceptance. All launched owners are terminal.
+  Receipts: `.tmp/atg09-reload-repair-{win-py311,win-py312,linux-py311}.json`
+  and their launch receipts; `.tmp/atg09-reload-installed-audit.json` retains
+  independent readback. Original assertions, deadlines and skip rules are unchanged.
+- Evidence reuse: `.tmp/atg09-reload-prerequisite-audit.json` and
+  `.tmp/atg09-reload-reuse-audit.json` verify artifacts and relevant inputs.
+  The old 627 selected files are unchanged; 16 reload rows are replaced and the
+  bootstrap plus four signal cases add five rows. Accepted Windows composites are
+  6,236 passes/three unchanged skips per interpreter. Linux's corresponding
+  6,230-pass/nine-skip totals are conditional and unaccepted. All 434 imported
+  provider modules and retained live provider evidence are unchanged; that flow
+  did not import the changed reload module. Old whole-wheel and complete source
+  coverage proof remain historical; full hosted coverage of at least 89% is mandatory.
+- Clock diagnosis: `.tmp/atg09-reload-clock-diagnosis.json` identifies a
+  possible host-sync/kernel-maximum-error interaction, without event-attributed
+  cause or a justified controller-disable change. Official stable WSL 3.0.1's x64
+  installer is retained at `D:/Orket-WSL-Releases/wsl.3.0.1.0.x64.msi`; Microsoft
+  Authenticode and official SHA256 passed. Windows cancelled the elevation request;
+  no installer, service stop, environment change or new clock qualification ran.
+  WSL remains 2.6.3.0. `.tmp/atg09-wsl-update-preparation.json` retains exact identity.
+  Required input: user response before another administrator prompt. Primary must
+  coordinate quiet native owners and graceful Gitea/Docker shutdown, install with
+  no automatic Windows reboot, restore and verify existing services, then declare
+  unchanged clock qualification. The latest release is not an advertised specific
+  clock fix. The prepared elevated helper refuses installation without primary
+  quiescence and a ten-minute reserve before 09:53:22 UTC; do not bypass that guard.
+- Live handoff readback: `.tmp/atg09-reload-handoff.json` confirms Gitea28.0.0
+  healthy on the existing container, unchanged main, empty repository/admin runner
+  registrations and absent prior runner owners/private files. A07 jobs are terminal;
+  llama.cpp health is `ok` with the recorded model. Health is not a new acceptance
+  campaign. The remaining window is insufficient to admit the full eleven-job
+  hosted refresh with its existing limits and cleanup reserve; the requested
+  extension remains unanswered. No A08 run or new runner registration was started.
+  R02 source and helper freezes ended after native owners and independent readback
+  settled. Checkpoint-only metadata changes do not refresh Linux runtime evidence;
+  a later Linux attempt needs an explicit new freeze and successful clock binding.
+- Next exact action: obtain the pending user response to the cancelled Windows
+  administrator prompt and infrastructure extension before dependent work.
+  Preserve the Linux R02 refusal and prepared installer; do not repeat the prompt
+  or a campaign while these inputs are absent. Publish this partial checkpoint.
+  Another qualification requires demonstrated environment change, retaining the
+  60s quiet/240s ceiling/10ms/280s outer limits. Refresh both Linux repair cells
+  only after that gate; do not repeat accepted Windows/provider campaigns.
+  Full hosted Quality on the published candidate remains independently required.
+  Current runner admission 09:48:22 UTC and cleanup 09:53:22 UTC remain binding; a
+  further extension request is pending. Close ATG-09 only after all evidence and
+  publication requirements, then continue ATG-10. No provider switch or main merge.
 - Remaining blockers or drift: complete hosted Gitea Quality is absent; ATG-09/10 and whole
   campaign completion are not claimed. ATG-07's 12,964 passes / 93 skips / 89.213132%
-  combined coverage remain bound to unchanged production inputs, with affected
-  fixture behavior refreshed by R01. Historical source/harness maps contain one
+  combined coverage remain historical after the reload runtime change; fresh hosted
+  coverage is required. Earlier fixture behavior was refreshed by R01. Historical source/harness maps contain one
   unrelated PDF path-label encoding discrepancy; the retained correct build snapshot
   and content hash match. Preserve those receipts. The earlier API timing outlier
   remains unexplained; its unchanged assertion passed the accepted final source run.
   Deferred findings remain outside the fixed queue, and current-authority structural
   checks do not establish general current-runtime proof.
+  A review accidentally overwrote the original supporting clock diagnosis without
+  preserving its bytes. Its expected SHA256 remains
+  `0d1ebe392d50565a316925e07e10453a4d18df866caa20ded38b3ea9d474095c`;
+  bounded recovery found no copy. `.tmp/atg09-clock-diagnosis-binding-drift.json`
+  identifies the broken historical binding and preserved current diagnosis.
+  Both service-change receipts and A05 clock/report/log/identity/helper hashes still
+  match their original bindings. Do not reconstruct or claim the missing snapshot.
 
 ## Reusable goal prompt
 

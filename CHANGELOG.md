@@ -5,6 +5,16 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.136] - 2026-10-03
+
+### Fixed
+- Keep API reload signal handlers free of Event locks and consume cooperative stop requests in normal worker/supervisor flow.
+- Preserve worker join, startup, repeated-signal and finalization behavior; add native signal-under-lock controls to both hosted Quality selections.
+- Retain the failed hosted run and native deadlock counterexamples. Both fresh Windows cells pass; the Linux clock bracket and full hosted Quality remain unresolved.
+- `compatibility_status`: `preserved`
+- `affected_audience`: `all`
+- `migration_requirement`: `none`
+
 ## [0.6.135] - 2026-10-03
 
 ### Fixed

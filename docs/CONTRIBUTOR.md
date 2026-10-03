@@ -545,7 +545,10 @@ alongside the server reload cases: cooperative worker handlers remain installed
 through the serving loop, then native signal-ignore handlers remain through
 interpreter teardown. The parent still joins the worker, and a failed finalizer
 must fail the launcher. Retain both multiprocessing and interpreter-finalization
-signal controls.
+signal controls. Both Quality selections also retain native signal-under-lock
+controls: handlers latch requests without acquiring Event locks, normal watcher
+flow consumes them, and a stop during join prevents replacement. Existing reload
+assertions, waits and skip rules remain unchanged.
 Scoped source/installed proof and the remaining
 repository-wide verification limits remain in the architectural-truth plan.
 

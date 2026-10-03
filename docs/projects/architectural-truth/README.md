@@ -6,19 +6,20 @@ Owner: Orket Core
 
 The [executable goal queue](ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md) is the single
 canonical implementation plan and resume record for ten fixed goals. **Eight goals
-are complete; ATG-09 local installed/provider acceptance is complete, while required
-hosted Gitea Quality proof remains pending. ATG-10 remains dependent.**
+are complete; ATG-09 needs the repaired Linux installed cells and full hosted
+Gitea Quality. Historical provider proof remains reusable. ATG-10 remains dependent.**
 The [workset inventory](GOAL_WORKSETS.json) binds sources, receipts and frozen batches.
-Checkpoint v0.6.135 repairs hosted logging fixture portability, coverage output
-placement and mandatory gate evidence production, with bounded native proof.
-The native Docker lifecycle selection passes all 13 cases and its leak gate.
-A06 retains its four logging failures; full Quality remains pending A07.
+Checkpoint v0.6.136 repairs demonstrated reload signal-lock reentry. Eight native
+source controls and both fresh Windows21-case installed cells pass. Linux3.11
+passes21 tests but fails its final clock bracket; Linux3.12 is unlaunched. Artifact
+and relevant-input audits pass, while full hosted coverage and Quality remain open.
+A07's original reload-launcher exit failure and all prior observations are retained.
 The user's second extension authorizes scoped infrastructure through 09:53:22 UTC.
 Earlier runners and their resources were removed. Gitea 28.0.0 remains running.
 The v0.6.129
 checkpoint repairs a reload-test marker publication race and records local acceptance: 64 scoped installed rechecks refresh affected Linux/Windows evidence,
 the persistent WSL clock repair passes its unchanged prerequisite, and actual
-llama.cpp public-library completion/cancellation proof passes. Runtime artifacts
+llama.cpp public-library completion/cancellation proof passes. Those historical runtime artifacts
 remain v0.6.125; composite evidence preserves the original Linux failure and all
 unchanged assertions, deadlines and skips. The canonical plan contains exact proof
 limits, publication receipts and the runner admission and remaining hosted proof needed to resume.

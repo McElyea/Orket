@@ -1,6 +1,6 @@
 # API Runtime Lifecycle
 
-Last updated: 2026-10-01
+Last updated: 2026-10-03
 Status: Active
 
 `orket.application.services.api_runtime_container.ApiRuntimeContainer` owns the
@@ -49,26 +49,27 @@ Direct container fixtures/embeddings supply an explicitly prepared value. Contra
 `docs/specs/LOG_WRITE_SETTLEMENT.md`.
 
 The canonical reload launcher retains Uvicorn's selected file watcher and spawned
-worker. Its supervisor requests shutdown through a process-shared event and joins
-the worker before replacement. The worker waits for startup before requesting
-normal server shutdown; repeated console signals request the same cooperative
-close instead of escalating to a lifespan-skipping exit. Parent shutdown retains
-the worker and listener cleanup. The dedicated worker retains cooperative signal
-handlers throughout the server loop. After that loop settles, it ignores handled
-signals natively through multiprocessing and interpreter finalization. CPython
-resets callable Python handlers during interpreter teardown; native ignore survives
-that reset. The parent still joins the worker, and a nonzero finalizer exit still
-makes the launcher fail. This adds no hard-stop deadline: startup or cleanup
-that never settles can hold the supervisor. The finalization correction has current
-Windows source console-signal proof; fresh installed and Linux finalization proof
-remain open. Earlier installed Windows/Linux Python 3.11/3.12 observations pass
-real StatReload, active-work, interruption and failure paths. Complete Linux 3.12
-cohort acceptance remains blocked by native
-wall-clock discontinuities in governed-agent tests. Windows source also
-exercises Uvicorn 0.27.0 and 0.52.4.
-These observations do not cover all intermediate versions or optional watcher
-backends; the private Uvicorn integration still requires compatibility review
-when dependencies change.
+worker. Parent and worker signal handlers only latch a local stop request: acquiring
+an Event condition from a handler can deadlock when the signal interrupts the same
+lock. Normal supervisor flow publishes the watcher event before or after its pause;
+the existing worker observation task consumes its local latch or the parent's shared
+Event. Startup finishes before normal server shutdown is requested. Repeated signals
+retain cooperative cleanup without a lifespan-skipping forced exit.
+
+The supervisor joins the old worker before replacement and refuses replacement when
+a stop was latched during that join. Parent shutdown retains worker and listener
+cleanup. The dedicated worker retains cooperative handlers throughout the server
+loop, then ignores handled signals natively through multiprocessing and interpreter
+finalization. Native ignore survives CPython's reset of callable handlers. The parent
+still joins the worker; a nonzero finalizer exit still fails the launcher. No hard-stop
+deadline is added: startup or cleanup that never settles can hold the supervisor.
+
+Historical source and installed observations remain bound to their original runtime
+bytes. The ATG-09 canonical plan records the signal-reentry counterexamples, affected
+fresh-package refresh and remaining hosted acceptance. The original hosted hang has
+no retained blocked stack, so the demonstrated lock defect does not prove its exact
+cause. Live observations use StatReload; optional watcher backends retain a separate
+compatibility proof obligation when dependencies change.
 Lifespan startup or shutdown failure makes the worker exit unsuccessfully. The
 supervisor observes unexpected worker exit and refuses replacement after failed
 cleanup; it closes its listener and reports failure to the launcher. The launcher

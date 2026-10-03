@@ -30,6 +30,7 @@ class _ReloadServer(uvicorn.Server):
     def __init__(self, config: uvicorn.Config, stop: Event) -> None:
         super().__init__(config)
         self._stop = stop
+        self._signal_stop = False
 
     def run(self, sockets: list[socket] | None = None) -> None:
         # This server runs only in the dedicated reload worker. Keep cooperative
@@ -46,16 +47,16 @@ class _ReloadServer(uvicorn.Server):
                 signal.signal(sig, signal.SIG_IGN)
 
     def handle_exit(self, sig: int, frame: FrameType | None) -> None:
-        # A console signal may coincide with a parent's IPC stop. Both request
-        # normal shutdown; neither escalates to Uvicorn's lifespan-skipping exit.
-        self._stop.set()
+        # A signal may interrupt the shared Event's non-reentrant lock.
+        # Latch locally; the serving task observes the request without locking here.
+        self._signal_stop = True
 
     async def serve(self, sockets: list[socket] | None = None) -> None:
         async def observe_stop() -> None:
             # Older supported Uvicorn versions skip shutdown when should_exit is
             # set during startup. Finish startup before requesting its normal close.
             # A process-shared Event cannot be replaced by a loop-local asyncio.Event.
-            while not self.started or not self._stop.is_set():  # noqa: ASYNC110
+            while not self.started or not (self._signal_stop or self._stop.is_set()):  # noqa: ASYNC110
                 await asyncio.sleep(0.05)
             self.should_exit = True
 
@@ -74,6 +75,20 @@ class _ReloadSupervisor(ChangeReload):
     def __init__(self, config: uvicorn.Config, server: _ReloadServer, sockets: list[socket], stop: Event) -> None:
         super().__init__(config, target=server.run, sockets=sockets)
         self._stop, self._closed = stop, False
+        self._signal_stop = False
+
+    def signal_handler(self, sig: int, frame: FrameType | None) -> None:
+        # The inherited handler acquires the same Event lock used by pause().
+        # Only latch here; publish to the watcher event from ordinary control flow.
+        self._signal_stop = True
+
+    def pause(self) -> None:
+        if self._signal_stop:
+            self.should_exit.set()
+        super().pause()
+        if self._signal_stop:
+            self.should_exit.set()
+            raise StopIteration()
 
     def _stop_worker(self) -> None:
         self._stop.set()
@@ -84,7 +99,7 @@ class _ReloadSupervisor(ChangeReload):
     def restart(self) -> None:
         self._stop_worker()
         self._check_worker_success()
-        if self.should_exit.is_set():
+        if self._signal_stop or self.should_exit.is_set():
             return
         self._stop.clear()
         self.process = get_subprocess(config=self.config, target=self.target, sockets=self.sockets)

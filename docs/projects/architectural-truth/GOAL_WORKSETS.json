@@ -34,7 +34,7 @@
       "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
       "docs/projects/architectural-truth/ARCHITECTURE_EXCEPTION_REGISTER.json",
       "docs/projects/architectural-truth/README.md",
-      "docs/projects/archive/Companion/CP03092026-MVP-CLOSEOUT/Building a Web Frontend for Chat + Lip\u00c3\u00a2\u00e2\u201a\u00ac\u00e2\u20ac\u02dcSynced Avatar Connected to a Python Backend.pdf",
+      "docs/projects/archive/Companion/CP03092026-MVP-CLOSEOUT/Building a Web Frontend for Chat + LipÃ¢â‚¬â€˜Synced Avatar Connected to a Python Backend.pdf",
       "pyproject.toml"
     ],
     "reused_test_counts": {
@@ -10125,144 +10125,6 @@
   ],
   "diff_ledger": [
     {
-      "run_at_utc": "2026-10-01T22:11:55.745085Z",
-      "changed": true,
-      "before_digest": "sha256:96bcaec8fbdc2673488e425aa5238ca37413c429b19104d78b09081aa3821082",
-      "after_digest": "sha256:0ed2744ca459e50416b56e76179fbcb30f132acda9f78028e9dd825fd9c20577",
-      "diff": {
-        "added_paths": 3,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 16331,
-        "paths_total_current": 17610,
-        "paths_total_reference": 17610,
-        "churn_paths": 4,
-        "churn_ratio": 0.000227,
-        "sample_paths": [
-          "$.diff_ledger",
-          "$.coverage_worksets.reconciliation[5].closing_selection",
-          "$.coverage_worksets.reconciliation[5].diagnostic_recorder_failure",
-          "$.coverage_worksets.reconciliation[5].native_probe.sha256"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-10-01T22:14:02.000977Z",
-      "changed": true,
-      "before_digest": "sha256:ec92e71d2e02b37bf82173346d5d539da46e321c1ece66c66f40447c6fc38548",
-      "after_digest": "sha256:0af00016534d480aaf4f29445d0e3dcbd6ec6e419c686b9b2ca81ae9d9b14610",
-      "diff": {
-        "added_paths": 4,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 16335,
-        "paths_total_current": 17634,
-        "paths_total_reference": 17634,
-        "churn_paths": 5,
-        "churn_ratio": 0.000284,
-        "sample_paths": [
-          "$.diff_ledger",
-          "$.coverage_worksets.reconciled_candidate_campaign",
-          "$.coverage_worksets.reconciliation[5].native_closing",
-          "$.coverage_worksets.reconciliation[5].source_after",
-          "$.coverage_worksets.reconciliation[5].status"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-10-01T23:45:54.864218Z",
-      "changed": true,
-      "before_digest": "sha256:4d3d45e65bd09c44bd20dd986eed8c99bc10178209b52bf66d24bc62ffab1e12",
-      "after_digest": "sha256:2b2c1d84cd977fe8a67b887ef7596976b5e6f26bb1f562350486cf01e637c1d1",
-      "diff": {
-        "added_paths": 3,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 16369,
-        "paths_total_current": 17749,
-        "paths_total_reference": 17749,
-        "churn_paths": 4,
-        "churn_ratio": 0.000225,
-        "sample_paths": [
-          "$.diff_ledger",
-          "$.coverage_worksets.reconciled_candidate_campaign.readback",
-          "$.coverage_worksets.reconciled_candidate_campaign.status",
-          "$.coverage_worksets.reconciliation"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-10-01T23:47:24.767282Z",
-      "changed": true,
-      "before_digest": "sha256:e65a5a9576ed67bc04296c655c0679d6a611758a2c9fb19e1559bb369ceb33af",
-      "after_digest": "sha256:df98e84bc24101241d06f8b0b165f787f03daa0035bfb430c18aedf5e811a01d",
-      "diff": {
-        "added_paths": 3,
-        "removed_paths": 0,
-        "changed_paths": 0,
-        "initial_write": false,
-        "paths_total_previous": 16494,
-        "paths_total_current": 17766,
-        "paths_total_reference": 17766,
-        "churn_paths": 3,
-        "churn_ratio": 0.000169,
-        "sample_paths": [
-          "$.diff_ledger",
-          "$.coverage_worksets.reconciled_candidate_campaign.warnings",
-          "$.coverage_worksets.reconciliation[6].native_probe"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-10-01T23:50:20.622079Z",
-      "changed": true,
-      "before_digest": "sha256:a94f16b99d896e0412d9311f7c5bf76685873b3fdd7f04c304c7e4d3bac85323",
-      "after_digest": "sha256:26972e0ac49118205bea0824a23f4663cf9af6079e492b0b7ae2653d9c6fcf52",
-      "diff": {
-        "added_paths": 5,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 16521,
-        "paths_total_current": 17769,
-        "paths_total_reference": 17769,
-        "churn_paths": 6,
-        "churn_ratio": 0.000338,
-        "sample_paths": [
-          "$.diff_ledger",
-          "$.coverage_worksets.reconciliation[6].api_diagnostic",
-          "$.coverage_worksets.reconciliation[6].native_closing_selection",
-          "$.coverage_worksets.reconciliation[6].native_counterexample",
-          "$.coverage_worksets.reconciliation[6].repair",
-          "$.coverage_worksets.reconciliation[6].status"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-10-01T23:50:22.440576Z",
-      "changed": true,
-      "before_digest": "sha256:7997ee4dfc068d37c840f2ef0c35af112f82636c5a4209283499fb9544a73f21",
-      "after_digest": "sha256:382b6edff1692f8fb56a6198c478789ac60c54fab1dfdb02e6d16debac0823c7",
-      "diff": {
-        "added_paths": 2,
-        "removed_paths": 0,
-        "changed_paths": 0,
-        "initial_write": false,
-        "paths_total_previous": 16532,
-        "paths_total_current": 17785,
-        "paths_total_reference": 17785,
-        "churn_paths": 2,
-        "churn_ratio": 0.000112,
-        "sample_paths": [
-          "$.diff_ledger",
-          "$.coverage_worksets.reconciliation[6].api_native_probe"
-        ]
-      }
-    },
-    {
       "run_at_utc": "2026-10-01T23:51:25.141434Z",
       "changed": true,
       "before_digest": "sha256:fa8d4a3611e2c6f4a51cc12cd69b960728ab1e9d8f417915cf9c33afd6bf80f5",
@@ -10918,6 +10780,176 @@
           "$.platform_worksets.remaining[0]",
           "$.platform_worksets.remaining",
           "$.platform_worksets.status"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-03T08:39:40.624760Z",
+      "changed": true,
+      "before_digest": "sha256:296bb2a2b65b1eefaa0bfd44158c55132ff0eabc6f305be9ce51b1cea0157355",
+      "after_digest": "sha256:979728b5c52578f03a57489b88b6a2232ba593cebf52a18bacc7f64fae2b2946",
+      "diff": {
+        "added_paths": 4,
+        "removed_paths": 0,
+        "changed_paths": 2,
+        "initial_write": false,
+        "paths_total_previous": 20873,
+        "paths_total_current": 22247,
+        "paths_total_reference": 22247,
+        "churn_paths": 6,
+        "churn_ratio": 0.00027,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.platform_worksets.hosted_reload_shutdown_repair",
+          "$.platform_worksets.hosted_attempts.A07",
+          "$.platform_worksets.hosted_attempts.A07_result",
+          "$.platform_worksets.next_action",
+          "$.platform_worksets.runner_second_extension.status"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-03T08:49:59.459393Z",
+      "changed": true,
+      "before_digest": "sha256:324fecf1a9d2c8c808c15093cd3e9d878265561bcd04df5929a09863d3f5849f",
+      "after_digest": "sha256:4365e683ec16d627622d1f623b33244dbed55eca11d078cb8056f1342378e3cd",
+      "diff": {
+        "added_paths": 5,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "initial_write": false,
+        "paths_total_previous": 20922,
+        "paths_total_current": 22259,
+        "paths_total_reference": 22259,
+        "churn_paths": 5,
+        "churn_ratio": 0.000225,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.platform_worksets.hosted_reload_shutdown_repair.diagnostic_budget_scope",
+          "$.platform_worksets.hosted_reload_shutdown_repair.diagnostic_helper",
+          "$.platform_worksets.hosted_reload_shutdown_repair.diagnostic_helper_sha256",
+          "$.platform_worksets.hosted_reload_shutdown_repair.diagnostic_receipt"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-03T08:54:17.351772Z",
+      "changed": true,
+      "before_digest": "sha256:22a45dc369e21e55eda1d434455c46959d940de4080c8d4ce4fb9a2c59e00521",
+      "after_digest": "sha256:d297128e26b8d2bb3d935a0573f8ee7c95c8a82f12307fd17cd7e9666032345e",
+      "diff": {
+        "added_paths": 11,
+        "removed_paths": 0,
+        "changed_paths": 4,
+        "initial_write": false,
+        "paths_total_previous": 20930,
+        "paths_total_current": 22306,
+        "paths_total_reference": 22306,
+        "churn_paths": 15,
+        "churn_ratio": 0.000672,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.platform_worksets.hosted_reload_shutdown_repair.build_receipt",
+          "$.platform_worksets.hosted_reload_shutdown_repair.candidate_version",
+          "$.platform_worksets.hosted_reload_shutdown_repair.demonstrated_defect",
+          "$.platform_worksets.hosted_reload_shutdown_repair.diagnostic_result",
+          "$.platform_worksets.hosted_reload_shutdown_repair.freeze_receipt",
+          "$.platform_worksets.hosted_reload_shutdown_repair.proof_refresh",
+          "$.platform_worksets.hosted_reload_shutdown_repair.repair",
+          "$.platform_worksets.hosted_reload_shutdown_repair.paths[1]",
+          "$.platform_worksets.hosted_reload_shutdown_repair.paths[2]",
+          "$.platform_worksets.hosted_reload_shutdown_repair.paths[3]",
+          "$.platform_worksets.hosted_reload_shutdown_repair.paths",
+          "$.platform_worksets.hosted_reload_shutdown_repair.receipt_sha256..tmp/atg09-A07-reload-evidence/signal-reentry-diagnostic.json",
+          "$.platform_worksets.hosted_reload_shutdown_repair.status"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-03T08:57:31.397464Z",
+      "changed": true,
+      "before_digest": "sha256:e1207cc9024ba81a5c61cd41cb204600cb5c45d0f96f33ac27ba6b28de56fb1e",
+      "after_digest": "sha256:39763d02d354639f1e1e2c29c327000fa8760cdae4fed2ca2da1ccdfb7895bfb",
+      "diff": {
+        "added_paths": 3,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 20977,
+        "paths_total_current": 22333,
+        "paths_total_reference": 22333,
+        "churn_paths": 4,
+        "churn_ratio": 0.000179,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.platform_worksets.hosted_reload_shutdown_repair.source_control_helper",
+          "$.platform_worksets.hosted_reload_shutdown_repair.source_control_receipts",
+          "$.platform_worksets.hosted_reload_shutdown_repair.status"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-03T09:36:18.738087Z",
+      "changed": true,
+      "before_digest": "sha256:c9d1001c1644ef86daad35a9e818f5caa7b0af9567a3eae32c23352d14e9658c",
+      "after_digest": "sha256:61ea79023cd7e433778e7ceeaee380fa86f07d2e0c916e1df99f289788f4eec5",
+      "diff": {
+        "added_paths": 26,
+        "removed_paths": 0,
+        "changed_paths": 3,
+        "initial_write": false,
+        "paths_total_previous": 20984,
+        "paths_total_current": 22435,
+        "paths_total_reference": 22435,
+        "churn_paths": 29,
+        "churn_ratio": 0.001293,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.platform_worksets.wsl_package_update",
+          "$.platform_worksets.clock_remediation.current_diagnosis",
+          "$.platform_worksets.clock_remediation.current_state",
+          "$.platform_worksets.hosted_reload_shutdown_repair.accepted_cells",
+          "$.platform_worksets.hosted_reload_shutdown_repair.checkpoint",
+          "$.platform_worksets.hosted_reload_shutdown_repair.proof_scope",
+          "$.platform_worksets.hosted_reload_shutdown_repair.receipt",
+          "$.platform_worksets.hosted_reload_shutdown_repair.rejected_cells",
+          "$.platform_worksets.hosted_reload_shutdown_repair.remaining",
+          "$.platform_worksets.hosted_reload_shutdown_repair.unlaunched_cells",
+          "$.platform_worksets.hosted_reload_shutdown_repair.receipt_sha256..tmp/atg09-reload-clock-diagnosis.json",
+          "$.platform_worksets.hosted_reload_shutdown_repair.receipt_sha256..tmp/atg09-reload-installed-audit.json",
+          "$.platform_worksets.hosted_reload_shutdown_repair.receipt_sha256..tmp/atg09-reload-prerequisite-audit.json",
+          "$.platform_worksets.hosted_reload_shutdown_repair.receipt_sha256..tmp/atg09-reload-repair-build.json",
+          "$.platform_worksets.hosted_reload_shutdown_repair.receipt_sha256..tmp/atg09-reload-repair-freeze.json",
+          "$.platform_worksets.hosted_reload_shutdown_repair.receipt_sha256..tmp/atg09-reload-repair-launch-linux-py311.json",
+          "$.platform_worksets.hosted_reload_shutdown_repair.receipt_sha256..tmp/atg09-reload-repair-launch-win-py311.json",
+          "$.platform_worksets.hosted_reload_shutdown_repair.receipt_sha256..tmp/atg09-reload-repair-launch-win-py312.json",
+          "$.platform_worksets.hosted_reload_shutdown_repair.receipt_sha256..tmp/atg09-reload-repair-linux-py311.json"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-03T09:38:39.844595Z",
+      "changed": true,
+      "before_digest": "sha256:0d019c28f71365a29c375d2b6ad5fb23fff40164fdfa2b2bbc4322918ac0f5ed",
+      "after_digest": "sha256:b29f66a6055073152d22061faacf3bae3859e0b98e0147d2a4eba2182bd82f48",
+      "diff": {
+        "added_paths": 6,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 21084,
+        "paths_total_current": 22480,
+        "paths_total_reference": 22480,
+        "churn_paths": 7,
+        "churn_ratio": 0.000311,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.platform_worksets.clock_remediation.diagnosis_binding_drift",
+          "$.platform_worksets.clock_remediation.diagnosis_snapshot_status",
+          "$.platform_worksets.hosted_reload_shutdown_repair.handoff_live_state",
+          "$.platform_worksets.hosted_reload_shutdown_repair.receipt_sha256..tmp/atg09-clock-diagnosis-binding-drift.json",
+          "$.platform_worksets.hosted_reload_shutdown_repair.receipt_sha256..tmp/atg09-reload-handoff.json",
+          "$.platform_worksets.next_action"
         ]
       }
     }
@@ -13902,7 +13934,7 @@
   },
   "platform_worksets": {
     "goal": "ATG-09",
-    "status": "active: hosted portability prerequisites verified; full Quality pending",
+    "status": "active: reload repair partial; Linux clock and full hosted Quality pending",
     "current_batch": "ATG09-P01 existing hosted Gitea runner prerequisite",
     "candidate_commit": "b7ab34bba7d76a146cf4782c8522681de22ac544",
     "candidate_tag": "v0.6.125",
@@ -13936,7 +13968,7 @@
       "Existing hosted Gitea Ubuntu/Windows runners and required Quality jobs at the published fixture-repaired checkpoint."
     ],
     "external_prerequisites": "Gitea28 and private native tools available. Registrations14/15 removed after A06 failure. User explicitly granted two further hours through09:53:22UTC; runner admission stops09:48:22UTC.",
-    "next_action": "Publish v0.6.135, renew only existing scoped native runners under second user extension, push this candidate to existing Gitea PR1, execute all11 Quality jobs as A07 with frozen source/helpers. Admission09:48:22UTC, cleanup09:53:22UTC. Preserve original failures and reuse unchanged local proof. ATG10 remains dependent.",
+    "next_action": "Publish partial v0.6.136. Await user response before a new Windows elevation prompt and pending infrastructure extension; WSL installer is verified and prepared, no upgrade occurred. Following an actual environment change, retain original clock thresholds and refresh both Linux repair cells with new explicit source/clock binding. Reuse accepted Windows/provider evidence only within recorded scope. Full eleven-job hosted Quality and coverage89 remain required before ATG09/ATG10. No repeat loops, provider switch or main merge.",
     "probe_limits": "Interpreter version probes succeeded. The first combined shell command failed only its uv lookup due to quote stripping; no uv availability was established by that command.",
     "clock_result": {
       "path": "blocked",
@@ -14390,7 +14422,16 @@
       "clock_receipt_sha256": "d74c6af20637be269b1b16fac7ccad048931b52398559e3a7fb853a99c63ee6f",
       "native_quiet_seconds": 60.00952753000092,
       "elapsed_seconds": 100.17433492999771,
-      "limit": "Early 20.090341ms step retained; final 60.009528s quiet window passes the unchanged gate. Longer-term clock stability remains observed separately."
+      "limit": "Early 20.090341ms step retained; final 60.009528s quiet window passes the unchanged gate. Longer-term clock stability remains observed separately.",
+      "current_state": "Historical A05 accepted; Linux311 R02 final synchronized=no. No environment change or qualification retry after this refusal.",
+      "current_diagnosis": ".tmp/atg09-reload-clock-diagnosis.json",
+      "diagnosis_snapshot_status": "unavailable: a read-only review replaced this supporting snapshot without preserving original bytes; expected original SHA stays unchanged, not accepted as a match",
+      "diagnosis_binding_drift": {
+        "receipt": ".tmp/atg09-clock-diagnosis-binding-drift.json",
+        "sha256": "ea266c6486464f2fd24362590fd6984e5780cb78b3bd9a65e7808c54d5cdea87",
+        "accepted_native_A05_and_service_receipts_unchanged": true,
+        "missing_original_reconstructed": false
+      }
     },
     "local_acceptance": {
       "status": "complete: available local acceptance; hosted runners blocked",
@@ -14586,7 +14627,9 @@
       "A05": ".tmp/atg09-hosted-attempts/A05.json",
       "A05_result": "Unchanged candidate core gate1846passed1skipped after native reaping repair; architecture and five later jobs deliberately cancelled after independently confirmed remaining Docker/fixture prerequisites. Not full hosted acceptance.",
       "A06": ".tmp/atg09-hosted-attempts/A06.json",
-      "A06_result": "Five jobs pass; architecture logging gate4failed273passed1skipped because undeclared host GGUF inventory was absent. Core1846passed1skipped retained. Remaining jobs skipped/cancelled; all owners and registrations14/15 removed."
+      "A06_result": "Five jobs pass; architecture logging gate4failed273passed1skipped because undeclared host GGUF inventory was absent. Core1846passed1skipped retained. Remaining jobs skipped/cancelled; all owners and registrations14/15 removed.",
+      "A07": ".tmp/atg09-hosted-attempts/A07.json",
+      "A07_result": "v0.6.135 run483: five jobs passed; architecture core1failed1845passed1skipped. Held-request reload returned200 and closed lifespan, but launcher exceeded15s exit and15s teardown waits, requiring forced cleanup. Four dependents skipped and sandbox cancelled. All owners and registrations16/17 removed. Full Quality remains unaccepted."
     },
     "hosted_window_checkpoint": {
       "status": "terminal environment blocker",
@@ -14832,7 +14875,7 @@
       "owners_settled": true
     },
     "runner_second_extension": {
-      "status": "authorized; inactive supervisor deadlines updated; registration pending",
+      "status": "A07 terminal; native owners settled and registrations16/17 removed before deadline",
       "user_direction": "add 2 additional hours for the infra lift",
       "authorization_deadline_utc": "2026-10-03T09:53:22Z",
       "admission_cutoff_utc": "2026-10-03T09:48:22Z",
@@ -14862,6 +14905,130 @@
       "process_limits": "At most300seconds per native command and600seconds for each owned proof phase after admission; observed phases finish within these limits. Initial source admission has no independent outer watchdog. Original test and CI limits remain unchanged.",
       "receipt_sha256": "18590d6ff414d3c3ed8429d975c0daca62c20709ab6faa87dbc8acf70c2e6362",
       "followup_helper": ".tmp/atg09-gate-evidence-followup.py"
+    },
+    "hosted_reload_shutdown_repair": {
+      "batch": "ATG09-P01",
+      "status": "partial: Windows repair accepted; Linux clock and hosted proof blocked",
+      "candidate": "1ddbab57dda276aa07b60043076a0d14132d250f",
+      "version": "0.6.135",
+      "run_id": 483,
+      "paths": [
+        "orket/interfaces/api_reload_runtime.py",
+        "tests/helpers/api_reload_signal_probe.py",
+        "tests/integration/test_api_reload_signal_reentry.py",
+        ".gitea/workflows/quality.yml",
+        "docs/specs/API_RUNTIME_LIFECYCLE.md",
+        "docs/CONTRIBUTOR.md"
+      ],
+      "obligation": "Explain and repair the existing cooperative reload shutdown contract failure required by hosted Quality; no unrelated API redesign.",
+      "observations": "Request200, request-completed and closed markers; worker log reaches Finished server process, parent Stopping reloader absent. No original stack was captured at the hang.",
+      "hypothesis": "Signal-handler synchronization reentry is under investigation; not established as the exact A07 cause.",
+      "diagnostic_scope": "Finite native parent/worker signal-reentry counterexamples with retained faulthandler stacks; at most5s per child and30s overall, exact owned child cleanup. No test campaign retry or clock qualification.",
+      "constraints": "Preserve existing assertions,15s waits, skip rules, coverage89, clock thresholds and fixed queue. Runtime changes require affected source/installed proof refresh before acceptance.",
+      "authorization_deadline_utc": "2026-10-03T09:53:22Z",
+      "admission_cutoff_utc": "2026-10-03T09:48:22Z",
+      "receipt_sha256": {
+        ".tmp/atg09-hosted-attempts/A07.json": "5c2ab3dbb94111d8f3c0c3e65e1256cc5b13958243fcc16fed8c46d4c3e99b4b",
+        ".tmp/atg09-hosted-attempts/A07-close.json": "ddc1ab197c81ca7be7e708161f9fddae22ad6ded015976d69c6067742708b96a",
+        ".tmp/atg09-hosted-A07-audit.json": "9a6619c5ce64ce57bb44719dc3902af6fa952388721bcc96cc54a45fd2c7cb45",
+        ".tmp/atg09-A07-reload-evidence/receipt.json": "e0003f7a1bae403c8280819f4bfb9891237f6bc50c0497e3badf8b64bd31f328",
+        ".tmp/atg09-ci-portability-publication.json": "439d24bd2c1666625dba77bbc5744040868dd62e8ea479c262840075ef07a89e",
+        ".tmp/atg09-A07-reload-evidence/signal-reentry-diagnostic.json": "bbafa9c7e1e2ef4e540058366b51ee341616e0e6c8f3f5c9b49f575bc83c597c",
+        ".tmp/atg09-reload-prerequisite-audit.json": "53dc6d45fc050c289c2c88896d3adcdf4811f710eda54c08312d7680310fd1db",
+        ".tmp/atg09-reload-reuse-audit.json": "3f0c570c66d883acb0b627e307db523dcbc2325cba3765f8e27d5503e42ae8d4",
+        ".tmp/atg09-reload-installed-audit.json": "3207a7baa645fd00dbbea6073174c34b8c2cc6249e5eda13fab93431a8a8e0e1",
+        ".tmp/atg09-reload-repair-build.json": "ec3af8112374e0e0a6c1e864a8ee8653e3a77db6916ac52ef643e3fdca31e2e6",
+        ".tmp/atg09-reload-repair-freeze.json": "2ff3c93f28e544ee9757f3803e7cfa3a1490b067517a7b916811eb881d7db1ef",
+        ".tmp/atg09-reload-repair-source-windows.json": "c8d6807c4cf283d35a092b4f56d6f0d594273191e86640a2b4542a131010bc82",
+        ".tmp/atg09-reload-repair-source-linux.json": "6267f5eb539b1d06faa7650b724de19ad3077d58b2aa32ac8d1f609b744ef61b",
+        ".tmp/atg09-reload-clock-diagnosis.json": "0766d274ba9a7519dfa563043a673c6f8e2860215aabe33af9b91dcc1b86b0d9",
+        ".tmp/atg09-wsl-update-preparation.json": "1239825de4dc9a44f3ace3844317ebdf06ed176f21ed0e53e4a83db20241e126",
+        ".tmp/atg09-reload-repair-win-py311.json": "326ea6874c77858ed98009423191e51d1911d53fdb8642a8775acc5d9545c19b",
+        ".tmp/atg09-reload-repair-launch-win-py311.json": "ecddf66d5d08d6da8152b7794ea454a58de40e1f220f8d74f6a4a8b23aa794aa",
+        ".tmp/atg09-reload-repair-win-py312.json": "7f64d5a89e0c728da034d22d19ccbecee8ab98c532505a71b50d9cfc71aba324",
+        ".tmp/atg09-reload-repair-launch-win-py312.json": "a6856a9f27fd9415843fdf7fe7a1017bb2eabe603ffb0a055a11a8ea20e4747c",
+        ".tmp/atg09-reload-repair-linux-py311.json": "9bd685063f6fbcfd1b62febf73d935f9d0cad0a1e56b89cfbe4280e8d5765be1",
+        ".tmp/atg09-reload-repair-launch-linux-py311.json": "12372415793c045df875252f110d3210ae4df3d9d3fb74b2d1ab17fa2deab546",
+        ".tmp/atg09-clock-diagnosis-binding-drift.json": "ea266c6486464f2fd24362590fd6984e5780cb78b3bd9a65e7808c54d5cdea87",
+        ".tmp/atg09-reload-handoff.json": "75bc84ca34a7096cf8944858f3636ae0974d75852d186ebbea1021525232ae14"
+      },
+      "diagnostic_helper": ".tmp/atg09-signal-reentry-diagnostic.py",
+      "diagnostic_helper_sha256": "fee15b535f8c4c9248b1c3093ca0b45fdf40ea4ff35724c53fc04b7e355ae217",
+      "diagnostic_receipt": ".tmp/atg09-A07-reload-evidence/signal-reentry-diagnostic.json",
+      "diagnostic_budget_scope": "5s native command deadlines; async23s activity plus canonical settlement; observed total must not exceed30s. No independent hard outer watchdog.",
+      "demonstrated_defect": "Both actual signal handlers deadlock when a signal arrives while the corresponding non-reentrant Event condition is owned. Native free-lock controls return; exact handler/Event/Condition stacks are retained. This does not retrospectively prove A07 causation.",
+      "repair": "Handlers latch local booleans only. Existing worker watcher and parent normal pause/restart flow consume stop requests; worker join, startup ordering and native finalization semantics stay intact.",
+      "diagnostic_result": {
+        "receipt": ".tmp/atg09-A07-reload-evidence/signal-reentry-diagnostic.json",
+        "sha256": "bbafa9c7e1e2ef4e540058366b51ee341616e0e6c8f3f5c9b49f575bc83c597c",
+        "elapsed_seconds": 18.67036245199415,
+        "scope": "Two native counterexamples and two free-lock controls, complete owned teardown"
+      },
+      "proof_refresh": {
+        "source": "Four new native signal controls on Windows/Linux Python3.11; scoped Ruff and canonical Mypy.",
+        "installed": "Four fresh Windows/Linux Python3.11/3.12 cells, existing16reload/finalization plus bootstrap1 plus new4signal controls,21cases each. Installed origins, all namespace/artifact members, pip check and native teardown required.",
+        "artifacts": "Fresh core0.6.136 sdist and wheel; exact old SDK artifact reused. Whole core member difference limited to api_reload_runtime.py and version metadata. Old whole-wheel proof stays historical.",
+        "reuse": "Replace affected installed rows only after exact identity and relevant-input audit. Original failures remain. Hosted full Quality with coverage89 remains required; provider/clock not rerun unchanged.",
+        "cell_timeout_seconds": 600,
+        "build_command_timeout_seconds": 300,
+        "selection": [
+          "tests/integration/test_api_server_reload.py",
+          "tests/integration/test_api_reload_process_finalization.py",
+          "tests/integration/test_api_server_bootstrap.py",
+          "tests/integration/test_api_reload_signal_reentry.py"
+        ]
+      },
+      "candidate_version": "0.6.136",
+      "build_receipt": ".tmp/atg09-reload-repair-build.json",
+      "freeze_receipt": ".tmp/atg09-reload-repair-freeze.json",
+      "source_control_helper": ".tmp/atg09_reload_source_controls.py",
+      "source_control_receipts": [
+        ".tmp/atg09-reload-repair-source-windows.json",
+        ".tmp/atg09-reload-repair-source-linux.json"
+      ],
+      "receipt": ".tmp/atg09-reload-prerequisite-audit.json",
+      "proof_scope": "Live source controls4+4 and fresh Windows installed21+21 pass. Linux311 tests21pass but final genuine NTPSynchronized=no rejects the cell. Linux312 not launched. Structural artifact/reuse audits do not replace these missing live gates or hosted coverage.",
+      "accepted_cells": [
+        "win-py311",
+        "win-py312"
+      ],
+      "rejected_cells": [
+        "linux-py311"
+      ],
+      "unlaunched_cells": [
+        "linux-py312"
+      ],
+      "remaining": "Demonstrated clock environment change, unchanged clock qualification, both Linux repair cells, all eleven hosted Quality jobs including fresh coverage89, then ATG09 closeout and dependent ATG10.",
+      "checkpoint": {
+        "version": "0.6.136",
+        "base_commit": "1ddbab57dda276aa07b60043076a0d14132d250f",
+        "directory": ".tmp/atg09-reload-checkpoint",
+        "checks_receipt": ".tmp/atg09-reload-checks.json",
+        "publication_receipt": ".tmp/atg09-reload-publication.json",
+        "paths": [
+          ".gitea/workflows/quality.yml",
+          "CHANGELOG.md",
+          "docs/CONTRIBUTOR.md",
+          "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
+          "docs/projects/architectural-truth/GOAL_WORKSETS.json",
+          "docs/projects/architectural-truth/README.md",
+          "docs/specs/API_RUNTIME_LIFECYCLE.md",
+          "orket/interfaces/api_reload_runtime.py",
+          "pyproject.toml",
+          "tests/helpers/api_reload_signal_probe.py",
+          "tests/integration/test_api_reload_signal_reentry.py"
+        ]
+      },
+      "handoff_live_state": ".tmp/atg09-reload-handoff.json"
+    },
+    "wsl_package_update": {
+      "status": "prepared; Windows elevation cancelled",
+      "receipt": ".tmp/atg09-wsl-update-preparation.json",
+      "receipt_sha256": "1239825de4dc9a44f3ace3844317ebdf06ed176f21ed0e53e4a83db20241e126",
+      "installed": "2.6.3.0",
+      "target": "3.0.1.0",
+      "environment_changed": false,
+      "missing_input": "User response before another Windows elevation request; active infrastructure authority and service restoration are required before installation."
     }
   }
 }
