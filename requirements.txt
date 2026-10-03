@@ -1,3 +1,4 @@
 # Derived install shim.
 # Canonical dependency metadata and versions are defined in pyproject.toml.
+-e ./orket_extension_sdk[testing]
 -e .[dev]

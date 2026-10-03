@@ -14454,8 +14454,8 @@
       }
     },
     "hosted_candidate": {
-      "tag": "v0.6.130",
-      "commit": "Resolve from annotated tag and .tmp/atg09-infra-publication.json; production/test inputs unchanged from v0.6.129."
+      "tag": "v0.6.131",
+      "commit": "Resolve from .tmp/atg09-gate-publication.json and annotated tag; install governance repaired, product runtime unchanged."
     },
     "infrastructure_repair": {
       "status": "complete: local infrastructure updated; hosted proof pending",
@@ -14490,6 +14490,52 @@
           "pyproject.toml"
         ]
       }
+    },
+    "hosted_install_gate_repair": {
+      "batch": "ATG09-P01",
+      "status": "complete: install convergence aligned; hosted Quality pending",
+      "candidate": "52a3795a0ce421cc3ba9dcdfb50de5caee6d3351",
+      "counterexample": ".tmp/atg09-hosted-attempts/A02-job-575.log",
+      "paths": [
+        "scripts/governance/check_install_surface_convergence.py",
+        "tests/scripts/test_check_install_surface_convergence.py",
+        "requirements.txt"
+      ],
+      "obligation": "Match existing CURRENT_AUTHORITY command.install SDK-testing-first and core-dev command, including the derived requirements shim. Preserve exact command/legacy refusals and existing test assertions, deadlines and skips.",
+      "proof_scope": "Native checker contract tests, real editable SDK/core install already demonstrated by four hosted matrix cells, then rerun the required hosted Quality gate. No production/provider changes.",
+      "clock_receipt": ".tmp/atg09-persistent-clock.json",
+      "clock_receipt_sha256": "d74c6af20637be269b1b16fac7ccad048931b52398559e3a7fb853a99c63ee6f",
+      "existing_assertions_unchanged": true,
+      "regression_result": "7 integration cases pass; native repository convergence check passes",
+      "receipt_sha256": {
+        ".tmp/atg09-install-gate-check.json": "24fb9e4b40cb3d5fe9da9b837159ca46d4870d299081765e492ea2fd6647a896",
+        ".tmp/atg09-install-gate-tests.xml": "ed61dfb1d6974c9bef11c52d9da3f736b4b30e5579f01553335189e1c020488e",
+        ".tmp/atg09-hosted-attempts/A02.json": "a1f1fb838ad3946bb7273ffdd0785db9664c3478920b24cd55a2f52594e90a70",
+        ".tmp/atg09-infra-audit.json": "88c8055069117a961b0ab8c9b6b95653aa568578bbbc18396c0a36f3ab74da61"
+      },
+      "checkpoint": {
+        "version": "0.6.131",
+        "base_commit": "52a3795a0ce421cc3ba9dcdfb50de5caee6d3351",
+        "directory": ".tmp/atg09-gate-checkpoint",
+        "checks_receipt": ".tmp/atg09-gate-checks.json",
+        "publication_receipt": ".tmp/atg09-gate-publication.json",
+        "paths": [
+          "CHANGELOG.md",
+          "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
+          "docs/projects/architectural-truth/GOAL_WORKSETS.json",
+          "docs/projects/architectural-truth/README.md",
+          "pyproject.toml",
+          "requirements.txt",
+          "scripts/governance/check_install_surface_convergence.py",
+          "tests/scripts/test_check_install_surface_convergence.py"
+        ]
+      }
+    },
+    "hosted_attempts": {
+      "A01": ".tmp/atg09-hosted-attempts/A01.json",
+      "A02": ".tmp/atg09-hosted-attempts/A02.json",
+      "current": ".tmp/atg09-hosted-run.json",
+      "A02_result": "4 matrix jobs pass (2 tests each); docs_hygiene fails stale install checker; other jobs cancelled/skipped."
     }
   }
 }

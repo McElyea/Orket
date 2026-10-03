@@ -13,7 +13,7 @@ except ModuleNotFoundError:  # pragma: no cover - direct script execution fallba
     from common.rerun_diff_ledger import write_payload_with_diff_ledger
 
 
-DEFAULT_CANONICAL_COMMAND = 'python -m pip install -e ".[dev]"'
+DEFAULT_CANONICAL_COMMAND = 'python -m pip install -e "./orket_extension_sdk[testing]" -e ".[dev]"'
 DEFAULT_LEGACY_COMMAND = "pip install -r requirements.txt"
 DEFAULT_DOC_PATHS = ("README.md", "docs/CONTRIBUTOR.md", "docs/RUNBOOK.md")
 DEFAULT_WORKFLOW_GLOB = ".gitea/workflows/*.yml"
@@ -21,6 +21,7 @@ DEFAULT_REQUIREMENTS_PATH = "requirements.txt"
 QUALITY_WORKFLOW_PATH = ".gitea/workflows/quality.yml"
 REQUIRED_CI_GATE_INVOCATION = "python scripts/governance/check_install_surface_convergence.py"
 ALLOWED_REQUIREMENTS_LINE_TOKENS = ("-e .[dev]", '-e ".[dev]"')
+ALLOWED_SDK_REQUIREMENTS_LINE_TOKENS = ("-e ./orket_extension_sdk[testing]", '-e "./orket_extension_sdk[testing]"')
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -156,11 +157,15 @@ def _collect_requirements_assertion(
 
     text = _read_text(path, failures)
     lines = _clean_requirements_lines(text)
-    valid = len(lines) == 1 and lines[0] in ALLOWED_REQUIREMENTS_LINE_TOKENS
+    valid = (
+        len(lines) == 2
+        and lines[0] in ALLOWED_SDK_REQUIREMENTS_LINE_TOKENS
+        and lines[1] in ALLOWED_REQUIREMENTS_LINE_TOKENS
+    )
     if not valid:
         failures.append(
-            "requirements shim drifted; expected exactly one editable pyproject line "
-            f"({ALLOWED_REQUIREMENTS_LINE_TOKENS}) and found {lines}"
+            "requirements shim drifted; expected SDK-testing then core-dev editable lines "
+            f"({ALLOWED_SDK_REQUIREMENTS_LINE_TOKENS}, {ALLOWED_REQUIREMENTS_LINE_TOKENS}) and found {lines}"
         )
     return {
         "id": "requirements_shim_derives_from_pyproject",

@@ -5,6 +5,17 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.131] - 2026-10-02
+
+### Fixed
+- Align install-convergence governance and the derived requirements shim with the existing canonical local SDK-testing and core-dev installation. Preserve existing test assertions and add refusal coverage for core-only installs.
+
+### Changed
+- Retain actual Gitea runner setup failures, their isolated environment repairs, and four successful hosted Windows/Linux Python matrix jobs. The remaining Quality gates and ATG-09/10 stay incomplete until live hosted acceptance.
+- `compatibility_status`: `preserved`
+- `affected_audience`: `all`
+- `migration_requirement`: `none`
+
 ## [0.6.130] - 2026-10-02
 
 ### Changed
