@@ -5,6 +5,16 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.134] - 2026-10-03
+
+### Fixed
+- Install the pinned local SDK alongside core in the runtime image and prepare writable runtime directories for its existing nonroot user.
+- Create the exact replay and skill fixture output directories in hosted Quality and propagate routine sandbox-disable policy into its Docker smoke container.
+- Preserve the failed permission probe and passing targeted repair proof; complete hosted Quality acceptance remains pending.
+- `compatibility_status`: `preserved`
+- `affected_audience`: `all`
+- `migration_requirement`: `none`
+
 ## [0.6.133] - 2026-10-03
 
 ### Changed

@@ -1,6 +1,6 @@
 # Architectural Truth
 
-Last updated: 2026-10-02 (America/Denver)
+Last updated: 2026-10-03 (America/Denver)
 Status: Active project registry
 Owner: Orket Core
 
@@ -9,11 +9,12 @@ canonical implementation plan and resume record for ten fixed goals. **Eight goa
 are complete; ATG-09 local installed/provider acceptance is complete, while required
 hosted Gitea Quality proof remains pending. ATG-10 remains dependent.**
 The [workset inventory](GOAL_WORKSETS.json) binds sources, receipts and frozen batches.
-Checkpoint v0.6.133 records a native temporary-runner reaping repair after A04
-exposed retained zombie children in process-cleanup tests. Five hosted jobs at
-v0.6.131 remain accepted; complete Quality remains pending A05. The user added two
-hours for scoped runners through 07:53:22 UTC; original teardown is preserved. v0.6.131
-repairs install-convergence governance and passes its hosted docs gate. v0.6.130 updates Gitea to 28.0.0 under a one-hour infrastructure exception. The v0.6.129
+Checkpoint v0.6.134 repairs hosted fixture directories and runtime Docker SDK,
+permissions and routine sandbox-disable prerequisites, with targeted live proof.
+A05 recovered the core boundary gate (1,846 passes, one skip), but full Quality
+remains pending A06. Scoped runners are authorized through 07:53:22 UTC. Prior
+runner teardown and failed attempts are retained. v0.6.131 repairs install
+convergence; v0.6.130 updates existing Gitea to 28.0.0. The v0.6.129
 checkpoint repairs a reload-test marker publication race and records local acceptance: 64 scoped installed rechecks refresh affected Linux/Windows evidence,
 the persistent WSL clock repair passes its unchanged prerequisite, and actual
 llama.cpp public-library completion/cancellation proof passes. Runtime artifacts

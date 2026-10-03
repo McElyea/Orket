@@ -11,11 +11,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf 
 
 COPY pyproject.toml README.md ./
 COPY orket ./orket
+COPY orket_extension_sdk ./orket_extension_sdk
 COPY server.py main.py ./
 
-RUN python -m pip install --upgrade pip && python -m pip install .
+RUN python -m pip install --upgrade pip && python -m pip install ./orket_extension_sdk .
 
-RUN useradd --create-home --shell /bin/bash orket
+RUN useradd --create-home --shell /bin/bash orket \
+    && chown orket:orket /app
 USER orket
 
 EXPOSE 8082

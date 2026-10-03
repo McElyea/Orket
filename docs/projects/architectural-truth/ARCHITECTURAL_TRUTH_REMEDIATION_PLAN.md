@@ -1,6 +1,6 @@
 # Architectural Truth: Executable Goal Queue
 
-Last updated: 2026-10-02 (America/Denver)
+Last updated: 2026-10-03 (America/Denver)
 Status: Active implementation; eight goals complete, ATG-09 local acceptance complete and hosted Quality blocked
 Queue: ATG-v1 — ten fixed goals for the existing revamp
 Owner: Orket Core
@@ -307,15 +307,14 @@ counterexample and does not change parser/grounding behavior or add a new goal.
   exception was extended by the user by **two additional hours**, ending
   **2026-10-03 07:53:22 UTC**; runner admission stops **07:48:22 UTC**.
   The original runners were already removed before renewal. No provider switch or main merge.
-- Checkpoint: **v0.6.133** records the temporary Linux supervisor reaping repair
-  and retained failed A04 evidence. It is based on published v0.6.132 commit
-  `27675db00503e71dd0dbd9618389bed16d9f2092`, annotated tag object
-  `bcf3930cf62533d83020ffbd99e3617d045dc154`. Verify terminal checks/publication
-  receipts `.tmp/atg09-reaping-checks.json` and `.tmp/atg09-reaping-publication.json`,
-  remote identities and clean worktree. Hosted candidate remains v0.6.131 commit
-  `30553e554c9b8fdc784b4209617e7064902f262e`; v0.6.132/133 are metadata checkpoints,
-  not new runtime acceptance. v0.6.131 repairs install convergence (seven integration
-  cases and passing hosted docs gate); accepted prior assertions are unchanged.
+- Checkpoint: **v0.6.134** repairs the hosted fixture output directories and
+  runtime image prerequisites. It is based on published v0.6.133 commit
+  `3d470e4be0da3664542e31281756a855371629a9`, annotated tag object
+  `0f8bd62a247ba67548b34cf6b28ef4792f135721`. Verify checks/publication receipts
+  `.tmp/atg09-prerequisite-checks.json` and `.tmp/atg09-prerequisite-publication.json`,
+  remote identities and clean worktree. A06 must execute the new committed workflow
+  and Docker candidate. Prior v0.6.131 hosted results remain historical evidence;
+  accepted v0.6.125 local runtime proof retains its recorded composite limits.
 - Local software: official llama.cpp **b11146 / 7fe450e19**, CUDA 12.4, is installed
   at `D:/llama.cpp-releases/b11146`; older copies remain. The existing GGUF serves
   `orcarouter_qwen3.8-27b-uncensored-q4_k_l` at `http://127.0.0.1:8080/v1`.
@@ -456,13 +455,31 @@ counterexample and does not change parser/grounding behavior or add a new goal.
   `.tmp/atg09-linux-reaping-repair.json` binds those observations and new helper hashes.
   No product, workflow or test code, assertions, five-second limits or skip rules
   changed. Full hosted acceptance after this environment repair is still pending.
-- Next exact action: publish this metadata checkpoint and selectively resume the
-  six incomplete run 467 jobs as **A05** on the unchanged v0.6.131 candidate, keeping
-  the five accepted results. Bind new native helper/readiness hashes before launch.
-  Registrations **14/15** currently exist but their daemons are stopped. Admission
-  cutoff **07:48:22 UTC** and absolute cleanup **07:53:22 UTC** remain unchanged.
-  Reuse accepted local proof; close ATG-09 only after all eleven jobs pass and native
-  teardown is verified, then continue dependent ATG-10.
+- Hosted A05: the same v0.6.131 candidate passed the previously failing core
+  gate: **1,846 passed / one skipped**, with prompt adopted-child reaping observed.
+  Architecture job 618 and five remaining jobs were deliberately cancelled after
+  confirming later prerequisite defects. This passing step is supplementary live
+  evidence; the complete architecture job and Quality workflow are not accepted.
+  All owners settled, source/helper freezes passed; immutable A05 archive and audit
+  preserve all outcomes in `.tmp/atg09-hosted-attempts/A05.json` and
+  `.tmp/atg09-hosted-A05-audit.json`.
+- Hosted prerequisite repair: Docker installs the pinned local SDK with core and
+  gives its existing nonroot user ownership of the invocation project directory;
+  packaged source trees retain root ownership.
+  The routine smoke container receives `ORKET_DISABLE_SANDBOX=1`. Replay and skills
+  fixture commands create their actual destination parents. Assertions, coverage
+  floor, deadlines, skips and job dependencies are unchanged. Targeted live Docker
+  build, package consistency, health and owned teardown pass; both exact fixture
+  smoke bodies pass from absent directories. Initial Docker permission failure is
+  preserved. Worksets bind `.tmp/atg09-prerequisite-docker.json`, its `-R02` and `-R03`
+  receipt and `.tmp/atg09-prerequisite-smokes.json` without claiming full hosted proof.
+- Next exact action: publish this checkpoint and push the committed candidate to
+  existing Gitea PR 1. Execute all eleven required Quality jobs as **A06**, preserving
+  prior evidence and binding source/native helper hashes. Registrations **14/15**
+  currently exist with stopped daemons. Admission cutoff **07:48:22 UTC** and absolute
+  cleanup **07:53:22 UTC** remain unchanged. Reuse accepted local proof; close ATG-09
+  only after all eleven jobs pass and native/resource teardown is verified, then
+  continue dependent ATG-10. Do not merge PR 1 or change providers.
 - Remaining blockers or drift: complete hosted Gitea Quality is absent; ATG-09/10 and whole
   campaign completion are not claimed. ATG-07's 12,964 passes / 93 skips / 89.213132%
   combined coverage remain bound to unchanged production inputs, with affected

@@ -1088,7 +1088,7 @@ jobs:
 
       - name: Enforce replay artifact drift comparator smoke
         run: |
-          mkdir -p benchmarks/results/benchmarks/replay
+          mkdir -p benchmarks/results/replay
           python - <<'PY'
           import json
           from pathlib import Path
@@ -1121,7 +1121,7 @@ jobs:
 
       - name: Enforce skill contract smoke
         run: |
-          mkdir -p benchmarks/results/benchmarks/skills
+          mkdir -p benchmarks/results/governance/skills
           python - <<'PY'
           import json
           from pathlib import Path
@@ -1309,7 +1309,7 @@ jobs:
 
       - name: Start container
         run: |
-          docker run -d --name orket-smoke -p 8082:8082 orket:${{ github.sha }}
+          docker run -d --name orket-smoke -e ORKET_DISABLE_SANDBOX=1 -p 8082:8082 orket:${{ github.sha }}
 
       - name: Probe health endpoint
         run: |

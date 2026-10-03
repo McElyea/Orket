@@ -13902,7 +13902,7 @@
   },
   "platform_worksets": {
     "goal": "ATG-09",
-    "status": "active: repaired temporary Linux supervision; required hosted Quality pending",
+    "status": "active: hosted prerequisite repair verified; complete Quality pending",
     "current_batch": "ATG09-P01 existing hosted Gitea runner prerequisite",
     "candidate_commit": "b7ab34bba7d76a146cf4782c8522681de22ac544",
     "candidate_tag": "v0.6.125",
@@ -13936,7 +13936,7 @@
       "Existing hosted Gitea Ubuntu/Windows runners and required Quality jobs at the published fixture-repaired checkpoint."
     ],
     "external_prerequisites": "Gitea28 access and prepared native Linux/Windows tools are available. Original temporary registrations were removed on time. User explicitly added two hours; re-register only these scoped runners, stop admission07:48:22UTC and finish cleanup07:53:22UTC.",
-    "next_action": "Publish v0.6.133 metadata checkpoint, then selectively resume incomplete run467 jobs on unchanged v0.6.131 candidate after binding repaired helper/readiness identities. Preserve five accepted jobs and local proof; admission cutoff07:48:22UTC and cleanup07:53:22UTC remain fixed.",
+    "next_action": "Publish v0.6.134, push this repaired committed candidate to existing Gitea PR1, cancel out-of-workset companion workflows, execute all11 Quality jobs as A06 with frozen source/helpers. Admission cutoff07:48:22UTC and cleanup07:53:22UTC remain fixed. Close ATG09 only on full live acceptance and cleanup, then ATG10.",
     "probe_limits": "Interpreter version probes succeeded. The first combined shell command failed only its uv lookup due to quote stripping; no uv availability was established by that command.",
     "clock_result": {
       "path": "blocked",
@@ -14582,7 +14582,9 @@
         ]
       },
       "A04": ".tmp/atg09-hosted-attempts/A04.json",
-      "A04_result": "Five prior job results reused exactly. Architecture core gate:15failed1831passed1skipped, all failures at process-group cleanup under delayed orphan reaping. Sandboxcancelled, dependentskipped; no full Quality acceptance."
+      "A04_result": "Five prior job results reused exactly. Architecture core gate:15failed1831passed1skipped, all failures at process-group cleanup under delayed orphan reaping. Sandboxcancelled, dependentskipped; no full Quality acceptance.",
+      "A05": ".tmp/atg09-hosted-attempts/A05.json",
+      "A05_result": "Unchanged candidate core gate1846passed1skipped after native reaping repair; architecture and five later jobs deliberately cancelled after independently confirmed remaining Docker/fixture prerequisites. Not full hosted acceptance."
     },
     "hosted_window_checkpoint": {
       "status": "terminal environment blocker",
@@ -14673,8 +14675,8 @@
       "authorization_deadline_utc": "2026-10-03T07:53:22Z",
       "admission_cutoff_utc": "2026-10-03T07:48:22Z",
       "scope": "Existing temporary Linux/Windows local runners and required Quality work only; no provider switch or main merge.",
-      "status": "Original A04 owners settled; Linux adopted-child reaping repaired and natively verified; A05 selective re-admission pending",
-      "campaign": "A05",
+      "status": "A05 owners settled; registrations14/15 offline; repaired candidate A06 pending",
+      "campaign": "A06",
       "reuse_candidate": "30553e554c9b8fdc784b4209617e7064902f262e"
     },
     "hosted_runner_reaping_repair": {
@@ -14706,6 +14708,47 @@
         "publication_receipt": ".tmp/atg09-reaping-publication.json",
         "paths": [
           "CHANGELOG.md",
+          "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
+          "docs/projects/architectural-truth/GOAL_WORKSETS.json",
+          "docs/projects/architectural-truth/README.md",
+          "pyproject.toml"
+        ]
+      }
+    },
+    "hosted_prerequisite_repair": {
+      "status": "complete: local prerequisites verified",
+      "batch": "ATG09-P01",
+      "paths": [
+        "Dockerfile",
+        ".gitea/workflows/quality.yml"
+      ],
+      "obligation": "Install the pinned local SDK with core in the runtime image; create the exact replay/skills fixture directories; propagate the existing routine sandbox-disable policy to the smoke container.",
+      "constraints": "Preserve all assertions, coverage floor, deadlines, skip rules, job dependencies and fixed queue. No product runtime changes.",
+      "proof_scope": "Both exact YAML fixture smoke bodies executed from absent destinations. Actual image installs local pinned SDK/core, pip check passes, health responds, explicit sandbox-disable env observed, exact owned container removed. Initial nonroot writable-root failure preserved. Full hosted Quality remains required.",
+      "infrastructure_deadline_utc": "2026-10-03T07:53:22Z",
+      "admission_cutoff_utc": "2026-10-03T07:48:22Z",
+      "clock_receipt": ".tmp/atg09-persistent-clock.json",
+      "clock_receipt_sha256": "d74c6af20637be269b1b16fac7ccad048931b52398559e3a7fb853a99c63ee6f",
+      "receipt_sha256": {
+        ".tmp/atg09-prerequisite-docker.json": "dc501418ed6900b256d159958c36f6ade8f2f80d7f7188bacd539cae493bdab6",
+        ".tmp/atg09-prerequisite-docker-R03.json": "32bf341bf2ca817b9689a4cddee971173f5a588bcf152aab105c50832411fada",
+        ".tmp/atg09-prerequisite-smokes.json": "3b9627f43667140d48b0129ef0d8e5eab9cbb6abf73e4bd8c447041f43d87c95",
+        ".tmp/atg09-prerequisite-docker-R02.json": "a83d7cbcaff50f3f0ea0ec1f70fc5c40ae6ba750988afabe78dabf613536e9c8",
+        ".tmp/atg09-hosted-attempts/A05.json": "8b4bf36c3b8ddddf2c0e340dadb7bc76decca4be32aab25e8b632716c790cd19",
+        ".tmp/atg09-hosted-A05-audit.json": "1f192f071bdfff03209ec8a34796d353a6e8705f08d6a74534354af77f73c3fa",
+        ".tmp/atg09-hosted-prerequisite-stop.json": "913cab752002aea987d5fd10b5ebc56d8eb3bd8cd297c3ac78efec0101850d94",
+        ".tmp/atg09-reaping-publication.json": "e8e5ba3e7d7ef9f70b7b01a86c9547bfa8cf1a75a2b584ab681950e478042769"
+      },
+      "checkpoint": {
+        "version": "0.6.134",
+        "base_commit": "3d470e4be0da3664542e31281756a855371629a9",
+        "directory": ".tmp/atg09-prerequisite-checkpoint",
+        "checks_receipt": ".tmp/atg09-prerequisite-checks.json",
+        "publication_receipt": ".tmp/atg09-prerequisite-publication.json",
+        "paths": [
+          ".gitea/workflows/quality.yml",
+          "CHANGELOG.md",
+          "Dockerfile",
           "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
           "docs/projects/architectural-truth/GOAL_WORKSETS.json",
           "docs/projects/architectural-truth/README.md",
