@@ -5,6 +5,18 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.129] - 2026-10-02
+
+### Fixed
+- Publish the reload fixture's interpreter-finalization marker atomically after writing and closing its exact payload. Preserve existing assertions, deadlines and signal behavior; all 16 affected-file cases pass in each installed Linux/Windows Python 3.11/3.12 cell.
+
+### Changed
+- Record persistent Ubuntu clock-service repair, unchanged clock qualification and actual llama.cpp public-library completion/cancellation proof. Reconcile explicit composite installed evidence while retaining the original Linux fixture failure.
+- Keep ATG-09 hosted Gitea Quality blocked on existing runner access; eight of ten goals remain complete. No new infrastructure, provider switch or main merge.
+- `compatibility_status`: `preserved`
+- `affected_audience`: `all`
+- `migration_requirement`: `none`
+
 ## [0.6.128] - 2026-10-02
 
 ### Changed

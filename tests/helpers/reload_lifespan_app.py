@@ -25,11 +25,13 @@ class InterpreterFinalizer:
 
     def __init__(self):
         self.held = str(ROOT / f"{PID}-interpreter-finalization-held")
+        self.staged = self.held + ".pending"
         self.done = str(ROOT / f"{PID}-interpreter-finalization-done")
         self.release = str(ROOT / "release-finalizer")
         self.failure = os.environ["RELOAD_TEST_FINALIZER"] == "fail"
         # Module globals may be cleared before __del__; retain native callables.
         self.open, self.write, self.close = os.open, os.write, os.close
+        self.replace = os.replace
         self.access, self.exit = os.access, os._exit
         self.sleep, self.delay, self.clock = time.sleep, 0.02, time.monotonic
         if os.name == "nt":
@@ -44,9 +46,11 @@ class InterpreterFinalizer:
     def __del__(self):
         if not self.finalizing() or self.handler(self.sigint) is not None:
             self.exit(19)
-        descriptor = self.open(self.held, self.flags, 0o600)
+        descriptor = self.open(self.staged, self.flags, 0o600)
         self.write(descriptor, b"interpreter-finalizing; python-signal-handler-cleared")
         self.close(descriptor)
+        # Existence is the parent's readiness signal, so publish complete bytes.
+        self.replace(self.staged, self.held)
         deadline = self.clock() + 10
         while not self.access(self.release, 0):
             if self.clock() >= deadline:

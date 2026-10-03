@@ -1,7 +1,7 @@
 # Architectural Truth: Executable Goal Queue
 
 Last updated: 2026-10-02 (America/Denver)
-Status: Active implementation; ATG-01 through ATG-08 published, ATG-09 local prerequisites restored
+Status: Active implementation; eight goals complete, ATG-09 local acceptance complete and hosted Quality blocked
 Queue: ATG-v1 — ten fixed goals for the existing revamp
 Owner: Orket Core
 Worktree: `C:/Source/Orket-architectural-truth`
@@ -77,7 +77,7 @@ do not repeat the 73-minute suite solely to restate this starting point.
 | ATG-06 | Clear canonical typing debt in bounded batches | ATG-02 through ATG-05 | complete: `52b45773` / `v0.6.123` |
 | ATG-07 | Restore the unchanged 89% coverage gate | ATG-02 through ATG-06 | complete: `1e5ce56f` / `v0.6.124` |
 | ATG-08 | Verify fresh Windows packages and public paths | ATG-07 | complete: `b7ab34bb` / `v0.6.125` |
-| ATG-09 | Complete applicable Linux, provider and hosted Quality proof | ATG-08; required environments available | in progress: local prerequisites restored; Linux/provider/hosted acceptance pending |
+| ATG-09 | Complete applicable Linux, provider and hosted Quality proof | ATG-08; required environments available | blocked: local installed/provider proof accepted; existing hosted runners unavailable |
 | ATG-10 | Reconcile and publish the bounded revamp result | ATG-01 through ATG-09 | waiting |
 
 ## Goal cards
@@ -300,69 +300,101 @@ counterexample and does not change parser/grounding behavior or add a new goal.
 
 ## Resume record
 
-- Current card/batch: **ATG-09 / ATG09-P01**, local prerequisite repair complete.
-  Completed cards: **8 of 10**. Linux/provider/hosted acceptance remains required;
-  ATG-10 stays dependent. User explicitly resumed the queue and on 2026-10-02
-  authorized repair of both local blockers and necessary package updates.
-- Published starting metadata checkpoint: `0e220386` / `v0.6.127`; clean branch,
-  annotated tag and remote readback are retained in `.tmp/atg09-resume-publication.json`.
-  New local-repair checkpoint: `v0.6.128`, five metadata files. Validation and
-  publication/process receipts are `.tmp/atg09-local-checks.json` and
-  `.tmp/atg09-local-publication.json`; inspect the receipt and remote tag for
-  publication status. `GOAL_WORKSETS.json::platform_worksets.local_repair` retains
-  exact configuration, package, process and evidence identities.
-- Windows Time repair: host NTP offset was about **18.113s** while Ubuntu was
-  synchronized to NTP. Administrator-approved service start/resync reduced it to
-  about **1ms**. Windows now reports Leap Indicator 0, stratum 5. Backed-up service
-  policy uses network-availability start/stop triggers and adaptive client polling
-  against the existing `time.windows.com` server. The original registry snapshot
-  and command transcripts are retained under `.tmp/atg09-windows-time-*`.
-- A03 clock proof: **primary / success**, unchanged passive owner and criteria.
-  **60.000425s synchronized quiet time**, **60.000427s elapsed**, maximum absolute
-  observed step **2.665138ms**, below the unchanged 10ms limit. The 240s observation
-  ceiling and 280s outer timeout remain. `.tmp/atg09-local-clock.json` retains
-  argv, environment, native identity, source/log/report hashes, exit 0 and no changed
-  inputs. Windows owner/launcher 11152/7376 and Linux child/wrapper 385/296 are
-  absent after return. A01/A02 failures remain intact; no Linux clock policy,
-  assertion, deadline or skip was changed. This is live prerequisite proof only.
-- llama.cpp repair: official stable-linked **b11146 / 7fe450e19** CUDA 12.4 build
-  installed at `D:/llama.cpp-releases/b11146`, with matching official archive hashes;
-  old b9134/b10809 copies remain. The current default GGUF is already local.
-  `http://127.0.0.1:8080/v1` serves
-  `orcarouter_qwen3.8-27b-uncensored-q4_k_l`; health/catalog and actual exact-response
-  inference pass. Server PID 33276 remains running with 8,192-token context,
-  one slot and GPU offload. Launcher: `D:/llama.cpp-releases/Start-Orket-Llama.ps1`;
-  logs: `D:/llama.cpp-releases/orket-server/`. Receipts:
-  `.tmp/atg09-llama-update.json` and `.tmp/atg09-llama-repair-proof.json`.
-  This repairs local readiness; Orket public-flow/cleanup proof is still required.
-- Package limits: WSL 2.6.3 is retained because the targeted time repair passes,
-  Ubuntu resides on `V:` and official WSL 3.0.1 has a reported moved-distro startup
-  regression. No Pinokio, Linux NTP replacement, Windows preview update, provider
-  switch or new infrastructure was needed. Configuration persistence is observed;
-  reboot/network-transition behavior has not been exercised.
-- Gitea discovery: existing `vibe-rail-gitea` serves Gitea 1.25.4 at
-  `http://localhost:3000`, with public repository `Orket/Orket`. The repository's
-  Actions runs/runners APIs return **HTTP 401**. Authenticated existing runner/job
-  access was requested without asking for credentials in chat. No hosted job has run.
-- Reused application evidence remains bound to **v0.6.125 / b7ab34bb**. The prior
-  read-only audit matched source, test/helper, artifact and installed namespace
-  hashes. ATG-07 retains **12,964 passed, 93 skipped, 89.213132%** combined coverage;
-  Windows Python 3.11.14/3.12.2 each retain **6,231 passed, zero failed, three
-  unchanged Gitea opt-in skips**. Thirty-four source-only controls remain separate.
-  Later metadata and these environment repairs do not upgrade that proof's scope.
-- Next exact action: freeze fresh applicable Linux Python 3.11/3.12 installations
-  using the retained matching artifacts/selection, then run native installed
-  acceptance and the actual llama.cpp Orket public flow with observed cleanup.
-  Continue independent eligible proof while obtaining Gitea authorization. Keep
-  source/harness inputs frozen and retain process receipts before launch.
-- Remaining blockers or drift: Linux installed and Orket provider acceptance are
-  pending; hosted Gitea authorization is unavailable. Historical source/harness
-  maps encode one unrelated Companion PDF separator as U+00E2/U+20AC/U+2018 instead
-  of U+2011; its content hash still matches
-  `f86e5e21ea112acec5371bab9a93dd8720fec05cece527dc15b9eca9faa323b2`.
-  Preserve historical receipts. The earlier API timing outlier remains unexplained;
-  its unchanged assertion passed the final source run. Deferred findings stay
-  outside the queue. No main merge or ATG-09/10 completion is claimed.
+- Current card/batch: **ATG-09 / ATG09-P01**. **8 of 10 goals complete**.
+  Available local installed/provider acceptance is complete; required hosted Gitea
+  Quality remains blocked. ATG-10 stays dependent. User authorized resumption and
+  repair/update of both existing local blockers; no new infrastructure or main merge.
+- Checkpoint: **v0.6.129**, based on `5a07909e` / `v0.6.128`, with the repaired
+  reload fixture and five metadata files. Validation/publication receipts are
+  `.tmp/atg09-acceptance-checks.json` and `.tmp/atg09-acceptance-publication.json`.
+  Inspect their terminal status, annotated tag and remote readback before assuming
+  publication. `platform_worksets.local_acceptance` binds the exact evidence hashes.
+- Local software: official llama.cpp **b11146 / 7fe450e19**, CUDA 12.4, is installed
+  at `D:/llama.cpp-releases/b11146`; older copies remain. The existing GGUF serves
+  `orcarouter_qwen3.8-27b-uncensored-q4_k_l` at `http://127.0.0.1:8080/v1`.
+  Manual launcher: `D:/llama.cpp-releases/Start-Orket-Llama.ps1`; logs are under
+  `D:/llama.cpp-releases/orket-server/`. Server PID 33276 is operator owned and was
+  intentionally left running. Update/readiness receipts are `.tmp/atg09-llama-update.json`
+  and `.tmp/atg09-llama-repair-proof.json`; inspect live process/health before reuse.
+- Clock repair: Windows Time was started and synchronized to its existing
+  `time.windows.com` source, with backed-up network-start/stop service policy.
+  Ubuntu's duplicate `systemd-timesyncd` is now **disabled and inactive**, while
+  existing WSL PHC synchronization and genuine `NTPSynchronized=yes` remain.
+  `.tmp/atg09-clock-service-persistent.json` retains the exact change and reversal
+  (`systemctl enable --now systemd-timesyncd.service` inside Ubuntu).
+  Persistence through an actual Ubuntu restart is verified; Windows reboot and
+  network-transition behavior remain unverified. WSL 2.6.3 is retained; a newer
+  package was not required for the passing local proof, and the known moved-distro
+  startup concern remains relevant to this Ubuntu installation on `V:`.
+- Clock evidence: A03's earlier 60-second pass did not prove sustained stability;
+  full Linux 3.11 later recorded 39 steps above 10ms. A04 failed after the temporary
+  service stop was undone by an Ubuntu restart; its journal preserves that fact.
+  After the persistent change, **A05 passes**: 60.009528 synchronized quiet seconds
+  within 100.174335s, with qualified-window steps from -55.29us to +6.370654ms.
+  The earlier 20.090341ms step and two unsynchronized reads remain in its raw result.
+  Original 60s quiet / 240s ceiling / 10ms step / 280s outer limits are unchanged.
+  `.tmp/atg09-persistent-clock.json`, `.tmp/atg09-clock-A05-audit.json` and
+  `.tmp/atg09-clock-lifecycle-audit.json` retain observations and process identities.
+  Another qualification requires a demonstrated environment change. Long-term
+  stability and the exact adjustment caller are not established by this gate.
+- Installed evidence uses unchanged **v0.6.125 / b7ab34bb** core and SDK artifacts.
+  Linux A02 full runs retain Python 3.11 **6,225 passes / nine skips** and Python 3.12
+  **6,224 passes / one failure / nine skips**. The sole failure is the existing
+  exact-content assertion reading an empty interpreter-finalization marker.
+  The fixture now writes/closes a staging file and atomically publishes the marker;
+  all assertions, deadlines, signal behavior and skip rules remain unchanged.
+- R01 independently rechecks both affected reload files in Linux/Windows Python
+  3.11/3.12: **16 passes per cell, 64 total, no failures/skips**, with frozen source,
+  installed origins and all 1,242 core / 31 SDK namespace bytes unchanged. New
+  separate harnesses overlay only the repaired helper. All commands settle normally;
+  each cell completes below its 600s admission/completion limit. Native command
+  waits enforce the remaining budget; the launcher has no independent hard outer
+  watchdog. The original failed run is retained, not relabeled as passing.
+  Composite totals replace all 16 prior scoped outcomes: each Linux cell has
+  **6,225 passes / nine declared skips**; each Windows cell has **6,231 passes /
+  three retained Gitea opt-in skips**. Thirty-four source-only controls remain separate.
+  Receipts: `.tmp/atg09-linux-{freeze,cells,proof,launch}.json`,
+  `.tmp/atg09-reload-{freeze,proof,launch}.json` and
+  `.tmp/atg09-local-acceptance-audit.json`. Raw timing samples remain observations
+  for readback, not a new campaign-wide gate or long-term clock guarantee.
+  Linux pytest monitors cover 30.719s/32.371s, with maximum absolute sampled steps
+  1.209951ms/1.110825ms; admission/readback gaps were not continuously monitored.
+  Windows raw flags remain: both pinned interpreters report 15.625ms wall/monotonic
+  resolution, consistent with the observed 10-13.7125ms residuals. Those flags do
+  not establish actual Windows host steps. The locked A02 artifact audit passes;
+  an earlier audit whose helper changed mid-readback is retained as invalidated.
+- Provider proof is **primary / success** for three actual llama.cpp SSE cases
+  through public `run_builtin_workload(model_stream_v1)`: completion, interaction
+  cancellation and caller cancellation. Original iterator/client/response/transport
+  owners settle, interaction state is empty and no pending tasks remain. Caller
+  cancellation stays cancellation; session close retains its fail-closed result.
+  Process 8404 exited 0 and was absent. Receipts are `.tmp/atg09_provider_inputs.json`,
+  `.tmp/atg09_provider_result.json` and `.tmp/atg09-provider-launch.json`. Existing
+  12s/60s/90s/10s limits and the 300s process ceiling remain. Scope is the public
+  library flow; API HTTP transport, installed-provider execution and remote inference
+  teardown are not established by this proof. Reuse it while relevant inputs match.
+- Gitea blocker: existing `vibe-rail-gitea`, Gitea 1.25.4, serves
+  `http://localhost:3000/Orket/Orket`. Existing credentials in `C:/Source/Orket/.env`
+  authenticate successfully without disclosure. Repository and administrator
+  instance-wide runner inventories both return **HTTP 200, zero runners**; no local
+  runner process/container/service is present. This branch has no hosted candidate
+  run. `.tmp/atg09-gitea-access.json` retains the read-only evidence. Required input:
+  **the existing Ubuntu/Windows Gitea runners' locations and start/access instructions**.
+  No runner, hosted job or infrastructure was created; no provider switch occurred.
+- Next exact action: verify this checkpoint's receipts/publication and the runner
+  input. When existing runners are available, run the frozen required hosted Quality
+  matrix at the published fixture-repaired checkpoint, retain job/environment/commit
+  identity, close ATG-09 and continue ATG-10. Do not repeat unchanged accepted local
+  campaigns merely to reconstruct context. A required missing job remains blocked.
+- Remaining blockers or drift: hosted Gitea Quality is absent; ATG-09/10 and whole
+  campaign completion are not claimed. ATG-07's 12,964 passes / 93 skips / 89.213132%
+  combined coverage remain bound to unchanged production inputs, with affected
+  fixture behavior refreshed by R01. Historical source/harness maps contain one
+  unrelated PDF path-label encoding discrepancy; the retained correct build snapshot
+  and content hash match. Preserve those receipts. The earlier API timing outlier
+  remains unexplained; its unchanged assertion passed the accepted final source run.
+  Deferred findings remain outside the fixed queue, and current-authority structural
+  checks do not establish general current-runtime proof.
 
 ## Reusable goal prompt
 

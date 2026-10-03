@@ -5,18 +5,17 @@ Status: Active project registry
 Owner: Orket Core
 
 The [executable goal queue](ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md) is the single
-canonical implementation plan and the file to target for continuing goal execution.
-It defines ten fixed goals, dependencies, starting and exit criteria, evidence
-requirements, exclusions and a resume record. **ATG-01 through ATG-08 are published
-through v0.6.125; ATG-09 local clock and llama.cpp prerequisites are now restored,
-with Linux/provider acceptance pending and hosted Gitea authorization required.** Larger goals use bounded
-batches without replacing the user's objective. The [workset inventory](GOAL_WORKSETS.json)
-binds current sources, retained proof and pending batch IDs without creating a second plan.
-Version 0.6.128 records the local repair and passing unchanged Linux clock gate,
-verified llama.cpp update and real model readiness. Accepted Windows application
-evidence remains bound to 0.6.125. The canonical plan retains exact process and
-configuration receipts and the next Linux/provider/hosted acceptance work.
-ATG-10 remains dependent.
+canonical implementation plan and resume record for ten fixed goals. **Eight goals
+are complete; ATG-09 local installed/provider acceptance is complete, while required
+hosted Gitea runners are unavailable. ATG-10 remains dependent.**
+The [workset inventory](GOAL_WORKSETS.json) binds sources, receipts and frozen batches.
+Checkpoint v0.6.129 repairs a reload-test marker publication race and records local
+acceptance: 64 scoped installed rechecks refresh affected Linux/Windows evidence,
+the persistent WSL clock repair passes its unchanged prerequisite, and actual
+llama.cpp public-library completion/cancellation proof passes. Runtime artifacts
+remain v0.6.125; composite evidence preserves the original Linux failure and all
+unchanged assertions, deadlines and skips. The canonical plan contains exact proof
+limits, publication receipts and the existing runner input needed to resume.
 
 The branch is `codex/architectural-truth-bt0` in
 `C:/Source/Orket-architectural-truth`. Published `v0.6.117` closes the eight fixture
@@ -28,7 +27,7 @@ The preserved baseline and proof limits are summarized in the queue. ATG-07's
 inputs. ATG-08's [closeout](../archive/architectural-truth/AT10012026-ATG08/CLOSEOUT.md)
 records fresh Windows Python 3.11/3.12 installed selections: each has 6,231 passes,
 zero failures and three unchanged Gitea opt-in skips, with package and input identity
-preserved. Fresh Linux/provider/hosted proof remains open.
+preserved. The canonical plan records accepted local Linux/provider evidence and the remaining hosted Quality blocker.
 
 The [history archive](../archive/architectural-truth/AT10012026-GOAL-QUEUE/README.md)
 preserves the former plan and registry without discarding their observations.

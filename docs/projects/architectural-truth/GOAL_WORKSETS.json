@@ -10125,206 +10125,6 @@
   ],
   "diff_ledger": [
     {
-      "run_at_utc": "2026-10-01T19:23:56.857130Z",
-      "changed": true,
-      "before_digest": "sha256:776b17f73376f02498b71ea92b1de0024b34e6c3c3b7dcf3d5802bf58a35406c",
-      "after_digest": "sha256:92f1586a339678aba618cc20df354c6ce47324c8b70e8b0d8837b6da15b53656",
-      "diff": {
-        "added_paths": 4,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 15646,
-        "paths_total_current": 16983,
-        "paths_total_reference": 16983,
-        "churn_paths": 5,
-        "churn_ratio": 0.000294,
-        "sample_paths": [
-          "$.diff_ledger",
-          "$.coverage_worksets.batches[9].additional_current_full_outcomes",
-          "$.coverage_worksets.batches[9].closing",
-          "$.coverage_worksets.batches[9].status",
-          "$.coverage_worksets.batches"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-10-01T19:28:34.073677Z",
-      "changed": true,
-      "before_digest": "sha256:4bfcb02e9269fd6ea1ed869f1d6b63dd9a5b2255dbbef89c0eec19e3564339ca",
-      "after_digest": "sha256:fdd90129f3fe9d3f22df7c36285d60cf862d76d543fdc5ca0428d23d6e279bcd",
-      "diff": {
-        "added_paths": 4,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 15670,
-        "paths_total_current": 16999,
-        "paths_total_reference": 16999,
-        "churn_paths": 5,
-        "churn_ratio": 0.000294,
-        "sample_paths": [
-          "$.diff_ledger",
-          "$.coverage_worksets.batches[10].additional_current_full_outcomes",
-          "$.coverage_worksets.batches[10].closing",
-          "$.coverage_worksets.batches[10].status",
-          "$.coverage_worksets.batches"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-10-01T21:57:58.564828Z",
-      "changed": true,
-      "before_digest": "sha256:5835b890deb8acf9295145e4e887c94a6d246089e1ad907b1eaf8bd27bd5bd37",
-      "after_digest": "sha256:a89eb684d1d7dde8ab196160d5a418f991140385ff1a2e4d7a266be9c23d4442",
-      "diff": {
-        "added_paths": 10,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 16162,
-        "paths_total_current": 17560,
-        "paths_total_reference": 17560,
-        "churn_paths": 11,
-        "churn_ratio": 0.000626,
-        "sample_paths": [
-          "$.diff_ledger",
-          "$.coverage_worksets.reconciliation",
-          "$.coverage_worksets.stabilized_candidate_campaign.changed_inputs",
-          "$.coverage_worksets.stabilized_candidate_campaign.counts",
-          "$.coverage_worksets.stabilized_candidate_campaign.coverage_totals",
-          "$.coverage_worksets.stabilized_candidate_campaign.elapsed_seconds",
-          "$.coverage_worksets.stabilized_candidate_campaign.failure",
-          "$.coverage_worksets.stabilized_candidate_campaign.limits",
-          "$.coverage_worksets.stabilized_candidate_campaign.result",
-          "$.coverage_worksets.stabilized_candidate_campaign.warnings",
-          "$.coverage_worksets.stabilized_candidate_campaign.status"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-10-01T22:00:08.550427Z",
-      "changed": true,
-      "before_digest": "sha256:a40a4bc903c3d0cf66ac4585eadf63a8f4934e48091c10d013f39589026702ad",
-      "after_digest": "sha256:6c4e0aa9d2db83ff053d8ee59500ae63d762e45eb38265bf5f724c46926b2f89",
-      "diff": {
-        "added_paths": 4,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 16263,
-        "paths_total_current": 17579,
-        "paths_total_reference": 17579,
-        "churn_paths": 5,
-        "churn_ratio": 0.000284,
-        "sample_paths": [
-          "$.diff_ledger",
-          "$.coverage_worksets.reconciliation[5].diagnostic_readback",
-          "$.coverage_worksets.reconciliation[5].diagnostic_test_change",
-          "$.coverage_worksets.reconciliation[5].native_probe",
-          "$.coverage_worksets.reconciliation[5].status"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-10-01T22:00:32.328805Z",
-      "changed": true,
-      "before_digest": "sha256:58cbd3ec6d839c1470308451806535508642eb26aa2ed6cb8396eb9c76d26c2a",
-      "after_digest": "sha256:f6b3cb81be36d0d073d411edb32bca2f04108e31f2a5a52806370bcbb5519e23",
-      "diff": {
-        "added_paths": 1,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 16280,
-        "paths_total_current": 17583,
-        "paths_total_reference": 17583,
-        "churn_paths": 2,
-        "churn_ratio": 0.000114,
-        "sample_paths": [
-          "$.diff_ledger",
-          "$.coverage_worksets.reconciliation[5].native_probe.sha256"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-10-01T22:02:03.890846Z",
-      "changed": true,
-      "before_digest": "sha256:e7b71bbd8ce0e05e9c7695d32cbe30cc37261268239e4e244db951f5fd3d2582",
-      "after_digest": "sha256:d43be75183bb62322efe2a517cc0572a05afc4cdc1052976371d6351dccbc83c",
-      "diff": {
-        "added_paths": 3,
-        "removed_paths": 0,
-        "changed_paths": 2,
-        "initial_write": false,
-        "paths_total_previous": 16280,
-        "paths_total_current": 17573,
-        "paths_total_reference": 17573,
-        "churn_paths": 5,
-        "churn_ratio": 0.000285,
-        "sample_paths": [
-          "$.diff_ledger",
-          "$.coverage_worksets.reconciliation[5].native_counterexample",
-          "$.coverage_worksets.reconciliation[5].native_probe.next_mode",
-          "$.coverage_worksets.reconciliation[5].native_probe.sha256",
-          "$.coverage_worksets.reconciliation[5].status"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-10-01T22:06:58.023091Z",
-      "changed": true,
-      "before_digest": "sha256:7d09927219e19690ecd266b23041cebfc9e9c454ad11d6c78202a84ecf2feead",
-      "after_digest": "sha256:20168d527b122a8cb4471b71eaf04c5d273b08ee8bf7646c7f159d931a44f32c",
-      "diff": {
-        "added_paths": 13,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 16284,
-        "paths_total_current": 17589,
-        "paths_total_reference": 17589,
-        "churn_paths": 14,
-        "churn_ratio": 0.000796,
-        "sample_paths": [
-          "$.diff_ledger",
-          "$.coverage_worksets.reconciliation[5].diagnosis",
-          "$.coverage_worksets.reconciliation[5].limits",
-          "$.coverage_worksets.reconciliation[5].new_proof",
-          "$.coverage_worksets.reconciliation[5].repair",
-          "$.coverage_worksets.reconciliation[5].paths",
-          "$.coverage_worksets.reconciliation[5].source_sha256..gitea/workflows/quality.yml",
-          "$.coverage_worksets.reconciliation[5].source_sha256.docs/CONTRIBUTOR.md",
-          "$.coverage_worksets.reconciliation[5].source_sha256.docs/architecture/CONTRACT_DELTA_ASYNC_FILE_OPERATIONS_D_2026-09-21.md",
-          "$.coverage_worksets.reconciliation[5].source_sha256.tests/contracts/test_file_path_identity.py",
-          "$.coverage_worksets.reconciliation[5].status"
-        ]
-      }
-    },
-    {
-      "run_at_utc": "2026-10-01T22:10:19.675459Z",
-      "changed": true,
-      "before_digest": "sha256:fe8e972b27420b74e5d161e921bce84b21657e3490475120aad8cf194f399100",
-      "after_digest": "sha256:197f30a5a42ffb48daf12faedd9f2776a5cfe11e69f9f4468739f741b5d9101b",
-      "diff": {
-        "added_paths": 3,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 16308,
-        "paths_total_current": 17616,
-        "paths_total_reference": 17616,
-        "churn_paths": 4,
-        "churn_ratio": 0.000227,
-        "sample_paths": [
-          "$.diff_ledger",
-          "$.coverage_worksets.reconciliation[5].deterministic_counterexample",
-          "$.coverage_worksets.reconciliation[5].runtime_selection",
-          "$.coverage_worksets.reconciliation[5].status"
-        ]
-      }
-    },
-    {
       "run_at_utc": "2026-10-01T22:11:55.745085Z",
       "changed": true,
       "before_digest": "sha256:96bcaec8fbdc2673488e425aa5238ca37413c429b19104d78b09081aa3821082",
@@ -10893,6 +10693,230 @@
           "$.platform_worksets.local_repair.next_action",
           "$.platform_worksets.local_repair.status",
           "$.platform_worksets.next_action",
+          "$.platform_worksets.status"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-02T22:54:24.777785Z",
+      "changed": true,
+      "before_digest": "sha256:941bd7c6fbe9fec600e8dee361406669476245c55f169ac4055a2c86ad70bf35",
+      "after_digest": "sha256:6c6f36821f2bdaf01a801e0df66a3fbfdfc96868ea1e162d97e4cbddcab6056f",
+      "diff": {
+        "added_paths": 2,
+        "removed_paths": 0,
+        "changed_paths": 3,
+        "initial_write": false,
+        "paths_total_previous": 19818,
+        "paths_total_current": 21116,
+        "paths_total_reference": 21116,
+        "churn_paths": 5,
+        "churn_ratio": 0.000237,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.platform_worksets.gitea_access",
+          "$.platform_worksets.external_prerequisites",
+          "$.platform_worksets.next_action",
+          "$.platform_worksets.status"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-02T23:06:13.337845Z",
+      "changed": true,
+      "before_digest": "sha256:235b6867aafd8952a37c35545fa0542acbe65f5b2f11234d4d58dcf78bc835ba",
+      "after_digest": "sha256:91bd716ad617134ead31079fdf487f85fbebb54f477e03a8b48f6e3236a334c7",
+      "diff": {
+        "added_paths": 2,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 19839,
+        "paths_total_current": 21214,
+        "paths_total_reference": 21214,
+        "churn_paths": 3,
+        "churn_ratio": 0.000141,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.platform_worksets.acceptance",
+          "$.platform_worksets.current_batch"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-02T23:07:35.248069Z",
+      "changed": true,
+      "before_digest": "sha256:32294f07b3db7f738002eafd011cad9d136c6380891c8dccd2003ea6fa39658c",
+      "after_digest": "sha256:c5946575e4aa093a559bac8458a66977f6e57f8169ed13a1ab370560041c0992",
+      "diff": {
+        "added_paths": 6,
+        "removed_paths": 0,
+        "changed_paths": 3,
+        "initial_write": false,
+        "paths_total_previous": 19937,
+        "paths_total_current": 21229,
+        "paths_total_reference": 21229,
+        "churn_paths": 9,
+        "churn_ratio": 0.000424,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.platform_worksets.acceptance.linux.prior_attempt",
+          "$.platform_worksets.acceptance.linux.attempt",
+          "$.platform_worksets.acceptance.linux.helper_sha256..tmp/atg09_launch_linux.py",
+          "$.platform_worksets.acceptance.linux.helper_sha256..tmp/atg09_linux_common.py",
+          "$.platform_worksets.acceptance.provider.inputs_sha256",
+          "$.platform_worksets.acceptance.provider.launcher_sha256",
+          "$.platform_worksets.acceptance.provider.proof_sha256",
+          "$.platform_worksets.acceptance.provider.status"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-02T23:56:21.446841Z",
+      "changed": true,
+      "before_digest": "sha256:21730918808fad6de940791294e40f92daab4e3c17b2cb48d67aa4a3e6ba1333",
+      "after_digest": "sha256:b4a1848ff00de12ef7c0bb9e34f988ebad0e683c6f5d5272e897e4d51b1aeeed",
+      "diff": {
+        "added_paths": 3,
+        "removed_paths": 0,
+        "changed_paths": 2,
+        "initial_write": false,
+        "paths_total_previous": 19956,
+        "paths_total_current": 21293,
+        "paths_total_reference": 21293,
+        "churn_paths": 5,
+        "churn_ratio": 0.000235,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.platform_worksets.clock_remediation",
+          "$.platform_worksets.fixture_repair",
+          "$.platform_worksets.current_batch",
+          "$.platform_worksets.status"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-02T23:57:14.761030Z",
+      "changed": true,
+      "before_digest": "sha256:d6b2c70a0bb9368045fae3a9b387264c3591b6c098604ee33da3d0b25160a5e6",
+      "after_digest": "sha256:6ffbf177eb721dc0a12da0109304ab036ca7275794c07e21c004c0dd1471b24b",
+      "diff": {
+        "added_paths": 5,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 20024,
+        "paths_total_current": 21304,
+        "paths_total_reference": 21304,
+        "churn_paths": 6,
+        "churn_ratio": 0.000282,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.platform_worksets.clock_remediation.clock_attempt",
+          "$.platform_worksets.clock_remediation.environment_change",
+          "$.platform_worksets.clock_remediation.helper_sha256",
+          "$.platform_worksets.clock_remediation.service_receipt_sha256",
+          "$.platform_worksets.clock_remediation.status"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-03T00:06:47.176627Z",
+      "changed": true,
+      "before_digest": "sha256:bd40b744cd55bd00a262b81f88f4eb662db014dbf5273c490b9fbff1f4692e00",
+      "after_digest": "sha256:d6cd3a3ea1046f089c1f323e738f2039396f30c8f9f0e20284db09cb26485bb4",
+      "diff": {
+        "added_paths": 6,
+        "removed_paths": 1,
+        "changed_paths": 3,
+        "initial_write": false,
+        "paths_total_previous": 20035,
+        "paths_total_current": 21350,
+        "paths_total_reference": 21350,
+        "churn_paths": 10,
+        "churn_ratio": 0.000468,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.platform_worksets.clock_remediation.persistent_service_receipt",
+          "$.platform_worksets.clock_remediation.persistent_service_receipt_sha256",
+          "$.platform_worksets.clock_remediation.prior_A04",
+          "$.platform_worksets.clock_remediation.reversal_argv",
+          "$.platform_worksets.clock_remediation.clock_attempt",
+          "$.platform_worksets.clock_remediation.clock_receipt",
+          "$.platform_worksets.clock_remediation.environment_change",
+          "$.platform_worksets.clock_remediation.helper_sha256..tmp/atg09_dual_clock.py",
+          "$.platform_worksets.clock_remediation.helper_sha256..tmp/atg09_persistent_clock.py"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-03T00:10:28.854241Z",
+      "changed": true,
+      "before_digest": "sha256:bbbcc7c9326fbb3ef2708f459bc1a1f273a430e332a181964d4e608ea16a2305",
+      "after_digest": "sha256:ecac94d32d60999ad125175acb594364327b5967477f0e01bb9f2f9c904620f0",
+      "diff": {
+        "added_paths": 13,
+        "removed_paths": 0,
+        "changed_paths": 5,
+        "initial_write": false,
+        "paths_total_previous": 20073,
+        "paths_total_current": 21384,
+        "paths_total_reference": 21384,
+        "churn_paths": 18,
+        "churn_ratio": 0.000842,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.platform_worksets.clock_remediation.clock_receipt_sha256",
+          "$.platform_worksets.clock_remediation.elapsed_seconds",
+          "$.platform_worksets.clock_remediation.limit",
+          "$.platform_worksets.clock_remediation.native_quiet_seconds",
+          "$.platform_worksets.clock_remediation.status",
+          "$.platform_worksets.current_batch",
+          "$.platform_worksets.fixture_repair.after_sha256",
+          "$.platform_worksets.fixture_repair.attempt",
+          "$.platform_worksets.fixture_repair.kill_after_seconds",
+          "$.platform_worksets.fixture_repair.linux_admission",
+          "$.platform_worksets.fixture_repair.native_owner",
+          "$.platform_worksets.fixture_repair.process_receipt",
+          "$.platform_worksets.fixture_repair.reuse",
+          "$.platform_worksets.fixture_repair.whole_cell_timeout_seconds",
+          "$.platform_worksets.fixture_repair.status",
+          "$.platform_worksets.next_action",
+          "$.platform_worksets.status"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-03T00:40:01.763182Z",
+      "changed": true,
+      "before_digest": "sha256:ab3bb3fbea084f0939ff500b9e1be9eebdc9dce2264babaa34a682cf37d067cf",
+      "after_digest": "sha256:0d289fe8c44500ec1ef574ca6ae5a8827c03f48014c8bfd5d7238e1f6ce4acee",
+      "diff": {
+        "added_paths": 8,
+        "removed_paths": 2,
+        "changed_paths": 7,
+        "initial_write": false,
+        "paths_total_previous": 20097,
+        "paths_total_current": 21521,
+        "paths_total_reference": 21521,
+        "churn_paths": 17,
+        "churn_ratio": 0.00079,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.platform_worksets.hosted_candidate",
+          "$.platform_worksets.local_acceptance",
+          "$.platform_worksets.acceptance.linux.composite_receipt",
+          "$.platform_worksets.acceptance.linux.scoped_receipt",
+          "$.platform_worksets.acceptance.linux.status",
+          "$.platform_worksets.acceptance.status",
+          "$.platform_worksets.current_batch",
+          "$.platform_worksets.external_prerequisites",
+          "$.platform_worksets.fixture_repair.counts",
+          "$.platform_worksets.fixture_repair.proof_receipt_sha256",
+          "$.platform_worksets.fixture_repair.status",
+          "$.platform_worksets.next_action",
+          "$.platform_worksets.remaining[0]",
+          "$.platform_worksets.remaining",
           "$.platform_worksets.status"
         ]
       }
@@ -13878,8 +13902,8 @@
   },
   "platform_worksets": {
     "goal": "ATG-09",
-    "status": "in progress; local prerequisites restored, hosted authorization blocked",
-    "current_batch": "ATG09-P01 local prerequisite repair complete; required acceptance pending",
+    "status": "ATG09-P01 hosted Quality environment blocker; local acceptance complete",
+    "current_batch": "ATG09-P01 existing hosted Gitea runner prerequisite",
     "candidate_commit": "b7ab34bba7d76a146cf4782c8522681de22ac544",
     "candidate_tag": "v0.6.125",
     "paths": [
@@ -13909,12 +13933,10 @@
     "windows_artifact_receipt": ".tmp/atg08-build.json",
     "windows_artifact_receipt_sha256": "cb8dd5cafd6debc01eab9a54c68d2dc7c97d0ee385d12f150217e974951a2e4a",
     "remaining": [
-      "Freeze fresh applicable Linux cells after current host-clock preflight; preserve source-defined platform skips and all assertions.",
-      "Actual llama.cpp endpoint/model readiness and changed public flow with cleanup.",
-      "Existing hosted Gitea repository/runner access and required Quality matrix."
+      "Existing hosted Gitea Ubuntu/Windows runners and required Quality jobs at the published fixture-repaired checkpoint."
     ],
-    "external_prerequisites": "Local clock and llama.cpp readiness now pass. Existing Gitea repository is reachable but Actions APIs return401; authenticated runner/job access is requested.",
-    "next_action": "Freeze and run the applicable Linux installed selections and actual Orket provider public-flow proof; obtain authenticated access to the existing Gitea Actions repository/runner. ATG-10 stays dependent.",
+    "external_prerequisites": "Existing Gitea credentials work, but both repository and instance-wide runner inventories contain zero runners. Need existing Ubuntu/Windows runner locations and start/access instructions. No infrastructure provisioning authorized.",
+    "next_action": "Verify v0.6.129 publication and retained receipt/input identity. Obtain existing Gitea runner access, run required hosted Quality jobs at this fixture-repaired checkpoint, then close ATG-09 and proceed to dependent ATG-10. Do not repeat unchanged local campaigns.",
     "probe_limits": "Interpreter version probes succeeded. The first combined shell command failed only its uv lookup due to quote stripping; no uv availability was established by that command.",
     "clock_result": {
       "path": "blocked",
@@ -14189,6 +14211,251 @@
         "runtime_evidence_version": "0.6.125",
         "scope": "Local environment repair/readiness checkpoint, not ATG-09 application acceptance."
       }
+    },
+    "gitea_access": {
+      "status": "environment blocker",
+      "receipt": ".tmp/atg09-gitea-access.json",
+      "receipt_sha256": "7e76cd25db31bc9d4ffd7a7f4e7e46b653aa1d2548f52eb733fee61adebd5d94",
+      "scope": "Authenticated read-only API observation; no mutation",
+      "repository": "http://localhost:3000/Orket/Orket",
+      "repository_runners": 0,
+      "instance_runners": 0,
+      "candidate_hosted_runs": 0,
+      "candidate_branch_present": false,
+      "missing_input": "Existing Ubuntu and Windows runner location/start instructions"
+    },
+    "acceptance": {
+      "status": "local available acceptance complete; hosted Quality blocked",
+      "batch": "ATG09-P01",
+      "metadata_commit": "5a07909eb4edd41f1d0f752e05e7cae76b5e8372",
+      "runtime_candidate": "b7ab34bba7d76a146cf4782c8522681de22ac544",
+      "runtime_version": "0.6.125",
+      "linux": {
+        "freeze": ".tmp/atg09-linux-freeze.json",
+        "launcher": ".tmp/atg09-linux-launch.json",
+        "preparation": ".tmp/atg09-linux-cells.json",
+        "proof": ".tmp/atg09-linux-proof.json",
+        "helper_sha256": {
+          ".tmp/atg09_linux_common.py": "a6e24a6c398ca46898387d21aac642b2092d77372e008193359408b6a3509d2c",
+          ".tmp/atg09_linux_prepare.py": "149f652f7d63be39479bd9a7ca061baad0fb97853d1075ae35dfd6e182e76914",
+          ".tmp/atg09_linux_run.py": "822bd6083f7e6179bb29cedd821da39a731b1cdc7f1a161fd728e6916a4ee982",
+          ".tmp/atg09_launch_linux.py": "000938f87985df822c6060a27f69c0c8c51fe556f00a072688b2b2a664926f03",
+          ".tmp/atg08_run_cell.py": "74b3942464c7acddee8437344b2351b286bb0a16ce7a3a856235b2b42d5ab7dd",
+          ".tmp/atg08_installed_origin.py": "8c29ca4770e88d60c17d0fdc6c85ea7548a571804c1153fa0578a21643256770",
+          ".tmp/atg08_origin_probe.py": "d4be24cacddc890b935afbbc94e69e1087fd0133f4ed733444b390d89f8e7479",
+          ".tmp/atg08_pytest_driver.py": "996e5f54fb645468f96868d48ad52c6b326bd27ee057ddd637a5e68fe21483ba"
+        },
+        "cells": [
+          "py311",
+          "py312"
+        ],
+        "attempt": "A02",
+        "expected_case_count": 6234,
+        "expected_passed": 6225,
+        "expected_skipped": 9,
+        "preparation_timeout_seconds": 900,
+        "acceptance_timeout_seconds": 3600,
+        "kill_after_seconds": 5,
+        "deadline_scope": "Complete installed selection; earlier small-cell and internal test limits unchanged.",
+        "clock_gate": "Reuse unchanged successful A03; command clock sampling is observational.",
+        "prior_attempt": {
+          "attempt": "A01",
+          "outcome": "harness failure before installation or acceptance",
+          "reason": "Native Git cannot interpret Windows absolute gitdir in worktree descriptor",
+          "frozen_inputs": ".tmp/atg09-linux-process/A01/freeze.json",
+          "log": ".tmp/atg09-linux-process/py311-A01-prepare.log"
+        },
+        "status": "accepted composite installed evidence; original failed full run retained",
+        "composite_receipt": ".tmp/atg09-local-acceptance-audit.json",
+        "scoped_receipt": ".tmp/atg09-reload-proof.json"
+      },
+      "provider": {
+        "inputs": ".tmp/atg09_provider_inputs.json",
+        "launcher": ".tmp/atg09-provider-launch.json",
+        "proof": ".tmp/atg09_provider_result.json",
+        "helper_sha256": {
+          ".tmp/atg09_provider_inventory.py": "59fe8f708d84b13d849409d3aead5e677812e23ae65f330e90f19d94b54c9374",
+          ".tmp/atg09_provider_observe.py": "c251edf2cdecaab6ce790e1ff491cf4bf32c5fc8abb9fa3cee137c6ffb8cf4f0",
+          ".tmp/atg09_provider_proof.py": "a6fbe5270d3e19da1da799c47615b452c8e36f6b1954db440df1a9f750a531c6",
+          ".tmp/atg09_launch_provider.py": "0f35081b3cb5d8fcd1d73b7e3946caedb61f048dde46983db6ba81334157c888"
+        },
+        "cases": [
+          "success",
+          "interaction_cancel",
+          "caller_cancel"
+        ],
+        "scope": "Public library workload and actual llama.cpp HTTP SSE; no API HTTP transport claim.",
+        "whole_process_timeout_seconds": 300,
+        "existing_deadlines_seconds": {
+          "builtin_turn": 12,
+          "http": 60,
+          "workload": 90,
+          "queue_read": 10
+        },
+        "status": "complete: live public library inference and cleanup",
+        "proof_sha256": "e8d6c2e02eff2e6ef471e990b8ddde5e1d6fd682db3918ef61421a34c2e77450",
+        "inputs_sha256": "4ad06cbdd140cbe60b46a843239b48cf9dff07b310fa1b50635777e00bc5183c",
+        "launcher_sha256": "c4fec5f32350d965dc96e33db033f59bf520b4ccc247eada8e3ffd679c016c80"
+      },
+      "tracked_input_policy": "All Git-visible bytes and executing helper hashes frozen until terminal readback."
+    },
+    "fixture_repair": {
+      "batch": "ATG09-P01",
+      "status": "complete: four installed scoped cells pass",
+      "paths": [
+        "tests/helpers/reload_lifespan_app.py"
+      ],
+      "obligation": "Publish complete interpreter-finalization marker before parent observes its existence.",
+      "counterexample": "Linux Python 3.12 A02: exact marker-content assertion at line 37 read an empty string.",
+      "failed_receipt": ".tmp/atg09-linux-proof.json",
+      "failed_receipt_sha256": "fe0104d2b9552a19ddd27b7c702b5fbe5cd3f630ac112c872bc8f490dbb11bc6",
+      "before_sha256": "327f8b0214f6b2243ece5ac78f6feeadb548396ea5907db49b6151916490e3a6",
+      "change": "Retain os.replace and a same-directory staging path; write and close existing payload, then atomically publish held marker.",
+      "invariants": "No test assertion, timeout, skip, signal, process outcome or production runtime change.",
+      "required_affected_consumers": 13,
+      "scoped_selection": [
+        "tests/integration/test_api_reload_process_finalization.py",
+        "tests/integration/test_api_server_reload.py"
+      ],
+      "scoped_cells": [
+        "linux-py311",
+        "linux-py312",
+        "win-py311",
+        "win-py312"
+      ],
+      "proof_scope": "16 existing cases per cell; reuse unaffected evidence only with relevant input identity. Keep failed full run intact.",
+      "proof_receipt": ".tmp/atg09-reload-proof.json",
+      "freeze_receipt": ".tmp/atg09-reload-freeze.json",
+      "after_sha256": "88afdd448eb13622317c7bd0a2d3bf610a9c3d5fe4f4636bfc1442675b29808a",
+      "attempt": "R01",
+      "whole_cell_timeout_seconds": 600,
+      "kill_after_seconds": 5,
+      "native_owner": ".tmp/atg09_reload_run.py",
+      "process_receipt": ".tmp/atg09-reload-launch.json",
+      "reuse": "Explicit composite: remove all 16 prior scoped outcomes before combining the new scope with 6209 Linux or 6215 Windows unaffected passes and unchanged applicable skips.",
+      "linux_admission": "New successful post-A04 clock receipt supplied by exact path/hash; reject A03/A04, verify actual current service/synchronization and retained native boot.",
+      "counts": {
+        "cells": 4,
+        "cases_per_cell": 16,
+        "passed": 64,
+        "failed": 0,
+        "skipped": 0
+      },
+      "proof_receipt_sha256": "5c93436a6aad655ac18f86c6f9666b128e37a5c83b68faae92713347f2a978fa"
+    },
+    "clock_remediation": {
+      "status": "complete: persistent clock prerequisite verified",
+      "diagnosis_receipt": ".tmp/atg09-clock-diagnosis.json",
+      "diagnosis_sha256": "0d1ebe392d50565a316925e07e10453a4d18df866caa20ded38b3ea9d474095c",
+      "service_receipt": ".tmp/atg09-clock-service.json",
+      "clock_receipt": ".tmp/atg09-persistent-clock.json",
+      "change": "Stop only Ubuntu systemd-timesyncd temporarily; preserve Windows Time and existing WSL PHC synchronization.",
+      "criterion": {
+        "required_synchronized_quiet_seconds": 60,
+        "declared_max_seconds": 240,
+        "maximum_step_seconds": 0.01,
+        "outer_timeout_seconds": 280
+      },
+      "rule": "Qualification A04 requires actual service-state change and genuine NTPSynchronized=yes; no retries without another evidenced change.",
+      "clock_attempt": "A05",
+      "environment_change": "Ubuntu timesyncd persistently disabled and stopped; retains WSL PHC Normal and genuine NTPSynchronized=yes. Native probe brackets sampling with disabled/inactive/PID0 readback.",
+      "service_receipt_sha256": "8c77597a79df2185962a6f2c421727798eba2bfc53b795481e0b1ab7cd92ddaa",
+      "helper_sha256": {
+        ".tmp/atg09_persistent_clock.py": "edf043bb5d7bc0ac1d9fa928edebce2679b93e3eeafd94c98e47a6ae3df12d06",
+        ".tmp/d_reentry_clock_preflight.py": "f9af974826a7e06e9054d04d763e7130c9e51d8a2e9714cc4f836b1b04697682"
+      },
+      "prior_A04": {
+        "receipt": ".tmp/atg09-dual-clock.json",
+        "sha256": "a1d6ebb338518d99ec9754189d9371dcea6eb9595a3416baffd8e972ecaa4e3e",
+        "result": "environment blocker",
+        "elapsed_seconds": 240.029505606999,
+        "quiet_seconds": 26.520881552998617,
+        "interpretation": "Ubuntu restarted after temporary stop; A04 journal proves timesyncd PID154 active before sampling. The failed gate did not test a single clock controller."
+      },
+      "persistent_service_receipt": ".tmp/atg09-clock-service-persistent.json",
+      "persistent_service_receipt_sha256": "a9a3fe3da1aadf5f833fac884d39f0ff1cb7b36ae21f81a70777749dc7ec17d9",
+      "reversal_argv": [
+        "wsl.exe",
+        "-d",
+        "Ubuntu-24.04",
+        "-u",
+        "root",
+        "--exec",
+        "systemctl",
+        "enable",
+        "--now",
+        "systemd-timesyncd.service"
+      ],
+      "clock_receipt_sha256": "d74c6af20637be269b1b16fac7ccad048931b52398559e3a7fb853a99c63ee6f",
+      "native_quiet_seconds": 60.00952753000092,
+      "elapsed_seconds": 100.17433492999771,
+      "limit": "Early 20.090341ms step retained; final 60.009528s quiet window passes the unchanged gate. Longer-term clock stability remains observed separately."
+    },
+    "local_acceptance": {
+      "status": "complete: available local acceptance; hosted runners blocked",
+      "batch": "ATG09-P01",
+      "clock_receipt": ".tmp/atg09-persistent-clock.json",
+      "clock_receipt_sha256": "d74c6af20637be269b1b16fac7ccad048931b52398559e3a7fb853a99c63ee6f",
+      "receipt_sha256": {
+        ".tmp/atg09-linux-freeze.json": "35dc07db197329c16424250bbbdd6190d2d8257f8f01560a66cc46c54d029c7f",
+        ".tmp/atg09-linux-cells.json": "74075024680d0734c126e687644b368849178868988b31095bcb5a9c7b1a54f3",
+        ".tmp/atg09-linux-proof.json": "fe0104d2b9552a19ddd27b7c702b5fbe5cd3f630ac112c872bc8f490dbb11bc6",
+        ".tmp/atg09-linux-launch.json": "5af89fbbc12a8ba2249384e5e6fd9427475b6a9e09dceeff8391ff1ada48a51c",
+        ".tmp/atg09-reload-freeze.json": "c548502b7b72584b92da92811db108cf1d06cd8f84dee590d18d03d689da0f15",
+        ".tmp/atg09-reload-proof.json": "5c93436a6aad655ac18f86c6f9666b128e37a5c83b68faae92713347f2a978fa",
+        ".tmp/atg09-reload-launch.json": "00fbaff7e109f4b9576099a460156b54cbab04db3d00b7b703a23ece40fec41d",
+        ".tmp/atg09-local-acceptance-audit.json": "45327b988a2fd300a64537eb3f493ef9382d1399c0a31b4120c7c8fb428394fa",
+        ".tmp/atg09-persistent-clock.json": "d74c6af20637be269b1b16fac7ccad048931b52398559e3a7fb853a99c63ee6f",
+        ".tmp/atg09-clock-service-persistent.json": "a9a3fe3da1aadf5f833fac884d39f0ff1cb7b36ae21f81a70777749dc7ec17d9",
+        ".tmp/atg09-clock-A05-audit.json": "55cfb8e71484d7ff5bc77b36c8e4603b084a25664e6c0f2859d9cd4da51b0388",
+        ".tmp/atg09-clock-lifecycle-audit.json": "8c950cbfe197e985ab4a77b7b6448b79c62796ea0366eb8d95f336a5caaf55fb",
+        ".tmp/atg09_provider_inputs.json": "4ad06cbdd140cbe60b46a843239b48cf9dff07b310fa1b50635777e00bc5183c",
+        ".tmp/atg09_provider_result.json": "e8d6c2e02eff2e6ef471e990b8ddde5e1d6fd682db3918ef61421a34c2e77450",
+        ".tmp/atg09-provider-launch.json": "c4fec5f32350d965dc96e33db033f59bf520b4ccc247eada8e3ffd679c016c80",
+        ".tmp/atg09-gitea-access.json": "7e76cd25db31bc9d4ffd7a7f4e7e46b653aa1d2548f52eb733fee61adebd5d94",
+        ".tmp/atg09-native-acceptance-readback.json": "7f8ca5f494ecb5431ba067edabdbfd3c1bedcb8796be206582ab592a1f5305c7"
+      },
+      "installed_evidence": "Composite: four retained full selections with all 16 affected outcomes replaced by R01. Each Linux cell 6225 passed/9 declared skips; each Windows cell 6231 passed/3 declared skips.",
+      "original_failure": "Linux py312 A02 remains 6224 passed, 1 empty-marker fixture failure, 9 skips; raw evidence is immutable.",
+      "runtime_candidate": "v0.6.125 / b7ab34bba7d76a146cf4782c8522681de22ac544; unchanged core/SDK bytes with repaired test helper only.",
+      "provider": "Three live llama.cpp public-library completion/cancellation cases accepted at their recorded scope.",
+      "process_limit": "Every scoped cell completed below 600s with normal settlement. Native command waits enforce remaining budget; the Windows launcher has no independent hard outer watchdog.",
+      "readback_owner_sha256": "f6571beadbf37f6327c825589d5385d6702836a6c6649e2f2f202e637de68319",
+      "discarded_readback": {
+        "path": ".tmp/atg09-local-acceptance-audit/A01.json",
+        "sha256": "987ef000a3acbd6e5b33e4d1891c4600ed4f7d8357f7761db56835a0e476314f",
+        "reason": "Audit helper changed during execution. This first readback is invalidated; locked A02 readback passed without repeating any test campaign."
+      },
+      "clock_monitor_readback": {
+        "linux": "Only sampled command intervals: pytest spans 30.719s/32.371s, largest absolute steps 1.209951ms/1.110825ms, neither flagged. Admission/copy/readback gaps were not continuously monitored.",
+        "windows": "Raw flags remain. Both actual pinned interpreters report GetSystemTimeAsFileTime and GetTickCount64 at 15.625ms resolution; 10-13.7125ms residuals are consistent with quantization, not proof of actual host clock steps.",
+        "official_sources": [
+          "https://github.com/python/cpython/blob/v3.11.14/Python/pytime.c",
+          "https://github.com/python/cpython/blob/v3.12.2/Python/pytime.c",
+          "https://docs.python.org/3.13/whatsnew/3.13.html#time"
+        ]
+      },
+      "checkpoint": {
+        "version": "0.6.129",
+        "base_commit": "5a07909eb4edd41f1d0f752e05e7cae76b5e8372",
+        "paths": [
+          "CHANGELOG.md",
+          "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
+          "docs/projects/architectural-truth/GOAL_WORKSETS.json",
+          "docs/projects/architectural-truth/README.md",
+          "pyproject.toml",
+          "tests/helpers/reload_lifespan_app.py"
+        ],
+        "checks_receipt": ".tmp/atg09-acceptance-checks.json",
+        "publication_receipt": ".tmp/atg09-acceptance-publication.json",
+        "directory": ".tmp/atg09-acceptance-checkpoint",
+        "runtime_evidence_version": "0.6.125",
+        "scope": "Local environment, fixture repair and explicit composite installed/provider acceptance; hosted Quality remains blocked."
+      }
+    },
+    "hosted_candidate": {
+      "tag": "v0.6.129",
+      "commit": "Resolve from verified annotated tag and .tmp/atg09-acceptance-publication.json; includes the repaired test helper."
     }
   }
 }
