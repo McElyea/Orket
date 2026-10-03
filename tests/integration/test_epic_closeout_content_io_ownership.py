@@ -9,6 +9,7 @@ import pytest
 
 from orket.adapters.storage.async_protocol_run_ledger import AsyncProtocolRunLedgerRepository
 from orket.application.services.epic_preparation_service import EpicPreparationService
+from orket.naming import sanitize_name
 from orket.runtime.evidence.protocol_receipt_materializer import materialize_protocol_receipts
 from orket.runtime.summary.run_summary import (
     build_degraded_run_summary_payload,
@@ -51,7 +52,7 @@ def _target_read(path: Path):
 async def test_protocol_receipt_content_read_owns_interruption(
     tmp_path, monkeypatch, record_property, timed,
 ) -> None:
-    workspace, session_id = tmp_path / "workspace", f"receipt-content-{timed}"
+    workspace, session_id = tmp_path / "workspace", sanitize_name(f"receipt-content-{timed}")
     receipt_path = await write_protocol_receipt(workspace, session_id)
     repo = AsyncProtocolRunLedgerRepository(workspace)
     hold = hold_sync(monkeypatch, Path, "read_text", predicate=_target_read(receipt_path))
@@ -76,7 +77,7 @@ async def test_protocol_receipt_content_read_owns_interruption(
 async def test_run_summary_receipt_content_read_owns_interruption(
     tmp_path, monkeypatch, record_property, timed,
 ) -> None:
-    session_id = f"summary-content-{timed}"
+    session_id = sanitize_name(f"summary-content-{timed}")
     receipt_path = tmp_path / "observability" / session_id / "ISSUE-1/001_coder/protocol_receipts.log"
     await write_text(receipt_path, json.dumps({"tool": "workspace.read"}) + "\n")
     hold = hold_sync(monkeypatch, Path, "read_text", predicate=_target_read(receipt_path))

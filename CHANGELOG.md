@@ -5,6 +5,15 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.140] - 2026-10-03
+
+### Fixed
+- Normalize closeout test session IDs using the canonical naming function so native Linux finds the same receipt files as Windows.
+- Preserve cancellation assertions, deadlines, skip rules and runtime behavior; record scoped Linux package proof and the incomplete hosted gate.
+- `compatibility_status`: `preserved`
+- `affected_audience`: `all`
+- `migration_requirement`: `none`
+
 ## [0.6.139] - 2026-10-03
 
 ### Changed

@@ -1,7 +1,7 @@
 # Architectural Truth: Executable Goal Queue
 
 Last updated: 2026-10-03 (America/Denver)
-Status: Active implementation; eight goals complete, ATG-09 Linux refresh and hosted Quality pending in the final authorized repair window
+Status: Active implementation; eight goals complete, scoped Linux proof accepted, full hosted Quality incomplete
 Queue: ATG-v1 — ten fixed goals for the existing revamp
 Owner: Orket Core
 Worktree: `C:/Source/Orket-architectural-truth`
@@ -77,7 +77,7 @@ do not repeat the 73-minute suite solely to restate this starting point.
 | ATG-06 | Clear canonical typing debt in bounded batches | ATG-02 through ATG-05 | complete: `52b45773` / `v0.6.123` |
 | ATG-07 | Restore the unchanged 89% coverage gate | ATG-02 through ATG-06 | complete: `1e5ce56f` / `v0.6.124` |
 | ATG-08 | Verify fresh Windows packages and public paths | ATG-07 | complete: `b7ab34bb` / `v0.6.125` |
-| ATG-09 | Complete applicable Linux, provider and hosted Quality proof | ATG-08; required environments available | active: v0.6.136 Windows refresh accepted; Linux clock and full hosted Quality blocked |
+| ATG-09 | Complete applicable Linux, provider and hosted Quality proof | ATG-08; required environments available | active: v0.6.136 Windows and Docker-stopped Linux refresh accepted; full hosted Quality pending |
 | ATG-10 | Reconcile and publish the bounded revamp result | ATG-01 through ATG-09 | waiting |
 
 ## Goal cards
@@ -302,7 +302,7 @@ counterexample and does not change parser/grounding behavior or add a new goal.
 
 - Current card/batch: **ATG-09 / ATG09-P01**. **8 of 10 goals complete**.
   Historical local acceptance remains bound to v0.6.125. The v0.6.136 reload
-  repair still needs both Linux refresh cells and full hosted Gitea Quality.
+  repair has both scoped Linux refresh cells; full hosted Gitea Quality remains incomplete.
   ATG-10 stays dependent. The user explicitly authorized one final two-hour
   infrastructure repair window beginning **2026-10-03 16:24:08 UTC** and ending
   **18:24:08 UTC** (12:24:08 America/Denver). Runner admission stops **18:19:08 UTC**.
@@ -313,13 +313,10 @@ counterexample and does not change parser/grounding behavior or add a new goal.
   Existing assertions, thresholds, deadlines, skips and the ten-goal queue remain.
   No provider switch or main merge. Track final-window work in
   `platform_worksets.final_repair_window`; preserve all earlier failed receipts.
-- Checkpoint: **v0.6.139** records terminal A08 and forthcoming scoped Linux proof; runtime remains v0.6.136. The runtime
-  repair remains published v0.6.136 commit `607124ce3736e933c8ea9622aca9afea94a172a2`,
-  annotated tag object `d6b97ef8e642c1b94051d7563396507a4573b0d9`.
-  Verify `.tmp/atg09-isolated-linux-checks.json` and
-  `.tmp/atg09-isolated-linux-publication.json`, branch/tag remote identities
-  and clean worktree. These checks do not repeat or expand runtime proof.
-  ATG-09 and ATG-10 remain incomplete.
+- Checkpoint: **v0.6.140** repairs two closeout fixture paths; runtime and
+  installed artifacts remain v0.6.136. Verify
+  `.tmp/atg09-fixture-case-checks.json` and `.tmp/atg09-fixture-case-publication.json`,
+  remote branch/tag identity and clean worktree. ATG-09/10 remain incomplete.
 - Local software: official llama.cpp **b11146 / 7fe450e19**, CUDA 12.4, is installed
   at `D:/llama.cpp-releases/b11146`; older copies remain. The existing GGUF serves
   `orcarouter_qwen3.8-27b-uncensored-q4_k_l` at `http://127.0.0.1:8080/v1`.
@@ -331,7 +328,7 @@ counterexample and does not change parser/grounding behavior or add a new goal.
   `time.windows.com` source, with backed-up network-start/stop service policy.
   Ubuntu's duplicate `systemd-timesyncd` is now **disabled and inactive**, while
   existing WSL PHC synchronization was observed. R02's later synchronization
-  refusal remains a current blocker; earlier success is not a stability guarantee.
+  refusal remains preserved; A06/R03 later pass only with Docker stopped, not as a stability guarantee.
   `.tmp/atg09-clock-service-persistent.json` retains the exact change and reversal
   (`systemctl enable --now systemd-timesyncd.service` inside Ubuntu).
   Persistence through an actual Ubuntu restart is verified; Windows reboot and
@@ -560,7 +557,7 @@ counterexample and does not change parser/grounding behavior or add a new goal.
   Receipts: `.tmp/atg09-reload-repair-{win-py311,win-py312,linux-py311}.json`
   and their launch receipts; `.tmp/atg09-reload-installed-audit.json` retains
   independent readback. Original assertions, deadlines and skip rules are unchanged.
-- Evidence reuse: `.tmp/atg09-reload-prerequisite-audit.json` and
+- Historical R02 evidence reuse: `.tmp/atg09-reload-prerequisite-audit.json` and
   `.tmp/atg09-reload-reuse-audit.json` verify artifacts and relevant inputs.
   The old 627 selected files are unchanged; 16 reload rows are replaced and the
   bootstrap plus four signal cases add five rows. Accepted Windows composites are
@@ -569,7 +566,7 @@ counterexample and does not change parser/grounding behavior or add a new goal.
   provider modules and retained live provider evidence are unchanged; that flow
   did not import the changed reload module. Old whole-wheel and complete source
   coverage proof remain historical; full hosted coverage of at least 89% is mandatory.
-- Clock diagnosis: `.tmp/atg09-reload-clock-diagnosis.json` identifies a
+- Historical v0.6.137 clock diagnosis: `.tmp/atg09-reload-clock-diagnosis.json` identifies a
   possible host-sync/kernel-maximum-error interaction, without event-attributed
   cause or a justified controller-disable change. Official stable WSL 3.0.1's x64
   installer is retained at `D:/Orket-WSL-Releases/wsl.3.0.1.0.x64.msi`; Microsoft
@@ -582,7 +579,7 @@ counterexample and does not change parser/grounding behavior or add a new goal.
   unchanged clock qualification. The latest release is not an advertised specific
   clock fix. The prepared elevated helper refuses installation without primary
   quiescence and a ten-minute reserve before 09:53:22 UTC; do not bypass that guard.
-- Live handoff readback: `.tmp/atg09-reload-handoff.json` confirms Gitea28.0.0
+- Historical A07 handoff readback: `.tmp/atg09-reload-handoff.json` confirms Gitea28.0.0
   healthy on the existing container, unchanged main, empty repository/admin runner
   registrations and absent prior runner owners/private files. A07 jobs are terminal;
   llama.cpp health is `ok` with the recorded model. Health is not a new acceptance
@@ -600,27 +597,60 @@ counterexample and does not change parser/grounding behavior or add a new goal.
   failure. Preserve `.tmp/atg09-hosted-attempts/A08.json`,
   `.tmp/atg09-final-hosted-run.json` and `.tmp/atg09-final-hosted-audit.json`.
   The auditor's generic environment-blocker label does not override the actual
-  test failure. `.tmp/atg09-hosted-final-window-close.json` proves runner18/19,
+  test failure. `.tmp/atg09-hosted-final-window-close.json` proves runners 18/19,
   private registration, native owner and test-resource cleanup before expiry.
   A08's stable receipt existed before launch but its exact path was omitted from
   this plan until this checkpoint; no earlier tracked link is claimed.
-- Next exact action: Docker Desktop is temporarily stopped, an actual change to
-  the traced `initd` clock-writer environment; see
-  `.tmp/atg09-final-docker-isolation.json`. Run A06 once with unchanged
-  60s quiet/240s ceiling/10ms/280s outer limits. Its stable process/result record
-  is `.tmp/atg09-final-clock.json`; the Linux freeze is
-  `.tmp/atg09-final-linux-R03-freeze.json`. On successful qualification, run the
-  same21-case installed cells. Stable process receipts are
-  `.tmp/atg09-final-linux-R03-launch-linux-py311.json` and
-  `.tmp/atg09-final-linux-R03-launch-linux-py312.json`; native receipts are
-  `.tmp/atg09-final-linux-R03-linux-py311.json` and
-  `.tmp/atg09-final-linux-R03-linux-py312.json`. Keep source frozen through both.
-  Restore Docker/Gitea and retain `.tmp/atg09-final-docker-restore.json` before
-  18:24:08UTC. This can prove only the scoped Docker-stopped Linux environment,
-  not permanent coexistence stability. Then repair the two hosted fixture IDs
-  using canonical normalization without weakening assertions/deadlines/skips.
-  Docker4.93 installation was cancelled at elevation;4.86 remains installed.
-  ATG-09 still requires all eleven hosted jobs; ATG-10 remains dependent.
+- Current isolated Linux proof: A06 qualifies the actual Docker-stopped host
+  under unchanged 60/240/.01/280 limits. Both R03 installed Python 3.11/3.12 cells
+  pass 21 cases with no skips, native signal controls, installed origins,
+  dependencies and owned teardown retained. Metadata candidate is v0.6.139;
+  package artifacts remain v0.6.136. Receipts:
+  `.tmp/atg09-final-clock.json`, `.tmp/atg09-final-linux-R03-freeze.json`,
+  `.tmp/atg09-final-linux-R03-{linux-py311,linux-py312}.json`, their
+  `.tmp/atg09-final-linux-R03-launch-{linux-py311,linux-py312}.json` owners, and
+  `.tmp/atg09-final-linux-audit.json`. This proves the scoped environment,
+  not permanent clock stability with Docker running. Prior failed attempts remain.
+  Later readback observed a different WSL boot after both cells settled. The first
+  audit wrongly required current boot equality; its failure is preserved at
+  `.tmp/atg09-hosted-attempts/R03-audit-initial-boot.json`. The corrected audit
+  retains the later boot change while enforcing the original before/after cell
+  boot bindings. No application cell or clock campaign was repeated.
+- Current composite reuse: `.tmp/atg09-final-evidence-reuse.json` verifies all 627
+  selected input hashes, 434 imported provider modules and 21 raw provider artifacts.
+  Installed composites retain 6,230 passes/nine unchanged skips per Linux interpreter
+  and 6,236 passes/three unchanged skips per Windows interpreter. The changed fixture
+  file is outside that installed selection and receives separate 119-case native
+  source verification. Historical full-suite coverage remains separate.
+- Current fixture repair: normalize two session IDs with canonical `sanitize_name`
+  so fixture directories match runtime discovery on case-sensitive filesystems.
+  The exact 119-case hosted closeout selection passes on native Linux and Windows
+  without changing assertions, deadlines or skips. Stable process/results are
+  `.tmp/atg09-fixture-case-linux.json` and `.tmp/atg09-fixture-case-windows.json`,
+  bound by `.tmp/atg09-fixture-case-freeze.json`; observe these before any replacement.
+  These are source integration controls, not a complete hosted Quality result.
+- Final environment outcome: official documentation and community reports were
+  checked before changes. Trace evidence records two `initd` settimeofday writes
+  about 30 seconds apart, each clearing NTP state. Installed Docker symbols and
+  documented cadence strongly corroborate attribution; exact event-time executable
+  mapping was not captured. WSL 3.0.1 had no identified fix for this userland writer.
+  A mistaken `/initd --help` probe entered startup and failed; supported Docker
+  stop/start recovered required services, without an exact side-effect rollback claim.
+  A backed-up official Docker 4.93 update was cancelled at OS elevation; 4.86.0.236216
+  remains installed. Receipts: `.tmp/atg09-final-clock-trace{,-audit}.json`,
+  `.tmp/atg09-final-clock-research-incident.json`, `.tmp/atg09-final-docker-recovery.json`
+  and `.tmp/atg09-final-docker-update{,-cancelled}.json`. The 668-file cold backup is
+  `D:/Orket-Gitea-Backups/pre-desktop-4.93-final-ATG09` with matched hashes/SQLite integrity.
+  `.tmp/atg09-final-docker-restore.json` proves existing Gitea 28.0.0 and llama health
+  after scoped isolation. Final publication/process readback is retained in
+  `.tmp/atg09-final-window-handoff.json`. Research links are in the two final-window research notes.
+- Next exact action: full eleven-job hosted Quality is still required on the
+  fixture-repaired candidate. The final infrastructure attempt is settled; no
+  further runner admission or update is planned. Existing authorization ends
+  18:24:08 UTC; its admission cutoff remains 18:19:08 UTC. Completion needs sufficient
+  explicitly authorized runner availability for the unchanged workflow and cleanup.
+  No provider switch, new platform/backend, main merge or extra goal is authorized.
+  ATG-10 cannot start until ATG-09's complete evidence, closeout and publication.
 - Remaining blockers or drift: complete hosted Gitea Quality is absent; ATG-09/10 and whole
   campaign completion are not claimed. ATG-07's 12,964 passes / 93 skips / 89.213132%
   combined coverage remain historical after the reload runtime change; fresh hosted
