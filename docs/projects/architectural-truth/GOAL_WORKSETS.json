@@ -13902,7 +13902,7 @@
   },
   "platform_worksets": {
     "goal": "ATG-09",
-    "status": "ATG09-P01 authorized local infrastructure updated; hosted Quality pending",
+    "status": "active: hosted Quality re-admission authorized through 2026-10-03T07:53:22Z",
     "current_batch": "ATG09-P01 existing hosted Gitea runner prerequisite",
     "candidate_commit": "b7ab34bba7d76a146cf4782c8522681de22ac544",
     "candidate_tag": "v0.6.125",
@@ -13935,8 +13935,8 @@
     "remaining": [
       "Existing hosted Gitea Ubuntu/Windows runners and required Quality jobs at the published fixture-repaired checkpoint."
     ],
-    "external_prerequisites": "Existing Gitea credentials work, but both repository and instance-wide runner inventories contain zero runners. Need existing Ubuntu/Windows runner locations and start/access instructions. No infrastructure provisioning authorized.",
-    "next_action": "Verify v0.6.129 publication and retained receipt/input identity. Obtain existing Gitea runner access, run required hosted Quality jobs at this fixture-repaired checkpoint, then close ATG-09 and proceed to dependent ATG-10. Do not repeat unchanged local campaigns.",
+    "external_prerequisites": "Gitea28 access and prepared native Linux/Windows tools are available. Original temporary registrations were removed on time. User explicitly added two hours; re-register only these scoped runners, stop admission07:48:22UTC and finish cleanup07:53:22UTC.",
+    "next_action": "Publish metadata checkpointv132; re-register existing prepared local runners with extended native deadlines, then resume only incomplete hosted Quality jobs on candidate30553e554c9b8fdc784b4209617e7064902f262e where Gitea supports selective rerun. Preserve accepted five jobs and all local proof. NoATG10 before all eleven jobs pass.",
     "probe_limits": "Interpreter version probes succeeded. The first combined shell command failed only its uv lookup due to quote stripping; no uv availability was established by that command.",
     "clock_result": {
       "path": "blocked",
@@ -14014,7 +14014,8 @@
         "result": "environment blocker",
         "reason": "No Gitea repository/runner or authorization context has been supplied; existing remote host observations are retained without credentials."
       },
-      "result": "environment blocker"
+      "result": "environment blocker",
+      "authority_note": "Historical pre-repair observation only; current local acceptance and hosted_window_checkpoint supersede readiness blockers."
     },
     "proof_receipts_sha256": {
       ".tmp/atg09-linux-clock.json": "43ff247a6650aac1cf6d451d349c7cb4a3a816ebc8fa8430cbbb5e6ea43a81f6",
@@ -14213,16 +14214,16 @@
       }
     },
     "gitea_access": {
-      "status": "environment blocker",
-      "receipt": ".tmp/atg09-gitea-access.json",
-      "receipt_sha256": "7e76cd25db31bc9d4ffd7a7f4e7e46b653aa1d2548f52eb733fee61adebd5d94",
-      "scope": "Authenticated read-only API observation; no mutation",
+      "status": "live service available; original temporary registrations removed",
       "repository": "http://localhost:3000/Orket/Orket",
+      "server_version": "28.0.0",
       "repository_runners": 0,
       "instance_runners": 0,
-      "candidate_hosted_runs": 0,
-      "candidate_branch_present": false,
-      "missing_input": "Existing Ubuntu and Windows runner location/start instructions"
+      "candidate_branch_present": true,
+      "candidate_hosted_runs": 1,
+      "candidate_commit": "30553e554c9b8fdc784b4209617e7064902f262e",
+      "receipt": ".tmp/atg09-hosted-window-close.json",
+      "receipt_sha256": "181d2f4e4ad327077edf6893385c1f30a4455cc0cc6903a82e69ccac738e6100"
     },
     "acceptance": {
       "status": "local available acceptance complete; hosted Quality blocked",
@@ -14455,7 +14456,9 @@
     },
     "hosted_candidate": {
       "tag": "v0.6.131",
-      "commit": "Resolve from .tmp/atg09-gate-publication.json and annotated tag; install governance repaired, product runtime unchanged."
+      "commit": "30553e554c9b8fdc784b4209617e7064902f262e",
+      "run_id": 467,
+      "result": "partial success; v0.6.132 is a metadata checkpoint, not new runtime proof"
     },
     "infrastructure_repair": {
       "status": "complete: local infrastructure updated; hosted proof pending",
@@ -14535,7 +14538,142 @@
       "A01": ".tmp/atg09-hosted-attempts/A01.json",
       "A02": ".tmp/atg09-hosted-attempts/A02.json",
       "current": ".tmp/atg09-hosted-run.json",
-      "A02_result": "4 matrix jobs pass (2 tests each); docs_hygiene fails stale install checker; other jobs cancelled/skipped."
+      "A02_result": "4 matrix jobs pass (2 tests each); docs_hygiene fails stale install checker; other jobs cancelled/skipped.",
+      "A03": ".tmp/atg09-hosted-attempts/A03.json",
+      "A03_result": {
+        "passed": [
+          "rulesim_determinism_matrix (ubuntu-latest, 3.11)",
+          "rulesim_determinism_matrix (ubuntu-latest, 3.12)",
+          "rulesim_determinism_matrix (windows-latest, 3.11)",
+          "rulesim_determinism_matrix (windows-latest, 3.12)",
+          "docs_hygiene"
+        ],
+        "unaccepted": [
+          {
+            "id": 595,
+            "name": "architecture_gates",
+            "conclusion": "cancelled"
+          },
+          {
+            "id": 596,
+            "name": "quality",
+            "conclusion": "cancelled"
+          },
+          {
+            "id": 597,
+            "name": "product_quality",
+            "conclusion": "cancelled"
+          },
+          {
+            "id": 598,
+            "name": "sandbox_docker_acceptance",
+            "conclusion": "cancelled"
+          },
+          {
+            "id": 599,
+            "name": "docker_smoke",
+            "conclusion": "cancelled"
+          },
+          {
+            "id": 600,
+            "name": "migration_smoke",
+            "conclusion": "cancelled"
+          }
+        ]
+      }
+    },
+    "hosted_window_checkpoint": {
+      "status": "terminal environment blocker",
+      "batch": "ATG09-P01",
+      "clock_receipt": ".tmp/atg09-persistent-clock.json",
+      "clock_receipt_sha256": "d74c6af20637be269b1b16fac7ccad048931b52398559e3a7fb853a99c63ee6f",
+      "result": "partial success",
+      "path": "primary",
+      "candidate": "30553e554c9b8fdc784b4209617e7064902f262e",
+      "run_id": 467,
+      "passed_jobs": [
+        "rulesim_determinism_matrix (ubuntu-latest, 3.11)",
+        "rulesim_determinism_matrix (ubuntu-latest, 3.12)",
+        "rulesim_determinism_matrix (windows-latest, 3.11)",
+        "rulesim_determinism_matrix (windows-latest, 3.12)",
+        "docs_hygiene"
+      ],
+      "unaccepted_jobs": [
+        {
+          "id": 595,
+          "name": "architecture_gates",
+          "conclusion": "cancelled"
+        },
+        {
+          "id": 596,
+          "name": "quality",
+          "conclusion": "cancelled"
+        },
+        {
+          "id": 597,
+          "name": "product_quality",
+          "conclusion": "cancelled"
+        },
+        {
+          "id": 598,
+          "name": "sandbox_docker_acceptance",
+          "conclusion": "cancelled"
+        },
+        {
+          "id": 599,
+          "name": "docker_smoke",
+          "conclusion": "cancelled"
+        },
+        {
+          "id": 600,
+          "name": "migration_smoke",
+          "conclusion": "cancelled"
+        }
+      ],
+      "temporary_authorization_ended": "2026-10-03T05:53:22Z",
+      "blocker": "Original window ended with five passing jobs and six cancelled jobs. Cleanup completed; user subsequently renewed temporary local-runner authorization by two additional hours. A04 re-admission remains pending.",
+      "receipt_sha256": {
+        ".tmp/atg09-hosted-attempts/A03.json": "ed2e09cfeab14cb72f451511d24514e23314c68a794191a62cf30294c87cc9d0",
+        ".tmp/atg09-hosted-window-close.json": "181d2f4e4ad327077edf6893385c1f30a4455cc0cc6903a82e69ccac738e6100",
+        ".tmp/atg09-gitea-storage-repair.json": "99d54677e7ebb3cab3fb1dc6f651074292ff932baed9ca51880479c77988717b",
+        ".tmp/atg09-gate-publication.json": "d58ae6f04686cf301f5022d352b2c978fe7efaf83e5357b6593a573e09df9145",
+        ".tmp/atg09-hosted-A03-audit.json": "1ac2c00258e9f9a9a1b0abae54d2cde4ea6690532b0a6d5ff5c363e393032e65"
+      },
+      "checkpoint": {
+        "version": "0.6.132",
+        "base_commit": "30553e554c9b8fdc784b4209617e7064902f262e",
+        "directory": ".tmp/atg09-window-checkpoint",
+        "checks_receipt": ".tmp/atg09-window-checks.json",
+        "publication_receipt": ".tmp/atg09-window-publication.json",
+        "paths": [
+          "CHANGELOG.md",
+          "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
+          "docs/projects/architectural-truth/GOAL_WORKSETS.json",
+          "docs/projects/architectural-truth/README.md",
+          "pyproject.toml"
+        ]
+      }
+    },
+    "gitea_access_before_upgrade": {
+      "status": "environment blocker",
+      "receipt": ".tmp/atg09-gitea-access.json",
+      "receipt_sha256": "7e76cd25db31bc9d4ffd7a7f4e7e46b653aa1d2548f52eb733fee61adebd5d94",
+      "scope": "Authenticated read-only API observation; no mutation",
+      "repository": "http://localhost:3000/Orket/Orket",
+      "repository_runners": 0,
+      "instance_runners": 0,
+      "candidate_hosted_runs": 0,
+      "candidate_branch_present": false,
+      "missing_input": "Existing Ubuntu and Windows runner location/start instructions"
+    },
+    "runner_extension": {
+      "user_instruction": "add 2 additional hours for the infra lift",
+      "authorization_deadline_utc": "2026-10-03T07:53:22Z",
+      "admission_cutoff_utc": "2026-10-03T07:48:22Z",
+      "scope": "Existing temporary Linux/Windows local runners and required Quality work only; no provider switch or main merge.",
+      "status": "authorized; primary owns re-admission",
+      "campaign": "A04",
+      "reuse_candidate": "30553e554c9b8fdc784b4209617e7064902f262e"
     }
   }
 }

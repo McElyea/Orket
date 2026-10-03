@@ -77,7 +77,7 @@ do not repeat the 73-minute suite solely to restate this starting point.
 | ATG-06 | Clear canonical typing debt in bounded batches | ATG-02 through ATG-05 | complete: `52b45773` / `v0.6.123` |
 | ATG-07 | Restore the unchanged 89% coverage gate | ATG-02 through ATG-06 | complete: `1e5ce56f` / `v0.6.124` |
 | ATG-08 | Verify fresh Windows packages and public paths | ATG-07 | complete: `b7ab34bb` / `v0.6.125` |
-| ATG-09 | Complete applicable Linux, provider and hosted Quality proof | ATG-08; required environments available | blocked: local installed/provider proof accepted; existing hosted runners unavailable |
+| ATG-09 | Complete applicable Linux, provider and hosted Quality proof | ATG-08; required environments available | active: local proof accepted; hosted Quality partial, two-hour runner renewal authorized |
 | ATG-10 | Reconcile and publish the bounded revamp result | ATG-01 through ATG-09 | waiting |
 
 ## Goal cards
@@ -304,14 +304,18 @@ counterexample and does not change parser/grounding behavior or add a new goal.
   Available local installed/provider acceptance is complete; required hosted Gitea
   Quality remains blocked. ATG-10 stays dependent. User authorized resumption and
   repair/update of both existing local blockers. The later one-hour infrastructure
-  exception expires **2026-10-03 05:53:22 UTC**; no provider switch or main merge.
-- Checkpoint: **v0.6.131**, based on `52a3795a` / `v0.6.130`, aligns the install
-  convergence checker and derived requirements with the already-canonical local
-  SDK-testing plus core-dev install. Seven integration cases pass; all four earlier
-  tests' assertions remain unchanged. Receipts are `.tmp/atg09-gate-checks.json`
-  and `.tmp/atg09-gate-publication.json`; verify terminal status, annotated tag and
-  remote identities. `platform_worksets.hosted_install_gate_repair` binds this repair.
-  v0.6.130 records infrastructure repair; v0.6.129 retains accepted local evidence.
+  exception was extended by the user by **two additional hours**, ending
+  **2026-10-03 07:53:22 UTC**; runner admission stops **07:48:22 UTC**.
+  The original runners were already removed before renewal. No provider switch or main merge.
+- Checkpoint: **v0.6.132** records partial hosted proof and completed temporary
+  runner teardown. It is based on published v0.6.131 commit
+  `30553e554c9b8fdc784b4209617e7064902f262e` (annotated tag object
+  `2d71c9ad5574db88869c5593b052dcdf9123ee48`). This checkpoint changes metadata,
+  not accepted runtime inputs. Verify `.tmp/atg09-window-checks.json` and
+  `.tmp/atg09-window-publication.json`, remote identities and clean worktree.
+  v0.6.131 repairs install convergence (seven integration cases; prior assertions
+  unchanged); its docs gate also passes live in hosted run 467. v0.6.130 records
+  infrastructure repair; v0.6.129 retains accepted local installed/provider proof.
 - Local software: official llama.cpp **b11146 / 7fe450e19**, CUDA 12.4, is installed
   at `D:/llama.cpp-releases/b11146`; older copies remain. The existing GGUF serves
   `orcarouter_qwen3.8-27b-uncensored-q4_k_l` at `http://127.0.0.1:8080/v1`.
@@ -387,14 +391,13 @@ counterexample and does not change parser/grounding behavior or add a new goal.
   so the existing data mount remains authoritative. The separate main checkout's
   older compose file is unchanged and must not replace the new deployment file.
   Rollback requires the saved data/config plus saved old image, not merely an image downgrade.
-- Existing Ubuntu Docker Desktop integration was enabled and its native daemon
-  access verified; settings backup and exact observation are in
-  `.tmp/atg09-docker-integration.json`. Windows and Linux runner tooling is being
-  prepared in `D:/Orket-Gitea-Runners/windows` and `/home/jon/orket-gitea-runner`.
-  Preparation/native tool checks do not establish hosted execution. Historical
-  runner absence follows the archived March 12 temporary-runner teardown; server
-  upgrade alone does not supply runners. Existing runs 451/452 were still queued
-  immediately after upgrade; retain their evidence before scoped job admission.
+- Existing Ubuntu Docker Desktop integration was enabled and native daemon
+  access verified; settings backup is retained in `.tmp/atg09-docker-integration.json`.
+  Private Windows and Linux tooling remains in `D:/Orket-Gitea-Runners/windows`
+  and `/home/jon/orket-gitea-runner`. Actual hosted outcomes follow below.
+  Historical runner absence follows the archived March 12 teardown. Existing queued
+  runs 451/452 and companion workflows were preserved and cancelled before scoped
+  admission; no unrelated historical job was executed by the temporary runners.
 - Hosted attempts: Gitea PR **1**, run **459**, used exact v0.6.130 commit
   `52a3795a0ce421cc3ba9dcdfb50de5caee6d3351`. A01 failed before tests on private
   Windows Git long-path configuration and Linux externally-managed Python caches.
@@ -411,16 +414,38 @@ counterexample and does not change parser/grounding behavior or add a new goal.
   Windows/Ubuntu health access. The operator start helper is
   `D:/Orket-Gitea-Runners/Start-Orket-Gitea.ps1`; backup `ROLLBACK.txt` records the
   matching data/image rollback procedure. Restoration and SSH remain unverified.
-- Next exact action: publish v0.6.131 to existing Gitea PR 1 and execute the unchanged
-  required Quality workflow against that commit. Its eleven jobs remain mandatory;
-  freeze tracked inputs and helper identities before launch. Finish or stop temporary
-  runners within the one-hour exception, with admission cutoff **05:48:22 UTC** and
-  absolute cleanup deadline **05:53:22 UTC** on October 3. Retain actual job, log,
-  environment and teardown identity; any timeout/cancellation remains incomplete.
-  Infrastructure provisioning after expiry requires new authorization. Close ATG-09
-  only when every required job passes, then continue ATG-10. Reuse unchanged accepted
-  local campaigns and preserve all original assertions, deadlines and skips.
-- Remaining blockers or drift: hosted Gitea Quality is absent; ATG-09/10 and whole
+- Hosted A03: PR **1**, run **467**, uses exact v0.6.131 commit above. **5 of
+  11 required jobs passed**: the four Windows/Linux Python 3.11/3.12 rulesim cells
+  and docs_hygiene. Architecture was progressing without a logged test failure
+  when the original authorization cutoff interrupted it; six jobs ended cancelled.
+  Unaccepted job outcomes remain exact in `.tmp/atg09-hosted-attempts/A03.json`;
+  cancellation or dependency skips are not passing evidence. Source and helper
+  identities remained frozen during execution. Accepted prior attempts are retained.
+- Gitea push repair: the next small push exposed **29 root-owned 0755 object shard
+  directories**, including shard `67` required by the new workset blob. Native Git
+  write access failed there. Only those directory owners changed to `git:git`;
+  modes and existing object bytes were preserved. The next push and hosted checkout
+  succeeded. `.tmp/atg09-gitea-storage-repair.json` records exact paths and reversal.
+  Git configuration, object creation safeguards and repository main were unchanged.
+- Temporary infrastructure closeout: both native process owners settled, runner
+  registrations **12/13** and their private registration files were removed, and
+  live readback found zero registered runners and no owned sandbox containers,
+  networks, volumes or `orket-smoke`. `.tmp/atg09-hosted-window-close.json` proves
+  cleanup before **2026-10-03 05:53:22 UTC**. Gitea 28.0.0, its backup, installed
+  private tooling, Ubuntu Docker integration and manual start helper remain.
+  No persistent runner service was installed; completed package updates persist.
+- Renewed authorization: after original cleanup, the user explicitly added two
+  hours to the infrastructure exception. New admission cutoff is **07:48:22 UTC**
+  and absolute cleanup deadline **07:53:22 UTC**, October 3. Preserve old native
+  helpers/receipts before changing only supervisor authorization deadlines. Test
+  assertions, timing limits, skip rules and resource teardown contracts stay fixed.
+- Next exact action: publish this metadata checkpoint, re-register the prepared
+  Linux/Windows runners, and resume the six incomplete Quality jobs on exact
+  v0.6.131 candidate `30553e554c9b8fdc784b4209617e7064902f262e`, retaining the five
+  passed jobs where Gitea supports selective rerun. Bind A04 inputs and actual
+  job/log/process identities before launch; stop and remove runners within the
+  renewed window. Reuse accepted local proof. ATG-10 requires all eleven jobs.
+- Remaining blockers or drift: complete hosted Gitea Quality is absent; ATG-09/10 and whole
   campaign completion are not claimed. ATG-07's 12,964 passes / 93 skips / 89.213132%
   combined coverage remain bound to unchanged production inputs, with affected
   fixture behavior refreshed by R01. Historical source/harness maps contain one

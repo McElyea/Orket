@@ -5,6 +5,15 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.132] - 2026-10-02
+
+### Changed
+- Record live Gitea 28 hosted checkout and partial Quality outcomes, repair of root-owned object shards, and verified temporary runner teardown within the user's one-hour infrastructure exception. Record the subsequent two-hour authorization for scoped runner re-admission; full hosted acceptance and ATG-09/10 remain incomplete.
+- Preserve accepted local runtime/provider proof and exact candidate, source, process, receipt and publication identities.
+- `compatibility_status`: `preserved`
+- `affected_audience`: `all`
+- `migration_requirement`: `none`
+
 ## [0.6.131] - 2026-10-02
 
 ### Fixed
