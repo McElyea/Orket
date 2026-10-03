@@ -77,7 +77,7 @@ do not repeat the 73-minute suite solely to restate this starting point.
 | ATG-06 | Clear canonical typing debt in bounded batches | ATG-02 through ATG-05 | complete: `52b45773` / `v0.6.123` |
 | ATG-07 | Restore the unchanged 89% coverage gate | ATG-02 through ATG-06 | complete: `1e5ce56f` / `v0.6.124` |
 | ATG-08 | Verify fresh Windows packages and public paths | ATG-07 | complete: `b7ab34bb` / `v0.6.125` |
-| ATG-09 | Complete applicable Linux, provider and hosted Quality proof | ATG-08; required environments available | active: local proof accepted; hosted Quality partial, two-hour runner renewal authorized |
+| ATG-09 | Complete applicable Linux, provider and hosted Quality proof | ATG-08; required environments available | active: v0.6.136 Windows refresh accepted; Linux clock and full hosted Quality blocked |
 | ATG-10 | Reconcile and publish the bounded revamp result | ATG-01 through ATG-09 | waiting |
 
 ## Goal cards
@@ -309,11 +309,12 @@ counterexample and does not change parser/grounding behavior or add a new goal.
   instruction "add 2 additional hours for the infra lift". The current deadline is
   **2026-10-03 09:53:22 UTC**; runner admission stops **09:48:22 UTC**.
   Registrations 16/17 and all A07 native owners are now removed after terminal failure. No provider switch or main merge.
-- Checkpoint: **v0.6.136** repairs demonstrated reload signal-lock reentry.
-  Published base is v0.6.135 commit `1ddbab57dda276aa07b60043076a0d14132d250f`,
-  annotated tag object `0aad4866b386828ab34d30dff46d831205f38540`.
-  Verify `.tmp/atg09-reload-checks.json`, `.tmp/atg09-reload-publication.json`,
-  branch/tag remote identities and clean worktree. This is a partial checkpoint;
+- Checkpoint: **v0.6.137** reconciles current resume metadata only. The runtime
+  repair remains published v0.6.136 commit `607124ce3736e933c8ea9622aca9afea94a172a2`,
+  annotated tag object `d6b97ef8e642c1b94051d7563396507a4573b0d9`.
+  Verify `.tmp/atg09-resume-reconciliation-checks.json` and
+  `.tmp/atg09-resume-reconciliation-publication.json`, branch/tag remote identities
+  and clean worktree. These checks do not repeat or expand runtime proof.
   ATG-09 and ATG-10 remain incomplete.
 - Local software: official llama.cpp **b11146 / 7fe450e19**, CUDA 12.4, is installed
   at `D:/llama.cpp-releases/b11146`; older copies remain. The existing GGUF serves
@@ -590,7 +591,8 @@ counterexample and does not change parser/grounding behavior or add a new goal.
 - Next exact action: obtain the pending user response to the cancelled Windows
   administrator prompt and infrastructure extension before dependent work.
   Preserve the Linux R02 refusal and prepared installer; do not repeat the prompt
-  or a campaign while these inputs are absent. Publish this partial checkpoint.
+  or a campaign while these inputs are absent. Verify the recorded checkpoint
+  publication before any replacement action; v0.6.136 publication already passed.
   Another qualification requires demonstrated environment change, retaining the
   60s quiet/240s ceiling/10ms/280s outer limits. Refresh both Linux repair cells
   only after that gate; do not repeat accepted Windows/provider campaigns.

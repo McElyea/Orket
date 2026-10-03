@@ -10125,29 +10125,6 @@
   ],
   "diff_ledger": [
     {
-      "run_at_utc": "2026-10-01T23:51:25.141434Z",
-      "changed": true,
-      "before_digest": "sha256:fa8d4a3611e2c6f4a51cc12cd69b960728ab1e9d8f417915cf9c33afd6bf80f5",
-      "after_digest": "sha256:3989fc88b651470cb57b35611ef4155e87e2e94fb48be998734a32f16bda267a",
-      "diff": {
-        "added_paths": 3,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 16546,
-        "paths_total_current": 17789,
-        "paths_total_reference": 17789,
-        "churn_paths": 4,
-        "churn_ratio": 0.000225,
-        "sample_paths": [
-          "$.diff_ledger",
-          "$.coverage_worksets.reconciliation[6].native_closing",
-          "$.coverage_worksets.reconciliation[6].api_native_probe.harness_correction",
-          "$.coverage_worksets.reconciliation[6].api_native_probe.sha256"
-        ]
-      }
-    },
-    {
       "run_at_utc": "2026-10-01T23:53:35.300451Z",
       "changed": true,
       "before_digest": "sha256:85e91dcdaf73f9cb9014a6556b2ba6cde02445df3edb43a20db475693971204c",
@@ -10949,6 +10926,28 @@
           "$.platform_worksets.hosted_reload_shutdown_repair.handoff_live_state",
           "$.platform_worksets.hosted_reload_shutdown_repair.receipt_sha256..tmp/atg09-clock-diagnosis-binding-drift.json",
           "$.platform_worksets.hosted_reload_shutdown_repair.receipt_sha256..tmp/atg09-reload-handoff.json",
+          "$.platform_worksets.next_action"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-03T09:43:05.574703Z",
+      "changed": true,
+      "before_digest": "sha256:cb188d6fef2b5c01190dbeb8881c1582479edcc38f64430cf41e8f738fd8cb0e",
+      "after_digest": "sha256:a0b31b9fbf8aaabb529e40fe15ab20d635a0bd4e57b7af03b874acbce778113a",
+      "diff": {
+        "added_paths": 2,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 21101,
+        "paths_total_current": 22545,
+        "paths_total_reference": 22545,
+        "churn_paths": 3,
+        "churn_ratio": 0.000133,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.platform_worksets.reload_resume_reconciliation",
           "$.platform_worksets.next_action"
         ]
       }
@@ -13968,7 +13967,7 @@
       "Existing hosted Gitea Ubuntu/Windows runners and required Quality jobs at the published fixture-repaired checkpoint."
     ],
     "external_prerequisites": "Gitea28 and private native tools available. Registrations14/15 removed after A06 failure. User explicitly granted two further hours through09:53:22UTC; runner admission stops09:48:22UTC.",
-    "next_action": "Publish partial v0.6.136. Await user response before a new Windows elevation prompt and pending infrastructure extension; WSL installer is verified and prepared, no upgrade occurred. Following an actual environment change, retain original clock thresholds and refresh both Linux repair cells with new explicit source/clock binding. Reuse accepted Windows/provider evidence only within recorded scope. Full eleven-job hosted Quality and coverage89 remain required before ATG09/ATG10. No repeat loops, provider switch or main merge.",
+    "next_action": "Verify v0.6.137 metadata checkpoint publication/clean tree; runtime candidate remains v0.6.136. Await user response before a new Windows elevation prompt and pending infrastructure extension; WSL installer is verified and prepared, no upgrade occurred. Following an actual environment change, retain original clock thresholds and refresh both Linux repair cells with new explicit source/clock binding. Reuse accepted Windows/provider evidence only within recorded scope. Full eleven-job hosted Quality and coverage89 remain required before ATG09/ATG10. No repeat loops, provider switch or main merge.",
     "probe_limits": "Interpreter version probes succeeded. The first combined shell command failed only its uv lookup due to quote stripping; no uv availability was established by that command.",
     "clock_result": {
       "path": "blocked",
@@ -15029,6 +15028,41 @@
       "target": "3.0.1.0",
       "environment_changed": false,
       "missing_input": "User response before another Windows elevation request; active infrastructure authority and service restoration are required before installation."
+    },
+    "reload_resume_reconciliation": {
+      "status": "complete: current resume metadata reconciled; prerequisites pending",
+      "batch": "ATG09-P01",
+      "obligation": "Correct the current ATG09 progress row and completed publication step; retain eight-goal denominator and exact source/proof boundaries.",
+      "runtime_candidate": "607124ce3736e933c8ea9622aca9afea94a172a2",
+      "runtime_version": "0.6.136",
+      "path": "blocked",
+      "observed_result": "environment blocker",
+      "receipt_sha256": {
+        ".tmp/atg09-reload-checks.json": "d8ffb5d6a6ccfd18f06363fa3aa4cf0de9b4d78334973ab59b3cbfffb5abab31",
+        ".tmp/atg09-reload-publication.json": "502e4483dc66e68850b5575cbb6f4f529e4aac1ac124f86ecf88ae2d672ace79",
+        ".tmp/atg09-reload-handoff.json": "75bc84ca34a7096cf8944858f3636ae0974d75852d186ebbea1021525232ae14",
+        ".tmp/atg09-wsl-update-preparation.json": "1239825de4dc9a44f3ace3844317ebdf06ed176f21ed0e53e4a83db20241e126",
+        ".tmp/atg09-clock-diagnosis-binding-drift.json": "ea266c6486464f2fd24362590fd6984e5780cb78b3bd9a65e7808c54d5cdea87"
+      },
+      "blocked_inputs": [
+        "User response before another Windows elevation request",
+        "Pending infrastructure extension for complete hosted Quality and cleanup"
+      ],
+      "proof_scope": "Metadata-only correction. Existing live source/Windows/provider proof retains exact original scopes; Linux and hosted acceptance are incomplete.",
+      "checkpoint": {
+        "version": "0.6.137",
+        "base_commit": "607124ce3736e933c8ea9622aca9afea94a172a2",
+        "paths": [
+          "CHANGELOG.md",
+          "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
+          "docs/projects/architectural-truth/GOAL_WORKSETS.json",
+          "docs/projects/architectural-truth/README.md",
+          "pyproject.toml"
+        ],
+        "directory": ".tmp/atg09-resume-reconciliation-checkpoint",
+        "checks_receipt": ".tmp/atg09-resume-reconciliation-checks.json",
+        "publication_receipt": ".tmp/atg09-resume-reconciliation-publication.json"
+      }
     }
   }
 }

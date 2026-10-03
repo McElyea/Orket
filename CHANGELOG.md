@@ -5,6 +5,15 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.137] - 2026-10-03
+
+### Changed
+- Reconcile the current ATG-09 status and verified publication with the rejected Linux clock bracket; retain the v0.6.136 runtime proof and all remaining gates.
+- Keep the prepared WSL update, cancelled elevation, pending infrastructure extension and missing supporting diagnosis snapshot explicit. No runtime behavior changed.
+- `compatibility_status`: `preserved`
+- `affected_audience`: `all`
+- `migration_requirement`: `none`
+
 ## [0.6.136] - 2026-10-03
 
 ### Fixed

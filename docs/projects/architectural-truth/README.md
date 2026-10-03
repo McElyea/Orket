@@ -9,7 +9,8 @@ canonical implementation plan and resume record for ten fixed goals. **Eight goa
 are complete; ATG-09 needs the repaired Linux installed cells and full hosted
 Gitea Quality. Historical provider proof remains reusable. ATG-10 remains dependent.**
 The [workset inventory](GOAL_WORKSETS.json) binds sources, receipts and frozen batches.
-Checkpoint v0.6.136 repairs demonstrated reload signal-lock reentry. Eight native
+Metadata checkpoint v0.6.137 reconciles the current refusal and publication state.
+Runtime checkpoint v0.6.136 repairs demonstrated reload signal-lock reentry. Eight native
 source controls and both fresh Windows21-case installed cells pass. Linux3.11
 passes21 tests but fails its final clock bracket; Linux3.12 is unlaunched. Artifact
 and relevant-input audits pass, while full hosted coverage and Quality remain open.
