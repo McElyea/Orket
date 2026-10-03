@@ -34,7 +34,7 @@
       "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
       "docs/projects/architectural-truth/ARCHITECTURE_EXCEPTION_REGISTER.json",
       "docs/projects/architectural-truth/README.md",
-      "docs/projects/archive/Companion/CP03092026-MVP-CLOSEOUT/Building a Web Frontend for Chat + Lipâ€‘Synced Avatar Connected to a Python Backend.pdf",
+      "docs/projects/archive/Companion/CP03092026-MVP-CLOSEOUT/Building a Web Frontend for Chat + Lip\u00c3\u00a2\u00e2\u201a\u00ac\u00e2\u20ac\u02dcSynced Avatar Connected to a Python Backend.pdf",
       "pyproject.toml"
     ],
     "reused_test_counts": {
@@ -13902,7 +13902,7 @@
   },
   "platform_worksets": {
     "goal": "ATG-09",
-    "status": "ATG09-P01 hosted Quality environment blocker; local acceptance complete",
+    "status": "ATG09-P01 authorized local infrastructure updated; hosted Quality pending",
     "current_batch": "ATG09-P01 existing hosted Gitea runner prerequisite",
     "candidate_commit": "b7ab34bba7d76a146cf4782c8522681de22ac544",
     "candidate_tag": "v0.6.125",
@@ -14454,8 +14454,42 @@
       }
     },
     "hosted_candidate": {
-      "tag": "v0.6.129",
-      "commit": "Resolve from verified annotated tag and .tmp/atg09-acceptance-publication.json; includes the repaired test helper."
+      "tag": "v0.6.130",
+      "commit": "Resolve from annotated tag and .tmp/atg09-infra-publication.json; production/test inputs unchanged from v0.6.129."
+    },
+    "infrastructure_repair": {
+      "status": "complete: local infrastructure updated; hosted proof pending",
+      "batch": "ATG09-P01",
+      "authorization": "User lifted infrastructure restriction for one hour, ending 2026-10-03T05:53:22Z. No provider switch or main merge.",
+      "server_version": "28.0.0",
+      "server_receipt": ".tmp/atg09-gitea-upgrade.json",
+      "docker_integration_receipt": ".tmp/atg09-docker-integration.json",
+      "clock_receipt": ".tmp/atg09-persistent-clock.json",
+      "clock_receipt_sha256": "d74c6af20637be269b1b16fac7ccad048931b52398559e3a7fb853a99c63ee6f",
+      "receipt_sha256": {
+        ".tmp/atg09-gitea-upgrade.json": "bee00ff22d05ddde10de6ddb5834af9ba0c78b5e91bf972cb89d972fbe12601b",
+        ".tmp/atg09-docker-integration.json": "064259ba8090f97a032e4480f7f2c2288724fc9439ba42b54e851ac41adb247b"
+      },
+      "backup": "D:/Orket-Gitea-Backups/pre-28.0.0-ATG09",
+      "windows_preparation": ".tmp/atg09-windows-runner-ready.json",
+      "linux_preparation": ".tmp/atg09-linux-runner-ready.json",
+      "hosted_process_receipt": ".tmp/atg09-hosted-run.json",
+      "proof_limit": "Live server upgrade and existing Ubuntu Docker integration. Runner preparation is not hosted Quality acceptance; all eleven required jobs remain required.",
+      "checkpoint": {
+        "version": "0.6.130",
+        "base_commit": "20ac9de90723dd70056dbe30a3bd5f20d13b2330",
+        "directory": ".tmp/atg09-infra-checkpoint",
+        "checks_receipt": ".tmp/atg09-infra-checks.json",
+        "publication_receipt": ".tmp/atg09-infra-publication.json",
+        "paths": [
+          "CHANGELOG.md",
+          "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
+          "docs/projects/architectural-truth/GOAL_WORKSETS.json",
+          "docs/projects/architectural-truth/README.md",
+          "infrastructure/docker-compose.gitea.yml",
+          "pyproject.toml"
+        ]
+      }
     }
   }
 }

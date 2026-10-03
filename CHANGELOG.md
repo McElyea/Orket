@@ -5,6 +5,15 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.130] - 2026-10-02
+
+### Changed
+- Upgrade the existing local Gitea deployment from 1.25.4 to 28.0.0 with a verified cold backup and retained repository/Actions history; pin the compose image and preserve Actions run retention.
+- Record the user-authorized one-hour local infrastructure exception, Ubuntu Docker integration and temporary Windows/Linux runner preparation. Hosted Quality remains pending; eight of ten goals are complete and accepted local evidence is reused.
+- `compatibility_status`: `preserved`
+- `affected_audience`: `operators`
+- `migration_requirement`: `Back up Gitea data before the database upgrade; rollback requires restoring the matching old data and configuration.`
+
 ## [0.6.129] - 2026-10-02
 
 ### Fixed

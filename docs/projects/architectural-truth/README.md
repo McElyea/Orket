@@ -7,15 +7,16 @@ Owner: Orket Core
 The [executable goal queue](ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md) is the single
 canonical implementation plan and resume record for ten fixed goals. **Eight goals
 are complete; ATG-09 local installed/provider acceptance is complete, while required
-hosted Gitea runners are unavailable. ATG-10 remains dependent.**
+hosted Gitea Quality proof remains pending. ATG-10 remains dependent.**
 The [workset inventory](GOAL_WORKSETS.json) binds sources, receipts and frozen batches.
-Checkpoint v0.6.129 repairs a reload-test marker publication race and records local
-acceptance: 64 scoped installed rechecks refresh affected Linux/Windows evidence,
+Checkpoint v0.6.130 updates Gitea to 28.0.0 and records the one-hour temporary
+infrastructure authorization. Hosted Quality remains unverified. The v0.6.129
+checkpoint repairs a reload-test marker publication race and records local acceptance: 64 scoped installed rechecks refresh affected Linux/Windows evidence,
 the persistent WSL clock repair passes its unchanged prerequisite, and actual
 llama.cpp public-library completion/cancellation proof passes. Runtime artifacts
 remain v0.6.125; composite evidence preserves the original Linux failure and all
 unchanged assertions, deadlines and skips. The canonical plan contains exact proof
-limits, publication receipts and the existing runner input needed to resume.
+limits, publication receipts and the runner admission and remaining hosted proof needed to resume.
 
 The branch is `codex/architectural-truth-bt0` in
 `C:/Source/Orket-architectural-truth`. Published `v0.6.117` closes the eight fixture

@@ -303,12 +303,14 @@ counterexample and does not change parser/grounding behavior or add a new goal.
 - Current card/batch: **ATG-09 / ATG09-P01**. **8 of 10 goals complete**.
   Available local installed/provider acceptance is complete; required hosted Gitea
   Quality remains blocked. ATG-10 stays dependent. User authorized resumption and
-  repair/update of both existing local blockers; no new infrastructure or main merge.
-- Checkpoint: **v0.6.129**, based on `5a07909e` / `v0.6.128`, with the repaired
-  reload fixture and five metadata files. Validation/publication receipts are
-  `.tmp/atg09-acceptance-checks.json` and `.tmp/atg09-acceptance-publication.json`.
-  Inspect their terminal status, annotated tag and remote readback before assuming
-  publication. `platform_worksets.local_acceptance` binds the exact evidence hashes.
+  repair/update of both existing local blockers. The later one-hour infrastructure
+  exception expires **2026-10-03 05:53:22 UTC**; no provider switch or main merge.
+- Checkpoint: **v0.6.130**, based on `20ac9de9` / `v0.6.129`, updates the Gitea
+  deployment image and records the finite infrastructure exception. Receipts are
+  `.tmp/atg09-infra-checks.json` and `.tmp/atg09-infra-publication.json`; verify their
+  terminal status, annotated tag and remote identities. `platform_worksets.infrastructure_repair`
+  binds this checkpoint. Accepted local fixture/provider/installed evidence remains
+  bound by `platform_worksets.local_acceptance` and its v0.6.129 receipts.
 - Local software: official llama.cpp **b11146 / 7fe450e19**, CUDA 12.4, is installed
   at `D:/llama.cpp-releases/b11146`; older copies remain. The existing GGUF serves
   `orcarouter_qwen3.8-27b-uncensored-q4_k_l` at `http://127.0.0.1:8080/v1`.
@@ -373,19 +375,34 @@ counterexample and does not change parser/grounding behavior or add a new goal.
   12s/60s/90s/10s limits and the 300s process ceiling remain. Scope is the public
   library flow; API HTTP transport, installed-provider execution and remote inference
   teardown are not established by this proof. Reuse it while relevant inputs match.
-- Gitea blocker: existing `vibe-rail-gitea`, Gitea 1.25.4, serves
-  `http://localhost:3000/Orket/Orket`. Existing credentials in `C:/Source/Orket/.env`
-  authenticate successfully without disclosure. Repository and administrator
-  instance-wide runner inventories both return **HTTP 200, zero runners**; no local
-  runner process/container/service is present. This branch has no hosted candidate
-  run. `.tmp/atg09-gitea-access.json` retains the read-only evidence. Required input:
-  **the existing Ubuntu/Windows Gitea runners' locations and start/access instructions**.
-  No runner, hosted job or infrastructure was created; no provider switch occurred.
-- Next exact action: verify this checkpoint's receipts/publication and the runner
-  input. When existing runners are available, run the frozen required hosted Quality
-  matrix at the published fixture-repaired checkpoint, retain job/environment/commit
-  identity, close ATG-09 and continue ATG-10. Do not repeat unchanged accepted local
-  campaigns merely to reconstruct context. A required missing job remains blocked.
+- Gitea repair: existing `vibe-rail-gitea` now serves **28.0.0** at
+  `http://localhost:3000/Orket/Orket`. Live health, repository/main identity and all
+  452 workflow records are preserved. A stopped-container backup at
+  `D:/Orket-Gitea-Backups/pre-28.0.0-ATG09` matches all 564 source file hashes and
+  passes SQLite integrity checking. `.tmp/atg09-gitea-upgrade.json` retains proof.
+  Compose now pins 28.0.0 and preserves Actions run history (`RUN_RETENTION_DAYS=0`).
+  The effective compose file is this branch's `infrastructure/docker-compose.gitea.yml`,
+  with project `infrastructure` and project directory `C:/Source/Orket/infrastructure`
+  so the existing data mount remains authoritative. The separate main checkout's
+  older compose file is unchanged and must not replace the new deployment file.
+  Rollback requires the saved data/config plus saved old image, not merely an image downgrade.
+- Existing Ubuntu Docker Desktop integration was enabled and its native daemon
+  access verified; settings backup and exact observation are in
+  `.tmp/atg09-docker-integration.json`. Windows and Linux runner tooling is being
+  prepared in `D:/Orket-Gitea-Runners/windows` and `/home/jon/orket-gitea-runner`.
+  Preparation/native tool checks do not establish hosted execution. Historical
+  runner absence follows the archived March 12 temporary-runner teardown; server
+  upgrade alone does not supply runners. Existing runs 451/452 were still queued
+  immediately after upgrade; retain their evidence before scoped job admission.
+- Next exact action: within the one-hour authorization, finish runner admission,
+  publish the identified candidate to existing Gitea and execute the unchanged
+  required Quality workflow. Its eleven jobs include Ubuntu/Windows Python 3.11/3.12
+  determinism cells, Linux gates and intentional Docker acceptance. Link/freeze the
+  candidate and helpers in `.tmp/atg09-hosted-run.json` before launch; retain hosted
+  job/log/commit/environment identity and native teardown. Stop temporary runners
+  before the authorization expires. Provisioning after expiry requires new authorization.
+  Close ATG-09 only when every required job passes, then continue ATG-10. Reuse
+  unchanged accepted local campaigns; missing or failed hosted jobs remain incomplete.
 - Remaining blockers or drift: hosted Gitea Quality is absent; ATG-09/10 and whole
   campaign completion are not claimed. ATG-07's 12,964 passes / 93 skips / 89.213132%
   combined coverage remain bound to unchanged production inputs, with affected
