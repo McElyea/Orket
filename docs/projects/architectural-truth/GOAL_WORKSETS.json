@@ -10125,45 +10125,6 @@
   ],
   "diff_ledger": [
     {
-      "run_at_utc": "2026-10-02T01:33:05.860364Z",
-      "changed": true,
-      "before_digest": "sha256:d6661277f9d14a6f2061938025abd8240f9e4586f0463edf861578b2d62b15fc",
-      "after_digest": "sha256:6a02e068959d96982cda3cca8a2ff544cebdc2fdb8503d09eefba13ed07aad06",
-      "diff": {
-        "added_paths": 18,
-        "removed_paths": 0,
-        "changed_paths": 29,
-        "initial_write": false,
-        "paths_total_previous": 19000,
-        "paths_total_current": 20360,
-        "paths_total_reference": 20360,
-        "churn_paths": 47,
-        "churn_ratio": 0.002308,
-        "sample_paths": [
-          "$.diff_ledger",
-          "$.coverage_worksets.batches[0].status",
-          "$.coverage_worksets.batches[1].status",
-          "$.coverage_worksets.batches[2].status",
-          "$.coverage_worksets.batches[3].status",
-          "$.coverage_worksets.batches[4].status",
-          "$.coverage_worksets.batches[5].status",
-          "$.coverage_worksets.batches[6].status",
-          "$.coverage_worksets.batches[7].status",
-          "$.coverage_worksets.batches[8].status",
-          "$.coverage_worksets.batches[9].status",
-          "$.coverage_worksets.batches[10].status",
-          "$.coverage_worksets.batches[11].status",
-          "$.coverage_worksets.batches[12].status",
-          "$.coverage_worksets.batches[13].status",
-          "$.coverage_worksets.batches[14].status",
-          "$.coverage_worksets.batches[15].status",
-          "$.coverage_worksets.batches[16].status",
-          "$.coverage_worksets.batches[17].status",
-          "$.coverage_worksets.batches[18].status"
-        ]
-      }
-    },
-    {
       "run_at_utc": "2026-10-02T02:49:04.944427Z",
       "changed": true,
       "before_digest": "sha256:05e31c6183d24c50bc054ec56694668b2c1c650c09a1f716ec8c6f0d2488b1c8",
@@ -10952,6 +10913,29 @@
           "$.platform_worksets.clock_remediation.rule",
           "$.platform_worksets.clock_remediation.status",
           "$.platform_worksets.external_prerequisites"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-03T18:30:19.207159Z",
+      "changed": true,
+      "before_digest": "sha256:ea92789465eb9076558469358ac7832b4170bcfe9cc4e599801527714592e49b",
+      "after_digest": "sha256:652c6939bd1a4b1f475ecd10eb15532169ef9bb01b18b7164088a6f06747b4ab",
+      "diff": {
+        "added_paths": 2,
+        "removed_paths": 0,
+        "changed_paths": 2,
+        "initial_write": false,
+        "paths_total_previous": 21477,
+        "paths_total_current": 22943,
+        "paths_total_reference": 22943,
+        "churn_paths": 4,
+        "churn_ratio": 0.000174,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.platform_worksets.two_day_completion_plan",
+          "$.platform_worksets.external_prerequisites",
+          "$.platform_worksets.next_action"
         ]
       }
     }
@@ -13969,8 +13953,8 @@
     "remaining": [
       "Complete all eleven existing hosted Gitea Quality jobs on the fixture-repaired candidate."
     ],
-    "external_prerequisites": "Gitea28and existingprivate native tools restored; A08registrations18/19 andownedprocesses removed. Finaltwo-hourwindow ends18:24:08UTC; admissioncutoff18:19:08UTC; no furtherinfrastructureadmissionplanned.",
-    "next_action": "Do not retry without enough explicitly authorized hosted runner time to complete fixed Quality and cleanup; preserve all A08 failure and v140 repair evidence.",
+    "external_prerequisites": "The final infrastructure exception expired 2026-10-03T18:24:08Z; prior owners/registrations were removed. Two-day kickoff/reset time and an explicit existing-runner window are pending. No update or new infrastructure is implied.",
+    "next_action": "At the user kickoff, follow the canonical two-day plan: verify current candidate/evidence/access, bind an explicitly renewed existing-runner window, then complete the fixed eleven-job hosted Quality workflow and dependent ATG-10. Do not launch with expired helpers.",
     "probe_limits": "Interpreter version probes succeeded. The first combined shell command failed only its uv lookup due to quote stripping; no uv availability was established by that command.",
     "clock_result": {
       "path": "blocked",
@@ -15264,6 +15248,50 @@
       }
     ],
     "historical_acceptance_limits": "No fresh Linux candidate install or runtime selection, actual provider inference or hosted Quality job has been executed. Native passive clock failure is live environment proof, not product failure or application acceptance.",
-    "historical_external_prerequisites": "Gitea28 and private native tools available. Registrations14/15 removed after A06 failure. User explicitly granted two further hours through09:53:22UTC; runner admission stops09:48:22UTC."
+    "historical_external_prerequisites": "Gitea28 and private native tools available. Registrations14/15 removed after A06 failure. User explicitly granted two further hours through09:53:22UTC; runner admission stops09:48:22UTC.",
+    "two_day_completion_plan": {
+      "status": "prepared: reset/kickoff and renewed runner window pending",
+      "canonical_section": "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md#two-day-completion-plan",
+      "prepared_on": "2026-10-03",
+      "goal_order": [
+        "ATG-09",
+        "ATG-10"
+      ],
+      "current_batch": "ATG09-P01",
+      "completed_goals": 8,
+      "total_goals": 10,
+      "requested_maximum_hours": 48,
+      "start_utc": null,
+      "runner_authorization_end_utc": null,
+      "fallback_planning_end_utc": "2026-10-06T06:00:00Z",
+      "fallback_end_is_verified_billing_time": false,
+      "execution_started": false,
+      "new_targets_authorized": false,
+      "scope": "Schedule the existing remaining queue; no package upgrades, provider changes, infrastructure expansion, paid credits or main merge.",
+      "receipt_sha256": {
+        ".tmp/atg09-fixture-case-publication.json": "a93a1a5a3060e7cf594cd9587459821a21b4cacec03111512764a64981fdbe83",
+        ".tmp/atg09-final-window-handoff.json": "5ccef9d3577acc41ebbbce1b0da968201d3ee78ac45313c38192621f09c5c7f3",
+        ".tmp/atg09-final-evidence-reuse.json": "a03cb084b002df613ea797028e675fb412604d7907f2082b8de656f618727afb",
+        ".tmp/atg09-final-linux-audit.json": "e631e5c692a1570847f75576f8e0548b3598d955b7aadc9e0e8c5c648a9f1864",
+        ".tmp/atg09-fixture-case-linux.json": "38be7cdd47b431de50a1ca88400f31f2ad194625fd4c40418600541fe7cb1a19",
+        ".tmp/atg09-fixture-case-windows.json": "a509c14dfa1b030f0396111674ebd781c2adcda057d82e5dd5ba4af8847730a2",
+        ".tmp/atg09-hosted-final-window-close.json": "6e85314a8e5971b262b007e46ddbe7aa81ea3cbc4b26c6b118270ca65e01804e"
+      },
+      "checkpoint": {
+        "version": "0.6.141",
+        "base_commit": "44840ff8f0383835f79667b86d718b24b6f2f92b",
+        "paths": [
+          "CHANGELOG.md",
+          "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
+          "docs/projects/architectural-truth/GOAL_WORKSETS.json",
+          "docs/projects/architectural-truth/README.md",
+          "pyproject.toml"
+        ],
+        "directory": ".tmp/atg-two-day-plan-checkpoint",
+        "checks_receipt": ".tmp/atg-two-day-plan-checks.json",
+        "publication_receipt": ".tmp/atg-two-day-plan-publication.json"
+      },
+      "proof": "Planning and structural checkpoint only; runtime and hosted acceptance do not change."
+    }
   }
 }

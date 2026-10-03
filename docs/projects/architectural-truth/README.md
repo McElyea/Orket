@@ -9,12 +9,15 @@ canonical implementation plan and resume record for ten fixed goals. **Eight goa
 are complete; scoped Linux installed proof passes, while ATG-09 still needs full hosted
 Gitea Quality. Historical provider proof remains reusable. ATG-10 remains dependent.**
 The [workset inventory](GOAL_WORKSETS.json) binds sources, receipts and frozen batches.
-Checkpoint v0.6.140 normalizes two closeout test fixture paths after A08 exposed
+Checkpoint v0.6.141 adds the [two-day completion plan](ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md#two-day-completion-plan)
+for the user's next usage reset. It keeps ATG-09 then ATG-10 as the only remaining
+goals; kickoff timing and renewed existing-runner availability remain pending.
+The v0.6.140 checkpoint normalizes two closeout test fixture paths after A08 exposed
 Windows case-insensitivity masking the mismatch. Both v0.6.136 Linux package
 refresh cells pass 21 cases with Docker temporarily stopped, after unchanged real
 clock qualification. Windows/package/provider evidence retains its exact scope.
 Full eleven-job hosted Quality remains incomplete; ATG-10 remains dependent.
-The final infrastructure window ends 18:24:08 UTC on October 3. Source control,
+The final infrastructure window expired at 18:24:08 UTC on October 3. Source control,
 restoration and publication receipts are linked in the canonical plan. The exact 119-case
 closeout source selection passes on Linux and Windows; Docker/Gitea are restored.
 Docker 4.93 installation was cancelled, so 4.86 persists; no permanent clock fix is claimed.

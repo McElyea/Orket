@@ -5,6 +5,15 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.141] - 2026-10-03
+
+### Changed
+- Plan the two-day completion window for the existing ATG-09 and ATG-10 goals, with evidence reuse, hosted verification and publication reserves.
+- Record expiry of the final infrastructure exception; execution timing and renewed existing-runner access remain pending, with no new targets or runtime changes.
+- `compatibility_status`: `preserved`
+- `affected_audience`: `all`
+- `migration_requirement`: `none`
+
 ## [0.6.140] - 2026-10-03
 
 ### Fixed

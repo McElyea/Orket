@@ -298,14 +298,121 @@ check consequently misses `Maybe this...` after it becomes `Maybethis...`; a
 punctuation-separated marker remains detectable. This coverage batch retains the
 counterexample and does not change parser/grounding behavior or add a new goal.
 
+## Two-day completion plan
+
+Prepared at the user's request on October 3 after the final infrastructure window.
+This schedules the remaining **ATG-09 / ATG09-P01, then ATG-10**; it creates no new
+goal IDs, worksets or acceptance targets. Eight goals remain accepted. The intended
+result is **10/10 with evidence and published checkpoints**. If a required gate
+cannot pass within the available time, retain the maximum verified progress and
+an exact resumable blocker; elapsed time cannot make the queue complete.
+
+**Timing:** T0 is the user's next usage reset and explicit kickoff. Its timestamp
+is not yet supplied. Work ends at the earlier of T0 + 48 hours and the verified
+downgrade time. Until account timing is supplied, use **2026-10-06 00:00
+America/Denver (06:00 UTC)** as a conservative planning cutoff, not a verified
+billing timestamp. Finish handoff during October 5. Move through these blocks as
+soon as their dependencies pass; the table allocates capacity, not waiting time.
+
+| Window from T0 | Work and concrete deliverable |
+|---|---|
+| 0-1 hour | Re-read startup/resume authority, verify branch/tag/clean tree, receipts and process absence; check existing Gitea, private runner tooling and actual access. Bind candidate, workflow, helper hashes and the explicitly authorized runner window before any admission. |
+| 1-10 hours | Run the existing eleven-job hosted Quality workflow on the fixture-repaired candidate. Retain complete logs, step/job outcomes, source freeze and native owner receipts. Allow an uninterrupted block: six hours is an estimate, not a proven full-run duration; reserve at least another 30 minutes for owned cleanup/readback. |
+| 10-24 hours | Diagnose observed failures against official package documentation and relevant upstream/community reports where useful. Repair only demonstrated defects in the fixed obligations, prove the affected path, publish a cohesive candidate, then refresh the invalidated hosted evidence. During source freezes, independent work is read-only evidence review and an ATG-10 draft. |
+| 24-36 hours | Finish any eligible hosted verification and evidence audit. Accept ATG-09 only with all required outcomes, cleanup and a tracked closeout; publish its own versioned commit, annotated tag and verified branch/tag push. Advance earlier if it passes earlier. |
+| 36-42 hours | After ATG-09 publication, execute ATG-10: reconcile finite worksets, exception reasons, compatibility and proof limits; run final metadata/release checks, archive the bounded closeout and publish a separate checkpoint. |
+| Last 6 hours before cutoff | Reserve for verification, native resource settlement, publication and handoff. Admit no campaign unless its existing bounds and cleanup fit the remaining time. If blocked, publish exact partial status and next action instead of beginning speculative work. |
+
+**Critical path and reuse:** the current missing result is the complete hosted
+Quality workflow: four rulesim OS/Python cells, docs_hygiene, architecture_gates,
+quality, product_quality, sandbox_docker_acceptance, docker_smoke and migration_smoke.
+Preserve the workflow's explicit absent-product-tests branch as absence. Required
+coverage remains the canonical full command with its **89%** combined floor.
+Passing local selections or dependency-skipped jobs cannot substitute for hosted
+results. Existing Linux runner capacity is one; do not increase concurrency or
+change scheduling infrastructure to fit this estimate.
+
+Reuse accepted Windows R02 and Linux R03 installed composites and the three actual
+llama.cpp public-library cases after checking relevant-input equality. The native
+119-case fixture proof also remains reusable at unchanged inputs. Do not repeat
+clock qualification, installed campaigns or provider inference to reconstruct
+context. If a repair invalidates evidence, refresh exactly the affected obligations.
+A new clock attempt still needs evidence of environment change and the original
+60s quiet / 240s ceiling / 10ms step / 280s outer limits. Preserve all test assertions,
+deadlines and skip rules. Historical source coverage is not fresh hosted coverage.
+
+**Access boundary:** the October 3 infrastructure exception **expired at 18:24:08
+UTC**; the planning request does not renew it. The proposed execution needs only
+temporary activation of the already-installed Windows/Linux runners for the
+existing Gitea repository and workflow, followed by registration/private-file,
+process and owned Docker-resource cleanup. Before launch, record the user's
+explicit runner authorization and absolute expiry. Preserve old expired helpers
+and receipts; bind a fresh supervisor window without altering test deadlines.
+No package update, new runner service/host, provider switch, account purchase,
+power-setting change or main merge is part of this plan. If prerequisite access
+is unavailable, request the specific input and continue only independent review.
+
+The previous connected `.tmp/` helper chain is `atg09_final_runner_renewal.py`,
+`atg09_register_final_window.py`, `atg09_final_runner_environment.py`,
+`atg09_bind_final_docker.py`, `atg09_admit_A08.py`, `atg09_final_hosted_execute.py`,
+`atg09_hosted_close_final_window.py` and `atg09_final_hosted_audit.py`. Preserve
+their bytes and terminal lifecycle/readiness receipts before preparing a fresh
+attempt. Update all linked candidate/run/receipt/window bindings together; old
+one-shot guards and A08/v0.6.138 identities are not launch-ready. Hosted proof must
+have its own actual run identity on the newly published candidate; metadata-only
+reuse cannot relabel A08's five successful jobs as a later full Quality pass.
+
+**Working method:** use bounded `gpt-6.1-sol` / `xhigh` subagents for independent
+substantial failure analysis, implementation or evidence auditing. Keep assignments
+and edited files disjoint; the primary owns integration, source freezes, final
+verification, publication and this resume record. Retrieve files and make small
+edits directly. Avoid duplicate campaigns, broad context reloads and open-ended
+architecture audits. At each failure, identify a concrete changed input or invalid
+run before another campaign; unchanged red runs are not a retry strategy. Preserve
+earlier failures. Standard usage and the existing subscription are assumed; no
+paid credits, API spending or faster paid mode is authorized by this schedule.
+
+**ATG-10 preparation:** refresh `.tmp/atg10-final-window-readiness.md` against the
+eventual accepted candidate rather than treating its v0.6.138 state as current.
+Keep the existing nine-file reconciliation scope and actual Denver closeout date.
+Final checks are docs hygiene, authored/generated current authority, install
+convergence, release policy, diff check and the existing 17 release controls.
+Current-authority runtime proof remains explicitly unavailable. Completion does
+not admit Mac support, whole-core purity, arbitrary plugin guarantees or deferred
+capabilities. If 10/10 finishes early, report it and leave other roadmap lanes at
+their existing status; more available time does not create new refactor targets.
+
+**Subscription assumption:** official OpenAI documentation ties continued Pro
+access to the current billing period; usage resets and weekly limits are separate.
+No fetched source establishes an extra week of Pro after this account's downgrade.
+The exact account cutoff and remaining allowance are unverified. Sources checked
+October 3: [Pro plans](https://help.openai.com/en/articles/9793128-about-chatgpt-pro-tiers)
+and [usage and pricing](https://learn.chatgpt.com/docs/pricing). Budget for two days
+at most, and shorten the execution blocks if the actual remaining window is less.
+
+To start after the reset, use the reusable goal prompt below with this addition:
+
+```text
+Use the Two-day completion plan in the canonical ATG plan. T0 is [timestamp and
+timezone]; stop and checkpoint by [timestamp and timezone, at most 48 hours later].
+For that window I authorize activating the existing Gitea Windows/Linux runners
+for the existing Quality workflow and cleaning up their owned resources. This
+does not authorize further package upgrades, new infrastructure or new targets.
+Resume the existing ATG-v1 goal; do not replace its objective or mark it complete
+until ATG-09 and ATG-10 have all required evidence and verified publication.
+```
+
 ## Resume record
 
 - Current card/batch: **ATG-09 / ATG09-P01**. **8 of 10 goals complete**.
   Historical local acceptance remains bound to v0.6.125. The v0.6.136 reload
   repair has both scoped Linux refresh cells; full hosted Gitea Quality remains incomplete.
-  ATG-10 stays dependent. The user explicitly authorized one final two-hour
+  ATG-10 stays dependent. The two-day plan above is prepared for the user's reset;
+  its execution start and renewed runner window are not yet supplied. The user
+  explicitly authorized one final two-hour
   infrastructure repair window beginning **2026-10-03 16:24:08 UTC** and ending
-  **18:24:08 UTC** (12:24:08 America/Denver). Runner admission stops **18:19:08 UTC**.
+  **18:24:08 UTC** (12:24:08 America/Denver). This window is now expired; runner
+  admission stopped **18:19:08 UTC**.
   This supersedes the expired 09:53:22 UTC window; all A07 owners and registrations
   16/17 were already removed. Research official package documentation and relevant
   Reddit/forum reports before bounded repairs. No new product, platform, deployment
@@ -313,9 +420,9 @@ counterexample and does not change parser/grounding behavior or add a new goal.
   Existing assertions, thresholds, deadlines, skips and the ten-goal queue remain.
   No provider switch or main merge. Track final-window work in
   `platform_worksets.final_repair_window`; preserve all earlier failed receipts.
-- Checkpoint: **v0.6.140** repairs two closeout fixture paths; runtime and
-  installed artifacts remain v0.6.136. Verify
-  `.tmp/atg09-fixture-case-checks.json` and `.tmp/atg09-fixture-case-publication.json`,
+- Checkpoint: **v0.6.141** records the two-day execution plan and expired window;
+  fixture proof remains v0.6.140, runtime and installed artifacts remain v0.6.136.
+  Verify `.tmp/atg-two-day-plan-checks.json` and `.tmp/atg-two-day-plan-publication.json`,
   remote branch/tag identity and clean worktree. ATG-09/10 remain incomplete.
 - Local software: official llama.cpp **b11146 / 7fe450e19**, CUDA 12.4, is installed
   at `D:/llama.cpp-releases/b11146`; older copies remain. The existing GGUF serves
@@ -646,8 +753,8 @@ counterexample and does not change parser/grounding behavior or add a new goal.
   `.tmp/atg09-final-window-handoff.json`. Research links are in the two final-window research notes.
 - Next exact action: full eleven-job hosted Quality is still required on the
   fixture-repaired candidate. The final infrastructure attempt is settled; no
-  further runner admission or update is planned. Existing authorization ends
-  18:24:08 UTC; its admission cutoff remains 18:19:08 UTC. Completion needs sufficient
+  further runner admission or update occurred under it. Its authorization expired
+  18:24:08 UTC; admission cutoff was 18:19:08 UTC. Completion needs sufficient
   explicitly authorized runner availability for the unchanged workflow and cleanup.
   No provider switch, new platform/backend, main merge or extra goal is authorized.
   ATG-10 cannot start until ATG-09's complete evidence, closeout and publication.
