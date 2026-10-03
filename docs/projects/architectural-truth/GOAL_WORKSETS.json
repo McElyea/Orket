@@ -10125,30 +10125,6 @@
   ],
   "diff_ledger": [
     {
-      "run_at_utc": "2026-10-01T23:53:35.300451Z",
-      "changed": true,
-      "before_digest": "sha256:85e91dcdaf73f9cb9014a6556b2ba6cde02445df3edb43a20db475693971204c",
-      "after_digest": "sha256:fa6b16a75f17844b1d56a1ddf2dc03cc64c9a632644af1ffc9808806026db838",
-      "diff": {
-        "added_paths": 5,
-        "removed_paths": 0,
-        "changed_paths": 0,
-        "initial_write": false,
-        "paths_total_previous": 16550,
-        "paths_total_current": 17802,
-        "paths_total_reference": 17802,
-        "churn_paths": 5,
-        "churn_ratio": 0.000281,
-        "sample_paths": [
-          "$.diff_ledger",
-          "$.coverage_worksets.reconciliation[6].api_bounded_observation",
-          "$.coverage_worksets.reconciliation[6].closing_selection",
-          "$.coverage_worksets.reconciliation[6].full_runner_change",
-          "$.coverage_worksets.reconciliation[6].native_repeated_closing"
-        ]
-      }
-    },
-    {
       "run_at_utc": "2026-10-01T23:55:58.802795Z",
       "changed": true,
       "before_digest": "sha256:90057d876ec64d47fba01f4b9c124e3e9c06846a28ee3b610d14ba704f12a798",
@@ -10948,6 +10924,28 @@
         "sample_paths": [
           "$.diff_ledger",
           "$.platform_worksets.reload_resume_reconciliation",
+          "$.platform_worksets.next_action"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-03T16:37:53.817998Z",
+      "changed": true,
+      "before_digest": "sha256:77deba467ef253aa3cf80cecc3fea67f07de001aa9c2cce463d203761d88af16",
+      "after_digest": "sha256:31bfa5b282829845d4e7e0f7478fff2d47e2714d47fdbcdef3f5b36c94d40a8f",
+      "diff": {
+        "added_paths": 2,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 21156,
+        "paths_total_current": 22600,
+        "paths_total_reference": 22600,
+        "churn_paths": 3,
+        "churn_ratio": 0.000133,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.platform_worksets.final_repair_window",
           "$.platform_worksets.next_action"
         ]
       }
@@ -13967,7 +13965,7 @@
       "Existing hosted Gitea Ubuntu/Windows runners and required Quality jobs at the published fixture-repaired checkpoint."
     ],
     "external_prerequisites": "Gitea28 and private native tools available. Registrations14/15 removed after A06 failure. User explicitly granted two further hours through09:53:22UTC; runner admission stops09:48:22UTC.",
-    "next_action": "Verify v0.6.137 metadata checkpoint publication/clean tree; runtime candidate remains v0.6.136. Await user response before a new Windows elevation prompt and pending infrastructure extension; WSL installer is verified and prepared, no upgrade occurred. Following an actual environment change, retain original clock thresholds and refresh both Linux repair cells with new explicit source/clock binding. Reuse accepted Windows/provider evidence only within recorded scope. Full eleven-job hosted Quality and coverage89 remain required before ATG09/ATG10. No repeat loops, provider switch or main merge.",
+    "next_action": "Identify observed initd clock writes, make a justified environment repair, then unchanged clock/Linux gates; independently complete hosted Quality.",
     "probe_limits": "Interpreter version probes succeeded. The first combined shell command failed only its uv lookup due to quote stripping; no uv availability was established by that command.",
     "clock_result": {
       "path": "blocked",
@@ -15062,6 +15060,42 @@
         "directory": ".tmp/atg09-resume-reconciliation-checkpoint",
         "checks_receipt": ".tmp/atg09-resume-reconciliation-checks.json",
         "publication_receipt": ".tmp/atg09-resume-reconciliation-publication.json"
+      }
+    },
+    "final_repair_window": {
+      "status": "active: final authorized repair and verification window",
+      "batch": "ATG09-P01",
+      "started_utc": "2026-10-03T16:24:08Z",
+      "admission_cutoff_utc": "2026-10-03T18:19:08Z",
+      "hard_end_utc": "2026-10-03T18:24:08Z",
+      "user_authorized_hours": 2,
+      "scope": "Existing local blockers and existing fixed ATG-v1 queue only; no new targets without user direction.",
+      "clock_thresholds": {
+        "quiet_seconds": 60,
+        "ceiling_seconds": 240,
+        "maximum_step_seconds": 0.01,
+        "outer_seconds": 280
+      },
+      "research": [
+        ".tmp/atg09-final-clock-research.md",
+        ".tmp/atg09-final-hosted-research.md"
+      ],
+      "diagnostic": ".tmp/atg09-final-clock-trace.json",
+      "next_action": "Identify observed initd clock writes, make a justified environment repair, then unchanged clock/Linux gates; independently complete hosted Quality.",
+      "checkpoint": {
+        "version": "0.6.138",
+        "base_commit": "76011ccff758f565c438357c7740856eb51020b6",
+        "paths": [
+          "CHANGELOG.md",
+          "docs/CONTRIBUTOR.md",
+          "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
+          "docs/projects/architectural-truth/GOAL_WORKSETS.json",
+          "docs/projects/architectural-truth/README.md",
+          "pyproject.toml"
+        ],
+        "directory": ".tmp/atg09-final-window-checkpoint",
+        "checks_receipt": ".tmp/atg09-final-window-checks.json",
+        "publication_receipt": ".tmp/atg09-final-window-publication.json"
       }
     }
   }

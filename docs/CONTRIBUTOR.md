@@ -74,6 +74,8 @@ When the user targets a canonical plan for continuing goal execution:
    If none is eligible, report the exact blocker and required input; blocked,
    budget-limited or unverified required work is not completed work. Existing user
    authorization applies to routine choices; scope expansion needs a user decision.
+7. Refactoring does not authorize new product, platform, deployment or acceptance
+   targets. Obtain explicit user direction before introducing any such target.
 
 ## Repository Rules
 

@@ -1,7 +1,7 @@
 # Architectural Truth: Executable Goal Queue
 
 Last updated: 2026-10-03 (America/Denver)
-Status: Active implementation; eight goals complete, ATG-09 local acceptance complete and hosted Quality blocked
+Status: Active implementation; eight goals complete, ATG-09 Linux refresh and hosted Quality pending in the final authorized repair window
 Queue: ATG-v1 — ten fixed goals for the existing revamp
 Owner: Orket Core
 Worktree: `C:/Source/Orket-architectural-truth`
@@ -303,17 +303,21 @@ counterexample and does not change parser/grounding behavior or add a new goal.
 - Current card/batch: **ATG-09 / ATG09-P01**. **8 of 10 goals complete**.
   Historical local acceptance remains bound to v0.6.125. The v0.6.136 reload
   repair still needs both Linux refresh cells and full hosted Gitea Quality.
-  ATG-10 stays dependent. User authorized resumption and
-  repair/update of both existing local blockers. The later one-hour infrastructure
-  exception received two explicit two-hour extensions, most recently the user's
-  instruction "add 2 additional hours for the infra lift". The current deadline is
-  **2026-10-03 09:53:22 UTC**; runner admission stops **09:48:22 UTC**.
-  Registrations 16/17 and all A07 native owners are now removed after terminal failure. No provider switch or main merge.
-- Checkpoint: **v0.6.137** reconciles current resume metadata only. The runtime
+  ATG-10 stays dependent. The user explicitly authorized one final two-hour
+  infrastructure repair window beginning **2026-10-03 16:24:08 UTC** and ending
+  **18:24:08 UTC** (12:24:08 America/Denver). Runner admission stops **18:19:08 UTC**.
+  This supersedes the expired 09:53:22 UTC window; all A07 owners and registrations
+  16/17 were already removed. Research official package documentation and relevant
+  Reddit/forum reports before bounded repairs. No new product, platform, deployment
+  or acceptance target may emerge from this refactor without user direction.
+  Existing assertions, thresholds, deadlines, skips and the ten-goal queue remain.
+  No provider switch or main merge. Track final-window work in
+  `platform_worksets.final_repair_window`; preserve all earlier failed receipts.
+- Checkpoint: **v0.6.138** records the final repair window and scope boundary only. The runtime
   repair remains published v0.6.136 commit `607124ce3736e933c8ea9622aca9afea94a172a2`,
   annotated tag object `d6b97ef8e642c1b94051d7563396507a4573b0d9`.
-  Verify `.tmp/atg09-resume-reconciliation-checks.json` and
-  `.tmp/atg09-resume-reconciliation-publication.json`, branch/tag remote identities
+  Verify `.tmp/atg09-final-window-checks.json` and
+  `.tmp/atg09-final-window-publication.json`, branch/tag remote identities
   and clean worktree. These checks do not repeat or expand runtime proof.
   ATG-09 and ATG-10 remain incomplete.
 - Local software: official llama.cpp **b11146 / 7fe450e19**, CUDA 12.4, is installed
@@ -588,18 +592,22 @@ counterexample and does not change parser/grounding behavior or add a new goal.
   R02 source and helper freezes ended after native owners and independent readback
   settled. Checkpoint-only metadata changes do not refresh Linux runtime evidence;
   a later Linux attempt needs an explicit new freeze and successful clock binding.
-- Next exact action: obtain the pending user response to the cancelled Windows
-  administrator prompt and infrastructure extension before dependent work.
-  Preserve the Linux R02 refusal and prepared installer; do not repeat the prompt
-  or a campaign while these inputs are absent. Verify the recorded checkpoint
-  publication before any replacement action; v0.6.136 publication already passed.
+- Next exact action: use official documentation and observed kernel-clock events
+  to identify and repair the existing local controller conflict. The final-window
+  trace records `initd` calling `settimeofday` every 30 seconds, followed by
+  `ntp_clear` and transient maximum error of 16 seconds; identify its owning
+  component before changing settings. Preserve `.tmp/atg09-final-clock-trace.json`
+  and the new research notes. Do not infer a WSL package fix from version alone.
   Another qualification requires demonstrated environment change, retaining the
   60s quiet/240s ceiling/10ms/280s outer limits. Refresh both Linux repair cells
-  only after that gate; do not repeat accepted Windows/provider campaigns.
-  Full hosted Quality on the published candidate remains independently required.
-  Current runner admission 09:48:22 UTC and cleanup 09:53:22 UTC remain binding; a
-  further extension request is pending. Close ATG-09 only after all evidence and
-  publication requirements, then continue ATG-10. No provider switch or main merge.
+  only after that gate; reuse accepted Windows/provider proof where inputs match.
+  Independently publish the candidate and run the existing eleven-job hosted
+  Quality workflow with owned cleanup by 18:24:08 UTC. No admission after 18:19:08.
+  Primary owns integration, final verification, publication and this resume record.
+  Complete ATG-09 only on all required proof/publication, then continue ATG-10.
+  Earlier cancelled UAC and expired-window records above are historical, not a
+  current missing authorization. Request OS approval only if a justified repair
+  actually requires elevation; no such update has yet been established as a fix.
 - Remaining blockers or drift: complete hosted Gitea Quality is absent; ATG-09/10 and whole
   campaign completion are not claimed. ATG-07's 12,964 passes / 93 skips / 89.213132%
   combined coverage remain historical after the reload runtime change; fresh hosted

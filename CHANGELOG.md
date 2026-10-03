@@ -5,6 +5,15 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.138] - 2026-10-03
+
+### Changed
+- Record the user's final two-hour local infrastructure repair window and require explicit direction before a refactor introduces new targets.
+- Preserve the existing Linux clock, installed proof and full hosted Quality gates; no runtime behavior or accepted evidence changed.
+- `compatibility_status`: `preserved`
+- `affected_audience`: `all`
+- `migration_requirement`: `none`
+
 ## [0.6.137] - 2026-10-03
 
 ### Changed
