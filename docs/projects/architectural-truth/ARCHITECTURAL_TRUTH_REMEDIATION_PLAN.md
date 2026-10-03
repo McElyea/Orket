@@ -313,11 +313,11 @@ counterexample and does not change parser/grounding behavior or add a new goal.
   Existing assertions, thresholds, deadlines, skips and the ten-goal queue remain.
   No provider switch or main merge. Track final-window work in
   `platform_worksets.final_repair_window`; preserve all earlier failed receipts.
-- Checkpoint: **v0.6.138** records the final repair window and scope boundary only. The runtime
+- Checkpoint: **v0.6.139** records terminal A08 and forthcoming scoped Linux proof; runtime remains v0.6.136. The runtime
   repair remains published v0.6.136 commit `607124ce3736e933c8ea9622aca9afea94a172a2`,
   annotated tag object `d6b97ef8e642c1b94051d7563396507a4573b0d9`.
-  Verify `.tmp/atg09-final-window-checks.json` and
-  `.tmp/atg09-final-window-publication.json`, branch/tag remote identities
+  Verify `.tmp/atg09-isolated-linux-checks.json` and
+  `.tmp/atg09-isolated-linux-publication.json`, branch/tag remote identities
   and clean worktree. These checks do not repeat or expand runtime proof.
   ATG-09 and ATG-10 remain incomplete.
 - Local software: official llama.cpp **b11146 / 7fe450e19**, CUDA 12.4, is installed
@@ -592,22 +592,35 @@ counterexample and does not change parser/grounding behavior or add a new goal.
   R02 source and helper freezes ended after native owners and independent readback
   settled. Checkpoint-only metadata changes do not refresh Linux runtime evidence;
   a later Linux attempt needs an explicit new freeze and successful clock binding.
-- Next exact action: use official documentation and observed kernel-clock events
-  to identify and repair the existing local controller conflict. The final-window
-  trace records `initd` calling `settimeofday` every 30 seconds, followed by
-  `ntp_clear` and transient maximum error of 16 seconds; identify its owning
-  component before changing settings. Preserve `.tmp/atg09-final-clock-trace.json`
-  and the new research notes. Do not infer a WSL package fix from version alone.
-  Another qualification requires demonstrated environment change, retaining the
-  60s quiet/240s ceiling/10ms/280s outer limits. Refresh both Linux repair cells
-  only after that gate; reuse accepted Windows/provider proof where inputs match.
-  Independently publish the candidate and run the existing eleven-job hosted
-  Quality workflow with owned cleanup by 18:24:08 UTC. No admission after 18:19:08.
-  Primary owns integration, final verification, publication and this resume record.
-  Complete ATG-09 only on all required proof/publication, then continue ATG-10.
-  Earlier cancelled UAC and expired-window records above are historical, not a
-  current missing authorization. Request OS approval only if a justified repair
-  actually requires elevation; no such update has yet been established as a fix.
+- Current final-window observation: A08/run492 on v0.6.138 has five successful
+  jobs, four failed closeout fixture cases in architecture, four skipped dependent
+  jobs and the cancelled queued sandbox job. Core ownership passed 1,850 cases.
+  The failing fixture IDs contain `True`/`False`, while canonical runtime discovery
+  lowercases paths. No runtime defect or package remedy is established by that
+  failure. Preserve `.tmp/atg09-hosted-attempts/A08.json`,
+  `.tmp/atg09-final-hosted-run.json` and `.tmp/atg09-final-hosted-audit.json`.
+  The auditor's generic environment-blocker label does not override the actual
+  test failure. `.tmp/atg09-hosted-final-window-close.json` proves runner18/19,
+  private registration, native owner and test-resource cleanup before expiry.
+  A08's stable receipt existed before launch but its exact path was omitted from
+  this plan until this checkpoint; no earlier tracked link is claimed.
+- Next exact action: Docker Desktop is temporarily stopped, an actual change to
+  the traced `initd` clock-writer environment; see
+  `.tmp/atg09-final-docker-isolation.json`. Run A06 once with unchanged
+  60s quiet/240s ceiling/10ms/280s outer limits. Its stable process/result record
+  is `.tmp/atg09-final-clock.json`; the Linux freeze is
+  `.tmp/atg09-final-linux-R03-freeze.json`. On successful qualification, run the
+  same21-case installed cells. Stable process receipts are
+  `.tmp/atg09-final-linux-R03-launch-linux-py311.json` and
+  `.tmp/atg09-final-linux-R03-launch-linux-py312.json`; native receipts are
+  `.tmp/atg09-final-linux-R03-linux-py311.json` and
+  `.tmp/atg09-final-linux-R03-linux-py312.json`. Keep source frozen through both.
+  Restore Docker/Gitea and retain `.tmp/atg09-final-docker-restore.json` before
+  18:24:08UTC. This can prove only the scoped Docker-stopped Linux environment,
+  not permanent coexistence stability. Then repair the two hosted fixture IDs
+  using canonical normalization without weakening assertions/deadlines/skips.
+  Docker4.93 installation was cancelled at elevation;4.86 remains installed.
+  ATG-09 still requires all eleven hosted jobs; ATG-10 remains dependent.
 - Remaining blockers or drift: complete hosted Gitea Quality is absent; ATG-09/10 and whole
   campaign completion are not claimed. ATG-07's 12,964 passes / 93 skips / 89.213132%
   combined coverage remain historical after the reload runtime change; fresh hosted

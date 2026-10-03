@@ -10125,31 +10125,6 @@
   ],
   "diff_ledger": [
     {
-      "run_at_utc": "2026-10-01T23:55:58.802795Z",
-      "changed": true,
-      "before_digest": "sha256:90057d876ec64d47fba01f4b9c124e3e9c06846a28ee3b610d14ba704f12a798",
-      "after_digest": "sha256:84d692caad2d3bc5afa91fb1e439bdfd8577137bf2442250f37b50993209bf6a",
-      "diff": {
-        "added_paths": 5,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 16595,
-        "paths_total_current": 17851,
-        "paths_total_reference": 17851,
-        "churn_paths": 6,
-        "churn_ratio": 0.000336,
-        "sample_paths": [
-          "$.diff_ledger",
-          "$.coverage_worksets.post_fixture_candidate_campaign",
-          "$.coverage_worksets.reconciliation[6].closing_result",
-          "$.coverage_worksets.reconciliation[6].proof_limits",
-          "$.coverage_worksets.reconciliation[6].source_after",
-          "$.coverage_worksets.reconciliation[6].status"
-        ]
-      }
-    },
-    {
       "run_at_utc": "2026-10-02T01:16:07.063602Z",
       "changed": true,
       "before_digest": "sha256:56415363f740fa7c050dfe9773bf79e7422e6a184ce6bfd7531179040c25f8bf",
@@ -10946,6 +10921,29 @@
         "sample_paths": [
           "$.diff_ledger",
           "$.platform_worksets.final_repair_window",
+          "$.platform_worksets.next_action"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-03T17:37:16.227752Z",
+      "changed": true,
+      "before_digest": "sha256:884a46f390edab163ef7c661a102c44b9a4f6bd3e4e0afa1f8f3466a2e6f2b1b",
+      "after_digest": "sha256:ae3e52ee7b79a519243b5c56da5f4fa1397a5a950bc18982dbc99d23deecca08",
+      "diff": {
+        "added_paths": 3,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 21213,
+        "paths_total_current": 22665,
+        "paths_total_reference": 22665,
+        "churn_paths": 4,
+        "churn_ratio": 0.000176,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.platform_worksets.final_linux_isolation",
+          "$.platform_worksets.final_repair_window.current_progress",
           "$.platform_worksets.next_action"
         ]
       }
@@ -13965,7 +13963,7 @@
       "Existing hosted Gitea Ubuntu/Windows runners and required Quality jobs at the published fixture-repaired checkpoint."
     ],
     "external_prerequisites": "Gitea28 and private native tools available. Registrations14/15 removed after A06 failure. User explicitly granted two further hours through09:53:22UTC; runner admission stops09:48:22UTC.",
-    "next_action": "Identify observed initd clock writes, make a justified environment repair, then unchanged clock/Linux gates; independently complete hosted Quality.",
+    "next_action": "Run unchanged A06 once after recorded Docker stop, then both unchanged21-case R03 cells if qualified; restore Docker/Gitea before18:24:08UTC.",
     "probe_limits": "Interpreter version probes succeeded. The first combined shell command failed only its uv lookup due to quote stripping; no uv availability was established by that command.",
     "clock_result": {
       "path": "blocked",
@@ -15096,6 +15094,48 @@
         "directory": ".tmp/atg09-final-window-checkpoint",
         "checks_receipt": ".tmp/atg09-final-window-checks.json",
         "publication_receipt": ".tmp/atg09-final-window-publication.json"
+      },
+      "current_progress": "A08 failed and owners removed; Docker temporarily stopped for independent existing Linux cells; no A06/R03 launch yet."
+    },
+    "final_linux_isolation": {
+      "status": "active: scoped Linux proof; hosted fixture failure pending",
+      "batch": "ATG09-P01",
+      "scope": "Same two Linux installed cells with Docker temporarily stopped; no coexistence repair claim.",
+      "process_receipts": [
+        ".tmp/atg09-final-clock.json",
+        ".tmp/atg09-final-linux-R03-freeze.json",
+        ".tmp/atg09-final-linux-R03-launch-linux-py311.json",
+        ".tmp/atg09-final-linux-R03-linux-py311.json",
+        ".tmp/atg09-final-linux-R03-launch-linux-py312.json",
+        ".tmp/atg09-final-linux-R03-linux-py312.json",
+        ".tmp/atg09-final-docker-restore.json"
+      ],
+      "receipt_sha256": {
+        ".tmp/atg09-hosted-attempts/A08.json": "d87212b852c60da046b3c6f9baf0ed446d2f52a27822d36a8456b1c2fc7860e2",
+        ".tmp/atg09-hosted-final-window-close.json": "6e85314a8e5971b262b007e46ddbe7aa81ea3cbc4b26c6b118270ca65e01804e",
+        ".tmp/atg09-final-hosted-audit.json": "223bd5cae95d7e6d4fc77261cb848a7a1e14cce8bf052a81f1837e719a7fcc3b",
+        ".tmp/atg09-final-clock-trace.json": "d0626a6ee898f92737a2fe2365db1f1c65b8f1419379bc707bc668f5833cb0d1",
+        ".tmp/atg09-final-clock-trace-audit.json": "639d336a27ccfa40e86ca891ee4ef557986981f41c52de05223b9da518ae3afb",
+        ".tmp/atg09-final-docker-isolation.json": "597b58fac8c2d6b3aa01f3f686b00831a4a87b49f975157f97c96517003e054f",
+        ".tmp/atg09-final-docker-update-cancelled.json": "591ac2bb41fd33ac87f84b5c05c825c9e6d1e2d7831d1bdd30acac032306e09e"
+      },
+      "hosted_result": "A08 run492: five jobs pass, architecture fails four fixture-path controls, four dependents skip, sandbox cancelled; scoped cleanup succeeds.",
+      "hosted_classification": "failure, not an established environment blocker; final auditor generic environment-blocker label does not override raw failures.",
+      "candidate_repair": "After Linux freeze settles, normalize two fixture IDs with canonical sanitize_name; preserve assertions and limits.",
+      "next_action": "Run unchanged A06 once after recorded Docker stop, then both unchanged21-case R03 cells if qualified; restore Docker/Gitea before18:24:08UTC.",
+      "checkpoint": {
+        "version": "0.6.139",
+        "base_commit": "d144383f95e2696d25c9c8a0e263bf807c23e7e9",
+        "paths": [
+          "CHANGELOG.md",
+          "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
+          "docs/projects/architectural-truth/GOAL_WORKSETS.json",
+          "docs/projects/architectural-truth/README.md",
+          "pyproject.toml"
+        ],
+        "directory": ".tmp/atg09-isolated-linux-checkpoint",
+        "checks_receipt": ".tmp/atg09-isolated-linux-checks.json",
+        "publication_receipt": ".tmp/atg09-isolated-linux-publication.json"
       }
     }
   }

@@ -9,14 +9,14 @@ canonical implementation plan and resume record for ten fixed goals. **Eight goa
 are complete; ATG-09 needs the repaired Linux installed cells and full hosted
 Gitea Quality. Historical provider proof remains reusable. ATG-10 remains dependent.**
 The [workset inventory](GOAL_WORKSETS.json) binds sources, receipts and frozen batches.
-Metadata checkpoint v0.6.138 records the final two-hour repair window and no-new-targets boundary.
+Metadata checkpoint v0.6.139 records failed A08 cleanup and links scoped Linux verification with Docker temporarily stopped. No permanent clock fix is claimed.
 Runtime checkpoint v0.6.136 repairs demonstrated reload signal-lock reentry. Eight native
 source controls and both fresh Windows21-case installed cells pass. Linux3.11
 passes21 tests but fails its final clock bracket; Linux3.12 is unlaunched. Artifact
 and relevant-input audits pass, while full hosted coverage and Quality remain open.
 A07's original reload-launcher exit failure and all prior observations are retained.
 The user's final window authorizes scoped infrastructure through 18:24:08 UTC on October 3; admission stops 18:19:08 UTC.
-Earlier runners and their resources were removed. Gitea 28.0.0 remains running.
+A08 runners and resources were removed. Gitea28.0.0 is temporarily stopped with Docker for Linux proof and must be restored within the window.
 The v0.6.129
 checkpoint repairs a reload-test marker publication race and records local acceptance: 64 scoped installed rechecks refresh affected Linux/Windows evidence,
 the persistent WSL clock repair passes its unchanged prerequisite, and actual
