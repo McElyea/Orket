@@ -5,6 +5,15 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.133] - 2026-10-03
+
+### Changed
+- Record the temporary Linux runner supervisor's adopted-child reaping repair, native lifecycle controls and preserved A04 cleanup failures. Runtime code, test assertions, workflow and deadlines remain unchanged; complete hosted Quality acceptance remains pending.
+- Retain five byte-identical reused hosted job results and the renewed runner cleanup deadline.
+- `compatibility_status`: `preserved`
+- `affected_audience`: `all`
+- `migration_requirement`: `none`
+
 ## [0.6.132] - 2026-10-02
 
 ### Changed

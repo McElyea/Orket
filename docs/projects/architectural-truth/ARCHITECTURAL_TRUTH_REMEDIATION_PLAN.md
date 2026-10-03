@@ -307,15 +307,15 @@ counterexample and does not change parser/grounding behavior or add a new goal.
   exception was extended by the user by **two additional hours**, ending
   **2026-10-03 07:53:22 UTC**; runner admission stops **07:48:22 UTC**.
   The original runners were already removed before renewal. No provider switch or main merge.
-- Checkpoint: **v0.6.132** records partial hosted proof and completed temporary
-  runner teardown. It is based on published v0.6.131 commit
-  `30553e554c9b8fdc784b4209617e7064902f262e` (annotated tag object
-  `2d71c9ad5574db88869c5593b052dcdf9123ee48`). This checkpoint changes metadata,
-  not accepted runtime inputs. Verify `.tmp/atg09-window-checks.json` and
-  `.tmp/atg09-window-publication.json`, remote identities and clean worktree.
-  v0.6.131 repairs install convergence (seven integration cases; prior assertions
-  unchanged); its docs gate also passes live in hosted run 467. v0.6.130 records
-  infrastructure repair; v0.6.129 retains accepted local installed/provider proof.
+- Checkpoint: **v0.6.133** records the temporary Linux supervisor reaping repair
+  and retained failed A04 evidence. It is based on published v0.6.132 commit
+  `27675db00503e71dd0dbd9618389bed16d9f2092`, annotated tag object
+  `bcf3930cf62533d83020ffbd99e3617d045dc154`. Verify terminal checks/publication
+  receipts `.tmp/atg09-reaping-checks.json` and `.tmp/atg09-reaping-publication.json`,
+  remote identities and clean worktree. Hosted candidate remains v0.6.131 commit
+  `30553e554c9b8fdc784b4209617e7064902f262e`; v0.6.132/133 are metadata checkpoints,
+  not new runtime acceptance. v0.6.131 repairs install convergence (seven integration
+  cases and passing hosted docs gate); accepted prior assertions are unchanged.
 - Local software: official llama.cpp **b11146 / 7fe450e19**, CUDA 12.4, is installed
   at `D:/llama.cpp-releases/b11146`; older copies remain. The existing GGUF serves
   `orcarouter_qwen3.8-27b-uncensored-q4_k_l` at `http://127.0.0.1:8080/v1`.
@@ -439,12 +439,30 @@ counterexample and does not change parser/grounding behavior or add a new goal.
   and absolute cleanup deadline **07:53:22 UTC**, October 3. Preserve old native
   helpers/receipts before changing only supervisor authorization deadlines. Test
   assertions, timing limits, skip rules and resource teardown contracts stay fixed.
-- Next exact action: publish this metadata checkpoint, re-register the prepared
-  Linux/Windows runners, and resume the six incomplete Quality jobs on exact
-  v0.6.131 candidate `30553e554c9b8fdc784b4209617e7064902f262e`, retaining the five
-  passed jobs where Gitea supports selective rerun. Bind A04 inputs and actual
-  job/log/process identities before launch; stop and remove runners within the
-  renewed window. Reuse accepted local proof. ATG-10 requires all eleven jobs.
+- Hosted A04: Gitea selectively cloned the five successful A03 jobs into IDs
+  **602-606**. Exact candidate, timestamps, numeric runner identities and complete
+  log hashes match the original execution; those jobs were reused without rerun.
+  Architecture job **607** failed its core boundary step: **15 failed / 1,831 passed /
+  one skipped**. Every failure occurred at the unchanged five-second process-group
+  cleanup check. The temporary Linux subreaper had retained adopted exited children
+  as zombies until whole-job settlement. All A04 owners are now settled; source and
+  helper freezes passed. Sandbox was cancelled and dependent jobs skipped, not passed.
+  `.tmp/atg09-hosted-attempts/A04.json` and `.tmp/atg09-hosted-A04-audit.json` retain
+  original outcomes, tracebacks, logs and native process observations.
+- Linux runner repair: preserve the A04 helper/readiness copies, promptly reap only
+  adopted exited children while the daemon runs, and leave the direct runner child
+  to its existing Popen owner. Native controls reproduce old zombie retention and
+  verify prompt reaping, direct-child exit status and cleanup after the fix.
+  `.tmp/atg09-linux-reaping-repair.json` binds those observations and new helper hashes.
+  No product, workflow or test code, assertions, five-second limits or skip rules
+  changed. Full hosted acceptance after this environment repair is still pending.
+- Next exact action: publish this metadata checkpoint and selectively resume the
+  six incomplete run 467 jobs as **A05** on the unchanged v0.6.131 candidate, keeping
+  the five accepted results. Bind new native helper/readiness hashes before launch.
+  Registrations **14/15** currently exist but their daemons are stopped. Admission
+  cutoff **07:48:22 UTC** and absolute cleanup **07:53:22 UTC** remain unchanged.
+  Reuse accepted local proof; close ATG-09 only after all eleven jobs pass and native
+  teardown is verified, then continue dependent ATG-10.
 - Remaining blockers or drift: complete hosted Gitea Quality is absent; ATG-09/10 and whole
   campaign completion are not claimed. ATG-07's 12,964 passes / 93 skips / 89.213132%
   combined coverage remain bound to unchanged production inputs, with affected

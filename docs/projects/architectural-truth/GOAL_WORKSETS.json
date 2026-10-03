@@ -13902,7 +13902,7 @@
   },
   "platform_worksets": {
     "goal": "ATG-09",
-    "status": "active: hosted Quality re-admission authorized through 2026-10-03T07:53:22Z",
+    "status": "active: repaired temporary Linux supervision; required hosted Quality pending",
     "current_batch": "ATG09-P01 existing hosted Gitea runner prerequisite",
     "candidate_commit": "b7ab34bba7d76a146cf4782c8522681de22ac544",
     "candidate_tag": "v0.6.125",
@@ -13936,7 +13936,7 @@
       "Existing hosted Gitea Ubuntu/Windows runners and required Quality jobs at the published fixture-repaired checkpoint."
     ],
     "external_prerequisites": "Gitea28 access and prepared native Linux/Windows tools are available. Original temporary registrations were removed on time. User explicitly added two hours; re-register only these scoped runners, stop admission07:48:22UTC and finish cleanup07:53:22UTC.",
-    "next_action": "Publish metadata checkpointv132; re-register existing prepared local runners with extended native deadlines, then resume only incomplete hosted Quality jobs on candidate30553e554c9b8fdc784b4209617e7064902f262e where Gitea supports selective rerun. Preserve accepted five jobs and all local proof. NoATG10 before all eleven jobs pass.",
+    "next_action": "Publish v0.6.133 metadata checkpoint, then selectively resume incomplete run467 jobs on unchanged v0.6.131 candidate after binding repaired helper/readiness identities. Preserve five accepted jobs and local proof; admission cutoff07:48:22UTC and cleanup07:53:22UTC remain fixed.",
     "probe_limits": "Interpreter version probes succeeded. The first combined shell command failed only its uv lookup due to quote stripping; no uv availability was established by that command.",
     "clock_result": {
       "path": "blocked",
@@ -14580,7 +14580,9 @@
             "conclusion": "cancelled"
           }
         ]
-      }
+      },
+      "A04": ".tmp/atg09-hosted-attempts/A04.json",
+      "A04_result": "Five prior job results reused exactly. Architecture core gate:15failed1831passed1skipped, all failures at process-group cleanup under delayed orphan reaping. Sandboxcancelled, dependentskipped; no full Quality acceptance."
     },
     "hosted_window_checkpoint": {
       "status": "terminal environment blocker",
@@ -14671,9 +14673,45 @@
       "authorization_deadline_utc": "2026-10-03T07:53:22Z",
       "admission_cutoff_utc": "2026-10-03T07:48:22Z",
       "scope": "Existing temporary Linux/Windows local runners and required Quality work only; no provider switch or main merge.",
-      "status": "authorized; primary owns re-admission",
-      "campaign": "A04",
+      "status": "Original A04 owners settled; Linux adopted-child reaping repaired and natively verified; A05 selective re-admission pending",
+      "campaign": "A05",
       "reuse_candidate": "30553e554c9b8fdc784b4209617e7064902f262e"
+    },
+    "hosted_runner_reaping_repair": {
+      "batch": "ATG09-P01",
+      "status": "complete: local prerequisites verified",
+      "counterexample": ".tmp/atg09-hosted-attempts/A04-job-607.log",
+      "paths": [
+        ".tmp/atg09-linux-runner-launch.py",
+        ".tmp/atg09-linux-runner-ready.json"
+      ],
+      "obligation": "The temporary Linux subreaper must promptly reap exited adopted children during a hosted job, while preserving the direct runner child exit status and native teardown ownership.",
+      "limits": "No product/test/workflow edits, no changed assertions or skip rules; preserve admission07:48:22UTC and cleanup07:53:22UTC. Retain immutable A04 helper/readiness/log evidence and verify real orphan lifecycle plus direct-child exit status before selective rerun.",
+      "candidate": "30553e554c9b8fdc784b4209617e7064902f262e",
+      "source_freeze_ended": "A04 source/helpers unchanged and all native owners settled before this declaration",
+      "clock_receipt": ".tmp/atg09-persistent-clock.json",
+      "clock_receipt_sha256": "d74c6af20637be269b1b16fac7ccad048931b52398559e3a7fb853a99c63ee6f",
+      "receipt_sha256": {
+        ".tmp/atg09-linux-reaping-repair.json": "1c73a2b3561409d21602b1aa50d6ea95ed6041563fb97af8f5c507dbdca94079",
+        ".tmp/atg09-hosted-attempts/A04.json": "51f86eddb669d642eab1ab5f5402ed3a6a8cc71015c9405df8f5dba1549d3b11",
+        ".tmp/atg09-hosted-A04-audit.json": "060e849b0f254d8b39b385097edd9212afcc55f815fe762df960b6db83f30552",
+        ".tmp/atg09-window-publication.json": "0aa50781484fd56ae9f3e2bcb696422a6e58a284cdae8afbf36c75e8a8639b33"
+      },
+      "proof_scope": "Real native adopted-child lifecycle and direct runner exit-status controls; repaired full hosted job remains unverified until A05.",
+      "checkpoint": {
+        "version": "0.6.133",
+        "base_commit": "27675db00503e71dd0dbd9618389bed16d9f2092",
+        "directory": ".tmp/atg09-reaping-checkpoint",
+        "checks_receipt": ".tmp/atg09-reaping-checks.json",
+        "publication_receipt": ".tmp/atg09-reaping-publication.json",
+        "paths": [
+          "CHANGELOG.md",
+          "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
+          "docs/projects/architectural-truth/GOAL_WORKSETS.json",
+          "docs/projects/architectural-truth/README.md",
+          "pyproject.toml"
+        ]
+      }
     }
   }
 }
