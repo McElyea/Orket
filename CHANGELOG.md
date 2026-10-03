@@ -5,6 +5,17 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.143] - 2026-10-03
+
+### Changed
+- Accept the current Windows ATG-09 source gate: 12,987 passes, 93 unchanged skips and 89.215755% combined coverage with the unchanged 89% floor.
+- Bind current canonical structural gates and reusable Windows 3.11/3.12 installed/public-path and actual llama.cpp library proof. Preserve failed attempts and explicit proof limits in the tracked closeout.
+- Stability: no runtime, test, dependency or coverage-policy changes; this is a bounded evidence checkpoint. ATG-10 reconciliation remains separate.
+- Operator and extension-author action: none.
+- `compatibility_status`: `preserved`
+- `affected_audience`: `all`
+- `migration_requirement`: `none`
+
 ## [0.6.142] - 2026-10-03
 
 ### Changed

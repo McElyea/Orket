@@ -1,0 +1,4261 @@
+{
+  "schema_version": "architectural_truth.atg09_windows_verification.v1",
+  "goal": "ATG-09",
+  "observed_path": "primary",
+  "observed_result": "success",
+  "date": "2026-10-03",
+  "source_quality": {
+    "base_commit": "a6b99e575682d9b721983381e75f80402c8018d2",
+    "dirty_status": " M docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md\n",
+    "python": "3.11.14 (main, Jan 14 2026, 19:28:21) [MSC v.1944 64 bit (AMD64)]",
+    "executable": "C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Scripts\\python.exe",
+    "versions": {
+      "pytest": "9.1.1",
+      "pytest-cov": "6.3.0",
+      "coverage": "7.16.2",
+      "ruff": "0.16.9",
+      "mypy": "2.3.1",
+      "psutil": "6.1.1"
+    },
+    "environment": {
+      "ORKET_DISABLE_SANDBOX": "1",
+      "PYTHONUNBUFFERED": "1",
+      "PYTHONUTF8": "1",
+      "TEMP": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg09-windows-quality\\A01\\process-temp",
+      "TMP": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg09-windows-quality\\A01\\process-temp",
+      "COVERAGE_FILE": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg09-windows-quality\\A01\\measurement.coverage"
+    },
+    "counts": {
+      "passed": 12987,
+      "failed": 0,
+      "skipped": 93
+    },
+    "coverage_totals": {
+      "covered_lines": 71375,
+      "num_statements": 77475,
+      "percent_covered": 89.21575503742372,
+      "percent_covered_display": "89",
+      "missing_lines": 6100,
+      "excluded_lines": 1383,
+      "percent_statements_covered": 92.12649241690868,
+      "percent_statements_covered_display": "92",
+      "num_branches": 22328,
+      "num_partial_branches": 3905,
+      "covered_branches": 17665,
+      "missing_branches": 4663,
+      "percent_branches_covered": 79.11590827660336,
+      "percent_branches_covered_display": "79"
+    },
+    "skips": [
+      {
+        "classname": "tests.acceptance.test_sandbox_cleanup_leak_gate",
+        "name": "test_live_cleanup_leak_gate_leaves_no_new_sandbox_resources",
+        "file": "tests\\acceptance\\test_sandbox_cleanup_leak_gate.py",
+        "line": "36",
+        "time": "0.001",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Set ORKET_RUN_SANDBOX_ACCEPTANCE=1 to run live sandbox acceptance tests."
+          }
+        ]
+      },
+      {
+        "classname": "tests.acceptance.test_sandbox_orchestrator_live_docker",
+        "name": "test_live_create_health_and_cleanup_flow",
+        "file": "tests\\acceptance\\test_sandbox_orchestrator_live_docker.py",
+        "line": "82",
+        "time": "0.000",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Set ORKET_RUN_SANDBOX_ACCEPTANCE=1 to run live sandbox acceptance tests."
+          }
+        ]
+      },
+      {
+        "classname": "tests.acceptance.test_sandbox_orchestrator_live_docker",
+        "name": "test_live_cleanup_rejects_host_context_mismatch",
+        "file": "tests\\acceptance\\test_sandbox_orchestrator_live_docker.py",
+        "line": "223",
+        "time": "0.000",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Set ORKET_RUN_SANDBOX_ACCEPTANCE=1 to run live sandbox acceptance tests."
+          }
+        ]
+      },
+      {
+        "classname": "tests.acceptance.test_sandbox_orphan_reconciliation_live_docker",
+        "name": "test_live_orphan_discovery_classifies_verified_and_unverified_projects",
+        "file": "tests\\acceptance\\test_sandbox_orphan_reconciliation_live_docker.py",
+        "line": "70",
+        "time": "0.000",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Set ORKET_RUN_SANDBOX_ACCEPTANCE=1 to run live sandbox acceptance tests."
+          }
+        ]
+      },
+      {
+        "classname": "tests.acceptance.test_sandbox_orphan_reconciliation_live_docker",
+        "name": "test_live_verified_orphan_is_cleaned_by_fallback_sweeper_without_compose_path",
+        "file": "tests\\acceptance\\test_sandbox_orphan_reconciliation_live_docker.py",
+        "line": "127",
+        "time": "0.000",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Set ORKET_RUN_SANDBOX_ACCEPTANCE=1 to run live sandbox acceptance tests."
+          }
+        ]
+      },
+      {
+        "classname": "tests.acceptance.test_sandbox_restart_reclaim_live_docker",
+        "name": "test_live_unhealthy_policy_terminalizes_restart_loop_and_projects_diagnostics",
+        "file": "tests\\acceptance\\test_sandbox_restart_reclaim_live_docker.py",
+        "line": "116",
+        "time": "0.000",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Set ORKET_RUN_SANDBOX_ACCEPTANCE=1 to run live sandbox acceptance tests."
+          }
+        ]
+      },
+      {
+        "classname": "tests.acceptance.test_sandbox_restart_reclaim_live_docker",
+        "name": "test_live_reclaimable_sandbox_can_be_reacquired_and_stale_owner_cannot_renew",
+        "file": "tests\\acceptance\\test_sandbox_restart_reclaim_live_docker.py",
+        "line": "164",
+        "time": "0.000",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Set ORKET_RUN_SANDBOX_ACCEPTANCE=1 to run live sandbox acceptance tests."
+          }
+        ]
+      },
+      {
+        "classname": "tests.acceptance.test_sandbox_runtime_recovery_live_docker",
+        "name": "test_live_unknown_outcome_reconciliation_recovers_to_active",
+        "file": "tests\\acceptance\\test_sandbox_runtime_recovery_live_docker.py",
+        "line": "95",
+        "time": "0.000",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Set ORKET_RUN_SANDBOX_ACCEPTANCE=1 to run live sandbox acceptance tests."
+          }
+        ]
+      },
+      {
+        "classname": "tests.acceptance.test_sandbox_runtime_recovery_live_docker",
+        "name": "test_live_cleanup_sweeper_cleans_due_terminal_sandbox",
+        "file": "tests\\acceptance\\test_sandbox_runtime_recovery_live_docker.py",
+        "line": "154",
+        "time": "0.000",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Set ORKET_RUN_SANDBOX_ACCEPTANCE=1 to run live sandbox acceptance tests."
+          }
+        ]
+      },
+      {
+        "classname": "tests.acceptance.test_sandbox_runtime_recovery_live_docker",
+        "name": "test_live_reconciliation_recovers_after_crash_between_delete_and_verify",
+        "file": "tests\\acceptance\\test_sandbox_runtime_recovery_live_docker.py",
+        "line": "215",
+        "time": "0.000",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Set ORKET_RUN_SANDBOX_ACCEPTANCE=1 to run live sandbox acceptance tests."
+          }
+        ]
+      },
+      {
+        "classname": "tests.acceptance.test_sandbox_terminal_evidence_cleanup_live_docker",
+        "name": "test_live_terminal_evidence_export_and_sweeper_cleanup",
+        "file": "tests\\acceptance\\test_sandbox_terminal_evidence_cleanup_live_docker.py",
+        "line": "28",
+        "time": "0.000",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Set ORKET_RUN_SANDBOX_ACCEPTANCE=1 to run live sandbox acceptance tests."
+          }
+        ]
+      },
+      {
+        "classname": "tests.e2e.test_governed_agent_effect_ollama",
+        "name": "test_live_effect_resolution_survives_restart_and_replay[approved]",
+        "file": "tests\\e2e\\test_governed_agent_effect_ollama.py",
+        "line": "25",
+        "time": "0.000",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "set ORKET_RUN_LIVE_AGENT_OLLAMA=1 for live Ollama proof"
+          }
+        ]
+      },
+      {
+        "classname": "tests.e2e.test_governed_agent_effect_ollama",
+        "name": "test_live_effect_resolution_survives_restart_and_replay[denied]",
+        "file": "tests\\e2e\\test_governed_agent_effect_ollama.py",
+        "line": "25",
+        "time": "0.000",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "set ORKET_RUN_LIVE_AGENT_OLLAMA=1 for live Ollama proof"
+          }
+        ]
+      },
+      {
+        "classname": "tests.e2e.test_governed_agent_llama_cpp",
+        "name": "test_live_llama_cpp_cli_continuation[mixed]",
+        "file": "tests\\e2e\\test_governed_agent_llama_cpp.py",
+        "line": "32",
+        "time": "0.001",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "requires live llama.cpp"
+          }
+        ]
+      },
+      {
+        "classname": "tests.e2e.test_governed_agent_llama_cpp",
+        "name": "test_live_llama_cpp_cli_continuation[all-open]",
+        "file": "tests\\e2e\\test_governed_agent_llama_cpp.py",
+        "line": "32",
+        "time": "0.000",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "requires live llama.cpp"
+          }
+        ]
+      },
+      {
+        "classname": "tests.e2e.test_governed_agent_llama_cpp",
+        "name": "test_live_llama_cpp_cli_continuation[empty-first]",
+        "file": "tests\\e2e\\test_governed_agent_llama_cpp.py",
+        "line": "32",
+        "time": "0.000",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "requires live llama.cpp"
+          }
+        ]
+      },
+      {
+        "classname": "tests.e2e.test_governed_agent_llama_cpp",
+        "name": "test_live_llama_cpp_api_wake_memory_and_replay",
+        "file": "tests\\e2e\\test_governed_agent_llama_cpp.py",
+        "line": "46",
+        "time": "0.000",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "requires live llama.cpp"
+          }
+        ]
+      },
+      {
+        "classname": "tests.e2e.test_governed_agent_llama_cpp",
+        "name": "test_live_llama_cpp_effect_restart[approved]",
+        "file": "tests\\e2e\\test_governed_agent_llama_cpp.py",
+        "line": "75",
+        "time": "0.001",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "requires live llama.cpp"
+          }
+        ]
+      },
+      {
+        "classname": "tests.e2e.test_governed_agent_llama_cpp",
+        "name": "test_live_llama_cpp_effect_restart[denied]",
+        "file": "tests\\e2e\\test_governed_agent_llama_cpp.py",
+        "line": "75",
+        "time": "0.000",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "requires live llama.cpp"
+          }
+        ]
+      },
+      {
+        "classname": "tests.e2e.test_governed_agent_ollama",
+        "name": "test_live_single_model_reaches_verified_terminal_truth[mixed]",
+        "file": "tests\\e2e\\test_governed_agent_ollama.py",
+        "line": "25",
+        "time": "0.000",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "set ORKET_RUN_LIVE_AGENT_OLLAMA=1 for live Ollama proof"
+          }
+        ]
+      },
+      {
+        "classname": "tests.e2e.test_governed_agent_ollama",
+        "name": "test_live_single_model_reaches_verified_terminal_truth[all-open]",
+        "file": "tests\\e2e\\test_governed_agent_ollama.py",
+        "line": "25",
+        "time": "0.000",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "set ORKET_RUN_LIVE_AGENT_OLLAMA=1 for live Ollama proof"
+          }
+        ]
+      },
+      {
+        "classname": "tests.e2e.test_governed_agent_ollama",
+        "name": "test_live_single_model_reaches_verified_terminal_truth[empty-first]",
+        "file": "tests\\e2e\\test_governed_agent_ollama.py",
+        "line": "25",
+        "time": "0.000",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "set ORKET_RUN_LIVE_AGENT_OLLAMA=1 for live Ollama proof"
+          }
+        ]
+      },
+      {
+        "classname": "tests.e2e.test_governed_agent_ollama",
+        "name": "test_live_multi_model_preserves_distinct_role_identity[mixed]",
+        "file": "tests\\e2e\\test_governed_agent_ollama.py",
+        "line": "43",
+        "time": "0.000",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "set ORKET_RUN_LIVE_AGENT_OLLAMA=1 for live Ollama proof"
+          }
+        ]
+      },
+      {
+        "classname": "tests.e2e.test_governed_agent_ollama",
+        "name": "test_live_multi_model_preserves_distinct_role_identity[all-open]",
+        "file": "tests\\e2e\\test_governed_agent_ollama.py",
+        "line": "43",
+        "time": "0.000",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "set ORKET_RUN_LIVE_AGENT_OLLAMA=1 for live Ollama proof"
+          }
+        ]
+      },
+      {
+        "classname": "tests.e2e.test_governed_agent_ollama",
+        "name": "test_live_multi_model_preserves_distinct_role_identity[empty-first]",
+        "file": "tests\\e2e\\test_governed_agent_ollama.py",
+        "line": "43",
+        "time": "0.001",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "set ORKET_RUN_LIVE_AGENT_OLLAMA=1 for live Ollama proof"
+          }
+        ]
+      },
+      {
+        "classname": "tests.e2e.test_governed_agent_process_recovery",
+        "name": "test_abrupt_api_exit_recovers_without_repeating_write[before_write]",
+        "file": "tests\\e2e\\test_governed_agent_process_recovery.py",
+        "line": "16",
+        "time": "0.000",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "requires live local provider"
+          }
+        ]
+      },
+      {
+        "classname": "tests.e2e.test_governed_agent_process_recovery",
+        "name": "test_abrupt_api_exit_recovers_without_repeating_write[after_write]",
+        "file": "tests\\e2e\\test_governed_agent_process_recovery.py",
+        "line": "16",
+        "time": "0.000",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "requires live local provider"
+          }
+        ]
+      },
+      {
+        "classname": "tests.e2e.test_governed_agent_supervisor_ollama",
+        "name": "test_live_multi_model_wake_reaches_truth_through_api_supervisor",
+        "file": "tests\\e2e\\test_governed_agent_supervisor_ollama.py",
+        "line": "27",
+        "time": "0.000",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "set ORKET_RUN_LIVE_AGENT_OLLAMA=1 for live Ollama proof"
+          }
+        ]
+      },
+      {
+        "classname": "tests.end_to_end.proof.test_trusted_terraform_disposable_aws_live_smoke",
+        "name": "test_live_aws_setup_and_cleanup_require_explicit_opt_in",
+        "file": "tests\\end_to_end\\proof\\test_trusted_terraform_disposable_aws_live_smoke.py",
+        "line": "14",
+        "time": "0.000",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "live AWS smoke requires ORKET_ENABLE_LIVE_AWS_SMOKE_TESTS=1"
+          }
+        ]
+      },
+      {
+        "classname": "tests.integration.test_gitea_epic_export_recovery",
+        "name": "test_committed_gitea_export_recovers_without_another_push",
+        "file": "tests\\integration\\test_gitea_epic_export_recovery.py",
+        "line": "21",
+        "time": "0.001",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Explicit owned localhost Gitea acceptance required"
+          }
+        ]
+      },
+      {
+        "classname": "tests.integration.test_gitea_epic_export_recovery",
+        "name": "test_native_gitea_restart_confirms_effect_or_preserves_uncertainty[gitea_export]",
+        "file": "tests\\integration\\test_gitea_epic_export_recovery.py",
+        "line": "66",
+        "time": "0.001",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Explicit owned localhost Gitea acceptance required"
+          }
+        ]
+      },
+      {
+        "classname": "tests.integration.test_gitea_epic_export_recovery",
+        "name": "test_native_gitea_restart_confirms_effect_or_preserves_uncertainty[gitea_intent]",
+        "file": "tests\\integration\\test_gitea_epic_export_recovery.py",
+        "line": "66",
+        "time": "0.001",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Explicit owned localhost Gitea acceptance required"
+          }
+        ]
+      },
+      {
+        "classname": "tests.integration.test_gitea_epic_export_recovery",
+        "name": "test_retained_export_commit_binds_payload_and_rejects_substitution",
+        "file": "tests\\integration\\test_gitea_epic_export_recovery.py",
+        "line": "104",
+        "time": "0.001",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Explicit owned localhost Gitea acceptance required"
+          }
+        ]
+      },
+      {
+        "classname": "tests.integration.test_gitea_export_owner_recovery",
+        "name": "test_native_export_owner_recovery_fences_dispatch_and_preserves_exact_commit[killed]",
+        "file": "tests\\integration\\test_gitea_export_owner_recovery.py",
+        "line": "20",
+        "time": "0.001",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Explicit owned localhost Gitea acceptance required"
+          }
+        ]
+      },
+      {
+        "classname": "tests.integration.test_gitea_export_owner_recovery",
+        "name": "test_native_export_owner_recovery_fences_dispatch_and_preserves_exact_commit[resumed]",
+        "file": "tests\\integration\\test_gitea_export_owner_recovery.py",
+        "line": "20",
+        "time": "0.001",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Explicit owned localhost Gitea acceptance required"
+          }
+        ]
+      },
+      {
+        "classname": "tests.integration.test_gitea_export_owner_recovery",
+        "name": "test_exact_export_recovery_refuses_changed_remote_history",
+        "file": "tests\\integration\\test_gitea_export_owner_recovery.py",
+        "line": "79",
+        "time": "0.001",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Explicit owned localhost Gitea acceptance required"
+          }
+        ]
+      },
+      {
+        "classname": "tests.integration.test_gitea_loop_live",
+        "name": "test_public_pipeline_loop_actual_gitea_and_card_publication[success]",
+        "file": "tests\\integration\\test_gitea_loop_live.py",
+        "line": "24",
+        "time": "0.001",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Explicit owned localhost Gitea acceptance required"
+          }
+        ]
+      },
+      {
+        "classname": "tests.integration.test_gitea_loop_live",
+        "name": "test_public_pipeline_loop_actual_gitea_and_card_publication[unresolved-work]",
+        "file": "tests\\integration\\test_gitea_loop_live.py",
+        "line": "24",
+        "time": "0.001",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Explicit owned localhost Gitea acceptance required"
+          }
+        ]
+      },
+      {
+        "classname": "tests.integration.test_gitea_terminal_live",
+        "name": "test_actual_gitea_closeout_matches_local_terminal_authority[success]",
+        "file": "tests\\integration\\test_gitea_terminal_live.py",
+        "line": "54",
+        "time": "0.001",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Explicit owned localhost Gitea acceptance required"
+          }
+        ]
+      },
+      {
+        "classname": "tests.integration.test_gitea_terminal_live",
+        "name": "test_actual_gitea_closeout_matches_local_terminal_authority[work-failure]",
+        "file": "tests\\integration\\test_gitea_terminal_live.py",
+        "line": "54",
+        "time": "0.001",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Explicit owned localhost Gitea acceptance required"
+          }
+        ]
+      },
+      {
+        "classname": "tests.integration.test_gitea_terminal_live",
+        "name": "test_actual_gitea_closeout_matches_local_terminal_authority[lease-expiry]",
+        "file": "tests\\integration\\test_gitea_terminal_live.py",
+        "line": "54",
+        "time": "0.001",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Explicit owned localhost Gitea acceptance required"
+          }
+        ]
+      },
+      {
+        "classname": "tests.integration.test_gitea_terminal_live",
+        "name": "test_actual_gitea_closeout_matches_local_terminal_authority[local-write-failure]",
+        "file": "tests\\integration\\test_gitea_terminal_live.py",
+        "line": "54",
+        "time": "0.001",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Explicit owned localhost Gitea acceptance required"
+          }
+        ]
+      },
+      {
+        "classname": "tests.integration.test_webhook_gitea_live",
+        "name": "test_native_gitea_signature_delivery_and_teardown",
+        "file": "tests\\integration\\test_webhook_gitea_live.py",
+        "line": "28",
+        "time": "0.001",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Explicit disposable localhost Gitea acceptance required"
+          }
+        ]
+      },
+      {
+        "classname": "tests.integration.test_webhook_gitea_live",
+        "name": "test_native_review_reaches_policy_once[REQUEST_CHANGES-changes_requested]",
+        "file": "tests\\integration\\test_webhook_gitea_live.py",
+        "line": "160",
+        "time": "0.001",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Explicit disposable localhost Gitea acceptance required"
+          }
+        ]
+      },
+      {
+        "classname": "tests.integration.test_webhook_gitea_live",
+        "name": "test_native_review_reaches_policy_once[APPROVED-success]",
+        "file": "tests\\integration\\test_webhook_gitea_live.py",
+        "line": "160",
+        "time": "0.001",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Explicit disposable localhost Gitea acceptance required"
+          }
+        ]
+      },
+      {
+        "classname": "tests.integration.test_webhook_gitea_live",
+        "name": "test_native_review_reaches_policy_once[COMMENT-ignored]",
+        "file": "tests\\integration\\test_webhook_gitea_live.py",
+        "line": "160",
+        "time": "0.001",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Explicit disposable localhost Gitea acceptance required"
+          }
+        ]
+      },
+      {
+        "classname": "tests.integration.test_webhook_gitea_live",
+        "name": "test_review_readiness_refuses_unready_pull[closed]",
+        "file": "tests\\integration\\test_webhook_gitea_live.py",
+        "line": "223",
+        "time": "0.001",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Explicit disposable localhost Gitea acceptance required"
+          }
+        ]
+      },
+      {
+        "classname": "tests.integration.test_webhook_gitea_live",
+        "name": "test_review_readiness_refuses_unready_pull[conflicting]",
+        "file": "tests\\integration\\test_webhook_gitea_live.py",
+        "line": "223",
+        "time": "0.001",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Explicit disposable localhost Gitea acceptance required"
+          }
+        ]
+      },
+      {
+        "classname": "tests.live.test_auditability_phase2_live",
+        "name": "test_phase2_auditability_live_suite",
+        "file": "tests\\live\\test_auditability_phase2_live.py",
+        "line": "36",
+        "time": "0.028",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live Phase 2 auditability proof."
+          }
+        ]
+      },
+      {
+        "classname": "tests.live.test_companion_voice_truth_live",
+        "name": "test_companion_voice_truth_live_tts_generation_is_explicit",
+        "file": "tests\\live\\test_companion_voice_truth_live.py",
+        "line": "85",
+        "time": "0.029",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live companion voice proof."
+          }
+        ]
+      },
+      {
+        "classname": "tests.live.test_companion_voice_truth_live",
+        "name": "test_companion_voice_truth_live_text_generation_remains_distinct_from_tts",
+        "file": "tests\\live\\test_companion_voice_truth_live.py",
+        "line": "132",
+        "time": "0.028",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live companion voice proof."
+          }
+        ]
+      },
+      {
+        "classname": "tests.live.test_companion_voice_truth_live",
+        "name": "test_companion_voice_truth_live_gateway_playback_without_avatar",
+        "file": "tests\\live\\test_companion_voice_truth_live.py",
+        "line": "178",
+        "time": "0.028",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live companion playback proof."
+          }
+        ]
+      },
+      {
+        "classname": "tests.live.test_llama_cpp_feature_paths",
+        "name": "test_llama_cpp_builtin_stream_reaches_committed_terminal_state",
+        "file": "tests\\live\\test_llama_cpp_feature_paths.py",
+        "line": "33",
+        "time": "0.001",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "requires live llama.cpp"
+          }
+        ]
+      },
+      {
+        "classname": "tests.live.test_llama_cpp_feature_paths",
+        "name": "test_llama_cpp_odr_transient_generation[_resolve_role_base_url-_resolve_role_provider0]",
+        "file": "tests\\live\\test_llama_cpp_feature_paths.py",
+        "line": "61",
+        "time": "0.001",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "requires live llama.cpp"
+          }
+        ]
+      },
+      {
+        "classname": "tests.live.test_llama_cpp_feature_paths",
+        "name": "test_llama_cpp_odr_transient_generation[_resolve_role_base_url-_resolve_role_provider1]",
+        "file": "tests\\live\\test_llama_cpp_feature_paths.py",
+        "line": "61",
+        "time": "0.001",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "requires live llama.cpp"
+          }
+        ]
+      },
+      {
+        "classname": "tests.live.test_llama_cpp_feature_paths",
+        "name": "test_default_extension_catalog_generation_and_discovery",
+        "file": "tests\\live\\test_llama_cpp_feature_paths.py",
+        "line": "77",
+        "time": "0.001",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "requires live llama.cpp"
+          }
+        ]
+      },
+      {
+        "classname": "tests.live.test_model_stream_v1_live",
+        "name": "test_model_stream_v1_live_repeated_cancel_before_first_token_interrupts",
+        "file": "tests\\live\\test_model_stream_v1_live.py",
+        "line": "34",
+        "time": "0.028",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live streaming proof."
+          }
+        ]
+      },
+      {
+        "classname": "tests.live.test_model_stream_v1_live",
+        "name": "test_model_stream_v1_live_cancel_after_final_is_noop",
+        "file": "tests\\live\\test_model_stream_v1_live.py",
+        "line": "97",
+        "time": "0.028",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live streaming proof."
+          }
+        ]
+      },
+      {
+        "classname": "tests.live.test_role_unit_live",
+        "name": "test_live_role_requirements_analyst_unit",
+        "file": "tests\\live\\test_role_unit_live.py",
+        "line": "94",
+        "time": "0.028",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Set ORKET_LIVE_ROLE_TESTS=1 to run live per-role deterministic checks."
+          }
+        ]
+      },
+      {
+        "classname": "tests.live.test_role_unit_live",
+        "name": "test_live_role_architect_unit",
+        "file": "tests\\live\\test_role_unit_live.py",
+        "line": "113",
+        "time": "0.028",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Set ORKET_LIVE_ROLE_TESTS=1 to run live per-role deterministic checks."
+          }
+        ]
+      },
+      {
+        "classname": "tests.live.test_role_unit_live",
+        "name": "test_live_role_coder_unit_contains_hello_world",
+        "file": "tests\\live\\test_role_unit_live.py",
+        "line": "132",
+        "time": "0.028",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Set ORKET_LIVE_ROLE_TESTS=1 to run live per-role deterministic checks."
+          }
+        ]
+      },
+      {
+        "classname": "tests.live.test_role_unit_live",
+        "name": "test_live_role_code_reviewer_unit",
+        "file": "tests\\live\\test_role_unit_live.py",
+        "line": "150",
+        "time": "0.029",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Set ORKET_LIVE_ROLE_TESTS=1 to run live per-role deterministic checks."
+          }
+        ]
+      },
+      {
+        "classname": "tests.live.test_runtime_stability_closeout_live",
+        "name": "test_boundary_illegal_state_transition_live",
+        "file": "tests\\live\\test_runtime_stability_closeout_live.py",
+        "line": "176",
+        "time": "0.028",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live runtime-stability proof."
+          }
+        ]
+      },
+      {
+        "classname": "tests.live.test_runtime_stability_closeout_live",
+        "name": "test_boundary_path_traversal_live",
+        "file": "tests\\live\\test_runtime_stability_closeout_live.py",
+        "line": "210",
+        "time": "0.029",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live runtime-stability proof."
+          }
+        ]
+      },
+      {
+        "classname": "tests.live.test_runtime_stability_closeout_live",
+        "name": "test_protocol_replay_missing_workspace_snapshot_live",
+        "file": "tests\\live\\test_runtime_stability_closeout_live.py",
+        "line": "284",
+        "time": "0.030",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live runtime-stability proof."
+          }
+        ]
+      },
+      {
+        "classname": "tests.live.test_system_acceptance_pipeline",
+        "name": "test_system_acceptance_role_pipeline_with_guard_live_reports_truthfully",
+        "file": "tests\\live\\test_system_acceptance_pipeline.py",
+        "line": "261",
+        "time": "0.030",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live acceptance with the selected provider."
+          }
+        ]
+      },
+      {
+        "classname": "tests.live.test_truthful_runtime_artifact_provenance_live",
+        "name": "test_artifact_provenance_live_acceptance_run_records_generated_files",
+        "file": "tests\\live\\test_truthful_runtime_artifact_provenance_live.py",
+        "line": "27",
+        "time": "0.030",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live artifact provenance proof."
+          }
+        ]
+      },
+      {
+        "classname": "tests.live.test_truthful_runtime_packet1_live",
+        "name": "test_packet1_live_failure_run_omits_classification_without_primary_output",
+        "file": "tests\\live\\test_truthful_runtime_packet1_live.py",
+        "line": "151",
+        "time": "0.030",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live packet1 proof."
+          }
+        ]
+      },
+      {
+        "classname": "tests.live.test_truthful_runtime_packet1_live",
+        "name": "test_packet1_live_emission_failure_uses_runtime_event_fallback",
+        "file": "tests\\live\\test_truthful_runtime_packet1_live.py",
+        "line": "190",
+        "time": "0.030",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live packet1 proof."
+          }
+        ]
+      },
+      {
+        "classname": "tests.live.test_truthful_runtime_packet1_live",
+        "name": "test_packet1_live_fallback_profile_marks_degraded_truth",
+        "file": "tests\\live\\test_truthful_runtime_packet1_live.py",
+        "line": "235",
+        "time": "0.030",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live packet1 proof."
+          }
+        ]
+      },
+      {
+        "classname": "tests.live.test_truthful_runtime_packet1_live",
+        "name": "test_packet1_live_corrective_reprompt_marks_repaired_truth",
+        "file": "tests\\live\\test_truthful_runtime_packet1_live.py",
+        "line": "286",
+        "time": "0.030",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live packet1 proof."
+          }
+        ]
+      },
+      {
+        "classname": "tests.live.test_truthful_runtime_phase_c_completion_live",
+        "name": "test_phase_c_live_required_source_attribution_blocks_missing_receipt",
+        "file": "tests\\live\\test_truthful_runtime_phase_c_completion_live.py",
+        "line": "27",
+        "time": "0.030",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live Phase C proof."
+          }
+        ]
+      },
+      {
+        "classname": "tests.live.test_truthful_runtime_phase_c_completion_live",
+        "name": "test_phase_c_live_required_source_attribution_verifies_receipt",
+        "file": "tests\\live\\test_truthful_runtime_phase_c_completion_live.py",
+        "line": "69",
+        "time": "0.030",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live Phase C proof."
+          }
+        ]
+      },
+      {
+        "classname": "tests.live.test_truthful_runtime_phase_c_completion_live",
+        "name": "test_phase_c_live_narration_effect_audit_detects_missing_source_receipt_effect",
+        "file": "tests\\live\\test_truthful_runtime_phase_c_completion_live.py",
+        "line": "118",
+        "time": "0.030",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live Phase C proof."
+          }
+        ]
+      },
+      {
+        "classname": "tests.live.test_truthful_runtime_phase_d_completion_live",
+        "name": "test_phase_d_live_durable_memory_requires_explicit_user_correction",
+        "file": "tests\\live\\test_truthful_runtime_phase_d_completion_live.py",
+        "line": "17",
+        "time": "0.030",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live Phase D proof."
+          }
+        ]
+      },
+      {
+        "classname": "tests.live.test_truthful_runtime_phase_d_completion_live",
+        "name": "test_phase_d_live_companion_governed_memory_context_filters_stale_rows",
+        "file": "tests\\live\\test_truthful_runtime_phase_d_completion_live.py",
+        "line": "70",
+        "time": "0.030",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live Phase D proof."
+          }
+        ]
+      },
+      {
+        "classname": "tests.live.test_truthful_runtime_phase_d_completion_live",
+        "name": "test_phase_d_live_reference_context_rendering_filters_stale_project_memory",
+        "file": "tests\\live\\test_truthful_runtime_phase_d_completion_live.py",
+        "line": "114",
+        "time": "0.030",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live Phase D proof."
+          }
+        ]
+      },
+      {
+        "classname": "tests.live.test_truthful_runtime_phase_e_completion_live",
+        "name": "test_phase_e_live_acceptance_gate_and_evidence_package_closeout",
+        "file": "tests\\live\\test_truthful_runtime_phase_e_completion_live.py",
+        "line": "33",
+        "time": "0.030",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live Phase E proof."
+          }
+        ]
+      },
+      {
+        "classname": "tests.scripts.test_check_td03052026_gate_audit",
+        "name": "test_td03052026_gate_audit_passes_when_dashboard_and_ci_are_aligned",
+        "file": "tests\\scripts\\test_check_td03052026_gate_audit.py",
+        "line": "61",
+        "time": "0.001",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+          }
+        ]
+      },
+      {
+        "classname": "tests.scripts.test_check_td03052026_gate_audit",
+        "name": "test_td03052026_gate_audit_fails_when_dashboard_gate_missing",
+        "file": "tests\\scripts\\test_check_td03052026_gate_audit.py",
+        "line": "83",
+        "time": "0.001",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+          }
+        ]
+      },
+      {
+        "classname": "tests.scripts.test_check_td03052026_gate_audit",
+        "name": "test_td03052026_gate_audit_fails_when_ci_snippet_missing",
+        "file": "tests\\scripts\\test_check_td03052026_gate_audit.py",
+        "line": "101",
+        "time": "0.001",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+          }
+        ]
+      },
+      {
+        "classname": "tests.scripts.test_record_protocol_enforce_window_signoff",
+        "name": "test_record_protocol_enforce_window_signoff_passes_on_clean_inputs",
+        "file": "tests\\scripts\\test_record_protocol_enforce_window_signoff.py",
+        "line": "17",
+        "time": "0.001",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+          }
+        ]
+      },
+      {
+        "classname": "tests.scripts.test_record_protocol_enforce_window_signoff",
+        "name": "test_record_protocol_enforce_window_signoff_strict_fails_when_retry_unknown",
+        "file": "tests\\scripts\\test_record_protocol_enforce_window_signoff.py",
+        "line": "58",
+        "time": "0.001",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+          }
+        ]
+      },
+      {
+        "classname": "tests.scripts.test_record_protocol_enforce_window_signoff",
+        "name": "test_record_protocol_enforce_window_signoff_blocks_unapproved_error_families",
+        "file": "tests\\scripts\\test_record_protocol_enforce_window_signoff.py",
+        "line": "92",
+        "time": "0.001",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+          }
+        ]
+      },
+      {
+        "classname": "tests.scripts.test_record_protocol_enforce_window_signoff",
+        "name": "test_record_protocol_enforce_window_signoff_preserves_invalid_projection_counts",
+        "file": "tests\\scripts\\test_record_protocol_enforce_window_signoff.py",
+        "line": "126",
+        "time": "0.001",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+          }
+        ]
+      },
+      {
+        "classname": "tests.scripts.test_record_td03052026_phase0_baseline",
+        "name": "test_record_phase0_baseline_writes_artifacts_and_sets_g1_green",
+        "file": "tests\\scripts\\test_record_td03052026_phase0_baseline.py",
+        "line": "24",
+        "time": "0.001",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+          }
+        ]
+      },
+      {
+        "classname": "tests.scripts.test_record_td03052026_phase0_baseline",
+        "name": "test_record_phase0_baseline_strict_fails_when_required_smoke_fails",
+        "file": "tests\\scripts\\test_record_td03052026_phase0_baseline.py",
+        "line": "73",
+        "time": "0.001",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+          }
+        ]
+      },
+      {
+        "classname": "tests.scripts.test_record_td03052026_phase0_baseline",
+        "name": "test_record_phase0_baseline_rejects_waived_for_p0_gate",
+        "file": "tests\\scripts\\test_record_td03052026_phase0_baseline.py",
+        "line": "103",
+        "time": "0.001",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+          }
+        ]
+      },
+      {
+        "classname": "tests.scripts.test_record_td03052026_phase0_baseline",
+        "name": "test_record_phase0_baseline_forces_g7_red_when_prerequisites_are_not_green",
+        "file": "tests\\scripts\\test_record_td03052026_phase0_baseline.py",
+        "line": "129",
+        "time": "0.001",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+          }
+        ]
+      },
+      {
+        "classname": "tests.scripts.test_run_protocol_enforce_window_capture",
+        "name": "test_run_protocol_enforce_window_capture_writes_manifest_and_passes",
+        "file": "tests\\scripts\\test_run_protocol_enforce_window_capture.py",
+        "line": "16",
+        "time": "0.001",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+          }
+        ]
+      },
+      {
+        "classname": "tests.scripts.test_run_protocol_enforce_window_capture",
+        "name": "test_run_protocol_enforce_window_capture_fails_when_step_fails",
+        "file": "tests\\scripts\\test_run_protocol_enforce_window_capture.py",
+        "line": "79",
+        "time": "0.001",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+          }
+        ]
+      },
+      {
+        "classname": "tests.scripts.test_run_protocol_enforce_window_capture",
+        "name": "test_run_protocol_enforce_window_capture_defaults_session_id_to_run_id",
+        "file": "tests\\scripts\\test_run_protocol_enforce_window_capture.py",
+        "line": "128",
+        "time": "0.001",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+          }
+        ]
+      },
+      {
+        "classname": "tests.scripts.test_run_protocol_enforce_window_capture",
+        "name": "test_run_protocol_enforce_window_capture_preserves_signoff_invalid_projection_counts",
+        "file": "tests\\scripts\\test_run_protocol_enforce_window_capture.py",
+        "line": "190",
+        "time": "0.001",
+        "reasons": [
+          {
+            "type": "pytest.skip",
+            "message": "one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+          }
+        ]
+      }
+    ],
+    "warnings_summary": "===============================\n.tmp\\goal-20260927-env\\Lib\\site-packages\\fastapi\\testclient.py:1\n  C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Lib\\site-packages\\fastapi\\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.\n    from starlette.testclient import TestClient as TestClient  # noqa\n\ntests/application/test_extension_runtime_service.py::test_extension_runtime_service_list_models_and_override_generation\n  <string>:8: RuntimeWarning: GenerateRequest.max_tokens below 256 can truncate governed outputs.\n\ntests/interfaces/test_api_composition_isolation.py::test_concurrent_requests_observe_their_own_app_root\n  C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Lib\\site-packages\\pydantic\\_internal\\_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'req' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.\n    warnings.warn(\n\n",
+    "changed_inputs": [],
+    "elapsed_seconds": 5144.439072847366,
+    "commands": [
+      {
+        "kind": "complete-suite",
+        "argv": [
+          "C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Scripts\\python.exe",
+          "-m",
+          "pytest",
+          "tests/",
+          "--cov=orket",
+          "--cov-config=pyproject.toml",
+          "--cov-fail-under=89",
+          "--cov-report=term",
+          "--cov-report=json:C:\\Source\\Orket-architectural-truth\\.tmp\\atg09-windows-quality\\A01\\coverage.json",
+          "-v",
+          "--tb=short",
+          "--junitxml=C:\\Source\\Orket-architectural-truth\\.tmp\\atg09-windows-quality\\A01\\pytest.xml",
+          "--basetemp=C:\\Source\\Orket-architectural-truth\\.tmp\\atg09-windows-quality\\A01\\pytest-temp",
+          "-o",
+          "junit_family=legacy",
+          "-o",
+          "faulthandler_timeout=120"
+        ],
+        "cwd": "C:\\Source\\Orket-architectural-truth",
+        "log": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg09-windows-quality\\A01\\pytest.log",
+        "status": "finished",
+        "started_at_unix": 1791064242.4476829,
+        "pid": 40812,
+        "created_at_unix": 1791064242.4805434,
+        "exit_code": 0,
+        "finished_at_unix": 1791069385.4452322,
+        "log_sha256": "e39288a6b4dbbc93b7c9eb5c7cd10400f4686955e7b29d10c17d964cf402155f",
+        "observed_descendant_count": 5820,
+        "remaining_observed_descendants": []
+      }
+    ],
+    "artifacts_sha256": {
+      "C:\\Source\\Orket-architectural-truth\\.tmp\\atg09-windows-quality\\A01\\pytest.log": "e39288a6b4dbbc93b7c9eb5c7cd10400f4686955e7b29d10c17d964cf402155f",
+      "C:\\Source\\Orket-architectural-truth\\.tmp\\atg09-windows-quality\\A01\\pytest.xml": "332c78e3a3d42d78028eb56d605748d607b0ead77b3977f8f5446db727d28564",
+      "C:\\Source\\Orket-architectural-truth\\.tmp\\atg09-windows-quality\\A01\\coverage.json": "e76a9e3f438fa52ff5c2b8403d2f525a0452e79f18fc46ae485eb46eb3b7dd5d"
+    },
+    "proof": "live source execution with each test layer retaining its own limits",
+    "input_count": 5746,
+    "coverage_floor": 89,
+    "branch_coverage": true,
+    "pytest_warning_count": 3,
+    "coverage_merge_warnings": [
+      "tests/unit/proof/test_trusted_terraform_smoke_names.py::test_operator_override_acceptance_and_rejection PASSED [100%]C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Lib\\site-packages\\coverage\\data.py:211: CoverageWarning: Couldn't use data file 'C:\\\\Source\\\\Orket-architectural-truth\\\\.tmp\\\\atg09-windows-quality\\\\A01\\\\measurement.coverage.DESKTOP-H0S3F53.pid26556.XLmc4GFx': database disk image is malformed"
+    ],
+    "source_inventory_sha256": "90c3009bf6deb8510dcd7ad464128c1c7aa0312e1d01265d6fc52113da277228",
+    "prelaunch_plan_sha256": "1964cfcdf40b449e449ae9eb9d70183fdd3f8f376ca7eb823fc11d17fc727351"
+  },
+  "structural_commands": [
+    {
+      "kind": "check-0",
+      "argv": [
+        "C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Scripts\\python.exe",
+        "-m",
+        "ruff",
+        "check",
+        "orket",
+        "tests"
+      ],
+      "log": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg09-windows-local-checks\\check-0.log",
+      "status": "finished",
+      "started_at_unix": 1791069429.975566,
+      "pid": 39124,
+      "exit_code": 0,
+      "finished_at_unix": 1791069430.6042242,
+      "log_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    {
+      "kind": "check-1",
+      "argv": [
+        "C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Scripts\\python.exe",
+        "scripts/governance/check_dependency_direction.py"
+      ],
+      "log": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg09-windows-local-checks\\check-1.log",
+      "status": "finished",
+      "started_at_unix": 1791069430.638739,
+      "pid": 35496,
+      "exit_code": 0,
+      "finished_at_unix": 1791069448.9796495,
+      "log_sha256": "4fc6fdd24df2324e6357a11218c4cfa43dc45173c8c773b9ff90b05627c4f2e8"
+    },
+    {
+      "kind": "check-2",
+      "argv": [
+        "C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Scripts\\python.exe",
+        "scripts/governance/enforce_test_taxonomy.py",
+        "--strict"
+      ],
+      "log": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg09-windows-local-checks\\check-2.log",
+      "status": "finished",
+      "started_at_unix": 1791069449.0112054,
+      "pid": 25000,
+      "exit_code": 0,
+      "finished_at_unix": 1791069514.6502218,
+      "log_sha256": "dcf678a63ff29c7631a500290ce9356d501889a191aeb6db3abb17512f43edce"
+    },
+    {
+      "kind": "check-3",
+      "argv": [
+        "C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Scripts\\python.exe",
+        "scripts/governance/check_noop_critical_paths.py"
+      ],
+      "log": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg09-windows-local-checks\\check-3.log",
+      "status": "finished",
+      "started_at_unix": 1791069514.6782224,
+      "pid": 4752,
+      "exit_code": 0,
+      "finished_at_unix": 1791069516.6820354,
+      "log_sha256": "b0be1d19bbed57e385217982c29aa737f95f7434b2a46f696ff7912325ef7398"
+    }
+  ],
+  "taxonomy_tests_total": 13080,
+  "mypy_reuse": {
+    "valid": true,
+    "command": [
+      "C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Scripts\\python.exe",
+      "-m",
+      "mypy",
+      "orket/",
+      "--ignore-missing-imports"
+    ],
+    "proof_receipt": ".tmp/atg09-reload-repair-source-windows.json",
+    "proof_receipt_sha256": "c8d6807c4cf283d35a092b4f56d6f0d594273191e86640a2b4542a131010bc82",
+    "input_receipt": ".tmp/atg09-reload-repair-source-inputs.json",
+    "input_receipt_sha256": "8fef6d3d33653f90939636c8dc3da50123de2263e0107f8e518f0e63178373bc",
+    "owned_native_settlement": {
+      "schema_version": "owned_command.v1",
+      "reason": "completed",
+      "cleanup_confirmed": true,
+      "capture_complete": true,
+      "backend": "windows_job",
+      "transport_pid": 18016,
+      "supervisor_pid": 35192,
+      "command_pid": 28660,
+      "diagnostics": []
+    },
+    "stdout_stderr_hashes_match": {
+      "stdout": true,
+      "stderr": true
+    },
+    "source_scope": "All Git-visible orket/ and orket_extension_sdk/ paths; exact inventory and byte comparison against the accepted reload source freeze.",
+    "relevant_files": 1277,
+    "changed_relevant_files": [],
+    "relevant_map_sha256": "761ba9356fc3dd878c897c72bf6a8f3f201ad08156bfe6a83cdc737ed8db69bc",
+    "frozen_pyproject_ref": "v0.6.136:pyproject.toml",
+    "frozen_pyproject_reconstruction": "Git LF bytes to CRLF; reconstructed SHA equals the original frozen file SHA.",
+    "frozen_pyproject_sha256": "2e6f09d653a8bdb524ba9b85d5ac987ec8431a6a604aa860f9fedbfc4aad707f",
+    "mypy_config_equal": true,
+    "all_pyproject_fields_except_project_version_equal": true,
+    "changed_python_since_freeze": [
+      "tests/integration/test_epic_closeout_content_io_ownership.py"
+    ],
+    "limits": [
+      "Retains prior canonical static typing success; no fresh Mypy invocation or runtime proof.",
+      "Valid only while the recorded relevant input inventory, bytes and configuration remain unchanged."
+    ]
+  },
+  "retained_live_evidence": {
+    "schema": "atg09.windows_resume_evidence_audit.v1",
+    "observed_at_utc": "2026-10-03T22:01:47.898077+00:00",
+    "worktree": "C:\\Source\\Orket-architectural-truth",
+    "branch": "codex/architectural-truth-bt0",
+    "head": "a6b99e575682d9b721983381e75f80402c8018d2",
+    "dirty_paths": [
+      " M docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md"
+    ],
+    "observed_path": "primary",
+    "observed_result": "success",
+    "proof": "Structural readback and exact relevant-input reuse of retained native live evidence; no campaigns or process/provider actions.",
+    "receipt_sha256": {
+      ".tmp/atg08-build.json": "cb8dd5cafd6debc01eab9a54c68d2dc7c97d0ee385d12f150217e974951a2e4a",
+      ".tmp/atg08-cells.json": "879e346a25eb9591a63d73ba1c3763b377e01963279ed649790f5964f9d74e04",
+      ".tmp/atg08-windows-proof.json": "c536d311d95175fc877dd094105d834ab938e230ab540e3fb5f2d6ac6da3cd8e",
+      ".tmp/atg08-source-selection.json": "48cd4d99b145df97c3f2c0c41d048b1753b4d8afccaa80f9f9a9f3dba883a22d",
+      ".tmp/atg09-reload-freeze.json": "c548502b7b72584b92da92811db108cf1d06cd8f84dee590d18d03d689da0f15",
+      ".tmp/atg09-reload-reuse-audit.json": "3f0c570c66d883acb0b627e307db523dcbc2325cba3765f8e27d5503e42ae8d4",
+      ".tmp/atg09-reload-installed-audit.json": "3207a7baa645fd00dbbea6073174c34b8c2cc6249e5eda13fab93431a8a8e0e1",
+      ".tmp/atg09-reload-repair-build.json": "ec3af8112374e0e0a6c1e864a8ee8653e3a77db6916ac52ef643e3fdca31e2e6",
+      ".tmp/atg09-reload-repair-freeze.json": "2ff3c93f28e544ee9757f3803e7cfa3a1490b067517a7b916811eb881d7db1ef",
+      ".tmp/atg09-reload-repair-win-py311.json": "326ea6874c77858ed98009423191e51d1911d53fdb8642a8775acc5d9545c19b",
+      ".tmp/atg09-reload-repair-win-py312.json": "7f64d5a89e0c728da034d22d19ccbecee8ab98c532505a71b50d9cfc71aba324",
+      ".tmp/atg09-final-evidence-reuse.json": "a03cb084b002df613ea797028e675fb412604d7907f2082b8de656f618727afb",
+      ".tmp/atg09-fixture-case-freeze.json": "be37dfdcaa855482632a9bef6bad7429f6bb1d8315fd12f5417970fde2410977",
+      ".tmp/atg09-fixture-case-windows.json": "a509c14dfa1b030f0396111674ebd781c2adcda057d82e5dd5ba4af8847730a2",
+      ".tmp/atg09-fixture-case-reuse.json": "d3b3a8a77f61b2f5b68a1f5fbd46853073baac647f669c0e323af1f8c3669ed9",
+      ".tmp/atg09_provider_inputs.json": "4ad06cbdd140cbe60b46a843239b48cf9dff07b310fa1b50635777e00bc5183c",
+      ".tmp/atg09_provider_result.json": "e8d6c2e02eff2e6ef471e990b8ddde5e1d6fd682db3918ef61421a34c2e77450",
+      ".tmp/atg09-provider-launch.json": "c4fec5f32350d965dc96e33db033f59bf520b4ccc247eada8e3ffd679c016c80",
+      "docs/projects/archive/architectural-truth/AT10012026-ATG08/VERIFICATION.json": "5bb27e2e89cbe58a7e1a14c61c86b1496806ff7dd9695683f7ef9df2daca998c"
+    },
+    "relevant_receipt_chain": {
+      "count": 8,
+      "matching": 8,
+      "differences": []
+    },
+    "source": {
+      "reload_R02": {
+        "frozen_files": 5743,
+        "unchanged_files": 5734,
+        "changed_inputs": [
+          {
+            "path": "CHANGELOG.md",
+            "expected": "f4b657f8d673ede553b45ee2cad5216397b3876a06d4ee8bd121cbdb96975ddb",
+            "actual": "9c6222226a1746167ebab4df953f3250e7bb926ddd1f8cafad3875a7454ef009"
+          },
+          {
+            "path": "docs/CONTRIBUTOR.md",
+            "expected": "04d7c171d77b07a03beff591fe6de6ce1eed6aeb3ddc3e21846e1c637a04019c",
+            "actual": "edf0fb08b449b6b825193020d20b17e136b02672e4e4baa425ecc8b45001d48d"
+          },
+          {
+            "path": "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
+            "expected": "7c4430af8157162486fd300909aec86be8be069adf132c6524a91c5a883d9fc3",
+            "actual": "1964cfcdf40b449e449ae9eb9d70183fdd3f8f376ca7eb823fc11d17fc727351"
+          },
+          {
+            "path": "docs/projects/architectural-truth/GOAL_WORKSETS.json",
+            "expected": "2c84b6c56d7ffe2efedad1d6bbde96bb640929e3bca1fb1b6b9851b25c69d77a",
+            "actual": "4665a33b80076c21cfb3952dca8ad19a9cfe5a0a1b9618757f9864163f8ec109"
+          },
+          {
+            "path": "docs/projects/architectural-truth/README.md",
+            "expected": "8052dfa842b8dc76560106e11f2adf9b7e009293d677de97cdf7731baf2ed83f",
+            "actual": "acdfe34e54a168d608cd798c25ef2be09f14486262438146044b62e8eeaf97c1"
+          },
+          {
+            "path": "docs/specs/API_RUNTIME_LIFECYCLE.md",
+            "expected": "17ce3284c5c9aa7bbcb265597a2f902b526585957d6da15537b83e268268ff27",
+            "actual": "99b75e6abd76763bf0421854634019a83d1bf9b4614471ea922cacf552722375"
+          },
+          {
+            "path": "docs/specs/RUNTIME_EXECUTION_RESULT_CONTRACT.md",
+            "expected": "3b2903234fb63e74a66741d0a5b360cb92afde4d579903fa1cef7cb62e98ce43",
+            "actual": "0f22b3d97eb70687ee38e8d3d709aa62b6b3b86b72974de554c951675b2262be"
+          },
+          {
+            "path": "pyproject.toml",
+            "expected": "2e6f09d653a8bdb524ba9b85d5ac987ec8431a6a604aa860f9fedbfc4aad707f",
+            "actual": "4d4601b9667765048204677453d70b0f48b0b1d42fad3dbd9ee85779dde69dad"
+          },
+          {
+            "path": "tests/integration/test_epic_closeout_content_io_ownership.py",
+            "expected": "000f5385b940bf75e86b4d8e5d8e189dd799e3e04b9e2105383aea03a1bf8885",
+            "actual": "8668d1928766236341ed9b08dc589fbda7705bf11b45171e342947316eef84f6"
+          }
+        ],
+        "runtime": {
+          "count": 1277,
+          "matching": 1277,
+          "differences": []
+        },
+        "added_paths": [
+          "docs/architecture/CONTRACT_DELTA_WINDOWS_ACCEPTANCE_2026-10-03.md",
+          "docs/projects/archive/architectural-truth/AT10032026-WINDOWS-SCOPE/PLAN_BEFORE_WINDOWS_SCOPE.md",
+          "docs/projects/archive/architectural-truth/AT10032026-WINDOWS-SCOPE/README.md"
+        ],
+        "removed_paths": []
+      },
+      "fixture_119": {
+        "frozen_files": 5743,
+        "unchanged_files": 5735,
+        "changed_inputs": [
+          {
+            "path": "CHANGELOG.md",
+            "expected": "61aae76e666715edd3497ba69ec1ed4f87caadf9c247dbc59aa99dadf130ce22",
+            "actual": "9c6222226a1746167ebab4df953f3250e7bb926ddd1f8cafad3875a7454ef009"
+          },
+          {
+            "path": "docs/CONTRIBUTOR.md",
+            "expected": "c7a8910dd519b40c3afb400abb460d73dfe9051545155feeee0a180973a64b97",
+            "actual": "edf0fb08b449b6b825193020d20b17e136b02672e4e4baa425ecc8b45001d48d"
+          },
+          {
+            "path": "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
+            "expected": "4eec5beaa4d32685b18e12bed3b52633ae393aeca7e4951998c1685be6a66fe1",
+            "actual": "1964cfcdf40b449e449ae9eb9d70183fdd3f8f376ca7eb823fc11d17fc727351"
+          },
+          {
+            "path": "docs/projects/architectural-truth/GOAL_WORKSETS.json",
+            "expected": "04402fa31993fd404708444251cb4203f90c3522e5c2d7421da97482d61ae961",
+            "actual": "4665a33b80076c21cfb3952dca8ad19a9cfe5a0a1b9618757f9864163f8ec109"
+          },
+          {
+            "path": "docs/projects/architectural-truth/README.md",
+            "expected": "f309aa75cc305d36479ff5a9fa46a16f04ba4535b98fe33a738571134bb5bbb6",
+            "actual": "acdfe34e54a168d608cd798c25ef2be09f14486262438146044b62e8eeaf97c1"
+          },
+          {
+            "path": "docs/specs/API_RUNTIME_LIFECYCLE.md",
+            "expected": "17ce3284c5c9aa7bbcb265597a2f902b526585957d6da15537b83e268268ff27",
+            "actual": "99b75e6abd76763bf0421854634019a83d1bf9b4614471ea922cacf552722375"
+          },
+          {
+            "path": "docs/specs/RUNTIME_EXECUTION_RESULT_CONTRACT.md",
+            "expected": "3b2903234fb63e74a66741d0a5b360cb92afde4d579903fa1cef7cb62e98ce43",
+            "actual": "0f22b3d97eb70687ee38e8d3d709aa62b6b3b86b72974de554c951675b2262be"
+          },
+          {
+            "path": "pyproject.toml",
+            "expected": "6a7df329acfaab30101f7d182905f1d7e584ddb6d32b4cbd9264d64423895b97",
+            "actual": "4d4601b9667765048204677453d70b0f48b0b1d42fad3dbd9ee85779dde69dad"
+          }
+        ],
+        "runtime": {
+          "count": 1277,
+          "matching": 1277,
+          "differences": []
+        },
+        "added_paths": [
+          "docs/architecture/CONTRACT_DELTA_WINDOWS_ACCEPTANCE_2026-10-03.md",
+          "docs/projects/archive/architectural-truth/AT10032026-WINDOWS-SCOPE/PLAN_BEFORE_WINDOWS_SCOPE.md",
+          "docs/projects/archive/architectural-truth/AT10032026-WINDOWS-SCOPE/README.md"
+        ],
+        "removed_paths": []
+      },
+      "git_visible_files": 5746,
+      "selected_test_files": {
+        "count": 627,
+        "matching": 627,
+        "differences": []
+      },
+      "reload_helpers": {
+        "count": 11,
+        "matching": 11,
+        "differences": []
+      },
+      "pyproject_versions": [
+        "0.6.136",
+        "0.6.142"
+      ],
+      "pyproject_nonversion_configuration_equal": true,
+      "current_fixture_file_outside_installed_selection": true
+    },
+    "artifact_comparison": {
+      "core": {
+        "wheel": {
+          "before_sha256": "5052ae08035e18d18ee34b098b4c36f8ae6d8451dd9650551f57f2345470103d",
+          "after_sha256": "ab9d0754413f57b39c13fe2252ae12f2ff0e9e0e79bbdb1a51b8a5a150a5d134",
+          "before_members": 1248,
+          "after_members": 1248,
+          "added": [],
+          "removed": [],
+          "changed_members": [
+            "orket-VERSION.dist-info/METADATA",
+            "orket-VERSION.dist-info/RECORD",
+            "orket/interfaces/api_reload_runtime.py"
+          ],
+          "version_only_metadata": {
+            "orket-VERSION.dist-info/METADATA": true
+          }
+        },
+        "sdist": {
+          "before_sha256": "45fb60ffe83bbce5b8e5db022ad75b76b04f9f205b1293e479eca8c19eab55e0",
+          "after_sha256": "f7d81ecea42a34d9224e0ec7dac75f89ea473c95ad7247c73bc6885a75a5d0cc",
+          "before_members": 1253,
+          "after_members": 1253,
+          "added": [],
+          "removed": [],
+          "changed_members": [
+            "PKG-INFO",
+            "orket.egg-info/PKG-INFO",
+            "orket/interfaces/api_reload_runtime.py",
+            "pyproject.toml"
+          ],
+          "version_only_metadata": {
+            "PKG-INFO": true,
+            "orket.egg-info/PKG-INFO": true
+          }
+        }
+      },
+      "sdk": {
+        "wheel": {
+          "before_sha256": "25ab338a4c823065ca9f59ffc3b930d4194deac810e1eb4f48123d779549e520",
+          "after_sha256": "25ab338a4c823065ca9f59ffc3b930d4194deac810e1eb4f48123d779549e520",
+          "before_members": 35,
+          "after_members": 35,
+          "added": [],
+          "removed": [],
+          "changed_members": [],
+          "version_only_metadata": {}
+        },
+        "sdist": {
+          "before_sha256": "ae763560b0e11da6558a4b88b006e855f88697622f27084abf1447447f19d5cf",
+          "after_sha256": "ae763560b0e11da6558a4b88b006e855f88697622f27084abf1447447f19d5cf",
+          "before_members": 40,
+          "after_members": 40,
+          "added": [],
+          "removed": [],
+          "changed_members": [],
+          "version_only_metadata": {}
+        }
+      },
+      "wheel_record": {
+        "rows": 1248,
+        "failures": []
+      },
+      "sdk_exact_artifact_reused": true
+    },
+    "windows_cells": {
+      "win-py311": {
+        "reuse_eligible": true,
+        "receipt_sha256": "326ea6874c77858ed98009423191e51d1911d53fdb8642a8775acc5d9545c19b",
+        "original_counts": {
+          "passed": 6231,
+          "failed": 0,
+          "skipped": 3
+        },
+        "removed_case_count": 16,
+        "unaffected_counts": {
+          "passed": 6215,
+          "failed": 0,
+          "skipped": 3
+        },
+        "fresh_counts": {
+          "passed": 21,
+          "failed": 0,
+          "skipped": 0
+        },
+        "added_case_count": 5,
+        "accepted_composite": {
+          "passed": 6236,
+          "failed": 0,
+          "skipped": 3
+        },
+        "exact_case_identities_verified": true,
+        "skipped_cases": [
+          [
+            "tests/integration/test_gitea_export_owner_recovery.py",
+            "tests.integration.test_gitea_export_owner_recovery",
+            "test_native_export_owner_recovery_fences_dispatch_and_preserves_exact_commit[killed]"
+          ],
+          [
+            "tests/integration/test_gitea_export_owner_recovery.py",
+            "tests.integration.test_gitea_export_owner_recovery",
+            "test_native_export_owner_recovery_fences_dispatch_and_preserves_exact_commit[resumed]"
+          ],
+          [
+            "tests/integration/test_gitea_export_owner_recovery.py",
+            "tests.integration.test_gitea_export_owner_recovery",
+            "test_exact_export_recovery_refuses_changed_remote_history"
+          ]
+        ],
+        "raw_artifacts": {
+          "count": 193,
+          "matching": 193,
+          "differences": []
+        },
+        "installed": {
+          "A01": {
+            "distributions": {
+              "orket": {
+                "version": "0.6.125",
+                "installed_root": "C:\\Users\\jonmc\\.cache\\orket-architectural-truth\\atg08-v0.6.125-win-py311-A01\\venv\\Lib\\site-packages\\orket",
+                "editable": false,
+                "members": 1242,
+                "differences": []
+              },
+              "orket-extension-sdk": {
+                "version": "0.7.0a1",
+                "installed_root": "C:\\Users\\jonmc\\.cache\\orket-architectural-truth\\atg08-v0.6.125-win-py311-A01\\venv\\Lib\\site-packages\\orket_extension_sdk",
+                "editable": false,
+                "members": 31,
+                "differences": []
+              }
+            },
+            "opening_origin_count": 387,
+            "final_origin_count": 1180,
+            "imported_origin_differences": [],
+            "python": "3.11.14 (main, Jan 14 2026, 19:28:21) [MSC v.1944 64 bit (AMD64)]"
+          },
+          "R02": {
+            "distributions": {
+              "orket": {
+                "version": "0.6.136",
+                "installed_root": "C:\\Users\\jonmc\\.cache\\orket-architectural-truth\\atg09-v0.6.136-repair-win-py311-R02\\venv\\Lib\\site-packages\\orket",
+                "editable": false,
+                "members": 1242,
+                "differences": []
+              },
+              "orket-extension-sdk": {
+                "version": "0.7.0a1",
+                "installed_root": "C:\\Users\\jonmc\\.cache\\orket-architectural-truth\\atg09-v0.6.136-repair-win-py311-R02\\venv\\Lib\\site-packages\\orket_extension_sdk",
+                "editable": false,
+                "members": 31,
+                "differences": []
+              }
+            },
+            "opening_origin_count": 387,
+            "final_origin_count": 445,
+            "imported_origin_differences": [],
+            "python": "3.11.14 (main, Jan 14 2026, 19:28:21) [MSC v.1944 64 bit (AMD64)]"
+          }
+        },
+        "harness_relevant_inputs": {
+          "count": 6,
+          "matching": 6,
+          "differences": []
+        },
+        "frozen_interpreter_tooling": {
+          "count": 4,
+          "matching": 4,
+          "differences": []
+        },
+        "manifest_sha256": "ed5feeeed910b5d915c7f8e54daee8094d3ff7e1eb1cd1da92f6242c6147e0b7",
+        "manifest_bound": true,
+        "command_count": 14,
+        "commands_settled": true,
+        "native_signal_controls_settled": true,
+        "recorded_owned_processes_after": [],
+        "elapsed_monotonic_seconds": 134.51599999999598,
+        "timeout_seconds": 600,
+        "clock_monitor_flags": [
+          {
+            "label": "pin-bootstrap",
+            "minimum": -0.0127234,
+            "maximum": 0.0123462
+          },
+          {
+            "label": "install",
+            "minimum": -0.013296,
+            "maximum": 0.0138062
+          },
+          {
+            "label": "pip-check",
+            "minimum": -0.0107656,
+            "maximum": 0.0093467
+          },
+          {
+            "label": "pytest",
+            "minimum": -0.0128076,
+            "maximum": 0.0142649
+          },
+          {
+            "label": "after-head",
+            "minimum": 0.0113027,
+            "maximum": 0.0113027
+          }
+        ],
+        "process_claim": "Retained complete/reaped native windows_job receipts and empty scopes only; no fresh PID probe or PID-reuse claim."
+      },
+      "win-py312": {
+        "reuse_eligible": true,
+        "receipt_sha256": "7f64d5a89e0c728da034d22d19ccbecee8ab98c532505a71b50d9cfc71aba324",
+        "original_counts": {
+          "passed": 6231,
+          "failed": 0,
+          "skipped": 3
+        },
+        "removed_case_count": 16,
+        "unaffected_counts": {
+          "passed": 6215,
+          "failed": 0,
+          "skipped": 3
+        },
+        "fresh_counts": {
+          "passed": 21,
+          "failed": 0,
+          "skipped": 0
+        },
+        "added_case_count": 5,
+        "accepted_composite": {
+          "passed": 6236,
+          "failed": 0,
+          "skipped": 3
+        },
+        "exact_case_identities_verified": true,
+        "skipped_cases": [
+          [
+            "tests/integration/test_gitea_export_owner_recovery.py",
+            "tests.integration.test_gitea_export_owner_recovery",
+            "test_native_export_owner_recovery_fences_dispatch_and_preserves_exact_commit[killed]"
+          ],
+          [
+            "tests/integration/test_gitea_export_owner_recovery.py",
+            "tests.integration.test_gitea_export_owner_recovery",
+            "test_native_export_owner_recovery_fences_dispatch_and_preserves_exact_commit[resumed]"
+          ],
+          [
+            "tests/integration/test_gitea_export_owner_recovery.py",
+            "tests.integration.test_gitea_export_owner_recovery",
+            "test_exact_export_recovery_refuses_changed_remote_history"
+          ]
+        ],
+        "raw_artifacts": {
+          "count": 193,
+          "matching": 193,
+          "differences": []
+        },
+        "installed": {
+          "A01": {
+            "distributions": {
+              "orket": {
+                "version": "0.6.125",
+                "installed_root": "C:\\Users\\jonmc\\.cache\\orket-architectural-truth\\atg08-v0.6.125-win-py312-A01\\venv\\Lib\\site-packages\\orket",
+                "editable": false,
+                "members": 1242,
+                "differences": []
+              },
+              "orket-extension-sdk": {
+                "version": "0.7.0a1",
+                "installed_root": "C:\\Users\\jonmc\\.cache\\orket-architectural-truth\\atg08-v0.6.125-win-py312-A01\\venv\\Lib\\site-packages\\orket_extension_sdk",
+                "editable": false,
+                "members": 31,
+                "differences": []
+              }
+            },
+            "opening_origin_count": 387,
+            "final_origin_count": 1180,
+            "imported_origin_differences": [],
+            "python": "3.12.2 (tags/v3.12.2:6abddd9, Feb  6 2024, 21:26:36) [MSC v.1937 64 bit (AMD64)]"
+          },
+          "R02": {
+            "distributions": {
+              "orket": {
+                "version": "0.6.136",
+                "installed_root": "C:\\Users\\jonmc\\.cache\\orket-architectural-truth\\atg09-v0.6.136-repair-win-py312-R02\\venv\\Lib\\site-packages\\orket",
+                "editable": false,
+                "members": 1242,
+                "differences": []
+              },
+              "orket-extension-sdk": {
+                "version": "0.7.0a1",
+                "installed_root": "C:\\Users\\jonmc\\.cache\\orket-architectural-truth\\atg09-v0.6.136-repair-win-py312-R02\\venv\\Lib\\site-packages\\orket_extension_sdk",
+                "editable": false,
+                "members": 31,
+                "differences": []
+              }
+            },
+            "opening_origin_count": 387,
+            "final_origin_count": 445,
+            "imported_origin_differences": [],
+            "python": "3.12.2 (tags/v3.12.2:6abddd9, Feb  6 2024, 21:26:36) [MSC v.1937 64 bit (AMD64)]"
+          }
+        },
+        "harness_relevant_inputs": {
+          "count": 6,
+          "matching": 6,
+          "differences": []
+        },
+        "frozen_interpreter_tooling": {
+          "count": 4,
+          "matching": 4,
+          "differences": []
+        },
+        "manifest_sha256": "0cfd83cb0cba57a6fc4d8ffce2060ef96e1fa292fb850e492f98ad22c0d72938",
+        "manifest_bound": true,
+        "command_count": 14,
+        "commands_settled": true,
+        "native_signal_controls_settled": true,
+        "recorded_owned_processes_after": [],
+        "elapsed_monotonic_seconds": 132.23500000000058,
+        "timeout_seconds": 600,
+        "clock_monitor_flags": [
+          {
+            "label": "pin-bootstrap",
+            "minimum": -0.0148437,
+            "maximum": 0.0102311
+          },
+          {
+            "label": "install",
+            "minimum": -0.0097593,
+            "maximum": 0.0141483
+          },
+          {
+            "label": "origins-before",
+            "minimum": -0.0154026,
+            "maximum": 0.0081631
+          },
+          {
+            "label": "pytest",
+            "minimum": -0.0144773,
+            "maximum": 0.015372
+          },
+          {
+            "label": "after-head",
+            "minimum": -0.0138967,
+            "maximum": -0.0138967
+          }
+        ],
+        "process_claim": "Retained complete/reaped native windows_job receipts and empty scopes only; no fresh PID probe or PID-reuse claim."
+      }
+    },
+    "fixture_119": {
+      "reuse_eligible": true,
+      "counts": {
+        "passed": 119,
+        "failed": 0,
+        "skipped": 0
+      },
+      "receipt_sha256": "a509c14dfa1b030f0396111674ebd781c2adcda057d82e5dd5ba4af8847730a2",
+      "freeze_sha256": "be37dfdcaa855482632a9bef6bad7429f6bb1d8315fd12f5417970fde2410977",
+      "freeze_bound": true,
+      "artifacts": {
+        "count": 3,
+        "matching": 3,
+        "differences": []
+      },
+      "runtime_test_script_inputs": {
+        "count": 3667,
+        "matching": 3667,
+        "differences": []
+      },
+      "helper_sha256": "cd585215b17bf4913702ac6102875fb00da0dae568dae78c276d6194b975d1c1",
+      "argv": [
+        "C:\\Users\\jonmc\\.cache\\orket-architectural-truth\\atg08-v0.6.125-win-py311-A01\\venv\\Scripts\\python.exe",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/integration/test_session_snapshot_ownership.py",
+        "tests/integration/test_epic_closeout_io_ownership.py",
+        "tests/integration/test_epic_closeout_content_io_ownership.py",
+        "tests/integration/test_epic_closeout_input_capture.py",
+        "tests/integration/test_epic_completion_publication.py",
+        "tests/integration/test_epic_preparation_recovery.py",
+        "tests/integration/test_epic_publication_recovery.py",
+        "tests/integration/test_epic_publication_recovery_process.py",
+        "tests/integration/test_epic_outcome_recovery.py",
+        "tests/runtime/test_protocol_receipt_materializer.py",
+        "tests/runtime/test_run_summary.py",
+        "tests/integration/test_epic_publication_log_ownership.py",
+        "--junitxml=C:\\Users\\jonmc\\AppData\\Local\\Temp\\atg09-fixture-case-v140-windows\\pytest.xml",
+        "--basetemp=C:\\Users\\jonmc\\AppData\\Local\\Temp\\atg09-fixture-case-v140-windows\\pytest-temp",
+        "-o",
+        "junit_family=legacy"
+      ],
+      "lifetime": {
+        "schema_version": "owned_command.v1",
+        "reason": "completed",
+        "cleanup_confirmed": true,
+        "capture_complete": true,
+        "backend": "windows_job",
+        "transport_pid": 8312,
+        "supervisor_pid": 20348,
+        "command_pid": 35344,
+        "diagnostics": []
+      },
+      "owned_scope_absent": true,
+      "limits": "Native Windows source integration selection only; no complete current suite or installed fixture execution claim."
+    },
+    "provider": {
+      "reuse_eligible": true,
+      "observed_path": "primary",
+      "observed_result": "success",
+      "scope": "Public library run_builtin_workload(model_stream_v1), real llama.cpp HTTP SSE; no API transport",
+      "origin_module_count": 434,
+      "origins": {
+        "count": 434,
+        "matching": 434,
+        "differences": []
+      },
+      "raw_artifacts": {
+        "count": 21,
+        "matching": 21,
+        "differences": []
+      },
+      "helpers": {
+        "count": 4,
+        "matching": 4,
+        "differences": []
+      },
+      "python": {
+        "executable": "C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Scripts\\python.exe",
+        "version": "3.11.14 (main, Jan 14 2026, 19:28:21) [MSC v.1944 64 bit (AMD64)]",
+        "sha256": "3dc5ed15d5c7715092b1a0ca3edae596889eb8dadd6ddf5aa51b50899ce71266"
+      },
+      "dependency_versions": {
+        "httpx": {
+          "expected": "0.28.1",
+          "observed": [
+            "0.28.1"
+          ],
+          "metadata_sha256": {
+            "C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Lib\\site-packages\\httpx-0.28.1.dist-info\\METADATA": "febb9b0f8f3e80d57c8199c304f35c4336e8581d1d18d7983c92766b82793b25"
+          }
+        },
+        "pydantic": {
+          "expected": "2.13.5",
+          "observed": [
+            "2.13.5"
+          ],
+          "metadata_sha256": {
+            "C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Lib\\site-packages\\pydantic-2.13.5.dist-info\\METADATA": "0685830d13647bd6f3f05526043d32a8b2a221d86b53773053d6c52bb17a9c07"
+          }
+        },
+        "anyio": {
+          "expected": "4.15.1",
+          "observed": [
+            "4.15.1"
+          ],
+          "metadata_sha256": {
+            "C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Lib\\site-packages\\anyio-4.15.1.dist-info\\METADATA": "043aecb571af7189e8a6c528f5d8e32545f1b2cdfaaf761d51e6d5b67ea3ca81"
+          }
+        }
+      },
+      "logging_frontier_settled": true,
+      "cases": [
+        {
+          "case": "success",
+          "observed_result": "success",
+          "observed_path": "primary",
+          "workload_return": {
+            "post_finalize_wait_ms": 0
+          },
+          "commit_outcome": "ok",
+          "commit_digest": "129f1807a1a72b904f65e620df9868da65357f3fa581fdf94e14c179f03afa8d",
+          "terminal": "turn_final",
+          "native_token_deltas": 14,
+          "nonempty_sse_deltas": 14,
+          "request_count": 1,
+          "cancellation_receipt": null,
+          "caller_cancel_accepted": null,
+          "no_builtin_commit_before_close": null,
+          "cleanup": [
+            {
+              "boundary": "cleanup_before_interaction_close",
+              "settled": true,
+              "iterators": 1,
+              "resources": 6,
+              "owners": 2
+            },
+            {
+              "boundary": "cleanup_after_session_close",
+              "settled": true,
+              "iterators": 1,
+              "resources": 6,
+              "owners": 2
+            },
+            {
+              "boundary": "cleanup_before_commit_publication",
+              "settled": true,
+              "iterators": 1,
+              "resources": 6,
+              "owners": 2
+            }
+          ],
+          "pending_new_tasks": []
+        },
+        {
+          "case": "interaction_cancel",
+          "observed_result": "success",
+          "observed_path": "primary",
+          "workload_return": {
+            "post_finalize_wait_ms": 0,
+            "request_cancel_turn": 1
+          },
+          "commit_outcome": "ok",
+          "commit_digest": "455fdfd3cc6e939f6d16442d712a2672cbf3a268d918b4ba0094660873fde33d",
+          "terminal": "turn_interrupted",
+          "native_token_deltas": 1,
+          "nonempty_sse_deltas": 1,
+          "request_count": 1,
+          "cancellation_receipt": {
+            "status": "cancelled",
+            "turn_id": "88d53118-2f98-468d-bb07-7f0456e1f044"
+          },
+          "caller_cancel_accepted": null,
+          "no_builtin_commit_before_close": null,
+          "cleanup": [
+            {
+              "boundary": "cleanup_before_interaction_close",
+              "settled": true,
+              "iterators": 1,
+              "resources": 6,
+              "owners": 2
+            },
+            {
+              "boundary": "cleanup_after_session_close",
+              "settled": true,
+              "iterators": 1,
+              "resources": 6,
+              "owners": 2
+            },
+            {
+              "boundary": "cleanup_before_commit_publication",
+              "settled": true,
+              "iterators": 1,
+              "resources": 6,
+              "owners": 2
+            }
+          ],
+          "pending_new_tasks": []
+        },
+        {
+          "case": "caller_cancel",
+          "observed_result": "success",
+          "observed_path": "primary",
+          "workload_return": "CancelledError",
+          "commit_outcome": "fail_closed",
+          "commit_digest": "fbd470cb1d749cfd5f65411d8e16b6619a915b8734b51bf8afbc831f9118bdb5",
+          "terminal": "turn_interrupted",
+          "native_token_deltas": 1,
+          "nonempty_sse_deltas": 1,
+          "request_count": 1,
+          "cancellation_receipt": null,
+          "caller_cancel_accepted": true,
+          "no_builtin_commit_before_close": true,
+          "cleanup": [
+            {
+              "boundary": "cleanup_before_interaction_close",
+              "settled": true,
+              "iterators": 1,
+              "resources": 6,
+              "owners": 2
+            },
+            {
+              "boundary": "cleanup_after_session_close",
+              "settled": true,
+              "iterators": 1,
+              "resources": 6,
+              "owners": 2
+            },
+            {
+              "boundary": "cleanup_before_commit_publication",
+              "settled": true,
+              "iterators": 1,
+              "resources": 6,
+              "owners": 2
+            }
+          ],
+          "pending_new_tasks": []
+        }
+      ],
+      "child_reaped": true,
+      "selected_provider": "llama_cpp",
+      "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+      "endpoint": "http://127.0.0.1:8080/v1",
+      "borrowed_server": {
+        "pid": 33276,
+        "build": "b11146",
+        "ownership": "borrowed_kept_running",
+        "observation_owner": "primary prerequisite receipt"
+      },
+      "limits": [
+        "Source public-library completion and two cancellation paths only; observations delegate to original native methods.",
+        "No API transport, optional WatchFiles or installed-provider execution was established.",
+        "No new inference, server health, remote inference teardown or operator-owned server teardown is claimed.",
+        "Third-party dependency versions match retained inputs; a complete third-party byte inventory was not frozen."
+      ]
+    },
+    "missing_current_required_evidence": [
+      "Current native Windows complete quality/coverage after reload repair remains primary-owned; no result is inferred from the installed/fixture/provider receipts.",
+      "ATG-09 and dependent ATG-10 publication/closeout are outside this audit."
+    ],
+    "limits": [
+      "Composite counts combine unchanged A01 rows with exact R02 replacements/additions; this is not a newly executed full installed campaign.",
+      "Every individual unit/contract/integration/end-to-end test keeps its own proof limit.",
+      "Native process cleanup is retained receipt evidence; no fresh PID absence probe is made.",
+      "Windows raw wall-minus-monotonic flags remain as recorded timer resolution/pair-skew observations; no host clock correction or new criterion is inferred.",
+      "Linux/WSL/hosted acceptance and infrastructure are excluded by the user amendment and were not accessed."
+    ],
+    "issues": [],
+    "files_written": [
+      ".tmp/atg09-windows-resume-evidence-audit.json"
+    ]
+  },
+  "independent_source_audit": {
+    "schema": "atg09.windows_quality_audit.v1",
+    "observed_at_utc": "2026-10-03T23:26:51.740867+00:00",
+    "worktree": "C:\\Source\\Orket-architectural-truth",
+    "head": "a6b99e575682d9b721983381e75f80402c8018d2",
+    "base_commit": "a6b99e575682d9b721983381e75f80402c8018d2",
+    "dirty_status": [
+      " M docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md"
+    ],
+    "observed_path": "primary",
+    "observed_result": "success",
+    "proof": "Independent structural/hash and native process readback of one completed live Windows full-suite run; no rerun.",
+    "quality_receipt_sha256": "68a623bda40c54ebe27bc99bb4c7b2dc45a2428cc657a6728d4c2b90a3070216",
+    "prior_campaign_receipt_sha256": "4bb8dca28f2f7dfcd77b768650ba5a9613c8f51411f1ab10c97d503bddf2da55",
+    "artifact_hashes": [
+      {
+        "path": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg09-windows-quality\\A01\\pytest.log",
+        "bytes": 1981797,
+        "expected_sha256": "e39288a6b4dbbc93b7c9eb5c7cd10400f4686955e7b29d10c17d964cf402155f",
+        "actual_sha256": "e39288a6b4dbbc93b7c9eb5c7cd10400f4686955e7b29d10c17d964cf402155f"
+      },
+      {
+        "path": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg09-windows-quality\\A01\\pytest.xml",
+        "bytes": 6489046,
+        "expected_sha256": "332c78e3a3d42d78028eb56d605748d607b0ead77b3977f8f5446db727d28564",
+        "actual_sha256": "332c78e3a3d42d78028eb56d605748d607b0ead77b3977f8f5446db727d28564"
+      },
+      {
+        "path": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg09-windows-quality\\A01\\coverage.json",
+        "bytes": 8989940,
+        "expected_sha256": "e76a9e3f438fa52ff5c2b8403d2f525a0452e79f18fc46ae485eb46eb3b7dd5d",
+        "actual_sha256": "e76a9e3f438fa52ff5c2b8403d2f525a0452e79f18fc46ae485eb46eb3b7dd5d"
+      }
+    ],
+    "prior_artifact_hashes": [
+      {
+        "path": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg07-complete-runs\\R07-worker-candidate\\pytest.log",
+        "expected_sha256": "02d26afa69a2bdc9604b332a649a6fe2c90b0857c44a24a28f3c843c99a9a87c",
+        "actual_sha256": "02d26afa69a2bdc9604b332a649a6fe2c90b0857c44a24a28f3c843c99a9a87c"
+      },
+      {
+        "path": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg07-complete-runs\\R07-worker-candidate\\pytest.xml",
+        "expected_sha256": "ce6d7bdc1930dc512e48cbd5ccec418401ee7da358be8695f078f64185fa92e0",
+        "actual_sha256": "ce6d7bdc1930dc512e48cbd5ccec418401ee7da358be8695f078f64185fa92e0"
+      },
+      {
+        "path": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg07-complete-runs\\R07-worker-candidate\\coverage.json",
+        "expected_sha256": "53943f0598d9cd663c0cbbadb4aa236e6c2baf342267ce7998508613d85d690b",
+        "actual_sha256": "53943f0598d9cd663c0cbbadb4aa236e6c2baf342267ce7998508613d85d690b"
+      }
+    ],
+    "counts": {
+      "passed": 12987,
+      "failed": 0,
+      "skipped": 93
+    },
+    "identities": {
+      "collected_count": 13080,
+      "xml_count": 13080,
+      "log_result_count": 13080,
+      "duplicates": [],
+      "log_duplicates": [],
+      "missing": [],
+      "extra": [],
+      "outcome_mismatches": [],
+      "added_since_R07": [
+        "tests/integration/test_api_reload_signal_reentry.py::test_reload_signal_handler_returns_while_event_condition_is_owned[free-parent]",
+        "tests/integration/test_api_reload_signal_reentry.py::test_reload_signal_handler_returns_while_event_condition_is_owned[free-worker]",
+        "tests/integration/test_api_reload_signal_reentry.py::test_reload_signal_handler_returns_while_event_condition_is_owned[held-parent]",
+        "tests/integration/test_api_reload_signal_reentry.py::test_reload_signal_handler_returns_while_event_condition_is_owned[held-worker]",
+        "tests/scripts/test_check_install_surface_convergence.py::test_check_install_surface_convergence_refuses_core_only_install[.gitea/workflows/quality.yml]",
+        "tests/scripts/test_check_install_surface_convergence.py::test_check_install_surface_convergence_refuses_core_only_install[README.md]",
+        "tests/scripts/test_check_install_surface_convergence.py::test_check_install_surface_convergence_refuses_core_only_install[requirements.txt]",
+        "tests/scripts/test_record_quality_gate.py::test_actual_zero_exit_retains_logs_and_native_settlement",
+        "tests/scripts/test_record_quality_gate.py::test_cli_refuses_noncanonical_command_before_launch",
+        "tests/scripts/test_record_quality_gate.py::test_missing_current_proof_keeps_every_gate_red",
+        "tests/scripts/test_record_quality_gate.py::test_nonzero_second_child_cannot_make_group_green",
+        "tests/scripts/test_record_quality_gate.py::test_provider_gate_requires_both_existing_commands",
+        "tests/scripts/test_record_quality_gate.py::test_recorder_publishes_actual_exit_and_replaces_prior_green[0]",
+        "tests/scripts/test_record_quality_gate.py::test_recorder_publishes_actual_exit_and_replaces_prior_green[37]",
+        "tests/scripts/test_record_quality_gate.py::test_rejects_missing_stale_or_corrupt_evidence[command]",
+        "tests/scripts/test_record_quality_gate.py::test_rejects_missing_stale_or_corrupt_evidence[failed]",
+        "tests/scripts/test_record_quality_gate.py::test_rejects_missing_stale_or_corrupt_evidence[incomplete]",
+        "tests/scripts/test_record_quality_gate.py::test_rejects_missing_stale_or_corrupt_evidence[log]",
+        "tests/scripts/test_record_quality_gate.py::test_rejects_missing_stale_or_corrupt_evidence[missing]",
+        "tests/scripts/test_record_quality_gate.py::test_rejects_missing_stale_or_corrupt_evidence[run]",
+        "tests/scripts/test_record_quality_gate.py::test_rejects_missing_stale_or_corrupt_evidence[source]",
+        "tests/scripts/test_record_quality_gate.py::test_source_binding_includes_new_untracked_inputs",
+        "tests/scripts/test_record_quality_gate.py::test_timeout_cannot_pass_even_if_caller_labels_result_pass"
+      ],
+      "removed_since_R07": [],
+      "log_parser_limit": "Result prefix matching preserves final result immediately followed by the raw coverage warning; parameter-value escapes remain unchanged."
+    },
+    "skips": {
+      "prior_count": 93,
+      "current_count": 93,
+      "added": [],
+      "removed": [],
+      "reason_changes": [],
+      "location_line_changes": [],
+      "exact_reasons_match": true,
+      "retained": [
+        {
+          "node_id": "tests/acceptance/test_sandbox_cleanup_leak_gate.py::test_live_cleanup_leak_gate_leaves_no_new_sandbox_resources",
+          "file": "tests/acceptance/test_sandbox_cleanup_leak_gate.py",
+          "classname": "tests.acceptance.test_sandbox_cleanup_leak_gate",
+          "name": "test_live_cleanup_leak_gate_leaves_no_new_sandbox_resources",
+          "line": "36",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Set ORKET_RUN_SANDBOX_ACCEPTANCE=1 to run live sandbox acceptance tests."
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\acceptance\\test_sandbox_cleanup_leak_gate.py:37: Set ORKET_RUN_SANDBOX_ACCEPTANCE=1 to run live sandbox acceptance tests."
+            }
+          ]
+        },
+        {
+          "node_id": "tests/acceptance/test_sandbox_orchestrator_live_docker.py::test_live_cleanup_rejects_host_context_mismatch",
+          "file": "tests/acceptance/test_sandbox_orchestrator_live_docker.py",
+          "classname": "tests.acceptance.test_sandbox_orchestrator_live_docker",
+          "name": "test_live_cleanup_rejects_host_context_mismatch",
+          "line": "223",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Set ORKET_RUN_SANDBOX_ACCEPTANCE=1 to run live sandbox acceptance tests."
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\acceptance\\test_sandbox_orchestrator_live_docker.py:224: Set ORKET_RUN_SANDBOX_ACCEPTANCE=1 to run live sandbox acceptance tests."
+            }
+          ]
+        },
+        {
+          "node_id": "tests/acceptance/test_sandbox_orchestrator_live_docker.py::test_live_create_health_and_cleanup_flow",
+          "file": "tests/acceptance/test_sandbox_orchestrator_live_docker.py",
+          "classname": "tests.acceptance.test_sandbox_orchestrator_live_docker",
+          "name": "test_live_create_health_and_cleanup_flow",
+          "line": "82",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Set ORKET_RUN_SANDBOX_ACCEPTANCE=1 to run live sandbox acceptance tests."
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\acceptance\\test_sandbox_orchestrator_live_docker.py:83: Set ORKET_RUN_SANDBOX_ACCEPTANCE=1 to run live sandbox acceptance tests."
+            }
+          ]
+        },
+        {
+          "node_id": "tests/acceptance/test_sandbox_orphan_reconciliation_live_docker.py::test_live_orphan_discovery_classifies_verified_and_unverified_projects",
+          "file": "tests/acceptance/test_sandbox_orphan_reconciliation_live_docker.py",
+          "classname": "tests.acceptance.test_sandbox_orphan_reconciliation_live_docker",
+          "name": "test_live_orphan_discovery_classifies_verified_and_unverified_projects",
+          "line": "70",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Set ORKET_RUN_SANDBOX_ACCEPTANCE=1 to run live sandbox acceptance tests."
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\acceptance\\test_sandbox_orphan_reconciliation_live_docker.py:71: Set ORKET_RUN_SANDBOX_ACCEPTANCE=1 to run live sandbox acceptance tests."
+            }
+          ]
+        },
+        {
+          "node_id": "tests/acceptance/test_sandbox_orphan_reconciliation_live_docker.py::test_live_verified_orphan_is_cleaned_by_fallback_sweeper_without_compose_path",
+          "file": "tests/acceptance/test_sandbox_orphan_reconciliation_live_docker.py",
+          "classname": "tests.acceptance.test_sandbox_orphan_reconciliation_live_docker",
+          "name": "test_live_verified_orphan_is_cleaned_by_fallback_sweeper_without_compose_path",
+          "line": "127",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Set ORKET_RUN_SANDBOX_ACCEPTANCE=1 to run live sandbox acceptance tests."
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\acceptance\\test_sandbox_orphan_reconciliation_live_docker.py:128: Set ORKET_RUN_SANDBOX_ACCEPTANCE=1 to run live sandbox acceptance tests."
+            }
+          ]
+        },
+        {
+          "node_id": "tests/acceptance/test_sandbox_restart_reclaim_live_docker.py::test_live_reclaimable_sandbox_can_be_reacquired_and_stale_owner_cannot_renew",
+          "file": "tests/acceptance/test_sandbox_restart_reclaim_live_docker.py",
+          "classname": "tests.acceptance.test_sandbox_restart_reclaim_live_docker",
+          "name": "test_live_reclaimable_sandbox_can_be_reacquired_and_stale_owner_cannot_renew",
+          "line": "164",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Set ORKET_RUN_SANDBOX_ACCEPTANCE=1 to run live sandbox acceptance tests."
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\acceptance\\test_sandbox_restart_reclaim_live_docker.py:165: Set ORKET_RUN_SANDBOX_ACCEPTANCE=1 to run live sandbox acceptance tests."
+            }
+          ]
+        },
+        {
+          "node_id": "tests/acceptance/test_sandbox_restart_reclaim_live_docker.py::test_live_unhealthy_policy_terminalizes_restart_loop_and_projects_diagnostics",
+          "file": "tests/acceptance/test_sandbox_restart_reclaim_live_docker.py",
+          "classname": "tests.acceptance.test_sandbox_restart_reclaim_live_docker",
+          "name": "test_live_unhealthy_policy_terminalizes_restart_loop_and_projects_diagnostics",
+          "line": "116",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Set ORKET_RUN_SANDBOX_ACCEPTANCE=1 to run live sandbox acceptance tests."
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\acceptance\\test_sandbox_restart_reclaim_live_docker.py:117: Set ORKET_RUN_SANDBOX_ACCEPTANCE=1 to run live sandbox acceptance tests."
+            }
+          ]
+        },
+        {
+          "node_id": "tests/acceptance/test_sandbox_runtime_recovery_live_docker.py::test_live_cleanup_sweeper_cleans_due_terminal_sandbox",
+          "file": "tests/acceptance/test_sandbox_runtime_recovery_live_docker.py",
+          "classname": "tests.acceptance.test_sandbox_runtime_recovery_live_docker",
+          "name": "test_live_cleanup_sweeper_cleans_due_terminal_sandbox",
+          "line": "154",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Set ORKET_RUN_SANDBOX_ACCEPTANCE=1 to run live sandbox acceptance tests."
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\acceptance\\test_sandbox_runtime_recovery_live_docker.py:155: Set ORKET_RUN_SANDBOX_ACCEPTANCE=1 to run live sandbox acceptance tests."
+            }
+          ]
+        },
+        {
+          "node_id": "tests/acceptance/test_sandbox_runtime_recovery_live_docker.py::test_live_reconciliation_recovers_after_crash_between_delete_and_verify",
+          "file": "tests/acceptance/test_sandbox_runtime_recovery_live_docker.py",
+          "classname": "tests.acceptance.test_sandbox_runtime_recovery_live_docker",
+          "name": "test_live_reconciliation_recovers_after_crash_between_delete_and_verify",
+          "line": "215",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Set ORKET_RUN_SANDBOX_ACCEPTANCE=1 to run live sandbox acceptance tests."
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\acceptance\\test_sandbox_runtime_recovery_live_docker.py:216: Set ORKET_RUN_SANDBOX_ACCEPTANCE=1 to run live sandbox acceptance tests."
+            }
+          ]
+        },
+        {
+          "node_id": "tests/acceptance/test_sandbox_runtime_recovery_live_docker.py::test_live_unknown_outcome_reconciliation_recovers_to_active",
+          "file": "tests/acceptance/test_sandbox_runtime_recovery_live_docker.py",
+          "classname": "tests.acceptance.test_sandbox_runtime_recovery_live_docker",
+          "name": "test_live_unknown_outcome_reconciliation_recovers_to_active",
+          "line": "95",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Set ORKET_RUN_SANDBOX_ACCEPTANCE=1 to run live sandbox acceptance tests."
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\acceptance\\test_sandbox_runtime_recovery_live_docker.py:96: Set ORKET_RUN_SANDBOX_ACCEPTANCE=1 to run live sandbox acceptance tests."
+            }
+          ]
+        },
+        {
+          "node_id": "tests/acceptance/test_sandbox_terminal_evidence_cleanup_live_docker.py::test_live_terminal_evidence_export_and_sweeper_cleanup",
+          "file": "tests/acceptance/test_sandbox_terminal_evidence_cleanup_live_docker.py",
+          "classname": "tests.acceptance.test_sandbox_terminal_evidence_cleanup_live_docker",
+          "name": "test_live_terminal_evidence_export_and_sweeper_cleanup",
+          "line": "28",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Set ORKET_RUN_SANDBOX_ACCEPTANCE=1 to run live sandbox acceptance tests."
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\acceptance\\test_sandbox_terminal_evidence_cleanup_live_docker.py:29: Set ORKET_RUN_SANDBOX_ACCEPTANCE=1 to run live sandbox acceptance tests."
+            }
+          ]
+        },
+        {
+          "node_id": "tests/e2e/test_governed_agent_effect_ollama.py::test_live_effect_resolution_survives_restart_and_replay[approved]",
+          "file": "tests/e2e/test_governed_agent_effect_ollama.py",
+          "classname": "tests.e2e.test_governed_agent_effect_ollama",
+          "name": "test_live_effect_resolution_survives_restart_and_replay[approved]",
+          "line": "25",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "set ORKET_RUN_LIVE_AGENT_OLLAMA=1 for live Ollama proof"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\e2e\\test_governed_agent_effect_ollama.py:26: set ORKET_RUN_LIVE_AGENT_OLLAMA=1 for live Ollama proof"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/e2e/test_governed_agent_effect_ollama.py::test_live_effect_resolution_survives_restart_and_replay[denied]",
+          "file": "tests/e2e/test_governed_agent_effect_ollama.py",
+          "classname": "tests.e2e.test_governed_agent_effect_ollama",
+          "name": "test_live_effect_resolution_survives_restart_and_replay[denied]",
+          "line": "25",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "set ORKET_RUN_LIVE_AGENT_OLLAMA=1 for live Ollama proof"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\e2e\\test_governed_agent_effect_ollama.py:26: set ORKET_RUN_LIVE_AGENT_OLLAMA=1 for live Ollama proof"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/e2e/test_governed_agent_llama_cpp.py::test_live_llama_cpp_api_wake_memory_and_replay",
+          "file": "tests/e2e/test_governed_agent_llama_cpp.py",
+          "classname": "tests.e2e.test_governed_agent_llama_cpp",
+          "name": "test_live_llama_cpp_api_wake_memory_and_replay",
+          "line": "46",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "requires live llama.cpp"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\e2e\\test_governed_agent_llama_cpp.py:47: requires live llama.cpp"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/e2e/test_governed_agent_llama_cpp.py::test_live_llama_cpp_cli_continuation[all-open]",
+          "file": "tests/e2e/test_governed_agent_llama_cpp.py",
+          "classname": "tests.e2e.test_governed_agent_llama_cpp",
+          "name": "test_live_llama_cpp_cli_continuation[all-open]",
+          "line": "32",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "requires live llama.cpp"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\e2e\\test_governed_agent_llama_cpp.py:33: requires live llama.cpp"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/e2e/test_governed_agent_llama_cpp.py::test_live_llama_cpp_cli_continuation[empty-first]",
+          "file": "tests/e2e/test_governed_agent_llama_cpp.py",
+          "classname": "tests.e2e.test_governed_agent_llama_cpp",
+          "name": "test_live_llama_cpp_cli_continuation[empty-first]",
+          "line": "32",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "requires live llama.cpp"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\e2e\\test_governed_agent_llama_cpp.py:33: requires live llama.cpp"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/e2e/test_governed_agent_llama_cpp.py::test_live_llama_cpp_cli_continuation[mixed]",
+          "file": "tests/e2e/test_governed_agent_llama_cpp.py",
+          "classname": "tests.e2e.test_governed_agent_llama_cpp",
+          "name": "test_live_llama_cpp_cli_continuation[mixed]",
+          "line": "32",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "requires live llama.cpp"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\e2e\\test_governed_agent_llama_cpp.py:33: requires live llama.cpp"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/e2e/test_governed_agent_llama_cpp.py::test_live_llama_cpp_effect_restart[approved]",
+          "file": "tests/e2e/test_governed_agent_llama_cpp.py",
+          "classname": "tests.e2e.test_governed_agent_llama_cpp",
+          "name": "test_live_llama_cpp_effect_restart[approved]",
+          "line": "75",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "requires live llama.cpp"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\e2e\\test_governed_agent_llama_cpp.py:76: requires live llama.cpp"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/e2e/test_governed_agent_llama_cpp.py::test_live_llama_cpp_effect_restart[denied]",
+          "file": "tests/e2e/test_governed_agent_llama_cpp.py",
+          "classname": "tests.e2e.test_governed_agent_llama_cpp",
+          "name": "test_live_llama_cpp_effect_restart[denied]",
+          "line": "75",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "requires live llama.cpp"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\e2e\\test_governed_agent_llama_cpp.py:76: requires live llama.cpp"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/e2e/test_governed_agent_ollama.py::test_live_multi_model_preserves_distinct_role_identity[all-open]",
+          "file": "tests/e2e/test_governed_agent_ollama.py",
+          "classname": "tests.e2e.test_governed_agent_ollama",
+          "name": "test_live_multi_model_preserves_distinct_role_identity[all-open]",
+          "line": "43",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "set ORKET_RUN_LIVE_AGENT_OLLAMA=1 for live Ollama proof"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\e2e\\test_governed_agent_ollama.py:44: set ORKET_RUN_LIVE_AGENT_OLLAMA=1 for live Ollama proof"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/e2e/test_governed_agent_ollama.py::test_live_multi_model_preserves_distinct_role_identity[empty-first]",
+          "file": "tests/e2e/test_governed_agent_ollama.py",
+          "classname": "tests.e2e.test_governed_agent_ollama",
+          "name": "test_live_multi_model_preserves_distinct_role_identity[empty-first]",
+          "line": "43",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "set ORKET_RUN_LIVE_AGENT_OLLAMA=1 for live Ollama proof"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\e2e\\test_governed_agent_ollama.py:44: set ORKET_RUN_LIVE_AGENT_OLLAMA=1 for live Ollama proof"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/e2e/test_governed_agent_ollama.py::test_live_multi_model_preserves_distinct_role_identity[mixed]",
+          "file": "tests/e2e/test_governed_agent_ollama.py",
+          "classname": "tests.e2e.test_governed_agent_ollama",
+          "name": "test_live_multi_model_preserves_distinct_role_identity[mixed]",
+          "line": "43",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "set ORKET_RUN_LIVE_AGENT_OLLAMA=1 for live Ollama proof"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\e2e\\test_governed_agent_ollama.py:44: set ORKET_RUN_LIVE_AGENT_OLLAMA=1 for live Ollama proof"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/e2e/test_governed_agent_ollama.py::test_live_single_model_reaches_verified_terminal_truth[all-open]",
+          "file": "tests/e2e/test_governed_agent_ollama.py",
+          "classname": "tests.e2e.test_governed_agent_ollama",
+          "name": "test_live_single_model_reaches_verified_terminal_truth[all-open]",
+          "line": "25",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "set ORKET_RUN_LIVE_AGENT_OLLAMA=1 for live Ollama proof"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\e2e\\test_governed_agent_ollama.py:26: set ORKET_RUN_LIVE_AGENT_OLLAMA=1 for live Ollama proof"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/e2e/test_governed_agent_ollama.py::test_live_single_model_reaches_verified_terminal_truth[empty-first]",
+          "file": "tests/e2e/test_governed_agent_ollama.py",
+          "classname": "tests.e2e.test_governed_agent_ollama",
+          "name": "test_live_single_model_reaches_verified_terminal_truth[empty-first]",
+          "line": "25",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "set ORKET_RUN_LIVE_AGENT_OLLAMA=1 for live Ollama proof"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\e2e\\test_governed_agent_ollama.py:26: set ORKET_RUN_LIVE_AGENT_OLLAMA=1 for live Ollama proof"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/e2e/test_governed_agent_ollama.py::test_live_single_model_reaches_verified_terminal_truth[mixed]",
+          "file": "tests/e2e/test_governed_agent_ollama.py",
+          "classname": "tests.e2e.test_governed_agent_ollama",
+          "name": "test_live_single_model_reaches_verified_terminal_truth[mixed]",
+          "line": "25",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "set ORKET_RUN_LIVE_AGENT_OLLAMA=1 for live Ollama proof"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\e2e\\test_governed_agent_ollama.py:26: set ORKET_RUN_LIVE_AGENT_OLLAMA=1 for live Ollama proof"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/e2e/test_governed_agent_process_recovery.py::test_abrupt_api_exit_recovers_without_repeating_write[after_write]",
+          "file": "tests/e2e/test_governed_agent_process_recovery.py",
+          "classname": "tests.e2e.test_governed_agent_process_recovery",
+          "name": "test_abrupt_api_exit_recovers_without_repeating_write[after_write]",
+          "line": "16",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "requires live local provider"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\e2e\\test_governed_agent_process_recovery.py:17: requires live local provider"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/e2e/test_governed_agent_process_recovery.py::test_abrupt_api_exit_recovers_without_repeating_write[before_write]",
+          "file": "tests/e2e/test_governed_agent_process_recovery.py",
+          "classname": "tests.e2e.test_governed_agent_process_recovery",
+          "name": "test_abrupt_api_exit_recovers_without_repeating_write[before_write]",
+          "line": "16",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "requires live local provider"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\e2e\\test_governed_agent_process_recovery.py:17: requires live local provider"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/e2e/test_governed_agent_supervisor_ollama.py::test_live_multi_model_wake_reaches_truth_through_api_supervisor",
+          "file": "tests/e2e/test_governed_agent_supervisor_ollama.py",
+          "classname": "tests.e2e.test_governed_agent_supervisor_ollama",
+          "name": "test_live_multi_model_wake_reaches_truth_through_api_supervisor",
+          "line": "27",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "set ORKET_RUN_LIVE_AGENT_OLLAMA=1 for live Ollama proof"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\e2e\\test_governed_agent_supervisor_ollama.py:28: set ORKET_RUN_LIVE_AGENT_OLLAMA=1 for live Ollama proof"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/end_to_end/proof/test_trusted_terraform_disposable_aws_live_smoke.py::test_live_aws_setup_and_cleanup_require_explicit_opt_in",
+          "file": "tests/end_to_end/proof/test_trusted_terraform_disposable_aws_live_smoke.py",
+          "classname": "tests.end_to_end.proof.test_trusted_terraform_disposable_aws_live_smoke",
+          "name": "test_live_aws_setup_and_cleanup_require_explicit_opt_in",
+          "line": "14",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "live AWS smoke requires ORKET_ENABLE_LIVE_AWS_SMOKE_TESTS=1"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\end_to_end\\proof\\test_trusted_terraform_disposable_aws_live_smoke.py:15: live AWS smoke requires ORKET_ENABLE_LIVE_AWS_SMOKE_TESTS=1"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/integration/test_gitea_epic_export_recovery.py::test_committed_gitea_export_recovers_without_another_push",
+          "file": "tests/integration/test_gitea_epic_export_recovery.py",
+          "classname": "tests.integration.test_gitea_epic_export_recovery",
+          "name": "test_committed_gitea_export_recovers_without_another_push",
+          "line": "21",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Explicit owned localhost Gitea acceptance required"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\integration\\test_gitea_epic_export_recovery.py:22: Explicit owned localhost Gitea acceptance required"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/integration/test_gitea_epic_export_recovery.py::test_native_gitea_restart_confirms_effect_or_preserves_uncertainty[gitea_export]",
+          "file": "tests/integration/test_gitea_epic_export_recovery.py",
+          "classname": "tests.integration.test_gitea_epic_export_recovery",
+          "name": "test_native_gitea_restart_confirms_effect_or_preserves_uncertainty[gitea_export]",
+          "line": "66",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Explicit owned localhost Gitea acceptance required"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\integration\\test_gitea_epic_export_recovery.py:67: Explicit owned localhost Gitea acceptance required"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/integration/test_gitea_epic_export_recovery.py::test_native_gitea_restart_confirms_effect_or_preserves_uncertainty[gitea_intent]",
+          "file": "tests/integration/test_gitea_epic_export_recovery.py",
+          "classname": "tests.integration.test_gitea_epic_export_recovery",
+          "name": "test_native_gitea_restart_confirms_effect_or_preserves_uncertainty[gitea_intent]",
+          "line": "66",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Explicit owned localhost Gitea acceptance required"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\integration\\test_gitea_epic_export_recovery.py:67: Explicit owned localhost Gitea acceptance required"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/integration/test_gitea_epic_export_recovery.py::test_retained_export_commit_binds_payload_and_rejects_substitution",
+          "file": "tests/integration/test_gitea_epic_export_recovery.py",
+          "classname": "tests.integration.test_gitea_epic_export_recovery",
+          "name": "test_retained_export_commit_binds_payload_and_rejects_substitution",
+          "line": "104",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Explicit owned localhost Gitea acceptance required"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\integration\\test_gitea_epic_export_recovery.py:105: Explicit owned localhost Gitea acceptance required"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/integration/test_gitea_export_owner_recovery.py::test_exact_export_recovery_refuses_changed_remote_history",
+          "file": "tests/integration/test_gitea_export_owner_recovery.py",
+          "classname": "tests.integration.test_gitea_export_owner_recovery",
+          "name": "test_exact_export_recovery_refuses_changed_remote_history",
+          "line": "79",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Explicit owned localhost Gitea acceptance required"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\integration\\test_gitea_export_owner_recovery.py:80: Explicit owned localhost Gitea acceptance required"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/integration/test_gitea_export_owner_recovery.py::test_native_export_owner_recovery_fences_dispatch_and_preserves_exact_commit[killed]",
+          "file": "tests/integration/test_gitea_export_owner_recovery.py",
+          "classname": "tests.integration.test_gitea_export_owner_recovery",
+          "name": "test_native_export_owner_recovery_fences_dispatch_and_preserves_exact_commit[killed]",
+          "line": "20",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Explicit owned localhost Gitea acceptance required"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\integration\\test_gitea_export_owner_recovery.py:21: Explicit owned localhost Gitea acceptance required"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/integration/test_gitea_export_owner_recovery.py::test_native_export_owner_recovery_fences_dispatch_and_preserves_exact_commit[resumed]",
+          "file": "tests/integration/test_gitea_export_owner_recovery.py",
+          "classname": "tests.integration.test_gitea_export_owner_recovery",
+          "name": "test_native_export_owner_recovery_fences_dispatch_and_preserves_exact_commit[resumed]",
+          "line": "20",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Explicit owned localhost Gitea acceptance required"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\integration\\test_gitea_export_owner_recovery.py:21: Explicit owned localhost Gitea acceptance required"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/integration/test_gitea_loop_live.py::test_public_pipeline_loop_actual_gitea_and_card_publication[success]",
+          "file": "tests/integration/test_gitea_loop_live.py",
+          "classname": "tests.integration.test_gitea_loop_live",
+          "name": "test_public_pipeline_loop_actual_gitea_and_card_publication[success]",
+          "line": "24",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Explicit owned localhost Gitea acceptance required"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\integration\\test_gitea_loop_live.py:25: Explicit owned localhost Gitea acceptance required"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/integration/test_gitea_loop_live.py::test_public_pipeline_loop_actual_gitea_and_card_publication[unresolved-work]",
+          "file": "tests/integration/test_gitea_loop_live.py",
+          "classname": "tests.integration.test_gitea_loop_live",
+          "name": "test_public_pipeline_loop_actual_gitea_and_card_publication[unresolved-work]",
+          "line": "24",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Explicit owned localhost Gitea acceptance required"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\integration\\test_gitea_loop_live.py:25: Explicit owned localhost Gitea acceptance required"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/integration/test_gitea_terminal_live.py::test_actual_gitea_closeout_matches_local_terminal_authority[lease-expiry]",
+          "file": "tests/integration/test_gitea_terminal_live.py",
+          "classname": "tests.integration.test_gitea_terminal_live",
+          "name": "test_actual_gitea_closeout_matches_local_terminal_authority[lease-expiry]",
+          "line": "54",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Explicit owned localhost Gitea acceptance required"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\integration\\test_gitea_terminal_live.py:55: Explicit owned localhost Gitea acceptance required"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/integration/test_gitea_terminal_live.py::test_actual_gitea_closeout_matches_local_terminal_authority[local-write-failure]",
+          "file": "tests/integration/test_gitea_terminal_live.py",
+          "classname": "tests.integration.test_gitea_terminal_live",
+          "name": "test_actual_gitea_closeout_matches_local_terminal_authority[local-write-failure]",
+          "line": "54",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Explicit owned localhost Gitea acceptance required"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\integration\\test_gitea_terminal_live.py:55: Explicit owned localhost Gitea acceptance required"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/integration/test_gitea_terminal_live.py::test_actual_gitea_closeout_matches_local_terminal_authority[success]",
+          "file": "tests/integration/test_gitea_terminal_live.py",
+          "classname": "tests.integration.test_gitea_terminal_live",
+          "name": "test_actual_gitea_closeout_matches_local_terminal_authority[success]",
+          "line": "54",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Explicit owned localhost Gitea acceptance required"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\integration\\test_gitea_terminal_live.py:55: Explicit owned localhost Gitea acceptance required"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/integration/test_gitea_terminal_live.py::test_actual_gitea_closeout_matches_local_terminal_authority[work-failure]",
+          "file": "tests/integration/test_gitea_terminal_live.py",
+          "classname": "tests.integration.test_gitea_terminal_live",
+          "name": "test_actual_gitea_closeout_matches_local_terminal_authority[work-failure]",
+          "line": "54",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Explicit owned localhost Gitea acceptance required"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\integration\\test_gitea_terminal_live.py:55: Explicit owned localhost Gitea acceptance required"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/integration/test_webhook_gitea_live.py::test_native_gitea_signature_delivery_and_teardown",
+          "file": "tests/integration/test_webhook_gitea_live.py",
+          "classname": "tests.integration.test_webhook_gitea_live",
+          "name": "test_native_gitea_signature_delivery_and_teardown",
+          "line": "28",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Explicit disposable localhost Gitea acceptance required"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\integration\\test_webhook_gitea_live.py:29: Explicit disposable localhost Gitea acceptance required"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/integration/test_webhook_gitea_live.py::test_native_review_reaches_policy_once[APPROVED-success]",
+          "file": "tests/integration/test_webhook_gitea_live.py",
+          "classname": "tests.integration.test_webhook_gitea_live",
+          "name": "test_native_review_reaches_policy_once[APPROVED-success]",
+          "line": "160",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Explicit disposable localhost Gitea acceptance required"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\integration\\test_webhook_gitea_live.py:161: Explicit disposable localhost Gitea acceptance required"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/integration/test_webhook_gitea_live.py::test_native_review_reaches_policy_once[COMMENT-ignored]",
+          "file": "tests/integration/test_webhook_gitea_live.py",
+          "classname": "tests.integration.test_webhook_gitea_live",
+          "name": "test_native_review_reaches_policy_once[COMMENT-ignored]",
+          "line": "160",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Explicit disposable localhost Gitea acceptance required"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\integration\\test_webhook_gitea_live.py:161: Explicit disposable localhost Gitea acceptance required"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/integration/test_webhook_gitea_live.py::test_native_review_reaches_policy_once[REQUEST_CHANGES-changes_requested]",
+          "file": "tests/integration/test_webhook_gitea_live.py",
+          "classname": "tests.integration.test_webhook_gitea_live",
+          "name": "test_native_review_reaches_policy_once[REQUEST_CHANGES-changes_requested]",
+          "line": "160",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Explicit disposable localhost Gitea acceptance required"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\integration\\test_webhook_gitea_live.py:161: Explicit disposable localhost Gitea acceptance required"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/integration/test_webhook_gitea_live.py::test_review_readiness_refuses_unready_pull[closed]",
+          "file": "tests/integration/test_webhook_gitea_live.py",
+          "classname": "tests.integration.test_webhook_gitea_live",
+          "name": "test_review_readiness_refuses_unready_pull[closed]",
+          "line": "223",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Explicit disposable localhost Gitea acceptance required"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\integration\\test_webhook_gitea_live.py:224: Explicit disposable localhost Gitea acceptance required"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/integration/test_webhook_gitea_live.py::test_review_readiness_refuses_unready_pull[conflicting]",
+          "file": "tests/integration/test_webhook_gitea_live.py",
+          "classname": "tests.integration.test_webhook_gitea_live",
+          "name": "test_review_readiness_refuses_unready_pull[conflicting]",
+          "line": "223",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Explicit disposable localhost Gitea acceptance required"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\integration\\test_webhook_gitea_live.py:224: Explicit disposable localhost Gitea acceptance required"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/live/test_auditability_phase2_live.py::test_phase2_auditability_live_suite",
+          "file": "tests/live/test_auditability_phase2_live.py",
+          "classname": "tests.live.test_auditability_phase2_live",
+          "name": "test_phase2_auditability_live_suite",
+          "line": "36",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live Phase 2 auditability proof."
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\live\\test_auditability_phase2_live.py:40: Set ORKET_LIVE_ACCEPTANCE=1 to run live Phase 2 auditability proof."
+            }
+          ]
+        },
+        {
+          "node_id": "tests/live/test_companion_voice_truth_live.py::test_companion_voice_truth_live_gateway_playback_without_avatar",
+          "file": "tests/live/test_companion_voice_truth_live.py",
+          "classname": "tests.live.test_companion_voice_truth_live",
+          "name": "test_companion_voice_truth_live_gateway_playback_without_avatar",
+          "line": "178",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live companion playback proof."
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\live\\test_companion_voice_truth_live.py:183: Set ORKET_LIVE_ACCEPTANCE=1 to run live companion playback proof."
+            }
+          ]
+        },
+        {
+          "node_id": "tests/live/test_companion_voice_truth_live.py::test_companion_voice_truth_live_text_generation_remains_distinct_from_tts",
+          "file": "tests/live/test_companion_voice_truth_live.py",
+          "classname": "tests.live.test_companion_voice_truth_live",
+          "name": "test_companion_voice_truth_live_text_generation_remains_distinct_from_tts",
+          "line": "132",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live companion voice proof."
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\live\\test_companion_voice_truth_live.py:136: Set ORKET_LIVE_ACCEPTANCE=1 to run live companion voice proof."
+            }
+          ]
+        },
+        {
+          "node_id": "tests/live/test_companion_voice_truth_live.py::test_companion_voice_truth_live_tts_generation_is_explicit",
+          "file": "tests/live/test_companion_voice_truth_live.py",
+          "classname": "tests.live.test_companion_voice_truth_live",
+          "name": "test_companion_voice_truth_live_tts_generation_is_explicit",
+          "line": "85",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live companion voice proof."
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\live\\test_companion_voice_truth_live.py:89: Set ORKET_LIVE_ACCEPTANCE=1 to run live companion voice proof."
+            }
+          ]
+        },
+        {
+          "node_id": "tests/live/test_llama_cpp_feature_paths.py::test_default_extension_catalog_generation_and_discovery",
+          "file": "tests/live/test_llama_cpp_feature_paths.py",
+          "classname": "tests.live.test_llama_cpp_feature_paths",
+          "name": "test_default_extension_catalog_generation_and_discovery",
+          "line": "77",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "requires live llama.cpp"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\live\\test_llama_cpp_feature_paths.py:78: requires live llama.cpp"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/live/test_llama_cpp_feature_paths.py::test_llama_cpp_builtin_stream_reaches_committed_terminal_state",
+          "file": "tests/live/test_llama_cpp_feature_paths.py",
+          "classname": "tests.live.test_llama_cpp_feature_paths",
+          "name": "test_llama_cpp_builtin_stream_reaches_committed_terminal_state",
+          "line": "33",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "requires live llama.cpp"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\live\\test_llama_cpp_feature_paths.py:34: requires live llama.cpp"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/live/test_llama_cpp_feature_paths.py::test_llama_cpp_odr_transient_generation[_resolve_role_base_url-_resolve_role_provider0]",
+          "file": "tests/live/test_llama_cpp_feature_paths.py",
+          "classname": "tests.live.test_llama_cpp_feature_paths",
+          "name": "test_llama_cpp_odr_transient_generation[_resolve_role_base_url-_resolve_role_provider0]",
+          "line": "61",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "requires live llama.cpp"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\live\\test_llama_cpp_feature_paths.py:62: requires live llama.cpp"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/live/test_llama_cpp_feature_paths.py::test_llama_cpp_odr_transient_generation[_resolve_role_base_url-_resolve_role_provider1]",
+          "file": "tests/live/test_llama_cpp_feature_paths.py",
+          "classname": "tests.live.test_llama_cpp_feature_paths",
+          "name": "test_llama_cpp_odr_transient_generation[_resolve_role_base_url-_resolve_role_provider1]",
+          "line": "61",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "requires live llama.cpp"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\live\\test_llama_cpp_feature_paths.py:62: requires live llama.cpp"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/live/test_model_stream_v1_live.py::test_model_stream_v1_live_cancel_after_final_is_noop",
+          "file": "tests/live/test_model_stream_v1_live.py",
+          "classname": "tests.live.test_model_stream_v1_live",
+          "name": "test_model_stream_v1_live_cancel_after_final_is_noop",
+          "line": "97",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live streaming proof."
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\live\\test_model_stream_v1_live.py:101: Set ORKET_LIVE_ACCEPTANCE=1 to run live streaming proof."
+            }
+          ]
+        },
+        {
+          "node_id": "tests/live/test_model_stream_v1_live.py::test_model_stream_v1_live_repeated_cancel_before_first_token_interrupts",
+          "file": "tests/live/test_model_stream_v1_live.py",
+          "classname": "tests.live.test_model_stream_v1_live",
+          "name": "test_model_stream_v1_live_repeated_cancel_before_first_token_interrupts",
+          "line": "34",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live streaming proof."
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\live\\test_model_stream_v1_live.py:38: Set ORKET_LIVE_ACCEPTANCE=1 to run live streaming proof."
+            }
+          ]
+        },
+        {
+          "node_id": "tests/live/test_role_unit_live.py::test_live_role_architect_unit",
+          "file": "tests/live/test_role_unit_live.py",
+          "classname": "tests.live.test_role_unit_live",
+          "name": "test_live_role_architect_unit",
+          "line": "113",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Set ORKET_LIVE_ROLE_TESTS=1 to run live per-role deterministic checks."
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\live\\test_role_unit_live.py:117: Set ORKET_LIVE_ROLE_TESTS=1 to run live per-role deterministic checks."
+            }
+          ]
+        },
+        {
+          "node_id": "tests/live/test_role_unit_live.py::test_live_role_code_reviewer_unit",
+          "file": "tests/live/test_role_unit_live.py",
+          "classname": "tests.live.test_role_unit_live",
+          "name": "test_live_role_code_reviewer_unit",
+          "line": "150",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Set ORKET_LIVE_ROLE_TESTS=1 to run live per-role deterministic checks."
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\live\\test_role_unit_live.py:154: Set ORKET_LIVE_ROLE_TESTS=1 to run live per-role deterministic checks."
+            }
+          ]
+        },
+        {
+          "node_id": "tests/live/test_role_unit_live.py::test_live_role_coder_unit_contains_hello_world",
+          "file": "tests/live/test_role_unit_live.py",
+          "classname": "tests.live.test_role_unit_live",
+          "name": "test_live_role_coder_unit_contains_hello_world",
+          "line": "132",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Set ORKET_LIVE_ROLE_TESTS=1 to run live per-role deterministic checks."
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\live\\test_role_unit_live.py:136: Set ORKET_LIVE_ROLE_TESTS=1 to run live per-role deterministic checks."
+            }
+          ]
+        },
+        {
+          "node_id": "tests/live/test_role_unit_live.py::test_live_role_requirements_analyst_unit",
+          "file": "tests/live/test_role_unit_live.py",
+          "classname": "tests.live.test_role_unit_live",
+          "name": "test_live_role_requirements_analyst_unit",
+          "line": "94",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Set ORKET_LIVE_ROLE_TESTS=1 to run live per-role deterministic checks."
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\live\\test_role_unit_live.py:98: Set ORKET_LIVE_ROLE_TESTS=1 to run live per-role deterministic checks."
+            }
+          ]
+        },
+        {
+          "node_id": "tests/live/test_runtime_stability_closeout_live.py::test_boundary_illegal_state_transition_live",
+          "file": "tests/live/test_runtime_stability_closeout_live.py",
+          "classname": "tests.live.test_runtime_stability_closeout_live",
+          "name": "test_boundary_illegal_state_transition_live",
+          "line": "176",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live runtime-stability proof."
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\live\\test_runtime_stability_closeout_live.py:180: Set ORKET_LIVE_ACCEPTANCE=1 to run live runtime-stability proof."
+            }
+          ]
+        },
+        {
+          "node_id": "tests/live/test_runtime_stability_closeout_live.py::test_boundary_path_traversal_live",
+          "file": "tests/live/test_runtime_stability_closeout_live.py",
+          "classname": "tests.live.test_runtime_stability_closeout_live",
+          "name": "test_boundary_path_traversal_live",
+          "line": "210",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live runtime-stability proof."
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\live\\test_runtime_stability_closeout_live.py:214: Set ORKET_LIVE_ACCEPTANCE=1 to run live runtime-stability proof."
+            }
+          ]
+        },
+        {
+          "node_id": "tests/live/test_runtime_stability_closeout_live.py::test_protocol_replay_missing_workspace_snapshot_live",
+          "file": "tests/live/test_runtime_stability_closeout_live.py",
+          "classname": "tests.live.test_runtime_stability_closeout_live",
+          "name": "test_protocol_replay_missing_workspace_snapshot_live",
+          "line": "284",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live runtime-stability proof."
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\live\\test_runtime_stability_closeout_live.py:288: Set ORKET_LIVE_ACCEPTANCE=1 to run live runtime-stability proof."
+            }
+          ]
+        },
+        {
+          "node_id": "tests/live/test_system_acceptance_pipeline.py::test_system_acceptance_role_pipeline_with_guard_live_reports_truthfully",
+          "file": "tests/live/test_system_acceptance_pipeline.py",
+          "classname": "tests.live.test_system_acceptance_pipeline",
+          "name": "test_system_acceptance_role_pipeline_with_guard_live_reports_truthfully",
+          "line": "261",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live acceptance with the selected provider."
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\live\\test_system_acceptance_pipeline.py:267: Set ORKET_LIVE_ACCEPTANCE=1 to run live acceptance with the selected provider."
+            }
+          ]
+        },
+        {
+          "node_id": "tests/live/test_truthful_runtime_artifact_provenance_live.py::test_artifact_provenance_live_acceptance_run_records_generated_files",
+          "file": "tests/live/test_truthful_runtime_artifact_provenance_live.py",
+          "classname": "tests.live.test_truthful_runtime_artifact_provenance_live",
+          "name": "test_artifact_provenance_live_acceptance_run_records_generated_files",
+          "line": "27",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live artifact provenance proof."
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\live\\test_truthful_runtime_artifact_provenance_live.py:31: Set ORKET_LIVE_ACCEPTANCE=1 to run live artifact provenance proof."
+            }
+          ]
+        },
+        {
+          "node_id": "tests/live/test_truthful_runtime_packet1_live.py::test_packet1_live_corrective_reprompt_marks_repaired_truth",
+          "file": "tests/live/test_truthful_runtime_packet1_live.py",
+          "classname": "tests.live.test_truthful_runtime_packet1_live",
+          "name": "test_packet1_live_corrective_reprompt_marks_repaired_truth",
+          "line": "286",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live packet1 proof."
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\live\\test_truthful_runtime_packet1_live.py:290: Set ORKET_LIVE_ACCEPTANCE=1 to run live packet1 proof."
+            }
+          ]
+        },
+        {
+          "node_id": "tests/live/test_truthful_runtime_packet1_live.py::test_packet1_live_emission_failure_uses_runtime_event_fallback",
+          "file": "tests/live/test_truthful_runtime_packet1_live.py",
+          "classname": "tests.live.test_truthful_runtime_packet1_live",
+          "name": "test_packet1_live_emission_failure_uses_runtime_event_fallback",
+          "line": "190",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live packet1 proof."
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\live\\test_truthful_runtime_packet1_live.py:194: Set ORKET_LIVE_ACCEPTANCE=1 to run live packet1 proof."
+            }
+          ]
+        },
+        {
+          "node_id": "tests/live/test_truthful_runtime_packet1_live.py::test_packet1_live_failure_run_omits_classification_without_primary_output",
+          "file": "tests/live/test_truthful_runtime_packet1_live.py",
+          "classname": "tests.live.test_truthful_runtime_packet1_live",
+          "name": "test_packet1_live_failure_run_omits_classification_without_primary_output",
+          "line": "151",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live packet1 proof."
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\live\\test_truthful_runtime_packet1_live.py:154: Set ORKET_LIVE_ACCEPTANCE=1 to run live packet1 proof."
+            }
+          ]
+        },
+        {
+          "node_id": "tests/live/test_truthful_runtime_packet1_live.py::test_packet1_live_fallback_profile_marks_degraded_truth",
+          "file": "tests/live/test_truthful_runtime_packet1_live.py",
+          "classname": "tests.live.test_truthful_runtime_packet1_live",
+          "name": "test_packet1_live_fallback_profile_marks_degraded_truth",
+          "line": "235",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live packet1 proof."
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\live\\test_truthful_runtime_packet1_live.py:239: Set ORKET_LIVE_ACCEPTANCE=1 to run live packet1 proof."
+            }
+          ]
+        },
+        {
+          "node_id": "tests/live/test_truthful_runtime_phase_c_completion_live.py::test_phase_c_live_narration_effect_audit_detects_missing_source_receipt_effect",
+          "file": "tests/live/test_truthful_runtime_phase_c_completion_live.py",
+          "classname": "tests.live.test_truthful_runtime_phase_c_completion_live",
+          "name": "test_phase_c_live_narration_effect_audit_detects_missing_source_receipt_effect",
+          "line": "118",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live Phase C proof."
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\live\\test_truthful_runtime_phase_c_completion_live.py:125: Set ORKET_LIVE_ACCEPTANCE=1 to run live Phase C proof."
+            }
+          ]
+        },
+        {
+          "node_id": "tests/live/test_truthful_runtime_phase_c_completion_live.py::test_phase_c_live_required_source_attribution_blocks_missing_receipt",
+          "file": "tests/live/test_truthful_runtime_phase_c_completion_live.py",
+          "classname": "tests.live.test_truthful_runtime_phase_c_completion_live",
+          "name": "test_phase_c_live_required_source_attribution_blocks_missing_receipt",
+          "line": "27",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live Phase C proof."
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\live\\test_truthful_runtime_phase_c_completion_live.py:34: Set ORKET_LIVE_ACCEPTANCE=1 to run live Phase C proof."
+            }
+          ]
+        },
+        {
+          "node_id": "tests/live/test_truthful_runtime_phase_c_completion_live.py::test_phase_c_live_required_source_attribution_verifies_receipt",
+          "file": "tests/live/test_truthful_runtime_phase_c_completion_live.py",
+          "classname": "tests.live.test_truthful_runtime_phase_c_completion_live",
+          "name": "test_phase_c_live_required_source_attribution_verifies_receipt",
+          "line": "69",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live Phase C proof."
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\live\\test_truthful_runtime_phase_c_completion_live.py:76: Set ORKET_LIVE_ACCEPTANCE=1 to run live Phase C proof."
+            }
+          ]
+        },
+        {
+          "node_id": "tests/live/test_truthful_runtime_phase_d_completion_live.py::test_phase_d_live_companion_governed_memory_context_filters_stale_rows",
+          "file": "tests/live/test_truthful_runtime_phase_d_completion_live.py",
+          "classname": "tests.live.test_truthful_runtime_phase_d_completion_live",
+          "name": "test_phase_d_live_companion_governed_memory_context_filters_stale_rows",
+          "line": "70",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live Phase D proof."
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\live\\test_truthful_runtime_phase_d_completion_live.py:75: Set ORKET_LIVE_ACCEPTANCE=1 to run live Phase D proof."
+            }
+          ]
+        },
+        {
+          "node_id": "tests/live/test_truthful_runtime_phase_d_completion_live.py::test_phase_d_live_durable_memory_requires_explicit_user_correction",
+          "file": "tests/live/test_truthful_runtime_phase_d_completion_live.py",
+          "classname": "tests.live.test_truthful_runtime_phase_d_completion_live",
+          "name": "test_phase_d_live_durable_memory_requires_explicit_user_correction",
+          "line": "17",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live Phase D proof."
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\live\\test_truthful_runtime_phase_d_completion_live.py:21: Set ORKET_LIVE_ACCEPTANCE=1 to run live Phase D proof."
+            }
+          ]
+        },
+        {
+          "node_id": "tests/live/test_truthful_runtime_phase_d_completion_live.py::test_phase_d_live_reference_context_rendering_filters_stale_project_memory",
+          "file": "tests/live/test_truthful_runtime_phase_d_completion_live.py",
+          "classname": "tests.live.test_truthful_runtime_phase_d_completion_live",
+          "name": "test_phase_d_live_reference_context_rendering_filters_stale_project_memory",
+          "line": "114",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live Phase D proof."
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\live\\test_truthful_runtime_phase_d_completion_live.py:119: Set ORKET_LIVE_ACCEPTANCE=1 to run live Phase D proof."
+            }
+          ]
+        },
+        {
+          "node_id": "tests/live/test_truthful_runtime_phase_e_completion_live.py::test_phase_e_live_acceptance_gate_and_evidence_package_closeout",
+          "file": "tests/live/test_truthful_runtime_phase_e_completion_live.py",
+          "classname": "tests.live.test_truthful_runtime_phase_e_completion_live",
+          "name": "test_phase_e_live_acceptance_gate_and_evidence_package_closeout",
+          "line": "33",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "Set ORKET_LIVE_ACCEPTANCE=1 to run live Phase E proof."
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\live\\test_truthful_runtime_phase_e_completion_live.py:38: Set ORKET_LIVE_ACCEPTANCE=1 to run live Phase E proof."
+            }
+          ]
+        },
+        {
+          "node_id": "tests/scripts/test_check_td03052026_gate_audit.py::test_td03052026_gate_audit_fails_when_ci_snippet_missing",
+          "file": "tests/scripts/test_check_td03052026_gate_audit.py",
+          "classname": "tests.scripts.test_check_td03052026_gate_audit",
+          "name": "test_td03052026_gate_audit_fails_when_ci_snippet_missing",
+          "line": "101",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\scripts\\test_check_td03052026_gate_audit.py:102: one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/scripts/test_check_td03052026_gate_audit.py::test_td03052026_gate_audit_fails_when_dashboard_gate_missing",
+          "file": "tests/scripts/test_check_td03052026_gate_audit.py",
+          "classname": "tests.scripts.test_check_td03052026_gate_audit",
+          "name": "test_td03052026_gate_audit_fails_when_dashboard_gate_missing",
+          "line": "83",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\scripts\\test_check_td03052026_gate_audit.py:84: one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/scripts/test_check_td03052026_gate_audit.py::test_td03052026_gate_audit_passes_when_dashboard_and_ci_are_aligned",
+          "file": "tests/scripts/test_check_td03052026_gate_audit.py",
+          "classname": "tests.scripts.test_check_td03052026_gate_audit",
+          "name": "test_td03052026_gate_audit_passes_when_dashboard_and_ci_are_aligned",
+          "line": "61",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\scripts\\test_check_td03052026_gate_audit.py:62: one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/scripts/test_record_protocol_enforce_window_signoff.py::test_record_protocol_enforce_window_signoff_blocks_unapproved_error_families",
+          "file": "tests/scripts/test_record_protocol_enforce_window_signoff.py",
+          "classname": "tests.scripts.test_record_protocol_enforce_window_signoff",
+          "name": "test_record_protocol_enforce_window_signoff_blocks_unapproved_error_families",
+          "line": "92",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\scripts\\test_record_protocol_enforce_window_signoff.py:93: one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/scripts/test_record_protocol_enforce_window_signoff.py::test_record_protocol_enforce_window_signoff_passes_on_clean_inputs",
+          "file": "tests/scripts/test_record_protocol_enforce_window_signoff.py",
+          "classname": "tests.scripts.test_record_protocol_enforce_window_signoff",
+          "name": "test_record_protocol_enforce_window_signoff_passes_on_clean_inputs",
+          "line": "17",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\scripts\\test_record_protocol_enforce_window_signoff.py:18: one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/scripts/test_record_protocol_enforce_window_signoff.py::test_record_protocol_enforce_window_signoff_preserves_invalid_projection_counts",
+          "file": "tests/scripts/test_record_protocol_enforce_window_signoff.py",
+          "classname": "tests.scripts.test_record_protocol_enforce_window_signoff",
+          "name": "test_record_protocol_enforce_window_signoff_preserves_invalid_projection_counts",
+          "line": "126",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\scripts\\test_record_protocol_enforce_window_signoff.py:127: one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/scripts/test_record_protocol_enforce_window_signoff.py::test_record_protocol_enforce_window_signoff_strict_fails_when_retry_unknown",
+          "file": "tests/scripts/test_record_protocol_enforce_window_signoff.py",
+          "classname": "tests.scripts.test_record_protocol_enforce_window_signoff",
+          "name": "test_record_protocol_enforce_window_signoff_strict_fails_when_retry_unknown",
+          "line": "58",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\scripts\\test_record_protocol_enforce_window_signoff.py:59: one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/scripts/test_record_td03052026_phase0_baseline.py::test_record_phase0_baseline_forces_g7_red_when_prerequisites_are_not_green",
+          "file": "tests/scripts/test_record_td03052026_phase0_baseline.py",
+          "classname": "tests.scripts.test_record_td03052026_phase0_baseline",
+          "name": "test_record_phase0_baseline_forces_g7_red_when_prerequisites_are_not_green",
+          "line": "129",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\scripts\\test_record_td03052026_phase0_baseline.py:130: one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/scripts/test_record_td03052026_phase0_baseline.py::test_record_phase0_baseline_rejects_waived_for_p0_gate",
+          "file": "tests/scripts/test_record_td03052026_phase0_baseline.py",
+          "classname": "tests.scripts.test_record_td03052026_phase0_baseline",
+          "name": "test_record_phase0_baseline_rejects_waived_for_p0_gate",
+          "line": "103",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\scripts\\test_record_td03052026_phase0_baseline.py:104: one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/scripts/test_record_td03052026_phase0_baseline.py::test_record_phase0_baseline_strict_fails_when_required_smoke_fails",
+          "file": "tests/scripts/test_record_td03052026_phase0_baseline.py",
+          "classname": "tests.scripts.test_record_td03052026_phase0_baseline",
+          "name": "test_record_phase0_baseline_strict_fails_when_required_smoke_fails",
+          "line": "73",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\scripts\\test_record_td03052026_phase0_baseline.py:74: one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/scripts/test_record_td03052026_phase0_baseline.py::test_record_phase0_baseline_writes_artifacts_and_sets_g1_green",
+          "file": "tests/scripts/test_record_td03052026_phase0_baseline.py",
+          "classname": "tests.scripts.test_record_td03052026_phase0_baseline",
+          "name": "test_record_phase0_baseline_writes_artifacts_and_sets_g1_green",
+          "line": "24",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\scripts\\test_record_td03052026_phase0_baseline.py:25: one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/scripts/test_run_protocol_enforce_window_capture.py::test_run_protocol_enforce_window_capture_defaults_session_id_to_run_id",
+          "file": "tests/scripts/test_run_protocol_enforce_window_capture.py",
+          "classname": "tests.scripts.test_run_protocol_enforce_window_capture",
+          "name": "test_run_protocol_enforce_window_capture_defaults_session_id_to_run_id",
+          "line": "128",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\scripts\\test_run_protocol_enforce_window_capture.py:129: one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/scripts/test_run_protocol_enforce_window_capture.py::test_run_protocol_enforce_window_capture_fails_when_step_fails",
+          "file": "tests/scripts/test_run_protocol_enforce_window_capture.py",
+          "classname": "tests.scripts.test_run_protocol_enforce_window_capture",
+          "name": "test_run_protocol_enforce_window_capture_fails_when_step_fails",
+          "line": "79",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\scripts\\test_run_protocol_enforce_window_capture.py:80: one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/scripts/test_run_protocol_enforce_window_capture.py::test_run_protocol_enforce_window_capture_preserves_signoff_invalid_projection_counts",
+          "file": "tests/scripts/test_run_protocol_enforce_window_capture.py",
+          "classname": "tests.scripts.test_run_protocol_enforce_window_capture",
+          "name": "test_run_protocol_enforce_window_capture_preserves_signoff_invalid_projection_counts",
+          "line": "190",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\scripts\\test_run_protocol_enforce_window_capture.py:191: one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+            }
+          ]
+        },
+        {
+          "node_id": "tests/scripts/test_run_protocol_enforce_window_capture.py::test_run_protocol_enforce_window_capture_writes_manifest_and_passes",
+          "file": "tests/scripts/test_run_protocol_enforce_window_capture.py",
+          "classname": "tests.scripts.test_run_protocol_enforce_window_capture",
+          "name": "test_run_protocol_enforce_window_capture_writes_manifest_and_passes",
+          "line": "16",
+          "outcome": "skipped",
+          "skip_reasons": [
+            {
+              "attributes": {
+                "type": "pytest.skip",
+                "message": "one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+              },
+              "text": "C:\\Source\\Orket-architectural-truth\\tests\\scripts\\test_run_protocol_enforce_window_capture.py:17: one-shot script test; set ORKET_INCLUDE_ONE_SHOT_SCRIPT_TESTS=1 to include"
+            }
+          ]
+        }
+      ]
+    },
+    "coverage": {
+      "meta": {
+        "format": 3,
+        "version": "7.16.2",
+        "timestamp": "2026-10-03T17:16:12.199505",
+        "branch_coverage": true,
+        "show_contexts": false
+      },
+      "totals": {
+        "covered_lines": 71375,
+        "num_statements": 77475,
+        "percent_covered": 89.21575503742372,
+        "percent_covered_display": "89",
+        "missing_lines": 6100,
+        "excluded_lines": 1383,
+        "percent_statements_covered": 92.12649241690868,
+        "percent_statements_covered_display": "92",
+        "num_branches": 22328,
+        "num_partial_branches": 3905,
+        "covered_branches": 17665,
+        "missing_branches": 4663,
+        "percent_branches_covered": 79.11590827660336,
+        "percent_branches_covered_display": "79"
+      },
+      "independent_file_summary_totals": {
+        "covered_lines": 71375,
+        "num_statements": 77475,
+        "missing_lines": 6100,
+        "excluded_lines": 1383,
+        "num_branches": 22328,
+        "covered_branches": 17665,
+        "missing_branches": 4663,
+        "num_partial_branches": 3905
+      },
+      "independent_combined_percent": 89.21575503742372,
+      "floor": 89,
+      "floor_met": true,
+      "configuration": {
+        "run": {
+          "source": [
+            "orket"
+          ],
+          "branch": true,
+          "omit": [
+            "tests/*",
+            "scripts/*",
+            "benchmarks/*"
+          ]
+        },
+        "report": {
+          "fail_under": 70,
+          "show_missing": true
+        }
+      },
+      "report_file_count": 1216,
+      "prior_report_file_count": 1216,
+      "added_report_files": [],
+      "removed_report_files": [],
+      "prior_num_statements": 77464,
+      "prior_num_branches": 22324,
+      "automatic_unexecuted_discovery_files": 1100,
+      "merged_measured_files": 1216,
+      "discovery_measurement_union_equals_report": true,
+      "git_visible_python_files": 1222,
+      "preexisting_namespace_discovery_omissions": [
+        "orket/interfaces/outward_authority_cli.py",
+        "orket/kernel/v1/plugins/orphan_links.py",
+        "orket/kernel/v1/plugins/related_stems.py",
+        "orket/orchestration/governance_auditor.py",
+        "orket/orchestration/models.py",
+        "orket/services/webhook_db.py"
+      ],
+      "denominator_claim": "All files in the unchanged configured automatic-discovery/retained-measurement selection are represented; this does not assert measurement of every Git-visible Python source.",
+      "lost_shard_effect": "The unreadable shard may contain an otherwise unreported namespace file, so no whole-report undercount direction is claimed. For already reported files, losing hits cannot manufacture coverage credit. The separate static zero-hit lower bound includes all six unreported files without adding execution credit.",
+      "canonical_acceptance": "Observed canonical exit 0 and independently computed 89.21575503742372 percent satisfy the unchanged 89-percent floor, with the retained merge warning and existing discovery omissions disclosed.",
+      "conservative_unreported_six_analysis": {
+        "proof": "Static confidence analysis only, using the same coverage7.16.2 configured source analyzer and in-memory zero-hit data; no execution or measurement credit is added.",
+        "coverage_version": "7.16.2",
+        "data_file": null,
+        "no_collection_started": true,
+        "files": [
+          {
+            "path": "orket/interfaces/outward_authority_cli.py",
+            "num_statements": 32,
+            "num_branches": 4,
+            "covered_lines": 0,
+            "covered_branches": 0,
+            "excluded_lines": 0,
+            "has_arcs": true
+          },
+          {
+            "path": "orket/kernel/v1/plugins/orphan_links.py",
+            "num_statements": 0,
+            "num_branches": 0,
+            "covered_lines": 0,
+            "covered_branches": 0,
+            "excluded_lines": 0,
+            "has_arcs": true
+          },
+          {
+            "path": "orket/kernel/v1/plugins/related_stems.py",
+            "num_statements": 0,
+            "num_branches": 0,
+            "covered_lines": 0,
+            "covered_branches": 0,
+            "excluded_lines": 0,
+            "has_arcs": true
+          },
+          {
+            "path": "orket/orchestration/governance_auditor.py",
+            "num_statements": 94,
+            "num_branches": 34,
+            "covered_lines": 0,
+            "covered_branches": 0,
+            "excluded_lines": 0,
+            "has_arcs": true
+          },
+          {
+            "path": "orket/orchestration/models.py",
+            "num_statements": 5,
+            "num_branches": 0,
+            "covered_lines": 0,
+            "covered_branches": 0,
+            "excluded_lines": 0,
+            "has_arcs": true
+          },
+          {
+            "path": "orket/services/webhook_db.py",
+            "num_statements": 2,
+            "num_branches": 0,
+            "covered_lines": 0,
+            "covered_branches": 0,
+            "excluded_lines": 0,
+            "has_arcs": true
+          }
+        ],
+        "additional_statement_denominator": 133,
+        "additional_branch_denominator": 38,
+        "reported_numerator": 89040,
+        "reported_denominator": 99803,
+        "conservative_expanded_denominator": 99974,
+        "zero_hit_conservative_percent": 89.06315642066937,
+        "floor": 89,
+        "floor_met": true,
+        "scope": "Assume every one of the six currently unreported Git-visible source files contributes its complete configured statement/branch denominator and no covered credit. The reported89.21575503742372percent and raw measurement artifacts remain unchanged."
+      }
+    },
+    "measurement": {
+      "path": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg09-windows-quality\\A01\\measurement.coverage",
+      "bytes": 5091328,
+      "sha256": "0462551c4c805baf2ad3d55813b57092d66d15ff3c3d5b4cdb508b3e75c4e217",
+      "immutable_readonly_quick_check": [
+        "ok"
+      ]
+    },
+    "lost_child_shard": {
+      "path": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg09-windows-quality\\A01\\measurement.coverage.DESKTOP-H0S3F53.pid26556.XLmc4GFx",
+      "bytes": 28672,
+      "sha256": "f9084e6db6bfc2701f023d7b3ec6220d59dc56b76899e2189acb9f29f1cb48ef",
+      "immutable_readonly_file_query_error": {
+        "type": "DatabaseError",
+        "message": "database disk image is malformed"
+      },
+      "originating_case": "unverified; no JUnit property binds PID26556; no broad temp/vendor scan performed",
+      "matching_junit_properties": [],
+      "contents": "unverified",
+      "artifact_unchanged": true
+    },
+    "warnings": {
+      "pytest_warning_count": 3,
+      "pytest_summary": "============================== warnings summary ===============================\n.tmp\\goal-20260927-env\\Lib\\site-packages\\fastapi\\testclient.py:1\n  C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Lib\\site-packages\\fastapi\\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.\n    from starlette.testclient import TestClient as TestClient  # noqa\n\ntests/application/test_extension_runtime_service.py::test_extension_runtime_service_list_models_and_override_generation\n  <string>:8: RuntimeWarning: GenerateRequest.max_tokens below 256 can truncate governed outputs.\n\ntests/interfaces/test_api_composition_isolation.py::test_concurrent_requests_observe_their_own_app_root\n  C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Lib\\site-packages\\pydantic\\_internal\\_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'req' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.\n    warnings.warn(\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n- generated xml file: C:\\Source\\Orket-architectural-truth\\.tmp\\atg09-windows-quality\\A01\\pytest.xml -\n",
+      "coverage_merge_warning_count": 1,
+      "coverage_merge_warnings": [
+        "tests/unit/proof/test_trusted_terraform_smoke_names.py::test_operator_override_acceptance_and_rejection PASSED [100%]C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Lib\\site-packages\\coverage\\data.py:211: CoverageWarning: Couldn't use data file 'C:\\\\Source\\\\Orket-architectural-truth\\\\.tmp\\\\atg09-windows-quality\\\\A01\\\\measurement.coverage.DESKTOP-H0S3F53.pid26556.XLmc4GFx': database disk image is malformed"
+      ],
+      "prior_pytest_warning_count": 2,
+      "prior_merge_warning_count": 0
+    },
+    "source": {
+      "frozen_input_count": 5746,
+      "recorded_changed_inputs": [],
+      "current_frozen_input_differences": [],
+      "critical_runtime_test_config_differences": [],
+      "base_commit_delta": [
+        "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md"
+      ],
+      "initial_permitted_plan_metadata_only": true,
+      "added_git_visible_paths": [],
+      "removed_git_visible_paths": [],
+      "helpers": [
+        {
+          "path": ".tmp\\atg09_windows_quality.py",
+          "expected": "0ba7db852d7327c62766fa64c42cb54b080f590d4dee674f9d22cf91e9085bf2",
+          "actual": "0ba7db852d7327c62766fa64c42cb54b080f590d4dee674f9d22cf91e9085bf2"
+        },
+        {
+          "path": ".tmp\\atg07_full_candidate.py",
+          "expected": "c1c254784f479c42644af547fb4c47b39e934405fca92f1fdc8f2791248be747",
+          "actual": "c1c254784f479c42644af547fb4c47b39e934405fca92f1fdc8f2791248be747"
+        }
+      ]
+    },
+    "cleanup": {
+      "command": {
+        "kind": "complete-suite",
+        "argv": [
+          "C:\\Source\\Orket-architectural-truth\\.tmp\\goal-20260927-env\\Scripts\\python.exe",
+          "-m",
+          "pytest",
+          "tests/",
+          "--cov=orket",
+          "--cov-config=pyproject.toml",
+          "--cov-fail-under=89",
+          "--cov-report=term",
+          "--cov-report=json:C:\\Source\\Orket-architectural-truth\\.tmp\\atg09-windows-quality\\A01\\coverage.json",
+          "-v",
+          "--tb=short",
+          "--junitxml=C:\\Source\\Orket-architectural-truth\\.tmp\\atg09-windows-quality\\A01\\pytest.xml",
+          "--basetemp=C:\\Source\\Orket-architectural-truth\\.tmp\\atg09-windows-quality\\A01\\pytest-temp",
+          "-o",
+          "junit_family=legacy",
+          "-o",
+          "faulthandler_timeout=120"
+        ],
+        "cwd": "C:\\Source\\Orket-architectural-truth",
+        "log": "C:\\Source\\Orket-architectural-truth\\.tmp\\atg09-windows-quality\\A01\\pytest.log",
+        "status": "finished",
+        "started_at_unix": 1791064242.4476829,
+        "pid": 40812,
+        "created_at_unix": 1791064242.4805434,
+        "exit_code": 0,
+        "finished_at_unix": 1791069385.4452322,
+        "log_sha256": "e39288a6b4dbbc93b7c9eb5c7cd10400f4686955e7b29d10c17d964cf402155f",
+        "observed_descendant_count": 5820,
+        "remaining_observed_descendants": []
+      },
+      "process_probe": {
+        "ObservedAtUtc": "2026-10-03T23:26:51.6901804Z",
+        "RequestedPids": [
+          3924,
+          40812
+        ],
+        "Found": []
+      },
+      "owner_created_at_unix": 1791064239.7354932,
+      "pytest_created_at_unix": 1791064242.4805434,
+      "observed_descendants": 5820,
+      "remaining_observed_descendants": [],
+      "claim_limit": "Sampled native descendant identities plus test-owned controls; no arbitrary process isolation claim."
+    },
+    "issues": [],
+    "limits": [
+      "Retained run plus readback only; no second test campaign, recovery or artifact alteration.",
+      "5820 sampled descendant identities and current owner/pytest absence do not prove arbitrary process isolation or rollback of external effects.",
+      "Malformed child measurement is retained and unconsumed; complete child-execution capture is unverified.",
+      "Six pre-existing namespace-discovery omissions remain explicit; configured report equality is not full Git-visible-source measurement.",
+      "ATG09/10 metadata/publication remain primary-owned."
+    ],
+    "files_written": [
+      ".tmp/atg09-windows-quality-audit.json"
+    ],
+    "diff_ledger": [
+      {
+        "run_at_utc": "2026-10-03T23:26:51.751176Z",
+        "changed": true,
+        "before_digest": null,
+        "after_digest": "sha256:e1534b564d933715912555cd249ecc5dcd76a321ad1e312ceebca2c3224d809d",
+        "diff": {
+          "initial_write": true,
+          "added_paths": 0,
+          "removed_paths": 0,
+          "changed_paths": 0,
+          "paths_total_previous": 0,
+          "paths_total_current": 2484,
+          "paths_total_reference": 2484,
+          "churn_paths": 2484,
+          "churn_ratio": 1.0,
+          "sample_paths": []
+        }
+      },
+      {
+        "run_at_utc": "2026-10-03T23:28:07.515189Z",
+        "changed": true,
+        "before_digest": "sha256:e1534b564d933715912555cd249ecc5dcd76a321ad1e312ceebca2c3224d809d",
+        "after_digest": "sha256:ebbea3bfd5176e03e1929bd212d6bb441d2a2680238cebb06e8081c901459a22",
+        "diff": {
+          "added_paths": 1,
+          "removed_paths": 0,
+          "changed_paths": 1,
+          "initial_write": false,
+          "paths_total_previous": 2484,
+          "paths_total_current": 2602,
+          "paths_total_reference": 2602,
+          "churn_paths": 2,
+          "churn_ratio": 0.000769,
+          "sample_paths": [
+            "$.coverage.conservative_unreported_six_analysis",
+            "$.coverage.lost_shard_effect"
+          ]
+        }
+      }
+    ]
+  },
+  "exact_files_touched": [
+    "pyproject.toml",
+    "CHANGELOG.md",
+    "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
+    "docs/projects/architectural-truth/GOAL_WORKSETS.json",
+    "docs/projects/architectural-truth/README.md",
+    "docs/projects/archive/architectural-truth/AT10032026-ATG09/CLOSEOUT.md",
+    "docs/projects/archive/architectural-truth/AT10032026-ATG09/VERIFICATION.json"
+  ],
+  "receipt_sha256": {
+    ".tmp/atg09-windows-quality.json": "68a623bda40c54ebe27bc99bb4c7b2dc45a2428cc657a6728d4c2b90a3070216",
+    ".tmp/atg09-windows-local-checks.json": "417a72fc1be4cfad8c7c6cdc7f518a627b092b81cb6891891a12e17ea981b65a",
+    ".tmp/atg09-windows-resume-evidence-audit.json": "70a2858a8409836b0a50e22e2f3250eeceb417a46adaf66a2c8270f04dd935ec",
+    ".tmp/atg10-windows-reconciliation-audit.json": "4a8296150ff30be18c33d8d2da272538ebf8ae157c7ab20c15795fe0c3895bc0",
+    ".tmp/atg09-windows-quality-audit.json": "1e68fea6f5c5f3009d4b32c9686df910293514e49e9ae19ee94b642801f99c6a"
+  },
+  "postproof_delta": "Only the listed release/queue/evidence metadata; runtime/test bytes and nonversion configuration are unchanged.",
+  "final_validation_receipt": ".tmp/atg09-windows-closeout-checks.json",
+  "publication": {
+    "required": true,
+    "version": "0.6.143",
+    "matching_annotated_tag": "v0.6.143",
+    "receipt": ".tmp/atg09-windows-closeout-publication.json",
+    "completion_condition": "Successful atomic branch/tag push, exact remote identities and clean worktree."
+  },
+  "failed_history": "docs/projects/archive/architectural-truth/AT10032026-WINDOWS-SCOPE/PLAN_BEFORE_WINDOWS_SCOPE.md",
+  "limits": [
+    "No Linux/Mac or hosted Quality acceptance.",
+    "No general current-authority runtime proof.",
+    "No API/installed-provider proof or remote inference/server teardown claim.",
+    "No main merge, whole-lane retirement, new capability or minor-release readiness."
+  ],
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-10-03T23:29:51.215816Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:2b4a17f85ebf5bbc1a01b04e297c7dd2b86f5b633034f01f2f73dab39f6250bd",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 5752,
+        "paths_total_reference": 5752,
+        "churn_paths": 5752,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    }
+  ]
+}

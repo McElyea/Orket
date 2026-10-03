@@ -10125,28 +10125,6 @@
   ],
   "diff_ledger": [
     {
-      "run_at_utc": "2026-10-02T02:53:07.277181Z",
-      "changed": true,
-      "before_digest": "sha256:ebf11d70de3a34ca916dec631bbca5ab9b14116177bf6105b33067d07ebc8ccb",
-      "after_digest": "sha256:8caae0056ccf2894bf19cebd43280a1b508b920b2800336f0d2d42f8258c2767",
-      "diff": {
-        "added_paths": 2,
-        "removed_paths": 0,
-        "changed_paths": 1,
-        "initial_write": false,
-        "paths_total_previous": 19207,
-        "paths_total_current": 20498,
-        "paths_total_reference": 20498,
-        "churn_paths": 3,
-        "churn_ratio": 0.000146,
-        "sample_paths": [
-          "$.diff_ledger",
-          "$.installed_worksets.closeout.validation_sha256",
-          "$.installed_worksets.closeout.status"
-        ]
-      }
-    },
-    {
       "run_at_utc": "2026-10-02T02:59:44.552069Z",
       "changed": true,
       "before_digest": "sha256:d93f6d2d5990e3bb2866c3199fb6799ae23ecb01c2a5539a1df6934475949e9f",
@@ -10949,6 +10927,45 @@
           "$.platform_worksets.paths[3]",
           "$.platform_worksets.paths[4]",
           "$.platform_worksets.paths[5]"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-03T23:29:51.243323Z",
+      "changed": true,
+      "before_digest": "sha256:c82b5e65975a231198a5268a62f68f84baec7106ee7902ccfe66ff98a5259d24",
+      "after_digest": "sha256:e7c2fb81e70daba459c49e7397e2abc5aae6575ad564bebca3f843429ccbad62",
+      "diff": {
+        "added_paths": 5,
+        "removed_paths": 5,
+        "changed_paths": 16,
+        "initial_write": false,
+        "paths_total_previous": 21710,
+        "paths_total_current": 23144,
+        "paths_total_reference": 23144,
+        "churn_paths": 26,
+        "churn_ratio": 0.001123,
+        "sample_paths": [
+          "$.diff_ledger",
+          "$.platform_worksets.windows_closeout",
+          "$.platform_worksets.windows_quality",
+          "$.platform_worksets.candidate_commit",
+          "$.platform_worksets.candidate_tag",
+          "$.platform_worksets.current_batch",
+          "$.platform_worksets.next_action",
+          "$.platform_worksets.paths[0]",
+          "$.platform_worksets.paths[1]",
+          "$.platform_worksets.paths[2]",
+          "$.platform_worksets.paths[3]",
+          "$.platform_worksets.paths[4]",
+          "$.platform_worksets.paths[5]",
+          "$.platform_worksets.paths[6]",
+          "$.platform_worksets.paths",
+          "$.platform_worksets.remaining[0]",
+          "$.platform_worksets.remaining",
+          "$.platform_worksets.status",
+          "$.platform_worksets.two_day_completion_plan.current_batch",
+          "$.platform_worksets.two_day_completion_plan.planning_end_utc"
         ]
       }
     }
@@ -13933,22 +13950,18 @@
   },
   "platform_worksets": {
     "goal": "ATG-09",
-    "status": "active: Windows-only final quality proof pending; Linux/hosted blocker withdrawn by user",
-    "current_batch": "ATG09-P01 native Windows final quality",
-    "candidate_commit": "175e5d58bb7159888b1a82882401083432de9547",
-    "candidate_tag": "v0.6.141",
+    "status": "Windows evidence accepted; v0.6.143 publication required",
+    "current_batch": "ATG09-P01 closeout",
+    "candidate_commit": "a6b99e575682d9b721983381e75f80402c8018d2",
+    "candidate_tag": "v0.6.142",
     "paths": [
+      "pyproject.toml",
       "CHANGELOG.md",
-      "docs/CONTRIBUTOR.md",
-      "docs/architecture/CONTRACT_DELTA_WINDOWS_ACCEPTANCE_2026-10-03.md",
       "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
       "docs/projects/architectural-truth/GOAL_WORKSETS.json",
       "docs/projects/architectural-truth/README.md",
-      "docs/projects/archive/architectural-truth/AT10032026-WINDOWS-SCOPE/PLAN_BEFORE_WINDOWS_SCOPE.md",
-      "docs/projects/archive/architectural-truth/AT10032026-WINDOWS-SCOPE/README.md",
-      "docs/specs/API_RUNTIME_LIFECYCLE.md",
-      "docs/specs/RUNTIME_EXECUTION_RESULT_CONTRACT.md",
-      "pyproject.toml"
+      "docs/projects/archive/architectural-truth/AT10032026-ATG09/CLOSEOUT.md",
+      "docs/projects/archive/architectural-truth/AT10032026-ATG09/VERIFICATION.json"
     ],
     "preflight_helper_sha256": {
       ".tmp/d_reentry_clock_preflight.py": "f9af974826a7e06e9054d04d763e7130c9e51d8a2e9714cc4f836b1b04697682",
@@ -13966,11 +13979,10 @@
     "windows_artifact_receipt": ".tmp/atg08-build.json",
     "windows_artifact_receipt_sha256": "cb8dd5cafd6debc01eab9a54c68d2dc7c97d0ee385d12f150217e974951a2e4a",
     "remaining": [
-      "Current native Windows full-suite zero-failure result with unchanged89%combinedcoverage after reload repair; retain canonical local checks.",
-      "Validate reuse or refresh affected Windows installed/public-path and llama.cpp evidence, then publish ATG-09 closeout."
+      "Verify ATG-09 v0.6.143 publication, then complete and publish ATG-10."
     ],
     "external_prerequisites": "No Linux/WSL/Gitea-runner prerequisite. Existing native Windows tooling and valid retained evidence are the execution path.",
-    "next_action": "At the user kickoff, bind source/process state and run current native Windows full quality/coverage with ORKET_DISABLE_SANDBOX=1. No hosted runner authorization or Linux attempt is needed.",
+    "next_action": "Verify .tmp/atg09-windows-closeout-publication.json before beginning dependent ATG-10.",
     "probe_limits": "Interpreter version probes succeeded. The first combined shell command failed only its uv lookup due to quote stripping; no uv availability was established by that command.",
     "clock_result": {
       "path": "blocked",
@@ -15266,7 +15278,7 @@
     "historical_acceptance_limits": "No fresh Linux candidate install or runtime selection, actual provider inference or hosted Quality job has been executed. Native passive clock failure is live environment proof, not product failure or application acceptance.",
     "historical_external_prerequisites": "Gitea28 and private native tools available. Registrations14/15 removed after A06 failure. User explicitly granted two further hours through09:53:22UTC; runner admission stops09:48:22UTC.",
     "two_day_completion_plan": {
-      "status": "prepared: Windows-only; user reset/kickoff time pending",
+      "status": "executing Windows ATG-09 then ATG-10",
       "canonical_section": "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md#two-day-completion-plan",
       "goal_order": [
         "ATG-09",
@@ -15275,12 +15287,14 @@
       "completed_goals": 8,
       "total_goals": 10,
       "requested_maximum_hours": 48,
-      "start_utc": null,
+      "start_utc": "2026-10-03T21:45:57Z",
       "fallback_planning_end_utc": "2026-10-06T06:00:00Z",
       "fallback_end_is_verified_billing_time": false,
       "runner_authorization_required": false,
-      "execution_started": false,
-      "new_targets_authorized": false
+      "execution_started": true,
+      "new_targets_authorized": false,
+      "planning_end_utc": "2026-10-05T21:45:57Z",
+      "current_batch": "ATG09-P01 closeout"
     },
     "historical_scope_fields_before_windows_amendment": {
       "status": "active: local scoped proof accepted; full hosted Quality incomplete",
@@ -15403,6 +15417,39 @@
         "checks_receipt": ".tmp/atg-windows-scope-checks.json",
         "publication_receipt": ".tmp/atg-windows-scope-publication.json"
       }
+    },
+    "windows_quality": {
+      "proof": "docs/projects/archive/architectural-truth/AT10032026-ATG09/VERIFICATION.json",
+      "source_receipt": ".tmp/atg09-windows-quality.json",
+      "counts": {
+        "passed": 12987,
+        "failed": 0,
+        "skipped": 93,
+        "pytest_warnings": 3,
+        "coverage_merge_warnings": 1
+      },
+      "combined_coverage": 89.21575503742372,
+      "floor": 89,
+      "changed_inputs": [],
+      "source_input_count": 5746,
+      "local_checks": ".tmp/atg09-windows-local-checks.json",
+      "reuse_audit": ".tmp/atg09-windows-resume-evidence-audit.json"
+    },
+    "windows_closeout": {
+      "version": "0.6.143",
+      "base_commit": "a6b99e575682d9b721983381e75f80402c8018d2",
+      "paths": [
+        "pyproject.toml",
+        "CHANGELOG.md",
+        "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
+        "docs/projects/architectural-truth/GOAL_WORKSETS.json",
+        "docs/projects/architectural-truth/README.md",
+        "docs/projects/archive/architectural-truth/AT10032026-ATG09/CLOSEOUT.md",
+        "docs/projects/archive/architectural-truth/AT10032026-ATG09/VERIFICATION.json"
+      ],
+      "archive": "docs/projects/archive/architectural-truth/AT10032026-ATG09/",
+      "checks_receipt": ".tmp/atg09-windows-closeout-checks.json",
+      "publication_receipt": ".tmp/atg09-windows-closeout-publication.json"
     }
   }
 }
