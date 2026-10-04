@@ -75,6 +75,8 @@ def _render_transaction(result: dict[str, Any]) -> str:
 
 
 def render_human(result: dict[str, Any]) -> str:
+    if result.get("ok") is True and "sdk_version" in result:
+        return str(result["sdk_version"])
     kind = str(result.get("kind") or "")
     if kind == "governed_run_execution":
         return str(result.get("console_output") or "")

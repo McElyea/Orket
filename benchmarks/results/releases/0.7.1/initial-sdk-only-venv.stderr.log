@@ -1,0 +1,7 @@
+Using CPython 3.11.14 interpreter at: C:\Users\jonmc\AppData\Roaming\uv\python\cpython-3.11.14-windows-x86_64-none\python.exe
+Creating virtual environment with seed packages at: sdk-only
+ + packaging==26.3
+ + pip==26.2.1
+ + setuptools==84.0.0
+ + wheel==0.48.0
+Activate with: sdk-only\Scripts\activate

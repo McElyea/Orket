@@ -17,7 +17,12 @@ Last reviewed: 2026-10-03
 
 ## CLI Contract
 
-SDK `0.7.0` is the matched standalone SDK for core `0.7.0` on Windows.
+SDK `0.7.1` is the current matched standalone SDK for core `0.7.1` on Windows.
+Its public contracts are unchanged from SDK 0.7.0; the patch records packaging
+and verified pair compatibility. Only that exact pair is newly admitted. Evidence:
+`docs/releases/0.7.1/PROOF_REPORT.md`. Other cross-pairings remain unverified.
+
+Historical SDK `0.7.0` is the matched standalone SDK for core `0.7.0` on Windows.
 This release explicitly narrows its nominal future compatibility window to that
 exact verified core. Core 0.6.0/0.6.2 remain paired with SDK 0.6.0; neither those
 hosts nor future versions are admitted by the 0.7.0 release.
@@ -58,6 +63,8 @@ orket ext validate <extension-root> --strict --json
 ```
 
 1. `orket sdk --version` must print version data sourced from `orket_extension_sdk.__version__`.
+   Its text form is the version alone on one line; `--json` retains the `ok` and
+   `sdk_version` fields. Core 0.7.1 fixes the prior generic manifest rendering.
 2. If core engine version is printed elsewhere, it is separate from SDK version and must come from its own canonical source.
 
 ## Tag Policy

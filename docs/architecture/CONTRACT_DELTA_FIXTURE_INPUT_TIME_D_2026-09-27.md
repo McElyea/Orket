@@ -1,5 +1,10 @@
 # Fixture admission and selected verification time
 
+Current removal disposition (0.7.1): `BT4-FIXTURE-SYNC-RETIRE` removes the two
+synchronous fixture classes and their deprecated exports. The earlier timeline
+below is historical; current migration and exact scope are in
+`CONTRACT_DELTA_FIXTURE_RETIREMENT_0_7_1_2026-10-03.md`.
+
 ## Summary
 - Owner: Orket Core. Date: 2026-09-27.
 - Status: Active implementation in checkpoint 0.6.113; scoped

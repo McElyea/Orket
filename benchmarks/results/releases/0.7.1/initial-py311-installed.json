@@ -1,0 +1,136 @@
+{
+  "version": "0.7.1",
+  "proof_mode": "live",
+  "observed_path": "degraded",
+  "observed_result": "success",
+  "python": "3.11.14 (main, Jan 14 2026, 19:28:21) [MSC v.1944 64 bit (AMD64)]",
+  "origins": {
+    "orket": "C:\\Source\\Orket\\.tmp\\release-0.7.1\\py311\\Lib\\site-packages\\orket\\__init__.py",
+    "sdk": "C:\\Source\\Orket\\.tmp\\release-0.7.1\\py311\\Lib\\site-packages\\orket_extension_sdk\\__init__.py"
+  },
+  "retired_imports": {
+    "orket.core.domain.fixture_verifier": {
+      "FixtureVerifier": false,
+      "VerificationEngine": false
+    },
+    "orket.core.domain.verification": {
+      "FixtureVerifier": false,
+      "VerificationEngine": false
+    },
+    "orket.domain": {
+      "FixtureVerifier": false,
+      "VerificationEngine": false
+    },
+    "orket.domain.fixture_verifier": {
+      "FixtureVerifier": false,
+      "VerificationEngine": false
+    },
+    "orket.domain.verification": {
+      "FixtureVerifier": false,
+      "VerificationEngine": false
+    }
+  },
+  "fixture_result": {
+    "timestamp": "2026-10-03T00:00:00+00:00",
+    "total_scenarios": 1,
+    "passed": 1,
+    "failed": 0,
+    "logs": [
+      "--- Verification Started at 2026-10-03T00:00:00+00:00 ---",
+      "Running Scenario: Native installed fixture",
+      "  [PASS] Expected 7, got 7",
+      "--- Verification Complete: 1 Passed, 0 Failed ---"
+    ],
+    "process_lifetime": {
+      "schema_version": "owned_command.v1",
+      "reason": "completed",
+      "cleanup_confirmed": true,
+      "capture_complete": true,
+      "backend": "windows_job",
+      "transport_pid": 26540,
+      "supervisor_pid": 29184,
+      "command_pid": 16284,
+      "diagnostics": []
+    }
+  },
+  "fixture_status": "pass",
+  "public_surfaces": {
+    "runtime": {
+      "command": [
+        "C:\\Source\\Orket\\.tmp\\release-0.7.1\\py311\\Scripts\\orket.exe",
+        "runtime",
+        "--workspace",
+        "C:\\Source\\Orket\\.tmp\\release-0.7.1\\py311-installed\\workspace"
+      ],
+      "proof_mode": "live",
+      "observed_path": "degraded",
+      "observed_result": "success",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "required_claim": "ORKET DRIVER (Interactive)",
+      "output": "\n[FIRST RUN] Orket EOS Orkestrated.\n  Recommendation: Use the canonical card entrypoint for initialization to optimize your models.\n  Command: orket runtime --card initialize_orket\n\n============================================================\n ORKET EOS MANIFEST (Dept: core)\n Hardware: 24 Cores | 63.8GB RAM | 24.0GB VRAM\n============================================================\n\n[LOCAL ENGINES]\n  > Coder: None found\n  > Arch:  None found\n\n[EPICS (Standalone)]\n\n[COMMAND SUGGESTION]\n  orket runtime --card ... --department core\n============================================================\n\n\n============================================================\n ORKET DRIVER (Interactive)\n============================================================\nDriver> [STARTUP WARNING] Structural reconciliation failed; continuing in degraded mode.\n"
+    },
+    "workflow": {
+      "command": [
+        "C:\\Source\\Orket\\.tmp\\release-0.7.1\\py311\\Scripts\\orket.exe",
+        "demo",
+        "governed-run",
+        "--workspace",
+        "C:\\Source\\Orket\\.tmp\\release-0.7.1\\py311-installed"
+      ],
+      "proof_mode": "live",
+      "observed_path": "primary",
+      "observed_result": "success",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "required_claim": "[orket] Run completed",
+      "output": "[model] Wants to inspect files\n[orket] Allowed: read-only observation allowed\n\n[model] Wants to edit config.yaml\n[orket] Approval required: write operation requires human approval\n\n[model] Wants to run shell command\n[orket] Blocked: shell command is not in the allowlist\n[orket] Run completed: allowed=1 approval_required=1 blocked=1\n[orket] Evidence bundle: .runs/governed-run-demo\n[orket] Inspect: orket inspect .runs/governed-run-demo\n[orket] Replay: orket replay .runs/governed-run-demo\n"
+    },
+    "api": {
+      "command": [
+        "C:\\Source\\Orket\\.tmp\\release-0.7.1\\py311\\Scripts\\python.exe",
+        "server.py",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "54196",
+        "--no-reload"
+      ],
+      "proof_mode": "live",
+      "observed_path": "primary",
+      "observed_result": "success",
+      "http_status": 200,
+      "body": {
+        "status": "ok"
+      },
+      "process_reaped": true,
+      "output": "INFO:     Started server process [28632]\nINFO:     Waiting for application startup.\nINFO:     Application startup complete.\nINFO:     Uvicorn running on http://127.0.0.1:54196 (Press CTRL+C to quit)\nINFO:     127.0.0.1:54197 - \"GET /health HTTP/1.1\" 200 OK\n",
+      "teardown": "Health-only server terminated and reaped; graceful task teardown is covered by agent acceptance."
+    }
+  },
+  "limits": [
+    "CLI structural reconciliation warning retained.",
+    "HTTP health server terminated/reaped; no graceful API lifecycle claim from that probe.",
+    "Native trusted fixture and deterministic demo, not model inference or Docker acceptance."
+  ],
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-10-04T02:26:10.863583Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:e34342f74d67a2453b6ff6dc5a572cabb200e9cc775e7da301e7cda1227f2326",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 170,
+        "paths_total_reference": 170,
+        "churn_paths": 170,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    }
+  ]
+}

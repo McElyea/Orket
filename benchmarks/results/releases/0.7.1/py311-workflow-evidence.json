@@ -1,0 +1,135 @@
+{
+  "completed_at": "2026-07-12T00:00:01Z",
+  "policy": {
+    "shell_allowlist": [],
+    "version": "governed_run_policy.v1"
+  },
+  "proposed_actions": [
+    {
+      "action_id": "inspect-files",
+      "approval": {
+        "decision": "not_required",
+        "required": false
+      },
+      "command": "",
+      "intent": "Wants to inspect files",
+      "kind": "list",
+      "observation": {
+        "entries": [
+          ".orket",
+          "durable",
+          "fixture",
+          "workspace"
+        ],
+        "path": ".",
+        "status": "success",
+        "type": "directory_listing"
+      },
+      "policy_decision": {
+        "approval_required": false,
+        "decision": "allow",
+        "reason": "read-only observation allowed"
+      },
+      "proposal": {
+        "action_id": "inspect-files",
+        "command": "",
+        "id": "inspect-files",
+        "intent": "Wants to inspect files",
+        "kind": "list",
+        "proposed_by": "simulated_model",
+        "target": "."
+      },
+      "proposed_by": "simulated_model",
+      "resulting_status": "success",
+      "risk_classification": {
+        "reason": "read/list/inspect actions are read-only observations",
+        "risk": "read_only"
+      },
+      "side_effect_occurred": false,
+      "target": "."
+    },
+    {
+      "action_id": "edit-config",
+      "approval": {
+        "decision": "not_requested",
+        "reason": "deterministic demo records the approval gate without executing the side effect",
+        "required": true
+      },
+      "command": "",
+      "intent": "Wants to edit config.yaml",
+      "kind": "edit",
+      "policy_decision": {
+        "approval_required": true,
+        "decision": "requires_approval",
+        "reason": "write operation requires human approval"
+      },
+      "proposal": {
+        "action_id": "edit-config",
+        "command": "",
+        "id": "edit-config",
+        "intent": "Wants to edit config.yaml",
+        "kind": "edit",
+        "proposed_by": "simulated_model",
+        "target": "config.yaml"
+      },
+      "proposed_by": "simulated_model",
+      "resulting_status": "blocked_pending_approval",
+      "risk_classification": {
+        "reason": "write/edit/delete actions can mutate workspace state",
+        "risk": "write"
+      },
+      "side_effect_occurred": false,
+      "target": "config.yaml"
+    },
+    {
+      "action_id": "run-shell-command",
+      "approval": {
+        "decision": "not_required",
+        "required": false
+      },
+      "command": "rm -rf tmp/demo-cache",
+      "intent": "Wants to run shell command",
+      "kind": "shell",
+      "policy_decision": {
+        "approval_required": false,
+        "decision": "deny",
+        "reason": "shell command is not in the allowlist"
+      },
+      "proposal": {
+        "action_id": "run-shell-command",
+        "command": "rm -rf tmp/demo-cache",
+        "id": "run-shell-command",
+        "intent": "Wants to run shell command",
+        "kind": "shell",
+        "proposed_by": "simulated_model",
+        "target": ""
+      },
+      "proposed_by": "simulated_model",
+      "resulting_status": "blocked",
+      "risk_classification": {
+        "reason": "shell commands can mutate state or escape policy boundaries",
+        "risk": "command"
+      },
+      "side_effect_occurred": false,
+      "target": ""
+    }
+  ],
+  "resulting_status": "completed",
+  "run_id": "governed-run-demo",
+  "scenario": {
+    "model": {
+      "kind": "simulated",
+      "name": "deterministic-simulated-model"
+    },
+    "name": "governed-run-core-primitive",
+    "path": "C:/Source/Orket/.tmp/release-0.7.1/r02/py311/Lib/site-packages/orket/quickstart/governed_run_scenario.yaml"
+  },
+  "schema_version": "governed_run.evidence.v1",
+  "started_at": "2026-07-12T00:00:00Z",
+  "totals": {
+    "allowed": 1,
+    "denied": 1,
+    "requires_approval": 1,
+    "side_effects_occurred": 0
+  }
+}

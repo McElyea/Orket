@@ -1,0 +1,14 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+_________ test_installed_sdk_version_matches_package_in_text_and_json _________
+tests\e2e\test_packaged_extension_scaffold.py:51: in test_installed_sdk_version_matches_package_in_text_and_json
+    assert code == 0 and text.strip() == sdk_version, (text, stderr)
+E   AssertionError: ('OK: None None (None)\r
+E     ', '')
+E   assert (0 == 0 and 'OK: None None (None)' == '0.7.1'
+E     
+E     - 0.7.1
+E     + OK: None None (None))
+=========================== short test summary info ===========================
+FAILED tests/e2e/test_packaged_extension_scaffold.py::test_installed_sdk_version_matches_package_in_text_and_json
+1 failed in 1.18s

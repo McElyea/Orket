@@ -25,12 +25,12 @@ from orket.core.domain.bug_fix_phase import (
 from orket.core.domain.critical_path import CriticalPathEngine
 from orket.core.domain.execution import ExecutionResult, ExecutionTurn, ToolCall, ToolCallErrorClass
 from orket.core.domain.failure_reporter import FailureReporter, PolicyViolationReport
-from orket.core.domain.fixture_verifier import FixtureVerifier, VerificationSecurityError
+from orket.core.domain.fixture_verifier import VerificationSecurityError
 from orket.core.domain.reconciler import StructuralReconciler
 from orket.core.domain.records import CardRecord, IssueRecord
 from orket.core.domain.sandbox import PortAllocation, Sandbox, SandboxRegistry, SandboxStatus, TechStack
 from orket.core.domain.state_machine import StateMachine, StateMachineError
-from orket.core.domain.verification import AGENT_OUTPUT_DIR, VERIFICATION_DIR, VerificationEngine
+from orket.core.domain.verification import AGENT_OUTPUT_DIR, VERIFICATION_DIR
 from orket.schema import WaitReason
 
 warnings.warn("`orket.domain` is deprecated; import from `orket.core.domain` instead.", DeprecationWarning, stacklevel=2)
@@ -80,7 +80,6 @@ __all__ = [
     "ExecutionResult",
     "ExecutionTurn",
     "FailureReporter",
-    "FixtureVerifier",
     "IssueRecord",
     "PolicyViolationReport",
     "PortAllocation",
@@ -94,7 +93,6 @@ __all__ = [
     "ToolCall",
     "ToolCallErrorClass",
     "VERIFICATION_DIR",
-    "VerificationEngine",
     "VerificationSecurityError",
     "WaitReason",
 ]

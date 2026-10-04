@@ -1,6 +1,6 @@
 {
   "schema_version": "current_authority.v1",
-  "updated_on": "2026-10-01",
+  "updated_on": "2026-10-03",
   "history": {
     "path": "docs/architecture/history/CURRENT_AUTHORITY_PRE_MANIFEST_2026-09-28.md",
     "sha256": "ba47889a8b7dc9f76e462ceecf460500b2220e2767eda92e7ee68bb59dca07a9"
@@ -190,7 +190,7 @@
       "kind": "contract",
       "label": "Runtime result and lifecycle",
       "source": "docs/specs/RUNTIME_EXECUTION_RESULT_CONTRACT.md",
-      "scope": "Application results, owned runtime/model-stream lifetimes and bounded demo/marshaller native publication."
+      "scope": "Application results, owned runtime/model-stream lifetimes, async fixture support execution and bounded demo/marshaller native publication. Synchronous fixture classes are retired in 0.7.1."
     },
     {
       "id": "contract.sdk",

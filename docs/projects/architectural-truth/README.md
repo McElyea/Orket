@@ -31,5 +31,7 @@ is retained.
 [Worksets](GOAL_WORKSETS.json), [exceptions](ARCHITECTURE_EXCEPTION_REGISTER.json),
 [contributor workflow](../../CONTRIBUTOR.md) and [roadmap](../../ROADMAP.md) retain
 their distinct authority. The user subsequently authorized the main merge and
-v0.7.0 release; the canonical plan records that separate release handoff. Earlier queue history remains in
+v0.7.0 release, followed by 0.7.1 cleanup of the fixture tombstones and SDK version
+text output. The canonical plan records that separate release handoff and final
+publication witness; proof is in `docs/releases/0.7.1/PROOF_REPORT.md`. Earlier queue history remains in
 the [archive](../archive/architectural-truth/AT10012026-GOAL-QUEUE/README.md).

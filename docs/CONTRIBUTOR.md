@@ -778,6 +778,12 @@ Both Quality selections retain the root controls with existing model policy guar
 
 ## Release and Versioning
 
+Core 0.7.1 removes the former `FixtureVerifier` and `VerificationEngine` migration
+tombstones and their legacy-domain exports. Fixture callers use
+`await FixtureVerificationService(workspace, utc_now=clock).verify(verification)`;
+do not restore synchronous forwarding. Contract and retirement scope:
+`docs/specs/VERIFICATION_PROCESS_LIFETIME_CONTRACT.md`.
+
 1. Core engine release/versioning authority lives in `docs/specs/CORE_RELEASE_VERSIONING_POLICY.md`.
 2. Core engine version source of truth is `pyproject.toml`.
 3. Starting with `0.4.0`, each commit kept on `main` must advance the core engine version, keep `CHANGELOG.md` aligned, and create and push the matching annotated Git tag `v<version>`. The default release step is a patch bump; minor release steps are allowed only as defined in `docs/specs/CORE_RELEASE_VERSIONING_POLICY.md`.

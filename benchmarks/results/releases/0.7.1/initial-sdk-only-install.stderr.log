@@ -1,0 +1,15 @@
+Using Python 3.11.14 environment at: sdk-only
+Resolved 12 packages in 16ms
+Installed 12 packages in 107ms
+ + annotated-types==0.8.0
+ + attrs==26.1.0
+ + jsonschema==4.26.0
+ + jsonschema-specifications==2025.9.1
+ + orket-extension-sdk==0.7.1 (from file:///C:/Source/Orket/dist/orket_extension_sdk-0.7.1-py3-none-any.whl)
+ + pydantic==2.13.5
+ + pydantic-core==2.46.5
+ + pyyaml==6.0.3
+ + referencing==0.37.0
+ + rpds-py==2026.6.3
+ + typing-extensions==4.16.0
+ + typing-inspection==0.4.4

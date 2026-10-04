@@ -1,0 +1,112 @@
+{
+  "status": "finished",
+  "observed_path": "primary",
+  "commands": [
+    {
+      "argv": [
+        "C:\\Source\\Orket\\.tmp\\release-0.7.1\\py311\\Scripts\\python.exe",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/e2e/test_packaged_extension_scaffold.py::test_installed_sdk_version_matches_package_in_text_and_json",
+        "--tb=short",
+        "--basetemp=C:\\Source\\Orket\\.tmp\\release-0.7.1\\sdk-version-counterexample-temp"
+      ],
+      "cwd": "C:\\Source\\Orket",
+      "status": "finished",
+      "started_at_unix": 1791081014.205959,
+      "exit_code": 1,
+      "lifetime": {
+        "schema_version": "owned_command.v1",
+        "reason": "completed",
+        "cleanup_confirmed": true,
+        "capture_complete": true,
+        "backend": "windows_job",
+        "transport_pid": 24420,
+        "supervisor_pid": 40076,
+        "command_pid": 5892,
+        "diagnostics": []
+      },
+      "finished_at_unix": 1791081016.4224098,
+      "stdout": {
+        "path": "C:\\Source\\Orket\\.tmp\\release-0.7.1\\sdk-version-counterexample.stdout.log",
+        "sha256": "6bb19ab6eb2e989b588a236c6b6598811ed125250e1e48c5c2fbaeb5c48f902a"
+      },
+      "stderr": {
+        "path": "C:\\Source\\Orket\\.tmp\\release-0.7.1\\sdk-version-counterexample.stderr.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  ],
+  "result": "failure reproduced",
+  "observed_result": "failure",
+  "finished_at_unix": 1791081016.4334314,
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-10-04T02:30:14.206458Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:aa6d5325e4d551dbac2fce30c0d811391b8199dd057735d11f72185e777facab",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 27,
+        "paths_total_reference": 27,
+        "churn_paths": 27,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    },
+    {
+      "run_at_utc": "2026-10-04T02:30:16.432428Z",
+      "changed": true,
+      "before_digest": "sha256:aa6d5325e4d551dbac2fce30c0d811391b8199dd057735d11f72185e777facab",
+      "after_digest": "sha256:300386012a2bf0b75ddbb20867bfe25f798d09bd82f03b5a2beb45363f63117c",
+      "diff": {
+        "added_paths": 5,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 27,
+        "paths_total_current": 59,
+        "paths_total_reference": 59,
+        "churn_paths": 6,
+        "churn_ratio": 0.101695,
+        "sample_paths": [
+          "$.commands[0].exit_code",
+          "$.commands[0].finished_at_unix",
+          "$.commands[0].lifetime",
+          "$.commands[0].stderr",
+          "$.commands[0].stdout",
+          "$.commands[0].status"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-04T02:30:16.438440Z",
+      "changed": true,
+      "before_digest": "sha256:300386012a2bf0b75ddbb20867bfe25f798d09bd82f03b5a2beb45363f63117c",
+      "after_digest": "sha256:51c3670f78df35f284a5bf21191f116649cdfcaa0b87147da0a062c1edaa9646",
+      "diff": {
+        "added_paths": 3,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 59,
+        "paths_total_current": 65,
+        "paths_total_reference": 65,
+        "churn_paths": 4,
+        "churn_ratio": 0.061538,
+        "sample_paths": [
+          "$.finished_at_unix",
+          "$.observed_result",
+          "$.result",
+          "$.status"
+        ]
+      }
+    }
+  ]
+}

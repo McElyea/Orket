@@ -4,6 +4,18 @@ All notable changes to `orket-extension-sdk` will be documented in this file.
 
 The format is based on Keep a Changelog and this package follows SemVer while in the `0.x` line.
 
+## [0.7.1] - 2026-10-03
+
+### Changed
+- Publish the verified Windows pairing with core 0.7.1 and update compatibility
+  documentation. SDK public contracts and implementation remain unchanged except
+  version identity. This is a packaging/compatibility patch, not a new SDK feature.
+- The admitted window is exact core 0.7.1 with SDK 0.7.1; the historical 0.7.0
+  pair retains its separate release record. Other cross-pairings are not certified.
+- SDK compatibility: preserved for extensions using its public surface;
+  no extension source migration is required from SDK 0.7.0. Core-private fixture
+  imports require the migration documented in `docs/releases/0.7.1/RELEASE_NOTES.md`.
+
 ## [0.7.0] - 2026-10-03
 
 ### Changed

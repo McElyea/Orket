@@ -1,12 +1,12 @@
 # Architectural Truth: Executable Goal Queue
 
 Last updated: 2026-10-03 (America/Denver)
-Status: Active umbrella; bounded Windows ATG-v1 complete and merged; v0.7.0 release checkpoint
+Status: Active umbrella; bounded Windows ATG-v1 complete; v0.7.1 release cleanup checkpoint
 Queue: ATG-v1 — ten goals; Windows-only scope amended by the user on 2026-10-03
 Owner: Orket Core
 Worktree: `C:/Source/Orket` (release integration; original ATG proof worktree retained)
 Branch: `main`; accepted ATG checkpoint remains `codex/architectural-truth-bt0` / `v0.6.144`
-Next goal: **None in ATG-v1; separately authorized v0.7.0 release follows below**
+Next goal: **None; v0.7.1 cleanup complete subject to the publication witness below**
 
 ## Purpose and authority
 
@@ -406,6 +406,47 @@ verified; budget for at most two days. The user's kickoff time remains schedulin
 input, not a Linux/runner prerequisite.
 
 ## Post-queue release authorization
+
+### Current release cleanup: 0.7.1 completion checkpoint
+
+The user requested completion of remaining release changes after matched core/SDK
+0.7.0 were published at `43c3650d1a29822b2091a75474902c726bcb5048`.
+The concrete remaining item is `BT4-FIXTURE-SYNC-RETIRE`. Its bounded workset is
+the two refusing fixture classes, their deprecated exports, dependent tests,
+current contracts and matched core/SDK packaging metadata. Production callers of
+the classes are absent; constant/security-error consumers retain their identities.
+Other aliases and broader ATG limitations keep their separate contracts.
+
+An actual installed counterexample additionally found `orket sdk --version`
+printing `OK: None None (None)` while JSON was correct. The same release workset
+fixes the host text renderer and requires exact installed text/JSON output. First
+candidate bytes and the failed regression remain under `.tmp/release-0.7.1/`;
+the corrected build/run is `.tmp/release-0.7.1/r02/state.json`.
+
+The corrected candidate passes 372 selected cases and three additional installed
+SDK CLI cases on Python 3.12. Actual installed async fixtures and CLI/API/workflow
+paths pass on Windows 3.11/3.12, with the existing degraded startup warning retained.
+Exact version text/JSON, strict template validation, standalone SDK isolation and
+canonical structural gates pass. Both fixture classes and their deprecated exports
+are absent. Their removal obligation and the SDK text-rendering defect are closed
+once final publication readback succeeds; other compatibility duties remain.
+
+Acceptance requires actual native async fixture behavior/cleanup, all removed
+class exports absent in source and installed packages, SDK/public-path controls,
+canonical structural/docs gates, exact package hashes, and published matching
+0.7.1 tags/assets. The 0.7.0 releases remain immutable. Contract:
+`docs/architecture/CONTRACT_DELTA_FIXTURE_RETIREMENT_0_7_1_2026-10-03.md`.
+Proof: `docs/releases/0.7.1/PROOF_REPORT.md`; stable evidence:
+`benchmarks/results/releases/0.7.1/`. Native execution/build/check and publication
+receipts: `.tmp/release-0.7.1/r02/state.json`, `.tmp/release-0.7.1/final-checks.json`,
+and `.tmp/release-0.7.1/publication.json`. Freeze tracked inputs during each run;
+inspect an existing receipt before retrying. Preserve the local skip-worktree
+operational override and substitute its Git blob only in packaging snapshots.
+The accepted patch is complete when the publication receipt reports `verified`
+and the two matching annotated tags/GitHub assets identify the same commit and
+verified bytes. Then no release cleanup remains; the ATG queue stays 10/10.
+
+### Published 0.7.0 disposition (historical)
 
 The user accepted the completed Windows queue, then explicitly requested merge
 to main and release 0.7.0 on October 3. That instruction supersedes this queue's

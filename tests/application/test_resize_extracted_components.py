@@ -3,23 +3,24 @@ from __future__ import annotations
 import pytest
 
 from orket.application.services.sandbox_verification_service import SandboxVerificationService
-from orket.core.domain.fixture_verifier import FixtureVerifier
+from orket.core.domain.fixture_verifier import interpret_fixture
 from orket.orchestration.engine_services import KernelGatewayFacade
 from orket.orchestration.orchestration_config import OrchestrationConfig
 from orket.schema import IssueVerification, VerificationScenario
 from tests.helpers.turn_artifacts import artifact_test_utc_now
 
 
-@pytest.mark.unit
-def test_fixture_verifier_mark_all_failed() -> None:
-    verifier = FixtureVerifier()
+@pytest.mark.contract
+def test_fixture_failure_interpretation_preserves_input() -> None:
+    """Layer: contract. A failed fixture marks every result without mutating caller input."""
     verification = IssueVerification(
-        fixture_path="",
+        fixture_path="verification/fixture.py",
         scenarios=[VerificationScenario(id="S1", description="d", input_data={}, expected_output={})],
     )
-    failed = verifier.mark_all_failed(verification)
-    assert failed == 1
-    assert verification.scenarios[0].status == "fail"
+    result, scenarios = interpret_fixture(verification, timestamp="2026-10-03T00:00:00Z", error="fixture failed")
+    assert (result.passed, result.failed) == (0, 1)
+    assert scenarios[0].status == "fail"
+    assert verification.scenarios[0].status == "pending"
 
 
 @pytest.mark.asyncio

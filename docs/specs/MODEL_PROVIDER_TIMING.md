@@ -1,7 +1,7 @@
 # Model provider timing availability
 
 Last updated: 2026-10-03
-Status: Active contract; matched core/SDK 0.7.0 Windows release
+Status: Active contract; matched core/SDK 0.7.x Windows releases
 Owner: Orket Core
 
 ## Provider response observations
@@ -70,6 +70,8 @@ preserves these fields; it does not cast null to an integer. `reported` means th
 host/provider supplied that observation, not an independent timing attestation.
 
 This public change ships in SDK 0.7.0 with the matched core 0.7.0 release.
+SDK/core 0.7.1 preserve these same timing contracts in their separately verified
+matched Windows pair; see `docs/releases/0.7.1/PROOF_REPORT.md`.
 Consumers must handle nullable latency and retain the response version/posture.
 Published core/SDK compatibility remains governed by
 `docs/requirements/sdk/VERSIONING.md` and `docs/releases/0.7.0/PROOF_REPORT.md`.

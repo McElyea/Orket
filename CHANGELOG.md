@@ -5,6 +5,18 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.1] - 2026-10-03 - "Complete fixture and SDK release cleanup"
+
+### Changed
+- Complete `BT4-FIXTURE-SYNC-RETIRE`: remove `FixtureVerifier` and `VerificationEngine`, including their deprecated domain exports. Async fixture verification remains the sole execution path; location constants and the security exception retain their existing identities.
+- Fix `orket sdk --version` to print the canonical SDK version instead of `OK: None None (None)`; JSON output retains its existing contract. Installed CLI regression proof checks exact output in both formats.
+- Publish matched core/SDK 0.7.1 with an exact SDK pin. SDK protocol behavior is unchanged; the admitted pair is Windows core 0.7.1 plus SDK 0.7.1. Existing published 0.7.0 artifacts remain immutable.
+- Migration: replace retired core/legacy class imports with `FixtureVerificationService` and await its `verify` method with an explicit clock. See `docs/releases/0.7.1/RELEASE_NOTES.md`.
+- Stability: bounded Windows patch; existing CLI startup, coverage capture, provider/platform and broader architectural limits remain. Other compatibility aliases keep their declared windows.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+
 ## [0.7.0] - 2026-10-03 - "Windows architectural truth"
 
 ### Changed

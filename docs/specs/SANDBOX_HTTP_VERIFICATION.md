@@ -71,8 +71,9 @@ The old core `SandboxVerifier` and `VerificationEngine.verify_sandbox` execution
 surfaces are removed without forwarding shims. Core retains only captured-value
 and interpretation functions. Fixture subprocess support code moves to
 `orket/adapters/execution/fixture_runner.py`; its application/container consumers
-use that one definition. Existing synchronous fixture tombstones retain their
-`BT4-FIXTURE-SYNC-RETIRE` removal ticket.
+use that one definition. Core 0.7.1 removes the synchronous fixture tombstones
+and their deprecated class exports under `BT4-FIXTURE-SYNC-RETIRE`; async fixture
+execution remains in `FixtureVerificationService`.
 
 This contract does not change Docker deployment admission, fixture execution
 policy, OS isolation, provider promotion or the trusted-code claim ceiling.

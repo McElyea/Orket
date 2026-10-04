@@ -12,6 +12,12 @@ history and cannot establish success. The same result governs CLI output and exi
 status. This contract covers normal return, retained failure, approval wait,
 incomplete work, cancellation and unresolved publication/recovery observations.
 
+Fixture verification is supporting evidence, not card completion authority.
+Its sole execution path is the async application `FixtureVerificationService`;
+core 0.7.1 removes the former synchronous fixture classes and their legacy exports.
+Native ownership, migration and limits remain in
+`docs/specs/VERIFICATION_PROCESS_LIFETIME_CONTRACT.md`.
+
 Reuse `RunRecord`, `FinalTruthRecord`, `RunState`, `ResultClass`, evidence
 sufficiency and residual-uncertainty vocabulary from the canonical control-plane
 contracts. Do not introduce another terminal journal or infer status from log

@@ -1,0 +1,54 @@
+........................................................................ [ 19%]
+........................................................................ [ 38%]
+........................................................................ [ 58%]
+........................................................................ [ 77%]
+........................................................................ [ 96%]
+............                                                             [100%]
+============================== warnings summary ===============================
+.tmp\release-0.7.1\r02\py311\Lib\site-packages\fastapi\testclient.py:1
+  C:\Source\Orket\.tmp\release-0.7.1\r02\py311\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+tests/adapters/test_verification_subprocess.py::test_sync_fixture_symbols_are_retired[orket.domain-names2]
+  C:\Users\jonmc\AppData\Roaming\uv\python\cpython-3.11.14-windows-x86_64-none\Lib\importlib\__init__.py:126: DeprecationWarning: `orket.domain` is deprecated; import from `orket.core.domain` instead.
+    return _bootstrap._gcd_import(name[level:], package, level)
+
+tests/integration/test_fixture_verification_inputs.py::test_fixture_metadata_stays_owned_through_interruption[cancel]
+tests/integration/test_fixture_verification_inputs.py::test_fixture_metadata_stays_owned_through_interruption[timeout]
+  tests\integration\test_fixture_verification_inputs.py:79: PytestWarning: record_property is incompatible with junit_family 'xunit2' (use 'legacy' or 'xunit1')
+    @pytest.mark.parametrize("stop", ["cancel", "timeout"])
+
+tests/integration/test_fixture_security_publication.py::test_security_publication_retains_native_append_and_failure_precedence[False-none]
+tests/integration/test_fixture_security_publication.py::test_security_publication_retains_native_append_and_failure_precedence[False-cancel]
+tests/integration/test_fixture_security_publication.py::test_security_publication_retains_native_append_and_failure_precedence[False-timeout]
+tests/integration/test_fixture_security_publication.py::test_security_publication_retains_native_append_and_failure_precedence[True-none]
+tests/integration/test_fixture_security_publication.py::test_security_publication_retains_native_append_and_failure_precedence[True-cancel]
+tests/integration/test_fixture_security_publication.py::test_security_publication_retains_native_append_and_failure_precedence[True-timeout]
+  tests\integration\test_fixture_security_publication.py:56: PytestWarning: record_property is incompatible with junit_family 'xunit2' (use 'legacy' or 'xunit1')
+    @pytest.mark.parametrize("stop", ["none", "cancel", "timeout"])
+
+tests/integration/test_fixture_input_adverse_controls.py::test_fixture_unsupported_graph_refuses_without_hooks_or_child[hook]
+tests/integration/test_fixture_input_adverse_controls.py::test_fixture_unsupported_graph_refuses_without_hooks_or_child[cycle]
+tests/integration/test_fixture_input_adverse_controls.py::test_fixture_unsupported_graph_refuses_without_hooks_or_child[nan]
+tests/integration/test_fixture_input_adverse_controls.py::test_fixture_unsupported_graph_refuses_without_hooks_or_child[nonstring-key]
+  tests\integration\test_fixture_input_adverse_controls.py:52: PytestWarning: record_property is incompatible with junit_family 'xunit2' (use 'legacy' or 'xunit1')
+    @pytest.mark.parametrize("kind", ["hook", "cycle", "nan", "nonstring-key"])
+
+tests/integration/test_fixture_input_adverse_controls.py::test_fixture_native_failure_precedence[none]
+tests/integration/test_fixture_input_adverse_controls.py::test_fixture_native_failure_precedence[cancel]
+tests/integration/test_fixture_input_adverse_controls.py::test_fixture_native_failure_precedence[timeout]
+tests/integration/test_fixture_input_adverse_controls.py::test_fixture_native_failure_precedence[previous-handled]
+  tests\integration\test_fixture_input_adverse_controls.py:75: PytestWarning: record_property is incompatible with junit_family 'xunit2' (use 'legacy' or 'xunit1')
+    @pytest.mark.parametrize("stop", ["none", "cancel", "timeout", "previous-handled"])
+
+tests/integration/test_fixture_input_adverse_controls.py::test_fixture_cancelled_native_tree_logs_only_to_captured_root
+  tests\integration\test_fixture_input_adverse_controls.py:162: PytestWarning: record_property is incompatible with junit_family 'xunit2' (use 'legacy' or 'xunit1')
+    async def test_fixture_cancelled_native_tree_logs_only_to_captured_root(tmp_path, monkeypatch, record_property):
+
+tests/integration/test_sandbox_cleanup_observation.py::test_cleanup_retains_held_metadata_through_repeated_cancel[preview]
+tests/integration/test_sandbox_cleanup_observation.py::test_cleanup_retains_held_metadata_through_repeated_cancel[execute]
+  tests\integration\test_sandbox_cleanup_observation.py:82: PytestWarning: record_property is incompatible with junit_family 'xunit2' (use 'legacy' or 'xunit1')
+    @pytest.mark.parametrize("execute", [False, True], ids=["preview", "execute"])
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+372 passed, 21 warnings in 63.46s (0:01:03)

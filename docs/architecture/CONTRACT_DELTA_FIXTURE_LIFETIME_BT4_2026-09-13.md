@@ -1,5 +1,10 @@
 # Contract delta: application-owned fixture verification
 
+Current removal disposition (0.7.1): `BT4-FIXTURE-SYNC-RETIRE` removes the two
+synchronous fixture classes and their deprecated exports. The earlier timeline
+below is historical; current migration and exact scope are in
+`CONTRACT_DELTA_FIXTURE_RETIREMENT_0_7_1_2026-10-03.md`.
+
 Release disposition (2026-10-03): the removal target below was not completed.
 Core 0.7.0 retains the existing refusing tombstones and deprecated exports;
 `BT4-FIXTURE-SYNC-RETIRE` remains overdue under Orket Core ownership. The explicit

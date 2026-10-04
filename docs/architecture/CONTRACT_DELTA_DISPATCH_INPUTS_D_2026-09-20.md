@@ -1,5 +1,10 @@
 # Immutable planner and router inputs
 
+Current removal disposition (0.7.1): `BT4-FIXTURE-SYNC-RETIRE` removes the two
+synchronous fixture classes and their deprecated exports. The earlier timeline
+below is historical; current migration and exact scope are in
+`CONTRACT_DELTA_FIXTURE_RETIREMENT_0_7_1_2026-10-03.md`.
+
 ## Summary
 - Owner: Orket Core, architectural-truth D.
 - Effective version: 0.6.46 candidate, 2026-09-20.

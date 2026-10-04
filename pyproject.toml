@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "orket"
-version = "0.7.0"
+version = "0.7.1"
 description = "Local-first workflow runtime for card-based execution"
 authors = [
     { name = "Jonathan McElyea" }
@@ -15,7 +15,7 @@ license-files = ["LICENSE"]
 requires-python = ">=3.11"
 dependencies = [
     # Core
-    "orket-extension-sdk==0.7.0",
+    "orket-extension-sdk==0.7.1",
     "jsonschema>=4.20.0,<5.0.0",
     "ollama>=0.4.0,<1.0.0",
     "pydantic>=2.5.0,<3.0.0",

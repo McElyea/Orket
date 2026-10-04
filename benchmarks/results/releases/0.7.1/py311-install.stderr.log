@@ -1,0 +1,69 @@
+Using Python 3.11.14 environment at: py311
+Resolved 67 packages in 39ms
+Prepared 2 packages in 394ms
+Installed 65 packages in 963ms
+ + aiofiles==25.1.0
+ + aiosqlite==0.22.1
+ + annotated-doc==0.0.5
+ + annotated-types==0.8.0
+ + anyio==4.15.1
+ + ast-serialize==0.11.2
+ + attrs==26.1.0
+ + bcrypt==5.0.0
+ + certifi==2026.7.22
+ + cffi==2.1.1
+ + click==8.5.0
+ + colorama==0.4.6
+ + coverage==7.16.2
+ + cryptography==50.0.1
+ + ecdsa==0.19.2
+ + fastapi==0.141.1
+ + google-crc32c==1.9.0
+ + h11==0.16.0
+ + httpcore==1.0.9
+ + httpx==0.28.1
+ + idna==3.20
+ + iniconfig==2.3.0
+ + jsonschema==4.26.0
+ + jsonschema-specifications==2025.9.1
+ + librt==0.15.0
+ + mypy==2.3.1
+ + mypy-extensions==1.1.0
+ + ollama==0.6.2
+ + orket==0.7.1 (from file:///C:/Source/Orket/dist/orket-0.7.1-py3-none-any.whl)
+ + orket-extension-sdk==0.7.1 (from file:///C:/Source/Orket/dist/orket_extension_sdk-0.7.1-py3-none-any.whl)
+ + passlib==1.7.4
+ + pathspec==1.1.1
+ + pluggy==1.6.0
+ + psutil==6.1.1
+ + pyasn1==0.6.4
+ + pycparser==3.0
+ + pydantic==2.13.5
+ + pydantic-core==2.46.5
+ + pygments==2.21.0
+ + pytest==9.1.1
+ + pytest-asyncio==1.4.0
+ + pytest-cov==6.3.0
+ + python-dotenv==1.2.3
+ + python-jose==3.5.0
+ + python-multipart==0.0.32
+ + pyyaml==6.0.3
+ + referencing==0.37.0
+ + respx==0.23.1
+ + rfc8785==0.1.4
+ + rpds-py==2026.6.3
+ + rsa==4.9.1
+ + ruff==0.16.9
+ + six==1.17.0
+ + starlette==1.7.0
+ + types-aiofiles==25.1.0.20260518
+ + types-jsonschema==4.26.0.20260518
+ + types-passlib==1.7.7.20260211
+ + types-psutil==7.2.2.20260906
+ + types-pyasn1==0.6.0.20260724
+ + types-python-jose==3.5.0.20260408
+ + types-pyyaml==6.0.12.20260906
+ + typing-extensions==4.16.0
+ + typing-inspection==0.4.4
+ + tzdata==2026.4
+ + uvicorn==0.54.0

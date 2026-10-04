@@ -1,10 +1,11 @@
 """Fixture behavior through the canonical async application boundary."""
 import asyncio
+import importlib
 
 import pytest
 
 from orket.application.services.fixture_verification_service import FixtureVerificationService
-from orket.core.domain.verification import FixtureVerifier, VerificationEngine, VerificationSecurityError
+from orket.core.domain.fixture_verifier import VerificationSecurityError
 from orket.schema import IssueVerification, VerificationScenario
 from tests.helpers.turn_artifacts import artifact_test_utc_now
 
@@ -88,14 +89,21 @@ async def test_invalid_admission_does_not_execute(tmp_path, monkeypatch, setting
     assert not await asyncio.to_thread((tmp_path / "verification/executed").exists)
 
 
-@pytest.mark.parametrize("entrypoint", [FixtureVerifier().verify, VerificationEngine.verify])
+@pytest.mark.parametrize("module_name,names", [
+    ("orket.core.domain.fixture_verifier", ("FixtureVerifier",)),
+    ("orket.core.domain.verification", ("FixtureVerifier", "VerificationEngine")),
+    ("orket.domain", ("FixtureVerifier", "VerificationEngine")),
+    ("orket.domain.fixture_verifier", ("FixtureVerifier",)),
+    ("orket.domain.verification", ("FixtureVerifier", "VerificationEngine")),
+])
 # Layer: contract
 @pytest.mark.contract
-async def test_sync_entrypoint_requires_explicit_migration(tmp_path, entrypoint):
-    verification = await asyncio.to_thread(prepare, tmp_path)
-    with pytest.raises(RuntimeError, match="FixtureVerificationService"):
-        entrypoint(verification, tmp_path)
-    assert verification.scenarios[0].status == "pending"
+async def test_sync_fixture_symbols_are_retired(module_name, names):
+    """Layer: contract. Canonical and deprecated imports expose no synchronous executor."""
+    module = importlib.import_module(module_name)
+    for name in names:
+        assert not hasattr(module, name)
+        assert name not in getattr(module, "__all__", ())
 
 
 # Layer: contract

@@ -174,11 +174,12 @@ installed or live Docker acceptance and does not replace the process/container o
    publication follow `RUNTIME_VERIFICATION_OWNERSHIP.md`. Both verification
    services require explicit aware `utc_now`; orchestration forwards its selected
    turn clock rather than constructing an implicit host-clock input.
-2. Synchronous `FixtureVerifier.verify` and `VerificationEngine.verify` refuse
-   before any effect with an explicit migration error. They are temporary
-   tombstones under `BT4-FIXTURE-SYNC-RETIRE`, not functioning fallback executors.
-   Core 0.7.0 retains them; the originally planned removal remains overdue and
-   tracked in the architectural-truth plan and the 0.7.0 release contract delta.
+2. Core 0.7.1 removes `FixtureVerifier` and `VerificationEngine`, including their
+   canonical and deprecated-domain exports, completing `BT4-FIXTURE-SYNC-RETIRE`.
+   Their former refusing migration tombstones no longer import. Use the async
+   `FixtureVerificationService` with an explicit clock. The existing location
+   constants, security exception and unrelated domain aliases remain. Migration:
+   `docs/architecture/CONTRACT_DELTA_FIXTURE_RETIREMENT_0_7_1_2026-10-03.md`.
 3. Native fixtures reuse owned command execution, including bounded raw capture.
    The existing fixture runner remains support evidence; a passing fixture is not
    sufficient card completion authority. Invalid modes fail closed. Production

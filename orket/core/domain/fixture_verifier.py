@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 from orket.schema import IssueVerification, VerificationResult, VerificationScenario
 
@@ -70,20 +69,3 @@ def interpret_fixture(verification: IssueVerification, *, timestamp: str, stdout
     logs.append(f"--- Verification Complete: {passed} Passed, {failed} Failed ---")
     return VerificationResult(timestamp=timestamp, total_scenarios=len(scenarios), passed=passed,
                               failed=failed, logs=logs, process_lifetime=lifetime), scenarios
-
-
-class FixtureVerifier:
-    """Legacy symbols pending BT4-FIXTURE-SYNC-RETIRE at the 0.7.0 cutover."""
-
-    def __init__(self, verification_dir: str = "verification") -> None:
-        self.verification_dir = verification_dir
-
-    @staticmethod
-    def mark_all_failed(verification: IssueVerification) -> int:
-        for scenario in verification.scenarios:
-            scenario.status = "fail"
-        return len(verification.scenarios)
-
-    def verify(self, verification: IssueVerification, workspace_root: Path) -> VerificationResult:
-        raise RuntimeError("Synchronous fixture execution was retired. "
-                           "Use await FixtureVerificationService(workspace, utc_now=...).verify(verification).")
