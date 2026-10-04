@@ -1,0 +1,19 @@
+{
+  "by_layer": {
+    "contract": 4985,
+    "end_to_end": 112,
+    "integration": 7165,
+    "unit": 818
+  },
+  "classification_source": "pytest_collection",
+  "collection_errors": [],
+  "collection_exit_code": 0,
+  "collection_output": "",
+  "invalid_layer_total": 0,
+  "invalid_layers": [],
+  "missing_layer_total": 0,
+  "missing_layers": [],
+  "ok": true,
+  "schema_version": "test_taxonomy_report.v2",
+  "tests_total": 13080
+}

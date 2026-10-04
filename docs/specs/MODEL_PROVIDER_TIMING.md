@@ -1,7 +1,7 @@
 # Model provider timing availability
 
-Last updated: 2026-09-13
-Status: Active development contract; architectural-truth candidate
+Last updated: 2026-10-03
+Status: Active contract; matched core/SDK 0.7.0 Windows release
 Owner: Orket Core
 
 ## Provider response observations
@@ -69,9 +69,9 @@ inference and report unavailable latency. The generic extension generate route
 preserves these fields; it does not cast null to an integer. `reported` means the
 host/provider supplied that observation, not an independent timing attestation.
 
-This public change belongs to SDK 0.7.0a1 and its matched host candidate only.
+This public change ships in SDK 0.7.0 with the matched core 0.7.0 release.
 Consumers must handle nullable latency and retain the response version/posture.
 Published core/SDK compatibility remains governed by
-`docs/requirements/sdk/VERSIONING.md`; no release or tag is created here.
+`docs/requirements/sdk/VERSIONING.md` and `docs/releases/0.7.0/PROOF_REPORT.md`.
 Governed-agent receipts retain the separate v2 contract in
 `docs/specs/GOVERNED_AGENT_LOOP_V1.md`.

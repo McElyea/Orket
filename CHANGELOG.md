@@ -5,6 +5,18 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2026-10-03 - "Windows architectural truth"
+
+### Changed
+- Release the completed Windows ATG-v1 architectural-truth remediation on main: explicit input/effect ownership, truthful completion and cancellation, scoped dependency/authority checks, three named orchestration extractions, canonical typing and the unchanged 89% coverage gate.
+- Release matched core and standalone SDK 0.7.0; SDK 0.7.0 is admitted only with core 0.7.0 on Windows. Public model receipts negotiate v2; generic generation responses retain nullable latency and explicit posture.
+- Stability: supported Windows CLI/API, bounded trusted-extension and recorded local-provider paths retain their accepted scopes. This release does not claim whole C/D/E conformance, Linux/Mac or hosted acceptance, hostile-code isolation, remote inference teardown or production soak.
+- Compatibility: `python main.py` and hidden `--rock` remain deprecated but supported through 0.7.x. Existing stored v1 model receipts remain readable; old manifests do not gain new execution authority.
+- Required action: install the matched core/SDK wheels; review nullable latency, declare `agent_model_use_receipt.v2`, and strictly revalidate extensions. Direct Python embeddings must follow the current explicit input and async lifetime contracts. Review docs/releases/0.7.0/RELEASE_NOTES.md before upgrade.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+
 ## [0.6.144] - 2026-10-03
 
 ### Changed

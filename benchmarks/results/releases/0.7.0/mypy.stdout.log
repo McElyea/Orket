@@ -1,0 +1,6 @@
+orket\extensions\sdk_workload_runner.py:70: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+orket\extensions\sdk_workload_runner.py:109: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+orket\extensions\sdk_workload_runner.py:169: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+orket\extensions\governed_agent_invoker.py:108: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+orket\streaming\model_provider.py:233: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+Success: no issues found in 1223 source files

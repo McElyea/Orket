@@ -1,0 +1,107 @@
+{
+  "proof_mode": "live",
+  "python": "3.11.14 (main, Jan 14 2026, 19:28:21) [MSC v.1944 64 bit (AMD64)]",
+  "executable": "C:\\Source\\Orket\\.tmp\\release-0.7.0\\py311\\Scripts\\python.exe",
+  "origins": {
+    "orket": "C:\\Source\\Orket\\.tmp\\release-0.7.0\\py311\\Lib\\site-packages\\orket\\__init__.py",
+    "sdk": "C:\\Source\\Orket\\.tmp\\release-0.7.0\\py311\\Lib\\site-packages\\orket_extension_sdk\\__init__.py"
+  },
+  "version": "0.7.0",
+  "records": {
+    "default_runtime_entrypoint": {
+      "command": [
+        "C:\\Source\\Orket\\.tmp\\release-0.7.0\\py311\\Scripts\\orket.exe",
+        "runtime",
+        "--workspace",
+        "C:\\Source\\Orket\\.tmp\\release-0.7.0\\py311-surfaces\\workspace"
+      ],
+      "proof_mode": "live",
+      "observed_path": "degraded",
+      "observed_result": "success",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "required_claim": "ORKET DRIVER (Interactive)",
+      "output": "\n[FIRST RUN] Orket EOS Orkestrated.\n  Recommendation: Use the canonical card entrypoint for initialization to optimize your models.\n  Command: orket runtime --card initialize_orket\n\n============================================================\n ORKET EOS MANIFEST (Dept: core)\n Hardware: 24 Cores | 63.8GB RAM | 24.0GB VRAM\n============================================================\n\n[LOCAL ENGINES]\n  > Coder: None found\n  > Arch:  None found\n\n[EPICS (Standalone)]\n\n[COMMAND SUGGESTION]\n  orket runtime --card ... --department core\n============================================================\n\n\n============================================================\n ORKET DRIVER (Interactive)\n============================================================\nDriver> [STARTUP WARNING] Structural reconciliation failed; continuing in degraded mode.\n"
+    },
+    "handled_runtime_failure": {
+      "command": [
+        "C:\\Source\\Orket\\.tmp\\release-0.7.0\\py311\\Scripts\\orket.exe",
+        "runtime",
+        "extensions",
+        "unsupported"
+      ],
+      "proof_mode": "live",
+      "observed_path": "degraded",
+      "observed_result": "success",
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "required_claim": "orket runtime extensions list",
+      "output": "\n[FATAL] Supported extensions commands: 'orket runtime extensions list' and 'orket runtime extensions install <repo> [--ref <ref>]'.\n[STARTUP WARNING] Structural reconciliation failed; continuing in degraded mode.\nTraceback (most recent call last):\n  File \"C:\\Source\\Orket\\.tmp\\release-0.7.0\\py311\\Lib\\site-packages\\orket\\interfaces\\cli.py\", line 163, in run_cli\n    raise ValueError(\nValueError: Supported extensions commands: 'orket runtime extensions list' and 'orket runtime extensions install <repo> [--ref <ref>]'.\n"
+    },
+    "governed_run_workflow": {
+      "command": [
+        "C:\\Source\\Orket\\.tmp\\release-0.7.0\\py311\\Scripts\\orket.exe",
+        "demo",
+        "governed-run",
+        "--workspace",
+        "C:\\Source\\Orket\\.tmp\\release-0.7.0\\py311-surfaces"
+      ],
+      "proof_mode": "live",
+      "observed_path": "primary",
+      "observed_result": "success",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "required_claim": "[orket] Run completed",
+      "output": "[model] Wants to inspect files\n[orket] Allowed: read-only observation allowed\n\n[model] Wants to edit config.yaml\n[orket] Approval required: write operation requires human approval\n\n[model] Wants to run shell command\n[orket] Blocked: shell command is not in the allowlist\n[orket] Run completed: allowed=1 approval_required=1 blocked=1\n[orket] Evidence bundle: .runs/governed-run-demo\n[orket] Inspect: orket inspect .runs/governed-run-demo\n[orket] Replay: orket replay .runs/governed-run-demo\n",
+      "durable_evidence_present": true,
+      "durable_evidence_sha256": "2c733469d55eb6c99956d1ae1301dfffca03f9f35f890b66f5845f6bce1ca7f3"
+    },
+    "api_runtime_entrypoint": {
+      "command": [
+        "C:\\Source\\Orket\\.tmp\\release-0.7.0\\py311\\Scripts\\python.exe",
+        "server.py",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "65331",
+        "--no-reload"
+      ],
+      "proof_mode": "live",
+      "observed_path": "primary",
+      "observed_result": "success",
+      "http_status": 200,
+      "body": {
+        "status": "ok"
+      },
+      "process_reaped": true,
+      "output": "INFO:     Started server process [11900]\nINFO:     Waiting for application startup.\nINFO:     Application startup complete.\nINFO:     Uvicorn running on http://127.0.0.1:65331 (Press CTRL+C to quit)\nINFO:     127.0.0.1:65332 - \"GET /health HTTP/1.1\" 200 OK\n",
+      "teardown": "Health-only server terminated and reaped; graceful task teardown is covered by agent acceptance."
+    }
+  },
+  "observed_path": "degraded",
+  "observed_result": "success",
+  "limitations": [
+    "Health-only API server terminated/reaped by the existing probe; this alone is not graceful runtime shutdown proof.",
+    "Deterministic demo proves local workflow effects, not model inference; provider evidence is separately bound."
+  ],
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-10-04T01:16:04.821154Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:499825e0c43436fbc71c65f84c3bb6da6a02d357de5f8a5aea7143c8fc7b100f",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 134,
+        "paths_total_reference": 134,
+        "churn_paths": 134,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    }
+  ]
+}

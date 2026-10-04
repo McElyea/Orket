@@ -1,0 +1,57 @@
+........................................................................ [ 38%]
+.....................................................F.....F.F.......... [ 77%]
+.........................................                                [100%]
+================================== FAILURES ===================================
+________________________ test_validate_bundle_success _________________________
+tests\interfaces\test_orket_bundle_cli.py:49: in test_validate_bundle_success
+    assert result["ok"] is True
+E   assert False is True
+__________________ test_cli_pack_and_inspect_archive_success __________________
+tests\interfaces\test_orket_bundle_cli.py:110: in test_cli_pack_and_inspect_archive_success
+    assert pack_code == 0
+E   assert 1 == 0
+_______________ test_cli_pack_is_deterministic_for_same_source ________________
+tests\interfaces\test_orket_bundle_cli.py:144: in test_cli_pack_is_deterministic_for_same_source
+    assert main(["pack", str(bundle_dir), "--out", str(archive_one), "--json"]) == 0
+E   AssertionError: assert 1 == 0
+E    +  where 1 = main(['pack', 'C:\\Source\\Orket\\.tmp\\release-0.7.0\\source-controls-temp\\test_cli_pack_is_deterministic0\\bundle', '--out', 'C:\\Source\\Orket\\.tmp\\release-0.7.0\\source-controls-temp\\test_cli_pack_is_deterministic0\\one.orket', '--json'])
+---------------------------- Captured stdout call -----------------------------
+{
+  "ok": false,
+  "target": "C:\\Source\\Orket\\.tmp\\release-0.7.0\\source-controls-temp\\test_cli_pack_is_deterministic0\\bundle",
+  "error_count": 1,
+  "errors": [
+    {
+      "code": "E_PACK_VALIDATE_FAILED",
+      "location": "bundle",
+      "message": "Bundle must pass 'orket validate' before packing."
+    }
+  ],
+  "validation": {
+    "ok": false,
+    "target": "C:\\Source\\Orket\\.tmp\\release-0.7.0\\source-controls-temp\\test_cli_pack_is_deterministic0\\bundle",
+    "manifest_path": "C:\\Source\\Orket\\.tmp\\release-0.7.0\\source-controls-temp\\test_cli_pack_is_deterministic0\\bundle\\orket.json",
+    "manifest_name": "orket-summarizer",
+    "manifest_version": "0.1.0",
+    "engine_version_checked": "0.7.0",
+    "error_count": 1,
+    "errors": [
+      {
+        "code": "E_ENGINE_INCOMPATIBLE",
+        "location": "metadata.engineVersion",
+        "message": "Engine version 0.7.0 does not satisfy manifest range >=0.3.0,<0.7.0."
+      }
+    ]
+  }
+}
+============================== warnings summary ===============================
+..\py311\Lib\site-packages\fastapi\testclient.py:1
+  C:\Source\Orket\.tmp\release-0.7.0\py311\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/interfaces/test_orket_bundle_cli.py::test_validate_bundle_success
+FAILED tests/interfaces/test_orket_bundle_cli.py::test_cli_pack_and_inspect_archive_success
+FAILED tests/interfaces/test_orket_bundle_cli.py::test_cli_pack_is_deterministic_for_same_source
+3 failed, 182 passed, 1 warning in 19.22s

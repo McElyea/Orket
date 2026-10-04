@@ -20,9 +20,11 @@ The imported `PlanningInput` used by the existing protocol/export now refers to 
 single authoritative core definition; no second definition is retained.
 
 The legacy domain namespace remains unchanged under the accepted BT-4 compatibility
-commitment. Its import warnings and alias state remain D debt until the explicit
-0.7.0 cutover after caller inventory and contract acceptance. No classification or
-dependency exception is changed to relabel that debt as compliance.
+commitment. Its import warnings and alias state remain D debt. The planned
+0.7.0 removal was not completed; the explicit release delta retains those existing
+surfaces and the overdue `BT4-FIXTURE-SYNC-RETIRE` obligation after caller inventory
+and contract acceptance. No classification or dependency exception relabels that
+debt as compliance. See `CONTRACT_DELTA_CORE_SDK_0_7_0_2026-10-03.md`.
 
 ## Verification and rollback
 Require retained pre-change mutation counterexamples, immutable nested-value and

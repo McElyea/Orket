@@ -7,7 +7,7 @@ Owner: Orket Core
 The [canonical plan](ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md) owns the fixed ten-goal
 queue and final resume record. The bounded result is reconciled in the
 [ATG-10 closeout](../archive/architectural-truth/AT10032026-ATG10/CLOSEOUT.md).
-Verified publication of its matching **v0.6.144** checkpoint completes **10/10**;
+Verified publication of its matching **v0.6.144** checkpoint completed **10/10**;
 no next implementation is authorized. This registry and plan retain umbrella
 authority; whole-lane retirement and new capabilities need a separate user decision.
 
@@ -25,8 +25,11 @@ No unchanged installed/provider campaign was repeated. General current-authority
 runtime proof, Linux/Mac and hosted Quality remain unestablished. Broader C/D/E
 findings, marshaller/grounding debt and compatibility obligations stay recorded.
 
-Worktree: `C:/Source/Orket-architectural-truth`; branch: `codex/architectural-truth-bt0`.
+Current worktree: `C:/Source/Orket`; branch: `main`. The completed checkpoint
+worktree/branch `C:/Source/Orket-architectural-truth` / `codex/architectural-truth-bt0`
+is retained.
 [Worksets](GOAL_WORKSETS.json), [exceptions](ARCHITECTURE_EXCEPTION_REGISTER.json),
 [contributor workflow](../../CONTRIBUTOR.md) and [roadmap](../../ROADMAP.md) retain
-their distinct authority. Main was not merged. Earlier queue history remains in
+their distinct authority. The user subsequently authorized the main merge and
+v0.7.0 release; the canonical plan records that separate release handoff. Earlier queue history remains in
 the [archive](../archive/architectural-truth/AT10012026-GOAL-QUEUE/README.md).

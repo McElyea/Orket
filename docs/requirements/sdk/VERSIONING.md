@@ -1,6 +1,6 @@
 # SDK Versioning
 
-Last reviewed: 2026-09-17
+Last reviewed: 2026-10-03
 
 ## Canonical Source of Truth
 1. SDK version is defined only in `orket_extension_sdk/__version__.py`.
@@ -17,23 +17,19 @@ Last reviewed: 2026-09-17
 
 ## CLI Contract
 
-The architectural-truth core `0.6.9` branch candidate uses SDK `0.7.0a1`, with a new
-required `agent_model_use_receipt.v2` host feature. Its compatibility scope is
-the matched remediation host checkpoint only, with scoped installed-artifact
-proof recorded in the canonical plan; it does not extend to other core versions
-or the nominal future window.
-Published core 0.6.0/0.6.2 packages retain their SDK 0.6.0 pins. New extension
-admissions must review nullable latency handling and explicitly declare v2;
-canonical historical v1 receipt reads remain supported without rewriting them.
-Candidate hashes, results and unverified surfaces belong to the active
-architectural-truth plan. The core branch checkpoint does not publish an SDK
-release or establish whole-lane or general release readiness.
+SDK `0.7.0` is the matched standalone SDK for core `0.7.0` on Windows.
+This release explicitly narrows its nominal future compatibility window to that
+exact verified core. Core 0.6.0/0.6.2 remain paired with SDK 0.6.0; neither those
+hosts nor future versions are admitted by the 0.7.0 release.
 
-The same development candidate also versions generic `GenerateResponse` as
-`model_generate_response.v1`, with nullable latency and explicit posture.
-Generic `model.generate`/host-API consumers must handle null and preserve those
-fields. Its provider/aggregate timing authority is
-`docs/specs/MODEL_PROVIDER_TIMING.md`; it does not widen published compatibility.
+New agent declarations require `agent_model_use_receipt.v2`; consumers must
+handle nullable latency and its explicit posture. Generic `GenerateResponse`
+retains `model_generate_response.v1` and the same nullable observation semantics.
+Historical v1 receipts remain readable without rewriting retained payloads.
+Upgrade both core and SDK, review declarations/consumers, and run strict host
+validation before new admission. Direct embeddings follow the current explicit
+input and lifetime contracts. Evidence: `docs/releases/0.7.0/PROOF_REPORT.md`;
+migration: `docs/architecture/CONTRACT_DELTA_CORE_SDK_0_7_0_2026-10-03.md`.
 
 SDK `0.6.0` admission is explicitly narrowed to verified core `0.6.0` and
 `0.6.2`, using the matched artifacts recorded in

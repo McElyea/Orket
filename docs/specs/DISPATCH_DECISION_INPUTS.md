@@ -92,4 +92,7 @@ These are trusted in-process strategy contracts, not hostile Python containment.
 They do not prevent a plugin from using an independently acquired global reference
 or deliberately bypassing Python model protections. They do not establish purity
 for other strategy families, freeze all application state, or retire legacy domain
-exports. `BT4-FIXTURE-SYNC-RETIRE` retains its explicit 0.7.0 cutover commitment.
+exports. `BT4-FIXTURE-SYNC-RETIRE` remains open: its originally planned 0.7.0
+cutover was not completed. Core 0.7.0 retains the existing refusing tombstones
+and deprecated exports under the explicit release scope in
+`docs/architecture/CONTRACT_DELTA_CORE_SDK_0_7_0_2026-10-03.md`.

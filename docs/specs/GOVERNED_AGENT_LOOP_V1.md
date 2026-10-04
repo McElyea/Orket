@@ -1,7 +1,7 @@
 # Governed Agent Loop V1
 
-Last updated: 2026-09-28
-Status: Active durable contract; core 0.6.0 acceptance released; llama.cpp feature integration added in source
+Last updated: 2026-10-03
+Status: Active durable contract; core/SDK 0.7.0 Windows release; retained llama.cpp library proof
 Owner: Orket Core
 Accepted requirements source: `docs/projects/archive/governed-agent-loop/GAL09062026-REQUIREMENTS/GOVERNED_AGENT_LOOP_REQUIREMENTS_DEFINITION_PLAN.md`
 
@@ -373,9 +373,9 @@ This prevents inconsistent partial metadata from masquerading as measured usage.
 The existing call/iteration/IPC envelopes retain their versions and carry the
 independently versioned receipt. New agent declarations must include
 `agent_model_use_receipt.v2` alongside the base governed-agent and stdio features;
-admission refuses declarations that have not migrated. SDK `0.7.0a1` is a
-development prerelease requiring the paired architectural-truth host candidate,
-not a compatibility claim for the published core/SDK artifacts. Canonical v1
+admission refuses declarations that have not migrated. SDK `0.7.0` requires the
+matched core `0.7.0` under the Windows release scope in
+`docs/releases/0.7.0/PROOF_REPORT.md`; other core versions are not admitted. Canonical v1
 receipts retain their integer, original fields and wire payloads on historical
 reads; they cannot be retroactively certified as measured. No retained run or
 manifest is automatically rewritten to authorize new execution.

@@ -1,12 +1,12 @@
 # Architectural Truth: Executable Goal Queue
 
 Last updated: 2026-10-03 (America/Denver)
-Status: Active umbrella; bounded Windows ATG-v1 result reconciled for v0.6.144 publication
+Status: Active umbrella; bounded Windows ATG-v1 complete and merged; v0.7.0 release checkpoint
 Queue: ATG-v1 — ten goals; Windows-only scope amended by the user on 2026-10-03
 Owner: Orket Core
-Worktree: `C:/Source/Orket-architectural-truth`
-Branch: `codex/architectural-truth-bt0`
-Next goal: **None after verified ATG-10 v0.6.144 publication**
+Worktree: `C:/Source/Orket` (release integration; original ATG proof worktree retained)
+Branch: `main`; accepted ATG checkpoint remains `codex/architectural-truth-bt0` / `v0.6.144`
+Next goal: **None in ATG-v1; separately authorized v0.7.0 release follows below**
 
 ## Purpose and authority
 
@@ -105,7 +105,7 @@ do not repeat the 73-minute suite solely to restate this starting point.
 | ATG-07 | Restore the unchanged 89% coverage gate | ATG-02 through ATG-06 | complete: `1e5ce56f` / `v0.6.124` |
 | ATG-08 | Verify fresh Windows packages and public paths | ATG-07 | complete: `b7ab34bb` / `v0.6.125` |
 | ATG-09 | Complete Windows quality and provider proof | ATG-08 | complete: `f0551120` / `v0.6.143` |
-| ATG-10 | Reconcile and publish the bounded revamp result | ATG-01 through ATG-09 | reconciled; complete at verified `v0.6.144` publication |
+| ATG-10 | Reconcile and publish the bounded revamp result | ATG-01 through ATG-09 | complete: `0b33356f` / `v0.6.144` |
 
 ## Goal cards
 
@@ -405,10 +405,46 @@ describes usage limits separately. No extra week or exact account cutoff has bee
 verified; budget for at most two days. The user's kickoff time remains scheduling
 input, not a Linux/runner prerequisite.
 
-## Resume record
+## Post-queue release authorization
+
+The user accepted the completed Windows queue, then explicitly requested merge
+to main and release 0.7.0 on October 3. That instruction supersedes this queue's
+earlier no-merge/minor-release exclusion for this release only. Main fast-forwarded
+from `112569206211aaa5a009a5e5ef7af43af545c744` to the verified ATG-10 commit
+`0b33356f0e666ec67eb7c386dfaff706820960d6`. The local skip-worktree operational rock
+was preserved byte-for-byte and is excluded from release artifacts and commits.
+
+Core and SDK 0.7.0 are released together at their matching annotated tags once the
+publication witness below succeeds. The SDK implementation is unchanged from
+0.7.0a1 except version identity. Existing command aliases remain through 0.7.x;
+the accepted delta and migration requirements live in
+`docs/architecture/CONTRACT_DELTA_CORE_SDK_0_7_0_2026-10-03.md`.
+Release proof/notes: `docs/releases/0.7.0/`. Stable machine evidence:
+`benchmarks/results/releases/0.7.0/`; private execution/process record:
+`.tmp/release-0.7.0/state.json`. The frozen packaging snapshot excludes the local
+operational override. Fresh Windows 3.11/3.12 installed public-surface proof,
+SDK isolation, API store/authentication/cleanup, 185 focused cases and canonical
+structural gates pass; initial failures and exact artifact hashes are retained.
+Final checks freeze current inputs at `.tmp/release-0.7.0/final-checks.json`.
+Publication is complete only after `.tmp/release-0.7.0/publication.json` verifies
+both annotated tags, atomic main/tag push, remote identities and downloaded GitHub
+asset bytes. Its public `publication.json` asset is linked from the v0.7.0 release.
+Inspect this receipt before resuming an interrupted publication. Once it succeeds,
+no release action remains; do not reopen the completed ATG queue.
+This release does not retire the broader umbrella or add Linux/hosted requirements.
+
+Remaining release drift: `BT4-FIXTURE-SYNC-RETIRE` originally targeted the 0.7.0
+cutover, but removal is not complete. Orket Core retains the existing refusing
+`FixtureVerifier.verify` / `VerificationEngine.verify` tombstones and deprecated
+domain exports under the explicit release delta. No new removal version is
+assigned. Caller inventory and separate contract acceptance are still required
+before retirement; no synchronous execution or hidden forwarding is restored.
+
+## Resume record (accepted ATG checkpoint)
 
 - Current checkpoint: **ATG-10 / v0.6.144**. ATG-01 through ATG-09 are
-  complete; **10 of 10 complete only after verified v0.6.144 publication**.
+  complete; **10 of 10 complete**. Publication was verified at
+  `0b33356f0e666ec67eb7c386dfaff706820960d6`; the publication condition below is satisfied.
   No executable goal remains after that witness. This is the bounded Windows
   queue result, not whole-lane retirement or whole-product conformance.
 - ATG-09 is accepted and published: commit

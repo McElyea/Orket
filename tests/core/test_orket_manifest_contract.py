@@ -27,9 +27,10 @@ def test_valid_manifest_fixture_passes() -> None:
     manifest = OrketManifest.model_validate(_load_fixture_payload("valid_minimal.json"))
     assert manifest.apiVersion == "orket.io/v1"
     assert manifest.kind == "Orket"
-    assert manifest.metadata.engineVersion == ">=0.3.0,<0.7.0"
+    assert manifest.metadata.engineVersion == ">=0.3.0,<0.8.0"
     assert is_engine_compatible(manifest, "0.6.0") is True
-    assert is_engine_compatible(manifest, "0.7.0") is False
+    assert is_engine_compatible(manifest, "0.7.0") is True
+    assert is_engine_compatible(manifest, "0.8.0") is False
     assert manifest.guards[0].value == "hallucination"
 
 
@@ -65,10 +66,13 @@ def test_invalid_engine_version_specifier_fails() -> None:
 
 @pytest.mark.contract
 def test_engine_compatibility_check() -> None:
-    """Layer: contract. Explicit manifest values determine version compatibility."""
+    """Layer: contract. Current and historical manifests retain their own version bounds."""
     manifest = OrketManifest.model_validate(_load_fixture_payload("valid_minimal.json"))
     assert is_engine_compatible(manifest, "0.3.9") is True
     assert is_engine_compatible(manifest, "0.9.0") is False
+    historical = _load_fixture_payload("valid_minimal.json")
+    historical["metadata"]["engineVersion"] = ">=0.3.0,<0.7.0"
+    assert is_engine_compatible(OrketManifest.model_validate(historical), "0.7.0") is False
 
 
 @pytest.mark.contract

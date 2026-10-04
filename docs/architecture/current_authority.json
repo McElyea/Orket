@@ -246,7 +246,7 @@
       "kind": "compatibility",
       "label": "Source wrapper and hidden rock alias",
       "source": "docs/projects/architectural-truth/ARCHITECTURE_EXCEPTION_REGISTER.json",
-      "condition": "Installed-root proof remains green and an explicit 0.7.0 contract delta removes python main.py plus the hidden source-wrapper --rock alias.",
+      "condition": "Deprecated python main.py and hidden --rock remain supported through 0.7.x. Removal requires a separate accepted contract delta and continued installed-root proof; no removal version is assigned.",
       "expires_on": null,
       "ceiling": "No removal is inferred from a version number or this index."
     },

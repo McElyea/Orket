@@ -177,6 +177,8 @@ installed or live Docker acceptance and does not replace the process/container o
 2. Synchronous `FixtureVerifier.verify` and `VerificationEngine.verify` refuse
    before any effect with an explicit migration error. They are temporary
    tombstones under `BT4-FIXTURE-SYNC-RETIRE`, not functioning fallback executors.
+   Core 0.7.0 retains them; the originally planned removal remains overdue and
+   tracked in the architectural-truth plan and the 0.7.0 release contract delta.
 3. Native fixtures reuse owned command execution, including bounded raw capture.
    The existing fixture runner remains support evidence; a passing fixture is not
    sufficient card completion authority. Invalid modes fail closed. Production

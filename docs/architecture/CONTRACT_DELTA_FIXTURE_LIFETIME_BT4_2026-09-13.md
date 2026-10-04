@@ -1,5 +1,11 @@
 # Contract delta: application-owned fixture verification
 
+Release disposition (2026-10-03): the removal target below was not completed.
+Core 0.7.0 retains the existing refusing tombstones and deprecated exports;
+`BT4-FIXTURE-SYNC-RETIRE` remains overdue under Orket Core ownership. The explicit
+release scope supersedes the planned cutover date, not the removal obligation:
+`CONTRACT_DELTA_CORE_SDK_0_7_0_2026-10-03.md`.
+
 ## Summary
 - Owner: architectural-truth BT-4.
 - Date: 2026-09-13.

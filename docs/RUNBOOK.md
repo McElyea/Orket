@@ -86,9 +86,11 @@ python server.py
 ```
 
 Compatibility-only source wrapper:
-`python main.py [runtime arguments]` remains supported through `0.6.x`. The hidden
+`python main.py [runtime arguments]` remains deprecated but supported through `0.7.x`. The hidden
 `--rock <rock_name>` alias remains accepted by that wrapper and `orket runtime`, but
-new callers must use `--card`; removal requires an explicit `0.7.0` contract delta.
+new callers must use `--card`; removal requires a separate accepted contract delta
+and continued installed-root proof. See
+`docs/architecture/CONTRACT_DELTA_CORE_SDK_0_7_0_2026-10-03.md`.
 
 ## Epic Publication Recovery
 

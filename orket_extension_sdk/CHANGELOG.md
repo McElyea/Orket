@@ -4,6 +4,22 @@ All notable changes to `orket-extension-sdk` will be documented in this file.
 
 The format is based on Keep a Changelog and this package follows SemVer while in the `0.x` line.
 
+## [0.7.0] - 2026-10-03
+
+### Changed
+- Release the architectural-truth SDK contracts with matched core 0.7.0.
+  The admitted compatibility window is core 0.7.0 on Windows; future cores
+  and published core 0.6.0/0.6.2 are not admitted by this release.
+- Preserve the prerelease's `agent_model_use_receipt.v2` negotiation and
+  `model_generate_response.v1` nullable latency/posture fields. Historical
+  v1 receipts remain readable; no retained manifest is automatically migrated.
+- Compatibility: breaking for SDK 0.6.0 consumers. Upgrade the matched core/SDK
+  pair, review nullable latency handling, declare the required v2 host feature,
+  and run strict extension validation before admitting new execution.
+- No SDK implementation change from 0.7.0a1 beyond the version identity.
+  Release proof and migration: `docs/releases/0.7.0/PROOF_REPORT.md` and
+  `docs/architecture/CONTRACT_DELTA_CORE_SDK_0_7_0_2026-10-03.md` in the core repo.
+
 ## [0.7.0a1] - 2026-09-13
 
 ### Changed

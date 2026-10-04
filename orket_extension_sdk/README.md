@@ -35,7 +35,7 @@ pip install -e "./orket_extension_sdk[tts,testing]"
 
 ## Generic Model Generation
 
-Generic `model.generate` responses in the development candidate expose
+Generic `model.generate` responses in SDK 0.7.0 expose
 `schema_version: model_generate_response.v1`, nullable integer `latency_ms`, and
 derived `latency_posture` (`reported` or `unavailable`). These are frozen dataclass
 fields and survive `dataclasses.asdict`. Invalid explicit latency is rejected;
@@ -59,11 +59,13 @@ valid author manifest when required runtime features are unavailable.
 
 ## Versioning And Compatibility
 
-The architectural-truth worktree now uses development SDK `0.7.0a1` and its
-explicit nullable model-receipt feature. Use it only with the paired host
-candidate; published core `0.6.0` and `0.6.2` require SDK `0.6.0`. This overrides
-the nominal window below for the prerelease. Candidate proof and remaining gaps
-belong to the canonical architectural-truth plan; this is not a release claim.
+SDK `0.7.0` is released with core `0.7.0` on Windows. That exact paired core
+is the admitted window, overriding the nominal future window below. Published
+core `0.6.0` and `0.6.2` still require SDK `0.6.0`. Upgrade both packages together,
+handle nullable latency, declare `agent_model_use_receipt.v2` for new agent
+admission, and run strict host validation. Historical v1 receipt reads remain
+supported. Release evidence and limits: `docs/releases/0.7.0/PROOF_REPORT.md`
+in the core repository.
 
 `orket_extension_sdk` has its own semantic version sourced from
 `orket_extension_sdk.__version__`; it does not follow the Orket core engine
@@ -77,7 +79,7 @@ guarantee.
 Development prereleases follow the same minor-window calculation but do not
 claim released host compatibility until the built-artifact matrix passes. The
 standalone SDK distribution is the sole SDK namespace owner in the current
-core `0.6.2` release. Tagged core `0.5.9` still bundles SDK
+core `0.7.0` release. Tagged core `0.5.9` still bundles SDK
 `0.1.0`; overlaying the standalone SDK on that host creates duplicate ownership
 and is unsupported. Upgrade core first, then force-reinstall the exact standalone
 SDK wheel: removing an old core can remove SDK files that it owned. Run

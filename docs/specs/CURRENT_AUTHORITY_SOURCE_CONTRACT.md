@@ -2,7 +2,7 @@
 
 Status: Active
 Owner: Orket Core
-Last updated: 2026-09-28
+Last updated: 2026-10-03
 
 ## One bounded current index
 
@@ -59,8 +59,9 @@ Compatibility conditions must occur in the canonical source. A supplied calendar
 expiry must be a valid declared date and remain in the future; reaching that date
 requires an explicit disposition. Condition-bound removals have no invented calendar
 deadline. An unassigned version window remains visible debt rather than an inferred
-permission to remove an alias. The source-wrapper 0.7.0 migration still requires its
-explicit contract delta; this checker does not infer a release from prose.
+permission to remove an alias. The 0.7.0 release explicitly preserves the source
+wrapper through 0.7.x; its later removal requires a separate accepted contract
+delta and installed-root proof. This checker does not infer a release from prose.
 
 Proof is `unavailable` or `historical`. Historical rows require a nonfuture ISO date;
 unavailable rows cannot carry an observation date. Neither grants current proof.

@@ -75,7 +75,7 @@ For broader compatibility and migration boundaries, use [CURRENT_AUTHORITY.md](C
 - Governed turn-tool execution with fail-closed namespace enforcement on the governed path.
 - Control-plane persistence for selected live lanes, including sandbox orchestration, governed turn-tool execution, governed kernel actions, cards epic execution, manual review-run execution, extension workload execution, approval-gated reservation and operator flows, coordinator reservation and lease flows, and the Gitea state worker path.
 - Deterministic and observability-oriented runtime artifacts under the normal workspace and durable `.orket/` paths.
-- Source wrapper `python main.py [runtime arguments]` remains supported through `0.6.x`.
+- Source wrapper `python main.py [runtime arguments]` remains deprecated but supported through `0.7.x`; removal requires a separate accepted contract delta and continued installed-root proof.
 - Legacy runtime `--rock` remains accepted as a hidden compatibility alias to the named card runtime; new callers use `--card`.
 
 ## Bounded Proof Slice

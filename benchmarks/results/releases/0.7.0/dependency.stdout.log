@@ -1,0 +1,2 @@
+{"adapter_effect_violations": 0, "analysis_errors": 0, "authority_cycles": 0, "collection_ok": true, "edges": 4315, "files": 1222, "ok": true, "resolved_dynamic_routes": 6, "unknown_modules": 0, "violations": 0}
+Wrote C:\Source\Orket\benchmarks\results\dependency_direction_check.json
