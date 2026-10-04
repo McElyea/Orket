@@ -1,24 +1,27 @@
 # Architectural Truth: Executable Goal Queue
 
 Last updated: 2026-10-04 (America/Denver)
-Status: Active umbrella; bounded Windows ATG-v1 and v0.7.1 cleanup complete; PRR-v1 active separately
+Status: Active umbrella; bounded Windows ATG-v1, v0.7.1 cleanup and PRR-v1 publication complete
 Queue: ATG-v1 — ten goals; Windows-only scope amended by the user on 2026-10-03
 Owner: Orket Core
 Worktree: `C:/Source/Orket` (release integration; original ATG proof worktree retained)
 Branch: `main`; accepted ATG checkpoint remains `codex/architectural-truth-bt0` / `v0.6.144`
-Next goal: **None after the PRR-v1 publication witness succeeds; inspect its archived resume record if interrupted**
+Next goal: **None; PRR-v1 is published and complete (3/3), with no executable PRR work**
 
 ## Purpose and authority
 
 This file retains the completed ATG-v1 queue, release publication witnesses and
-umbrella proof limits. The user invoked PRR-v1 on October 4, 2026. Its bounded source closeout and
-publication resume record are [archived](../archive/architectural-truth/PRR10042026/POST_RELEASE_RELIABILITY_PLAN.md).
+umbrella proof limits. The user invoked PRR-v1 on October 4, 2026. Its completed
+publication and historical checkpoints are [archived](../archive/architectural-truth/PRR10042026/POST_RELEASE_RELIABILITY_PLAN.md).
 The matched 0.7.2 [release proof](../../releases/0.7.2/PROOF_REPORT.md) supersedes
 the earlier grounding and installed native-stream proof gaps only at its stated
 scope. Initial card-template refusals remain historical; a later independently
 replaced, template-aligned server passed bounded actual turns on both interpreters.
-Broader limits remain. No new
-queue becomes executable after its final publication witness succeeds.
+Fresh remote and downloaded-byte reconciliation confirms matched `v0.7.2` and
+`sdk-v0.7.2` at `9cb8a89056c46f0c3633e0c20aaac60d80113236`; PRR-01 through
+PRR-03 are complete. The [final handoff](../../releases/0.7.3/PROOF_REPORT.md)
+records a documentation-only successor, preserving the 0.7.2 install target.
+PRR-S1 remains not admitted. Broader limits remain; no new queue is executable.
 The ATG goal cards, schedules and next-action text below describe the completed
 queue and do not authorize its restart or override the PRR-v1 resume record.
 Execution workflow lives in `docs/CONTRIBUTOR.md`, including **Persistent goal
@@ -370,7 +373,8 @@ B03/B04 native-file and healthy real Git controls do not prove adverse process c
 Do not expand this queue or its denominator without user authorization. Historical
 capability/compatibility obligations remain in the archive and active specs.
 
-Deferred finding (observed public contract failure, B17-closing): the existing
+Historical finding, repaired by PRR-02 in matched 0.7.2 (original B17-closing
+observation follows unchanged): the existing
 ResponseParser residue normalization removes prose whitespace. The grounding
 check consequently misses `Maybe this...` after it becomes `Maybethis...`; a
 punctuation-separated marker remains detectable. This coverage batch retains the
@@ -415,7 +419,10 @@ input, not a Linux/runner prerequisite.
 
 ## Post-queue release authorization
 
-### Current release cleanup: 0.7.1 completion checkpoint
+### Historical release cleanup: 0.7.1 completion checkpoint
+
+The published 0.7.1 result is complete. The original prepublication checkpoint
+below retains its scope; it is not outstanding release work.
 
 The user requested completion of remaining release changes after matched core/SDK
 0.7.0 were published at `43c3650d1a29822b2091a75474902c726bcb5048`.
@@ -489,7 +496,12 @@ domain exports under the explicit release delta. No new removal version is
 assigned. Caller inventory and separate contract acceptance are still required
 before retirement; no synchronous execution or hidden forwarding is restored.
 
-## Resume record (accepted ATG checkpoint)
+## Historical resume record (accepted ATG checkpoint)
+
+This accepted ATG record retains its original evidence and limitations. Later
+0.7.0/0.7.1/0.7.2 releases supersede only the scopes identified above, including
+fixture retirement, parser grounding and installed Windows provider paths.
+Its old next-action and missing-proof statements do not activate work.
 
 - Current checkpoint: **ATG-10 / v0.6.144**. ATG-01 through ATG-09 are
   complete; **10 of 10 complete**. Publication was verified at

@@ -1,0 +1,431 @@
+{
+  "observed_path": "primary",
+  "observed_result": "success",
+  "main_at_observation": "9cb8a89056c46f0c3633e0c20aaac60d80113236",
+  "later_main_commits": [],
+  "historical_receipts": {
+    "publication": "69d783a29bea64907b96b134adc42a22739c58744103388a49db9bdf8e51e849",
+    "closeout": "c4a76e6e43fb731d11b5eaa98e9f8a4ecb45b151b5e5f6667bcebf260ad80f53"
+  },
+  "remote_refs": {
+    "refs/heads/main": "9cb8a89056c46f0c3633e0c20aaac60d80113236",
+    "refs/tags/sdk-v0.7.0": "6f8531219e2fe56b9b08d75261fc0c56a76e14be",
+    "refs/tags/sdk-v0.7.0^{}": "43c3650d1a29822b2091a75474902c726bcb5048",
+    "refs/tags/sdk-v0.7.1": "60e605c8feb037ef208528d9228255a241e6b268",
+    "refs/tags/sdk-v0.7.1^{}": "2ccbd9aa26a71ba0347096800b8acbd8f4804070",
+    "refs/tags/sdk-v0.7.2": "03994c37aa556a87d417fcfc3c0f1a5aa34ce967",
+    "refs/tags/sdk-v0.7.2^{}": "9cb8a89056c46f0c3633e0c20aaac60d80113236",
+    "refs/tags/v0.7.0": "b136cff9058c3293c6f16ec8bb2c43461cf10ee0",
+    "refs/tags/v0.7.0^{}": "43c3650d1a29822b2091a75474902c726bcb5048",
+    "refs/tags/v0.7.1": "ff792f9aae995bd2fd7387dd96e54f12c51d6b08",
+    "refs/tags/v0.7.1^{}": "2ccbd9aa26a71ba0347096800b8acbd8f4804070",
+    "refs/tags/v0.7.2": "8c176bf557c389865816cb25529c5c321fbba369",
+    "refs/tags/v0.7.2^{}": "9cb8a89056c46f0c3633e0c20aaac60d80113236"
+  },
+  "releases": {
+    "v0.7.2": {
+      "url": "https://github.com/McElyea/Orket/releases/tag/v0.7.2",
+      "downloaded_assets_sha256": {
+        "dependency-constraints-0.7.2.txt": "abdf0145d2def7d60973e643a6bc58eeaec8e89d936627e2e0177a43fe998da4",
+        "orket-0.7.2-py3-none-any.whl": "73660e97ca1d58f66f1511998451ec332004f38c92240f0159041be1f9b2cd5e",
+        "orket-0.7.2.tar.gz": "902ea13f507088e246640ffac7e5448b3eb873f860b1d77af44f715b70b884a1",
+        "orket_extension_sdk-0.7.2-py3-none-any.whl": "43f73259ae54647e40403b85b2708806ff9c5738a4020c0c82dd4c3dc3d3ea81",
+        "orket_extension_sdk-0.7.2.tar.gz": "7c6c343fc0d54bc41eda7a6307edfc03b1c7695f0f3676d4fa8e223f1cd13a41",
+        "publication.json": "56ad191f5a45eb6babedd89c7ef41528d34af945c6cdfdc4ff8dc5f6a200814c",
+        "SHA256SUMS-0.7.2.txt": "2877b3d03b5c7b351eaf351bfd3d725a1a270357435bef743aad2928196ccfa5"
+      },
+      "checksum_entries_verified": true
+    },
+    "sdk-v0.7.2": {
+      "url": "https://github.com/McElyea/Orket/releases/tag/sdk-v0.7.2",
+      "downloaded_assets_sha256": {
+        "orket_extension_sdk-0.7.2-py3-none-any.whl": "43f73259ae54647e40403b85b2708806ff9c5738a4020c0c82dd4c3dc3d3ea81",
+        "orket_extension_sdk-0.7.2.tar.gz": "7c6c343fc0d54bc41eda7a6307edfc03b1c7695f0f3676d4fa8e223f1cd13a41",
+        "publication.json": "56ad191f5a45eb6babedd89c7ef41528d34af945c6cdfdc4ff8dc5f6a200814c",
+        "SHA256SUMS-SDK-0.7.2.txt": "fb7c315ab391a3d6f3988fe93e0a723705e33f7385d2d38e2feba89fca66d924"
+      },
+      "checksum_entries_verified": true
+    }
+  },
+  "previous_releases_preserved": true,
+  "historical_batches_exact": {
+    "baseline": {
+      "result": "success",
+      "raw_receipt_sha256": "c43ea9bba81f5c9406ac62eaa6efe1c6c1b575da69b7d10fd7a1127a9274f191"
+    },
+    "baseline-upgrade": {
+      "result": "success",
+      "raw_receipt_sha256": "10071826ff438f5834dc70e5a0c1c441c2e51cfb76ecc19c255f594d770f0e09"
+    },
+    "parser-prefixed": {
+      "result": "expected failure; inspect assertions",
+      "raw_receipt_sha256": "5487f2caa321105e9f46faba5dfbeb62f9982a0c599049b7dc8c18aae14401bb"
+    },
+    "parser-repaired": {
+      "result": "success",
+      "raw_receipt_sha256": "9fb4a8b0b26b5f040da8e401f6624b1d7e596765f290a4d91d4e492304bd7c94"
+    },
+    "candidate-r01": {
+      "result": "failure",
+      "raw_receipt_sha256": "5e9727087418b19924775fec9b80f1de9db65cb63ce606675971e533e9317670"
+    },
+    "websocket-prefixed": {
+      "result": "expected failure; inspect assertions",
+      "raw_receipt_sha256": "80b444528515ec85afb3df8af3cc58f095e6c3f040b496b573cc764f8b184a0a"
+    },
+    "websocket-repaired": {
+      "result": "success",
+      "raw_receipt_sha256": "b190a2ea0ef45a9e1a2a211db771110f344e2e4d96f2282f754319071da67081"
+    },
+    "candidate-r02": {
+      "result": "failure",
+      "raw_receipt_sha256": "7154fc4cdf1374dcd96e56391594ec4ddc36b257b70bd7170f423c7344321af9"
+    },
+    "installed-r03": {
+      "result": "failure",
+      "raw_receipt_sha256": "2228389734147ab308cf88d691b5f7e86ffa6154095839aeab531c619cf97f19"
+    },
+    "live-remainder-r04": {
+      "result": "failure",
+      "raw_receipt_sha256": "6896df91ad0c3ccb3a46ded3b82b8fad6ba0997cc1547ba814babaad57a2a8b2"
+    },
+    "live-remainder-r05": {
+      "result": "failure",
+      "raw_receipt_sha256": "2777544a514eee6c76e18a12bf50e07c48a9b7e871a64d646ad4d7a172e885c9"
+    },
+    "live-remainder-r06": {
+      "result": "failure",
+      "raw_receipt_sha256": "e5afd024628687453c424458596b7252793dff980ef8a7158e30f1d830c576a9"
+    },
+    "live-remainder-r07": {
+      "result": "success",
+      "raw_receipt_sha256": "98dca625fb3423e151c8f2c737585e97318b371e732efd1929b6cf908c40d7c6"
+    },
+    "verification": {
+      "result": "failure",
+      "raw_receipt_sha256": "54a36fc37b4adbd1c706261666c053f9580e6ee13dd22c0fda4501ca4309f269"
+    },
+    "verification-corrected": {
+      "result": "success",
+      "raw_receipt_sha256": "c758c9b33c87859871a55c21b39cb3ad5d3a736d3005a32329434a483c35610a"
+    },
+    "final-packages": {
+      "result": "failure",
+      "raw_receipt_sha256": "915b0108a16a0406fbbc71ab5a3c381db35bda310f5792c7dbb655bb2370cb7c"
+    },
+    "final-packages-r02": {
+      "result": "success",
+      "raw_receipt_sha256": "4301d89270004e9d8e678420820af63350f15bc96e99ae13ef7bc987b7f58885"
+    },
+    "documented-probe": {
+      "result": "success",
+      "raw_receipt_sha256": "2fa908aaa2efa9e40b3807487b064df5b27a9fe328187873d753915ea0cfbc92"
+    },
+    "environment-refresh": {
+      "result": "failure",
+      "raw_receipt_sha256": "f110e77234e63e699c103f4622496e6283de6b2c4b6fbc17486baf5391f931e6"
+    },
+    "profiled-refresh-r02": {
+      "result": "success",
+      "raw_receipt_sha256": "4a69d7958ba43e7222ac396b833cef1b382403d2de7a33ad1516b1ef77a4dd78"
+    }
+  },
+  "sealed_evidence_files_exact": 413,
+  "proof_reuse": "Historical accepted Windows 0.7.2 runtime evidence; no changed runtime inputs.",
+  "process_observation": {
+    "current_observer_ancestors": [
+      39296,
+      20068,
+      9488,
+      44164,
+      40492,
+      44328,
+      31412,
+      15324,
+      11388,
+      13244,
+      13296
+    ],
+    "listeners": [
+      {
+        "LocalAddress": "127.0.0.1",
+        "LocalPort": 8080,
+        "OwningProcess": 45556
+      }
+    ],
+    "remaining_prr_processes": [],
+    "operator_servers": [
+      {
+        "ProcessId": 45556,
+        "ParentProcessId": 34876,
+        "CreationDate": "/Date(1791141847554)/",
+        "ExecutablePath": "D:\\llama.cpp-releases\\b11146\\llama-server.exe"
+      }
+    ]
+  },
+  "provider_observation": {
+    "provider": "llama_cpp",
+    "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+    "endpoint": "http://127.0.0.1:8080/v1",
+    "template_sha256": "8fc57a9f65eaaaee48e80771aea4775f7d3a8adb466a6193d8de551fa124d578",
+    "proof": "live read-only catalog/template; not new inference proof"
+  },
+  "operator_override_and_worktrees_preserved": true,
+  "prior_probe_failure": "Process filter counted its own observation transport PID 42148; lifetime confirms settled. No product failure.",
+  "schema": "orket.prr.closeout_reconciliation.v1",
+  "source_checkpoint_version": "0.7.3",
+  "accepted_distribution_pair": "0.7.2/0.7.2",
+  "required_progress": "3/3",
+  "next_prr_action": "none",
+  "archive": {
+    "path": "benchmarks/results/releases/0.7.3/reconciliation.zip",
+    "sha256": "6d2ea8db82d4cc09385e56634adf651419c46088535c8a9686cc89e601b482d8"
+  },
+  "batches": {
+    "reconciliation": {
+      "raw_receipt_sha256": "6ec5ed6eb7b9c492eabde54408af1634a59a871132661a398973fcf0eb6c2f20",
+      "observed_result": "failure"
+    },
+    "reconciliation-environment": {
+      "raw_receipt_sha256": "97e3992a229f0fdabc3e680bd34d6615cb0fdc89eef6ed83f1a95a5a8805b51f",
+      "observed_result": "success"
+    },
+    "reconciliation-checks": {
+      "raw_receipt_sha256": "c3ffcb51886da724a9c2e6f743933111698fa0b7981af4c7ae2b34b2f10ed112",
+      "observed_result": "success"
+    }
+  },
+  "proof_scope": "Live remote/download and local process/catalog observations; reused historical Windows runtime proof; structural documentation validation.",
+  "publication_receipt": ".tmp/post-release-reliability/reconciliation-publication/state.json",
+  "limits": "No runtime edits, new inference, full campaign, distribution release or new SDK pairing. PRR-S1 and broader umbrella remain deferred.",
+  "structural_checks": [
+    {
+      "argv": [
+        "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\verification-py311\\Scripts\\python.exe",
+        "scripts/governance/check_docs_project_hygiene.py"
+      ],
+      "exit_code": 0,
+      "lifetime": {
+        "schema_version": "owned_command.v1",
+        "reason": "completed",
+        "cleanup_confirmed": true,
+        "capture_complete": true,
+        "backend": "windows_job",
+        "transport_pid": 37448,
+        "supervisor_pid": 38356,
+        "command_pid": 48032,
+        "diagnostics": []
+      },
+      "stdout": {
+        "path": "C:\\Source\\Orket\\.tmp\\post-release-reliability\\reconciliation-checks\\docs.stdout.log",
+        "sha256": "8d1bf1af779ff045b85d7cb11f0397a564628c421af4baca5d9668060f8a78cd"
+      },
+      "stderr": {
+        "path": "C:\\Source\\Orket\\.tmp\\post-release-reliability\\reconciliation-checks\\docs.stderr.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "argv": [
+        "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\verification-py311\\Scripts\\python.exe",
+        "scripts/governance/check_current_authority.py"
+      ],
+      "exit_code": 0,
+      "lifetime": {
+        "schema_version": "owned_command.v1",
+        "reason": "completed",
+        "cleanup_confirmed": true,
+        "capture_complete": true,
+        "backend": "windows_job",
+        "transport_pid": 30148,
+        "supervisor_pid": 34884,
+        "command_pid": 46156,
+        "diagnostics": []
+      },
+      "stdout": {
+        "path": "C:\\Source\\Orket\\.tmp\\post-release-reliability\\reconciliation-checks\\authority.stdout.log",
+        "sha256": "60da3e5f32e6a4562cf852361518ea7083286596650be4fe599ffa51b4597574"
+      },
+      "stderr": {
+        "path": "C:\\Source\\Orket\\.tmp\\post-release-reliability\\reconciliation-checks\\authority.stderr.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "argv": [
+        "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\verification-py311\\Scripts\\python.exe",
+        "scripts/governance/render_current_authority.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "lifetime": {
+        "schema_version": "owned_command.v1",
+        "reason": "completed",
+        "cleanup_confirmed": true,
+        "capture_complete": true,
+        "backend": "windows_job",
+        "transport_pid": 40052,
+        "supervisor_pid": 30344,
+        "command_pid": 46776,
+        "diagnostics": []
+      },
+      "stdout": {
+        "path": "C:\\Source\\Orket\\.tmp\\post-release-reliability\\reconciliation-checks\\authority-view.stdout.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "C:\\Source\\Orket\\.tmp\\post-release-reliability\\reconciliation-checks\\authority-view.stderr.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "argv": [
+        "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\verification-py311\\Scripts\\python.exe",
+        "scripts/governance/check_install_surface_convergence.py"
+      ],
+      "exit_code": 0,
+      "lifetime": {
+        "schema_version": "owned_command.v1",
+        "reason": "completed",
+        "cleanup_confirmed": true,
+        "capture_complete": true,
+        "backend": "windows_job",
+        "transport_pid": 46440,
+        "supervisor_pid": 9152,
+        "command_pid": 44488,
+        "diagnostics": []
+      },
+      "stdout": {
+        "path": "C:\\Source\\Orket\\.tmp\\post-release-reliability\\reconciliation-checks\\install.stdout.log",
+        "sha256": "c0158433edf8a40ff2ef2a294c5e32b30489f1f873819da2ad9b83396551c14a"
+      },
+      "stderr": {
+        "path": "C:\\Source\\Orket\\.tmp\\post-release-reliability\\reconciliation-checks\\install.stderr.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "argv": [
+        "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\verification-py311\\Scripts\\python.exe",
+        "scripts/sdk/check_sdk_tag_version.py",
+        "--tag",
+        "sdk-v0.7.2"
+      ],
+      "exit_code": 0,
+      "lifetime": {
+        "schema_version": "owned_command.v1",
+        "reason": "completed",
+        "cleanup_confirmed": true,
+        "capture_complete": true,
+        "backend": "windows_job",
+        "transport_pid": 7920,
+        "supervisor_pid": 41328,
+        "command_pid": 27160,
+        "diagnostics": []
+      },
+      "stdout": {
+        "path": "C:\\Source\\Orket\\.tmp\\post-release-reliability\\reconciliation-checks\\sdk-tag.stdout.log",
+        "sha256": "d1c9d70ea3b014fb1fb3996a351da07d4e9938ce99c263f412fcf2bb5fd3c825"
+      },
+      "stderr": {
+        "path": "C:\\Source\\Orket\\.tmp\\post-release-reliability\\reconciliation-checks\\sdk-tag.stderr.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "argv": [
+        "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\verification-py311\\Scripts\\python.exe",
+        "scripts/governance/check_core_release_policy.py"
+      ],
+      "exit_code": 0,
+      "lifetime": {
+        "schema_version": "owned_command.v1",
+        "reason": "completed",
+        "cleanup_confirmed": true,
+        "capture_complete": true,
+        "backend": "windows_job",
+        "transport_pid": 44184,
+        "supervisor_pid": 48120,
+        "command_pid": 20252,
+        "diagnostics": []
+      },
+      "stdout": {
+        "path": "C:\\Source\\Orket\\.tmp\\post-release-reliability\\reconciliation-checks\\core-policy.stdout.log",
+        "sha256": "2679e4568af02f4e23201b689b5dadb73b41eb43412cbf9d7224a03969034dd8"
+      },
+      "stderr": {
+        "path": "C:\\Source\\Orket\\.tmp\\post-release-reliability\\reconciliation-checks\\core-policy.stderr.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "lifetime": {
+        "schema_version": "owned_command.v1",
+        "reason": "completed",
+        "cleanup_confirmed": true,
+        "capture_complete": true,
+        "backend": "windows_job",
+        "transport_pid": 40044,
+        "supervisor_pid": 8112,
+        "command_pid": 40280,
+        "diagnostics": []
+      },
+      "stdout": {
+        "path": "C:\\Source\\Orket\\.tmp\\post-release-reliability\\reconciliation-checks\\diff-check.stdout.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "C:\\Source\\Orket\\.tmp\\post-release-reliability\\reconciliation-checks\\diff-check.stderr.log",
+        "sha256": "04b3d445c422c5f5f17108e014c9c1bb9fe1ebfdb80cae5b93e03aeab5381387"
+      }
+    }
+  ],
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-10-04T20:59:59.919665Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:2e411e6c814f81cafcaa0c1b77071c62837d147432f8c6983627ac20069793a8",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 271,
+        "paths_total_reference": 271,
+        "churn_paths": 271,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    },
+    {
+      "run_at_utc": "2026-10-04T21:00:42.567912Z",
+      "changed": true,
+      "before_digest": "sha256:2e411e6c814f81cafcaa0c1b77071c62837d147432f8c6983627ac20069793a8",
+      "after_digest": "sha256:a5b6fe100ed0d10bef62ab4622c5ebe09dfee085b3a9476046f7af65f5fe7f92",
+      "diff": {
+        "added_paths": 2,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 271,
+        "paths_total_current": 537,
+        "paths_total_reference": 537,
+        "churn_paths": 3,
+        "churn_ratio": 0.005587,
+        "sample_paths": [
+          "$.structural_checks",
+          "$.archive.sha256",
+          "$.batches.reconciliation-checks"
+        ]
+      }
+    }
+  ]
+}

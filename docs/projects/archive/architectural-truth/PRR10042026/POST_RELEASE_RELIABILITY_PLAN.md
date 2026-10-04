@@ -1,13 +1,32 @@
 # Post-release reliability: execution handoff
 
 Last updated: 2026-10-04 (America/Denver)
-Status: Archived source closeout; publication witness controls PRR-03 completion
+Status: Archived; PRR-v1 publication verified and complete
 Queue: PRR-v1
 Owner: Orket Core
 Workspace: `C:/Source/Orket`
 Branch: `main`
-Progress: PRR-01/02 accepted; PRR-03 attested by the publication witness (3/3 on verified success); PRR-S1 not admitted
-Next action: Inspect `.tmp/post-release-reliability/publication/state.json`; finish only an incomplete final verification/publication phase. After its verified success, PRR-v1 is 3/3 with no next executable goal.
+Progress: PRR-01 through PRR-03 complete (3/3); PRR-S1 not admitted
+Next action: None. Required closeout and publication are verified; do not reopen deferred work.
+
+## Final reconciliation
+
+On October 4, live remote readback and fresh asset downloads confirmed matched
+annotated `v0.7.2` and `sdk-v0.7.2` at
+`9cb8a89056c46f0c3633e0c20aaac60d80113236`. The public `publication.json`, both
+checksum manifests and all distribution bytes match the accepted witnesses.
+The original publication and closeout receipts report success and 3/3; no later
+main commit existed at reconciliation preflight. Task-owned process cleanup,
+the unchanged operator override, selected llama.cpp server and other worktrees
+were checked. [Final handoff and exact evidence](../../../../releases/0.7.3/PROOF_REPORT.md)
+record the documentation-only successor checkpoint; the tested install target
+remains matched core/SDK 0.7.2.
+
+The cards, starting checkpoints and prepublication instructions below retain
+their historical scope. They do not reactivate the completed queue. The October 6,
+2026 00:00 America/Denver cutoff and final six-hour reserve are retained; required
+work finished before the reserve. PRR-S1 remains not admitted, and whole-umbrella
+retirement remains outside scope.
 
 ## Purpose and authority
 
@@ -92,7 +111,7 @@ the selected llama.cpp provider. Official usage reference, checked October 4:
 |---|---|---|---|
 | PRR-01 | Installed Windows real-model user journey | Baseline and ownership preflight | accepted: both installed Windows versions |
 | PRR-02 | ResponseParser whitespace/grounding repair | Baseline; may proceed if PRR-01 is blocked | accepted: regressions and live stream/parser proof |
-| PRR-03 | Verification, publication and operator handoff | PRR-01 and PRR-02 accepted; any admitted stretch work settled | active: final verification and publication |
+| PRR-03 | Verification, publication and operator handoff | PRR-01 and PRR-02 accepted; any admitted stretch work settled | complete: matched 0.7.2 publication verified |
 | PRR-S1 | Marshaller subprocess ownership | Optional admission described below | not admitted |
 
 Required completion is 3/3. PRR-S1 is reported separately and never changes that
@@ -234,7 +253,10 @@ reported as partial success and does not satisfy missing required goals.
   success/environment blocker. Keep health, fixture, controlled-HTTP and actual
   model evidence distinct.
 
-## Resume record
+## Historical resume record (before publication)
+
+This checkpoint is preserved as recorded. The final reconciliation above
+supersedes its 2/3 status and next actions; the evidence and failed attempts remain.
 
 - Current goal: PRR-03; required progress 2/3, publication not yet performed.
 - Main baseline: `2ccbd9aa26a71ba0347096800b8acbd8f4804070`; candidate matched core/SDK 0.7.2.
@@ -291,7 +313,10 @@ completion still needs verified publication, exact remote identities, asset byte
 cleanup, final operator handoff and slice archive. No current claim is a fresh
 full-coverage, hosted-CI, other-platform or remote-inference-stop claim.
 
-## Source closeout and publication boundary
+## Historical source closeout and publication boundary
+
+This prepared source checkpoint predates publication. Its conditions were later
+satisfied by the verified witnesses linked in the final reconciliation above.
 
 Final canonical wheel receipt: `.tmp/post-release-reliability/final-packages-r02/state.json`
 (success on both supported interpreters). Fresh source controls: 569 passes plus
