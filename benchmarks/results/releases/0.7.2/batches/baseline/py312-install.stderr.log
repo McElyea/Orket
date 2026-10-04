@@ -1,0 +1,47 @@
+Using Python 3.12.2 environment at: baseline-py312
+Resolved 44 packages in 39ms
+Installed 44 packages in 584ms
+ + aiofiles==25.1.0
+ + aiosqlite==0.22.1
+ + annotated-doc==0.0.5
+ + annotated-types==0.8.0
+ + anyio==4.15.1
+ + attrs==26.1.0
+ + bcrypt==5.0.0
+ + certifi==2026.7.22
+ + cffi==2.1.1
+ + click==8.5.0
+ + cryptography==50.0.1
+ + ecdsa==0.19.2
+ + fastapi==0.141.1
+ + google-crc32c==1.9.0
+ + h11==0.16.0
+ + httpcore==1.0.9
+ + httpx==0.28.1
+ + idna==3.20
+ + jsonschema==4.26.0
+ + jsonschema-specifications==2025.9.1
+ + ollama==0.6.2
+ + orket==0.7.1 (from file:///C:/Source/Orket/dist/orket-0.7.1-py3-none-any.whl)
+ + orket-extension-sdk==0.7.1 (from file:///C:/Source/Orket/dist/orket_extension_sdk-0.7.1-py3-none-any.whl)
+ + packaging==26.3
+ + passlib==1.7.4
+ + psutil==6.1.1
+ + pyasn1==0.6.4
+ + pycparser==3.0
+ + pydantic==2.13.5
+ + pydantic-core==2.46.5
+ + python-dotenv==1.2.3
+ + python-jose==3.5.0
+ + python-multipart==0.0.32
+ + pyyaml==6.0.3
+ + referencing==0.37.0
+ + rfc8785==0.1.4
+ + rpds-py==2026.6.3
+ + rsa==4.9.1
+ + six==1.17.0
+ + starlette==1.7.0
+ + typing-extensions==4.16.0
+ + typing-inspection==0.4.4
+ + tzdata==2026.4
+ + uvicorn==0.54.0

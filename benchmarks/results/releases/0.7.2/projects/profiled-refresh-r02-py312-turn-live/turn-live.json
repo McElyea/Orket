@@ -1,0 +1,66 @@
+{
+  "proof_mode": "live",
+  "observed_path": "primary",
+  "observed_result": "success",
+  "python": "3.12.2 (tags/v3.12.2:6abddd9, Feb  6 2024, 21:26:36) [MSC v.1937 64 bit (AMD64)]",
+  "provider": "llama_cpp",
+  "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+  "origin": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\final-packages-r02-py312\\Lib\\site-packages\\orket\\__init__.py",
+  "turn": {
+    "success": true,
+    "error": null,
+    "content": "{\n  \"content\": \"\",\n  \"tool_calls\": [\n    {\n      \"tool\": \"write_file\",\n      \"args\": {\n        \"path\": \"grounded.txt\",\n        \"content\": \"PRR live grounding accepted\\n\"\n      }\n    }\n  ]\n}"
+  },
+  "output": {
+    "path": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\profiled-refresh-r02-py312-turn-live\\workspace\\grounded.txt",
+    "sha256": "625b5f1b2f99a454bb30099108b7b2ad4a31a59355fc886997171333e9a158bc",
+    "bytes_hex": "505252206c6976652067726f756e64696e672061636365707465640d0a",
+    "newline_semantics": "existing Windows text-mode write translates newline to CRLF"
+  },
+  "grounding_response": "Maybe this should work.",
+  "grounding_diagnostics": {
+    "scope": {
+      "workspace": [],
+      "provided_context": [],
+      "active_context": [],
+      "passive_context": [],
+      "archived_context": [],
+      "declared_interfaces": [],
+      "strict_grounding": true,
+      "max_workspace_items": null,
+      "max_active_context_items": null,
+      "max_passive_context_items": null,
+      "max_archived_context_items": null,
+      "max_total_context_items": null,
+      "forbidden_phrases": []
+    },
+    "violations": [
+      {
+        "rule_id": "HALLUCINATION.INVENTED_DETAIL",
+        "message": "Output includes speculative language under strict grounding scope.",
+        "evidence": "Maybe"
+      }
+    ]
+  },
+  "provider_client_closed": true,
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-10-04T19:34:47.302083Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:a40e808a404ae179b06a88060adc0a41d0fe41e4687fef104f52428f16791176",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 63,
+        "paths_total_reference": 63,
+        "churn_paths": 63,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    }
+  ]
+}

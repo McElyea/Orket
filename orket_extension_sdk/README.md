@@ -62,13 +62,13 @@ valid author manifest when required runtime features are unavailable.
 `orket sdk --version` prints the canonical SDK version on one line. Add `--json`
 for the existing `ok`/`sdk_version` payload; core 0.7.1 fixes the text renderer.
 
-SDK `0.7.1` is released with core `0.7.1` on Windows. That exact paired core
+SDK `0.7.2` is paired with core `0.7.2` on Windows. That exact paired core
 is the admitted window, overriding the nominal future window below. Published
 core `0.6.0` and `0.6.2` still require SDK `0.6.0`. Upgrade both packages together,
 handle nullable latency, declare `agent_model_use_receipt.v2` for new agent
 admission, and run strict host validation. Historical v1 receipt reads remain
-supported. SDK public behavior is unchanged from 0.7.0; the historical 0.7.0 pair
-retains its original release record. Release evidence and limits: `docs/releases/0.7.1/PROOF_REPORT.md`
+supported. SDK public behavior is unchanged from 0.7.0; the historical 0.7.0/0.7.1 pairs
+retain their original release records. Release evidence and limits: `docs/releases/0.7.2/PROOF_REPORT.md`
 in the core repository.
 
 `orket_extension_sdk` has its own semantic version sourced from
@@ -83,7 +83,7 @@ guarantee.
 Development prereleases follow the same minor-window calculation but do not
 claim released host compatibility until the built-artifact matrix passes. The
 standalone SDK distribution is the sole SDK namespace owner in the current
-core `0.7.1` release. Tagged core `0.5.9` still bundles SDK
+core `0.7.2` release. Tagged core `0.5.9` still bundles SDK
 `0.1.0`; overlaying the standalone SDK on that host creates duplicate ownership
 and is unsupported. Upgrade core first, then force-reinstall the exact standalone
 SDK wheel: removing an old core can remove SDK files that it owned. Run

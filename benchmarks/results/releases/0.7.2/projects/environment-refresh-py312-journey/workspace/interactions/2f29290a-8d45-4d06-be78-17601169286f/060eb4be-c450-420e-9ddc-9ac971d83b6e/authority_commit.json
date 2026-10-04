@@ -1,0 +1,13 @@
+{
+  "authoritative": true,
+  "commit_digest": "fd5dae3ee45fc9dd009aaed9f5fd4c5e98a4445f4351ea301ee16b45922d5d2d",
+  "intents": [
+    {
+      "payload_digest": null,
+      "ref": "model_stream_v1",
+      "type": "turn_finalize"
+    }
+  ],
+  "session_id": "2f29290a-8d45-4d06-be78-17601169286f",
+  "turn_id": "060eb4be-c450-420e-9ddc-9ac971d83b6e"
+}

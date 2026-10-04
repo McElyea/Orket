@@ -5,6 +5,19 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.2] - 2026-10-04 - "Installed Windows reliability"
+
+### Fixed
+- Preserve prose word boundaries during JSON residue extraction so existing strict-grounding markers cannot bypass turn validation. JSON payload exclusions and corrective retry policy remain unchanged.
+- Install the WebSocket transport required by the existing public API interaction routes; a plain core wheel previously returned HTTP 404 for WebSocket upgrades.
+- Settle disconnected interaction WebSockets even when no further events arrive, allowing graceful API shutdown after completion or cancellation.
+- Advance the matched standalone SDK identity and exact core dependency pin to 0.7.2; SDK protocol behavior is unchanged.
+- Stability: bounded Windows llama.cpp interaction and turn-grounding repairs. Streamed text remains nonauthoritative; durable interaction commits record lifecycle outcomes rather than transcripts. No remote inference termination or additional platform acceptance is implied.
+- Operator action: upgrade both matched wheels. Initialize the caller-owned project board to avoid the existing missing-board startup warning.
+- `compatibility_status`: `preserved`
+- `affected_audience`: `all`
+- `migration_requirement`: `none`
+
 ## [0.7.1] - 2026-10-03 - "Complete fixture and SDK release cleanup"
 
 ### Changed

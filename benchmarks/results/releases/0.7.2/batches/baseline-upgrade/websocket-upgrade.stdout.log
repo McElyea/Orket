@@ -1,0 +1,2 @@
+INFO:     127.0.0.1:65298 - "POST /v1/interactions/sessions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65298 - "GET /ws/interactions/f6602472-550e-4eb4-927e-28fd5c52955c HTTP/1.1" 404 Not Found

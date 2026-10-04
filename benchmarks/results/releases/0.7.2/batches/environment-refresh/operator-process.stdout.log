@@ -1,0 +1,7 @@
+{
+    "ProcessId":  45556,
+    "ParentProcessId":  34876,
+    "CreationDate":  "\/Date(1791141847554)\/",
+    "ExecutablePath":  "D:\\llama.cpp-releases\\b11146\\llama-server.exe",
+    "CommandLine":  "\"D:\\llama.cpp-releases\\b11146\\llama-server.exe\" --model D:/Models/GGUF/bartowski/orcarouter_Qwen3.8-27B-Uncensored-GGUF/orcarouter_Qwen3.8-27B-Uncensored-Q4_K_L.gguf --alias orcarouter_qwen3.8-27b-uncensored-q4_k_l --host 127.0.0.1 --port 8080 --ctx-size 8192 --parallel 1 --gpu-layers all --flash-attn on --chat-template-file C:/Users/jonmc/miniconda3/Lib/site-packages/orket/runtime/config/qwen38_text_chatml.jinja --reasoning off "
+}

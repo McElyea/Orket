@@ -1,0 +1,132 @@
+Building wheel from source distribution...
+running egg_info
+writing orket_extension_sdk.egg-info\PKG-INFO
+writing dependency_links to orket_extension_sdk.egg-info\dependency_links.txt
+writing requirements to orket_extension_sdk.egg-info\requires.txt
+writing top-level names to orket_extension_sdk.egg-info\top_level.txt
+reading manifest file 'orket_extension_sdk.egg-info\SOURCES.txt'
+writing manifest file 'orket_extension_sdk.egg-info\SOURCES.txt'
+running bdist_wheel
+running build
+running build_py
+creating build\lib\orket_extension_sdk
+copying .\agent_broker.py -> build\lib\orket_extension_sdk
+copying .\agent_fixtures.py -> build\lib\orket_extension_sdk
+copying .\agent_ipc.py -> build\lib\orket_extension_sdk
+copying .\agent_models.py -> build\lib\orket_extension_sdk
+copying .\agent_runtime.py -> build\lib\orket_extension_sdk
+copying .\agent_testing.py -> build\lib\orket_extension_sdk
+copying .\agent_types.py -> build\lib\orket_extension_sdk
+copying .\agent_validation.py -> build\lib\orket_extension_sdk
+copying .\audio.py -> build\lib\orket_extension_sdk
+copying .\capabilities.py -> build\lib\orket_extension_sdk
+copying .\controller.py -> build\lib\orket_extension_sdk
+copying .\errors.py -> build\lib\orket_extension_sdk
+copying .\import_scan.py -> build\lib\orket_extension_sdk
+copying .\llm.py -> build\lib\orket_extension_sdk
+copying .\manifest.py -> build\lib\orket_extension_sdk
+copying .\memory.py -> build\lib\orket_extension_sdk
+copying .\piper_tts.py -> build\lib\orket_extension_sdk
+copying .\result.py -> build\lib\orket_extension_sdk
+copying .\schema.py -> build\lib\orket_extension_sdk
+copying .\testing.py -> build\lib\orket_extension_sdk
+copying .\tui.py -> build\lib\orket_extension_sdk
+copying .\validate.py -> build\lib\orket_extension_sdk
+copying .\voice.py -> build\lib\orket_extension_sdk
+copying .\workload.py -> build\lib\orket_extension_sdk
+copying .\__init__.py -> build\lib\orket_extension_sdk
+copying .\__version__.py -> build\lib\orket_extension_sdk
+creating build\lib\orket_extension_sdk\schemas
+copying schemas\__init__.py -> build\lib\orket_extension_sdk\schemas
+creating build\lib\orket_extension_sdk\workloads
+copying workloads\controller.py -> build\lib\orket_extension_sdk\workloads
+copying workloads\__init__.py -> build\lib\orket_extension_sdk\workloads
+running egg_info
+writing orket_extension_sdk.egg-info\PKG-INFO
+writing dependency_links to orket_extension_sdk.egg-info\dependency_links.txt
+writing requirements to orket_extension_sdk.egg-info\requires.txt
+writing top-level names to orket_extension_sdk.egg-info\top_level.txt
+reading manifest file 'orket_extension_sdk.egg-info\SOURCES.txt'
+writing manifest file 'orket_extension_sdk.egg-info\SOURCES.txt'
+copying .\py.typed -> build\lib\orket_extension_sdk
+copying schemas\governed_agent_loop_v1.json -> build\lib\orket_extension_sdk\schemas
+installing to build\bdist.win-amd64\wheel
+running install
+running install_lib
+creating build\bdist.win-amd64\wheel
+creating build\bdist.win-amd64\wheel\orket_extension_sdk
+copying build\lib\orket_extension_sdk\agent_broker.py -> build\bdist.win-amd64\wheel\.\orket_extension_sdk
+copying build\lib\orket_extension_sdk\agent_fixtures.py -> build\bdist.win-amd64\wheel\.\orket_extension_sdk
+copying build\lib\orket_extension_sdk\agent_ipc.py -> build\bdist.win-amd64\wheel\.\orket_extension_sdk
+copying build\lib\orket_extension_sdk\agent_models.py -> build\bdist.win-amd64\wheel\.\orket_extension_sdk
+copying build\lib\orket_extension_sdk\agent_runtime.py -> build\bdist.win-amd64\wheel\.\orket_extension_sdk
+copying build\lib\orket_extension_sdk\agent_testing.py -> build\bdist.win-amd64\wheel\.\orket_extension_sdk
+copying build\lib\orket_extension_sdk\agent_types.py -> build\bdist.win-amd64\wheel\.\orket_extension_sdk
+copying build\lib\orket_extension_sdk\agent_validation.py -> build\bdist.win-amd64\wheel\.\orket_extension_sdk
+copying build\lib\orket_extension_sdk\audio.py -> build\bdist.win-amd64\wheel\.\orket_extension_sdk
+copying build\lib\orket_extension_sdk\capabilities.py -> build\bdist.win-amd64\wheel\.\orket_extension_sdk
+copying build\lib\orket_extension_sdk\controller.py -> build\bdist.win-amd64\wheel\.\orket_extension_sdk
+copying build\lib\orket_extension_sdk\errors.py -> build\bdist.win-amd64\wheel\.\orket_extension_sdk
+copying build\lib\orket_extension_sdk\import_scan.py -> build\bdist.win-amd64\wheel\.\orket_extension_sdk
+copying build\lib\orket_extension_sdk\llm.py -> build\bdist.win-amd64\wheel\.\orket_extension_sdk
+copying build\lib\orket_extension_sdk\manifest.py -> build\bdist.win-amd64\wheel\.\orket_extension_sdk
+copying build\lib\orket_extension_sdk\memory.py -> build\bdist.win-amd64\wheel\.\orket_extension_sdk
+copying build\lib\orket_extension_sdk\piper_tts.py -> build\bdist.win-amd64\wheel\.\orket_extension_sdk
+copying build\lib\orket_extension_sdk\py.typed -> build\bdist.win-amd64\wheel\.\orket_extension_sdk
+copying build\lib\orket_extension_sdk\result.py -> build\bdist.win-amd64\wheel\.\orket_extension_sdk
+copying build\lib\orket_extension_sdk\schema.py -> build\bdist.win-amd64\wheel\.\orket_extension_sdk
+creating build\bdist.win-amd64\wheel\orket_extension_sdk\schemas
+copying build\lib\orket_extension_sdk\schemas\governed_agent_loop_v1.json -> build\bdist.win-amd64\wheel\.\orket_extension_sdk\schemas
+copying build\lib\orket_extension_sdk\schemas\__init__.py -> build\bdist.win-amd64\wheel\.\orket_extension_sdk\schemas
+copying build\lib\orket_extension_sdk\testing.py -> build\bdist.win-amd64\wheel\.\orket_extension_sdk
+copying build\lib\orket_extension_sdk\tui.py -> build\bdist.win-amd64\wheel\.\orket_extension_sdk
+copying build\lib\orket_extension_sdk\validate.py -> build\bdist.win-amd64\wheel\.\orket_extension_sdk
+copying build\lib\orket_extension_sdk\voice.py -> build\bdist.win-amd64\wheel\.\orket_extension_sdk
+copying build\lib\orket_extension_sdk\workload.py -> build\bdist.win-amd64\wheel\.\orket_extension_sdk
+creating build\bdist.win-amd64\wheel\orket_extension_sdk\workloads
+copying build\lib\orket_extension_sdk\workloads\controller.py -> build\bdist.win-amd64\wheel\.\orket_extension_sdk\workloads
+copying build\lib\orket_extension_sdk\workloads\__init__.py -> build\bdist.win-amd64\wheel\.\orket_extension_sdk\workloads
+copying build\lib\orket_extension_sdk\__init__.py -> build\bdist.win-amd64\wheel\.\orket_extension_sdk
+copying build\lib\orket_extension_sdk\__version__.py -> build\bdist.win-amd64\wheel\.\orket_extension_sdk
+running install_egg_info
+Copying orket_extension_sdk.egg-info to build\bdist.win-amd64\wheel\.\orket_extension_sdk-0.7.2-py3.11.egg-info
+running install_scripts
+creating build\bdist.win-amd64\wheel\orket_extension_sdk-0.7.2.dist-info\WHEEL
+creating 'C:\\Source\\Orket\\.tmp\\post-release-reliability\\candidate-r02\\artifacts\\.tmp-ky_9icmk\\orket_extension_sdk-0.7.2-py3-none-any.whl' and adding 'build\\bdist.win-amd64\\wheel' to it
+adding 'orket_extension_sdk/__init__.py'
+adding 'orket_extension_sdk/__version__.py'
+adding 'orket_extension_sdk/agent_broker.py'
+adding 'orket_extension_sdk/agent_fixtures.py'
+adding 'orket_extension_sdk/agent_ipc.py'
+adding 'orket_extension_sdk/agent_models.py'
+adding 'orket_extension_sdk/agent_runtime.py'
+adding 'orket_extension_sdk/agent_testing.py'
+adding 'orket_extension_sdk/agent_types.py'
+adding 'orket_extension_sdk/agent_validation.py'
+adding 'orket_extension_sdk/audio.py'
+adding 'orket_extension_sdk/capabilities.py'
+adding 'orket_extension_sdk/controller.py'
+adding 'orket_extension_sdk/errors.py'
+adding 'orket_extension_sdk/import_scan.py'
+adding 'orket_extension_sdk/llm.py'
+adding 'orket_extension_sdk/manifest.py'
+adding 'orket_extension_sdk/memory.py'
+adding 'orket_extension_sdk/piper_tts.py'
+adding 'orket_extension_sdk/py.typed'
+adding 'orket_extension_sdk/result.py'
+adding 'orket_extension_sdk/schema.py'
+adding 'orket_extension_sdk/testing.py'
+adding 'orket_extension_sdk/tui.py'
+adding 'orket_extension_sdk/validate.py'
+adding 'orket_extension_sdk/voice.py'
+adding 'orket_extension_sdk/workload.py'
+adding 'orket_extension_sdk/schemas/__init__.py'
+adding 'orket_extension_sdk/schemas/governed_agent_loop_v1.json'
+adding 'orket_extension_sdk/workloads/__init__.py'
+adding 'orket_extension_sdk/workloads/controller.py'
+adding 'orket_extension_sdk-0.7.2.dist-info/METADATA'
+adding 'orket_extension_sdk-0.7.2.dist-info/WHEEL'
+adding 'orket_extension_sdk-0.7.2.dist-info/top_level.txt'
+adding 'orket_extension_sdk-0.7.2.dist-info/RECORD'
+removing build\bdist.win-amd64\wheel
+Successfully built C:\Source\Orket\.tmp\post-release-reliability\candidate-r02\artifacts\orket_extension_sdk-0.7.2-py3-none-any.whl

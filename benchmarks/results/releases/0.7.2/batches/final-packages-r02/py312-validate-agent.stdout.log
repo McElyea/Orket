@@ -1,0 +1,17 @@
+{
+  "ok": true,
+  "target": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\final-packages-r02-py312-sdk\\agent",
+  "manifest_path": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\final-packages-r02-py312-sdk\\agent\\extension.yaml",
+  "manifest_version": "v0",
+  "extension_id": "governed.agent.starter",
+  "workload_count": 1,
+  "error_count": 0,
+  "warning_count": 0,
+  "errors": [],
+  "warnings": [],
+  "exit_code": 0,
+  "import_scan": {
+    "scanned_file_count": 2,
+    "error_count": 0
+  }
+}

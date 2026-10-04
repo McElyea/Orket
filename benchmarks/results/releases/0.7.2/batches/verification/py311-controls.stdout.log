@@ -1,0 +1,57 @@
+........................................................................ [ 12%]
+........................................................................ [ 25%]
+........................................................................ [ 37%]
+........................................................................ [ 50%]
+........................................................................ [ 63%]
+........................................................................ [ 75%]
+........................................................................ [ 88%]
+.................................................................        [100%]
+============================== warnings summary ===============================
+..\..\Users\jonmc\AppData\Local\Temp\orket-prr-v1\verification-py311\Lib\site-packages\fastapi\testclient.py:1
+  C:\Users\jonmc\AppData\Local\Temp\orket-prr-v1\verification-py311\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+tests/integration/test_turn_parser_publication_ownership.py: 12 warnings
+  tests\integration\test_turn_parser_publication_ownership.py:142: PytestWarning: record_property is incompatible with junit_family 'xunit2' (use 'legacy' or 'xunit1')
+    @pytest.mark.parametrize("fault_stage", [None, "mkdir", "first", "second"])
+
+tests/integration/test_turn_parser_publication_ownership.py::test_parser_uses_captured_response_and_policy_during_held_operation
+  tests\integration\test_turn_parser_publication_ownership.py:190: PytestWarning: record_property is incompatible with junit_family 'xunit2' (use 'legacy' or 'xunit1')
+    async def test_parser_uses_captured_response_and_policy_during_held_operation(
+
+tests/integration/test_model_stream_target_admission.py::test_model_stream_respects_actual_target_admission[quarantined-openai]
+tests/integration/test_model_stream_target_admission.py::test_model_stream_respects_actual_target_admission[quarantined-llama]
+tests/integration/test_model_stream_target_admission.py::test_model_stream_respects_actual_target_admission[missing-gguf]
+tests/integration/test_model_stream_target_admission.py::test_model_stream_respects_actual_target_admission[empty-gguf]
+tests/integration/test_model_stream_target_admission.py::test_model_stream_respects_actual_target_admission[admitted-openai]
+tests/integration/test_model_stream_target_admission.py::test_model_stream_respects_actual_target_admission[admitted-llama]
+tests/integration/test_model_stream_target_admission.py::test_model_stream_respects_actual_target_admission[empty-model]
+  tests\integration\test_model_stream_target_admission.py:19: PytestWarning: record_property is incompatible with junit_family 'xunit2' (use 'legacy' or 'xunit1')
+    @pytest.mark.parametrize("case", CASES)
+
+tests/integration/test_model_stream_workload_inputs.py::test_model_stream_admission_keeps_request_and_provider_inputs[control]
+tests/integration/test_model_stream_workload_inputs.py::test_model_stream_admission_keeps_request_and_provider_inputs[request]
+tests/integration/test_model_stream_workload_inputs.py::test_model_stream_admission_keeps_request_and_provider_inputs[api-key]
+tests/integration/test_model_stream_workload_inputs.py::test_model_stream_admission_keeps_request_and_provider_inputs[inference-timeout]
+tests/integration/test_model_stream_workload_inputs.py::test_model_stream_admission_keeps_request_and_provider_inputs[turn-timeout]
+tests/integration/test_model_stream_workload_inputs.py::test_model_stream_admission_keeps_request_and_provider_inputs[resolver-context]
+tests/integration/test_model_stream_workload_inputs.py::test_model_stream_admission_keeps_request_and_provider_inputs[empty-target]
+  tests\integration\test_model_stream_workload_inputs.py:18: PytestWarning: record_property is incompatible with junit_family 'xunit2' (use 'legacy' or 'xunit1')
+    @pytest.mark.parametrize("case", CASES)
+
+tests/integration/test_application_root_inputs.py::test_gate_root_is_selected_before_native_validation[governed-cwd-none]
+tests/integration/test_application_root_inputs.py::test_gate_root_is_selected_before_native_validation[governed-attribute-none]
+tests/integration/test_application_root_inputs.py::test_gate_root_is_selected_before_native_validation[facts-cwd-none]
+tests/integration/test_application_root_inputs.py::test_gate_root_is_selected_before_native_validation[facts-attribute-cancel]
+tests/integration/test_application_root_inputs.py::test_gate_root_is_selected_before_native_validation[facts-cwd-invalid-ast]
+tests/integration/test_application_root_inputs.py::test_gate_root_is_selected_before_native_validation[input-escape-none]
+tests/integration/test_application_root_inputs.py::test_gate_root_is_selected_before_native_validation[input-drive-none]
+  tests\integration\test_application_root_inputs.py:34: PytestWarning: record_property is incompatible with junit_family 'xunit2' (use 'legacy' or 'xunit1')
+    @pytest.mark.parametrize("route,change,stop", GATE_CASES)
+
+tests/integration/test_application_root_inputs.py: 11 warnings
+  tests\integration\test_application_root_inputs.py:45: PytestWarning: record_property is incompatible with junit_family 'xunit2' (use 'legacy' or 'xunit1')
+    @pytest.mark.parametrize("route,stage,change", STRUCTURAL_CASES)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+569 passed, 46 warnings in 104.75s (0:01:44)

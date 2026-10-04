@@ -1,0 +1,23 @@
+{
+  "run_id": "prr-live-turn",
+  "issue_id": "PRR-LIVE",
+  "turn_index": 1,
+  "role": "developer",
+  "prompt_hash": "f910ad83638be447",
+  "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+  "tool_calls": [
+    {
+      "tool": "write_file",
+      "args": {
+        "path": "grounded.txt",
+        "content": "PRR live grounding accepted\n"
+      }
+    }
+  ],
+  "state_delta": {
+    "from": "in_progress",
+    "to": null
+  },
+  "prompt_metadata": {},
+  "captured_at": "2026-10-04T19:34:43.189246+00:00"
+}

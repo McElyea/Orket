@@ -1,0 +1,29 @@
+INFO:     Started server process [48120]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:61206 - "WebSocket /ws/interactions/b05a0e94-c248-4fb6-94b2-17e72fada1bc" [accepted]
+INFO:     connection open
+INFO:     127.0.0.1:53066 - "WebSocket /ws/interactions/f1c4c6d1-df76-4e18-a7e4-963db9ba454b" [accepted]
+INFO:     connection open
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [48120]
+Traceback (most recent call last):
+  File "C:\Source\Orket\.tmp\prr_journey.py", line 145, in <module>
+    asyncio.run(main())
+  File "C:\Users\jonmc\AppData\Roaming\uv\python\cpython-3.11.14-windows-x86_64-none\Lib\asyncio\runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\jonmc\AppData\Roaming\uv\python\cpython-3.11.14-windows-x86_64-none\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\jonmc\AppData\Roaming\uv\python\cpython-3.11.14-windows-x86_64-none\Lib\asyncio\base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "C:\Source\Orket\.tmp\prr_journey.py", line 139, in main
+    durable_results()
+  File "C:\Source\Orket\.tmp\prr_journey.py", line 96, in durable_results
+    assert not any(value['type'] == 'turn_finalize' for value in commit['intents'])
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

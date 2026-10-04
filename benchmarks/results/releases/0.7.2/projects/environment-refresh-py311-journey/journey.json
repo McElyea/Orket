@@ -1,0 +1,1130 @@
+{
+  "proof_mode": "live",
+  "observed_path": "primary",
+  "observed_result": "success",
+  "python": "3.11.14 (main, Jan 14 2026, 19:28:21) [MSC v.1944 64 bit (AMD64)]",
+  "version": "0.7.2",
+  "origins": {
+    "orket": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\final-packages-r02-py311\\Lib\\site-packages\\orket\\__init__.py",
+    "sdk": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\final-packages-r02-py311\\Lib\\site-packages\\orket_extension_sdk\\__init__.py"
+  },
+  "environment": {
+    "ORKET_DISABLE_SANDBOX": "1",
+    "ORKET_STREAM_EVENTS_V1": "true",
+    "ORKET_MODEL_STREAM_PROVIDER": "real",
+    "ORKET_MODEL_STREAM_REAL_PROVIDER": "llama_cpp",
+    "ORKET_MODEL_STREAM_REAL_MODEL_ID": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+    "ORKET_MODEL_STREAM_OPENAI_USE_STREAM": "true",
+    "ORKET_LLAMA_CPP_BASE_URL": "http://127.0.0.1:8080/v1",
+    "ORKET_MODULE_PROFILE": "developer-local",
+    "ORKET_PROVIDER_RUNTIME_AUTO_SELECT_MODEL": "0",
+    "ORKET_PROVIDER_RUNTIME_AUTO_LOAD_LOCAL_MODEL": "0",
+    "ORKET_MODEL_STREAM_REAL_TIMEOUT_S": "120",
+    "ORKET_MODEL_STREAM_TURN_TIMEOUT_S": "120",
+    "ORKET_GOVERNED_AGENT_SUPERVISOR_ENABLED": "0",
+    "ORKET_DURABLE_ROOT": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\environment-refresh-py311-journey\\.orket\\durable"
+  },
+  "provider": "llama_cpp",
+  "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+  "project": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\environment-refresh-py311-journey",
+  "turns": [
+    {
+      "session_id": "00faf668-5944-4453-bbd5-4c12c525cac0",
+      "cancel_requested": false,
+      "events": [
+        {
+          "schema_v": "1.0",
+          "session_id": "00faf668-5944-4453-bbd5-4c12c525cac0",
+          "turn_id": "14f3cad2-aacf-472f-9703-96dc02dd2a20",
+          "seq": 0,
+          "mono_ts_ms": 178199687,
+          "event_type": "turn_accepted",
+          "payload": {
+            "authoritative": false,
+            "input": {
+              "model_id": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+              "temperature": 0,
+              "max_tokens": 96,
+              "prompt": "Write one short sentence explaining why the sky appears blue."
+            },
+            "turn_params": {}
+          },
+          "wall_ts": "2026-10-04T19:33:46.469974+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "00faf668-5944-4453-bbd5-4c12c525cac0",
+          "turn_id": "14f3cad2-aacf-472f-9703-96dc02dd2a20",
+          "seq": 1,
+          "mono_ts_ms": 178199734,
+          "event_type": "model_selected",
+          "payload": {
+            "model_id": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+            "reason": "real_provider",
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:33:46.508499+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "00faf668-5944-4453-bbd5-4c12c525cac0",
+          "turn_id": "14f3cad2-aacf-472f-9703-96dc02dd2a20",
+          "seq": 2,
+          "mono_ts_ms": 178199734,
+          "event_type": "model_loading",
+          "payload": {
+            "cold_start": false,
+            "progress": 0.0,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:33:46.508499+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "00faf668-5944-4453-bbd5-4c12c525cac0",
+          "turn_id": "14f3cad2-aacf-472f-9703-96dc02dd2a20",
+          "seq": 3,
+          "mono_ts_ms": 178199734,
+          "event_type": "model_ready",
+          "payload": {
+            "model_id": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+            "warm_state": "unknown",
+            "load_ms": 0,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:33:46.509000+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "00faf668-5944-4453-bbd5-4c12c525cac0",
+          "turn_id": "14f3cad2-aacf-472f-9703-96dc02dd2a20",
+          "seq": 4,
+          "mono_ts_ms": 178200265,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": "The",
+            "index": 0,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:33:47.035502+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "00faf668-5944-4453-bbd5-4c12c525cac0",
+          "turn_id": "14f3cad2-aacf-472f-9703-96dc02dd2a20",
+          "seq": 5,
+          "mono_ts_ms": 178200296,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " sky",
+            "index": 1,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:33:47.068660+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "00faf668-5944-4453-bbd5-4c12c525cac0",
+          "turn_id": "14f3cad2-aacf-472f-9703-96dc02dd2a20",
+          "seq": 6,
+          "mono_ts_ms": 178200328,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " appears",
+            "index": 2,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:33:47.100676+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "00faf668-5944-4453-bbd5-4c12c525cac0",
+          "turn_id": "14f3cad2-aacf-472f-9703-96dc02dd2a20",
+          "seq": 7,
+          "mono_ts_ms": 178200359,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " blue",
+            "index": 3,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:33:47.126683+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "00faf668-5944-4453-bbd5-4c12c525cac0",
+          "turn_id": "14f3cad2-aacf-472f-9703-96dc02dd2a20",
+          "seq": 8,
+          "mono_ts_ms": 178200375,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " because",
+            "index": 4,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:33:47.153700+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "00faf668-5944-4453-bbd5-4c12c525cac0",
+          "turn_id": "14f3cad2-aacf-472f-9703-96dc02dd2a20",
+          "seq": 9,
+          "mono_ts_ms": 178200406,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " sunlight",
+            "index": 5,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:33:47.180708+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "00faf668-5944-4453-bbd5-4c12c525cac0",
+          "turn_id": "14f3cad2-aacf-472f-9703-96dc02dd2a20",
+          "seq": 10,
+          "mono_ts_ms": 178200437,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " sc",
+            "index": 6,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:33:47.206217+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "00faf668-5944-4453-bbd5-4c12c525cac0",
+          "turn_id": "14f3cad2-aacf-472f-9703-96dc02dd2a20",
+          "seq": 11,
+          "mono_ts_ms": 178200453,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": "atters",
+            "index": 7,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:33:47.230227+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "00faf668-5944-4453-bbd5-4c12c525cac0",
+          "turn_id": "14f3cad2-aacf-472f-9703-96dc02dd2a20",
+          "seq": 12,
+          "mono_ts_ms": 178200484,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " off",
+            "index": 8,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:33:47.253742+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "00faf668-5944-4453-bbd5-4c12c525cac0",
+          "turn_id": "14f3cad2-aacf-472f-9703-96dc02dd2a20",
+          "seq": 13,
+          "mono_ts_ms": 178200500,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " molecules",
+            "index": 9,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:33:47.278761+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "00faf668-5944-4453-bbd5-4c12c525cac0",
+          "turn_id": "14f3cad2-aacf-472f-9703-96dc02dd2a20",
+          "seq": 14,
+          "mono_ts_ms": 178200531,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " in",
+            "index": 10,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:33:47.301773+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "00faf668-5944-4453-bbd5-4c12c525cac0",
+          "turn_id": "14f3cad2-aacf-472f-9703-96dc02dd2a20",
+          "seq": 15,
+          "mono_ts_ms": 178200546,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " the",
+            "index": 11,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:33:47.325285+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "00faf668-5944-4453-bbd5-4c12c525cac0",
+          "turn_id": "14f3cad2-aacf-472f-9703-96dc02dd2a20",
+          "seq": 16,
+          "mono_ts_ms": 178200578,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " atmosphere",
+            "index": 12,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:33:47.349296+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "00faf668-5944-4453-bbd5-4c12c525cac0",
+          "turn_id": "14f3cad2-aacf-472f-9703-96dc02dd2a20",
+          "seq": 17,
+          "mono_ts_ms": 178200593,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": ",",
+            "index": 13,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:33:47.372805+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "00faf668-5944-4453-bbd5-4c12c525cac0",
+          "turn_id": "14f3cad2-aacf-472f-9703-96dc02dd2a20",
+          "seq": 18,
+          "mono_ts_ms": 178200625,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " with",
+            "index": 14,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:33:47.396827+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "00faf668-5944-4453-bbd5-4c12c525cac0",
+          "turn_id": "14f3cad2-aacf-472f-9703-96dc02dd2a20",
+          "seq": 19,
+          "mono_ts_ms": 178200640,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " shorter",
+            "index": 15,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:33:47.420840+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "00faf668-5944-4453-bbd5-4c12c525cac0",
+          "turn_id": "14f3cad2-aacf-472f-9703-96dc02dd2a20",
+          "seq": 20,
+          "mono_ts_ms": 178200671,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " blue",
+            "index": 16,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:33:47.445847+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "00faf668-5944-4453-bbd5-4c12c525cac0",
+          "turn_id": "14f3cad2-aacf-472f-9703-96dc02dd2a20",
+          "seq": 21,
+          "mono_ts_ms": 178200687,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " wavelengths",
+            "index": 17,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:33:47.469920+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "00faf668-5944-4453-bbd5-4c12c525cac0",
+          "turn_id": "14f3cad2-aacf-472f-9703-96dc02dd2a20",
+          "seq": 22,
+          "mono_ts_ms": 178200718,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " scattering",
+            "index": 18,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:33:47.493928+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "00faf668-5944-4453-bbd5-4c12c525cac0",
+          "turn_id": "14f3cad2-aacf-472f-9703-96dc02dd2a20",
+          "seq": 23,
+          "mono_ts_ms": 178200750,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " more",
+            "index": 19,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:33:47.517940+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "00faf668-5944-4453-bbd5-4c12c525cac0",
+          "turn_id": "14f3cad2-aacf-472f-9703-96dc02dd2a20",
+          "seq": 24,
+          "mono_ts_ms": 178200765,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " effectively",
+            "index": 20,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:33:47.542451+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "00faf668-5944-4453-bbd5-4c12c525cac0",
+          "turn_id": "14f3cad2-aacf-472f-9703-96dc02dd2a20",
+          "seq": 25,
+          "mono_ts_ms": 178200796,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " than",
+            "index": 21,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:33:47.566460+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "00faf668-5944-4453-bbd5-4c12c525cac0",
+          "turn_id": "14f3cad2-aacf-472f-9703-96dc02dd2a20",
+          "seq": 26,
+          "mono_ts_ms": 178200812,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " other",
+            "index": 22,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:33:47.589972+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "00faf668-5944-4453-bbd5-4c12c525cac0",
+          "turn_id": "14f3cad2-aacf-472f-9703-96dc02dd2a20",
+          "seq": 27,
+          "mono_ts_ms": 178200843,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " colors",
+            "index": 23,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:33:47.614477+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "00faf668-5944-4453-bbd5-4c12c525cac0",
+          "turn_id": "14f3cad2-aacf-472f-9703-96dc02dd2a20",
+          "seq": 28,
+          "mono_ts_ms": 178200859,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": ".",
+            "index": 24,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:33:47.637988+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "00faf668-5944-4453-bbd5-4c12c525cac0",
+          "turn_id": "14f3cad2-aacf-472f-9703-96dc02dd2a20",
+          "seq": 29,
+          "mono_ts_ms": 178200890,
+          "event_type": "turn_final",
+          "payload": {
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:33:47.663520+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "00faf668-5944-4453-bbd5-4c12c525cac0",
+          "turn_id": "14f3cad2-aacf-472f-9703-96dc02dd2a20",
+          "seq": 30,
+          "mono_ts_ms": 178200906,
+          "event_type": "commit_final",
+          "payload": {
+            "authoritative": true,
+            "commit_digest": "197ab27367cca523fccb8f97cec179d3b9fa5269ac3fcbff923f4562d6fcb66f",
+            "commit_outcome": "ok",
+            "issues": [],
+            "artifact_refs": [
+              "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\environment-refresh-py311-journey\\workspace\\interactions\\00faf668-5944-4453-bbd5-4c12c525cac0\\14f3cad2-aacf-472f-9703-96dc02dd2a20\\authority_commit.json"
+            ],
+            "commit_id": "commit-197ab27367cc"
+          },
+          "wall_ts": "2026-10-04T19:33:47.681530+00:00"
+        }
+      ],
+      "turn_id": "14f3cad2-aacf-472f-9703-96dc02dd2a20",
+      "input_config": {
+        "model_id": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "temperature": 0,
+        "max_tokens": 96,
+        "prompt": "Write one short sentence explaining why the sky appears blue."
+      },
+      "status": {
+        "session_id": "00faf668-5944-4453-bbd5-4c12c525cac0",
+        "surface": "interaction_session",
+        "active": false,
+        "status": "idle",
+        "task_state": "idle",
+        "backlog": {
+          "count": 0,
+          "by_status": {}
+        },
+        "summary": {
+          "continuity_identifier": "session_id",
+          "context_version": "packet1_session_context_v1",
+          "latest_turn_id": "14f3cad2-aacf-472f-9703-96dc02dd2a20",
+          "turn_count": 1,
+          "inspection_only": true
+        },
+        "artifacts": {
+          "session_snapshot_surface": "GET /v1/sessions/{session_id}/snapshot",
+          "session_replay_surface": "GET /v1/sessions/{session_id}/replay",
+          "targeted_replay": "run_session_only"
+        }
+      },
+      "snapshot": {
+        "session_id": "00faf668-5944-4453-bbd5-4c12c525cac0",
+        "surface": "interaction_session",
+        "continuity_identifier": "session_id",
+        "inspection_only": true,
+        "status": "idle",
+        "active_turn_id": null,
+        "latest_turn_id": "14f3cad2-aacf-472f-9703-96dc02dd2a20",
+        "turn_count": 1,
+        "created_at": "2026-10-04T19:33:46.428428+00:00",
+        "updated_at": "2026-10-04T19:33:47.663520+00:00",
+        "session_params": {},
+        "snapshot_kind": "interaction_session_context",
+        "captured_at": "2026-10-04T19:33:47.663520+00:00",
+        "memory_scope_boundary": {
+          "session_memory": "host_owned_session_continuity",
+          "profile_memory": "separate_profile_or_operator_scope",
+          "workspace_memory": "workspace_root_state_separate_from_session_identity"
+        },
+        "replay_boundary": {
+          "timeline_view": "inspection_only",
+          "targeted_replay": "run_session_only",
+          "execution_authority": "none"
+        },
+        "session_context_pipeline": {
+          "context_version": "packet1_session_context_v1",
+          "provider_lineage": [
+            {
+              "order": 1,
+              "provider_id": "host_continuity",
+              "authority": "host_owned",
+              "source_surface": "POST /v1/interactions/sessions",
+              "fields": [
+                "session_id",
+                "session_params"
+              ],
+              "present": true
+            },
+            {
+              "order": 2,
+              "provider_id": "turn_request",
+              "authority": "host_validated_request",
+              "source_surface": "POST /v1/interactions/{session_id}/turns",
+              "fields": [
+                "input_config",
+                "turn_params",
+                "workload_id",
+                "department",
+                "workspace"
+              ],
+              "present": true
+            },
+            {
+              "order": 3,
+              "provider_id": "extension_manifest_required_capabilities",
+              "authority": "host_resolved_manifest_metadata",
+              "source_surface": "extension_manifest",
+              "fields": [
+                "required_capabilities"
+              ],
+              "present": false
+            }
+          ],
+          "latest_context_envelope": {
+            "context_version": "packet1_session_context_v1",
+            "continuity": {
+              "session_id": "00faf668-5944-4453-bbd5-4c12c525cac0",
+              "session_params": {}
+            },
+            "turn_request": {
+              "input_config": {
+                "model_id": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+                "temperature": 0,
+                "max_tokens": 96,
+                "prompt": "Write one short sentence explaining why the sky appears blue."
+              },
+              "turn_params": {},
+              "workload_id": "model_stream_v1",
+              "department": "core",
+              "workspace": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\environment-refresh-py311-journey\\workspace\\default"
+            },
+            "extension_manifest": {}
+          }
+        }
+      },
+      "replay": {
+        "session_id": "00faf668-5944-4453-bbd5-4c12c525cac0",
+        "surface": "interaction_session",
+        "inspection_only": true,
+        "turn_count": 1,
+        "filters": {
+          "role": null
+        },
+        "replay_boundary": {
+          "timeline_view": "inspection_only",
+          "targeted_replay": "run_session_only",
+          "execution_authority": "none"
+        },
+        "turns": [
+          {
+            "turn_id": "14f3cad2-aacf-472f-9703-96dc02dd2a20",
+            "turn_index": 1,
+            "status": "finalized",
+            "accepted_at": "2026-10-04T19:33:46.469473+00:00",
+            "finalized_at": "2026-10-04T19:33:47.663520+00:00",
+            "terminal_event": "turn_final",
+            "context_version": "packet1_session_context_v1",
+            "context_envelope": {
+              "context_version": "packet1_session_context_v1",
+              "continuity": {
+                "session_id": "00faf668-5944-4453-bbd5-4c12c525cac0",
+                "session_params": {}
+              },
+              "turn_request": {
+                "input_config": {
+                  "model_id": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+                  "temperature": 0,
+                  "max_tokens": 96,
+                  "prompt": "Write one short sentence explaining why the sky appears blue."
+                },
+                "turn_params": {},
+                "workload_id": "model_stream_v1",
+                "department": "core",
+                "workspace": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\environment-refresh-py311-journey\\workspace\\default"
+              },
+              "extension_manifest": {}
+            },
+            "provider_lineage": [
+              {
+                "order": 1,
+                "provider_id": "host_continuity",
+                "authority": "host_owned",
+                "source_surface": "POST /v1/interactions/sessions",
+                "fields": [
+                  "session_id",
+                  "session_params"
+                ],
+                "present": true
+              },
+              {
+                "order": 2,
+                "provider_id": "turn_request",
+                "authority": "host_validated_request",
+                "source_surface": "POST /v1/interactions/{session_id}/turns",
+                "fields": [
+                  "input_config",
+                  "turn_params",
+                  "workload_id",
+                  "department",
+                  "workspace"
+                ],
+                "present": true
+              },
+              {
+                "order": 3,
+                "provider_id": "extension_manifest_required_capabilities",
+                "authority": "host_resolved_manifest_metadata",
+                "source_surface": "extension_manifest",
+                "fields": [
+                  "required_capabilities"
+                ],
+                "present": false
+              }
+            ],
+            "inspection_only": true,
+            "role": null,
+            "commit_outcome": "ok",
+            "commit_id": "commit-197ab27367cc",
+            "authoritative_commit": true
+          }
+        ]
+      },
+      "durable_semantics": "model workload completion intent; generated tokens are not a durable transcript",
+      "durable_commit": {
+        "authoritative": true,
+        "commit_digest": "197ab27367cca523fccb8f97cec179d3b9fa5269ac3fcbff923f4562d6fcb66f",
+        "intents": [
+          {
+            "payload_digest": null,
+            "ref": "model_stream_v1",
+            "type": "turn_finalize"
+          }
+        ],
+        "session_id": "00faf668-5944-4453-bbd5-4c12c525cac0",
+        "turn_id": "14f3cad2-aacf-472f-9703-96dc02dd2a20"
+      },
+      "artifacts": {
+        "authority_commit.json": {
+          "path": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\environment-refresh-py311-journey\\workspace\\interactions\\00faf668-5944-4453-bbd5-4c12c525cac0\\14f3cad2-aacf-472f-9703-96dc02dd2a20\\authority_commit.json",
+          "sha256": "54603e906429d0f68dd7818155d09c617a1b5d4a5e6a66f442acea6607194e8f"
+        },
+        "interaction_trace.jsonl": {
+          "path": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\environment-refresh-py311-journey\\workspace\\interactions\\00faf668-5944-4453-bbd5-4c12c525cac0\\14f3cad2-aacf-472f-9703-96dc02dd2a20\\interaction_trace.jsonl",
+          "sha256": "81acbe19c9235e795ae267b37114cb25185f4994c86e52386b0f2aea61dbc705"
+        }
+      }
+    },
+    {
+      "session_id": "ce2405de-ed19-402a-9530-58cc947f6a83",
+      "cancel_requested": true,
+      "events": [
+        {
+          "schema_v": "1.0",
+          "session_id": "ce2405de-ed19-402a-9530-58cc947f6a83",
+          "turn_id": "b2207b75-b6be-4de1-a0a9-d5ca31fc6e44",
+          "seq": 0,
+          "mono_ts_ms": 178200953,
+          "event_type": "turn_accepted",
+          "payload": {
+            "authoritative": false,
+            "input": {
+              "model_id": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+              "temperature": 0,
+              "max_tokens": 2048,
+              "prompt": "List integers from 1 through 10000, each on its own line. Start now."
+            },
+            "turn_params": {}
+          },
+          "wall_ts": "2026-10-04T19:33:47.730056+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "ce2405de-ed19-402a-9530-58cc947f6a83",
+          "turn_id": "b2207b75-b6be-4de1-a0a9-d5ca31fc6e44",
+          "seq": 1,
+          "mono_ts_ms": 178200984,
+          "event_type": "model_selected",
+          "payload": {
+            "model_id": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+            "reason": "real_provider",
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:33:47.767067+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "ce2405de-ed19-402a-9530-58cc947f6a83",
+          "turn_id": "b2207b75-b6be-4de1-a0a9-d5ca31fc6e44",
+          "seq": 2,
+          "mono_ts_ms": 178201000,
+          "event_type": "model_loading",
+          "payload": {
+            "cold_start": false,
+            "progress": 0.0,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:33:47.767567+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "ce2405de-ed19-402a-9530-58cc947f6a83",
+          "turn_id": "b2207b75-b6be-4de1-a0a9-d5ca31fc6e44",
+          "seq": 3,
+          "mono_ts_ms": 178201000,
+          "event_type": "model_ready",
+          "payload": {
+            "model_id": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+            "warm_state": "unknown",
+            "load_ms": 0,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:33:47.767567+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "ce2405de-ed19-402a-9530-58cc947f6a83",
+          "turn_id": "b2207b75-b6be-4de1-a0a9-d5ca31fc6e44",
+          "seq": 4,
+          "mono_ts_ms": 178201218,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": "1",
+            "index": 0,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:33:47.989210+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "ce2405de-ed19-402a-9530-58cc947f6a83",
+          "turn_id": "b2207b75-b6be-4de1-a0a9-d5ca31fc6e44",
+          "seq": 5,
+          "mono_ts_ms": 178201218,
+          "event_type": "turn_interrupted",
+          "payload": {
+            "authoritative": false,
+            "reason": "canceled"
+          },
+          "wall_ts": "2026-10-04T19:33:47.992209+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "ce2405de-ed19-402a-9530-58cc947f6a83",
+          "turn_id": "b2207b75-b6be-4de1-a0a9-d5ca31fc6e44",
+          "seq": 6,
+          "mono_ts_ms": 178201265,
+          "event_type": "commit_final",
+          "payload": {
+            "authoritative": true,
+            "commit_digest": "9c9bf77d11cb398a10a3d593584b545257af7312124e2dab5c91f359d6b54b08",
+            "commit_outcome": "ok",
+            "issues": [],
+            "artifact_refs": [
+              "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\environment-refresh-py311-journey\\workspace\\interactions\\ce2405de-ed19-402a-9530-58cc947f6a83\\b2207b75-b6be-4de1-a0a9-d5ca31fc6e44\\authority_commit.json"
+            ],
+            "commit_id": "commit-9c9bf77d11cb"
+          },
+          "wall_ts": "2026-10-04T19:33:48.040227+00:00"
+        }
+      ],
+      "turn_id": "b2207b75-b6be-4de1-a0a9-d5ca31fc6e44",
+      "input_config": {
+        "model_id": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "temperature": 0,
+        "max_tokens": 2048,
+        "prompt": "List integers from 1 through 10000, each on its own line. Start now."
+      },
+      "cancel_ack": {
+        "ok": true,
+        "target": "b2207b75-b6be-4de1-a0a9-d5ca31fc6e44"
+      },
+      "status": {
+        "session_id": "ce2405de-ed19-402a-9530-58cc947f6a83",
+        "surface": "interaction_session",
+        "active": false,
+        "status": "idle",
+        "task_state": "idle",
+        "backlog": {
+          "count": 0,
+          "by_status": {}
+        },
+        "summary": {
+          "continuity_identifier": "session_id",
+          "context_version": "packet1_session_context_v1",
+          "latest_turn_id": "b2207b75-b6be-4de1-a0a9-d5ca31fc6e44",
+          "turn_count": 1,
+          "inspection_only": true
+        },
+        "artifacts": {
+          "session_snapshot_surface": "GET /v1/sessions/{session_id}/snapshot",
+          "session_replay_surface": "GET /v1/sessions/{session_id}/replay",
+          "targeted_replay": "run_session_only"
+        }
+      },
+      "snapshot": {
+        "session_id": "ce2405de-ed19-402a-9530-58cc947f6a83",
+        "surface": "interaction_session",
+        "continuity_identifier": "session_id",
+        "inspection_only": true,
+        "status": "idle",
+        "active_turn_id": null,
+        "latest_turn_id": "b2207b75-b6be-4de1-a0a9-d5ca31fc6e44",
+        "turn_count": 1,
+        "created_at": "2026-10-04T19:33:47.719046+00:00",
+        "updated_at": "2026-10-04T19:33:48.019717+00:00",
+        "session_params": {},
+        "snapshot_kind": "interaction_session_context",
+        "captured_at": "2026-10-04T19:33:48.019717+00:00",
+        "memory_scope_boundary": {
+          "session_memory": "host_owned_session_continuity",
+          "profile_memory": "separate_profile_or_operator_scope",
+          "workspace_memory": "workspace_root_state_separate_from_session_identity"
+        },
+        "replay_boundary": {
+          "timeline_view": "inspection_only",
+          "targeted_replay": "run_session_only",
+          "execution_authority": "none"
+        },
+        "session_context_pipeline": {
+          "context_version": "packet1_session_context_v1",
+          "provider_lineage": [
+            {
+              "order": 1,
+              "provider_id": "host_continuity",
+              "authority": "host_owned",
+              "source_surface": "POST /v1/interactions/sessions",
+              "fields": [
+                "session_id",
+                "session_params"
+              ],
+              "present": true
+            },
+            {
+              "order": 2,
+              "provider_id": "turn_request",
+              "authority": "host_validated_request",
+              "source_surface": "POST /v1/interactions/{session_id}/turns",
+              "fields": [
+                "input_config",
+                "turn_params",
+                "workload_id",
+                "department",
+                "workspace"
+              ],
+              "present": true
+            },
+            {
+              "order": 3,
+              "provider_id": "extension_manifest_required_capabilities",
+              "authority": "host_resolved_manifest_metadata",
+              "source_surface": "extension_manifest",
+              "fields": [
+                "required_capabilities"
+              ],
+              "present": false
+            }
+          ],
+          "latest_context_envelope": {
+            "context_version": "packet1_session_context_v1",
+            "continuity": {
+              "session_id": "ce2405de-ed19-402a-9530-58cc947f6a83",
+              "session_params": {}
+            },
+            "turn_request": {
+              "input_config": {
+                "model_id": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+                "temperature": 0,
+                "max_tokens": 2048,
+                "prompt": "List integers from 1 through 10000, each on its own line. Start now."
+              },
+              "turn_params": {},
+              "workload_id": "model_stream_v1",
+              "department": "core",
+              "workspace": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\environment-refresh-py311-journey\\workspace\\default"
+            },
+            "extension_manifest": {}
+          }
+        }
+      },
+      "replay": {
+        "session_id": "ce2405de-ed19-402a-9530-58cc947f6a83",
+        "surface": "interaction_session",
+        "inspection_only": true,
+        "turn_count": 1,
+        "filters": {
+          "role": null
+        },
+        "replay_boundary": {
+          "timeline_view": "inspection_only",
+          "targeted_replay": "run_session_only",
+          "execution_authority": "none"
+        },
+        "turns": [
+          {
+            "turn_id": "b2207b75-b6be-4de1-a0a9-d5ca31fc6e44",
+            "turn_index": 1,
+            "status": "interrupted",
+            "accepted_at": "2026-10-04T19:33:47.730056+00:00",
+            "finalized_at": "2026-10-04T19:33:47.992209+00:00",
+            "terminal_event": "turn_interrupted",
+            "context_version": "packet1_session_context_v1",
+            "context_envelope": {
+              "context_version": "packet1_session_context_v1",
+              "continuity": {
+                "session_id": "ce2405de-ed19-402a-9530-58cc947f6a83",
+                "session_params": {}
+              },
+              "turn_request": {
+                "input_config": {
+                  "model_id": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+                  "temperature": 0,
+                  "max_tokens": 2048,
+                  "prompt": "List integers from 1 through 10000, each on its own line. Start now."
+                },
+                "turn_params": {},
+                "workload_id": "model_stream_v1",
+                "department": "core",
+                "workspace": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\environment-refresh-py311-journey\\workspace\\default"
+              },
+              "extension_manifest": {}
+            },
+            "provider_lineage": [
+              {
+                "order": 1,
+                "provider_id": "host_continuity",
+                "authority": "host_owned",
+                "source_surface": "POST /v1/interactions/sessions",
+                "fields": [
+                  "session_id",
+                  "session_params"
+                ],
+                "present": true
+              },
+              {
+                "order": 2,
+                "provider_id": "turn_request",
+                "authority": "host_validated_request",
+                "source_surface": "POST /v1/interactions/{session_id}/turns",
+                "fields": [
+                  "input_config",
+                  "turn_params",
+                  "workload_id",
+                  "department",
+                  "workspace"
+                ],
+                "present": true
+              },
+              {
+                "order": 3,
+                "provider_id": "extension_manifest_required_capabilities",
+                "authority": "host_resolved_manifest_metadata",
+                "source_surface": "extension_manifest",
+                "fields": [
+                  "required_capabilities"
+                ],
+                "present": false
+              }
+            ],
+            "inspection_only": true,
+            "role": null,
+            "commit_outcome": "ok",
+            "commit_id": "commit-9c9bf77d11cb",
+            "authoritative_commit": true
+          }
+        ]
+      },
+      "terminal_cancel_status": 409,
+      "durable_semantics": "interrupted lifecycle finalized; no model workload success intent",
+      "durable_commit": {
+        "authoritative": true,
+        "commit_digest": "9c9bf77d11cb398a10a3d593584b545257af7312124e2dab5c91f359d6b54b08",
+        "intents": [
+          {
+            "payload_digest": null,
+            "ref": "b2207b75-b6be-4de1-a0a9-d5ca31fc6e44",
+            "type": "turn_finalize"
+          }
+        ],
+        "session_id": "ce2405de-ed19-402a-9530-58cc947f6a83",
+        "turn_id": "b2207b75-b6be-4de1-a0a9-d5ca31fc6e44"
+      },
+      "artifacts": {
+        "authority_commit.json": {
+          "path": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\environment-refresh-py311-journey\\workspace\\interactions\\ce2405de-ed19-402a-9530-58cc947f6a83\\b2207b75-b6be-4de1-a0a9-d5ca31fc6e44\\authority_commit.json",
+          "sha256": "c17b0910a8abcdfd8c1dd9e8ba5409eb5ca79b680e43c26c083c3dcf4a62b811"
+        },
+        "interaction_trace.jsonl": {
+          "path": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\environment-refresh-py311-journey\\workspace\\interactions\\ce2405de-ed19-402a-9530-58cc947f6a83\\b2207b75-b6be-4de1-a0a9-d5ca31fc6e44\\interaction_trace.jsonl",
+          "sha256": "060c4e6a8b3fcffc98f8226348f0f040a41bf207d16fac226fbc91b004bc6cda"
+        }
+      }
+    }
+  ],
+  "model_catalog": {
+    "models": [
+      {
+        "name": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "modified_at": "",
+        "size": "",
+        "digest": "",
+        "type": "model",
+        "description": "",
+        "tags": [
+          ""
+        ],
+        "capabilities": [
+          "completion"
+        ],
+        "parameters": "",
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "",
+          "families": [
+            ""
+          ],
+          "parameter_size": "",
+          "quantization_level": ""
+        }
+      }
+    ],
+    "object": "list",
+    "data": [
+      {
+        "id": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "aliases": [
+          "orcarouter_qwen3.8-27b-uncensored-q4_k_l"
+        ],
+        "tags": [],
+        "object": "model",
+        "created": 1791142426,
+        "owned_by": "llamacpp",
+        "meta": {
+          "vocab_type": 2,
+          "n_vocab": 248320,
+          "n_ctx": 8192,
+          "n_ctx_train": 262144,
+          "n_embd": 5120,
+          "n_params": 27320697856,
+          "size": 18705158144,
+          "ftype": "Q4_K - Medium"
+        }
+      }
+    ]
+  },
+  "cleanup": {
+    "runtime_closed": true,
+    "requests": 0,
+    "background_tasks": 0
+  },
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-10-04T19:33:48.188317Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:27f772bb6d77c9e73e0a3e09b50bcec2c353c4a309feccefeb081d43e4794460",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 1643,
+        "paths_total_reference": 1643,
+        "churn_paths": 1643,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    }
+  ]
+}

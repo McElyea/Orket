@@ -1,6 +1,6 @@
 # Orket Operational Runbook
 
-Last reviewed: 2026-09-13
+Last reviewed: 2026-10-04
 
 ## Purpose
 Operator commands for starting Orket, checking health, running core validations, and recovering from common failures.
@@ -72,6 +72,34 @@ Requires webhook credentials in environment or `.env`:
 `ORKET_GITEA_ALLOW_INSECURE=true` is only for local plaintext Gitea. Without that explicit override, the webhook handler rejects `http://` Gitea API URLs before constructing the authenticated client.
 
 ## Engine Launch Examples
+
+### Installed Windows llama.cpp journey
+
+The matched 0.7.2 wheels include the WebSocket transport required by the existing
+interaction API. Use the tested [installed walkthrough](releases/0.7.2/OPERATOR_WALKTHROUGH.md)
+for completion, cancellation, durable inspection and local cleanup. It identifies
+the selected model and preserves the operator-owned llama.cpp process.
+
+An API cancel acknowledgement means interruption was admitted. Wait for
+`turn_interrupted` and `commit_final`, then inspect the durable commit and runtime
+settlement. `commit_outcome=ok` can describe a committed interrupted lifecycle;
+it does not mean the model completed successfully. Generated `token_delta` events
+are nonauthoritative and are not a durable transcript. Preserve a separate event
+capture when output text must be retained.
+
+If `orket runtime` prints a structural reconciliation warning, inspect the intended
+project's `model/` tree. `--workspace` does not move that tree. A missing board
+remains degraded; create or restore valid project assets rather than suppressing
+the warning. The walkthrough includes a minimal startup-only board and its
+expected adoption result. It does not configure a useful card workload.
+
+The native interaction stream and profiled card provider have distinct prompting
+contracts. `E_LLAMA_CPP_TEMPLATE_IDENTITY` means the selected server does not
+match the card profile's declared template. Keep that refusal visible; streaming
+success is not evidence that a card can run against the same server template.
+
+### Existing launch commands
+
 1. Default CLI runtime:
 ```bash
 orket runtime

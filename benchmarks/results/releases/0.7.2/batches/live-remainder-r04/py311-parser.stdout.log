@@ -1,0 +1,5 @@
+INFO:     127.0.0.1:50703 - "POST /v1/interactions/sessions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50703 - "POST /v1/interactions/ddff7918-002c-4bab-adab-a881b0a6324d/turns HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50703 - "GET /v1/sessions/ddff7918-002c-4bab-adab-a881b0a6324d/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50703 - "GET /v1/sessions/ddff7918-002c-4bab-adab-a881b0a6324d/snapshot HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50703 - "GET /v1/sessions/ddff7918-002c-4bab-adab-a881b0a6324d/replay HTTP/1.1" 200 OK

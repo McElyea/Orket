@@ -1,0 +1,1662 @@
+{
+  "proof_mode": "live",
+  "observed_path": "primary",
+  "observed_result": "success",
+  "python": "3.12.2 (tags/v3.12.2:6abddd9, Feb  6 2024, 21:26:36) [MSC v.1937 64 bit (AMD64)]",
+  "version": "0.7.2",
+  "origins": {
+    "orket": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\installed-r03-py312\\Lib\\site-packages\\orket\\__init__.py",
+    "sdk": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\installed-r03-py312\\Lib\\site-packages\\orket_extension_sdk\\__init__.py"
+  },
+  "environment": {
+    "ORKET_DISABLE_SANDBOX": "1",
+    "ORKET_STREAM_EVENTS_V1": "true",
+    "ORKET_MODEL_STREAM_PROVIDER": "real",
+    "ORKET_MODEL_STREAM_REAL_PROVIDER": "llama_cpp",
+    "ORKET_MODEL_STREAM_REAL_MODEL_ID": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+    "ORKET_MODEL_STREAM_OPENAI_USE_STREAM": "true",
+    "ORKET_LLAMA_CPP_BASE_URL": "http://127.0.0.1:8080/v1",
+    "ORKET_MODULE_PROFILE": "developer-local",
+    "ORKET_PROVIDER_RUNTIME_AUTO_SELECT_MODEL": "0",
+    "ORKET_PROVIDER_RUNTIME_AUTO_LOAD_LOCAL_MODEL": "0",
+    "ORKET_MODEL_STREAM_REAL_TIMEOUT_S": "120",
+    "ORKET_MODEL_STREAM_TURN_TIMEOUT_S": "120",
+    "ORKET_GOVERNED_AGENT_SUPERVISOR_ENABLED": "0",
+    "ORKET_DURABLE_ROOT": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\installed-r03-py312-journey\\.orket\\durable"
+  },
+  "provider": "llama_cpp",
+  "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+  "project": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\installed-r03-py312-journey",
+  "turns": [
+    {
+      "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+      "cancel_requested": false,
+      "events": [
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 0,
+          "mono_ts_ms": 176294281,
+          "event_type": "turn_accepted",
+          "payload": {
+            "authoritative": false,
+            "input": {
+              "model_id": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+              "temperature": 0,
+              "max_tokens": 96,
+              "prompt": "Write one short sentence explaining why the sky appears blue."
+            },
+            "turn_params": {}
+          },
+          "wall_ts": "2026-10-04T19:02:00.922344+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 1,
+          "mono_ts_ms": 176294437,
+          "event_type": "model_selected",
+          "payload": {
+            "model_id": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+            "reason": "real_provider",
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:01.088478+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 2,
+          "mono_ts_ms": 176294437,
+          "event_type": "model_loading",
+          "payload": {
+            "cold_start": false,
+            "progress": 0.0,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:01.088978+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 3,
+          "mono_ts_ms": 176294437,
+          "event_type": "model_ready",
+          "payload": {
+            "model_id": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+            "warm_state": "unknown",
+            "load_ms": 0,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:01.089479+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 4,
+          "mono_ts_ms": 176295031,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": "We",
+            "index": 0,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:01.679405+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 5,
+          "mono_ts_ms": 176295062,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " need",
+            "index": 1,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:01.711417+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 6,
+          "mono_ts_ms": 176295093,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " answer",
+            "index": 2,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:01.744448+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 7,
+          "mono_ts_ms": 176295125,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " user",
+            "index": 3,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:01.767958+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 8,
+          "mono_ts_ms": 176295140,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": ":",
+            "index": 4,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:01.791472+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 9,
+          "mono_ts_ms": 176295171,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " \"",
+            "index": 5,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:01.813538+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 10,
+          "mono_ts_ms": 176295187,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": "Write",
+            "index": 6,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:01.836551+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 11,
+          "mono_ts_ms": 176295218,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " one",
+            "index": 7,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:01.859562+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 12,
+          "mono_ts_ms": 176295234,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " short",
+            "index": 8,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:01.882576+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 13,
+          "mono_ts_ms": 176295265,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " sentence",
+            "index": 9,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:01.906591+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 14,
+          "mono_ts_ms": 176295281,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " explaining",
+            "index": 10,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:01.929606+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 15,
+          "mono_ts_ms": 176295312,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " why",
+            "index": 11,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:01.952117+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 16,
+          "mono_ts_ms": 176295328,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " the",
+            "index": 12,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:01.974628+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 17,
+          "mono_ts_ms": 176295359,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " sky",
+            "index": 13,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:01.998186+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 18,
+          "mono_ts_ms": 176295375,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " appears",
+            "index": 14,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:02.021705+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 19,
+          "mono_ts_ms": 176295406,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " blue",
+            "index": 15,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:02.044217+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 20,
+          "mono_ts_ms": 176295421,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": ".\"",
+            "index": 16,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:02.068231+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 21,
+          "mono_ts_ms": 176295453,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " Need",
+            "index": 17,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:02.090242+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 22,
+          "mono_ts_ms": 176295468,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " final",
+            "index": 18,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:02.113752+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 23,
+          "mono_ts_ms": 176295484,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " one",
+            "index": 19,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:02.136771+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 24,
+          "mono_ts_ms": 176295515,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " short",
+            "index": 20,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:02.159781+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 25,
+          "mono_ts_ms": 176295546,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " sentence",
+            "index": 21,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:02.184293+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 26,
+          "mono_ts_ms": 176295562,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": ".",
+            "index": 22,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:02.205853+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 27,
+          "mono_ts_ms": 176295578,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " Simple",
+            "index": 23,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:02.228373+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 28,
+          "mono_ts_ms": 176295609,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": ":",
+            "index": 24,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:02.251385+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 29,
+          "mono_ts_ms": 176295625,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " The",
+            "index": 25,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:02.273899+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 30,
+          "mono_ts_ms": 176295656,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " sky",
+            "index": 26,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:02.298410+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 31,
+          "mono_ts_ms": 176295671,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " appears",
+            "index": 27,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:02.323426+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 32,
+          "mono_ts_ms": 176295703,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " blue",
+            "index": 28,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:02.348441+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 33,
+          "mono_ts_ms": 176295734,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " because",
+            "index": 29,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:02.373462+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 34,
+          "mono_ts_ms": 176295750,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " air",
+            "index": 30,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:02.398830+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 35,
+          "mono_ts_ms": 176295781,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " molecules",
+            "index": 31,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:02.424352+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 36,
+          "mono_ts_ms": 176295796,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " scatter",
+            "index": 32,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:02.448866+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 37,
+          "mono_ts_ms": 176295828,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " shorter",
+            "index": 33,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:02.474385+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 38,
+          "mono_ts_ms": 176295859,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " blue",
+            "index": 34,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:02.499403+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 39,
+          "mono_ts_ms": 176295875,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " wavelengths",
+            "index": 35,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:02.523931+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 40,
+          "mono_ts_ms": 176295906,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " of",
+            "index": 36,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:02.548943+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 41,
+          "mono_ts_ms": 176295921,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " sunlight",
+            "index": 37,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:02.573458+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 42,
+          "mono_ts_ms": 176295953,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " more",
+            "index": 38,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:02.599999+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 43,
+          "mono_ts_ms": 176295984,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " than",
+            "index": 39,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:02.625015+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 44,
+          "mono_ts_ms": 176296000,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " other",
+            "index": 40,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:02.650023+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 45,
+          "mono_ts_ms": 176296031,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " colors",
+            "index": 41,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:02.676037+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 46,
+          "mono_ts_ms": 176296062,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": ".",
+            "index": 42,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:02.699555+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 47,
+          "mono_ts_ms": 176296078,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": "\n",
+            "index": 43,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:02.724079+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 48,
+          "mono_ts_ms": 176296156,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": "The",
+            "index": 44,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:02.797127+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 49,
+          "mono_ts_ms": 176296171,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " sky",
+            "index": 45,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:02.821659+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 50,
+          "mono_ts_ms": 176296203,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " appears",
+            "index": 46,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:02.846676+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 51,
+          "mono_ts_ms": 176296218,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " blue",
+            "index": 47,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:02.870188+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 52,
+          "mono_ts_ms": 176296250,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " because",
+            "index": 48,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:02.894700+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 53,
+          "mono_ts_ms": 176296281,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " air",
+            "index": 49,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:02.918718+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 54,
+          "mono_ts_ms": 176296296,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " molecules",
+            "index": 50,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:02.942229+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 55,
+          "mono_ts_ms": 176296328,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " scatter",
+            "index": 51,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:02.965246+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 56,
+          "mono_ts_ms": 176296343,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " shorter",
+            "index": 52,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:02.989758+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 57,
+          "mono_ts_ms": 176296359,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " blue",
+            "index": 53,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:03.010775+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 58,
+          "mono_ts_ms": 176296390,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " wavelengths",
+            "index": 54,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:03.034791+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 59,
+          "mono_ts_ms": 176296406,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " of",
+            "index": 55,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:03.057303+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 60,
+          "mono_ts_ms": 176296437,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " sunlight",
+            "index": 56,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:03.079813+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 61,
+          "mono_ts_ms": 176296453,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " more",
+            "index": 57,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:03.103822+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 62,
+          "mono_ts_ms": 176296484,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " strongly",
+            "index": 58,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:03.126842+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 63,
+          "mono_ts_ms": 176296500,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " than",
+            "index": 59,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:03.149860+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 64,
+          "mono_ts_ms": 176296531,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " other",
+            "index": 60,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:03.172871+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 65,
+          "mono_ts_ms": 176296546,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": " colors",
+            "index": 61,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:03.195386+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 66,
+          "mono_ts_ms": 176296578,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": ".",
+            "index": 62,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:03.217907+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 67,
+          "mono_ts_ms": 176296593,
+          "event_type": "turn_final",
+          "payload": {
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:03.241414+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+          "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "seq": 68,
+          "mono_ts_ms": 176296609,
+          "event_type": "commit_final",
+          "payload": {
+            "authoritative": true,
+            "commit_digest": "bc1c12b2a7309373d1a97f9c0cdfc7d0282e3c85d3fe4850b0e1ca75f44af125",
+            "commit_outcome": "ok",
+            "issues": [],
+            "artifact_refs": [
+              "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\installed-r03-py312-journey\\workspace\\interactions\\bfae57a0-8a1e-4233-a357-f8959eb76aa3\\a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e\\authority_commit.json"
+            ],
+            "commit_id": "commit-bc1c12b2a730"
+          },
+          "wall_ts": "2026-10-04T19:02:03.259424+00:00"
+        }
+      ],
+      "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+      "input_config": {
+        "model_id": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "temperature": 0,
+        "max_tokens": 96,
+        "prompt": "Write one short sentence explaining why the sky appears blue."
+      },
+      "status": {
+        "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+        "surface": "interaction_session",
+        "active": false,
+        "status": "idle",
+        "task_state": "idle",
+        "backlog": {
+          "count": 0,
+          "by_status": {}
+        },
+        "summary": {
+          "continuity_identifier": "session_id",
+          "context_version": "packet1_session_context_v1",
+          "latest_turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+          "turn_count": 1,
+          "inspection_only": true
+        },
+        "artifacts": {
+          "session_snapshot_surface": "GET /v1/sessions/{session_id}/snapshot",
+          "session_replay_surface": "GET /v1/sessions/{session_id}/replay",
+          "targeted_replay": "run_session_only"
+        }
+      },
+      "snapshot": {
+        "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+        "surface": "interaction_session",
+        "continuity_identifier": "session_id",
+        "inspection_only": true,
+        "status": "idle",
+        "active_turn_id": null,
+        "latest_turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+        "turn_count": 1,
+        "created_at": "2026-10-04T19:02:00.880811+00:00",
+        "updated_at": "2026-10-04T19:02:03.241414+00:00",
+        "session_params": {},
+        "snapshot_kind": "interaction_session_context",
+        "captured_at": "2026-10-04T19:02:03.241414+00:00",
+        "memory_scope_boundary": {
+          "session_memory": "host_owned_session_continuity",
+          "profile_memory": "separate_profile_or_operator_scope",
+          "workspace_memory": "workspace_root_state_separate_from_session_identity"
+        },
+        "replay_boundary": {
+          "timeline_view": "inspection_only",
+          "targeted_replay": "run_session_only",
+          "execution_authority": "none"
+        },
+        "session_context_pipeline": {
+          "context_version": "packet1_session_context_v1",
+          "provider_lineage": [
+            {
+              "order": 1,
+              "provider_id": "host_continuity",
+              "authority": "host_owned",
+              "source_surface": "POST /v1/interactions/sessions",
+              "fields": [
+                "session_id",
+                "session_params"
+              ],
+              "present": true
+            },
+            {
+              "order": 2,
+              "provider_id": "turn_request",
+              "authority": "host_validated_request",
+              "source_surface": "POST /v1/interactions/{session_id}/turns",
+              "fields": [
+                "input_config",
+                "turn_params",
+                "workload_id",
+                "department",
+                "workspace"
+              ],
+              "present": true
+            },
+            {
+              "order": 3,
+              "provider_id": "extension_manifest_required_capabilities",
+              "authority": "host_resolved_manifest_metadata",
+              "source_surface": "extension_manifest",
+              "fields": [
+                "required_capabilities"
+              ],
+              "present": false
+            }
+          ],
+          "latest_context_envelope": {
+            "context_version": "packet1_session_context_v1",
+            "continuity": {
+              "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+              "session_params": {}
+            },
+            "turn_request": {
+              "input_config": {
+                "model_id": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+                "temperature": 0,
+                "max_tokens": 96,
+                "prompt": "Write one short sentence explaining why the sky appears blue."
+              },
+              "turn_params": {},
+              "workload_id": "model_stream_v1",
+              "department": "core",
+              "workspace": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\installed-r03-py312-journey\\workspace\\default"
+            },
+            "extension_manifest": {}
+          }
+        }
+      },
+      "replay": {
+        "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+        "surface": "interaction_session",
+        "inspection_only": true,
+        "turn_count": 1,
+        "filters": {
+          "role": null
+        },
+        "replay_boundary": {
+          "timeline_view": "inspection_only",
+          "targeted_replay": "run_session_only",
+          "execution_authority": "none"
+        },
+        "turns": [
+          {
+            "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e",
+            "turn_index": 1,
+            "status": "finalized",
+            "accepted_at": "2026-10-04T19:02:00.922344+00:00",
+            "finalized_at": "2026-10-04T19:02:03.241414+00:00",
+            "terminal_event": "turn_final",
+            "context_version": "packet1_session_context_v1",
+            "context_envelope": {
+              "context_version": "packet1_session_context_v1",
+              "continuity": {
+                "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+                "session_params": {}
+              },
+              "turn_request": {
+                "input_config": {
+                  "model_id": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+                  "temperature": 0,
+                  "max_tokens": 96,
+                  "prompt": "Write one short sentence explaining why the sky appears blue."
+                },
+                "turn_params": {},
+                "workload_id": "model_stream_v1",
+                "department": "core",
+                "workspace": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\installed-r03-py312-journey\\workspace\\default"
+              },
+              "extension_manifest": {}
+            },
+            "provider_lineage": [
+              {
+                "order": 1,
+                "provider_id": "host_continuity",
+                "authority": "host_owned",
+                "source_surface": "POST /v1/interactions/sessions",
+                "fields": [
+                  "session_id",
+                  "session_params"
+                ],
+                "present": true
+              },
+              {
+                "order": 2,
+                "provider_id": "turn_request",
+                "authority": "host_validated_request",
+                "source_surface": "POST /v1/interactions/{session_id}/turns",
+                "fields": [
+                  "input_config",
+                  "turn_params",
+                  "workload_id",
+                  "department",
+                  "workspace"
+                ],
+                "present": true
+              },
+              {
+                "order": 3,
+                "provider_id": "extension_manifest_required_capabilities",
+                "authority": "host_resolved_manifest_metadata",
+                "source_surface": "extension_manifest",
+                "fields": [
+                  "required_capabilities"
+                ],
+                "present": false
+              }
+            ],
+            "inspection_only": true,
+            "role": null,
+            "commit_outcome": "ok",
+            "commit_id": "commit-bc1c12b2a730",
+            "authoritative_commit": true
+          }
+        ]
+      },
+      "durable_semantics": "model workload completion intent; generated tokens are not a durable transcript",
+      "durable_commit": {
+        "authoritative": true,
+        "commit_digest": "bc1c12b2a7309373d1a97f9c0cdfc7d0282e3c85d3fe4850b0e1ca75f44af125",
+        "intents": [
+          {
+            "payload_digest": null,
+            "ref": "model_stream_v1",
+            "type": "turn_finalize"
+          }
+        ],
+        "session_id": "bfae57a0-8a1e-4233-a357-f8959eb76aa3",
+        "turn_id": "a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e"
+      },
+      "artifacts": {
+        "authority_commit.json": {
+          "path": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\installed-r03-py312-journey\\workspace\\interactions\\bfae57a0-8a1e-4233-a357-f8959eb76aa3\\a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e\\authority_commit.json",
+          "sha256": "efc22fca0184027817cba0a4baeeddb448f7bc2c080e4f736a9ed9f8c486d350"
+        },
+        "interaction_trace.jsonl": {
+          "path": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\installed-r03-py312-journey\\workspace\\interactions\\bfae57a0-8a1e-4233-a357-f8959eb76aa3\\a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e\\interaction_trace.jsonl",
+          "sha256": "0c19b30161c2ebc3bfc8709078e82518c3eb57cc292a76adad0d79e744b6ac83"
+        }
+      }
+    },
+    {
+      "session_id": "da3c6ba7-f1a3-4e4b-a600-6360bc76d425",
+      "cancel_requested": true,
+      "events": [
+        {
+          "schema_v": "1.0",
+          "session_id": "da3c6ba7-f1a3-4e4b-a600-6360bc76d425",
+          "turn_id": "a8740837-486e-4c2f-81f2-77e8b2100e7d",
+          "seq": 0,
+          "mono_ts_ms": 176296656,
+          "event_type": "turn_accepted",
+          "payload": {
+            "authoritative": false,
+            "input": {
+              "model_id": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+              "temperature": 0,
+              "max_tokens": 2048,
+              "prompt": "List integers from 1 through 10000, each on its own line. Start now."
+            },
+            "turn_params": {}
+          },
+          "wall_ts": "2026-10-04T19:02:03.300942+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "da3c6ba7-f1a3-4e4b-a600-6360bc76d425",
+          "turn_id": "a8740837-486e-4c2f-81f2-77e8b2100e7d",
+          "seq": 1,
+          "mono_ts_ms": 176296812,
+          "event_type": "model_selected",
+          "payload": {
+            "model_id": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+            "reason": "real_provider",
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:03.458244+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "da3c6ba7-f1a3-4e4b-a600-6360bc76d425",
+          "turn_id": "a8740837-486e-4c2f-81f2-77e8b2100e7d",
+          "seq": 2,
+          "mono_ts_ms": 176296812,
+          "event_type": "model_loading",
+          "payload": {
+            "cold_start": false,
+            "progress": 0.0,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:03.458745+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "da3c6ba7-f1a3-4e4b-a600-6360bc76d425",
+          "turn_id": "a8740837-486e-4c2f-81f2-77e8b2100e7d",
+          "seq": 3,
+          "mono_ts_ms": 176296812,
+          "event_type": "model_ready",
+          "payload": {
+            "model_id": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+            "warm_state": "unknown",
+            "load_ms": 0,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:03.458745+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "da3c6ba7-f1a3-4e4b-a600-6360bc76d425",
+          "turn_id": "a8740837-486e-4c2f-81f2-77e8b2100e7d",
+          "seq": 4,
+          "mono_ts_ms": 176297171,
+          "event_type": "token_delta",
+          "payload": {
+            "delta": "We",
+            "index": 0,
+            "authoritative": false
+          },
+          "wall_ts": "2026-10-04T19:02:03.819503+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "da3c6ba7-f1a3-4e4b-a600-6360bc76d425",
+          "turn_id": "a8740837-486e-4c2f-81f2-77e8b2100e7d",
+          "seq": 5,
+          "mono_ts_ms": 176297187,
+          "event_type": "turn_interrupted",
+          "payload": {
+            "authoritative": false,
+            "reason": "canceled"
+          },
+          "wall_ts": "2026-10-04T19:02:03.824504+00:00"
+        },
+        {
+          "schema_v": "1.0",
+          "session_id": "da3c6ba7-f1a3-4e4b-a600-6360bc76d425",
+          "turn_id": "a8740837-486e-4c2f-81f2-77e8b2100e7d",
+          "seq": 6,
+          "mono_ts_ms": 176297234,
+          "event_type": "commit_final",
+          "payload": {
+            "authoritative": true,
+            "commit_digest": "ab592e2756d3f9c7402254f80ec9dd0b4167b9be2a72da75e2e8cb0beb25d0c5",
+            "commit_outcome": "ok",
+            "issues": [],
+            "artifact_refs": [
+              "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\installed-r03-py312-journey\\workspace\\interactions\\da3c6ba7-f1a3-4e4b-a600-6360bc76d425\\a8740837-486e-4c2f-81f2-77e8b2100e7d\\authority_commit.json"
+            ],
+            "commit_id": "commit-ab592e2756d3"
+          },
+          "wall_ts": "2026-10-04T19:02:03.882036+00:00"
+        }
+      ],
+      "turn_id": "a8740837-486e-4c2f-81f2-77e8b2100e7d",
+      "input_config": {
+        "model_id": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "temperature": 0,
+        "max_tokens": 2048,
+        "prompt": "List integers from 1 through 10000, each on its own line. Start now."
+      },
+      "cancel_ack": {
+        "ok": true,
+        "target": "a8740837-486e-4c2f-81f2-77e8b2100e7d"
+      },
+      "status": {
+        "session_id": "da3c6ba7-f1a3-4e4b-a600-6360bc76d425",
+        "surface": "interaction_session",
+        "active": false,
+        "status": "idle",
+        "task_state": "idle",
+        "backlog": {
+          "count": 0,
+          "by_status": {}
+        },
+        "summary": {
+          "continuity_identifier": "session_id",
+          "context_version": "packet1_session_context_v1",
+          "latest_turn_id": "a8740837-486e-4c2f-81f2-77e8b2100e7d",
+          "turn_count": 1,
+          "inspection_only": true
+        },
+        "artifacts": {
+          "session_snapshot_surface": "GET /v1/sessions/{session_id}/snapshot",
+          "session_replay_surface": "GET /v1/sessions/{session_id}/replay",
+          "targeted_replay": "run_session_only"
+        }
+      },
+      "snapshot": {
+        "session_id": "da3c6ba7-f1a3-4e4b-a600-6360bc76d425",
+        "surface": "interaction_session",
+        "continuity_identifier": "session_id",
+        "inspection_only": true,
+        "status": "idle",
+        "active_turn_id": null,
+        "latest_turn_id": "a8740837-486e-4c2f-81f2-77e8b2100e7d",
+        "turn_count": 1,
+        "created_at": "2026-10-04T19:02:03.291933+00:00",
+        "updated_at": "2026-10-04T19:02:03.852524+00:00",
+        "session_params": {},
+        "snapshot_kind": "interaction_session_context",
+        "captured_at": "2026-10-04T19:02:03.852524+00:00",
+        "memory_scope_boundary": {
+          "session_memory": "host_owned_session_continuity",
+          "profile_memory": "separate_profile_or_operator_scope",
+          "workspace_memory": "workspace_root_state_separate_from_session_identity"
+        },
+        "replay_boundary": {
+          "timeline_view": "inspection_only",
+          "targeted_replay": "run_session_only",
+          "execution_authority": "none"
+        },
+        "session_context_pipeline": {
+          "context_version": "packet1_session_context_v1",
+          "provider_lineage": [
+            {
+              "order": 1,
+              "provider_id": "host_continuity",
+              "authority": "host_owned",
+              "source_surface": "POST /v1/interactions/sessions",
+              "fields": [
+                "session_id",
+                "session_params"
+              ],
+              "present": true
+            },
+            {
+              "order": 2,
+              "provider_id": "turn_request",
+              "authority": "host_validated_request",
+              "source_surface": "POST /v1/interactions/{session_id}/turns",
+              "fields": [
+                "input_config",
+                "turn_params",
+                "workload_id",
+                "department",
+                "workspace"
+              ],
+              "present": true
+            },
+            {
+              "order": 3,
+              "provider_id": "extension_manifest_required_capabilities",
+              "authority": "host_resolved_manifest_metadata",
+              "source_surface": "extension_manifest",
+              "fields": [
+                "required_capabilities"
+              ],
+              "present": false
+            }
+          ],
+          "latest_context_envelope": {
+            "context_version": "packet1_session_context_v1",
+            "continuity": {
+              "session_id": "da3c6ba7-f1a3-4e4b-a600-6360bc76d425",
+              "session_params": {}
+            },
+            "turn_request": {
+              "input_config": {
+                "model_id": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+                "temperature": 0,
+                "max_tokens": 2048,
+                "prompt": "List integers from 1 through 10000, each on its own line. Start now."
+              },
+              "turn_params": {},
+              "workload_id": "model_stream_v1",
+              "department": "core",
+              "workspace": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\installed-r03-py312-journey\\workspace\\default"
+            },
+            "extension_manifest": {}
+          }
+        }
+      },
+      "replay": {
+        "session_id": "da3c6ba7-f1a3-4e4b-a600-6360bc76d425",
+        "surface": "interaction_session",
+        "inspection_only": true,
+        "turn_count": 1,
+        "filters": {
+          "role": null
+        },
+        "replay_boundary": {
+          "timeline_view": "inspection_only",
+          "targeted_replay": "run_session_only",
+          "execution_authority": "none"
+        },
+        "turns": [
+          {
+            "turn_id": "a8740837-486e-4c2f-81f2-77e8b2100e7d",
+            "turn_index": 1,
+            "status": "interrupted",
+            "accepted_at": "2026-10-04T19:02:03.300942+00:00",
+            "finalized_at": "2026-10-04T19:02:03.824004+00:00",
+            "terminal_event": "turn_interrupted",
+            "context_version": "packet1_session_context_v1",
+            "context_envelope": {
+              "context_version": "packet1_session_context_v1",
+              "continuity": {
+                "session_id": "da3c6ba7-f1a3-4e4b-a600-6360bc76d425",
+                "session_params": {}
+              },
+              "turn_request": {
+                "input_config": {
+                  "model_id": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+                  "temperature": 0,
+                  "max_tokens": 2048,
+                  "prompt": "List integers from 1 through 10000, each on its own line. Start now."
+                },
+                "turn_params": {},
+                "workload_id": "model_stream_v1",
+                "department": "core",
+                "workspace": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\installed-r03-py312-journey\\workspace\\default"
+              },
+              "extension_manifest": {}
+            },
+            "provider_lineage": [
+              {
+                "order": 1,
+                "provider_id": "host_continuity",
+                "authority": "host_owned",
+                "source_surface": "POST /v1/interactions/sessions",
+                "fields": [
+                  "session_id",
+                  "session_params"
+                ],
+                "present": true
+              },
+              {
+                "order": 2,
+                "provider_id": "turn_request",
+                "authority": "host_validated_request",
+                "source_surface": "POST /v1/interactions/{session_id}/turns",
+                "fields": [
+                  "input_config",
+                  "turn_params",
+                  "workload_id",
+                  "department",
+                  "workspace"
+                ],
+                "present": true
+              },
+              {
+                "order": 3,
+                "provider_id": "extension_manifest_required_capabilities",
+                "authority": "host_resolved_manifest_metadata",
+                "source_surface": "extension_manifest",
+                "fields": [
+                  "required_capabilities"
+                ],
+                "present": false
+              }
+            ],
+            "inspection_only": true,
+            "role": null,
+            "commit_outcome": "ok",
+            "commit_id": "commit-ab592e2756d3",
+            "authoritative_commit": true
+          }
+        ]
+      },
+      "terminal_cancel_status": 409,
+      "durable_semantics": "interrupted lifecycle finalized; no model workload success intent",
+      "durable_commit": {
+        "authoritative": true,
+        "commit_digest": "ab592e2756d3f9c7402254f80ec9dd0b4167b9be2a72da75e2e8cb0beb25d0c5",
+        "intents": [
+          {
+            "payload_digest": null,
+            "ref": "a8740837-486e-4c2f-81f2-77e8b2100e7d",
+            "type": "turn_finalize"
+          }
+        ],
+        "session_id": "da3c6ba7-f1a3-4e4b-a600-6360bc76d425",
+        "turn_id": "a8740837-486e-4c2f-81f2-77e8b2100e7d"
+      },
+      "artifacts": {
+        "authority_commit.json": {
+          "path": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\installed-r03-py312-journey\\workspace\\interactions\\da3c6ba7-f1a3-4e4b-a600-6360bc76d425\\a8740837-486e-4c2f-81f2-77e8b2100e7d\\authority_commit.json",
+          "sha256": "9dade99862dfd308609643eca2834f4dd7f038b0874b1a54a6af93a07af1a0e1"
+        },
+        "interaction_trace.jsonl": {
+          "path": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\installed-r03-py312-journey\\workspace\\interactions\\da3c6ba7-f1a3-4e4b-a600-6360bc76d425\\a8740837-486e-4c2f-81f2-77e8b2100e7d\\interaction_trace.jsonl",
+          "sha256": "3783b9101b09b3e49c161836e963d32eb3d61d165c8596ee5a801f5e41d75f2c"
+        }
+      }
+    }
+  ],
+  "model_catalog": {
+    "models": [
+      {
+        "name": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "modified_at": "",
+        "size": "",
+        "digest": "",
+        "type": "model",
+        "description": "",
+        "tags": [
+          ""
+        ],
+        "capabilities": [
+          "completion"
+        ],
+        "parameters": "",
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "",
+          "families": [
+            ""
+          ],
+          "parameter_size": "",
+          "quantization_level": ""
+        }
+      }
+    ],
+    "object": "list",
+    "data": [
+      {
+        "id": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "aliases": [
+          "orcarouter_qwen3.8-27b-uncensored-q4_k_l"
+        ],
+        "tags": [],
+        "object": "model",
+        "created": 1791140520,
+        "owned_by": "llamacpp",
+        "meta": {
+          "vocab_type": 2,
+          "n_vocab": 248320,
+          "n_ctx": 8192,
+          "n_ctx_train": 262144,
+          "n_embd": 5120,
+          "n_params": 27320697856,
+          "size": 18705158144,
+          "ftype": "Q4_K - Medium"
+        }
+      }
+    ]
+  },
+  "cleanup": {
+    "runtime_closed": true,
+    "requests": 0,
+    "background_tasks": 0
+  },
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-10-04T19:02:04.035658Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:d415bdddcfd8f8fcf1bcf486e4eea57ea1f0d819d4a502c086035fd9dd8233ab",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 2479,
+        "paths_total_reference": 2479,
+        "churn_paths": 2479,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    }
+  ]
+}

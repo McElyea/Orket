@@ -1,0 +1,16 @@
+Traceback (most recent call last):
+  File "C:\Source\Orket\.tmp\prr_turn_live.py", line 90, in <module>
+    asyncio.run(main())
+  File "C:\Users\jonmc\AppData\Roaming\uv\python\cpython-3.11.14-windows-x86_64-none\Lib\asyncio\runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\jonmc\AppData\Roaming\uv\python\cpython-3.11.14-windows-x86_64-none\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\jonmc\AppData\Roaming\uv\python\cpython-3.11.14-windows-x86_64-none\Lib\asyncio\base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "C:\Source\Orket\.tmp\prr_turn_live.py", line 68, in main
+    assert content == b'PRR live grounding accepted\n', content
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: b'PRR live grounding accepted\r\n'

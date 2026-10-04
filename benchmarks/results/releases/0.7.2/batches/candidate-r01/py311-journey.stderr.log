@@ -1,0 +1,98 @@
+INFO:     Started server process [29628]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:63310 - "WebSocket /ws/interactions/7cc4f2cb-a921-48b7-b874-6d56fd5b1128" [accepted]
+INFO:     connection open
+INFO:     127.0.0.1:63313 - "WebSocket /ws/interactions/11dec621-578e-4196-8fdd-c344d3ddf370" [accepted]
+INFO:     connection open
+INFO:     Shutting down
+INFO:     Waiting for background tasks to complete. (CTRL+C to force quit)
+ERROR:    Traceback (most recent call last):
+  File "C:\Users\jonmc\AppData\Roaming\uv\python\cpython-3.11.14-windows-x86_64-none\Lib\asyncio\tasks.py", line 500, in wait_for
+    return fut.result()
+           ^^^^^^^^^^^^
+  File "C:\Users\jonmc\AppData\Local\Temp\orket-prr-v1\candidate-r01-py311\Lib\site-packages\uvicorn\server.py", line 90, in serve
+    await self._serve(sockets)
+  File "C:\Users\jonmc\AppData\Local\Temp\orket-prr-v1\candidate-r01-py311\Lib\site-packages\uvicorn\server.py", line 109, in _serve
+    await self.shutdown(sockets=sockets)
+  File "C:\Users\jonmc\AppData\Local\Temp\orket-prr-v1\candidate-r01-py311\Lib\site-packages\uvicorn\server.py", line 297, in shutdown
+    await asyncio.wait_for(
+  File "C:\Users\jonmc\AppData\Roaming\uv\python\cpython-3.11.14-windows-x86_64-none\Lib\asyncio\tasks.py", line 452, in wait_for
+    return await fut
+           ^^^^^^^^^
+  File "C:\Users\jonmc\AppData\Local\Temp\orket-prr-v1\candidate-r01-py311\Lib\site-packages\uvicorn\server.py", line 326, in _wait_tasks_to_complete
+    await asyncio.sleep(0.1)
+  File "C:\Users\jonmc\AppData\Roaming\uv\python\cpython-3.11.14-windows-x86_64-none\Lib\asyncio\tasks.py", line 649, in sleep
+    return await future
+           ^^^^^^^^^^^^
+asyncio.exceptions.CancelledError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\jonmc\AppData\Roaming\uv\python\cpython-3.11.14-windows-x86_64-none\Lib\asyncio\runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\jonmc\AppData\Roaming\uv\python\cpython-3.11.14-windows-x86_64-none\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\jonmc\AppData\Roaming\uv\python\cpython-3.11.14-windows-x86_64-none\Lib\asyncio\base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "C:\Source\Orket\.tmp\prr_journey.py", line 133, in main
+    await asyncio.wait_for(serving, 30)
+  File "C:\Users\jonmc\AppData\Roaming\uv\python\cpython-3.11.14-windows-x86_64-none\Lib\asyncio\tasks.py", line 502, in wait_for
+    raise exceptions.TimeoutError() from exc
+TimeoutError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\jonmc\AppData\Local\Temp\orket-prr-v1\candidate-r01-py311\Lib\site-packages\starlette\routing.py", line 661, in lifespan
+    await receive()
+  File "C:\Users\jonmc\AppData\Local\Temp\orket-prr-v1\candidate-r01-py311\Lib\site-packages\uvicorn\lifespan\on.py", line 137, in receive
+    return await self.receive_queue.get()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\jonmc\AppData\Roaming\uv\python\cpython-3.11.14-windows-x86_64-none\Lib\asyncio\queues.py", line 158, in get
+    await getter
+asyncio.exceptions.CancelledError
+
+Traceback (most recent call last):
+  File "C:\Users\jonmc\AppData\Roaming\uv\python\cpython-3.11.14-windows-x86_64-none\Lib\asyncio\tasks.py", line 500, in wait_for
+    return fut.result()
+           ^^^^^^^^^^^^
+  File "C:\Users\jonmc\AppData\Local\Temp\orket-prr-v1\candidate-r01-py311\Lib\site-packages\uvicorn\server.py", line 90, in serve
+    await self._serve(sockets)
+  File "C:\Users\jonmc\AppData\Local\Temp\orket-prr-v1\candidate-r01-py311\Lib\site-packages\uvicorn\server.py", line 109, in _serve
+    await self.shutdown(sockets=sockets)
+  File "C:\Users\jonmc\AppData\Local\Temp\orket-prr-v1\candidate-r01-py311\Lib\site-packages\uvicorn\server.py", line 297, in shutdown
+    await asyncio.wait_for(
+  File "C:\Users\jonmc\AppData\Roaming\uv\python\cpython-3.11.14-windows-x86_64-none\Lib\asyncio\tasks.py", line 452, in wait_for
+    return await fut
+           ^^^^^^^^^
+  File "C:\Users\jonmc\AppData\Local\Temp\orket-prr-v1\candidate-r01-py311\Lib\site-packages\uvicorn\server.py", line 326, in _wait_tasks_to_complete
+    await asyncio.sleep(0.1)
+  File "C:\Users\jonmc\AppData\Roaming\uv\python\cpython-3.11.14-windows-x86_64-none\Lib\asyncio\tasks.py", line 649, in sleep
+    return await future
+           ^^^^^^^^^^^^
+asyncio.exceptions.CancelledError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Source\Orket\.tmp\prr_journey.py", line 145, in <module>
+    asyncio.run(main())
+  File "C:\Users\jonmc\AppData\Roaming\uv\python\cpython-3.11.14-windows-x86_64-none\Lib\asyncio\runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\jonmc\AppData\Roaming\uv\python\cpython-3.11.14-windows-x86_64-none\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\jonmc\AppData\Roaming\uv\python\cpython-3.11.14-windows-x86_64-none\Lib\asyncio\base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "C:\Source\Orket\.tmp\prr_journey.py", line 133, in main
+    await asyncio.wait_for(serving, 30)
+  File "C:\Users\jonmc\AppData\Roaming\uv\python\cpython-3.11.14-windows-x86_64-none\Lib\asyncio\tasks.py", line 502, in wait_for
+    raise exceptions.TimeoutError() from exc
+TimeoutError

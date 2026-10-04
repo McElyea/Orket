@@ -1,0 +1,35 @@
+{
+  "proof_mode": "live",
+  "observed_path": "primary",
+  "observed_result": "failure",
+  "python": "3.12.2 (tags/v3.12.2:6abddd9, Feb  6 2024, 21:26:36) [MSC v.1937 64 bit (AMD64)]",
+  "provider": "llama_cpp",
+  "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+  "origin": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\installed-r03-py312\\Lib\\site-packages\\orket\\__init__.py",
+  "turn": {
+    "success": false,
+    "error": "E_LLAMA_CPP_TEMPLATE_IDENTITY: launch the model with the declared text template",
+    "content": null
+  },
+  "error": "AssertionError: E_LLAMA_CPP_TEMPLATE_IDENTITY: launch the model with the declared text template",
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-10-04T19:02:08.929216Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:bb13df9ee1caf790e59cd9a6a850eaaf796ba66d24daabc6363bd2dd2003ffca",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 23,
+        "paths_total_reference": 23,
+        "churn_paths": 23,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    }
+  ]
+}

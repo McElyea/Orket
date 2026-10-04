@@ -1,0 +1,9 @@
+[
+  {
+    "tool": "write_file",
+    "args": {
+      "path": "grounded.txt",
+      "content": "PRR live grounding accepted\n"
+    }
+  }
+]

@@ -1,0 +1,14 @@
+........................................................................ [ 38%]
+........................................................................ [ 77%]
+..........................................                               [100%]
+============================== warnings summary ===============================
+tests/integration/test_turn_parser_publication_ownership.py: 12 warnings
+  tests\integration\test_turn_parser_publication_ownership.py:142: PytestWarning: record_property is incompatible with junit_family 'xunit2' (use 'legacy' or 'xunit1')
+    @pytest.mark.parametrize("fault_stage", [None, "mkdir", "first", "second"])
+
+tests/integration/test_turn_parser_publication_ownership.py::test_parser_uses_captured_response_and_policy_during_held_operation
+  tests\integration\test_turn_parser_publication_ownership.py:190: PytestWarning: record_property is incompatible with junit_family 'xunit2' (use 'legacy' or 'xunit1')
+    async def test_parser_uses_captured_response_and_policy_during_held_operation(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+186 passed, 13 warnings in 3.96s

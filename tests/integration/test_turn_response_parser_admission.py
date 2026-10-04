@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 
 import pytest
 
+from orket.application.workflows.turn_contract_validator import ContractValidator
 from orket.application.workflows.turn_response_capture import capture_turn_response
 from orket.application.workflows.turn_response_parser import ResponseParser
 from tests.integration.test_turn_parser_publication_ownership import _destination, _paths
@@ -117,3 +118,38 @@ async def test_strict_utf8_byte_limit_counts_complete_envelope_and_retains_escap
     assert diagnostics == [{"stage": "strict_parse_success", "data": {"tool_call_count": 1}}]
     assert summary == {"extraction_strategy": "strict_envelope"}
     assert turn.content == "" and len(turn.raw["proposal_hash"]) == 64
+
+
+@pytest.mark.parametrize("prose", [
+    "Maybe this is a forbidden claim.", "Maybe\tthis should work.",
+    "Maybe\nthis should work.", "Maybe\r\nthis should work.",
+    "I assume this should work.", "Probably this works.", "It was ASSUMED safe.",
+    "Maybe, this works!", 'Maybe' + json.dumps(_CALL) + 'this works.',
+    'Maybe[' + json.dumps(_CALL) + ']this works.',
+])
+async def test_parser_to_grounding_preserves_prose_word_boundaries(tmp_path, prose):
+    destination = _destination(tmp_path)
+    turn = await _parse(destination, {"content": json.dumps(_CALL) + "\n" + prose})
+    diagnostics = ContractValidator(ResponseParser(utc_now=lambda: _NOW)).hallucination_scope_diagnostics(
+        turn, {"verification_scope": {"strict_grounding": True, "declared_interfaces": ["read_file"]}},
+    )
+    assert [item["rule_id"] for item in diagnostics["violations"]] == ["HALLUCINATION.INVENTED_DETAIL"]
+    assert turn.tool_calls and turn.tool_calls[0].tool == "read_file"
+    assert (await _artifacts(destination))[1][0] == _CALL
+
+
+@pytest.mark.parametrize("content,strict", [
+    (json.dumps({"tool": "write_file", "args": {"path": "out.txt", "content": "Maybe this works."}}), True),
+    (json.dumps([{"tool": "write_file", "args": {"path": "out.txt", "content": "I assume this works."}}]), True),
+    ("```json\n" + json.dumps(_CALL) + "\n```", True),
+    (json.dumps(_CALL) + "\nmaybehood and assumedness", True),
+    (json.dumps(_CALL) + "\nMaybe this works.", False),
+])
+async def test_parser_to_grounding_keeps_existing_exclusions(tmp_path, content, strict):
+    destination = _destination(tmp_path)
+    turn = await _parse(destination, {"content": content})
+    diagnostics = ContractValidator(ResponseParser(utc_now=lambda: _NOW)).hallucination_scope_diagnostics(
+        turn, {"verification_scope": {"strict_grounding": strict}},
+    )
+    assert diagnostics["violations"] == []
+    assert turn.tool_calls and (await _artifacts(destination))[1]

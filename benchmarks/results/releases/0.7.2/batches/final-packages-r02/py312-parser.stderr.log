@@ -1,0 +1,9 @@
+INFO:     Started server process [28752]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:54354 - "WebSocket /ws/interactions/dd190320-700e-4497-8a16-d24af89c45b8" [accepted]
+INFO:     connection open
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [28752]

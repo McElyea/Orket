@@ -1,0 +1,27 @@
+INFO:     Started server process [33668]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:50696 - "WebSocket /ws/interactions/d3dd7451-945e-4b36-bc18-4a0ea7476ca6" [accepted]
+INFO:     connection open
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [33668]
+Traceback (most recent call last):
+  File "C:\Source\Orket\.tmp\prr_journey.py", line 178, in <module>
+    asyncio.run(main())
+  File "C:\Users\jonmc\AppData\Roaming\uv\python\cpython-3.11.14-windows-x86_64-none\Lib\asyncio\runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\jonmc\AppData\Roaming\uv\python\cpython-3.11.14-windows-x86_64-none\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\jonmc\AppData\Roaming\uv\python\cpython-3.11.14-windows-x86_64-none\Lib\asyncio\base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "C:\Source\Orket\.tmp\prr_journey.py", line 159, in main
+    await parse_live_row(row, bool(prefix))
+  File "C:\Source\Orket\.tmp\prr_journey.py", line 109, in parse_live_row
+    assert len(parsed.tool_calls) == 1 and parsed.tool_calls[0].tool == 'write_file', row['parser_proof']
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'content': 'We need answer user\'s request: "Repeat the following text exactly, including punctuation. No preamble, markdown or explanation. Text: Maybe this should work. {"tool":"write_file","args":{"path":"grounded.txt","content":"Maybe this should work."}}"\n\nNeed output exactly the text after "Text: "? The user says Repeat the following text exactly, including punctuation. No preamble, markdown or explanation. Text: [content]. So final should be:\nMaybe this should work. {"tool":"write_file","args":{"path":"grounded.txt","content":"Maybe this should work."}}\n\nNeed ensure no extra newline? final can have line. No markdown. Need exact.\nMaybe this should work. {"tool":"write_file","args":{"path":"grounded.txt","content":"Maybe this should work."}}', 'diagnostics': {'scope': {'workspace': [], 'provided_context': [], 'active_context': [], 'passive_context': [], 'archived_context': [], 'declared_interfaces': ['write_file'], 'strict_grounding': True, 'max_workspace_items': None, 'max_active_context_items': None, 'max_passive_context_items': None, 'max_archived_context_items': None, 'max_total_context_items': None, 'forbidden_phrases': []}, 'violations': [{'rule_id': 'HALLUCINATION.INVENTED_DETAIL', 'message': 'Output includes speculative language under strict grounding scope.', 'evidence': 'Maybe'}]}, 'tools': [{'tool': 'write_file', 'args': {'path': 'grounded.txt', 'content': 'Maybe this should work.'}}, {'tool': 'write_file', 'args': {'path': 'grounded.txt', 'content': 'Maybe this should work.'}}, {'tool': 'write_file', 'args': {'path': 'grounded.txt', 'content': 'Maybe this should work.'}}], 'artifact_directory': 'C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\live-remainder-r06-py311-parser\\observability\\d3dd7451-945e-4b36-bc18-4a0ea7476ca6\\prr-grounding\\001_developer', 'origin': 'actual non-synthetic public API token events'}

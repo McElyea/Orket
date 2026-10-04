@@ -1,0 +1,588 @@
+{
+  "schema": "orket.release.0.7.2.verification.v1",
+  "version": "0.7.2",
+  "proof_mode": "live_and_structural_separately_identified",
+  "observed_path": "primary",
+  "observed_result": "success",
+  "batches": {
+    "baseline": {
+      "observed_result": "success",
+      "raw_receipt_sha256": "c43ea9bba81f5c9406ac62eaa6efe1c6c1b575da69b7d10fd7a1127a9274f191",
+      "source_inputs_unchanged": true,
+      "command_count": 6,
+      "all_native_cleanup_confirmed": true,
+      "receipt": "benchmarks/results/releases/0.7.2/batches/baseline/state.json.gz"
+    },
+    "baseline-upgrade": {
+      "observed_result": "success",
+      "raw_receipt_sha256": "10071826ff438f5834dc70e5a0c1c441c2e51cfb76ecc19c255f594d770f0e09",
+      "source_inputs_unchanged": true,
+      "command_count": 1,
+      "all_native_cleanup_confirmed": true,
+      "receipt": "benchmarks/results/releases/0.7.2/batches/baseline-upgrade/state.json.gz"
+    },
+    "parser-prefixed": {
+      "observed_result": "expected failure; inspect assertions",
+      "raw_receipt_sha256": "5487f2caa321105e9f46faba5dfbeb62f9982a0c599049b7dc8c18aae14401bb",
+      "source_inputs_unchanged": true,
+      "command_count": 1,
+      "all_native_cleanup_confirmed": true,
+      "receipt": "benchmarks/results/releases/0.7.2/batches/parser-prefixed/state.json.gz"
+    },
+    "parser-repaired": {
+      "observed_result": "success",
+      "raw_receipt_sha256": "9fb4a8b0b26b5f040da8e401f6624b1d7e596765f290a4d91d4e492304bd7c94",
+      "source_inputs_unchanged": true,
+      "command_count": 1,
+      "all_native_cleanup_confirmed": true,
+      "receipt": "benchmarks/results/releases/0.7.2/batches/parser-repaired/state.json.gz"
+    },
+    "candidate-r01": {
+      "observed_result": "failure",
+      "raw_receipt_sha256": "5e9727087418b19924775fec9b80f1de9db65cb63ce606675971e533e9317670",
+      "source_inputs_unchanged": true,
+      "command_count": 8,
+      "all_native_cleanup_confirmed": true,
+      "receipt": "benchmarks/results/releases/0.7.2/batches/candidate-r01/state.json.gz"
+    },
+    "websocket-prefixed": {
+      "observed_result": "expected failure; inspect assertions",
+      "raw_receipt_sha256": "80b444528515ec85afb3df8af3cc58f095e6c3f040b496b573cc764f8b184a0a",
+      "source_inputs_unchanged": true,
+      "command_count": 2,
+      "all_native_cleanup_confirmed": true,
+      "receipt": "benchmarks/results/releases/0.7.2/batches/websocket-prefixed/state.json.gz"
+    },
+    "websocket-repaired": {
+      "observed_result": "success",
+      "raw_receipt_sha256": "b190a2ea0ef45a9e1a2a211db771110f344e2e4d96f2282f754319071da67081",
+      "source_inputs_unchanged": true,
+      "command_count": 1,
+      "all_native_cleanup_confirmed": true,
+      "receipt": "benchmarks/results/releases/0.7.2/batches/websocket-repaired/state.json.gz"
+    },
+    "candidate-r02": {
+      "observed_result": "failure",
+      "raw_receipt_sha256": "7154fc4cdf1374dcd96e56391594ec4ddc36b257b70bd7170f423c7344321af9",
+      "source_inputs_unchanged": true,
+      "command_count": 8,
+      "all_native_cleanup_confirmed": true,
+      "receipt": "benchmarks/results/releases/0.7.2/batches/candidate-r02/state.json.gz"
+    },
+    "installed-r03": {
+      "observed_result": "failure",
+      "raw_receipt_sha256": "2228389734147ab308cf88d691b5f7e86ffa6154095839aeab531c619cf97f19",
+      "source_inputs_unchanged": true,
+      "command_count": 14,
+      "all_native_cleanup_confirmed": true,
+      "receipt": "benchmarks/results/releases/0.7.2/batches/installed-r03/state.json.gz"
+    },
+    "live-remainder-r04": {
+      "observed_result": "failure",
+      "raw_receipt_sha256": "6896df91ad0c3ccb3a46ded3b82b8fad6ba0997cc1547ba814babaad57a2a8b2",
+      "source_inputs_unchanged": true,
+      "command_count": 1,
+      "all_native_cleanup_confirmed": true,
+      "receipt": "benchmarks/results/releases/0.7.2/batches/live-remainder-r04/state.json.gz"
+    },
+    "live-remainder-r05": {
+      "observed_result": "failure",
+      "raw_receipt_sha256": "2777544a514eee6c76e18a12bf50e07c48a9b7e871a64d646ad4d7a172e885c9",
+      "source_inputs_unchanged": true,
+      "command_count": 1,
+      "all_native_cleanup_confirmed": true,
+      "receipt": "benchmarks/results/releases/0.7.2/batches/live-remainder-r05/state.json.gz"
+    },
+    "live-remainder-r06": {
+      "observed_result": "failure",
+      "raw_receipt_sha256": "e5afd024628687453c424458596b7252793dff980ef8a7158e30f1d830c576a9",
+      "source_inputs_unchanged": true,
+      "command_count": 1,
+      "all_native_cleanup_confirmed": true,
+      "receipt": "benchmarks/results/releases/0.7.2/batches/live-remainder-r06/state.json.gz"
+    },
+    "live-remainder-r07": {
+      "observed_result": "success",
+      "raw_receipt_sha256": "98dca625fb3423e151c8f2c737585e97318b371e732efd1929b6cf908c40d7c6",
+      "source_inputs_unchanged": true,
+      "command_count": 4,
+      "all_native_cleanup_confirmed": true,
+      "receipt": "benchmarks/results/releases/0.7.2/batches/live-remainder-r07/state.json.gz"
+    },
+    "verification": {
+      "observed_result": "failure",
+      "raw_receipt_sha256": "54a36fc37b4adbd1c706261666c053f9580e6ee13dd22c0fda4501ca4309f269",
+      "source_inputs_unchanged": true,
+      "command_count": 17,
+      "all_native_cleanup_confirmed": true,
+      "receipt": "benchmarks/results/releases/0.7.2/batches/verification/state.json.gz"
+    },
+    "verification-corrected": {
+      "observed_result": "success",
+      "raw_receipt_sha256": "c758c9b33c87859871a55c21b39cb3ad5d3a736d3005a32329434a483c35610a",
+      "source_inputs_unchanged": true,
+      "command_count": 2,
+      "all_native_cleanup_confirmed": true,
+      "receipt": "benchmarks/results/releases/0.7.2/batches/verification-corrected/state.json.gz"
+    },
+    "final-packages": {
+      "observed_result": "failure",
+      "raw_receipt_sha256": "915b0108a16a0406fbbc71ab5a3c381db35bda310f5792c7dbb655bb2370cb7c",
+      "source_inputs_unchanged": true,
+      "command_count": 1,
+      "all_native_cleanup_confirmed": true,
+      "receipt": "benchmarks/results/releases/0.7.2/batches/final-packages/state.json.gz"
+    },
+    "final-packages-r02": {
+      "observed_result": "success",
+      "raw_receipt_sha256": "4301d89270004e9d8e678420820af63350f15bc96e99ae13ef7bc987b7f58885",
+      "source_inputs_unchanged": true,
+      "command_count": 37,
+      "all_native_cleanup_confirmed": true,
+      "receipt": "benchmarks/results/releases/0.7.2/batches/final-packages-r02/state.json.gz"
+    },
+    "documented-probe": {
+      "observed_result": "success",
+      "raw_receipt_sha256": "2fa908aaa2efa9e40b3807487b064df5b27a9fe328187873d753915ea0cfbc92",
+      "source_inputs_unchanged": true,
+      "command_count": 1,
+      "all_native_cleanup_confirmed": true,
+      "receipt": "benchmarks/results/releases/0.7.2/batches/documented-probe/state.json.gz"
+    },
+    "environment-refresh": {
+      "observed_result": "failure",
+      "raw_receipt_sha256": "f110e77234e63e699c103f4622496e6283de6b2c4b6fbc17486baf5391f931e6",
+      "source_inputs_unchanged": true,
+      "command_count": 4,
+      "all_native_cleanup_confirmed": true,
+      "receipt": "benchmarks/results/releases/0.7.2/batches/environment-refresh/state.json.gz"
+    },
+    "profiled-refresh-r02": {
+      "observed_result": "success",
+      "raw_receipt_sha256": "4a69d7958ba43e7222ac396b833cef1b382403d2de7a33ad1516b1ef77a4dd78",
+      "source_inputs_unchanged": true,
+      "command_count": 2,
+      "all_native_cleanup_confirmed": true,
+      "receipt": "benchmarks/results/releases/0.7.2/batches/profiled-refresh-r02/state.json.gz"
+    }
+  },
+  "projects": {
+    "baseline-py311-project": {
+      "original_project": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\baseline-py311-project",
+      "retained_files": [
+        "journey.json"
+      ]
+    },
+    "candidate-r01-py311-project": {
+      "original_project": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\candidate-r01-py311-project",
+      "retained_files": [
+        "journey.json",
+        "workspace/interactions/11dec621-578e-4196-8fdd-c344d3ddf370/c4d2a77f-8faa-4341-878c-9dc3a5154088/authority_commit.json",
+        "workspace/interactions/11dec621-578e-4196-8fdd-c344d3ddf370/c4d2a77f-8faa-4341-878c-9dc3a5154088/interaction_trace.jsonl",
+        "workspace/interactions/7cc4f2cb-a921-48b7-b874-6d56fd5b1128/02f16fdf-9f6f-42bd-9774-f130dd0f0041/authority_commit.json",
+        "workspace/interactions/7cc4f2cb-a921-48b7-b874-6d56fd5b1128/02f16fdf-9f6f-42bd-9774-f130dd0f0041/interaction_trace.jsonl"
+      ]
+    },
+    "candidate-r02-py311-project": {
+      "original_project": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\candidate-r02-py311-project",
+      "retained_files": [
+        "journey.json",
+        "workspace/interactions/b05a0e94-c248-4fb6-94b2-17e72fada1bc/2098e9b6-58cc-4078-89c5-d1dc9f45e72c/authority_commit.json",
+        "workspace/interactions/b05a0e94-c248-4fb6-94b2-17e72fada1bc/2098e9b6-58cc-4078-89c5-d1dc9f45e72c/interaction_trace.jsonl",
+        "workspace/interactions/f1c4c6d1-df76-4e18-a7e4-963db9ba454b/3f143eca-a31e-4b3e-9cf1-ff56f38c726c/authority_commit.json",
+        "workspace/interactions/f1c4c6d1-df76-4e18-a7e4-963db9ba454b/3f143eca-a31e-4b3e-9cf1-ff56f38c726c/interaction_trace.jsonl"
+      ]
+    },
+    "documented-probe": {
+      "original_project": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\documented-probe",
+      "retained_files": [
+        "journey.json",
+        "workspace/interactions/198dc0cf-8487-4585-b706-53ba73623faf/ba91264d-18fb-4e34-8db3-2c944558dc39/authority_commit.json",
+        "workspace/interactions/198dc0cf-8487-4585-b706-53ba73623faf/ba91264d-18fb-4e34-8db3-2c944558dc39/interaction_trace.jsonl",
+        "workspace/interactions/d7acf1ac-ca0a-4f05-971f-5bfa209d4bed/47d835bf-9a34-49f1-919a-7d708fb57b5e/authority_commit.json",
+        "workspace/interactions/d7acf1ac-ca0a-4f05-971f-5bfa209d4bed/47d835bf-9a34-49f1-919a-7d708fb57b5e/interaction_trace.jsonl"
+      ]
+    },
+    "environment-refresh-py311-journey": {
+      "original_project": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\environment-refresh-py311-journey",
+      "retained_files": [
+        "journey.json",
+        "workspace/interactions/00faf668-5944-4453-bbd5-4c12c525cac0/14f3cad2-aacf-472f-9703-96dc02dd2a20/authority_commit.json",
+        "workspace/interactions/00faf668-5944-4453-bbd5-4c12c525cac0/14f3cad2-aacf-472f-9703-96dc02dd2a20/interaction_trace.jsonl",
+        "workspace/interactions/ce2405de-ed19-402a-9530-58cc947f6a83/b2207b75-b6be-4de1-a0a9-d5ca31fc6e44/authority_commit.json",
+        "workspace/interactions/ce2405de-ed19-402a-9530-58cc947f6a83/b2207b75-b6be-4de1-a0a9-d5ca31fc6e44/interaction_trace.jsonl"
+      ]
+    },
+    "environment-refresh-py311-turn-live": {
+      "original_project": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\environment-refresh-py311-turn-live",
+      "retained_files": [
+        "turn-live.json",
+        "workspace/grounded.txt",
+        "workspace/observability/prr-live-turn/prr-live/001_developer/checkpoint.json",
+        "workspace/observability/prr-live-turn/prr-live/001_developer/messages.json",
+        "workspace/observability/prr-live-turn/prr-live/001_developer/model_response_raw.json",
+        "workspace/observability/prr-live-turn/prr-live/001_developer/parsed_tool_calls.json",
+        "workspace/observability/prr-live-turn/prr-live/001_developer/prompt_layers.json",
+        "workspace/observability/prr-live-turn/prr-live/001_developer/tool_parser_diagnostics.json",
+        "workspace/observability/prr-live-turn/prr-live/001_developer/tool_parser_summary.json",
+        "workspace/observability/prr-live-turn/prr-live/001_developer/tool_result_write_file_0a33a4c5a6ac.json"
+      ]
+    },
+    "environment-refresh-py312-journey": {
+      "original_project": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\environment-refresh-py312-journey",
+      "retained_files": [
+        "journey.json",
+        "workspace/interactions/2f29290a-8d45-4d06-be78-17601169286f/060eb4be-c450-420e-9ddc-9ac971d83b6e/authority_commit.json",
+        "workspace/interactions/2f29290a-8d45-4d06-be78-17601169286f/060eb4be-c450-420e-9ddc-9ac971d83b6e/interaction_trace.jsonl",
+        "workspace/interactions/6cb6ef14-3fc1-4daa-8cba-8d70fe3a084a/3e78c36e-b34c-4191-a6a1-a3bcefde0cc0/authority_commit.json",
+        "workspace/interactions/6cb6ef14-3fc1-4daa-8cba-8d70fe3a084a/3e78c36e-b34c-4191-a6a1-a3bcefde0cc0/interaction_trace.jsonl"
+      ]
+    },
+    "final-packages-r02-py311-initialized": {
+      "original_project": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\final-packages-r02-py311-initialized",
+      "retained_files": [
+        "model/core/epics/prr_startup.json",
+        "model/core/rocks/run_the_business.json",
+        "model/core/teams/prr_team.json"
+      ]
+    },
+    "final-packages-r02-py311-journey": {
+      "original_project": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\final-packages-r02-py311-journey",
+      "retained_files": [
+        "journey.json",
+        "workspace/interactions/9ed9d844-a6ed-41c8-bd5a-32d66601c497/4b9bf465-4a8f-4dfb-a83a-ee6013f40751/authority_commit.json",
+        "workspace/interactions/9ed9d844-a6ed-41c8-bd5a-32d66601c497/4b9bf465-4a8f-4dfb-a83a-ee6013f40751/interaction_trace.jsonl",
+        "workspace/interactions/ef7a9164-df86-4be6-a08b-0bba71ca505f/073e0ef7-1aae-4482-b60a-21a65ca51f3b/authority_commit.json",
+        "workspace/interactions/ef7a9164-df86-4be6-a08b-0bba71ca505f/073e0ef7-1aae-4482-b60a-21a65ca51f3b/interaction_trace.jsonl"
+      ]
+    },
+    "final-packages-r02-py311-missing-board": {
+      "original_project": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\final-packages-r02-py311-missing-board",
+      "retained_files": []
+    },
+    "final-packages-r02-py311-parser": {
+      "original_project": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\final-packages-r02-py311-parser",
+      "retained_files": [
+        "journey.json",
+        "workspace/interactions/9378f6b4-5904-41ed-8e88-de6805a51125/b5b5dc6c-3d44-4224-8f9b-febc1ef7b7fe/authority_commit.json",
+        "workspace/interactions/9378f6b4-5904-41ed-8e88-de6805a51125/b5b5dc6c-3d44-4224-8f9b-febc1ef7b7fe/interaction_trace.jsonl",
+        "observability/9378f6b4-5904-41ed-8e88-de6805a51125/prr-grounding/001_developer/parsed_tool_calls.json",
+        "observability/9378f6b4-5904-41ed-8e88-de6805a51125/prr-grounding/001_developer/tool_parser_diagnostics.json",
+        "observability/9378f6b4-5904-41ed-8e88-de6805a51125/prr-grounding/001_developer/tool_parser_summary.json"
+      ]
+    },
+    "final-packages-r02-py312-initialized": {
+      "original_project": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\final-packages-r02-py312-initialized",
+      "retained_files": [
+        "model/core/epics/prr_startup.json",
+        "model/core/rocks/run_the_business.json",
+        "model/core/teams/prr_team.json"
+      ]
+    },
+    "final-packages-r02-py312-journey": {
+      "original_project": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\final-packages-r02-py312-journey",
+      "retained_files": [
+        "journey.json",
+        "workspace/interactions/1081c9dc-7235-4f59-b127-790e58ce00a1/5e4f676b-98b8-4056-9493-d4d9f691258e/authority_commit.json",
+        "workspace/interactions/1081c9dc-7235-4f59-b127-790e58ce00a1/5e4f676b-98b8-4056-9493-d4d9f691258e/interaction_trace.jsonl",
+        "workspace/interactions/8f67ad22-0d7d-4f09-9093-2b1d496a3d27/142f72fb-5502-4299-a020-67ba4e3dec88/authority_commit.json",
+        "workspace/interactions/8f67ad22-0d7d-4f09-9093-2b1d496a3d27/142f72fb-5502-4299-a020-67ba4e3dec88/interaction_trace.jsonl"
+      ]
+    },
+    "final-packages-r02-py312-missing-board": {
+      "original_project": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\final-packages-r02-py312-missing-board",
+      "retained_files": []
+    },
+    "final-packages-r02-py312-parser": {
+      "original_project": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\final-packages-r02-py312-parser",
+      "retained_files": [
+        "journey.json",
+        "workspace/interactions/dd190320-700e-4497-8a16-d24af89c45b8/a3f4ead2-466b-4372-b244-2c7b06956893/authority_commit.json",
+        "workspace/interactions/dd190320-700e-4497-8a16-d24af89c45b8/a3f4ead2-466b-4372-b244-2c7b06956893/interaction_trace.jsonl",
+        "observability/dd190320-700e-4497-8a16-d24af89c45b8/prr-grounding/001_developer/parsed_tool_calls.json",
+        "observability/dd190320-700e-4497-8a16-d24af89c45b8/prr-grounding/001_developer/tool_parser_diagnostics.json",
+        "observability/dd190320-700e-4497-8a16-d24af89c45b8/prr-grounding/001_developer/tool_parser_summary.json"
+      ]
+    },
+    "installed-r03-py311-initialized": {
+      "original_project": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\installed-r03-py311-initialized",
+      "retained_files": [
+        "model/core/epics/prr_startup.json",
+        "model/core/rocks/run_the_business.json"
+      ]
+    },
+    "installed-r03-py311-journey": {
+      "original_project": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\installed-r03-py311-journey",
+      "retained_files": [
+        "journey.json",
+        "workspace/interactions/4d566364-4826-4d0c-945b-bae57a1e4dab/498788a7-58c1-4ef7-b200-6cfb6c8bffe8/authority_commit.json",
+        "workspace/interactions/4d566364-4826-4d0c-945b-bae57a1e4dab/498788a7-58c1-4ef7-b200-6cfb6c8bffe8/interaction_trace.jsonl",
+        "workspace/interactions/aeb85af4-2961-484f-8141-357c4de7edd8/fe8fbb54-5123-41ed-bce8-e3c5581c0bcb/authority_commit.json",
+        "workspace/interactions/aeb85af4-2961-484f-8141-357c4de7edd8/fe8fbb54-5123-41ed-bce8-e3c5581c0bcb/interaction_trace.jsonl"
+      ]
+    },
+    "installed-r03-py311-missing-board": {
+      "original_project": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\installed-r03-py311-missing-board",
+      "retained_files": []
+    },
+    "installed-r03-py311-turn-live": {
+      "original_project": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\installed-r03-py311-turn-live",
+      "retained_files": [
+        "turn-live.json",
+        "workspace/observability/prr-live-turn/prr-live/001_developer/messages.json",
+        "workspace/observability/prr-live-turn/prr-live/001_developer/prompt_layers.json"
+      ]
+    },
+    "installed-r03-py312-initialized": {
+      "original_project": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\installed-r03-py312-initialized",
+      "retained_files": [
+        "model/core/epics/prr_startup.json",
+        "model/core/rocks/run_the_business.json"
+      ]
+    },
+    "installed-r03-py312-journey": {
+      "original_project": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\installed-r03-py312-journey",
+      "retained_files": [
+        "journey.json",
+        "workspace/interactions/bfae57a0-8a1e-4233-a357-f8959eb76aa3/a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e/authority_commit.json",
+        "workspace/interactions/bfae57a0-8a1e-4233-a357-f8959eb76aa3/a1cbdd71-9ada-40c0-8d49-a53e1a3dd33e/interaction_trace.jsonl",
+        "workspace/interactions/da3c6ba7-f1a3-4e4b-a600-6360bc76d425/a8740837-486e-4c2f-81f2-77e8b2100e7d/authority_commit.json",
+        "workspace/interactions/da3c6ba7-f1a3-4e4b-a600-6360bc76d425/a8740837-486e-4c2f-81f2-77e8b2100e7d/interaction_trace.jsonl"
+      ]
+    },
+    "installed-r03-py312-missing-board": {
+      "original_project": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\installed-r03-py312-missing-board",
+      "retained_files": []
+    },
+    "installed-r03-py312-turn-live": {
+      "original_project": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\installed-r03-py312-turn-live",
+      "retained_files": [
+        "turn-live.json",
+        "workspace/observability/prr-live-turn/prr-live/001_developer/messages.json",
+        "workspace/observability/prr-live-turn/prr-live/001_developer/prompt_layers.json"
+      ]
+    },
+    "live-remainder-r04-py311-parser": {
+      "original_project": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\live-remainder-r04-py311-parser",
+      "retained_files": [
+        "journey.json",
+        "workspace/interactions/ddff7918-002c-4bab-adab-a881b0a6324d/564bc389-7b99-407e-9bbe-471baf05d2c1/authority_commit.json",
+        "workspace/interactions/ddff7918-002c-4bab-adab-a881b0a6324d/564bc389-7b99-407e-9bbe-471baf05d2c1/interaction_trace.jsonl",
+        "observability/ddff7918-002c-4bab-adab-a881b0a6324d/prr-grounding/001_developer/parsed_tool_calls.json",
+        "observability/ddff7918-002c-4bab-adab-a881b0a6324d/prr-grounding/001_developer/tool_parser_diagnostics.json",
+        "observability/ddff7918-002c-4bab-adab-a881b0a6324d/prr-grounding/001_developer/tool_parser_summary.json"
+      ]
+    },
+    "live-remainder-r05-py311-parser": {
+      "original_project": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\live-remainder-r05-py311-parser",
+      "retained_files": [
+        "journey.json",
+        "workspace/interactions/1e39a3c9-bdd6-4936-a9a9-222990d158f7/b741b308-39dd-4f33-a658-599036067bc1/authority_commit.json",
+        "workspace/interactions/1e39a3c9-bdd6-4936-a9a9-222990d158f7/b741b308-39dd-4f33-a658-599036067bc1/interaction_trace.jsonl"
+      ]
+    },
+    "live-remainder-r06-py311-parser": {
+      "original_project": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\live-remainder-r06-py311-parser",
+      "retained_files": [
+        "journey.json",
+        "workspace/interactions/d3dd7451-945e-4b36-bc18-4a0ea7476ca6/c0c036b7-f962-46e7-a2c6-5a70f3e3ca8b/authority_commit.json",
+        "workspace/interactions/d3dd7451-945e-4b36-bc18-4a0ea7476ca6/c0c036b7-f962-46e7-a2c6-5a70f3e3ca8b/interaction_trace.jsonl",
+        "observability/d3dd7451-945e-4b36-bc18-4a0ea7476ca6/prr-grounding/001_developer/parsed_tool_calls.json",
+        "observability/d3dd7451-945e-4b36-bc18-4a0ea7476ca6/prr-grounding/001_developer/tool_parser_diagnostics.json",
+        "observability/d3dd7451-945e-4b36-bc18-4a0ea7476ca6/prr-grounding/001_developer/tool_parser_summary.json"
+      ]
+    },
+    "live-remainder-r07-py311-initialized": {
+      "original_project": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\live-remainder-r07-py311-initialized",
+      "retained_files": [
+        "model/core/epics/prr_startup.json",
+        "model/core/rocks/run_the_business.json",
+        "model/core/teams/prr_team.json"
+      ]
+    },
+    "live-remainder-r07-py311-parser": {
+      "original_project": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\live-remainder-r07-py311-parser",
+      "retained_files": [
+        "journey.json",
+        "workspace/interactions/e6deb9dd-aed3-4d3d-85c2-4befe19c6ca0/eb7c4f83-4f2e-4b3b-bf57-9b5899607f23/authority_commit.json",
+        "workspace/interactions/e6deb9dd-aed3-4d3d-85c2-4befe19c6ca0/eb7c4f83-4f2e-4b3b-bf57-9b5899607f23/interaction_trace.jsonl",
+        "observability/e6deb9dd-aed3-4d3d-85c2-4befe19c6ca0/prr-grounding/001_developer/parsed_tool_calls.json",
+        "observability/e6deb9dd-aed3-4d3d-85c2-4befe19c6ca0/prr-grounding/001_developer/tool_parser_diagnostics.json",
+        "observability/e6deb9dd-aed3-4d3d-85c2-4befe19c6ca0/prr-grounding/001_developer/tool_parser_summary.json"
+      ]
+    },
+    "live-remainder-r07-py312-initialized": {
+      "original_project": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\live-remainder-r07-py312-initialized",
+      "retained_files": [
+        "model/core/epics/prr_startup.json",
+        "model/core/rocks/run_the_business.json",
+        "model/core/teams/prr_team.json"
+      ]
+    },
+    "live-remainder-r07-py312-parser": {
+      "original_project": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\live-remainder-r07-py312-parser",
+      "retained_files": [
+        "journey.json",
+        "workspace/interactions/836e7825-d6ff-49b6-8386-57f4fac2b473/8e9f2c32-0cca-40b9-b1c1-6835818d8f37/authority_commit.json",
+        "workspace/interactions/836e7825-d6ff-49b6-8386-57f4fac2b473/8e9f2c32-0cca-40b9-b1c1-6835818d8f37/interaction_trace.jsonl",
+        "observability/836e7825-d6ff-49b6-8386-57f4fac2b473/prr-grounding/001_developer/parsed_tool_calls.json",
+        "observability/836e7825-d6ff-49b6-8386-57f4fac2b473/prr-grounding/001_developer/tool_parser_diagnostics.json",
+        "observability/836e7825-d6ff-49b6-8386-57f4fac2b473/prr-grounding/001_developer/tool_parser_summary.json"
+      ]
+    },
+    "profiled-refresh-r02-py311-turn-live": {
+      "original_project": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\profiled-refresh-r02-py311-turn-live",
+      "retained_files": [
+        "turn-live.json",
+        "workspace/grounded.txt",
+        "workspace/observability/prr-live-grounding/prr-grounding/001_developer/parsed_tool_calls.json",
+        "workspace/observability/prr-live-grounding/prr-grounding/001_developer/tool_parser_diagnostics.json",
+        "workspace/observability/prr-live-grounding/prr-grounding/001_developer/tool_parser_summary.json",
+        "workspace/observability/prr-live-turn/prr-live/001_developer/checkpoint.json",
+        "workspace/observability/prr-live-turn/prr-live/001_developer/messages.json",
+        "workspace/observability/prr-live-turn/prr-live/001_developer/model_response_raw.json",
+        "workspace/observability/prr-live-turn/prr-live/001_developer/parsed_tool_calls.json",
+        "workspace/observability/prr-live-turn/prr-live/001_developer/prompt_layers.json",
+        "workspace/observability/prr-live-turn/prr-live/001_developer/tool_parser_diagnostics.json",
+        "workspace/observability/prr-live-turn/prr-live/001_developer/tool_parser_summary.json",
+        "workspace/observability/prr-live-turn/prr-live/001_developer/tool_result_write_file_0a33a4c5a6ac.json"
+      ]
+    },
+    "profiled-refresh-r02-py312-turn-live": {
+      "original_project": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\profiled-refresh-r02-py312-turn-live",
+      "retained_files": [
+        "turn-live.json",
+        "workspace/grounded.txt",
+        "workspace/observability/prr-live-grounding/prr-grounding/001_developer/parsed_tool_calls.json",
+        "workspace/observability/prr-live-grounding/prr-grounding/001_developer/tool_parser_diagnostics.json",
+        "workspace/observability/prr-live-grounding/prr-grounding/001_developer/tool_parser_summary.json",
+        "workspace/observability/prr-live-turn/prr-live/001_developer/checkpoint.json",
+        "workspace/observability/prr-live-turn/prr-live/001_developer/messages.json",
+        "workspace/observability/prr-live-turn/prr-live/001_developer/model_response_raw.json",
+        "workspace/observability/prr-live-turn/prr-live/001_developer/parsed_tool_calls.json",
+        "workspace/observability/prr-live-turn/prr-live/001_developer/prompt_layers.json",
+        "workspace/observability/prr-live-turn/prr-live/001_developer/tool_parser_diagnostics.json",
+        "workspace/observability/prr-live-turn/prr-live/001_developer/tool_parser_summary.json",
+        "workspace/observability/prr-live-turn/prr-live/001_developer/tool_result_write_file_0a33a4c5a6ac.json"
+      ]
+    }
+  },
+  "source_controls": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0",
+    "tests": "569",
+    "time": "104.693",
+    "timestamp": "2026-10-04T13:12:12.920144-06:00",
+    "hostname": "DESKTOP-H0S3F53"
+  },
+  "additional_installed_controls": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0",
+    "tests": "3",
+    "time": "9.008",
+    "timestamp": "2026-10-04T13:14:32.098494-06:00",
+    "hostname": "DESKTOP-H0S3F53"
+  },
+  "packaged_source_members": 1278,
+  "evidence_semantics": "Raw native logs, XML, project reports and compressed local receipts retain exact bytes. Embedded original absolute paths identify the originating environment; project copies preserve relative structure.",
+  "probe_semantics": "Probe sources are the final working local harnesses; earlier failures/logs retain their actual assertions. They are release evidence, not new canonical product entrypoints.",
+  "limits": [
+    "Initial direct profiled flow refused the embedded template. Independent server replacement aligned the template; bounded actual TurnExecutor/file-write/grounding flows then passed on both versions, without bypass. No general card-workflow claim.",
+    "Missing CLI board is intentionally degraded; initialized startup passes.",
+    "No fresh full coverage, hosted CI, Linux/Mac, Docker, remote Gitea or remote inference termination proof.",
+    "Durable commits bind lifecycle intents, not generated transcripts; captured event bytes are separate.",
+    "One extra streaming probe failed closed with provider_error; subsequent bounded live parser probes pass; no arbitrary reliability guarantee."
+  ],
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-10-04T19:22:52.597065Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:2830dbddc4074dc4a5728cce6362d6ac6116686372761bbfa6c4898da20a4405",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 564,
+        "paths_total_reference": 564,
+        "churn_paths": 564,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    },
+    {
+      "run_at_utc": "2026-10-04T19:27:24.515865Z",
+      "changed": true,
+      "before_digest": "sha256:2830dbddc4074dc4a5728cce6362d6ac6116686372761bbfa6c4898da20a4405",
+      "after_digest": "sha256:2eb047f050509267fbc98d10d33000883d90788d52790d8238df32e81d761a7e",
+      "diff": {
+        "added_paths": 2,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "initial_write": false,
+        "paths_total_previous": 564,
+        "paths_total_current": 591,
+        "paths_total_reference": 591,
+        "churn_paths": 2,
+        "churn_ratio": 0.003384,
+        "sample_paths": [
+          "$.batches.documented-probe",
+          "$.projects.documented-probe"
+        ]
+      }
+    },
+    {
+      "run_at_utc": "2026-10-04T19:29:34.348889Z",
+      "changed": false,
+      "before_digest": "sha256:2eb047f050509267fbc98d10d33000883d90788d52790d8238df32e81d761a7e",
+      "after_digest": "sha256:2eb047f050509267fbc98d10d33000883d90788d52790d8238df32e81d761a7e",
+      "diff": {
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "initial_write": false,
+        "paths_total_previous": 591,
+        "paths_total_current": 591,
+        "paths_total_reference": 591,
+        "churn_paths": 0,
+        "churn_ratio": 0.0,
+        "sample_paths": []
+      }
+    },
+    {
+      "run_at_utc": "2026-10-04T19:36:40.522971Z",
+      "changed": true,
+      "before_digest": "sha256:2eb047f050509267fbc98d10d33000883d90788d52790d8238df32e81d761a7e",
+      "after_digest": "sha256:dac6647c36463f20e6047ff022a5df4621525fb7ab89764df696ba568d377884",
+      "diff": {
+        "added_paths": 11,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 591,
+        "paths_total_current": 737,
+        "paths_total_reference": 737,
+        "churn_paths": 12,
+        "churn_ratio": 0.016282,
+        "sample_paths": [
+          "$.batches.environment-refresh",
+          "$.batches.profiled-refresh-r02",
+          "$.limits[0]",
+          "$.projects.environment-refresh-py311-journey",
+          "$.projects.environment-refresh-py311-turn-live",
+          "$.projects.environment-refresh-py312-journey",
+          "$.projects.profiled-refresh-r02-py311-turn-live",
+          "$.projects.profiled-refresh-r02-py312-turn-live",
+          "$.projects.installed-r03-py311-turn-live.retained_files",
+          "$.projects.installed-r03-py312-turn-live.retained_files"
+        ]
+      }
+    }
+  ]
+}

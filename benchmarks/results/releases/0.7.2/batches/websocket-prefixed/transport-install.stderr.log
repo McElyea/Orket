@@ -1,0 +1,4 @@
+Using Python 3.11.14 environment at: .tmp\release-0.7.1\r02\py311
+Resolved 1 package in 3ms
+Installed 1 package in 41ms
+ + websockets==16.1.1

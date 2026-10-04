@@ -1255,14 +1255,13 @@ async def test_turn_executor_hallucination_scope_contract_fails_after_reprompt(t
     with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
         result = await executor.execute_turn(_issue(), role, model, toolbox, context)
     assert result.success is False
-    assert model.calls == 2
-    assert len(toolbox.calls) == 0
+    assert model.calls == 2 and len(toolbox.calls) == 0
     assert "hallucination scope contract not met after corrective reprompt" in (result.error or "")
 
 
 @pytest.mark.contract
 @pytest.mark.asyncio
-async def test_turn_executor_hallucination_strict_grounding_ignores_non_json_residue(tmp_path):
+async def test_turn_executor_hallucination_strict_grounding_rejects_non_json_residue(tmp_path):
     executor = TurnExecutor(
         StateMachine(),
         ToolGate(organization=None, workspace_root=Path(tmp_path)),
@@ -1294,9 +1293,10 @@ async def test_turn_executor_hallucination_strict_grounding_ignores_non_json_res
     }
     with bind_logging(await prepare_logging(LoggingInputs(tmp_path))):
         result = await executor.execute_turn(_issue(), role, model, toolbox, context)
-    assert result.success is True
-    assert model.calls == 1
-    assert len(toolbox.calls) == 1
+    assert result.success is False
+    assert model.calls == 2
+    assert len(toolbox.calls) == 0
+    assert "hallucination scope contract not met after corrective reprompt" in (result.error or "")
 
 
 @pytest.mark.contract

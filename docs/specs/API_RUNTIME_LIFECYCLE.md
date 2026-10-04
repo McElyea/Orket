@@ -1,6 +1,6 @@
 # API Runtime Lifecycle
 
-Last updated: 2026-10-03
+Last updated: 2026-10-04
 Status: Active
 
 `orket.application.services.api_runtime_container.ApiRuntimeContainer` owns the
@@ -10,6 +10,16 @@ of one API application, followed by its engine. The public factory is
 `orket.interfaces.api.lifespan` enters owned `ApiRuntimePreparation`, then delegates
 initialization and runtime teardown to
 `orket.application.services.api_startup_service.api_runtime_lifespan`.
+
+Core installation includes the WebSocket transport for the existing `/ws/events`
+and `/ws/interactions/{session_id}` routes. Minimal Uvicorn alone supplies no
+WebSocket implementation; missing transport must not be treated as route success.
+Dependency repair and scope: `docs/architecture/CONTRACT_DELTA_PRR_RELIABILITY_2026-10-04.md`.
+Interaction WebSockets observe peer disconnect concurrently with outbound events.
+The request settles both transport tasks and its existing subscription before
+returning, including when the event queue is idle. Disconnect releases the observer;
+it does not cancel the separately owned model workload. Operator cancellation
+continues through the authenticated interaction cancel endpoint.
 
 The 0.6.39 construction transition is specified in
 `docs/architecture/CONTRACT_DELTA_API_CONSTRUCTION_D_2026-09-19.md`: the synchronous
@@ -372,6 +382,9 @@ five-second fixture cleanup checks are not a general API shutdown SLA.
 The scoped tests use real TCP listeners, the public app factory and lifespan,
 real detached native command trees dispatched by the authenticated approval route,
 live streaming HTTP through Uvicorn, and both real ASGI WebSocket routes through
-TestClient. The WebSocket checks are not TCP WebSocket proof. Synthetic owner
+TestClient. Those TestClient checks are not TCP WebSocket proof. PRR-v1 adds
+native TCP WebSocket controls for peer disconnection while idle and after turn
+completion; installed actual-model observations have their own release evidence.
+Synthetic owner
 failure tests cover observation semantics only. Their exact source/install
 versions, outcomes and counterexamples live in the architectural-truth plan.

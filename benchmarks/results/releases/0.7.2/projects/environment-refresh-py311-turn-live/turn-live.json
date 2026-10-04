@@ -1,0 +1,35 @@
+{
+  "proof_mode": "live",
+  "observed_path": "primary",
+  "observed_result": "failure",
+  "python": "3.11.14 (main, Jan 14 2026, 19:28:21) [MSC v.1944 64 bit (AMD64)]",
+  "provider": "llama_cpp",
+  "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+  "origin": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\final-packages-r02-py311\\Lib\\site-packages\\orket\\__init__.py",
+  "turn": {
+    "success": true,
+    "error": null,
+    "content": "{\n  \"content\": \"\",\n  \"tool_calls\": [\n    {\n      \"tool\": \"write_file\",\n      \"args\": {\n        \"path\": \"grounded.txt\",\n        \"content\": \"PRR live grounding accepted\\n\"\n      }\n    }\n  ]\n}"
+  },
+  "error": "AssertionError: b'PRR live grounding accepted\\r\\n'",
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-10-04T19:33:56.184827Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:9c65c5036778bebe1ee3cc4cda7840afba5c3789c7f6f76c5e3a9c04843784ec",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 23,
+        "paths_total_reference": 23,
+        "churn_paths": 23,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    }
+  ]
+}

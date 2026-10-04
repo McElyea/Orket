@@ -1,0 +1,10 @@
+[
+  {
+    "role": "system",
+    "content": "IDENTITY: developer\nMODE: compact governed tool turn\nRULES:\n- Return exactly one JSON object.\n- Response envelope: {\"content\":\"\",\"tool_calls\":[...]}. Each call: {\"tool\":\"<allowed tool name>\",\"args\":{...}}.\n- content must be empty when tool_calls are present.\n- No prose, no markdown fences, no labels.\n- Use only tools, paths, statuses, and facts from the TURN PACKET.\n- Call every required tool in the same response.\nGUARDRAIL: Output only the JSON object."
+  },
+  {
+    "role": "user",
+    "content": "TURN PACKET:\nIssue PRR-LIVE: Write the requested file\n\nType: CardType.ISSUE\nPriority: 2.0\n- role: developer\n- current_status: in_progress\n- stage_gate_mode: none\n- required tools: write_file\n- required write paths: grounded.txt\n- available tools: write_file\n- response shape: {\"content\":\"\",\"tool_calls\":[...]}\n- You must include all required tool calls in this same response.\n- A response containing only get_issue_context/add_issue_comment is invalid.\n- Empty or placeholder content for required write_file paths is invalid.\n- When writing Python source through write_file, prefer single-quoted literals to keep the JSON payload valid.\n- Use workspace-relative write paths exactly as listed.\n\nIssue Brief:\nDescription: Write grounded.txt with exactly PRR live grounding accepted followed by a newline."
+  }
+]

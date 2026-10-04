@@ -1,0 +1,11 @@
+INFO:     Started server process [2480]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:57053 - "WebSocket /ws/interactions/d7acf1ac-ca0a-4f05-971f-5bfa209d4bed" [accepted]
+INFO:     connection open
+INFO:     127.0.0.1:57056 - "WebSocket /ws/interactions/198dc0cf-8487-4585-b706-53ba73623faf" [accepted]
+INFO:     connection open
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [2480]

@@ -8,3 +8,4 @@ tests/proof_fixtures/outward_run/** -text whitespace=blank-at-eol,blank-at-eof,s
 
 # This release evidence retains captured bytes, including failed-command whitespace.
 benchmarks/results/releases/0.7.1/** -text -whitespace
+benchmarks/results/releases/0.7.2/** -text -whitespace

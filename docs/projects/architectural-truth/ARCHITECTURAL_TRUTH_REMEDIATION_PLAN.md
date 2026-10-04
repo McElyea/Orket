@@ -1,18 +1,26 @@
 # Architectural Truth: Executable Goal Queue
 
-Last updated: 2026-10-03 (America/Denver)
-Status: Active umbrella; bounded Windows ATG-v1 complete; v0.7.1 release cleanup checkpoint
+Last updated: 2026-10-04 (America/Denver)
+Status: Active umbrella; bounded Windows ATG-v1 and v0.7.1 cleanup complete; PRR-v1 active separately
 Queue: ATG-v1 — ten goals; Windows-only scope amended by the user on 2026-10-03
 Owner: Orket Core
 Worktree: `C:/Source/Orket` (release integration; original ATG proof worktree retained)
 Branch: `main`; accepted ATG checkpoint remains `codex/architectural-truth-bt0` / `v0.6.144`
-Next goal: **None; v0.7.1 cleanup complete subject to the publication witness below**
+Next goal: **None after the PRR-v1 publication witness succeeds; inspect its archived resume record if interrupted**
 
 ## Purpose and authority
 
-Use this file as the target for one continuing goal. Complete the listed goals in
-dependency order without requiring a replacement user prompt after each one.
-This is the lane's single canonical execution plan, indexed by `docs/ROADMAP.md`.
+This file retains the completed ATG-v1 queue, release publication witnesses and
+umbrella proof limits. The user invoked PRR-v1 on October 4, 2026. Its bounded source closeout and
+publication resume record are [archived](../archive/architectural-truth/PRR10042026/POST_RELEASE_RELIABILITY_PLAN.md).
+The matched 0.7.2 [release proof](../../releases/0.7.2/PROOF_REPORT.md) supersedes
+the earlier grounding and installed native-stream proof gaps only at its stated
+scope. Initial card-template refusals remain historical; a later independently
+replaced, template-aligned server passed bounded actual turns on both interpreters.
+Broader limits remain. No new
+queue becomes executable after its final publication witness succeeds.
+The ATG goal cards, schedules and next-action text below describe the completed
+queue and do not authorize its restart or override the PRR-v1 resume record.
 Execution workflow lives in `docs/CONTRIBUTOR.md`, including **Persistent goal
 queues**. Runtime contracts and `CURRENT_AUTHORITY.md` keep their existing authority.
 

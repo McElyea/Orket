@@ -1,0 +1,66 @@
+Building source distribution...
+running egg_info
+creating orket_extension_sdk.egg-info
+writing orket_extension_sdk.egg-info\PKG-INFO
+writing dependency_links to orket_extension_sdk.egg-info\dependency_links.txt
+writing requirements to orket_extension_sdk.egg-info\requires.txt
+writing top-level names to orket_extension_sdk.egg-info\top_level.txt
+writing manifest file 'orket_extension_sdk.egg-info\SOURCES.txt'
+reading manifest file 'orket_extension_sdk.egg-info\SOURCES.txt'
+writing manifest file 'orket_extension_sdk.egg-info\SOURCES.txt'
+running sdist
+running egg_info
+writing orket_extension_sdk.egg-info\PKG-INFO
+writing dependency_links to orket_extension_sdk.egg-info\dependency_links.txt
+writing requirements to orket_extension_sdk.egg-info\requires.txt
+writing top-level names to orket_extension_sdk.egg-info\top_level.txt
+reading manifest file 'orket_extension_sdk.egg-info\SOURCES.txt'
+writing manifest file 'orket_extension_sdk.egg-info\SOURCES.txt'
+running check
+creating orket_extension_sdk-0.7.2
+creating orket_extension_sdk-0.7.2\orket_extension_sdk.egg-info
+creating orket_extension_sdk-0.7.2\schemas
+creating orket_extension_sdk-0.7.2\workloads
+copying files to orket_extension_sdk-0.7.2...
+copying README.md -> orket_extension_sdk-0.7.2
+copying __init__.py -> orket_extension_sdk-0.7.2
+copying __version__.py -> orket_extension_sdk-0.7.2
+copying agent_broker.py -> orket_extension_sdk-0.7.2
+copying agent_fixtures.py -> orket_extension_sdk-0.7.2
+copying agent_ipc.py -> orket_extension_sdk-0.7.2
+copying agent_models.py -> orket_extension_sdk-0.7.2
+copying agent_runtime.py -> orket_extension_sdk-0.7.2
+copying agent_testing.py -> orket_extension_sdk-0.7.2
+copying agent_types.py -> orket_extension_sdk-0.7.2
+copying agent_validation.py -> orket_extension_sdk-0.7.2
+copying audio.py -> orket_extension_sdk-0.7.2
+copying capabilities.py -> orket_extension_sdk-0.7.2
+copying controller.py -> orket_extension_sdk-0.7.2
+copying errors.py -> orket_extension_sdk-0.7.2
+copying import_scan.py -> orket_extension_sdk-0.7.2
+copying llm.py -> orket_extension_sdk-0.7.2
+copying manifest.py -> orket_extension_sdk-0.7.2
+copying memory.py -> orket_extension_sdk-0.7.2
+copying piper_tts.py -> orket_extension_sdk-0.7.2
+copying py.typed -> orket_extension_sdk-0.7.2
+copying pyproject.toml -> orket_extension_sdk-0.7.2
+copying result.py -> orket_extension_sdk-0.7.2
+copying schema.py -> orket_extension_sdk-0.7.2
+copying testing.py -> orket_extension_sdk-0.7.2
+copying tui.py -> orket_extension_sdk-0.7.2
+copying validate.py -> orket_extension_sdk-0.7.2
+copying voice.py -> orket_extension_sdk-0.7.2
+copying workload.py -> orket_extension_sdk-0.7.2
+copying orket_extension_sdk.egg-info\PKG-INFO -> orket_extension_sdk-0.7.2\orket_extension_sdk.egg-info
+copying orket_extension_sdk.egg-info\SOURCES.txt -> orket_extension_sdk-0.7.2\orket_extension_sdk.egg-info
+copying orket_extension_sdk.egg-info\dependency_links.txt -> orket_extension_sdk-0.7.2\orket_extension_sdk.egg-info
+copying orket_extension_sdk.egg-info\requires.txt -> orket_extension_sdk-0.7.2\orket_extension_sdk.egg-info
+copying orket_extension_sdk.egg-info\top_level.txt -> orket_extension_sdk-0.7.2\orket_extension_sdk.egg-info
+copying schemas\__init__.py -> orket_extension_sdk-0.7.2\schemas
+copying schemas\governed_agent_loop_v1.json -> orket_extension_sdk-0.7.2\schemas
+copying workloads\__init__.py -> orket_extension_sdk-0.7.2\workloads
+copying workloads\controller.py -> orket_extension_sdk-0.7.2\workloads
+Writing orket_extension_sdk-0.7.2\setup.cfg
+Creating tar archive
+removing 'orket_extension_sdk-0.7.2' (and everything under it)
+Successfully built C:\Source\Orket\.tmp\post-release-reliability\final-packages-r02\artifacts\orket_extension_sdk-0.7.2.tar.gz

@@ -1,0 +1,25 @@
+INFO:     Started server process [45320]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  Unsupported upgrade request.
+WARNING:  No supported WebSocket library detected. Please use "pip install 'uvicorn[standard]'", or install 'websockets' or 'wsproto' manually.
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [45320]
+Traceback (most recent call last):
+  File "C:\Source\Orket\.tmp\prr_journey.py", line 145, in <module>
+    asyncio.run(main())
+  File "C:\Users\jonmc\AppData\Roaming\uv\python\cpython-3.11.14-windows-x86_64-none\Lib\asyncio\runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\jonmc\AppData\Roaming\uv\python\cpython-3.11.14-windows-x86_64-none\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\jonmc\AppData\Roaming\uv\python\cpython-3.11.14-windows-x86_64-none\Lib\asyncio\base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "C:\Source\Orket\.tmp\prr_journey.py", line 127, in main
+    assert response.status_code == 101, f'WebSocket upgrade returned {response.status_code}: {response.text}'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: WebSocket upgrade returned 404: {"detail":"Not Found"}

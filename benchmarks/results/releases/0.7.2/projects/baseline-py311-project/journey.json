@@ -1,0 +1,111 @@
+{
+  "proof_mode": "live",
+  "observed_path": "primary",
+  "observed_result": "failure",
+  "python": "3.11.14 (main, Jan 14 2026, 19:28:21) [MSC v.1944 64 bit (AMD64)]",
+  "version": "0.7.1",
+  "origins": {
+    "orket": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\baseline-py311\\Lib\\site-packages\\orket\\__init__.py",
+    "sdk": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\baseline-py311\\Lib\\site-packages\\orket_extension_sdk\\__init__.py"
+  },
+  "environment": {
+    "ORKET_DISABLE_SANDBOX": "1",
+    "ORKET_STREAM_EVENTS_V1": "true",
+    "ORKET_MODEL_STREAM_PROVIDER": "real",
+    "ORKET_MODEL_STREAM_REAL_PROVIDER": "llama_cpp",
+    "ORKET_MODEL_STREAM_REAL_MODEL_ID": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+    "ORKET_MODEL_STREAM_OPENAI_USE_STREAM": "true",
+    "ORKET_LLAMA_CPP_BASE_URL": "http://127.0.0.1:8080/v1",
+    "ORKET_MODULE_PROFILE": "developer-local",
+    "ORKET_PROVIDER_RUNTIME_AUTO_SELECT_MODEL": "0",
+    "ORKET_PROVIDER_RUNTIME_AUTO_LOAD_LOCAL_MODEL": "0",
+    "ORKET_MODEL_STREAM_REAL_TIMEOUT_S": "120",
+    "ORKET_MODEL_STREAM_TURN_TIMEOUT_S": "120",
+    "ORKET_GOVERNED_AGENT_SUPERVISOR_ENABLED": "0",
+    "ORKET_DURABLE_ROOT": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\baseline-py311-project\\.orket\\durable"
+  },
+  "provider": "llama_cpp",
+  "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+  "project": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\baseline-py311-project",
+  "turns": [],
+  "model_catalog": {
+    "models": [
+      {
+        "name": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "modified_at": "",
+        "size": "",
+        "digest": "",
+        "type": "model",
+        "description": "",
+        "tags": [
+          ""
+        ],
+        "capabilities": [
+          "completion"
+        ],
+        "parameters": "",
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "",
+          "families": [
+            ""
+          ],
+          "parameter_size": "",
+          "quantization_level": ""
+        }
+      }
+    ],
+    "object": "list",
+    "data": [
+      {
+        "id": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "aliases": [
+          "orcarouter_qwen3.8-27b-uncensored-q4_k_l"
+        ],
+        "tags": [],
+        "object": "model",
+        "created": 1791139396,
+        "owned_by": "llamacpp",
+        "meta": {
+          "vocab_type": 2,
+          "n_vocab": 248320,
+          "n_ctx": 8192,
+          "n_ctx_train": 262144,
+          "n_embd": 5120,
+          "n_params": 27320697856,
+          "size": 18705158144,
+          "ftype": "Q4_K - Medium"
+        }
+      }
+    ]
+  },
+  "websocket_upgrade_status": 404,
+  "cleanup": {
+    "runtime_closed": true,
+    "requests": 0,
+    "background_tasks": 0
+  },
+  "error": "AssertionError: WebSocket upgrade returned 404: {\"detail\":\"Not Found\"}",
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-10-04T18:43:16.589944Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:7d0805c40eada83873e597b4219fc3c848541512e6da5626b63bf91be73ddf85",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 134,
+        "paths_total_reference": 134,
+        "churn_paths": 134,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    }
+  ]
+}

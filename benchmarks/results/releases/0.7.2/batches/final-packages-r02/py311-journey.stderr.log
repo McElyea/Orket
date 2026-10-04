@@ -1,0 +1,11 @@
+INFO:     Started server process [46576]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:56935 - "WebSocket /ws/interactions/9ed9d844-a6ed-41c8-bd5a-32d66601c497" [accepted]
+INFO:     connection open
+INFO:     127.0.0.1:56942 - "WebSocket /ws/interactions/ef7a9164-df86-4be6-a08b-0bba71ca505f" [accepted]
+INFO:     connection open
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [46576]

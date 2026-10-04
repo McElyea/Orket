@@ -1,0 +1,5 @@
+INFO:     127.0.0.1:50695 - "POST /v1/interactions/sessions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50695 - "POST /v1/interactions/d3dd7451-945e-4b36-bc18-4a0ea7476ca6/turns HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54200 - "GET /v1/sessions/d3dd7451-945e-4b36-bc18-4a0ea7476ca6/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54200 - "GET /v1/sessions/d3dd7451-945e-4b36-bc18-4a0ea7476ca6/snapshot HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54200 - "GET /v1/sessions/d3dd7451-945e-4b36-bc18-4a0ea7476ca6/replay HTTP/1.1" 200 OK

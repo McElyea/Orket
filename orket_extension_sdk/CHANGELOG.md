@@ -4,6 +4,14 @@ All notable changes to `orket-extension-sdk` will be documented in this file.
 
 The format is based on Keep a Changelog and this package follows SemVer while in the `0.x` line.
 
+## [0.7.2] - 2026-10-04
+
+### Changed
+- Advance version identity for the matched Windows core 0.7.2 pair. SDK implementation
+  and public contracts remain unchanged; this is a packaging/compatibility patch.
+- Pair acceptance requires the core 0.7.2 release proof; other cross-pairings are
+  unverified. Existing released pairs retain their historical evidence.
+
 ## [0.7.1] - 2026-10-03
 
 ### Changed

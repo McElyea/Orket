@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="2" time="7.807" timestamp="2026-10-04T12:51:18.741128-06:00" hostname="DESKTOP-H0S3F53"><testcase classname="tests.integration.test_api_websocket_disconnect" name="test_disconnected_interaction_releases_request_before_shutdown[idle]" time="3.431"><failure message="TimeoutError">tests\integration\test_api_websocket_disconnect.py:35: in test_disconnected_interaction_releases_request_before_shutdown
+    await asyncio.sleep(0.01)
+C:\Users\jonmc\AppData\Roaming\uv\python\cpython-3.11.14-windows-x86_64-none\Lib\asyncio\tasks.py:649: in sleep
+    return await future
+           ^^^^^^^^^^^^
+E   asyncio.exceptions.CancelledError
+
+The above exception was the direct cause of the following exception:
+tests\integration\test_api_websocket_disconnect.py:33: in test_disconnected_interaction_releases_request_before_shutdown
+    async with asyncio.timeout(3):
+C:\Users\jonmc\AppData\Roaming\uv\python\cpython-3.11.14-windows-x86_64-none\Lib\asyncio\timeouts.py:115: in __aexit__
+    raise TimeoutError from exc_val
+E   TimeoutError</failure></testcase><testcase classname="tests.integration.test_api_websocket_disconnect" name="test_disconnected_interaction_releases_request_before_shutdown[completed]" time="3.329"><failure message="TimeoutError">tests\integration\test_api_websocket_disconnect.py:35: in test_disconnected_interaction_releases_request_before_shutdown
+    await asyncio.sleep(0.01)
+C:\Users\jonmc\AppData\Roaming\uv\python\cpython-3.11.14-windows-x86_64-none\Lib\asyncio\tasks.py:649: in sleep
+    return await future
+           ^^^^^^^^^^^^
+E   asyncio.exceptions.CancelledError
+
+The above exception was the direct cause of the following exception:
+tests\integration\test_api_websocket_disconnect.py:33: in test_disconnected_interaction_releases_request_before_shutdown
+    async with asyncio.timeout(3):
+C:\Users\jonmc\AppData\Roaming\uv\python\cpython-3.11.14-windows-x86_64-none\Lib\asyncio\timeouts.py:115: in __aexit__
+    raise TimeoutError from exc_val
+E   TimeoutError</failure></testcase></testsuite></testsuites>

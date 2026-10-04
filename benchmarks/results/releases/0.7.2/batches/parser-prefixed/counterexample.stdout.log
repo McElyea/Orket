@@ -1,0 +1,124 @@
+.......................................FFFFFFF.FF.....FF                 [100%]
+================================== FAILURES ===================================
+_ test_parser_to_grounding_preserves_prose_word_boundaries[Maybe this is a forbidden claim.] _
+tests\integration\test_turn_response_parser_admission.py:136: in test_parser_to_grounding_preserves_prose_word_boundaries
+    assert [item["rule_id"] for item in diagnostics["violations"]] == ["HALLUCINATION.INVENTED_DETAIL"]
+E   AssertionError: assert [] == ['HALLUCINATI...ENTED_DETAIL']
+E     
+E     Right contains one more item: 'HALLUCINATION.INVENTED_DETAIL'
+E     Use -v to get more diff
+------------------------------ Captured log call ------------------------------
+INFO     orket:log_publication.py:290 tool_parser_diagnostic
+INFO     orket:log_publication.py:290 tool_parser_diagnostic
+_ test_parser_to_grounding_preserves_prose_word_boundaries[Maybe\tthis should work.] _
+tests\integration\test_turn_response_parser_admission.py:136: in test_parser_to_grounding_preserves_prose_word_boundaries
+    assert [item["rule_id"] for item in diagnostics["violations"]] == ["HALLUCINATION.INVENTED_DETAIL"]
+E   AssertionError: assert [] == ['HALLUCINATI...ENTED_DETAIL']
+E     
+E     Right contains one more item: 'HALLUCINATION.INVENTED_DETAIL'
+E     Use -v to get more diff
+------------------------------ Captured log call ------------------------------
+INFO     orket:log_publication.py:290 tool_parser_diagnostic
+INFO     orket:log_publication.py:290 tool_parser_diagnostic
+_ test_parser_to_grounding_preserves_prose_word_boundaries[Maybe\nthis should work.] _
+tests\integration\test_turn_response_parser_admission.py:136: in test_parser_to_grounding_preserves_prose_word_boundaries
+    assert [item["rule_id"] for item in diagnostics["violations"]] == ["HALLUCINATION.INVENTED_DETAIL"]
+E   AssertionError: assert [] == ['HALLUCINATI...ENTED_DETAIL']
+E     
+E     Right contains one more item: 'HALLUCINATION.INVENTED_DETAIL'
+E     Use -v to get more diff
+------------------------------ Captured log call ------------------------------
+INFO     orket:log_publication.py:290 tool_parser_diagnostic
+INFO     orket:log_publication.py:290 tool_parser_diagnostic
+_ test_parser_to_grounding_preserves_prose_word_boundaries[Maybe\r\nthis should work.] _
+tests\integration\test_turn_response_parser_admission.py:136: in test_parser_to_grounding_preserves_prose_word_boundaries
+    assert [item["rule_id"] for item in diagnostics["violations"]] == ["HALLUCINATION.INVENTED_DETAIL"]
+E   AssertionError: assert [] == ['HALLUCINATI...ENTED_DETAIL']
+E     
+E     Right contains one more item: 'HALLUCINATION.INVENTED_DETAIL'
+E     Use -v to get more diff
+------------------------------ Captured log call ------------------------------
+INFO     orket:log_publication.py:290 tool_parser_diagnostic
+INFO     orket:log_publication.py:290 tool_parser_diagnostic
+_ test_parser_to_grounding_preserves_prose_word_boundaries[I assume this should work.] _
+tests\integration\test_turn_response_parser_admission.py:136: in test_parser_to_grounding_preserves_prose_word_boundaries
+    assert [item["rule_id"] for item in diagnostics["violations"]] == ["HALLUCINATION.INVENTED_DETAIL"]
+E   AssertionError: assert [] == ['HALLUCINATI...ENTED_DETAIL']
+E     
+E     Right contains one more item: 'HALLUCINATION.INVENTED_DETAIL'
+E     Use -v to get more diff
+------------------------------ Captured log call ------------------------------
+INFO     orket:log_publication.py:290 tool_parser_diagnostic
+INFO     orket:log_publication.py:290 tool_parser_diagnostic
+_ test_parser_to_grounding_preserves_prose_word_boundaries[Probably this works.] _
+tests\integration\test_turn_response_parser_admission.py:136: in test_parser_to_grounding_preserves_prose_word_boundaries
+    assert [item["rule_id"] for item in diagnostics["violations"]] == ["HALLUCINATION.INVENTED_DETAIL"]
+E   AssertionError: assert [] == ['HALLUCINATI...ENTED_DETAIL']
+E     
+E     Right contains one more item: 'HALLUCINATION.INVENTED_DETAIL'
+E     Use -v to get more diff
+------------------------------ Captured log call ------------------------------
+INFO     orket:log_publication.py:290 tool_parser_diagnostic
+INFO     orket:log_publication.py:290 tool_parser_diagnostic
+_ test_parser_to_grounding_preserves_prose_word_boundaries[It was ASSUMED safe.] _
+tests\integration\test_turn_response_parser_admission.py:136: in test_parser_to_grounding_preserves_prose_word_boundaries
+    assert [item["rule_id"] for item in diagnostics["violations"]] == ["HALLUCINATION.INVENTED_DETAIL"]
+E   AssertionError: assert [] == ['HALLUCINATI...ENTED_DETAIL']
+E     
+E     Right contains one more item: 'HALLUCINATION.INVENTED_DETAIL'
+E     Use -v to get more diff
+------------------------------ Captured log call ------------------------------
+INFO     orket:log_publication.py:290 tool_parser_diagnostic
+INFO     orket:log_publication.py:290 tool_parser_diagnostic
+_ test_parser_to_grounding_preserves_prose_word_boundaries[Maybe{"tool": "read_file", "args": {"path": "input.txt"}}this works.] _
+tests\integration\test_turn_response_parser_admission.py:136: in test_parser_to_grounding_preserves_prose_word_boundaries
+    assert [item["rule_id"] for item in diagnostics["violations"]] == ["HALLUCINATION.INVENTED_DETAIL"]
+E   AssertionError: assert [] == ['HALLUCINATI...ENTED_DETAIL']
+E     
+E     Right contains one more item: 'HALLUCINATION.INVENTED_DETAIL'
+E     Use -v to get more diff
+------------------------------ Captured log call ------------------------------
+INFO     orket:log_publication.py:290 tool_parser_diagnostic
+INFO     orket:log_publication.py:290 tool_parser_diagnostic
+_ test_parser_to_grounding_preserves_prose_word_boundaries[Maybe[{"tool": "read_file", "args": {"path": "input.txt"}}]this works.] _
+tests\integration\test_turn_response_parser_admission.py:136: in test_parser_to_grounding_preserves_prose_word_boundaries
+    assert [item["rule_id"] for item in diagnostics["violations"]] == ["HALLUCINATION.INVENTED_DETAIL"]
+E   AssertionError: assert [] == ['HALLUCINATI...ENTED_DETAIL']
+E     
+E     Right contains one more item: 'HALLUCINATION.INVENTED_DETAIL'
+E     Use -v to get more diff
+------------------------------ Captured log call ------------------------------
+INFO     orket:log_publication.py:290 tool_parser_diagnostic
+INFO     orket:log_publication.py:290 tool_parser_diagnostic
+___ test_scope_budgets_grounding_and_interface_diagnostics_remain_distinct ____
+tests\application\test_turn_contract_rule_admission.py:81: in test_scope_budgets_grounding_and_interface_diagnostics_remain_distinct
+    assert [item["rule_id"] for item in result["violations"]] == ["HALLUCINATION." + suffix for suffix in [
+E   AssertionError: assert ['HALLUCINATI...T_FOUND', ...] == ['HALLUCINATI...T_FOUND', ...]
+E     
+E     At index 8 diff: 'HALLUCINATION.CONTRADICTION' != 'HALLUCINATION.INVENTED_DETAIL'
+E     Right contains one more item: 'HALLUCINATION.CONTRADICTION'
+E     Use -v to get more diff
+_ test_turn_executor_hallucination_strict_grounding_rejects_non_json_residue __
+tests\application\test_turn_executor_middleware.py:1297: in test_turn_executor_hallucination_strict_grounding_rejects_non_json_residue
+    assert result.success is False
+E   assert True is False
+E    +  where True = TurnResult(success=True, turn=ExecutionTurn(role='code_reviewer', issue_id='ISSUE-1', thought=None, content='{"tool": ...tack_json'}, partial_parse_failure=False, error=None, error_class=None), error=None, should_retry=False, violations=[]).success
+------------------------------ Captured log call ------------------------------
+INFO     orket:log_publication.py:290 turn_start
+INFO     orket:log_publication.py:290 tool_parser_diagnostic
+INFO     orket:log_publication.py:290 tool_parser_diagnostic
+INFO     orket:log_publication.py:290 tool_call_start
+INFO     orket:log_publication.py:290 tool_call_result
+=========================== short test summary info ===========================
+FAILED tests/integration/test_turn_response_parser_admission.py::test_parser_to_grounding_preserves_prose_word_boundaries[Maybe this is a forbidden claim.]
+FAILED tests/integration/test_turn_response_parser_admission.py::test_parser_to_grounding_preserves_prose_word_boundaries[Maybe\tthis should work.]
+FAILED tests/integration/test_turn_response_parser_admission.py::test_parser_to_grounding_preserves_prose_word_boundaries[Maybe\nthis should work.]
+FAILED tests/integration/test_turn_response_parser_admission.py::test_parser_to_grounding_preserves_prose_word_boundaries[Maybe\r\nthis should work.]
+FAILED tests/integration/test_turn_response_parser_admission.py::test_parser_to_grounding_preserves_prose_word_boundaries[I assume this should work.]
+FAILED tests/integration/test_turn_response_parser_admission.py::test_parser_to_grounding_preserves_prose_word_boundaries[Probably this works.]
+FAILED tests/integration/test_turn_response_parser_admission.py::test_parser_to_grounding_preserves_prose_word_boundaries[It was ASSUMED safe.]
+FAILED tests/integration/test_turn_response_parser_admission.py::test_parser_to_grounding_preserves_prose_word_boundaries[Maybe{"tool": "read_file", "args": {"path": "input.txt"}}this works.]
+FAILED tests/integration/test_turn_response_parser_admission.py::test_parser_to_grounding_preserves_prose_word_boundaries[Maybe[{"tool": "read_file", "args": {"path": "input.txt"}}]this works.]
+FAILED tests/application/test_turn_contract_rule_admission.py::test_scope_budgets_grounding_and_interface_diagnostics_remain_distinct
+FAILED tests/application/test_turn_executor_middleware.py::test_turn_executor_hallucination_strict_grounding_rejects_non_json_residue
+11 failed, 45 passed in 1.96s

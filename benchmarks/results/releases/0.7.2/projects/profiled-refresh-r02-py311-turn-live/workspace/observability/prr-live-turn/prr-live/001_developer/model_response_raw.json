@@ -1,0 +1,518 @@
+{
+  "openai_compat": {
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "{\n  \"content\": \"\",\n  \"tool_calls\": [\n    {\n      \"tool\": \"write_file\",\n      \"args\": {\n        \"path\": \"grounded.txt\",\n        \"content\": \"PRR live grounding accepted\\n\"\n      }\n    }\n  ]\n}"
+        }
+      }
+    ],
+    "created": 1791142483,
+    "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+    "system_fingerprint": "b11146-7fe450e19",
+    "object": "chat.completion",
+    "usage": {
+      "completion_tokens": 67,
+      "prompt_tokens": 316,
+      "total_tokens": 383,
+      "prompt_tokens_details": {
+        "cached_tokens": 312
+      }
+    },
+    "id": "chatcmpl-d2xGmj5gRUzhjyTJ0uJnQAvns6Vy9F6b",
+    "timings": {
+      "cache_n": 312,
+      "prompt_n": 4,
+      "prompt_ms": 333.959,
+      "prompt_per_token_ms": 83.48975,
+      "prompt_per_second": 11.977518198341713,
+      "predicted_n": 67,
+      "predicted_ms": 1573.985,
+      "predicted_per_token_ms": 23.848257575757575,
+      "predicted_per_second": 41.93178461039972
+    }
+  },
+  "tool_calls": [],
+  "input_tokens": 316,
+  "output_tokens": 67,
+  "total_tokens": 383,
+  "usage": {
+    "prompt_tokens": 316,
+    "completion_tokens": 67,
+    "total_tokens": 383
+  },
+  "timing_schema_version": "model_provider_timing.v1",
+  "timings": {
+    "prompt_ms": 333.959,
+    "predicted_ms": 1573.985,
+    "total_ms": null
+  },
+  "latency_measurement": {
+    "source": "perf_counter",
+    "scope": "successful_attempt_until_response_observed"
+  },
+  "provider": "openai-compat",
+  "provider_backend": "openai_compat",
+  "provider_name": "llama_cpp",
+  "base_url": "http://127.0.0.1:8080/v1",
+  "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+  "requested_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+  "provider_session_epoch": 0,
+  "context_reset_status": "fresh_context",
+  "retries": 0,
+  "latency_ms": 1918,
+  "response_chars": 189,
+  "orket_session_id": "prr-live-turn",
+  "orket_session_epoch": 0,
+  "orket_request_id": "orket-1791142481265251000",
+  "prompt_fingerprint": "382d95effa2b0f30804abe15081bd540987d23fa902fdfd4acfcda4b69d66ee4",
+  "request_payload_byte_count": 1577,
+  "model_alias": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+  "orket_trace": {
+    "provider_backend": "openai_compat",
+    "provider_name": "llama_cpp"
+  },
+  "http": {
+    "status_code": 200,
+    "response_headers": {
+      "server": "llama.cpp",
+      "content-type": "application/json; charset=utf-8"
+    }
+  },
+  "runtime_target": {
+    "requested_provider": "llama_cpp",
+    "canonical_provider": "openai_compat",
+    "requested_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+    "model_id": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+    "base_url": "http://127.0.0.1:8080/v1",
+    "resolution_mode": "requested",
+    "inventory_source": "http_models+gguf_inventory",
+    "available_models": [
+      "orcarouter_qwen3.8-27b-uncensored-q4_k_l"
+    ],
+    "loaded_models_before": [],
+    "loaded_models_after": [],
+    "auto_load_attempted": false,
+    "auto_load_performed": false,
+    "status": "OK",
+    "gguf_model_root": "D:\\Models\\GGUF",
+    "gguf_inventory_status": "OK",
+    "gguf_models": [
+      {
+        "alias": "dark-osmosis-24b-v1.0-q6_k",
+        "digest_status": "pending",
+        "error": "",
+        "path": "D:\\Models\\GGUF\\ReadyArt\\Dark-Osmosis-24B-v1.0-GGUF\\Dark-Osmosis-24B-v1.0-Q6_K.gguf",
+        "sha256": "",
+        "size_bytes": 19345939584
+      },
+      {
+        "alias": "deepseek-r1-distill-qwen-14b-q6_k",
+        "digest_status": "pending",
+        "error": "",
+        "path": "D:\\Models\\GGUF\\bartowski\\DeepSeek-R1-Distill-Qwen-14B-GGUF\\DeepSeek-R1-Distill-Qwen-14B-Q6_K.gguf",
+        "sha256": "",
+        "size_bytes": 12124683680
+      },
+      {
+        "alias": "forgotten-safeword-12b-v4.0.q4_k_s",
+        "digest_status": "pending",
+        "error": "",
+        "path": "D:\\Models\\GGUF\\mradermacher\\Forgotten-Safeword-12B-v4.0-GGUF\\Forgotten-Safeword-12B-v4.0.Q4_K_S.gguf",
+        "sha256": "",
+        "size_bytes": 7120201056
+      },
+      {
+        "alias": "functiongemma-270m-it-q8_0",
+        "digest_status": "pending",
+        "error": "",
+        "path": "D:\\Models\\GGUF\\unsloth\\functiongemma-270m-it-GGUF\\functiongemma-270m-it-Q8_0.gguf",
+        "sha256": "",
+        "size_bytes": 291558624
+      },
+      {
+        "alias": "functiongemma-270m-it.q8_0",
+        "digest_status": "pending",
+        "error": "",
+        "path": "D:\\Models\\GGUF\\mingxilei\\functiongemma-270m-it-unsloth-bnb-4bit-ft-QAT-GGUF\\functiongemma-270m-it.Q8_0.gguf",
+        "sha256": "",
+        "size_bytes": 291557856
+      },
+      {
+        "alias": "gemma-3-12b-it-qat-q4_k_s",
+        "digest_status": "pending",
+        "error": "",
+        "path": "D:\\Models\\GGUF\\unsloth\\gemma-3-12b-it-qat-GGUF\\gemma-3-12b-it-qat-Q4_K_S.gguf",
+        "sha256": "",
+        "size_bytes": 6935333248
+      },
+      {
+        "alias": "gemma-3-4b-it-q4_k_m",
+        "digest_status": "pending",
+        "error": "",
+        "path": "D:\\Models\\GGUF\\ggml-org\\gemma-3-4b-it-GGUF\\gemma-3-4b-it-Q4_K_M.gguf",
+        "sha256": "",
+        "size_bytes": 2489757856
+      },
+      {
+        "alias": "gemma-3-4b-it-qat-q4_k_s",
+        "digest_status": "pending",
+        "error": "",
+        "path": "D:\\Models\\GGUF\\unsloth\\gemma-3-4b-it-qat-GGUF\\gemma-3-4b-it-qat-Q4_K_S.gguf",
+        "sha256": "",
+        "size_bytes": 2377929856
+      },
+      {
+        "alias": "gemma-4-26b-a4b-it-q4_k_m",
+        "digest_status": "pending",
+        "error": "",
+        "path": "D:\\Models\\GGUF\\lmstudio-community\\gemma-4-26B-A4B-it-GGUF\\gemma-4-26B-A4B-it-Q4_K_M.gguf",
+        "sha256": "",
+        "size_bytes": 16796010624
+      },
+      {
+        "alias": "google_gemma-4-26b-a4b-it-q5_k_m",
+        "digest_status": "pending",
+        "error": "",
+        "path": "D:\\Models\\GGUF\\bartowski\\google_gemma-4-26B-A4B-it-GGUF\\google_gemma-4-26B-A4B-it-Q5_K_M.gguf",
+        "sha256": "",
+        "size_bytes": 19319198848
+      },
+      {
+        "alias": "huihui-qwen3-30b-a3b-instruct-2507-abliterated.q4_k_s",
+        "digest_status": "pending",
+        "error": "",
+        "path": "D:\\Models\\GGUF\\mradermacher\\Huihui-Qwen3-30B-A3B-Instruct-2507-abliterated-GGUF\\Huihui-Qwen3-30B-A3B-Instruct-2507-abliterated.Q4_K_S.gguf",
+        "sha256": "",
+        "size_bytes": 17456009888
+      },
+      {
+        "alias": "magistral-small-2509-q4_k_m",
+        "digest_status": "pending",
+        "error": "",
+        "path": "D:\\Models\\GGUF\\lmstudio-community\\Magistral-Small-2509-GGUF\\Magistral-Small-2509-Q4_K_M.gguf",
+        "sha256": "",
+        "size_bytes": 14333911104
+      },
+      {
+        "alias": "mistralai_magistral-small-2509-q5_k_m",
+        "digest_status": "pending",
+        "error": "",
+        "path": "D:\\Models\\GGUF\\bartowski\\mistralai_Magistral-Small-2509-GGUF\\mistralai_Magistral-Small-2509-Q5_K_M.gguf",
+        "sha256": "",
+        "size_bytes": 16763986912
+      },
+      {
+        "alias": "mistralai_mistral-small-3.1-24b-instruct-2503-q4_k_m",
+        "digest_status": "pending",
+        "error": "",
+        "path": "D:\\Models\\GGUF\\bartowski\\mistralai_Mistral-Small-3.1-24B-Instruct-2503-GGUF\\mistralai_Mistral-Small-3.1-24B-Instruct-2503-Q4_K_M.gguf",
+        "sha256": "",
+        "size_bytes": 14333910496
+      },
+      {
+        "alias": "mmproj-f32",
+        "digest_status": "pending",
+        "error": "",
+        "path": "D:\\Models\\GGUF\\unsloth\\Qwen3.5-0.8B-GGUF\\mmproj-F32.gguf",
+        "sha256": "",
+        "size_bytes": 402381664
+      },
+      {
+        "alias": "mmproj-f32",
+        "digest_status": "pending",
+        "error": "",
+        "path": "D:\\Models\\GGUF\\unsloth\\gemma-3-12b-it-qat-GGUF\\mmproj-F32.gguf",
+        "sha256": "",
+        "size_bytes": 1676341376
+      },
+      {
+        "alias": "mmproj-f32",
+        "digest_status": "pending",
+        "error": "",
+        "path": "D:\\Models\\GGUF\\unsloth\\gemma-3-4b-it-qat-GGUF\\mmproj-F32.gguf",
+        "sha256": "",
+        "size_bytes": 1673392256
+      },
+      {
+        "alias": "mmproj-gemma-4-26b-a4b-it-bf16",
+        "digest_status": "pending",
+        "error": "",
+        "path": "D:\\Models\\GGUF\\lmstudio-community\\gemma-4-26B-A4B-it-GGUF\\mmproj-gemma-4-26B-A4B-it-BF16.gguf",
+        "sha256": "",
+        "size_bytes": 1194827744
+      },
+      {
+        "alias": "mmproj-google_gemma-4-26b-a4b-it-f16",
+        "digest_status": "pending",
+        "error": "",
+        "path": "D:\\Models\\GGUF\\bartowski\\google_gemma-4-26B-A4B-it-GGUF\\mmproj-google_gemma-4-26B-A4B-it-f16.gguf",
+        "sha256": "",
+        "size_bytes": 1193058528
+      },
+      {
+        "alias": "mmproj-magistral-small-2509-f16",
+        "digest_status": "pending",
+        "error": "",
+        "path": "D:\\Models\\GGUF\\lmstudio-community\\Magistral-Small-2509-GGUF\\mmproj-Magistral-Small-2509-F16.gguf",
+        "sha256": "",
+        "size_bytes": 878053344
+      },
+      {
+        "alias": "mmproj-mistralai_mistral-small-3.1-24b-instruct-2503-f16",
+        "digest_status": "pending",
+        "error": "",
+        "path": "D:\\Models\\GGUF\\bartowski\\mistralai_Mistral-Small-3.1-24B-Instruct-2503-GGUF\\mmproj-mistralai_Mistral-Small-3.1-24B-Instruct-2503-f16.gguf",
+        "sha256": "",
+        "size_bytes": 878054144
+      },
+      {
+        "alias": "mmproj-model-f16",
+        "digest_status": "pending",
+        "error": "",
+        "path": "D:\\Models\\GGUF\\ggml-org\\gemma-3-4b-it-GGUF\\mmproj-model-f16.gguf",
+        "sha256": "",
+        "size_bytes": 851251104
+      },
+      {
+        "alias": "mmproj-orcarouter_qwen3.8-27b-uncensored-f16",
+        "digest_status": "pending",
+        "error": "",
+        "path": "D:\\Models\\GGUF\\bartowski\\orcarouter_Qwen3.8-27B-Uncensored-GGUF\\mmproj-orcarouter_Qwen3.8-27B-Uncensored-f16.gguf",
+        "sha256": "",
+        "size_bytes": 927607584
+      },
+      {
+        "alias": "mmproj-qwen3.5-35b-a3b-bf16",
+        "digest_status": "pending",
+        "error": "",
+        "path": "D:\\Models\\GGUF\\lmstudio-community\\Qwen3.5-35B-A3B-GGUF\\mmproj-Qwen3.5-35B-A3B-BF16.gguf",
+        "sha256": "",
+        "size_bytes": 902822016
+      },
+      {
+        "alias": "mmproj-qwen3.5-9b-bf16",
+        "digest_status": "pending",
+        "error": "",
+        "path": "D:\\Models\\GGUF\\lmstudio-community\\Qwen3.5-9B-GGUF\\mmproj-Qwen3.5-9B-BF16.gguf",
+        "sha256": "",
+        "size_bytes": 921704480
+      },
+      {
+        "alias": "mmproj-qwen3.8-27b-bf16",
+        "digest_status": "pending",
+        "error": "",
+        "path": "D:\\Models\\GGUF\\lmstudio-community\\Qwen3.8-27B-GGUF\\mmproj-Qwen3.8-27B-BF16.gguf",
+        "sha256": "",
+        "size_bytes": 931145856
+      },
+      {
+        "alias": "mmproj-qwen_qwen3.5-27b-f16",
+        "digest_status": "pending",
+        "error": "",
+        "path": "D:\\Models\\GGUF\\bartowski\\Qwen_Qwen3.5-27B-GGUF\\mmproj-Qwen_Qwen3.5-27B-f16.gguf",
+        "sha256": "",
+        "size_bytes": 927607104
+      },
+      {
+        "alias": "nomic-embed-text-v1.5.q4_k_m",
+        "digest_status": "pending",
+        "error": "",
+        "path": "D:\\Models\\GGUF\\nomic-ai\\nomic-embed-text-v1.5-GGUF\\nomic-embed-text-v1.5.Q4_K_M.gguf",
+        "sha256": "",
+        "size_bytes": 84106624
+      },
+      {
+        "alias": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "digest_status": "pending",
+        "error": "",
+        "path": "D:\\Models\\GGUF\\bartowski\\orcarouter_Qwen3.8-27B-Uncensored-GGUF\\orcarouter_Qwen3.8-27B-Uncensored-Q4_K_L.gguf",
+        "sha256": "",
+        "size_bytes": 18716154112
+      },
+      {
+        "alias": "qwen3.5-0.8b-q8_0",
+        "digest_status": "pending",
+        "error": "",
+        "path": "D:\\Models\\GGUF\\unsloth\\Qwen3.5-0.8B-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+        "sha256": "",
+        "size_bytes": 811843840
+      },
+      {
+        "alias": "qwen3.5-35b-a3b-q4_k_m",
+        "digest_status": "pending",
+        "error": "",
+        "path": "D:\\Models\\GGUF\\lmstudio-community\\Qwen3.5-35B-A3B-GGUF\\Qwen3.5-35B-A3B-Q4_K_M.gguf",
+        "sha256": "",
+        "size_bytes": 21169116992
+      },
+      {
+        "alias": "qwen3.5-9b-q4_k_m",
+        "digest_status": "pending",
+        "error": "",
+        "path": "D:\\Models\\GGUF\\lmstudio-community\\Qwen3.5-9B-GGUF\\Qwen3.5-9B-Q4_K_M.gguf",
+        "sha256": "",
+        "size_bytes": 5627044256
+      },
+      {
+        "alias": "qwen3.6-27b-q4_k_m",
+        "digest_status": "pending",
+        "error": "",
+        "path": "D:\\Models\\GGUF\\Qwen3.6-27B-Q4_K_M.gguf",
+        "sha256": "",
+        "size_bytes": 16817244384
+      },
+      {
+        "alias": "qwen3.6-27b-q4_k_m",
+        "digest_status": "pending",
+        "error": "",
+        "path": "D:\\Models\\GGUF\\local\\Qwen3.6-27B-GGUF\\Qwen3.6-27B-Q4_K_M.gguf",
+        "sha256": "",
+        "size_bytes": 16817244384
+      },
+      {
+        "alias": "qwen3.8-27b-q4_k_m",
+        "digest_status": "pending",
+        "error": "",
+        "path": "D:\\Models\\GGUF\\lmstudio-community\\Qwen3.8-27B-GGUF\\Qwen3.8-27B-Q4_K_M.gguf",
+        "sha256": "",
+        "size_bytes": 16810714336
+      },
+      {
+        "alias": "qwen_qwen3-14b-q6_k",
+        "digest_status": "pending",
+        "error": "",
+        "path": "D:\\Models\\GGUF\\bartowski\\Qwen_Qwen3-14B-GGUF\\Qwen_Qwen3-14B-Q6_K.gguf",
+        "sha256": "",
+        "size_bytes": 12121937952
+      },
+      {
+        "alias": "qwen_qwen3.5-27b-q4_k_s",
+        "digest_status": "pending",
+        "error": "",
+        "path": "D:\\Models\\GGUF\\bartowski\\Qwen_Qwen3.5-27B-GGUF\\Qwen_Qwen3.5-27B-Q4_K_S.gguf",
+        "sha256": "",
+        "size_bytes": 16090121760
+      },
+      {
+        "alias": "satyr-v0.1-4b-f16",
+        "digest_status": "pending",
+        "error": "",
+        "path": "D:\\Models\\GGUF\\PantheonUnbound\\Satyr-V0.1-4B\\Satyr-V0.1-4B-F16.gguf",
+        "sha256": "",
+        "size_bytes": 8051284768
+      },
+      {
+        "alias": "satyr-v0.1-4b-q8_0",
+        "digest_status": "pending",
+        "error": "",
+        "path": "D:\\Models\\GGUF\\PantheonUnbound\\Satyr-V0.1-4B\\Satyr-V0.1-4B-Q8_0.gguf",
+        "sha256": "",
+        "size_bytes": 4280404768
+      }
+    ]
+  },
+  "openai_request_message_count": 2,
+  "openai_request_role_sequence": [
+    "system",
+    "user"
+  ],
+  "openai_request_role_counts": {
+    "system": 1,
+    "user": 1
+  },
+  "openai_request_payload_shape": {
+    "endpoint": "/chat/completions",
+    "message_count": 2,
+    "role_sequence": [
+      "system",
+      "user"
+    ],
+    "has_tools": false,
+    "has_tool_choice": false,
+    "stream": false,
+    "stop_count": 3
+  },
+  "openai_native_tool_names": [],
+  "openai_tool_choice": null,
+  "openai_native_payload_overrides": {},
+  "local_prompt_provider": "llama_cpp",
+  "local_prompting_mode": "shadow",
+  "task_class": "tool_call",
+  "profile_id": "llama_cpp.qwen3.8.chatml.v1",
+  "template_family": "chatml",
+  "template_version": "orket_qwen38_text_chatml_2026_09",
+  "template_hash": "a7cc55bd2e04d9ad384e0d9f5455e353d4bd20e8763b071c0063f4d4dcbe8517",
+  "template_hash_alg": "sha256",
+  "rendered_prompt_byte_count": 1358,
+  "render_observability_classification": "rendered_prompt_audited",
+  "sampling_bundle": {
+    "temperature": 0.0,
+    "top_p": 1.0,
+    "top_k": 1,
+    "repeat_penalty": 1.0,
+    "max_output_tokens": 2048,
+    "seed_policy": "fixed",
+    "seed_value": 103
+  },
+  "stop_sequences_by_task_class": {
+    "strict_json": [
+      "<|json_end|>",
+      "<|im_end|>"
+    ],
+    "tool_call": [
+      "<|tool_end|>",
+      "<|im_end|>"
+    ],
+    "concise_text": [
+      "<|im_end|>"
+    ],
+    "reasoning": [
+      "<|im_end|>"
+    ]
+  },
+  "effective_stop_sequences": [
+    "<|tool_end|>",
+    "<|im_end|>",
+    "</s>"
+  ],
+  "tool_call_mode": "json_wrapper",
+  "history_policy": "bounded_head_tail_v1",
+  "allows_thinking_blocks": false,
+  "thinking_block_format": "none",
+  "intro_phrase_denylist": [
+    "sure",
+    "here is",
+    "here's",
+    "i will",
+    "i'll",
+    "thinking process:",
+    "let me"
+  ],
+  "local_prompt_allows_thinking_blocks": false,
+  "local_prompt_thinking_block_format": "none",
+  "local_prompt_intro_denylist": [
+    "sure",
+    "here is",
+    "here's",
+    "i will",
+    "i'll",
+    "thinking process:",
+    "let me"
+  ],
+  "lmstudio_session_mode": "none",
+  "lmstudio_session_id_present": false,
+  "profile_resolution_path": "matched",
+  "profile_registry_snapshot_hash": "5b62df9935350c4b45b246997bf9183a11d9864c1e9628e6817f009253be63d1",
+  "local_prompting_warnings": [],
+  "render_verification_method": "provider_native_preview_byte_exact",
+  "template_source_sha256": "8fc57a9f65eaaaee48e80771aea4775f7d3a8adb466a6193d8de551fa124d578",
+  "server_build": "b11146-7fe450e19",
+  "render_verified": true,
+  "token_counter_source": "llama_cpp_native_tokenize",
+  "rendered_input_tokens": 316,
+  "effective_context_budget_tokens": 8192
+}

@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "operation": "ext.init",
+  "target": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\final-packages-r02-py312-sdk\\agent",
+  "template": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\final-packages-r02-py312\\Lib\\site-packages\\orket\\runtime\\config\\assets\\extension_templates\\governed_agent_external.zip",
+  "template_kind": "agent",
+  "copied_file_count": 6,
+  "error_count": 0,
+  "errors": [],
+  "exit_code": 0
+}

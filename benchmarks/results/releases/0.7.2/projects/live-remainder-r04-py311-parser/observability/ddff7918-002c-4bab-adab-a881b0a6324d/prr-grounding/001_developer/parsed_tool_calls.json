@@ -1,0 +1,9 @@
+[
+  {
+    "tool": "write_file",
+    "args": {
+      "path": "grounded.txt",
+      "content": "Maybe this should work."
+    }
+  }
+]

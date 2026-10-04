@@ -1,9 +1,37 @@
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from typing import Any
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+
+
+async def _forward_interaction_events(websocket: WebSocket, queue: asyncio.Queue) -> None:
+    while True:
+        event = await queue.get()
+        await websocket.send_json(event.model_dump())
+
+
+async def _wait_for_disconnect(websocket: WebSocket) -> None:
+    while True:
+        if (await websocket.receive())["type"] == "websocket.disconnect":
+            return
+
+
+async def _stream_interaction(websocket: WebSocket, queue: asyncio.Queue) -> None:
+    # A quiet event queue must not hide peer disconnect from request/shutdown ownership.
+    try:
+        async with asyncio.TaskGroup() as tasks:
+            sender = tasks.create_task(_forward_interaction_events(websocket, queue))
+            receiver = tasks.create_task(_wait_for_disconnect(websocket))
+            try:
+                await asyncio.wait((sender, receiver), return_when=asyncio.FIRST_COMPLETED)
+            finally:
+                sender.cancel()
+                receiver.cancel()
+    except* WebSocketDisconnect:
+        pass
 
 
 def register_streaming_routes(
@@ -65,9 +93,4 @@ def register_streaming_routes(
             return
         await websocket.accept()
         async with interaction_manager.streams.subscribe(session_id) as queue:
-            try:
-                while True:
-                    event = await queue.get()
-                    await websocket.send_json(event.model_dump())
-            except WebSocketDisconnect:
-                pass
+            await _stream_interaction(websocket, queue)

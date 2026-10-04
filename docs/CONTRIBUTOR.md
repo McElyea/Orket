@@ -173,6 +173,9 @@ and retains native construction and cleanup through repeated interruption. Raw
 real stream adapters require the application HTTP lifetime port. A cleanup
 TimeoutError is not a turn-deadline verdict. Controlled HTTP is separate from
 actual-provider acceptance under `docs/specs/MODEL_STREAM_LIFETIME.md`.
+Both Quality selections also retain native interaction WebSocket disconnect
+controls before server shutdown. Their idle/completed cases prove local request
+settlement; they do not establish remote model termination.
 
 
 Tool invocation uses the shared I/O owner through synchronous native work and

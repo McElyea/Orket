@@ -1,0 +1,15 @@
+Traceback (most recent call last):
+  File "C:\Source\Orket\.tmp\prr_turn_live.py", line 90, in <module>
+    asyncio.run(main())
+  File "C:\Python312\Lib\asyncio\runners.py", line 194, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\asyncio\base_events.py", line 685, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "C:\Source\Orket\.tmp\prr_turn_live.py", line 65, in main
+    assert result.success, result.error
+AssertionError: E_LLAMA_CPP_TEMPLATE_IDENTITY: launch the model with the declared text template

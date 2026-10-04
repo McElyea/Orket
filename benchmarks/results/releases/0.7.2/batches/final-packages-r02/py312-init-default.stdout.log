@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "operation": "ext.init",
+  "target": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\final-packages-r02-py312-sdk\\default",
+  "template": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\final-packages-r02-py312\\Lib\\site-packages\\orket\\runtime\\config\\assets\\extension_templates\\external_extension.zip",
+  "template_kind": "default",
+  "copied_file_count": 85,
+  "error_count": 0,
+  "errors": [],
+  "exit_code": 0
+}

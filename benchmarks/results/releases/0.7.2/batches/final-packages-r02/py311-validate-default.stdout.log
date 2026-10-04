@@ -1,0 +1,17 @@
+{
+  "ok": true,
+  "target": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\final-packages-r02-py311-sdk\\default",
+  "manifest_path": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\final-packages-r02-py311-sdk\\default\\extension.yaml",
+  "manifest_version": "v0",
+  "extension_id": "your.extension.id",
+  "workload_count": 1,
+  "error_count": 0,
+  "warning_count": 0,
+  "errors": [],
+  "warnings": [],
+  "exit_code": 0,
+  "import_scan": {
+    "scanned_file_count": 10,
+    "error_count": 0
+  }
+}

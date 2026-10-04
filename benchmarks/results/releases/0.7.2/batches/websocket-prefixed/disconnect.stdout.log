@@ -1,0 +1,38 @@
+FF                                                                       [100%]
+================================== FAILURES ===================================
+____ test_disconnected_interaction_releases_request_before_shutdown[idle] _____
+tests\integration\test_api_websocket_disconnect.py:35: in test_disconnected_interaction_releases_request_before_shutdown
+    await asyncio.sleep(0.01)
+C:\Users\jonmc\AppData\Roaming\uv\python\cpython-3.11.14-windows-x86_64-none\Lib\asyncio\tasks.py:649: in sleep
+    return await future
+           ^^^^^^^^^^^^
+E   asyncio.exceptions.CancelledError
+
+The above exception was the direct cause of the following exception:
+tests\integration\test_api_websocket_disconnect.py:33: in test_disconnected_interaction_releases_request_before_shutdown
+    async with asyncio.timeout(3):
+C:\Users\jonmc\AppData\Roaming\uv\python\cpython-3.11.14-windows-x86_64-none\Lib\asyncio\timeouts.py:115: in __aexit__
+    raise TimeoutError from exc_val
+E   TimeoutError
+------------------------------ Captured log call ------------------------------
+INFO     orket:log_publication.py:290 api_security_posture
+__ test_disconnected_interaction_releases_request_before_shutdown[completed] __
+tests\integration\test_api_websocket_disconnect.py:35: in test_disconnected_interaction_releases_request_before_shutdown
+    await asyncio.sleep(0.01)
+C:\Users\jonmc\AppData\Roaming\uv\python\cpython-3.11.14-windows-x86_64-none\Lib\asyncio\tasks.py:649: in sleep
+    return await future
+           ^^^^^^^^^^^^
+E   asyncio.exceptions.CancelledError
+
+The above exception was the direct cause of the following exception:
+tests\integration\test_api_websocket_disconnect.py:33: in test_disconnected_interaction_releases_request_before_shutdown
+    async with asyncio.timeout(3):
+C:\Users\jonmc\AppData\Roaming\uv\python\cpython-3.11.14-windows-x86_64-none\Lib\asyncio\timeouts.py:115: in __aexit__
+    raise TimeoutError from exc_val
+E   TimeoutError
+------------------------------ Captured log call ------------------------------
+INFO     orket:log_publication.py:290 api_security_posture
+=========================== short test summary info ===========================
+FAILED tests/integration/test_api_websocket_disconnect.py::test_disconnected_interaction_releases_request_before_shutdown[idle]
+FAILED tests/integration/test_api_websocket_disconnect.py::test_disconnected_interaction_releases_request_before_shutdown[completed]
+2 failed in 7.81s

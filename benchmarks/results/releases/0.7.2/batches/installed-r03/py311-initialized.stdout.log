@@ -1,0 +1,33 @@
+
+[FIRST RUN] Orket EOS Orkestrated.
+  Recommendation: Use the canonical card entrypoint for initialization to optimize your models.
+  Command: orket runtime --card initialize_orket
+
+============================================================
+ ORKET EOS MANIFEST (Dept: core)
+ Hardware: 24 Cores | 63.8GB RAM | 24.0GB VRAM
+============================================================
+
+[LOCAL ENGINES]
+  > Coder: None found
+  > Arch:  None found
+
+[ROCKS & ACCOUNTABILITY]
+  - ROCK: Run the Business
+    * CORE         | Epic: prr_startup          | [Error: 2 validation errors for EpicConfig
+team
+  Field required [type=missing, input_value={'name': 'prr_startup', '...c34a37b39b48d3a58cf801'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+environment
+  Field required [type=missing, input_value={'name': 'prr_startup', '...c34a37b39b48d3a58cf801'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing]
+
+[COMMAND SUGGESTION]
+  orket runtime --card run_the_business --department core
+============================================================
+
+
+============================================================
+ ORKET DRIVER (Interactive)
+============================================================
+Driver> 

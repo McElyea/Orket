@@ -1,0 +1,12 @@
+{
+  "findings": [],
+  "ok": true,
+  "parse_errors": [],
+  "roots": [
+    "C:\\Source\\Orket\\orket\\application",
+    "C:\\Source\\Orket\\orket\\runtime",
+    "C:\\Source\\Orket\\orket\\interfaces"
+  ],
+  "scanned_files": 726,
+  "schema_version": "1.0"
+}

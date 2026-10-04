@@ -1,6 +1,6 @@
 # Protocol-Governed Local Provider Compatibility Contract (v1.2)
 
-Last updated: 2026-09-25
+Last updated: 2026-10-04
 Status: Active (contract baseline)
 Owner: Orket Core
 
@@ -18,6 +18,15 @@ Core principle:
 3. Runtime validators and schemas remain the enforcement authority.
 
 ## Request and registry ownership
+
+Turn strict-grounding checks preserve prose word boundaries when extracting
+non-JSON residue, including spaces, tabs/newlines and removed JSON spans. The
+existing whole-word speculative markers remain `assume`, `assumed`, `probably`
+and `maybe`, case-insensitive. Valid JSON objects/object arrays and existing
+legacy tool-only recovery remain excluded. This is a bounded language check,
+not semantic grounding proof. Strict envelopes, tool admission, corrective retry
+and refusal semantics are unchanged. Repair delta:
+`docs/architecture/CONTRACT_DELTA_PRR_RELIABILITY_2026-10-04.md`.
 
 `LocalPromptingService` in `orket/application/services/local_prompting_service.py`
 owns prompt policy. `create_local_model_provider` captures environment and injects

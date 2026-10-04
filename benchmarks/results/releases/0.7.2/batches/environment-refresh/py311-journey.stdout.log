@@ -1,0 +1,12 @@
+INFO:     127.0.0.1:61101 - "POST /v1/interactions/sessions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61101 - "POST /v1/interactions/00faf668-5944-4453-bbd5-4c12c525cac0/turns HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61101 - "GET /v1/sessions/00faf668-5944-4453-bbd5-4c12c525cac0/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61101 - "GET /v1/sessions/00faf668-5944-4453-bbd5-4c12c525cac0/snapshot HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61101 - "GET /v1/sessions/00faf668-5944-4453-bbd5-4c12c525cac0/replay HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61101 - "POST /v1/interactions/sessions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61101 - "POST /v1/interactions/ce2405de-ed19-402a-9530-58cc947f6a83/turns HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61101 - "POST /v1/interactions/ce2405de-ed19-402a-9530-58cc947f6a83/cancel HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61101 - "GET /v1/sessions/ce2405de-ed19-402a-9530-58cc947f6a83/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61101 - "GET /v1/sessions/ce2405de-ed19-402a-9530-58cc947f6a83/snapshot HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61101 - "GET /v1/sessions/ce2405de-ed19-402a-9530-58cc947f6a83/replay HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61101 - "POST /v1/interactions/ce2405de-ed19-402a-9530-58cc947f6a83/cancel HTTP/1.1" 409 Conflict

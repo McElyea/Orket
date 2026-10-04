@@ -71,7 +71,7 @@ def test_scope_budgets_grounding_and_interface_diagnostics_remain_distinct(tmp_p
     turn = _turn(ToolCall("write_file", {"path": "created.txt", "content": "data"}),
         ToolCall("read_file", {"path": "created.txt"}), ToolCall("read_file", {"path": "absent.txt"}),
         ToolCall("get_issue_context", {"section": "absent-section"}), ToolCall("undeclared", {}),
-        content="Maybe, this is a forbidden claim.")
+        content="Maybe this is a forbidden claim.")
     scope = {"workspace": ["existing.txt"], "active_context": ["active"], "passive_context": ["passive"],
         "archived_context": ["archived"], "max_workspace_items": 0, "max_active_context_items": 0,
         "max_passive_context_items": 0, "max_archived_context_items": 0, "max_total_context_items": 2,

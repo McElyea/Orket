@@ -281,17 +281,16 @@ class ResponseParser:
         n = len(blob)
         while idx < n:
             ch = blob[idx]
-            if ch.isspace():
-                idx += 1
-                continue
             if ch in {"{", "["}:
                 try:
                     parsed, end_pos = decoder.raw_decode(blob[idx:])
                     if isinstance(parsed, dict):
+                        kept.append(" ")  # Removing JSON must not join adjacent prose words.
                         idx += max(end_pos, 1)
                         continue
                     if isinstance(parsed, list):
                         if all(isinstance(item, dict) for item in parsed):
+                            kept.append(" ")
                             idx += max(end_pos, 1)
                             continue
                         kept.append(ch)

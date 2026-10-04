@@ -1,6 +1,6 @@
 # SDK Versioning
 
-Last reviewed: 2026-10-03
+Last reviewed: 2026-10-04
 
 ## Canonical Source of Truth
 1. SDK version is defined only in `orket_extension_sdk/__version__.py`.
@@ -17,10 +17,11 @@ Last reviewed: 2026-10-03
 
 ## CLI Contract
 
-SDK `0.7.1` is the current matched standalone SDK for core `0.7.1` on Windows.
+SDK `0.7.2` is the matched standalone SDK for core `0.7.2` on Windows.
 Its public contracts are unchanged from SDK 0.7.0; the patch records packaging
 and verified pair compatibility. Only that exact pair is newly admitted. Evidence:
-`docs/releases/0.7.1/PROOF_REPORT.md`. Other cross-pairings remain unverified.
+`docs/releases/0.7.2/PROOF_REPORT.md`. The historical 0.7.1 pair retains its own
+release record. Other cross-pairings remain unverified.
 
 Historical SDK `0.7.0` is the matched standalone SDK for core `0.7.0` on Windows.
 This release explicitly narrows its nominal future compatibility window to that
