@@ -997,7 +997,7 @@ def _evaluate_quality(task: dict[str, Any], main_text: str, run_dir: Path | None
                 )
                 try:
                     result = subprocess.run(
-                        ["python", str(checker_path), str(target_path), function_name, str(cases_path)],
+                        [sys.executable, str(checker_path), str(target_path), function_name, str(cases_path)],
                         capture_output=True,
                         text=True,
                         check=False,
@@ -1061,7 +1061,7 @@ def _evaluate_quality(task: dict[str, Any], main_text: str, run_dir: Path | None
                     if not isinstance(raw_args, list):
                         mismatch = f"args must be a list at index {idx}"
                         break
-                    cmd = ["python", str(target)] + [str(arg) for arg in raw_args]
+                    cmd = [sys.executable, str(target)] + [str(arg) for arg in raw_args]
                     expected_exit = int(case.get("expected_exit_code", 0))
                     expected_stdout = str(case.get("expected_stdout", ""))
                     expected_stderr = str(case.get("expected_stderr", ""))
@@ -1287,7 +1287,7 @@ def main() -> int:
     epic_path.write_text(json.dumps(epic_payload, indent=2) + "\n", encoding="utf-8")
 
     cmd = [
-        "python",
+        sys.executable,
         "main.py",
         "--epic",
         epic_name,

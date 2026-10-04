@@ -5,6 +5,22 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.4] - 2026-10-04 - "Reusable work and truthful benchmark runs"
+
+### Added
+- Add an isolated four-card Windows bug-fix example with declared completion acceptance, a frozen baseline/verifier and retained live llama.cpp evidence.
+- Stage stored-workflow and long-running benchmark comparisons, separating completed work, deterministic controls, transport results, failed attempts and historical timings.
+
+### Fixed
+- Keep benchmark subprocesses on the invoking Python interpreter and parse quoted runner commands with native Windows argv rules.
+- Enter and exit the real API lifespan around streaming scenario traffic; cover startup, scenario outcomes and shutdown with integration tests.
+- Stability: bounded Windows tooling proof. The live streaming endurance request failed in loop 6, stored workflow acceptance blockers remain, and service admission is not completed card work. See `docs/releases/0.7.4/PROOF_REPORT.md`.
+- This source checkpoint changes examples, benchmark tooling and tests; runtime/SDK implementation and dependency selections are unchanged. The verified installed pair remains core/SDK 0.7.2. No new distribution assets, pairing acceptance or benchmark promotion are claimed.
+- Operator action: use `examples/bug_fix/README.md` for the reusable local workflow; preserve its explicit acceptance and selected provider.
+- `compatibility_status`: `preserved`
+- `affected_audience`: `operator_only`
+- `migration_requirement`: `none`
+
 ## [0.7.3] - 2026-10-04 - "PRR publication reconciliation"
 
 ### Changed

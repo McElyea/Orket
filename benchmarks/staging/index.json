@@ -1,6 +1,6 @@
 {
   "catalog_v": "1.0.0",
-  "updated_on": "2026-04-19",
+  "updated_on": "2026-10-04",
   "root": "benchmarks/staging",
   "highlight_id": "STAGE-GEN-017",
   "artifacts": [
@@ -304,6 +304,38 @@
       "compare_scope": "trusted_repo_config_change_v1",
       "operator_surface": "trusted_run_witness_report.v1",
       "determinism_class": "workspace"
+    },
+    {
+      "id": "STAGE-GEN-019",
+      "category": "General",
+      "path": "General/stored_workflow_runtime_comparison.json",
+      "title": "Stored Workflow Runtime Comparison (Windows)",
+      "summary": "All 16 nonempty stored epics tested; failed workload timings separated from native fixture/control timings and historical model results. Includes bounded live benchmark probes and Windows launcher verification.",
+      "signals": [
+        "live_windows",
+        "failed_workloads_retained",
+        "fixture_proof_separate",
+        "historical_comparison",
+        "native_cleanup"
+      ],
+      "source_path": "benchmarks/staging/General/stored_workflow_runtime_comparison.md",
+      "publish_reviewed": false
+    },
+    {
+      "id": "STAGE-GEN-020",
+      "category": "General",
+      "path": "General/long_running_workflow_comparison.json",
+      "title": "Long-running Workflow Comparison (Windows)",
+      "summary": "4,100 deterministic review repetitions passed; a 1,000-loop live streaming request stopped at loop 6. Transport load, stub soak, missing historical fixture and failed attempts are reported separately.",
+      "signals": [
+        "live_windows",
+        "long_run",
+        "deterministic_review",
+        "streaming_failure_retained",
+        "transport_not_completion"
+      ],
+      "source_path": "benchmarks/staging/General/long_running_workflow_comparison.md",
+      "publish_reviewed": false
     }
   ]
 }

@@ -1,6 +1,6 @@
 # Staged Benchmark Candidates
 
-Last updated: 2026-04-19
+Last updated: 2026-10-04
 
 This directory is the review lane for benchmark artifacts awaiting explicit publication approval.
 
@@ -35,6 +35,8 @@ This directory is the review lane for benchmark artifacts awaiting explicit publ
 | STAGE-GEN-016 | General | `General/prompt_reforger_qwen25_coder_7b_probe_score.json` | Prompt Reforger Qwen2.5-Coder-7B Probe Score | Candidate structural score for the exploratory Ollama `qwen2.5-coder:7b` probe, clearing all 5 frozen bootstrap slices and outperforming the current Gemma 4B portability baseline. |  | `prompt_reforger`, `cross_family_probe`, `qwen25_coder_7b`, `frozen_corpus_clear`, `portability_comparison` |
 | STAGE-GEN-017 | General | `General/prompt_reforger_guide_model_comparison.json` | Prompt Reforger Guide-Model Comparison Checkpoint | Candidate live guide-model comparison checkpoint for the frozen Gemma tool-use corpus, showing degraded Qwen guide generation, blocked LM Studio Gemma guide warmup, and an environment blocker on target-side quality comparison because the portability baseline target did not produce a score report. |  | `prompt_reforger`, `guide_model_comparison`, `candidate_generation_quality`, `environment_blocker`, `qwen_generation_partial` |
 | STAGE-GEN-018 | General | `General/governed_repo_change_packet_adversarial_benchmark_2026-04-19.json` | Governed Repo Change Packet Adversarial Benchmark | Candidate mixed benchmark for the first governed repo change packet, showing six failure classes where the standalone packet verifier fails closed while the baseline comparator remains success-shaped or ambiguous. | `verdict_deterministic` on `trusted_repo_config_change_v1`<br>surface `trusted_run_witness_report.v1`<br>class `workspace` | `governed_change_packet`, `repo_change_packet`, `adversarial_benchmark`, `standalone_verifier`, `workflow_plus_logs_plus_approvals` |
+| STAGE-GEN-019 | General | `General/stored_workflow_runtime_comparison.json` | Stored Workflow Runtime Comparison (Windows) | All 16 nonempty stored epics tested; failed workload timings separated from native fixture/control timings and historical model results. Includes bounded live benchmark probes and Windows launcher verification. |  | `live_windows`, `failed_workloads_retained`, `fixture_proof_separate`, `historical_comparison`, `native_cleanup` |
+| STAGE-GEN-020 | General | `General/long_running_workflow_comparison.json` | Long-running Workflow Comparison (Windows) | 4,100 deterministic review repetitions passed; a 1,000-loop live streaming request stopped at loop 6. Transport load, stub soak, missing historical fixture and failed attempts are reported separately. |  | `live_windows`, `long_run`, `deterministic_review`, `streaming_failure_retained`, `transport_not_completion` |
 
 ## Staging Workflow
 1. Copy candidate artifact(s) into the correct category folder.

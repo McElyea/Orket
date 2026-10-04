@@ -192,7 +192,6 @@ def run_scenario(*, scenario_path: Path, timeout_s: float = 20.0) -> dict[str, A
         os.environ[str(key)] = str(value)
 
     app = api_module.create_api_app(project_root=Path.cwd())
-    client = TestClient(app)
     checker = StreamLawChecker()
     events: list[dict[str, Any]] = []
     terminal_event: str | None = None
@@ -200,176 +199,177 @@ def run_scenario(*, scenario_path: Path, timeout_s: float = 20.0) -> dict[str, A
     commit_digest: str | None = None
     violations: list[dict[str, Any]] = []
 
-    start_resp = client.post(
-        "/v1/interactions/sessions",
-        headers={"X-API-Key": api_key},
-        json={"session_params": {"scenario_id": scenario_id}},
-    )
-    if start_resp.status_code != 200:
-        raise RuntimeError(f"failed to start interaction session: {start_resp.status_code} {start_resp.text}")
-    session_id = str(start_resp.json()["session_id"])
-
-    with client.websocket_connect(f"/ws/interactions/{session_id}?api_key={api_key}") as ws:
-        turn_request_started_epoch_ms = int(time.time() * 1000)
-        turn_accepted_received_epoch_ms: int | None = None
-        turn_resp = client.post(
-            f"/v1/interactions/{session_id}/turns",
+    with TestClient(app) as client:
+        start_resp = client.post(
+            "/v1/interactions/sessions",
             headers={"X-API-Key": api_key},
-            json={
-                "workload_id": workload_id,
-                "input_config": input_config,
-                "turn_params": turn_params,
-            },
+            json={"session_params": {"scenario_id": scenario_id}},
         )
-        turn_id = ""
+        if start_resp.status_code != 200:
+            raise RuntimeError(f"failed to start interaction session: {start_resp.status_code} {start_resp.text}")
+        session_id = str(start_resp.json()["session_id"])
 
-        if expected_http_status is not None:
-            if turn_resp.status_code != int(expected_http_status):
-                _add_violation(
-                    violations,
-                    code="E_EXPECT_HTTP_STATUS",
-                    message=f"expected turn status {expected_http_status} got {turn_resp.status_code}",
-                    kind="expectation",
-                    data={"expected": int(expected_http_status), "got": turn_resp.status_code},
-                )
-        elif turn_resp.status_code != 200:
-            raise RuntimeError(f"failed to begin turn: {turn_resp.status_code} {turn_resp.text}")
-
-        if error_contains:
-            if error_contains.lower() not in turn_resp.text.lower():
-                _add_violation(
-                    violations,
-                    code="E_EXPECT_ERROR_CONTAINS",
-                    message=f"expected error to contain '{error_contains}'",
-                    kind="expectation",
-                    data={"response": turn_resp.text},
-                )
-
-        if turn_resp.status_code == 200:
-            turn_id = str(turn_resp.json()["turn_id"])
-        else:
-            if require_no_stream_events:
-                deadline = time.time() + max(0.05, no_stream_window_ms / 1000.0)
-                while True:
-                    remaining = deadline - time.time()
-                    if remaining <= 0:
-                        break
-                    quiet_event = _receive_json_with_timeout(ws, remaining)
-                    if isinstance(quiet_event, dict):
-                        _add_violation(
-                            violations,
-                            code="E_EXPECT_NO_STREAM_EVENTS",
-                            message="received unexpected stream event for rejected turn",
-                            kind="expectation",
-                            data={"event": quiet_event, "window_ms": no_stream_window_ms},
-                        )
-                        break
-            # Error-only scenario: no active turn loop required.
-            commit_outcome = None
-            commit_digest = None
-            terminal_event = None
-
-        if turn_resp.status_code == 200 and finalize_explicit:
-            client.post(
-                f"/v1/interactions/{session_id}/finalize",
+        with client.websocket_connect(f"/ws/interactions/{session_id}?api_key={api_key}") as ws:
+            turn_request_started_epoch_ms = int(time.time() * 1000)
+            turn_accepted_received_epoch_ms: int | None = None
+            turn_resp = client.post(
+                f"/v1/interactions/{session_id}/turns",
                 headers={"X-API-Key": api_key},
-                json={"turn_id": turn_id},
+                json={
+                    "workload_id": workload_id,
+                    "input_config": input_config,
+                    "turn_params": turn_params,
+                },
             )
+            turn_id = ""
 
-        cancel_issued = False
-        cancel_event_type = str(cancel_at.get("event_type")) if cancel_at else ""
-        cancel_after_ms = int(cancel_at.get("after_ms", 0)) if cancel_at else 0
-        cancel_after_count = int(cancel_at.get("after_count", 1)) if cancel_at else 1
-        seen_event_counts: dict[str, int] = {}
-        terminal_seen_at: float | None = None
-
-        while turn_resp.status_code == 200:
-            elapsed = time.time() - start_wall
-            if elapsed > timeout_s:
-                timeout_target = "commit_final" if require_commit_final else "terminal event"
-                _add_violation(
-                    violations,
-                    code="E_TIMEOUT",
-                    message=f"timeout waiting for {timeout_target} after {timeout_s}s",
-                    kind="expectation",
-                )
-                break
-            wait_budget_s = max(0.01, min(0.5, timeout_s - elapsed))
-            event = _receive_json_with_timeout(ws, wait_budget_s)
-            if event is None:
-                continue
-            events.append(event)
-            try:
-                checker.consume(event)
-            except StreamLawViolation as exc:
-                _add_violation(violations, code="E_STREAM_LAW", message=str(exc), kind="law")
-                break
-
-            event_type = str(event.get("event_type", ""))
-            seen_event_counts[event_type] = seen_event_counts.get(event_type, 0) + 1
-            if event_type == "turn_accepted" and turn_accepted_received_epoch_ms is None:
-                turn_accepted_received_epoch_ms = int(time.time() * 1000)
-
-            if cancel_at and not cancel_issued and event_type == cancel_event_type:
-                if seen_event_counts[event_type] >= cancel_after_count:
-                    if cancel_after_ms > 0:
-                        time.sleep(cancel_after_ms / 1000.0)
-                    client.post(
-                        f"/v1/interactions/{session_id}/cancel",
-                        headers={"X-API-Key": api_key},
-                        json={"turn_id": turn_id},
+            if expected_http_status is not None:
+                if turn_resp.status_code != int(expected_http_status):
+                    _add_violation(
+                        violations,
+                        code="E_EXPECT_HTTP_STATUS",
+                        message=f"expected turn status {expected_http_status} got {turn_resp.status_code}",
+                        kind="expectation",
+                        data={"expected": int(expected_http_status), "got": turn_resp.status_code},
                     )
-                    cancel_issued = True
+            elif turn_resp.status_code != 200:
+                raise RuntimeError(f"failed to begin turn: {turn_resp.status_code} {turn_resp.text}")
 
-            if event_type in {"turn_interrupted", "turn_final"}:
-                terminal_event = event_type
-                if terminal_seen_at is None:
-                    terminal_seen_at = time.time()
-                if not require_commit_final:
-                    if terminal_drain_ms <= 0:
-                        break
-                    if ((time.time() - terminal_seen_at) * 1000.0) >= terminal_drain_ms:
-                        break
-            if event_type == "commit_final":
-                payload = event.get("payload") if isinstance(event.get("payload"), dict) else {}
-                commit_outcome = str(payload.get("commit_outcome"))
-                commit_digest = str(payload.get("commit_digest"))
-                break
+            if error_contains:
+                if error_contains.lower() not in turn_resp.text.lower():
+                    _add_violation(
+                        violations,
+                        code="E_EXPECT_ERROR_CONTAINS",
+                        message=f"expected error to contain '{error_contains}'",
+                        kind="expectation",
+                        data={"response": turn_resp.text},
+                    )
 
-        if turn_resp.status_code == 200 and post_cancel_quiet_ms > 0:
-            if not cancel_issued:
-                _add_violation(
-                    violations,
-                    code="E_EXPECT_CANCEL_NOT_ISSUED",
-                    message="post_cancel_quiet_ms set but cancel was not issued by scenario trigger",
-                    kind="expectation",
-                )
+            if turn_resp.status_code == 200:
+                turn_id = str(turn_resp.json()["turn_id"])
             else:
-                deadline = time.time() + (post_cancel_quiet_ms / 1000.0)
-                while True:
-                    remaining = deadline - time.time()
-                    if remaining <= 0:
-                        break
-                    quiet_event = _receive_json_with_timeout(ws, remaining)
-                    if isinstance(quiet_event, dict):
-                        in_scope = False
-                        if post_cancel_quiet_scope == "turn":
-                            in_scope = (
-                                str(quiet_event.get("session_id")) == session_id
-                                and str(quiet_event.get("turn_id")) == turn_id
-                            )
-                        else:
-                            in_scope = str(quiet_event.get("session_id")) == session_id
-                        if in_scope:
+                if require_no_stream_events:
+                    deadline = time.time() + max(0.05, no_stream_window_ms / 1000.0)
+                    while True:
+                        remaining = deadline - time.time()
+                        if remaining <= 0:
+                            break
+                        quiet_event = _receive_json_with_timeout(ws, remaining)
+                        if isinstance(quiet_event, dict):
                             _add_violation(
                                 violations,
-                                code="E_EXPECT_QUIET_AFTER_CANCEL",
-                                message=f"received unexpected event after cancel quiet window start: {quiet_event.get('event_type')}",
+                                code="E_EXPECT_NO_STREAM_EVENTS",
+                                message="received unexpected stream event for rejected turn",
                                 kind="expectation",
-                                data={"event": quiet_event, "scope": post_cancel_quiet_scope},
+                                data={"event": quiet_event, "window_ms": no_stream_window_ms},
                             )
                             break
-                        # Ignore out-of-scope events and keep draining until deadline.
+                # Error-only scenario: no active turn loop required.
+                commit_outcome = None
+                commit_digest = None
+                terminal_event = None
+
+            if turn_resp.status_code == 200 and finalize_explicit:
+                client.post(
+                    f"/v1/interactions/{session_id}/finalize",
+                    headers={"X-API-Key": api_key},
+                    json={"turn_id": turn_id},
+                )
+
+            cancel_issued = False
+            cancel_event_type = str(cancel_at.get("event_type")) if cancel_at else ""
+            cancel_after_ms = int(cancel_at.get("after_ms", 0)) if cancel_at else 0
+            cancel_after_count = int(cancel_at.get("after_count", 1)) if cancel_at else 1
+            seen_event_counts: dict[str, int] = {}
+            terminal_seen_at: float | None = None
+
+            while turn_resp.status_code == 200:
+                elapsed = time.time() - start_wall
+                if elapsed > timeout_s:
+                    timeout_target = "commit_final" if require_commit_final else "terminal event"
+                    _add_violation(
+                        violations,
+                        code="E_TIMEOUT",
+                        message=f"timeout waiting for {timeout_target} after {timeout_s}s",
+                        kind="expectation",
+                    )
+                    break
+                wait_budget_s = max(0.01, min(0.5, timeout_s - elapsed))
+                event = _receive_json_with_timeout(ws, wait_budget_s)
+                if event is None:
+                    continue
+                events.append(event)
+                try:
+                    checker.consume(event)
+                except StreamLawViolation as exc:
+                    _add_violation(violations, code="E_STREAM_LAW", message=str(exc), kind="law")
+                    break
+
+                event_type = str(event.get("event_type", ""))
+                seen_event_counts[event_type] = seen_event_counts.get(event_type, 0) + 1
+                if event_type == "turn_accepted" and turn_accepted_received_epoch_ms is None:
+                    turn_accepted_received_epoch_ms = int(time.time() * 1000)
+
+                if cancel_at and not cancel_issued and event_type == cancel_event_type:
+                    if seen_event_counts[event_type] >= cancel_after_count:
+                        if cancel_after_ms > 0:
+                            time.sleep(cancel_after_ms / 1000.0)
+                        client.post(
+                            f"/v1/interactions/{session_id}/cancel",
+                            headers={"X-API-Key": api_key},
+                            json={"turn_id": turn_id},
+                        )
+                        cancel_issued = True
+
+                if event_type in {"turn_interrupted", "turn_final"}:
+                    terminal_event = event_type
+                    if terminal_seen_at is None:
+                        terminal_seen_at = time.time()
+                    if not require_commit_final:
+                        if terminal_drain_ms <= 0:
+                            break
+                        if ((time.time() - terminal_seen_at) * 1000.0) >= terminal_drain_ms:
+                            break
+                if event_type == "commit_final":
+                    payload = event.get("payload") if isinstance(event.get("payload"), dict) else {}
+                    commit_outcome = str(payload.get("commit_outcome"))
+                    commit_digest = str(payload.get("commit_digest"))
+                    break
+
+            if turn_resp.status_code == 200 and post_cancel_quiet_ms > 0:
+                if not cancel_issued:
+                    _add_violation(
+                        violations,
+                        code="E_EXPECT_CANCEL_NOT_ISSUED",
+                        message="post_cancel_quiet_ms set but cancel was not issued by scenario trigger",
+                        kind="expectation",
+                    )
+                else:
+                    deadline = time.time() + (post_cancel_quiet_ms / 1000.0)
+                    while True:
+                        remaining = deadline - time.time()
+                        if remaining <= 0:
+                            break
+                        quiet_event = _receive_json_with_timeout(ws, remaining)
+                        if isinstance(quiet_event, dict):
+                            in_scope = False
+                            if post_cancel_quiet_scope == "turn":
+                                in_scope = (
+                                    str(quiet_event.get("session_id")) == session_id
+                                    and str(quiet_event.get("turn_id")) == turn_id
+                                )
+                            else:
+                                in_scope = str(quiet_event.get("session_id")) == session_id
+                            if in_scope:
+                                _add_violation(
+                                    violations,
+                                    code="E_EXPECT_QUIET_AFTER_CANCEL",
+                                    message=f"received unexpected event after cancel quiet window start: {quiet_event.get('event_type')}",
+                                    kind="expectation",
+                                    data={"event": quiet_event, "scope": post_cancel_quiet_scope},
+                                )
+                                break
+                            # Ignore out-of-scope events and keep draining until deadline.
 
     expected_outcome = str(expected.get("outcome", "")).strip().lower()
     if expected_outcome and turn_resp.status_code == 200 and expected_outcome not in {"any", commit_outcome or ""}:

@@ -4,7 +4,6 @@ import hashlib
 import json
 import os
 import re
-import shlex
 import subprocess
 import tempfile
 import time
@@ -14,13 +13,13 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from scripts.benchmarks.determinism_cli import parse_invocation
+    from scripts.benchmarks.determinism_cli import parse_invocation, split_runner_command
     from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
 except ModuleNotFoundError:  # pragma: no cover - direct script execution fallback
     import sys
 
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-    from scripts.benchmarks.determinism_cli import parse_invocation
+    from scripts.benchmarks.determinism_cli import parse_invocation, split_runner_command
     from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
 
 MINIMUM_RUNS_FOR_DETERMINISM_CLAIM = 2
@@ -282,7 +281,7 @@ def _run_once(
         env["ORKET_BENCH_AFFINITY_POLICY"] = str(affinity_policy)
         env["ORKET_BENCH_WARMUP_STEPS"] = str(warmup_steps)
         started = time.perf_counter()
-        argv = shlex.split(command, posix=os.name != "nt")
+        argv = split_runner_command(command)
         if not argv:
             raise ValueError("runner-template resolved to an empty command")
         result = subprocess.run(

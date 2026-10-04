@@ -46,6 +46,22 @@ Scores are still computed from workflow/test/docs references plus recent activit
 
 Entry scripts should depend on this package instead of duplicating quant orchestration logic.
 
+## Benchmark process invocation
+
+The live card and collection benchmark suites launch repository-owned Python
+children with the invoking interpreter (`sys.executable`), including generated
+program checks. The determinism harness parses runner templates using native
+Windows argv rules on Windows, preserving quoted executable paths and arguments;
+it invokes the resulting argv without a shell. Explicit operator runner templates
+retain their selected executable. A successful harness or scoring command alone
+does not establish successful model work; inspect individual outcomes and evidence.
+
+The API streaming scenario runner enters the real API lifespan before sending
+session or WebSocket requests and exits it after the scenario traffic settles.
+Its three baseline scenarios use deterministic workloads; provider scenarios in
+the real-mode gate call the selected model. A passing single loop does not prove
+the 1,000-loop endurance gate completed.
+
 ## Provider Boundaries
 
 Provider-specific behavior stays explicit, but run-path provider/model preparation now shares one authority path:

@@ -2,9 +2,34 @@
 from __future__ import annotations
 
 import argparse
+import ctypes
 import json
+import os
+import shlex
 from pathlib import Path
 from typing import Any
+
+
+def split_runner_command(command: str) -> list[str]:
+    """Use native Windows argv rules so quoted executable paths retain their identity."""
+    if not command.strip():
+        return []
+    if os.name != "nt":
+        return shlex.split(command)
+    count = ctypes.c_int()
+    parse = ctypes.WinDLL("shell32", use_last_error=True).CommandLineToArgvW
+    parse.argtypes = [ctypes.c_wchar_p, ctypes.POINTER(ctypes.c_int)]
+    parse.restype = ctypes.POINTER(ctypes.c_wchar_p)
+    release = ctypes.WinDLL("kernel32", use_last_error=True).LocalFree
+    release.argtypes = [ctypes.c_void_p]
+    release.restype = ctypes.c_void_p
+    arguments = parse(command, ctypes.byref(count))
+    if not arguments:
+        raise ctypes.WinError(ctypes.get_last_error())
+    try:
+        return [arguments[index] for index in range(count.value)]
+    finally:
+        release(arguments)
 
 
 def _argument_parser() -> argparse.ArgumentParser:

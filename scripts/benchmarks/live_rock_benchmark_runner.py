@@ -6,6 +6,7 @@ import importlib.util
 import json
 import os
 import subprocess
+import sys
 import uuid
 from datetime import UTC, datetime
 from pathlib import Path
@@ -168,7 +169,7 @@ def main() -> int:
     )
 
     cmd = [
-        "python",
+        sys.executable,
         "main.py",
         "--card",
         entry_card_name,

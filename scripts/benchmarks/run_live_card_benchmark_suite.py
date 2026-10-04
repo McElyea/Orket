@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import subprocess
+import sys
 from pathlib import Path
 
 
@@ -33,7 +34,7 @@ def main() -> int:
     Path(args.scored_out).parent.mkdir(parents=True, exist_ok=True)
 
     harness_cmd = [
-        "python",
+        sys.executable,
         "scripts/benchmarks/run_determinism_harness.py",
         "--task-bank",
         args.task_bank,
@@ -45,7 +46,7 @@ def main() -> int:
         args.execution_mode,
         "--runner-template",
         (
-            "python scripts/benchmarks/live_card_benchmark_runner.py --task {task_file} "
+            f'"{Path(sys.executable).as_posix()}" scripts/benchmarks/live_card_benchmark_runner.py --task {{task_file}} '
             "--runtime-target {runtime_target} --execution-mode {execution_mode} --run-dir {run_dir}"
         ),
         "--artifact-glob",
@@ -60,7 +61,7 @@ def main() -> int:
     _run(harness_cmd)
 
     score_cmd = [
-        "python",
+        sys.executable,
         "scripts/benchmarks/score_benchmark_run.py",
         "--report",
         args.raw_out,

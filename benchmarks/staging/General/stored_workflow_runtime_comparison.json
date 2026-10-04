@@ -1,0 +1,1395 @@
+{
+  "schema_version": "stored_workflow_comparison.v1",
+  "recorded_at_utc": "2026-10-04T22:31:34.533712+00:00",
+  "observed_path": "blocked",
+  "observed_result": "partial success",
+  "scope": "all stored nonempty epics; benchmark fixture/control suites and bounded live probes",
+  "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+  "provider": "llama_cpp",
+  "installed_core": "0.7.2",
+  "installed_sdk": "0.7.2",
+  "workflows": [
+    {
+      "path": "model/core/epics/auth_manager.json",
+      "sha256": "494b94621d29472140f2a9b93791b9d3f2366ef6f6296290c439ea7568ff48e9",
+      "cards": 3,
+      "team": "enterprise",
+      "missing_acceptance": 3,
+      "reviewer_role_present": false,
+      "state": "nonempty",
+      "project": "C:\\Source\\Orket-workflow-comparison\\auth_manager",
+      "run_id": "ad2f9451",
+      "status": "failed",
+      "duration_ms": 51,
+      "reason": "Small-project policy preflight failed: missing code_reviewer seat. Available seats=['backend_specialist', 'data_scientist', 'governance_ethics', 'integrity_guard', 'lead_architect', 'market_researcher', 'network_engineer', 'operations_lead', 'protocol_enforcer', 'reforge_specialist', 'senior_developer', 'ux_artisan']. Add a seat with role 'code_reviewer' or increase small_project_issue_threshold to disable small-team mode for this epic.",
+      "blocker": "missing_reviewer_seat",
+      "completed_turns": 0,
+      "corrective_reprompts": 0,
+      "summary_path": "C:\\Source\\Orket-workflow-comparison\\auth_manager\\workspace\\runs\\ad2f9451\\run_summary.json",
+      "summary_sha256": "9d6f1f280dad30b99ab28f5bae3418d61f4112e79f73624fd300bfe7d7937b6d",
+      "provider_provenance": {
+        "actual_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "actual_profile": "default",
+        "actual_provider": "llama_cpp",
+        "execution_profile": "normal",
+        "fallback_occurred": false,
+        "intended_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "intended_profile": "default",
+        "intended_provider": "llama_cpp",
+        "mismatch_reason": "none",
+        "path_mismatch": false,
+        "primary_output_kind": "none",
+        "repair_occurred": false,
+        "retry_occurred": false,
+        "run_id": "ad2f9451",
+        "terminal_status": "failed"
+      }
+    },
+    {
+      "path": "model/core/epics/benchmark_live_008_7b53edf8.json",
+      "sha256": "6245105bdd26c4f401cd6d332d3f96353fb002d77daca634325e90af774da380",
+      "cards": 1,
+      "team": "standard",
+      "missing_acceptance": 1,
+      "reviewer_role_present": true,
+      "state": "nonempty",
+      "project": "C:\\Source\\Orket-workflow-comparison\\benchmark_live_008_7b53edf8",
+      "run_id": "6550fcec",
+      "status": "failed",
+      "duration_ms": 13304,
+      "reason": "Governance Violation: Governance violations: ['Tool update_issue_status failed: E_CARD_COMPLETION_EVIDENCE_REQUIRED']",
+      "blocker": "missing_completion_acceptance",
+      "completed_turns": 1,
+      "corrective_reprompts": 2,
+      "summary_path": "C:\\Source\\Orket-workflow-comparison\\benchmark_live_008_7b53edf8\\workspace\\runs\\6550fcec\\run_summary.json",
+      "summary_sha256": "e2183344f1380d03fc7bb99eb03ba798e46259e7d155d4b8eb8afa7da7873641",
+      "provider_provenance": {
+        "actual_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "actual_profile": "llama_cpp.qwen3.8.chatml.v1",
+        "actual_provider": "openai_compat",
+        "execution_profile": "normal",
+        "fallback_occurred": false,
+        "intended_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "intended_profile": "llama_cpp.qwen3.8.chatml.v1",
+        "intended_provider": "llama_cpp",
+        "mismatch_reason": "none",
+        "path_mismatch": false,
+        "primary_output_id": "agent_output/main.py",
+        "primary_output_kind": "artifact",
+        "repair_occurred": true,
+        "retry_occurred": false,
+        "run_id": "6550fcec",
+        "terminal_status": "failed",
+        "truth_classification": "repaired"
+      }
+    },
+    {
+      "path": "model/core/epics/branding.json",
+      "sha256": "333ca4d56ccbdde9ca6f43d75f5841fc622b1549539e2dafba95a7257deb7708",
+      "cards": 2,
+      "team": "ui_experts",
+      "missing_acceptance": 2,
+      "reviewer_role_present": false,
+      "state": "nonempty",
+      "project": "C:\\Source\\Orket-workflow-comparison\\branding",
+      "run_id": "2df86dc5",
+      "status": "failed",
+      "duration_ms": 48,
+      "reason": "Small-project policy preflight failed: missing code_reviewer seat. Available seats=['creative_director', 'frontend_artisan', 'quality_inspector']. Add a seat with role 'code_reviewer' or increase small_project_issue_threshold to disable small-team mode for this epic.",
+      "blocker": "missing_reviewer_seat",
+      "completed_turns": 0,
+      "corrective_reprompts": 0,
+      "summary_path": "C:\\Source\\Orket-workflow-comparison\\branding\\workspace\\runs\\2df86dc5\\run_summary.json",
+      "summary_sha256": "c091a8b721bdf5190d3ad47419f0cfd93e90c58813523ede061396d2ba7535da",
+      "provider_provenance": {
+        "actual_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "actual_profile": "default",
+        "actual_provider": "llama_cpp",
+        "execution_profile": "normal",
+        "fallback_occurred": false,
+        "intended_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "intended_profile": "default",
+        "intended_provider": "llama_cpp",
+        "mismatch_reason": "none",
+        "path_mismatch": false,
+        "primary_output_kind": "none",
+        "repair_occurred": false,
+        "retry_occurred": false,
+        "run_id": "2df86dc5",
+        "terminal_status": "failed"
+      }
+    },
+    {
+      "path": "model/core/epics/challenge_workflow_runtime.json",
+      "sha256": "ba4c9a6c0c5d6a34bc5d601c152fadf90b5c2e1782293a56796356607b07b2d7",
+      "cards": 12,
+      "team": "challenge_coder_guard_team",
+      "missing_acceptance": 12,
+      "reviewer_role_present": false,
+      "state": "nonempty",
+      "project": "C:\\Source\\Orket-workflow-comparison\\challenge_workflow_runtime",
+      "run_id": "20d5b719",
+      "status": "failed",
+      "duration_ms": 25060,
+      "reason": "Governance Violation: Governance violations: ['Tool update_issue_status failed: E_CARD_COMPLETION_EVIDENCE_REQUIRED']",
+      "blocker": "missing_completion_acceptance",
+      "completed_turns": 1,
+      "corrective_reprompts": 2,
+      "summary_path": "C:\\Source\\Orket-workflow-comparison\\challenge_workflow_runtime\\workspace\\runs\\20d5b719\\run_summary.json",
+      "summary_sha256": "ec0ed338225678b88120008650d50668c1ae996d43b4c45887e497ed53bf7d52",
+      "provider_provenance": {
+        "actual_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "actual_profile": "llama_cpp.qwen3.8.chatml.v1",
+        "actual_provider": "openai_compat",
+        "execution_profile": "normal",
+        "fallback_occurred": false,
+        "intended_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "intended_profile": "llama_cpp.qwen3.8.chatml.v1",
+        "intended_provider": "llama_cpp",
+        "mismatch_reason": "none",
+        "path_mismatch": false,
+        "primary_output_id": "agent_output/requirements.txt",
+        "primary_output_kind": "artifact",
+        "repair_occurred": true,
+        "retry_occurred": false,
+        "run_id": "20d5b719",
+        "terminal_status": "failed",
+        "truth_classification": "repaired"
+      }
+    },
+    {
+      "path": "model/core/epics/core_baseline.json",
+      "sha256": "8117d00e8a1c853021c7b90e5bffc4ac7a56ed9be6b689c83bbc949c80e56287",
+      "cards": 3,
+      "team": "enterprise",
+      "missing_acceptance": 3,
+      "reviewer_role_present": false,
+      "state": "nonempty",
+      "project": "C:\\Source\\Orket-workflow-comparison\\core_baseline",
+      "run_id": "d733cc5f",
+      "status": "failed",
+      "duration_ms": 51,
+      "reason": "Small-project policy preflight failed: missing code_reviewer seat. Available seats=['backend_specialist', 'data_scientist', 'governance_ethics', 'integrity_guard', 'lead_architect', 'market_researcher', 'network_engineer', 'operations_lead', 'protocol_enforcer', 'reforge_specialist', 'senior_developer', 'ux_artisan']. Add a seat with role 'code_reviewer' or increase small_project_issue_threshold to disable small-team mode for this epic.",
+      "blocker": "missing_reviewer_seat",
+      "completed_turns": 0,
+      "corrective_reprompts": 0,
+      "summary_path": "C:\\Source\\Orket-workflow-comparison\\core_baseline\\workspace\\runs\\d733cc5f\\run_summary.json",
+      "summary_sha256": "c907b91334d6593574999b87ac64572c982b4d1c54a6a46661fd7d1bdf382532",
+      "provider_provenance": {
+        "actual_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "actual_profile": "default",
+        "actual_provider": "llama_cpp",
+        "execution_profile": "normal",
+        "fallback_occurred": false,
+        "intended_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "intended_profile": "default",
+        "intended_provider": "llama_cpp",
+        "mismatch_reason": "none",
+        "path_mismatch": false,
+        "primary_output_kind": "none",
+        "repair_occurred": false,
+        "retry_occurred": false,
+        "run_id": "d733cc5f",
+        "terminal_status": "failed"
+      }
+    },
+    {
+      "path": "model/core/epics/idea_brainstorming_session.json",
+      "sha256": "0f16208e9e6e725fa1ca54a3c9a1847608e227fa4963e15998a348f964ac0e83",
+      "cards": 3,
+      "team": "enterprise",
+      "missing_acceptance": 3,
+      "reviewer_role_present": false,
+      "state": "nonempty",
+      "project": "C:\\Source\\Orket-workflow-comparison\\idea_brainstorming_session",
+      "run_id": "b40b7ea7",
+      "status": "failed",
+      "duration_ms": 48,
+      "reason": "Small-project policy preflight failed: missing code_reviewer seat. Available seats=['backend_specialist', 'data_scientist', 'governance_ethics', 'integrity_guard', 'lead_architect', 'market_researcher', 'network_engineer', 'operations_lead', 'protocol_enforcer', 'reforge_specialist', 'senior_developer', 'ux_artisan']. Add a seat with role 'code_reviewer' or increase small_project_issue_threshold to disable small-team mode for this epic.",
+      "blocker": "missing_reviewer_seat",
+      "completed_turns": 0,
+      "corrective_reprompts": 0,
+      "summary_path": "C:\\Source\\Orket-workflow-comparison\\idea_brainstorming_session\\workspace\\runs\\b40b7ea7\\run_summary.json",
+      "summary_sha256": "ef9d289501ca0a4c6041ed207933d01684d7ea6eb98db61e1c3328dd86a0aefa",
+      "provider_provenance": {
+        "actual_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "actual_profile": "default",
+        "actual_provider": "llama_cpp",
+        "execution_profile": "normal",
+        "fallback_occurred": false,
+        "intended_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "intended_profile": "default",
+        "intended_provider": "llama_cpp",
+        "mismatch_reason": "none",
+        "path_mismatch": false,
+        "primary_output_kind": "none",
+        "repair_occurred": false,
+        "retry_occurred": false,
+        "run_id": "b40b7ea7",
+        "terminal_status": "failed"
+      }
+    },
+    {
+      "path": "model/core/epics/model_reforge.json",
+      "sha256": "d1e73405103cf55d246ba9ab155a7ed671300aba0f19ada5e0c8b5d3ba8c7a30",
+      "cards": 3,
+      "team": "standard",
+      "missing_acceptance": 3,
+      "reviewer_role_present": true,
+      "state": "nonempty",
+      "project": "C:\\Source\\Orket-workflow-comparison\\model_reforge",
+      "run_id": "e3501bda",
+      "status": "failed",
+      "duration_ms": 84089,
+      "reason": "Governance Violation: Governance violations: ['Tool update_issue_status failed: E_CARD_COMPLETION_EVIDENCE_REQUIRED']",
+      "blocker": "missing_completion_acceptance",
+      "completed_turns": 3,
+      "corrective_reprompts": 6,
+      "summary_path": "C:\\Source\\Orket-workflow-comparison\\model_reforge\\workspace\\runs\\e3501bda\\run_summary.json",
+      "summary_sha256": "18e25956c1b86826dc5d1c9df855973456972f9d13db302271c3f485dec3ab37",
+      "provider_provenance": {
+        "actual_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "actual_profile": "llama_cpp.qwen3.8.chatml.v1",
+        "actual_provider": "openai_compat",
+        "execution_profile": "normal",
+        "fallback_occurred": false,
+        "intended_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "intended_profile": "llama_cpp.qwen3.8.chatml.v1",
+        "intended_provider": "llama_cpp",
+        "mismatch_reason": "none",
+        "path_mismatch": false,
+        "primary_output_id": "agent_output/main.py",
+        "primary_output_kind": "artifact",
+        "repair_occurred": true,
+        "retry_occurred": false,
+        "run_id": "e3501bda",
+        "terminal_status": "failed",
+        "truth_classification": "repaired"
+      }
+    },
+    {
+      "path": "model/core/epics/price_arbitrage_system.json",
+      "sha256": "fa8b6109b8d744276f47aa3c467de8d07fca7655548e83ab90f209dcf41471e3",
+      "cards": 9,
+      "team": "enterprise",
+      "missing_acceptance": 9,
+      "reviewer_role_present": false,
+      "state": "nonempty",
+      "project": "C:\\Source\\Orket-workflow-comparison\\price_arbitrage_system",
+      "run_id": "b6a30b6a",
+      "status": "failed",
+      "duration_ms": 32892,
+      "reason": "Governance Violation: Governance violations: [\"Tool google_web_search failed: Unknown tool 'google_web_search'\", \"Tool google_web_search failed: Unknown tool 'google_web_search'\", \"Tool google_web_search failed: Unknown tool 'google_web_search'\", \"Tool google_web_search failed: Unknown tool 'google_web_search'\", \"Tool google_web_search failed: Unknown tool 'google_web_search'\", \"Tool google_web_search failed: Unknown tool 'google_web_search'\", \"Tool google_web_search failed: Unknown tool 'google_web_search'\", \"Tool google_web_search failed: Unknown tool 'google_web_search'\"]",
+      "blocker": "unavailable_tool",
+      "completed_turns": 0,
+      "corrective_reprompts": 8,
+      "summary_path": "C:\\Source\\Orket-workflow-comparison\\price_arbitrage_system\\workspace\\runs\\b6a30b6a\\run_summary.json",
+      "summary_sha256": "e59fb4765449dddcbc094740eff9c5490715d026983e122f8c80235f7a59db50",
+      "provider_provenance": {
+        "actual_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "actual_profile": "llama_cpp.qwen3.8.chatml.v1",
+        "actual_provider": "openai_compat",
+        "execution_profile": "normal",
+        "fallback_occurred": false,
+        "intended_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "intended_profile": "llama_cpp.qwen3.8.chatml.v1",
+        "intended_provider": "llama_cpp",
+        "mismatch_reason": "none",
+        "path_mismatch": false,
+        "primary_output_kind": "none",
+        "repair_occurred": true,
+        "retry_occurred": false,
+        "run_id": "b6a30b6a",
+        "terminal_status": "failed"
+      }
+    },
+    {
+      "path": "model/core/epics/qa_completion_test.json",
+      "sha256": "5a666f4f4f88fac62c59d16d23fe8c79b5086a062099997fd29270b3c0fd31bd",
+      "cards": 2,
+      "team": "standard",
+      "missing_acceptance": 2,
+      "reviewer_role_present": true,
+      "state": "nonempty",
+      "project": "C:\\Source\\Orket-workflow-comparison\\qa_completion_test",
+      "run_id": "8a24cbf8",
+      "status": "failed",
+      "duration_ms": 39748,
+      "reason": "Governance Violation: Governance violations: ['Tool update_issue_status failed: E_CARD_COMPLETION_EVIDENCE_REQUIRED']",
+      "blocker": "missing_completion_acceptance",
+      "completed_turns": 2,
+      "corrective_reprompts": 4,
+      "summary_path": "C:\\Source\\Orket-workflow-comparison\\qa_completion_test\\workspace\\runs\\8a24cbf8\\run_summary.json",
+      "summary_sha256": "dcf5ba8befcf8a675045d21d6cff825aa03c181d8d1eea083302423a7f7e7f66",
+      "provider_provenance": {
+        "actual_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "actual_profile": "llama_cpp.qwen3.8.chatml.v1",
+        "actual_provider": "openai_compat",
+        "execution_profile": "normal",
+        "fallback_occurred": false,
+        "intended_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "intended_profile": "llama_cpp.qwen3.8.chatml.v1",
+        "intended_provider": "llama_cpp",
+        "mismatch_reason": "none",
+        "path_mismatch": false,
+        "primary_output_id": "agent_output/main.py",
+        "primary_output_kind": "artifact",
+        "repair_occurred": true,
+        "retry_occurred": false,
+        "run_id": "8a24cbf8",
+        "terminal_status": "failed",
+        "truth_classification": "repaired"
+      }
+    },
+    {
+      "path": "model/core/epics/requirements_refinement.json",
+      "sha256": "89cae3663a2a863d7a8d1b0de46dbe18bcca317ae0e3531376293d8c0478a836",
+      "cards": 3,
+      "team": "product_owners",
+      "missing_acceptance": 3,
+      "reviewer_role_present": false,
+      "state": "nonempty",
+      "project": "C:\\Source\\Orket-workflow-comparison\\requirements_refinement",
+      "run_id": "a507d517",
+      "status": "failed",
+      "duration_ms": 51,
+      "reason": "Small-project policy preflight failed: missing code_reviewer seat. Available seats=['product_owner', 'requirements_specialist', 'writer']. Add a seat with role 'code_reviewer' or increase small_project_issue_threshold to disable small-team mode for this epic.",
+      "blocker": "missing_reviewer_seat",
+      "completed_turns": 0,
+      "corrective_reprompts": 0,
+      "summary_path": "C:\\Source\\Orket-workflow-comparison\\requirements_refinement\\workspace\\runs\\a507d517\\run_summary.json",
+      "summary_sha256": "8c9b7162a4e9a587bfc16ab3f6a458495ec9657e079ae3087d3e93c2893fbbb4",
+      "provider_provenance": {
+        "actual_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "actual_profile": "default",
+        "actual_provider": "llama_cpp",
+        "execution_profile": "normal",
+        "fallback_occurred": false,
+        "intended_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "intended_profile": "default",
+        "intended_provider": "llama_cpp",
+        "mismatch_reason": "none",
+        "path_mismatch": false,
+        "primary_output_kind": "none",
+        "repair_occurred": false,
+        "retry_occurred": false,
+        "run_id": "a507d517",
+        "terminal_status": "failed"
+      }
+    },
+    {
+      "path": "model/core/epics/requirements_team.json",
+      "sha256": "66d4dd8c804e1480121e03f6781c2ee00cf720e43c4d3568379b1ea0a069813f",
+      "cards": 3,
+      "team": "enterprise",
+      "missing_acceptance": 3,
+      "reviewer_role_present": false,
+      "state": "nonempty",
+      "project": "C:\\Source\\Orket-workflow-comparison\\requirements_team",
+      "run_id": "58203de0",
+      "status": "failed",
+      "duration_ms": 54,
+      "reason": "Small-project policy preflight failed: missing code_reviewer seat. Available seats=['backend_specialist', 'data_scientist', 'governance_ethics', 'integrity_guard', 'lead_architect', 'market_researcher', 'network_engineer', 'operations_lead', 'protocol_enforcer', 'reforge_specialist', 'senior_developer', 'ux_artisan']. Add a seat with role 'code_reviewer' or increase small_project_issue_threshold to disable small-team mode for this epic.",
+      "blocker": "missing_reviewer_seat",
+      "completed_turns": 0,
+      "corrective_reprompts": 0,
+      "summary_path": "C:\\Source\\Orket-workflow-comparison\\requirements_team\\workspace\\runs\\58203de0\\run_summary.json",
+      "summary_sha256": "b33c3504ce5cf303d315b9637781152eee97f02e8c0a82a38563ca2f257de576",
+      "provider_provenance": {
+        "actual_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "actual_profile": "default",
+        "actual_provider": "llama_cpp",
+        "execution_profile": "normal",
+        "fallback_occurred": false,
+        "intended_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "intended_profile": "default",
+        "intended_provider": "llama_cpp",
+        "mismatch_reason": "none",
+        "path_mismatch": false,
+        "primary_output_kind": "none",
+        "repair_occurred": false,
+        "retry_occurred": false,
+        "run_id": "58203de0",
+        "terminal_status": "failed"
+      }
+    },
+    {
+      "path": "model/core/epics/role_matrix_soak.json",
+      "sha256": "33d7a9f8fa91006a16542ba91037565f5d608c041393ff479e3bc67b1f029ed2",
+      "cards": 24,
+      "team": "role_matrix_soak_team",
+      "missing_acceptance": 24,
+      "reviewer_role_present": true,
+      "state": "nonempty",
+      "project": "C:\\Source\\Orket-workflow-comparison\\role_matrix_soak",
+      "run_id": "955cc4cd",
+      "status": "failed",
+      "duration_ms": 55961,
+      "reason": "Governance Violation: Governance violations: ['Tool update_issue_status failed: E_CARD_COMPLETION_EVIDENCE_REQUIRED']",
+      "blocker": "missing_completion_acceptance",
+      "completed_turns": 2,
+      "corrective_reprompts": 3,
+      "summary_path": "C:\\Source\\Orket-workflow-comparison\\role_matrix_soak\\workspace\\runs\\955cc4cd\\run_summary.json",
+      "summary_sha256": "89a07a196b5e6d4edaa2eaa06ac75c4987410f0170100ae29f3d363fdfb17daf",
+      "provider_provenance": {
+        "actual_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "actual_profile": "llama_cpp.qwen3.8.chatml.v1",
+        "actual_provider": "openai_compat",
+        "execution_profile": "normal",
+        "fallback_occurred": false,
+        "intended_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "intended_profile": "llama_cpp.qwen3.8.chatml.v1",
+        "intended_provider": "llama_cpp",
+        "mismatch_reason": "none",
+        "path_mismatch": false,
+        "primary_output_id": "agent_output/soak_matrix/product/product_brief.md",
+        "primary_output_kind": "artifact",
+        "repair_occurred": true,
+        "retry_occurred": false,
+        "run_id": "955cc4cd",
+        "terminal_status": "failed",
+        "truth_classification": "repaired"
+      }
+    },
+    {
+      "path": "model/core/epics/standard.json",
+      "sha256": "2aa971c6f668f634e2421e592b0cba865c659048df6d1958816a3d26c471b08d",
+      "cards": 3,
+      "team": "standard",
+      "missing_acceptance": 3,
+      "reviewer_role_present": true,
+      "state": "nonempty",
+      "project": "C:\\Source\\Orket-workflow-comparison\\standard",
+      "run_id": "dd749017",
+      "status": "failed",
+      "duration_ms": 35441,
+      "reason": "Governance Violation: Governance violations: ['Tool update_issue_status failed: E_CARD_COMPLETION_EVIDENCE_REQUIRED']",
+      "blocker": "missing_completion_acceptance",
+      "completed_turns": 3,
+      "corrective_reprompts": 3,
+      "summary_path": "C:\\Source\\Orket-workflow-comparison\\standard\\workspace\\runs\\dd749017\\run_summary.json",
+      "summary_sha256": "88d26386a2cb62d307beb3ac6976ea2743dbd1a0ead3ab6e7422edaf1d9a5eb5",
+      "provider_provenance": {
+        "actual_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "actual_profile": "llama_cpp.qwen3.8.chatml.v1",
+        "actual_provider": "openai_compat",
+        "execution_profile": "normal",
+        "fallback_occurred": false,
+        "intended_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "intended_profile": "llama_cpp.qwen3.8.chatml.v1",
+        "intended_provider": "llama_cpp",
+        "mismatch_reason": "none",
+        "path_mismatch": false,
+        "primary_output_id": "agent_output/main.py",
+        "primary_output_kind": "artifact",
+        "repair_occurred": true,
+        "retry_occurred": false,
+        "run_id": "dd749017",
+        "terminal_status": "failed",
+        "truth_classification": "repaired"
+      }
+    },
+    {
+      "path": "model/core/epics/system_optimization_q1.json",
+      "sha256": "0ebd72d131fa9b46778a93efe3792e62cf09eaff8e1036d9242573d3ab39458b",
+      "cards": 2,
+      "team": "enterprise",
+      "missing_acceptance": 2,
+      "reviewer_role_present": false,
+      "state": "nonempty",
+      "project": "C:\\Source\\Orket-workflow-comparison\\system_optimization_q1",
+      "run_id": "c915e018",
+      "status": "failed",
+      "duration_ms": 53,
+      "reason": "Small-project policy preflight failed: missing code_reviewer seat. Available seats=['backend_specialist', 'data_scientist', 'governance_ethics', 'integrity_guard', 'lead_architect', 'market_researcher', 'network_engineer', 'operations_lead', 'protocol_enforcer', 'reforge_specialist', 'senior_developer', 'ux_artisan']. Add a seat with role 'code_reviewer' or increase small_project_issue_threshold to disable small-team mode for this epic.",
+      "blocker": "missing_reviewer_seat",
+      "completed_turns": 0,
+      "corrective_reprompts": 0,
+      "summary_path": "C:\\Source\\Orket-workflow-comparison\\system_optimization_q1\\workspace\\runs\\c915e018\\run_summary.json",
+      "summary_sha256": "2a275d19ff961c23184943e6ce95d9c1b080db89b13d5aeb040acc52f0d27932",
+      "provider_provenance": {
+        "actual_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "actual_profile": "default",
+        "actual_provider": "llama_cpp",
+        "execution_profile": "normal",
+        "fallback_occurred": false,
+        "intended_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "intended_profile": "default",
+        "intended_provider": "llama_cpp",
+        "mismatch_reason": "none",
+        "path_mismatch": false,
+        "primary_output_kind": "none",
+        "repair_occurred": false,
+        "retry_occurred": false,
+        "run_id": "c915e018",
+        "terminal_status": "failed"
+      }
+    },
+    {
+      "path": "model/core/epics/ui_update.json",
+      "sha256": "826046201c715db160c6cfa536f98ebbc969ce65fefd119876b7f2034cdb9daf",
+      "cards": 2,
+      "team": "enterprise",
+      "missing_acceptance": 2,
+      "reviewer_role_present": false,
+      "state": "nonempty",
+      "project": "C:\\Source\\Orket-workflow-comparison\\ui_update",
+      "run_id": "6392cd6b",
+      "status": "failed",
+      "duration_ms": 56,
+      "reason": "Small-project policy preflight failed: missing code_reviewer seat. Available seats=['backend_specialist', 'data_scientist', 'governance_ethics', 'integrity_guard', 'lead_architect', 'market_researcher', 'network_engineer', 'operations_lead', 'protocol_enforcer', 'reforge_specialist', 'senior_developer', 'ux_artisan']. Add a seat with role 'code_reviewer' or increase small_project_issue_threshold to disable small-team mode for this epic.",
+      "blocker": "missing_reviewer_seat",
+      "completed_turns": 0,
+      "corrective_reprompts": 0,
+      "summary_path": "C:\\Source\\Orket-workflow-comparison\\ui_update\\workspace\\runs\\6392cd6b\\run_summary.json",
+      "summary_sha256": "8bab6c6aa70c63a80fff71ba0a6df6b4ca39c2c1d996f5239b7342f6fa7d96c8",
+      "provider_provenance": {
+        "actual_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "actual_profile": "default",
+        "actual_provider": "llama_cpp",
+        "execution_profile": "normal",
+        "fallback_occurred": false,
+        "intended_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "intended_profile": "default",
+        "intended_provider": "llama_cpp",
+        "mismatch_reason": "none",
+        "path_mismatch": false,
+        "primary_output_kind": "none",
+        "repair_occurred": false,
+        "retry_occurred": false,
+        "run_id": "6392cd6b",
+        "terminal_status": "failed"
+      }
+    },
+    {
+      "path": "model/core/epics/web_dev.json",
+      "sha256": "69015577e4f762cd8e892e4c808ed3c479db47fadc2d854590130dddcb118cb4",
+      "cards": 2,
+      "team": "ui_experts",
+      "missing_acceptance": 2,
+      "reviewer_role_present": false,
+      "state": "nonempty",
+      "project": "C:\\Source\\Orket-workflow-comparison\\web_dev",
+      "run_id": "ebffb675",
+      "status": "failed",
+      "duration_ms": 50,
+      "reason": "Small-project policy preflight failed: missing code_reviewer seat. Available seats=['creative_director', 'frontend_artisan', 'quality_inspector']. Add a seat with role 'code_reviewer' or increase small_project_issue_threshold to disable small-team mode for this epic.",
+      "blocker": "missing_reviewer_seat",
+      "completed_turns": 0,
+      "corrective_reprompts": 0,
+      "summary_path": "C:\\Source\\Orket-workflow-comparison\\web_dev\\workspace\\runs\\ebffb675\\run_summary.json",
+      "summary_sha256": "578f45f60856e705074e8e86ee0366485b42a81ee52a638ab0eec2b4c3b950d6",
+      "provider_provenance": {
+        "actual_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "actual_profile": "default",
+        "actual_provider": "llama_cpp",
+        "execution_profile": "normal",
+        "fallback_occurred": false,
+        "intended_model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+        "intended_profile": "default",
+        "intended_provider": "llama_cpp",
+        "mismatch_reason": "none",
+        "path_mismatch": false,
+        "primary_output_kind": "none",
+        "repair_occurred": false,
+        "retry_occurred": false,
+        "run_id": "ebffb675",
+        "terminal_status": "failed"
+      }
+    }
+  ],
+  "blocker_counts": {
+    "missing_reviewer_seat": 9,
+    "missing_completion_acceptance": 6,
+    "unavailable_tool": 1
+  },
+  "suites": [
+    {
+      "name": "phase4-raw",
+      "kind": "fixture",
+      "task_count": 60,
+      "runs_per_task": 1,
+      "command_count": 60,
+      "exit_zero_count": 60,
+      "avg_latency_ms": 62.132,
+      "determinism_rate": 0.0,
+      "path": "C:\\Source\\Orket-workflow-comparison\\suite_runners_suites-02\\results\\phase4-raw.json",
+      "sha256": "9cc5d52185ec805076c5ab3a905c13b40ec5d1bad548759aca8b362d080dcfa8",
+      "details": {}
+    },
+    {
+      "name": "phase5-raw",
+      "kind": "fixture",
+      "task_count": 40,
+      "runs_per_task": 1,
+      "command_count": 40,
+      "exit_zero_count": 40,
+      "avg_latency_ms": 62.112,
+      "determinism_rate": 0.0,
+      "path": "C:\\Source\\Orket-workflow-comparison\\suite_runners_suites-02\\results\\phase5-raw.json",
+      "sha256": "11311fc09ebb151e1e20210db120995448907a7597a1aa979a09bfe4dfe9ad85",
+      "details": {}
+    },
+    {
+      "name": "v1-control",
+      "kind": "control",
+      "task_count": 100,
+      "runs_per_task": 2,
+      "command_count": 200,
+      "exit_zero_count": 200,
+      "avg_latency_ms": 52.353,
+      "determinism_rate": 1.0,
+      "path": "C:\\Source\\Orket-workflow-comparison\\suite_runners_suites-02\\results\\v1-control.json",
+      "sha256": "eaf9e70669fd81c642ecef7fc536dfd0ffeaf5fcd39e7701a55bd9d764db8b0d",
+      "details": {}
+    },
+    {
+      "name": "v2_realworld-control",
+      "kind": "control",
+      "task_count": 80,
+      "runs_per_task": 2,
+      "command_count": 160,
+      "exit_zero_count": 160,
+      "avg_latency_ms": 55.994,
+      "determinism_rate": 1.0,
+      "path": "C:\\Source\\Orket-workflow-comparison\\suite_runners_suites-02\\results\\v2_realworld-control.json",
+      "sha256": "347f0215df1e4c0c7968acc17660d90e6f1c805c4d2a38fca6f217a8f72bd21d",
+      "details": {}
+    },
+    {
+      "name": "card-raw",
+      "kind": "live_probe",
+      "task_count": 1,
+      "runs_per_task": 1,
+      "command_count": 1,
+      "exit_zero_count": 0,
+      "avg_latency_ms": 13767.733,
+      "determinism_rate": 0.0,
+      "path": "C:\\Source\\Orket-workflow-comparison\\suite_runners_suites-02\\results\\card-raw.json",
+      "sha256": "95b9c5c81e3328bae21c027ccf63556693193171bbb61c6bdfd926273b7fcce1",
+      "details": {
+        "001": {
+          "tier": 1,
+          "unique_hashes": 1,
+          "deterministic": null,
+          "determinism_note": "single_run_insufficient",
+          "avg_latency_ms": 13767.733,
+          "avg_cost_usd": 0.0,
+          "hashes": [
+            "a375691c5d580fa775264d6671a9c9058e082c090c404e412be7020e53bd95bf"
+          ],
+          "runs": [
+            {
+              "run_index": 1,
+              "exit_code": 2,
+              "outcome": "fail",
+              "hash": "a375691c5d580fa775264d6671a9c9058e082c090c404e412be7020e53bd95bf",
+              "duration_ms": 13767.733,
+              "cost_usd": 0.0,
+              "telemetry": {
+                "execution_lane": "ci",
+                "vram_profile": "safe",
+                "init_latency": null,
+                "total_latency": 12.707,
+                "peak_memory_rss": 127.063,
+                "adherence_score": 1.0,
+                "internal_model_seconds": 3.706,
+                "orchestration_overhead_ratio": 0.708,
+                "run_quality_status": "POLLUTED",
+                "run_quality_reasons": [
+                  "MISSING_EXPERIMENTAL_CONTROLS",
+                  "HIGH_ORCHESTRATION_OVERHEAD"
+                ],
+                "system_load_start": {
+                  "core_count": 24,
+                  "cpu_percent": 16.6,
+                  "load_1m": null
+                },
+                "system_load_end": {
+                  "core_count": 24,
+                  "cpu_percent": 13.2,
+                  "load_1m": null
+                },
+                "experimental_controls": {
+                  "seed": null,
+                  "threads": null,
+                  "affinity_policy": "",
+                  "warmup_steps": null
+                },
+                "token_metrics_status": "OK",
+                "token_metrics": {
+                  "status": "OK",
+                  "counts": {
+                    "prompt_tokens": 1200,
+                    "output_tokens": 126,
+                    "total_tokens": 1326
+                  },
+                  "latencies": {
+                    "prefill_seconds": 0.497,
+                    "decode_seconds": 3.209,
+                    "total_turn_seconds": 12.707
+                  },
+                  "throughput": {
+                    "prompt_tokens_per_second": 2414.49,
+                    "generation_tokens_per_second": 39.26
+                  },
+                  "audit": {
+                    "raw_usage": {
+                      "completion_tokens": 126,
+                      "prompt_tokens": 1200,
+                      "total_tokens": 1326
+                    },
+                    "raw_timings": {
+                      "predicted_ms": 3208.691,
+                      "prompt_ms": 497.196
+                    }
+                  }
+                },
+                "vibe_metrics": {
+                  "latency_variance": null,
+                  "code_density": 0.325,
+                  "gen_retries": 0,
+                  "vibe_delta": null,
+                  "vibe_delta_status": "NO_BASELINE"
+                }
+              },
+              "normalized_output_preview": "{\"canonical_run_dir\": \"workspace/runs/20261004_222320_task001_50e301c2\", \"exit_code\": 2, \"output_file\": \"benchmark_task_001_output.md\", \"run_id\": \"50e301c2\", \"run_manifest\": \"workspace/run_manifest.jsonl\", \"session_id\": \"b39f3f4b\", \"task_id\": \"001\", \"telemetry\": {\"adherence_score\": 1.0, \"experimenta"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "rock-raw",
+      "kind": "live_probe",
+      "task_count": 1,
+      "runs_per_task": 1,
+      "command_count": 1,
+      "exit_zero_count": 0,
+      "avg_latency_ms": 1878.836,
+      "determinism_rate": 0.0,
+      "path": "C:\\Source\\Orket-workflow-comparison\\suite_runners_suites-02\\results\\rock-raw.json",
+      "sha256": "2a4d0caa5ba9e46ad2d728ed736094bc920d612f0c9af2eeac41f3b358b04c6a",
+      "details": {
+        "008": {
+          "tier": 1,
+          "unique_hashes": 1,
+          "deterministic": null,
+          "determinism_note": "single_run_insufficient",
+          "avg_latency_ms": 1878.836,
+          "avg_cost_usd": 0.0,
+          "hashes": [
+            "50573629a1061bc40946b8b8bf180580ccb0a8c22a1cf8cc4a6b1b5cae4dff72"
+          ],
+          "runs": [
+            {
+              "run_index": 1,
+              "exit_code": 2,
+              "outcome": "fail",
+              "hash": "50573629a1061bc40946b8b8bf180580ccb0a8c22a1cf8cc4a6b1b5cae4dff72",
+              "duration_ms": 1878.836,
+              "cost_usd": 0.0,
+              "telemetry": {
+                "execution_lane": "ci",
+                "vram_profile": "safe",
+                "init_latency": null,
+                "total_latency": 1.879,
+                "peak_memory_rss": 0.0,
+                "adherence_score": null,
+                "internal_model_seconds": null,
+                "orchestration_overhead_ratio": null,
+                "run_quality_status": "POLLUTED",
+                "run_quality_reasons": [
+                  "MISSING_EXPERIMENTAL_CONTROLS",
+                  "MISSING_TOKEN_TIMINGS"
+                ],
+                "system_load_start": {},
+                "system_load_end": {},
+                "experimental_controls": {
+                  "seed": null,
+                  "threads": null,
+                  "affinity_policy": "",
+                  "warmup_steps": null
+                },
+                "token_metrics_status": "TOKEN_AND_TIMING_UNAVAILABLE",
+                "token_metrics": {
+                  "status": "TOKEN_AND_TIMING_UNAVAILABLE",
+                  "counts": {
+                    "prompt_tokens": null,
+                    "output_tokens": null,
+                    "total_tokens": null
+                  },
+                  "latencies": {
+                    "prefill_seconds": null,
+                    "decode_seconds": null,
+                    "total_turn_seconds": 1.879
+                  },
+                  "throughput": {
+                    "prompt_tokens_per_second": null,
+                    "generation_tokens_per_second": null
+                  },
+                  "audit": {
+                    "raw_usage": {},
+                    "raw_timings": {}
+                  }
+                },
+                "vibe_metrics": {
+                  "latency_variance": null,
+                  "code_density": 0.0,
+                  "gen_retries": 0,
+                  "vibe_delta": null,
+                  "vibe_delta_status": "NO_BASELINE"
+                }
+              },
+              "normalized_output_preview": "{\"canonical_run_dir\": \"workspace/runs/20261004_222335_task008_2cc1a37a_card\", \"entry_card\": \"benchmark_live_collection_008_c0e361a5\", \"epic\": \"benchmark_live_008_18be2d30\", \"exit_code\": 2, \"output_file\": \"benchmark_task_008_output.md\", \"run_id\": \"2cc1a37a\", \"run_manifest\": \"workspace/run_manifest.js"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "empty_epics": [
+    {
+      "path": "model/core/epics/enterprise_launch.json",
+      "sha256": "4f81ee89fabb603a29911a03eea7ce2d52211f79ddd4e71444b7fffc0d4093a2",
+      "cards": 0,
+      "team": "enterprise",
+      "missing_acceptance": 0,
+      "reviewer_role_present": false,
+      "state": "empty_scaffold"
+    },
+    {
+      "path": "model/core/epics/sanity_test.json",
+      "sha256": "818ca53fa4c4ed5c22f946d8c255bebdfa5b11cefb33a7630279caebf845624f",
+      "cards": 0,
+      "team": "enterprise",
+      "missing_acceptance": 0,
+      "reviewer_role_present": false,
+      "state": "empty_scaffold"
+    },
+    {
+      "path": "model/core/epics/ui_vision.json",
+      "sha256": "1856d241af147f89d7fb9e4f6014725f3b84f2a1b03b40a4340dc231f2e994d2",
+      "cards": 0,
+      "team": "ui_experts",
+      "missing_acceptance": 0,
+      "reviewer_role_present": false,
+      "state": "empty_scaffold"
+    },
+    {
+      "path": "model/core/epics/unplanned_support.json",
+      "sha256": "c5693516e39097cf389731944ac00134620fbf4a984366ff83172a041326a74a",
+      "cards": 0,
+      "team": "enterprise",
+      "missing_acceptance": 0,
+      "reviewer_role_present": false,
+      "state": "empty_scaffold"
+    },
+    {
+      "path": "model/creative/epics/void_lore.json",
+      "sha256": "01754caeadc001fd1e9d63a5230c01824bb6f22c2c0c8da522f6b2913213e6bb",
+      "cards": 0,
+      "team": "creative_guild",
+      "missing_acceptance": 0,
+      "reviewer_role_present": false,
+      "state": "empty_scaffold"
+    },
+    {
+      "path": "model/creative/epics/void_visuals.json",
+      "sha256": "8400c9cf1d1382d89fcc220c83a406f84d4649cb302559fdfc092865068d3783",
+      "cards": 0,
+      "team": "creative_guild",
+      "missing_acceptance": 0,
+      "reviewer_role_present": false,
+      "state": "empty_scaffold"
+    },
+    {
+      "path": "model/engineering/epics/dashboard_scaffold.json",
+      "sha256": "4e54811383fedde676c00e13366326f53fef59dd338bc5799da80b419a038e57",
+      "cards": 0,
+      "team": "engineering_team",
+      "missing_acceptance": 0,
+      "reviewer_role_present": false,
+      "state": "empty_scaffold"
+    },
+    {
+      "path": "model/engineering/epics/New Feature Epic.json",
+      "sha256": "21f4325462512ba94103180aee13e19c453364d8df377e659f06fc2a91059f3d",
+      "cards": 0,
+      "team": null,
+      "missing_acceptance": 0,
+      "reviewer_role_present": false,
+      "state": "empty_scaffold"
+    },
+    {
+      "path": "model/engineering/epics/void_engine.json",
+      "sha256": "cec23ba9cc52a76c362205888876a02b4b1ffa8befcdf8310776806a07e57797",
+      "cards": 0,
+      "team": "engineering_team",
+      "missing_acceptance": 0,
+      "reviewer_role_present": false,
+      "state": "empty_scaffold"
+    },
+    {
+      "path": "model/marketing/epics/brand_package.json",
+      "sha256": "20e564819697d581e0d4123df06d8b6044a36d88ab46c863d4459874ae6ac205",
+      "cards": 0,
+      "team": "marketing_pros",
+      "missing_acceptance": 0,
+      "reviewer_role_present": false,
+      "state": "empty_scaffold"
+    },
+    {
+      "path": "model/marketing/epics/enterprise_vibe_design.json",
+      "sha256": "2d7435e8d73fa2a5fbb3e1b7c417431c4aa0185769af401a82ce44a0de1192e0",
+      "cards": 0,
+      "team": "marketing_pros",
+      "missing_acceptance": 0,
+      "reviewer_role_present": false,
+      "state": "empty_scaffold"
+    },
+    {
+      "path": "model/product/epics/command_center_requirements.json",
+      "sha256": "400e2db30b3186b6cf881fbf956c80ca92695d5838af0eef90c70e1e3b2820fa",
+      "cards": 0,
+      "team": "product_owners",
+      "missing_acceptance": 0,
+      "reviewer_role_present": false,
+      "state": "empty_scaffold"
+    },
+    {
+      "path": "model/product/epics/core_requirements.json",
+      "sha256": "747bde25a6b9fe0d18c3c8b3d5d7ff2a2fe3c2f98a4c4ad8c1a41705d826c202",
+      "cards": 0,
+      "team": "product_owners",
+      "missing_acceptance": 0,
+      "reviewer_role_present": false,
+      "state": "empty_scaffold"
+    },
+    {
+      "path": "model/quality/epics/security_audit.json",
+      "sha256": "658d9c8dbe92e303de5f9aa1b4fbe425e8e5af69713837583c54369ca029f36a",
+      "cards": 0,
+      "team": "quality_team",
+      "missing_acceptance": 0,
+      "reviewer_role_present": false,
+      "state": "empty_scaffold"
+    },
+    {
+      "path": "model/training/epics/import_best_practices.json",
+      "sha256": "d568e09e89892ee16bf2a93114dbdc20245c5ad584e8651839657f0718fed109",
+      "cards": 0,
+      "team": "training_experts",
+      "missing_acceptance": 0,
+      "reviewer_role_present": false,
+      "state": "empty_scaffold"
+    },
+    {
+      "path": "model/uiux/epics/layout_mockup.json",
+      "sha256": "cdd1542a709759852523c2d0d2d5acf3b4342a48eed22c0fbdbf1533ac300e08",
+      "cards": 0,
+      "team": "uiux_designers",
+      "missing_acceptance": 0,
+      "reviewer_role_present": false,
+      "state": "empty_scaffold"
+    }
+  ],
+  "unrun_matrices": [
+    {
+      "path": "benchmarks/configs/quant_sweep_common_sessions.json",
+      "sha256": "1ef264357f9c42a802e7cb4c87daf5a2d2b13270bcdf327bde3211b77be8da9c",
+      "models": [
+        "qwen2.5-coder:7b",
+        "llama3.1:8b"
+      ],
+      "task_bank": "benchmarks/task_bank/v2_realworld/tasks.json",
+      "task_limit": 0,
+      "execution_mode": "live-card",
+      "quants": [
+        "Q8_0",
+        "Q6_K",
+        "Q4_K_M"
+      ],
+      "configured_provider": null
+    },
+    {
+      "path": "benchmarks/configs/quant_sweep_logic_only.json",
+      "sha256": "57bef7eb8e10bd5cc700480dd1e91a27d564ff95440418da94e9d78be8b1c0a8",
+      "models": [
+        "qwen2.5-coder:7b",
+        "llama3.1:8b"
+      ],
+      "task_bank": "benchmarks/task_bank/v2_realworld/tasks.json",
+      "task_limit": 10,
+      "execution_mode": "live-card",
+      "quants": [
+        "Q8_0",
+        "Q6_K",
+        "Q4_K_M"
+      ],
+      "configured_provider": null
+    },
+    {
+      "path": "benchmarks/configs/quant_sweep_mixed.json",
+      "sha256": "72f6ce8d239b7d05492e824307e78c77ee8a6ace99a2475cb19c249d1ea93d92",
+      "models": [
+        "qwen2.5-coder:7b",
+        "llama3.1:8b"
+      ],
+      "task_bank": "benchmarks/task_bank/v2_realworld/tasks.json",
+      "task_limit": 0,
+      "execution_mode": "live-card",
+      "quants": [
+        "Q8_0",
+        "Q6_K",
+        "Q4_K_M"
+      ],
+      "configured_provider": null
+    },
+    {
+      "path": "benchmarks/configs/quant_sweep_refactor_heavy.json",
+      "sha256": "e49eaf279003670a149aa1009f3664614693a7cda7102e46d65f40b89837728c",
+      "models": [
+        "qwen2.5-coder:7b",
+        "llama3.1:8b"
+      ],
+      "task_bank": "benchmarks/task_bank/v2_realworld/tasks.json",
+      "task_limit": 0,
+      "execution_mode": "live-card",
+      "quants": [
+        "Q8_0",
+        "Q6_K",
+        "Q4_K_M"
+      ],
+      "configured_provider": null
+    },
+    {
+      "path": "benchmarks/configs/qwen35_full_spectrum.json",
+      "sha256": "176b640021a12585dbad7bb833b78057be5eb6e95095b140f4e99cfdaaf1a198",
+      "models": [
+        "qwen3.5-0.8b",
+        "qwen3.5-2b",
+        "qwen3.5-4b",
+        "qwen3.5-27b",
+        "qwen3.5-35b-a3b"
+      ],
+      "task_bank": "benchmarks/task_bank/v2_realworld/tasks.json",
+      "task_limit": 0,
+      "execution_mode": "live-card",
+      "quants": [
+        "Q8_0",
+        "Q6_K",
+        "Q4_K_M",
+        "Q3_K_L"
+      ],
+      "configured_provider": "lmstudio"
+    },
+    {
+      "path": "benchmarks/configs/qwen35_logic_sentry.json",
+      "sha256": "4e6b1c1d491d55304917c4a21ec519c2c7d7c7c329e2e38f3bb595e3e699f723",
+      "models": [
+        "qwen3.5-2b",
+        "qwen3.5-4b",
+        "qwen3.5-0.8b"
+      ],
+      "task_bank": "benchmarks/task_bank/v2_realworld/tasks.json",
+      "task_limit": 10,
+      "execution_mode": "live-card",
+      "quants": [
+        "Q8_0",
+        "Q6_K",
+        "Q4_K_M"
+      ],
+      "configured_provider": "lmstudio"
+    },
+    {
+      "path": "benchmarks/configs/qwen35_logic_sentry_35b.json",
+      "sha256": "5a6edd6b6d2d4afbee793a365396ddf7ad2996b75dc767365f84e1dfec9bfe45",
+      "models": [
+        "qwen3.5-35b-a3b"
+      ],
+      "task_bank": "benchmarks/task_bank/v2_realworld/tasks.json",
+      "task_limit": 10,
+      "execution_mode": "live-card",
+      "quants": [
+        "Q8_0",
+        "Q6_K",
+        "Q4_K_M"
+      ],
+      "configured_provider": "lmstudio"
+    },
+    {
+      "path": "benchmarks/configs/qwen35_logic_sentry_bigmodels.json",
+      "sha256": "4527d7cbd4333de1455ff6d9ad8c96604db6523b5cb177ad8e193a5305da04c3",
+      "models": [
+        "qwen3.5-27b",
+        "qwen3.5-35b-a3b"
+      ],
+      "task_bank": "benchmarks/task_bank/v2_realworld/tasks.json",
+      "task_limit": 10,
+      "execution_mode": "live-card",
+      "quants": [
+        "Q8_0",
+        "Q6_K",
+        "Q4_K_M"
+      ],
+      "configured_provider": "lmstudio"
+    },
+    {
+      "path": "benchmarks/configs/qwen35_logic_sentry_trialA.json",
+      "sha256": "8e67d7815f62fcfaed4117a367272e697f03a7f6af6d329d44b37afd6749bfb7",
+      "models": [
+        "qwen3.5-2b",
+        "qwen3.5-4b",
+        "qwen3.5-0.8b"
+      ],
+      "task_bank": "benchmarks/task_bank/v2_realworld/tasks.json",
+      "task_limit": 10,
+      "execution_mode": "live-card",
+      "quants": [
+        "Q8_0",
+        "Q6_K",
+        "Q4_K_M"
+      ],
+      "configured_provider": "lmstudio"
+    },
+    {
+      "path": "benchmarks/configs/qwen35_logic_sentry_trialB.json",
+      "sha256": "cf7f922d0ece812a627eb14f4ebda7cc601b462de4d1af2ff13442c4b99e2b4d",
+      "models": [
+        "qwen3.5-2b",
+        "qwen3.5-4b",
+        "qwen3.5-0.8b"
+      ],
+      "task_bank": "benchmarks/task_bank/v2_realworld/tasks.json",
+      "task_limit": 10,
+      "execution_mode": "live-card",
+      "quants": [
+        "Q8_0",
+        "Q6_K",
+        "Q4_K_M"
+      ],
+      "configured_provider": "lmstudio"
+    },
+    {
+      "path": "benchmarks/configs/qwen35_logic_sentry_trialC.json",
+      "sha256": "5ea098a54cf62967217e691575be45a7b6c0517675f6ba4527710974bbca552d",
+      "models": [
+        "qwen3.5-2b",
+        "qwen3.5-4b",
+        "qwen3.5-0.8b"
+      ],
+      "task_bank": "benchmarks/task_bank/v2_realworld/tasks.json",
+      "task_limit": 10,
+      "execution_mode": "live-card",
+      "quants": [
+        "Q8_0",
+        "Q6_K",
+        "Q4_K_M"
+      ],
+      "configured_provider": "lmstudio"
+    },
+    {
+      "path": "benchmarks/configs/qwen35_logic_sentry_trialD.json",
+      "sha256": "a48e1600295b2f32a60aef40eddda37573a8bc1bb2cf747fba5b4929de19b7ae",
+      "models": [
+        "qwen3.5-2b",
+        "qwen3.5-4b",
+        "qwen3.5-0.8b"
+      ],
+      "task_bank": "benchmarks/task_bank/v2_realworld/tasks.json",
+      "task_limit": 10,
+      "execution_mode": "live-card",
+      "quants": [
+        "Q8_0",
+        "Q6_K",
+        "Q4_K_M"
+      ],
+      "configured_provider": "lmstudio"
+    },
+    {
+      "path": "benchmarks/configs/qwen35_marshall_ops.json",
+      "sha256": "0df3190aad397bd8a05c8d812299c7318bef20ca72efa52d98f31b43c8d4c8b9",
+      "models": [
+        "qwen3.5-27b",
+        "qwen3.5-35b-a3b"
+      ],
+      "task_bank": "benchmarks/task_bank/v2_realworld/tasks.json",
+      "task_limit": 0,
+      "execution_mode": "live-card",
+      "quants": [
+        "Q8_0",
+        "Q6_K",
+        "Q4_K_M"
+      ],
+      "configured_provider": "lmstudio"
+    }
+  ],
+  "historical": [
+    {
+      "path": "benchmarks/results/benchmarks/live_rock_v2_001_080_determinism_report.json",
+      "sha256": "012b3fc05f4981dd4058bc6238479457a079ce9366b6e838f04f0833226312a9",
+      "generated_at_utc": "2026-02-18T04:40:29.967538+00:00",
+      "tasks": 80,
+      "avg_latency_ms": 4532.065,
+      "runs_per_task": 1,
+      "runner_template": "python scripts/MidTier/live_rock_benchmark_runner.py --task {task_file} --venue {venue} --flow {flow} --run-dir {run_dir}",
+      "exit_zero": 80,
+      "run_count": 80,
+      "note": "historical only; zero exit and legacy determinism labels do not prove current correctness or repeatability"
+    },
+    {
+      "path": "benchmarks/results/benchmarks/live_card_100_determinism_report.json",
+      "sha256": "ffde387db287a4b5ceab9597a8d70a7ac21cd786108bc079a9b352c367a0c5c7",
+      "generated_at_utc": "2026-03-26T21:37:38.083334+00:00",
+      "tasks": 100,
+      "avg_latency_ms": 7468.8,
+      "runs_per_task": 1,
+      "runner_template": "python scripts/benchmarks/live_card_benchmark_runner.py --task {task_file} --runtime-target {runtime_target} --execution-mode {execution_mode} --run-dir {run_dir}",
+      "exit_zero": 71,
+      "run_count": 100,
+      "note": "historical only; zero exit and legacy determinism labels do not prove current correctness or repeatability"
+    },
+    {
+      "path": "benchmarks/results/benchmarks/phase4_determinism_report.json",
+      "sha256": "1227af54d5c2d85f3aef501e779864da74230f92882758724b740b0ce32f5aeb",
+      "generated_at_utc": "2026-02-18T00:36:20.741652+00:00",
+      "tasks": 60,
+      "avg_latency_ms": 77.663,
+      "runs_per_task": 1,
+      "runner_template": "python scripts/MidTier/orchestration_runner.py --task {task_file} --venue {venue} --flow {flow} --run-dir {run_dir}",
+      "exit_zero": 60,
+      "run_count": 60,
+      "note": "historical only; zero exit and legacy determinism labels do not prove current correctness or repeatability"
+    },
+    {
+      "path": "benchmarks/results/benchmarks/phase5_determinism_report.json",
+      "sha256": "a38acc99da70db18c131cc0a398b56ebbe56ca80441cbb75b78c8f613013c797",
+      "generated_at_utc": "2026-02-18T00:23:16.887851+00:00",
+      "tasks": 40,
+      "avg_latency_ms": 71.985,
+      "runs_per_task": 1,
+      "runner_template": "python scripts/MidTier/orchestration_runner.py --task {task_file} --venue {venue} --flow {flow} --run-dir {run_dir}",
+      "exit_zero": 40,
+      "run_count": 40,
+      "note": "historical only; zero exit and legacy determinism labels do not prove current correctness or repeatability"
+    },
+    {
+      "path": ".tmp/local_model_coding_challenge/run_01/runs/de516300/run_summary.json",
+      "sha256": "ebe1974182c29d0607029786df0a9f4bf12887671e0a607da6e1fc969e3881ab",
+      "model": "google/gemma-4-26b-a4b",
+      "provider": "lmstudio",
+      "status": "terminal_failure",
+      "duration_ms": 63582,
+      "turns": 8,
+      "deepest_issue": "CWR-04"
+    },
+    {
+      "path": ".tmp/local_model_coding_challenge/run_02/runs/83c16895/run_summary.json",
+      "sha256": "8d365e0fb6e3855fe18c84f99fa0ebecbaab9a56ce8610484889c10e6b002834",
+      "model": "google/gemma-4-26b-a4b",
+      "provider": "lmstudio",
+      "status": "terminal_failure",
+      "duration_ms": 64606,
+      "turns": 8,
+      "deepest_issue": "CWR-04"
+    },
+    {
+      "path": ".tmp/local_model_coding_challenge/run_03/runs/6d0cfc41/run_summary.json",
+      "sha256": "a9eb0a075772d2faa86fa9a12e1e1d19878f87d338448abb4e2d234ed40f126d",
+      "model": "google/gemma-4-26b-a4b",
+      "provider": "lmstudio",
+      "status": "terminal_failure",
+      "duration_ms": 63520,
+      "turns": 8,
+      "deepest_issue": "CWR-04"
+    }
+  ],
+  "preservation": {
+    "owned_commands_cleaned": true,
+    "surviving_owned_processes": [],
+    "operator_server": {
+      "ProcessId": 45556,
+      "Name": "llama-server.exe",
+      "StartedUTC": "2026-10-04T19:24:07.5544910Z"
+    },
+    "operator_board_sha256": "14724f69f6712ba8c49370855646e55f5f8cf0c06c3e06e07d24dd259b8252ab",
+    "operator_board_flag": "S model/core/rocks/run_the_business.json",
+    "template_sha256": "8fc57a9f65eaaaee48e80771aea4775f7d3a8adb466a6193d8de551fa124d578",
+    "worktrees": "worktree C:/Source/Orket\nHEAD 17fe469cf71294a03d8d8b9cb5a37cb7735aedd7\nbranch refs/heads/main\n\nworktree C:/Source/Orket-architectural-truth\nHEAD 0b33356f0e666ec67eb7c386dfaff706820960d6\nbranch refs/heads/codex/architectural-truth-bt0\n\nworktree C:/Source/Orket-logging-baseline-b69\nHEAD b69baeaeee8cf27c90543ed8c33c3fa40ea9df43\ndetached\n\nworktree C:/Source/Orket-paperclips-foundation\nHEAD 2ccbd9aa26a71ba0347096800b8acbd8f4804070\nbranch refs/heads/codex/paperclips-foundation\n\n"
+  },
+  "targeted_tests_passed": 37,
+  "process_receipts": {
+    "C:\\Source\\Orket\\.tmp\\workflow-comparison\\probes-01\\state.json": "711214d3b574dc87831ec2fd25aee3575d748d0fdb04aeb7d4f1aa4500b630f3",
+    "C:\\Source\\Orket\\.tmp\\workflow-comparison\\probes-02\\state.json": "e4218a47948663a234f09a3a940ff044186b24f42d540a38431b13c4f8250c37",
+    "C:\\Source\\Orket\\.tmp\\workflow-comparison\\suites-01\\state.json": "c95933827e82536a0be933d4e985ef0fe55548bbb42e1489e9447047dd38618f",
+    "C:\\Source\\Orket\\.tmp\\workflow-comparison\\suites-02\\state.json": "6056071711b08270ddb10d218df841ae0a6c533fb44733c7434a30ef2875b344",
+    "C:\\Source\\Orket\\.tmp\\workflow-comparison\\verify-01\\state.json": "171e3c28f087244e0244d2b2d398f2f0a0906e2c43276b7a1a7aa5e0dc48f0e7"
+  },
+  "source_sha256": {
+    "scripts/README.md": "9372283a535aed2bd4b51a14238b438226efb85cf3d39fb47003c8e091de68ca",
+    "scripts/benchmarks/determinism_cli.py": "39814ee6b6dc294fdf080926e05d36a41e01daae2868ac1bbb493be03cfce1f4",
+    "scripts/benchmarks/live_card_benchmark_runner.py": "1bd29c2a860429a0a636413fb33734fb3545c74339b166771df125734fd831b2",
+    "scripts/benchmarks/live_rock_benchmark_runner.py": "89271b10d8c09e5fda173bf8b71664c634287895328a8f2d46d286a86c45b867",
+    "scripts/benchmarks/run_determinism_harness.py": "ec3c99fa7542b5b7bfd9003fe0814ce556e9800ddf5060057bc24e69cdf38013",
+    "scripts/benchmarks/run_live_card_benchmark_suite.py": "5efe9a41d5f215307707c6187f1079ee384e615d5309fc845071bd471ec66d07",
+    "scripts/benchmarks/run_live_rock_benchmark_suite.py": "4c8bfd6e79172f1dd6d1b243ffa398e8d00f72d77d9676a50e1b4b87a22d0e2d",
+    "tests/scripts/test_benchmark_windows_command.py": "7a352ad9970ec63dbc69e1b9b2ab4ff9c4ad00167044acbd9bcee6041d7cc96a"
+  },
+  "repository_files_touched": [
+    "scripts/README.md",
+    "scripts/benchmarks/determinism_cli.py",
+    "scripts/benchmarks/live_card_benchmark_runner.py",
+    "scripts/benchmarks/live_rock_benchmark_runner.py",
+    "scripts/benchmarks/run_determinism_harness.py",
+    "scripts/benchmarks/run_live_card_benchmark_suite.py",
+    "scripts/benchmarks/run_live_rock_benchmark_suite.py",
+    "tests/scripts/test_benchmark_windows_command.py",
+    "benchmarks/staging/General/stored_workflow_runtime_comparison.json",
+    "benchmarks/staging/General/stored_workflow_runtime_comparison.md",
+    "benchmarks/staging/index.json",
+    "benchmarks/staging/README.md"
+  ],
+  "next_action": "Comparison finished. Successful runtime comparisons require stored team/acceptance migration and benchmark board-lifetime repair; no automatic campaign queued.",
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-10-04T22:29:10.235722Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:d73ba1519b9c1441db249b59e6f4d7abf86e51f070f63dae97282367e138f586",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 2264,
+        "paths_total_reference": 2264,
+        "churn_paths": 2264,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    },
+    {
+      "run_at_utc": "2026-10-04T22:31:35.025130Z",
+      "changed": true,
+      "before_digest": "sha256:d73ba1519b9c1441db249b59e6f4d7abf86e51f070f63dae97282367e138f586",
+      "after_digest": "sha256:9df52a1ee809646011f0a660d2d642b241fecb76a898ddf905deb99e4e70fb26",
+      "diff": {
+        "added_paths": 1,
+        "removed_paths": 0,
+        "changed_paths": 1,
+        "initial_write": false,
+        "paths_total_previous": 2264,
+        "paths_total_current": 2266,
+        "paths_total_reference": 2266,
+        "churn_paths": 2,
+        "churn_ratio": 0.000883,
+        "sample_paths": [
+          "$.process_receipts.C:\\Source\\Orket\\.tmp\\workflow-comparison\\verify-01\\state.json",
+          "$.recorded_at_utc"
+        ]
+      }
+    }
+  ]
+}

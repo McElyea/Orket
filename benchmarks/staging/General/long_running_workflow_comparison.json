@@ -1,0 +1,959 @@
+{
+  "schema_version": "long_running_workflow_comparison.v1",
+  "observed_path": "primary",
+  "observed_result": "partial success",
+  "host": "native Windows",
+  "installed_core_sdk": [
+    "0.7.2",
+    "0.7.2"
+  ],
+  "provider": "llama_cpp",
+  "model": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+  "base_commit": "17fe469cf71294a03d8d8b9cb5a37cb7735aedd7",
+  "review": [
+    {
+      "scenario": "constants_flags",
+      "report": "C:\\Source\\Orket\\.tmp\\longrun-comparison\\review-01\\constants_flags.json",
+      "sha256": "50b92b700f2698aa06d61e7793c8d47748e9730a76e603a9db0dc2e0ecc0714a",
+      "runs_requested": 1000,
+      "runs_checked": 1000,
+      "ok": true,
+      "strict_replay_parity": true,
+      "command_wall_seconds": 213.095,
+      "proof": "live native Windows deterministic review execution; no model calls"
+    },
+    {
+      "scenario": "secrets_sha1",
+      "report": "C:\\Source\\Orket\\.tmp\\longrun-comparison\\review-01\\secrets_sha1.json",
+      "sha256": "07cbbf35a89646e1c7d5a8d14db50c6ce7ed951d10d3810dd177ea685945a1b7",
+      "runs_requested": 1000,
+      "runs_checked": 1000,
+      "ok": true,
+      "strict_replay_parity": true,
+      "command_wall_seconds": 243.96,
+      "proof": "live native Windows deterministic review execution; no model calls"
+    },
+    {
+      "scenario": "auth_insecure",
+      "report": "C:\\Source\\Orket\\.tmp\\longrun-comparison\\review-01\\auth_insecure.json",
+      "sha256": "e4cfbed99b5e14cdfdafd0d360bd8ed54b9a7123d4e30fd8d63ee766323b18df",
+      "runs_requested": 1000,
+      "runs_checked": 1000,
+      "ok": true,
+      "strict_replay_parity": true,
+      "command_wall_seconds": 275.518,
+      "proof": "live native Windows deterministic review execution; no model calls"
+    },
+    {
+      "scenario": "math_parse_int",
+      "report": "C:\\Source\\Orket\\.tmp\\longrun-comparison\\review-01\\math_parse_int.json",
+      "sha256": "27699f05b62009e18ab0155832172229416358ee8e5669abe942b1cb87568a44",
+      "runs_requested": 1000,
+      "runs_checked": 1000,
+      "ok": true,
+      "strict_replay_parity": true,
+      "command_wall_seconds": 228.059,
+      "proof": "live native Windows deterministic review execution; no model calls"
+    },
+    {
+      "scenario": "truncation_bounds",
+      "report": "C:\\Source\\Orket\\.tmp\\longrun-comparison\\review-01\\truncation_bounds.json",
+      "sha256": "db8dcde4d98e6066613603afe78e7a73330d19b94c84483bd7dca903338a0ebd",
+      "runs_requested": 100,
+      "runs_checked": 100,
+      "ok": true,
+      "strict_replay_parity": true,
+      "command_wall_seconds": 23.765,
+      "proof": "live native Windows deterministic review execution; no model calls"
+    }
+  ],
+  "streaming": {
+    "schema_version": "live_1000_consistency_v1",
+    "generated_at_utc": "2026-10-04T23:00:40.937749+00:00",
+    "config": {
+      "stream_loops": 1000,
+      "stream_provider_mode": "real",
+      "stream_real_provider": "llama_cpp",
+      "stream_model_id": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+      "stream_timeout": 30.0,
+      "stream_scenarios_root": "docs/observability/stream_scenarios",
+      "stream_skip_preflight": false,
+      "stream_preflight_smoke_stream": false,
+      "stream_openai_use_stream": true,
+      "stress_runs": 0,
+      "stress_profile": "baseline",
+      "stress_api_port": 8082,
+      "stress_webhook_port": 8080,
+      "stress_health_timeout_sec": 90,
+      "stress_out_dir": "benchmarks/results/streaming/live_1000_consistency_stress_runs",
+      "fail_fast": true
+    },
+    "stream_gate": {
+      "enabled": true,
+      "ok": false,
+      "return_code": 1,
+      "duration_ms": 148039.957,
+      "command": [
+        "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\final-packages-r02-py311\\Scripts\\python.exe",
+        "C:\\Source\\Orket-longrun-comparison\\stream-long-01\\scripts\\streaming\\run_model_streaming_gate.py",
+        "--provider-mode",
+        "real",
+        "--scenarios-root",
+        "docs/observability/stream_scenarios",
+        "--timeout",
+        "30.0",
+        "--stability-loops",
+        "1000",
+        "--real-provider",
+        "llama_cpp"
+      ],
+      "gate_run_id": "gate-da720f2d4eff",
+      "summary": {
+        "gate_run_id": "gate-da720f2d4eff",
+        "loops_requested": 1000,
+        "verdict_files_found": 34,
+        "loops_seen_global": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "scenarios": [
+          {
+            "scenario_id": "backpressure_drop_ranges",
+            "runs": 6,
+            "loops_seen": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "status_counts": {
+              "PASS": 6
+            },
+            "law_checker_failures": 0,
+            "terminal_event_values": [
+              "turn_final"
+            ],
+            "commit_outcome_values": [
+              ""
+            ],
+            "min_expected_token_deltas": 30,
+            "token_delta_min": 32,
+            "token_delta_max": 32
+          },
+          {
+            "scenario_id": "finalize_cancel_noop",
+            "runs": 6,
+            "loops_seen": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "status_counts": {
+              "PASS": 6
+            },
+            "law_checker_failures": 0,
+            "terminal_event_values": [
+              "turn_final"
+            ],
+            "commit_outcome_values": [
+              "ok"
+            ],
+            "min_expected_token_deltas": 0,
+            "token_delta_min": 1,
+            "token_delta_max": 1
+          },
+          {
+            "scenario_id": "s7_real_model_happy_path",
+            "runs": 6,
+            "loops_seen": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "status_counts": {
+              "PASS": 5,
+              "FAIL": 1
+            },
+            "law_checker_failures": 0,
+            "terminal_event_values": [
+              "turn_final",
+              "turn_interrupted"
+            ],
+            "commit_outcome_values": [
+              "fail_closed",
+              "ok"
+            ],
+            "min_expected_token_deltas": 1,
+            "token_delta_min": 0,
+            "token_delta_max": 1
+          },
+          {
+            "scenario_id": "s8_real_model_cancel_mid_gen",
+            "runs": 5,
+            "loops_seen": [
+              1,
+              2,
+              3,
+              4,
+              5
+            ],
+            "status_counts": {
+              "PASS": 5
+            },
+            "law_checker_failures": 0,
+            "terminal_event_values": [
+              "turn_interrupted"
+            ],
+            "commit_outcome_values": [
+              ""
+            ],
+            "min_expected_token_deltas": 0,
+            "token_delta_min": 0,
+            "token_delta_max": 0
+          },
+          {
+            "scenario_id": "s9_real_model_cold_load_visibility",
+            "runs": 5,
+            "loops_seen": [
+              1,
+              2,
+              3,
+              4,
+              5
+            ],
+            "status_counts": {
+              "PASS": 5
+            },
+            "law_checker_failures": 0,
+            "terminal_event_values": [
+              "turn_final"
+            ],
+            "commit_outcome_values": [
+              "ok"
+            ],
+            "min_expected_token_deltas": 1,
+            "token_delta_min": 1,
+            "token_delta_max": 1
+          },
+          {
+            "scenario_id": "unknown_workload_400",
+            "runs": 6,
+            "loops_seen": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "status_counts": {
+              "PASS": 6
+            },
+            "law_checker_failures": 0,
+            "terminal_event_values": [
+              ""
+            ],
+            "commit_outcome_values": [
+              ""
+            ],
+            "min_expected_token_deltas": 0,
+            "token_delta_min": 0,
+            "token_delta_max": 0
+          }
+        ]
+      },
+      "stdout_tail": "seq=1 type=model_selected mono_ts_ms=190583937 keys=['authoritative', 'model_id', 'reason']\nseq=2 type=model_loading mono_ts_ms=190583937 keys=['authoritative', 'cold_start', 'progress']\nseq=3 type=turn_interrupted mono_ts_ms=190583937 keys=['authoritative', 'reason']\nPASS scenario=s8_real_model_cancel_mid_gen\nSUMMARY terminal=turn_interrupted commit=none token_deltas=0\nverdict=C:\\Source\\Orket-longrun-comparison\\stream-long-01\\workspace\\observability\\stream_scenarios\\s8_real_model_cancel_mid_gen\\gate-da720f2d4eff\\loop-5\\run-ca049e82aa00\\verdict.json\nseq=1 type=model_selected mono_ts_ms=190585250 keys=['authoritative', 'model_id', 'reason']\nseq=2 type=model_loading mono_ts_ms=190585250 keys=['authoritative', 'cold_start', 'progress']\nseq=3 type=model_ready mono_ts_ms=190585250 keys=['authoritative', 'load_ms', 'model_id', 'warm_state']\nseq=4 type=token_delta mono_ts_ms=190593890 keys=['authoritative', 'delta', 'index']\nseq=5 type=turn_final mono_ts_ms=190593906 keys=['authoritative']\nseq=6 type=commit_final mono_ts_ms=190593937 keys=['artifact_refs', 'authoritative', 'commit_digest', 'commit_id', 'commit_outcome', 'issues']\nPASS scenario=s9_real_model_cold_load_visibility\nSUMMARY terminal=turn_final commit=ok token_deltas=1\nverdict=C:\\Source\\Orket-longrun-comparison\\stream-long-01\\workspace\\observability\\stream_scenarios\\s9_real_model_cold_load_visibility\\gate-da720f2d4eff\\loop-5\\run-a09d234c372c\\verdict.json\nSTABILITY_LOOP=6/1000 gate_run_id=gate-da720f2d4eff\nPASS scenario=unknown_workload_400\nSUMMARY terminal=none commit=none token_deltas=0 drops=0 stream_digest=4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945\nverdict=C:\\Source\\Orket-longrun-comparison\\stream-long-01\\workspace\\observability\\stream_scenarios\\unknown_workload_400\\gate-da720f2d4eff\\loop-6\\run-56427d494e8b\\verdict.json\nPASS scenario=backpressure_drop_ranges\nseq=0 type=turn_accepted mono_ts_ms=190599078 keys=['authoritative', 'input', 'turn_params']\nseq=1 type=model_selected mono_ts_ms=190599078 keys=['authoritative', 'model_id', 'reason']\nseq=2 type=model_loading mono_ts_ms=190599078 keys=['authoritative', 'cold_start', 'progress']\nseq=3 type=model_ready mono_ts_ms=190599078 keys=['authoritative', 'load_ms', 'model_id', 'warm_state']\nseq=4 type=token_delta mono_ts_ms=190599078 keys=['authoritative', 'delta', 'index']\nseq=5 type=token_delta mono_ts_ms=190599078 keys=['authoritative', 'delta', 'index']\nseq=6 type=token_delta mono_ts_ms=190599078 keys=['authoritative', 'delta', 'index']\nseq=7 type=token_delta mono_ts_ms=190599078 keys=['authoritative', 'delta', 'index']\nseq=8 type=token_delta mono_ts_ms=190599078 keys=['authoritative', 'delta', 'index']\nseq=9 type=token_delta mono_ts_ms=190599093 keys=['authoritative', 'delta', 'index']\nseq=10 type=token_delta mono_ts_ms=190599093 keys=['authoritative', 'delta', 'index']\nseq=11 type=token_delta mono_ts_ms=190599093 keys=['authoritative', 'delta', 'index']\nseq=12 type=token_delta mono_ts_ms=190599093 keys=['authoritative', 'delta', 'index']\nseq=13 type=token_delta mono_ts_ms=190599093 keys=['authoritative', 'delta', 'index']\nseq=14 type=token_delta mono_ts_ms=190599093 keys=['authoritative', 'delta', 'index']\nseq=15 type=token_delta mono_ts_ms=190599093 keys=['authoritative', 'delta', 'index']\nseq=16 type=token_delta mono_ts_ms=190599093 keys=['authoritative', 'delta', 'index']\nseq=17 type=token_delta mono_ts_ms=190599093 keys=['authoritative', 'delta', 'index']\nseq=18 type=token_delta mono_ts_ms=190599093 keys=['authoritative', 'delta', 'index']\nseq=19 type=token_delta mono_ts_ms=190599093 keys=['authoritative', 'delta', 'index']\nseq=20 type=token_delta mono_ts_ms=190599093 keys=['authoritative', 'delta', 'index']\nseq=21 type=token_delta mono_ts_ms=190599093 keys=['authoritative', 'delta', 'index']\nseq=22 type=token_delta mono_ts_ms=190599093 keys=['authoritative', 'delta', 'index']\nseq=23 type=token_delta mono_ts_ms=190599093 keys=['authoritative', 'delta', 'index']\nseq=24 type=token_delta mono_ts_ms=190599093 keys=['authoritative', 'delta', 'index']\nseq=25 type=token_delta mono_ts_ms=190599093 keys=['authoritative', 'delta', 'index']\nseq=26 type=token_delta mono_ts_ms=190599093 keys=['authoritative', 'delta', 'index']\nseq=27 type=token_delta mono_ts_ms=190599093 keys=['authoritative', 'delta', 'index']\nseq=28 type=token_delta mono_ts_ms=190599093 keys=['authoritative', 'delta', 'index']\nseq=29 type=token_delta mono_ts_ms=190599093 keys=['authoritative', 'delta', 'index']\nseq=30 type=token_delta mono_ts_ms=190599093 keys=['authoritative', 'delta', 'index']\nseq=31 type=token_delta mono_ts_ms=190599093 keys=['authoritative', 'delta', 'index']\nseq=32 type=token_delta mono_ts_ms=190599093 keys=['authoritative', 'delta', 'index']\nseq=33 type=token_delta mono_ts_ms=190599093 keys=['authoritative', 'delta', 'index']\nseq=34 type=token_delta mono_ts_ms=190599093 keys=['authoritative', 'delta', 'index']\nseq=35 type=token_delta mono_ts_ms=190599093 keys=['authoritative', 'delta', 'index']\nseq=37 type=stream_truncated mono_ts_ms=190599093 keys=['authoritative', 'dropped_event_type', 'dropped_seq_ranges', 'reason']\nseq=125 type=turn_final mono_ts_ms=190599093 keys=['authoritative', 'dropped_seq_ranges']\nSUMMARY terminal=turn_final commit=none token_deltas=32 drops=2 stream_digest=76f39b739b82fec36567fa6d480eee0f112969b7648dc208f54f7c081650367a\nverdict=C:\\Source\\Orket-longrun-comparison\\stream-long-01\\workspace\\observability\\stream_scenarios\\backpressure_drop_ranges\\gate-da720f2d4eff\\loop-6\\run-46c97a0485b4\\verdict.json\nPASS scenario=finalize_cancel_noop\nseq=0 type=turn_accepted mono_ts_ms=190601359 keys=['authoritative', 'input', 'turn_params']\nseq=1 type=model_selected mono_ts_ms=190601359 keys=['authoritative', 'model_id', 'reason']\nseq=2 type=model_loading mono_ts_ms=190601359 keys=['authoritative', 'cold_start', 'progress']\nseq=3 type=model_ready mono_ts_ms=190601359 keys=['authoritative', 'load_ms', 'model_id', 'warm_state']\nseq=4 type=token_delta mono_ts_ms=190601359 keys=['authoritative', 'delta', 'index']\nseq=5 type=turn_final mono_ts_ms=190601359 keys=['authoritative']\nseq=6 type=commit_final mono_ts_ms=190601390 keys=['artifact_refs', 'authoritative', 'commit_digest', 'commit_id', 'commit_outcome', 'issues']\nSUMMARY terminal=turn_final commit=ok token_deltas=1 drops=0 stream_digest=034661eadbc5180a65ed5ffd119389e53c0cf718faefa72f68f93f03adec93d7\nverdict=C:\\Source\\Orket-longrun-comparison\\stream-long-01\\workspace\\observability\\stream_scenarios\\finalize_cancel_noop\\gate-da720f2d4eff\\loop-6\\run-75c98df842c6\\verdict.json\nseq=1 type=model_selected mono_ts_ms=190603343 keys=['authoritative', 'model_id', 'reason']\nseq=2 type=model_loading mono_ts_ms=190603343 keys=['authoritative', 'cold_start', 'progress']\nseq=3 type=model_ready mono_ts_ms=190603343 keys=['authoritative', 'load_ms', 'model_id', 'warm_state']\nseq=4 type=turn_interrupted mono_ts_ms=190613359 keys=['authoritative', 'reason']\nseq=5 type=commit_final mono_ts_ms=190613390 keys=['artifact_refs', 'authoritative', 'commit_digest', 'commit_id', 'commit_outcome', 'issues']\nFAIL scenario=s7_real_model_happy_path\nFAIL E_EXPECT_MIN_TOKEN_DELTAS expected at least 1 token_delta events got 0\nverdict=C:\\Source\\Orket-longrun-comparison\\stream-long-01\\workspace\\observability\\stream_scenarios\\s7_real_model_happy_path\\gate-da720f2d4eff\\loop-6\\run-d68eac01fb4e\\verdict.json\nMODEL_STREAMING_GATE=FAIL\nFAILURE loop=6:s7_real_model_happy_path.yaml",
+      "stderr_tail": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\final-packages-r02-py311\\Lib\\site-packages\\fastapi\\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.\n  from starlette.testclient import TestClient as TestClient  # noqa\nC:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\final-packages-r02-py311\\Lib\\site-packages\\fastapi\\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.\n  from starlette.testclient import TestClient as TestClient  # noqa\nC:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\final-packages-r02-py311\\Lib\\site-packages\\fastapi\\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.\n  from starlette.testclient import TestClient as TestClient  # noqa\nC:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\final-packages-r02-py311\\Lib\\site-packages\\fastapi\\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.\n  from starlette.testclient import TestClient as TestClient  # noqa\nC:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\final-packages-r02-py311\\Lib\\site-packages\\fastapi\\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.\n  from starlette.testclient import TestClient as TestClient  # noqa\nC:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\final-packages-r02-py311\\Lib\\site-packages\\fastapi\\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.\n  from starlette.testclient import TestClient as TestClient  # noqa\nC:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\final-packages-r02-py311\\Lib\\site-packages\\fastapi\\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.\n  from starlette.testclient import TestClient as TestClient  # noqa\nC:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\final-packages-r02-py311\\Lib\\site-packages\\fastapi\\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.\n  from starlette.testclient import TestClient as TestClient  # noqa\nC:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\final-packages-r02-py311\\Lib\\site-packages\\fastapi\\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.\n  from starlette.testclient import TestClient as TestClient  # noqa\nC:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\final-packages-r02-py311\\Lib\\site-packages\\fastapi\\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.\n  from starlette.testclient import TestClient as TestClient  # noqa\nC:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\final-packages-r02-py311\\Lib\\site-packages\\fastapi\\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.\n  from starlette.testclient import TestClient as TestClient  # noqa\nC:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\final-packages-r02-py311\\Lib\\site-packages\\fastapi\\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.\n  from starlette.testclient import TestClient as TestClient  # noqa\nC:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\final-packages-r02-py311\\Lib\\site-packages\\fastapi\\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.\n  from starlette.testclient import TestClient as TestClient  # noqa\nC:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\final-packages-r02-py311\\Lib\\site-packages\\fastapi\\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.\n  from starlette.testclient import TestClient as TestClient  # noqa\nC:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\final-packages-r02-py311\\Lib\\site-packages\\fastapi\\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.\n  from starlette.testclient import TestClient as TestClient  # noqa\nC:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\final-packages-r02-py311\\Lib\\site-packages\\fastapi\\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.\n  from starlette.testclient import TestClient as TestClient  # noqa\nC:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\final-packages-r02-py311\\Lib\\site-packages\\fastapi\\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.\n  from starlette.testclient import TestClient as TestClient  # noqa\nC:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\final-packages-r02-py311\\Lib\\site-packages\\fastapi\\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.\n  from starlette.testclient import TestClient as TestClient  # noqa"
+    },
+    "stress": {
+      "enabled": false,
+      "ok": true
+    },
+    "ok": false,
+    "diff_ledger": [
+      {
+        "run_at_utc": "2026-10-04T23:00:40.938249Z",
+        "changed": true,
+        "before_digest": null,
+        "after_digest": "sha256:49fbf7845b5f6f8561080ffb5fac0f0a0156240e4ad532dcf976d7f5b036a312",
+        "diff": {
+          "initial_write": true,
+          "added_paths": 0,
+          "removed_paths": 0,
+          "changed_paths": 0,
+          "paths_total_previous": 0,
+          "paths_total_current": 317,
+          "paths_total_reference": 317,
+          "churn_paths": 317,
+          "churn_ratio": 1.0,
+          "sample_paths": []
+        }
+      }
+    ]
+  },
+  "successful_streaming_probe": {
+    "schema_version": "live_1000_consistency_v1",
+    "generated_at_utc": "2026-10-04T22:57:37.725889+00:00",
+    "config": {
+      "stream_loops": 1,
+      "stream_provider_mode": "real",
+      "stream_real_provider": "llama_cpp",
+      "stream_model_id": "orcarouter_qwen3.8-27b-uncensored-q4_k_l",
+      "stream_timeout": 30.0,
+      "stream_scenarios_root": "docs/observability/stream_scenarios",
+      "stream_skip_preflight": false,
+      "stream_preflight_smoke_stream": false,
+      "stream_openai_use_stream": true,
+      "stress_runs": 0,
+      "stress_profile": "baseline",
+      "stress_api_port": 8082,
+      "stress_webhook_port": 8080,
+      "stress_health_timeout_sec": 90,
+      "stress_out_dir": "benchmarks/results/streaming/live_1000_consistency_stress_runs",
+      "fail_fast": true
+    },
+    "stream_gate": {
+      "enabled": true,
+      "ok": true,
+      "return_code": 0,
+      "duration_ms": 25437.993,
+      "command": [
+        "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\final-packages-r02-py311\\Scripts\\python.exe",
+        "C:\\Source\\Orket-longrun-comparison\\stream-probe-03\\scripts\\streaming\\run_model_streaming_gate.py",
+        "--provider-mode",
+        "real",
+        "--scenarios-root",
+        "docs/observability/stream_scenarios",
+        "--timeout",
+        "30.0",
+        "--stability-loops",
+        "1",
+        "--real-provider",
+        "llama_cpp"
+      ],
+      "gate_run_id": "gate-1cee0d31a9d3",
+      "summary": {
+        "gate_run_id": "gate-1cee0d31a9d3",
+        "loops_requested": 1,
+        "verdict_files_found": 6,
+        "loops_seen_global": [
+          1
+        ],
+        "scenarios": [
+          {
+            "scenario_id": "backpressure_drop_ranges",
+            "runs": 1,
+            "loops_seen": [
+              1
+            ],
+            "status_counts": {
+              "PASS": 1
+            },
+            "law_checker_failures": 0,
+            "terminal_event_values": [
+              "turn_final"
+            ],
+            "commit_outcome_values": [
+              ""
+            ],
+            "min_expected_token_deltas": 30,
+            "token_delta_min": 32,
+            "token_delta_max": 32
+          },
+          {
+            "scenario_id": "finalize_cancel_noop",
+            "runs": 1,
+            "loops_seen": [
+              1
+            ],
+            "status_counts": {
+              "PASS": 1
+            },
+            "law_checker_failures": 0,
+            "terminal_event_values": [
+              "turn_final"
+            ],
+            "commit_outcome_values": [
+              "ok"
+            ],
+            "min_expected_token_deltas": 0,
+            "token_delta_min": 1,
+            "token_delta_max": 1
+          },
+          {
+            "scenario_id": "s7_real_model_happy_path",
+            "runs": 1,
+            "loops_seen": [
+              1
+            ],
+            "status_counts": {
+              "PASS": 1
+            },
+            "law_checker_failures": 0,
+            "terminal_event_values": [
+              "turn_final"
+            ],
+            "commit_outcome_values": [
+              "ok"
+            ],
+            "min_expected_token_deltas": 1,
+            "token_delta_min": 1,
+            "token_delta_max": 1
+          },
+          {
+            "scenario_id": "s8_real_model_cancel_mid_gen",
+            "runs": 1,
+            "loops_seen": [
+              1
+            ],
+            "status_counts": {
+              "PASS": 1
+            },
+            "law_checker_failures": 0,
+            "terminal_event_values": [
+              "turn_interrupted"
+            ],
+            "commit_outcome_values": [
+              ""
+            ],
+            "min_expected_token_deltas": 0,
+            "token_delta_min": 0,
+            "token_delta_max": 0
+          },
+          {
+            "scenario_id": "s9_real_model_cold_load_visibility",
+            "runs": 1,
+            "loops_seen": [
+              1
+            ],
+            "status_counts": {
+              "PASS": 1
+            },
+            "law_checker_failures": 0,
+            "terminal_event_values": [
+              "turn_final"
+            ],
+            "commit_outcome_values": [
+              "ok"
+            ],
+            "min_expected_token_deltas": 1,
+            "token_delta_min": 1,
+            "token_delta_max": 1
+          },
+          {
+            "scenario_id": "unknown_workload_400",
+            "runs": 1,
+            "loops_seen": [
+              1
+            ],
+            "status_counts": {
+              "PASS": 1
+            },
+            "law_checker_failures": 0,
+            "terminal_event_values": [
+              ""
+            ],
+            "commit_outcome_values": [
+              ""
+            ],
+            "min_expected_token_deltas": 0,
+            "token_delta_min": 0,
+            "token_delta_max": 0
+          }
+        ]
+      },
+      "stdout_tail": "PASS scenario=unknown_workload_400\nSUMMARY terminal=none commit=none token_deltas=0 drops=0 stream_digest=4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945\nverdict=C:\\Source\\Orket-longrun-comparison\\stream-probe-03\\workspace\\observability\\stream_scenarios\\unknown_workload_400\\gate-1cee0d31a9d3\\loop-1\\run-3d916a892cd2\\verdict.json\nPASS scenario=backpressure_drop_ranges\nseq=0 type=turn_accepted mono_ts_ms=190410078 keys=['authoritative', 'input', 'turn_params']\nseq=1 type=model_selected mono_ts_ms=190410078 keys=['authoritative', 'model_id', 'reason']\nseq=2 type=model_loading mono_ts_ms=190410078 keys=['authoritative', 'cold_start', 'progress']\nseq=3 type=model_ready mono_ts_ms=190410078 keys=['authoritative', 'load_ms', 'model_id', 'warm_state']\nseq=4 type=token_delta mono_ts_ms=190410078 keys=['authoritative', 'delta', 'index']\nseq=5 type=token_delta mono_ts_ms=190410078 keys=['authoritative', 'delta', 'index']\nseq=6 type=token_delta mono_ts_ms=190410078 keys=['authoritative', 'delta', 'index']\nseq=7 type=token_delta mono_ts_ms=190410078 keys=['authoritative', 'delta', 'index']\nseq=8 type=token_delta mono_ts_ms=190410078 keys=['authoritative', 'delta', 'index']\nseq=9 type=token_delta mono_ts_ms=190410078 keys=['authoritative', 'delta', 'index']\nseq=10 type=token_delta mono_ts_ms=190410078 keys=['authoritative', 'delta', 'index']\nseq=11 type=token_delta mono_ts_ms=190410078 keys=['authoritative', 'delta', 'index']\nseq=12 type=token_delta mono_ts_ms=190410078 keys=['authoritative', 'delta', 'index']\nseq=13 type=token_delta mono_ts_ms=190410078 keys=['authoritative', 'delta', 'index']\nseq=14 type=token_delta mono_ts_ms=190410078 keys=['authoritative', 'delta', 'index']\nseq=15 type=token_delta mono_ts_ms=190410078 keys=['authoritative', 'delta', 'index']\nseq=16 type=token_delta mono_ts_ms=190410078 keys=['authoritative', 'delta', 'index']\nseq=17 type=token_delta mono_ts_ms=190410078 keys=['authoritative', 'delta', 'index']\nseq=18 type=token_delta mono_ts_ms=190410078 keys=['authoritative', 'delta', 'index']\nseq=19 type=token_delta mono_ts_ms=190410078 keys=['authoritative', 'delta', 'index']\nseq=20 type=token_delta mono_ts_ms=190410078 keys=['authoritative', 'delta', 'index']\nseq=21 type=token_delta mono_ts_ms=190410078 keys=['authoritative', 'delta', 'index']\nseq=22 type=token_delta mono_ts_ms=190410078 keys=['authoritative', 'delta', 'index']\nseq=23 type=token_delta mono_ts_ms=190410078 keys=['authoritative', 'delta', 'index']\nseq=24 type=token_delta mono_ts_ms=190410078 keys=['authoritative', 'delta', 'index']\nseq=25 type=token_delta mono_ts_ms=190410078 keys=['authoritative', 'delta', 'index']\nseq=26 type=token_delta mono_ts_ms=190410078 keys=['authoritative', 'delta', 'index']\nseq=27 type=token_delta mono_ts_ms=190410078 keys=['authoritative', 'delta', 'index']\nseq=28 type=token_delta mono_ts_ms=190410078 keys=['authoritative', 'delta', 'index']\nseq=29 type=token_delta mono_ts_ms=190410078 keys=['authoritative', 'delta', 'index']\nseq=30 type=token_delta mono_ts_ms=190410078 keys=['authoritative', 'delta', 'index']\nseq=31 type=token_delta mono_ts_ms=190410078 keys=['authoritative', 'delta', 'index']\nseq=32 type=token_delta mono_ts_ms=190410078 keys=['authoritative', 'delta', 'index']\nseq=33 type=token_delta mono_ts_ms=190410078 keys=['authoritative', 'delta', 'index']\nseq=34 type=token_delta mono_ts_ms=190410078 keys=['authoritative', 'delta', 'index']\nseq=35 type=token_delta mono_ts_ms=190410078 keys=['authoritative', 'delta', 'index']\nseq=37 type=stream_truncated mono_ts_ms=190410078 keys=['authoritative', 'dropped_event_type', 'dropped_seq_ranges', 'reason']\nseq=125 type=turn_final mono_ts_ms=190410093 keys=['authoritative', 'dropped_seq_ranges']\nSUMMARY terminal=turn_final commit=none token_deltas=32 drops=2 stream_digest=71f3b7c540ac7cff1dd7f4a5812145d4cf9bfbd05c244664bc4048b0867ee8d5\nverdict=C:\\Source\\Orket-longrun-comparison\\stream-probe-03\\workspace\\observability\\stream_scenarios\\backpressure_drop_ranges\\gate-1cee0d31a9d3\\loop-1\\run-2488da04f50f\\verdict.json\nPASS scenario=finalize_cancel_noop\nseq=0 type=turn_accepted mono_ts_ms=190411625 keys=['authoritative', 'input', 'turn_params']\nseq=1 type=model_selected mono_ts_ms=190411625 keys=['authoritative', 'model_id', 'reason']\nseq=2 type=model_loading mono_ts_ms=190411625 keys=['authoritative', 'cold_start', 'progress']\nseq=3 type=model_ready mono_ts_ms=190411625 keys=['authoritative', 'load_ms', 'model_id', 'warm_state']\nseq=4 type=token_delta mono_ts_ms=190411625 keys=['authoritative', 'delta', 'index']\nseq=5 type=turn_final mono_ts_ms=190411625 keys=['authoritative']\nseq=6 type=commit_final mono_ts_ms=190411656 keys=['artifact_refs', 'authoritative', 'commit_digest', 'commit_id', 'commit_outcome', 'issues']\nSUMMARY terminal=turn_final commit=ok token_deltas=1 drops=0 stream_digest=6e0a66a041759dbca2f33cf1f07aa555f2182bec1583b8510b359060fb67afe0\nverdict=C:\\Source\\Orket-longrun-comparison\\stream-probe-03\\workspace\\observability\\stream_scenarios\\finalize_cancel_noop\\gate-1cee0d31a9d3\\loop-1\\run-76abd1331d53\\verdict.json\nseq=1 type=model_selected mono_ts_ms=190413078 keys=['authoritative', 'model_id', 'reason']\nseq=2 type=model_loading mono_ts_ms=190413078 keys=['authoritative', 'cold_start', 'progress']\nseq=3 type=model_ready mono_ts_ms=190413078 keys=['authoritative', 'load_ms', 'model_id', 'warm_state']\nseq=4 type=token_delta mono_ts_ms=190419453 keys=['authoritative', 'delta', 'index']\nseq=5 type=turn_final mono_ts_ms=190419453 keys=['authoritative']\nseq=6 type=commit_final mono_ts_ms=190419484 keys=['artifact_refs', 'authoritative', 'commit_digest', 'commit_id', 'commit_outcome', 'issues']\nPASS scenario=s7_real_model_happy_path\nSUMMARY terminal=turn_final commit=ok token_deltas=1\nverdict=C:\\Source\\Orket-longrun-comparison\\stream-probe-03\\workspace\\observability\\stream_scenarios\\s7_real_model_happy_path\\gate-1cee0d31a9d3\\loop-1\\run-077cff8588a6\\verdict.json\nseq=1 type=model_selected mono_ts_ms=190420921 keys=['authoritative', 'model_id', 'reason']\nseq=2 type=model_loading mono_ts_ms=190420921 keys=['authoritative', 'cold_start', 'progress']\nseq=3 type=turn_interrupted mono_ts_ms=190420921 keys=['authoritative', 'reason']\nPASS scenario=s8_real_model_cancel_mid_gen\nSUMMARY terminal=turn_interrupted commit=none token_deltas=0\nverdict=C:\\Source\\Orket-longrun-comparison\\stream-probe-03\\workspace\\observability\\stream_scenarios\\s8_real_model_cancel_mid_gen\\gate-1cee0d31a9d3\\loop-1\\run-23c4eebd6dc0\\verdict.json\nseq=1 type=model_selected mono_ts_ms=190421937 keys=['authoritative', 'model_id', 'reason']\nseq=2 type=model_loading mono_ts_ms=190421937 keys=['authoritative', 'cold_start', 'progress']\nseq=3 type=model_ready mono_ts_ms=190421937 keys=['authoritative', 'load_ms', 'model_id', 'warm_state']\nseq=4 type=token_delta mono_ts_ms=190430312 keys=['authoritative', 'delta', 'index']\nseq=5 type=turn_final mono_ts_ms=190430328 keys=['authoritative']\nseq=6 type=commit_final mono_ts_ms=190430343 keys=['artifact_refs', 'authoritative', 'commit_digest', 'commit_id', 'commit_outcome', 'issues']\nPASS scenario=s9_real_model_cold_load_visibility\nSUMMARY terminal=turn_final commit=ok token_deltas=1\nverdict=C:\\Source\\Orket-longrun-comparison\\stream-probe-03\\workspace\\observability\\stream_scenarios\\s9_real_model_cold_load_visibility\\gate-1cee0d31a9d3\\loop-1\\run-809bcaeb266c\\verdict.json\nGATE_RUN_ID=gate-1cee0d31a9d3\nMODEL_STREAMING_GATE=PASS",
+      "stderr_tail": "C:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\final-packages-r02-py311\\Lib\\site-packages\\fastapi\\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.\n  from starlette.testclient import TestClient as TestClient  # noqa\nC:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\final-packages-r02-py311\\Lib\\site-packages\\fastapi\\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.\n  from starlette.testclient import TestClient as TestClient  # noqa\nC:\\Users\\jonmc\\AppData\\Local\\Temp\\orket-prr-v1\\final-packages-r02-py311\\Lib\\site-packages\\fastapi\\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.\n  from starlette.testclient import TestClient as TestClient  # noqa"
+    },
+    "stress": {
+      "enabled": false,
+      "ok": true
+    },
+    "ok": true,
+    "diff_ledger": [
+      {
+        "run_at_utc": "2026-10-04T22:57:37.726388Z",
+        "changed": true,
+        "before_digest": null,
+        "after_digest": "sha256:b93d1c495b532904f8e83432f65aca3b08754aec8f2bbaeb164386d291026811",
+        "diff": {
+          "initial_write": true,
+          "added_paths": 0,
+          "removed_paths": 0,
+          "changed_paths": 0,
+          "paths_total_previous": 0,
+          "paths_total_current": 245,
+          "paths_total_reference": 245,
+          "churn_paths": 245,
+          "churn_ratio": 1.0,
+          "sample_paths": []
+        }
+      }
+    ]
+  },
+  "services": {
+    "baseline": {
+      "current": {
+        "timestamp_utc": "2026-10-04T22:54:17.301162+00:00",
+        "config": {
+          "webhook_base_url": "http://127.0.0.1:18083",
+          "api_base_url": "http://127.0.0.1:18082",
+          "ws_url": "ws://127.0.0.1:18082/ws/events",
+          "webhook_total": 300,
+          "webhook_concurrency": 40,
+          "api_total": 600,
+          "api_concurrency": 60,
+          "epic_total": 40,
+          "epic_concurrency": 20,
+          "ws_clients": 100
+        },
+        "results": {
+          "webhook": {
+            "samples": 300,
+            "failures": 0,
+            "p50_ms": 99.135,
+            "p95_ms": 386.481,
+            "p99_ms": 536.847,
+            "error_rate_percent": 0.0
+          },
+          "api_heartbeat": {
+            "samples": 600,
+            "failures": 0,
+            "p50_ms": 155.041,
+            "p95_ms": 595.213,
+            "p99_ms": 912.213,
+            "error_rate_percent": 0.0
+          },
+          "parallel_epic_trigger": {
+            "samples": 40,
+            "failures": 0,
+            "p50_ms": 71.366,
+            "p95_ms": 93.104,
+            "p99_ms": 94.394,
+            "error_rate_percent": 0.0
+          },
+          "websocket_connect": {
+            "samples": 100,
+            "failures": 0,
+            "p50_ms": 200.654,
+            "p95_ms": 309.729,
+            "p99_ms": 311.801,
+            "error_rate_percent": 0.0
+          }
+        }
+      },
+      "historical": {
+        "timestamp_utc": "2026-03-04T00:13:02.897971+00:00",
+        "config": {
+          "webhook_base_url": "http://127.0.0.1:8080",
+          "api_base_url": "http://127.0.0.1:8082",
+          "ws_url": "ws://127.0.0.1:8082/ws/events",
+          "webhook_total": 300,
+          "webhook_concurrency": 40,
+          "api_total": 600,
+          "api_concurrency": 60,
+          "epic_total": 40,
+          "epic_concurrency": 20,
+          "ws_clients": 100
+        },
+        "results": {
+          "webhook": {
+            "samples": 300,
+            "failures": 0,
+            "p50_ms": 33.553,
+            "p95_ms": 130.325,
+            "p99_ms": 167.937,
+            "error_rate_percent": 0.0
+          },
+          "api_heartbeat": {
+            "samples": 600,
+            "failures": 0,
+            "p50_ms": 40.661,
+            "p95_ms": 47.544,
+            "p99_ms": 51.423,
+            "error_rate_percent": 0.0
+          },
+          "parallel_epic_trigger": {
+            "samples": 40,
+            "failures": 0,
+            "p50_ms": 17.641,
+            "p95_ms": 22.553,
+            "p99_ms": 22.56,
+            "error_rate_percent": 0.0
+          },
+          "websocket_connect": {
+            "samples": 100,
+            "failures": 0,
+            "p50_ms": 139.58,
+            "p95_ms": 151.902,
+            "p99_ms": 158.648,
+            "error_rate_percent": 0.0
+          }
+        }
+      },
+      "historical_sha256": "ffb2961a2565ecee28a42693fc2c59620b1381dcd1a0bee451ef7e826d077a76"
+    },
+    "heavy": {
+      "current": {
+        "timestamp_utc": "2026-10-04T22:54:36.272668+00:00",
+        "config": {
+          "webhook_base_url": "http://127.0.0.1:18083",
+          "api_base_url": "http://127.0.0.1:18082",
+          "ws_url": "ws://127.0.0.1:18082/ws/events",
+          "webhook_total": 1500,
+          "webhook_concurrency": 100,
+          "api_total": 3000,
+          "api_concurrency": 150,
+          "epic_total": 200,
+          "epic_concurrency": 80,
+          "ws_clients": 300
+        },
+        "results": {
+          "webhook": {
+            "samples": 1500,
+            "failures": 0,
+            "p50_ms": 208.337,
+            "p95_ms": 249.351,
+            "p99_ms": 262.963,
+            "error_rate_percent": 0.0
+          },
+          "api_heartbeat": {
+            "samples": 3000,
+            "failures": 0,
+            "p50_ms": 520.942,
+            "p95_ms": 615.377,
+            "p99_ms": 650.446,
+            "error_rate_percent": 0.0
+          },
+          "parallel_epic_trigger": {
+            "samples": 200,
+            "failures": 0,
+            "p50_ms": 263.967,
+            "p95_ms": 596.96,
+            "p99_ms": 649.126,
+            "error_rate_percent": 0.0
+          },
+          "websocket_connect": {
+            "samples": 300,
+            "failures": 0,
+            "p50_ms": 1742.701,
+            "p95_ms": 2959.531,
+            "p99_ms": 3082.533,
+            "error_rate_percent": 0.0
+          }
+        }
+      },
+      "historical": {
+        "timestamp_utc": "2026-03-04T00:13:15.298236+00:00",
+        "config": {
+          "webhook_base_url": "http://127.0.0.1:8080",
+          "api_base_url": "http://127.0.0.1:8082",
+          "ws_url": "ws://127.0.0.1:8082/ws/events",
+          "webhook_total": 1500,
+          "webhook_concurrency": 100,
+          "api_total": 3000,
+          "api_concurrency": 150,
+          "epic_total": 200,
+          "epic_concurrency": 80,
+          "ws_clients": 300
+        },
+        "results": {
+          "webhook": {
+            "samples": 1500,
+            "failures": 0,
+            "p50_ms": 87.308,
+            "p95_ms": 94.805,
+            "p99_ms": 100.501,
+            "error_rate_percent": 0.0
+          },
+          "api_heartbeat": {
+            "samples": 3000,
+            "failures": 0,
+            "p50_ms": 237.24,
+            "p95_ms": 300.854,
+            "p99_ms": 317.372,
+            "error_rate_percent": 0.0
+          },
+          "parallel_epic_trigger": {
+            "samples": 200,
+            "failures": 0,
+            "p50_ms": 106.61,
+            "p95_ms": 152.958,
+            "p99_ms": 159.859,
+            "error_rate_percent": 0.0
+          },
+          "websocket_connect": {
+            "samples": 300,
+            "failures": 0,
+            "p50_ms": 412.741,
+            "p95_ms": 477.732,
+            "p99_ms": 488.786,
+            "error_rate_percent": 0.0
+          }
+        }
+      },
+      "historical_sha256": "03e202c0e76661f1bc1a9595e7cbac13de1bbecbc6f495f738a7819009b05574"
+    },
+    "limitations": {
+      "transport_only": true,
+      "card_not_found_tracebacks": 40,
+      "completed_card_work_proven": false,
+      "log_path": "C:\\Source\\Orket\\.tmp\\longrun-comparison\\services-02\\service-18082.log",
+      "log_sha256": "3d69ed02d4b42eea5d4116ef76218e41f5e190f0c119ccf1ef17d70448706b38",
+      "service_ports": [
+        18082,
+        18083
+      ],
+      "synthetic_trigger_requests": 240,
+      "timings_overlap_reviewrun_cpu_and_io": true
+    }
+  },
+  "soak": {
+    "schema_version": "1.0",
+    "ok": true,
+    "check_count": 3,
+    "turn_count": 120,
+    "checks": [
+      {
+        "check": "stub_provider_no_error_events_across_soak_turns",
+        "ok": true,
+        "error_terminal_count": 0
+      },
+      {
+        "check": "stub_provider_terminal_event_per_turn",
+        "ok": true,
+        "stopped_terminal_count": 120,
+        "turn_count": 120
+      },
+      {
+        "check": "stub_provider_event_order_stable_across_soak_turns",
+        "ok": true,
+        "order_violation_count": 0
+      }
+    ],
+    "contract": {
+      "schema_version": "1.0",
+      "target_surface": "orket.streaming.model_provider.StubModelStreamProvider",
+      "turn_count": 120,
+      "checks": [
+        {
+          "check_id": "stub_provider_no_error_events_across_soak_turns",
+          "expected_behavior": "zero error terminal events across configured soak turns"
+        },
+        {
+          "check_id": "stub_provider_terminal_event_per_turn",
+          "expected_behavior": "every turn emits exactly one stopped terminal event"
+        },
+        {
+          "check_id": "stub_provider_event_order_stable_across_soak_turns",
+          "expected_behavior": "selected -> loading -> ready -> token_delta -> stopped order per turn"
+        }
+      ]
+    },
+    "diff_ledger": [
+      {
+        "run_at_utc": "2026-10-04T22:56:28.597167Z",
+        "changed": true,
+        "before_digest": null,
+        "after_digest": "sha256:6d00fad5bf2565fc720a2dc5802e5eb69110e07af2b38fd32fee86c4c1f871f3",
+        "diff": {
+          "initial_write": true,
+          "added_paths": 0,
+          "removed_paths": 0,
+          "changed_paths": 0,
+          "paths_total_previous": 0,
+          "paths_total_current": 55,
+          "paths_total_reference": 55,
+          "churn_paths": 55,
+          "churn_ratio": 1.0,
+          "sample_paths": []
+        }
+      }
+    ]
+  },
+  "historical": [
+    {
+      "path": "benchmarks/results/reviewrun/reviewrun_30page_allfiles_1000.json",
+      "sha256": "5a516668cbf674493c975dfaf5a82d53f065002fba696c5e0fe8ededc95a4d7e",
+      "ok": true,
+      "evidence": "historical; not newly verified runtime"
+    },
+    {
+      "path": "benchmarks/results/reviewrun/reviewrun_consistency_1000.json",
+      "sha256": "a5808591c5749adba6b9a2c240cf966dd27715f4973f42b6e6d059cfffa25f28",
+      "ok": true,
+      "evidence": "historical; not newly verified runtime"
+    },
+    {
+      "path": "benchmarks/results/reviewrun/reviewrun_consistency_1000_auth_insecure_v1.json",
+      "sha256": "afd0a8a8532b2408fd600644b3fc2ce669adbce7d5a7859273fbd7119bab18d7",
+      "ok": true,
+      "evidence": "historical; not newly verified runtime"
+    },
+    {
+      "path": "benchmarks/results/reviewrun/reviewrun_consistency_1000_auth_insecure_v2.json",
+      "sha256": "228c4db33076904c9066ffddbd32aba6160d2894ef7d4262f2f0c97c8ff83d77",
+      "ok": true,
+      "evidence": "historical; not newly verified runtime"
+    },
+    {
+      "path": "benchmarks/results/reviewrun/reviewrun_consistency_1000_math_parse_int_v1.json",
+      "sha256": "513cd6a18f98241c2b5e3c45fd3a201397d1d4295e60760df113c4c1dc371d87",
+      "ok": true,
+      "evidence": "historical; not newly verified runtime"
+    },
+    {
+      "path": "benchmarks/results/reviewrun/reviewrun_consistency_1000_math_parse_int_v2.json",
+      "sha256": "d0ebcfe0f98fecfc8c8849c53a5a14fc4ed1017eee6fbb7c953ed7e3428ee879",
+      "ok": true,
+      "evidence": "historical; not newly verified runtime"
+    },
+    {
+      "path": "benchmarks/results/reviewrun/reviewrun_consistency_1000_secrets_sha1.json",
+      "sha256": "3f437a92f859a75d177ed99dbd5ac3b62eefaeb18302acb4750514e7efd6d653",
+      "ok": true,
+      "evidence": "historical; not newly verified runtime"
+    },
+    {
+      "path": "benchmarks/results/reviewrun/reviewrun_consistency_1000_secrets_sha1_v1.json",
+      "sha256": "89a83af650376f2c39929c23f451d0dc19682e71dd24536876461c8e8a96d2e2",
+      "ok": true,
+      "evidence": "historical; not newly verified runtime"
+    },
+    {
+      "path": "benchmarks/results/reviewrun/reviewrun_consistency_100_truncation_bounds_v1.json",
+      "sha256": "f9378986fee74ec7989932178adc593e613b1c9b438cdf81814a888c2738c209",
+      "ok": true,
+      "evidence": "historical; not newly verified runtime"
+    },
+    {
+      "path": "benchmarks/results/streaming/live_1000_consistency.json",
+      "sha256": "ec1cfb417508f57abc736b3df7bbbd3ff2eb7d7c1e354f97426688713a93d837",
+      "ok": true,
+      "evidence": "historical; not newly verified runtime"
+    },
+    {
+      "path": "benchmarks/results/streaming/live_1000_consistency_ollama_auto.json",
+      "sha256": "39962a8344c95ace31414af7b07909f14643da72a4fb9d1fbdf587120f5ed3f4",
+      "ok": true,
+      "evidence": "historical; not newly verified runtime"
+    },
+    {
+      "path": "benchmarks/results/streaming/real_service_stress_baseline_authfixed.json",
+      "sha256": "ffb2961a2565ecee28a42693fc2c59620b1381dcd1a0bee451ef7e826d077a76",
+      "ok": null,
+      "evidence": "historical; not newly verified runtime"
+    },
+    {
+      "path": "benchmarks/results/streaming/real_service_stress_heavy_authfixed.json",
+      "sha256": "03e202c0e76661f1bc1a9595e7cbac13de1bbecbc6f495f738a7819009b05574",
+      "ok": null,
+      "evidence": "historical; not newly verified runtime"
+    }
+  ],
+  "diagnostic": {
+    "result": "ReadTimeout at 30.172 seconds",
+    "path": "C:\\Source\\Orket\\.tmp\\longrun-comparison\\diagnostic-01\\diagnostic.stdout.log",
+    "qualification": "Single server slot observed busy then idle; interference/root cause not established."
+  },
+  "thirty_page": {
+    "result": "environment blocker",
+    "completed_runs": 0,
+    "reason": "Retained fixture lacks .git/HEAD; git reports not a git repository before reading the archived revision.",
+    "receipt": "C:\\Source\\Orket\\.tmp\\longrun-comparison\\review-30page-01\\state.json"
+  },
+  "verification": {
+    "regression_tests_passed": 5,
+    "review_report_validators_passed": 5,
+    "single_streaming_validator_passed": true,
+    "endurance_validator_rejected_incomplete_run": true,
+    "new_test_lint": "pass",
+    "existing_stream_script_lint": "3 E402 and 2 SIM102; same five at HEAD",
+    "candidate_source_sha256": "f65cd00808e7db3db00a540f992d11ab86419918542dd5477433d6c2de33cec4",
+    "verification_receipt_input_note": "verify-01 ended after its lint finding; the new test import order was corrected before receipt finalization. All benchmark batches retained frozen inputs."
+  },
+  "preservation": {
+    "owned_commands_cleaned": true,
+    "surviving_owned_processes": [],
+    "operator_server": {
+      "ProcessId": 45556,
+      "Name": "llama-server.exe",
+      "StartedUTC": "2026-10-04T19:24:07.5544910Z"
+    },
+    "operator_board_sha256": "14724f69f6712ba8c49370855646e55f5f8cf0c06c3e06e07d24dd259b8252ab",
+    "operator_board_flag": "S model/core/rocks/run_the_business.json",
+    "template_sha256": "8fc57a9f65eaaaee48e80771aea4775f7d3a8adb466a6193d8de551fa124d578",
+    "worktrees": "worktree C:/Source/Orket\nHEAD 17fe469cf71294a03d8d8b9cb5a37cb7735aedd7\nbranch refs/heads/main\n\nworktree C:/Source/Orket-architectural-truth\nHEAD 0b33356f0e666ec67eb7c386dfaff706820960d6\nbranch refs/heads/codex/architectural-truth-bt0\n\nworktree C:/Source/Orket-logging-baseline-b69\nHEAD b69baeaeee8cf27c90543ed8c33c3fa40ea9df43\ndetached\n\nworktree C:/Source/Orket-paperclips-foundation\nHEAD 2ccbd9aa26a71ba0347096800b8acbd8f4804070\nbranch refs/heads/codex/paperclips-foundation\n\n"
+  },
+  "process_receipts": {
+    "C:\\Source\\Orket\\.tmp\\longrun-comparison\\diagnostic-01\\state.json": "e821eb7cf48fc5443e750fe0afe9bcebce4714a96e6b2079a3b55a2387e1f5e8",
+    "C:\\Source\\Orket\\.tmp\\longrun-comparison\\review-01\\state.json": "6885a46027640311597a82d12d55ee6409921bf17ef396a3375ec8d94d5cd947",
+    "C:\\Source\\Orket\\.tmp\\longrun-comparison\\review-30page-01\\state.json": "dd11c41f68648d9b71c43f9a86d0886ce057c98d1727b14bd62c9f93d51c9975",
+    "C:\\Source\\Orket\\.tmp\\longrun-comparison\\services-01\\state.json": "5879d0098f034d0de8402da1dc7a71aebdf21b6f1b987c6209a8ee9cbea65139",
+    "C:\\Source\\Orket\\.tmp\\longrun-comparison\\services-02\\state.json": "39bdb98d792278bbf4b17eb7ab8febb45ff018ff43d4bf8bff3818d99720c515",
+    "C:\\Source\\Orket\\.tmp\\longrun-comparison\\soak-01\\state.json": "c3fd8e08a14fc9d7543875edeb932cf6e27c7785038480114991a63ceaa19bfd",
+    "C:\\Source\\Orket\\.tmp\\longrun-comparison\\stream-long-01\\state.json": "698c5efc45390d16a1223864bb0488b8469097fce85557f25e1194f69fdb7510",
+    "C:\\Source\\Orket\\.tmp\\longrun-comparison\\stream-probe-01\\state.json": "4d96b24ec7c68f15c88e24dd98f07d765c6ae84b288171697ebb0958f5a93a9b",
+    "C:\\Source\\Orket\\.tmp\\longrun-comparison\\stream-probe-02\\state.json": "f83881fcf0345e3800353e2db3dc1798f8ac739e00bc60f0068307a401e36e9e",
+    "C:\\Source\\Orket\\.tmp\\longrun-comparison\\stream-probe-03\\state.json": "0a7b0fb6aee1e293b7ce335112655be907c9298da32401f2245df28a519a7950",
+    "C:\\Source\\Orket\\.tmp\\longrun-comparison\\verify-01\\state.json": "e13426c487ce96108892077a5b5d242d83140630878f784bb81dc255bb7f823c"
+  },
+  "source_sha256": {
+    "scripts/streaming/run_stream_scenario.py": "f65cd00808e7db3db00a540f992d11ab86419918542dd5477433d6c2de33cec4",
+    "tests/scripts/test_stream_scenario_lifespan.py": "a4da353ef85b405c5fae59425a96a3b2bac3596700d7403d152039a7b34f487b",
+    "scripts/README.md": "ef42ae384feda6c69840b91bd975f3d54b5f800a0fe023a72375790b58a5052e"
+  },
+  "repository_files_touched": [
+    "scripts/streaming/run_stream_scenario.py",
+    "tests/scripts/test_stream_scenario_lifespan.py",
+    "scripts/README.md",
+    "benchmarks/staging/General/long_running_workflow_comparison.json",
+    "benchmarks/staging/General/long_running_workflow_comparison.md",
+    "benchmarks/staging/index.json",
+    "benchmarks/staging/README.md"
+  ],
+  "limits": [
+    "No 1000-loop streaming success",
+    "No completed card work from synthetic service triggers",
+    "No old-model or quant-matrix rerun",
+    "No statistical model speedup/regression claim",
+    "No real cold model unload/load proof; s9 is an event-visibility scenario",
+    "No thermal endurance claim from the summary-only thermal profiler",
+    "No non-Windows proof"
+  ],
+  "next_action": "No test processes left running. For a new endurance attempt, first resolve the observed 10-second provider/no-token failure under a controlled idle server window; retain the original acceptance thresholds. Restore the 30-page Git fixture for its historical-input rerun.",
+  "cutoff": "2026-10-06T00:00:00 America/Denver; final six-hour verification/publication reserve retained",
+  "publication": "Uncommitted staging candidate; no benchmark promotion, version tag or release created.",
+  "diff_ledger": [
+    {
+      "run_at_utc": "2026-10-04T23:11:53.656430Z",
+      "changed": true,
+      "before_digest": null,
+      "after_digest": "sha256:07f35d7d34e9f620c808ad39e017cbe9afe37398df392d2dd2e693ad537a2665",
+      "diff": {
+        "initial_write": true,
+        "added_paths": 0,
+        "removed_paths": 0,
+        "changed_paths": 0,
+        "paths_total_previous": 0,
+        "paths_total_current": 1396,
+        "paths_total_reference": 1396,
+        "churn_paths": 1396,
+        "churn_ratio": 1.0,
+        "sample_paths": []
+      }
+    }
+  ]
+}
