@@ -14,8 +14,8 @@ from benchmarks.phase5_load_test import LoadResult
 from orket.application.services.application_runtime_lifetime import ApplicationRuntimeLifetime
 from orket.interfaces.api_invocation import schedule_api_invocation_task
 from orket.state import GlobalState
-from scripts.benchmarks.function_acceptance import VERIFIER, declare_function_acceptance
 from scripts.benchmarks.isolated_project import prepare_project
+from scripts.benchmarks.task_acceptance import FUNCTION_VERIFIER, declare_task_acceptance
 from scripts.governance.check_workflow_preflight import inspect_workflow
 
 pytestmark = pytest.mark.integration
@@ -46,7 +46,7 @@ def test_function_acceptance_executes_real_program_and_refuses_metadata_only(tmp
     task = {"id": "1", "evaluation": {"type": "function_examples", "function_name": "double",
                                      "examples": [{"args": [3], "expected": 6}]}}
     epic = {"issues": [{"note": "Implement double"}]}
-    declare_function_acceptance(epic, task, tmp_path)
+    declare_task_acceptance(epic, task, tmp_path)
     definition = epic["issues"][0]["params"]["completion_acceptance"]
     program = tmp_path / "agent_output/main.py"
     program.write_text("def double(n):\n    return n * 2\n")
@@ -54,9 +54,9 @@ def test_function_acceptance_executes_real_program_and_refuses_metadata_only(tmp
     assert json.loads(subprocess.check_output(command, text=True)) == 6
     program.write_text("def double(n):\n    return 0\n")
     assert json.loads(subprocess.check_output(command, text=True)) != 6
-    assert (tmp_path / definition["entrypoint"]).read_text() == VERIFIER
+    assert (tmp_path / definition["entrypoint"]).read_text() == FUNCTION_VERIFIER
     with pytest.raises(ValueError, match="explicit function_examples"):
-        declare_function_acceptance(epic, {"id": "1"}, tmp_path)
+        declare_task_acceptance(epic, {"id": "1"}, tmp_path)
 
 
 @pytest.mark.asyncio

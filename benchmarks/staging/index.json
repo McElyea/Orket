@@ -352,6 +352,16 @@
       ],
       "source_path": "benchmarks/staging/General/workflow_limitation_repairs.md",
       "publish_reviewed": false
+    },
+    {
+      "id": "STAGE-GEN-022",
+      "category": "General",
+      "path": "General/workflow_followup_repairs.json",
+      "title": "CLI Workflow Follow-up and Installed Candidate Proof (Windows)",
+      "summary": "CLI admission, effective prepared configuration, syntax-aware source quality and visible runtime warnings. Original 11/15 matrix, separate corrected task run, installed sanity and failed API QA are distinguished.",
+      "signals": ["live_windows", "cli_acceptance", "installed_candidate", "failure_disclosure", "failed_attempts_retained"],
+      "source_path": "benchmarks/staging/General/workflow_followup_repairs.md",
+      "publish_reviewed": false
     }
   ]
 }

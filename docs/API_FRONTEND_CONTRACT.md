@@ -69,6 +69,13 @@ changed receipts and unreadable evidence remain unverified. Detail separately
 exposes `source_attribution`; attribution metadata alone cannot yield a verified
 run. Historical status remains visible without rewriting retained records.
 
+Both run views also expose `runtime_truth`, a projection of the retained packet-1
+classification, repair flag, conformance and defects. Missing packets report
+`available: false`; absence is not a conformance verdict. Human summaries and
+`run.truth.repaired` / `run.truth.non_conformant` reason codes disclose recorded
+repair and nonconformance. These warnings neither revoke declared acceptance nor
+rewrite a historical truth packet, and repair alone does not imply degradation.
+
 Unfiltered card pagination applies the offset once. Filtered views retain the
 existing maximum scan of 500 cards; `total` is the matching scanned count.
 Durable view authority: `docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md`.

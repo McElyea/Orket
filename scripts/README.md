@@ -52,9 +52,12 @@ Readiness and outcome rules: `docs/specs/WORKFLOW_BENCHMARK_READINESS.md`.
 Run `python scripts/governance/check_workflow_preflight.py --project <project>
 --epic <name>` before inference; the report is structural, not completion proof.
 The live benchmark runners retain one isolated project/board per invocation and
-require explicit function-example acceptance. Other task shapes refuse until
-task-specific acceptance is supplied. Prepared `standard` and `qa_completion_test`
-recipes are documented in `examples/stored_workflows/README.md`.
+require explicit function examples or CLI examples with a retained implementation
+inventory and exact stdout/stderr/exit expectations. Undefined shapes still refuse.
+The v2 CLI bank uses the corrected 0.7.6 expectations; compare its historical
+results only with that input change disclosed. Prepared `standard`,
+`qa_completion_test` and bounded `sanity_test` recipes are documented in
+`examples/stored_workflows/README.md`.
 
 The service load harness follows `--epic-id <real-target>` to accepted completion;
 without that option it tests missing-target refusal. Its stable default output is

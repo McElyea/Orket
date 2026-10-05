@@ -800,6 +800,14 @@ do not restore synchronous forwarding. Contract and retirement scope:
 11. Use `--commit-and-tag` only after the matching changelog entry and any required proof report are complete and no unrelated worktree changes remain.
 12. For normal non-release-only work, each versioned commit destined for `main` must carry its matching annotated tag on that exact commit, and the branch tip plus those tags must be pushed together. A core version bump is not complete until its matching tag is pushed.
 
+Build distribution candidates from a fresh source tree without a shared `build/`
+cache. Core and SDK wheels must not overwrite each other's package namespaces:
+inspect the wheel file inventory and install the candidate plus its pinned SDK
+in a fresh environment outside the checkout. Verify import origins and run the
+affected installed entrypoint. Dependency metadata checks alone do not detect
+stale files bundled from a reused build cache. Retain failed artifacts and their
+hashes; never replace an accepted published wheel in place.
+
 ## Testing
 
 1. Prefer real filesystems, databases, and integration paths over mocks when practical.

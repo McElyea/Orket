@@ -1,6 +1,6 @@
 # Card Viewer/Runner Surface V1
 
-Last updated: 2026-09-12
+Last updated: 2026-10-04
 Status: Active
 Owner: Orket Core
 
@@ -54,6 +54,15 @@ The canonical terminal outcome vocabulary for run-facing operator views is:
 5. `degraded_completed`
 
 This vocabulary is human-facing lifecycle truth. It does not replace the existing technical fields on `run_summary.json`.
+
+Run history and detail include `runtime_truth`: retained packet-1 classification,
+repair flag, conformance and defects, with `available: false` when the packet is
+absent. This is a projection, not a fresh evaluation. The human summary discloses
+recorded repairs and nonconformance, with `run.truth.repaired` and
+`run.truth.non_conformant` reason codes. Completion acceptance, lifecycle,
+classification and historical defect records retain their independent meanings.
+Repair does not by itself set `degraded`, and missing packets cannot imply
+conformance. Raw historical summaries are not rewritten by viewing them.
 
 ## Truth Rules
 

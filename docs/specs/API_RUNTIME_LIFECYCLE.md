@@ -8,6 +8,11 @@ return 404. Scheduled invocations use the retained-failure background supervisor
 Existence is an observation, not a reservation or completion claim. Migration:
 `docs/architecture/CONTRACT_DELTA_WORKFLOW_WINS_2026-10-04.md`.
 
+Run-view reads project retained packet-1 repair and nonconformance warnings without
+rewriting evidence or completion. View fields and claim limits are owned by
+`docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md`; see the 0.7.6 delta in
+`docs/architecture/CONTRACT_DELTA_WORKFLOW_FOLLOWUP_2026-10-04.md`.
+
 `orket.application.services.api_runtime_container.ApiRuntimeContainer` owns the
 HTTP/WebSocket ASGI invocation tasks, registered background tasks and resources
 of one API application, followed by its engine. The public factory is

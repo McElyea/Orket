@@ -5,6 +5,11 @@ The `standard` workflow declares, implements and verifies an integer-addition CL
 Both use declared mechanical acceptance; the QA handoff does not claim exhaustive
 correctness. The preparer refuses an existing destination.
 
+`sanity_test` is a third prepared workflow. It reads the captured organization
+name and writes one exact, scoped receipt at `agent_output/sanity_receipt.md`.
+Use `--workflow sanity_test` and run that epic in its own prepared directory.
+The receipt proves file-writing acceptance only, not overall system health.
+
 From the checkout, using the installed development environment:
 
 ```powershell

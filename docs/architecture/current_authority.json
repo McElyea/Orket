@@ -183,7 +183,7 @@
       "kind": "contract",
       "label": "API construction and lifetime",
       "source": "docs/specs/API_RUNTIME_LIFECYCLE.md",
-      "scope": "Captured factory inputs, lifespan acquisition, required authentication/interaction owners, installed WebSocket transport, peer-disconnect settlement, target existence preflight, retained background failures, request admission and cleanup."
+      "scope": "Captured factory inputs, lifespan acquisition, required authentication/interaction owners, installed WebSocket transport, peer-disconnect settlement, target existence preflight, retained background failures, request admission and cleanup. Run views disclose retained repair and conformance warnings without rewriting evidence or completion."
     },
     {
       "id": "contract.runtime",

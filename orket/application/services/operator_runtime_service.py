@@ -29,6 +29,8 @@ def classify_operator_run(*, summary: dict[str, Any], status: str | None,
     verification = operator_verification(deepcopy(completion))
     degraded = bool(captured.get("is_degraded")) or str(provenance.get("truth_classification") or "").strip() == "degraded"
     reasons = list(verification["reason_codes"])
+    truth, truth_reasons, warnings = _runtime_truth(packet)
+    reasons.extend(truth_reasons)
     if resolution and resolution != "resolved":
         degraded = True
         reasons.append(f"cards_runtime.{resolution}")
@@ -46,7 +48,32 @@ def classify_operator_run(*, summary: dict[str, Any], status: str | None,
     return {"raw_status": raw_status or "unknown", "primary_status": primary, "degraded": degraded,
             "reason_codes": reason_codes, "lifecycle_category": lifecycle or None,
             "execution_profile": execution_profile or None, "stop_reason": stop_reason or None,
-            "failure_reason": failure_reason or None, "verification": verification}
+            "failure_reason": failure_reason or None, "verification": verification,
+            "runtime_truth": truth, "truth_warnings": warnings}
+
+
+def _runtime_truth(packet: Any) -> tuple[dict, list[str], list[str]]:
+    """Project retained facts without rewriting classification or conformance."""
+    if not isinstance(packet, dict):
+        return {"available": False}, [], []
+    classification = packet.get("classification")
+    classification = classification if isinstance(classification, dict) else {}
+    provenance = packet.get("provenance")
+    provenance = provenance if isinstance(provenance, dict) else {}
+    conformance = packet.get("packet1_conformance")
+    conformance = conformance if isinstance(conformance, dict) else {}
+    truth_class = classification.get("truth_classification") or provenance.get("truth_classification")
+    reasons, warnings = [], []
+    if truth_class == "repaired" or provenance.get("repair_occurred") is True:
+        reasons.append("run.truth.repaired")
+        warnings.append("Runtime output required repair.")
+    if conformance.get("status") == "non_conformant":
+        reasons.append("run.truth.non_conformant")
+        warnings.append("Runtime truth checks reported nonconformance.")
+    return ({"available": True, "classification": deepcopy(classification),
+             "repair_occurred": provenance.get("repair_occurred"),
+             "packet1_conformance": deepcopy(conformance), "defects": deepcopy(packet.get("defects", {}))},
+            reasons, warnings)
 
 
 def _lifecycle(status: str, *, prebuild: bool, degraded: bool, verified: bool) -> tuple[str, str]:

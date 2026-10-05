@@ -1,22 +1,75 @@
 {
   "id": "SANITY-01",
-  "name": "Orket Core Sanity Test",
+  "name": "sanity_test",
   "type": "epic",
   "status": "ready",
-  "team": "enterprise",
+  "team": "standard",
   "environment": "standard",
-  "description": "A rapid end-to-end test of the Vibe Rail Orket Engine after the Reforge.",
+  "description": "Prepared file-write sanity receipt only; use examples/stored_workflows/prepare.py. No general health or performance claim.",
   "architecture_governance": {
     "idesign": false,
-    "pattern": "Tactical/Flat"
+    "pattern": "Tactical"
   },
-  "stories": [
+  "issues": [
     {
       "id": "SN-001",
-      "summary": "Generate a Sanity Receipt in the workspace.",
-      "seat": "lead_architect",
-      "priority": "High",
-      "note": "Write a file named 'sanity_receipt.md' that says 'Orket is Operational' and includes the Organization name."
+      "summary": "Write a scoped organization sanity receipt",
+      "seat": "coder",
+      "status": "ready",
+      "depends_on": [],
+      "note": "Read agent_output/organization.json. Write agent_output/sanity_receipt.md with exactly this single line and no newline: Orket is Operational | Organization: Orket Organizational Unit | Scope: file-write acceptance only. Then request code_review. This is only a file-write receipt; do not claim general system health.",
+      "params": {
+        "completion_acceptance": {
+          "schema_version": "card_artifact_acceptance.v1",
+          "acceptance_ref": "SN-001.v1",
+          "policy_ref": "sanity-receipt.v1",
+          "workload_id": "SN-001",
+          "artifact_paths": [
+            "agent_output/sanity_receipt.md"
+          ],
+          "cases": [
+            {
+              "kind": "text_equals",
+              "criterion_id": "scoped-receipt",
+              "description": "Exact organization receipt; file-write proof only",
+              "path": "agent_output/sanity_receipt.md",
+              "expected_text": "Orket is Operational | Organization: Orket Organizational Unit | Scope: file-write acceptance only."
+            }
+          ]
+        },
+        "cards_runtime": {
+          "execution_profile": "write_artifact_v1",
+          "artifact_contract": {
+            "kind": "artifact",
+            "primary_output": "agent_output/sanity_receipt.md",
+            "required_read_paths": [
+              "agent_output/organization.json"
+            ],
+            "required_write_paths": [
+              "agent_output/sanity_receipt.md"
+            ],
+            "review_read_paths": [
+              "agent_output/organization.json",
+              "agent_output/sanity_receipt.md"
+            ]
+          }
+        },
+        "turn_contract": {
+          "required_action_tools": [
+            "write_file",
+            "update_issue_status"
+          ],
+          "required_read_paths": [
+            "agent_output/organization.json"
+          ],
+          "required_write_paths": [
+            "agent_output/sanity_receipt.md"
+          ],
+          "required_statuses": [
+            "code_review"
+          ]
+        }
+      }
     }
   ]
 }

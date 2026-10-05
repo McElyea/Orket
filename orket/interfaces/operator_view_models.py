@@ -37,6 +37,7 @@ def build_run_history_item_view(
         "degraded": classification["degraded"],
         "summary": classification["summary"],
         "reason_codes": classification["reason_codes"],
+        "runtime_truth": classification["runtime_truth"],
         "next_action": classification["next_action"],
         "lifecycle_category": classification["lifecycle_category"],
         "execution_profile": classification["execution_profile"],
@@ -71,6 +72,7 @@ def build_run_detail_view(
         "degraded": classification["degraded"],
         "summary": classification["summary"],
         "reason_codes": classification["reason_codes"],
+        "runtime_truth": classification["runtime_truth"],
         "next_action": classification["next_action"],
         "lifecycle_category": classification["lifecycle_category"],
         "execution_profile": classification["execution_profile"],
@@ -174,8 +176,9 @@ def _classify_run_outcome(*, summary: dict[str, Any], status: str | None, comple
     primary = classification["primary_status"]
     degraded = classification["degraded"]
     return {**classification,
-            "summary": _run_summary_text(lifecycle_category=lifecycle, primary_status=primary,
+            "summary": " ".join([_run_summary_text(lifecycle_category=lifecycle, primary_status=primary,
                                          degraded=degraded, verification=classification["verification"]),
+                                  *classification["truth_warnings"]]),
             "next_action": _run_next_action(lifecycle_category=lifecycle, primary_status=primary, degraded=degraded)}
 
 

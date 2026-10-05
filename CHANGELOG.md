@@ -5,6 +5,25 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.6] - 2026-10-04 - "Declared CLI benchmarks and visible runtime warnings"
+
+### Added
+- Admit CLI benchmark tasks with frozen multi-file implementations and exact stdout, stderr and exit-code acceptance, alongside the existing function-example lane.
+- Prepare the stored sanity workflow with a captured organization and a scoped file-write receipt.
+- Expose retained repair and conformance warnings in operator run history/detail without changing completion or historical truth packets.
+
+### Fixed
+- Correct nine v2 CLI tasks' escaped newline expectations and give all ten CLI tasks an explicit implementation inventory and revision 2 identity.
+- Supply CLI support-verifier commands from a declared case instead of invoking argument-taking programs without arguments. Completion acceptance still verifies all cases.
+- Update the modular architecture policy actually loaded by prepared projects instead of a lower-precedence organization file.
+- Check the required Python main guard as syntax, accepting equivalent quote styles while rejecting comments and string literals.
+- Document fresh-source distribution builds after retaining a failed wheel contaminated by a reused build cache. A corrected local wheel passed installed CLI sanity; installed API QA failures remain explicit.
+- Stability: bounded Windows llama.cpp follow-up with retained failures and separate behavioral, model, structural and historical evidence. See `docs/releases/0.7.6/PROOF_REPORT.md` for exact verification and remaining limitations.
+- Operator action: use revision 2 CLI tasks and the updated preparer; private benchmark adapter imports move to `scripts.benchmarks.task_acceptance`. Render additive runtime warnings without interpreting them as completion revocation. Historical results keep their original scope.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `operator_only`
+- `migration_requirement`: `required`
+
 ## [0.7.5] - 2026-10-04 - "Workflow acceptance and benchmark repairs"
 
 ### Added

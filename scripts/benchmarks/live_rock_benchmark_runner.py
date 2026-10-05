@@ -143,7 +143,7 @@ def main() -> int:
     )
     epic_payload["name"] = epic_name
     member_workspace = run_dir / epic_name
-    card_runner.declare_function_acceptance(epic_payload, task, member_workspace)
+    card_runner.declare_task_acceptance(epic_payload, task, member_workspace)
     card_runner._safe_copy(task_context_path, member_workspace / task_context_path.name)
     card_runner._safe_copy(problem_statement_path, member_workspace / problem_statement_path.name)
     collection_payload = {

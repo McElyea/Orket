@@ -4,7 +4,7 @@
     "tier": 1,
     "description": "Deterministic sum CLI program.",
     "problem": "Build a runnable Python program that sums two numbers passed via command-line arguments.",
-    "instruction": "Create a multi-file program with an executable CLI entrypoint that validates input and prints the sum.",
+    "instruction": "Create a multi-file program with an executable CLI entrypoint that validates input and prints the sum. Put CLI parsing in agent_output/main.py and computation in agent_output/implementation.py. Import the implementation from main.py.",
     "constraints": [
       "Use Python standard library only",
       "Deterministic output and error formatting",
@@ -13,11 +13,11 @@
     "io_examples": [
       {
         "input": "python agent_output/main.py 2 3",
-        "output": "5\\n"
+        "output": "5\n"
       },
       {
         "input": "python agent_output/main.py -1 4",
-        "output": "3\\n"
+        "output": "3\n"
       }
     ],
     "acceptance_contract": {
@@ -82,15 +82,20 @@
           "expected_stderr": "error: arguments must be numeric\n",
           "expected_exit_code": 2
         }
+      ],
+      "artifact_paths": [
+        "agent_output/main.py",
+        "agent_output/implementation.py"
       ]
-    }
+    },
+    "task_revision": "2"
   },
   {
     "id": "002",
     "tier": 1,
     "description": "Deterministic concatenate-strings CLI program.",
     "problem": "Build a runnable Python program that concatenates exactly two input strings from CLI arguments.",
-    "instruction": "Create a multi-file program with an executable CLI entrypoint that validates argument count and prints concatenated output.",
+    "instruction": "Create a multi-file program with an executable CLI entrypoint that validates argument count and prints concatenated output. Put CLI parsing in agent_output/main.py and computation in agent_output/implementation.py. Import the implementation from main.py.",
     "constraints": [
       "Use Python standard library only",
       "Deterministic output and error formatting",
@@ -99,11 +104,11 @@
     "io_examples": [
       {
         "input": "python agent_output/main.py foo bar",
-        "output": "foobar\\n"
+        "output": "foobar\n"
       },
       {
         "input": "python agent_output/main.py \"\" x",
-        "output": "x\\n"
+        "output": "x\n"
       }
     ],
     "acceptance_contract": {
@@ -137,7 +142,7 @@
             "foo",
             "bar"
           ],
-          "expected_stdout": "foobar\\n",
+          "expected_stdout": "foobar\n",
           "expected_stderr": "",
           "expected_exit_code": 0
         },
@@ -146,7 +151,7 @@
             "",
             "x"
           ],
-          "expected_stdout": "x\\n",
+          "expected_stdout": "x\n",
           "expected_stderr": "",
           "expected_exit_code": 0
         },
@@ -155,18 +160,23 @@
             "onlyone"
           ],
           "expected_stdout": "",
-          "expected_stderr": "error: expected exactly 2 arguments\\n",
+          "expected_stderr": "error: expected exactly 2 arguments\n",
           "expected_exit_code": 2
         }
+      ],
+      "artifact_paths": [
+        "agent_output/main.py",
+        "agent_output/implementation.py"
       ]
-    }
+    },
+    "task_revision": "2"
   },
   {
     "id": "003",
     "tier": 1,
     "description": "Deterministic Fibonacci CLI program.",
     "problem": "Build a runnable Python program that outputs the first n Fibonacci numbers as a JSON list.",
-    "instruction": "Create a multi-file program with an executable CLI entrypoint that parses n, validates it, and prints the sequence.",
+    "instruction": "Create a multi-file program with an executable CLI entrypoint that parses n, validates it, and prints the sequence. Put CLI parsing in agent_output/main.py and computation in agent_output/implementation.py. Import the implementation from main.py.",
     "constraints": [
       "Use Python standard library only",
       "Output JSON list exactly, followed by newline",
@@ -175,11 +185,11 @@
     "io_examples": [
       {
         "input": "python agent_output/main.py 0",
-        "output": "[]\\n"
+        "output": "[]\n"
       },
       {
         "input": "python agent_output/main.py 5",
-        "output": "[0, 1, 1, 2, 3]\\n"
+        "output": "[0, 1, 1, 2, 3]\n"
       }
     ],
     "acceptance_contract": {
@@ -213,7 +223,7 @@
           "args": [
             "0"
           ],
-          "expected_stdout": "[]\\n",
+          "expected_stdout": "[]\n",
           "expected_stderr": "",
           "expected_exit_code": 0
         },
@@ -221,7 +231,7 @@
           "args": [
             "5"
           ],
-          "expected_stdout": "[0, 1, 1, 2, 3]\\n",
+          "expected_stdout": "[0, 1, 1, 2, 3]\n",
           "expected_stderr": "",
           "expected_exit_code": 0
         },
@@ -230,18 +240,23 @@
             "-1"
           ],
           "expected_stdout": "",
-          "expected_stderr": "error: n must be a non-negative integer\\n",
+          "expected_stderr": "error: n must be a non-negative integer\n",
           "expected_exit_code": 2
         }
+      ],
+      "artifact_paths": [
+        "agent_output/main.py",
+        "agent_output/implementation.py"
       ]
-    }
+    },
+    "task_revision": "2"
   },
   {
     "id": "004",
     "tier": 1,
     "description": "Deterministic reverse-string CLI program.",
     "problem": "Build a runnable Python program that reverses one input string from CLI arguments.",
-    "instruction": "Create a multi-file program with an executable CLI entrypoint that validates argument count and prints reversed text.",
+    "instruction": "Create a multi-file program with an executable CLI entrypoint that validates argument count and prints reversed text. Put CLI parsing in agent_output/main.py and computation in agent_output/implementation.py. Import the implementation from main.py.",
     "constraints": [
       "Use Python standard library only",
       "Deterministic output and error formatting",
@@ -250,11 +265,11 @@
     "io_examples": [
       {
         "input": "python agent_output/main.py abc",
-        "output": "cba\\n"
+        "output": "cba\n"
       },
       {
         "input": "python agent_output/main.py racecar",
-        "output": "racecar\\n"
+        "output": "racecar\n"
       }
     ],
     "acceptance_contract": {
@@ -287,7 +302,7 @@
           "args": [
             "abc"
           ],
-          "expected_stdout": "cba\\n",
+          "expected_stdout": "cba\n",
           "expected_stderr": "",
           "expected_exit_code": 0
         },
@@ -295,25 +310,30 @@
           "args": [
             ""
           ],
-          "expected_stdout": "\\n",
+          "expected_stdout": "\n",
           "expected_stderr": "",
           "expected_exit_code": 0
         },
         {
           "args": [],
           "expected_stdout": "",
-          "expected_stderr": "error: expected exactly 1 argument\\n",
+          "expected_stderr": "error: expected exactly 1 argument\n",
           "expected_exit_code": 2
         }
+      ],
+      "artifact_paths": [
+        "agent_output/main.py",
+        "agent_output/implementation.py"
       ]
-    }
+    },
+    "task_revision": "2"
   },
   {
     "id": "005",
     "tier": 1,
     "description": "Deterministic vowel-count CLI program.",
     "problem": "Build a runnable Python program that counts vowels in one input string and prints the count.",
-    "instruction": "Create a multi-file program with an executable CLI entrypoint that validates argument count and prints the vowel count.",
+    "instruction": "Create a multi-file program with an executable CLI entrypoint that validates argument count and prints the vowel count. Put CLI parsing in agent_output/main.py and computation in agent_output/implementation.py. Import the implementation from main.py.",
     "constraints": [
       "Use Python standard library only",
       "Vowels are a,e,i,o,u (case-insensitive)",
@@ -322,11 +342,11 @@
     "io_examples": [
       {
         "input": "python agent_output/main.py hello",
-        "output": "2\\n"
+        "output": "2\n"
       },
       {
         "input": "python agent_output/main.py XYZ",
-        "output": "0\\n"
+        "output": "0\n"
       }
     ],
     "acceptance_contract": {
@@ -359,7 +379,7 @@
           "args": [
             "hello"
           ],
-          "expected_stdout": "2\\n",
+          "expected_stdout": "2\n",
           "expected_stderr": "",
           "expected_exit_code": 0
         },
@@ -367,7 +387,7 @@
           "args": [
             "AEIOU"
           ],
-          "expected_stdout": "5\\n",
+          "expected_stdout": "5\n",
           "expected_stderr": "",
           "expected_exit_code": 0
         },
@@ -377,11 +397,16 @@
             "b"
           ],
           "expected_stdout": "",
-          "expected_stderr": "error: expected exactly 1 argument\\n",
+          "expected_stderr": "error: expected exactly 1 argument\n",
           "expected_exit_code": 2
         }
+      ],
+      "artifact_paths": [
+        "agent_output/main.py",
+        "agent_output/implementation.py"
       ]
-    }
+    },
+    "task_revision": "2"
   },
   {
     "id": "006",
@@ -1411,7 +1436,7 @@
     "tier": 3,
     "description": "Deterministic run-length-encoding CLI program.",
     "problem": "Build a runnable Python program that applies run-length encoding to one input string from CLI arguments.",
-    "instruction": "Create a multi-file program with an executable CLI entrypoint that validates argument count and prints the encoded string.",
+    "instruction": "Create a multi-file program with an executable CLI entrypoint that validates argument count and prints the encoded string. Put CLI parsing in agent_output/main.py and computation in agent_output/implementation.py. Import the implementation from main.py.",
     "constraints": [
       "Use Python standard library only",
       "Return empty output line for empty input",
@@ -1420,11 +1445,11 @@
     "io_examples": [
       {
         "input": "python agent_output/main.py aaabb",
-        "output": "a3b2\\n"
+        "output": "a3b2\n"
       },
       {
         "input": "python agent_output/main.py abcd",
-        "output": "a1b1c1d1\\n"
+        "output": "a1b1c1d1\n"
       }
     ],
     "acceptance_contract": {
@@ -1457,7 +1482,7 @@
           "args": [
             "aaabb"
           ],
-          "expected_stdout": "a3b2\\n",
+          "expected_stdout": "a3b2\n",
           "expected_stderr": "",
           "expected_exit_code": 0
         },
@@ -1465,18 +1490,23 @@
           "args": [
             "abcd"
           ],
-          "expected_stdout": "a1b1c1d1\\n",
+          "expected_stdout": "a1b1c1d1\n",
           "expected_stderr": "",
           "expected_exit_code": 0
         },
         {
           "args": [],
           "expected_stdout": "",
-          "expected_stderr": "error: expected exactly 1 argument\\n",
+          "expected_stderr": "error: expected exactly 1 argument\n",
           "expected_exit_code": 2
         }
+      ],
+      "artifact_paths": [
+        "agent_output/main.py",
+        "agent_output/implementation.py"
       ]
-    }
+    },
+    "task_revision": "2"
   },
   {
     "id": "020",
@@ -1578,7 +1608,7 @@
     "tier": 4,
     "description": "Deterministic longest-unique-substring CLI program.",
     "problem": "Build a runnable Python program that returns the length of the longest substring without duplicate characters.",
-    "instruction": "Create a multi-file program with an executable CLI entrypoint that accepts one ASCII string argument and prints the integer result.",
+    "instruction": "Create a multi-file program with an executable CLI entrypoint that accepts one ASCII string argument and prints the integer result. Put CLI parsing in agent_output/main.py and computation in agent_output/implementation.py. Import the implementation from main.py.",
     "constraints": [
       "Use Python standard library only",
       "Output integer with trailing newline",
@@ -1587,11 +1617,11 @@
     "io_examples": [
       {
         "input": "python agent_output/main.py abcabcbb",
-        "output": "3\\n"
+        "output": "3\n"
       },
       {
         "input": "python agent_output/main.py bbbbb",
-        "output": "1\\n"
+        "output": "1\n"
       }
     ],
     "acceptance_contract": {
@@ -1624,7 +1654,7 @@
           "args": [
             "abcabcbb"
           ],
-          "expected_stdout": "3\\n",
+          "expected_stdout": "3\n",
           "expected_stderr": "",
           "expected_exit_code": 0
         },
@@ -1632,7 +1662,7 @@
           "args": [
             "bbbbb"
           ],
-          "expected_stdout": "1\\n",
+          "expected_stdout": "1\n",
           "expected_stderr": "",
           "expected_exit_code": 0
         },
@@ -1640,18 +1670,23 @@
           "args": [
             "pwwkew"
           ],
-          "expected_stdout": "3\\n",
+          "expected_stdout": "3\n",
           "expected_stderr": "",
           "expected_exit_code": 0
         },
         {
           "args": [],
           "expected_stdout": "",
-          "expected_stderr": "error: expected exactly 1 argument\\n",
+          "expected_stderr": "error: expected exactly 1 argument\n",
           "expected_exit_code": 2
         }
+      ],
+      "artifact_paths": [
+        "agent_output/main.py",
+        "agent_output/implementation.py"
       ]
-    }
+    },
+    "task_revision": "2"
   },
   {
     "id": "022",
@@ -2032,7 +2067,7 @@
     "tier": 4,
     "description": "Deterministic minimum-window-substring CLI program.",
     "problem": "Build a runnable Python program that returns the minimum-length substring of s containing all characters of t, or empty string.",
-    "instruction": "Create a multi-file program with an executable CLI entrypoint that accepts two string arguments s and t and prints the minimum window result.",
+    "instruction": "Create a multi-file program with an executable CLI entrypoint that accepts two string arguments s and t and prints the minimum window result. Put CLI parsing in agent_output/main.py and computation in agent_output/implementation.py. Import the implementation from main.py.",
     "constraints": [
       "Use Python standard library only",
       "Case-sensitive behavior",
@@ -2042,11 +2077,11 @@
     "io_examples": [
       {
         "input": "python agent_output/main.py ADOBECODEBANC ABC",
-        "output": "BANC\\n"
+        "output": "BANC\n"
       },
       {
         "input": "python agent_output/main.py a aa",
-        "output": "\\n"
+        "output": "\n"
       }
     ],
     "acceptance_contract": {
@@ -2080,7 +2115,7 @@
             "ADOBECODEBANC",
             "ABC"
           ],
-          "expected_stdout": "BANC\\n",
+          "expected_stdout": "BANC\n",
           "expected_stderr": "",
           "expected_exit_code": 0
         },
@@ -2089,7 +2124,7 @@
             "a",
             "aa"
           ],
-          "expected_stdout": "\\n",
+          "expected_stdout": "\n",
           "expected_stderr": "",
           "expected_exit_code": 0
         },
@@ -2098,7 +2133,7 @@
             "ab",
             "b"
           ],
-          "expected_stdout": "b\\n",
+          "expected_stdout": "b\n",
           "expected_stderr": "",
           "expected_exit_code": 0
         },
@@ -2107,18 +2142,23 @@
             "onlyone"
           ],
           "expected_stdout": "",
-          "expected_stderr": "error: expected exactly 2 arguments\\n",
+          "expected_stderr": "error: expected exactly 2 arguments\n",
           "expected_exit_code": 2
         }
+      ],
+      "artifact_paths": [
+        "agent_output/main.py",
+        "agent_output/implementation.py"
       ]
-    }
+    },
+    "task_revision": "2"
   },
   {
     "id": "026",
     "tier": 4,
     "description": "Deterministic rotated-array-search CLI program.",
     "problem": "Build a runnable Python program that returns the index of target in a rotated sorted array, or -1 if absent.",
-    "instruction": "Create a multi-file program with an executable CLI entrypoint that accepts a JSON array string and a target integer, then prints the index.",
+    "instruction": "Create a multi-file program with an executable CLI entrypoint that accepts a JSON array string and a target integer, then prints the index. Put CLI parsing in agent_output/main.py and computation in agent_output/implementation.py. Import the implementation from main.py.",
     "constraints": [
       "Use Python standard library only",
       "Input array values are unique",
@@ -2127,11 +2167,11 @@
     "io_examples": [
       {
         "input": "python agent_output/main.py \"[4,5,6,7,0,1,2]\" 0",
-        "output": "4\\n"
+        "output": "4\n"
       },
       {
         "input": "python agent_output/main.py \"[4,5,6,7,0,1,2]\" 3",
-        "output": "-1\\n"
+        "output": "-1\n"
       }
     ],
     "acceptance_contract": {
@@ -2166,7 +2206,7 @@
             "[4,5,6,7,0,1,2]",
             "0"
           ],
-          "expected_stdout": "4\\n",
+          "expected_stdout": "4\n",
           "expected_stderr": "",
           "expected_exit_code": 0
         },
@@ -2175,7 +2215,7 @@
             "[4,5,6,7,0,1,2]",
             "3"
           ],
-          "expected_stdout": "-1\\n",
+          "expected_stdout": "-1\n",
           "expected_stderr": "",
           "expected_exit_code": 0
         },
@@ -2184,7 +2224,7 @@
             "[1]",
             "0"
           ],
-          "expected_stdout": "-1\\n",
+          "expected_stdout": "-1\n",
           "expected_stderr": "",
           "expected_exit_code": 0
         },
@@ -2194,11 +2234,16 @@
             "0"
           ],
           "expected_stdout": "",
-          "expected_stderr": "error: first argument must be a JSON integer array\\n",
+          "expected_stderr": "error: first argument must be a JSON integer array\n",
           "expected_exit_code": 2
         }
+      ],
+      "artifact_paths": [
+        "agent_output/main.py",
+        "agent_output/implementation.py"
       ]
-    }
+    },
+    "task_revision": "2"
   },
   {
     "id": "027",
@@ -2508,7 +2553,7 @@
     "tier": 4,
     "description": "Deterministic RPN-evaluator CLI program.",
     "problem": "Build a runnable Python program that evaluates a Reverse Polish Notation token list and prints the integer result.",
-    "instruction": "Create a multi-file program with an executable CLI entrypoint that accepts one JSON array of token strings and prints evaluation result.",
+    "instruction": "Create a multi-file program with an executable CLI entrypoint that accepts one JSON array of token strings and prints evaluation result. Put CLI parsing in agent_output/main.py and computation in agent_output/implementation.py. Import the implementation from main.py.",
     "constraints": [
       "Use Python standard library only",
       "Operators are +, -, *, /",
@@ -2518,11 +2563,11 @@
     "io_examples": [
       {
         "input": "python agent_output/main.py \"[\"2\",\"1\",\"+\",\"3\",\"*\"]\"",
-        "output": "9\\n"
+        "output": "9\n"
       },
       {
         "input": "python agent_output/main.py \"[\"-2\",\"3\",\"/\"]\"",
-        "output": "0\\n"
+        "output": "0\n"
       }
     ],
     "acceptance_contract": {
@@ -2556,7 +2601,7 @@
           "args": [
             "[\"2\",\"1\",\"+\",\"3\",\"*\"]"
           ],
-          "expected_stdout": "9\\n",
+          "expected_stdout": "9\n",
           "expected_stderr": "",
           "expected_exit_code": 0
         },
@@ -2564,7 +2609,7 @@
           "args": [
             "[\"4\",\"13\",\"5\",\"/\",\"+\"]"
           ],
-          "expected_stdout": "6\\n",
+          "expected_stdout": "6\n",
           "expected_stderr": "",
           "expected_exit_code": 0
         },
@@ -2572,7 +2617,7 @@
           "args": [
             "[\"10\",\"6\",\"9\",\"3\",\"+\",\"-11\",\"*\",\"/\",\"*\",\"17\",\"+\",\"5\",\"+\"]"
           ],
-          "expected_stdout": "22\\n",
+          "expected_stdout": "22\n",
           "expected_stderr": "",
           "expected_exit_code": 0
         },
@@ -2580,7 +2625,7 @@
           "args": [
             "[\"-2\",\"3\",\"/\"]"
           ],
-          "expected_stdout": "0\\n",
+          "expected_stdout": "0\n",
           "expected_stderr": "",
           "expected_exit_code": 0
         },
@@ -2589,11 +2634,16 @@
             "oops"
           ],
           "expected_stdout": "",
-          "expected_stderr": "error: argument must be a JSON token array\\n",
+          "expected_stderr": "error: argument must be a JSON token array\n",
           "expected_exit_code": 2
         }
+      ],
+      "artifact_paths": [
+        "agent_output/main.py",
+        "agent_output/implementation.py"
       ]
-    }
+    },
+    "task_revision": "2"
   },
   {
     "id": "031",

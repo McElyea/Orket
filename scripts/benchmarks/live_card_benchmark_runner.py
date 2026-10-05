@@ -22,12 +22,13 @@ import psutil
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from scripts.benchmarks.function_acceptance import VERIFIER, declare_function_acceptance  # noqa: E402
 from scripts.benchmarks.isolated_project import prepare_project, project_environment  # noqa: E402
 from scripts.benchmarks.live_card_timing_metrics import (  # noqa: E402
     _extract_token_metrics_from_log,
     _round3,
 )
+from scripts.benchmarks.source_requirements import missing_source_requirements  # noqa: E402
+from scripts.benchmarks.task_acceptance import declare_task_acceptance, verifier_for  # noqa: E402
 
 
 def _parse_args() -> argparse.Namespace:
@@ -518,7 +519,7 @@ def _is_placeholder_source(text: str) -> bool:
 def _validate_task_outputs(run_dir: Path, task: dict[str, Any], output_file: str) -> list[str]:
     issues: list[str] = []
     verifier = run_dir / "agent_output/benchmark_verify.py"
-    if not verifier.exists() or verifier.read_text(encoding="utf-8") != VERIFIER:
+    if not verifier.exists() or verifier.read_text(encoding="utf-8") != verifier_for(task):
         issues.append("benchmark acceptance verifier missing or modified")
     expected_main = run_dir / "agent_output" / "main.py"
     if not expected_main.exists():
@@ -750,7 +751,6 @@ class ConstraintValidator:
             "checks": checks,
         }
 
-
 def _evaluate_quality(task: dict[str, Any], main_text: str, run_dir: Path | None = None) -> dict[str, Any]:
     acceptance = task.get("acceptance_contract") or {}
     mode = str(acceptance.get("mode", "")).strip().lower()
@@ -821,7 +821,7 @@ def _evaluate_quality(task: dict[str, Any], main_text: str, run_dir: Path | None
     if mode == "function" and not required_keywords:
         required_keywords = ["def ", "return"]
     if required_keywords:
-        missing_required = [kw for kw in required_keywords if kw.lower() not in lowered_text]
+        missing_required = missing_source_requirements(required_keywords, main_text, parsed_module)
         checks.append(
             {
                 "name": "required_keywords_present",
@@ -1288,7 +1288,7 @@ def main() -> int:
         output_file=output_file,
     )
     epic_payload["name"] = epic_name
-    declare_function_acceptance(epic_payload, task, run_dir)
+    declare_task_acceptance(epic_payload, task, run_dir)
 
     epic_path.parent.mkdir(parents=True, exist_ok=True)
     epic_path.write_text(json.dumps(epic_payload, indent=2) + "\n", encoding="utf-8")

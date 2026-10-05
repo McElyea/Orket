@@ -72,6 +72,9 @@ Each governed commit must satisfy all of the following:
 1. If a narrative proof report exists, it is stored under `docs/releases/<version>/`.
 2. If machine-readable or bulky supporting evidence exists, it is stored under `benchmarks/results/releases/<version>/`.
 3. Storage paths use the plain release number, not the Git tag form.
+4. When building distribution candidates, follow the contributor fresh-source
+   build rule, inspect package namespace ownership and verify the installed
+   entrypoint outside the checkout. Dependency checks alone are insufficient.
 
 ## 4. Minor Release Additional Gate
 
