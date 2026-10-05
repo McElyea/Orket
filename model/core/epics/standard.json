@@ -1,11 +1,294 @@
 {
+  "id": "standard",
   "name": "standard",
-  "description": "Standard development flow.",
+  "description": "Prepared integer-sum CLI workflow; use examples/stored_workflows/prepare.py.",
   "team": "standard",
   "environment": "standard",
+  "architecture_governance": {
+    "idesign": false,
+    "pattern": "Tactical"
+  },
   "issues": [
-    { "summary": "Design the solution", "seat": "lead_architect" },
-    { "summary": "Implement the code", "seat": "senior_developer" },
-    { "summary": "Verify the results", "seat": "quality_assurance" }
+    {
+      "id": "STD-01",
+      "summary": "Declare the integer-sum CLI contract",
+      "seat": "coder",
+      "status": "ready",
+      "depends_on": [],
+      "note": "Write agent_output/design.json as this JSON object:\n{\"entrypoint\": \"agent_output/main.py\", \"arguments\": [\"INTEGER\", \"INTEGER\"], \"output\": \"JSON integer sum\", \"arithmetic\": \"arbitrary-precision\", \"dependencies\": \"standard-library-only\"} Read the required inputs, use write_file for changes, then update_issue_status to code_review. The runtime verifies acceptance; do not claim to have run shell commands.",
+      "params": {
+        "completion_acceptance": {
+          "schema_version": "card_artifact_acceptance.v1",
+          "acceptance_ref": "STD-01.v1",
+          "policy_ref": "integer-sum-design.v1",
+          "workload_id": "STD-01",
+          "artifact_paths": [
+            "agent_output/design.json"
+          ],
+          "cases": [
+            {
+              "kind": "json_value_equals",
+              "criterion_id": "design",
+              "description": "Declared structured contract",
+              "path": "agent_output/design.json",
+              "key_path": [],
+              "expected_json": "{\"entrypoint\": \"agent_output/main.py\", \"arguments\": [\"INTEGER\", \"INTEGER\"], \"output\": \"JSON integer sum\", \"arithmetic\": \"arbitrary-precision\", \"dependencies\": \"standard-library-only\"}"
+            }
+          ]
+        },
+        "cards_runtime": {
+          "execution_profile": "write_artifact_v1",
+          "artifact_contract": {
+            "kind": "artifact",
+            "primary_output": "agent_output/design.json",
+            "required_read_paths": [
+              "agent_output/requirements.txt"
+            ],
+            "required_write_paths": [
+              "agent_output/design.json"
+            ],
+            "review_read_paths": [
+              "agent_output/requirements.txt",
+              "agent_output/design.json"
+            ]
+          }
+        },
+        "turn_contract": {
+          "required_action_tools": [
+            "write_file",
+            "update_issue_status"
+          ],
+          "required_read_paths": [
+            "agent_output/requirements.txt"
+          ],
+          "required_write_paths": [
+            "agent_output/design.json"
+          ],
+          "required_statuses": [
+            "code_review"
+          ]
+        }
+      }
+    },
+    {
+      "id": "STD-02",
+      "summary": "Implement integer addition as a runnable CLI",
+      "seat": "coder",
+      "status": "ready",
+      "depends_on": [
+        "STD-01"
+      ],
+      "note": "Create agent_output/main.py. Parse two CLI arguments with int(), add them and print their sum using json.dumps. Preserve arbitrary precision; no external packages. Read the required inputs, use write_file for changes, then update_issue_status to code_review. The runtime verifies acceptance; do not claim to have run shell commands.",
+      "params": {
+        "completion_acceptance": {
+          "schema_version": "card_python_cli_acceptance.v1",
+          "acceptance_ref": "STD-02.v1",
+          "policy_ref": "integer-sum-cli.v1",
+          "workload_id": "STD-02",
+          "entrypoint": "agent_output/main.py",
+          "artifact_paths": [
+            "agent_output/main.py"
+          ],
+          "cases": [
+            {
+              "criterion_id": "zero",
+              "description": "zero",
+              "arguments": [
+                "0",
+                "0"
+              ],
+              "expected_json": "0"
+            },
+            {
+              "criterion_id": "positive",
+              "description": "positive",
+              "arguments": [
+                "2",
+                "3"
+              ],
+              "expected_json": "5"
+            },
+            {
+              "criterion_id": "negative",
+              "description": "negative",
+              "arguments": [
+                "-7",
+                "4"
+              ],
+              "expected_json": "-3"
+            },
+            {
+              "criterion_id": "both-negative",
+              "description": "both-negative",
+              "arguments": [
+                "-2",
+                "-3"
+              ],
+              "expected_json": "-5"
+            },
+            {
+              "criterion_id": "large",
+              "description": "large",
+              "arguments": [
+                "12345678901234567890",
+                "1"
+              ],
+              "expected_json": "12345678901234567891"
+            },
+            {
+              "criterion_id": "padding",
+              "description": "padding",
+              "arguments": [
+                " 2 ",
+                "3"
+              ],
+              "expected_json": "5"
+            }
+          ]
+        },
+        "cards_runtime": {
+          "execution_profile": "write_artifact_v1",
+          "artifact_contract": {
+            "kind": "artifact",
+            "primary_output": "agent_output/main.py",
+            "required_read_paths": [
+              "agent_output/requirements.txt",
+              "agent_output/design.json"
+            ],
+            "required_write_paths": [
+              "agent_output/main.py"
+            ],
+            "review_read_paths": [
+              "agent_output/requirements.txt",
+              "agent_output/design.json",
+              "agent_output/main.py"
+            ]
+          }
+        },
+        "turn_contract": {
+          "required_action_tools": [
+            "write_file",
+            "update_issue_status"
+          ],
+          "required_read_paths": [
+            "agent_output/requirements.txt",
+            "agent_output/design.json"
+          ],
+          "required_write_paths": [
+            "agent_output/main.py"
+          ],
+          "required_statuses": [
+            "code_review"
+          ]
+        }
+      }
+    },
+    {
+      "id": "STD-03",
+      "summary": "Verify the sum CLI against six declared cases",
+      "seat": "code_reviewer",
+      "status": "ready",
+      "depends_on": [
+        "STD-02"
+      ],
+      "note": "Inspect the CLI and request mechanical verification. Six independent native process cases must pass before completion. Read the required inputs, use write_file for changes, then update_issue_status to code_review. The runtime verifies acceptance; do not claim to have run shell commands.",
+      "params": {
+        "completion_acceptance": {
+          "schema_version": "card_python_cli_acceptance.v1",
+          "acceptance_ref": "STD-03.v1",
+          "policy_ref": "integer-sum-cli.v1",
+          "workload_id": "STD-03",
+          "entrypoint": "agent_output/main.py",
+          "artifact_paths": [
+            "agent_output/main.py"
+          ],
+          "cases": [
+            {
+              "criterion_id": "zero",
+              "description": "zero",
+              "arguments": [
+                "0",
+                "0"
+              ],
+              "expected_json": "0"
+            },
+            {
+              "criterion_id": "positive",
+              "description": "positive",
+              "arguments": [
+                "2",
+                "3"
+              ],
+              "expected_json": "5"
+            },
+            {
+              "criterion_id": "negative",
+              "description": "negative",
+              "arguments": [
+                "-7",
+                "4"
+              ],
+              "expected_json": "-3"
+            },
+            {
+              "criterion_id": "both-negative",
+              "description": "both-negative",
+              "arguments": [
+                "-2",
+                "-3"
+              ],
+              "expected_json": "-5"
+            },
+            {
+              "criterion_id": "large",
+              "description": "large",
+              "arguments": [
+                "12345678901234567890",
+                "1"
+              ],
+              "expected_json": "12345678901234567891"
+            },
+            {
+              "criterion_id": "padding",
+              "description": "padding",
+              "arguments": [
+                " 2 ",
+                "3"
+              ],
+              "expected_json": "5"
+            }
+          ]
+        },
+        "cards_runtime": {
+          "execution_profile": "write_artifact_v1",
+          "artifact_contract": {
+            "kind": "artifact",
+            "primary_output": "agent_output/main.py",
+            "required_read_paths": [
+              "agent_output/requirements.txt",
+              "agent_output/main.py"
+            ],
+            "required_write_paths": [],
+            "review_read_paths": [
+              "agent_output/requirements.txt",
+              "agent_output/main.py"
+            ]
+          }
+        },
+        "turn_contract": {
+          "required_action_tools": [
+            "update_issue_status"
+          ],
+          "required_read_paths": [
+            "agent_output/requirements.txt",
+            "agent_output/main.py"
+          ],
+          "required_write_paths": [],
+          "required_statuses": [
+            "code_review"
+          ]
+        }
+      }
+    }
   ]
 }

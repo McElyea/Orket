@@ -1,23 +1,30 @@
 from __future__ import annotations
+
 import argparse
 import asyncio
-import json
 import os
-from pathlib import Path
 import statistics
+import sys
 import time
-from dataclasses import dataclass
-from datetime import datetime, UTC
-from typing import Any, Dict, List, Optional
+from dataclasses import dataclass, field
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any
 
 import httpx
 import websockets
 
+if __package__ in {None, ""}:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from benchmarks.job_outcomes import observe_job
+from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger
+
 
 @dataclass
 class LoadResult:
-    durations_ms: List[float]
+    durations_ms: list[float]
     failures: int
+    outcomes: list[dict] = field(default_factory=list)
 
     def summary(self, name: str) -> str:
         if not self.durations_ms:
@@ -25,13 +32,13 @@ class LoadResult:
         p50 = statistics.median(self.durations_ms)
         p95 = percentile(self.durations_ms, 95)
         p99 = percentile(self.durations_ms, 99)
-        err_rate = (self.failures / (len(self.durations_ms) + self.failures)) * 100
+        err_rate = (self.failures / len(self.durations_ms)) * 100
         return (
             f"{name}: n={len(self.durations_ms)} failures={self.failures} "
             f"p50={p50:.1f}ms p95={p95:.1f}ms p99={p99:.1f}ms error_rate={err_rate:.2f}%"
         )
 
-    def as_dict(self) -> Dict[str, Any]:
+    def as_dict(self) -> dict[str, Any]:
         if not self.durations_ms:
             return {
                 "samples": 0,
@@ -41,7 +48,7 @@ class LoadResult:
                 "p99_ms": None,
                 "error_rate_percent": 100.0 if self.failures else 0.0,
             }
-        err_rate = (self.failures / (len(self.durations_ms) + self.failures)) * 100
+        err_rate = (self.failures / len(self.durations_ms)) * 100
         return {
             "samples": len(self.durations_ms),
             "failures": self.failures,
@@ -49,10 +56,11 @@ class LoadResult:
             "p95_ms": round(percentile(self.durations_ms, 95), 3),
             "p99_ms": round(percentile(self.durations_ms, 99), 3),
             "error_rate_percent": round(err_rate, 4),
+            "outcomes": self.outcomes,
         }
 
 
-def percentile(values: List[float], p: int) -> float:
+def percentile(values: list[float], p: int) -> float:
     if not values:
         return 0.0
     ordered = sorted(values)
@@ -64,7 +72,7 @@ async def _timed_request(
     client: httpx.AsyncClient,
     method: str,
     url: str,
-    expected_statuses: Optional[set[int]] = None,
+    expected_statuses: set[int] | None = None,
     **kwargs
 ) -> tuple[float, bool]:
     start = time.perf_counter()
@@ -82,7 +90,7 @@ async def _timed_request(
 
 async def run_webhook_load(base_url: str, total: int, concurrency: int) -> LoadResult:
     sem = asyncio.Semaphore(concurrency)
-    durations: List[float] = []
+    durations: list[float] = []
     failures = 0
     payload = {
         "event": "test",
@@ -92,7 +100,7 @@ async def run_webhook_load(base_url: str, total: int, concurrency: int) -> LoadR
 
     webhook_test_token = os.getenv("ORKET_WEBHOOK_TEST_TOKEN", "").strip()
     api_key = os.getenv("ORKET_API_KEY", "").strip()
-    headers: Dict[str, str] = {}
+    headers: dict[str, str] = {}
     if webhook_test_token:
         headers["X-Webhook-Test-Token"] = webhook_test_token
     elif api_key:
@@ -120,7 +128,7 @@ async def run_webhook_load(base_url: str, total: int, concurrency: int) -> LoadR
 
 async def run_api_load(base_url: str, total: int, concurrency: int) -> LoadResult:
     sem = asyncio.Semaphore(concurrency)
-    durations: List[float] = []
+    durations: list[float] = []
     failures = 0
 
     api_key = os.getenv("ORKET_API_KEY", "").strip()
@@ -145,10 +153,12 @@ async def run_api_load(base_url: str, total: int, concurrency: int) -> LoadResul
     return LoadResult(durations, failures)
 
 
-async def run_parallel_epic_trigger_load(base_url: str, total: int, concurrency: int) -> LoadResult:
+async def run_parallel_epic_trigger_load(base_url: str, total: int, concurrency: int, *,
+                                         epic_id: str = "", completion_timeout: float = 600) -> LoadResult:
     sem = asyncio.Semaphore(concurrency)
-    durations: List[float] = []
+    durations: list[float] = []
     failures = 0
+    outcomes = []
 
     api_key = os.getenv("ORKET_API_KEY", "").strip()
     headers = {"X-API-Key": api_key} if api_key else {}
@@ -157,24 +167,19 @@ async def run_parallel_epic_trigger_load(base_url: str, total: int, concurrency:
         async def worker(i: int):
             nonlocal failures
             async with sem:
-                duration_ms, ok = await _timed_request(
-                    client,
-                    "POST",
-                    f"{base_url}/v1/system/run-active",
-                    json={"issue_id": f"LOAD-EPIC-{i}"},
-                    headers=headers if headers else None,
-                    expected_statuses={200},
-                )
-                durations.append(duration_ms)
-                if not ok:
+                row = await observe_job(client, base_url, headers, asset_id=epic_id or f"LOAD-EPIC-{i}",
+                                        expected_missing=not epic_id, deadline_seconds=completion_timeout)
+                outcomes.append(row)
+                durations.append(row["duration_ms"])
+                if row["outcome"] != ("accepted_completion" if epic_id else "missing_target_rejected"):
                     failures += 1
 
         await asyncio.gather(*(worker(i) for i in range(total)))
-    return LoadResult(durations, failures)
+    return LoadResult(durations, failures, outcomes)
 
 
 async def run_websocket_load(ws_url: str, clients: int) -> LoadResult:
-    durations: List[float] = []
+    durations: list[float] = []
     failures = 0
     api_key = os.getenv("ORKET_API_KEY", "").strip()
     additional_headers = {"X-API-Key": api_key} if api_key else None
@@ -187,8 +192,9 @@ async def run_websocket_load(ws_url: str, clients: int) -> LoadResult:
                 await ws.send(f"ping-{i}")
                 await asyncio.sleep(0.05)
             durations.append((time.perf_counter() - start) * 1000)
-        except (OSError, websockets.exceptions.WebSocketException, asyncio.TimeoutError):
+        except (TimeoutError, OSError, websockets.exceptions.WebSocketException):
             failures += 1
+            durations.append((time.perf_counter() - start) * 1000)
 
     await asyncio.gather(*(connect_worker(i) for i in range(clients)))
     return LoadResult(durations, failures)
@@ -205,13 +211,16 @@ async def main() -> None:
     parser.add_argument("--api-concurrency", type=int, default=50)
     parser.add_argument("--epic-total", type=int, default=10)
     parser.add_argument("--epic-concurrency", type=int, default=10)
+    parser.add_argument("--epic-id", default="", help="Real target to follow to acceptance; absent tests missing-target refusal")
+    parser.add_argument("--completion-timeout", type=float, default=600)
     parser.add_argument("--ws-clients", type=int, default=50)
-    parser.add_argument("--out", default="", help="Optional JSON result output path")
+    parser.add_argument("--out", default="benchmarks/staging/General/service_load.json", help="Stable JSON result output path")
     args = parser.parse_args()
 
     webhook_result = await run_webhook_load(args.webhook_base_url, args.webhook_total, args.webhook_concurrency)
     api_result = await run_api_load(args.api_base_url, args.api_total, args.api_concurrency)
-    epic_result = await run_parallel_epic_trigger_load(args.api_base_url, args.epic_total, args.epic_concurrency)
+    epic_result = await run_parallel_epic_trigger_load(args.api_base_url, args.epic_total, args.epic_concurrency,
+        epic_id=args.epic_id, completion_timeout=args.completion_timeout)
     ws_result = await run_websocket_load(args.ws_url, args.ws_clients)
 
     print(webhook_result.summary("webhook"))
@@ -221,6 +230,7 @@ async def main() -> None:
 
     payload = {
         "timestamp_utc": datetime.now(UTC).isoformat(),
+        "job_scope": "accepted_completion" if args.epic_id else "missing_target_refusal",
         "config": {
             "webhook_base_url": args.webhook_base_url,
             "api_base_url": args.api_base_url,
@@ -243,7 +253,9 @@ async def main() -> None:
     if args.out:
         out_path = Path(args.out)
         out_path.parent.mkdir(parents=True, exist_ok=True)
-        out_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        write_payload_with_diff_ledger(out_path, payload)
+    if any(result.failures for result in (webhook_result, api_result, epic_result, ws_result)):
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

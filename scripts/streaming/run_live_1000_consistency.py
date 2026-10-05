@@ -25,9 +25,12 @@ except ModuleNotFoundError:  # pragma: no cover - direct script execution fallba
     from live_consistency_common import extract_gate_run_id, now_utc_iso, tail_text, to_float, to_int
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 
 from orket.core.contracts.provider_runtime import PROVIDER_CHOICES  # noqa: E402 - direct script bootstrap
+from scripts.streaming.real_service_stress import DEFAULT_STRESS_WEBHOOK_PORT  # noqa: E402
 
 
 def _parse_args() -> argparse.Namespace:
@@ -110,7 +113,7 @@ def _parse_args() -> argparse.Namespace:
         help="Profile for real-service stress loops.",
     )
     parser.add_argument("--stress-api-port", type=int, default=8082)
-    parser.add_argument("--stress-webhook-port", type=int, default=8080)
+    parser.add_argument("--stress-webhook-port", type=int, default=DEFAULT_STRESS_WEBHOOK_PORT)
     parser.add_argument("--stress-health-timeout-sec", type=int, default=90)
     parser.add_argument("--stress-api-key", type=str, default="stress-api-key")
     parser.add_argument("--stress-webhook-test-token", type=str, default="stress-webhook-token")

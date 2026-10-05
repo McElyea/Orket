@@ -5,6 +5,24 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.5] - 2026-10-04 - "Workflow acceptance and benchmark repairs"
+
+### Added
+- Add prepared `standard` and `qa_completion_test` workflows, structural readiness checks, idle-server streaming diagnostics and a recoverable 30-page review fixture runner.
+- Retain Windows repair evidence in staging, including failed attempts, accepted card receipts, TCP outcomes and the corrected 1,000-repeat historical review.
+
+### Fixed
+- Scan selected whole-file review content for forbidden patterns; the previous diff parser silently missed TODO/FIXME findings in `files` snapshots. Diff/PR checks retain added-line semantics.
+- Resolve canonical API job targets before acknowledgment and supervise admitted background work with the existing application lifetime owner. Missing targets return HTTP 404.
+- Give each live function benchmark a retained isolated project and explicit function-example acceptance; reject undefined task shapes before inference.
+- Follow load-test jobs through accepted completion, fix request error-rate accounting, honor service ports and preserve typed streaming errors without extending deadlines.
+- Stability: bounded Windows llama.cpp proof. The 281-test selection, prepared workflows, two consecutive collection benchmarks, TCP load, ten streaming loops and 1,000 deterministic review repetitions passed. These do not establish full endurance, general task correctness or a new installed pair. See `docs/releases/0.7.5/PROOF_REPORT.md`.
+- This versioned source checkpoint changes runtime behavior and tooling. SDK sources and dependency selections are unchanged; the accepted published install target remains core/SDK 0.7.2. No new distribution or SDK pairing acceptance is claimed.
+- Operator action: handle missing-target HTTP 404, prepare stored workflow inputs and use explicit function-example tasks. Treat corrected whole-file findings and load outcomes according to `docs/architecture/CONTRACT_DELTA_WORKFLOW_WINS_2026-10-04.md`.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `operator_only`
+- `migration_requirement`: `required`
+
 ## [0.7.4] - 2026-10-04 - "Reusable work and truthful benchmark runs"
 
 ### Added

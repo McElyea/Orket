@@ -22,6 +22,8 @@ import psutil
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
+from scripts.benchmarks.function_acceptance import VERIFIER, declare_function_acceptance  # noqa: E402
+from scripts.benchmarks.isolated_project import prepare_project, project_environment  # noqa: E402
 from scripts.benchmarks.live_card_timing_metrics import (  # noqa: E402
     _extract_token_metrics_from_log,
     _round3,
@@ -515,6 +517,9 @@ def _is_placeholder_source(text: str) -> bool:
 
 def _validate_task_outputs(run_dir: Path, task: dict[str, Any], output_file: str) -> list[str]:
     issues: list[str] = []
+    verifier = run_dir / "agent_output/benchmark_verify.py"
+    if not verifier.exists() or verifier.read_text(encoding="utf-8") != VERIFIER:
+        issues.append("benchmark acceptance verifier missing or modified")
     expected_main = run_dir / "agent_output" / "main.py"
     if not expected_main.exists():
         issues.append("missing agent_output/main.py")
@@ -1253,7 +1258,7 @@ def main() -> int:
     started_at = _utc_now()
     run_id = uuid.uuid4().hex[:8]
 
-    run_dir = Path(args.run_dir) if args.run_dir else task_path.parent
+    run_dir = (Path(args.run_dir) if args.run_dir else task_path.parent).resolve()
     run_dir.mkdir(parents=True, exist_ok=True)
     runs_root = Path(args.runs_root)
     runs_root.mkdir(parents=True, exist_ok=True)
@@ -1275,26 +1280,22 @@ def main() -> int:
     problem_statement_path.write_text(json.dumps(problem_statement, indent=2) + "\n", encoding="utf-8")
 
     epic_name = f"benchmark_live_{task_id}_{uuid.uuid4().hex[:8]}"
-    epic_path = Path("model") / str(args.department) / "epics" / f"{epic_name}.json"
+    project = prepare_project(Path.cwd(), canonical_run_dir / "project", str(args.department))
+    epic_path = project / "model" / str(args.department) / "epics" / f"{epic_name}.json"
     epic_payload = _build_epic(
         task=task,
         task_context_file=task_context_path.name,
         output_file=output_file,
     )
     epic_payload["name"] = epic_name
+    declare_function_acceptance(epic_payload, task, run_dir)
 
     epic_path.parent.mkdir(parents=True, exist_ok=True)
     epic_path.write_text(json.dumps(epic_payload, indent=2) + "\n", encoding="utf-8")
 
     cmd = [
-        sys.executable,
-        "main.py",
-        "--epic",
-        epic_name,
-        "--department",
-        str(args.department),
-        "--workspace",
-        str(run_dir),
+        sys.executable, "main.py", "--epic", epic_name,
+        "--department", str(args.department), "--workspace", str(run_dir),
     ]
 
     _append_jsonl(
@@ -1309,8 +1310,7 @@ def main() -> int:
         },
     )
 
-    env = dict(os.environ)
-    env.setdefault("ORKET_DISABLE_SANDBOX", "1")
+    env = project_environment(dict(os.environ), project)
     controls = _experimental_controls_from_args(args)
     for env_key, value in {
         "ORKET_BENCH_SEED": controls.get("seed"),
@@ -1333,14 +1333,9 @@ def main() -> int:
             result_stdout,
             result_stderr,
             peak_memory_rss_mib,
-        ) = _run_command_with_peak_rss(cmd, cwd=Path.cwd(), env=env)
+        ) = _run_command_with_peak_rss(cmd, cwd=project, env=env)
     except OSError as exc:
         result_stderr = str(exc)
-    finally:
-        try:
-            epic_path.unlink(missing_ok=True)
-        except OSError as exc:
-            print(f"Failed to remove temporary benchmark epic {epic_path}: {exc}", file=sys.stderr)
     total_latency_s = _round3(time.perf_counter() - generation_started_perf)
     system_load_end = _system_load_snapshot()
 

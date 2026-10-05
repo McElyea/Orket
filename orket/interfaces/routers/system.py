@@ -189,6 +189,8 @@ def build_system_router(
 
     @router.post("/system/run-active")
     async def run_active_asset(req: RunAssetRequest) -> dict[str, Any]:
+        from orket.application.services.api_background_invocation_service import api_target_exists
+
         api_runtime_node = api_runtime_node_getter()
         runtime_host = runtime_host_getter()
         engine = engine_getter()
@@ -209,6 +211,8 @@ def build_system_router(
         )
         invocation = api_policy.capture_api_invocation(invocation)
         method_name = invocation["method_name"]
+        if not await api_target_exists(engine, method_name, asset_id):
+            raise HTTPException(status_code=404, detail=f"Run target '{asset_id}' not found")
 
         await events_getter().emit(
             "api_run_active",

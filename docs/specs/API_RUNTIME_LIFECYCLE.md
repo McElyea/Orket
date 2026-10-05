@@ -3,6 +3,11 @@
 Last updated: 2026-10-04
 Status: Active
 
+Canonical run-active targets resolve before acknowledgment; nonexistent targets
+return 404. Scheduled invocations use the retained-failure background supervisor.
+Existence is an observation, not a reservation or completion claim. Migration:
+`docs/architecture/CONTRACT_DELTA_WORKFLOW_WINS_2026-10-04.md`.
+
 `orket.application.services.api_runtime_container.ApiRuntimeContainer` owns the
 HTTP/WebSocket ASGI invocation tasks, registered background tasks and resources
 of one API application, followed by its engine. The public factory is

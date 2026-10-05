@@ -68,6 +68,15 @@ def _stable_sort_findings(findings: list[DeterministicFinding]) -> list[Determin
     return sorted(findings, key=key)
 
 
+def _pattern_lines(snapshot: ReviewSnapshot) -> list[dict[str, Any]]:
+    if snapshot.source != "files":
+        return _added_diff_lines(snapshot.diff_unified)
+    selected = {changed.path for changed in snapshot.changed_files}
+    return [{"path": blob.path, "line": number, "text": text}
+            for blob in snapshot.context_blobs if blob.path in selected
+            for number, text in enumerate(blob.content.splitlines(), 1)]
+
+
 def _forbidden_pattern_rows(raw_patterns: Any) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for item in list(raw_patterns or []):
@@ -122,7 +131,7 @@ def run_deterministic_lane(
     patterns = _forbidden_pattern_rows(checks.get("forbidden_patterns"))
     if patterns:
         executed_checks.append("forbidden_patterns")
-        added_lines = _added_diff_lines(snapshot.diff_unified)
+        added_lines = _pattern_lines(snapshot)
         for row in patterns:
             pattern = str(row["pattern"])
             # _forbidden_pattern_rows admits only the canonical severity rank keys.

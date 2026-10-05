@@ -1,6 +1,6 @@
 # ReviewRun v0 Contract
 
-Last reviewed: 2026-04-23
+Last reviewed: 2026-10-04
 
 ## Summary
 `ReviewRun` is a manual, snapshot-driven review primitive.
@@ -59,6 +59,12 @@ Default behavior for v0 is `code_only` to avoid non-code drift in review inputs.
 
 ## Lanes
 Deterministic lane:
+
+Forbidden patterns scan added lines for `diff`/`pr` snapshots and bounded selected
+context blobs for `files` snapshots, retaining file paths and line numbers. Whole
+file snapshots are not unified patches. Core 0.7.5 repairs their previously missed
+matches; historical decisions remain unchanged. Repeatability alone is not proof
+of a correct verdict. Migration: `docs/architecture/CONTRACT_DELTA_WORKFLOW_WINS_2026-10-04.md`.
 1. Path policy checks
 2. Forbidden pattern checks
 3. Threshold checks

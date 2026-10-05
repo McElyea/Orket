@@ -204,7 +204,8 @@ async def _real_turn(provider, req) -> AsyncIterator[ProviderEvent]:
                         payload={"stop_reason": "canceled" if provider._canceled[turn_id].is_set() else "completed"})
                 except _PROVIDER_ERRORS as exc:
                     yield ProviderEvent(provider_turn_id=turn_id, event_type=ProviderEventType.ERROR,
-                                        payload={"error": str(exc)})
+                                        payload={"error": f"{type(exc).__name__}: {exc}" if str(exc) else type(exc).__name__,
+                                                 "error_type": type(exc).__name__})
             finally:
                 await run_owned_io(tokens.aclose, label="model-stream-tokens", preserve_failure=True)
     finally:

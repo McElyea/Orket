@@ -48,6 +48,26 @@ Entry scripts should depend on this package instead of duplicating quant orchest
 
 ## Benchmark process invocation
 
+Readiness and outcome rules: `docs/specs/WORKFLOW_BENCHMARK_READINESS.md`.
+Run `python scripts/governance/check_workflow_preflight.py --project <project>
+--epic <name>` before inference; the report is structural, not completion proof.
+The live benchmark runners retain one isolated project/board per invocation and
+require explicit function-example acceptance. Other task shapes refuse until
+task-specific acceptance is supplied. Prepared `standard` and `qa_completion_test`
+recipes are documented in `examples/stored_workflows/README.md`.
+
+The service load harness follows `--epic-id <real-target>` to accepted completion;
+without that option it tests missing-target refusal. Its stable default output is
+`benchmarks/staging/General/service_load.json`. The real-service stress launcher
+defaults to API 8082 and webhook 8083 and honors both port options.
+`python scripts/streaming/diagnose_llama_stream.py --model <selected-alias>` records
+idle-slot checks and first-token timing without changing the model or timeouts.
+`python scripts/reviewrun/run_30page_consistency.py --runs 1000` retains a hashed
+Git bundle and verifies a deterministic baseline. Use `--policy <path>` to reuse
+a retained policy and `--historical-report <path>` to recover exact commits from
+surviving objects without modifying the original fixture. Use `--expected-decision`
+to refuse consistent but semantically wrong results.
+
 The live card and collection benchmark suites launch repository-owned Python
 children with the invoking interpreter (`sys.executable`), including generated
 program checks. The determinism harness parses runner templates using native

@@ -96,6 +96,7 @@ This index is the canonical map for markdown docs under `docs/`, excluding `docs
 69. `docs/specs/QUALITY_CHECKER_CONTRACT.md`
 70. `docs/specs/CURRENT_AUTHORITY_SOURCE_CONTRACT.md`
 71. `docs/specs/MODEL_STREAM_LIFETIME.md`
+72. `docs/specs/WORKFLOW_BENCHMARK_READINESS.md`
 
 ## Process
 1. `docs/process/PR_REVIEW_POLICY.md`

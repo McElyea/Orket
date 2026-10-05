@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import socket
 import subprocess
 import sys
 import time
@@ -9,8 +10,8 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+DEFAULT_STRESS_WEBHOOK_PORT = 8083
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
@@ -31,15 +32,9 @@ def _wait_for_health(url: str, timeout_sec: int) -> None:
 
 def _start_process(cmd: list[str], env: dict[str, str], log_path: Path) -> subprocess.Popen:
     log_path.parent.mkdir(parents=True, exist_ok=True)
-    log_file = log_path.open("w", encoding="utf-8")
-    return subprocess.Popen(
-        cmd,
-        cwd=str(PROJECT_ROOT),
-        env=env,
-        stdout=log_file,
-        stderr=subprocess.STDOUT,
-        text=True,
-    )
+    with log_path.open("w", encoding="utf-8") as log_file:
+        return subprocess.Popen(cmd, cwd=str(PROJECT_ROOT), env=env, stdout=log_file,
+            stderr=subprocess.STDOUT, text=True, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
 
 
 def _profile_args(profile: str) -> dict[str, int]:
@@ -78,7 +73,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Run real-service stress load against Orket API + webhook.")
     parser.add_argument("--profile", choices=["baseline", "heavy", "aggressive"], default="heavy")
     parser.add_argument("--api-port", type=int, default=8082)
-    parser.add_argument("--webhook-port", type=int, default=8080)
+    parser.add_argument("--webhook-port", type=int, default=DEFAULT_STRESS_WEBHOOK_PORT)
     parser.add_argument("--health-timeout-sec", type=int, default=90)
     parser.add_argument("--out", default="", help="Optional output json path for load report.")
     parser.add_argument("--api-key", default="stress-api-key")
@@ -86,9 +81,15 @@ def main() -> None:
     args = parser.parse_args()
 
     load = _profile_args(args.profile)
-    out_path = args.out or f"benchmarks/results/streaming/{int(time.time())}_real_service_{args.profile}.json"
+    out_path = args.out or f"benchmarks/staging/General/real_service_{args.profile}.json"
+    if args.api_port == args.webhook_port:
+        parser.error("API and webhook ports must differ")
+    for port in (args.api_port, args.webhook_port):
+        with socket.socket() as probe:
+            probe.bind(("127.0.0.1", port))
 
     env = dict(os.environ)
+    env["ORKET_DISABLE_SANDBOX"] = "1"
     env["ORKET_API_KEY"] = args.api_key
     env["GITEA_ADMIN_PASSWORD"] = env.get("GITEA_ADMIN_PASSWORD", "test-pass")
     env["GITEA_WEBHOOK_SECRET"] = env.get("GITEA_WEBHOOK_SECRET", "test-secret")
@@ -99,12 +100,13 @@ def main() -> None:
     webhook_proc = None
     try:
         api_proc = _start_process(
-            [sys.executable, "server.py"],
+            [sys.executable, "server.py", "--host", "127.0.0.1", "--port", str(args.api_port), "--no-reload"],
             env=env,
             log_path=PROJECT_ROOT / ".smoke" / "api_stress.log",
         )
         webhook_proc = _start_process(
-            [sys.executable, "-m", "orket.webhook_server"],
+            [sys.executable, "-c", "from orket.webhook_server import start_server; "
+             f"start_server(port={args.webhook_port})"],
             env=env,
             log_path=PROJECT_ROOT / ".smoke" / "webhook_stress.log",
         )
@@ -150,6 +152,7 @@ def main() -> None:
                 proc.wait(timeout=10)
             except subprocess.TimeoutExpired:
                 proc.kill()
+                proc.wait(timeout=10)
 
 
 if __name__ == "__main__":

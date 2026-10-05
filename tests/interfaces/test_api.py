@@ -924,10 +924,11 @@ def test_run_active_uses_runtime_invocation(monkeypatch):
 
     class FakeEngine:
         run_card = staticmethod(fake_run)
+        async def resolve_run_card_target(self, card_id):
+            return "epic", None
 
     async def fake_add_task(session_id, task):
         captured["session_id"] = session_id
-        await task
 
     monkeypatch.setattr(api_module._runtime_context(client.app), "engine", FakeEngine())
     monkeypatch.setattr(api_module._get_runtime_state(client.app), "add_task", fake_add_task)

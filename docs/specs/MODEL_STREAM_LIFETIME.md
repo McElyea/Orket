@@ -1,8 +1,12 @@
 # Model-stream invocation lifetime
 
 Status: Active
-Last updated: 2026-10-01
+Last updated: 2026-10-04
 Owner: Orket Core
+
+Provider error events retain their exception class, including errors with an empty
+message. No timeout budget changes accompany this diagnostic correction. Scope:
+`docs/architecture/CONTRACT_DELTA_WORKFLOW_WINS_2026-10-04.md`.
 
 The builtin `run_model_stream_v1` owns its admitted provider iteration and cancel
 watcher through settlement, using `SHARED_IO_CANCELLATION.md`. Captured request,

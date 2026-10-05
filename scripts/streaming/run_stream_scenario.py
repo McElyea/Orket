@@ -18,9 +18,9 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-import orket.interfaces.api as api_module
-from orket.streaming import StreamLawChecker, StreamLawViolation
-from scripts.streaming.provider_identity import provider_identity as _provider_identity
+import orket.interfaces.api as api_module  # noqa: E402 - direct-script path bootstrap
+from orket.streaming import StreamLawChecker, StreamLawViolation  # noqa: E402
+from scripts.streaming.provider_identity import provider_identity as _provider_identity  # noqa: E402
 
 
 def _parse_payload(path: Path) -> dict[str, Any]:
@@ -235,15 +235,14 @@ def run_scenario(*, scenario_path: Path, timeout_s: float = 20.0) -> dict[str, A
             elif turn_resp.status_code != 200:
                 raise RuntimeError(f"failed to begin turn: {turn_resp.status_code} {turn_resp.text}")
 
-            if error_contains:
-                if error_contains.lower() not in turn_resp.text.lower():
-                    _add_violation(
-                        violations,
-                        code="E_EXPECT_ERROR_CONTAINS",
-                        message=f"expected error to contain '{error_contains}'",
-                        kind="expectation",
-                        data={"response": turn_resp.text},
-                    )
+            if error_contains and error_contains.lower() not in turn_resp.text.lower():
+                _add_violation(
+                    violations,
+                    code="E_EXPECT_ERROR_CONTAINS",
+                    message=f"expected error to contain '{error_contains}'",
+                    kind="expectation",
+                    data={"response": turn_resp.text},
+                )
 
             if turn_resp.status_code == 200:
                 turn_id = str(turn_resp.json()["turn_id"])
@@ -310,16 +309,16 @@ def run_scenario(*, scenario_path: Path, timeout_s: float = 20.0) -> dict[str, A
                 if event_type == "turn_accepted" and turn_accepted_received_epoch_ms is None:
                     turn_accepted_received_epoch_ms = int(time.time() * 1000)
 
-                if cancel_at and not cancel_issued and event_type == cancel_event_type:
-                    if seen_event_counts[event_type] >= cancel_after_count:
-                        if cancel_after_ms > 0:
-                            time.sleep(cancel_after_ms / 1000.0)
-                        client.post(
-                            f"/v1/interactions/{session_id}/cancel",
-                            headers={"X-API-Key": api_key},
-                            json={"turn_id": turn_id},
-                        )
-                        cancel_issued = True
+                if (cancel_at and not cancel_issued and event_type == cancel_event_type
+                        and seen_event_counts[event_type] >= cancel_after_count):
+                    if cancel_after_ms > 0:
+                        time.sleep(cancel_after_ms / 1000.0)
+                    client.post(
+                        f"/v1/interactions/{session_id}/cancel",
+                        headers={"X-API-Key": api_key},
+                        json={"turn_id": turn_id},
+                    )
+                    cancel_issued = True
 
                 if event_type in {"turn_interrupted", "turn_final"}:
                     terminal_event = event_type

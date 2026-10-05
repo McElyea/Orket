@@ -98,7 +98,7 @@ def main() -> int:
     started_at = _utc_now()
     run_id = uuid.uuid4().hex[:8]
 
-    run_dir = Path(args.run_dir) if args.run_dir else task_path.parent
+    run_dir = (Path(args.run_dir) if args.run_dir else task_path.parent).resolve()
     run_dir.mkdir(parents=True, exist_ok=True)
     runs_root = Path(args.runs_root)
     runs_root.mkdir(parents=True, exist_ok=True)
@@ -132,8 +132,9 @@ def main() -> int:
 
     epic_name = f"benchmark_live_{task_id}_{uuid.uuid4().hex[:8]}"
     entry_card_name = f"benchmark_live_collection_{task_id}_{uuid.uuid4().hex[:8]}"
-    epic_path = Path("model") / str(args.department) / "epics" / f"{epic_name}.json"
-    collection_path = Path("model") / str(args.department) / "rocks" / f"{entry_card_name}.json"
+    project = card_runner.prepare_project(Path.cwd(), canonical_run_dir / "project", str(args.department))
+    epic_path = project / "model" / str(args.department) / "epics" / f"{epic_name}.json"
+    collection_path = project / "model" / str(args.department) / "rocks" / f"{entry_card_name}.json"
 
     epic_payload = card_runner._build_epic(  # noqa: SLF001 - intentional reuse of tested helper
         task=task,
@@ -141,6 +142,10 @@ def main() -> int:
         output_file=output_file,
     )
     epic_payload["name"] = epic_name
+    member_workspace = run_dir / epic_name
+    card_runner.declare_function_acceptance(epic_payload, task, member_workspace)
+    card_runner._safe_copy(task_context_path, member_workspace / task_context_path.name)
+    card_runner._safe_copy(problem_statement_path, member_workspace / problem_statement_path.name)
     collection_payload = {
         "name": entry_card_name,
         "description": f"Live benchmark collection asset for task {task_id}",
@@ -179,19 +184,8 @@ def main() -> int:
         str(run_dir),
     ]
 
-    env = dict(os.environ)
-    env.setdefault("ORKET_DISABLE_SANDBOX", "1")
-    try:
-        result = subprocess.run(cmd, capture_output=True, text=True, check=False, env=env)
-    finally:
-        try:
-            epic_path.unlink(missing_ok=True)
-        except OSError:
-            pass
-        try:
-            collection_path.unlink(missing_ok=True)
-        except OSError:
-            pass
+    env = card_runner.project_environment(dict(os.environ), project)
+    result = subprocess.run(cmd, capture_output=True, text=True, check=False, env=env, cwd=project)
 
     (run_dir / "live_runner_output.log").write_text(
         ((result.stdout or "") + "\n" + (result.stderr or "")).strip() + "\n",

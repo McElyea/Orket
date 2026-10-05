@@ -336,6 +336,22 @@
       ],
       "source_path": "benchmarks/staging/General/long_running_workflow_comparison.md",
       "publish_reviewed": false
+    },
+    {
+      "id": "STAGE-GEN-021",
+      "category": "General",
+      "path": "General/workflow_limitation_repairs.json",
+      "title": "Workflow Limitation Repairs (Windows)",
+      "summary": "Prepared workflows and isolated function benchmarks passed; recovered historical whole-file review exposed and fixed a false-green scanner, then completed 1,000 expected rejections. TCP outcomes, bounded streaming and remaining limitations are separate.",
+      "signals": [
+        "live_windows",
+        "accepted_completion",
+        "recovered_historical_fixture",
+        "deterministic_review",
+        "failed_attempts_retained"
+      ],
+      "source_path": "benchmarks/staging/General/workflow_limitation_repairs.md",
+      "publish_reviewed": false
     }
   ]
 }
