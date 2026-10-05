@@ -1,6 +1,6 @@
 # Outward Approval and Effect Lifecycle V1
 
-Last updated: 2026-09-28
+Last updated: 2026-10-04
 Status: Active implementation contract; complete enforcement remains the BT-1 gate
 Owner: Orket Core
 
@@ -57,7 +57,11 @@ is target-binding enforcement, not hostile-process containment, protection from
 privileged filesystem modification, or an arbitrary command filesystem sandbox.
 Existing v1 bindings already retain the required root/target; their bytes remain
 immutable. The binding commits a canonical pathname, not a historical inode/file-ID
-or prior file-content digest; the opened object is pinned at dispatch. Cancellation
+or prior file-content digest; the opened object is pinned at dispatch. Bound text
+writes preserve the serialized UTF-8 content without Windows newline translation,
+matching the standard async file writer. Existing files and retained evidence are
+not rewritten. Delta: `docs/architecture/CONTRACT_DELTA_WORKFLOW_RECOVERY_2026-10-04.md`.
+Cancellation
 cannot release a thread-owned operation's handles before that operation has
 finished, including repeated cancellation requests. The connector timeout uses
 an `asyncio.timeout` scope in the owning task, so an outer task wrapper cannot

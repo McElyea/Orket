@@ -179,7 +179,7 @@ class ResponseParser:
         if len(payload_bytes) > max(1, int(max_response_bytes)):
             raise ValueError(E_RESPONSE_BYTES)
         trimmed = self._trim_ascii_whitespace_once(content)
-        if self._contains_markdown_fence_outside_json_strings(trimmed):
+        if self.contains_markdown_fence_outside_json_strings(trimmed):
             raise ValueError(E_MARKDOWN_FENCE)
         try:
             parsed = json.loads(trimmed, object_pairs_hook=_reject_duplicate_keys)
@@ -217,7 +217,7 @@ class ResponseParser:
             raise ValueError(format_protocol_error(E_MAX_TOOL_CALLS_PREFIX, str(len(tool_calls))))
         return {"content": "", "tool_calls": tool_calls}
 
-    def _contains_markdown_fence_outside_json_strings(self, content: str) -> bool:
+    def contains_markdown_fence_outside_json_strings(self, content: str) -> bool:
         in_string = False
         escaped = False
         for index, char in enumerate(content):

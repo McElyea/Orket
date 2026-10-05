@@ -15,6 +15,11 @@ from scripts.benchmarks.isolated_project import prepare_project  # noqa: E402
 from scripts.common.rerun_diff_ledger import write_payload_with_diff_ledger  # noqa: E402
 
 
+def runtime_environment(workflow: str) -> dict[str, str]:
+    """Bound repeated history for the challenge; required file context remains intact."""
+    return {"ORKET_CONTEXT_WINDOW": "1"} if workflow == "challenge_workflow_runtime" else {}
+
+
 def prepare(project: Path, workflow: str, model: str, *, api: bool = False) -> None:
     project = prepare_project(SOURCE, project, "core")
     organization = ConfigLoader(project).load_organization()
@@ -26,6 +31,9 @@ def prepare(project: Path, workflow: str, model: str, *, api: bool = False) -> N
     workspace = project / ("workspace/default" if api else "workspace")
     output = workspace / "agent_output"
     output.mkdir(parents=True)
+    if workflow == "challenge_workflow_runtime":
+        shutil.copyfile(SOURCE / "examples/stored_workflows/challenge_acceptance_runner.py",
+                        output / "challenge_acceptance_runner.py")
     if workflow == "sanity_test":
         (output / "organization.json").write_text(json.dumps({"name": organization.name}), encoding="utf-8")
         definition = json.loads(epic.read_text(encoding="utf-8"))
@@ -34,7 +42,7 @@ def prepare(project: Path, workflow: str, model: str, *, api: bool = False) -> N
         card["params"]["completion_acceptance"]["cases"][0]["expected_text"] = expected
         card["note"] = f"Read agent_output/organization.json. Write agent_output/sanity_receipt.md with exactly this single line and no newline: {expected} Then request code_review. This is only a file-write receipt; do not claim general system health."
         epic.write_text(json.dumps(definition, indent=2) + "\n", encoding="utf-8")
-    else:
+    elif workflow != "challenge_workflow_runtime":
         (output / "requirements.txt").write_text(
             "CLI: python agent_output/main.py INTEGER INTEGER\n"
             "Print one JSON integer equal to the sum. Preserve arbitrary precision, negative values and int() whitespace.\n"
@@ -59,20 +67,24 @@ def prepare(project: Path, workflow: str, model: str, *, api: bool = False) -> N
         path.write_text(json.dumps(definition, indent=2) + "\n", encoding="utf-8")
     architecture = project / "config/architecture.json"
     policy = json.loads(architecture.read_text(encoding="utf-8"))
-    policy.setdefault("process_rules", {})["disable_runtime_verifier"] = True
+    policy.setdefault("process_rules", {})["disable_runtime_verifier"] = workflow != "challenge_workflow_runtime"
+    if workflow == "challenge_workflow_runtime":
+        policy["process_rules"]["project_surface_profile"] = "cli"
     architecture.write_text(json.dumps(policy, indent=2) + "\n", encoding="utf-8")
     environment = project / "model/core/environments/standard.json"
     environment.write_text(json.dumps({"name": "standard", "model": model, "temperature": 0, "timeout": 120}),
                            encoding="utf-8")
     write_payload_with_diff_ledger(project / "setup.json", {"workflow": workflow, "model": model,
+        "runtime_environment": runtime_environment(workflow),
         "proof_mode": "structural", "scope": "Prepared inputs only; use runtime completion evidence for results"})
-    print(json.dumps({"project": str(project), "workflow": workflow, "workspace": str(workspace)}))
+    print(json.dumps({"project": str(project), "workflow": workflow, "workspace": str(workspace),
+                      "runtime_environment": runtime_environment(workflow)}))
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("project", type=Path)
-    parser.add_argument("--workflow", choices=["standard", "qa_completion_test", "sanity_test"], required=True)
+    parser.add_argument("--workflow", choices=["standard", "qa_completion_test", "sanity_test", "challenge_workflow_runtime"], required=True)
     parser.add_argument("--model", default=DEFAULT_LOCAL_MODEL)
     parser.add_argument("--api", action="store_true", help="Seed the API server's workspace/default entrypoint")
     args = parser.parse_args()

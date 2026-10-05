@@ -9,7 +9,7 @@
     {
       "id": "command.install",
       "kind": "command",
-      "label": "SDK and core development install",
+      "label": "SDK and core development install in the selected environment",
       "source": "README.md",
       "command": "python -m pip install -e \"./orket_extension_sdk[testing]\" -e \".[dev]\"",
       "proof": "proof.current"
@@ -165,7 +165,7 @@
       "authorization": "orket/application/services/tool_gate_service.py#ToolGate",
       "effect": "orket/application/services/toolbox.py#ToolBox",
       "terminal": "orket/application/services/turn_tool_control_plane_service.py#TurnToolControlPlaneService",
-      "ceiling": "Each tool retains its admitted contract; model completion statements are not effect or terminal authority."
+      "ceiling": "Each tool retains its admitted contract, including exact serialized UTF-8 file writes; model completion statements are not effect or terminal authority."
     },
     {
       "id": "owners.card",
@@ -176,7 +176,7 @@
       "authorization": "orket/application/services/cards_epic_control_plane_service.py#CardsEpicControlPlaneService",
       "effect": "orket/adapters/storage/async_card_repository.py#AsyncCardRepository",
       "terminal": "orket/application/services/card_completion_service.py#CardCompletionService",
-      "ceiling": "Declared acceptance and current governed start-path contracts bound completion; storage success alone does not prove the requested workload."
+      "ceiling": "Declared acceptance and current governed start-path contracts bound completion; artifact review uses its declared inputs. Prepared challenge checks require explicit retained acceptance; storage success alone does not prove the requested workload."
     },
     {
       "id": "contract.api",

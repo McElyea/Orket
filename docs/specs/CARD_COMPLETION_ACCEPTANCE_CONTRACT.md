@@ -833,6 +833,13 @@ Delta: `docs/architecture/CONTRACT_DELTA_COMPLETION_GUARD_BT3_2026-09-13.md`.
 
 ## Required runtime acceptance
 
+Final integrity review of an artifact card uses its declared artifact review
+paths, including when the originating seat is `code_reviewer` or `reviewer`.
+It does not add app-default design or runtime-report inputs to that artifact
+contract. Application final review retains those defaults. This path selection
+does not change completion acceptance or authorize missing evidence.
+Delta: `docs/architecture/CONTRACT_DELTA_WORKFLOW_RECOVERY_2026-10-04.md`.
+
 Composed runs must exercise real verification, tools, filesystem and final storage
 for absent plan, empty workspace, syntax-only evidence, incorrect but syntactically
 valid behavior, failed accepted checks, stale and cross-run evidence, and behavior

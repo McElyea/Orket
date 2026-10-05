@@ -5,6 +5,23 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.7] - 2026-10-05 - "Stored workflow recovery and separate benchmark verdicts"
+
+### Fixed
+- Retain and settle the streaming scenario harness's pending WebSocket reader across poll timeouts; late commit events no longer disappear into abandoned readers. Preserve the failed endurance attempt and unchanged gate assertions.
+- Accept Markdown fences inside JSON tool argument strings while continuing to reject fences around the response; reuse the response parser's lexical check.
+- Preserve submitted UTF-8 line endings in standard and approved bound file writes on Windows; exact artifact acceptance no longer rejects text altered by the writer itself.
+- Keep final artifact review within its declared input paths; the prepared QA workflow no longer acquires an absent app-default design file or asks its read-only reviewer to write.
+- Connect the twelve-card workflow-runtime challenge to explicit retained acceptance and add a prepared CLI recipe using its existing runtime checks. Preserve original commands, assertions and historical failures.
+- Separate CLI example correctness from observed replay equality. Repeatable wrong answers still fail the task; incomplete observations remain explicit.
+- Remove the incorrect suggestion to increase the small-project threshold to disable its reviewer requirement.
+- Document a stable Windows project environment and verify its activated entrypoint, avoiding the stale global core/SDK 0.7.1 observed in the normal shell.
+- Stability: targeted native controls and fresh Windows workflow/suite outcomes are recorded in `docs/releases/0.7.7/PROOF_REPORT.md`. Model failures, transport checks, fixture controls and historical evidence remain distinct.
+- Operator action: prepare a fresh challenge project with `examples/stored_workflows/prepare.py --workflow challenge_workflow_runtime`; keep its seeded acceptance adapter unchanged and use the development environment with pytest. Earlier workspaces and reports are not migrated automatically.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `operator_only`
+- `migration_requirement`: `required`
+
 ## [0.7.6] - 2026-10-04 - "Declared CLI benchmarks and visible runtime warnings"
 
 ### Added

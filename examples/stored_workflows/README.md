@@ -10,9 +10,28 @@ name and writes one exact, scoped receipt at `agent_output/sanity_receipt.md`.
 Use `--workflow sanity_test` and run that epic in its own prepared directory.
 The receipt proves file-writing acceptance only, not overall system health.
 
-From the checkout, using the installed development environment:
+The fourth recipe, `challenge_workflow_runtime`, runs the twelve-card programming
+challenge: requirements, design, fixtures, loader, validator, planner, simulator,
+checkpoint/resume, CLI, generated tests and reporting. Prepare a new directory
+with `--workflow challenge_workflow_runtime`, then run that epic with its own
+durable root as below. Use the core development environment, including pytest.
+Preparation seeds only the acceptance adapter; the model creates the solution.
+Keep `agent_output/challenge_acceptance_runner.py` unchanged. The runtime retains
+its original command/assertion checks as completion evidence. Exact requirements,
+design and fixture checks prove their declared artifact shape; generated tests
+and example checks do not establish correctness for every possible workflow.
+For the selected 8K llama.cpp context, set `$env:ORKET_CONTEXT_WINDOW = '1'`
+in the challenge's shell before `orket runtime` (or before starting its API server).
+Preparation records this setting in `setup.json` and prints it; it does not change
+the parent shell. It bounds repeated same-role history, while required file reads,
+current instructions, acceptance and retained transcripts remain intact.
+
+Create the Windows project `.venv` and install development dependencies using
+the [runtime setup](../../README.md#full-runtime-quick-start). From the checkout,
+activate that environment in each shell before preparing or running workflows:
 
 ```powershell
+& C:/Source/Orket/.venv/Scripts/Activate.ps1
 python examples/stored_workflows/prepare.py C:/Source/Orket-standard-demo --workflow standard --model orcarouter_qwen3.8-27b-uncensored-q4_k_l
 $env:ORKET_DISABLE_SANDBOX = '1'
 $env:ORKET_LLM_PROVIDER = 'llama_cpp'
@@ -26,7 +45,8 @@ orket runtime --epic standard --workspace ./workspace --model orcarouter_qwen3.8
 For QA, prepare a separate directory with `--workflow qa_completion_test`, use its
 own durable root, and run that epic. Preparation seeds the correct CLI so QA has
 real inputs; changing it to an incorrect implementation must refuse completion.
-The generic support verifier is disabled for these small task shapes. Declared
+The generic support verifier is disabled for the three small task shapes. The
+challenge keeps support verification enabled on a CLI surface. Declared
 card acceptance remains mandatory. Setup and preflight are structural evidence;
 runtime completion receipts establish whether the actual work was accepted.
 

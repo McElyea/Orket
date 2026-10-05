@@ -479,7 +479,7 @@ changes and generated archives together. Runtime reads those packaged archives
 only. The compiler normalizes UTF-8 text to LF, preserves binary assets and uses
 fixed ZIP metadata. Both Quality jobs enforce source/archive agreement.
 
-- Install: `python -m pip install --upgrade pip && python -m pip install -e "./orket_extension_sdk[testing]" -e ".[dev]"`
+- Install: run `python -m pip install --upgrade pip`, then `python -m pip install -e "./orket_extension_sdk[testing]" -e ".[dev]"` in the selected environment.
 - Default runtime: `orket runtime`
 - Named card runtime: `orket runtime --card <card_id>`
 - API runtime: `python server.py`
@@ -489,6 +489,13 @@ fixed ZIP metadata. Both Quality jobs enforce source/archive agreement.
 - Governed-run deterministic demo: `orket demo governed-run`
 - Interactive project setup: `python -m orket.interfaces.setup_cli`
 - Test command: `python -m pytest -q`
+
+Use the same selected Python environment for installation, preparation, runtime
+and tests. The Windows project `.venv` creation/activation example is in
+`README.md`; activate it in each new shell or use its explicit executable paths.
+Check `Get-Command python, orket` after installation so an older global executable
+does not silently become the operator entrypoint. Environment creation does not
+change the operator's provider, model server or board override.
 
 Async Kernel embeddings use engine async mutation/approval methods; the API
 routes synchronous Kernel work through application-owned workers. Retain the

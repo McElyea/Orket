@@ -492,7 +492,7 @@ class ContractValidator:
                     excerpt=content[:240],
                 )
             )
-        if "```" in content and (protocol_governed_enabled or task_class == "tool_call"):
+        if self.response_parser.contains_markdown_fence_outside_json_strings(content) and (protocol_governed_enabled or task_class == "tool_call"):
             violations.append(
                 self._local_prompt_violation(
                     rule_id="LOCAL_PROMPT.MARKDOWN_FENCE",

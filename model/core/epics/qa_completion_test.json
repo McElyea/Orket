@@ -15,7 +15,7 @@
       "seat": "code_reviewer",
       "status": "ready",
       "depends_on": [],
-      "note": "Inspect the seeded CLI. Request mechanical verification against six declared cases. A faulty implementation must remain unaccepted. Read the required inputs, use write_file for changes, then update_issue_status to code_review. The runtime verifies acceptance; do not claim to have run shell commands.",
+      "note": "Inspect the seeded CLI. Request mechanical verification against six declared cases. A faulty implementation must remain unaccepted. Read the declared inputs without changing them, then request code_review. You have no write tool. The runtime verifies acceptance; do not claim to have run shell commands.",
       "params": {
         "completion_acceptance": {
           "schema_version": "card_python_cli_acceptance.v1",

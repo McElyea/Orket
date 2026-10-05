@@ -179,7 +179,7 @@ def required_read_paths_for_seat(*, seat_name: str, issue: Any) -> list[str]:
     if seat == "architect":
         return [DEFAULT_REQUIREMENTS_PATH]
     if seat == "integrity_guard":
-        if issue_seat in {"code_reviewer", "reviewer"}:
+        if issue_seat in {"code_reviewer", "reviewer"} and artifact_contract.get("kind") == "app":
             return _normalize_paths(
                 DEFAULT_REQUIREMENTS_PATH,
                 DEFAULT_ARCHITECTURE_PATH,

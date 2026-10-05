@@ -39,7 +39,9 @@ def test_stored_preflight_detects_missing_acceptance_before_inference():
     assert inspect_workflow(ROOT, "standard")["ready"]
     assert inspect_workflow(ROOT, "qa_completion_test")["ready"]
     report = inspect_workflow(ROOT, "challenge_workflow_runtime")
-    assert not report["ready"] and any("missing completion_acceptance" in error for error in report["errors"])
+    assert report["ready"]
+    legacy = inspect_workflow(ROOT, "model_reforge")
+    assert not legacy["ready"] and any("missing completion_acceptance" in error for error in legacy["errors"])
 
 
 def test_function_acceptance_executes_real_program_and_refuses_metadata_only(tmp_path):

@@ -1,6 +1,6 @@
 # Staged Benchmark Candidates
 
-Last updated: 2026-10-04
+Last updated: 2026-10-05
 
 This directory is the review lane for benchmark artifacts awaiting explicit publication approval.
 
@@ -39,6 +39,7 @@ This directory is the review lane for benchmark artifacts awaiting explicit publ
 | STAGE-GEN-020 | General | `General/long_running_workflow_comparison.json` | Long-running Workflow Comparison (Windows) | 4,100 deterministic review repetitions passed; a 1,000-loop live streaming request stopped at loop 6. Transport load, stub soak, missing historical fixture and failed attempts are reported separately. |  | `live_windows`, `long_run`, `deterministic_review`, `streaming_failure_retained`, `transport_not_completion` |
 | STAGE-GEN-021 | General | `General/workflow_limitation_repairs.json` | Workflow Limitation Repairs (Windows) | Prepared workflows and isolated function benchmarks passed; recovered historical whole-file review exposed and fixed a false-green scanner, then completed 1,000 expected rejections. TCP outcomes, bounded streaming and remaining limitations are separate. |  | `live_windows`, `accepted_completion`, `recovered_historical_fixture`, `deterministic_review`, `failed_attempts_retained` |
 | STAGE-GEN-022 | General | `General/workflow_followup_repairs.json` | CLI Workflow Follow-up and Installed Candidate Proof (Windows) | CLI admission, effective prepared configuration, syntax-aware source quality and visible runtime warnings. Original 11/15 matrix, separate corrected task run, installed sanity and failed API QA are distinguished. |  | `live_windows`, `cli_acceptance`, `installed_candidate`, `failure_disclosure`, `failed_attempts_retained` |
+| STAGE-GEN-023 | General | `General/legacy_suite_recovery.json` | Stored Suite Execution and Programming Challenge Recovery (Windows) | All 26 nonempty stored epics and the fixed eleven-family queue attempted; recovered twelve-card challenge and QA, native long-run reviews, model failures, streaming reader repair and remaining authoring gaps are reported separately. |  | `live_windows`, `accepted_completion`, `long_run`, `failed_attempts_retained`, `native_cleanup` |
 
 ## Staging Workflow
 1. Copy candidate artifact(s) into the correct category folder.

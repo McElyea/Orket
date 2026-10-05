@@ -410,7 +410,7 @@ LP-09 visualization (deterministic repair loop):
 
 Strict mode validation MUST include:
 1. `only_contract_payload` check (no non-whitespace outside payload),
-2. markdown fence detection,
+2. markdown fence detection outside JSON strings (fences inside tool argument strings are payload data),
 3. intro-phrase detector using a configurable denylist.
 
 Requirements:

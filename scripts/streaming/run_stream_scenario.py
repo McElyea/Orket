@@ -4,9 +4,7 @@ import argparse
 import hashlib
 import json
 import os
-import queue
 import sys
-import threading
 import time
 from pathlib import Path
 from typing import Any
@@ -21,6 +19,7 @@ if str(REPO_ROOT) not in sys.path:
 import orket.interfaces.api as api_module  # noqa: E402 - direct-script path bootstrap
 from orket.streaming import StreamLawChecker, StreamLawViolation  # noqa: E402
 from scripts.streaming.provider_identity import provider_identity as _provider_identity  # noqa: E402
+from scripts.streaming.scenario_receive import ScenarioReceiver, scenario_socket  # noqa: E402
 
 
 def _parse_payload(path: Path) -> dict[str, Any]:
@@ -136,27 +135,8 @@ def _resolved_model_id_from_events(events: list[dict[str, Any]]) -> str:
     return ""
 
 
-def _receive_json_with_timeout(ws: Any, timeout_s: float) -> dict[str, Any] | None:
-    out: queue.Queue = queue.Queue(maxsize=1)
-
-    def _worker() -> None:
-        try:
-            event = ws.receive_json()
-            out.put(("ok", event))
-        except Exception as exc:  # pragma: no cover - transport exception variability
-            out.put(("err", exc))
-
-    thread = threading.Thread(target=_worker, daemon=True)
-    thread.start()
-    thread.join(timeout=max(0.0, timeout_s))
-    if thread.is_alive():
-        return None
-    if out.empty():
-        return None
-    status, value = out.get()
-    if status == "err":
-        raise value
-    return value
+def _receive_json_with_timeout(ws: ScenarioReceiver, timeout_s: float) -> dict[str, Any] | None:
+    return ws.receive(timeout_s)
 
 
 def run_scenario(*, scenario_path: Path, timeout_s: float = 20.0) -> dict[str, Any]:
@@ -209,7 +189,7 @@ def run_scenario(*, scenario_path: Path, timeout_s: float = 20.0) -> dict[str, A
             raise RuntimeError(f"failed to start interaction session: {start_resp.status_code} {start_resp.text}")
         session_id = str(start_resp.json()["session_id"])
 
-        with client.websocket_connect(f"/ws/interactions/{session_id}?api_key={api_key}") as ws:
+        with scenario_socket(client.websocket_connect(f"/ws/interactions/{session_id}?api_key={api_key}")) as ws:
             turn_request_started_epoch_ms = int(time.time() * 1000)
             turn_accepted_received_epoch_ms: int | None = None
             turn_resp = client.post(

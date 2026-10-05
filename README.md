@@ -92,6 +92,21 @@ Use [docs/guides/TRUSTED_REPO_CHANGE_PROOF_GUIDE.md](docs/guides/TRUSTED_REPO_CH
 
 ## Full Runtime Quick Start
 
+For Windows development, create and activate a project environment from the
+checkout (the example uses uv and Python 3.11):
+
+```powershell
+uv venv --python 3.11 --seed .venv
+& ./.venv/Scripts/Activate.ps1
+Get-Command python, orket -ErrorAction SilentlyContinue
+```
+
+Create the environment once; activate it in each new shell before installing or
+running Orket. After installation, both commands should resolve inside `.venv`.
+You can also invoke `.venv/Scripts/python.exe` and `.venv/Scripts/orket.exe`
+explicitly. Use that same environment for the prepared workflow recipes in
+[examples/stored_workflows/README.md](examples/stored_workflows/README.md).
+
 1. Install dependencies:
 
 ```bash

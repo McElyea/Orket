@@ -62,7 +62,7 @@ def _operate(tool: str, args: dict[str, Any], target: Path, descriptor: int,
             content = json.dumps(content, indent=2)
         # Truncate only after the opened handle has passed no-follow/type checks.
         os.ftruncate(descriptor, 0)
-        with os.fdopen(os.dup(descriptor), "w", encoding="utf-8") as stream:
+        with os.fdopen(os.dup(descriptor), "w", encoding="utf-8", newline="") as stream:
             stream.write(content)
     elif tool == "delete_file":
         delete()

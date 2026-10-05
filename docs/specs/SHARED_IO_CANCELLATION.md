@@ -1,6 +1,6 @@
 # Shared I/O cancellation ownership
 
-Last updated: 2026-09-28
+Last updated: 2026-10-04
 Status: Active implementation contract; 0.6.106 acceptance remains in the architectural-truth plan
 
 `orket.adapters.execution.owned_io.run_owned_io` retains one admitted operation
@@ -8,6 +8,14 @@ until its existing task/gather settlement completes. The operation factory runs
 synchronously before the owner's first suspension. Its result must satisfy the
 existing `asyncio.create_task` coroutine admission; arbitrary awaitables are not
 newly admitted. Factory failures retain their synchronous timing.
+
+`AsyncFileTools.write_file` preserves the serialized text as exact UTF-8 bytes,
+without host newline translation. LF, CRLF and mixed submitted endings remain
+distinct. Object content retains the existing JSON serialization. The owned
+open/write/close lifetime and failure precedence remain unchanged. Text reads
+retain their existing universal-newline behavior; byte acceptance captures files
+separately and performs no text normalization. Delta:
+`docs/architecture/CONTRACT_DELTA_WORKFLOW_RECOVERY_2026-10-04.md`.
 
 `OwnedCoroutine[T]` names that coroutine/generator family. The shared factory,
 Kernel publication factory and turn-preparation close port use it instead of

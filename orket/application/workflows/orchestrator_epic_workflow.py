@@ -48,8 +48,7 @@ def preflight_epic_team(
         )
         raise ExecutionFailed(
             "Small-project policy preflight failed: missing code_reviewer seat. "
-            f"Available seats={available_seats}. Add a seat with role 'code_reviewer' "
-            "or increase small_project_issue_threshold to disable small-team mode for this epic."
+            f"Available seats={available_seats}. Add a seat with role 'code_reviewer'."
         )
     emit(
         "team_selection_decision",

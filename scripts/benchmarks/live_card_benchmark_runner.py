@@ -22,6 +22,7 @@ import psutil
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
+from scripts.benchmarks.cli_example_checks import cli_example_checks  # noqa: E402
 from scripts.benchmarks.isolated_project import prepare_project, project_environment  # noqa: E402
 from scripts.benchmarks.live_card_timing_metrics import (  # noqa: E402
     _extract_token_metrics_from_log,
@@ -1027,113 +1028,7 @@ def _evaluate_quality(task: dict[str, Any], main_text: str, run_dir: Path | None
                         }
                     )
     elif eval_type == "cli_examples":
-        entrypoint = str(evaluation.get("entrypoint", "agent_output/main.py")).strip() or "agent_output/main.py"
-        examples = evaluation.get("examples") or []
-        if run_dir is None:
-            checks.append(
-                {
-                    "name": "cli_example_cases_pass",
-                    "passed": False,
-                    "detail": "run_dir missing for cli_examples evaluation",
-                }
-            )
-        elif not isinstance(examples, list) or not examples:
-            checks.append(
-                {
-                    "name": "cli_example_cases_pass",
-                    "passed": False,
-                    "detail": "evaluation.examples missing",
-                }
-            )
-        else:
-            target = run_dir / entrypoint
-            if not target.exists():
-                checks.append(
-                    {
-                        "name": "cli_example_cases_pass",
-                        "passed": False,
-                        "detail": f"missing entrypoint: {entrypoint}",
-                    }
-                )
-            else:
-                mismatch: str = ""
-                deterministic_ok = True
-                for idx, case in enumerate(examples):
-                    if not isinstance(case, dict):
-                        mismatch = f"invalid case format at index {idx}"
-                        break
-                    raw_args = case.get("args", [])
-                    if not isinstance(raw_args, list):
-                        mismatch = f"args must be a list at index {idx}"
-                        break
-                    cmd = [sys.executable, str(target)] + [str(arg) for arg in raw_args]
-                    expected_exit = int(case.get("expected_exit_code", 0))
-                    expected_stdout = str(case.get("expected_stdout", ""))
-                    expected_stderr = str(case.get("expected_stderr", ""))
-                    try:
-                        first = subprocess.run(
-                            cmd,
-                            capture_output=True,
-                            text=True,
-                            check=False,
-                            timeout=5,
-                            cwd=str(run_dir),
-                        )
-                        second = subprocess.run(
-                            cmd,
-                            capture_output=True,
-                            text=True,
-                            check=False,
-                            timeout=5,
-                            cwd=str(run_dir),
-                        )
-                    except subprocess.TimeoutExpired:
-                        mismatch = f"cli example timed out at index {idx}"
-                        deterministic_ok = False
-                        break
-                    if first.returncode != expected_exit:
-                        mismatch = (
-                            f"exit mismatch at index {idx}: "
-                            f"expected={expected_exit} actual={first.returncode}"
-                        )
-                        break
-                    if first.stdout != expected_stdout:
-                        mismatch = (
-                            f"stdout mismatch at index {idx}: "
-                            f"expected={expected_stdout!r} actual={first.stdout!r}"
-                        )
-                        break
-                    if first.stderr != expected_stderr:
-                        mismatch = (
-                            f"stderr mismatch at index {idx}: "
-                            f"expected={expected_stderr!r} actual={first.stderr!r}"
-                        )
-                        break
-                    if (
-                        first.returncode != second.returncode
-                        or first.stdout != second.stdout
-                        or first.stderr != second.stderr
-                    ):
-                        deterministic_ok = False
-                        mismatch = f"non-deterministic cli output at index {idx}"
-                        break
-
-                checks.append(
-                    {
-                        "name": "cli_example_cases_pass",
-                        "passed": not bool(mismatch),
-                        "detail": mismatch if mismatch else "all cli examples passed",
-                    }
-                )
-                checks.append(
-                    {
-                        "name": "cli_examples_deterministic_replay",
-                        "passed": deterministic_ok and not bool(mismatch),
-                        "detail": "cli outputs are deterministic across repeated runs"
-                        if deterministic_ok and not mismatch
-                        else "cli output determinism check failed",
-                    }
-                )
+        checks.extend(cli_example_checks(evaluation, run_dir))
 
     passed = all(bool(check.get("passed")) for check in checks)
     failed_names = [str(check.get("name")) for check in checks if not bool(check.get("passed"))]

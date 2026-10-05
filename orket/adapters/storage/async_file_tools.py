@@ -149,7 +149,7 @@ class AsyncFileTools:
                     return cast(str, await stream.read())  # aiofiles text mode returns str.
             if operation == "write":
                 await run_owned_thread(partial(path.parent.mkdir, parents=True, exist_ok=True), label="file-parent")
-                async with aiofiles.open(path, mode="w", encoding="utf-8") as stream:
+                async with aiofiles.open(path, mode="w", encoding="utf-8", newline="") as stream:
                     await stream.write(cast(str, content))  # The write overload requires text.
                 return str(path)
             if operation == "create":

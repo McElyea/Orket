@@ -1,6 +1,6 @@
 {
   "catalog_v": "1.0.0",
-  "updated_on": "2026-10-04",
+  "updated_on": "2026-10-05",
   "root": "benchmarks/staging",
   "highlight_id": "STAGE-GEN-017",
   "artifacts": [
@@ -361,6 +361,16 @@
       "summary": "CLI admission, effective prepared configuration, syntax-aware source quality and visible runtime warnings. Original 11/15 matrix, separate corrected task run, installed sanity and failed API QA are distinguished.",
       "signals": ["live_windows", "cli_acceptance", "installed_candidate", "failure_disclosure", "failed_attempts_retained"],
       "source_path": "benchmarks/staging/General/workflow_followup_repairs.md",
+      "publish_reviewed": false
+    },
+    {
+      "id": "STAGE-GEN-023",
+      "category": "General",
+      "path": "General/legacy_suite_recovery.json",
+      "title": "Stored Suite Execution and Programming Challenge Recovery (Windows)",
+      "summary": "All 26 nonempty stored epics and the fixed eleven-family queue attempted; recovered twelve-card challenge and QA, native long-run reviews, model failures, streaming reader repair and remaining authoring gaps are reported separately.",
+      "signals": ["live_windows", "accepted_completion", "long_run", "failed_attempts_retained", "native_cleanup"],
+      "source_path": "benchmarks/staging/General/legacy_suite_recovery.md",
       "publish_reviewed": false
     }
   ]

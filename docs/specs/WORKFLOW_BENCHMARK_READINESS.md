@@ -22,6 +22,23 @@ The prepared `sanity_test` workflow writes one organization receipt with declare
 text acceptance. Preparation captures the project organization name. Its receipt
 explicitly limits the claim to file writing; it is not a general health check.
 
+`challenge_workflow_runtime` is a fourth prepared recipe. It retains the twelve
+dependent programming cards and their existing runtime commands/assertions. The
+first three cards declare exact requirements text, design data and fixtures;
+those are artifact checks, not proof of design quality. Subsequent cards declare
+retained CLI acceptance over the cumulative implementation inventory. Preparation
+seeds `challenge_acceptance_runner.py`, which invokes the canonical
+`RuntimeVerifier` with the authored contract and retains inner command receipts
+on stderr in the outer acceptance package. It seeds no solution code. The
+development environment must include pytest for the original generated-test
+commands. Passing those generated tests does not establish exhaustive correctness.
+Use a fresh prepared project; raw legacy workspaces do not acquire this verifier
+or acceptance retroactively. Never edit its verifier during model work.
+The recipe records `ORKET_CONTEXT_WINDOW=1` for the selected 8K context. Apply
+the printed runtime environment before launching its CLI or API process.
+This uses the existing history-window control; required file context and
+acceptance stay intact, and retained transcripts are not truncated.
+
 Live card and collection benchmark runners retain each invocation's project,
 assets, empty initial board and durable root under its canonical run directory.
 They never adopt temporary assets into the caller's board or delete referenced
@@ -37,13 +54,24 @@ checks additionally replay each CLI case twice. Final validation still requires
 unchanged verifier bytes, required harness reports, quality checks and successful
 runtime exit. Metadata-only and undefined shapes refuse before inference.
 
+`scripts/benchmarks/cli_example_checks.py` separately reports exact expected
+outputs and observed replay equality. It observes both executions of every
+declared case, including cases after a wrong answer. Both executions must match
+the expected exit/stdout/stderr for correctness. A repeatable wrong answer fails
+correctness while passing the bounded replay observation. Missing observations
+fail with explicit incomplete details; they are not claims of nondeterminism.
+Task success still requires both checks. Two matching executions do not prove
+general determinism, and old conflated verdicts remain historical evidence.
+
 When the separate support verifier is enabled, a CLI benchmark supplies an
 issue-level command for its first declared case with exact JSON assertions.
 This replaces the invalid default of invoking an argument-taking CLI with no
 arguments. Full card acceptance still executes every declared case, including
 nonzero exit/error cases. Prepared examples change the modular architecture
 policy actually loaded by `ConfigLoader`; the generic support check is disabled
-there while mandatory card acceptance remains enabled. Preparation captures the
+for the three small recipes while mandatory card acceptance remains enabled.
+The challenge keeps support verification enabled and selects a CLI surface.
+Preparation captures the
 canonical loaded organization, not a lower-precedence legacy copy.
 
 The ten v2 CLI tasks declare `main.py` plus `implementation.py`. Nine authored
@@ -73,6 +101,13 @@ first content/reasoning delta time, duration and exception class for at most twe
 one-token requests. It refuses inference unless idle occupancy is confirmed. The
 ten-second read limit matches the runtime cap. It does not restart the server,
 change its model or establish long-run endurance.
+
+The streaming scenario runner owns one pending WebSocket receive across polling
+deadlines. A polling timeout does not discard that receive or start another
+consumer. Socket context exit precedes settlement of the pending reader; failure
+to settle is an explicit harness error. Transport failures propagate. The runner
+does not prefetch events, extend scenario deadlines, or weaken finalization and
+post-cancel quiet assertions. Long-run reports retain earlier failed attempts.
 
 `scripts/reviewrun/run_30page_consistency.py` retains Git history in `fixture.bundle`,
 with its SHA-256 and commit identities in `fixture.json`. By default it generates

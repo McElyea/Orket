@@ -1,6 +1,6 @@
 # Tool Execution Gate V1
 
-Last updated: 2026-09-14
+Last updated: 2026-10-04
 Status: Active (implemented first-slice authority)
 Owner: Orket Core
 Archived lane requirements: `docs/projects/archive/ExtensionCapabilityAuthorization/TGE04082026-LANE-CLOSEOUT/TOOL_GATE_ENFORCEMENT_REQUIREMENTS.md`
@@ -43,8 +43,18 @@ The following are fixed for this lane:
 6. Direct `orket/tools.py::ToolBox.execute(...)` and direct card-family method invocation are internal helper surfaces, not independent gate-authority surfaces.
 7. Card-family methods remain tool implementations; gate authority happens before those methods are invoked.
 8. In scope for this lane are extension actions that delegate into `run_card(...)`, including extension engine actions normalized by `orket/extensions/runtime.py::ExtensionEngineAdapter.execute_action(...)`.
+
 9. Out of scope for this lane are SDK capability registry invocations such as `model.generate`, `memory.write`, `memory.query`, `speech.transcribe`, `tts.speak`, `audio.play`, `voice.turn_control`, and similar workload capability calls. Those belong to `docs/specs/EXTENSION_CAPABILITY_AUTHORIZATION_V1.md`.
 10. For supported runtime paths, missing gate authority is a construction-time failure condition for lane closure.
+
+File-write byte and lifetime contracts remain owned by
+`docs/specs/SHARED_IO_CANCELLATION.md` and
+`docs/specs/OUTWARD_APPROVAL_EFFECT_LIFECYCLE_V1.md`. Their writers preserve
+submitted serialized UTF-8 text without host newline translation; this does not
+change tool authorization or make successful writes completion evidence.
+Local response validation shares the parser's fence rule under
+`docs/specs/PROTOCOL_GOVERNED_LOCAL_PROMPTING_CONTRACT.md`: Markdown inside JSON
+argument strings is payload data, while fences around the response are rejected.
 
 ## Canonical supported path
 
