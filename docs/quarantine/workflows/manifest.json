@@ -1,0 +1,235 @@
+{
+  "schema_version": "workflow_quarantine.v1",
+  "decision_date": "2026-10-05",
+  "authority": "User-directed quarantine of unrepairable or underspecified workflows; later value/repairability review required.",
+  "entries": [
+    {
+      "original_path": "model/core/epics/auth_manager.json",
+      "quarantined_path": "docs/quarantine/workflows/core/epics/auth_manager.json",
+      "reason": "Existing user-management implementation and integration contract are absent.",
+      "restore_requires": "Author the missing inputs and task-specific acceptance, prepare an isolated project, pass preflight and native negative controls, then prove the selected-provider flow before restoring discovery."
+    },
+    {
+      "original_path": "model/core/epics/benchmark_live_008_7b53edf8.json",
+      "quarantined_path": "docs/quarantine/workflows/core/epics/benchmark_live_008_7b53edf8.json",
+      "reason": "Run-specific generated asset has no retained preparation/acceptance. Replaced by prepared factorial from v2 task 008.",
+      "restore_requires": "Author the missing inputs and task-specific acceptance, prepare an isolated project, pass preflight and native negative controls, then prove the selected-provider flow before restoring discovery."
+    },
+    {
+      "original_path": "model/core/epics/branding.json",
+      "quarantined_path": "docs/quarantine/workflows/core/epics/branding.json",
+      "reason": "Approved brand brief, image-generation inputs and artifact acceptance are absent.",
+      "restore_requires": "Author the missing inputs and task-specific acceptance, prepare an isolated project, pass preflight and native negative controls, then prove the selected-provider flow before restoring discovery."
+    },
+    {
+      "original_path": "model/core/epics/core_baseline.json",
+      "quarantined_path": "docs/quarantine/workflows/core/epics/core_baseline.json",
+      "reason": "No authoritative target hardware/settings/dashboard or safe configuration-change oracle.",
+      "restore_requires": "Author the missing inputs and task-specific acceptance, prepare an isolated project, pass preflight and native negative controls, then prove the selected-provider flow before restoring discovery."
+    },
+    {
+      "original_path": "model/core/epics/enterprise_launch.json",
+      "quarantined_path": "docs/quarantine/workflows/core/epics/enterprise_launch.json",
+      "reason": "Empty authoring template; no executable cards or task acceptance.",
+      "restore_requires": "Author the missing inputs and task-specific acceptance, prepare an isolated project, pass preflight and native negative controls, then prove the selected-provider flow before restoring discovery."
+    },
+    {
+      "original_path": "model/core/epics/idea_brainstorming_session.json",
+      "quarantined_path": "docs/quarantine/workflows/core/epics/idea_brainstorming_session.json",
+      "reason": "Business objective, participants and accepted output criteria are unspecified.",
+      "restore_requires": "Author the missing inputs and task-specific acceptance, prepare an isolated project, pass preflight and native negative controls, then prove the selected-provider flow before restoring discovery."
+    },
+    {
+      "original_path": "model/core/epics/model_reforge.json",
+      "quarantined_path": "docs/quarantine/workflows/core/epics/model_reforge.json",
+      "reason": "Execution-log inputs, approved tuning target and regression oracle are unspecified.",
+      "restore_requires": "Author the missing inputs and task-specific acceptance, prepare an isolated project, pass preflight and native negative controls, then prove the selected-provider flow before restoring discovery."
+    },
+    {
+      "original_path": "model/core/epics/price_arbitrage_system.json",
+      "quarantined_path": "docs/quarantine/workflows/core/epics/price_arbitrage_system.json",
+      "reason": "Live shopping targets and current external integration inputs are absent.",
+      "restore_requires": "Author the missing inputs and task-specific acceptance, prepare an isolated project, pass preflight and native negative controls, then prove the selected-provider flow before restoring discovery."
+    },
+    {
+      "original_path": "model/core/epics/requirements_refinement.json",
+      "quarantined_path": "docs/quarantine/workflows/core/epics/requirements_refinement.json",
+      "reason": "Target Traction board and accepted business requirements are absent.",
+      "restore_requires": "Author the missing inputs and task-specific acceptance, prepare an isolated project, pass preflight and native negative controls, then prove the selected-provider flow before restoring discovery."
+    },
+    {
+      "original_path": "model/core/epics/requirements_team.json",
+      "quarantined_path": "docs/quarantine/workflows/core/epics/requirements_team.json",
+      "reason": "Stakeholder requirements, board inputs and completion criteria are absent.",
+      "restore_requires": "Author the missing inputs and task-specific acceptance, prepare an isolated project, pass preflight and native negative controls, then prove the selected-provider flow before restoring discovery."
+    },
+    {
+      "original_path": "model/core/epics/role_matrix_soak.json",
+      "quarantined_path": "docs/quarantine/workflows/core/epics/role_matrix_soak.json",
+      "reason": "24 cards lack completion acceptance. RMS-22 intentionally expects blocked/terminal_failure; restore a scenario-outcome checker, never bless business success.",
+      "restore_requires": "Author the missing inputs and task-specific acceptance, prepare an isolated project, pass preflight and native negative controls, then prove the selected-provider flow before restoring discovery."
+    },
+    {
+      "original_path": "model/core/epics/system_optimization_q1.json",
+      "quarantined_path": "docs/quarantine/workflows/core/epics/system_optimization_q1.json",
+      "reason": "Historical Q1 maintenance target lacks current log inputs and an approved mutation oracle.",
+      "restore_requires": "Author the missing inputs and task-specific acceptance, prepare an isolated project, pass preflight and native negative controls, then prove the selected-provider flow before restoring discovery."
+    },
+    {
+      "original_path": "model/core/epics/ui_update.json",
+      "quarantined_path": "docs/quarantine/workflows/core/epics/ui_update.json",
+      "reason": "Existing dashboard source and accepted visual target are absent.",
+      "restore_requires": "Author the missing inputs and task-specific acceptance, prepare an isolated project, pass preflight and native negative controls, then prove the selected-provider flow before restoring discovery."
+    },
+    {
+      "original_path": "model/core/epics/ui_vision.json",
+      "quarantined_path": "docs/quarantine/workflows/core/epics/ui_vision.json",
+      "reason": "Existing UI source, visual direction and round-specific acceptance are absent.",
+      "restore_requires": "Author the missing inputs and task-specific acceptance, prepare an isolated project, pass preflight and native negative controls, then prove the selected-provider flow before restoring discovery."
+    },
+    {
+      "original_path": "model/core/epics/web_dev.json",
+      "quarantined_path": "docs/quarantine/workflows/core/epics/web_dev.json",
+      "reason": "Branding dependency, page brief and accepted visual target are absent.",
+      "restore_requires": "Author the missing inputs and task-specific acceptance, prepare an isolated project, pass preflight and native negative controls, then prove the selected-provider flow before restoring discovery."
+    },
+    {
+      "original_path": "model/creative/epics/void_lore.json",
+      "quarantined_path": "docs/quarantine/workflows/creative/epics/void_lore.json",
+      "reason": "Empty authoring template; no executable cards or task acceptance.",
+      "restore_requires": "Author the missing inputs and task-specific acceptance, prepare an isolated project, pass preflight and native negative controls, then prove the selected-provider flow before restoring discovery."
+    },
+    {
+      "original_path": "model/creative/epics/void_visuals.json",
+      "quarantined_path": "docs/quarantine/workflows/creative/epics/void_visuals.json",
+      "reason": "Empty authoring template; no executable cards or task acceptance.",
+      "restore_requires": "Author the missing inputs and task-specific acceptance, prepare an isolated project, pass preflight and native negative controls, then prove the selected-provider flow before restoring discovery."
+    },
+    {
+      "original_path": "model/engineering/epics/dashboard_scaffold.json",
+      "quarantined_path": "docs/quarantine/workflows/engineering/epics/dashboard_scaffold.json",
+      "reason": "External dashboard source, API contract and implementation acceptance are absent.",
+      "restore_requires": "Author the missing inputs and task-specific acceptance, prepare an isolated project, pass preflight and native negative controls, then prove the selected-provider flow before restoring discovery."
+    },
+    {
+      "original_path": "model/engineering/epics/New Feature Epic.json",
+      "quarantined_path": "docs/quarantine/workflows/engineering/epics/New Feature Epic.json",
+      "reason": "Empty authoring template; no executable cards or task acceptance.",
+      "restore_requires": "Author the missing inputs and task-specific acceptance, prepare an isolated project, pass preflight and native negative controls, then prove the selected-provider flow before restoring discovery."
+    },
+    {
+      "original_path": "model/engineering/epics/void_engine.json",
+      "quarantined_path": "docs/quarantine/workflows/engineering/epics/void_engine.json",
+      "reason": "Empty authoring template; no executable cards or task acceptance.",
+      "restore_requires": "Author the missing inputs and task-specific acceptance, prepare an isolated project, pass preflight and native negative controls, then prove the selected-provider flow before restoring discovery."
+    },
+    {
+      "original_path": "model/marketing/epics/brand_package.json",
+      "quarantined_path": "docs/quarantine/workflows/marketing/epics/brand_package.json",
+      "reason": "Approved brand inputs and usable image generation/artifact acceptance are absent.",
+      "restore_requires": "Author the missing inputs and task-specific acceptance, prepare an isolated project, pass preflight and native negative controls, then prove the selected-provider flow before restoring discovery."
+    },
+    {
+      "original_path": "model/marketing/epics/enterprise_vibe_design.json",
+      "quarantined_path": "docs/quarantine/workflows/marketing/epics/enterprise_vibe_design.json",
+      "reason": "Product-specific design brief and approved theme acceptance are absent.",
+      "restore_requires": "Author the missing inputs and task-specific acceptance, prepare an isolated project, pass preflight and native negative controls, then prove the selected-provider flow before restoring discovery."
+    },
+    {
+      "original_path": "model/product/epics/command_center_requirements.json",
+      "quarantined_path": "docs/quarantine/workflows/product/epics/command_center_requirements.json",
+      "reason": "Target monorepo/component requirements and stakeholder acceptance are absent.",
+      "restore_requires": "Author the missing inputs and task-specific acceptance, prepare an isolated project, pass preflight and native negative controls, then prove the selected-provider flow before restoring discovery."
+    },
+    {
+      "original_path": "model/product/epics/core_requirements.json",
+      "quarantined_path": "docs/quarantine/workflows/product/epics/core_requirements.json",
+      "reason": "External frontend project and accepted product requirements are absent.",
+      "restore_requires": "Author the missing inputs and task-specific acceptance, prepare an isolated project, pass preflight and native negative controls, then prove the selected-provider flow before restoring discovery."
+    },
+    {
+      "original_path": "model/quality/epics/security_audit.json",
+      "quarantined_path": "docs/quarantine/workflows/quality/epics/security_audit.json",
+      "reason": "Target scaffolded source and scoped security requirements are absent.",
+      "restore_requires": "Author the missing inputs and task-specific acceptance, prepare an isolated project, pass preflight and native negative controls, then prove the selected-provider flow before restoring discovery."
+    },
+    {
+      "original_path": "model/training/epics/import_best_practices.json",
+      "quarantined_path": "docs/quarantine/workflows/training/epics/import_best_practices.json",
+      "reason": "Pinned prompt sources, approved promotion target and behavioral evaluation are absent.",
+      "restore_requires": "Author the missing inputs and task-specific acceptance, prepare an isolated project, pass preflight and native negative controls, then prove the selected-provider flow before restoring discovery."
+    },
+    {
+      "original_path": "model/uiux/epics/layout_mockup.json",
+      "quarantined_path": "docs/quarantine/workflows/uiux/epics/layout_mockup.json",
+      "reason": "Target dashboard specification and accepted layout criteria are absent.",
+      "restore_requires": "Author the missing inputs and task-specific acceptance, prepare an isolated project, pass preflight and native negative controls, then prove the selected-provider flow before restoring discovery."
+    },
+    {
+      "original_path": "model/core/rocks/branding_to_web.json",
+      "quarantined_path": "docs/quarantine/workflows/core/rocks/branding_to_web.json",
+      "reason": "Collection depends on quarantined or absent epics: core/branding, core/web_dev.",
+      "restore_requires": "Restore every required member with acceptance and a collection preparation recipe; prove aggregate completion before restoring discovery."
+    },
+    {
+      "original_path": "model/core/rocks/core_launch.json",
+      "quarantined_path": "docs/quarantine/workflows/core/rocks/core_launch.json",
+      "reason": "Collection depends on quarantined or absent epics: core/standard, core/ui_update, core/auth_manager.",
+      "restore_requires": "Restore every required member with acceptance and a collection preparation recipe; prove aggregate completion before restoring discovery."
+    },
+    {
+      "original_path": "model/core/rocks/initialize_orket.json",
+      "quarantined_path": "docs/quarantine/workflows/core/rocks/initialize_orket.json",
+      "reason": "Collection depends on quarantined or absent epics: core/core_baseline, core/model_reforge.",
+      "restore_requires": "Restore every required member with acceptance and a collection preparation recipe; prove aggregate completion before restoring discovery."
+    },
+    {
+      "original_path": "model/core/rocks/market_edge_arbitrage.json",
+      "quarantined_path": "docs/quarantine/workflows/core/rocks/market_edge_arbitrage.json",
+      "reason": "Collection depends on quarantined or absent epics: core/price_arbitrage_system.",
+      "restore_requires": "Restore every required member with acceptance and a collection preparation recipe; prove aggregate completion before restoring discovery."
+    },
+    {
+      "original_path": "model/core/rocks/market_intelligence_suite.json",
+      "quarantined_path": "docs/quarantine/workflows/core/rocks/market_intelligence_suite.json",
+      "reason": "Collection depends on quarantined or absent epics: core/price_arbitrage_system.",
+      "restore_requires": "Restore every required member with acceptance and a collection preparation recipe; prove aggregate completion before restoring discovery."
+    },
+    {
+      "original_path": "model/core/rocks/q1_2026_maturation.json",
+      "quarantined_path": "docs/quarantine/workflows/core/rocks/q1_2026_maturation.json",
+      "reason": "Collection depends on quarantined or absent epics: core/system_optimization_q1, core/sneaky_price_watch_refinement.",
+      "restore_requires": "Restore every required member with acceptance and a collection preparation recipe; prove aggregate completion before restoring discovery."
+    },
+    {
+      "original_path": "model/core/rocks/Rock-Nomination-idea_brainstorming_session.json",
+      "quarantined_path": "docs/quarantine/workflows/core/rocks/Rock-Nomination-idea_brainstorming_session.json",
+      "reason": "Collection depends on quarantined or absent epics: core/idea_brainstorming_session, core/requirements_team, core/requirements_refinement.",
+      "restore_requires": "Restore every required member with acceptance and a collection preparation recipe; prove aggregate completion before restoring discovery."
+    },
+    {
+      "original_path": "model/creative/rocks/project_void.json",
+      "quarantined_path": "docs/quarantine/workflows/creative/rocks/project_void.json",
+      "reason": "Collection depends on quarantined or absent epics: creative/void_lore, creative/void_visuals, engineering/void_engine.",
+      "restore_requires": "Restore every required member with acceptance and a collection preparation recipe; prove aggregate completion before restoring discovery."
+    },
+    {
+      "original_path": "model/engineering/rocks/Rock-Nomination-New Feature Epic.json",
+      "quarantined_path": "docs/quarantine/workflows/engineering/rocks/Rock-Nomination-New Feature Epic.json",
+      "reason": "Collection depends on quarantined or absent epics: engineering/New Feature Epic.",
+      "restore_requires": "Restore every required member with acceptance and a collection preparation recipe; prove aggregate completion before restoring discovery."
+    },
+    {
+      "original_path": "model/product/rocks/engine_v2_ui.json",
+      "quarantined_path": "docs/quarantine/workflows/product/rocks/engine_v2_ui.json",
+      "reason": "Collection depends on quarantined or absent epics: product/command_center_requirements, marketing/enterprise_vibe_design.",
+      "restore_requires": "Restore every required member with acceptance and a collection preparation recipe; prove aggregate completion before restoring discovery."
+    },
+    {
+      "original_path": "model/product/rocks/frontend_launch.json",
+      "quarantined_path": "docs/quarantine/workflows/product/rocks/frontend_launch.json",
+      "reason": "Collection depends on quarantined or absent epics: product/core_requirements, marketing/brand_package, uiux/layout_mockup, engineering/dashboard_scaffold, quality/security_audit.",
+      "restore_requires": "Restore every required member with acceptance and a collection preparation recipe; prove aggregate completion before restoring discovery."
+    }
+  ]
+}

@@ -113,8 +113,9 @@ def build_system_health_view(
     heartbeat_status = _text(heartbeat.get("status")).lower()
     cpu_percent = _float(metrics.get("cpu_percent"))
     ram_percent = _float(metrics.get("ram_percent"))
-    vram_used = _float(metrics.get("vram_gb_used"))
-    vram_total = _float(metrics.get("vram_total_gb"))
+    unified = metrics.get("memory_model") == "unified"
+    vram_used = None if unified else _float(metrics.get("vram_gb_used"))
+    vram_total = None if unified else _float(metrics.get("vram_total_gb"))
     degraded = heartbeat_status != "online" or bool(provider_status.get("degraded"))
     reason_codes: list[str] = []
     if heartbeat_status != "online":
@@ -126,7 +127,7 @@ def build_system_health_view(
     if ram_percent >= _DEGRADED_RESOURCE_THRESHOLD:
         degraded = True
         reason_codes.append("system.ram_hot")
-    if vram_total > 0.0 and (vram_used / vram_total) >= _DEGRADED_VRAM_RATIO:
+    if vram_total is not None and vram_used is not None and vram_total > 0.0 and (vram_used / vram_total) >= _DEGRADED_VRAM_RATIO:
         degraded = True
         reason_codes.append("system.vram_hot")
     if bool(provider_status.get("degraded")):
@@ -147,6 +148,9 @@ def build_system_health_view(
         "ram_percent": ram_percent,
         "vram_gb_used": vram_used,
         "vram_total_gb": vram_total,
+        "memory_model": _text(metrics.get("memory_model")) or "unknown",
+        "unified_memory_gb": metrics.get("unified_memory_gb"),
+        "gpu_observation": _text(metrics.get("gpu_observation")) or "unobserved",
         "provider_status": dict(provider_status),
     }
 

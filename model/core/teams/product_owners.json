@@ -19,6 +19,18 @@
       "roles": [
         "writer"
       ]
+    },
+    "code_reviewer": {
+      "name": "Code Reviewer",
+      "roles": [
+        "code_reviewer"
+      ]
+    },
+    "integrity_guard": {
+      "name": "Integrity Guard",
+      "roles": [
+        "integrity_guard"
+      ]
     }
   }
 }

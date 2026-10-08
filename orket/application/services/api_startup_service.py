@@ -49,6 +49,7 @@ def _validate_root(configured_root: Path, owned_root: Path) -> None:
 @asynccontextmanager
 async def api_runtime_lifespan(
     owner: ApiRuntimeContainer, configured_root: Path, broadcaster: Callable[[], Awaitable[None]],
+    *, prepare_transport: Callable[[], object],
 ) -> AsyncIterator[None]:
     # Capture selected owners before startup can await or another caller can close.
     root, engine, authentication = owner.project_root, owner.engine, owner.authentication
@@ -60,6 +61,9 @@ async def api_runtime_lifespan(
     async def initialize() -> None:
         await run_owned_thread(lambda: _validate_root(configured_root, root), label="api-startup-root")
         await run_owned_thread(validate_authentication, label="api-startup-authentication")
+        # FastAPI's public schema builder also prepares included-route dependencies.
+        # Keep that synchronous work off the first request's event loop.
+        await run_owned_thread(prepare_transport, label="api-startup-transport")
         initialize_engine = getattr(engine, "initialize", None)
         if callable(initialize_engine):
             await initialize_engine()

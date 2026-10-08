@@ -81,6 +81,9 @@ def _handle_governed_run_scenario(args: argparse.Namespace) -> int:
 
 def _handle_demo_command(args: argparse.Namespace) -> int:
     command = str(getattr(args, "demo_command", "") or "").strip()
+    if command == "local-agent":
+        from orket.interfaces.local_agent_example_cli import handle_local_agent_example
+        return handle_local_agent_example(args)
     if command != "governed-run":
         result = _governed_run_error(ValueError("Unsupported demo command"))
         return _print_governed_result(result, emit_json=bool(getattr(args, "json", False)))
@@ -219,6 +222,12 @@ def _handle_generation_command(args: argparse.Namespace) -> dict[str, Any]:
 def main(argv: list[str] | None = None) -> int:
     parser = bundle_cli_arguments.build_parser()
     args, runtime_args = parser.parse_known_args(argv)
+    if args.command == "setup":
+        from orket.interfaces.setup_cli import main as setup_main
+        return setup_main(runtime_args)
+    if args.command == "doctor":
+        from orket.interfaces.doctor_cli import main as doctor_main
+        return doctor_main(runtime_args)
     if args.command == "runtime":
         parser.error("runtime must be invoked through the installed 'orket' command root")
     if runtime_args:

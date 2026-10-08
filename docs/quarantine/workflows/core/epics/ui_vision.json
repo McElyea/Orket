@@ -1,0 +1,34 @@
+{
+  "name": "ui_vision",
+  "description": "Smart EOS-governed UI design cycle.",
+  "team": "ui_experts",
+  "environment": "standard",
+  "iterations": 2,
+  "example_task": "Design and implement a modern, dark-mode dashboard. Use write_file to create 'dashboard.css'.",
+  "issues": [
+    {
+      "seat": "creative_director",
+      "model": "qwen3-coder:latest",
+      "governance": "once",
+      "note": "Set the visual direction in Round 1 only.",
+      "summary": "Set the visual direction in Round 1 only",
+      "id": "core-ui_vision-01"
+    },
+    {
+      "seat": "frontend_artisan",
+      "model": "deepseek-coder:33B",
+      "governance": "always",
+      "note": "Refine the CSS every round.",
+      "summary": "Refine the CSS every round",
+      "id": "core-ui_vision-02"
+    },
+    {
+      "seat": "quality_inspector",
+      "model": "qwen2.5-coder:14b",
+      "governance": "final",
+      "note": "Perform a technical audit in the final round only.",
+      "summary": "Perform a technical audit in the final round only",
+      "id": "core-ui_vision-03"
+    }
+  ]
+}

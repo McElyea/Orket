@@ -1,16 +1,23 @@
 {
   "name": "Product Team",
-  "roles": {
-    "analyst": {
-      "name": "analyst",
-      "description": "Product analyst responsible for defining technical requirements and user stories.",
-      "tools": ["list_dir", "read_file", "write_file"]
-    }
-  },
   "seats": {
     "product_owner": {
       "name": "Product Owner",
-      "roles": ["analyst"]
+      "roles": [
+        "analyst"
+      ]
+    },
+    "code_reviewer": {
+      "name": "Code Reviewer",
+      "roles": [
+        "code_reviewer"
+      ]
+    },
+    "integrity_guard": {
+      "name": "Integrity Guard",
+      "roles": [
+        "integrity_guard"
+      ]
     }
   }
 }

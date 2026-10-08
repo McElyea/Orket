@@ -5,6 +5,25 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.8] - 2026-10-07 - "Local setup, truthful acceptance and quality preparation"
+
+### Added
+- Add guided provider setup, diagnostics and a packaged local-agent example through the existing governed submission and verifier.
+- Add fresh core/SDK candidate installation, installed process controls and a native Mac acceptance harness with retained receipts. Windows control runs do not establish Mac or Metal acceptance.
+- Preserve unknown dedicated-VRAM and Metal/model-fit values when observing Apple unified memory.
+
+### Fixed
+- Prepare the API's OpenAPI schema and included routes in owned native startup before readiness, avoiding synchronous route compilation during the first request. Startup cancellation drains preparation and native failure prevents readiness.
+- Preserve the task registry's declared element type through mypy's reversed-list inference without changing runtime behavior.
+- Classify actual print calls in the runtime output guard and retain deliberate CLI output surfaces.
+- Require an actual held-loopback connection failure and closed provider resources for missing-provider acceptance; a setup timeout cannot prove provider unavailability.
+- Complete stored workflow input recovery, quarantine unsupported shipped assets and retain task failures separately from score-policy verdicts.
+- Stability: native Windows full coverage passed with 13,252 tests passed, 93 skipped and 89.25% coverage; canonical mypy/Ruff, scoped native controls, fresh installed process checks and the actual llama.cpp workflow passed. One incomplete worker coverage measurement is retained and disclosed in `docs/releases/0.7.8/PROOF_REPORT.md`. Native Mac ownership, hardware and Metal acceptance remain pending under `docs/projects/macos-support/MACOS_SUPPORT_IMPLEMENTATION_PLAN.md`; this release does not declare Mac support complete.
+- Operator action: use the current prepared workflow recipes; quarantined assets require restored source inputs and acceptance before reuse. Existing projects and historical reports are not migrated automatically. Internal startup-service callers now supply the captured transport preparation callback; public app factories are unchanged.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `operator_only`
+- `migration_requirement`: `required`
+
 ## [0.7.7] - 2026-10-05 - "Stored workflow recovery and separate benchmark verdicts"
 
 ### Fixed

@@ -35,13 +35,22 @@ def test_isolated_projects_preserve_caller_board_and_retained_assets(tmp_path):
         prepare_project(source, tmp_path / "one", "core")
 
 
-def test_stored_preflight_detects_missing_acceptance_before_inference():
+def test_stored_preflight_detects_missing_acceptance_before_inference(tmp_path):
     assert inspect_workflow(ROOT, "standard")["ready"]
     assert inspect_workflow(ROOT, "qa_completion_test")["ready"]
     report = inspect_workflow(ROOT, "challenge_workflow_runtime")
     assert report["ready"]
-    legacy = inspect_workflow(ROOT, "model_reforge")
-    assert not legacy["ready"] and any("missing completion_acceptance" in error for error in legacy["errors"])
+    from examples.stored_workflows.prepare import prepare
+    from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_MODEL
+    project = tmp_path / "incomplete"
+    prepare(project, "standard", DEFAULT_LOCAL_MODEL)
+    path = project / "model/core/epics/standard.json"
+    epic = json.loads(path.read_text())
+    del epic["issues"][0]["params"]["completion_acceptance"]
+    path.write_text(json.dumps(epic), encoding="utf-8")
+    incomplete = inspect_workflow(project, "standard")
+    assert not incomplete["ready"]
+    assert any("missing completion_acceptance" in error for error in incomplete["errors"])
 
 
 def test_function_acceptance_executes_real_program_and_refuses_metadata_only(tmp_path):

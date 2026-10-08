@@ -7,6 +7,7 @@ import httpx
 import pytest
 from fastapi import FastAPI
 
+import orket.settings as settings_module
 from orket.adapters.storage.async_pending_gate_repository import AsyncPendingGateRepository
 from orket.interfaces.routers.approvals import build_approvals_router
 from orket.orchestration.engine import OrchestrationEngine
@@ -52,6 +53,8 @@ async def approval_engine(
     root, monkeypatch, *, setup=False, custom_db=False, provider=None, prepare_assets=None,
 ):
     workspace = root / "workspace"
+    # Native worker processes do not inherit pytest's in-process settings fixture.
+    monkeypatch.setattr(settings_module, "ENV_FILE", root / "settings/.env")
     assert prepare_assets is None or setup
     if setup:
         def build_assets():

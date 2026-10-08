@@ -1,0 +1,100 @@
+{
+  "name": "factorial",
+  "description": "Generated from executable v2 task 008; prepare inputs before running.",
+  "status": "ready",
+  "team": "standard",
+  "environment": "standard",
+  "issues": [
+    {
+      "id": "LB-008-1",
+      "summary": "Execute benchmark task 008: Implement factorial(n). Quality contract: implement at least one non-trivial function body with >=2 meaningful statements, use function input parameters in computation, and do not return constant-only stub values. Code-shape contract: output focused implementation code in agent_output/main.py only. Do not emit CLI wrappers, crash handlers, orchestration boilerplate, or placeholder comments. Output contract: return exact required values with no extra characters, separators, or whitespace changes. Preserve the task's specified ordering, indices and grouping. Deterministic does not mean sorted: only sort outputs when the task requires sorting. Implement exactly one top-level function matching signature def factorial(n): that performs deterministic computation using at least one intermediate variable assignment before returning a computed value. Required function signature: def factorial(n):. Problem: Compute n! for non-negative integer n.. Evaluation examples (must match exactly): [{\"args\": [0], \"expected\": 1}, {\"args\": [1], \"expected\": 1}, {\"args\": [5], \"expected\": 120}]. Task constraints: [\"n >= 0\", \"0! = 1\"]. Required source features/tokens: [\"def factorial(\", \"return\"]. Forbidden source tokens: [\"__main__\", \"print(\", \"run_cli\", \"log_crash\"].",
+      "seat": "coder",
+      "status": "ready",
+      "priority": "High",
+      "note": "Read task_context.json. Then write benchmark_task_008_output.md. The output must include task id, summary, implementation plan, and acceptance checks. If any file is missing, create it instead of failing. Main code style requirements: concise and task-focused; avoid comments unless strictly necessary; no __main__ entrypoint unless the task explicitly requires runtime CLI behavior; for function-mode tasks avoid print statements and follow the required function signature. For function-mode tasks, return exact expected output format with no additional characters; preserve task-defined output ordering; never sort positional results unless required. Description: Factorial. Instruction: Implement factorial(n). Pass conditions: Function returns expected values for examples; Required artifacts are produced; Task-level checks pass Problem statement: Compute n! for non-negative integer n. Function signature: def factorial(n): Constraints: n >= 0; 0! = 1 I/O examples: [{\"input\": [0], \"output\": 1}, {\"input\": [5], \"output\": 120}] Do not modify benchmark_verify.py. Request code_review after writing the implementation. Required implementation files: agent_output/main.py.",
+      "params": {
+        "completion_acceptance": {
+          "schema_version": "card_python_cli_acceptance.v1",
+          "acceptance_ref": "benchmark-008.examples.v1",
+          "policy_ref": "benchmark-function-examples.v1",
+          "workload_id": "008",
+          "entrypoint": "agent_output/benchmark_verify.py",
+          "artifact_paths": [
+            "agent_output/benchmark_verify.py",
+            "agent_output/main.py"
+          ],
+          "cases": [
+            {
+              "criterion_id": "example-1",
+              "description": "Declared example 1",
+              "arguments": [
+                "{\"function\": \"factorial\", \"args\": [0], \"kwargs\": {}}"
+              ],
+              "expected_json": "1"
+            },
+            {
+              "criterion_id": "example-2",
+              "description": "Declared example 2",
+              "arguments": [
+                "{\"function\": \"factorial\", \"args\": [1], \"kwargs\": {}}"
+              ],
+              "expected_json": "1"
+            },
+            {
+              "criterion_id": "example-3",
+              "description": "Declared example 3",
+              "arguments": [
+                "{\"function\": \"factorial\", \"args\": [5], \"kwargs\": {}}"
+              ],
+              "expected_json": "120"
+            }
+          ],
+          "timeout_seconds": 30
+        },
+        "artifact_contract": {
+          "kind": "app",
+          "primary_output": "agent_output/main.py",
+          "required_write_paths": [
+            "agent_output/main.py"
+          ],
+          "required_read_paths": [
+            "task_context.json"
+          ],
+          "review_read_paths": [
+            "agent_output/benchmark_verify.py",
+            "agent_output/main.py"
+          ]
+        },
+        "runtime_verifier": {
+          "commands": [
+            [
+              "python",
+              "-I",
+              "-B",
+              "agent_output/benchmark_verify.py",
+              "{\"cases\": [{\"function\": \"factorial\", \"args\": [0], \"kwargs\": {}}, {\"function\": \"factorial\", \"args\": [1], \"kwargs\": {}}, {\"function\": \"factorial\", \"args\": [5], \"kwargs\": {}}]}"
+            ]
+          ],
+          "expect_json_stdout": true,
+          "json_assertions": [
+            {
+              "path": "cases[0]",
+              "op": "eq",
+              "value": 1
+            },
+            {
+              "path": "cases[1]",
+              "op": "eq",
+              "value": 1
+            },
+            {
+              "path": "cases[2]",
+              "op": "eq",
+              "value": 120
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

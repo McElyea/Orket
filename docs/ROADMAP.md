@@ -1,12 +1,12 @@
 # Orket Roadmap
 
-Last updated: 2026-10-04
+Last updated: 2026-10-06
 
 Workflow authority: `docs/CONTRIBUTOR.md`
 
 ## Priority Now
 
-No active execution item.
+1. Apple Silicon macOS local runtime support -- Plan: `docs/projects/macos-support/MACOS_SUPPORT_IMPLEMENTATION_PLAN.md`.
 
 ## Maintenance (Non-Priority)
 
@@ -36,7 +36,8 @@ Every non-archive project under `docs/projects/` must appear here.
 
 | Project | Status | Priority | Canonical Path | Owner | Notes |
 |---|---|---|---|---|---|
-| architectural-truth | active-umbrella | none | `docs/projects/architectural-truth/` | Orket Core | PRR-v1 published and complete (3/3): archive/architectural-truth/PRR10042026/POST_RELEASE_RELIABILITY_PLAN.md. No executable PRR work remains. ATG-v1 history and remaining limits stay in ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md; whole-lane retirement is not authorized. |
+| macos-support | active-implementation | P1 | `docs/projects/macos-support/` | Orket Core | First local CLI/runtime milestone; native Apple Silicon acceptance required. |
+| architectural-truth | active-umbrella | none | `docs/projects/architectural-truth/` | Orket Core | Workflow recovery is archived under WR10052026; no active recovery queue. PRR-v1 is archived and complete (3/3); no PRR work is reopened. ATG history and broader limits remain in ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md; whole-lane retirement is not authorized. |
 | northstar-aws-smoke-setup | paused-checkpoint | paused | `docs/projects/northstar-aws-smoke-setup/` | Orket Core | Paused pending Bedrock access. No-spend setup, randomized fixtures, and blocked handoff are implemented; reopen only when Bedrock access is available and the user explicitly requests live completion or reopen. This lane does not publicly admit `trusted_terraform_plan_decision_v1`. |
 | governed-proof | paused-checkpoint | paused | `docs/projects/governed-proof/` | Orket Core | Paused after the truthful 2026-04-19 provider-backed Bedrock checkpoint. `ORKET_PROOF_CARRYING_GOVERNED_CHANGES_IMPLEMENTATION_PLAN.md` remains the canonical pause and reopen authority; reopen only when a bounded change can use an AWS account or Region with non-zero Bedrock inference quota for the admitted provider-backed governed-proof path, or for explicit retirement. |
 | northstar-governed-change-packets | paused-checkpoint | paused | `docs/projects/northstar-governed-change-packets/` | Orket Core | Paused after the truthful 2026-04-20 Terraform public-admission checkpoint. `ORKET_NORTHSTAR_SECOND_GOVERNED_CHANGE_PACKET_FAMILY_IMPLEMENTATION_PLAN.md` remains the canonical pause and reopen authority; reopen only when a bounded change can truthfully provide the required non-secret live inputs, rerun the full Workstream 2 proof envelope, and re-evaluate the publication-readiness and publication-gate outputs in the same change, or for explicit retirement. |

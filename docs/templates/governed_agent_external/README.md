@@ -18,6 +18,8 @@ admitted `governed_agent_loop.v1`, `agent_stdio_ipc.v1`, and
 `agent_model_use_receipt.v2` must refuse this
 extension before child startup.
 
-This template targets the paired SDK `0.7.0a1`/architectural-truth host candidate.
-Model latency can be unavailable; token usage and response status are separate.
-Published core 0.6.0/0.6.2 artifacts require their original SDK 0.6.0 pair.
+Use the SDK version required by the selected core distribution. Keep its matching
+core/SDK candidate pair together; the template does not grant compatibility with
+an older host. Model latency can be unavailable; token usage and response status
+are separate. The host's `orket demo local-agent --project <directory>` prepares
+this template and the shared ticket inputs for a bounded actual-provider example.

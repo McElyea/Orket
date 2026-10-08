@@ -60,7 +60,8 @@ def test_installed_runtime_help_exits_zero_from_fresh_workspace(tmp_path: Path) 
     assert result.returncode == 0
     assert "usage: orket runtime" in result.stdout
     assert "--card" in result.stdout
-    assert "orket runtime --card initialize_orket" in result.stdout
+    assert "Command: orket runtime --help" in result.stdout
+    assert "initialize_orket" not in result.stdout
     assert "python main.py" not in result.stdout + result.stderr
     assert (tmp_path / ".orket" / "durable" / "config" / "user_settings.json").is_file()
 

@@ -79,6 +79,10 @@ jobs:
         env:
           ORKET_DISABLE_SANDBOX: "1"
         run: |
+          python -m pytest -q tests/contract/test_apple_hardware_observations.py tests/integration/test_hardware_native_observation.py tests/platform/test_hardware_metrics_cache.py tests/interfaces/test_operator_view_models.py
+          python -m pytest -q tests/integration/test_candidate_install_evidence.py
+          python -m pytest -q tests/contract/test_installed_process_verdict.py tests/contract/test_macos_acceptance_verdict.py
+          python -m pytest -q tests/contract/test_provider_setup_inputs.py tests/integration/test_local_setup_diagnostics.py tests/integration/test_setup_command_ownership.py tests/integration/test_local_agent_example.py
           python -m pytest -q tests/scripts/test_enforce_test_taxonomy.py tests/scripts/test_check_noop_critical_paths.py tests/scripts/test_build_architectural_truth_baseline.py::test_taxonomy_summary_preserves_collection_failure_and_conflicts tests/contracts/test_architecture_size_inventory.py tests/integration/test_coverage_subprocess_configuration.py tests/contracts/test_turn_tool_authority_scan.py tests/application/test_control_plane_workload_authority_governance.py tests/platform/test_quality_workflow_gates.py tests/scripts/test_current_authority_source.py tests/platform/test_current_authority_map.py tests/platform/test_remediation_authority_docs.py
           python scripts/governance/enforce_test_taxonomy.py --strict
           python scripts/governance/check_noop_critical_paths.py
@@ -681,6 +685,10 @@ jobs:
         env:
           ORKET_DISABLE_SANDBOX: "1"
         run: |
+          python -m pytest -q tests/contract/test_apple_hardware_observations.py tests/integration/test_hardware_native_observation.py tests/platform/test_hardware_metrics_cache.py tests/interfaces/test_operator_view_models.py
+          python -m pytest -q tests/integration/test_candidate_install_evidence.py
+          python -m pytest -q tests/contract/test_installed_process_verdict.py tests/contract/test_macos_acceptance_verdict.py
+          python -m pytest -q tests/contract/test_provider_setup_inputs.py tests/integration/test_local_setup_diagnostics.py tests/integration/test_setup_command_ownership.py tests/integration/test_local_agent_example.py
           python -m pytest -q tests/scripts/test_enforce_test_taxonomy.py tests/scripts/test_check_noop_critical_paths.py tests/scripts/test_build_architectural_truth_baseline.py::test_taxonomy_summary_preserves_collection_failure_and_conflicts tests/contracts/test_architecture_size_inventory.py tests/integration/test_coverage_subprocess_configuration.py tests/contracts/test_turn_tool_authority_scan.py tests/application/test_control_plane_workload_authority_governance.py tests/platform/test_quality_workflow_gates.py tests/scripts/test_current_authority_source.py tests/platform/test_current_authority_map.py tests/platform/test_remediation_authority_docs.py
           python scripts/governance/enforce_test_taxonomy.py --strict
           python scripts/governance/check_noop_critical_paths.py

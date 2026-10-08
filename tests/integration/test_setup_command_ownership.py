@@ -8,10 +8,12 @@ import pytest
 from orket.adapters.storage.setup_project_store import SetupProjectStore
 from orket.application.services.setup_service import SetupService
 from orket.application.services.user_settings_service import SettingsLocation
+from orket.core.contracts.provider_setup import ProviderSetup
 from tests.integration.test_runtime_entrypoints import child
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
-WIZARD = ['-m', 'orket.interfaces.setup_cli']
+WIZARD = ['-m', 'orket.interfaces.setup_cli', '--project', '.', '--provider', 'llama_cpp',
+          '--model-id', 'fixture-model', '--base-url', 'http://127.0.0.1:8080/v1', '--gguf-root', 'gguf', '--skip-check']
 
 
 async def test_setup_refuses_unknown_profile_before_initialization_claim(tmp_path):
@@ -75,7 +77,8 @@ async def test_setup_retains_captured_inputs_and_owner_until_worker_finishes(tmp
     choices = dict(name='Captured', vision='Vision', ethos='Ethos', workspace='workspace', model='model',
                    module_profile='developer-local')
     service = SetupService(tmp_path, SettingsLocation(tmp_path, '.orket/durable'))
-    command = service.initialize(choices)
+    command = service.initialize(choices, provider=ProviderSetup("llama_cpp", "captured-model",
+                                 "http://127.0.0.1:8080/v1", "captured-models"))
     request = asyncio.create_task(asyncio.wait_for(command, 0.05) if stop == 'timeout' else command)
     try:
         assert await asyncio.to_thread(entered.wait, 3)
@@ -97,6 +100,9 @@ async def test_setup_retains_captured_inputs_and_owner_until_worker_finishes(tmp
         config = json.loads(await asyncio.to_thread((tmp_path / 'config/organization.json').read_bytes))
         settings = json.loads(await asyncio.to_thread((tmp_path / '.orket/durable/config/user_settings.json').read_bytes))
         assert config['name'] == 'Captured' and settings['module_profile'] == 'developer-local'
+        assert config['process_rules']['default_llm'] == 'captured-model'
+        environment = await asyncio.to_thread((tmp_path / '.env').read_text, encoding='utf-8')
+        assert "ORKET_LLAMA_CPP_GGUF_MODEL_ROOT='captured-models'" in environment
         assert not await asyncio.to_thread((tmp_path / 'late').exists)
         assert (await service.initialize({**choices, 'name': 'Retry'}))['module_profile'] == 'engine-only'
     finally:

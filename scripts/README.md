@@ -13,6 +13,45 @@ refuses while runtime receipt adapters remain unavailable. Source contract:
 
 ## Layout
 
+`python scripts/ci/verify_candidate_install.py` builds and checks core/SDK wheels
+from fresh Git-visible inputs in an external isolated environment. Its stable
+reports are `.tmp/macos-support/package-install.json` and
+`.tmp/macos-support/package-inputs.json`, with rerun diff ledgers. Candidate
+wheels, per-command logs and example projects are retained under the external
+directory named in the report. `--require-macos-arm64` requires native Darwin
+arm64 and does not bypass unavailable command ownership. Instructions and proof
+limits: `docs/guides/MACOS_LOCAL_INSTALL.md`. A passing packaging slice is not
+full Mac acceptance or live provider proof.
+
+`python scripts/ci/verify_installed_process_acceptance.py` consumes that verified
+candidate and runs the existing native process controls outside the checkout.
+The stable result is `.tmp/macos-support/process-acceptance.json`; its retained
+external directory contains copied test sources, JUnit evidence, logs and fixture
+state. It checks all mandatory items and refuses skips. `--windows-control`
+explicitly proves only Windows behavior. The same core wheel's declared dev extra
+supplies test tooling; installation, imports and the final dependency set are
+recorded. Full native Mac/provider/Metal acceptance remains separate.
+
+`python scripts/ci/verify_macos_acceptance.py --llama-server <absolute-executable> --model-file <absolute-gguf>`
+combines those components with guided setup and actual llama.cpp workflow/restart
+proof. Stable `.tmp/macos-support/native-acceptance.json` records every required
+MA case and owned server/Metal observations. Windows control reports partial
+success only; missing Metal or mandatory native cases cannot grant Mac acceptance.
+Preparation, evidence retrieval and teardown: `docs/guides/MACOS_ACCEPTANCE_RUNBOOK.md`.
+
+The live card and collection suite commands now share
+`scripts/benchmarks/live_suite.py`: both default to the executable 80-task v2 bank,
+accept `--model` and optional ID bounds, and fail on failed/missing workload runs.
+`--require-score` additionally enforces the unchanged scoring report. Their stable
+staging outputs are `benchmarks/staging/General/live_{card,rock}_suite.json` and
+`live_{card,rock}_suite_scored.json`, with rerun diff ledgers. The v1 bank remains
+fixture/control metadata; it is not the live default. Details and proof limits:
+`docs/specs/WORKFLOW_BENCHMARK_READINESS.md`.
+
+The canonical coverage configuration writes measurements under `.tmp/quality/`,
+matching `.gitea/workflows/quality.yml`. Root `.coverage` is historical data and
+must not be used as current proof. See `docs/CONTRIBUTOR.md` for the unchanged gate.
+
 - `acceptance/`, `benchmarks/`, `context/`, `explorer/`, `extensions/`
 - `gitea/`, `governance/`, `nervous_system/`, `odr/`, `ops/`
 - `protocol/`, `providers/`, `quant/`, `replay/`, `security/`, `streaming/`

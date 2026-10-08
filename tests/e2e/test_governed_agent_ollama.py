@@ -10,9 +10,9 @@ from pathlib import Path
 import pytest
 import yaml
 
+from orket.application.services.governed_agent_example_inputs import live_ticket_report_request
 from orket.interfaces.orket_bundle_cli import main
-from orket_extension_sdk.agent_fixtures import prefixed_digest
-from tests.runtime.governed_agent_test_support import staged_agent_request, ticket_continuation_inputs
+from tests.runtime.governed_agent_test_support import ticket_continuation_inputs
 
 _LIVE_ENABLED = os.getenv("ORKET_RUN_LIVE_AGENT_OLLAMA") == "1"
 _EXTENSION_ROOT = Path(
@@ -126,32 +126,7 @@ def _run_live(tmp_path: Path, capsys, monkeypatch, *, models: dict[str, str], ca
 
 
 def _live_request(case_id: str = "mixed") -> dict:
-    request = staged_agent_request(case_id)
-    now = datetime.now(UTC)
-    request["deadline_utc"] = (now + timedelta(minutes=10)).isoformat()
-    request["lease_expires_at_utc"] = (now + timedelta(minutes=9)).isoformat()
-    for profile in request["model_profiles"]:
-        profile["max_output_tokens"] = 512
-        profile["timeout_ms"] = 120_000
-    _set_budget(request["remaining_iteration_budget"], run_scope=False)
-    _set_budget(request["remaining_run_budget"], run_scope=True)
-    return request
-
-
-def _set_budget(budget: dict, *, run_scope: bool) -> None:
-    multiplier = 2 if run_scope else 1
-    budget["model_calls"] = 4 * multiplier
-    budget["per_role_model_calls"] = [
-        {"role": role, "count": 2 * multiplier}
-        for role in ("planner", "actor", "critic")
-    ]
-    budget["input_tokens"] = 16_384 * multiplier
-    budget["output_tokens"] = 2_048 * multiplier
-    budget["repair_attempts"] = multiplier
-    budget["wall_time_ms"] = 600_000
-    budget["snapshot_digest"] = prefixed_digest(
-        {key: value for key, value in budget.items() if key != "snapshot_digest"}
-    )
+    return live_ticket_report_request(case_id, now=datetime.now(UTC))
 
 
 def _receipts(payload: dict) -> list[dict]:

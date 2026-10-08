@@ -1,16 +1,23 @@
 {
   "name": "Marketing Team",
-  "roles": {
-    "brand_specialist": {
-      "name": "brand_specialist",
-      "description": "Visual branding and copy specialist.",
-      "tools": ["image_generate", "write_file"]
-    }
-  },
   "seats": {
     "brand_architect": {
       "name": "Brand Architect",
-      "roles": ["brand_specialist"]
+      "roles": [
+        "brand_specialist"
+      ]
+    },
+    "code_reviewer": {
+      "name": "Code Reviewer",
+      "roles": [
+        "code_reviewer"
+      ]
+    },
+    "integrity_guard": {
+      "name": "Integrity Guard",
+      "roles": [
+        "integrity_guard"
+      ]
     }
   }
 }

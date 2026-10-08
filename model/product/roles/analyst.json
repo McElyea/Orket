@@ -1,0 +1,28 @@
+{
+  "name": "analyst",
+  "description": "Product analyst responsible for defining technical requirements and user stories.",
+  "tools": [
+    "list_directory",
+    "read_file",
+    "write_file",
+    "add_issue_comment",
+    "update_issue_status"
+  ],
+  "prompt_metadata": {
+    "id": "role.product.analyst",
+    "version": "1.0.0",
+    "status": "stable",
+    "owner": "product",
+    "updated_at": "2026-10-05",
+    "lineage": {
+      "parent": null
+    },
+    "changelog": [
+      {
+        "version": "1.0.0",
+        "date": "2026-10-05",
+        "notes": "Migrate the existing team-local definition into the standalone asset loaded by current runtime."
+      }
+    ]
+  }
+}

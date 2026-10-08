@@ -157,6 +157,11 @@ async def test_pre_effect_resume_binds_checkpoint_content(tmp_path, record_prope
 @pytest.mark.parametrize("mode", ["unchanged", "reformatted", "changed-plan"])
 # Layer: integration
 async def test_approval_recovery_binds_checkpoint_content(tmp_path, monkeypatch, record_property, mode):
+    # Both processes must ignore unrelated operator dotenv data in their CWD.
+    dotenv = tmp_path / "operator/.env"
+    await asyncio.to_thread(dotenv.parent.mkdir)
+    await asyncio.to_thread(dotenv.write_text, "GITEA_OWNER=unrelated-operator\n", encoding="utf-8")
+    monkeypatch.chdir(dotenv.parent)
     async with claimed_process(tmp_path) as (child, pause):
         child.kill()
         await asyncio.wait_for(child.communicate(), 15)
@@ -178,6 +183,7 @@ async def test_approval_recovery_binds_checkpoint_content(tmp_path, monkeypatch,
                 "recoveries": [row.model_dump(mode="json") for row in recoveries],
                 "output": output, "snapshot_after": retained, "pause_unchanged": latest == pause}, sort_keys=True))
             assert latest == pause and retained["sha256"] == snapshot["after_sha256"]
+            assert pause.export_binding["owner"] != "unrelated-operator"
             if mode == "changed-plan":
                 assert result.observation == "unresolved" and result.succeeded is False
                 assert "E_CHECKPOINT_SNAPSHOT_INTEGRITY_MISMATCH" in result.reason

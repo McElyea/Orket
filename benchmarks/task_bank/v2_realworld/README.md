@@ -2,6 +2,13 @@
 
 `tasks.json` contains coding tasks used by benchmark runners.
 
+Both live suite commands now default to all 80 tasks in this bank. Use the selected
+project Python environment and `--model` to select the actual provider alias. The
+v1 metadata bank is not an executable live suite. Zero exit requires every selected
+workload run to pass; `--require-score` additionally requires the separate scoring
+gate. Single runs do not establish repeatability. See the current
+[readiness contract](../../../docs/specs/WORKFLOW_BENCHMARK_READINESS.md).
+
 ## Task Schema (per task)
 1. `problem`
 2. `constraints`

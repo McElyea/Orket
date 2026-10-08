@@ -62,8 +62,13 @@ async def test_owned_command_captures_borrowed_inputs_before_transport_task(tmp_
 
 
 def _private_owner(pid):
-    owners = [parent for parent in psutil.Process(pid).parents()
-              if any(Path(argument).name == "owned_command_worker.py" for argument in parent.cmdline())]
+    owners = []
+    for parent in psutil.Process(pid).parents():
+        # Outer CLI/CI supervisors own pytest, not this invocation's private workers.
+        if parent.pid == os.getpid():
+            break
+        if any(Path(argument).name == "owned_command_worker.py" for argument in parent.cmdline()):
+            owners.append(parent)
     assert owners
     return {owner.pid: dict(directory=owner.cwd(), environment=owner.environ().get("ORKET_TEST_PROVIDER_INPUT"))
             for owner in owners}
@@ -105,7 +110,7 @@ async def test_private_supervisor_uses_admitted_directory_and_environment(tmp_pa
         dispatch.set()
         observation = await asyncio.to_thread(_private_owner, await _await_pid(observed))
         expected = dict(directory=str(first / "work"), environment=None if mode == "empty" else "admitted")
-        assert all(value == expected for value in observation.values())
+        assert all(value == expected for value in observation.values()), (observation, expected)
         await asyncio.to_thread(release.touch)
         result = await asyncio.wait_for(asyncio.shield(operation), 5)
         assert result.cleanup_confirmed and result.capture_complete

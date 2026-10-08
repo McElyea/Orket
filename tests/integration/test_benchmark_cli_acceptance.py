@@ -31,13 +31,17 @@ def _prepare(root):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("mutation", ["none", "wrong-computation", "literal-newline", "missing-module"])
+@pytest.mark.parametrize("mutation", ["none", "wrong-computation", "wrong-error", "literal-newline", "missing-module"])
 async def test_cli_acceptance_retains_multifile_behavior_and_refuses_wrong_outputs(tmp_path, mutation):
     task, params = await asyncio.to_thread(_prepare, tmp_path)
     definition = PythonCliAcceptance.model_validate(params["completion_acceptance"])
     implementation = tmp_path / "agent_output/implementation.py"
     if mutation == "wrong-computation":
         await asyncio.to_thread(implementation.write_text, 'def combine(a, b):\n    return "wrong"\n')
+    elif mutation == "wrong-error":
+        main = tmp_path / "agent_output/main.py"
+        source = await asyncio.to_thread(main.read_text)
+        await asyncio.to_thread(main.write_text, source.replace("error: two arguments", "wrong error"))
     elif mutation == "missing-module":
         await asyncio.to_thread(implementation.unlink)
     elif mutation == "literal-newline":
@@ -50,10 +54,13 @@ async def test_cli_acceptance_retains_multifile_behavior_and_refuses_wrong_outpu
     result = await service.verify(workspace_root=tmp_path, definition=definition,
                                   card_id="card", run_id="run", attempt_id="attempt", workload_inputs_json="{}")
     assert result.decision.sufficient is (mutation == "none")
-    if mutation in {"none", "wrong-computation"}:
+    if mutation in {"none", "wrong-computation", "wrong-error"}:
         support = await RuntimeVerifier(tmp_path, issue_params=params).verify()
         assert support.ok is (mutation == "none")
         assert support.command_results[0]["policy_source"] == "issue_override"
+        if mutation == "wrong-error":
+            assert support.command_results[0]["stdout_json"]["cases"][0]["stdout"] == "a b\n"
+            assert any("cases[1]" in error for error in support.errors)
     retained = json.loads(await store.read(result.evidence_digest))
     if mutation == "none":
         assert {row["path"] for row in retained["artifacts"]} == set(definition.artifact_paths)

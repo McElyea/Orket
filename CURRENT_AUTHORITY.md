@@ -1,6 +1,6 @@
 # Current authority
 
-Last updated: 2026-10-04
+Last updated: 2026-10-07
 
 <!-- Generated from docs/architecture/current_authority.json; do not edit this view. -->
 
@@ -18,11 +18,11 @@ Validate: `python scripts/governance/check_current_authority.py`.
 | Named card | orket runtime --card &lt;card_id&gt; | [docs/CONTRIBUTOR.md](<docs/CONTRIBUTOR.md>) |
 | Dependency direction | python scripts/governance/check_dependency_direction.py | [docs/CONTRIBUTOR.md](<docs/CONTRIBUTOR.md>) |
 | Project docs hygiene | python scripts/governance/check_docs_project_hygiene.py | [docs/CONTRIBUTOR.md](<docs/CONTRIBUTOR.md>) |
-| SDK and core development install in the selected environment | python -m pip install -e "./orket_extension_sdk[testing]" -e ".[dev]" | [README.md](<README.md>) |
+| SDK and core development install; candidate path in docs/guides/MACOS_LOCAL_INSTALL.md and native proof procedure in docs/guides/MACOS_ACCEPTANCE_RUNBOOK.md remain subject to Mac acceptance | python -m pip install -e "./orket_extension_sdk[testing]" -e ".[dev]" | [README.md](<README.md>) |
 | Default tests | python -m pytest -q | [docs/CONTRIBUTOR.md](<docs/CONTRIBUTOR.md>) |
 | Quality coverage | pytest tests/ --cov=orket --cov-config=pyproject.toml --cov-fail-under=89 | [docs/CONTRIBUTOR.md](<docs/CONTRIBUTOR.md>) |
 | Canonical Ruff | ruff check orket tests | [.gitea/workflows/quality.yml](<.gitea/workflows/quality.yml>) |
-| Default runtime | orket runtime | [docs/CONTRIBUTOR.md](<docs/CONTRIBUTOR.md>) |
+| Default runtime; project setup, diagnostics and prepared local-agent example documented alongside it | orket runtime | [docs/CONTRIBUTOR.md](<docs/CONTRIBUTOR.md>) |
 | Strict taxonomy | python scripts/governance/enforce_test_taxonomy.py --strict | [docs/CONTRIBUTOR.md](<docs/CONTRIBUTOR.md>) |
 
 ## Execution ownership
@@ -41,8 +41,8 @@ Validate: `python scripts/governance/check_current_authority.py`.
 | Executable dependency policy | dependency_policy | [model/core/contracts/dependency_direction_policy.json](<model/core/contracts/dependency_direction_policy.json>) |
 | Durable paths and retained stores | durable_paths | [docs/ARCHITECTURE.md](<docs/ARCHITECTURE.md>) |
 | Transitional exception obligations | exception_register | [docs/projects/architectural-truth/ARCHITECTURE_EXCEPTION_REGISTER.json](<docs/projects/architectural-truth/ARCHITECTURE_EXCEPTION_REGISTER.json>) |
-| Canonical script owners and output locations | script_outputs | [scripts/README.md](<scripts/README.md>) |
-| Active obligations and bounded proof records | active_plan | [docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md](<docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md>) |
+| Canonical script owners, current benchmark inputs and output locations | script_outputs | [scripts/README.md](<scripts/README.md>) |
+| Active execution plans and project index; Mac acceptance remains outstanding | active_plan | [docs/ROADMAP.md](<docs/ROADMAP.md>) |
 | Security and trust boundary | security | [docs/SECURITY.md](<docs/SECURITY.md>) |
 | Governed start-path authority | start_paths | [docs/specs/CONTROL_PLANE_GOVERNED_START_PATH_MATRIX.md](<docs/specs/CONTROL_PLANE_GOVERNED_START_PATH_MATRIX.md>) |
 | Contributor workflow | workflow | [docs/CONTRIBUTOR.md](<docs/CONTRIBUTOR.md>) |
@@ -51,13 +51,13 @@ Validate: `python scripts/governance/check_current_authority.py`.
 
 | Surface | Current scope | Source |
 | --- | --- | --- |
-| API construction and lifetime | Captured factory inputs, lifespan acquisition, required authentication/interaction owners, installed WebSocket transport, peer-disconnect settlement, target existence preflight, retained background failures, request admission and cleanup. Run views disclose retained repair and conformance warnings without rewriting evidence or completion. | [docs/specs/API_RUNTIME_LIFECYCLE.md](<docs/specs/API_RUNTIME_LIFECYCLE.md>) |
+| API construction and lifetime | Captured factory inputs, lifespan acquisition and owned schema/route preparation before readiness, required authentication/interaction owners, installed WebSocket transport, peer-disconnect settlement, target existence preflight, retained background failures, request admission and cleanup. Run views disclose retained repair and conformance warnings without rewriting evidence or completion. Hardware views preserve unknown unified-memory GPU observations; online is not Metal or model-fit proof. | [docs/specs/API_RUNTIME_LIFECYCLE.md](<docs/specs/API_RUNTIME_LIFECYCLE.md>) |
 | Logging preparation and settlement | Explicit native preparation, operation-local bindings, captured required producers, process-owned writer and bounded optional publication/frontier. | [docs/specs/LOG_WRITE_SETTLEMENT.md](<docs/specs/LOG_WRITE_SETTLEMENT.md>) |
 | Quality checker and coverage contract | Actual pytest markers, native checker limits and unchanged 89-percent coverage floor. | [docs/specs/QUALITY_CHECKER_CONTRACT.md](<docs/specs/QUALITY_CHECKER_CONTRACT.md>) |
 | Runtime project roots | Invocation project selection and package-owned immutable assets. | [docs/specs/RUNTIME_PROJECT_ROOTS.md](<docs/specs/RUNTIME_PROJECT_ROOTS.md>) |
 | Runtime result and lifecycle | Application results, owned runtime/model-stream lifetimes with typed provider errors, async fixture support execution and bounded demo/marshaller native publication. Synchronous fixture classes are retired in 0.7.1. | [docs/specs/RUNTIME_EXECUTION_RESULT_CONTRACT.md](<docs/specs/RUNTIME_EXECUTION_RESULT_CONTRACT.md>) |
 | Trusted workload process lifetime | Trusted extension process lifetime; not hostile-code containment. | [docs/specs/SDK_WORKLOAD_PROCESS_LIFETIME.md](<docs/specs/SDK_WORKLOAD_PROCESS_LIFETIME.md>) |
-| Settings and preference inputs | Bound configuration, persistence and migration. | [docs/specs/SETTINGS_INPUT_OWNERSHIP.md](<docs/specs/SETTINGS_INPUT_OWNERSHIP.md>) |
+| Settings and preference inputs | Bound configuration, persistence and migration. Setup persists runtime organization model defaults and project provider dotenv values; explicit dotenv bootstrap retains environment precedence and once-per-process semantics. | [docs/specs/SETTINGS_INPUT_OWNERSHIP.md](<docs/specs/SETTINGS_INPUT_OWNERSHIP.md>) |
 | Runtime store binding | Durable store locations bind once; historical migration stays explicit. | [docs/specs/RUNTIME_STORE_BINDING.md](<docs/specs/RUNTIME_STORE_BINDING.md>) |
 | Control-plane terminal authority | Verified terminal publication and explicit uncertainty. | [docs/specs/CONTROL_PLANE_TERMINAL_AUTHORITY.md](<docs/specs/CONTROL_PLANE_TERMINAL_AUTHORITY.md>) |
 

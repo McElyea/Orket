@@ -1,0 +1,15 @@
+{
+  "name": "command_center_requirements",
+  "team": "product_owners",
+  "environment": "standard",
+  "example_task": "Create 'ui_specs.md'. Define the React components needed for the 50/50 split dashboard: FileTree, Editor, MemberHUD, and the 3-panel footer components (LogStream, HardwareGraph, EngineTelemetry).",
+  "issues": [
+    {
+      "seat": "product_owner",
+      "model": "deepseek-r1:32b",
+      "note": "Define React Component structures for the monorepo.",
+      "summary": "Define React Component structures for the monorepo",
+      "id": "product-command_center_requirements-01"
+    }
+  ]
+}

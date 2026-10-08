@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "orket"
-version = "0.7.7"
+version = "0.7.8"
 description = "Local-first workflow runtime for card-based execution"
 authors = [
     { name = "Jonathan McElyea" }
@@ -150,6 +150,7 @@ mypy_path = "stubs"
 exclude = "(^tests/|^scripts/|^benchmarks/)"
 
 [tool.coverage.run]
+data_file = ".tmp/quality/.coverage"
 source = ["orket"]
 branch = true
 omit = ["tests/*", "scripts/*", "benchmarks/*"]

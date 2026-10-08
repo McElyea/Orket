@@ -154,8 +154,8 @@ def test_perform_first_run_onboarding_marks_first_run(monkeypatch, capsys) -> No
     assert result == "first_run_setup"
     assert saved_settings == [{"setup_complete": True, "hardware_profile": "auto-detected"}]
     assert ("discovery_startup_path", {"path": "first_run_setup", "result": "completed"}) in startup_events
-    assert "orket runtime --card initialize_orket" in out
-    assert "orket runtime --rock initialize_orket" not in out
+    assert "orket runtime --help" in out
+    assert "initialize_orket" not in out
 
 
 @pytest.mark.contract

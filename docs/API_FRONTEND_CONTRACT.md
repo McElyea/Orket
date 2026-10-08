@@ -26,6 +26,17 @@ Card/run operator acceptance views updated and exercised: 2026-09-12.
 7. Insecure bypass exists only when `ORKET_ALLOW_INSECURE_NO_API_KEY=true`.
 8. Every HTTP response under `/v1/*` includes `X-Orket-Version`.
 
+## Hardware observation
+
+Hardware metrics and the system-health view preserve `memory_model` and
+`gpu_observation`. On Darwin arm64, `vram_total_gb` and `vram_gb_used` are null;
+`unified_memory_gb` is total system memory and `gpu_observation` is
+`metal_unverified`. Clients must display unknown GPU usage instead of converting
+these nulls to zero. Neither system-health `online` nor physical memory establishes
+Metal availability or model fit. Existing NVIDIA metric values remain unchanged.
+Observation scope and native acceptance limits:
+`docs/specs/MACOS_LOCAL_RUNTIME_ACCEPTANCE.md`.
+
 ## Execution graph acceptance
 
 `GET /v1/runs/{session_id}/execution-graph` displays the session's stored cards.

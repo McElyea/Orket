@@ -117,8 +117,8 @@ def test_discover_project_assets_passes_selected_project_to_loader(monkeypatch, 
     }
 
 
-def test_perform_first_run_onboarding_recommends_canonical_card_entrypoint(monkeypatch, capsys):
-    """Layer: unit. Verifies onboarding recommends the canonical `--card` command instead of blessing rock execution."""
+def test_perform_first_run_onboarding_recommends_available_runtime_help(monkeypatch, capsys):
+    """Layer: unit. Onboarding must not recommend an unavailable project collection."""
     monkeypatch.setattr("orket.discovery.load_user_settings", lambda: {})
     monkeypatch.setattr("orket.discovery.save_user_settings", lambda _payload: None)
     monkeypatch.setattr("orket.discovery.log_event", lambda *_args, **_kwargs: None)
@@ -127,6 +127,7 @@ def test_perform_first_run_onboarding_recommends_canonical_card_entrypoint(monke
     out = capsys.readouterr().out
 
     assert result == "first_run_setup"
-    assert "canonical card entrypoint" in out
-    assert "orket runtime --card initialize_orket" in out
+    assert "prepared project card" in out
+    assert "orket runtime --help" in out
+    assert "initialize_orket" not in out
     assert "initialization rock" not in out

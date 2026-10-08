@@ -199,3 +199,90 @@ async def test_cancelled_root_observation_drains_worker_and_keeps_peer_responsiv
         if (owner := getattr(app.state, "api_runtime_context", None)) is not None:
             await owner.close()
     assert finished.is_set() and owner.closed and peer.state.api_runtime_context.closed
+
+
+@pytest.mark.parametrize("outcome", ["cancel", "native_failure", "cancel_and_native_failure"])
+async def test_transport_preparation_retains_worker_and_refuses_readiness(tmp_path, monkeypatch, outcome):
+    app, peer = _app(tmp_path / "first", monkeypatch), _app(tmp_path / "peer", monkeypatch)
+    entered, release, finished = threading.Event(), threading.Event(), threading.Event()
+    prepare, threads, admitted = app.openapi, [], []
+    failure = OSError("controlled transport preparation failure")
+    baseline = event_subscriber_count()
+
+    def held_schema():
+        threads.append(threading.get_ident())
+        entered.set()
+        try:
+            assert release.wait(5)
+            schema = prepare()
+            if "native_failure" in outcome:
+                raise failure
+            return schema
+        finally:
+            finished.set()
+
+    async def enter_lifespan():
+        async with app.router.lifespan_context(app):
+            admitted.append(True)
+
+    monkeypatch.setattr(app, "openapi", held_schema)
+    async with peer.router.lifespan_context(peer):
+        starting = asyncio.create_task(enter_lifespan())
+        try:
+            assert await asyncio.to_thread(entered.wait, 5)
+            owner = app.state.api_runtime_context
+            # Startup captured its callback before any preparation/root waits.
+            monkeypatch.setattr(app, "openapi", lambda: pytest.fail("Late transport callback was selected"))
+            if "cancel" in outcome:
+                starting.cancel()
+                await asyncio.sleep(0)
+                starting.cancel()
+            async with (
+                httpx.AsyncClient(transport=httpx.ASGITransport(app), base_url="http://starting") as pending,
+                httpx.AsyncClient(transport=httpx.ASGITransport(peer), base_url="http://peer") as ready,
+            ):
+                assert (await asyncio.wait_for(pending.get("/health"), RESPONSIVENESS_SECONDS)).status_code == 503
+                assert (await asyncio.wait_for(ready.get("/health"), RESPONSIVENESS_SECONDS)).status_code == 200
+            assert not starting.done() and not owner.closed and owner.active_request_count == 1
+            assert not app.state.api_ready and not admitted and not finished.is_set()
+        finally:
+            release.set()
+            result = (await asyncio.gather(starting, return_exceptions=True))[0]
+        if "native_failure" in outcome:
+            assert result is failure
+        else:
+            assert isinstance(result, asyncio.CancelledError)
+        assert owner.closed and owner.active_request_count == owner.active_background_task_count == 0
+    assert threads and threading.get_ident() not in threads and finished.is_set()
+    assert not app.state.api_ready and not admitted and event_subscriber_count() == baseline
+
+
+async def test_transport_callback_is_captured_before_root_validation_await(tmp_path, monkeypatch):
+    app = _app(tmp_path, monkeypatch)
+    entered, release = threading.Event(), threading.Event()
+    validate, prepare, calls = api_startup_service._validate_root, app.openapi, []
+
+    def hold_root(configured, owned):
+        entered.set()
+        assert release.wait(5)
+        validate(configured, owned)
+
+    def captured_schema():
+        calls.append(threading.get_ident())
+        return prepare()
+
+    async def enter_lifespan():
+        async with app.router.lifespan_context(app):
+            assert app.state.api_ready and app.openapi_schema["paths"]
+
+    monkeypatch.setattr(api_startup_service, "_validate_root", hold_root)
+    monkeypatch.setattr(app, "openapi", captured_schema)
+    starting = asyncio.create_task(enter_lifespan())
+    try:
+        assert await asyncio.to_thread(entered.wait, 5)
+        monkeypatch.setattr(app, "openapi", lambda: pytest.fail("Late transport callback was selected"))
+    finally:
+        release.set()
+        await starting
+    assert len(calls) == 1 and calls[0] != threading.get_ident()
+    assert app.state.api_runtime_context.closed and not app.state.api_ready

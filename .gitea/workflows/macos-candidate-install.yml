@@ -1,0 +1,79 @@
+name: Apple Silicon candidate acceptance
+
+on:
+  workflow_dispatch:
+    inputs:
+      llama_server:
+        description: Absolute path to the prepared llama.cpp server on the authorized runner
+        required: true
+      model_file:
+        description: Absolute path to the prepared Qwen3.8 GGUF on the authorized runner
+        required: true
+
+jobs:
+  installed-candidate:
+    # Register an authorized native runner with the label orket-macos-arm64:host.
+    # Full acceptance is granted only by the combined MA-01 through MA-09 result.
+    runs-on: orket-macos-arm64
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
+    env:
+      ORKET_DISABLE_SANDBOX: "1"
+      PYTHONUTF8: "1"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Require native Apple Silicon Python and prepare harness
+        run: |
+          set -euo pipefail
+          python3.11 -c 'import platform; assert platform.system() == "Darwin" and platform.machine() == "arm64", "native Apple Silicon Python required"'
+          python3.11 -m venv .tmp/macos-harness
+
+      - name: Install contributor dependencies for the evidence harness
+        run: |
+          set -euo pipefail
+          source .tmp/macos-harness/bin/activate
+          python -m pip install --upgrade pip
+          python -m pip install -e "./orket_extension_sdk[testing]" -e ".[dev]"
+
+      - name: Build and exercise isolated installed candidates
+        run: |
+          set -euo pipefail
+          source .tmp/macos-harness/bin/activate
+          python scripts/ci/verify_candidate_install.py --require-macos-arm64
+
+      - name: Locate retained evidence
+        if: always()
+        run: |
+          test ! -f .tmp/macos-support/package-install.json || cat .tmp/macos-support/package-install.json
+
+      - name: Exercise installed native process ownership
+        run: |
+          set -euo pipefail
+          source .tmp/macos-harness/bin/activate
+          python scripts/ci/verify_installed_process_acceptance.py
+
+      - name: Locate process evidence
+        if: always()
+        run: |
+          # Preserve this file and its referenced local paths before disposing of the host.
+          test ! -f .tmp/macos-support/process-acceptance.json || cat .tmp/macos-support/process-acceptance.json
+
+      - name: Verify all native Mac acceptance cases
+        env:
+          LLAMA_SERVER: ${{ inputs.llama_server }}
+          MODEL_FILE: ${{ inputs.model_file }}
+        run: |
+          set -euo pipefail
+          source .tmp/macos-harness/bin/activate
+          python scripts/ci/verify_macos_acceptance.py --llama-server "$LLAMA_SERVER" --model-file "$MODEL_FILE"
+
+      - name: Locate complete acceptance evidence
+        if: always()
+        run: |
+          test ! -f .tmp/macos-support/native-acceptance.json || cat .tmp/macos-support/native-acceptance.json

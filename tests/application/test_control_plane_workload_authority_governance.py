@@ -875,17 +875,14 @@ def test_live_rock_benchmark_runner_prefers_canonical_card_surface() -> None:
     benchmark_runner_text = (
         REPO_ROOT / "scripts" / "benchmarks" / "live_rock_benchmark_runner.py"
     ).read_text(encoding="utf-8-sig")
-    benchmark_suite_text = (
-        REPO_ROOT / "scripts" / "benchmarks" / "run_live_rock_benchmark_suite.py"
-    ).read_text(encoding="utf-8-sig")
+    from scripts.benchmarks.live_suite import parse_args
 
     assert '"--card"' in benchmark_runner_text
     assert '"--rock"' not in benchmark_runner_text
     assert "benchmark_live_rock_" not in benchmark_runner_text
     assert '"run_mode": "rock"' not in benchmark_runner_text
     assert 'default="live-rock"' not in benchmark_runner_text
-    assert 'default="live-rock"' not in benchmark_suite_text
     assert "benchmark_live_collection_" in benchmark_runner_text
     assert '"run_mode": "card"' in benchmark_runner_text
     assert 'default="live-card"' in benchmark_runner_text
-    assert 'default="live-card"' in benchmark_suite_text
+    assert parse_args("rock", []).execution_mode == "live-card"

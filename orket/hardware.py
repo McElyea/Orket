@@ -1,5 +1,6 @@
 # orket/hardware.py
 import os
+import platform
 import subprocess
 import threading
 import time
@@ -8,6 +9,8 @@ from datetime import UTC, datetime
 from typing import Any
 
 import psutil
+
+from orket.adapters.execution.owned_io import require_sync_context
 
 _VRAM_CACHE = {
     "ts": 0.0,
@@ -24,12 +27,16 @@ side_effecting = True
 class HardwareProfile:
     cpu_cores: int
     ram_gb: float
-    vram_gb: float
+    vram_gb: float | None
     has_nvidia: bool
+    memory_model: str = "unknown"
+    architecture: str = "unknown"
+    gpu_observation: str = "unobserved"
 
 
 def get_vram_info() -> float:
     """Detects NVIDIA VRAM using nvidia-smi."""
+    require_sync_context(code="E_HARDWARE_REQUIRES_NATIVE_OWNER")
     try:
         # Request vram in MB
         res = subprocess.run(
@@ -48,15 +55,33 @@ def get_vram_info() -> float:
 
 
 def get_current_profile() -> HardwareProfile:
+    require_sync_context(code="E_HARDWARE_REQUIRES_NATIVE_OWNER")
+    host = platform.uname()
     ram = psutil.virtual_memory().total / (1024**3)
     cpu = psutil.cpu_count(logical=False) or 0
+    if _apple_silicon(host.system, host.machine):
+        return HardwareProfile(cpu, ram, None, False, "unified", host.machine, "metal_unverified")
     vram = get_vram_info()
-    return HardwareProfile(cpu_cores=cpu, ram_gb=ram, vram_gb=vram, has_nvidia=(vram > 0))
+    return HardwareProfile(cpu, ram, vram, vram > 0, "dedicated" if vram > 0 else "unknown",
+                           host.machine, "nvidia_observed" if vram > 0 else "unobserved")
+
+
+def _apple_silicon(system: str, machine: str) -> bool:
+    return system == "Darwin" and machine.lower() in {"arm64", "aarch64"}
 
 
 def get_metrics_snapshot() -> dict[str, Any]:
     """Returns real-time usage stats for graphs."""
+    require_sync_context(code="E_HARDWARE_REQUIRES_NATIVE_OWNER")
+    host = platform.uname()
     vm = psutil.virtual_memory()
+    if _apple_silicon(host.system, host.machine):
+        return {
+            "cpu_percent": psutil.cpu_percent(interval=None), "ram_percent": vm.percent,
+            "vram_gb_used": None, "vram_total_gb": None, "memory_model": "unified",
+            "unified_memory_gb": vm.total / (1024**3), "gpu_observation": "metal_unverified",
+            "architecture": host.machine, "timestamp": datetime.now(UTC).isoformat(),
+        }
     cache_ttl_sec = 5.0
     try:
         cache_ttl_sec = max(0.0, float(os.getenv("ORKET_METRICS_VRAM_CACHE_SEC", "5")))
@@ -69,6 +94,9 @@ def get_metrics_snapshot() -> dict[str, Any]:
         "ram_percent": vm.percent,
         "vram_gb_used": vram["used"],
         "vram_total_gb": vram["total"],
+        "memory_model": "dedicated" if vram["total"] > 0 else "unknown",
+        "gpu_observation": "nvidia_observed" if vram["total"] > 0 else "unobserved",
+        "architecture": host.machine,
         "timestamp": datetime.now(UTC).isoformat(),
     }
 
@@ -89,6 +117,7 @@ def _cached_vram_metrics(cache_ttl_sec: float) -> dict[str, float]:
 
 
 def get_vram_usage() -> float:
+    require_sync_context(code="E_HARDWARE_REQUIRES_NATIVE_OWNER")
     try:
         res = subprocess.run(
             ["nvidia-smi", "--query-gpu=memory.used", "--format=csv,noheader,nounits"],
@@ -124,8 +153,11 @@ class ModelTier:
     T5_ULTRA = "ultra"  # 70B+ models (48GB+ VRAM)
 
 
-def can_handle_model_tier(tier: str, profile: HardwareProfile) -> bool:
+def can_handle_model_tier(tier: str, profile: HardwareProfile) -> bool | None:
+    """Legacy advisory heuristic; None means memory fit has not been established."""
     vram = profile.vram_gb
+    if vram is None:
+        return None
     if tier == ModelTier.T1_MINI:
         return True  # Everyone can run 1B
     if tier == ModelTier.T2_BASE:
@@ -145,6 +177,9 @@ def can_handle_tier(tier: str, profile: HardwareProfile) -> bool:
 
     if tier == ToolTier.TIER_1_COMPUTE:
         return profile.ram_gb >= 8 and profile.cpu_cores >= 4
+
+    if profile.vram_gb is None:
+        return False  # These optional tool tiers require the existing NVIDIA path.
 
     if tier == ToolTier.TIER_2_VISION:
         return profile.has_nvidia and profile.vram_gb >= 6

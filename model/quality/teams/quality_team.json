@@ -1,16 +1,23 @@
 {
   "name": "quality_team",
-  "roles": {
-    "auditor": {
-      "name": "auditor",
-      "description": "Security and Quality auditor.",
-      "tools": ["read_file", "list_dir", "write_file"]
-    }
-  },
   "seats": {
     "security_auditor": {
       "name": "Security Auditor",
-      "roles": ["auditor"]
+      "roles": [
+        "auditor"
+      ]
+    },
+    "code_reviewer": {
+      "name": "Code Reviewer",
+      "roles": [
+        "code_reviewer"
+      ]
+    },
+    "integrity_guard": {
+      "name": "Integrity Guard",
+      "roles": [
+        "integrity_guard"
+      ]
     }
   }
 }

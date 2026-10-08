@@ -59,6 +59,7 @@ class GlobalState:
     async def get_task(self, session_id: str) -> asyncio.Task[Any] | None:
         async with self._tasks_lock:
             tasks = list(self.active_tasks.get(session_id, []))
+            task: asyncio.Task[Any]  # Preserve the registry's element type across reversed() inference.
             for task in reversed(tasks):
                 if not task.done():
                     return task

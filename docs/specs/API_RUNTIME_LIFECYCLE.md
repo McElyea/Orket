@@ -1,7 +1,13 @@
 # API Runtime Lifecycle
 
-Last updated: 2026-10-04
+Last updated: 2026-10-07
 Status: Active
+
+Hardware metrics use the existing owned native worker. The metrics and health
+projection preserve nullable dedicated-VRAM values for unified-memory Apple
+platform observations. Online status grants no Metal/model-fit proof. Wire fields
+and observation limits: `docs/API_FRONTEND_CONTRACT.md` and
+`docs/specs/MACOS_LOCAL_RUNTIME_ACCEPTANCE.md`.
 
 Canonical run-active targets resolve before acknowledgment; nonexistent targets
 return 404. Scheduled invocations use the retained-failure background supervisor.
@@ -138,6 +144,19 @@ observable at teardown even when the task has already finished. A registered
 subscription resource unsubscribes after admitted work settles. Startup no longer
 creates an unused invocation-level `logs/` directory; actual log publication still
 creates its own destination parent.
+
+The interface captures the app's bound public `openapi` callback on lifespan
+entry, before preparation awaits. Initialization owns its complete synchronous
+schema/route preparation through `run_owned_thread`, after root/authentication
+validation and before engine initialization. FastAPI's included-route compilation
+must finish before readiness; it is not deferred into the first admitted request.
+Repeated cancellation retains the worker and acquired runtime until settlement;
+a native preparation failure takes precedence and prevents readiness. Partial
+schema state does not authorize service admission. Restart still requires a new
+app. Routes and the schema callback are configured before lifespan entry; runtime
+route mutation or custom schema callbacks that skip route preparation are outside
+this contract. Migration and proof limits:
+`docs/architecture/CONTRACT_DELTA_API_TRANSPORT_PREPARATION_2026-10-07.md`.
 
 The startup posture's `insecure_no_api_key_bypass` describes effective anonymous
 authentication, not merely the presence of the environment flag. A configured key

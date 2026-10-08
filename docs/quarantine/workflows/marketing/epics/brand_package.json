@@ -1,0 +1,15 @@
+{
+  "name": "brand_package",
+  "team": "marketing_pros",
+  "environment": "standard",
+  "example_task": "Generate a 'logo.png' for Orket and a 'brand_guide.json' with CSS color codes: Primary (Neon Purple), Secondary (Cyan), Background (Deep Obsidian).",
+  "issues": [
+    {
+      "seat": "brand_architect",
+      "model": "qwen3-coder:latest",
+      "note": "Generate the logo and brand guide.",
+      "summary": "Generate the logo and brand guide",
+      "id": "marketing-brand_package-01"
+    }
+  ]
+}

@@ -86,6 +86,72 @@ does not turn failed or absent hosted/Linux evidence into passing proof. Keep
 Windows assertions, deadlines, declared skips and the 89-percent floor unchanged.
 Verification-contract delta: `docs/architecture/CONTRACT_DELTA_WINDOWS_ACCEPTANCE_2026-10-03.md`.
 
+The separate Apple Silicon Mac support lane was authorized on 2026-10-06. Its
+acceptance contract is `docs/specs/MACOS_LOCAL_RUNTIME_ACCEPTANCE.md`; it does not
+reopen or change ATG-v1. Mac proof requires a native macOS runner and identified
+installed candidates. Windows runs, simulated platform inputs and workflow labels
+do not establish Mac acceptance. Keep native ownership guarantees unchanged and
+retain missing-access/technical blockers in the lane's canonical plan.
+Both Quality selections retain hardware observation controls: simulated Apple
+inputs are contract proof, native host metrics are integration proof, and neither
+establishes live Metal inference. Preserve nullable unified-memory GPU metrics
+through the system-health projection and the hardware event-loop refusal.
+
+The built core/SDK candidate path is documented in
+`docs/guides/MACOS_LOCAL_INSTALL.md`. Its producer is
+`python scripts/ci/verify_candidate_install.py`; canonical reports are
+`.tmp/macos-support/package-install.json` and `package-inputs.json` in the same
+directory. It uses fresh Git-visible sources and an external isolated environment,
+retains failed evidence, and requires actual command settlement. Both Quality
+selections retain its native evidence controls. The native Mac workflow
+and both downstream producers require the held-loopback connection-failure
+evidence with closed provider resources and settled native diagnostics. An invalid
+timeout or unrelated diagnostic failure cannot prove an unavailable provider.
+Both Quality selections retain the negative receipt controls for this distinction.
+The manual native Mac workflow
+adds `--require-macos-arm64`; it remains blocked by unavailable native ownership
+until MAC-02 is resolved. Packaging/quickstart proof cannot close provider, Metal
+or whole-runtime acceptance. Contributor editable installation remains unchanged.
+
+Local setup and diagnostics are `orket setup --project <directory>` and
+`orket doctor --project <directory>`. Keep their input/native publication and
+controlled HTTP regression modules in both Quality selections. Explicit `.env`
+bootstrap selection retains process-environment precedence and once-per-process
+semantics. The model default remains organization process policy, while provider
+settings use the existing dotenv runtime inputs. Offline quickstart and the
+optional arithmetic diagnostic do not replace MA-04 workflow proof. Scope and
+failure semantics: `docs/specs/MACOS_LOCAL_RUNTIME_ACCEPTANCE.md`.
+
+The prepared provider workflow is `orket demo local-agent --project <directory>`.
+It reuses the governed-agent submission and verifier with the packaged template.
+Both Quality selections retain its real CLI/child/SQLite controls, controlled HTTP
+failure cases, fresh-process inspection/replay and native publication interruption.
+Ticket-example input builders are shared with the existing governed-agent tests;
+their fixture responses remain distinct from live provider proof. Published
+operator instructions are in `docs/guides/MACOS_LOCAL_INSTALL.md`.
+
+`python scripts/ci/verify_installed_process_acceptance.py` copies the existing
+native lifetime/uncertainty controls into an external test harness and runs them
+against the previously verified candidate. It installs that core wheel's declared
+dev extra, rechecks installed origins/bytes and retains the final dependency list.
+Its stable `.tmp/macos-support/process-acceptance.json` receipt requires every
+selected item, rejects skips and duplicates, and never claims whole Mac acceptance.
+Both Quality selections retain the receipt's negative controls. The explicit
+`--windows-control` mode proves only Windows harness behavior. Native Mac command
+ownership and backend-specific assertions remain MAC-02 obligations.
+
+`python scripts/ci/verify_macos_acceptance.py --llama-server <absolute-executable> --model-file <absolute-gguf>`
+combines verified installed/process receipts with the actual guided setup and
+prepared provider workflow. Its stable `.tmp/macos-support/native-acceptance.json`
+requires all nine MA cases, matching installed dependencies, unchanged source and
+settled server teardown. Metal allocation and actual workflow calls must refer to
+the same owned server. Both Quality selections retain its negative verdict/log
+controls; their synthetic inputs do not prove Metal. Explicit Windows control can
+return CONTROL_PASS with partial-success attribution, never Mac acceptance.
+The commands, native runner preparation, evidence retrieval, host proposal and
+teardown are in `docs/guides/MACOS_ACCEPTANCE_RUNBOOK.md`. Native ownership and
+access remain required; the workflow does not provision either.
+
 ## Repository Rules
 
 1. Keep runtime paths in `orket/` async-safe and governance mechanical.
@@ -267,6 +333,11 @@ legacy-sentinel migration and partial effects. Both Quality jobs retain file,
 SQLite, process and input controls under `docs/specs/SANDBOX_EVENT_PUBLICATION_OWNERSHIP.md`.
 API startup validation uses the existing owned native worker before engine startup;
 keep handler/cancellation/security controls under `docs/specs/API_RUNTIME_LIFECYCLE.md`.
+The captured public OpenAPI callback prepares schemas and included routes through
+that startup owner before engine initialization/readiness. Both Quality selections
+retain native preparation cancellation/failure and first-request controls in
+`test_api_startup_ownership.py` and `test_api_construction_ownership.py`; preserve
+the existing 0.5-second API observation assertions.
 Both Quality selections also retain native missing-authentication and missing-
 interaction-owner refusal/cleanup controls in `test_api_required_runtime_owners.py`.
 The required-value delta is `docs/architecture/CONTRACT_DELTA_TYPING_REQUIRED_VALUES_2026-10-01.md`.
@@ -496,6 +567,18 @@ and tests. The Windows project `.venv` creation/activation example is in
 Check `Get-Command python, orket` after installation so an older global executable
 does not silently become the operator entrypoint. Environment creation does not
 change the operator's provider, model server or board override.
+Check the selected runtime version with `python -c "import orket; print(orket.__version__)"`
+as well. Ignored checkout-root `.egg-info` metadata can shadow a successful editable
+reinstall's version. If observed, retain that stale generated directory outside the
+import root and recheck the selected metadata; do not treat pip's success line alone
+as version proof. The 0.7.8 Windows checkpoint records this observed case.
+
+Coverage measurements default to `.tmp/quality/.coverage` in `pyproject.toml`,
+matching the existing Quality workflow's `COVERAGE_FILE` setting. Keep the
+89-percent command-line floor unchanged. The tracked historical root `.coverage`
+is not a current verdict; overwriting it or adding root worker coverage files
+pollutes source-bound verification. Retain measurement artifacts under the ignored
+quality output root and keep authored inputs frozen during proof.
 
 Async Kernel embeddings use engine async mutation/approval methods; the API
 routes synchronous Kernel work through application-owned workers. Retain the

@@ -60,7 +60,7 @@ def refresh_engine_mappings() -> dict[str, str]:
     recommendations: dict[str, str] = {}
 
     for cat, mapping in registry.mappings.items():
-        if not can_handle_model_tier(mapping.tier, hw):
+        if can_handle_model_tier(mapping.tier, hw) is False:
             continue
 
         best_match: str | None = None
@@ -114,7 +114,7 @@ def get_engine_recommendations() -> list[dict[str, str]]:
         best_in_catalog = None
         for item in mapping.catalog:
             if (
-                can_handle_model_tier(item.tier, hw)
+                can_handle_model_tier(item.tier, hw) is True
                 and str(item.model).strip().lower() not in installed_lower
                 and (not best_in_catalog or _model_tier_rank(item.tier) > _model_tier_rank(best_in_catalog.tier))
             ):
@@ -169,8 +169,8 @@ def perform_first_run_onboarding() -> str:
         return "no_op"
     save_user_settings({"setup_complete": True, "hardware_profile": "auto-detected"})
     print("\n[FIRST RUN] Orket EOS Orkestrated.")
-    print("  Recommendation: Use the canonical card entrypoint for initialization to optimize your models.")
-    print("  Command: orket runtime --card initialize_orket")
+    print("  Recommendation: Review runtime options, then select a prepared project card.")
+    print("  Command: orket runtime --help")
     log_event("discovery_startup_path", {"path": "first_run_setup", "result": "completed"})
     return "first_run_setup"
 
@@ -206,20 +206,25 @@ def print_orket_manifest(department: str = "core") -> None:
     models, assets, hw = get_installed_models(), discover_project_assets(department), get_current_profile()
     loader = ConfigLoader(_default_project_root(), department)
 
+    memory = (f"{hw.ram_gb:.1f}GB unified memory | Metal availability and model fit unverified"
+              if hw.memory_model == "unified" else
+              f"{hw.ram_gb:.1f}GB RAM | {hw.vram_gb:.1f}GB NVIDIA VRAM (legacy observation)")
+
     manifest_header = (
         f"\n{'=' * 60}\n"
         f" ORKET EOS MANIFEST (Dept: {department})\n"
-        f" Hardware: {hw.cpu_cores} Cores | {hw.ram_gb:.1f}GB RAM | {hw.vram_gb:.1f}GB VRAM\n"
+        f" Hardware: {hw.cpu_cores} Cores | {memory}\n"
         f"{'=' * 60}"
     )
     print(manifest_header)
 
     def find_best(keywords: list[str], tier: Any) -> str:
-        if not can_handle_model_tier(tier, hw):
+        fit = can_handle_model_tier(tier, hw)
+        if fit is False:
             return f"Skipped ({tier})"
         for m in models:
             if any(k in m.lower() for k in keywords):
-                return m
+                return f"{m} (fit unverified)" if fit is None else m
         return "None found"
 
     local_engines = (

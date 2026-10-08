@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 from orket.adapters.storage.async_control_plane_execution_repository import (
     AsyncControlPlaneExecutionRepository,
@@ -15,6 +15,12 @@ from orket.application.services.governed_agent_broker_service import (
     GovernedAgentModelObservation,
     GovernedAgentResolvedModelProfile,
 )
+from orket.application.services.governed_agent_example_inputs import (
+    ticket_continuation_inputs as ticket_continuation_inputs,
+)
+from orket.application.services.governed_agent_example_inputs import (
+    ticket_report_request,
+)
 from orket.application.services.governed_agent_fixture import (
     DeterministicAgentModelProvider,
     SecondIterationDeterministicVerifier,
@@ -22,13 +28,7 @@ from orket.application.services.governed_agent_fixture import (
 from orket.core.contracts import AttemptRecord, RunRecord, StepRecord, WorkloadRecord
 from orket.core.contracts.governed_agent_ports import GovernedAgentInvocationBinding
 from orket.core.domain import AttemptState, RunState
-from orket_extension_sdk import AgentModelCallRequest, canonical_digest_sha256, canonical_json
-from orket_extension_sdk.agent_fixtures import (
-    agent_iteration_request,
-    agent_model_profile_request,
-    prefixed_digest,
-)
-from orket_extension_sdk.agent_testing import ticket_report_fixture
+from orket_extension_sdk import AgentModelCallRequest, canonical_digest_sha256
 
 TEMPLATE_ROOT = Path("docs/templates/governed_agent_external").resolve()
 
@@ -56,74 +56,11 @@ SecondIterationVerifier = SecondIterationDeterministicVerifier
 
 
 def agent_request(case_id: str = "mixed") -> dict[str, Any]:
-    request = agent_iteration_request()
-    fixture = ticket_report_fixture(case_id)
-    request["objective_ref"] = "objective:ticket-report" + (f":{case_id}" if case_id != "mixed" else "")
-    request["acceptance_ref"] = "acceptance:ticket-report-v1"
-    request["authoritative_context_refs"] = list(fixture["batches"])
-    request["materialized_inputs"] = [
-        _materialized_input(request["objective_ref"], "objective", fixture["objective"]),
-        _materialized_input("acceptance:ticket-report-v1", "acceptance", fixture["acceptance"]),
-        *[
-            _materialized_input(reference, "authoritative_context", content)
-            for reference, content in fixture["batches"].items()
-        ],
-    ]
-    now = datetime.now(UTC)
-    request["deadline_utc"] = (now + timedelta(seconds=8)).isoformat()
-    request["lease_expires_at_utc"] = (now + timedelta(seconds=7)).isoformat()
-    profiles = []
-    for role in ("planner", "actor", "critic"):
-        profile = agent_model_profile_request()
-        profile.update({"role": role, "profile_ref": f"local.{role}"})
-        profiles.append(profile)
-    request["model_profiles"] = profiles
-    for scope in ("remaining_run_budget", "remaining_iteration_budget"):
-        request[scope]["per_role_model_calls"] = [
-            {"role": role, "count": 1} for role in ("planner", "actor", "critic")
-        ]
-        request[scope]["input_tokens"] = 12_288
-        request[scope]["output_tokens"] = 4_096
-        if scope == "remaining_run_budget":
-            request[scope]["model_calls"] = 6
-            request[scope]["per_role_model_calls"] = [
-                {"role": role, "count": 2} for role in ("planner", "actor", "critic")
-            ]
-            request[scope]["input_tokens"] = 24_576
-            request[scope]["output_tokens"] = 8_192
-        request[scope]["snapshot_digest"] = prefixed_digest(
-            {key: value for key, value in request[scope].items() if key != "snapshot_digest"}
-        )
-    return cast(dict[str, Any], request)
-
-
-def _materialized_input(reference: str, kind: str, content: Any) -> dict[str, Any]:
-    encoded = canonical_json(content).encode("utf-8")
-    return {
-        "reference": reference,
-        "kind": kind,
-        "media_type": "application/json",
-        "encoding": "json",
-        "digest": "sha256:" + canonical_digest_sha256(content),
-        "encoded_bytes": len(encoded),
-        "content": content,
-        "provenance_refs": [f"provenance:{reference}"],
-    }
+    return ticket_report_request(case_id, now=datetime.now(UTC))
 
 
 def staged_agent_request(case_id: str = "mixed") -> dict[str, Any]:
-    """First acceptance iteration receives only batch A; later inputs remain host-owned."""
-    request = agent_request(case_id)
-    request["authoritative_context_refs"] = ["artifact:ticket-batch-a"]
-    request["materialized_inputs"] = [item for item in request["materialized_inputs"]
-                                      if item["reference"] != "artifact:ticket-batch-b"]
-    return request
-
-
-def ticket_continuation_inputs(case_id: str = "mixed") -> dict[str, Any]:
-    fixture = ticket_report_fixture(case_id)
-    return {"2": [_materialized_input("artifact:ticket-batch-b", "authoritative_context",
-                                      fixture["batches"]["artifact:ticket-batch-b"])]}
+    return ticket_report_request(case_id, now=datetime.now(UTC), staged=True)
 
 
 def binding_for(request: dict[str, Any]) -> GovernedAgentInvocationBinding:

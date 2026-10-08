@@ -45,12 +45,16 @@ def _add_bundle(subparsers):
 
 
 def _add_demo(subparsers):
-    demo_parser = subparsers.add_parser("demo", help="Run local deterministic Orket demos.")
+    demo_parser = subparsers.add_parser("demo", help="Run prepared Orket demos.")
     demo_sub = demo_parser.add_subparsers(dest="demo_command", required=True)
     demo_governed = demo_sub.add_parser("governed-run", help="Run the deterministic governed-run evidence demo.")
     demo_governed.add_argument("--scenario", default=str(DEFAULT_GOVERNED_RUN_SCENARIO), help="Scenario YAML path.")
     demo_governed.add_argument("--workspace", default=".", help="Workspace root for .runs output and read observations.")
     demo_governed.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
+    local = demo_sub.add_parser("local-agent", help="Run the prepared ticket report with the project's actual provider.")
+    local.add_argument("--project", default=".", help="Project created by orket setup.")
+    local.add_argument("--output", default=".orket/examples/local-agent", help="Fresh directory inside the project.")
+    local.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
 
 
 def _add_extensions(subparsers):
@@ -301,6 +305,8 @@ def _add_connectors(subparsers):
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="orket", description="Orket bundle tools.")
     subparsers = parser.add_subparsers(dest="command", required=True)
+    subparsers.add_parser("setup", add_help=False, help="Configure a local project and run first-use checks.")
+    subparsers.add_parser("doctor", add_help=False, help="Check the selected provider, hardware and native execution.")
 
     subparsers.add_parser(
         "runtime",

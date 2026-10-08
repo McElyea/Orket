@@ -1,6 +1,6 @@
 # Architectural Truth: Executable Goal Queue
 
-Last updated: 2026-10-04 (America/Denver)
+Last updated: 2026-10-06 (America/Denver)
 Status: Active umbrella; bounded Windows ATG-v1, v0.7.1 cleanup and PRR-v1 publication complete
 Queue: ATG-v1 — ten goals; Windows-only scope amended by the user on 2026-10-03
 Owner: Orket Core
@@ -21,7 +21,11 @@ Fresh remote and downloaded-byte reconciliation confirms matched `v0.7.2` and
 `sdk-v0.7.2` at `9cb8a89056c46f0c3633e0c20aaac60d80113236`; PRR-01 through
 PRR-03 are complete. The [final handoff](../../releases/0.7.3/PROOF_REPORT.md)
 records a documentation-only successor, preserving the 0.7.2 install target.
-PRR-S1 remains not admitted. Broader limits remain; no new queue is executable.
+PRR-S1 remains not admitted. Broader limits remain; no ATG or PRR queue is reopened.
+The October 5 user-authorized current workflow recovery is
+[archived](../archive/architectural-truth/WR10052026/WORKFLOW_RECOVERY_PLAN.md).
+Its Windows gate and six prepared recipes passed; model failures, quarantine and
+broader proof limits remain explicit. This does not reopen ATG or PRR work.
 The ATG goal cards, schedules and next-action text below describe the completed
 queue and do not authorize its restart or override the PRR-v1 resume record.
 Execution workflow lives in `docs/CONTRIBUTOR.md`, including **Persistent goal

@@ -62,6 +62,8 @@ For broader compatibility and migration boundaries, use [CURRENT_AUTHORITY.md](C
 - Governed-run inspection and replay: `orket inspect .runs/<run_id>` and `orket replay .runs/<run_id>`
 - Governed-agent path: bounded CLI submission and durable manual wake enqueue/list/inspect/cancel/recover/actions remain under `orket agent`; authenticated API wake, schedule, and HMAC webhook admission plus controls and inspection are under `/v1/agent-wakes`, `/v1/agent-schedules`, `/v1/agent-webhooks`, `/v1/agent-runs`, and `/v1/agent-runtime/status`. API-owned continuous dispatch is disabled by default and requires explicit `ORKET_GOVERNED_AGENT_SUPERVISOR_ENABLED=1` provider configuration. llama.cpp is the default provider across local runtime and testing entrypoints. Live Qwen3.8 CLI/API continuation and approval/denial across restart are proven for the bounded reference workload; general coding-objective verification remains outside that proof.
 - Default runtime entrypoint: `orket runtime`
+- Guided project setup: `orket setup --project <directory>`; diagnostics: `orket doctor --project <directory>` (Mac native acceptance remains outstanding).
+- Prepared provider workflow: `orket demo local-agent --project <directory>` runs a bounded, verified ticket report using the saved model. See the [candidate guide](docs/guides/MACOS_LOCAL_INSTALL.md).
 - Named card runtime entrypoint: `orket runtime --card <card_id>`
 - API runtime entrypoint: `python server.py`
 - Canonical test command: `python -m pytest -q`
@@ -91,6 +93,11 @@ The practical trust reason for that slice is that Orket can package approval, ef
 Use [docs/guides/TRUSTED_REPO_CHANGE_PROOF_GUIDE.md](docs/guides/TRUSTED_REPO_CHANGE_PROOF_GUIDE.md) for the evaluator path and [docs/specs/TRUST_REASON_AND_EXTERNAL_ADOPTION_V1.md](docs/specs/TRUST_REASON_AND_EXTERNAL_ADOPTION_V1.md) for the publication boundary.
 
 ## Full Runtime Quick Start
+
+For the Apple Silicon candidate package path, see
+[Mac installation and verification](docs/guides/MACOS_LOCAL_INSTALL.md).
+Native Mac runtime acceptance is still outstanding. The commands below remain
+the contributor installation path.
 
 For Windows development, create and activate a project environment from the
 checkout (the example uses uv and Python 3.11):

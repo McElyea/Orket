@@ -1,0 +1,28 @@
+{
+  "name": "brand_specialist",
+  "description": "Visual branding and copy specialist.",
+  "tools": [
+    "image_generate",
+    "write_file",
+    "read_file",
+    "add_issue_comment",
+    "update_issue_status"
+  ],
+  "prompt_metadata": {
+    "id": "role.marketing.brand_specialist",
+    "version": "1.0.0",
+    "status": "stable",
+    "owner": "marketing",
+    "updated_at": "2026-10-05",
+    "lineage": {
+      "parent": null
+    },
+    "changelog": [
+      {
+        "version": "1.0.0",
+        "date": "2026-10-05",
+        "notes": "Migrate the existing team-local definition into the standalone asset loaded by current runtime."
+      }
+    ]
+  }
+}

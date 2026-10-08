@@ -65,3 +65,25 @@ async def test_websocket_is_closed_before_acceptance_without_startup(tmp_path, m
     await app(scope, receive, send)
     assert messages == [{"type": "websocket.close", "code": 1001}]
     assert get_api_runtime_context(app) is None
+
+
+async def test_schema_and_included_routes_are_prepared_off_loop_before_readiness(tmp_path, monkeypatch):
+    monkeypatch.setenv("ORKET_API_KEY", TEST_API_KEY)
+    app = create_api_app(CompositionConfig(project_root=tmp_path))
+    prepare, calls, loop_thread = app.openapi, [], threading.get_ident()
+
+    def observe_schema():
+        calls.append((threading.get_ident(), app.state.api_ready))
+        return prepare()
+
+    monkeypatch.setattr(app, "openapi", observe_schema)
+    assert app.openapi_schema is None
+    async with app.router.lifespan_context(app):
+        assert len(calls) == 1 and calls[0][0] != loop_thread and calls[0][1] is False
+        assert "/v1/sessions/{session_id}/replay" in app.openapi_schema["paths"]
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app), base_url="http://api.test") as client:
+            # The first request exercises a real included router, including authentication.
+            assert (await client.get("/v1/sessions/absent/replay", headers={"X-API-Key": TEST_API_KEY})).status_code == 404
+            response = await client.get("/openapi.json")
+            assert response.status_code == 200 and response.json() == app.openapi_schema
+    assert app.state.api_runtime_context.closed

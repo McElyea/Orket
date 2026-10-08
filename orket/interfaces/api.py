@@ -110,11 +110,15 @@ async def get_api_key(request: Request, api_key_header: str | None = Security(ap
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+    prepare_transport = _app.openapi
     async with _app.state.api_preparation.open() as prepared:
         context = set_api_runtime_context(_app, prepared.container)
         _app.state.outbound_policy_config = prepared.outbound_policy
         state, runtime_node = context.runtime_state, context.api_runtime_node
-        async with api_runtime_lifespan(context, context.project_root, lambda: event_broadcaster(state, runtime_node)):
+        async with api_runtime_lifespan(
+            context, context.project_root, lambda: event_broadcaster(state, runtime_node),
+            prepare_transport=prepare_transport,
+        ):
             _app.state.api_ready = True
             try:
                 yield

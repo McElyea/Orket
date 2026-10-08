@@ -1,18 +1,84 @@
 {
-    "name": "enterprise",
-    "description": "High-fidelity professional roles for software engineering, design, and business.",
-    "seats": {
-        "lead_architect": { "name": "Lead Architect", "roles": ["lead_architect"] },
-        "ux_artisan": { "name": "UX Artisan", "roles": ["ux_artisan"] },
-        "reforge_specialist": { "name": "Reforge Specialist", "roles": ["reforge_specialist"] },
-        "integrity_guard": { "name": "Integrity Guard", "roles": ["integrity_guard"] },
-        "governance_ethics": { "name": "Governance and Ethics", "roles": ["governance_ethics"] },
-        "operations_lead": { "name": "Operations Lead", "roles": ["operations_lead"] },
-        "data_scientist": { "name": "Data Scientist", "roles": ["data_scientist"] },
-        "network_engineer": { "name": "Network Engineer", "roles": ["network_engineer"] },
-        "protocol_enforcer": { "name": "Protocol Enforcer", "roles": ["protocol_enforcer"] },
-        "backend_specialist": { "name": "Backend Specialist", "roles": ["backend_specialist"] },
-        "senior_developer": { "name": "Senior Developer", "roles": ["coder"] },
-        "market_researcher": { "name": "Market Researcher", "roles": ["market_researcher"] }
+  "name": "enterprise",
+  "description": "High-fidelity professional roles for software engineering, design, and business.",
+  "seats": {
+    "lead_architect": {
+      "name": "Lead Architect",
+      "roles": [
+        "lead_architect"
+      ]
+    },
+    "ux_artisan": {
+      "name": "UX Artisan",
+      "roles": [
+        "ux_artisan"
+      ]
+    },
+    "reforge_specialist": {
+      "name": "Reforge Specialist",
+      "roles": [
+        "reforge_specialist"
+      ]
+    },
+    "integrity_guard": {
+      "name": "Integrity Guard",
+      "roles": [
+        "integrity_guard"
+      ]
+    },
+    "governance_ethics": {
+      "name": "Governance and Ethics",
+      "roles": [
+        "governance_ethics"
+      ]
+    },
+    "operations_lead": {
+      "name": "Operations Lead",
+      "roles": [
+        "operations_lead"
+      ]
+    },
+    "data_scientist": {
+      "name": "Data Scientist",
+      "roles": [
+        "data_scientist"
+      ]
+    },
+    "network_engineer": {
+      "name": "Network Engineer",
+      "roles": [
+        "network_engineer"
+      ]
+    },
+    "protocol_enforcer": {
+      "name": "Protocol Enforcer",
+      "roles": [
+        "protocol_enforcer"
+      ]
+    },
+    "backend_specialist": {
+      "name": "Backend Specialist",
+      "roles": [
+        "backend_specialist"
+      ]
+    },
+    "senior_developer": {
+      "name": "Senior Developer",
+      "roles": [
+        "coder"
+      ]
+    },
+    "market_researcher": {
+      "name": "Market Researcher",
+      "roles": [
+        "market_researcher"
+      ]
+    },
+    "code_reviewer": {
+      "name": "Code Reviewer",
+      "roles": [
+        "code_reviewer"
+      ]
     }
+  }
 }

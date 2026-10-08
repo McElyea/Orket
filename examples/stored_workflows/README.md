@@ -26,6 +26,20 @@ Preparation records this setting in `setup.json` and prints it; it does not chan
 the parent shell. It bounds repeated same-role history, while required file reads,
 current instructions, acceptance and retained transcripts remain intact.
 
+The `factorial` recipe materializes v2 task 008 and its unchanged executable oracle.
+It replaces the old run-specific factorial asset. Prepare with `--workflow factorial`
+and run `orket runtime --epic factorial` in that project's workspace. The model must
+write the implementation; preparation supplies only task inputs and the verifier.
+
+The `test_rock` recipe prepares QA and sanity inputs together. Use `--workflow test_rock`,
+then `orket runtime --card test_rock --workspace ./workspace --model <selected-model>`.
+Both member epics must complete with retained acceptance.
+Preparation seeds their inputs under `workspace/<epic-name>/`, matching collection
+runtime isolation; the collection root is not a shared member workspace.
+
+Underspecified historical workflows are [quarantined](../../docs/quarantine/workflows/README.md).
+They are excluded from active discovery until their real inputs and acceptance exist.
+
 Create the Windows project `.venv` and install development dependencies using
 the [runtime setup](../../README.md#full-runtime-quick-start). From the checkout,
 activate that environment in each shell before preparing or running workflows:
@@ -45,7 +59,7 @@ orket runtime --epic standard --workspace ./workspace --model orcarouter_qwen3.8
 For QA, prepare a separate directory with `--workflow qa_completion_test`, use its
 own durable root, and run that epic. Preparation seeds the correct CLI so QA has
 real inputs; changing it to an incorrect implementation must refuse completion.
-The generic support verifier is disabled for the three small task shapes. The
+The generic support verifier is disabled for the small task shapes. The
 challenge keeps support verification enabled on a CLI surface. Declared
 card acceptance remains mandatory. Setup and preflight are structural evidence;
 runtime completion receipts establish whether the actual work was accepted.

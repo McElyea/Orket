@@ -8,6 +8,22 @@ Exact HTTP route and payload catalog authority lives in `docs/API_FRONTEND_CONTR
 
 ## Quick Start
 
+The separate built-package candidate path and its proof limits are in
+[Apple Silicon candidate installation](guides/MACOS_LOCAL_INSTALL.md).
+Native Mac runtime acceptance remains outstanding; the editable commands below
+prepare a contributor environment, not an installed-package acceptance result.
+Use `orket setup --project <directory> --run-example` for guided configuration
+and the offline approval demo. `orket doctor --project <directory> --inference`
+checks the saved provider and one bounded arithmetic response; it does not prove
+a complete workflow or Metal operation. Model defaults live in organization
+process rules; provider endpoints/GGUF roots live in project `.env`. Existing
+process environment values still override dotenv values.
+After readiness passes, `orket demo local-agent --project <directory>` runs the
+prepared two-iteration ticket workflow through the actual selected provider.
+Retain its fresh `.orket/examples/local-agent` directory, then use the printed
+`agent inspect` and `agent replay` commands to reopen state. Its completion does
+not establish Metal use; the candidate guide defines evidence and rerun limits.
+
 Run the CLI from the intended project directory. Discovery and the driver select
 that directory's `model/` and `config/` assets; `--workspace` selects execution
 output and does not select another project. Existing explicit application/driver

@@ -97,6 +97,12 @@ This index is the canonical map for markdown docs under `docs/`, excluding `docs
 70. `docs/specs/CURRENT_AUTHORITY_SOURCE_CONTRACT.md`
 71. `docs/specs/MODEL_STREAM_LIFETIME.md`
 72. `docs/specs/WORKFLOW_BENCHMARK_READINESS.md`
+73. `docs/specs/MACOS_LOCAL_RUNTIME_ACCEPTANCE.md` -- Accepted Apple Silicon milestone requirements; native acceptance outstanding.
+
+Apple Silicon candidate installation and packaging proof:
+[guides/MACOS_LOCAL_INSTALL.md](guides/MACOS_LOCAL_INSTALL.md).
+Native acceptance commands, remote host proposal and evidence/teardown procedure:
+[guides/MACOS_ACCEPTANCE_RUNBOOK.md](guides/MACOS_ACCEPTANCE_RUNBOOK.md).
 
 ## Process
 1. `docs/process/PR_REVIEW_POLICY.md`

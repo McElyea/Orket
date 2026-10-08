@@ -31,6 +31,7 @@ def _parse_args() -> argparse.Namespace:
         description="Run one benchmark task through live Orket collection assets via the canonical card runtime."
     )
     parser.add_argument("--task", required=True, help="Path to benchmark task JSON.")
+    parser.add_argument("--model", default=card_runner.DEFAULT_LOCAL_MODEL)
     parser.add_argument("--runtime-target", "--venue", dest="runtime_target", default="local-hardware")
     parser.add_argument("--execution-mode", "--flow", dest="execution_mode", default="live-card")
     parser.add_argument("--run-dir", default="", help="Workspace/run directory.")
@@ -64,23 +65,6 @@ def _parse_runtime_roles(runtime_events_path: Path) -> set[str]:
         if role and event == "turn_complete":
             roles.add(role)
     return roles
-
-
-def _resolve_effective_run_dir(run_dir: Path) -> Path:
-    direct_main = run_dir / "agent_output" / "main.py"
-    if direct_main.exists():
-        return run_dir
-    candidates = []
-    for child in run_dir.iterdir():
-        if not child.is_dir():
-            continue
-        marker = child / "agent_output" / "main.py"
-        if marker.exists():
-            candidates.append(child)
-    if not candidates:
-        return run_dir
-    candidates.sort(key=lambda p: p.stat().st_mtime, reverse=True)
-    return candidates[0]
 
 
 def _append_jsonl(path: Path, payload: dict[str, Any]) -> None:
@@ -175,7 +159,7 @@ def main() -> int:
 
     cmd = [
         sys.executable,
-        "main.py",
+        "-m", "orket.cli", "runtime", "--model", args.model,
         "--card",
         entry_card_name,
         "--department",
@@ -193,7 +177,8 @@ def main() -> int:
     )
 
     ended_at = _utc_now()
-    effective_run_dir = _resolve_effective_run_dir(run_dir)
+    # The authored member owns evidence even when execution fails before writing main.py.
+    effective_run_dir = member_workspace
     orket_log_path = effective_run_dir / "orket.log"
     session_id = card_runner._parse_session_id(orket_log_path)  # noqa: SLF001
     quality_checks = card_runner._materialize_required_artifacts(  # noqa: SLF001

@@ -5,16 +5,16 @@
   "description": "Visual designer role for interface structure and style direction.",
   "tools": [
     "image_analyze",
-    "list_dir",
+    "list_directory",
     "add_issue_comment",
     "update_issue_status"
   ],
   "prompt_metadata": {
     "id": "role.designer",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "status": "stable",
     "owner": "core",
-    "updated_at": "2026-02-14",
+    "updated_at": "2026-10-05",
     "lineage": {
       "parent": null
     },
@@ -23,6 +23,11 @@
         "version": "1.0.0",
         "date": "2026-02-14",
         "notes": "Initial prompt metadata registration."
+      },
+      {
+        "version": "1.0.1",
+        "date": "2026-10-05",
+        "notes": "Use the current list_directory tool identifier."
       }
     ]
   }

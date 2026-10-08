@@ -1,6 +1,6 @@
 {
   "schema_version": "current_authority.v1",
-  "updated_on": "2026-10-04",
+  "updated_on": "2026-10-07",
   "history": {
     "path": "docs/architecture/history/CURRENT_AUTHORITY_PRE_MANIFEST_2026-09-28.md",
     "sha256": "ba47889a8b7dc9f76e462ceecf460500b2220e2767eda92e7ee68bb59dca07a9"
@@ -9,7 +9,7 @@
     {
       "id": "command.install",
       "kind": "command",
-      "label": "SDK and core development install in the selected environment",
+      "label": "SDK and core development install; candidate path in docs/guides/MACOS_LOCAL_INSTALL.md and native proof procedure in docs/guides/MACOS_ACCEPTANCE_RUNBOOK.md remain subject to Mac acceptance",
       "source": "README.md",
       "command": "python -m pip install -e \"./orket_extension_sdk[testing]\" -e \".[dev]\"",
       "proof": "proof.current"
@@ -17,7 +17,7 @@
     {
       "id": "command.runtime",
       "kind": "command",
-      "label": "Default runtime",
+      "label": "Default runtime; project setup, diagnostics and prepared local-agent example documented alongside it",
       "source": "docs/CONTRIBUTOR.md",
       "command": "orket runtime",
       "proof": "proof.current"
@@ -131,7 +131,7 @@
     {
       "id": "reference.outputs",
       "kind": "reference",
-      "label": "Canonical script owners and output locations",
+      "label": "Canonical script owners, current benchmark inputs and output locations",
       "source": "scripts/README.md",
       "role": "script_outputs"
     },
@@ -145,8 +145,8 @@
     {
       "id": "reference.plan",
       "kind": "reference",
-      "label": "Active obligations and bounded proof records",
-      "source": "docs/projects/architectural-truth/ARCHITECTURAL_TRUTH_REMEDIATION_PLAN.md",
+      "label": "Active execution plans and project index; Mac acceptance remains outstanding",
+      "source": "docs/ROADMAP.md",
       "role": "active_plan"
     },
     {
@@ -183,7 +183,7 @@
       "kind": "contract",
       "label": "API construction and lifetime",
       "source": "docs/specs/API_RUNTIME_LIFECYCLE.md",
-      "scope": "Captured factory inputs, lifespan acquisition, required authentication/interaction owners, installed WebSocket transport, peer-disconnect settlement, target existence preflight, retained background failures, request admission and cleanup. Run views disclose retained repair and conformance warnings without rewriting evidence or completion."
+      "scope": "Captured factory inputs, lifespan acquisition and owned schema/route preparation before readiness, required authentication/interaction owners, installed WebSocket transport, peer-disconnect settlement, target existence preflight, retained background failures, request admission and cleanup. Run views disclose retained repair and conformance warnings without rewriting evidence or completion. Hardware views preserve unknown unified-memory GPU observations; online is not Metal or model-fit proof."
     },
     {
       "id": "contract.runtime",
@@ -204,7 +204,7 @@
       "kind": "contract",
       "label": "Settings and preference inputs",
       "source": "docs/specs/SETTINGS_INPUT_OWNERSHIP.md",
-      "scope": "Bound configuration, persistence and migration."
+      "scope": "Bound configuration, persistence and migration. Setup persists runtime organization model defaults and project provider dotenv values; explicit dotenv bootstrap retains environment precedence and once-per-process semantics."
     },
     {
       "id": "contract.terminal",

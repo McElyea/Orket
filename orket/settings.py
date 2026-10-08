@@ -100,7 +100,7 @@ def clear_settings_cache() -> None:
         _ENV_LOADED = False
 
 
-def load_env() -> None:
+def load_env(*, env_file: Path | None = None) -> None:
     """Load the selected .env once, at an explicit synchronous bootstrap boundary."""
     global _ENV_LOADED
     if _ENV_LOADED:
@@ -110,7 +110,7 @@ def load_env() -> None:
     with _ENV_LOADED_LOCK:
         if _ENV_LOADED:
             return
-        for key, value in dotenv_values(ENV_FILE).items():
+        for key, value in dotenv_values(ENV_FILE if env_file is None else env_file).items():
             if key and value is not None:
                 os.environ.setdefault(str(key).strip(), str(value))
         _ENV_LOADED = True

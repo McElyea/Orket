@@ -22,6 +22,7 @@ import psutil
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
+from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_MODEL  # noqa: E402
 from scripts.benchmarks.cli_example_checks import cli_example_checks  # noqa: E402
 from scripts.benchmarks.isolated_project import prepare_project, project_environment  # noqa: E402
 from scripts.benchmarks.live_card_timing_metrics import (  # noqa: E402
@@ -35,6 +36,7 @@ from scripts.benchmarks.task_acceptance import declare_task_acceptance, verifier
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run one benchmark task through the live Orket card pipeline.")
     parser.add_argument("--task", required=True, help="Path to benchmark task JSON.")
+    parser.add_argument("--model", default=DEFAULT_LOCAL_MODEL)
     parser.add_argument("--runtime-target", "--venue", dest="runtime_target", default="local-hardware")
     parser.add_argument("--execution-mode", "--flow", dest="execution_mode", default="live")
     parser.add_argument("--run-dir", default="", help="Workspace/run directory.")
@@ -80,13 +82,8 @@ def _build_epic(task: dict, task_context_file: str, output_file: str) -> dict:
         summary_suffix = (
             f"{summary_suffix} "
             "Output contract: return exact required values with no extra characters, separators, or whitespace changes. "
-            "When returning collections, apply stable deterministic ordering for all levels so repeated runs are identical "
-            "and ordering-sensitive checks pass."
-        )
-        summary_suffix = (
-            f"{summary_suffix} "
-            "For nested list/group outputs, sort each inner group deterministically and then sort the outer list "
-            "by a stable key (for example first element, then length) before returning."
+            "Preserve the task's specified ordering, indices and grouping. "
+            "Deterministic does not mean sorted: only sort outputs when the task requires sorting."
         )
         summary_suffix = (
             f"{summary_suffix} "
@@ -146,7 +143,7 @@ def _build_epic(task: dict, task_context_file: str, output_file: str) -> dict:
                     "no __main__ entrypoint unless the task explicitly requires runtime CLI behavior; "
                     "for function-mode tasks avoid print statements and follow the required function signature. "
                     "For function-mode tasks, return exact expected output format with no additional characters; "
-                    "if returning list/dict/set-derived data, normalize to deterministic ordering before return. "
+                    "preserve task-defined output ordering; never sort positional results unless required. "
                     f"Description: {description} "
                     f"Instruction: {instruction or 'No explicit instruction provided; use description and acceptance contract.'} "
                     f"Pass conditions: {pass_text} "
@@ -1189,7 +1186,7 @@ def main() -> int:
     epic_path.write_text(json.dumps(epic_payload, indent=2) + "\n", encoding="utf-8")
 
     cmd = [
-        sys.executable, "main.py", "--epic", epic_name,
+        sys.executable, "-m", "orket.cli", "runtime", "--model", args.model, "--epic", epic_name,
         "--department", str(args.department), "--workspace", str(run_dir),
     ]
 
