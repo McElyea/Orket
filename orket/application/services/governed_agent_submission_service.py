@@ -101,7 +101,9 @@ async def submit_governed_agent(*, db_path: Path, submission: GovernedAgentSubmi
     finally:
         await run_owned_io(selection.close, label="governed-agent-submission-provider-close", preserve_failure=True)
     inspection = await build_governed_agent_inspector(db_path, iterations=iterations).inspect(run_id=request.identity.run_id)
-    return _execution_payload(result, selection, inspection, db_path)
+    payload = _execution_payload(result, selection, inspection, db_path)
+    payload["authoritative_result"] = await _authoritative_result(result, iterations) if payload["ok"] else None
+    return payload
 
 
 def _bind_path(root: Path, path: Path) -> Path:
@@ -145,6 +147,19 @@ async def _select_provider(
         ollama_base_url=options.ollama_base_url, inventory_timeout_seconds=options.inventory_timeout_seconds,
         environment=environment,
     )
+
+
+async def _authoritative_result(execution_result, iterations: AsyncGovernedAgentRepository) -> dict[str, Any] | None:
+    """Project the accepted iteration result that final truth names, so a caller can
+    read what was verified without reading the control-plane store directly."""
+    ref = execution_result.final_truth.authoritative_result_ref
+    if not isinstance(ref, str) or not ref.startswith("agent-result:"):
+        return None
+    snapshot = await iterations.get_iteration_snapshot(invocation_id=ref.removeprefix("agent-result:"))
+    if snapshot is None or snapshot.result_payload is None:
+        raise ValueError("E_AGENT_AUTHORITATIVE_RESULT_MISSING")
+    return {"ref": ref, "result_digest": snapshot.result_digest,
+            "advisory_proposal": snapshot.result_payload.get("advisory_proposal")}
 
 
 def _execution_payload(execution_result, selection, inspection, db_path: Path) -> dict[str, Any]:

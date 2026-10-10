@@ -2,12 +2,20 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
+from orket.application.services.governed_agent_advisory_report import ADVISORY_REPORT_VERIFICATION_FEATURE
 from orket_extension_sdk.manifest import AGENT_MODEL_RECEIPT_FEATURE, ExtensionManifest, unsupported_agent_host_features
 
 # These features are admitted only through the dedicated governed-agent path.
 # The generic extension executor still refuses all agent discriminator markers.
+# ADVISORY_REPORT_VERIFICATION_FEATURE selects report-only completion
+# verification (governed_agent_advisory_report.py); it is optional per workload.
 SUPPORTED_GOVERNED_AGENT_HOST_FEATURES: frozenset[str] = frozenset(
-    {"agent_stdio_ipc.v1", "governed_agent_loop.v1", AGENT_MODEL_RECEIPT_FEATURE}
+    {
+        "agent_stdio_ipc.v1",
+        "governed_agent_loop.v1",
+        AGENT_MODEL_RECEIPT_FEATURE,
+        ADVISORY_REPORT_VERIFICATION_FEATURE,
+    }
 )
 
 

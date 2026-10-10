@@ -5,6 +5,22 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- Add the `agent_advisory_report_verification.v1` host feature. A governed agent
+  workload that requires it completes through a report-only advisory-report
+  verifier (exact `{report, source_refs}` proposal, sources from the request's
+  authoritative context, no effects); other workloads keep the ticket-report verifier.
+- Project the accepted result as `authoritative_result` in successful
+  `orket agent submit --json` output.
+- Add `examples/gardener_harness/`: a repository-audit agent extension and a
+  wrapper implementing gardener's `command` harness contract (report mode only).
+- Contract delta: `docs/architecture/CONTRACT_DELTA_GOVERNED_AGENT_ADVISORY_REPORT_VERIFICATION_2026-10-10.md`.
+- `compatibility_status`: `preserved`
+- `affected_audience`: `extension_author_only`
+- `migration_requirement`: `none`
+
 ## [0.8.0] - 2026-10-10 - "Apache-2.0 licensing cutover"
 
 ### Changed

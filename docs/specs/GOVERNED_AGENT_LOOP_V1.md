@@ -1,6 +1,6 @@
 # Governed Agent Loop V1
 
-Last updated: 2026-10-03
+Last updated: 2026-10-10
 Status: Active durable contract; matched core/SDK 0.7.x Windows releases; retained llama.cpp library proof
 Owner: Orket Core
 Accepted requirements source: `docs/projects/archive/governed-agent-loop/GAL09062026-REQUIREMENTS/GOVERNED_AGENT_LOOP_REQUIREMENTS_DEFINITION_PLAN.md`
@@ -355,6 +355,22 @@ report content with effects enters recovery without preparing those effects.
 Final success references the persisted `agent-result:<invocation_id>` record,
 whose report content is verified, rather than an unmaterialized fixture result
 name. Fixed acceptance cases are `mixed`, `all-open`, and `empty-first`.
+
+A workload whose manifest requires the host feature
+`agent_advisory_report_verification.v1` is verified by the advisory-report
+verifier v1 instead; every other workload keeps the ticket-report verifier.
+Its completion basis is schema or contract validation: one `returned`
+iteration result with no effect proposals whose `advisory_proposal` is a JSON
+object with exactly `report` (non-empty, at most 60,000 characters) and
+`source_refs` (non-empty, unique, and a subset of the request's
+`authoritative_context_refs`). Success attests only to the report's form and
+provenance; its statements remain model-assisted advice for a human to judge.
+The deterministic fixture provider answers that response schema with a fixed
+report citing every supplied source, which is never live-model proof. A
+successful `orket agent submit --json` result also projects
+`authoritative_result` (`ref`, `result_digest`, `advisory_proposal`) for the
+iteration result its final truth names. Delta:
+`docs/architecture/CONTRACT_DELTA_GOVERNED_AGENT_ADVISORY_REPORT_VERIFICATION_2026-10-10.md`.
 
 ## Model-profile contract
 
