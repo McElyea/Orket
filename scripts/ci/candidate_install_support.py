@@ -9,6 +9,7 @@ from typing import Any
 from urllib.parse import urlsplit
 
 from scripts.common.git_inventory import git_list_files
+from scripts.governance.check_licenses import inspect_distribution
 
 MISSING_PROVIDER_MODEL = "acceptance-model"
 
@@ -46,7 +47,7 @@ def snapshot_packages(repo: Path, destination: Path) -> dict[str, Any]:
     inputs = {}
     for path in git_list_files(repo):
         relative = path.relative_to(repo)
-        if relative.parts[0] not in {"orket", "orket_extension_sdk", "pyproject.toml", "README.md", "LICENSE"}:
+        if relative.parts[0] not in {"orket", "orket_extension_sdk", "pyproject.toml", "README.md", "LICENSE", "NOTICE", "THIRD_PARTY_NOTICES.txt"}:
             continue
         if any(part in excluded or part.endswith(".egg-info") for part in relative.parts):
             continue
@@ -57,7 +58,7 @@ def snapshot_packages(repo: Path, destination: Path) -> dict[str, Any]:
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(content)
         inputs[relative.as_posix()] = hashlib.sha256(content).hexdigest()
-    required = {"pyproject.toml", "README.md", "LICENSE", "orket/__init__.py",
+    required = {"pyproject.toml", "README.md", "LICENSE", "NOTICE", "THIRD_PARTY_NOTICES.txt", "orket/__init__.py",
                 "orket_extension_sdk/pyproject.toml", "orket_extension_sdk/__init__.py"}
     if not required.issubset(inputs):
         raise ValueError(f"Incomplete candidate source: {sorted(required - inputs.keys())}")
@@ -90,7 +91,9 @@ def inspect_wheel(path: Path, source: Path, namespace: str) -> dict[str, Any]:
                         if "build" not in p.relative_to(source / namespace).parts)
         if not required.issubset(names):
             raise ValueError(f"Wheel missing authored package files: {sorted(required - names)}")
-    return {**file_identity(path), "namespace": namespace, "required_files_checked": len(required)}
+    project = source if namespace == "orket" else source / namespace
+    licensing = inspect_distribution(path, project)
+    return {**file_identity(path), "namespace": namespace, "required_files_checked": len(required), "licensing": licensing}
 
 
 def observe_quickstart(project: Path, decision: str) -> dict[str, Any]:

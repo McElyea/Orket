@@ -50,7 +50,9 @@ jobs:
 
       - name: Build SDK wheel and sdist
         run: |
+          python scripts/governance/check_licenses.py
           python -m build --sdist --wheel --outdir dist ./orket_extension_sdk
+          python scripts/governance/check_licenses.py --project orket_extension_sdk --dist dist
 
       - name: Smoke install built SDK artifact
         shell: bash

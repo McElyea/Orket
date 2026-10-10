@@ -154,6 +154,24 @@ access remain required; the workflow does not provision either.
 
 ## Repository Rules
 
+### Licensing and contributions
+
+Orket original work uses Apache-2.0 from the coordinated 0.8.0 cutover.
+Contributions intentionally submitted for inclusion use those same terms under
+section 5, unless explicitly stated otherwise and separately accepted.
+Contributors must have the rights to submit their work and identify third-party
+material and required notices. Copyright remains with its rights holder.
+Canonical licensing and packaging rules: `docs/specs/LICENSING_POLICY.md`.
+
+After license/notice changes, run `python scripts/governance/check_licenses.py --write`,
+then the template synchronization commands below. Both Quality selections run
+the source-copy check and `tests/integration/test_distribution_licenses.py`;
+the SDK release workflow also checks actual wheel/sdist metadata and license bytes.
+The candidate installer includes canonical root notices and applies the same wheel
+observer. These checks establish packaging facts, not legal title or runtime proof.
+
+### General rules
+
 1. Keep runtime paths in `orket/` async-safe and governance mechanical.
 2. Keep permanent decisions in tracked docs or code.
 3. Prefer small, reversible changes.
@@ -805,7 +823,7 @@ transition failure. Startup migration, storage roots and interruption limits liv
 in `docs/specs/COORDINATOR_RUNTIME_LIFECYCLE.md`.
 
 Compatibility-only source wrapper:
-`python main.py [runtime arguments]` remains deprecated but supported through `0.7.x`. The hidden
+`python main.py [runtime arguments]` remains deprecated but supported through `0.8.x`. The hidden
 `--rock <rock_name>` alias remains accepted by that wrapper and `orket runtime`, but
 new callers must use `--card`; removal requires a separate accepted contract delta
 and continued installed-root proof. The 0.7.0 release preserves these aliases:
@@ -871,6 +889,14 @@ Both Quality selections retain the root controls with existing model policy guar
 
 ## Release and Versioning
 
+The user explicitly authorized 0.8.0 as the Apache-2.0 cutover for core, SDK,
+and all Orket-owned package/template versions on 2026-10-10. This specific
+minor-version boundary is permitted without declaring an unrelated roadmap
+project complete. Existing release proof, annotated-tag and publication rules
+remain in force. Core and SDK use `v0.8.0` and `sdk-v0.8.0`; future SDK versioning
+remains independent. The cutover retains deprecated wrapper/rock compatibility
+through 0.8.x. Delta: `docs/architecture/CONTRACT_DELTA_APACHE_CUTOVER_2026-10-10.md`.
+
 Core 0.7.1 removes the former `FixtureVerifier` and `VerificationEngine` migration
 tombstones and their legacy-domain exports. Fixture callers use
 `await FixtureVerificationService(workspace, utc_now=clock).verify(verification)`;
@@ -880,7 +906,7 @@ do not restore synchronous forwarding. Contract and retirement scope:
 1. Core engine release/versioning authority lives in `docs/specs/CORE_RELEASE_VERSIONING_POLICY.md`.
 2. Core engine version source of truth is `pyproject.toml`.
 3. Starting with `0.4.0`, each commit kept on `main` must advance the core engine version, keep `CHANGELOG.md` aligned, and create and push the matching annotated Git tag `v<version>`. The default release step is a patch bump; minor release steps are allowed only as defined in `docs/specs/CORE_RELEASE_VERSIONING_POLICY.md`.
-4. Minor version bumps require closure of a roadmap-tracked major project as defined in `docs/specs/CORE_RELEASE_VERSIONING_POLICY.md`.
+4. Except for the explicit 0.8.0 licensing cutover above, minor version bumps require closure of a roadmap-tracked major project as defined in `docs/specs/CORE_RELEASE_VERSIONING_POLICY.md`.
 5. Do not treat UI work as the default reason for `0.4.0`; follow the active release/versioning policy and roadmap instead.
 6. Use `docs/specs/CORE_RELEASE_GATE_CHECKLIST.md` when evaluating core release readiness.
 7. Use `docs/specs/CORE_RELEASE_PROOF_REPORT.md` for required minor-release proof records and store completed reports under `docs/releases/<version>/PROOF_REPORT.md`.

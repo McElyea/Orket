@@ -1,21 +1,21 @@
 [build-system]
-requires = ["setuptools>=77.0.0"]
+requires = ["setuptools>=77.0.3"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "orket"
-version = "0.7.8"
+version = "0.8.0"
 description = "Local-first workflow runtime for card-based execution"
 authors = [
     { name = "Jonathan McElyea" }
 ]
 readme = "README.md"
-license = "BUSL-1.1"
-license-files = ["LICENSE"]
+license = "Apache-2.0 AND MIT AND ISC AND OFL-1.1"
+license-files = ["LICENSE", "NOTICE", "THIRD_PARTY_NOTICES.txt"]
 requires-python = ">=3.11"
 dependencies = [
     # Core
-    "orket-extension-sdk==0.7.2",
+    "orket-extension-sdk==0.8.0",
     "jsonschema>=4.20.0,<5.0.0",
     "ollama>=0.4.0,<1.0.0",
     "pydantic>=2.5.0,<3.0.0",
@@ -55,7 +55,7 @@ orket-quickstart = "orket.quickstart.governed_action_demo:main"
 
 [project.optional-dependencies]
 dev = [
-    "setuptools>=77.0.0",
+    "setuptools>=77.0.3",
     "pytest>=8.0.0,<10.0.0",
     "pytest-cov>=5.0.0,<7.0.0",
     "pytest-asyncio>=0.23.0,<2.0.0",

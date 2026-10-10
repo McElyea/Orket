@@ -1,7 +1,7 @@
 {
   "name": "companion-app-frontend",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.8.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -34,5 +34,6 @@
     "typescript": "^5.9.2",
     "vite": "^5.4.20",
     "vitest": "^1.6.1"
-  }
+  },
+  "license": "Apache-2.0"
 }

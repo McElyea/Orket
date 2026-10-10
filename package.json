@@ -12,5 +12,7 @@
     "ci:live:benchmark100": "set ORKET_RUN_BENCHMARK_LIVE_100=1 && python -m pytest tests/live/test_benchmark_task_bank_live.py -q",
     "report:failures": "python scripts/replay/report_failure_modes.py",
     "prompt:eval": "python scripts/prompt_lab/eval_harness.py"
-  }
+  },
+  "version": "0.8.0",
+  "license": "Apache-2.0"
 }

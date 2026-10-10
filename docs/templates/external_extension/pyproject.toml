@@ -1,15 +1,17 @@
 [build-system]
-requires = ["setuptools>=68.0"]
+requires = ["setuptools>=77.0.3"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "orket-companion-template"
-version = "0.1.0"
+version = "0.8.0"
 description = "Template external extension package for Orket SDK workloads."
 readme = "README.md"
 requires-python = ">=3.11"
+license = "Apache-2.0 AND MIT AND ISC AND OFL-1.1"
+license-files = ["LICENSE", "NOTICE", "src/companion_app/static/THIRD_PARTY_NOTICES.txt"]
 dependencies = [
-    "orket-extension-sdk>=0.1.0",
+    "orket-extension-sdk==0.8.0",
     "httpx>=0.27.0,<1.0.0",
     "fastapi>=0.109.0,<1.0.0",
     "uvicorn>=0.27.0,<1.0.0",

@@ -1,6 +1,6 @@
 # Core Release Gate Checklist
 
-Last updated: 2026-03-13
+Last updated: 2026-10-10
 Status: Active
 Owner: Orket Core
 
@@ -78,8 +78,9 @@ Each governed commit must satisfy all of the following:
 
 ## 4. Minor Release Additional Gate
 
-1. The release corresponds to a completed roadmap-tracked major project.
-2. Release notes summarize the completed major project.
+1. The release corresponds to a completed roadmap-tracked major project, or the
+   explicit 0.8.0 licensing-cutover exception in the release versioning policy.
+2. Release notes summarize the completed major project or authorized licensing cutover.
 3. A completed proof report exists at `docs/releases/<version>/PROOF_REPORT.md`.
 4. The proof report includes required records for:
    - the default runtime entrypoint

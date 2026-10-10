@@ -453,6 +453,8 @@ jobs:
       - name: Enforce packaged extension template parity
         run: |
           python scripts/governance/sync_extension_templates.py --check
+          python scripts/governance/check_licenses.py
+          python -m pytest -q tests/integration/test_distribution_licenses.py
 
       - name: Enforce dependency direction rules
         run: |
@@ -1059,6 +1061,8 @@ jobs:
       - name: Enforce packaged extension template parity
         run: |
           python scripts/governance/sync_extension_templates.py --check
+          python scripts/governance/check_licenses.py
+          python -m pytest -q tests/integration/test_distribution_licenses.py
 
       - name: Enforce dependency direction rules
         run: |

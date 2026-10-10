@@ -39,8 +39,8 @@
       "id": "AT-EX-006",
       "area": "operator-command-root",
       "status": "active_compatibility_window",
-      "reason": "The installed orket root owns the runtime command tree. Core 0.7.0 preserves deprecated python main.py and hidden --rock compatibility through 0.7.x; removal is a separate accepted contract decision.",
-      "removal_condition": "Deprecated python main.py and hidden --rock remain supported through 0.7.x. Removal requires a separate accepted contract delta and continued installed-root proof; no removal version is assigned.",
+      "reason": "The installed orket root owns the runtime command tree. The 0.8.0 licensing cutover preserves deprecated python main.py and hidden --rock compatibility through 0.8.x; removal is a separate accepted contract decision.",
+      "removal_condition": "Deprecated python main.py and hidden --rock remain supported through 0.8.x. Removal requires a separate accepted contract delta and continued installed-root proof; no removal version is assigned.",
       "evidence": "docs/architecture/CONTRACT_DELTA_CORE_SDK_0_7_0_2026-10-03.md"
     },
     {

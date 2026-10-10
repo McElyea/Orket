@@ -5,6 +5,30 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] - 2026-10-10 - "Apache-2.0 licensing cutover"
+
+### Changed
+- License Orket original code, documentation, SDK, and templates under Apache-2.0.
+  Historical releases retain their original license and change-date commitments.
+- Coordinate core, SDK, private npm packages, and extension template/manifest
+  versions at 0.8.0 by explicit user direction. Protocol/schema versions are unchanged.
+- Preserve full MIT/ISC/OFL notices for bundled frontend code and fonts; include
+  checked license copies in standalone packages and generated extension archives.
+- Verify distribution license metadata and bytes in candidate and SDK release
+  tooling, with source-copy and adverse archive controls in both Quality selections.
+- Retain deprecated `python main.py` and hidden `--rock` compatibility through 0.8.x.
+- Admit core 0.8.0 in the valid bundle test fixture while retaining rejection of
+  explicitly incompatible historical ranges.
+- Stability: runtime implementation is unchanged. Fresh installed Windows CLI,
+  HTTP and actual llama.cpp workflow proof passed; the CLI retains its existing
+  degraded-startup warning. Coverage is retained at its earlier source-bound scope.
+  Evidence and limits: `docs/releases/0.8.0/PROOF_REPORT.md`.
+- Operator action: install core and SDK 0.8.0 together to adopt the Apache release
+  family. No application source or stored-state migration is required.
+- `compatibility_status`: `preserved`
+- `affected_audience`: `all`
+- `migration_requirement`: `none`
+
 ## [0.7.8] - 2026-10-07 - "Local setup, truthful acceptance and quality preparation"
 
 ### Added
@@ -3203,7 +3227,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - **Schema Migration**: Fixed backward compatibility issues with legacy priority strings
 - **Verification Aliases**: Corrected field alias mappings for verification fixtures
-- **Line Ending Warnings**: Normalized line endings across core modules (LF ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ CRLF on Windows)
+- **Line Ending Warnings**: Normalized line endings across core modules (LF ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ CRLF on Windows)
 
 ### Removed
 - **Obsolete Tests**: Removed deprecated test files (`test_examples_tictactoe.py`, `test_flow_loads.py`)
@@ -3271,7 +3295,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - iDesign enforcement framework
 - Prompt Engine updates
-- Book ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ Card terminology migration
+- Book ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ Card terminology migration
 
 ### Changed
 - Major architectural alignment with iDesign principles

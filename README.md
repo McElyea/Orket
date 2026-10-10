@@ -77,7 +77,7 @@ For broader compatibility and migration boundaries, use [CURRENT_AUTHORITY.md](C
 - Governed turn-tool execution with fail-closed namespace enforcement on the governed path.
 - Control-plane persistence for selected live lanes, including sandbox orchestration, governed turn-tool execution, governed kernel actions, cards epic execution, manual review-run execution, extension workload execution, approval-gated reservation and operator flows, coordinator reservation and lease flows, and the Gitea state worker path.
 - Deterministic and observability-oriented runtime artifacts under the normal workspace and durable `.orket/` paths.
-- Source wrapper `python main.py [runtime arguments]` remains deprecated but supported through `0.7.x`; removal requires a separate accepted contract delta and continued installed-root proof.
+- Source wrapper `python main.py [runtime arguments]` remains deprecated but supported through `0.8.x`; removal requires a separate accepted contract delta and continued installed-root proof.
 - Legacy runtime `--rock` remains accepted as a hidden compatibility alias to the named card runtime; new callers use `--card`.
 
 ## Bounded Proof Slice
@@ -169,6 +169,13 @@ python -m pytest -q
 
 ## License
 
-Orket is source-available, not open source, under the Business Source License 1.1 in [LICENSE](LICENSE).
+Starting with 0.8.0, Orket original code, documentation, SDK, and templates are
+open source under [Apache-2.0](LICENSE). Commercial use, hosting, and embedding
+are permitted under that license without an employee-count restriction.
 
-Commercial uses outside the Additional Use Grant are described in [COMMERCIAL_LICENSE.md](COMMERCIAL_LICENSE.md).
+Bundled third-party code and fonts retain their licenses; see
+[THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt). The core distribution therefore
+declares `Apache-2.0 AND MIT AND ISC AND OFL-1.1`; the standalone SDK declares
+`Apache-2.0`. Historical releases retain their original terms. See the
+[licensing policy](docs/specs/LICENSING_POLICY.md) and
+[0.8.0 cutover record](docs/releases/0.8.0/RELEASE_NOTES.md).

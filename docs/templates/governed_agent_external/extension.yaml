@@ -1,6 +1,6 @@
 manifest_version: v0
 extension_id: governed.agent.starter
-extension_version: 0.3.0a1
+extension_version: 0.8.0
 allowed_stdlib_modules: [json]
 workloads:
   - workload_id: governed-agent-loop

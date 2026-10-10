@@ -2,6 +2,11 @@
 
 `orket_extension_sdk` is the public contract package for external Orket extensions.
 
+Starting with 0.8.0, SDK original work is licensed under [Apache-2.0](LICENSE),
+with attribution in [NOTICE](NOTICE). Both files ship in the wheel and source
+distribution. Dependencies retain their own licenses. Historical releases retain
+their original terms.
+
 ## Install
 
 Base install:
@@ -59,10 +64,17 @@ valid author manifest when required runtime features are unavailable.
 
 ## Versioning And Compatibility
 
+SDK 0.8.0 is the Apache-2.0 cutover release paired with core 0.8.0 on Windows.
+Its public contracts are unchanged. The verification scope and known limits
+are recorded in `docs/releases/0.8.0/PROOF_REPORT.md` in the core
+repository; this statement does not certify other core pairings or platforms.
+The coordinated 0.8.0 boundary was explicitly selected for licensing; future
+SDK versions remain independent.
+
 `orket sdk --version` prints the canonical SDK version on one line. Add `--json`
 for the existing `ok`/`sdk_version` payload; core 0.7.1 fixes the text renderer.
 
-SDK `0.7.2` is paired with core `0.7.2` on Windows. That exact paired core
+Historical SDK `0.7.2` is paired with core `0.7.2` on Windows. That exact paired core
 is the admitted window, overriding the nominal future window below. Published
 core `0.6.0` and `0.6.2` still require SDK `0.6.0`. Upgrade both packages together,
 handle nullable latency, declare `agent_model_use_receipt.v2` for new agent
@@ -83,7 +95,7 @@ guarantee.
 Development prereleases follow the same minor-window calculation but do not
 claim released host compatibility until the built-artifact matrix passes. The
 standalone SDK distribution is the sole SDK namespace owner in the current
-core `0.7.2` release. Tagged core `0.5.9` still bundles SDK
+core release family. Tagged core `0.5.9` still bundles SDK
 `0.1.0`; overlaying the standalone SDK on that host creates duplicate ownership
 and is unsupported. Upgrade core first, then force-reinstall the exact standalone
 SDK wheel: removing an old core can remove SDK files that it owned. Run

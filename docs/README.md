@@ -1,6 +1,6 @@
 # Orket Docs Index
 
-Last reviewed: 2026-04-23
+Last reviewed: 2026-10-10
 
 This index is the canonical map for markdown docs under `docs/`, excluding `docs/projects/**` and excluding non-markdown artifacts such as schemas, JSON snapshots, and YAML scenarios.
 
@@ -25,6 +25,8 @@ This index is the canonical map for markdown docs under `docs/`, excluding `docs
    - SDK version source-of-truth and tag policy.
 
 ## Specifications
+Licensing authority: [Apache-2.0 cutover, contributions, and notices](specs/LICENSING_POLICY.md).
+
 1. `docs/specs/CORE_RUNTIME_STABILITY_REQUIREMENTS.md`
 2. `docs/specs/CORE_TOOL_RINGS_COMPATIBILITY_REQUIREMENTS.md`
 3. `docs/specs/RUNTIME_INVARIANTS.md`
@@ -204,6 +206,8 @@ Native acceptance commands, remote host proposal and evidence/teardown procedure
 
 ## Releases
 1. `docs/releases/0.4.0/PROOF_REPORT.md`
+2. `docs/releases/0.8.0/RELEASE_NOTES.md`
+   - Coordinated Apache-2.0 source cutover; proof and publication status in the adjacent report.
 
 ## Templates
 1. `docs/templates/external_extension/README.md`

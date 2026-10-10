@@ -1,6 +1,6 @@
 # Current authority
 
-Last updated: 2026-10-07
+Last updated: 2026-10-10
 
 <!-- Generated from docs/architecture/current_authority.json; do not edit this view. -->
 
@@ -45,7 +45,7 @@ Validate: `python scripts/governance/check_current_authority.py`.
 | Active execution plans and project index; Mac acceptance remains outstanding | active_plan | [docs/ROADMAP.md](<docs/ROADMAP.md>) |
 | Security and trust boundary | security | [docs/SECURITY.md](<docs/SECURITY.md>) |
 | Governed start-path authority | start_paths | [docs/specs/CONTROL_PLANE_GOVERNED_START_PATH_MATRIX.md](<docs/specs/CONTROL_PLANE_GOVERNED_START_PATH_MATRIX.md>) |
-| Contributor workflow | workflow | [docs/CONTRIBUTOR.md](<docs/CONTRIBUTOR.md>) |
+| Contributor workflow, contribution terms and Apache-2.0 licensing policy | workflow | [docs/CONTRIBUTOR.md](<docs/CONTRIBUTOR.md>) |
 
 ## Active contracts
 
@@ -65,7 +65,7 @@ Validate: `python scripts/governance/check_current_authority.py`.
 
 | Surface | Current scope | Source |
 | --- | --- | --- |
-| Source wrapper and hidden rock alias | Deprecated python main.py and hidden --rock remain supported through 0.7.x. Removal requires a separate accepted contract delta and continued installed-root proof; no removal version is assigned. (condition-bound; no calendar expiry assigned) | [docs/projects/architectural-truth/ARCHITECTURE_EXCEPTION_REGISTER.json](<docs/projects/architectural-truth/ARCHITECTURE_EXCEPTION_REGISTER.json>) |
+| Source wrapper and hidden rock alias | Deprecated python main.py and hidden --rock remain supported through 0.8.x. Removal requires a separate accepted contract delta and continued installed-root proof; no removal version is assigned. (condition-bound; no calendar expiry assigned) | [docs/projects/architectural-truth/ARCHITECTURE_EXCEPTION_REGISTER.json](<docs/projects/architectural-truth/ARCHITECTURE_EXCEPTION_REGISTER.json>) |
 | Replay diagnostics alias | All supported callers use replay_turn_diagnostics() and the compatibility window is explicitly closed. (condition-bound; no calendar expiry assigned) | [docs/projects/architectural-truth/ARCHITECTURE_EXCEPTION_REGISTER.json](<docs/projects/architectural-truth/ARCHITECTURE_EXCEPTION_REGISTER.json>) |
 | Flat runtime module aliases; removal version unassigned | The old flat \`orket.runtime.&lt;module&gt;\` imports remain one-release compatibility aliases. (condition-bound; no calendar expiry assigned) | [docs/ARCHITECTURE.md](<docs/ARCHITECTURE.md>) |
 | Latest verification support artifact | All supported consumers use the canonical verification index and per-record artifacts. (condition-bound; no calendar expiry assigned) | [docs/projects/architectural-truth/ARCHITECTURE_EXCEPTION_REGISTER.json](<docs/projects/architectural-truth/ARCHITECTURE_EXCEPTION_REGISTER.json>) |

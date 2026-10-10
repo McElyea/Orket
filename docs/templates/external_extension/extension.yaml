@@ -1,6 +1,6 @@
 manifest_version: v0
 extension_id: your.extension.id
-extension_version: 0.1.0
+extension_version: 0.8.0
 allowed_stdlib_modules:
   - json
   - typing

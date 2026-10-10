@@ -19,6 +19,7 @@ def test_snapshot_uses_git_visible_dirty_inputs_and_excludes_cached_builds(tmp_p
     repo.mkdir()
     subprocess.run(["git", "init", str(repo)], check=True, capture_output=True)
     authored = {"pyproject.toml": "current", "README.md": "readme", "LICENSE": "license",
+                "NOTICE": "copyright", "THIRD_PARTY_NOTICES.txt": "upstream notices",
                 "orket/__init__.py": "", "orket_extension_sdk/__init__.py": "",
                 "orket_extension_sdk/pyproject.toml": "sdk", "orket/data.json": '{"real":true}'}
     for name, content in authored.items():

@@ -4,6 +4,17 @@ All notable changes to `orket-extension-sdk` will be documented in this file.
 
 The format is based on Keep a Changelog and this package follows SemVer while in the `0.x` line.
 
+## [0.8.0] - 2026-10-10
+
+### Changed
+- Move SDK original work to Apache-2.0 and include checked LICENSE/NOTICE files
+  in wheels and source distributions. Require a PEP 639-capable build backend.
+- Coordinate the version boundary with core 0.8.0 at the user's request; future
+  SDK versions remain independent. Public SDK contracts are unchanged.
+- Core 0.8.0 is the selected Windows candidate pairing. Verification and release
+  limits are recorded in `docs/releases/0.8.0/PROOF_REPORT.md` in the core repo;
+  older pairings retain their original evidence and licensing.
+
 ## [0.7.2] - 2026-10-04
 
 ### Changed

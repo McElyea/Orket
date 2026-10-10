@@ -1,6 +1,6 @@
 # Orket Operational Runbook
 
-Last reviewed: 2026-10-04
+Last reviewed: 2026-10-10
 
 ## Purpose
 Operator commands for starting Orket, checking health, running core validations, and recovering from common failures.
@@ -130,7 +130,7 @@ python server.py
 ```
 
 Compatibility-only source wrapper:
-`python main.py [runtime arguments]` remains deprecated but supported through `0.7.x`. The hidden
+`python main.py [runtime arguments]` remains deprecated but supported through `0.8.x`. The hidden
 `--rock <rock_name>` alias remains accepted by that wrapper and `orket runtime`, but
 new callers must use `--card`; removal requires a separate accepted contract delta
 and continued installed-root proof. See

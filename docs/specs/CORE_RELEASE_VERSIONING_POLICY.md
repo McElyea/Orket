@@ -1,6 +1,6 @@
 # Core Release Versioning Policy
 
-Last updated: 2026-03-13
+Last updated: 2026-10-10
 Status: Active
 Owner: Orket Core
 
@@ -20,8 +20,16 @@ SDK versioning remains separately governed by [docs/requirements/sdk/VERSIONING.
 
 ## 2. Effective Versioning Model Beginning With `0.4.0`
 
+Specific user-authorized exception: 0.8.0 is the coordinated Apache-2.0 licensing
+cutover requested on 2026-10-10. Its minor-version boundary does not require
+closure of an unrelated roadmap project. All proof, release-contract, annotated
+tag and publication requirements remain in force. This exception does not change
+the ordinary minor-release rule or future SDK independence. Authority:
+`docs/specs/LICENSING_POLICY.md`; delta:
+`docs/architecture/CONTRACT_DELTA_APACHE_CUTOVER_2026-10-10.md`.
+
 1. Starting with core engine version `0.4.0`, every commit merged into `main` must advance the core engine version and end with a matching annotated Git tag on that commit.
-2. Minor version bumps occur only after completion of a roadmap-tracked major project.
+2. Except for the explicit 0.8.0 licensing cutover above, minor version bumps occur only after completion of a roadmap-tracked major project.
 3. A major project for core versioning purposes is a roadmap-tracked body of work whose completion materially changes runtime behavior, operator workflows, release governance, or public interfaces.
 4. Major-project completion requires:
    - roadmap lane closure,

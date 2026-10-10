@@ -1,6 +1,6 @@
 # SDK Versioning
 
-Last reviewed: 2026-10-04
+Last reviewed: 2026-10-10
 
 ## Canonical Source of Truth
 1. SDK version is defined only in `orket_extension_sdk/__version__.py`.
@@ -17,7 +17,13 @@ Last reviewed: 2026-10-04
 
 ## CLI Contract
 
-SDK `0.7.2` is the matched standalone SDK for core `0.7.2` on Windows.
+SDK 0.8.0 is the Apache-2.0 cutover release paired with core 0.8.0 on Windows.
+The user explicitly selected that common version for this release; future SDK
+versioning remains independent. Public SDK contracts are unchanged. Acceptance
+scope and known limits are recorded in `docs/releases/0.8.0/PROOF_REPORT.md`.
+No broader host/platform compatibility is inferred from the version alignment.
+
+Historical SDK `0.7.2` is the matched standalone SDK for core `0.7.2` on Windows.
 Its public contracts are unchanged from SDK 0.7.0; the patch records packaging
 and verified pair compatibility. Only that exact pair is newly admitted. Evidence:
 `docs/releases/0.7.2/PROOF_REPORT.md`. The historical 0.7.1 pair retains its own

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import ast
 from pathlib import Path
 
 
@@ -11,9 +12,14 @@ def _load_sdk_version(repo_root: Path) -> str:
     version_path = (repo_root / "orket_extension_sdk" / "__version__.py").resolve()
     if not version_path.is_file():
         raise FileNotFoundError(f"SDK version file not found: {version_path}")
-    namespace: dict[str, object] = {}
-    exec(version_path.read_text(encoding="utf-8"), namespace)
-    version = str(namespace.get("__version__") or "").strip()
+    tree = ast.parse(version_path.read_text(encoding="utf-8"))
+    assignments = [node for node in tree.body if isinstance(node, ast.Assign)
+                   and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name)
+                   and node.targets[0].id == "__version__"]
+    if len(assignments) != 1:
+        raise ValueError(f"Expected one literal __version__ assignment in {version_path}")
+    value = ast.literal_eval(assignments[0].value)
+    version = value.strip() if isinstance(value, str) else ""
     if not version:
         raise ValueError(f"Missing __version__ value in {version_path}")
     return version
