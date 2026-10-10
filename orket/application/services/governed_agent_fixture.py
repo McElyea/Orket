@@ -3,10 +3,6 @@ from __future__ import annotations
 import json
 from typing import Any, TypeGuard
 
-from orket.application.services.governed_agent_advisory_report import (
-    fixture_advisory_report,
-    is_advisory_report_schema,
-)
 from orket.application.services.governed_agent_broker_service import (
     GovernedAgentModelObservation,
     GovernedAgentResolvedModelProfile,
@@ -33,11 +29,7 @@ class DeterministicAgentModelProvider:
         profile: GovernedAgentResolvedModelProfile,
     ) -> GovernedAgentModelObservation:
         source = json.loads(request.messages[-1].content)
-        schema = request.response_schema.thaw() if request.response_schema is not None else None
-        response = (
-            fixture_advisory_report(source) if is_advisory_report_schema(schema)
-            else _fixture_role_response(request.role, source)
-        )
+        response = _fixture_role_response(request.role, source)
         return GovernedAgentModelObservation(
             response=response,
             usage_posture="estimated",

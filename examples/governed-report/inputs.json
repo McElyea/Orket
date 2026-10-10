@@ -1,0 +1,66 @@
+[
+  {
+    "reference": "objective:documentation-audit",
+    "kind": "objective",
+    "media_type": "application/json",
+    "encoding": "json",
+    "digest": "sha256:e4a94c8be0c2d5d33c49eb06bd10feacf238d13ff6ac722a95a44212e67eefa0",
+    "encoded_bytes": 95,
+    "content": {
+      "task": "Compare the supplied README with the supplied convention; report documentation gaps."
+    },
+    "provenance_refs": [
+      "example:authored-fixture-v1"
+    ]
+  },
+  {
+    "reference": "acceptance:advisory-report",
+    "kind": "acceptance",
+    "media_type": "application/json",
+    "encoding": "json",
+    "digest": "sha256:a0c345a8aba73ee947db023b0aba5f5d43f13b210c27ee8574a73b2d0f202bbf",
+    "encoded_bytes": 101,
+    "content": {
+      "delivery": "structured_report.v1",
+      "required_sections": [
+        "summary"
+      ],
+      "claim": "Advisory findings only."
+    },
+    "provenance_refs": [
+      "example:authored-fixture-v1"
+    ]
+  },
+  {
+    "reference": "snapshot:readme",
+    "kind": "authoritative_context",
+    "media_type": "application/json",
+    "encoding": "json",
+    "digest": "sha256:298db690203f1ee3937f2ce789f1d3b6193362bf982f33db4d0356d96f9cd9e3",
+    "encoded_bytes": 92,
+    "content": {
+      "path": "README.md",
+      "text": "# Example\nA sample project.\n",
+      "revision": "example-fixture-v1"
+    },
+    "provenance_refs": [
+      "example:authored-fixture-v1"
+    ]
+  },
+  {
+    "reference": "snapshot:conventions",
+    "kind": "authoritative_context",
+    "media_type": "application/json",
+    "encoding": "json",
+    "digest": "sha256:8ca1678d1f15710ec3d0ba7953d53b42cd9721a0184b52de24159a8a003212cd",
+    "encoded_bytes": 119,
+    "content": {
+      "path": "README_STANDARD.md",
+      "text": "A README must contain installation instructions.",
+      "revision": "example-fixture-v1"
+    },
+    "provenance_refs": [
+      "example:authored-fixture-v1"
+    ]
+  }
+]

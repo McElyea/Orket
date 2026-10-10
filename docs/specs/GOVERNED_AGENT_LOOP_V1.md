@@ -1,7 +1,7 @@
 # Governed Agent Loop V1
 
 Last updated: 2026-10-10
-Status: Active durable contract; matched core/SDK 0.7.x Windows releases; retained llama.cpp library proof
+Status: Active durable contract; public report-task addition is unreleased after 0.8.0
 Owner: Orket Core
 Accepted requirements source: `docs/projects/archive/governed-agent-loop/GAL09062026-REQUIREMENTS/GOVERNED_AGENT_LOOP_REQUIREMENTS_DEFINITION_PLAN.md`
 
@@ -111,6 +111,13 @@ Slice 6G admits API-key plus HMAC authenticated webhook delivery with bounded
 replay protection and durable delivery receipts. Slice 6H prepares accepted
 effect proposals beneath the active wake fence, exposes authenticated operator
 resolution, and resumes only through a request-bound existing-run wake.
+
+The additive `orket agent run` route consumes the existing SDK submission
+contract, materialized inputs and the built-in `structured_report.v1` verifier.
+It admits one manual report iteration with host-owned identity and timing.
+Its completion claim is report delivery, not the truth of the findings.
+See [Governed Agent Task Submission](GOVERNED_AGENT_TASK_SUBMISSION.md) for the
+admitted policy, lifecycle and retained advisory-output projection.
 
 The first-slice object mapping is:
 
@@ -355,22 +362,6 @@ report content with effects enters recovery without preparing those effects.
 Final success references the persisted `agent-result:<invocation_id>` record,
 whose report content is verified, rather than an unmaterialized fixture result
 name. Fixed acceptance cases are `mixed`, `all-open`, and `empty-first`.
-
-A workload whose manifest requires the host feature
-`agent_advisory_report_verification.v1` is verified by the advisory-report
-verifier v1 instead; every other workload keeps the ticket-report verifier.
-Its completion basis is schema or contract validation: one `returned`
-iteration result with no effect proposals whose `advisory_proposal` is a JSON
-object with exactly `report` (non-empty, at most 60,000 characters) and
-`source_refs` (non-empty, unique, and a subset of the request's
-`authoritative_context_refs`). Success attests only to the report's form and
-provenance; its statements remain model-assisted advice for a human to judge.
-The deterministic fixture provider answers that response schema with a fixed
-report citing every supplied source, which is never live-model proof. A
-successful `orket agent submit --json` result also projects
-`authoritative_result` (`ref`, `result_digest`, `advisory_proposal`) for the
-iteration result its final truth names. Delta:
-`docs/architecture/CONTRACT_DELTA_GOVERNED_AGENT_ADVISORY_REPORT_VERIFICATION_2026-10-10.md`.
 
 ## Model-profile contract
 

@@ -15,10 +15,6 @@ from orket.adapters.storage.async_governed_agent_repository import AsyncGoverned
 from orket.adapters.storage.async_governed_agent_run_control_repository import AsyncGovernedAgentRunControlRepository
 from orket.adapters.storage.control_plane_transaction import SQLiteControlPlaneTransactions
 from orket.adapters.storage.governed_agent_replay_store import GovernedAgentReplayStore
-from orket.application.services.governed_agent_advisory_report import (
-    AdvisoryReportVerifier,
-    requires_advisory_report_verification,
-)
 from orket.application.services.governed_agent_broker_service import (
     GovernedAgentHostBroker,
     GovernedAgentModelProvider,
@@ -28,7 +24,10 @@ from orket.application.services.governed_agent_fixture import (
     DeterministicAgentModelProvider,
     SecondIterationDeterministicVerifier,
 )
-from orket.application.services.governed_agent_loop_service import GovernedAgentLoopService
+from orket.application.services.governed_agent_loop_service import (
+    GovernedAgentCompletionVerifier,
+    GovernedAgentLoopService,
+)
 from orket.application.services.governed_agent_memory_service import GovernedAgentObjectiveMemory
 from orket.application.services.governed_agent_model_provider import (
     PROVIDER_CHOICES as PROVIDER_CHOICES,
@@ -146,6 +145,7 @@ def build_governed_agent_loop_service(
     launch: GovernedAgentWorkloadLaunch,
     selection: GovernedAgentProviderSelection,
     authority_guard: GovernedAgentAuthorityGuard | None = None,
+    verifier: GovernedAgentCompletionVerifier | None = None,
 ) -> GovernedAgentLoopService:
     if len({str(execution.db_path), str(iterations.db_path), str(records.db_path)}) != 1:
         raise ValueError("E_AGENT_CONTROL_PLANE_STORE_CONFLICT")
@@ -168,13 +168,7 @@ def build_governed_agent_loop_service(
         iteration_repository=iterations,
         transactions=SQLiteControlPlaneTransactions(records.db_path),
         invoker=invoker,
-        # A workload requiring agent_advisory_report_verification.v1 completes as a
-        # report-only advisory report; every other workload keeps the ticket fixture verifier.
-        verifier=(
-            AdvisoryReportVerifier()
-            if requires_advisory_report_verification(launch.agent_declaration)
-            else SecondIterationDeterministicVerifier()
-        ),
+        verifier=verifier if verifier is not None else SecondIterationDeterministicVerifier(),
         run_controls=AsyncGovernedAgentRunControlRepository(iterations.db_path),
         authority_guard=authority_guard,
     )

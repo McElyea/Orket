@@ -100,6 +100,8 @@ Licensing authority: [Apache-2.0 cutover, contributions, and notices](specs/LICE
 71. `docs/specs/MODEL_STREAM_LIFETIME.md`
 72. `docs/specs/WORKFLOW_BENCHMARK_READINESS.md`
 73. `docs/specs/MACOS_LOCAL_RUNTIME_ACCEPTANCE.md` -- Accepted Apple Silicon milestone requirements; native acceptance outstanding.
+74. `docs/specs/GOVERNED_AGENT_TASK_SUBMISSION.md` -- Public SDK task admission and advisory report delivery.
+75. `docs/specs/GARDENER_REPORT_HARNESS.md` -- Bounded committed evidence and report-only Gardener integration.
 
 Apple Silicon candidate installation and packaging proof:
 [guides/MACOS_LOCAL_INSTALL.md](guides/MACOS_LOCAL_INSTALL.md).
@@ -146,6 +148,10 @@ Native acceptance commands, remote host proposal and evidence/teardown procedure
 3. `docs/odr/stoplogic.md`
 
 ## Architecture Deep Dives
+
+Public report submission delta:
+[CONTRACT_DELTA_AGENT_TASK_SUBMISSION_2026-10-10.md](architecture/CONTRACT_DELTA_AGENT_TASK_SUBMISSION_2026-10-10.md).
+
 1. `docs/architecture/ADR-0001-volatility-tier-boundaries.md`
 2. `docs/architecture/CONTRACT_BREAK_WORKFLOW.md`
 3. `docs/architecture/CONTRACT_DELTA_TEMPLATE.md`
@@ -208,6 +214,8 @@ Native acceptance commands, remote host proposal and evidence/teardown procedure
 1. `docs/releases/0.4.0/PROOF_REPORT.md`
 2. `docs/releases/0.8.0/RELEASE_NOTES.md`
    - Coordinated Apache-2.0 source cutover; proof and publication status in the adjacent report.
+3. `docs/releases/0.8.1/PROOF_REPORT.md`
+   - Installed Windows/Gardener/llama.cpp report proof and its limits.
 
 ## Templates
 1. `docs/templates/external_extension/README.md`

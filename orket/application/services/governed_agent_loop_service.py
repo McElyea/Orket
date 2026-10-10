@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, Protocol
 
@@ -79,6 +79,7 @@ class _IterationExecution:
     verification: GovernedAgentVerificationObservation | None
     failure: str | None
     operator_action_refs: tuple[str, ...] = ()
+    decision_timestamp_utc: str | None = None
 
 
 class GovernedAgentLoopService:
@@ -112,7 +113,7 @@ class GovernedAgentLoopService:
         configuration_digest: str,
         admission_receipt_ref: str,
         creation_timestamp_utc: str,
-        decision_timestamps_utc: Sequence[str],
+        decision_timestamps_utc: Sequence[str | Callable[[], str]],
         next_lease_expiries_utc: Sequence[str],
         continuation_inputs_payload: Mapping[str, Any] | None = None,
     ) -> GovernedAgentLoopExecution:
@@ -156,13 +157,14 @@ class GovernedAgentLoopService:
             verification = iteration.verification
             decisions.append(decision)
             if decision.disposition in {"complete", "blocked", "failed"}:
+                assert iteration.decision_timestamp_utc is not None
                 run, attempt, final_truth = await close_agent_run(
                     transactions=self._transactions, guard=self._authority_guard,
                     decision=decision, decision_ref=f"agent-decision:{binding.invocation_id}",
                     run=run,
                     attempt=attempt,
                     verification=verification,
-                    end_timestamp=decision_timestamps_utc[index],
+                    end_timestamp=iteration.decision_timestamp_utc,
                     invocation_id=binding.invocation_id, operator_action_refs=iteration.operator_action_refs,
                 )
                 break
@@ -258,17 +260,18 @@ class GovernedAgentLoopService:
         *,
         binding: GovernedAgentInvocationBinding,
         request: AgentIterationRequest,
-        decision_timestamp_utc: str,
+        decision_timestamp_utc: str | Callable[[], str],
     ) -> _IterationExecution:
         result, failure = await self._invoke_and_accept(binding, request)
         if result is None:
             return _IterationExecution(None, None, None, failure)
         verification = await self._verifier.verify(request=request, result=result)
+        timestamp = decision_timestamp_utc() if callable(decision_timestamp_utc) else decision_timestamp_utc
         inputs = continuation_inputs(
             request=request,
             result=result,
             verification=verification,
-            decision_timestamp_utc=decision_timestamp_utc,
+            decision_timestamp_utc=timestamp,
         )
         inputs = with_recorded_progress(inputs, request, verification,
                                        await self._iterations.list_iteration_snapshots(run_id=binding.run_id))
@@ -286,7 +289,7 @@ class GovernedAgentLoopService:
         if publication.status not in {"accepted", "idempotent"}:
             raise ValueError(f"E_AGENT_DECISION_PUBLICATION_{publication.status.upper()}")
         await self._close_step(binding, verification, publication.durable_decision_ref)
-        return _IterationExecution(result, decision, verification, None, inputs.operator_action_refs)
+        return _IterationExecution(result, decision, verification, None, inputs.operator_action_refs, timestamp)
 
     async def _invoke_and_accept(
         self,

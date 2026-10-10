@@ -5,20 +5,26 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.8.1] - 2026-10-10 - "Safe governed reports and Gardener adapter"
 
-### Added
-- Add the `agent_advisory_report_verification.v1` host feature. A governed agent
-  workload that requires it completes through a report-only advisory-report
-  verifier (exact `{report, source_refs}` proposal, sources from the request's
-  authoritative context, no effects); other workloads keep the ticket-report verifier.
-- Project the accepted result as `authoritative_result` in successful
-  `orket agent submit --json` output.
-- Add `examples/gardener_harness/`: a repository-audit agent extension and a
-  wrapper implementing gardener's `command` harness contract (report mode only).
-- Contract delta: `docs/architecture/CONTRACT_DELTA_GOVERNED_AGENT_ADVISORY_REPORT_VERIFICATION_2026-10-10.md`.
+### Changed
+- Add `orket agent run` for SDK report submissions with host-owned identity,
+  timing, catalog admission and the existing governed execution lifecycle.
+- Accept structured advisory reports through one host verifier and retain their
+  proposals for inspection and replay. Delivery verification does not certify
+  the factual correctness of model findings.
+- Adapt Daniel McCoy Stephenson's Gardener contribution to a report-only source
+  example: bounded committed Git evidence, explicit conventions directories,
+  canonical provider selection, owned child processes and fail-closed results.
+- Stability: trusted local extensions only; no repository writes, automatic
+  retry, provider fallback, or hostile-code sandbox guarantee is introduced.
+  Fresh installed Windows/Gardener/llama.cpp proof and its limits are recorded
+  in `docs/releases/0.8.1/PROOF_REPORT.md`.
+- Operator action: install the trusted SDK report example and configure the
+  Gardener source wrapper as documented in `examples/gardener_harness/README.md`.
+  Existing low-level submissions retain their completion contract.
 - `compatibility_status`: `preserved`
-- `affected_audience`: `extension_author_only`
+- `affected_audience`: `all`
 - `migration_requirement`: `none`
 
 ## [0.8.0] - 2026-10-10 - "Apache-2.0 licensing cutover"

@@ -172,6 +172,8 @@ class GovernedAgentInspectionService:
             "context_refs": snapshot.request_payload["authoritative_context_refs"],
             "prior_verified_output_refs": snapshot.request_payload["prior_verified_output_refs"],
             "result_digest": snapshot.result_digest,
+            "advisory_proposal": (None if snapshot.result_payload is None
+                                  else snapshot.result_payload.get("advisory_proposal")),
             "decision": snapshot.decision_payload,
             "uncertainty": snapshot.uncertainty,
             "model_calls": [

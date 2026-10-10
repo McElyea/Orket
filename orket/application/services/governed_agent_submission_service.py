@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import json
 import os
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, replace
 from pathlib import Path
 from types import MappingProxyType
@@ -21,10 +21,11 @@ from orket.application.services.governed_agent_execution_composition import (
     model_map_for_roles,
     select_governed_agent_provider,
 )
+from orket.application.services.governed_agent_loop_service import GovernedAgentCompletionVerifier
 from orket.core.contracts import WorkloadRecord
 from orket.extensions.manager import ExtensionManager
 from orket.extensions.models import GovernedAgentWorkloadLaunch
-from orket_extension_sdk import AgentIterationRequest
+from orket_extension_sdk import AgentIterationRequest, canonical_digest_sha256
 
 
 @dataclass(frozen=True, slots=True)
@@ -79,31 +80,54 @@ async def submit_governed_agent(*, db_path: Path, submission: GovernedAgentSubmi
         label="governed-agent-submission-inputs",
     )
     request = AgentIterationRequest.from_wire(request_payload)
-    selection = await _select_provider(submission.provider, request, launch, environment=observed)
+    return await execute_prepared_governed_agent(
+        db_path=db_path, launch=launch, request=request, provider=submission.provider, environment=observed,
+        creation_timestamp_utc=submission.creation_timestamp_utc,
+        decision_timestamps_utc=submission.decision_timestamps_utc,
+        next_lease_expiries_utc=submission.next_lease_expiries_utc, continuation_inputs=continuation_inputs,
+    )
+
+
+async def execute_prepared_governed_agent(
+    *, db_path: Path, launch: GovernedAgentWorkloadLaunch, request: AgentIterationRequest,
+    provider: GovernedAgentProviderOptions, environment: Mapping[str, str], creation_timestamp_utc: str,
+    decision_timestamps_utc: Sequence[str | Callable[[], str]], next_lease_expiries_utc: Sequence[str],
+    continuation_inputs: Mapping[str, Any] | None = None, verifier: GovernedAgentCompletionVerifier | None = None,
+    admission_payload: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    admission_digest = None if admission_payload is None else "sha256:" + canonical_digest_sha256({
+        "submission": dict(admission_payload), "request": request.to_wire(),
+    })
+    decision_timestamps_utc = tuple(decision_timestamps_utc)
+    next_lease_expiries_utc = tuple(next_lease_expiries_utc)
+    selection = await _select_provider(provider, request, launch, environment=environment)
     try:
         execution = AsyncControlPlaneExecutionRepository(db_path)
         iterations = AsyncGovernedAgentRepository(db_path)
         service = build_governed_agent_loop_service(
             execution=execution, iterations=iterations, records=AsyncControlPlaneRecordRepository(db_path),
-            launch=launch, selection=selection,
+            launch=launch, selection=selection, verifier=verifier,
         )
+        configuration = governed_agent_configuration_digest(launch, selection.configuration_payload())
+        if admission_digest is not None:
+            configuration = "sha256:" + canonical_digest_sha256({
+                "configuration": configuration, "admission_digest": admission_digest,
+            })
         result = await service.run_bounded(
-            initial_request_payload=request_payload,
+            initial_request_payload=request.to_wire(),
             workload_record=WorkloadRecord.model_validate(launch.control_plane_workload_record),
             extension_digest=launch.extension_digest,
-            configuration_digest=governed_agent_configuration_digest(launch, selection.configuration_payload()),
+            configuration_digest=configuration,
             admission_receipt_ref=f"agent-catalog-admission:{launch.extension_id}:{launch.workload_id}",
-            creation_timestamp_utc=submission.creation_timestamp_utc,
-            decision_timestamps_utc=submission.decision_timestamps_utc,
-            next_lease_expiries_utc=submission.next_lease_expiries_utc,
+            creation_timestamp_utc=creation_timestamp_utc,
+            decision_timestamps_utc=decision_timestamps_utc,
+            next_lease_expiries_utc=next_lease_expiries_utc,
             continuation_inputs_payload=continuation_inputs,
         )
     finally:
         await run_owned_io(selection.close, label="governed-agent-submission-provider-close", preserve_failure=True)
     inspection = await build_governed_agent_inspector(db_path, iterations=iterations).inspect(run_id=request.identity.run_id)
-    payload = _execution_payload(result, selection, inspection, db_path)
-    payload["authoritative_result"] = await _authoritative_result(result, iterations) if payload["ok"] else None
-    return payload
+    return _execution_payload(result, selection, inspection, db_path)
 
 
 def _bind_path(root: Path, path: Path) -> Path:
@@ -147,19 +171,6 @@ async def _select_provider(
         ollama_base_url=options.ollama_base_url, inventory_timeout_seconds=options.inventory_timeout_seconds,
         environment=environment,
     )
-
-
-async def _authoritative_result(execution_result, iterations: AsyncGovernedAgentRepository) -> dict[str, Any] | None:
-    """Project the accepted iteration result that final truth names, so a caller can
-    read what was verified without reading the control-plane store directly."""
-    ref = execution_result.final_truth.authoritative_result_ref
-    if not isinstance(ref, str) or not ref.startswith("agent-result:"):
-        return None
-    snapshot = await iterations.get_iteration_snapshot(invocation_id=ref.removeprefix("agent-result:"))
-    if snapshot is None or snapshot.result_payload is None:
-        raise ValueError("E_AGENT_AUTHORITATIVE_RESULT_MISSING")
-    return {"ref": ref, "result_digest": snapshot.result_digest,
-            "advisory_proposal": snapshot.result_payload.get("advisory_proposal")}
 
 
 def _execution_payload(execution_result, selection, inspection, db_path: Path) -> dict[str, Any]:
