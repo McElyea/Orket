@@ -130,6 +130,23 @@ Ticket-example input builders are shared with the existing governed-agent tests;
 their fixture responses remain distinct from live provider proof. Published
 operator instructions are in `docs/guides/MACOS_LOCAL_INSTALL.md`.
 
+The public SDK report path is `orket agent run --submission <submission.json>
+--inputs <inputs.json> --catalog <catalog.json> --db <agent.sqlite3> --model
+<exact-model-id> --provider llama_cpp --json`. Its contract and completion ceiling
+are in `docs/specs/GOVERNED_AGENT_TASK_SUBMISSION.md`. Keep
+`tests/integration/test_governed_agent_task.py` and
+`tests/integration/test_governed_agent_task_ownership.py` in both Quality
+selections. These exercise controlled provider HTTP, actual CLI/child/storage and
+native input ownership; they do not replace actual model proof. Routine live
+report proof sets `ORKET_DISABLE_SANDBOX=1` and settles the owned provider process.
+
+The source Gardener report adapter reuses that public task and verifier. Keep
+`tests/integration/test_gardener_harness_example.py` in both Quality selections.
+Its real Git, CLI, SDK child, SQLite and controlled HTTP cases establish native
+adapter behavior, not actual model proof. Actual integration proof must include
+Gardener dispatch, llama.cpp receipts and observed server teardown. Input and
+claim boundaries are in `docs/specs/GARDENER_REPORT_HARNESS.md`.
+
 `python scripts/ci/verify_installed_process_acceptance.py` copies the existing
 native lifetime/uncertainty controls into an external test harness and runs them
 against the previously verified candidate. It installs that core wheel's declared

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import json
 import os
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, replace
 from pathlib import Path
 from types import MappingProxyType
@@ -21,10 +21,11 @@ from orket.application.services.governed_agent_execution_composition import (
     model_map_for_roles,
     select_governed_agent_provider,
 )
+from orket.application.services.governed_agent_loop_service import GovernedAgentCompletionVerifier
 from orket.core.contracts import WorkloadRecord
 from orket.extensions.manager import ExtensionManager
 from orket.extensions.models import GovernedAgentWorkloadLaunch
-from orket_extension_sdk import AgentIterationRequest
+from orket_extension_sdk import AgentIterationRequest, canonical_digest_sha256
 
 
 @dataclass(frozen=True, slots=True)
@@ -79,23 +80,48 @@ async def submit_governed_agent(*, db_path: Path, submission: GovernedAgentSubmi
         label="governed-agent-submission-inputs",
     )
     request = AgentIterationRequest.from_wire(request_payload)
-    selection = await _select_provider(submission.provider, request, launch, environment=observed)
+    return await execute_prepared_governed_agent(
+        db_path=db_path, launch=launch, request=request, provider=submission.provider, environment=observed,
+        creation_timestamp_utc=submission.creation_timestamp_utc,
+        decision_timestamps_utc=submission.decision_timestamps_utc,
+        next_lease_expiries_utc=submission.next_lease_expiries_utc, continuation_inputs=continuation_inputs,
+    )
+
+
+async def execute_prepared_governed_agent(
+    *, db_path: Path, launch: GovernedAgentWorkloadLaunch, request: AgentIterationRequest,
+    provider: GovernedAgentProviderOptions, environment: Mapping[str, str], creation_timestamp_utc: str,
+    decision_timestamps_utc: Sequence[str | Callable[[], str]], next_lease_expiries_utc: Sequence[str],
+    continuation_inputs: Mapping[str, Any] | None = None, verifier: GovernedAgentCompletionVerifier | None = None,
+    admission_payload: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    admission_digest = None if admission_payload is None else "sha256:" + canonical_digest_sha256({
+        "submission": dict(admission_payload), "request": request.to_wire(),
+    })
+    decision_timestamps_utc = tuple(decision_timestamps_utc)
+    next_lease_expiries_utc = tuple(next_lease_expiries_utc)
+    selection = await _select_provider(provider, request, launch, environment=environment)
     try:
         execution = AsyncControlPlaneExecutionRepository(db_path)
         iterations = AsyncGovernedAgentRepository(db_path)
         service = build_governed_agent_loop_service(
             execution=execution, iterations=iterations, records=AsyncControlPlaneRecordRepository(db_path),
-            launch=launch, selection=selection,
+            launch=launch, selection=selection, verifier=verifier,
         )
+        configuration = governed_agent_configuration_digest(launch, selection.configuration_payload())
+        if admission_digest is not None:
+            configuration = "sha256:" + canonical_digest_sha256({
+                "configuration": configuration, "admission_digest": admission_digest,
+            })
         result = await service.run_bounded(
-            initial_request_payload=request_payload,
+            initial_request_payload=request.to_wire(),
             workload_record=WorkloadRecord.model_validate(launch.control_plane_workload_record),
             extension_digest=launch.extension_digest,
-            configuration_digest=governed_agent_configuration_digest(launch, selection.configuration_payload()),
+            configuration_digest=configuration,
             admission_receipt_ref=f"agent-catalog-admission:{launch.extension_id}:{launch.workload_id}",
-            creation_timestamp_utc=submission.creation_timestamp_utc,
-            decision_timestamps_utc=submission.decision_timestamps_utc,
-            next_lease_expiries_utc=submission.next_lease_expiries_utc,
+            creation_timestamp_utc=creation_timestamp_utc,
+            decision_timestamps_utc=decision_timestamps_utc,
+            next_lease_expiries_utc=next_lease_expiries_utc,
             continuation_inputs_payload=continuation_inputs,
         )
     finally:

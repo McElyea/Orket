@@ -3,8 +3,11 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
+from uuid import uuid4
 
 from orket.application.services.governed_agent_commands import GovernedAgentCommands
 from orket.application.services.governed_agent_execution_composition import PROVIDER_CHOICES
@@ -13,6 +16,7 @@ from orket.application.services.governed_agent_submission_service import (
     GovernedAgentSubmission,
     submit_governed_agent,
 )
+from orket.application.services.governed_agent_task_service import run_governed_agent_task
 from orket.application.services.governed_agent_wake_commands import build_governed_agent_wake_commands
 from orket.interfaces.governed_agent_wake_cli import (
     add_governed_agent_wake_subparser,
@@ -53,6 +57,15 @@ def add_governed_agent_subparser(subparsers: Any) -> None:
     submit.add_argument("--creation-timestamp-utc", required=True)
     submit.add_argument("--decision-timestamp-utc", action="append", required=True)
     submit.add_argument("--next-lease-expires-at-utc", action="append", default=[])
+    task = commands.add_parser("run", help="Run an SDK task submission with host-owned identity and timing.")
+    for flag in ("db", "catalog", "submission", "inputs"):
+        task.add_argument(f"--{flag}", required=True)
+    for surface in (submit, task):
+        _add_provider_arguments(surface)
+        surface.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
+
+
+def _add_provider_arguments(submit: argparse.ArgumentParser) -> None:
     provider = submit.add_mutually_exclusive_group(required=True)
     provider.add_argument("--deterministic-fixture", action="store_true")
     provider.add_argument("--model", help="Exact served model; defaults to the llama.cpp provider.")
@@ -63,7 +76,6 @@ def add_governed_agent_subparser(subparsers: Any) -> None:
         submit.add_argument(f"--{role}-model", help=f"Exact served model override for {role}.")
     submit.add_argument("--ollama-base-url", default="", help="Optional Ollama base URL override.")
     submit.add_argument("--inventory-timeout-seconds", type=float, default=30.0)
-    submit.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
 
 
 def handle_governed_agent_command(args: argparse.Namespace) -> int:
@@ -89,6 +101,14 @@ async def _run_command(
     catalog_path: Path | None, request_path: Path | None,
 ) -> dict[str, Any]:
     command = str(args.agent_command)
+    if command == "run":
+        if catalog_path is None:
+            raise ValueError("E_AGENT_TASK_CATALOG_REQUIRED")
+        return await run_governed_agent_task(
+            project_root=project_root, db_path=db_path, catalog_path=catalog_path,
+            submission_path=Path(args.submission), inputs_path=Path(args.inputs), provider=_provider_options(args),
+            environment=dict(os.environ), run_id=f"agent-run:{uuid4().hex}", utc_now=lambda: datetime.now(UTC),
+        )
     if command == "wake":
         return await run_governed_agent_wake_command(args, build_governed_agent_wake_commands(db_path))
     if command == "submit":
@@ -126,7 +146,12 @@ def _submission(
         creation_timestamp_utc=str(args.creation_timestamp_utc),
         decision_timestamps_utc=tuple(args.decision_timestamp_utc),
         next_lease_expiries_utc=tuple(args.next_lease_expires_at_utc),
-        provider=GovernedAgentProviderOptions(
+        provider=_provider_options(args),
+    )
+
+
+def _provider_options(args: argparse.Namespace) -> GovernedAgentProviderOptions:
+    return GovernedAgentProviderOptions(
             deterministic_fixture=bool(args.deterministic_fixture), provider_name=getattr(args, "provider", None),
             model=str(getattr(args, "model", "") or ""), ollama_model=str(args.ollama_model or ""),
             provider_base_url=str(getattr(args, "provider_base_url", "") or ""),
@@ -134,7 +159,6 @@ def _submission(
             role_models=tuple((role, str(getattr(args, f"{role}_model", "") or ""))
                               for role in ("planner", "actor", "critic")),
             inventory_timeout_seconds=float(args.inventory_timeout_seconds),
-        ),
     )
 
 

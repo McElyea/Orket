@@ -1,7 +1,7 @@
 # Governed Agent Loop V1
 
-Last updated: 2026-10-03
-Status: Active durable contract; matched core/SDK 0.7.x Windows releases; retained llama.cpp library proof
+Last updated: 2026-10-10
+Status: Active durable contract; public report-task addition is unreleased after 0.8.0
 Owner: Orket Core
 Accepted requirements source: `docs/projects/archive/governed-agent-loop/GAL09062026-REQUIREMENTS/GOVERNED_AGENT_LOOP_REQUIREMENTS_DEFINITION_PLAN.md`
 
@@ -111,6 +111,13 @@ Slice 6G admits API-key plus HMAC authenticated webhook delivery with bounded
 replay protection and durable delivery receipts. Slice 6H prepares accepted
 effect proposals beneath the active wake fence, exposes authenticated operator
 resolution, and resumes only through a request-bound existing-run wake.
+
+The additive `orket agent run` route consumes the existing SDK submission
+contract, materialized inputs and the built-in `structured_report.v1` verifier.
+It admits one manual report iteration with host-owned identity and timing.
+Its completion claim is report delivery, not the truth of the findings.
+See [Governed Agent Task Submission](GOVERNED_AGENT_TASK_SUBMISSION.md) for the
+admitted policy, lifecycle and retained advisory-output projection.
 
 The first-slice object mapping is:
 

@@ -56,6 +56,7 @@ def resolve_governed_agent_catalog_entry(
         extension_digest=extension_digest,
         manifest_digest_sha256=extension.manifest_digest_sha256,
         agent_declaration=dict(workload.agent_declaration),
+        required_capabilities=tuple(workload.required_capabilities),
         control_plane_workload_record=owner._resolve_control_plane_workload_record(
             extension=extension,
             workload=workload,

@@ -81,6 +81,7 @@ class GovernedAgentWorkloadLaunch:
     manifest_digest_sha256: str
     agent_declaration: dict[str, Any]
     control_plane_workload_record: dict[str, Any]
+    required_capabilities: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)

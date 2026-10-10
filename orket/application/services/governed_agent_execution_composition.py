@@ -24,7 +24,10 @@ from orket.application.services.governed_agent_fixture import (
     DeterministicAgentModelProvider,
     SecondIterationDeterministicVerifier,
 )
-from orket.application.services.governed_agent_loop_service import GovernedAgentLoopService
+from orket.application.services.governed_agent_loop_service import (
+    GovernedAgentCompletionVerifier,
+    GovernedAgentLoopService,
+)
 from orket.application.services.governed_agent_memory_service import GovernedAgentObjectiveMemory
 from orket.application.services.governed_agent_model_provider import (
     PROVIDER_CHOICES as PROVIDER_CHOICES,
@@ -142,6 +145,7 @@ def build_governed_agent_loop_service(
     launch: GovernedAgentWorkloadLaunch,
     selection: GovernedAgentProviderSelection,
     authority_guard: GovernedAgentAuthorityGuard | None = None,
+    verifier: GovernedAgentCompletionVerifier | None = None,
 ) -> GovernedAgentLoopService:
     if len({str(execution.db_path), str(iterations.db_path), str(records.db_path)}) != 1:
         raise ValueError("E_AGENT_CONTROL_PLANE_STORE_CONFLICT")
@@ -164,7 +168,7 @@ def build_governed_agent_loop_service(
         iteration_repository=iterations,
         transactions=SQLiteControlPlaneTransactions(records.db_path),
         invoker=invoker,
-        verifier=SecondIterationDeterministicVerifier(),
+        verifier=verifier if verifier is not None else SecondIterationDeterministicVerifier(),
         run_controls=AsyncGovernedAgentRunControlRepository(iterations.db_path),
         authority_guard=authority_guard,
     )

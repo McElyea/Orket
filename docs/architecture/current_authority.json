@@ -195,9 +195,9 @@
     {
       "id": "contract.sdk",
       "kind": "contract",
-      "label": "Trusted workload process lifetime",
+      "label": "Trusted workload lifetime and public report tasks",
       "source": "docs/specs/SDK_WORKLOAD_PROCESS_LIFETIME.md",
-      "scope": "Trusted extension process lifetime; not hostile-code containment."
+      "scope": "Trusted extension process lifetime; not hostile-code containment. Public agent run admission is specified in docs/specs/GOVERNED_AGENT_TASK_SUBMISSION.md: one report iteration, host-built lifecycle and structured_report.v1 delivery verification through existing owners. Retained output is advisory, with no factual verification or repository effects. The Gardener source adapter uses that same verifier; committed snapshot admission and outward limits are in docs/specs/GARDENER_REPORT_HARNESS.md."
     },
     {
       "id": "contract.settings",

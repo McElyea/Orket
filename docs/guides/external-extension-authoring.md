@@ -37,12 +37,22 @@ The extension can make only brokered model/memory calls and return proposals;
 it cannot continue the run, execute effects, or publish completion truth. The
 host advertises both required V1 features only on the dedicated governed-agent
 path. Generic extension execution still rejects agent workloads. The bounded
-submit surface supports either `--deterministic-fixture` or exact installed
-Ollama selection with `--ollama-model` and optional fixed role overrides.
+submit surface supports `--deterministic-fixture`, exact llama.cpp selection with
+`--model`, or explicit Ollama selection with `--provider ollama`. Fixed role
+overrides remain available.
 `read_file` and `write_file` may be declared only as host-bound effect-proposal
 capabilities: child configuration cannot instantiate them, and only the host can
-observe, approve, execute, reconcile, or resume. API and continuous-supervisor
-admission remain unavailable.
+observe, approve, execute, reconcile, or resume. Authenticated API wakes and
+opt-in supervisor ownership are documented in `docs/specs/GOVERNED_AGENT_LOOP_V1.md`.
+
+For new report objectives, `orket agent run` consumes an SDK
+`governed_agent_submission.v1` and materialized inputs, with host-owned identity,
+timing and a built-in report-delivery verifier. The independent example is
+`examples/governed-report/`; admission rules and the advisory completion ceiling
+are in [Governed Agent Task Submission](../specs/GOVERNED_AGENT_TASK_SUBMISSION.md).
+This manual one-iteration route does not add repository tools or arbitrary
+verifier imports. The original scaffold and low-level submit retain their
+ticket-specific verifier.
 
 ## Canonical Package Surface
 
