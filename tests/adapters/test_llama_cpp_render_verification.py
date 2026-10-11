@@ -18,7 +18,7 @@ from orket.exceptions import ModelProviderError
 pytestmark = pytest.mark.contract
 
 
-@pytest.mark.parametrize("fault", ["", "template", "model", "render", "token_budget"])
+@pytest.mark.parametrize("fault", ["", "template", "model", "render", "token_budget", "input_budget"])
 async def test_native_preview_identity_and_bytes(fault: str) -> None:
     messages = [{"role": "user", "content": "<tool_response>cafe\u0301\r\nunchanged </tool_response>"}]
     expected = expected_text_render(messages)
@@ -47,9 +47,11 @@ async def test_native_preview_identity_and_bytes(fault: str) -> None:
             payload={"model": "model", "messages": messages},
             template_version=QWEN38_TEXT_TEMPLATE_VERSION,
             context_budget_tokens=8192,
+            input_budget_tokens=2 if fault == "input_budget" else 0,
         )
         if fault:
-            with pytest.raises(ModelProviderError, match="E_LLAMA_CPP_"):
+            reason = "E_MODEL_INPUT_BUDGET:.*input was not truncated" if fault == "input_budget" else "E_LLAMA_CPP_"
+            with pytest.raises(ModelProviderError, match=reason):
                 await call
         else:
             evidence = await call

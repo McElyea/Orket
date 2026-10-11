@@ -231,3 +231,17 @@ def test_source_change_during_model_call_refuses_final_report(tmp_path, catalog_
     assert code == 1 and result["is_error"]
     assert "snapshot requires a clean" in result["result"]
     assert state["calls"].count("/v1/chat/completions") == 1
+    assert result["session_id"].startswith("orket:")
+    run_id = result["session_id"].removeprefix("orket:")
+    assert run_id in result["result"] and "orket agent inspect" in result["result"]
+    area = next((tmp_path / "work").glob("run-*"))
+    for command in ("inspect", "replay"):
+        inspected = subprocess.run([sys.executable, "-m", "orket.cli", "agent", command, run_id,
+            "--db", str(area / "agent.sqlite3"), "--json"], capture_output=True, text=True, timeout=30, check=True)
+        retained = json.loads(inspected.stdout)
+        assert retained["ok"]
+        if command == "inspect":
+            # Wrapper source refusal cannot rewrite the prior, captured-snapshot outcome.
+            assert retained["final_truth"]["completion_classification"] == "completion_satisfied"
+        else:
+            assert retained["status"] == "matched"

@@ -103,6 +103,8 @@ Governed model requests preserve their admitted messages. Output requests above
 the host profile ceiling fail with `E_MODEL_OUTPUT_LIMIT`; inputs above the
 admitted capacity fail with `E_MODEL_INPUT_BUDGET` before generation. Qwen3.8
 llama.cpp uses native rendering/tokenization, including the output reservation.
+Both native input-limit and conservative input-budget refusals explicitly state
+`input was not truncated`; their measured-count/estimate fields remain distinct.
 Other supported profiles conservatively estimate UTF-8 bytes plus 128 per
 message and 256 overhead. This is admission guidance, not tokenizer measurement
 or a universal custom-template bound. Post-call observed usage is still enforced.

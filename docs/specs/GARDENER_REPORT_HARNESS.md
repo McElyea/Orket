@@ -88,7 +88,7 @@ dispatch with `E_GARDENER_INPUT_TOO_LARGE`. Reduce individual file capture or
 split the source document explicitly. Total capture can reach 512 KiB across
 multiple inputs. Capture, encoded-item, wire and token limits remain independent.
 
-Native Windows supports this wrapper and Orket. Gardener 0.3.0's full CLI imports
+Native Windows supports this wrapper and Orket. Gardener 0.3.0–0.4.2's full CLI imports
 POSIX `fcntl`; use WSL for `gardener align` until upstream supports Windows.
 This is a platform workaround, not a native Windows Gardener acceptance claim.
 
@@ -110,9 +110,11 @@ end timestamp and provider failure code, and final truth is unsatisfied (usually
 `blocked` because the budget is exhausted). No inference retry occurs. This does
 not claim remote model termination. Interrupted children, publication failure
 and general/effectful governed runs retain their recovery requirements.
-Failed CLI-result envelopes include `session_id: orket:<run_id>` and the exact
-inspect command when that result contains a run identity. Pre-admission failures have no
-run identity. Child protocol failures expose only extracted SDK error codes;
+Failed CLI-result envelopes and subsequent wrapper report/source-check refusals
+include `session_id: orket:<run_id>` and the exact inspect command when the CLI
+result contains a run identity. A source-change refusal preserves the original
+captured-snapshot outcome in SQLite; it does not rewrite that outcome as failed.
+Pre-admission failures have no run identity. Child protocol failures expose only extracted SDK error codes;
 arbitrary child stderr remains private diagnostic data.
 
 ## Verification

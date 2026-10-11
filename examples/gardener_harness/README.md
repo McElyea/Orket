@@ -84,7 +84,7 @@ model failure reasons even when the terminal policy reason is more general.
 Each run retains `snapshot-inventory.json`. For trees larger than 128 entries,
 the model sees a bounded listing, selected content, coverage counts and the full
 inventory digest. Names prove presence; uninspected content remains unknown.
-Full Gardener 0.3.0 `align` currently needs POSIX/WSL because of its `fcntl` imports;
+Full Gardener 0.3.0–0.4.2 `align` needs POSIX/WSL because of its `fcntl` imports;
 the Windows wrapper alone does not establish native Windows CLI support.
 Inside WSL, use Linux paths throughout and a provider reachable from that
 environment. For llama.cpp, set `ORKET_LLAMA_CPP_GGUF_MODEL_ROOT` to the Linux
@@ -122,7 +122,11 @@ multiple inputs. The complete prompt travels in consecutive message chunks,
 under a 1 MiB aggregate child-output budget and the independent wire-frame cap.
 These bounds do not enlarge model context or authorize input truncation.
 
-Admitted failures return the run ID and exact inspection command. Model calls
+Failures with a retained CLI run identity return that ID and the exact inspection
+command, including wrapper refusals after a source change. In that case the
+stored snapshot report can be accepted while Gardener delivery is refused;
+inspection describes the captured snapshot, not the subsequently edited tree.
+Model calls
 reserve five seconds for failed-receipt delivery and terminal publication.
 Settled report-only timeouts/unavailability retain unknown token usage, charge
 the reserved budget, and close unsatisfied through the existing stop policy.

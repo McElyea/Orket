@@ -65,7 +65,8 @@ async def verify_llama_cpp_render(
     token_count = len(token_response.json()["tokens"])
     if input_budget_tokens and token_count > input_budget_tokens:
         raise ModelInputBudgetError(
-            f"E_MODEL_INPUT_BUDGET: native_tokens={token_count}, input_limit={input_budget_tokens}")
+            f"E_MODEL_INPUT_BUDGET: native_tokens={token_count}, input_limit={input_budget_tokens}; "
+            "input was not truncated")
     server_budget = int(props.get("default_generation_settings", {}).get("n_ctx", 0))
     budget = min(context_budget_tokens, server_budget)
     if budget <= 0 or token_count + int(payload.get("max_tokens", 0)) > budget:

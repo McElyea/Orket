@@ -5,6 +5,24 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.5] - 2026-10-10 - "Gardener field follow-up inspection"
+
+### Fixed
+- Preserve retained run identities and exact inspection commands when the
+  Gardener wrapper refuses delivery after report/source validation. Later source
+  changes do not rewrite the original captured-snapshot outcome in SQLite.
+- Make native llama.cpp input-budget refusals explicitly state that input was not
+  truncated, consistent with conservative admission and Gardener's integration
+  contract. Token limits and refusal behavior remain unchanged.
+- Stability: Rev 2 field-report review, native regression results and actual
+  larger-model verification are recorded in `docs/releases/0.8.5/PROOF_REPORT.md`.
+  Report delivery remains advisory and does not certify factual accuracy.
+- Operator/extension-author action: update the source wrapper with core 0.8.5;
+  the 0.8.4 trusted report extension/catalog and SDK 0.8.0 remain compatible.
+- `compatibility_status`: `compatible`
+- `affected_audience`: `all`
+- `migration_requirement`: `none`
+
 ## [0.8.4] - 2026-10-10 - "Gardener delivery and terminal failures"
 
 ### Fixed

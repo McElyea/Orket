@@ -86,15 +86,20 @@ def execute(prompt: str, environment: dict[str, str], root: Path) -> dict:
     payload = json.loads(result.stdout)
     if not isinstance(payload, dict):
         raise HarnessFailure(f"invalid Orket result; retained run area: {area}")
+    run_id = (payload.get("run") or {}).get("run_id")
+    inspect = f'orket agent inspect "{run_id}" --db "{database}" --json' if run_id else str(area)
     if result.returncode != 0 or payload.get("ok") is not True:
         error = failure_reason(payload)
-        run_id = (payload.get("run") or {}).get("run_id")
-        inspect = f'orket agent inspect "{run_id}" --db "{database}" --json' if run_id else str(area)
         raise HarnessFailure(f"{error}; inspect retained run: {inspect}",
                              blocked=error.startswith(UNAVAILABLE), run_id=run_id)
-    report = accepted_report(payload, sources)
-    verify_unchanged(commands, trees)
-    run_id = payload["run"]["run_id"]
+    if not isinstance(run_id, str) or not run_id:
+        raise HarnessFailure(f"Orket success omitted its run identity; retained run area: {area}")
+    try:
+        report = accepted_report(payload, sources)
+        verify_unchanged(commands, trees)
+    except (OSError, ValueError, RuntimeError, TypeError, KeyError) as exc:
+        raise HarnessFailure(f"{exc}; inspect retained run: {inspect}", run_id=run_id,
+                             blocked=isinstance(exc, HarnessFailure) and exc.blocked) from exc
     footer = (f"\n\n---\nAdvisory report; verified delivery and source references only. "
               f"Committed snapshots only; no tests or fixes executed.\n"
               f"Requested token limits: input {input_tokens}, output {output_tokens}; host limits also enforced.\n"
