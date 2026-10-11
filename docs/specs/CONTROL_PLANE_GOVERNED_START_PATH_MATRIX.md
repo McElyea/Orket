@@ -9,9 +9,9 @@ Preserve the active workload-authority decision lock and governed start-path mat
 
 ## Active authorities
 
-1. [docs/specs/CONTROL_PLANE_PACKET_V1_INDEX.md](docs/specs/CONTROL_PLANE_PACKET_V1_INDEX.md)
-2. [docs/specs/WORKLOAD_CONTRACT_V1.md](docs/specs/WORKLOAD_CONTRACT_V1.md)
-3. [CURRENT_AUTHORITY.md](CURRENT_AUTHORITY.md)
+1. [docs/specs/CONTROL_PLANE_PACKET_V1_INDEX.md](CONTROL_PLANE_PACKET_V1_INDEX.md)
+2. [docs/specs/WORKLOAD_CONTRACT_V1.md](WORKLOAD_CONTRACT_V1.md)
+3. [CURRENT_AUTHORITY.md](../../CURRENT_AUTHORITY.md)
 
 ## Workload Authority Decision Lock
 
@@ -108,4 +108,4 @@ These surfaces may emit evidence or metadata, but they do not become co-equal wo
 
 ## Historical Record
 
-The ControlPlane project closeout archive lives at [docs/projects/archive/ControlPlane/CP04092026-PROJECT-CLOSEOUT/CLOSEOUT.md](docs/projects/archive/ControlPlane/CP04092026-PROJECT-CLOSEOUT/CLOSEOUT.md).
+The ControlPlane project closeout archive lives at [docs/projects/archive/ControlPlane/CP04092026-PROJECT-CLOSEOUT/CLOSEOUT.md](../projects/archive/ControlPlane/CP04092026-PROJECT-CLOSEOUT/CLOSEOUT.md).

@@ -10,7 +10,7 @@ Define the minimum reservation, ownership, and lease semantics required for Orke
 
 ## Authority note
 
-Shared ownership, orphan, reservation, and lease enums are defined in [00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md](docs/specs/00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md).
+Shared ownership, orphan, reservation, and lease enums are defined in [00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md](00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md).
 
 ## Core assertion
 

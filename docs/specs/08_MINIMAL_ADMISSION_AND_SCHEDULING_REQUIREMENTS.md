@@ -10,7 +10,7 @@ Define the minimum admission and scheduling semantics required so execution, ret
 
 ## Authority note
 
-Reservation and lease enums are defined in [00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md](docs/specs/00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md).
+Reservation and lease enums are defined in [00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md](00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md).
 
 ## Core assertion
 

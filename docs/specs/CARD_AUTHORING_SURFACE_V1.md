@@ -3,8 +3,8 @@
 Last updated: 2026-04-09
 Status: Active shipped authority
 Owner: Orket Core
-Source requirements: [docs/projects/OrketUI/ORKET_EXTENSION_UI_REQUIREMENTS_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_REQUIREMENTS_V1.md)
-Related docs: [docs/projects/archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md](docs/projects/archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md), [docs/projects/OrketUI/ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md), [docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md](docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md), [docs/API_FRONTEND_CONTRACT.md](docs/API_FRONTEND_CONTRACT.md), [CURRENT_AUTHORITY.md](CURRENT_AUTHORITY.md)
+Source requirements: [docs/projects/OrketUI/ORKET_EXTENSION_UI_REQUIREMENTS_V1.md](../projects/OrketUI/ORKET_EXTENSION_UI_REQUIREMENTS_V1.md)
+Related docs: [docs/projects/archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md](../projects/archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md), [docs/projects/OrketUI/ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md](../projects/OrketUI/ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md), [docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md](CARD_VIEWER_RUNNER_SURFACE_V1.md), [docs/API_FRONTEND_CONTRACT.md](../API_FRONTEND_CONTRACT.md), [CURRENT_AUTHORITY.md](../../CURRENT_AUTHORITY.md)
 
 ## 1. Purpose
 
@@ -84,16 +84,16 @@ Must return at least:
 
 ## 6. Mounted current slice
 
-1. The routes above are mounted through [orket/interfaces/routers/card_authoring.py](orket/interfaces/routers/card_authoring.py) and included by [orket/interfaces/api.py](orket/interfaces/api.py).
-2. The existing read and operator-view surfaces in [docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md](docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md) remain the canonical card inspection surface.
+1. The routes above are mounted through [orket/interfaces/routers/card_authoring.py](../../orket/interfaces/routers/card_authoring.py) and included by [orket/interfaces/api.py](../../orket/interfaces/api.py).
+2. The existing read and operator-view surfaces in [docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md](CARD_VIEWER_RUNNER_SURFACE_V1.md) remain the canonical card inspection surface.
 3. Save requests fail closed with `404` when the card does not exist and `409` on revision conflict.
-4. The bounded runtime projection for issue-type authored cards is maintained through [orket/application/services/card_authoring_runtime_projection_service.py](orket/application/services/card_authoring_runtime_projection_service.py) and writes the canonical composition file at `config/epics/orket_ui_authored_cards.json`.
+4. The bounded runtime projection for issue-type authored cards is maintained through [orket/application/services/card_authoring_runtime_projection_service.py](../../orket/application/services/card_authoring_runtime_projection_service.py) and writes the canonical composition file at `config/epics/orket_ui_authored_cards.json`.
 
 ## 7. Sync rule
 
 When this surface changes, update in the same change:
 
-1. [docs/specs/CARD_AUTHORING_SURFACE_V1.md](docs/specs/CARD_AUTHORING_SURFACE_V1.md)
-2. [docs/API_FRONTEND_CONTRACT.md](docs/API_FRONTEND_CONTRACT.md)
-3. [CURRENT_AUTHORITY.md](CURRENT_AUTHORITY.md)
-4. [docs/projects/OrketUI/ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md)
+1. [docs/specs/CARD_AUTHORING_SURFACE_V1.md](CARD_AUTHORING_SURFACE_V1.md)
+2. [docs/API_FRONTEND_CONTRACT.md](../API_FRONTEND_CONTRACT.md)
+3. [CURRENT_AUTHORITY.md](../../CURRENT_AUTHORITY.md)
+4. [docs/projects/OrketUI/ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md](../projects/OrketUI/ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md)

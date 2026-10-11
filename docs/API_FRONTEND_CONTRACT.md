@@ -9,7 +9,8 @@ Internal `closed` requires successful owned teardown and is not run-completion o
 effect-receipt authority. Unregistered detached work, arbitrary blocking threads,
 remote termination and host-death recovery remain outside that guarantee.
 
-Last verified against `orket/interfaces/api.py`: 2026-05-04
+Route inventory checked against the mounted OpenAPI schema: 2026-10-10.
+This is structural route verification, not fresh live acceptance of every endpoint.
 
 Execution graph acceptance contract updated and exercised: 2026-09-12.
 Card/run operator acceptance views updated and exercised: 2026-09-12.
@@ -19,11 +20,13 @@ Card/run operator acceptance views updated and exercised: 2026-09-12.
 2. Generic extension runtime routes under `/v1/extensions/{extension_id}/runtime/*` use the same `ORKET_API_KEY` posture as other core `/v1/*` routes.
 3. Orket host no longer mounts Companion-specific product routes under `/v1/companion/*` or `/api/v1/companion/*`.
 4. Auth rejection telemetry is emitted via `api_auth_rejected` with `route_class=core`.
-5. Websocket endpoints `GET ws://<host>/ws/events` and `GET ws://<host>/ws/interactions/{session_id}` accept API key via:
-   - `X-API-Key` header, or
-   - `api_key` query parameter.
+5. Websocket endpoints `GET ws://<host>/ws/events` and `GET ws://<host>/ws/interactions/{session_id}` accept `X-API-Key`.
+   The `api_key` query parameter is compatibility-only and is rejected when
+   `ORKET_API_SECURITY_MODE=enforce`.
 6. Fail-closed default: requests are rejected when `ORKET_API_KEY` is unset.
-7. Insecure bypass exists only when `ORKET_ALLOW_INSECURE_NO_API_KEY=true`.
+7. Anonymous local bypass requires `ORKET_ALLOW_INSECURE_NO_API_KEY=true` and a
+   non-production `ORKET_API_SECURITY_PROFILE` with no configured key. The default
+   profile is `production`. Production/staging environments refuse bypass at startup.
 8. Every HTTP response under `/v1/*` includes `X-Orket-Version`.
 
 ## Hardware observation
@@ -147,11 +150,11 @@ Use authenticated `/v1/*` system surfaces for version, metrics, provider, and de
 6. `GET /v1/runs/{session_id}/view`
 7. `GET /v1/runs/{session_id}/metrics`
 8. `GET /v1/runs/{session_id}/token-summary`
-9. `GET /v1/runs/{session_id}/events`
-10. `GET /v1/runs/{session_id}/events/stream`
-11. `GET /v1/runs/{session_id}/summary`
-12. `GET /v1/runs/{session_id}/ledger`
-13. `GET` and `POST /v1/runs/{session_id}/ledger/verify`
+9. `GET /v1/runs/{run_id}/events`
+10. `GET /v1/runs/{run_id}/events/stream`
+11. `GET /v1/runs/{run_id}/summary`
+12. `GET /v1/runs/{run_id}/ledger`
+13. `GET` and `POST /v1/runs/{run_id}/ledger/verify`
 14. `GET /v1/runs/{session_id}/replay`
 15. `GET /v1/runs/{session_id}/backlog`
 16. `GET /v1/runs/{session_id}/execution-graph`
@@ -160,6 +163,37 @@ Use authenticated `/v1/*` system surfaces for version, metrics, provider, and de
 19. `GET /v1/sessions/{session_id}/replay`
 20. `GET /v1/sessions/{session_id}/snapshot`
 21. `POST /v1/sessions/{session_id}/halt`
+
+## Governed-Agent Runs and Durable Wakes
+
+These routes share core `/v1/*` API authentication. They operate on governed-agent
+identities, distinct from interaction sessions and legacy card-run projections.
+
+| Method | Route |
+| --- | --- |
+| GET | `/v1/agent-runtime/status` |
+| GET, POST | `/v1/agent-wakes` |
+| GET | `/v1/agent-wakes/{wake_id}` |
+| GET | `/v1/agent-wakes/{wake_id}/actions` |
+| POST | `/v1/agent-wakes/{wake_id}/cancel` |
+| POST | `/v1/agent-wakes/{wake_id}/recover` |
+| GET, POST | `/v1/agent-schedules/{schedule_id}/evaluations` |
+| GET | `/v1/agent-webhooks/{issuer_ref}/deliveries` |
+| POST | `/v1/agent-webhooks/{issuer_ref}/deliveries/{delivery_id}` |
+| GET | `/v1/agent-runs/{run_id}` |
+| GET | `/v1/agent-runs/{run_id}/replay` |
+| POST | `/v1/agent-runs/{run_id}/controls` |
+| POST | `/v1/agent-runs/{run_id}/resume` |
+| POST | `/v1/agent-runs/{run_id}/effects/resume` |
+| POST | `/v1/agent-runs/{run_id}/effects/{approval_id}/resolve` |
+
+Webhook delivery additionally requires the configured issuer's signed payload,
+`X-Orket-Webhook-Timestamp`, `X-Orket-Webhook-Key-Id` and
+`X-Orket-Webhook-Signature`. Admission is not execution success. Schedule
+evaluations are submitted explicitly; continuous API-owned dispatch remains
+opt-in through `ORKET_GOVERNED_AGENT_SUPERVISOR_ENABLED=1`. Schemas and semantics:
+[Governed Agent Loop](specs/GOVERNED_AGENT_LOOP_V1.md). Concrete invocation,
+inspection and recovery examples: [Durable Wakes](RUNBOOK.md#governed-agent-durable-wakes).
 
 ## Operator Approval Control
 1. `GET /v1/approvals`
@@ -224,6 +258,13 @@ through the selected provider policy. The effective token limit cannot exceed
 the selected profile ceiling; caller stops retain whitespace and precede profile
 stops. Empty stop strings return 400 before inference. See
 `docs/specs/MODEL_GENERATION_OPTIONS.md` for precedence and conformance limits.
+
+Builtin SDK/API Ollama generation preserves all admitted messages, sends an
+explicit context and disables truncation. Oversized input/output requests return
+typed HTTP 400 refusals; increasing `max_tokens` does not enlarge host context.
+Settled provider timeouts return HTTP 504 (`E_EXTENSION_MODEL_PROVIDER_TIMEOUT`)
+and connection failures return HTTP 503 (`E_EXTENSION_MODEL_PROVIDER_UNAVAILABLE`).
+See [host profile configuration](specs/MODEL_GENERATION_OPTIONS.md#larger-prompts-through-the-headless-extension).
 
 ## Companion BFF Ownership Note
 1. Companion product routes now live only in the external Companion gateway/BFF.
@@ -318,7 +359,7 @@ stops. Empty stop strings return 400 before inference. See
 27. `GET /v1/protocol/runs/{run_id}/ledger-parity` supports optional `sqlite_db_path`.
 28. `GET /v1/protocol/ledger-parity/campaign` supports repeated `session_id`; optional `sqlite_db_path`, `discover_limit`.
 29. Caller-provided `runs_root` and `sqlite_db_path` on the protocol replay or parity surfaces fail closed when they escape the workspace root.
-30. `POST /v1/cards` body requires `draft` with the admitted `CardDraftWriteModel` fields from [docs/specs/CARD_AUTHORING_SURFACE_V1.md](docs/specs/CARD_AUTHORING_SURFACE_V1.md).
+30. `POST /v1/cards` body requires `draft` with the admitted `CardDraftWriteModel` fields from [docs/specs/CARD_AUTHORING_SURFACE_V1.md](specs/CARD_AUTHORING_SURFACE_V1.md).
 31. `PUT /v1/cards/{card_id}` body requires `draft` and supports optional `expected_revision_id`; it fails closed with `404` when the card does not exist and `409` on revision conflict. For issue-target authored cards, successful `POST` and `PUT` also upsert the bounded runtime projection at `config/epics/orket_ui_authored_cards.json` so the current admitted flow-run slice can resolve those cards on the canonical run-card surface.
 32. `POST /v1/cards/validate` body requires `draft`; it is non-persisting and does not mint a host `card_id`.
 33. `POST /v1/cards/archive` requires at least one selector: `card_ids`, `build_id`, or `related_tokens`.
@@ -329,10 +370,10 @@ stops. Empty stop strings return 400 before inference. See
 38. `GET /v1/runs/{session_id}` returns an outward run status payload when `{session_id}` is a known outward `run_id`; otherwise it preserves the legacy session/run-ledger detail behavior. In the BT-5 candidate, outward submission/status/list include `authority_state` and `final_truth`, plus `workload_id` and `workload_version` when shared admission exists. Summary also includes authority state and final truth. `shared` identifies common admission; `migration_required` identifies older generation-one history; `legacy_quarantined` identifies generation-zero history. Unfinished runs have null final truth. Shared results distinguish success, failed and blocked independently of protocol status; contradictory retained terminal records refuse the projection. Contract and migration acceptance: `docs/specs/OUTWARD_RUN_AUTHORITY.md`.
 39. `GET /v1/runs/view` supports optional `limit`.
 40. `GET /v1/flows` supports optional `limit` and `offset`.
-41. `POST /v1/flows` body requires `definition` with the admitted `FlowDefinitionWriteModel` fields from [docs/specs/FLOW_AUTHORING_SURFACE_V1.md](docs/specs/FLOW_AUTHORING_SURFACE_V1.md).
+41. `POST /v1/flows` body requires `definition` with the admitted `FlowDefinitionWriteModel` fields from [docs/specs/FLOW_AUTHORING_SURFACE_V1.md](specs/FLOW_AUTHORING_SURFACE_V1.md).
 42. `PUT /v1/flows/{flow_id}` body requires `definition` and supports optional `expected_revision_id`; it fails closed with `404` when the flow does not exist and `409` on revision conflict. SQLite consumes a supplied current revision atomically; an explicit empty guard conflicts, while omitted/null guards preserve unconditional update semantics. Captured definitions cannot change after the first await. Creates refuse generated-id collisions with `409 flow_id_conflict`. Cancelled saves and shutdown 503 responses can follow a committed write; inspect current state before retrying.
 43. `POST /v1/flows/validate` body requires `definition`; it is non-persisting and does not mint a host `flow_id`.
-44. `POST /v1/flows/{flow_id}/runs` supports optional `expected_revision_id`; the current admitted run slice is bounded to exactly one `card` node, forbids `branch` and `merge`, requires the assigned card on the host card surface, requires that card to resolve on the canonical run-card surface including the bounded authored-card runtime projection documented by [docs/specs/CARD_AUTHORING_SURFACE_V1.md](docs/specs/CARD_AUTHORING_SURFACE_V1.md) when applicable, and requires that card to resolve to the `issue` runtime target.
+44. `POST /v1/flows/{flow_id}/runs` supports optional `expected_revision_id`; the current admitted run slice is bounded to exactly one `card` node, forbids `branch` and `merge`, requires the assigned card on the host card surface, requires that card to resolve on the canonical run-card surface including the bounded authored-card runtime projection documented by [docs/specs/CARD_AUTHORING_SURFACE_V1.md](specs/CARD_AUTHORING_SURFACE_V1.md) when applicable, and requires that card to resolve to the `issue` runtime target.
 45. `POST /v1/flows/{flow_id}/runs` returns authoritative acceptance through `session_id` when it succeeds; later run completion remains governed by the existing runtime policy and epic environment.
 46. `POST /v1/system/run-active` body supports: `path`, `build_id`, `type`, `issue_id`; it remains the canonical run/rerun action for the Card Viewer/Runner slice.
 47. `GET /v1/system/provider-status` and `GET /v1/system/health-view` support optional `roles`.
@@ -357,11 +398,11 @@ stops. Empty stop strings return 400 before inference. See
     For admitted outward runs, repeating `POST /v1/runs` with the same run ID and valid submission envelope resumes a ready next-turn model admission or publishes its retained result without another provider call. Concurrent producers and claimed admissions without retained results return HTTP 409 (`E_OUTWARD_MODEL_ADMISSION_UNRESOLVED`). Missing admission and input/evidence drift also return conflict; the service does not synthesize legacy admission or repair changed evidence. Proposal, binding, model event, run projection and admission publication are atomic. An old approval retry never initiates this next-turn operation.
     Authenticated `GET /v1/runs/{run_id}/model-admission` returns current admission and retained attempt summaries without full inputs/results. `POST /v1/runs/{run_id}/model-admission/recover` takes `request_id`, `execution_generation`, `turn`, `step_index`, `expected_owner_id` and `expected_fencing_generation`, with strict integer scope fields and no extras. Only the latest claimed/unobserved attempt with unchanged inputs may be superseded. The old attempt remains retained; a new ready attempt and shared recovery/operator records commit together. Recovery never invokes the provider; normal run reentry claims ready work. Identical retries return the same attempt; changed actor/body or superseded recovery conflicts. A late old producer cannot observe/publish after replacement, and each new attempt writes its own immutable evidence directory. Prior provider execution and billing remain unknown.
 65. `POST /v1/approvals/{approval_id}/decision` remains the Packet 1 compatibility decision endpoint and can resolve an outward proposal when the id matches a stored outward proposal; outward approve-and-pause semantics are not exposed.
-66. `GET /v1/runs/{session_id}/events` returns ordered outward `run_events` for a known outward `run_id`; it supports optional `from_turn`, `to_turn`, `types` as comma-separated event types, `agent_id`, and `limit`.
-67. `GET /v1/runs/{session_id}/summary` returns a derived outward run summary from the persisted outward run record and `run_events`; it is read-only and does not derive authority from presentation text.
-68. `GET /v1/runs/{session_id}/events/stream` returns `text/event-stream` for outward run events using process-local polling over persisted `run_events`; it closes when the outward run is terminal, and after restart clients should use the events endpoint for persisted history until durable pub/sub is implemented.
-69. `GET /v1/runs/{session_id}/ledger` returns `ledger_export.v1` JSON for an outward run. Optional `types` accepts ledger event groups `proposals`, `decisions`, `commitments`, `tools`, `audit`, or `all`; filtered exports are `partial_view` payloads with canonical hash-chain anchors. Optional `include_pii=true` records a `ledger_export_requested` audit event before response serialization.
-70. `GET /v1/runs/{session_id}/ledger/verify` returns the `ledger_export.v1` vocabulary `valid`, `partial_valid`, or `invalid`, with separate retained integrity, snapshot completeness and authenticity fields. It reads existing storage without initialization, migration or hash repair. Exports derive v1 order/hashes only after verifying the full retained snapshot and add a separately versioned `retained.anchor`; exceeding 100,000 events or 64 MiB of aggregate payload bytes rejects the snapshot. `POST` to the same verify route accepts exactly `{"external_anchor": <outward_ledger_anchor.v2 object>}` and compares the independently retained prefix; extra request/anchor fields are rejected. Anchor mismatch returns `result: invalid`, even when local integrity is valid. PII audit identities use serialized append sequence and retain the authenticated actor reference. `docs/specs/OUTWARD_LEDGER_STORAGE_V2.md` defines exact fields and limits. Legacy stores require the documented offline copied migration; unsealed histories cannot be exported as valid retained ledgers.
+66. `GET /v1/runs/{run_id}/events` returns ordered outward `run_events` for a known outward `run_id`; it supports optional `from_turn`, `to_turn`, `types` as comma-separated event types, `agent_id`, and `limit`.
+67. `GET /v1/runs/{run_id}/summary` returns a derived outward run summary from the persisted outward run record and `run_events`; it is read-only and does not derive authority from presentation text.
+68. `GET /v1/runs/{run_id}/events/stream` returns `text/event-stream` for outward run events using process-local polling over persisted `run_events`; it closes when the outward run is terminal, and after restart clients should use the events endpoint for persisted history until durable pub/sub is implemented.
+69. `GET /v1/runs/{run_id}/ledger` returns `ledger_export.v1` JSON for an outward run. Optional `types` accepts ledger event groups `proposals`, `decisions`, `commitments`, `tools`, `audit`, or `all`; filtered exports are `partial_view` payloads with canonical hash-chain anchors. Optional `include_pii=true` records a `ledger_export_requested` audit event before response serialization.
+70. `GET /v1/runs/{run_id}/ledger/verify` returns the `ledger_export.v1` vocabulary `valid`, `partial_valid`, or `invalid`, with separate retained integrity, snapshot completeness and authenticity fields. It reads existing storage without initialization, migration or hash repair. Exports derive v1 order/hashes only after verifying the full retained snapshot and add a separately versioned `retained.anchor`; exceeding 100,000 events or 64 MiB of aggregate payload bytes rejects the snapshot. `POST` to the same verify route accepts exactly `{"external_anchor": <outward_ledger_anchor.v2 object>}` and compares the independently retained prefix; extra request/anchor fields are rejected. Anchor mismatch returns `result: invalid`, even when local integrity is valid. PII audit identities use serialized append sequence and retain the authenticated actor reference. `docs/specs/OUTWARD_LEDGER_STORAGE_V2.md` defines exact fields and limits. Legacy stores require the documented offline copied migration; unsealed histories cannot be exported as valid retained ledgers.
 71. Outward governed connector execution uses the built-in connector registry for `read_file`, `write_file`, `create_directory`, `delete_file`, `run_command`, `http_get`, and `http_post`. Connector args are validated before proposal creation, approved invocations emit `tool_invoked` payloads with `connector_name`, `args_hash`, `result_summary`, `duration_ms`, `timing`, and `outcome`, and HTTP connectors require `ORKET_CONNECTOR_HTTP_ALLOWLIST`. Duration is measured monotonic milliseconds with fractional precision, or null when unavailable. The `invocation_timing.v1` provenance declares `awaited_connector_invocation` scope; it does not establish effect lifetime. Existing provenance-free connector numbers are unmeasured history and are not rewritten. Receipt republication reuses the original timing. `docs/specs/CONNECTOR_INVOCATION_TIMING.md` defines the contract. Native command summaries additionally retain `process_lifetime` (`owned_command.v1`), actual nullable return codes and captured raw byte counts. Each stream is capped at 4 MiB; exceeding the cap fails with incomplete capture. Unconfirmed cleanup raises HTTP 409 `E_COMMAND_EXECUTION_UNCERTAIN`; cancellation and uncertainty retain unresolved dispatch intent without a completed receipt, and reentry returns `E_OUTWARD_EFFECT_IN_FLIGHT_OR_UNCERTAIN`. Cleanup does not establish reversal of effects. Historical receipts without lifetime evidence remain unchanged. `docs/specs/VERIFICATION_PROCESS_LIFETIME_CONTRACT.md` defines these observations and limits.
 72. Operator-visible outward payloads pass through `orket/kernel/v1/outbound_policy_gate.py` before serialization. The gate supports configured PII field paths, forbidden regex patterns, and allowed output fields by event/surface type through environment variables or `ORKET_OUTBOUND_POLICY_CONFIG_PATH`. If default ledger export redaction would alter stored event payload bytes, the API returns a `partial_view` ledger export with omitted-span anchors rather than a false full canonical ledger.
 

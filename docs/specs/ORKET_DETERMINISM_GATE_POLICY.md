@@ -4,16 +4,16 @@ Last updated: 2026-04-25
 Status: Active
 Owner: Orket Core
 
-This document operationalizes [docs/specs/ORKET_OPERATING_PRINCIPLES.md](docs/specs/ORKET_OPERATING_PRINCIPLES.md) for determinism claims, promotion decisions, and publication language.
+This document operationalizes [docs/specs/ORKET_OPERATING_PRINCIPLES.md](ORKET_OPERATING_PRINCIPLES.md) for determinism claims, promotion decisions, and publication language.
 
 It does not replace:
-1. [docs/specs/PROTOCOL_DETERMINISM_CONTROL_SURFACE.md](docs/specs/PROTOCOL_DETERMINISM_CONTROL_SURFACE.md)
-2. [docs/specs/PROTOCOL_REPLAY_CAMPAIGN_SCHEMA.md](docs/specs/PROTOCOL_REPLAY_CAMPAIGN_SCHEMA.md)
-3. [docs/specs/PROTOCOL_LEDGER_PARITY_CAMPAIGN_SCHEMA.md](docs/specs/PROTOCOL_LEDGER_PARITY_CAMPAIGN_SCHEMA.md)
-4. [docs/specs/OFFLINE_CAPABILITY_MATRIX.md](docs/specs/OFFLINE_CAPABILITY_MATRIX.md)
-5. [docs/specs/CORE_RELEASE_GATE_CHECKLIST.md](docs/specs/CORE_RELEASE_GATE_CHECKLIST.md)
-6. [docs/process/PUBLISHED_ARTIFACTS_POLICY.md](docs/process/PUBLISHED_ARTIFACTS_POLICY.md)
-7. [docs/process/PRODUCT_PUBLISHING.md](docs/process/PRODUCT_PUBLISHING.md)
+1. [docs/specs/PROTOCOL_DETERMINISM_CONTROL_SURFACE.md](PROTOCOL_DETERMINISM_CONTROL_SURFACE.md)
+2. [docs/specs/PROTOCOL_REPLAY_CAMPAIGN_SCHEMA.md](PROTOCOL_REPLAY_CAMPAIGN_SCHEMA.md)
+3. [docs/specs/PROTOCOL_LEDGER_PARITY_CAMPAIGN_SCHEMA.md](PROTOCOL_LEDGER_PARITY_CAMPAIGN_SCHEMA.md)
+4. [docs/specs/OFFLINE_CAPABILITY_MATRIX.md](OFFLINE_CAPABILITY_MATRIX.md)
+5. [docs/specs/CORE_RELEASE_GATE_CHECKLIST.md](CORE_RELEASE_GATE_CHECKLIST.md)
+6. [docs/process/PUBLISHED_ARTIFACTS_POLICY.md](../process/PUBLISHED_ARTIFACTS_POLICY.md)
+7. [docs/process/PRODUCT_PUBLISHING.md](../process/PRODUCT_PUBLISHING.md)
 
 This policy defines:
 1. what determinism tier Orket may claim,

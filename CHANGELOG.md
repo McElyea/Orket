@@ -5,6 +5,24 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.8] - 2026-10-10 - "Documentation accuracy audit"
+
+### Documentation
+- Repair 189 relative links and align the root/docs entry points, API route
+  catalog, authentication guidance, test layer selections and shell examples
+  with current source. Remove stale Mac candidate version assumptions and mark
+  historical proposals and benchmark snapshots explicitly.
+- Align release proof labels with the testing policy. Document the reproduced
+  legacy security-canary failure and the current scoped security checks.
+- Stability: documentation-only changes; runtime behavior and SDK 0.8.0 remain
+  unchanged. Audit coverage, executed checks and remaining limitations are in
+  `docs/releases/0.8.8/PROOF_REPORT.md`.
+- Operator/contributor action: no migration required. Use the current check
+  commands and select installation artifacts from the chosen build receipt.
+- `compatibility_status`: `preserved`
+- `affected_audience`: `all`
+- `migration_requirement`: `none`
+
 ## [0.8.7] - 2026-10-10 - "Gardener installation and upgrade guide"
 
 ### Documentation

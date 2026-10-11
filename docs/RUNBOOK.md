@@ -70,7 +70,7 @@ python -m pip install -e "./orket_extension_sdk[testing]" -e ".[dev]"
 ```
 2. Configure environment:
 ```bash
-copy .env.example .env
+cp .env.example .env
 ```
 3. CLI runtime:
 ```bash
@@ -500,7 +500,7 @@ orket connectors test create_directory --args "{\"path\":\"demo-dir\"}"
 HTTP connectors require exact-host allowlisting:
 
 ```bash
-set ORKET_CONNECTOR_HTTP_ALLOWLIST=example.com
+export ORKET_CONNECTOR_HTTP_ALLOWLIST=example.com
 orket connectors test http_get --args "{\"url\":\"https://example.com\"}"
 ```
 
@@ -508,15 +508,15 @@ orket connectors test http_get --args "{\"url\":\"https://example.com\"}"
 The outbound policy gate can be configured with environment variables:
 
 ```bash
-set ORKET_OUTBOUND_POLICY_PII_FIELD_PATHS=items.*.args_preview.path
-set ORKET_OUTBOUND_POLICY_FORBIDDEN_PATTERNS=BLOCKME
-set ORKET_OUTBOUND_POLICY_ALLOWED_OUTPUT_FIELDS={"proposal_made":["event_type","payload"]}
+export ORKET_OUTBOUND_POLICY_PII_FIELD_PATHS='items.*.args_preview.path'
+export ORKET_OUTBOUND_POLICY_FORBIDDEN_PATTERNS=BLOCKME
+export ORKET_OUTBOUND_POLICY_ALLOWED_OUTPUT_FIELDS='{"proposal_made":["event_type","payload"]}'
 ```
 
 Or use a JSON config file and point API startup at it:
 
 ```bash
-set ORKET_OUTBOUND_POLICY_CONFIG_PATH=config/outbound_policy.json
+export ORKET_OUTBOUND_POLICY_CONFIG_PATH=config/outbound_policy.json
 python server.py
 ```
 
@@ -1144,14 +1144,20 @@ python -m pytest tests/kernel/v1/test_odr_determinism_gate.py -k gate_pr -q
 ```bash
 python scripts/governance/run_cli_regression_smoke.py --out benchmarks/results/governance/cli_regression_smoke.json
 ```
-4. Release smoke:
+4. API authentication controls:
 ```bash
-python scripts/governance/release_smoke.py
+python -m pytest -q tests/interfaces/test_api.py -k "health_check or version or insecure or websocket_events"
 ```
-5. Security canary:
+5. Webhook controls:
 ```bash
-python scripts/security/security_canary.py
+python -m pytest -q tests/interfaces/test_webhook_factory.py
 ```
+The legacy `security_canary.py` still references removed module-level app
+singletons, and `release_smoke.py` invokes that broken path. Until migrated,
+neither establishes passing acceptance. The selections above are scoped
+contract/integration checks, not whole-release or live model proof; see
+[Testing policy](TESTING_POLICY.md#cli-and-security-smoke).
+
 6. Volatility boundary gate:
 ```bash
 python scripts/benchmarks/check_volatility_boundaries.py
@@ -1358,11 +1364,11 @@ python scripts/ci/gitea_ci_easy.py doctor
 ## Runtime Profiles and Migration
 1. Set workflow profile:
 ```bash
-set ORKET_WORKFLOW_PROFILE=legacy_cards_v1
+export ORKET_WORKFLOW_PROFILE=legacy_cards_v1
 ```
 or
 ```bash
-set ORKET_WORKFLOW_PROFILE=project_task_v1
+export ORKET_WORKFLOW_PROFILE=project_task_v1
 ```
 2. Migration dry-run:
 ```bash

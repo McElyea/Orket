@@ -23,7 +23,7 @@ Validate: `python scripts/governance/check_current_authority.py`.
 | Quality coverage | pytest tests/ --cov=orket --cov-config=pyproject.toml --cov-fail-under=89 | [docs/CONTRIBUTOR.md](<docs/CONTRIBUTOR.md>) |
 | Canonical Ruff | ruff check orket tests | [.gitea/workflows/quality.yml](<.gitea/workflows/quality.yml>) |
 | Default runtime; project setup, diagnostics and prepared local-agent example documented alongside it | orket runtime | [docs/CONTRIBUTOR.md](<docs/CONTRIBUTOR.md>) |
-| Strict taxonomy | python scripts/governance/enforce_test_taxonomy.py --strict | [docs/CONTRIBUTOR.md](<docs/CONTRIBUTOR.md>) |
+| Strict collected-marker taxonomy; layer and current security selections in docs/TESTING_POLICY.md | python scripts/governance/enforce_test_taxonomy.py --strict | [docs/CONTRIBUTOR.md](<docs/CONTRIBUTOR.md>) |
 
 ## Execution ownership
 

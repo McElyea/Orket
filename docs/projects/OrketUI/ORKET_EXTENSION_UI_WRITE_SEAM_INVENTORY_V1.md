@@ -4,7 +4,7 @@ Last updated: 2026-04-09
 Status: Active shipped provenance support doc
 Authority status: Active Orket-side shipped provenance support doc. Records the current write-seam inventory for OrketUI and does not itself admit new host behavior.
 Owner: Orket Core
-Related docs: [docs/projects/archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md](docs/projects/archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md), [ORKET_EXTENSION_UI_REQUIREMENTS_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_REQUIREMENTS_V1.md), [ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md), [ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md), [docs/specs/CARD_AUTHORING_SURFACE_V1.md](docs/specs/CARD_AUTHORING_SURFACE_V1.md), [docs/specs/FLOW_AUTHORING_SURFACE_V1.md](docs/specs/FLOW_AUTHORING_SURFACE_V1.md), [docs/API_FRONTEND_CONTRACT.md](docs/API_FRONTEND_CONTRACT.md), [CURRENT_AUTHORITY.md](CURRENT_AUTHORITY.md)
+Related docs: [docs/projects/archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md](../archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md), [ORKET_EXTENSION_UI_REQUIREMENTS_V1.md](ORKET_EXTENSION_UI_REQUIREMENTS_V1.md), [ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md](ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md), [ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md](ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md), [docs/specs/CARD_AUTHORING_SURFACE_V1.md](../../specs/CARD_AUTHORING_SURFACE_V1.md), [docs/specs/FLOW_AUTHORING_SURFACE_V1.md](../../specs/FLOW_AUTHORING_SURFACE_V1.md), [docs/API_FRONTEND_CONTRACT.md](../../API_FRONTEND_CONTRACT.md), [CURRENT_AUTHORITY.md](../../../CURRENT_AUTHORITY.md)
 
 ## Purpose
 
@@ -23,42 +23,42 @@ The only bounded caveat is `run flow`: it is shipped only as a bounded single-ca
 ### `create card`
 
 1. Current shipped host seam: `POST /v1/cards`
-2. Canonical host contract: [docs/specs/CARD_AUTHORING_SURFACE_V1.md](docs/specs/CARD_AUTHORING_SURFACE_V1.md)
+2. Canonical host contract: [docs/specs/CARD_AUTHORING_SURFACE_V1.md](../../specs/CARD_AUTHORING_SURFACE_V1.md)
 3. Current status: shipped and admitted
 4. Truth note: host create success begins only when the response returns the canonical `card_id` and `revision_id`; issue-target cards also upsert the bounded runtime projection at `config/epics/orket_ui_authored_cards.json`
 
 ### `save card`
 
 1. Current shipped host seam: `PUT /v1/cards/{card_id}`
-2. Canonical host contract: [docs/specs/CARD_AUTHORING_SURFACE_V1.md](docs/specs/CARD_AUTHORING_SURFACE_V1.md)
+2. Canonical host contract: [docs/specs/CARD_AUTHORING_SURFACE_V1.md](../../specs/CARD_AUTHORING_SURFACE_V1.md)
 3. Current status: shipped and admitted
 4. Truth note: the optional `expected_revision_id` guard is the fail-closed stale-save boundary, and successful issue-target saves refresh the bounded runtime projection used by the admitted flow-run slice
 
 ### `validate card`
 
 1. Current shipped host seam: `POST /v1/cards/validate`
-2. Canonical host contract: [docs/specs/CARD_AUTHORING_SURFACE_V1.md](docs/specs/CARD_AUTHORING_SURFACE_V1.md)
+2. Canonical host contract: [docs/specs/CARD_AUTHORING_SURFACE_V1.md](../../specs/CARD_AUTHORING_SURFACE_V1.md)
 3. Current status: shipped and admitted
 4. Truth note: validation is non-persisting and does not mint host identifiers
 
 ### `save flow`
 
 1. Current shipped host seam: `POST /v1/flows` and `PUT /v1/flows/{flow_id}`
-2. Canonical host contract: [docs/specs/FLOW_AUTHORING_SURFACE_V1.md](docs/specs/FLOW_AUTHORING_SURFACE_V1.md)
+2. Canonical host contract: [docs/specs/FLOW_AUTHORING_SURFACE_V1.md](../../specs/FLOW_AUTHORING_SURFACE_V1.md)
 3. Current status: shipped and admitted
 4. Truth note: flow persistence is now host-owned for the admitted neutral flow-definition surface
 
 ### `validate flow`
 
 1. Current shipped host seam: `POST /v1/flows/validate`
-2. Canonical host contract: [docs/specs/FLOW_AUTHORING_SURFACE_V1.md](docs/specs/FLOW_AUTHORING_SURFACE_V1.md)
+2. Canonical host contract: [docs/specs/FLOW_AUTHORING_SURFACE_V1.md](../../specs/FLOW_AUTHORING_SURFACE_V1.md)
 3. Current status: shipped and admitted
 4. Truth note: validation is non-persisting and remains distinct from save truth
 
 ### `run flow`
 
 1. Current shipped host seam: `POST /v1/flows/{flow_id}/runs`
-2. Canonical host contract: [docs/specs/FLOW_AUTHORING_SURFACE_V1.md](docs/specs/FLOW_AUTHORING_SURFACE_V1.md)
+2. Canonical host contract: [docs/specs/FLOW_AUTHORING_SURFACE_V1.md](../../specs/FLOW_AUTHORING_SURFACE_V1.md)
 3. Nearby existing seam: `POST /v1/system/run-active` remains the canonical run or rerun action for the existing Card Viewer/Runner slice only
 4. Current status: shipped and admitted for the bounded current slice
 5. Truth note: `200` plus returned `session_id` is authoritative run acceptance only; later run completion remains governed by the existing runtime policy and epic environment

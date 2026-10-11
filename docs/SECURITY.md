@@ -1,6 +1,10 @@
 # Orket Security and Governance
 
-This document defines security requirements for API/webhook boundaries, configuration posture, and release canary checks.
+This document defines security requirements for API/webhook boundaries, configuration posture, and security verification.
+
+Last reviewed: 2026-10-10. Application authority:
+`orket/application/services/api_authentication_service.py` and
+`orket/runtime/config/startup_checks.py`.
 
 ## 1. API Auth Policy (`/v1/*`)
 1. `/v1/*` endpoints are protected by `X-API-Key`.
@@ -10,7 +14,11 @@ This document defines security requirements for API/webhook boundaries, configur
    - if `ORKET_API_KEY` is unset, requests are rejected.
 5. API key comparison uses timing-safe comparison for supplied `X-API-Key` values.
 6. Insecure local bypass is explicit and opt-in only:
-   - `ORKET_ALLOW_INSECURE_NO_API_KEY=true`
+   - `ORKET_ALLOW_INSECURE_NO_API_KEY=true`, a non-production
+     `ORKET_API_SECURITY_PROFILE` (for example `dev`), and a local `ORKET_ENV`.
+   - The default security profile is `production`, which still rejects anonymous
+     requests. A configured key still has to match even when bypass is enabled.
+   - `ORKET_ENV=production` or `staging` refuses bypass at startup.
 7. Startup refuses non-local environments when required secrets are missing or still set to documented placeholders:
    - `ORKET_ENCRYPTION_KEY`
    - `SESSION_SECRET`
@@ -21,6 +29,17 @@ This document defines security requirements for API/webhook boundaries, configur
 10. Companion gateway/BFF auth is external to Orket core:
    - the gateway sends the host credential through `COMPANION_API_KEY` or `ORKET_API_KEY`
    - the gateway continues to enforce its own loopback and same-origin protections on `/api/*`
+
+`GET /health` is deliberately unauthenticated and returns only liveness. The
+WebSocket routes use the same captured host authentication inputs: headers are
+supported in every mode; query-string keys are compatibility-only and are rejected
+by `ORKET_API_SECURITY_MODE=enforce`. Do not put credentials in shared URLs/logs.
+Changing shell settings does not reconfigure an already constructed API owner;
+restart the host to change its captured authentication inputs.
+
+Governed-agent delivery at `/v1/agent-webhooks/{issuer_ref}/deliveries/{delivery_id}`
+requires both the core API key and its configured issuer HMAC/timestamp headers.
+It is separate from the standalone Gitea webhook service described below.
 
 ## 1.1. Browser CORS Policy
 1. Browser CORS is denied by default with `allow_origins=[]`.
@@ -49,14 +68,14 @@ This document defines security requirements for API/webhook boundaries, configur
 
 ## 3. Environment Matrix
 ### Local Dev
-1. `ORKET_API_KEY` set (recommended), or explicit insecure bypass for temporary local debug.
+1. `ORKET_API_KEY` set (recommended), or the complete explicit local bypass posture above.
 2. `ORKET_ENABLE_WEBHOOK_TEST_ENDPOINT` normally `false`.
 3. If enabling `/webhook/test`, set `ORKET_WEBHOOK_TEST_TOKEN`.
 4. If running the external Companion gateway, set `COMPANION_API_KEY` or `ORKET_API_KEY` in that process environment.
 
 ### CI
 1. Use strict auth posture (no insecure bypass).
-2. Run tests and release canary checks.
+2. Run the current API/webhook checks linked below alongside the applicable test selection.
 3. Keep webhook test endpoint disabled unless a specific test requires it.
 
 ### Production
@@ -78,8 +97,10 @@ This document defines security requirements for API/webhook boundaries, configur
 
 ## 6. Auditability and Canary Checks
 1. Session/runtime actions are observable through logs and datastore records.
-2. `scripts/security/security_canary.py` validates:
-   - fail-closed API auth
-   - mandatory webhook signature
-   - disabled webhook test endpoint by default
-3. `scripts/governance/release_smoke.py` runs security canary by default.
+2. Use the current API authentication and webhook factory regression commands in
+   [Testing Policy](TESTING_POLICY.md#cli-and-security-smoke). These exercise
+   application lifetimes and admission; they are not live model proof.
+3. The legacy `scripts/security/security_canary.py` still uses the removed module
+   `app` singleton and currently fails before its assertions. The legacy
+   `scripts/governance/release_smoke.py` depends on it. Neither is a passing
+   security/release acceptance command until migrated to the application factories.

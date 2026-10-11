@@ -220,6 +220,6 @@ At minimum, prior compatibility results must be treated as requiring re-evaluati
 
 The Phase 0 bootstrap freeze for this contract is accompanied by:
 
-1. [docs/projects/archive/PromptReforgerToolCompatibility/PR04032026-PHASE0-CLOSEOUT/request_examples.jsonl](docs/projects/archive/PromptReforgerToolCompatibility/PR04032026-PHASE0-CLOSEOUT/request_examples.jsonl)
-2. [docs/projects/archive/PromptReforgerToolCompatibility/PR04032026-PHASE0-CLOSEOUT/result_examples.jsonl](docs/projects/archive/PromptReforgerToolCompatibility/PR04032026-PHASE0-CLOSEOUT/result_examples.jsonl)
-3. [docs/projects/archive/PromptReforgerToolCompatibility/PR04032026-PHASE0-CLOSEOUT/Phase0ImplementationPlan.md](docs/projects/archive/PromptReforgerToolCompatibility/PR04032026-PHASE0-CLOSEOUT/Phase0ImplementationPlan.md)
+1. [docs/projects/archive/PromptReforgerToolCompatibility/PR04032026-PHASE0-CLOSEOUT/request_examples.jsonl](../projects/archive/PromptReforgerToolCompatibility/PR04032026-PHASE0-CLOSEOUT/request_examples.jsonl)
+2. [docs/projects/archive/PromptReforgerToolCompatibility/PR04032026-PHASE0-CLOSEOUT/result_examples.jsonl](../projects/archive/PromptReforgerToolCompatibility/PR04032026-PHASE0-CLOSEOUT/result_examples.jsonl)
+3. [docs/projects/archive/PromptReforgerToolCompatibility/PR04032026-PHASE0-CLOSEOUT/Phase0ImplementationPlan.md](../projects/archive/PromptReforgerToolCompatibility/PR04032026-PHASE0-CLOSEOUT/Phase0ImplementationPlan.md)

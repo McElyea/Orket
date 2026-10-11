@@ -4,7 +4,7 @@ Last updated: 2026-09-18
 Status: Active shipped provenance support doc
 Authority status: Active Orket-side shipped provenance support doc. Subordinate to shipped host authority and not itself a new host-seam grant.
 Owner: Orket Core
-Related docs: [docs/projects/archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md](docs/projects/archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md), [ORKET_EXTENSION_UI_REQUIREMENTS_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_REQUIREMENTS_V1.md), [ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md), [ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md), [docs/specs/CARD_AUTHORING_SURFACE_V1.md](docs/specs/CARD_AUTHORING_SURFACE_V1.md), [docs/specs/FLOW_AUTHORING_SURFACE_V1.md](docs/specs/FLOW_AUTHORING_SURFACE_V1.md), [docs/API_FRONTEND_CONTRACT.md](docs/API_FRONTEND_CONTRACT.md), [docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md](docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md), [docs/specs/COMPANION_UI_MVP_CONTRACT.md](docs/specs/COMPANION_UI_MVP_CONTRACT.md), [docs/specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md](docs/specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md), [CURRENT_AUTHORITY.md](CURRENT_AUTHORITY.md)
+Related docs: [docs/projects/archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md](../archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md), [ORKET_EXTENSION_UI_REQUIREMENTS_V1.md](ORKET_EXTENSION_UI_REQUIREMENTS_V1.md), [ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md](ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md), [ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md](ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md), [docs/specs/CARD_AUTHORING_SURFACE_V1.md](../../specs/CARD_AUTHORING_SURFACE_V1.md), [docs/specs/FLOW_AUTHORING_SURFACE_V1.md](../../specs/FLOW_AUTHORING_SURFACE_V1.md), [docs/API_FRONTEND_CONTRACT.md](../../API_FRONTEND_CONTRACT.md), [docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md](../../specs/CARD_VIEWER_RUNNER_SURFACE_V1.md), [docs/specs/COMPANION_UI_MVP_CONTRACT.md](../../specs/COMPANION_UI_MVP_CONTRACT.md), [docs/specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md](../../specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md), [CURRENT_AUTHORITY.md](../../../CURRENT_AUTHORITY.md)
 
 ## Purpose
 
@@ -16,9 +16,9 @@ This doc exists so the OrketUI lane does not quietly invent host truth through B
 
 When this doc conflicts with current shipped host authority, the higher-precedence sources are:
 
-1. [CURRENT_AUTHORITY.md](CURRENT_AUTHORITY.md)
-2. [docs/API_FRONTEND_CONTRACT.md](docs/API_FRONTEND_CONTRACT.md)
-3. active host specs named by the current authority snapshot, including [docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md](docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md) and [docs/specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md](docs/specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md)
+1. [CURRENT_AUTHORITY.md](../../../CURRENT_AUTHORITY.md)
+2. [docs/API_FRONTEND_CONTRACT.md](../../API_FRONTEND_CONTRACT.md)
+3. active host specs named by the current authority snapshot, including [docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md](../../specs/CARD_VIEWER_RUNNER_SURFACE_V1.md) and [docs/specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md](../../specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md)
 
 This doc does not reopen or override those surfaces.
 
@@ -42,12 +42,12 @@ That precedent does not authorize OrketUI-specific nouns, routes, or host write 
 
 Without new core work, the extension may rely only on host inputs already admitted by canonical docs such as:
 
-1. [docs/API_FRONTEND_CONTRACT.md](docs/API_FRONTEND_CONTRACT.md)
-2. [docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md](docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md)
-3. [docs/specs/CARD_AUTHORING_SURFACE_V1.md](docs/specs/CARD_AUTHORING_SURFACE_V1.md)
-4. [docs/specs/FLOW_AUTHORING_SURFACE_V1.md](docs/specs/FLOW_AUTHORING_SURFACE_V1.md)
-5. [docs/specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md](docs/specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md)
-6. host-current seams named in [CURRENT_AUTHORITY.md](CURRENT_AUTHORITY.md)
+1. [docs/API_FRONTEND_CONTRACT.md](../../API_FRONTEND_CONTRACT.md)
+2. [docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md](../../specs/CARD_VIEWER_RUNNER_SURFACE_V1.md)
+3. [docs/specs/CARD_AUTHORING_SURFACE_V1.md](../../specs/CARD_AUTHORING_SURFACE_V1.md)
+4. [docs/specs/FLOW_AUTHORING_SURFACE_V1.md](../../specs/FLOW_AUTHORING_SURFACE_V1.md)
+5. [docs/specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md](../../specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md)
+6. host-current seams named in [CURRENT_AUTHORITY.md](../../../CURRENT_AUTHORITY.md)
 
 Older UI code, prototype HTML, generated mockups, and remembered route shapes are not authority.
 
@@ -55,8 +55,8 @@ Older UI code, prototype HTML, generated mockups, and remembered route shapes ar
 
 The OrketUI lane now has shipped host specs for the bounded current write slice in:
 
-1. [docs/specs/CARD_AUTHORING_SURFACE_V1.md](docs/specs/CARD_AUTHORING_SURFACE_V1.md)
-2. [docs/specs/FLOW_AUTHORING_SURFACE_V1.md](docs/specs/FLOW_AUTHORING_SURFACE_V1.md)
+1. [docs/specs/CARD_AUTHORING_SURFACE_V1.md](../../specs/CARD_AUTHORING_SURFACE_V1.md)
+2. [docs/specs/FLOW_AUTHORING_SURFACE_V1.md](../../specs/FLOW_AUTHORING_SURFACE_V1.md)
 
 Those specs are now adopted into the active host authority set.
 
@@ -163,7 +163,7 @@ These admitted generic extension-runtime routes also do not, by themselves, auth
 
 ## Prompt Reforger seam note
 
-Prompt Reforger already has a host-owned service contract in [docs/specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md](docs/specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md).
+Prompt Reforger already has a host-owned service contract in [docs/specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md](../../specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md).
 
 What is already canonical:
 
@@ -216,7 +216,7 @@ Those actions now map to admitted host seams for the bounded shipped slice.
 
 That does not authorize the UI to imply broader behavior than the current host contract actually ships, especially for multi-node flow execution beyond the admitted single-card issue-target run path.
 
-The current action-by-action result for that inventory is recorded in [ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md).
+The current action-by-action result for that inventory is recorded in [ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md](ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md).
 
 ## Change gate for implementation
 

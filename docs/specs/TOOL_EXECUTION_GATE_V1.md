@@ -40,7 +40,7 @@ The following are fixed for this lane:
 3. Direct `ToolDispatcher` use is internal-only and is not a separate supported public runtime path.
 4. The authoritative governed turn-tool gate is the composed dispatcher-level gate on that path, not the looser phrase "`ToolGate` or a stricter first-class policy gate."
 5. `orket/agents/agent.py::Agent.run(...)` direct tool execution remains legacy compatibility debt, and the retained compatibility surface now fail-closes before any direct tool call when `tool_gate` authority is missing.
-6. Direct `orket/tools.py::ToolBox.execute(...)` and direct card-family method invocation are internal helper surfaces, not independent gate-authority surfaces.
+6. Direct `orket/application/services/toolbox.py::ToolBox.execute(...)` and direct card-family method invocation are internal helper surfaces, not independent gate-authority surfaces.
 7. Card-family methods remain tool implementations; gate authority happens before those methods are invoked.
 8. In scope for this lane are extension actions that delegate into `run_card(...)`, including extension engine actions normalized by `orket/extensions/runtime.py::ExtensionEngineAdapter.execute_action(...)`.
 

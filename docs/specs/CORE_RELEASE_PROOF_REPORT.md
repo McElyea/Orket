@@ -1,6 +1,6 @@
 # Core Release Proof Report Template
 
-Last updated: 2026-03-12
+Last updated: 2026-10-10
 Status: Active
 Owner: Orket Core
 
@@ -18,6 +18,10 @@ Patch releases may use this template, but it is required only when the release p
    - `proof_mode` is `structural`
    - `proof_result` is `blocked`
    - `proof_result` is `not_applicable`
+6. Apply [the testing policy's live definition](../TESTING_POLICY.md#live-definition).
+   Provider-free native execution is scoped non-live evidence. When recording it
+   as `structural`, distinguish actual contract/integration execution from source
+   inspection and retain the command, result and limitations.
 
 ## 2. Template
 

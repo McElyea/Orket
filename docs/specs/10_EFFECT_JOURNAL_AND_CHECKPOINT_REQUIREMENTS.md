@@ -14,7 +14,7 @@ This document closes one of the implementation-gate gaps identified by the packe
 
 ## Authority note
 
-Shared enums and first-class object nouns are defined in [00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md](docs/specs/00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md).
+Shared enums and first-class object nouns are defined in [00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md](00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md).
 
 `EffectJournalEntry` and `CheckpointAcceptanceRecord` are first-class control-plane records in this lane.
 

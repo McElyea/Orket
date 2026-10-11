@@ -1,5 +1,10 @@
 # Volatility Baseline
 
+Status: Historical measurement (2026-02-11), not the current module map or work queue.
+Paths and counts below describe that source snapshot. For current ownership use
+[Architecture](../ARCHITECTURE.md) and [dependency graph](dependency_graph_snapshot.md);
+execution priority remains [Roadmap](../ROADMAP.md).
+
 Generated from `scripts/ops/churn_report.py` on 2026-02-11.
 Evidence file: `benchmarks/results/benchmarks/2026-02-11_phaseR_churn.json`.
 

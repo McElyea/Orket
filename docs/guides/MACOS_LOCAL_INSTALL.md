@@ -1,6 +1,6 @@
 # Apple Silicon candidate installation
 
-Last updated: 2026-10-07
+Last updated: 2026-10-10
 
 Mac support is awaiting native acceptance. These are the candidate installation
 instructions for that work, not a declaration that the complete runtime works on
@@ -15,24 +15,29 @@ from the candidate evidence record. Do not install Orket into Apple's system
 Python or a contributor environment. Internet access to PyPI is required for
 dependencies unless an independently prepared wheelhouse is supplied.
 
-In Terminal, check the interpreter and create a new environment:
+In Terminal, check the interpreter and create a new environment. Replace
+`<candidate-id>` with the identity of the selected build receipt:
 
 ```bash
 python3.11 -c 'import platform; print(platform.system(), platform.machine(), platform.python_version())'
-python3.11 -m venv "$HOME/.local/share/orket/candidates/0.7.8"
-source "$HOME/.local/share/orket/candidates/0.7.8/bin/activate"
+ORKET_CANDIDATE_ENV="$HOME/.local/share/orket/candidates/<candidate-id>"
+python3.11 -m venv "$ORKET_CANDIDATE_ENV"
+source "$ORKET_CANDIDATE_ENV/bin/activate"
 ```
 
 The platform check must print `Darwin arm64`. An `x86_64` interpreter is outside
 this milestone, including when it runs through Rosetta. Choose an unused
-environment directory; the example corresponds to the current source candidate.
+environment directory. No fixed historical version is implied to be the current
+candidate; core and SDK versions are selected from the same build receipt and
+need not have identical version numbers.
 
 Set these two paths to the retained wheels named in `package-install.json` and
-compare their hashes with that record before installation:
+compare their hashes with that record before installation. Replace the path and
+version placeholders; do not infer a published wheel from the source version:
 
 ```bash
-SDK_WHEEL="/absolute/path/to/orket_extension_sdk-0.7.2-py3-none-any.whl"
-ORKET_WHEEL="/absolute/path/to/orket-0.7.8-py3-none-any.whl"
+SDK_WHEEL="/absolute/path/to/orket_extension_sdk-<sdk-version>-py3-none-any.whl"
+ORKET_WHEEL="/absolute/path/to/orket-<core-version>-py3-none-any.whl"
 shasum -a 256 "$SDK_WHEEL" "$ORKET_WHEEL"
 python -m pip install "$SDK_WHEEL" "$ORKET_WHEEL"
 python -m pip check

@@ -46,7 +46,7 @@ Optional governed claim fields for artifact rows:
 7. `provenance_ref`
 8. `determinism_class`
 
-When present, these fields are first-class publication consumer surfaces and must stay truthful to the underlying proof bundle. Rows that omit them remain transition-rule debt under [docs/specs/ORKET_DETERMINISM_GATE_POLICY.md](docs/specs/ORKET_DETERMINISM_GATE_POLICY.md).
+When present, these fields are first-class publication consumer surfaces and must stay truthful to the underlying proof bundle. Rows that omit them remain transition-rule debt under [docs/specs/ORKET_DETERMINISM_GATE_POLICY.md](../specs/ORKET_DETERMINISM_GATE_POLICY.md).
 
 ## Staging Workflow (Mandatory For Agent-Proposed Artifacts)
 1. Copy candidate artifact(s) into the right category folder under `benchmarks/staging/`.

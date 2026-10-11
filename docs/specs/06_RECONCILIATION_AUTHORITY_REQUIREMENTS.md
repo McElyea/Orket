@@ -10,7 +10,7 @@ Define the authority, triggers, outputs, and constraints of reconciliation so Or
 
 ## Authority note
 
-Shared reconciliation enums and operator input classes are defined in [00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md](docs/specs/00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md).
+Shared reconciliation enums and operator input classes are defined in [00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md](00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md).
 
 ## Core assertion
 

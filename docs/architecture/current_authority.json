@@ -65,7 +65,7 @@
     {
       "id": "command.taxonomy",
       "kind": "command",
-      "label": "Strict taxonomy",
+      "label": "Strict collected-marker taxonomy; layer and current security selections in docs/TESTING_POLICY.md",
       "source": "docs/CONTRIBUTOR.md",
       "command": "python scripts/governance/enforce_test_taxonomy.py --strict",
       "proof": "proof.current"

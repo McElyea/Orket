@@ -10,11 +10,11 @@ Define the minimum capability and effect model required for Orket to mediate too
 
 ## Authority note
 
-Shared capability, effect, idempotency, compensation, evidence, and observability enums are defined in [00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md](docs/specs/00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md).
+Shared capability, effect, idempotency, compensation, evidence, and observability enums are defined in [00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md](00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md).
 
 Namespace and tooling extensions are defined in:
-1. [11_NAMESPACE_AND_WORKLOAD_COMPOSITION_REQUIREMENTS.md](docs/specs/11_NAMESPACE_AND_WORKLOAD_COMPOSITION_REQUIREMENTS.md)
-2. [12_SAFE_TOOLING_WORKLOAD_INTEGRATION_REQUIREMENTS.md](docs/specs/12_SAFE_TOOLING_WORKLOAD_INTEGRATION_REQUIREMENTS.md)
+1. [11_NAMESPACE_AND_WORKLOAD_COMPOSITION_REQUIREMENTS.md](11_NAMESPACE_AND_WORKLOAD_COMPOSITION_REQUIREMENTS.md)
+2. [12_SAFE_TOOLING_WORKLOAD_INTEGRATION_REQUIREMENTS.md](12_SAFE_TOOLING_WORKLOAD_INTEGRATION_REQUIREMENTS.md)
 
 ## Core assertion
 
@@ -62,7 +62,7 @@ Each effect-bearing action must declare or resolve at minimum:
 
 ### CE-05. Effect journal compatibility
 
-Every effect-bearing action contract must be compatible with [10_EFFECT_JOURNAL_AND_CHECKPOINT_REQUIREMENTS.md](docs/specs/10_EFFECT_JOURNAL_AND_CHECKPOINT_REQUIREMENTS.md).
+Every effect-bearing action contract must be compatible with [10_EFFECT_JOURNAL_AND_CHECKPOINT_REQUIREMENTS.md](10_EFFECT_JOURNAL_AND_CHECKPOINT_REQUIREMENTS.md).
 
 ## Policy implications
 

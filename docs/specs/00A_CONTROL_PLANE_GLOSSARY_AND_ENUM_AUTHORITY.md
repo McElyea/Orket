@@ -29,7 +29,7 @@ They may explain meaning, guardrails, and policy, but they must not silently red
 
 ## Architecture alignment
 
-`FinalTruthRecord.result_class` must use the stable result vocabulary already defined in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+`FinalTruthRecord.result_class` must use the stable result vocabulary already defined in [docs/ARCHITECTURE.md](../ARCHITECTURE.md).
 
 This packet augments that result vocabulary with additional closure fields.
 It does not silently replace it.

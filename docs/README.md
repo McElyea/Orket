@@ -2,7 +2,15 @@
 
 Last reviewed: 2026-10-10
 
-This index is the canonical map for markdown docs under `docs/`, excluding `docs/projects/**` and excluding non-markdown artifacts such as schemas, JSON snapshots, and YAML scenarios.
+This is the curated entry point for current documentation, not an exhaustive
+file inventory. [Current authority](../CURRENT_AUTHORITY.md) identifies canonical
+commands and contracts; [Roadmap](ROADMAP.md) owns project status. Dated release
+proof, contract deltas and archived plans describe their recorded candidates,
+not automatic acceptance of today's checkout.
+
+Browse the complete [specifications](specs/), [guides](guides/),
+[architecture records](architecture/), [release evidence](releases/) and
+[historical projects](projects/archive/) when a document is not listed below.
 
 ## Canonical Root Docs
 1. `docs/ROADMAP.md`
@@ -102,6 +110,11 @@ Licensing authority: [Apache-2.0 cutover, contributions, and notices](specs/LICE
 73. `docs/specs/MACOS_LOCAL_RUNTIME_ACCEPTANCE.md` -- Accepted Apple Silicon milestone requirements; native acceptance outstanding.
 74. `docs/specs/GOVERNED_AGENT_TASK_SUBMISSION.md` -- Public SDK task admission and advisory report delivery.
 75. `docs/specs/GARDENER_REPORT_HARNESS.md` -- Bounded committed evidence and report-only Gardener integration.
+76. [Host generation options and profile sizing](specs/MODEL_GENERATION_OPTIONS.md).
+77. [Provider timing and nullable measurements](specs/MODEL_PROVIDER_TIMING.md).
+78. [Licensing and package notices](specs/LICENSING_POLICY.md).
+79. [Governed-agent loop, durable wakes and continuation](specs/GOVERNED_AGENT_LOOP_V1.md).
+80. [Installed runtime project roots](specs/RUNTIME_PROJECT_ROOTS.md).
 
 Gardener installation, environment settings, budget sizing and upgrades:
 [command harness guide](../examples/gardener_harness/README.md#install-orket-and-the-report-extension).
@@ -144,6 +157,12 @@ Native acceptance commands, remote host proposal and evidence/teardown procedure
 9. `docs/guides/GOVERNED_REPO_CHANGE_PACKET_GUIDE.md`
 10. `docs/guides/TRUSTED_TERRAFORM_PLAN_DECISION_SCOPE_GUIDE.md`
 11. `docs/guides/TRUST_KERNEL_CONFORMANCE_PACK_GUIDE.md`
+12. [Local installation and prepared workflow](guides/MACOS_LOCAL_INSTALL.md) -- native Mac acceptance remains outstanding.
+13. [Mac acceptance runbook](guides/MACOS_ACCEPTANCE_RUNBOOK.md).
+
+The [Gardener integration brief](ORKET_GARDENER_INTEGRATION_BRIEF.html) is the
+historical September proposal. Use the current installation guide linked above
+for the implemented report-only path.
 
 ## ODR Research
 1. `docs/odr/requirements.md`
@@ -214,6 +233,11 @@ Public report submission delta:
 56. `docs/architecture/CONTRACT_DELTA_NAMED_HOTSPOTS_E2_2026-10-01.md`
 
 ## Releases
+
+Use the root [changelog](../CHANGELOG.md) for current versions, compatibility and
+operator actions. The [release directory](releases/) retains scoped evidence for
+each documented candidate; an older passing proof is not a current full-suite pass.
+
 1. `docs/releases/0.4.0/PROOF_REPORT.md`
 2. `docs/releases/0.8.0/RELEASE_NOTES.md`
    - Coordinated Apache-2.0 source cutover; proof and publication status in the adjacent report.

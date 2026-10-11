@@ -1,6 +1,6 @@
 ﻿# Failure Recovery
 
-Last reviewed: 2026-02-27
+Last reviewed: 2026-10-10
 
 ## Purpose
 Operational recovery guide for API, CLI, webhook, and run-state failures.
@@ -25,7 +25,10 @@ Checks:
 
 Actions:
 1. Inspect `workspace/default/orket.log` for startup/auth errors.
-2. Validate `.env` keys (`ORKET_API_KEY`, `ORKET_ALLOW_INSECURE_NO_API_KEY`).
+2. Check the launching process and selected `.env` authentication settings against
+   [Security](../SECURITY.md#1-api-auth-policy-v1). A bypass flag alone does not
+   enable anonymous access; shell values take precedence and the API captures
+   its configuration at startup.
 3. Restart server after correcting env or path issues.
 
 ### 2) Webhook failures
@@ -64,11 +67,16 @@ Actions:
 ```bash
 python scripts/governance/run_migrations.py
 ```
-2. Re-run smoke gates:
+2. Re-run the CLI smoke and current security controls:
 ```bash
-python scripts/governance/release_smoke.py
-python scripts/security/security_canary.py
+python scripts/governance/run_cli_regression_smoke.py --out benchmarks/results/governance/cli_regression_smoke.json
+python -m pytest -q tests/interfaces/test_api.py -k "health_check or version or insecure or websocket_events"
+python -m pytest -q tests/interfaces/test_webhook_factory.py
 ```
+These checks do not establish migration correctness or whole-release acceptance.
+The legacy `security_canary.py` and its `release_smoke.py` caller still depend on
+removed app singletons. Their migration remains tooling debt; see
+[Testing policy](../TESTING_POLICY.md#cli-and-security-smoke).
 
 ## Post-Recovery Verification
 1. `python -m pytest -q`

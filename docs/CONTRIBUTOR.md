@@ -952,6 +952,17 @@ hashes; never replace an accepted published wheel in place.
 
 ## Testing
 
+Collected pytest markers, rather than directory names, define the `unit`,
+`contract`, `integration` and `end_to_end` layers. Current selection commands and
+proof labels live in `docs/TESTING_POLICY.md`. Its API/webhook regression commands
+are the supported security checks while the legacy `security_canary.py` and
+its `release_smoke.py` caller still depend on removed app singletons. Do not
+count those broken wrappers or controlled-provider responses as live acceptance.
+Release proof labels use that same live definition. Provider-free native runs
+remain scoped non-live evidence, explicitly distinguished from source inspection
+in the release report. Historical report labels retain their original scope;
+clarification: `docs/architecture/CONTRACT_DELTA_DOCS_PROOF_LABELS_2026-10-10.md`.
+
 1. Prefer real filesystems, databases, and integration paths over mocks when practical.
    Bootstrap publication proof must retain native access failures and incomplete
    staging, exercise held-handle release/exhaustion and owned interruption, and

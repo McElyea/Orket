@@ -10,7 +10,7 @@ Define the minimum rules by which tools and workload actions plug into the contr
 
 ## Authority note
 
-Shared enums and first-class object nouns are defined in [00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md](docs/specs/00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md).
+Shared enums and first-class object nouns are defined in [00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md](00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md).
 
 ## Core assertions
 

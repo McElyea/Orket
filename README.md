@@ -24,6 +24,10 @@ orket-quickstart --decision deny
 orket-quickstart --decision approve --workspace <directory>
 ```
 
+With `--workspace`, the printed output and ledger paths are relative to that
+directory. Run the verifier from that directory, or prefix its ledger argument
+with the workspace path.
+
 If interactive input is unavailable, the command exits nonzero with
 `E_QUICKSTART_INPUT_REQUIRED` instead of printing a traceback.
 
@@ -64,6 +68,7 @@ For broader compatibility and migration boundaries, use [CURRENT_AUTHORITY.md](C
 - Default runtime entrypoint: `orket runtime`
 - Guided project setup: `orket setup --project <directory>`; diagnostics: `orket doctor --project <directory>` (Mac native acceptance remains outstanding).
 - Prepared provider workflow: `orket demo local-agent --project <directory>` runs a bounded, verified ticket report using the saved model. See the [candidate guide](docs/guides/MACOS_LOCAL_INSTALL.md).
+- Gardener report integration: follow the [installation, configuration and upgrade guide](examples/gardener_harness/README.md). It uses a separately installed trusted report extension and explicit evidence/model budgets; findings remain advisory.
 - Named card runtime entrypoint: `orket runtime --card <card_id>`
 - API runtime entrypoint: `python server.py`
 - Canonical test command: `python -m pytest -q`
@@ -136,6 +141,10 @@ cp .env.example .env
 ```
 
 The API runtime entrypoint loads this repo-local `.env` before app construction. Explicit environment variables already set in the launching shell still take precedence.
+Set `ORKET_API_KEY` before starting the API; `/health` is public, while `/v1/*`
+requires authentication by default. Authentication settings are captured at
+startup. See [security configuration](docs/SECURITY.md) for the exact local
+debug and WebSocket compatibility rules.
 
 3. Start the default runtime:
 

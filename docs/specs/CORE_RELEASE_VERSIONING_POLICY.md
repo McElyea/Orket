@@ -7,7 +7,7 @@ Owner: Orket Core
 Canonical policy for core engine versioning, release framing, release proof, and release-gate expectations.
 
 This policy governs the core Orket engine only.
-SDK versioning remains separately governed by [docs/requirements/sdk/VERSIONING.md](docs/requirements/sdk/VERSIONING.md).
+SDK versioning remains separately governed by [docs/requirements/sdk/VERSIONING.md](../requirements/sdk/VERSIONING.md).
 
 ## 1. Canonical Sources
 
@@ -89,8 +89,17 @@ Allowed `proof_mode` values:
 1. `live`
 2. `structural`
 
-`live` means the required surface was exercised through runtime execution.
-`structural` means the required surface was evaluated through non-runtime structural verification explicitly allowed by the canonical release policy.
+`live` follows the [testing policy's live definition](../TESTING_POLICY.md#live-definition):
+real model execution through the shipped provider/runtime path, a real workspace
+and fresh artifacts. Executing a provider-free CLI, install or HTTP check does
+not qualify by itself.
+`structural` covers non-live evidence explicitly allowed for the release surface.
+State whether that evidence is source/schema inspection or executed
+contract/integration behavior, and why that scope is sufficient. A structural
+pass never substitutes for required live model proof.
+Historical reports retain their original terminology and candidate scope; they
+are not automatically reclassified or promoted to current acceptance. Clarification:
+`docs/architecture/CONTRACT_DELTA_DOCS_PROOF_LABELS_2026-10-10.md`.
 
 Allowed `proof_result` values:
 

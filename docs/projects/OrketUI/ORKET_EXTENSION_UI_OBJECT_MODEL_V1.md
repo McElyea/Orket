@@ -4,7 +4,7 @@ Last updated: 2026-09-18
 Status: Active shipped provenance support doc
 Authority status: Active Orket-side shipped provenance support doc. Summarizes current host-owned nouns and remaining extension-owned projections, but does not itself create new host authority.
 Owner: Orket Core
-Related docs: [docs/projects/archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md](docs/projects/archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md), [ORKET_EXTENSION_UI_REQUIREMENTS_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_REQUIREMENTS_V1.md), [ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md), [docs/specs/CARD_AUTHORING_SURFACE_V1.md](docs/specs/CARD_AUTHORING_SURFACE_V1.md), [docs/specs/FLOW_AUTHORING_SURFACE_V1.md](docs/specs/FLOW_AUTHORING_SURFACE_V1.md), [docs/API_FRONTEND_CONTRACT.md](docs/API_FRONTEND_CONTRACT.md), [docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md](docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md), [docs/specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md](docs/specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md), [CURRENT_AUTHORITY.md](CURRENT_AUTHORITY.md)
+Related docs: [docs/projects/archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md](../archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md), [ORKET_EXTENSION_UI_REQUIREMENTS_V1.md](ORKET_EXTENSION_UI_REQUIREMENTS_V1.md), [ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md](ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md), [docs/specs/CARD_AUTHORING_SURFACE_V1.md](../../specs/CARD_AUTHORING_SURFACE_V1.md), [docs/specs/FLOW_AUTHORING_SURFACE_V1.md](../../specs/FLOW_AUTHORING_SURFACE_V1.md), [docs/API_FRONTEND_CONTRACT.md](../../API_FRONTEND_CONTRACT.md), [docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md](../../specs/CARD_VIEWER_RUNNER_SURFACE_V1.md), [docs/specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md](../../specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md), [CURRENT_AUTHORITY.md](../../../CURRENT_AUTHORITY.md)
 
 ## Purpose
 
@@ -19,8 +19,8 @@ This doc exists so the OrketUI lane does not silently promote projection vocabul
 
 When this doc conflicts with current shipped host authority, the higher-precedence sources are:
 
-1. [CURRENT_AUTHORITY.md](CURRENT_AUTHORITY.md)
-2. [docs/API_FRONTEND_CONTRACT.md](docs/API_FRONTEND_CONTRACT.md)
+1. [CURRENT_AUTHORITY.md](../../../CURRENT_AUTHORITY.md)
+2. [docs/API_FRONTEND_CONTRACT.md](../../API_FRONTEND_CONTRACT.md)
 3. active host specs already named by current authority
 
 This doc is an active shipped provenance support doc and remains subordinate to shipped host authority.
@@ -38,11 +38,11 @@ The following nouns are safe to treat as host-owned because they already exist o
 7. flow authoring `revision_id`
 8. interaction session and interaction turn surfaces exposed through the admitted session and interaction APIs
 9. websocket event streams exposed through `WS /ws/events` and `WS /ws/interactions/{session_id}`
-10. card and run operator-view read models already admitted by [docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md](docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md)
-11. host route families and route parameters already fixed by [docs/API_FRONTEND_CONTRACT.md](docs/API_FRONTEND_CONTRACT.md)
-12. card authoring payload fields now admitted through [docs/specs/CARD_AUTHORING_SURFACE_V1.md](docs/specs/CARD_AUTHORING_SURFACE_V1.md): `display_category`, `expected_output_type`, `approval_expectation`, and `artifact_expectation`
-13. neutral flow node kinds now admitted through [docs/specs/FLOW_AUTHORING_SURFACE_V1.md](docs/specs/FLOW_AUTHORING_SURFACE_V1.md): `start`, `card`, `branch`, `merge`, and `final`
-14. Prompt Reforger service-result classes and result-envelope semantics already fixed by [docs/specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md](docs/specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md)
+10. card and run operator-view read models already admitted by [docs/specs/CARD_VIEWER_RUNNER_SURFACE_V1.md](../../specs/CARD_VIEWER_RUNNER_SURFACE_V1.md)
+11. host route families and route parameters already fixed by [docs/API_FRONTEND_CONTRACT.md](../../API_FRONTEND_CONTRACT.md)
+12. card authoring payload fields now admitted through [docs/specs/CARD_AUTHORING_SURFACE_V1.md](../../specs/CARD_AUTHORING_SURFACE_V1.md): `display_category`, `expected_output_type`, `approval_expectation`, and `artifact_expectation`
+13. neutral flow node kinds now admitted through [docs/specs/FLOW_AUTHORING_SURFACE_V1.md](../../specs/FLOW_AUTHORING_SURFACE_V1.md): `start`, `card`, `branch`, `merge`, and `final`
+14. Prompt Reforger service-result classes and result-envelope semantics already fixed by [docs/specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md](../../specs/PROMPT_REFORGER_GENERIC_SERVICE_CONTRACT.md)
 
 Flow ids and revisions are minted by the application's supplied runtime inputs.
 An atomic save guard consumes the current revision once; create-id collisions
@@ -71,8 +71,8 @@ These may be useful UI constructs. They are not host truth merely because earlie
 
 The OrketUI lane now has shipped host specs in:
 
-1. [docs/specs/CARD_AUTHORING_SURFACE_V1.md](docs/specs/CARD_AUTHORING_SURFACE_V1.md)
-2. [docs/specs/FLOW_AUTHORING_SURFACE_V1.md](docs/specs/FLOW_AUTHORING_SURFACE_V1.md)
+1. [docs/specs/CARD_AUTHORING_SURFACE_V1.md](../../specs/CARD_AUTHORING_SURFACE_V1.md)
+2. [docs/specs/FLOW_AUTHORING_SURFACE_V1.md](../../specs/FLOW_AUTHORING_SURFACE_V1.md)
 
 Those shipped specs move the neutral host authoring nouns above into current host authority.
 

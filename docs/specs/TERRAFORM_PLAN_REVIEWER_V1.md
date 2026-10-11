@@ -3,9 +3,9 @@
 Last updated: 2026-09-22
 Status: Active
 Owner: Orket Core
-Source requirements: [docs/projects/archive/terraform-plan-review/TP03222026/requirements.md](docs/projects/archive/terraform-plan-review/TP03222026/requirements.md)
-Verification authority: [docs/projects/archive/terraform-plan-review/TP03222026/verification_plan.md](docs/projects/archive/terraform-plan-review/TP03222026/verification_plan.md)
-Implementation closeout authority: [docs/projects/archive/terraform-plan-review/TP03222026/CLOSEOUT.md](docs/projects/archive/terraform-plan-review/TP03222026/CLOSEOUT.md)
+Source requirements: [docs/projects/archive/terraform-plan-review/TP03222026/requirements.md](../projects/archive/terraform-plan-review/TP03222026/requirements.md)
+Verification authority: [docs/projects/archive/terraform-plan-review/TP03222026/verification_plan.md](../projects/archive/terraform-plan-review/TP03222026/verification_plan.md)
+Implementation closeout authority: [docs/projects/archive/terraform-plan-review/TP03222026/CLOSEOUT.md](../projects/archive/terraform-plan-review/TP03222026/CLOSEOUT.md)
 
 ## 1. Purpose
 
@@ -181,4 +181,4 @@ This lane has two independent proof obligations:
 1. correctness proof
 2. governance proof
 
-The lane is not complete unless both proof obligations are satisfied according to [docs/projects/archive/terraform-plan-review/TP03222026/verification_plan.md](docs/projects/archive/terraform-plan-review/TP03222026/verification_plan.md).
+The lane is not complete unless both proof obligations are satisfied according to [docs/projects/archive/terraform-plan-review/TP03222026/verification_plan.md](../projects/archive/terraform-plan-review/TP03222026/verification_plan.md).

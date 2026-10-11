@@ -10,7 +10,7 @@ Define the legal lifecycle of governed workloads and the supervisor authority th
 
 ## Authority note
 
-Shared state enums are defined in [00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md](docs/specs/00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md).
+Shared state enums are defined in [00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md](00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md).
 
 This document defines the semantics, guardrails, and supervisory rules for those states.
 

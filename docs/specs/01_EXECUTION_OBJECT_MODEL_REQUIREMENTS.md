@@ -10,7 +10,7 @@ Define the minimum first-class execution objects required for Orket's control pl
 
 ## Authority note
 
-Shared nouns and enums are defined in [00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md](docs/specs/00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md).
+Shared nouns and enums are defined in [00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md](00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md).
 
 This document defines object shape, relationships, and object-specific requirements.
 

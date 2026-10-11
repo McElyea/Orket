@@ -10,7 +10,7 @@ Define the minimum failure taxonomy and recovery rules required for Orket to rec
 
 ## Authority note
 
-Failure-plane, failure-class, side-effect boundary, and recovery action enums are defined in [00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md](docs/specs/00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md).
+Failure-plane, failure-class, side-effect boundary, and recovery action enums are defined in [00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md](00A_CONTROL_PLANE_GLOSSARY_AND_ENUM_AUTHORITY.md).
 
 This document defines how those classes drive recovery behavior.
 

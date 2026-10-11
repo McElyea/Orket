@@ -7,9 +7,9 @@ Owner: Orket Core
 Canonical release gate checklist for core engine releases beginning with `0.4.0`.
 
 Use with:
-1. [docs/specs/CORE_RELEASE_VERSIONING_POLICY.md](docs/specs/CORE_RELEASE_VERSIONING_POLICY.md)
-2. [docs/specs/CORE_RELEASE_PROOF_REPORT.md](docs/specs/CORE_RELEASE_PROOF_REPORT.md)
-3. [docs/CONTRIBUTOR.md](docs/CONTRIBUTOR.md)
+1. [docs/specs/CORE_RELEASE_VERSIONING_POLICY.md](CORE_RELEASE_VERSIONING_POLICY.md)
+2. [docs/specs/CORE_RELEASE_PROOF_REPORT.md](CORE_RELEASE_PROOF_REPORT.md)
+3. [docs/CONTRIBUTOR.md](../CONTRIBUTOR.md)
 
 ## 1. Applicability
 

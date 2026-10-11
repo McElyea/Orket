@@ -3,8 +3,8 @@
 Last updated: 2026-09-18
 Status: Active shipped authority
 Owner: Orket Core
-Source requirements: [docs/projects/OrketUI/ORKET_EXTENSION_UI_REQUIREMENTS_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_REQUIREMENTS_V1.md)
-Related docs: [docs/projects/archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md](docs/projects/archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md), [docs/projects/OrketUI/ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md), [docs/projects/OrketUI/ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md), [docs/API_FRONTEND_CONTRACT.md](docs/API_FRONTEND_CONTRACT.md), [CURRENT_AUTHORITY.md](CURRENT_AUTHORITY.md)
+Source requirements: [docs/projects/OrketUI/ORKET_EXTENSION_UI_REQUIREMENTS_V1.md](../projects/OrketUI/ORKET_EXTENSION_UI_REQUIREMENTS_V1.md)
+Related docs: [docs/projects/archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md](../projects/archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md), [docs/projects/OrketUI/ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md](../projects/OrketUI/ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md), [docs/projects/OrketUI/ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md](../projects/OrketUI/ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md), [docs/API_FRONTEND_CONTRACT.md](../API_FRONTEND_CONTRACT.md), [CURRENT_AUTHORITY.md](../../CURRENT_AUTHORITY.md)
 
 ## 1. Purpose
 
@@ -108,7 +108,7 @@ Must return at least:
 6. Successful flow-run acceptance returns the canonical `session_id` and hands off later inspection to the existing run and session read surfaces.
 7. The current admitted run slice is intentionally bounded: exactly one `card` node, no `branch` or `merge`, assigned card present on the host card surface, assigned card resolvable on the canonical run-card surface, and assigned card resolvable to the `issue` runtime target.
 8. `200` on `POST /v1/flows/{flow_id}/runs` is authoritative acceptance only. Downstream run completion remains governed by the existing runtime policy and epic environment after handoff.
-9. The current admitted run slice composes with cards created or updated through [docs/specs/CARD_AUTHORING_SURFACE_V1.md](docs/specs/CARD_AUTHORING_SURFACE_V1.md) because issue-type authored cards are projected onto the canonical run-card surface before flow-run acceptance resolves assigned cards.
+9. The current admitted run slice composes with cards created or updated through [docs/specs/CARD_AUTHORING_SURFACE_V1.md](CARD_AUTHORING_SURFACE_V1.md) because issue-type authored cards are projected onto the canonical run-card surface before flow-run acceptance resolves assigned cards.
 
 Save admission captures a detached definition, revision and timestamp before the
 first awaited read. Guarded saves compare the supplied revision in the SQLite
@@ -128,22 +128,22 @@ remain persistable with negative validation; they cannot run.
 Run acceptance describes the selected saved revision. It is not a transaction
 across subsequent flow/card edits and downstream execution, and does not introduce
 flow history. Migration and proof limits:
-[flow authority delta](docs/architecture/CONTRACT_DELTA_FLOW_AUTHORITY_CD_2026-09-18.md).
+[flow authority delta](../architecture/CONTRACT_DELTA_FLOW_AUTHORITY_CD_2026-09-18.md).
 
 ## 6. Mounted current slice
 
-1. The routes above are mounted through [orket/interfaces/routers/flows.py](orket/interfaces/routers/flows.py) and included by [orket/interfaces/api.py](orket/interfaces/api.py).
-2. Application composition in [orket/application/services/flow_runtime_service.py](orket/application/services/flow_runtime_service.py) selects `.orket/durable/db/orket_ui_flows.sqlite3` under the captured project root. The host supplies runtime clock and identity inputs; the storage adapter owns directory and SQLite effects.
+1. The routes above are mounted through [orket/interfaces/routers/flows.py](../../orket/interfaces/routers/flows.py) and included by [orket/interfaces/api.py](../../orket/interfaces/api.py).
+2. Application composition in [orket/application/services/flow_runtime_service.py](../../orket/application/services/flow_runtime_service.py) selects `.orket/durable/db/orket_ui_flows.sqlite3` under the captured project root. The host supplies runtime clock and identity inputs; the storage adapter owns directory and SQLite effects.
 3. The neutral host node kinds above do not promote UI palette labels into host truth.
 4. `GET /v1/flows` and `GET /v1/flows/{flow_id}` are now canonical host inspection surfaces for persisted flow definitions.
-5. The bounded run-composition path may resolve assigned cards through the authored-card runtime projection maintained by [docs/specs/CARD_AUTHORING_SURFACE_V1.md](docs/specs/CARD_AUTHORING_SURFACE_V1.md).
+5. The bounded run-composition path may resolve assigned cards through the authored-card runtime projection maintained by [docs/specs/CARD_AUTHORING_SURFACE_V1.md](CARD_AUTHORING_SURFACE_V1.md).
 
 ## 7. Sync rule
 
 When this surface changes, update in the same change:
 
-1. [docs/specs/FLOW_AUTHORING_SURFACE_V1.md](docs/specs/FLOW_AUTHORING_SURFACE_V1.md)
-2. [docs/API_FRONTEND_CONTRACT.md](docs/API_FRONTEND_CONTRACT.md)
-3. [CURRENT_AUTHORITY.md](CURRENT_AUTHORITY.md)
-4. [docs/projects/OrketUI/ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md)
-5. [docs/projects/OrketUI/ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md)
+1. [docs/specs/FLOW_AUTHORING_SURFACE_V1.md](FLOW_AUTHORING_SURFACE_V1.md)
+2. [docs/API_FRONTEND_CONTRACT.md](../API_FRONTEND_CONTRACT.md)
+3. [CURRENT_AUTHORITY.md](../../CURRENT_AUTHORITY.md)
+4. [docs/projects/OrketUI/ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md](../projects/OrketUI/ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md)
+5. [docs/projects/OrketUI/ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md](../projects/OrketUI/ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md)

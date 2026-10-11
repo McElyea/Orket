@@ -2,11 +2,11 @@
 
 Last updated: 2026-04-09
 Status: Active shipped provenance requirements
-Authority status: Active Orket-side shipped provenance authority. Not host implementation authority and not permission for new host-seam invention. Read with [ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md), [ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md), [ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md), [docs/specs/CARD_AUTHORING_SURFACE_V1.md](docs/specs/CARD_AUTHORING_SURFACE_V1.md), [docs/specs/FLOW_AUTHORING_SURFACE_V1.md](docs/specs/FLOW_AUTHORING_SURFACE_V1.md), and [docs/projects/archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md](docs/projects/archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md).
+Authority status: Active Orket-side shipped provenance authority. Not host implementation authority and not permission for new host-seam invention. Read with [ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md](ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md), [ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md](ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md), [ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md](ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md), [docs/specs/CARD_AUTHORING_SURFACE_V1.md](../../specs/CARD_AUTHORING_SURFACE_V1.md), [docs/specs/FLOW_AUTHORING_SURFACE_V1.md](../../specs/FLOW_AUTHORING_SURFACE_V1.md), and [docs/projects/archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md](../archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md).
 Owner: Orket Core
 Scope: UI extension requirements for a card-driven Orket extension with external BFF
 Audience: extension author, UI implementer, API/BFF implementer, Orket host maintainers
-Related docs: [docs/projects/archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md](docs/projects/archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md), [ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md), [ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md), [ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md), [docs/specs/CARD_AUTHORING_SURFACE_V1.md](docs/specs/CARD_AUTHORING_SURFACE_V1.md), [docs/specs/FLOW_AUTHORING_SURFACE_V1.md](docs/specs/FLOW_AUTHORING_SURFACE_V1.md), [docs/API_FRONTEND_CONTRACT.md](docs/API_FRONTEND_CONTRACT.md), [CURRENT_AUTHORITY.md](CURRENT_AUTHORITY.md)
+Related docs: [docs/projects/archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md](../archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md), [ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md](ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md), [ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md](ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md), [ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md](ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md), [docs/specs/CARD_AUTHORING_SURFACE_V1.md](../../specs/CARD_AUTHORING_SURFACE_V1.md), [docs/specs/FLOW_AUTHORING_SURFACE_V1.md](../../specs/FLOW_AUTHORING_SURFACE_V1.md), [docs/API_FRONTEND_CONTRACT.md](../../API_FRONTEND_CONTRACT.md), [CURRENT_AUTHORITY.md](../../../CURRENT_AUTHORITY.md)
 
 ## 1. Purpose
 
@@ -33,13 +33,13 @@ This repo carries provenance for the extension lane and preserves why the work e
 
 The current Orket-side shipped provenance packet for this extension consists of:
 
-1. [ORKET_EXTENSION_UI_REQUIREMENTS_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_REQUIREMENTS_V1.md)
-2. [ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md)
-3. [ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md)
-4. [ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md)
-5. [docs/projects/archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md](docs/projects/archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md)
+1. [ORKET_EXTENSION_UI_REQUIREMENTS_V1.md](ORKET_EXTENSION_UI_REQUIREMENTS_V1.md)
+2. [ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md](ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md)
+3. [ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md](ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md)
+4. [ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md](ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md)
+5. [docs/projects/archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md](../archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md)
 
-Any future implementation expansion for OrketUI must remain subordinate to [CURRENT_AUTHORITY.md](CURRENT_AUTHORITY.md), [docs/API_FRONTEND_CONTRACT.md](docs/API_FRONTEND_CONTRACT.md), and the narrower support docs [ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md) and [ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md).
+Any future implementation expansion for OrketUI must remain subordinate to [CURRENT_AUTHORITY.md](../../../CURRENT_AUTHORITY.md), [docs/API_FRONTEND_CONTRACT.md](../../API_FRONTEND_CONTRACT.md), and the narrower support docs [ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md](ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md) and [ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md](ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md).
 
 If this doc conflicts with current shipped authority, current shipped authority wins.
 
@@ -57,8 +57,8 @@ The lane is now execution-ready and already beyond the initial read-backed shell
 
 The write-seam core-spec extraction blocker is now cleared through:
 
-1. [docs/specs/CARD_AUTHORING_SURFACE_V1.md](docs/specs/CARD_AUTHORING_SURFACE_V1.md)
-2. [docs/specs/FLOW_AUTHORING_SURFACE_V1.md](docs/specs/FLOW_AUTHORING_SURFACE_V1.md)
+1. [docs/specs/CARD_AUTHORING_SURFACE_V1.md](../../specs/CARD_AUTHORING_SURFACE_V1.md)
+2. [docs/specs/FLOW_AUTHORING_SURFACE_V1.md](../../specs/FLOW_AUTHORING_SURFACE_V1.md)
 
 The bounded current write-surface blocker is also cleared:
 
@@ -66,9 +66,9 @@ The bounded current write-surface blocker is also cleared:
 2. the host now ships and admits the bounded flow-authoring routes
 3. the OrketUI BFF now consumes those seams truthfully for the current slice
 
-The current action-by-action write inventory is recorded in [ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md).
+The current action-by-action write inventory is recorded in [ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md](ORKET_EXTENSION_UI_WRITE_SEAM_INVENTORY_V1.md).
 
-Cross-surface acceptance proof for the bounded current slice is now completed and recorded in [docs/projects/archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md](docs/projects/archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md).
+Cross-surface acceptance proof for the bounded current slice is now completed and recorded in [docs/projects/archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md](../archive/OrketUI/OUI04092026-LANE-CLOSEOUT/CLOSEOUT.md).
 
 The remaining bounded caveat for the current slice is:
 
@@ -204,7 +204,7 @@ R-039. Contextual utilities that do not need continuous visibility SHOULD live i
 
 ## 7. Shared domain vocabulary
 
-Host-owned nouns versus extension-owned projections for this lane are defined in [ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md).
+Host-owned nouns versus extension-owned projections for this lane are defined in [ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md](ORKET_EXTENSION_UI_OBJECT_MODEL_V1.md).
 
 R-040. The extension SHALL use a stable extension vocabulary for at least the following concepts:
 
@@ -292,7 +292,7 @@ R-055. The extension SHALL prefer readable structure, spacing, and hierarchy ove
 
 ## 10. BFF requirements
 
-Allowed host-facing seams for the extension BFF are defined in [ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md](docs/projects/OrketUI/ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md).
+Allowed host-facing seams for the extension BFF are defined in [ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md](ORKET_EXTENSION_UI_HOST_SEAM_MAP_V1.md).
 
 ### 10.1 Boundary and authority
 

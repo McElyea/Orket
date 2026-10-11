@@ -4,6 +4,9 @@ Last updated: 2026-02-18 (UTC)
 Owner: Benchmark reliability loop
 Scope: v2 real-world live rock benchmarks (`001-080`)
 
+Historical record: incidents, source paths and results below describe the
+February 2026 candidates. They are not current-checkout benchmark acceptance.
+
 ## Purpose
 This document records benchmark failures, root causes, and remediations so weak spots are explicit and traceable.
 
@@ -37,7 +40,7 @@ This document records benchmark failures, root causes, and remediations so weak 
 - `079`: replaced with `max_product_subarray(values)`.
 - `080`: replaced with `find_duplicate_number(values)`.
 
-## Current Reliability Snapshot
+## Recorded Reliability Snapshot (2026-02-18)
 - Live rock `001-080`: deterministic `80/80`, failing tasks `0`, overall score `5.0`.
 - Reports:
   - `benchmarks/results/benchmarks/live_rock_v2_001_080_determinism_report.json`

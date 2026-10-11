@@ -135,5 +135,5 @@ Current canonical rendering examples:
 2. Contract coverage: `tests/runtime/test_truthful_memory_policy.py`
 3. Integration coverage:
    `tests/runtime/test_sdk_memory_provider.py`,
-   `tests/application/test_companion_runtime_service.py`,
+   `tests/application/test_extension_runtime_service.py`,
    `tests/integration/test_memory_rag.py`
