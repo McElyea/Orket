@@ -14,13 +14,14 @@ import tempfile
 import time
 from pathlib import Path
 
+from gardener_scope import inventory_payload, relative_scope
 from gardener_snapshot import Commands, HarnessFailure, collect_sources, verify_unchanged
-from gardener_submission import accepted_report, prepare_submission
+from gardener_submission import accepted_report, failure_reason, prepare_submission, token_limits
 
 from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_PROVIDER, PROVIDER_CHOICES
 
 UNAVAILABLE = ("E_AGENT_LOCAL_MODEL_UNAVAILABLE", "E_AGENT_LOCAL_INVENTORY_UNAVAILABLE",
-               "E_AGENT_LOCAL_MODEL_REQUIRED")
+               "E_AGENT_LOCAL_MODEL_REQUIRED", "E_AGENT_MODEL_PROVIDER_UNAVAILABLE", "E_AGENT_MODEL_PROVIDER_TIMEOUT")
 
 
 def configuration(environment: dict[str, str], root: Path) -> tuple[dict, list[Path], Path, Path, int]:
@@ -35,6 +36,12 @@ def configuration(environment: dict[str, str], root: Path) -> tuple[dict, list[P
     if not isinstance(dirs, list) or len(dirs) > 8 or any(not isinstance(item, str) or not item for item in dirs):
         raise HarnessFailure("add_dirs must contain at most eight explicit source directories")
     roots = [(root / item).resolve(strict=True) for item in dirs]
+    if subdir := environment.get("ORKET_GARDENER_CONVENTIONS_SUBDIR"):
+        scope = relative_scope(subdir)
+        selected = [(path / str(scope)).resolve(strict=True) for path in roots]
+        if any(not child.is_relative_to(parent) for parent, child in zip(roots, selected, strict=True)):
+            raise HarnessFailure("conventions subdirectory escapes its declared source root")
+        roots = selected
     timeout = int(environment.get("GARDENER_HARNESS_TIMEOUT", "1800"))
     if not 30 <= timeout <= 3600:
         raise HarnessFailure("GARDENER_HARNESS_TIMEOUT must be between 30 and 3600 seconds", blocked=True)
@@ -54,18 +61,21 @@ def configuration(environment: dict[str, str], root: Path) -> tuple[dict, list[P
 
 def execute(prompt: str, environment: dict[str, str], root: Path) -> dict:
     selection, roots, catalog, work, timeout = configuration(environment, root)
+    input_tokens, output_tokens = token_limits(environment)
     # Leave Gardener time to observe settlement and receive the final envelope.
     commands = Commands(work, {**environment, "ORKET_DISABLE_SANDBOX": "1", "PYTHONIOENCODING": "utf-8"},
                         time.monotonic() + timeout - 15)
     sources, trees = collect_sources(commands, prompt, root, roots)
     work.mkdir(parents=True, exist_ok=True)
     area = Path(tempfile.mkdtemp(prefix="run-", dir=work))
+    (area / "snapshot-inventory.json").write_text(json.dumps(inventory_payload(trees)), encoding="utf-8")
     commands.area = area
     commands.owner = commands.owner.for_workspace(area)
     remaining = int(commands.deadline - time.monotonic()) - 5
     if remaining < 1:
         raise HarnessFailure("snapshot consumed the report time budget", blocked=True)
-    submission, inputs = prepare_submission(area, prompt, sources, remaining)
+    submission, inputs = prepare_submission(area, prompt, sources, remaining,
+        input_tokens=input_tokens, output_tokens=output_tokens)
     database = area / "agent.sqlite3"
     argv = [sys.executable, "-m", "orket.cli", "agent", "run", "--submission", str(submission),
             "--inputs", str(inputs), "--catalog", str(catalog), "--db", str(database),
@@ -77,13 +87,14 @@ def execute(prompt: str, environment: dict[str, str], root: Path) -> dict:
     if not isinstance(payload, dict):
         raise HarnessFailure(f"invalid Orket result; retained run area: {area}")
     if result.returncode != 0 or payload.get("ok") is not True:
-        error = str(payload.get("error") or payload.get("normalized_reason") or "report delivery was refused")
+        error = failure_reason(payload)
         raise HarnessFailure(f"{error}; inspect retained run area: {area}", blocked=error.startswith(UNAVAILABLE))
     report = accepted_report(payload, sources)
     verify_unchanged(commands, trees)
     run_id = payload["run"]["run_id"]
     footer = (f"\n\n---\nAdvisory report; verified delivery and source references only. "
               f"Committed snapshots only; no tests or fixes executed.\n"
+              f"Requested token limits: input {input_tokens}, output {output_tokens}; host limits also enforced.\n"
               f"Run: {run_id}\nDatabase: {database}\n"
               f"Inspect: orket agent inspect \"{run_id}\" --db \"{database}\" --json")
     return {"result": report + footer, "is_error": False, "session_id": f"orket:{run_id}",

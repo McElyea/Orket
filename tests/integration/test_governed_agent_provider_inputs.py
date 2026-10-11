@@ -59,7 +59,10 @@ async def test_governed_preparation_keeps_admitted_provider_inputs(monkeypatch, 
                 environment.update(os.environ)
             release.set()
             runtime = await asyncio.wait_for(task, 10)
-            model_request = AgentModelCallRequest.from_wire(agent_model_call_request())
+            model_payload = agent_model_call_request()
+            # This OpenAI compatibility profile admits 512; capture proof must not rely on silent clamping.
+            model_payload['max_output_tokens'] = 512
+            model_request = AgentModelCallRequest.from_wire(model_payload)
             observation = await runtime.provider.call(request=model_request, profile=runtime.profiles['local.planner'])
             assert observation.response == {'observed': 'primary'}
             assert {t.base_url for t in runtime.targets.values()} == {first + '/v1'}

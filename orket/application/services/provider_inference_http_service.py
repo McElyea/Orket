@@ -9,15 +9,16 @@ from orket.application.services.provider_http_service import capture_provider_ht
 
 
 class ProviderInferenceHttpService:
-    def __init__(self, *, environment: Mapping[str, str], cwd: Path):
+    def __init__(self, *, environment: Mapping[str, str], cwd: Path, governed: bool = False):
         self._inputs = capture_provider_http_inputs(environment=environment, cwd=cwd)
         self._ollama_api_key = environment.get("OLLAMA_API_KEY")
         self._resources = ProviderHttpResources()
+        self._governed = governed
 
     def create_client(self, *, backend: str, base_url: str, timeout_s: float, connect_timeout_s: float) -> Any:
         return build_provider_inference_client(inputs=self._inputs, backend=backend, base_url=base_url,
             timeout_s=timeout_s, connect_timeout_s=connect_timeout_s, ollama_api_key=self._ollama_api_key,
-            own_resource=self._resources.retain)
+            own_resource=self._resources.retain, governed=self._governed)
 
     async def close(self, client: Any = None) -> None:
         await self._resources.close(client)

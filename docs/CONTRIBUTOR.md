@@ -142,6 +142,9 @@ report proof sets `ORKET_DISABLE_SANDBOX=1` and settles the owned provider proce
 
 The source Gardener report adapter reuses that public task and verifier. Keep
 `tests/integration/test_gardener_harness_example.py` in both Quality selections.
+Also retain `tests/integration/test_governed_ollama_reports.py`: selected HTTP
+inventory, explicit context, pre-generation budget refusals, provider failures,
+single-attempt timeouts and truncated-response refusal use observed HTTP controls.
 Its real Git, CLI, SDK child, SQLite and controlled HTTP cases establish native
 adapter behavior, not actual model proof. Actual integration proof must include
 Gardener dispatch, llama.cpp receipts and observed server teardown. Input and

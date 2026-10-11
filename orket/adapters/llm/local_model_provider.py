@@ -238,6 +238,7 @@ class LocalModelProvider:
         return await self._complete_ollama(
             policy.message_payload(),
             policy,
+            runtime_context=resolved_context,
             native_tools=native_tools,
             native_tool_choice=native_tool_choice,
             native_payload_overrides=native_payload_overrides,
@@ -248,6 +249,7 @@ class LocalModelProvider:
         messages: list[dict[str, str]],
         local_prompting_policy: LocalPromptingPolicyResult,
         *,
+        runtime_context: Mapping[str, Any],
         native_tools: list[dict[str, Any]],
         native_tool_choice: str | None,
         native_payload_overrides: Mapping[str, Any],
@@ -256,13 +258,13 @@ class LocalModelProvider:
         if self.seed is not None:
             options["seed"] = self.seed
         options.update(local_prompting_policy.ollama_options_overrides())
-        request_format = ""
+        request_format: Any = ""
         # Strict payload paths now use one canonical JSON object, including legacy
         # tool_call turns that carry multiple calls via {"content":"","tool_calls":[...]}.
         if local_prompting_policy.task_class in {"strict_json", "tool_call"} and not native_tools:
-            request_format = "json"
+            request_format = runtime_context.get("local_prompt_response_schema") or "json"
         native_tool_names = self._native_tool_names(native_tools)
-        max_retries = 3
+        max_retries = 1 if local_prompting_policy.input_budget_tokens else 3
         retry_delay = 1
         for attempt in range(max_retries):
             try:
@@ -335,12 +337,7 @@ class LocalModelProvider:
                     ) from exc
                 raise ModelProviderError(f"Unexpected error invoking model {self.model}: {str(exc)}") from exc
             except (TimeoutError, ModelTimeoutError) as exc:
-                if attempt == max_retries - 1:
-                    raise ModelTimeoutError(f"Model {self.model} timed out after {max_retries} attempts.") from exc
-                log_event(
-                    "model_timeout_retry",
-                    {"model": self.model, "attempt": attempt + 1, "retry_delay_sec": retry_delay},
-                )
+                raise ModelTimeoutError(f"Model {self.model} timed out; inference was not retried.") from exc
             except (ConnectionError, ollama.ResponseError, ModelConnectionError) as exc:
                 if attempt == max_retries - 1:
                     raise ModelConnectionError(
@@ -391,7 +388,8 @@ class LocalModelProvider:
         if self.seed is not None:
             payload["seed"] = self.seed
         response_format = str(self._provider_environment.get("ORKET_LLM_OPENAI_RESPONSE_FORMAT", "")).strip().lower()
-        payload.update(response_format_payload(response_format, provider_name=self.provider_name))
+        payload.update(response_format_payload(response_format, provider_name=self.provider_name,
+            schema=runtime_context.get("local_prompt_response_schema")))
         if native_tools:
             payload["tools"] = native_tools
         if native_tool_choice:
@@ -420,7 +418,7 @@ class LocalModelProvider:
         headers["X-Client-Session"] = orket_session_id
         headers["X-Orket-Request-Id"] = orket_request_id
 
-        max_retries = 3
+        max_retries = 1 if local_prompting_policy.input_budget_tokens else 3
         retry_delay = 1
 
         for attempt in range(max_retries):
@@ -430,6 +428,7 @@ class LocalModelProvider:
                     client=self.client, headers=headers, payload=payload,
                     template_version=local_prompting_policy.template_version,
                     context_budget_tokens=local_prompting_policy.context_budget_tokens,
+                    input_budget_tokens=local_prompting_policy.input_budget_tokens,
                 ) if self.provider_name == "llama_cpp" else {}
                 response = await asyncio.wait_for(
                     self.client.post("/chat/completions", headers=headers, json=payload),
@@ -524,12 +523,7 @@ class LocalModelProvider:
                 return ModelResponse(content=content, raw=raw)
 
             except (TimeoutError, httpx.TimeoutException, ModelTimeoutError) as exc:
-                if attempt == max_retries - 1:
-                    raise ModelTimeoutError(f"Model {self.model} timed out after {max_retries} attempts.") from exc
-                log_event(
-                    "model_timeout_retry",
-                    {"model": self.model, "attempt": attempt + 1, "retry_delay_sec": retry_delay},
-                )
+                raise ModelTimeoutError(f"Model {self.model} timed out; inference was not retried.") from exc
             except (httpx.ConnectError, httpx.NetworkError, httpx.RemoteProtocolError, ModelConnectionError) as exc:
                 if attempt == max_retries - 1:
                     raise ModelConnectionError(

@@ -27,9 +27,13 @@ extension. There is one host verifier, `structured_report.v1`; the proposed
    against a concurrently hostile local administrator or executable.
 4. Target and convention repositories must be clean before collection. Selected
    symlink/submodule entries, invalid text, missing Git evidence and exceeded
-   bounds refuse. Every extra directory's tracked files are included; target
-   files are selected from prompt names and root documentation. Blob IDs and
-   commit IDs bind source content. The complete bounded inventory accompanies it.
+   bounds refuse. Every selected extra directory's tracked files are included.
+   Target defaults include root documentation, manifests, and text in docs/,
+   .github/ and .gitea/, plus prompt-named files. Explicit target paths replace
+   that default selection. Blob IDs and commit IDs bind source content.
+   Trees allow 10,000 entries; the full inventory is retained locally. Above 128
+   entries the prompt lists selected files and up to 128 root names, with counts
+   and a digest binding the full inventory. Unread content remains unknown.
 5. The run directory is outside all source repositories. No source code is run.
    Provider credentials and other ambient settings retain existing host policy;
    repository prose cannot authorize tools or select another completion rule.
@@ -59,6 +63,28 @@ recovery surface. Re-execution is a new invocation, never an implicit retry.
 Unavailable providers/models are device-blocking; validation failures remain
 failures. Stdout is one Gardener JSON envelope. The wrapper writes inputs and
 uses the existing durable store, without a parallel JSON result authority.
+
+## Evidence and model budgets
+
+`ORKET_GARDENER_TARGET_PATHS` is a JSON list of relative files/directories.
+`ORKET_GARDENER_CONVENTIONS_SUBDIR` selects a relative directory within each
+declared extra root; resolved escapes refuse. A compact rubric must be authored
+as a complete scope, never fabricated by silently chopping convention files.
+Selected binary files, symlinks and submodules still refuse.
+
+File and total content defaults remain 16 KiB and 64 KiB, configurable up to
+512 KiB. These are capture bounds, not promises of model context capacity.
+Submission defaults are 8192 input / 2048 output tokens; explicit configuration
+also remains subject to the host prompt profile and model limits. Governed
+requests preserve all admitted messages and refuse incompatible budgets before
+generation. Exact llama.cpp rendering and conservative other-provider admission
+are specified in `GOVERNED_AGENT_TASK_SUBMISSION.md`. Raising a capture limit
+alone cannot enlarge the model context. No automatic splitting or summarization
+changes the supplied evidence.
+
+Native Windows supports this wrapper and Orket. Gardener 0.3.0's full CLI imports
+POSIX `fcntl`; use WSL for `gardener align` until upstream supports Windows.
+This is a platform workaround, not a native Windows Gardener acceptance claim.
 
 ## Verification
 

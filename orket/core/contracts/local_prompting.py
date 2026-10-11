@@ -36,6 +36,7 @@ class LocalPromptingPolicyResult:
     profile_registry_snapshot_hash: str
     warnings: tuple[str, ...]
     context_budget_tokens: int = 0
+    input_budget_tokens: int = 0
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "messages", tuple(MappingProxyType(dict(row)) for row in self.messages))
@@ -58,6 +59,9 @@ class LocalPromptingPolicyResult:
 
     def ollama_options_overrides(self) -> dict[str, Any]:
         overrides = sampling_payload(self.sampling_bundle, ollama=True, extended=True)
+        if self.input_budget_tokens:
+            overrides["num_ctx"] = min(self.context_budget_tokens,
+                self.input_budget_tokens + int(self.sampling_bundle["max_output_tokens"]))
         if self.effective_stop_sequences:
             overrides["stop"] = list(self.effective_stop_sequences)
         return overrides
@@ -90,6 +94,7 @@ class LocalPromptingPolicyResult:
             "profile_resolution_path": self.resolution_path,
             "profile_registry_snapshot_hash": self.profile_registry_snapshot_hash,
             "local_prompting_warnings": list(self.warnings),
+            "local_prompt_input_budget_tokens": self.input_budget_tokens,
         }
 
 

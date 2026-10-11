@@ -4,6 +4,7 @@ from collections.abc import Callable
 import httpx
 import ollama
 
+from orket.adapters.llm.governed_ollama_client import GovernedOllamaClient
 from orket.adapters.llm.provider_catalog_client import build_provider_http_client
 from orket.core.contracts.provider_http import ProviderHttpInputs
 
@@ -25,8 +26,14 @@ class CapturedOllamaAuth(httpx.Auth):
 
 def build_provider_inference_client(*, inputs: ProviderHttpInputs, backend: str, base_url: str,
                                     timeout_s: float, connect_timeout_s: float, ollama_api_key: str | None,
-                                    own_resource: Callable[[object], None]) -> httpx.AsyncClient | ollama.AsyncClient:
+                                    own_resource: Callable[[object], None], governed: bool = False):
     options: dict[str, object]
+    if backend == "ollama" and governed:
+        options = dict(base_url=base_url, follow_redirects=False, auth=CapturedOllamaAuth(ollama_api_key),
+            timeout=httpx.Timeout(connect=connect_timeout_s, read=max(1.0, timeout_s), write=30.0, pool=10.0))
+        client = build_provider_http_client(inputs=inputs, factory=httpx.AsyncClient,
+                                           options=options, own_resource=own_resource)
+        return GovernedOllamaClient(client)
     if backend == "openai_compat":
         http_factory = httpx.AsyncClient
         options = dict(base_url=base_url, follow_redirects=False,

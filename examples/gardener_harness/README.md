@@ -28,22 +28,68 @@ alternatives require explicit selection. `ORKET_GARDENER_WORK_DIR` defaults to
 `~/.orket/gardener-harness` and must be outside every source repository. The
 wrapper starts the installed module with its own Python, so it cannot silently
 select an unrelated `orket` executable from PATH. A missing model or unavailable
-provider fails with `blocked: true`.
+provider, or an inference timeout, fails with `blocked: true`.
+For Ollama explicitly set `ORKET_GARDENER_PROVIDER=ollama` and the native base
+URL (without `/v1`). Governed Ollama requires version 0.24.0 or later for its
+non-truncating request guards. The selected HTTP endpoint supplies model inventory;
+an unrelated local Ollama CLI installation is not required.
 
 Only `report` with plan permissions, Read/Grep/Glob, no allowed commands and
 `merge_allowed: false` is accepted. Every `add_dirs` entry must be a directory
 inside a clean, committed Git repository. The target must also be clean. The
-snapshot includes named tracked target files, standard root documentation and
-all tracked files within each extra directory. Use narrowly scoped convention
+snapshot includes named tracked target files, standard root documentation,
+manifests, text files in `docs/`, `.github/` and `.gitea/`, and all tracked files
+within each selected extra directory. Use narrowly scoped convention
 directories. File content comes from immutable Git blob IDs; symlinks, submodules,
 non-UTF-8/binary selected files, failed discovery and exceeded limits refuse
 before the model runs. Untracked and ignored content is never model input.
 
-Limits are 1,000 inventory entries per selected tree, 128 text documents,
+Limits are 10,000 inventory entries per selected tree, 128 text documents,
 16 KiB per document, 64 KiB document content, 64 KiB prompt, eight extra
 directories, and a 30–3,600 second dispatch timeout. Oversized required evidence
-is refused, not silently truncated. The model may impose a smaller context or
-output limit and refuse the report. Source state is checked again after the run.
+is refused, not silently truncated. Source state is checked again after the run.
+
+For a large repository, explicitly choose the files to inspect, for example:
+
+```text
+ORKET_GARDENER_TARGET_PATHS=["README.md","pyproject.toml",".github/workflows"]
+ORKET_GARDENER_CONVENTIONS_SUBDIR=review-rubric
+ORKET_GARDENER_MAX_INPUT_TOKENS=8192
+ORKET_GARDENER_MAX_OUTPUT_TOKENS=2048
+ORKET_GARDENER_MAX_FILE_BYTES=16384
+ORKET_GARDENER_MAX_SNAPSHOT_BYTES=65536
+```
+
+Target paths replace the default selection; they are literal relative paths,
+not globs. The conventions subdirectory applies inside each `add_dirs` root.
+Commit a complete, smaller rubric there. Raising byte limits (at most 524288)
+does not raise token capacity. Submission token ranges are 256..131072 input
+and 64..8192 output, still bounded by the selected host profile and model.
+`ORKET_LOCAL_PROMPT_PROFILE_REGISTRY_PATH` can select an operator-authored copy
+of the packaged `orket/runtime/config/local_prompt_profiles.json`: increase
+the chosen profile's `context_budget_tokens` and
+`sampling_bundles.strict_json.max_output_tokens`
+only within your model/server capacity. The packaged relevant Qwen and Llama
+strict-report output ceilings are 2048; requests above a ceiling now refuse
+with `E_MODEL_OUTPUT_LIMIT` instead of silently lowering it.
+
+`E_MODEL_INPUT_BUDGET` means reduce selected evidence or explicitly enlarge both
+submission and host capacity. Native Qwen3.8 llama.cpp uses rendered token counts;
+other admitted profiles use a conservative UTF-8 byte estimate with message
+overhead, which may refuse text that would fit a tokenizer. It is not a measured
+token count. Ollama receives an explicit `num_ctx`, `truncate: false` and
+`shift: false`; no implicit retry follows a timeout. Inspection retains specific
+model failure reasons even when the terminal policy reason is more general.
+
+Each run retains `snapshot-inventory.json`. For trees larger than 128 entries,
+the model sees a bounded listing, selected content, coverage counts and the full
+inventory digest. Names prove presence; uninspected content remains unknown.
+Full Gardener 0.3.0 `align` currently needs POSIX/WSL because of its `fcntl` imports;
+the Windows wrapper alone does not establish native Windows CLI support.
+Inside WSL, use Linux paths throughout and a provider reachable from that
+environment. For llama.cpp, set `ORKET_LLAMA_CPP_GGUF_MODEL_ROOT` to the Linux
+path containing the GGUF files (for example `/mnt/d/Models/GGUF`); a Windows
+drive-letter default is not a valid Linux inventory root.
 
 Each dispatch retains its input JSON files and SQLite evidence in a private
 run directory. The result footer supplies the run ID, database and inspection

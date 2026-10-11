@@ -21,6 +21,7 @@ from orket.application.services.governed_agent_broker_service import (
 from orket.application.services.local_model_factory import create_local_model_provider
 from orket.application.services.process_input_service import capture_process_context
 from orket.application.services.runtime_result_lifetime import create_runtime_owner
+from orket.core.contracts.model_input_budget import ModelInputBudgetError
 from orket.core.contracts.provider_runtime import PROVIDER_CHOICES, ProviderRuntimeTarget
 from orket.exceptions import ModelTimeoutError
 from orket.runtime.config.provider_runtime_target import resolve_provider_runtime_target
@@ -62,8 +63,11 @@ class GovernedAgentLocalModelProvider:
             "local_prompting_mode": "enforce",
             "local_prompt_task_class": "strict_json" if request.response_mode == "json" else "concise_text",
             "local_prompt_max_output_tokens": request.max_output_tokens,
+            "local_prompt_max_input_tokens": request.max_input_tokens,
             "local_prompt_temperature": request.temperature,
             "local_prompt_stop_sequences": list(request.stop_sequences),
+            "local_prompt_response_schema": (request.response_schema.thaw()
+                if request.response_mode == "json" and request.response_schema is not None else None),
         }
         try:
             model_response = await asyncio.wait_for(
@@ -72,6 +76,10 @@ class GovernedAgentLocalModelProvider:
             )
         except TimeoutError as exc:
             raise ModelTimeoutError(f"Governed model call timed out for role {request.role}.") from exc
+        except ModelInputBudgetError as exc:
+            return GovernedAgentModelObservation(response=None, usage_posture="measured", input_tokens=0,
+                output_tokens=0, estimate_source=None, latency_ms=None, finish_reason=None,
+                status="failed", normalized_reason=str(exc))
         return _observation(model_response, response_mode=request.response_mode)
 
     async def close(self) -> None:
@@ -145,7 +153,7 @@ async def _prepare_local_clients(targets, *, provider, maximum_timeout, environm
         for model_id, target in targets.items():
             construct = partial(create_local_model_provider, model_id, temperature=0,
                 timeout=max(1, int(maximum_timeout)), provider=provider, base_url=target.base_url,
-                runtime_target=target, environment=environment, cwd=cwd,
+                runtime_target=target, environment=environment, cwd=cwd, governed=True,
                 connect_timeout_seconds=min(30, max(1, maximum_timeout)))
             clients[model_id] = await create_runtime_owner(construct, label="governed-provider-construction")
         return clients

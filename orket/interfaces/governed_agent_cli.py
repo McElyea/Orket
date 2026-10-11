@@ -100,6 +100,12 @@ async def _run_command(
     args: argparse.Namespace, db_path: Path, project_root: Path,
     catalog_path: Path | None, request_path: Path | None,
 ) -> dict[str, Any]:
+    from orket.application.services.governed_agent_logging import run_with_agent_logging
+    return await run_with_agent_logging(project_root, dict(os.environ),
+        lambda: _run_bound_command(args, db_path, project_root, catalog_path, request_path))
+
+
+async def _run_bound_command(args, db_path, project_root, catalog_path, request_path) -> dict[str, Any]:
     command = str(args.agent_command)
     if command == "run":
         if catalog_path is None:

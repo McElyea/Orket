@@ -5,12 +5,14 @@ import json
 import os
 from collections.abc import Mapping
 from copy import deepcopy
+from dataclasses import replace
 from functools import partial
 from pathlib import Path
 from types import MappingProxyType
 from typing import Any
 
 from orket.adapters.execution.owned_io import run_owned_thread
+from orket.adapters.llm.llama_cpp_render_verification import QWEN38_TEXT_TEMPLATE_VERSION
 from orket.adapters.storage.prompt_registry_reader import read_prompt_registry
 from orket.application.services.local_prompting_rules import (
     E_LOCAL_PROMPT_PROFILE_REQUIRED,
@@ -39,6 +41,7 @@ from orket.core.contracts.model_generation_options import (
     request_sampling_options,
     request_stop_sequences,
 )
+from orket.core.contracts.model_input_budget import admit_model_input
 from orket.runtime.config.compact_turn_packet import compact_turn_messages, is_compact_turn_packet
 from orket.runtime.config.local_prompt_profiles import (
     DEFAULT_LOCAL_PROMPT_PROFILE_REGISTRY_PATH,
@@ -146,9 +149,10 @@ def _resolve_registry_policy(*, registry, registry_hash, provider_backend, model
     resolved_messages, warnings, effective_context_budget_tokens = _shape_messages(
         messages, context, resolved.profile, provider_backend, model, task_class, mode,
         lmstudio_session_mode, lmstudio_session_id)
-    return _resolved_policy(resolved, resolved_messages, warnings, effective_context_budget_tokens,
+    policy = _resolved_policy(resolved, resolved_messages, warnings, effective_context_budget_tokens,
         provider_backend, provider_for_profile, mode, task_class, requested_stops, requested_sampling,
         lmstudio_session_mode, lmstudio_session_id, registry_hash)
+    return replace(policy, input_budget_tokens=int(context.get("local_prompt_max_input_tokens", 0)))
 
 
 def _shape_messages(messages, context, profile, provider_backend, model, task_class, mode,
@@ -204,6 +208,16 @@ def _apply_budget(resolved_messages, context, profile, task_class, mode):
         profile_budget_tokens=int(profile.context_budget_tokens),
     )
     pretrim_messages = list(resolved_messages)
+    if requested_input := context.get("local_prompt_max_input_tokens"):
+        requested_output = int(context["local_prompt_max_output_tokens"])
+        effective_output = min(requested_output, _sampling_bundle(profile, task_class)["max_output_tokens"])
+        admit_model_input(resolved_messages, requested_input=requested_input, requested_output=requested_output,
+            effective_output=effective_output, context_limit=effective_context_budget_tokens,
+            native_counter=profile.template_version == QWEN38_TEXT_TEMPLATE_VERSION)
+        role_violation = _role_forbidden_error(resolved_messages, profile)
+        if role_violation:
+            raise ValueError(f"{E_LOCAL_PROMPT_ROLE_FORBIDDEN}:{role_violation}")
+        return resolved_messages, warnings, effective_context_budget_tokens, context_budget_warning
     resolved_messages, trimmed_count = _trim_messages_by_budget(
         pretrim_messages,
         context_budget_tokens=effective_context_budget_tokens,

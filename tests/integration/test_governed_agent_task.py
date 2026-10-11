@@ -21,7 +21,12 @@ async def invoke(root, endpoint, catalog, submission, inputs):
 
 async def test_public_task_accepts_new_objective_and_replays_real_state(tmp_path, catalog_server):
     endpoint, state = catalog_server
-    state["response"] = lambda _: json.dumps(report_response())
+    def respond(request):
+        shape = request["response_format"]
+        assert shape["type"] == "json_schema" and shape["json_schema"]["strict"] is True
+        assert shape["json_schema"]["schema"]["properties"]["sections"]["required"] == ["summary"]
+        return json.dumps(report_response())
+    state["response"] = respond
     paths = await asyncio.to_thread(prepare_report_task, tmp_path)
     code, output, error = await invoke(tmp_path, endpoint, *paths)
     result = json.loads(output)
@@ -46,7 +51,8 @@ async def test_public_task_accepts_new_objective_and_replays_real_state(tmp_path
             assert payload["iterations"][0]["advisory_proposal"] == result["iterations"][0]["advisory_proposal"]
 
 
-@pytest.mark.parametrize("defect", ["missing_section", "foreign_source", "not_advisory", "plain_text"])
+@pytest.mark.parametrize("defect", ["missing_section", "foreign_source", "not_advisory", "plain_text",
+                                  "duplicate_source", "blank_section"])
 async def test_public_task_refuses_invalid_report_without_false_success(tmp_path, catalog_server, defect):
     endpoint, state = catalog_server
     report = report_response()
@@ -56,6 +62,10 @@ async def test_public_task_refuses_invalid_report_without_false_success(tmp_path
         report["source_refs"].append("unseen:secret")
     elif defect == "not_advisory":
         report["advisory"] = False
+    elif defect == "duplicate_source":
+        report["source_refs"] = [report["source_refs"][0]] * len(report["source_refs"])
+    elif defect == "blank_section":
+        report["sections"]["summary"] = " "
     state["response"] = lambda _: "done" if defect == "plain_text" else json.dumps(report)
     paths = await asyncio.to_thread(prepare_report_task, tmp_path)
     code, output, error = await invoke(tmp_path, endpoint, *paths)
@@ -67,8 +77,15 @@ async def test_public_task_refuses_invalid_report_without_false_success(tmp_path
     if defect != "plain_text":
         iteration = result["iterations"][0]
         assert iteration["state"] == "decided"
-        assert json.loads(iteration["advisory_proposal"]) == report
-        assert iteration["model_calls"][0]["receipt"]["status"] == "returned"
+        call = iteration["model_calls"][0]
+        if defect in {"duplicate_source", "blank_section"}:
+            # Passing generation/broker schema is insufficient: the independent host verifier must refuse.
+            assert json.loads(iteration["advisory_proposal"]) == report
+            assert call["receipt"]["status"] == "returned"
+        else:
+            assert iteration["advisory_proposal"] is None
+            assert call["receipt"]["status"] == "failed"
+            assert call["normalized_reason"] == "model_response_contract_failed"
 
 
 @pytest.mark.parametrize("defect", ["verifier", "policy", "extension", "budget", "input_digest"])

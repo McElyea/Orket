@@ -37,9 +37,6 @@ from orket.runtime.config.provider_runtime_inventory import (
     list_installed_lmstudio_models_sync as _list_installed_lmstudio_models_sync,
 )
 from orket.runtime.config.provider_runtime_inventory import (
-    list_installed_ollama_models_sync as _list_installed_ollama_models_sync,
-)
-from orket.runtime.config.provider_runtime_inventory import (
     list_loaded_lmstudio_model_ids_sync as _list_loaded_lmstudio_model_ids_sync,
 )
 from orket.runtime.config.provider_runtime_inventory import (
@@ -349,7 +346,7 @@ async def resolve_provider_runtime_target(
             status="BLOCKED",
         )
     if canonical_provider == "ollama":
-        available_models = await _owned_inventory(_list_installed_ollama_models_sync, timeout_s=timeout_s, cwd=cwd, environment=environment)
+        available_models = await _list_ollama_models(base_url=resolved_base_url, timeout_s=timeout_s, cwd=cwd, environment=environment)
         resolved_model = requested_model_token if requested_model_token in available_models else ""
         resolution_mode = "requested" if resolved_model else "unresolved"
         if not resolved_model and (auto_select_model or not requested_model_token):
@@ -379,7 +376,7 @@ async def resolve_provider_runtime_target(
             model_id=resolved_model,
             base_url=resolved_base_url,
             resolution_mode=resolution_mode,
-            inventory_source="ollama_list",
+            inventory_source="http_api_tags",
             available_models=available_models,
             status="OK" if resolved_model else "BLOCKED",
         )

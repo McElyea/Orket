@@ -46,11 +46,11 @@ def observe_resources(monkeypatch, *, fail_after=None):
     return resources, closed
 
 
-@pytest.mark.parametrize('provider', ['openai_compat', 'ollama'])
+@pytest.mark.parametrize(('provider', 'governed'), [('openai_compat', False), ('ollama', False), ('ollama', True)])
 @pytest.mark.parametrize('interrupt', ['cancel', 'repeated', 'timeout'])
 @pytest.mark.parametrize('fail', [False, True], ids=['constructed', 'native-failure'])
 async def test_inference_retains_native_construction_and_outcome(tmp_path, monkeypatch, record_property,
-                                                               provider, interrupt, fail):
+                                                               provider, governed, interrupt, fail):
     entered, release, finished = threading.Event(), threading.Event(), threading.Event()
     worker = []
     original = ssl.SSLContext.load_verify_locations
@@ -72,7 +72,7 @@ async def test_inference_retains_native_construction_and_outcome(tmp_path, monke
     async with observed_http_server(response_for(provider, 'unused')) as server:
         async def invoke():
             async with timeout:
-                return await create_observed_provider(provider, server[0], environment={})
+                return await create_observed_provider(provider, server[0], environment={}, governed=governed)
 
         task = asyncio.create_task(invoke())
         try:
@@ -156,13 +156,13 @@ async def test_inference_close_is_retained_and_preserves_failure(monkeypatch, pr
         assert failure or all(resource in closed for resource in resources)
 
 
-@pytest.mark.parametrize('provider', ['openai_compat', 'ollama'])
+@pytest.mark.parametrize(('provider', 'governed'), [('openai_compat', False), ('ollama', False), ('ollama', True)])
 @pytest.mark.parametrize('fail_after', [1, 2])
-async def test_failed_native_provider_closes_partial_acquisition(monkeypatch, provider, fail_after):
+async def test_failed_native_provider_closes_partial_acquisition(monkeypatch, provider, governed, fail_after):
     resources, closed = observe_resources(monkeypatch, fail_after=fail_after)
     async with observed_http_server(response_for(provider, 'unused')) as server:
         with pytest.raises(OSError, match='controlled acquisition failure'):
-            await create_observed_provider(provider, server[0], environment={})
+            await create_observed_provider(provider, server[0], environment={}, governed=governed)
         assert len(resources) == fail_after and not server[1]
         assert all(resource in closed for resource in resources)
 

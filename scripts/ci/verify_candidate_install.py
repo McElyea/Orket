@@ -89,10 +89,11 @@ class InstallEvidence:
         return result.stdout
 
 
-async def build_and_install(run: InstallEvidence) -> tuple[Path, Path, Path]:
+async def build_and_install(run: InstallEvidence, *,
+                            inputs_report: Path = Path(".tmp/macos-support/package-inputs.json")) -> tuple[Path, Path, Path]:
     source, dist, prefix = run.area / "source", run.area / "wheels", run.area / "candidate"
     snapshot = snapshot_packages(run.repo, source)
-    write_payload_with_diff_ledger(run.repo / ".tmp/macos-support/package-inputs.json", snapshot)
+    write_payload_with_diff_ledger(run.repo / inputs_report, snapshot)
     run.payload["snapshot"] = {key: value for key, value in snapshot.items() if key != "inputs"}
     run.save()
     dist.mkdir()

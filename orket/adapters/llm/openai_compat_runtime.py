@@ -38,7 +38,10 @@ def _dict_payload(value: Any) -> dict[str, Any]:
     return dict(value) if isinstance(value, dict) else {}
 
 
-def response_format_payload(response_format: str, *, provider_name: str) -> dict[str, Any]:
+def response_format_payload(response_format: str, *, provider_name: str, schema: Any = None) -> dict[str, Any]:
+    if schema is not None:
+        return {"response_format": {"type": "json_schema",
+            "json_schema": {"name": "governed_response", "strict": True, "schema": schema}}}
     if response_format not in {"text", "json_object", "json_schema"}:
         return {}
     selected: dict[str, Any] = {"type": response_format}

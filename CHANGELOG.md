@@ -5,6 +5,28 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.2] - 2026-10-10 - "Gardener field fixes and explicit model budgets"
+
+### Fixed
+- Address Gardener issues #3, #4 and #5: send explicit Ollama context and
+  non-truncation guards, preserve provider failures through prepared CLI logging,
+  and admit input/output budgets before inference without silent trimming.
+- Forward SDK JSON response schemas to providers, reject truncated reports, and
+  prevent automatic retries of governed inference and non-streaming timeouts.
+- Raise relevant strict-report output ceilings to 2048 tokens and make Gardener
+  evidence scopes, capture limits, token limits and unread inventory explicit.
+- Stability: 265 targeted tests and installed live llama.cpp/Ollama report flows
+  passed, including an Ollama request with 5416 measured input tokens and full
+  Gardener align through WSL. Accepted delivery does not certify factual accuracy.
+  Release evidence and remaining limits: `docs/releases/0.8.2/PROOF_REPORT.md`.
+- Operator/extension-author action: use Ollama 0.24.0 or newer for governed
+  reports, reinstall the updated trusted report example, and scope evidence or
+  explicitly configure host/submission budgets. Use WSL for Gardener 0.3.0's
+  full CLI on Windows. SDK 0.8.0 and wire schemas remain unchanged.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+
 ## [0.8.1] - 2026-10-10 - "Safe governed reports and Gardener adapter"
 
 ### Changed

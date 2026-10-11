@@ -290,6 +290,8 @@ def _model_result(
         raise ValueError("E_AGENT_MODEL_OBSERVED_USAGE_EXCEEDED")
     status = observation.status
     normalized_reason = observation.normalized_reason
+    if status == "returned" and observation.truncated:
+        status, normalized_reason = "failed", "model_response_truncated"
     if status == "returned" and not _response_matches_contract(call, observation.response):
         status = "failed"
         normalized_reason = "model_response_contract_failed"
@@ -308,8 +310,7 @@ def _model_result(
         role=call.role,
         requested_profile_ref=profile.requested_profile_ref,
         resolved_profile_ref=profile.resolved_profile_ref,
-        provider=profile.provider,
-        provider_version=profile.provider_version,
+        provider=profile.provider, provider_version=profile.provider_version,
         model=profile.model, model_digest=profile.model_digest,
         status=status,
         usage_posture=observation.usage_posture,
@@ -328,8 +329,7 @@ def _model_result(
         identity=call.identity,
         call_id=call.call_id,
         role=call.role,
-        response=response,
-        response_digest=response_digest,
+        response=response, response_digest=response_digest,
         receipt=receipt,
         normalized_reason=normalized_reason,
     )

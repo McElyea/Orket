@@ -10,6 +10,7 @@ import httpx
 
 from orket.adapters.execution.owned_io import run_owned_thread
 from orket.adapters.llm.prompt_canonicalization import canonicalize_prompt_text
+from orket.core.contracts.model_input_budget import ModelInputBudgetError
 from orket.exceptions import ModelProviderError
 
 QWEN38_TEXT_TEMPLATE_VERSION = "orket_qwen38_text_chatml_2026_09"
@@ -38,6 +39,7 @@ async def verify_llama_cpp_render(
     payload: dict[str, Any],
     template_version: str,
     context_budget_tokens: int = 0,
+    input_budget_tokens: int = 0,
 ) -> dict[str, Any]:
     if template_version != QWEN38_TEXT_TEMPLATE_VERSION:
         return {}
@@ -61,10 +63,13 @@ async def verify_llama_cpp_render(
     )
     token_response.raise_for_status()
     token_count = len(token_response.json()["tokens"])
+    if input_budget_tokens and token_count > input_budget_tokens:
+        raise ModelInputBudgetError(
+            f"E_MODEL_INPUT_BUDGET: native_tokens={token_count}, input_limit={input_budget_tokens}")
     server_budget = int(props.get("default_generation_settings", {}).get("n_ctx", 0))
     budget = min(context_budget_tokens, server_budget)
     if budget <= 0 or token_count + int(payload.get("max_tokens", 0)) > budget:
-        raise ModelProviderError("E_LLAMA_CPP_CONTEXT_BUDGET: native token count exceeds input/output budget")
+        raise ModelInputBudgetError("E_LLAMA_CPP_CONTEXT_BUDGET: native token count exceeds input/output budget")
     # LP-02 canonicalization is distinct from byte-exact renderer comparison.
     canonical = canonicalize_prompt_text(observed).encode("utf-8")
     return {

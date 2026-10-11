@@ -183,6 +183,8 @@ class GovernedAgentInspectionService:
                     "status": call.status,
                     "request_digest": call.request_digest,
                     "result_digest": call.result_digest,
+                    "normalized_reason": (None if call.result_payload is None
+                                          else call.result_payload.get("normalized_reason")),
                     "receipt": (
                         None
                         if call.result_payload is None

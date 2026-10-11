@@ -21,11 +21,11 @@ from orket.core.contracts.provider_preparation import ProviderPreparationPort
 def create_local_model_provider(*args: Any, environment: Mapping[str, str] | None = None,
                                 runtime_preparation: ProviderPreparationPort | None = None,
                                 cwd: Path | None = None, http_client_owner: ProviderInferenceHttpPort | None = None,
-                                **kwargs: Any) -> LocalModelProvider:
+                                governed: bool = False, **kwargs: Any) -> LocalModelProvider:
     require_sync_context(code="E_PROVIDER_FACTORY_REQUIRES_ASYNC_OWNER")
     directory, captured = capture_process_context(cwd=cwd, environment=environment)
     owner = http_client_owner if http_client_owner is not None else ProviderInferenceHttpService(
-        environment=captured, cwd=directory)
+        environment=captured, cwd=directory, governed=governed)
     def construct() -> LocalModelProvider:
         return LocalModelProvider(*args, environment=captured, http_client_owner=owner,
             prompt_policy=LocalPromptingService(environment=captured),

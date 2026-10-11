@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 # Layer: contract
+from unittest.mock import AsyncMock
+
 import pytest
 
 from orket.runtime import provider_runtime_target as runtime_target
@@ -10,13 +12,13 @@ pytestmark = pytest.mark.contract
 
 
 @pytest.mark.asyncio
-async def test_resolve_provider_runtime_target_auto_selects_ollama_from_cli_inventory(
+async def test_resolve_provider_runtime_target_auto_selects_ollama_from_selected_http_inventory(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
         runtime_target,
-        "_list_installed_ollama_models_sync",
-        lambda **_: ["qwen2.5-coder:7b", "llama3.1:8b"],
+        "_list_ollama_models",
+        AsyncMock(return_value=["qwen2.5-coder:7b", "llama3.1:8b"]),
     )
 
     result = await runtime_target.resolve_provider_runtime_target(
@@ -30,7 +32,7 @@ async def test_resolve_provider_runtime_target_auto_selects_ollama_from_cli_inve
         model_ttl_sec=600,
     )
 
-    assert result.inventory_source == "ollama_list"
+    assert result.inventory_source == "http_api_tags"
     assert result.model_id == "qwen2.5-coder:7b"
     assert result.resolution_mode == "auto_selected"
     assert result.status == "OK"
@@ -138,7 +140,7 @@ async def test_resolve_provider_runtime_target_blocks_quarantined_provider(
     monkeypatch.delenv("ORKET_PROVIDER_MODEL_QUARANTINE", raising=False)
     monkeypatch.setattr(
         runtime_target,
-        "_list_installed_ollama_models_sync",
+        "_list_ollama_models",
         lambda **_: (_ for _ in ()).throw(AssertionError("quarantined provider should short-circuit inventory")),
     )
 
@@ -167,8 +169,8 @@ async def test_resolve_provider_runtime_target_blocks_quarantined_model(
     monkeypatch.setenv("ORKET_PROVIDER_MODEL_QUARANTINE", "ollama:qwen2.5-coder:7b")
     monkeypatch.setattr(
         runtime_target,
-        "_list_installed_ollama_models_sync",
-        lambda **_: ["qwen2.5-coder:7b", "llama3.1:8b"],
+        "_list_ollama_models",
+        AsyncMock(return_value=["qwen2.5-coder:7b", "llama3.1:8b"]),
     )
 
     result = await runtime_target.resolve_provider_runtime_target(

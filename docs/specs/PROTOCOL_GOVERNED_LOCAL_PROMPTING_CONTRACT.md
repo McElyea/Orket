@@ -1,6 +1,6 @@
 # Protocol-Governed Local Provider Compatibility Contract (v1.2)
 
-Last updated: 2026-10-04
+Last updated: 2026-10-10
 Status: Active (contract baseline)
 Owner: Orket Core
 
@@ -18,6 +18,15 @@ Core principle:
 3. Runtime validators and schemas remain the enforcement authority.
 
 ## Request and registry ownership
+
+Governed agent model requests carry an explicit input limit. They preserve the
+admitted messages instead of applying history trimming and refuse an output
+request larger than the host profile ceiling. The relevant Ollama Qwen/Llama
+and llama.cpp Qwen3.8 strict-JSON profiles allow 2048 output tokens. Context
+capacity remains independently bounded; changing an output ceiling does not
+enlarge it. Native rendered-token admission, conservative other-profile input
+admission, Ollama non-truncation guards and diagnostic receipts are defined in
+`GOVERNED_AGENT_TASK_SUBMISSION.md`. Ordinary turn history policy is unchanged.
 
 Turn strict-grounding checks preserve prose word boundaries when extracting
 non-JSON residue, including spaces, tabs/newlines and removed JSON spans. The

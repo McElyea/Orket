@@ -7,12 +7,11 @@ import re
 import time
 from pathlib import Path, PurePosixPath
 
+from gardener_scope import byte_limits, coverage_listing, target_scopes, wanted_entry
+
 from orket.application.services.command_process_supervisor import CommandProcessSupervisor
 
-MAX_FILE_BYTES = 16_384
-MAX_SNAPSHOT_BYTES = 65_536
-MAX_FILES = 1_000
-DEFAULT_DOCS = ("README.md", "CLAUDE.md", "AGENTS.md", "CONTRIBUTING.md", "SECURITY.md")
+MAX_FILES = 10_000
 
 
 class HarnessFailure(ValueError):
@@ -99,25 +98,25 @@ def observe_tree(commands: Commands, selected: Path) -> dict:
 
 
 def collect_sources(commands: Commands, prompt: str, repo: Path, extra_roots: list[Path]) -> tuple[dict, list[dict]]:
+    scopes = target_scopes(commands.environment)
+    max_file_bytes, max_snapshot_bytes = byte_limits(commands.environment)
     trees = [observe_tree(commands, root) for root in dict.fromkeys([repo, *extra_roots])]
     if any(commands.area.is_relative_to(tree["root"]) for tree in trees):
         raise HarnessFailure("the retained run area must be outside every source repository")
     normalized_prompt = prompt.replace("\\", "/")
-    if os.name == "nt":
-        normalized_prompt = normalized_prompt.casefold()
     sources, used = {}, 0
+    prefix = PurePosixPath(trees[0]["selected"].relative_to(trees[0]["root"]).as_posix())
+    for scope in scopes:
+        if not any(PurePosixPath(entry["path"]).relative_to(prefix).is_relative_to(scope)
+                   for entry in trees[0]["entries"]):
+            raise HarnessFailure(f"selected target scope has no committed entries: {scope}")
     for index, tree in enumerate(trees):
         for entry in tree["entries"]:
-            absolute = (tree["root"] / entry["path"]).as_posix()
-            named = absolute.casefold() if os.name == "nt" else absolute
-            relative = entry["path"].casefold() if os.name == "nt" else entry["path"]
-            named_relative = re.search(r"(?<![\w./])" + re.escape(relative) + r"(?![\w./])", normalized_prompt)
-            wanted = index > 0 or named in normalized_prompt or named_relative or entry["path"] in DEFAULT_DOCS
-            if not wanted:
+            if not wanted_entry(entry, tree, index, normalized_prompt, scopes):
                 continue
             if entry["mode"] not in {"100644", "100755"} or entry["kind"] != "blob":
                 raise HarnessFailure("selected snapshot input is a symlink, submodule, or non-regular Git entry")
-            if entry["size"] > MAX_FILE_BYTES or used + entry["size"] > MAX_SNAPSHOT_BYTES:
+            if entry["size"] > max_file_bytes or used + entry["size"] > max_snapshot_bytes:
                 raise HarnessFailure("selected snapshot content exceeds the byte budget; reduce the source scope")
             data = git_bytes(commands, tree["root"], "cat-file", "blob", entry["oid"])
             if len(data) != entry["size"] or b"\0" in data:
@@ -129,9 +128,7 @@ def collect_sources(commands: Commands, prompt: str, repo: Path, extra_roots: li
             used += len(data)
     if not sources or len(sources) > 128:
         raise HarnessFailure("snapshot requires between 1 and 128 committed text documents")
-    sources["listing"] = {"repositories": [{"repository": index, "commit": tree["commit"],
-        "files": [{"path": entry["path"], "mode": entry["mode"]} for entry in tree["entries"]]}
-        for index, tree in enumerate(trees)]}
+    sources["listing"] = coverage_listing(trees, sources)
     return sources, trees
 
 

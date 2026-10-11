@@ -124,7 +124,9 @@ async def list_openai_compat_models(*, base_url: str, api_key: str | None, timeo
 
 async def list_ollama_models(*, base_url: str, timeout_s: float, cwd: Path | None = None,
                              environment: Mapping[str, str] | None = None) -> list[str]:
+    cwd, environment = capture_process_context(cwd=cwd, environment=environment)
     async with open_provider_catalog_client(base_url=base_url, timeout_s=timeout_s,
+                                           api_key=environment.get("OLLAMA_API_KEY"),
                                            cwd=cwd, environment=environment) as client:
         response = await client.get("/api/tags")
         response.raise_for_status()

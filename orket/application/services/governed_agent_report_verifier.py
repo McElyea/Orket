@@ -58,7 +58,7 @@ class StructuredReportVerifier:
                  and all(text.strip() for text in report["sections"].values())
                  and not result.effect_proposals and not result.memory_write_proposals
                  and not result.handoff_proposals
-                 and all(receipt.status == "returned" for receipt in result.model_receipts))
+                 and all(receipt.status == "returned" and not receipt.truncated for receipt in result.model_receipts))
         return GovernedAgentVerificationObservation(
             verifier_id="structured_report", verifier_version="v1", output_admissible=valid,
             objective_satisfied=valid, evidence_sufficient=valid,

@@ -17,7 +17,8 @@ class ReportAgent:
         submission = request.extension_config.thaw()["governed_submission"]
         sections = submission["verifier_config"]["required_sections"]
         prompt = canonical_json({
-            "inputs": [item.model_dump(mode="json") for item in request.materialized_inputs],
+            "inputs": [{"reference": item.reference, "kind": item.kind, "content": item.content.thaw()}
+                       for item in request.materialized_inputs],
             "required_sections": sections, "required_source_refs": list(request.authoritative_context_refs),
         })
         response = await context.model.call(AgentModelCallRequest(
@@ -30,11 +31,12 @@ class ReportAgent:
                 "advisory (true). State any incomplete coverage in limitations. No tools or external effects. "
                 "Do not use Markdown, code fences or commentary outside the JSON object. "
                 "Your response must start with { and end with }. "
-                'Example shape: {"sections":{"summary":"Finding"},"source_refs":["snapshot:readme"],'
-                '"limitations":["Only supplied inputs inspected"],"advisory":true}. '
-                "Use the actual required section names and all actual required_source_refs, not example values."
+                "Use only the actual required section names and actual required_source_refs below. "
+                "A file listed by name is not file-content evidence. Report uninspected checks as unknown; "
+                "do not invent missing files, tests, fixes, or checklist results."
             )), AgentModelMessage(role="user", content=prompt)),
-            response_mode=profile.response_mode, response_schema=FrozenJson.freeze({"type": "object"}),
+            response_mode=profile.response_mode,
+            response_schema=FrozenJson.freeze(_report_format(sections, request.authoritative_context_refs)),
             max_input_tokens=profile.max_input_tokens,
             max_output_tokens=profile.max_output_tokens, timeout_ms=profile.timeout_ms,
             temperature=0, seed=None, streaming_preference="disabled", tool_descriptions=(), stop_sequences=(),
@@ -55,3 +57,16 @@ class ReportAgent:
                 output_bytes=0, artifact_bytes=0, repair_attempts=0),
             normalized_reason=None if returned else response.normalized_reason,
         )
+
+
+def _report_format(sections, references):
+    # Generation guidance and broker response validation; host report acceptance remains independent.
+    return {"type": "object", "additionalProperties": False,
+        "required": ["sections", "source_refs", "limitations", "advisory"], "properties": {
+            "sections": {"type": "object", "additionalProperties": False, "required": sections,
+                "properties": {name: {"type": "string", "minLength": 1} for name in sections}},
+            "source_refs": {"type": "array", "items": {"type": "string", "enum": list(references)},
+                "minItems": len(references), "maxItems": len(references)},
+            "limitations": {"type": "array", "items": {"type": "string"}},
+            "advisory": {"const": True},
+        }}

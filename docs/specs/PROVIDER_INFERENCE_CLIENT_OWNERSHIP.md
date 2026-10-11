@@ -1,6 +1,6 @@
 # Provider inference client inputs and ownership
 
-Last updated: 2026-09-22
+Last updated: 2026-10-10
 Status: Implementation contract; acceptance remains in the architectural-truth plan
 
 Application composition owns provider client construction and cleanup. Native
@@ -23,10 +23,19 @@ reads or its platform/version User-Agent. Do not copy SDK internals, mutate glob
 environment, weaken TLS verification or add another proxy/certificate authority.
 
 Preserve backend-specific behavior: OpenAI-compatible connection/read/write/pool
-budgets and disabled redirects; Ollama SDK redirects and its outer finite generation
-deadline; retry policy, API keys, pinned-target admission, prompt handling, response
+budgets and disabled redirects; ordinary Ollama SDK redirects and its outer finite generation
+deadline; API keys, pinned-target admission, prompt handling, response
 validation and provider lineage. Non-finite model budgets must fail before native
 or network effects. Catalog budgets and behavior remain unchanged.
+
+Governed non-streaming Ollama calls use the native HTTP API through the same
+captured transport/resource owner because the Python SDK does not expose the
+required `truncate`/`shift` guards. Redirects are disabled on this path. Version,
+model context and token admission are specified in `GOVERNED_AGENT_TASK_SUBMISSION.md`.
+Non-streaming timeouts are never automatically retried; governed connections
+also get one attempt. Nongoverned connection retries retain their prior policy.
+Governed JSON response schemas are forwarded to each provider's structured-output
+field and remain subject to independent broker and completion validation.
 
 Each provider owns its native client and acquired transports. Replacing its public
 client transfers the replacement to provider cleanup too; the originally acquired

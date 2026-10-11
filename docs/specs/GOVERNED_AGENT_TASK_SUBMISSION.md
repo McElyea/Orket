@@ -85,6 +85,42 @@ completion; the import guard and subprocess boundary are not an OS sandbox.
 No hostile-code containment or filesystem immutability claim follows from a
 read-only report contract.
 
+## Provider admission and failures
+
+The SDK's JSON `response_schema` is forwarded to Ollama's native `format` or
+OpenAI-compatible `response_format.json_schema`. The report example supplies
+section and reference constraints instead of a generic object hint. This is
+generation guidance and broker response validation, not another completion
+verifier: `structured_report.v1` still independently checks delivery. A provider
+that rejects the schema fails visibly; the host does not silently downgrade it.
+
+The standalone CLI prepares and binds its logging scope before provider work.
+Ollama inventory comes from `/api/tags` at the selected endpoint using captured
+authentication. An unreachable endpoint produces a typed inventory/provider
+failure, not a logging-preparation error or inventory from another daemon.
+
+Governed model requests preserve their admitted messages. Output requests above
+the host profile ceiling fail with `E_MODEL_OUTPUT_LIMIT`; inputs above the
+admitted capacity fail with `E_MODEL_INPUT_BUDGET` before generation. Qwen3.8
+llama.cpp uses native rendering/tokenization, including the output reservation.
+Other supported profiles conservatively estimate UTF-8 bytes plus 128 per
+message and 256 overhead. This is admission guidance, not tokenizer measurement
+or a universal custom-template bound. Post-call observed usage is still enforced.
+
+Ollama additionally requires version >=0.24.0, an observed model context limit,
+and native `/api/chat` guards `truncate: false` and `shift: false`. Its explicit
+`num_ctx` is the smaller of host capacity and requested input plus effective
+output. Old servers or unknown/insufficient model capacity refuse before chat.
+The shared HTTP resource owner supplies captured TLS, proxy, authentication and
+cleanup; the governed non-streaming transport disables redirects. No speculative
+inference retry follows a timeout or governed connection failure. Closing the
+HTTP client does not prove termination of remote inference.
+
+Run/inspect expose `iterations[].model_calls[].normalized_reason` from retained
+result payloads, or null when no result exists. Budget refusals record zero
+measured tokens; provider errors retain existing uncertain-usage rules. A
+provider-truncated response fails even if its JSON is structurally valid.
+
 ## Host verifier and completion meaning
 
 `verifier_class` selects the built-in `structured_report.v1` implementation.
@@ -109,7 +145,7 @@ context reference exactly once, no others, with at most 256 entries. `limitation
 contains at most 128 nonempty strings of at most 2,048 characters; an empty array
 is allowed. Existing SDK proposal and result size limits also apply.
 
-The host requires a returned invocation, returned model receipts, and no effect,
+The host requires a returned invocation, returned non-truncated model receipts, and no effect,
 memory-write or handoff proposals. Missing/invalid output cannot produce a
 successful final truth. Extension completion recommendations remain advisory.
 Successful completion means **delivery of a structurally valid advisory report
