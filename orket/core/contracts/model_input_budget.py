@@ -23,5 +23,6 @@ def admit_model_input(messages: Sequence[Mapping[str, str]], *, requested_input:
         raise ModelInputBudgetError(
             f"E_MODEL_INPUT_BUDGET: utf8_byte_estimate={estimate}, input_limit={requested_input}, "
             f"context_limit={context_limit}, output_limit={effective_output}; reduce evidence or "
-            "explicitly increase the submission and host profile limits; input was not truncated")
+            "increase request limits and the selected host profile context_budget_tokens "
+            "(ORKET_LOCAL_PROMPT_PROFILE_REGISTRY_PATH), within model capacity; input was not truncated")
     return estimate

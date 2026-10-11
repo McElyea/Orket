@@ -80,6 +80,59 @@ only within the model's capacity. The request's `max_tokens` controls output;
 it does not authorize more input. Other providers, streaming and injected
 third-party SDK implementations retain their existing contracts.
 
+### Larger prompts through the headless extension
+
+Gardener's headless extension uses this generic API. Its prompt and output reserve
+can exceed the packaged Qwen/Llama Ollama profiles' 8192-token context even with
+a small repository snapshot. `E_MODEL_INPUT_BUDGET` names both
+`context_budget_tokens` and `ORKET_LOCAL_PROMPT_PROFILE_REGISTRY_PATH` so the
+host operator can locate the limit. The estimate counts UTF-8 bytes plus overhead,
+not tokenizer tokens; reducing only the snapshot may still be insufficient.
+
+1. From the host's installed Python environment, copy the packaged registry to a
+   new operator-owned file. Choose a new destination to preserve existing settings:
+
+   ```text
+   python -c "from importlib.resources import files; from shutil import copyfile; copyfile(str(files('orket.runtime.config').joinpath('local_prompt_profiles.json')), 'local_prompt_profiles.operator.json')"
+   ```
+
+2. Edit the matching entry under `profiles`. For `qwen2.5:7b` on Ollama this is
+   `profile.profile_id: ollama.qwen.chatml.v1`; for `llama3.2:3b` it is
+   `ollama.llama.inst.v1`. Set that entry's `profile.context_budget_tokens` to `32768`
+   only if the selected model supports it and the host has sufficient memory.
+   Preserve the other registry fields. This affects every model matching that
+   entry, so review its `provider` and `match` rules. If the host explicitly sets
+   `ORKET_LOCAL_PROMPT_PROFILE_ID`, edit that selected profile instead.
+3. Validate the edited file using the same installed environment:
+
+   ```text
+   python -c "from orket.runtime.config.local_prompt_profiles import load_local_prompt_profile_registry_file; load_local_prompt_profile_registry_file('local_prompt_profiles.operator.json'); print('Registry schema valid; model capacity and inference not tested')"
+   ```
+
+4. Set `ORKET_LOCAL_PROMPT_PROFILE_REGISTRY_PATH` to the file's **absolute path in
+   the Orket API host's environment**, then restart that host. For example, in
+   PowerShell from the Orket checkout before starting the API:
+
+   ```powershell
+   $env:ORKET_LOCAL_PROMPT_PROFILE_REGISTRY_PATH = (Resolve-Path ./local_prompt_profiles.operator.json).Path
+   python server.py
+   ```
+
+   For a POSIX host, export its absolute POSIX path before starting the API.
+   Setting the variable only in Gardener's separate client process does not
+   reconfigure a running Orket host. `ORKET_GARDENER_MAX_INPUT_TOKENS` belongs to
+   the command harness; it does not configure this generic API.
+5. Retry deliberately and inspect the result. Orket sends the selected context
+   as Ollama's `num_ctx`; changing only `OLLAMA_CONTEXT_LENGTH` on the server does
+   not override this per-request limit. The input estimate plus output reserve
+   must fit. `max_tokens` must also fit the selected sampling bundle's output
+   ceiling. Raising context alone does not raise that ceiling, guarantee report
+   quality or authorize truncation. A missing registry still fails closed.
+
+The packaged default remains 8192. A 32768-token profile is an explicit example,
+not a promise that every Gardener prompt or device fits. The command harness has
+its separate submission limits in [Gardener Report Harness](GARDENER_REPORT_HARNESS.md).
+
 ## Evidence and limits
 
 Retain the effective sampling bundle/stops in the existing provider telemetry and

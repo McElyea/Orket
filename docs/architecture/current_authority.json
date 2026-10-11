@@ -197,7 +197,7 @@
       "kind": "contract",
       "label": "Trusted workload lifetime and public report tasks",
       "source": "docs/specs/SDK_WORKLOAD_PROCESS_LIFETIME.md",
-      "scope": "Trusted extension lifetime, not hostile-code containment. GOVERNED_AGENT_TASK_SUBMISSION.md governs structured delivery and settled report-only failure receipts. MODEL_GENERATION_OPTIONS.md requires guarded full-input SDK/API Ollama calls and typed HTTP failures. GARDENER_REPORT_HARNESS.md governs snapshots, frame budgets, run identity through wrapper refusals and findings/summary checks. Reports remain advisory; completion certifies neither factual accuracy nor remote model termination."
+      "scope": "Trusted extension lifetime, not hostile-code containment. GOVERNED_AGENT_TASK_SUBMISSION.md governs report delivery and settled failure receipts. MODEL_GENERATION_OPTIONS.md governs full-input SDK/API Ollama calls, typed HTTP failures and operator host-profile configuration. GARDENER_REPORT_HARNESS.md governs snapshots, frame budgets, refusal run identity and findings/summary checks. Reports remain advisory; completion certifies neither factual accuracy nor remote model termination."
     },
     {
       "id": "contract.settings",

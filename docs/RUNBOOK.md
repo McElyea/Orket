@@ -51,6 +51,12 @@ operator-managed registry, set `ORKET_LOCAL_PROMPT_PROFILE_REGISTRY_PATH` to
 its explicit path. A missing override fails closed, without reverting to the
 packaged default.
 
+For Gardener's headless extension or other long Ollama API prompts, follow
+[larger host prompt profiles](specs/MODEL_GENERATION_OPTIONS.md#larger-prompts-through-the-headless-extension).
+It covers copying the installed registry, selecting the matching profile and
+restarting the API host with its absolute override path. Client-side Gardener
+capture settings do not enlarge the host's packaged 8192-token context.
+
 1. Install dependencies:
 ```bash
 python -m pip install --upgrade pip

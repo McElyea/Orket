@@ -5,6 +5,21 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.6] - 2026-10-10 - "Explain extension host context limits"
+
+### Fixed
+- Name the host registry setting and context field in conservative input-budget
+  refusals. Document how headless extension operators select a larger profile in
+  the API host environment; packaged defaults and admission limits are unchanged.
+- Stability: the Rev 3 report review and paired 8192/32768 API regression are
+  recorded in `docs/releases/0.8.6/PROOF_REPORT.md`. Reports remain advisory.
+- Operator/extension-author action: no migration is required. For long prompts,
+  explicitly size the host profile within model capacity and available memory.
+  SDK 0.8.0 remains compatible.
+- `compatibility_status`: `compatible`
+- `affected_audience`: `all`
+- `migration_requirement`: `none`
+
 ## [0.8.5] - 2026-10-10 - "Gardener field follow-up inspection"
 
 ### Fixed

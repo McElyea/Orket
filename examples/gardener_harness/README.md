@@ -6,6 +6,11 @@ the existing [SDK report example](../governed-report/README.md). The host's
 Findings remain advisory. No write mode, repository tool, automatic retry,
 provider fallback, or new completion verifier is added.
 
+For Gardener's separate headless extension using the generic HTTP generation API,
+see [larger host prompt profiles](../../docs/specs/MODEL_GENERATION_OPTIONS.md#larger-prompts-through-the-headless-extension).
+Its settings belong to the Orket API host. The command-harness submission options
+below configure this source wrapper.
+
 First install the trusted report example through the normal extension installer,
 as described in its README. Retain this source checkout for the wrapper and its
 adjacent submission template; the examples are not installed wheel entrypoints.

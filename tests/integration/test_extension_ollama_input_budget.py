@@ -86,6 +86,8 @@ async def test_extension_ollama_refuses_oversized_input_without_chat(tmp_path, m
         assert response.status_code == 400, response.text
         assert response.json()["detail"]["code"] == "E_MODEL_INPUT_BUDGET", response.text
         assert response.json()["detail"]["ok"] is False
+        assert "ORKET_LOCAL_PROMPT_PROFILE_REGISTRY_PATH" in response.json()["detail"]["message"]
+        assert "context_budget_tokens" in response.json()["detail"]["message"]
     assert not any("/api/chat " in first for first, _ in requests)
 
 
@@ -117,11 +119,23 @@ async def test_extension_ollama_refuses_unsafe_generation(tmp_path, monkeypatch,
     assert not any("/api/chat " in first for first, _ in requests)
 
 
-async def test_extension_ollama_honors_larger_explicit_host_context(tmp_path, monkeypatch):
+@pytest.mark.parametrize("override", [False, True], ids=["default", "override"])
+async def test_extension_ollama_honors_larger_explicit_host_context(tmp_path, monkeypatch, override):
     content = "The secret word is PELICAN.\n" + "filler\n" * 2400 + "What is the secret word?"
+    body = generation_body(override=override, content=content)
+    async with ollama_api(tmp_path, monkeypatch) as (client, requests):
+        response = await client.post(ROUTE, json=body)
+        assert response.status_code == 400, response.text
+        assert response.json()["detail"]["code"] == "E_MODEL_INPUT_BUDGET"
+        assert "context_limit=8192" in response.json()["detail"]["message"]
+    assert not any("/api/chat " in first for first, _ in requests)
     async with ollama_api(tmp_path, monkeypatch, host_context=32768) as (client, requests):
-        response = await client.post(ROUTE, json=generation_body(override=True, content=content))
+        response = await client.post(ROUTE, json=body)
         assert response.status_code == 200, response.text
-    chat = next(payload for first, payload in requests if "/api/chat " in first)
+    chats = [payload for first, payload in requests if "/api/chat " in first]
+    assert len(chats) == 1
+    chat = chats[0]
     assert chat["messages"][-1]["content"] == content
+    assert chat["messages"][0]["content"] == body["system_prompt"]
+    assert chat["options"]["num_predict"] == body["max_tokens"]
     assert chat["options"]["num_ctx"] == 32768 and chat["truncate"] is False and chat["shift"] is False
