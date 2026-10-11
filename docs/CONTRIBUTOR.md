@@ -145,6 +145,9 @@ The source Gardener report adapter reuses that public task and verifier. Keep
 Also retain `tests/integration/test_governed_ollama_reports.py`: selected HTTP
 inventory, explicit context, pre-generation budget refusals, provider failures,
 single-attempt timeouts and truncated-response refusal use observed HTTP controls.
+Keep `tests/integration/test_extension_ollama_input_budget.py` in both Quality
+selections for generic SDK/API full-input admission, context guards and typed
+refusals. Its controlled Ollama HTTP responses do not establish live inference.
 Its real Git, CLI, SDK child, SQLite and controlled HTTP cases establish native
 adapter behavior, not actual model proof. Actual integration proof must include
 Gardener dispatch, llama.cpp receipts and observed server teardown. Input and

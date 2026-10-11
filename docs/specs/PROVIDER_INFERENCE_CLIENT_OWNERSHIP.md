@@ -28,12 +28,14 @@ deadline; API keys, pinned-target admission, prompt handling, response
 validation and provider lineage. Non-finite model budgets must fail before native
 or network effects. Catalog budgets and behavior remain unchanged.
 
-Governed non-streaming Ollama calls use the native HTTP API through the same
+Governed and builtin SDK non-streaming Ollama calls use the native HTTP API through the same
 captured transport/resource owner because the Python SDK does not expose the
 required `truncate`/`shift` guards. Redirects are disabled on this path. Version,
-model context and token admission are specified in `GOVERNED_AGENT_TASK_SUBMISSION.md`.
-Non-streaming timeouts are never automatically retried; governed connections
-also get one attempt. Nongoverned connection retries retain their prior policy.
+model context and token admission are specified in `GOVERNED_AGENT_TASK_SUBMISSION.md`
+and `MODEL_GENERATION_OPTIONS.md`. Generic extension HTTP generation shares the
+SDK path, including default and per-request providers.
+Non-streaming timeouts are never automatically retried; budgeted connections
+also get one attempt. Other connection retries retain their prior policy.
 Governed JSON response schemas are forwarded to each provider's structured-output
 field and remain subject to independent broker and completion validation.
 

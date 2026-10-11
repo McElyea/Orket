@@ -1,6 +1,6 @@
 # Host model generation options
 
-Last updated: 2026-09-13
+Last updated: 2026-10-10
 Status: Active development contract; architectural-truth candidate
 Owner: Orket Core
 
@@ -14,8 +14,10 @@ process environment are not mutated to implement per-call options.
 ## Effective options
 
 1. Maximum output is the smaller of the requested positive integer and the
-   selected profile's maximum. A request never widens its profile ceiling.
-   Without a resolved profile, an explicitly requested limit remains applicable.
+   selected profile's maximum, except builtin SDK Ollama generation refuses a
+   request above that ceiling with `E_MODEL_OUTPUT_LIMIT`. A request never widens
+   its profile ceiling. Without a resolved profile, an explicitly requested limit
+   remains applicable only on paths that admit unresolved profiles.
 2. Explicit request temperature overrides the profile/constructor temperature
    for that call. It must be a finite number between 0 and 2, inclusive.
 3. Requested stops precede profile stops. Only identical strings are deduplicated;
@@ -29,7 +31,8 @@ process environment are not mutated to implement per-call options.
    at the interface. Policy validation runs for resolved and unresolved profiles.
 5. Unresolved profiles in an already admitted shadow/compat path retain only
    explicitly supplied sampling options, without fabricating other sampling
-   values. Existing strict-task/enforce missing-profile refusal remains intact.
+   values. Builtin SDK Ollama requires a resolved profile in every mode.
+   Existing strict-task/enforce missing-profile refusal remains intact.
 6. OpenAI-compatible requests use `max_tokens`, `temperature` and `stop`.
    Ollama uses `options.num_predict`, `options.temperature` and `options.stop`.
    The shared policy retains its existing profile sampling and seed behavior.
@@ -38,6 +41,37 @@ The generic extension HTTP route preserves stop strings through service/SDK
 construction. An empty stop string fails with HTTP 400 before inference. Injected
 providers remain authoritative for their own behavior; builtin provider conformance
 does not certify arbitrary third-party implementations.
+
+## Ollama full-input admission
+
+Builtin SDK generation and `POST /v1/extensions/{id}/runtime/llm/generate`
+use the existing budget admission and guarded native Ollama transport. Both
+default and per-request provider/model selections follow this rule. The SDK
+sets internal `local_prompt_ollama_full_input`; the policy derives the input
+budget from the resolved host profile and reserves the effective output budget.
+It preserves all messages after normal profile shaping instead of trimming
+history or dropping an oversized user message. These checks also apply in
+shadow/compat modes.
+
+Admission uses the conservative UTF-8 byte estimate with message overhead from
+`model_input_budget.py`; it is not an exact tokenizer measurement. The host sends
+explicit `num_ctx` within the selected profile's context capacity, plus
+`truncate: false` and `shift: false`. Ollama >=0.24.0 and observed model context
+metadata are required. The existing HTTP owner retains captured TLS/auth/proxy
+inputs, client cleanup and one inference attempt.
+
+An oversized input returns `E_MODEL_INPUT_BUDGET` before generation. Unsupported
+guards or context capacity return the existing `E_OLLAMA_*` admission errors.
+The extension API maps these to HTTP 400 using its existing
+`detail: {ok: false, code, message}` envelope. A missing profile returns
+`E_LOCAL_PROMPT_PROFILE_REQUIRED`, rather than dispatching without a budget.
+Direct SDK callers receive the corresponding exception.
+
+Operators can reduce the input or select an operator-authored registry with
+`ORKET_LOCAL_PROMPT_PROFILE_REGISTRY_PATH`, increasing `context_budget_tokens`
+only within the model's capacity. The request's `max_tokens` controls output;
+it does not authorize more input. Other providers, streaming and injected
+third-party SDK implementations retain their existing contracts.
 
 ## Evidence and limits
 

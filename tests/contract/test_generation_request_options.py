@@ -7,6 +7,7 @@ import json
 import httpx
 import pytest
 
+from orket.adapters.llm.governed_ollama_client import GovernedOllamaClient
 from orket.application.services import sdk_llm_provider
 from orket.application.services.local_prompting_service import resolve_local_prompting_policy
 from orket.application.services.sdk_llm_provider import LocalModelCapabilityProvider
@@ -14,18 +15,6 @@ from orket.capabilities.sync_bridge import run_coro_sync
 from orket.runtime.config.local_prompt_profiles import DEFAULT_LOCAL_PROMPT_PROFILE_REGISTRY_PATH
 from orket_extension_sdk.llm import GenerateRequest
 from tests.helpers.provider_preparation import create_test_model_provider
-
-
-class OllamaTransport:
-    def __init__(self, observed):
-        self.observed = observed
-
-    async def chat(self, **kwargs):
-        self.observed.append(kwargs["options"])
-        return {"message": {"content": "controlled"}, "prompt_eval_count": 2, "eval_count": 1}
-
-    async def aclose(self):
-        return None
 
 
 @pytest.mark.contract
@@ -36,19 +25,32 @@ def test_sdk_options_reach_transport_without_mutating_provider_defaults(monkeypa
     observed = []
 
     def respond(request):
+        if request.url.path == "/api/version":
+            return httpx.Response(200, json={"version": "0.24.0"})
+        if request.url.path == "/api/show":
+            return httpx.Response(200, json={"model_info": {"general.architecture": "qwen2",
+                                                          "qwen2.context_length": 32768}})
+        if backend == "ollama":
+            observed.append(json.loads(request.content)["options"])
+            return httpx.Response(200, json={"message": {"content": "controlled"},
+                                            "prompt_eval_count": 2, "eval_count": 1})
         observed.append(json.loads(request.content))
         return httpx.Response(200, json={"choices": [{"message": {"content": "controlled"}}]})
 
     monkeypatch.setenv("ORKET_LOCAL_PROMPTING_MODE", "shadow")
     monkeypatch.setenv("ORKET_LLM_OPENAI_BASE_URL", "http://controlled.test/v1")
     monkeypatch.setattr(sdk_llm_provider, "create_local_model_provider", create_test_model_provider)
-    if backend == "ollama":
-        monkeypatch.setattr("orket.adapters.llm.local_model_provider.ollama.AsyncClient", lambda **_: OllamaTransport(observed))
     provider = LocalModelCapabilityProvider(model=model, temperature=0.9, seed=None, provider=backend)
-    if backend == "lmstudio":
-        run_coro_sync(provider._provider.client.aclose())
-        provider._provider.client = httpx.AsyncClient(base_url="http://controlled.test/v1", transport=httpx.MockTransport(respond))
+    run_coro_sync(provider._provider.client.aclose())
+    client = httpx.AsyncClient(base_url="http://controlled.test" + ("/v1" if backend == "lmstudio" else ""),
+                              transport=httpx.MockTransport(respond))
+    provider._provider.client = GovernedOllamaClient(client) if backend == "ollama" else client
     try:
+        if backend == "ollama" and model == "unknown-model-family":
+            with pytest.raises(ValueError, match="E_LOCAL_PROMPT_PROFILE_REQUIRED"):
+                provider.generate(GenerateRequest(system_prompt="", user_message="hello"))
+            assert observed == []
+            return
         for temperature in (0.0, 0.65):
             provider.generate(GenerateRequest(system_prompt="", user_message="hello", max_tokens=512,
                                              temperature=temperature, stop_sequences=["  END\n", " ", "  END\n"]))

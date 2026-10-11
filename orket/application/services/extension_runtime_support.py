@@ -6,6 +6,7 @@ from typing import Any
 from orket.adapters.execution.owned_io import run_owned_thread
 from orket.application.services.sdk_llm_provider import LocalModelCapabilityProvider
 from orket.capabilities.tts_piper import PiperTTSProvider
+from orket.core.contracts.model_input_budget import ModelInputBudgetError
 from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_MODEL
 from orket.services.extension_memory_namespace import (
     profile_key,
@@ -94,10 +95,13 @@ async def generate_response(
     provider_override: str,
     model_override: str,
 ) -> GenerateResponse:
-    return await run_owned_thread(
-        lambda: _generate_response_sync(request, model_provider, provider_override, model_override),
-        label="extension model generation and client cleanup",
-    )
+    try:
+        return await run_owned_thread(
+            lambda: _generate_response_sync(request, model_provider, provider_override, model_override),
+            label="extension model generation and client cleanup",
+        )
+    except ModelInputBudgetError as exc:
+        raise ValueError(str(exc)) from exc
 
 
 async def synthesize_audio(

@@ -29,6 +29,7 @@ class LocalModelCapabilityProvider:
             timeout=timeout,
             provider=provider,
             environment=environment,
+            governed=True,
         )
         self._coroutines = SyncCoroutineOwner()
         self._closed = False
@@ -45,6 +46,7 @@ class LocalModelCapabilityProvider:
             self._provider.complete(
                 messages=messages,
                 runtime_context={
+                    "local_prompt_ollama_full_input": True,
                     "local_prompt_max_output_tokens": request.max_tokens,
                     "local_prompt_temperature": request.temperature,
                     "local_prompt_stop_sequences": list(request.stop_sequences),

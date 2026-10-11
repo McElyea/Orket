@@ -28,6 +28,11 @@ enlarge it. Native rendered-token admission, conservative other-profile input
 admission, Ollama non-truncation guards and diagnostic receipts are defined in
 `GOVERNED_AGENT_TASK_SUBMISSION.md`. Ordinary turn history policy is unchanged.
 
+Builtin SDK Ollama generation, including the generic extension HTTP route, also
+uses non-trimming budget admission with a required host profile and explicit
+native context/truncation guards. `MODEL_GENERATION_OPTIONS.md` defines that
+surface's input reservation, HTTP refusal envelope and operator configuration.
+
 Turn strict-grounding checks preserve prose word boundaries when extracting
 non-JSON residue, including spaces, tabs/newlines and removed JSON spans. The
 existing whole-word speculative markers remain `assume`, `assumed`, `probably`

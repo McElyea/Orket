@@ -5,6 +5,27 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.3] - 2026-10-10 - "Preserve extension Ollama input"
+
+### Fixed
+- Address issue #6: builtin SDK and generic extension HTTP Ollama generation now
+  reuse full-input budget admission and guarded native transport. Requests send
+  explicit context limits; oversized inputs are refused before generation instead
+  of returning success after dropping the user message.
+- Preserve the existing HTTP 400 error envelope for typed admission failures.
+  Missing profiles, old servers, insufficient context and excessive output
+  requests refuse explicitly. Default and per-request providers share the fix.
+- Stability: scoped API/SDK regression and fresh installed live-provider evidence
+  are recorded in `docs/releases/0.8.3/PROOF_REPORT.md`. Input admission remains
+  conservative; successful generation is not proof of factual accuracy.
+- Operator/extension-author action: use Ollama >=0.24.0 with an admitted profile;
+  reduce input or explicitly enlarge the host profile within model capacity.
+  Handle budget errors instead of expecting silent input trimming/output capping.
+  Other providers and SDK 0.8.0 wire schemas are unchanged.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+
 ## [0.8.2] - 2026-10-10 - "Gardener field fixes and explicit model budgets"
 
 ### Fixed

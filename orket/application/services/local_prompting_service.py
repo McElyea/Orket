@@ -107,6 +107,7 @@ async def resolve_local_prompting_policy(**kwargs: Any) -> LocalPromptingPolicyR
 def _resolve_registry_policy(*, registry, registry_hash, provider_backend, model, messages, context,
     requested_sampling, requested_stops, mode, task_class, strict_task, allow_fallback, fallback_profile_id,
     override_profile_id, lmstudio_session_mode, lmstudio_session_id, provider_for_profile) -> LocalPromptingPolicyResult:
+    full_input = provider_backend == "ollama" and context.get("local_prompt_ollama_full_input")
     try:
         resolved = registry.resolve_profile(
             provider=provider_for_profile,
@@ -116,7 +117,7 @@ def _resolve_registry_policy(*, registry, registry_hash, provider_backend, model
             fallback_profile_id=fallback_profile_id or None,
         )
     except ValueError as exc:
-        if strict_task or mode == "enforce":
+        if strict_task or mode == "enforce" or full_input:
             raise ValueError(f"{E_LOCAL_PROMPT_PROFILE_REQUIRED}:{exc}") from exc
         normalized_messages = _canonicalize_messages(messages)
         template_hash, byte_count = _render_hash(normalized_messages)
@@ -146,6 +147,9 @@ def _resolve_registry_policy(*, registry, registry_hash, provider_backend, model
             profile_registry_snapshot_hash=registry_hash,
             warnings=(f"{E_LOCAL_PROMPT_PROFILE_RESOLUTION}:{exc}",),
         )
+    if full_input:
+        context = {**context, "local_prompt_max_input_tokens": int(
+            context.get("local_prompt_max_input_tokens") or resolved.profile.context_budget_tokens)}
     resolved_messages, warnings, effective_context_budget_tokens = _shape_messages(
         messages, context, resolved.profile, provider_backend, model, task_class, mode,
         lmstudio_session_mode, lmstudio_session_id)
