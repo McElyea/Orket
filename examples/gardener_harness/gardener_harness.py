@@ -88,7 +88,10 @@ def execute(prompt: str, environment: dict[str, str], root: Path) -> dict:
         raise HarnessFailure(f"invalid Orket result; retained run area: {area}")
     if result.returncode != 0 or payload.get("ok") is not True:
         error = failure_reason(payload)
-        raise HarnessFailure(f"{error}; inspect retained run area: {area}", blocked=error.startswith(UNAVAILABLE))
+        run_id = (payload.get("run") or {}).get("run_id")
+        inspect = f'orket agent inspect "{run_id}" --db "{database}" --json' if run_id else str(area)
+        raise HarnessFailure(f"{error}; inspect retained run: {inspect}",
+                             blocked=error.startswith(UNAVAILABLE), run_id=run_id)
     report = accepted_report(payload, sources)
     verify_unchanged(commands, trees)
     run_id = payload["run"]["run_id"]
@@ -109,7 +112,8 @@ def main() -> int:
         envelope = execute(prompt, dict(os.environ), Path.cwd().resolve())
     except (OSError, ValueError, RuntimeError, TypeError, KeyError) as exc:
         envelope = {"result": f"Orket Gardener report failed: {exc}", "is_error": True,
-                    "session_id": None, "total_cost_usd": None, "permission_denials": [],
+                    "session_id": (f"orket:{exc.run_id}" if isinstance(exc, HarnessFailure) and exc.run_id else None),
+                    "total_cost_usd": None, "permission_denials": [],
                     "blocked": isinstance(exc, HarnessFailure) and exc.blocked}
     print(json.dumps(envelope, ensure_ascii=True))
     return 1 if envelope["is_error"] else 0

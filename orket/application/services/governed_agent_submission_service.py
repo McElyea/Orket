@@ -22,6 +22,7 @@ from orket.application.services.governed_agent_execution_composition import (
     select_governed_agent_provider,
 )
 from orket.application.services.governed_agent_loop_service import GovernedAgentCompletionVerifier
+from orket.application.services.governed_agent_model_provider import ReportOnlyModelProvider
 from orket.core.contracts import WorkloadRecord
 from orket.extensions.manager import ExtensionManager
 from orket.extensions.models import GovernedAgentWorkloadLaunch
@@ -101,6 +102,9 @@ async def execute_prepared_governed_agent(
     decision_timestamps_utc = tuple(decision_timestamps_utc)
     next_lease_expiries_utc = tuple(next_lease_expiries_utc)
     selection = await _select_provider(provider, request, launch, environment=environment)
+    if admission_payload is not None:
+        # Only the public report task supplies this host-validated, effect-free admission.
+        selection.provider = ReportOnlyModelProvider(selection.provider)
     try:
         execution = AsyncControlPlaneExecutionRepository(db_path)
         iterations = AsyncGovernedAgentRepository(db_path)

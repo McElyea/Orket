@@ -5,6 +5,25 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.4] - 2026-10-10 - "Gardener delivery and terminal failures"
+
+### Fixed
+- Resolve Gardener issues #7–#9: admit larger snapshots under explicit frame and
+  item limits, retain inspectable terminal report failures, and reject title-only
+  deliveries using findings and summary constraints in the existing host verifier.
+- Address the #6 timeout follow-up with typed HTTP 504/503 generation failures.
+  Preserve unknown usage and general governed-run recovery requirements.
+- Stability: native regression and installed live-provider evidence are recorded
+  in `docs/releases/0.8.4/PROOF_REPORT.md`. Delivery checks do not certify factual
+  accuracy, and HTTP cleanup does not prove remote inference termination.
+- Operator/extension-author action: refresh the trusted source report extension
+  and catalog together with the Gardener wrapper. Reports now require findings
+  and a `GARDENER_SUMMARY:` line. Handle typed provider failures and inspect the
+  returned run ID. SDK 0.8.0 wire schemas and generic summary-only tasks remain.
+- `compatibility_status`: `breaking`
+- `affected_audience`: `all`
+- `migration_requirement`: `required`
+
 ## [0.8.3] - 2026-10-10 - "Preserve extension Ollama input"
 
 ### Fixed

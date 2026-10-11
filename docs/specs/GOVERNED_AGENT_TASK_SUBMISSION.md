@@ -117,16 +117,25 @@ inference retry follows a timeout or governed connection failure. Closing the
 HTTP client does not prove termination of remote inference.
 
 Run/inspect expose `iterations[].model_calls[].normalized_reason` from retained
-result payloads, or null when no result exists. Budget refusals record zero
-measured tokens; provider errors retain existing uncertain-usage rules. A
+result payloads or retained uncertain-call reasons. Budget refusals record zero
+measured tokens. Settled transport timeouts/unavailability in the admitted
+report-only path return failed receipts with unknown usage and charge the full
+reserved budget. A stopped child can then publish unsatisfied terminal truth
+through the existing continuation policy. Unknown provider errors, interrupted
+dispatch/publication and general governed runs retain recovery semantics. A
 provider-truncated response fails even if its JSON is structurally valid.
 
 ## Host verifier and completion meaning
 
 `verifier_class` selects the built-in `structured_report.v1` implementation.
 Unknown classes are refused before provider construction. The host never imports
-a verifier module named by the submission. `verifier_config` has exactly one key,
+a verifier module named by the submission. `verifier_config` requires
 `required_sections`: 1–32 unique, nonblank names of at most 128 characters.
+Optional `minimum_section_lengths` maps required section names to integer
+trimmed-character minimums from 1 to 32768; booleans are refused. Optional
+`required_section_prefixes` maps required names to nonblank prefixes of at most
+128 characters. Prefixes must begin the section exactly and have nonblank text
+afterward. Unknown keys or section names refuse before provider construction.
 
 The result's `advisory_proposal` contains a JSON object with exactly these fields:
 

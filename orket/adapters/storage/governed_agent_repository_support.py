@@ -238,6 +238,7 @@ def call_record(row: aiosqlite.Row) -> GovernedAgentBrokerCallRecord:
         charged_output_tokens=int(row["charged_output_tokens"]),
         result_digest=str(row["result_digest"]) if row["result_digest"] is not None else None,
         result_payload=optional_payload(row["result_json"]),
+        normalized_reason=row["normalized_reason"],
     )
 
 

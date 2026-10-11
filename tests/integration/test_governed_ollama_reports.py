@@ -121,6 +121,12 @@ async def test_inference_failure_preserves_cause_and_never_retries(tmp_path, fai
     expected = "E_AGENT_MODEL_PROVIDER_" + ("TIMEOUT" if failure == "timeout" else "UNAVAILABLE")
     assert expected in json.dumps(result), result
     assert "E_LOGGING_PREPARATION_REQUIRED" not in json.dumps(result)
+    assert result["run"]["lifecycle_state"] == "failed_terminal", result
+    assert result["final_truth"]["completion_classification"] == "completion_unsatisfied"
+    call = result["iterations"][0]["model_calls"][0]
+    assert call["normalized_reason"] == expected
+    assert call["receipt"]["usage_posture"] == "unknown"
+    assert call["receipt"]["charged_input_tokens"] == 4096
 
 
 async def test_even_well_formed_report_is_refused_when_provider_reports_truncation(tmp_path):
@@ -131,4 +137,24 @@ async def test_even_well_formed_report_is_refused_when_provider_reports_truncati
     call = result["iterations"][0]["model_calls"][0]
     assert call["normalized_reason"] == "model_response_truncated"
     assert call["receipt"]["truncated"] is True and call["receipt"]["status"] == "failed"
+    assert sum("/api/chat " in first for first, _ in requests) == 1
+
+
+async def test_unknown_provider_failure_retains_recovery_and_inspectable_reason(tmp_path):
+    paths = await asyncio.to_thread(prepare_report_task, tmp_path)
+    normal = responder()
+
+    async def respond(request):
+        if "/api/chat " in request[0]:
+            return 500, {"error": "PRIVATE_PROVIDER_DIAGNOSTIC"}
+        return await normal(request)
+
+    async with observed_http_server(respond) as (endpoint, requests):
+        code, result = await invoke(tmp_path, endpoint, paths)
+    assert code == 1 and result["run"]["lifecycle_state"] == "recovery_pending", result
+    assert result["final_truth"] is None
+    call = result["iterations"][0]["model_calls"][0]
+    assert call["status"] == "uncertain" and call["receipt"] is None
+    assert call["normalized_reason"] == "E_AGENT_MODEL_PROVIDER_UNCERTAIN"
+    assert "PRIVATE_PROVIDER_DIAGNOSTIC" not in json.dumps(result)
     assert sum("/api/chat " in first for first, _ in requests) == 1

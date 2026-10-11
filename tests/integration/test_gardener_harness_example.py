@@ -30,6 +30,10 @@ def commit(root):
 
 def setup(root):
     catalog, _, _ = prepare_report_task(root)
+    models = root / "gguf"
+    models.mkdir()
+    # Controlled HTTP supplies inference; these bytes prove inventory selection only.
+    (models / f"{DEFAULT_LOCAL_MODEL}.gguf").write_bytes(b"controlled inventory fixture")
     target, conventions = root / "target", root / "conventions café with spaces"
     for path in (target, conventions):
         path.mkdir()
@@ -50,6 +54,7 @@ def invoke(root, endpoint, paths, *, mode="report", extra=None):
         "GARDENER_HARNESS_SPEC": json.dumps({"mode": mode, "permission_mode": "plan", "merge_allowed": False,
             "tools": ["Read", "Grep", "Glob"], "allowed_tools": [], "add_dirs": [str(conventions)]}),
         "ORKET_GARDENER_CATALOG": str(catalog), "ORKET_GARDENER_WORK_DIR": str(root / "work"),
+        "ORKET_LLAMA_CPP_GGUF_MODEL_ROOT": str(root / "gguf"),
         "ORKET_GARDENER_PROVIDER_BASE_URL": endpoint}
     environment.pop("ORKET_GARDENER_PROVIDER", None)
     environment.pop("ORKET_DURABLE_ROOT", None)
@@ -62,8 +67,10 @@ def invoke(root, endpoint, paths, *, mode="report", extra=None):
 
 
 def report_response(request):
-    inputs = json.loads(request["messages"][-1]["content"])
-    return json.dumps({"sections": {"summary": "Advisory: installation documentation is absent."},
+    inputs = json.loads("".join(row["content"] for row in request["messages"] if row["role"] == "user"))
+    return json.dumps({"sections": {"summary": "GARDENER_SUMMARY: Advisory: installation documentation is absent.",
+        "findings": "- Installation guidance: the committed README has only a title. Add setup instructions to "
+                    "satisfy CHECKLIST.md. Runtime behavior and unread files remain unknown."},
         "source_refs": inputs["required_source_refs"], "limitations": ["Only committed snapshots inspected."],
         "advisory": True})
 

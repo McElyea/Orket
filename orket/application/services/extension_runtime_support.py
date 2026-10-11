@@ -8,6 +8,7 @@ from orket.application.services.sdk_llm_provider import LocalModelCapabilityProv
 from orket.capabilities.tts_piper import PiperTTSProvider
 from orket.core.contracts.model_input_budget import ModelInputBudgetError
 from orket.core.contracts.provider_runtime import DEFAULT_LOCAL_MODEL
+from orket.exceptions import ModelConnectionError, ModelTimeoutError
 from orket.services.extension_memory_namespace import (
     profile_key,
     query_extension_profile_records,
@@ -19,6 +20,16 @@ from orket.services.extension_memory_namespace import (
 from orket.services.scoped_memory_store import ScopedMemoryRecord, ScopedMemoryStore
 from orket_extension_sdk.audio import AudioClip, TTSProvider, VoiceInfo
 from orket_extension_sdk.llm import GenerateRequest, GenerateResponse, LLMProvider
+
+
+class ExtensionGenerationUnavailable(RuntimeError):
+    def __init__(self, *, timed_out: bool):
+        self.status_code = 504 if timed_out else 503
+        self.code = "E_EXTENSION_MODEL_PROVIDER_TIMEOUT" if timed_out else "E_EXTENSION_MODEL_PROVIDER_UNAVAILABLE"
+        super().__init__(self.code)
+
+    def detail(self) -> dict[str, Any]:
+        return {"ok": False, "code": self.code, "message": self.code}
 
 
 def validate_memory_scope(scope: str) -> str:
@@ -102,6 +113,8 @@ async def generate_response(
         )
     except ModelInputBudgetError as exc:
         raise ValueError(str(exc)) from exc
+    except (ModelTimeoutError, ModelConnectionError) as exc:
+        raise ExtensionGenerationUnavailable(timed_out=isinstance(exc, ModelTimeoutError)) from exc
 
 
 async def synthesize_audio(

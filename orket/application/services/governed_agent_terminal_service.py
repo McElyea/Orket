@@ -27,6 +27,7 @@ async def close_agent_run(
     decision: GovernedAgentContinuationDecision, verification: GovernedAgentVerificationObservation,
     decision_ref: str, end_timestamp: str,
     invocation_id: str, operator_action_refs: tuple[str, ...],
+    failure_reason: str | None = None,
 ) -> tuple[RunRecord, AttemptRecord, FinalTruthRecord]:
     await ensure_governed_agent_authority(guard)
     async with transactions() as transaction:
@@ -66,6 +67,7 @@ async def close_agent_run(
         await ensure_governed_agent_authority(guard)
         attempt = await transaction.execution.save_attempt_record(record=attempt.model_copy(update={
             "attempt_state": AttemptState.COMPLETED if success else AttemptState.FAILED, "end_timestamp": end_timestamp,
+            "failure_class": None if success else failure_reason,
         }))
         await ensure_governed_agent_authority(guard)
         run = await transaction.execution.save_run_record(record=run.model_copy(update={

@@ -113,3 +113,22 @@ async def test_task_admission_refuses_before_provider_and_database(tmp_path, cat
     assert not json.loads(output)["ok"]
     assert not state["calls"]
     assert not (tmp_path / "agent.sqlite3").exists()
+
+
+@pytest.mark.parametrize("config", [
+    {"minimum_section_lengths": {"summary": True}},
+    {"minimum_section_lengths": {"summary": 32769}},
+    {"minimum_section_lengths": {"unknown": 10}},
+    {"required_section_prefixes": {"summary": " "}},
+    {"required_section_prefixes": []},
+    {"unknown_option": 1},
+])
+async def test_report_constraints_refuse_invalid_config_before_provider(tmp_path, catalog_server, config):
+    endpoint, state = catalog_server
+    paths = await asyncio.to_thread(prepare_report_task, tmp_path)
+    payload = json.loads(await asyncio.to_thread(paths[1].read_bytes))
+    payload["verifier_config"].update(config)
+    await asyncio.to_thread(paths[1].write_text, json.dumps(payload), encoding="utf-8")
+    code, output, error = await invoke(tmp_path, endpoint, *paths)
+    assert code == 1 and "E_AGENT_TASK_VERIFIER_CONFIG_INVALID" in output, output + error
+    assert not state["calls"] and not (tmp_path / "agent.sqlite3").exists()

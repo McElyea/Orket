@@ -149,6 +149,7 @@ class GovernedAgentBrokerCallRecord:
     charged_output_tokens: int
     result_digest: str | None
     result_payload: Mapping[str, Any] | None
+    normalized_reason: str | None = None
 
 
 class GovernedAgentIterationRepository(Protocol):

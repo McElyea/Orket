@@ -1,5 +1,12 @@
 # Host model generation options
 
+The extension HTTP generation route translates settled provider timeouts to
+HTTP 504 with `E_EXTENSION_MODEL_PROVIDER_TIMEOUT` and connection failures to
+HTTP 503 with `E_EXTENSION_MODEL_PROVIDER_UNAVAILABLE`. Both use the existing
+`detail: {ok: false, code, message}` envelope, after owned provider cleanup.
+Provider response bodies and arbitrary exception text are not exposed. These
+statuses do not establish remote inference termination or authorize retries.
+
 Last updated: 2026-10-10
 Status: Active development contract; architectural-truth candidate
 Owner: Orket Core

@@ -15,9 +15,10 @@ MAX_FILES = 10_000
 
 
 class HarnessFailure(ValueError):
-    def __init__(self, reason: str, *, blocked: bool = False):
+    def __init__(self, reason: str, *, blocked: bool = False, run_id: str | None = None):
         super().__init__(reason)
         self.blocked = blocked
+        self.run_id = run_id
 
 
 class Commands:

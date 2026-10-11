@@ -142,6 +142,9 @@ report proof sets `ORKET_DISABLE_SANDBOX=1` and settles the owned provider proce
 
 The source Gardener report adapter reuses that public task and verifier. Keep
 `tests/integration/test_gardener_harness_example.py` in both Quality selections.
+Also retain `tests/integration/test_gardener_delivery_regressions.py` and
+`tests/integration/test_extension_provider_failures.py` for large native frames,
+content-free report refusal, terminal report failures and typed HTTP failures.
 Also retain `tests/integration/test_governed_ollama_reports.py`: selected HTTP
 inventory, explicit context, pre-generation budget refusals, provider failures,
 single-attempt timeouts and truncated-response refusal use observed HTTP controls.

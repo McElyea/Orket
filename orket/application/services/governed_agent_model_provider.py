@@ -15,20 +15,40 @@ from orket.adapters.execution.owned_io import run_owned_io
 from orket.adapters.llm.local_model_provider import LocalModelProvider, ModelResponse
 from orket.application.services.governed_agent_broker_service import (
     GovernedAgentModelObservation,
+    GovernedAgentModelProvider,
     GovernedAgentResolvedModelProfile,
     UsagePosture,
+    provider_failure_reason,
 )
 from orket.application.services.local_model_factory import create_local_model_provider
 from orket.application.services.process_input_service import capture_process_context
 from orket.application.services.runtime_result_lifetime import create_runtime_owner
 from orket.core.contracts.model_input_budget import ModelInputBudgetError
 from orket.core.contracts.provider_runtime import PROVIDER_CHOICES, ProviderRuntimeTarget
-from orket.exceptions import ModelTimeoutError
+from orket.exceptions import ModelConnectionError, ModelTimeoutError
 from orket.runtime.config.provider_runtime_target import resolve_provider_runtime_target
 from orket_extension_sdk import AgentIterationRequest, AgentModelCallRequest
 from orket_extension_sdk.llm import nonnegative_int_or_none
 
 logger = logging.getLogger(__name__)
+
+
+class ReportOnlyModelProvider:
+    """Retain a settled transport failure without claiming remote token usage or termination."""
+
+    def __init__(self, provider: GovernedAgentModelProvider) -> None:
+        self._provider = provider
+
+    async def call(self, *, request: AgentModelCallRequest,
+                   profile: GovernedAgentResolvedModelProfile) -> GovernedAgentModelObservation:
+        try:
+            return await self._provider.call(request=request, profile=profile)
+        except (ModelTimeoutError, ModelConnectionError) as exc:
+            return GovernedAgentModelObservation(
+                response=None, usage_posture="unknown", input_tokens=None, output_tokens=None,
+                estimate_source=None, latency_ms=None, finish_reason=None, status="failed",
+                normalized_reason=provider_failure_reason(exc),
+            )
 
 
 @dataclass(frozen=True, slots=True)

@@ -7,6 +7,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from orket.application.services.extension_model_catalog import ExtensionModelCatalogUnavailable
+from orket.application.services.extension_runtime_support import ExtensionGenerationUnavailable
 
 
 class ExtensionRuntimeGenerateRequest(BaseModel):
@@ -92,6 +93,8 @@ def build_extension_runtime_router(*, service_getter: Callable[[], Any]) -> APIR
                 provider=req.provider,
                 model=req.model,
             )
+        except ExtensionGenerationUnavailable as exc:
+            raise HTTPException(status_code=exc.status_code, detail=exc.detail()) from exc
         except ValueError as exc:
             _raise_extension_runtime_http_error(exc)
 

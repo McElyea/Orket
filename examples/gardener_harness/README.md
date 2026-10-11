@@ -108,3 +108,23 @@ python -m pytest -q tests/integration/test_gardener_harness_example.py
 
 Adapted from Daniel McCoy Stephenson's Orket PR #2 and Gardener's released
 command-harness proposal; contribution terms are Apache-2.0.
+
+## Delivery and failure inspection
+
+Gardener requires a `summary` of at least 40 trimmed characters starting with
+`GARDENER_SUMMARY:` and `findings` of at least 80 trimmed characters. Findings
+should identify checks, evidence or unknown coverage, and suggested actions.
+The host verifies delivery structure; factual findings remain advisory.
+
+One materialized input may not exceed 262144 encoded bytes; larger individual
+files refuse before dispatch. Total capture may reach 524288 bytes across
+multiple inputs. The complete prompt travels in consecutive message chunks,
+under a 1 MiB aggregate child-output budget and the independent wire-frame cap.
+These bounds do not enlarge model context or authorize input truncation.
+
+Admitted failures return the run ID and exact inspection command. Model calls
+reserve five seconds for failed-receipt delivery and terminal publication.
+Settled report-only timeouts/unavailability retain unknown token usage, charge
+the reserved budget, and close unsatisfied through the existing stop policy.
+Inspect the failed attempt and receipt for the provider error code. No retry or
+remote-inference termination is implied.

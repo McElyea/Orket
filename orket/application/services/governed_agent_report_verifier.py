@@ -22,10 +22,19 @@ class StructuredReportVerifier:
             raise ValueError("E_AGENT_TASK_VERIFIER_UNSUPPORTED")
         config = submission.verifier_config.thaw()
         sections = config.get("required_sections") if isinstance(config, dict) else None
-        if (not isinstance(config, dict) or set(config) != {"required_sections"}
+        if (not isinstance(config, dict) or set(config) - {
+                "required_sections", "minimum_section_lengths", "required_section_prefixes"}
                 or not isinstance(sections, list) or not 1 <= len(sections) <= 32
                 or any(not isinstance(name, str) or not name.strip() or len(name) > 128 for name in sections)
                 or len(set(sections)) != len(sections)):
+            raise ValueError("E_AGENT_TASK_VERIFIER_CONFIG_INVALID")
+        self._minimums = config.get("minimum_section_lengths", {})
+        self._prefixes = config.get("required_section_prefixes", {})
+        if (not isinstance(self._minimums, dict) or set(self._minimums) - set(sections)
+                or any(type(value) is not int or not 1 <= value <= 32768 for value in self._minimums.values())
+                or not isinstance(self._prefixes, dict) or set(self._prefixes) - set(sections)
+                or any(not isinstance(value, str) or not value.strip() or len(value) > 128
+                       for value in self._prefixes.values())):
             raise ValueError("E_AGENT_TASK_VERIFIER_CONFIG_INVALID")
         self._context_refs = frozenset(submission.initial_context_refs)
         self._identity = "sha256:" + canonical_digest_sha256({
@@ -56,6 +65,9 @@ class StructuredReportVerifier:
                  and set(report["source_refs"]) == self._context_refs
                  and set(request.authoritative_context_refs) == self._context_refs
                  and all(text.strip() for text in report["sections"].values())
+                 and all(len(report["sections"][name].strip()) >= length for name, length in self._minimums.items())
+                 and all(report["sections"][name].startswith(prefix)
+                         and report["sections"][name][len(prefix):].strip() for name, prefix in self._prefixes.items())
                  and not result.effect_proposals and not result.memory_write_proposals
                  and not result.handoff_proposals
                  and all(receipt.status == "returned" and not receipt.truncated for receipt in result.model_receipts))

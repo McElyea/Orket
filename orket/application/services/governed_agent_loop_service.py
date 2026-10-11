@@ -166,6 +166,7 @@ class GovernedAgentLoopService:
                     verification=verification,
                     end_timestamp=iteration.decision_timestamp_utc,
                     invocation_id=binding.invocation_id, operator_action_refs=iteration.operator_action_refs,
+                    failure_reason=result.normalized_reason,
                 )
                 break
             if not decision.next_iteration_authorized:
@@ -180,7 +181,8 @@ class GovernedAgentLoopService:
                 verification_evidence_ref=verification.evidence_ref,
                 next_context_inputs=context_plan.get(str(request.identity.iteration_ordinal + 1)),
             )
-        return GovernedAgentLoopExecution(run, attempt, tuple(decisions), tuple(invocation_ids), final_truth, None)
+        return GovernedAgentLoopExecution(run, attempt, tuple(decisions), tuple(invocation_ids), final_truth,
+                                         None if run.lifecycle_state is RunState.COMPLETED else result.normalized_reason)
 
     async def _ensure_parent(
         self,

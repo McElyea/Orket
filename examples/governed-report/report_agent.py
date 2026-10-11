@@ -19,7 +19,8 @@ class ReportAgent:
         prompt = canonical_json({
             "inputs": [{"reference": item.reference, "kind": item.kind, "content": item.content.thaw()}
                        for item in request.materialized_inputs],
-            "required_sections": sections, "required_source_refs": list(request.authoritative_context_refs),
+            "required_sections": sections, "verifier_config": submission["verifier_config"],
+            "required_source_refs": list(request.authoritative_context_refs),
         })
         response = await context.model.call(AgentModelCallRequest(
             identity=request.identity, call_id="report-1", role=profile.role, profile_ref=profile.profile_ref,
@@ -33,8 +34,11 @@ class ReportAgent:
                 "Your response must start with { and end with }. "
                 "Use only the actual required section names and actual required_source_refs below. "
                 "A file listed by name is not file-content evidence. Report uninspected checks as unknown; "
-                "do not invent missing files, tests, fixes, or checklist results."
-            )), AgentModelMessage(role="user", content=prompt)),
+                "do not invent missing files, tests, fixes, or checklist results. "
+                "Obey verifier_config minimum section lengths and required prefixes. "
+                "Consecutive user messages contain consecutive pieces of one JSON input document."
+            )), *(AgentModelMessage(role="user", content=prompt[start:start + 131072])
+                   for start in range(0, len(prompt), 131072))),
             response_mode=profile.response_mode,
             response_schema=FrozenJson.freeze(_report_format(sections, request.authoritative_context_refs)),
             max_input_tokens=profile.max_input_tokens,

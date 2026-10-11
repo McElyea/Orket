@@ -167,7 +167,7 @@ class GovernedAgentHostBroker(GovernedAgentCapabilityBroker):
         except GovernedAgentAuthorityStaleError:
             raise
         except (ModelConnectionError, ModelTimeoutError, ModelProviderError) as exc:
-            reason = _provider_failure_reason(exc)
+            reason = provider_failure_reason(exc)
             await self._calls.mark_call_uncertain(
                 binding=binding,
                 call_id=call.call_id,
@@ -372,7 +372,7 @@ def _response_matches_contract(call: AgentModelCallRequest, response: Any) -> bo
     return True
 
 
-def _provider_failure_reason(exc: ModelProviderError) -> str:
+def provider_failure_reason(exc: ModelProviderError) -> str:
     if isinstance(exc, ModelConnectionError):
         return "E_AGENT_MODEL_PROVIDER_UNAVAILABLE"
     if isinstance(exc, ModelTimeoutError):

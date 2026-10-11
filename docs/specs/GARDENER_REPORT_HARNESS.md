@@ -79,12 +79,41 @@ also remains subject to the host prompt profile and model limits. Governed
 requests preserve all admitted messages and refuse incompatible budgets before
 generation. Exact llama.cpp rendering and conservative other-provider admission
 are specified in `GOVERNED_AGENT_TASK_SUBMISSION.md`. Raising a capture limit
-alone cannot enlarge the model context. No automatic splitting or summarization
-changes the supplied evidence.
+alone cannot enlarge the model context. No summarization changes the supplied
+evidence. The complete JSON document travels in consecutive user-message chunks
+of at most 131072 characters. Gardener admits 1 MiB of aggregate child output,
+including model-call requests; each wire frame retains its separate 1 MiB cap.
+An individual materialized input over 262144 encoded bytes refuses before
+dispatch with `E_GARDENER_INPUT_TOO_LARGE`. Reduce individual file capture or
+split the source document explicitly. Total capture can reach 512 KiB across
+multiple inputs. Capture, encoded-item, wire and token limits remain independent.
 
 Native Windows supports this wrapper and Orket. Gardener 0.3.0's full CLI imports
 POSIX `fcntl`; use WSL for `gardener align` until upstream supports Windows.
 This is a platform workaround, not a native Windows Gardener acceptance claim.
+
+Gardener requires `summary` (at least 40 trimmed characters, beginning with
+`GARDENER_SUMMARY:` and nonempty text after the prefix) and `findings` (at least
+80 trimmed characters). The prompt requests checks, evidence/unknown coverage
+and suggested actions. These structural checks reject title-only delivery;
+they do not detect every vague, padded or factually wrong report. The generic
+summary-only report example remains supported under its original configuration.
+`completion_satisfied`, `evidence_sufficient` and `no_residual_uncertainty` refer
+only to delivery under this contract, never to factual certainty of findings.
+
+Model calls reserve five seconds inside the report deadline for failed-receipt
+delivery and terminal publication. A settled timeout or connection failure in
+the admitted report-only path records a failed receipt with unknown token usage,
+charges the reserved input/output limits and closes through the existing
+continuation policy. The run is `failed_terminal`, the attempt is failed with an
+end timestamp and provider failure code, and final truth is unsatisfied (usually
+`blocked` because the budget is exhausted). No inference retry occurs. This does
+not claim remote model termination. Interrupted children, publication failure
+and general/effectful governed runs retain their recovery requirements.
+Failed CLI-result envelopes include `session_id: orket:<run_id>` and the exact
+inspect command when that result contains a run identity. Pre-admission failures have no
+run identity. Child protocol failures expose only extracted SDK error codes;
+arbitrary child stderr remains private diagnostic data.
 
 ## Verification
 

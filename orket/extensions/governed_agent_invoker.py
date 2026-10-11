@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import re
 import subprocess
 import sys
 from collections.abc import Mapping
@@ -92,6 +93,11 @@ class GovernedAgentSubprocessInvoker:
         finally:
             await run_owned_io(lambda: self._finish_active(active),
                                label="governed-agent-teardown", preserve_failure=True)
+        if outcome.normalized_reason == "E_AGENT_CHILD_DISCONNECTED":
+            # Child diagnostics are untrusted: expose protocol codes, never arbitrary stderr contents.
+            codes = re.findall(r"\bE_SDK_AGENT_[A-Z_]+\b", active.diagnostic_tail)
+            if codes:
+                outcome = self._failure(outcome.status, binding, codes[-1], False)
         return self._with_stopped(outcome, active.finished.is_set())
 
     async def _invoke_active(self, active, request):
