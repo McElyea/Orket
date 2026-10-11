@@ -18,7 +18,7 @@ Validate: `python scripts/governance/check_current_authority.py`.
 | Named card | orket runtime --card &lt;card_id&gt; | [docs/CONTRIBUTOR.md](<docs/CONTRIBUTOR.md>) |
 | Dependency direction | python scripts/governance/check_dependency_direction.py | [docs/CONTRIBUTOR.md](<docs/CONTRIBUTOR.md>) |
 | Project docs hygiene | python scripts/governance/check_docs_project_hygiene.py | [docs/CONTRIBUTOR.md](<docs/CONTRIBUTOR.md>) |
-| SDK and core development install; candidate path in docs/guides/MACOS_LOCAL_INSTALL.md and native proof procedure in docs/guides/MACOS_ACCEPTANCE_RUNBOOK.md remain subject to Mac acceptance | python -m pip install -e "./orket_extension_sdk[testing]" -e ".[dev]" | [README.md](<README.md>) |
+| SDK and core development install; Gardener setup/upgrade recipe in examples/gardener_harness/README.md. Candidate path in docs/guides/MACOS_LOCAL_INSTALL.md and native proof procedure in docs/guides/MACOS_ACCEPTANCE_RUNBOOK.md remain subject to Mac acceptance | python -m pip install -e "./orket_extension_sdk[testing]" -e ".[dev]" | [README.md](<README.md>) |
 | Default tests | python -m pytest -q | [docs/CONTRIBUTOR.md](<docs/CONTRIBUTOR.md>) |
 | Quality coverage | pytest tests/ --cov=orket --cov-config=pyproject.toml --cov-fail-under=89 | [docs/CONTRIBUTOR.md](<docs/CONTRIBUTOR.md>) |
 | Canonical Ruff | ruff check orket tests | [.gitea/workflows/quality.yml](<.gitea/workflows/quality.yml>) |

@@ -9,7 +9,7 @@
     {
       "id": "command.install",
       "kind": "command",
-      "label": "SDK and core development install; candidate path in docs/guides/MACOS_LOCAL_INSTALL.md and native proof procedure in docs/guides/MACOS_ACCEPTANCE_RUNBOOK.md remain subject to Mac acceptance",
+      "label": "SDK and core development install; Gardener setup/upgrade recipe in examples/gardener_harness/README.md. Candidate path in docs/guides/MACOS_LOCAL_INSTALL.md and native proof procedure in docs/guides/MACOS_ACCEPTANCE_RUNBOOK.md remain subject to Mac acceptance",
       "source": "README.md",
       "command": "python -m pip install -e \"./orket_extension_sdk[testing]\" -e \".[dev]\"",
       "proof": "proof.current"

@@ -103,6 +103,9 @@ Licensing authority: [Apache-2.0 cutover, contributions, and notices](specs/LICE
 74. `docs/specs/GOVERNED_AGENT_TASK_SUBMISSION.md` -- Public SDK task admission and advisory report delivery.
 75. `docs/specs/GARDENER_REPORT_HARNESS.md` -- Bounded committed evidence and report-only Gardener integration.
 
+Gardener installation, environment settings, budget sizing and upgrades:
+[command harness guide](../examples/gardener_harness/README.md#install-orket-and-the-report-extension).
+
 Apple Silicon candidate installation and packaging proof:
 [guides/MACOS_LOCAL_INSTALL.md](guides/MACOS_LOCAL_INSTALL.md).
 Native acceptance commands, remote host proposal and evidence/teardown procedure:

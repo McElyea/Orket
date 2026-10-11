@@ -5,6 +5,21 @@ All notable changes to Orket will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.7] - 2026-10-10 - "Gardener installation and upgrade guide"
+
+### Documentation
+- Incorporate the Rev 4 installation feedback into the Gardener and report-example
+  guides: editable core/SDK setup, a committed example repository, validation and
+  catalog installation, launcher settings, paired budgets and upgrade checks.
+- Stability: documentation-only guidance; runtime code, defaults and SDK 0.8.0
+  remain unchanged. Scope and command verification are recorded in
+  `docs/releases/0.8.7/PROOF_REPORT.md`.
+- Operator/extension-author action: no migration required. Follow the guide when
+  preparing or upgrading a Gardener report installation; findings remain advisory.
+- `compatibility_status`: `compatible`
+- `affected_audience`: `all`
+- `migration_requirement`: `none`
+
 ## [0.8.6] - 2026-10-10 - "Explain extension host context limits"
 
 ### Fixed

@@ -57,6 +57,12 @@ It covers copying the installed registry, selecting the matching profile and
 restarting the API host with its absolute override path. Client-side Gardener
 capture settings do not enlarge the host's packaged 8192-token context.
 
+For Gardener's governed command harness, use its
+[installation and upgrade guide](../examples/gardener_harness/README.md#install-orket-and-the-report-extension).
+It covers core/SDK setup, the separately committed report extension, the installed
+catalog, launcher environment and paired submission/host budgets. This route
+starts the Orket CLI per dispatch and does not need a separate Orket API server.
+
 1. Install dependencies:
 ```bash
 python -m pip install --upgrade pip
